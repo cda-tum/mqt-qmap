@@ -1,5 +1,5 @@
-# A tool to map quantum circuits to the IBM QX architecture (developed in C++)
-Copyright (c) 2017 by Alwin Zulehner (alwin.zulehner@jku.at), Stefan Hillmich (stefan.hillmich@jku.at), Alexandru Paler (alexandru.paler@jku.at), and Robert Wille (robert.wille@jku.at)  
+# A tool to map quantum circuits to the quantum architecture (developed in C++)
+Copyright (c) 2017 by Alwin Zulehner (alwin.zulehner@jku.at), Stefan Hillmich (stefan.hillmich@jku.at), Alexandru Paler (alexandru.paler@jku.at), and Robert Wille (robert.wille@jku.at)
 Johannes Kepler University Linz, Austria  
 http://www.jku.at/iic/eda/ibm_qx_mapping
 
@@ -126,4 +126,10 @@ by citing the following publication:
     year={2019}
 }
 ````
+
+
+### Minimal Mapper
+
+cmake -DZ3_INCLUDE_PATH:STRING=<PATH_TO_Z3>
+
 

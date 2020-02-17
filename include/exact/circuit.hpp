@@ -28,8 +28,8 @@ by citing the following publication:
 #include <utility>
 #include <functional>
 #include <chrono>
-#include <z3++.h>
 
+#include "z3++.h"
 #include "parser.hpp"
 
 using namespace std::chrono;

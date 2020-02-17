@@ -1,5 +1,5 @@
-add_executable(${PROJECT_NAME} 
-            ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+
+set(SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
            
             ${CMAKE_CURRENT_SOURCE_DIR}/qasm_parser/token.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/qasm_parser/scanner.cpp
@@ -15,9 +15,6 @@ add_executable(${PROJECT_NAME}
 
             ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 
-            ${CMAKE_CURRENT_SOURCE_DIR}/exact/circuit.cpp
-			${CMAKE_CURRENT_SOURCE_DIR}/exact/exact_mapping.cpp
-
             ${PROJECT_SOURCE_DIR}/include/qasm_parser/token.hpp
             ${PROJECT_SOURCE_DIR}/include/qasm_parser/scanner.hpp
             ${PROJECT_SOURCE_DIR}/include/qasm_parser/parser.hpp
@@ -25,14 +22,28 @@ add_executable(${PROJECT_NAME}
             ${PROJECT_SOURCE_DIR}/include/heuristic/mapper.hpp
             ${PROJECT_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp
 
-            ${PROJECT_SOURCE_DIR}/include/exact/circuit.hpp
 )
 
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+if (NOT Z3_INCLUDE_PATH STREQUAL "")
+    target_include_directories(${PROJECT_NAME} PUBLIC ${Z3_INCLUDE_PATH})
+    add_definitions(-DMINIMAL_MAPPING_ENABLED)
+    target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/exact/circuit.hpp
+                                        ${CMAKE_CURRENT_SOURCE_DIR}/exact/circuit.cpp
+                                        ${CMAKE_CURRENT_SOURCE_DIR}/exact/exact_mapping.cpp
+    )
+endif()
+
+target_link_libraries(${PROJECT_NAME} boost_program_options)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include 
                                                   ${PROJECT_SOURCE_DIR}/include/qasm_parser
                                                   ${PROJECT_SOURCE_DIR}/include/heuristic
                                                   ${PROJECT_SOURCE_DIR}/include/exact
 )
+
+
+
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
@@ -48,6 +59,7 @@ if(ipo_supported)
     set_target_properties(${PROJECT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
+
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE "/W4" "$<$<CONFIG:RELEASE>:/O2 /GL>")
     target_link_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:Release>:/LTCG>")
@@ -55,4 +67,7 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -DNDEBUG -g0 $<$<CONFIG:DEBUG>:-Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native>)
 endif()
 
-target_link_libraries(${PROJECT_NAME} boost_program_options z3)
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/qelib1.inc      ${CMAKE_BINARY_DIR}/qelib1.inc)
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME} ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+

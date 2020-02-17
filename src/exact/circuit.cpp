@@ -19,6 +19,10 @@ by citing the following publication:
 }
 */
 
+
+
+#if Z3_INCLUDE_PATH
+
 #include "circuit.hpp"
 
 /// Static driver routine
@@ -579,3 +583,6 @@ void dfs(int current, std::set<int>& visited, CouplingMap& cm) {
 		}
 	}
 }
+
+
+#endif /* Z3_INCLUDE_PATH */

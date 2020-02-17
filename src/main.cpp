@@ -1,6 +1,9 @@
 #include "mapper.hpp"
-#include "circuit.hpp"
 
+
+#if MINIMAL_MAPPING_ENABLED
+#include "circuit.hpp"
+#endif 
 
 #include <boost/program_options.hpp>
 #include <regex>
@@ -29,7 +32,9 @@ double get_pi_div(double val) {
 }
 
 int main(int argc, char** argv) {
+#if MINIMAL_MAPPING_ENABLED
 	bool   exact       = false;
+#endif
 	bool   verbose     = false;
 	bool   real_format = false;
 	std::string input,  input_coupling;
@@ -40,7 +45,9 @@ int main(int argc, char** argv) {
 		po::options_description desc{"Options"};
     	desc.add_options()
 			("help,h",                                                        "help screen")
+#if MINIMAL_MAPPING_ENABLED
 			("exact,i",         po::bool_switch(&exact),                      "exact mapping is used rather than heuristic")
+#endif
 			("input,i",         po::value<std::string>(&input)->required(),   "input file")
 			("output,o",        po::value<std::string>(&output),              "output file                           (only for heuristic)")
 			("statistic,s",     po::value<std::string>(&output_statistics),   "output statistics file                (only for heuristic)")
@@ -67,9 +74,13 @@ int main(int argc, char** argv) {
 		exit(ERROR);
 	}
 
+#if MINIMAL_MAPPING_ENABLED
+dfdfd
+	std::cout << "ERREREER" << std::endl;
 	if(exact) {
 		return exact_mapping(input);
 	}
+#endif 
 
 	if(verbose) {
 		std::cout << "Input:        " << input             << std::endl;
