@@ -21,18 +21,23 @@ set(SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 
             ${PROJECT_SOURCE_DIR}/include/heuristic/mapper.hpp
             ${PROJECT_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp
-
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-if (NOT Z3_INCLUDE_PATH STREQUAL "")
-    target_include_directories(${PROJECT_NAME} PUBLIC ${Z3_INCLUDE_PATH})
+if (NOT Z3_DIR STREQUAL "")
+    find_package(Z3
+      REQUIRED
+      #CONFIG
+      PATHS ${Z3_DIR}
+    )
+    target_include_directories(${PROJECT_NAME} PUBLIC ${Z3_CXX_INCLUDE_DIRS})
     add_definitions(-DMINIMAL_MAPPING_ENABLED)
     target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/exact/circuit.hpp
                                         ${CMAKE_CURRENT_SOURCE_DIR}/exact/circuit.cpp
                                         ${CMAKE_CURRENT_SOURCE_DIR}/exact/exact_mapping.cpp
     )
+    target_link_libraries(${PROJECT_NAME} ${Z3_LIBRARIES})
 endif()
 
 target_link_libraries(${PROJECT_NAME} boost_program_options)
@@ -41,9 +46,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include
                                                   ${PROJECT_SOURCE_DIR}/include/heuristic
                                                   ${PROJECT_SOURCE_DIR}/include/exact
 )
-
-
-
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_14)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)

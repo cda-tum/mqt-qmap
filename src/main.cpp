@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     	desc.add_options()
 			("help,h",                                                        "help screen")
 #if MINIMAL_MAPPING_ENABLED
-			("exact,i",         po::bool_switch(&exact),                      "exact mapping is used rather than heuristic")
+			("exact,e",         po::bool_switch(&exact),                      "exact mapping is used rather than heuristic")
 #endif
 			("input,i",         po::value<std::string>(&input)->required(),   "input file")
 			("output,o",        po::value<std::string>(&output),              "output file                           (only for heuristic)")
@@ -75,8 +75,6 @@ int main(int argc, char** argv) {
 	}
 
 #if MINIMAL_MAPPING_ENABLED
-dfdfd
-	std::cout << "ERREREER" << std::endl;
 	if(exact) {
 		return exact_mapping(input);
 	}

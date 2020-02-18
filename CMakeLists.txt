@@ -6,8 +6,8 @@ project(QMAP
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(Z3_INCLUDE_PATH  ""  CACHE STRING "Path to the Z3 Library")
-set(COVERAGE         OFF CACHE BOOL   "Coverage")
+set(Z3_DIR   ""  CACHE STRING "Path to the Z3 Library")
+set(COVERAGE OFF CACHE BOOL   "Coverage")
 
 set(default_build_type "Release")
 

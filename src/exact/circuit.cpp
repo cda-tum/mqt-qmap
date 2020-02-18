@@ -19,10 +19,6 @@ by citing the following publication:
 }
 */
 
-
-
-#if Z3_INCLUDE_PATH
-
 #include "circuit.hpp"
 
 /// Static driver routine
@@ -37,7 +33,7 @@ MappingResults Circuit::run(std::string& filename, unsigned int timeout, const C
 	MappingResults optimum = MappingResults();
 
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
-	unsigned long nrPhysicalQubits = physicalQubits.size();
+	//unsigned long nrPhysicalQubits = physicalQubits.size();
 
 	// 0) Parse input file
 	QASMparser *parser = new QASMparser(filename);
@@ -46,7 +42,7 @@ MappingResults Circuit::run(std::string& filename, unsigned int timeout, const C
 	// 1) Extract gates and layers
 	// 1a) Compute list of non-unary gates
 	auto layers = parser->getLayers();
-	unsigned long nrLayers = layers.size();
+	//unsigned long nrLayers = layers.size();
 	unsigned long ignoredUnaryGates = 0;
 	std::vector<QASMparser::gate> gates;
 
@@ -159,7 +155,7 @@ MappingResults Circuit::run(std::string& filename, unsigned int timeout, const C
 	std::vector<std::set<int>> allPossibleQubitChoices;
 	do {
 		std::set<int> qubitChoice;
-		for (int i = 0; i < nrUsedQubits; ++i) {
+		for (unsigned int i = 0; i < nrUsedQubits; ++i) {
 			qubitChoice.insert(physicalQubits[i]);
 		}
 		allPossibleQubitChoices.push_back(qubitChoice);
@@ -228,7 +224,7 @@ MappingResults Circuit::run(std::string& filename, unsigned int timeout, const C
 /// \return Mapping results
 MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsigned int(std::vector<int>&)>& cost) {
 
-	high_resolution_clock::time_point t1 = high_resolution_clock::now();
+	// high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
 	// Z3 context
 	context c;
@@ -245,7 +241,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	 number of variables: (|L|) * m * n
 	 */
 	expr_vector x(c);
-	for (int k=0; k<nrLayers; k++) {
+	for (unsigned int k = 0; k < nrLayers; k++) {
 		for (int usedPhysicalQubit : usedPhysicalQubits) {
 			for (int logicalQubit : logicalQubits) {
 				std::stringstream x_name;
@@ -267,7 +263,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	}
 
 	expr_vector y(c);
-	for (int k=1; k<nrLayers; k++) {
+	for (unsigned int k = 1; k < nrLayers; k++) {
 		do {
 			std::stringstream y_name;
 			y_name << "y_" << k << '_' << printPi(pi);
@@ -282,8 +278,8 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	 number of variables: |G|
 	 */
 	expr_vector z(c);
-	for (int k=0; k<nrLayers; k++) {
-		for(int m=0; m<layers[k].size(); m++) {
+	for (unsigned int k = 0; k < nrLayers; k++) {
+		for(unsigned int m = 0; m < layers[k].size(); m++) {
 			std::stringstream z_name;
 			z_name << "d_" << k << "_" << m;
 			z.push_back(c.bool_const(z_name.str().c_str()));
@@ -302,7 +298,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	//////////////////////////////////////////
 	/// 	Consistency Constraints			//
 	//////////////////////////////////////////
-	for (int k=0; k<nrLayers; k++) {
+	for (unsigned int k = 0; k < nrLayers; k++) {
 		for (int usedPhysicalQubit: usedPhysicalQubits) {
 			expr rowConsistency = c.int_val(0);
 			for (int logicalQubit: logicalQubits) {
@@ -326,9 +322,9 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	//////////////////////////////////////////
 	///		Coupling Constraints			//
 	//////////////////////////////////////////
-	for (int k=0; k<nrLayers; k++) {
+	for (unsigned int k = 0; k < nrLayers; k++) {
 		expr allCouplings = c.bool_val(true);
-		for(int m=0; m<layers[k].size(); m++) {
+		for(unsigned int m = 0; m < layers[k].size(); m++) {
 			expr coupling = c.bool_val(false);
 			for (auto edge: cm) {
 				coupling = coupling or ((x[idx(k, edge.first, layers[k][m].control)] and
@@ -345,7 +341,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	/// 	Permutation Constraints			//
 	//////////////////////////////////////////
 	unsigned long n = factorial(nrUsedPhysicalQubits);
-	for (int k=1; k<nrLayers; k++) {
+	for (unsigned int k = 1; k < nrLayers; k++) {
 		int piCnt=0;
 		do {
 			expr equal = c.bool_val(true);
@@ -370,7 +366,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	}
 
 	// Allow only 1 y_k_pi to be true
-	for (int k=1; k<nrLayers; k++) {
+	for (unsigned int k = 1; k < nrLayers; k++) {
 		expr onlyOne = c.int_val(0);
 		int piCnt=0;
 		do {
@@ -384,8 +380,8 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	/// 	Direction Reverse Constraints	//
 	//////////////////////////////////////////
 	int g = 0;
-	for (int k=0; k<nrLayers; k++) {
-		for (int m = 0; m < layers[k].size(); m++) {
+	for (unsigned int k = 0; k < nrLayers; k++) {
+		for (unsigned int m = 0; m < layers[k].size(); m++) {
 			expr reverse = c.bool_val(false);
 			for(auto edge: cm) {
 				reverse = reverse or (x[idx(k, edge.first, layers[k][m].target)] and
@@ -400,14 +396,14 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 	/// 	Objective Function				//
 	//////////////////////////////////////////
     // cost for permutations
-	for (int k=1; k<nrLayers; k++) {
+	for (unsigned int k = 1; k < nrLayers; k++) {
 		int piCnt=0;
 		do {
 			// augment permutation to all physical qubits to obtain correct costs
 			std::vector<int> augmentedPi;
 			for(auto q: physicalQubits) {
 				// check if q is used and get its index
-				int counti = 0;
+				unsigned int counti = 0;
 				for (int usedPhysicalQubit : usedPhysicalQubits) {
 					if (q == usedPhysicalQubit) break;
 					counti++;
@@ -427,6 +423,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
     int gateIdx = 0;
     for(const auto& layer: layers) {
         for (const auto &gate: layer) {
+			UNUSED(gate);
             opt.add(not(z[gateIdx]), 4);
             gateIdx++;
         }
@@ -445,7 +442,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 		model m = opt.get_model();
 		results.timeout = false;
 
-		for (int k=0; k<nrLayers; k++) {
+		for (unsigned int k = 0; k < nrLayers; k++) {
 			results.X.emplace_back(std::vector<std::vector<int>>());
 			for (int usedPhysicalQubit: usedPhysicalQubits) {
 				results.X.back().emplace_back(std::vector<int>());
@@ -456,14 +453,14 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
 		}
 
         unsigned long swapCost = 0;
-        for (int k=1; k<nrLayers; k++) {
+        for (unsigned int k = 1; k < nrLayers; k++) {
 			int piCnt=0;
 			do {
                 // augment permutation to all physical qubits to obtain correct costs
                 std::vector<int> augmentedPi;
                 for (auto q: physicalQubits) {
                     // check if q is used and get its index
-                    int counti = 0;
+                    unsigned int counti = 0;
                     for (int usedPhysicalQubit : usedPhysicalQubits) {
                         if (q == usedPhysicalQubit) break;
                         counti++;
@@ -486,6 +483,7 @@ MappingResults Circuit::mapping(const CouplingMap& cm, const std::function< unsi
         unsigned long reverseCost = 0;
         for (const auto& layer: layers) {
 			for (const auto& gate: layer) {
+				UNUSED(gate)
 				results.Z.push_back((eq(m.eval(z[gateIdx]), c.bool_val(true))? 1 : 0));
                 reverseCost += eq(m.eval(z[gateIdx]), c.bool_val(true)) ? 4 : 0;
 				gateIdx++;
@@ -514,7 +512,7 @@ std::string printPi(std::vector<int>& pi){
 
 	std::stringstream perm;
 	perm << '(';
-	for (int i=0; i<pi.size()-1; i++) {
+	for (unsigned int i = 0; i < pi.size()-1; i++) {
 		perm << pi[i] << ',';
 	}
 	perm << pi[pi.size()-1] << ')';
@@ -583,6 +581,3 @@ void dfs(int current, std::set<int>& visited, CouplingMap& cm) {
 		}
 	}
 }
-
-
-#endif /* Z3_INCLUDE_PATH */

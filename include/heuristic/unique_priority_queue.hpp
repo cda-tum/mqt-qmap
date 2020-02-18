@@ -5,7 +5,7 @@
 #ifndef UNIQUE_PRIORITY_QUEUE_H
 #define UNIQUE_PRIORITY_QUEUE_H
 
-#define UNUSED(x) ((void)x)
+#define UNUSED(x)       {(void) x;}
 
 const int    MAX_QUEUE_SIZE               = 6000000;
 const int    MAX_NODES_MARGIN             = 500000;

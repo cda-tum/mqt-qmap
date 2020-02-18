@@ -128,8 +128,8 @@ by citing the following publication:
 ````
 
 
-### Minimal Mapper
+### Minimal Mapper - Execution
 
-cmake -DZ3_INCLUDE_PATH:STRING=<PATH_TO_Z3>
+cmake -DZ3_DIR:STRING=<PATH_TO_Z3_BUILD_DIRECTORY> ..
 
 

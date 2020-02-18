@@ -29,8 +29,12 @@ by citing the following publication:
 #include <functional>
 #include <chrono>
 
-#include "z3++.h"
+#include <z3++.h>
 #include "parser.hpp"
+
+#ifndef UNUSED
+	#define UNUSED(x)       {(void) x;}
+#endif
 
 using namespace std::chrono;
 using namespace z3;
