@@ -1,18 +1,18 @@
 #include <set>
 #include <queue>
-#include <assert.h>
+#include <cassert>
+#include <iostream>
+#include <vector>
 
 #ifndef UNIQUE_PRIORITY_QUEUE_H
 #define UNIQUE_PRIORITY_QUEUE_H
 
 #define UNUSED(x)       {(void) x;}
 
-const int    MAX_QUEUE_SIZE               = 6000000;
-const int    MAX_NODES_MARGIN             = 500000;
-const int    MAX_QUEUE_COPY_LENGTH        = 1000000;
-const double QUEUE_COPY_LENGTH_PERCENTAGE = 1/((double)6);
-
-
+constexpr int    MAX_QUEUE_SIZE               = 6000000;
+constexpr int    MAX_NODES_MARGIN             = 500000;
+constexpr int    MAX_QUEUE_COPY_LENGTH        = 1000000;
+constexpr double QUEUE_COPY_LENGTH_PERCENTAGE = 1./6;
 
 template<class T>
 struct do_nothing {
@@ -33,7 +33,7 @@ class own_priority_queue : public std::priority_queue<T, Container, Compare> {
  * Priority queue with unique (according to FuncCompare) elements of type T where the sorting is based on CostCompare.
  * If NDEBUG is *not* defined, there are some assertions that help catching errors in the provided comparision functions.
  */
-template<class T, class CleanObsoleteElement = do_nothing<T>, class CostCompare = std::less<T>, class FuncCompare = CostCompare>
+template<class T, class CostCompare = std::less<T>, class FuncCompare = std::greater<T>, class CleanObsoleteElement = do_nothing<T>>
 class unique_priority_queue
 {
 public:
