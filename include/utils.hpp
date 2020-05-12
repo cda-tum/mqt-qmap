@@ -118,14 +118,14 @@ std::string printPi(std::vector<unsigned short>& pi);
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::unordered_set<unsigned short>& visited, CouplingMap& rcm);
+void dfs(unsigned short current, std::set<unsigned short>& visited, CouplingMap& rcm);
 
 /// Helper function returning correct 1D array index for 3D array
 /// \param k first index
 /// \param i second index
 /// \param j third index
 /// \return index in 1D array
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::unordered_set<unsigned short>& iValues, const std::set<unsigned short>& jValues);
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::unordered_set<unsigned short>& iValues, unsigned short nj);
+unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, const std::set<unsigned short>& jValues);
+unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj);
 
 #endif //QMAP_UTILS_HPP

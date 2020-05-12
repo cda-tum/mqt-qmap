@@ -98,7 +98,7 @@ std::string printPi(std::vector<unsigned short>& pi){
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::unordered_set<unsigned short>& visited, CouplingMap& rcm) {
+void dfs(unsigned short current, std::set<unsigned short>& visited, CouplingMap& rcm) {
 	for (auto edge: rcm) {
 		if (edge.first == current) {
 			if(!visited.count(edge.second)) {
@@ -119,7 +119,7 @@ void dfs(unsigned short current, std::unordered_set<unsigned short>& visited, Co
 /// \param i second index
 /// \param j third index
 /// \return index in 1D array
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::unordered_set<unsigned short>& iValues, const std::set<unsigned short>& jValues) {
+unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, const std::set<unsigned short>& jValues) {
 	unsigned short counti = 0;
 	for (unsigned short iVal : iValues) {
 		if (iVal == i) break;
@@ -134,7 +134,7 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 	return k*jValues.size()*iValues.size() + counti*jValues.size() + countj;
 }
 
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::unordered_set<unsigned short>& iValues, unsigned short nj) {
+unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj) {
 	unsigned short counti = 0;
 	for (unsigned short iVal : iValues) {
 		if (iVal == i) break;

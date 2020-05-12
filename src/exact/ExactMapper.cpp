@@ -64,9 +64,9 @@ void ExactMapper::map(const MappingSettings& settings) {
 	for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
 		qubits.push_back(i);
 	}
-	std::vector<std::unordered_set<unsigned short>> allPossibleQubitChoices{};
+	std::vector<std::set<unsigned short>> allPossibleQubitChoices{};
 	do {
-		std::unordered_set<unsigned short> qubitChoice{};
+		std::set<unsigned short> qubitChoice{};
 		for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
 			qubitChoice.insert(qubits.at(i));
 		}
@@ -95,7 +95,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 		if (reducedCouplingMap.empty()) continue;
 
 		// 5) Check if E_k is connected. If yes, then possible subset found
-		std::unordered_set<unsigned short> reachedQubits{};
+		std::set<unsigned short> reachedQubits{};
 		reachedQubits.insert(*(choice.begin()));
 		dfs(*(choice.begin()), reachedQubits, reducedCouplingMap);
 		if (!(reachedQubits == choice)) continue;
@@ -224,7 +224,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 	results.time = diff.count();
 }
 
-void ExactMapper::coreMappingRoutine(const std::unordered_set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps) {
+void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps) {
 	// Z3 context
 	context c;
 
