@@ -124,7 +124,7 @@ public:
 
 		void print(std::ostream& out) {
 			out << swaps.size() << ": ";
-			for (const auto p: permutation) {
+			for (const auto& p: permutation) {
 				out << p.first << "->" << p.second << " ";
 			}
 			out << " | ";

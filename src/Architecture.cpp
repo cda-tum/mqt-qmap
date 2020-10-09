@@ -196,7 +196,7 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
 			std::swap(next.permutation.at(swap.first), next.permutation.at(swap.second));
 			next.nswaps++;
 			bool done = true;
-			for (const auto assignment: goalPermutation) {
+			for (const auto& assignment: goalPermutation) {
 				if (next.permutation.at(assignment.first) != assignment.second) {
 					done = false;
 					break;
@@ -272,7 +272,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
 			next.nswaps++;
 
 			bool done = true;
-			for (const auto assignment: goalPermutation) {
+			for (const auto& assignment: goalPermutation) {
 				if (next.permutation.at(assignment.first) != assignment.second) {
 					done = false;
 					break;

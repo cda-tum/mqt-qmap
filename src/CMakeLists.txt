@@ -11,7 +11,7 @@ file(RELATIVE_PATH relDir
      )
 set(CMAKE_INSTALL_RPATH ${basePoint} ${basePoint}/${relDir})
 
-option(TRY_USING_INSTALLED_QFR_LIBRARY "Attempt searching for installed version of QFR library and use it if found" ON)
+option(TRY_USING_INSTALLED_QFR_LIBRARY "Attempt searching for installed version of QFR library and use it if found" OFF)
 if (TRY_USING_INSTALLED_QFR_LIBRARY)
 	find_package(qfr 1.0 QUIET)
 	if (qfr_FOUND)

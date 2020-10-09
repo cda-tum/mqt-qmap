@@ -166,7 +166,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 
 				qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
 				                                             locations.at(gate.target),
-				                                             op->getGate(),
+				                                             op->getType(),
 				                                             op->getParameter().at(0),
 				                                             op->getParameter().at(1),
 				                                             op->getParameter().at(2));
