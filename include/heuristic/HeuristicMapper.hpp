@@ -9,10 +9,8 @@
 #define QMAP_HEURISTICMAPPER_HPP
 
 class HeuristicMapper: public Mapper {
-	static constexpr bool VERBOSE = true;
-
 public:
-	using Mapper::Mapper;
+	using Mapper::Mapper; // import constructors from parent class
 
 	void map(const MappingSettings& ms) override;
 

@@ -14,14 +14,14 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 	initResults();
 
 	createLayers();
-	if (VERBOSE) {
-		printLayering(std::cout);
+	if (ms.verbose) {
+		printLayering(std::clog);
 	}
 
 	createInitialMapping();
-	if (VERBOSE) {
-		printLocations(std::cout );
-		printQubits(std::cout );
+	if (ms.verbose) {
+		printLocations(std::clog );
+		printQubits(std::clog );
 	}
 
 	unsigned long gateidx = 0;
@@ -60,7 +60,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 				if (locations.at(gate.target) == DEFAULT_POSITION) {
 					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
 					                                             gate.target,
-					                                             op->getGate(),
+					                                             op->getType(),
 					                                             op->getParameter().at(0),
 					                                             op->getParameter().at(1),
 					                                             op->getParameter().at(2));
@@ -71,7 +71,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 				} else {
 					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
 							locations.at(gate.target),
-							op->getGate(),
+							op->getType(),
 							op->getParameter().at(0),
 							op->getParameter().at(1),
 							op->getParameter().at(2));
@@ -116,7 +116,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 			if (!op) {
 				throw QMAPException("Cast to StandardOperation not possible during mapping. Check that circuit contains only StandardOperations");
 			}
-			if (op->getGate() == qc::SWAP) {
+			if (op->getType() == qc::SWAP) {
 				short q0 = qubits.at(op->getTargets().at(0));
 				short q1 = qubits.at(op->getTargets().at(1));
 				qubits.at(op->getTargets().at(0)) = q1;

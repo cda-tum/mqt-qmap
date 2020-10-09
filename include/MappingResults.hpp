@@ -99,7 +99,7 @@ struct MappingResults {
 		j["arch"] = architecture;
 		j["calibration"] = calibration;
 
-		out << j.dump(4) << std::endl;
+		out << j.dump(4) << "\n";
 
 		return out;
 	};

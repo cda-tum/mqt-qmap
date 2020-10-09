@@ -28,6 +28,7 @@ struct MappingSettings {
 	InitialLayoutStrategy initialLayoutStrategy = Dynamic;
 
 	bool admissibleHeuristic = true;
+	bool verbose = false;
 
 	bool lookahead = true;
 	int nrLookaheads = 15;
