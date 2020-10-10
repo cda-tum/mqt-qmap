@@ -93,13 +93,13 @@ jobs:
 #        - nmake
 #        - cd "/C/Users/travis/build/iic-jku/ddsim"
 
-install:
+before_install:
   - git clone https://github.com/Z3Prover/z3.git
   - cd z3
-  - cmake -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD} ../ -B build -S .
+  - cmake -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD} -B build -S .
   - cmake --build build
-  - cd build
-  - make install
+  - cd build && sudo ninja install
+  - cd ../../
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     export PATH="$(brew --prefix llvm)/bin:$PATH";
     fi
