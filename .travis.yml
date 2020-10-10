@@ -121,10 +121,16 @@ before_script:
   - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cmake --build . --config ${BUILD} --target qmap_exact; fi
 
 script:
-  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then cd apps/${BUILD} && ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch; fi
-  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then cd apps/${BUILD} && ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch; fi
-  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cd apps && ./qmap_exact --in ../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../extern/architectures/ibmq_london.arch; fi
-  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cd apps && ./qmap_heuristic --in ../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../extern/architectures/ibmq_london.arch; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      cd apps/${BUILD};
+      ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
+      ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
+    fi
+  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then
+      cd apps;
+      ./qmap_exact --in ../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../extern/architectures/ibmq_london.arch --ps;
+      ./qmap_heuristic --in ../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../extern/architectures/ibmq_london.arch --ps;
+    fi
 
 after_success:
   - |
