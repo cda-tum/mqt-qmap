@@ -104,8 +104,8 @@ public:
 	}
 
 
-	virtual std::ostream& printResult(std::ostream& out) {
-		return results.print(out);
+	virtual std::ostream& printResult(std::ostream& out, bool printStatistics) {
+		return results.print(out, printStatistics);
 	}
 
 	std::ostream& printLayering(std::ostream& out) {

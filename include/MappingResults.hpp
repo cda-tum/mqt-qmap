@@ -5,25 +5,22 @@
 
 #include <string>
 #include <iostream>
-#include <nlohmann/json.hpp>
-
-// for convenience
-using json = nlohmann::json;
+#include "MappingSettings.hpp"
 
 #ifndef QMAP_MAPPINGRESULTS_HPP
 #define QMAP_MAPPINGRESULTS_HPP
 
-enum Method {
+enum class Method {
 	None, Exact, Heuristic
 };
 
 static std::string toString(const Method method) {
 	switch (method) {
-		case None:
+		case Method::None:
 			return "none";
-		case Exact:
+		case Method::Exact:
 			return "exact";
-		case Heuristic:
+		case Method::Heuristic:
 			return "heuristic";
 	}
 	return " ";
@@ -38,14 +35,16 @@ struct MappingResults {
 	unsigned long input_qubits = 0;
 	unsigned long input_layers = 0;
 
-	std::string architecture = "";
-	std::string calibration = "";
+	std::string architecture;
+	std::string calibration;
 
-	Method method = None;
+	Method method = Method::None;
+	InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
+	LayeringStrategy layeringStrategy = LayeringStrategy::None;
 
 	double time = 0.0;
 	bool timeout = true;
-	std::string output_name = "";
+	std::string output_name;
 	unsigned long output_gates = 0;
 	unsigned long output_singlequbitgates = 0;
 	unsigned long output_cnots = 0;
@@ -67,39 +66,52 @@ struct MappingResults {
 		architecture = mappingResults.architecture;
 		calibration = mappingResults.calibration;
 		method = mappingResults.method;
+		initialLayoutStrategy = mappingResults.initialLayoutStrategy;
+		layeringStrategy = mappingResults.layeringStrategy;
 
 		output_name = mappingResults.output_name;
 		output_qubits = mappingResults.output_qubits;
 	}
 
-	virtual std::ostream& print(std::ostream& out) {
-		json j;
+	virtual std::ostream& print(std::ostream& out, bool printStatistics) {
+		out << "{\n";
+		out << "\t\"circuit\": {\n";
+		out << "\t\t\"name\": \"" << input_name << "\",\n";
+		out << "\t\t\"qubits\": " << input_qubits << ",\n";
+		out << "\t\t\"gates\": " << input_gates << ",\n";
+		out << "\t\t\"singlequbitgates\": " << input_singlequbitgates << ",\n";
+		out << "\t\t\"cnots\": " << input_cnots << ",\n";
+		out << "\t\t\"layers\": " << input_layers << "\n";
+		out << "\t},\n";
+		out << "\t\"mapped_circuit\": {\n";
+		out << "\t\t\"name\": \"" << output_name << "\",\n";
+		out << "\t\t\"qubits\": " << output_qubits << ",\n";
+		out << "\t\t\"gates\": " << output_gates << ",\n";
+		out << "\t\t\"singlequbitgates\": " << output_singlequbitgates << ",\n";
+		out << "\t\t\"cnots\": " << output_cnots << ",\n";
+		out << "\t\t\"swaps\": " << output_swaps << ",\n";
+		out << "\t\t\"direction_reverse\": " << output_direction_reverse << "\n";
+		out << "\t}";
+		if (printStatistics) {
+			out << ",\n\t\"statistics\": {\n";
+			out << "\t\t\"mapping_time\": " << (timeout? "\"timeout\"": std::to_string(time)) << ",\n";
+			out << "\t\t\"additional_gates\": " << output_gates-input_gates << ",\n";
+			out << "\t\t\"method\": \"" << toString(method) << "\",\n";
 
-		j["circuit"]["name"] = input_name;
-		j["circuit"]["qubits"] = input_qubits;
-		j["circuit"]["gates"] = input_gates;
-		j["circuit"]["singlequbitgates"] = input_singlequbitgates;
-		j["circuit"]["cnots"] = input_cnots;
-		j["circuit"]["layers"] = input_layers;
+			if (layeringStrategy != LayeringStrategy::None) {
+				out << "\t\t\"layeringStrategy\": \"" << toString(layeringStrategy) << "\",\n";
+			}
+			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
+				out << "\t\t\"initialLayoutStrategy\": \"" << toString(initialLayoutStrategy) << "\",\n";
 
-		j["mapped_circuit"]["name"] = output_name;
-		j["mapped_circuit"]["qubits"] = output_qubits;
-		j["mapped_circuit"]["gates"] = output_gates;
-		j["mapped_circuit"]["singlequbitgates"] = output_singlequbitgates;
-		j["mapped_circuit"]["cnots"] = output_cnots;
-		j["mapped_circuit"]["swaps"] = output_swaps;
-		j["mapped_circuit"]["direction_reverse"] = output_direction_reverse;
-
-		if (timeout) {
-			j["mapping_time"] = "timeout";
-		} else {
-			j["mapping_time"] = time;
+			}
+			out << "\t\t\"arch\": \"" << architecture << "\"";
+			if (!calibration.empty()) {
+				out << ",\n\t\t\"calibration\": \"" << calibration << "\"";
+			}
+			out << "\n\t}";
 		}
-		j["method"] = toString(method);
-		j["arch"] = architecture;
-		j["calibration"] = calibration;
-
-		out << j.dump(4) << "\n";
+		out << "\n}\n";
 
 		return out;
 	};

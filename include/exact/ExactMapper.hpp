@@ -40,8 +40,6 @@ using namespace z3;
 class ExactMapper : public Mapper{
 	using Mapper::Mapper;
 
-	static constexpr bool VERBOSE = true;
-
 protected:
 	// inputs
 	std::vector<unsigned long> reducedLayerIndices{};

@@ -14,6 +14,7 @@ int main(int argc, char** argv) {
             ("out", po::value<std::string>()->required(), "File to write to")
             ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
+            ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
 	const std::string circuit = vm["in"].as<std::string>();
 	const std::string cm = vm["arch"].as<std::string>();
 
-    HeuristicMapper* mapper = nullptr;
+    HeuristicMapper* mapper;
 	if(vm.count("calibration")) {
         const std::string cal = vm["calibration"].as<std::string>();
         mapper = new HeuristicMapper{circuit, cm, cal};
@@ -42,14 +43,25 @@ int main(int argc, char** argv) {
         mapper = new HeuristicMapper{circuit, cm};
 	}
 
-
-
 	MappingSettings ms{};
-	ms.layeringStrategy = DisjointQubits;
+	ms.layeringStrategy = LayeringStrategy::None;
+	if (vm.count("initiallayout")) {
+		std::string initialLayout = vm["initiallayout"].as<std::string>();
+		if (initialLayout == "identity") {
+			ms.initialLayoutStrategy = InitialLayoutStrategy::Identity;
+		} else if (initialLayout == "static") {
+			ms.initialLayoutStrategy = InitialLayoutStrategy::Static;
+		} else if (initialLayout == "dynamic") {
+			ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+		} else {
+			ms.initialLayoutStrategy = InitialLayoutStrategy::None;
+		}
+	}
+
 	ms.verbose = vm.count("verbose") > 0;
 	mapper->map(ms);
 
 	mapper->dumpResult(vm["out"].as<std::string>());
 
-	mapper->printResult(std::cout);
+	mapper->printResult(std::cout, vm.count("ps"));
 }

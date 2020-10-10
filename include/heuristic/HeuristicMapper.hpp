@@ -63,16 +63,16 @@ public:
 			}
 		}
 
-		std::ostream& print(std::ostream& out) {
-			json j;
-			j["done"] = done;
-			j["cost"]["fixed"] = costFixed;
-			j["cost"]["heuristic"] = costHeur;
-			j["cost"]["total"] = costTotal;
-			j["cost"]["lookahead_penalty"] = lookaheadPenalty;
-			j["nswaps"] = nswaps;
-
-			out << j.dump(4) << std::endl;
+		std::ostream& print(std::ostream& out) const {
+			out << "{\n";
+			out << "\t\"done\": " << done << ",\n";
+			out << "\t\"cost\": {\n";
+			out << "\t\t\"fixed\": " << costFixed << ",\n";
+			out << "\t\t\"heuristic\": " << costHeur << ",\n";
+			out << "\t\t\"total\": " << costTotal << ",\n";
+			out << "\t\t\"lookahead_penalty\": " << lookaheadPenalty << "\n";
+			out << "\t},\n";
+			out << "\t\"nswaps\": " << nswaps << "\n}\n";
 			return out;
 		}
 	};

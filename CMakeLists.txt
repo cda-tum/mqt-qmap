@@ -41,8 +41,5 @@ endmacro()
 
 handle_submodule(qfr)
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(${PROJECT_SOURCE_DIR}/extern/json)
-
 add_subdirectory(src)
 add_subdirectory(apps)

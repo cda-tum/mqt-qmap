@@ -8,13 +8,41 @@
 /// Identity: q_i -> Q_i
 /// Static: first layer is mapped q_c -> Q_c and q_t -> Q_t
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
-enum InitialLayoutStrategy {
-	Identity, Static, Dynamic
+enum class InitialLayoutStrategy {
+	Identity, Static, Dynamic, None
 };
+static std::string toString(const InitialLayoutStrategy strategy) {
+	switch (strategy) {
+		case InitialLayoutStrategy::Identity:
+			return "identity";
+		case InitialLayoutStrategy::Static:
+			return "static";
+		case InitialLayoutStrategy::Dynamic:
+			return "dynamic";
+		case InitialLayoutStrategy::None:
+			return "none";
+	}
+	return " ";
+}
 
-enum LayeringStrategy {
-	IndividualGates, DisjointQubits, OddGates, QubitTriangle
+enum class LayeringStrategy {
+	IndividualGates, DisjointQubits, OddGates, QubitTriangle, None
 };
+static std::string toString(const LayeringStrategy strategy) {
+	switch (strategy) {
+		case LayeringStrategy::IndividualGates:
+			return "individual gates";
+		case LayeringStrategy::DisjointQubits:
+			return "disjoint qubits";
+		case LayeringStrategy::OddGates:
+			return "odd gates";
+		case LayeringStrategy::QubitTriangle:
+			return "qubit triangle";
+		case LayeringStrategy::None:
+			return "none";
+	}
+	return " ";
+}
 
 struct MappingSettings {
 	MappingSettings() = default;
@@ -22,10 +50,10 @@ struct MappingSettings {
 	unsigned int timeout = 3600000; // 60min timeout
 	void setTimeout(unsigned int sec) { timeout = sec;}
 
-	LayeringStrategy layeringStrategy = IndividualGates;
+	LayeringStrategy layeringStrategy = LayeringStrategy::None;
 
 	/// Settings for heuristic approach
-	InitialLayoutStrategy initialLayoutStrategy = Dynamic;
+	InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
 
 	bool admissibleHeuristic = true;
 	bool verbose = false;

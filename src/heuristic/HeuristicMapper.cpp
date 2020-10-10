@@ -6,8 +6,8 @@
 
 void HeuristicMapper::map(const MappingSettings& ms) {
 	settings = ms;
-	if (settings.layeringStrategy == OddGates || settings.layeringStrategy == QubitTriangle) {
-		std::cerr << "Layering strategy " << std::to_string(settings.layeringStrategy) << " not suitable for heuristic mapper!" << std::endl;
+	if (settings.layeringStrategy == LayeringStrategy::OddGates || settings.layeringStrategy == LayeringStrategy::QubitTriangle) {
+		std::cerr << "Layering strategy " << toString(settings.layeringStrategy) << " not suitable for heuristic mapper!" << std::endl;
 		return;
 	}
 	auto start = std::chrono::high_resolution_clock::now();
@@ -159,7 +159,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 
 void HeuristicMapper::initResults() {
 	Mapper::initResults();
-	results.method = Heuristic;
+	results.method = Method::Heuristic;
 }
 
 void HeuristicMapper::createInitialMapping() {
@@ -167,13 +167,13 @@ void HeuristicMapper::createInitialMapping() {
 		return;
 
 	switch (settings.initialLayoutStrategy) {
-		case Identity:
+		case InitialLayoutStrategy::Identity:
 			for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
 				locations.at(i) = i;
 				qubits.at(i) = i;
 			}
 			break;
-		case Static:
+		case InitialLayoutStrategy::Static:
 			for (const auto& gate: layers.at(0)) {
 				if (gate.singleQubit())
 					continue;
@@ -202,7 +202,8 @@ void HeuristicMapper::createInitialMapping() {
 			}
 
 			break;
-		case Dynamic:
+		case InitialLayoutStrategy::Dynamic:
+		case InitialLayoutStrategy::None:
 			// nothing to be done here
 			break;
 
