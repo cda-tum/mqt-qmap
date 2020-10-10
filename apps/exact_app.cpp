@@ -27,7 +27,7 @@ by citing the following publication:
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
-    po::options_description description("JKQ QMAP heuristic mapper by https://iic.jku.at/eda/ -- Options");
+    po::options_description description("JKQ QMAP exact mapper by https://iic.jku.at/eda/quantum -- Options");
     description.add_options()
             ("help,h", "produce help message")
             ("in", po::value<std::string>()->required(), "File to read from")

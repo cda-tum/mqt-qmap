@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/iic-jku/qmap.svg?token=md6M7jxUi7wqb4j9saQb&branch=main)](https://travis-ci.com/iic-jku/qmap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![toolset: JKQ](https://img.shields.io/badge/toolset-JKQ-blue)](https://github.com/iic-jku/jkq)
 
@@ -73,7 +74,7 @@ The exact mapping tool `qmap_exact` also offers the `--layering` option, which a
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4)
 
 ### System Requirements
-Building (and running) should work under Linux, MacOS, and Windows with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
+Building (and running) is continuously tested under Linux (Ubuntu 20.04) using gcc-7.4, gcc-10 and clang-11, MacOS (Catalina 10.15) using AppleClang, and Windows using MSVC 15.9. However, the implementation should be compatible with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
 
 `boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
 

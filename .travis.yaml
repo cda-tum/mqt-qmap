@@ -1,0 +1,134 @@
+language: cpp
+os: linux
+
+jobs:
+  include:
+    - os: linux
+      dist: focal
+      compiler: "gcc"
+      env: BUILD='Debug' CC=gcc CXX=g++ COVERAGE=1 COV_EXE=gcov
+      addons:
+        apt:
+          packages:
+            - cmake
+            - ninja-build
+            - lcov
+            - libboost-program-options-dev
+            - z3
+
+    - os: linux
+      dist: focal
+      compiler: "gcc"
+      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
+      addons:
+        apt:
+          packages:
+            - cmake
+            - ninja-build
+            - libboost-program-options-dev
+            - z3
+
+    - os: linux
+      dist: focal
+      compiler: "gcc-10"
+      env: BUILD='Release' CC=gcc-10 CXX=g++-10 COVERAGE=0
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - cmake
+            - ninja-build
+            - gcc-10
+            - g++-10
+            - libboost-program-options-dev
+            - z3
+
+    - os: linux
+      dist: focal
+      compiler: "clang-11"
+      env: BUILD='Release' CC=clang-11 CXX=clang++-11 COVERAGE=0
+      addons:
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+          packages:
+            - cmake
+            - ninja-build
+            - clang-11
+            - libboost-program-options-dev
+            - z3
+
+    - os: osx
+      osx_image: xcode12
+      compiler: "clang"
+      env: BUILD='Release' CC=clang CXX=clang++ COVERAGE=0
+      addons:
+        homebrew:
+          packages:
+            - cmake
+            - ninja
+            - boost
+            - z3
+          update: true
+
+    - os: windows
+      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
+      install:
+        - cmake --version
+        - wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
+        - 7z x boost_1_70_0.7z -o/C/local
+        - cd "/C/local/boost_1_70_0"
+        - ./bootstrap.bat
+        - ./b2.exe -j8 toolset=msvc-14.1 address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
+        - export Boost_DIR="/C/local/boost_1_70_0"
+        - setx path "%path%;c:\local\boost_1_70_0"
+        - setx lib "%lib%;c:\local\boost_1_70_0\stage\lib"
+        - setx libpath "%libpath%;c:\local\boost_1_70_0\stage\lib"
+        - cd "/C/local"
+        - wget https://github.com/Z3Prover/z3/archive/z3-4.8.9.zip --no-check-certificate
+        - 7z x z3-4.8.9.zip -o/C/local
+        - cd "/C/local/z3-4.8.9"
+        - python scripts/mk_make.py -x
+        - cd build
+        - nmake
+        - cd "/C/Users/travis/build/iic-jku/ddsim"
+
+install:
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    export PATH="$(brew --prefix llvm)/bin:$PATH";
+    fi
+  - echo ${CC}
+  - echo ${CXX}
+  - ${CXX} --version
+  - cmake --version
+
+before_script:
+  - mkdir -p build && cd build
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      cmake .. -G "Visual Studio 15 2017" -A x64 -LA -DCMAKE_BUILD_TYPE=${BUILD} -DCOVERAGE=${COVERAGE} -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF
+    else
+      cmake .. -G Ninja -LA -DCMAKE_BUILD_TYPE=${BUILD} -DCOVERAGE=${COVERAGE}
+    fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then cmake --build . --config ${BUILD} --target INSTALL; fi
+  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cmake --build . --config ${BUILD} --target qmap_heuristic; fi
+  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cmake --build . --config ${BUILD} --target qmap_exact; fi
+
+script:
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then cd apps/${BUILD} && ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then cd apps/${BUILD} && ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch; fi
+  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cd apps && ./qmap_exact --in ../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../extern/architectures/ibmq_london.arch; fi
+  - if [ "$TRAVIS_OS_NAME" != "windows" ]; then cd apps && ./qmap_heuristic --in ../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../extern/architectures/ibmq_london.arch; fi
+
+after_success:
+  - |
+    if [[ -n "${COV_EXE}" ]]; then
+      # Create lcov report
+      lcov --gcov-tool ${COV_EXE} --capture --directory . --base-directory . --output-file coverage.info
+      lcov --remove coverage.info '/usr/*' '*/extern/*' --output-file coverage.info # filter system-files
+      lcov --list coverage.info # debug info
+      # Uploading report to CodeCov
+      bash <(curl -s https://codecov.io/bash) -f coverage.info -t c73691bf-ba37-44ac-89dd-f1630aa3e993 || echo "Codecov did not collect coverage reports"
+    fi

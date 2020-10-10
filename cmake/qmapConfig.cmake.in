@@ -1,0 +1,14 @@
+get_filename_component(QMAP_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+
+find_dependency(qfr 1.0.8 REQUIRED CONFIG)
+
+if(NOT TARGET JKQ::qmap_heuristic)
+	include("${QMAP_CMAKE_DIR}/qmapTargets.cmake")
+	if(NOT TARGET JKQ::qmap_exact)
+        set(qmap_LIBRARIES JKQ::qmap_heuristic)
+    else()
+        set(qmap_LIBRARIES JKQ::qmap_heuristic JKQ::qmap_exact)
+    endif()
+endif()
+

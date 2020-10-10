@@ -5,7 +5,7 @@ endif()
 
 project(qmap
         VERSION 1.0
-        DESCRIPTION "QMAP  - A library for mapping of quantum circuits to quantum architectures"
+        DESCRIPTION "JKQ QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         LANGUAGES CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

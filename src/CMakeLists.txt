@@ -75,7 +75,7 @@ if (Z3_FOUND)
 		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
 	endif()
 else()
-	message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3")
+	message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
 endif ()
 
 add_library(${PROJECT_NAME}_heuristic_lib
@@ -118,3 +118,57 @@ else()
 	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
 endif()
 
+# installation instructions
+
+include(GNUInstallDirs)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+if (TARGET ${PROJECT_NAME}_exact_lib)
+	install(TARGETS ${PROJECT_NAME}_exact_lib ${PROJECT_NAME}_heuristic_lib
+	        EXPORT ${PROJECT_NAME}-targets
+	        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	set_target_properties(${PROJECT_NAME}_exact_lib PROPERTIES EXPORT_NAME ${PROJECT_NAME}_exact_lib)
+else ()
+	install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_heuristic_lib
+	        EXPORT ${PROJECT_NAME}-targets
+	        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+set_target_properties(${PROJECT_NAME}_heuristic_lib PROPERTIES EXPORT_NAME ${PROJECT_NAME}_heuristic_lib)
+
+install(DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT ${PROJECT_NAME}-targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE JKQ::
+        DESTINATION ${INSTALL_CONFIGDIR}
+        )
+
+#Create a ConfigVersion.cmake file
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+		VERSION ${PROJECT_VERSION}
+		COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(${${PROJECT_NAME}_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+                              INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+                              )
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${INSTALL_CONFIGDIR}
+        )
+
+# exporting from the build tree
+export(EXPORT ${PROJECT_NAME}-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake NAMESPACE JKQ::)
+
+# Register package in user's package registry
+export(PACKAGE ${PROJECT_NAME})

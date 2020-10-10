@@ -29,8 +29,22 @@ macro(add_qmap_executable APPNAME)
 	endif()
 endmacro()
 
-if (TARGET ${PROJECT_NAME}_exact_lib)
-	add_qmap_executable(exact)
-endif()
+include(GNUInstallDirs)
+if (Boost_FOUND)
+	if (TARGET ${PROJECT_NAME}_exact_lib)
+		add_qmap_executable(exact)
+		install(TARGETS ${PROJECT_NAME}_exact
+		        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_qmap_executable(heuristic)
+		set_target_properties(${PROJECT_NAME}_exact PROPERTIES EXPORT_NAME ${PROJECT_NAME}_exact)
+	endif()
+
+	add_qmap_executable(heuristic)
+	install(TARGETS ${PROJECT_NAME}_heuristic
+	        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+	set_target_properties(${PROJECT_NAME}_heuristic PROPERTIES EXPORT_NAME ${PROJECT_NAME}_heuristic)
+else()
+	message(STATUS "Did not find Boost! Commandline applications will not be an available target!")
+endif ()
+
