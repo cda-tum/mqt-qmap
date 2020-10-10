@@ -14,7 +14,6 @@ jobs:
             - ninja-build
             - lcov
             - libboost-program-options-dev
-            - z3
 
     - os: linux
       dist: focal
@@ -26,7 +25,6 @@ jobs:
             - cmake
             - ninja-build
             - libboost-program-options-dev
-            - z3
 
     - os: linux
       dist: focal
@@ -42,7 +40,6 @@ jobs:
             - gcc-10
             - g++-10
             - libboost-program-options-dev
-            - z3
 
     - os: linux
       dist: focal
@@ -58,7 +55,6 @@ jobs:
             - ninja-build
             - clang-11
             - libboost-program-options-dev
-            - z3
 
     - os: osx
       osx_image: xcode12
@@ -96,6 +92,9 @@ jobs:
         - cd "/C/Users/travis/build/iic-jku/ddsim"
 
 install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    sudo apt-get -y install z3;
+    fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     export PATH="$(brew --prefix llvm)/bin:$PATH";
     fi

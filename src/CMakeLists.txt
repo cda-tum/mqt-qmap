@@ -131,7 +131,7 @@ if (TARGET ${PROJECT_NAME}_exact_lib)
 	        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 	set_target_properties(${PROJECT_NAME}_exact_lib PROPERTIES EXPORT_NAME ${PROJECT_NAME}_exact_lib)
 else ()
-	install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_heuristic_lib
+	install(TARGETS ${PROJECT_NAME}_heuristic_lib
 	        EXPORT ${PROJECT_NAME}-targets
 	        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
