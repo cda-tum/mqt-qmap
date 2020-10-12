@@ -82,32 +82,28 @@ jobs:
         - setx path "%path%;c:\local\boost_1_70_0"
         - setx lib "%lib%;c:\local\boost_1_70_0\stage\lib"
         - setx libpath "%libpath%;c:\local\boost_1_70_0\stage\lib"
-        - cd "/C/local"
-        - wget https://github.com/Z3Prover/z3/archive/z3-4.8.9.zip --no-check-certificate
-        - 7z x z3-4.8.9.zip -o/C/local
-        - cd "/C/local/z3-4.8.9"
-        - python scripts/mk_make.py -x
-        - cd build
-        - nmake
         - cd "/C/Users/travis/build/iic-jku/qmap"
 
 before_install:
-  - |
-    if [ "$TRAVIS_OS_NAME" != "windows" ]; then
-    git clone --depth 1 https://github.com/Z3Prover/z3.git;
-    cd z3;
-    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD} -B build -S .;
-    cmake --build build;
-    cd build && sudo ninja install;
-    cd ../../;
-    fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    export PATH="$(brew --prefix llvm)/bin:$PATH";
-    fi
   - echo ${CC}
   - echo ${CXX}
   - ${CXX} --version
   - cmake --version
+  - git clone --depth 1 https://github.com/Z3Prover/z3.git;
+  - cd z3;
+  - mkdir -p build && cd build
+  - |
+    if [ "$TRAVIS_OS_NAME" != "windows" ]; then
+      cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD};
+    else
+      cmake .. -G "Visual Studio 15 2017" -A x64 -LA -DCMAKE_BUILD_TYPE=${BUILD};
+    fi
+  - cmake --build . --target INSTALL;
+  - cd ../../;
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    export PATH="$(brew --prefix llvm)/bin:$PATH";
+    fi
+
 
 before_script:
   - mkdir -p build && cd build
