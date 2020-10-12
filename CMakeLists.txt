@@ -42,4 +42,15 @@ endmacro()
 handle_submodule(qfr)
 
 add_subdirectory(src)
-add_subdirectory(apps)
+
+option(BUILD_TESTS "Also build tests for QMAP project" OFF)
+if (BUILD_TESTS)
+	enable_testing()
+	include(GoogleTest)
+	add_subdirectory(test)
+endif ()
+
+# only build apps if this is the main project
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	add_subdirectory(apps)
+endif()

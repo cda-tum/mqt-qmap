@@ -99,7 +99,8 @@ protected:
 
 	virtual Node AstarMap(long layer);
 
-	void expandNode(const std::vector<unsigned short>& consideredQubits, unsigned short qubit, std::vector<Edge>& swaps, unsigned short nswaps, Node& node, long layer);
+	void expandNode(const std::vector<unsigned short>& consideredQubits, Node& node, long layer);
+	void expand_node_add_one_swap(const Edge& swap, Node& node, long layer);
 
 	void lookahead(long layer, Node& node);
 

@@ -12,6 +12,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 
 	this->settings = settings;
 	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+	qc.stripIdleQubits(true, true);
 	initResults();
 
 	// 1) create layers according to different criteria

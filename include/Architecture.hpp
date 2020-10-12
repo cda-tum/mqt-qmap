@@ -136,8 +136,8 @@ public:
 		}
 	};
 protected:
-	std::string architectureName = "";
-	std::string calibrationName = "";
+	std::string architectureName;
+	std::string calibrationName;
 	unsigned short nqubits = 0;
 	CouplingMap couplingMap = {};
 	bool isBidirectional = true;

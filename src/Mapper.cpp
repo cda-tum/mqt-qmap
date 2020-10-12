@@ -19,7 +19,6 @@ void Mapper::initResults() {
 
 Mapper::Mapper(const std::string& filename) {
 	qc.import(filename);
-	qc.stripIdleQubits(true);
 	qubits.fill(DEFAULT_POSITION);
 	locations.fill(DEFAULT_POSITION);
 	fidelities.fill(INITIAL_FIDELITY);

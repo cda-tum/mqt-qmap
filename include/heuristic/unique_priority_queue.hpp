@@ -38,7 +38,7 @@ class own_priority_queue : public std::priority_queue<T, Container, Compare> {
  * Priority queue with unique (according to FuncCompare) elements of type T where the sorting is based on CostCompare.
  * If NDEBUG is *not* defined, there are some assertions that help catching errors in the provided comparision functions.
  */
-template<class T, class CostCompare = std::less<T>, class FuncCompare = std::greater<T>, class CleanObsoleteElement = do_nothing<T>>
+template<class T, class CostCompare = std::greater<T>, class FuncCompare = std::less<T>, class CleanObsoleteElement = do_nothing<T>>
 class unique_priority_queue
 {
 public:
