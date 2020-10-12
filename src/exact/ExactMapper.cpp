@@ -1,23 +1,7 @@
 /*
-Minimal Mapping of Quantum Circuits to IBM QX Architectures by JKU Linz, Austria
-
-Developer: Robert Wille, Lukas Burgholzer, Alwin Zulehner
-
-For more information, please visit http://iic.jku.at/eda/research/ibm_qx_mapping
-
-If you have any questions feel free to contact us using
-robert.wille@jku.at, lukas.burgholzer@jku.at or alwin.zulehner@jku.at
-
-If you use the compiler for your research, we would be thankful if you referred to it
-by citing the following publication:
-
-@inproceedings{wille2019mapping,
-    title={Mapping Quantum Circuits to {IBM QX} Architectures Using the Minimal Number of {SWAP} and {H} Operations},
-    author={Wille, Robert and Burgholzer, Lukas and Zulehner, Alwin},
-    booktitle={Design Automation Conference},
-    year={2019}
-}
-*/
+ * This file is part of the JKQ QMAP library which is released under the MIT license.
+ * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
+ */
 
 #include "exact/ExactMapper.hpp"
 

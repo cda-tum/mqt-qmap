@@ -1,6 +1,7 @@
-//
-// Created by Lukas Burgholzer on 28.02.20.
-//
+/*
+ * This file is part of the JKQ QMAP library which is released under the MIT license.
+ * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
+ */
 
 #ifndef QMAP_ARCHITECTURE_HPP
 #define QMAP_ARCHITECTURE_HPP
