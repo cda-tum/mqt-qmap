@@ -84,7 +84,7 @@ jobs:
         - setx libpath "%libpath%;c:\local\boost_1_70_0\stage\lib"
         - cd "/C/local"
         - wget https://github.com/Z3Prover/z3/archive/z3-4.8.9.zip --no-check-certificate
-        - 7z e z3-4.8.9.zip -o/C/local
+        - 7z x z3-4.8.9.zip -o/C/local
         - cd "/C/local/z3-4.8.9"
         - python scripts/mk_make.py -x
         - cd build
