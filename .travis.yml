@@ -1,5 +1,6 @@
 language: cpp
 os: linux
+dist: focal
 
 jobs:
   include:
@@ -15,34 +16,32 @@ jobs:
             - lcov
             - libboost-program-options-dev
 
-#    - os: linux
-#      dist: focal
-#      compiler: "gcc"
-#      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
-#      addons:
-#        apt:
-#          packages:
-#            - cmake
-#            - ninja-build
-#            - libboost-program-options-dev
-#            - z3
+    - os: linux
+      dist: focal
+      compiler: "gcc"
+      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
+      addons:
+        apt:
+          packages:
+            - cmake
+            - ninja-build
+            - libboost-program-options-dev
 
-#    - os: linux
-#      dist: focal
-#      compiler: "gcc-10"
-#      env: BUILD='Release' CC=gcc-10 CXX=g++-10 COVERAGE=0
-#      addons:
-#        apt:
-#          sources:
-#            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-#          packages:
-#            - cmake
-#            - ninja-build
-#            - gcc-10
-#            - g++-10
-#            - libboost-program-options-dev
-#            - z3
-#
+    - os: linux
+      dist: focal
+      compiler: "gcc-10"
+      env: BUILD='Release' CC=gcc-10 CXX=g++-10 COVERAGE=0
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - cmake
+            - ninja-build
+            - gcc-10
+            - g++-10
+            - libboost-program-options-dev
+
 #    - os: linux
 #      dist: focal
 #      compiler: "clang-11"
@@ -57,7 +56,6 @@ jobs:
 #            - ninja-build
 #            - clang-11
 #            - libboost-program-options-dev
-#            - z3
 
     - os: osx
       osx_image: xcode12
@@ -71,35 +69,38 @@ jobs:
             - boost
           update: false
 
-#    - os: windows
-#      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
-#      install:
-#        - cmake --version
-#        - wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
-#        - 7z x boost_1_70_0.7z -o/C/local
-#        - cd "/C/local/boost_1_70_0"
-#        - ./bootstrap.bat
-#        - ./b2.exe -j8 toolset=msvc-14.1 address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
-#        - export Boost_DIR="/C/local/boost_1_70_0"
-#        - setx path "%path%;c:\local\boost_1_70_0"
-#        - setx lib "%lib%;c:\local\boost_1_70_0\stage\lib"
-#        - setx libpath "%libpath%;c:\local\boost_1_70_0\stage\lib"
-#        - cd "/C/local"
-#        - wget https://github.com/Z3Prover/z3/archive/z3-4.8.9.zip --no-check-certificate
-#        - 7z e z3-4.8.9.zip -o/C/local
-#        - cd "/C/local/z3-4.8.9"
-#        - python scripts/mk_make.py -x
-#        - cd build
-#        - nmake
-#        - cd "/C/Users/travis/build/iic-jku/ddsim"
+    - os: windows
+      env: BUILD='Release' CC=gcc CXX=g++ COVERAGE=0
+      install:
+        - cmake --version
+        - wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
+        - 7z x boost_1_70_0.7z -o/C/local
+        - cd "/C/local/boost_1_70_0"
+        - ./bootstrap.bat
+        - ./b2.exe -j8 toolset=msvc-14.1 address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
+        - export Boost_DIR="/C/local/boost_1_70_0"
+        - setx path "%path%;c:\local\boost_1_70_0"
+        - setx lib "%lib%;c:\local\boost_1_70_0\stage\lib"
+        - setx libpath "%libpath%;c:\local\boost_1_70_0\stage\lib"
+        - cd "/C/local"
+        - wget https://github.com/Z3Prover/z3/archive/z3-4.8.9.zip --no-check-certificate
+        - 7z e z3-4.8.9.zip -o/C/local
+        - cd "/C/local/z3-4.8.9"
+        - python scripts/mk_make.py -x
+        - cd build
+        - nmake
+        - cd "/C/Users/travis/build/iic-jku/qmap"
 
 before_install:
-  - git clone https://github.com/Z3Prover/z3.git
-  - cd z3
-  - cmake -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD} -B build -S .
-  - cmake --build build
-  - cd build && sudo ninja install
-  - cd ../../
+  - |
+    if [ "$TRAVIS_OS_NAME" != "windows" ]; then
+    git clone --depth 1 https://github.com/Z3Prover/z3.git;
+    cd z3;
+    cmake -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD} -B build -S .;
+    cmake --build build;
+    cd build && sudo ninja install;
+    cd ../../;
+    fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     export PATH="$(brew --prefix llvm)/bin:$PATH";
     fi

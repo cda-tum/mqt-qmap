@@ -27,6 +27,12 @@ macro(add_qmap_executable APPNAME)
 	else()
 		target_compile_options(${PROJECT_NAME}_${APPNAME} PUBLIC -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
 	endif()
+
+	# add coverage compiler and linker flag if COVERAGE is set
+	if (COVERAGE)
+		target_compile_options(${PROJECT_NAME}_${APPNAME} PRIVATE --coverage)
+		target_link_libraries(${PROJECT_NAME}_${APPNAME} PRIVATE --coverage)
+	endif()
 endmacro()
 
 include(GNUInstallDirs)
