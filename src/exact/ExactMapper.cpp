@@ -4,6 +4,9 @@
  */
 
 #include "exact/ExactMapper.hpp"
+#include <z3++.h>
+
+using namespace z3;
 
 void ExactMapper::map(const MappingSettings& settings) {
 

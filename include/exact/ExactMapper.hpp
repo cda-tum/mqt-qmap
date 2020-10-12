@@ -15,10 +15,7 @@
 #include <set>
 #include <unordered_set>
 
-#include <z3++.h>
 #include "Mapper.hpp"
-
-using namespace z3;
 
 /// Main structure representing the circuit and mapping functionality
 class ExactMapper : public Mapper{

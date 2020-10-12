@@ -95,10 +95,13 @@ before_install:
   - |
     if [ "$TRAVIS_OS_NAME" != "windows" ]; then
       cmake .. -G "Ninja" -DCMAKE_BUILD_TYPE=${BUILD};
+      cmake --build . --config ${BUILD}
+      sudo ninja install;
     else
+      source ./run_command_and_apply_environment_differences.sh "call vcvars64_vs2017.bat";
       cmake .. -G "Visual Studio 15 2017" -A x64 -LA -DCMAKE_BUILD_TYPE=${BUILD};
+      cmake --build . --config ${BUILD} --target INSTALL;
     fi
-  - cmake --build . --target INSTALL;
   - cd ../../;
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     export PATH="$(brew --prefix llvm)/bin:$PATH";
