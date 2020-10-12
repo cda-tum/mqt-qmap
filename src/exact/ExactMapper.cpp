@@ -344,7 +344,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 					auto indexFC = idx(k, edge.first, qc.initialLayout.at(gate.control), qubitChoice, qc.getNqubits());
 					auto indexST = idx(k, edge.second, qc.initialLayout.at(gate.target), qubitChoice, qc.getNqubits());
 
-					coupling = coupling or (x[indexFC] and x[indexST]);
+					coupling = coupling || (x[indexFC] && x[indexST]);
 				}
 			} else {
 				for (const auto& edge: rcm) {
@@ -353,12 +353,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 					auto indexFT = idx(k, edge.first, qc.initialLayout.at(gate.target), qubitChoice, qc.getNqubits());
 					auto indexSC = idx(k, edge.second, qc.initialLayout.at(gate.control), qubitChoice, qc.getNqubits());
 
-					coupling = coupling or ((x[indexFC] and x[indexST])
-					                        or
-					                        (x[indexFT] and x[indexSC]));
+					coupling = coupling || ((x[indexFC] && x[indexST])
+					                        ||
+					                        (x[indexFT] && x[indexSC]));
 				}
 			}
-			allCouplings = allCouplings and coupling.simplify();
+			allCouplings = allCouplings && coupling.simplify();
 		}
 		opt.add(allCouplings.simplify());
 	}
@@ -381,7 +381,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 					}
 					auto before = idx(k-1, Q, q, qubitChoice, qc.getNqubits());
 					auto after = idx(k, pi.at(counti), q, qubitChoice, qc.getNqubits());
-					equal = equal and (x[before] == x[after]);
+					equal = equal && (x[before] == x[after]);
 				}
 			}
 			auto index = (k-1)*n+piCount;
@@ -416,7 +416,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 				for (const auto& edge: rcm) {
 					auto indexFT = idx(k, edge.first, qc.initialLayout.at(gate.target), qubitChoice, qc.getNqubits());
 					auto indexSC = idx(k, edge.second, qc.initialLayout.at(gate.control), qubitChoice, qc.getNqubits());
-					reverse = reverse or (x[indexFT] and x[indexSC]);
+					reverse = reverse || (x[indexFT] && x[indexSC]);
 				}
 				opt.add(z[g] == reverse.simplify());
 				++g;
@@ -441,7 +441,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			} else {
 				picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
 			}
-			opt.add(not(y[index]), picost);
+			opt.add(!(y[index]), picost);
 			++piCount;
 		} while(std::next_permutation(pi.begin(), pi.end()));
 	}
@@ -454,7 +454,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 				if (gate.singleQubit())
 					continue;
 
-				opt.add(not(z[gateIdx]), GATES_OF_DIRECTION_REVERSE);
+				opt.add(!(z[gateIdx]), GATES_OF_DIRECTION_REVERSE);
 				++gateIdx;
 			}
 		}
