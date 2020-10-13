@@ -112,7 +112,7 @@ before_script:
   - mkdir -p build && cd build
   - |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-      cmake .. -G "Visual Studio 15 2017" -A x64 -LA -DCMAKE_BUILD_TYPE=${BUILD} -DCOVERAGE=${COVERAGE} -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBUILD_TESTS=ON
+      cmake .. -G "Visual Studio 15 2017" -A x64 -LA -DCMAKE_BUILD_TYPE=${BUILD} -DCOVERAGE=${COVERAGE} -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBUILD_TESTS=OFF
     else
       cmake .. -G Ninja -LA -DCMAKE_BUILD_TYPE=${BUILD} -DCOVERAGE=${COVERAGE} -DBUILD_TESTS=ON
     fi
@@ -130,9 +130,6 @@ script:
       cd apps/${BUILD};
       ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
       ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
-      cd ../../test/${BUILD};
-      ./qmap_exact_test.exe;
-      ./qmap_heuristic_test.exe;
       cd ../../;
     else
       cd apps;
