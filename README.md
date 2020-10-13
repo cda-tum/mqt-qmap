@@ -3,8 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![toolset: JKQ](https://img.shields.io/badge/toolset-JKQ-blue)](https://github.com/iic-jku/jkq)
 
-# JKQ QMAP - A tool for mapping quantum circuits to quantum architectures (developed in C++)
-A [JKQ](https://github.com/iic-jku/jkq) tool for mapping quantum circuits by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
+# JKQ QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
+A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
 
 [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
 A. Zulehner, A. Paler, and R. Wille. **"An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures"**.
@@ -20,7 +20,7 @@ The tool can be used for mapping quantum circuits in any of the following format
 * `TFC` (e.g. from [Reversible Logic Synthesis Benchmarks Page](http://webhome.cs.uvic.ca/~dmaslov/mach-read.html))
 * `QC` (e.g. from [Feynman](https://github.com/meamy/feynman))
 
-to, e.g., the IBM Q London architecture, which is specified by the coupling map
+to any given architecture, e.g., the IBM Q London architecture, which is specified by the coupling map
 ```
 5
 0 1
