@@ -32,62 +32,45 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
 	                         return ss.str();});
 
 TEST_P(HeuristicTest5Q, Identity) {
-	try {
-		auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-		auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
+	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
+	MappingSettings settings{};
+	settings.initialLayoutStrategy = InitialLayoutStrategy::Identity;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
 
-		MappingSettings settings{};
-		settings.initialLayoutStrategy = InitialLayoutStrategy::Identity;
-		IBM_QX4_mapper.map(settings);
-		IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
-		IBM_QX4_mapper.printResult(std::cout, true);
-
-		IBMQ_London_mapper.map(settings);
-		IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_identity.qasm");
-		IBMQ_London_mapper.printResult(std::cout, true);
-	} catch (std::exception& e) {
-		FAIL() << "Unexpected exception occured during mapping: " << e.what();
-	}
+	IBMQ_London_mapper.map(settings);
+	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_identity.qasm");
+	IBMQ_London_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 
 TEST_P(HeuristicTest5Q, Static) {
-	try {
-		auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-		auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
-
-		MappingSettings settings{};
-		settings.initialLayoutStrategy = InitialLayoutStrategy::Static;
-		IBM_QX4_mapper.map(settings);
-		IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
-		IBM_QX4_mapper.printResult(std::cout, true);
-
-		IBMQ_London_mapper.map(settings);
-		IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_static.qasm");
-		IBMQ_London_mapper.printResult(std::cout, true);
-	} catch (std::exception& e) {
-		FAIL() << "Unexpected exception occured during mapping: " << e.what();
-	}
+	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
+	MappingSettings settings{};
+	settings.initialLayoutStrategy = InitialLayoutStrategy::Static;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_London_mapper.map(settings);
+	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_static.qasm");
+	IBMQ_London_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 
 TEST_P(HeuristicTest5Q, Dynamic) {
-	try {
-		auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-		auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
-
-		MappingSettings settings{};
-		settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-		IBM_QX4_mapper.map(settings);
-		IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
-		IBM_QX4_mapper.printResult(std::cout, true);
-
-		IBMQ_London_mapper.map(settings);
-		IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
-		IBMQ_London_mapper.printResult(std::cout, true);
-	} catch (std::exception& e) {
-		FAIL() << "Unexpected exception occured during mapping: " << e.what();
-	}
+	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
+	MappingSettings settings{};
+	settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_London_mapper.map(settings);
+	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
+	IBMQ_London_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 
@@ -114,17 +97,11 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest16Q,
 	                         return ss.str();});
 
 TEST_P(HeuristicTest16Q, Dynamic) {
-	try {
-		auto IBM_QX5_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx5.arch");
-
-		MappingSettings settings{};
-		settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-		IBM_QX5_mapper.map(settings);
-		IBM_QX5_mapper.dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
-		IBM_QX5_mapper.printResult(std::cout, true);
-
-	} catch (std::exception& e) {
-		FAIL() << "Unexpected exception occured during mapping: " << e.what();
-	}
+	auto IBM_QX5_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx5.arch");
+	MappingSettings settings{};
+	settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+	IBM_QX5_mapper.map(settings);
+	IBM_QX5_mapper.dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
+	IBM_QX5_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }

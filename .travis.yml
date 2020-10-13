@@ -130,9 +130,10 @@ script:
       cd apps/${BUILD};
       ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
       ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
-      cd ../../test/${BUILD};
-      ./qmap_exact_test.exe;
-      ./qmap_heuristic_test.exe;
+      cd ../../test;
+      ./${BUILD}/qmap_exact_test.exe;
+      ./${BUILD}/qmap_heuristic_test.exe;
+      cd ..;
     else
       cd apps;
       ./qmap_exact --in ../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../extern/architectures/ibmq_london.arch --ps;
@@ -140,13 +141,14 @@ script:
       cd ../test;
       ./qmap_exact_test;
       ./qmap_heuristic_test;
+      cd ../;
     fi
 
 after_success:
   - |
     if [[ -n "${COV_EXE}" ]]; then
       # Create lcov report
-      lcov --gcov-tool ${COV_EXE} --capture --directory . --base-directory . --output-file coverage.info
+      lcov --gcov-tool ${COV_EXE} --capture --directory . --base-directory .. --output-file coverage.info
       lcov --remove coverage.info '/usr/*' '*/extern/*' --output-file coverage.info # filter system-files
       lcov --list coverage.info # debug info
       # Uploading report to CodeCov

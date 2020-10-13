@@ -56,8 +56,8 @@ if (Z3_FOUND)
 
 	# add coverage compiler and linker flag if COVERAGE is set
 	if (COVERAGE)
-		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE --coverage)
-		target_link_libraries(${PROJECT_NAME}_exact_lib PRIVATE --coverage)
+		target_compile_options(${PROJECT_NAME}_exact_lib INTERFACE --coverage)
+		target_link_libraries(${PROJECT_NAME}_exact_lib INTERFACE --coverage)
 	endif()
 
 	# check if interprocedural optimization is supported
@@ -72,7 +72,7 @@ if (Z3_FOUND)
 		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE "/W4" "/GR" "$<$<CONFIG:RELEASE>:/O2 /GL>")
 		target_link_options(${PROJECT_NAME}_exact_lib PRIVATE "$<$<CONFIG:Release>:/LTCG>")
 	else()
-		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
+		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -g0>)
 	endif()
 else()
 	message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
@@ -99,8 +99,8 @@ target_link_libraries(${PROJECT_NAME}_heuristic_lib PUBLIC JKQ::qfr)
 
 # add coverage compiler and linker flag if COVERAGE is set
 if (COVERAGE)
-	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE --coverage)
-	target_link_libraries(${PROJECT_NAME}_heuristic_lib PRIVATE --coverage)
+	target_compile_options(${PROJECT_NAME}_heuristic_lib INTERFACE --coverage)
+	target_link_libraries(${PROJECT_NAME}_heuristic_lib INTERFACE --coverage)
 endif()
 
 # check if interprocedural optimization is supported
@@ -115,7 +115,7 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE "/W4" "/GR" "$<$<CONFIG:RELEASE>:/O2 /GL>")
 	target_link_options(${PROJECT_NAME}_heuristic_lib PRIVATE "$<$<CONFIG:Release>:/LTCG>")
 else()
-	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
+	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE -Wall $<$<CONFIG:DEBUG>:-g -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -g0>)
 endif()
 
 # installation instructions
