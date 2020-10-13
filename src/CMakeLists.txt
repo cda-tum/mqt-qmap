@@ -56,8 +56,8 @@ if (Z3_FOUND)
 
 	# add coverage compiler and linker flag if COVERAGE is set
 	if (COVERAGE)
-		target_compile_options(${PROJECT_NAME}_exact_lib INTERFACE --coverage)
-		target_link_libraries(${PROJECT_NAME}_exact_lib INTERFACE --coverage)
+		target_compile_options(${PROJECT_NAME}_exact_lib PRIVATE --coverage)
+		target_link_libraries(${PROJECT_NAME}_exact_lib PRIVATE --coverage)
 	endif()
 
 	# check if interprocedural optimization is supported
@@ -99,8 +99,8 @@ target_link_libraries(${PROJECT_NAME}_heuristic_lib PUBLIC JKQ::qfr)
 
 # add coverage compiler and linker flag if COVERAGE is set
 if (COVERAGE)
-	target_compile_options(${PROJECT_NAME}_heuristic_lib INTERFACE --coverage)
-	target_link_libraries(${PROJECT_NAME}_heuristic_lib INTERFACE --coverage)
+	target_compile_options(${PROJECT_NAME}_heuristic_lib PRIVATE --coverage)
+	target_link_libraries(${PROJECT_NAME}_heuristic_lib PRIVATE --coverage)
 endif()
 
 # check if interprocedural optimization is supported

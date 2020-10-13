@@ -29,7 +29,7 @@ jobs:
 
     - os: linux
       dist: focal
-      compiler: "gcc-10"
+      compiler: "gcc"
       env: BUILD='Release' CC=gcc-10 CXX=g++-10 COVERAGE=0
       addons:
         apt:
@@ -130,10 +130,13 @@ script:
       cd apps/${BUILD};
       ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
       ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
-      cd ../../test;
-      ./${BUILD}/qmap_exact_test.exe;
-      ./${BUILD}/qmap_heuristic_test.exe;
-      cd ..;
+      Xcopy /S /I /E ../../../examples ../../examples;
+      Xcopy /S /I /E ../../../extern/architectures ../../extern/architectures;
+      Xcopy /S /I /E ../../../extern/calibration ../../extern/calibration;
+      cd ../../test/${BUILD};
+      ./qmap_exact_test.exe;
+      ./qmap_heuristic_test.exe;
+      cd ../../;
     else
       cd apps;
       ./qmap_exact --in ../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../extern/architectures/ibmq_london.arch --ps;
@@ -141,7 +144,7 @@ script:
       cd ../test;
       ./qmap_exact_test;
       ./qmap_heuristic_test;
-      cd ../;
+      cd ..;
     fi
 
 after_success:
