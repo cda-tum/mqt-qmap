@@ -37,7 +37,7 @@ macro(package_add_test TESTNAME LIBRARY)
 		target_compile_options(${TESTNAME} PUBLIC "/W4" "$<$<CONFIG:RELEASE>:/O2 /GL>")
 		target_link_options(${TESTNAME} PUBLIC "$<$<CONFIG:Release>:/LTCG>")
 	else()
-		target_compile_options(${TESTNAME} PUBLIC -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -DNDEBUG -g0>)
+		target_compile_options(${TESTNAME} PUBLIC -Wall $<$<CONFIG:DEBUG>:-g3 -Og -Wextra -Wpedantic -pedantic> $<$<CONFIG:RELEASE>:-O3 -mtune=native -march=native -g>)
 	endif()
 
 	# gtest_discover_tests replaces gtest_add_tests,
@@ -53,6 +53,33 @@ endmacro()
 package_add_test(${PROJECT_NAME}_heuristic_test heuristic
                  ${CMAKE_CURRENT_SOURCE_DIR}/test_heuristic.cpp)
 
-package_add_test(${PROJECT_NAME}_exact_test exact
-                 ${CMAKE_CURRENT_SOURCE_DIR}/test_exact.cpp)
+add_custom_command(TARGET ${PROJECT_NAME}_heuristic_test
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/${PROJECT_NAME}_heuristic_test ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_heuristic_test
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../examples $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/examples
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/examples ${CMAKE_BINARY_DIR}/examples
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/architectures $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/architectures
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/architectures ${CMAKE_BINARY_DIR}/architectures
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/calibration $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/calibration
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/calibration ${CMAKE_BINARY_DIR}/calibration
+                   COMMENT "Copying files and creating symlinks for ${PROJECT_NAME}_heuristic_test"
+                   VERBATIM)
+
+if (TARGET ${PROJECT_NAME}_exact_lib)
+	package_add_test(${PROJECT_NAME}_exact_test exact
+	                 ${CMAKE_CURRENT_SOURCE_DIR}/test_exact.cpp)
+
+	add_custom_command(TARGET ${PROJECT_NAME}_exact_test
+	                   POST_BUILD
+	                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/${PROJECT_NAME}_exact_test ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_exact_test
+	                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../examples $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/examples
+	                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/examples ${CMAKE_BINARY_DIR}/examples
+	                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/architectures $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/architectures
+	                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/architectures ${CMAKE_BINARY_DIR}/architectures
+	                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/calibration $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/calibration
+	                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_exact_test>/calibration ${CMAKE_BINARY_DIR}/calibration
+	                   COMMENT "Copying files and creating symlinks for ${PROJECT_NAME}_exact_test"
+	                   VERBATIM)
+endif ()
+
 

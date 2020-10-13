@@ -9,9 +9,9 @@
 
 class HeuristicTest5Q: public testing::TestWithParam<std::string> {
 protected:
-	std::string test_example_dir = "../../examples/";
-	std::string test_architecture_dir = "../../extern/architectures/";
-	std::string test_calibration_dir = "../../extern/calibration/";
+	std::string test_example_dir = "./examples/";
+	std::string test_architecture_dir = "./architectures/";
+	std::string test_calibration_dir = "./calibration/";
 };
 
 INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
