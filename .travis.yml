@@ -148,7 +148,7 @@ after_success:
   - |
     if [[ -n "${COV_EXE}" ]]; then
       # Create lcov report
-      lcov --gcov-tool ${COV_EXE} --capture --directory . --base-directory .. --output-file coverage.info
+      lcov --gcov-tool ${COV_EXE} --capture --directory . --base-directory . --output-file coverage.info
       lcov --remove coverage.info '/usr/*' '*/extern/*' --output-file coverage.info # filter system-files
       lcov --list coverage.info # debug info
       # Uploading report to CodeCov
