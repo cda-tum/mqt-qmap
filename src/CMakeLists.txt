@@ -52,7 +52,7 @@ if (Z3_FOUND)
 	                           $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
 	target_compile_features(${PROJECT_NAME}_exact_lib PUBLIC cxx_std_14)
 	set_target_properties(${PROJECT_NAME}_exact_lib PROPERTIES CXX_EXTENSIONS OFF)
-	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC JKQ::qfr PRIVATE z3::z3lib)
+	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC JKQ::qfr z3::z3lib)
 
 	# add coverage compiler and linker flag if COVERAGE is set
 	if (COVERAGE)

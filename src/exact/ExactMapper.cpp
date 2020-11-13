@@ -195,7 +195,8 @@ void ExactMapper::map(const MappingSettings& settings) {
 
 		if (swapsIterator != mappingSwaps.end() && layerIterator !=  reducedLayerIndices.end() && i == *layerIterator) {
 			// apply swaps before layer
-			for (const auto& swap: *swapsIterator) {
+			for (auto it=(*swapsIterator).rbegin(); it != (*swapsIterator).rend(); ++it) {
+				auto& swap = *it;
 				qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), std::vector<qc::Control>{ }, swap.first, swap.second, qc::SWAP);
 				std::swap(qcMapped.outputPermutation.at(swap.first), qcMapped.outputPermutation.at(swap.second));
 				std::swap(qubits.at(swap.first), qubits.at(swap.second));
@@ -208,7 +209,6 @@ void ExactMapper::map(const MappingSettings& settings) {
 					std::cout << std::endl;
 				}
 			}
-
 
 			++swapsIterator;
 			++layerIterator;

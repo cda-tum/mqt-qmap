@@ -4,7 +4,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
 endif()
 
 project(qmap
-        VERSION 1.0
+        VERSION 1.0.1
         DESCRIPTION "JKQ QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         LANGUAGES CXX)
 
