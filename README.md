@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/iic-jku/qmap.svg?token=md6M7jxUi7wqb4j9saQb&branch=main)](https://travis-ci.com/iic-jku/qmap)
+[![Build Status](https://travis-ci.com/iic-jku/qmap.svg?branch=master)](https://travis-ci.com/iic-jku/qmap)
 [![codecov](https://codecov.io/gh/iic-jku/qmap/branch/master/graph/badge.svg?token=TSFLDIO7HX)](https://codecov.io/gh/iic-jku/qmap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![toolset: JKQ](https://img.shields.io/badge/toolset-JKQ-blue)](https://github.com/iic-jku/jkq)
