@@ -136,12 +136,17 @@ jobs:
           path: ${{github.workspace}}/boost_1_70_0
           key:  ${{ runner.OS }}-boost
 
-      - name:  Building boost
-        shell: bash
+      - name: Download boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
              C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
              C:\msys64\usr\bin\7z.exe x boost_1_70_0.7z -o ${{github.workspace}}
-             cd "${{github.workspace}}/boost_1_70_0"
+
+      - name:  Building boost
+        if: steps.cache-boost.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: ${{github.workspace}}/boost_1_70_0
+        run: |
              ./bootstrap.bat --with-toolset=clang-win
              ./b2.exe -j8 toolset=clang-win address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
 
