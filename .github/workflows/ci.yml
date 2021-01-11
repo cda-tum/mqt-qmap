@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Installing dependencies
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            brew install z3;
+            brew install boost;
+          else
+            sudo apt-get install -y libboost-program-options-dev
+          fi
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBUILD_QMAP_TESTS=ON
+          else
+            cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target INSTALL --parallel 8
+          else
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8
+            sudo cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target install
+          fi
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build/test
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            cd $BUILD_TYPE
+            ./qmap_exact_test.exe
+            ./qmap_heuristic_test.exe
+          else
+            ./qmap_exact_test
+            ./qmap_heuristic_test
+          fi
+
+#  coverage:
+#    needs: test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#
+#      - name: Configure CMake
+#        shell: bash
+#        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=1
+#
+#      - name: Build
+#        shell: bash
+#        run: |
+#          cmake --build "${{github.workspace}}/build" --config Debug --target qmap_exact_test
+#          cmake --build "${{github.workspace}}/build" --config Debug --target qmap_heuristic_test
+#
+#      - name: Test
+#        working-directory: ${{github.workspace}}/build/test
+#        shell: bash
+#        run: |
+#          ./qmap_exact_test
+#          ./qmap_heuristic_test
+#
+#      - name: Upload coverage to Codecov
+#        uses: codecov/codecov-action@v1
+#        with:
+#          fail_ci_if_error: true

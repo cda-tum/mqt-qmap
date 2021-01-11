@@ -5,7 +5,7 @@ endif()
 
 project(qmap
         VERSION 1.0.1
-        DESCRIPTION "JKQ QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
+        DESCRIPTION "QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         LANGUAGES CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -43,8 +43,8 @@ handle_submodule(qfr)
 
 add_subdirectory(src)
 
-option(BUILD_TESTS "Also build tests for QMAP project" OFF)
-if (BUILD_TESTS)
+option(BUILD_QMAP_TESTS "Also build tests for QMAP project" OFF)
+if (BUILD_QMAP_TESTS)
 	enable_testing()
 	include(GoogleTest)
 	add_subdirectory(test)

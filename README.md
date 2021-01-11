@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![toolset: JKQ](https://img.shields.io/badge/toolset-JKQ-blue)](https://github.com/iic-jku/jkq)
 
-# JKQ QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
+# QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
 A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
 
 [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
@@ -75,7 +75,8 @@ The exact mapping tool `qmap_exact` also offers the `--layering` option, which a
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4)
 
 ### System Requirements
-Building (and running) is continuously tested under Linux (Ubuntu 20.04) using gcc-9.3 and gcc-10, MacOS (Catalina 10.15) using AppleClang, and Windows using MSVC 15.9. However, the implementation should be compatible with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
+Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
+However, the implementation should be compatible with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
 
 `boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
 
