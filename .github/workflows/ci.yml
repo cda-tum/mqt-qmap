@@ -172,7 +172,7 @@ jobs:
         shell: bash
         run:   |
                git clone --depth 1 https://github.com/Z3Prover/z3.git
-               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DCMAKE_CXX_FLAGS="/EHa"
+               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64
                cmake --build z3/build --config $BUILD_TYPE --parallel 8
 
       - name:              Installing Z3
