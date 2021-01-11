@@ -141,9 +141,10 @@ jobs:
         run: |
              C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
 
+      - uses: ilammy/msvc-dev-cmd@v1
+
       - name:  Building boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        uses: ilammy/msvc-dev-cmd@v1
         shell: bash
         run: |
              "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
