@@ -145,7 +145,7 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         shell: bash
         run: |
-             "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z -o ${{github.workspace}}
+             "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
              cd boost_1_70_0
              ./bootstrap.bat --with-toolset=clang-win
              ./b2.exe -j8 toolset=clang-win address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
