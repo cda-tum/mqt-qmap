@@ -11,24 +11,35 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  ci:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Installing dependencies
+      - name: Installing boost
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
-            brew install z3;
             brew install boost;
           else
             sudo apt-get install -y libboost-program-options-dev
           fi
+
+      - name: Installing Z3
+        shell: bash
+        run: |
+             git clone --depth 1 https://github.com/Z3Prover/z3.git
+             cd z3
+             mkdir -p build && cd build
+             if [ "$RUNNER_OS" != "Windows" ]; then
+               cmake .. -DCMAKE_BUILD_TYPE=${BUILD};
+               cmake --build . --config ${BUILD} --parallel 8
+               sudo make install;
+             fi
 
       - name: Configure CMake
         shell: bash
@@ -45,8 +56,10 @@ jobs:
           if [ "$RUNNER_OS" == "Windows" ]; then
             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target INSTALL --parallel 8
           else
-            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8
-            sudo cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target install
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic;
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact;
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test;
+            cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test;
           fi
 
       - name: Test

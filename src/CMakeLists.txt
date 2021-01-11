@@ -25,7 +25,7 @@ else()
 	add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 endif ()
 
-find_package(Z3)
+find_package(Z3 CONFIG)
 if (Z3_FOUND)
 	if(NOT TARGET z3::z3lib)
 		add_library(z3::z3lib IMPORTED INTERFACE)
