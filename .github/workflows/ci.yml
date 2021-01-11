@@ -147,17 +147,17 @@ jobs:
         run: |
              "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
              cd boost_1_70_0
-             echo "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\x64\bin\" >> $GITHUB_PATH
+             echo "/c/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/Llvm/x64/bin/" >> $GITHUB_PATH
              ./bootstrap.bat --with-toolset=clang-win
              ./b2.exe -j8 toolset=clang-win address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
 
       - name: Installing Boost
         shell: bash
         run: |
-             export Boost_DIR="${{github.workspace}}\boost_1_70_0"
-             setx path "%path%;${{github.workspace}}\boost_1_70_0"
-             setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
-             setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
+             export Boost_DIR="${{github.workspace}}/boost_1_70_0"
+             setx path "%path%;${{github.workspace}}/boost_1_70_0"
+             setx lib "%lib%;${{github.workspace}}/boost_1_70_0/stage/lib"
+             setx libpath "%libpath%;${{github.workspace}}/boost_1_70_0/stage/lib"
 
       - name: Cache Z3
         id:   cache-z3
