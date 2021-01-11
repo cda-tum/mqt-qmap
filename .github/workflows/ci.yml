@@ -182,16 +182,12 @@ jobs:
 
       - name:  Build
         shell: bash
-        run:   |
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+        run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target INSTALL
 
       - name:              Test
-        working-directory: ${{github.workspace}}/build/test
+        working-directory: ${{github.workspace}}/build/apps
         shell:             bash
         run:               |
                            cd $BUILD_TYPE
-                           ./qmap_exact_test
-                           ./qmap_heuristic_test
+                           ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
+                           ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
