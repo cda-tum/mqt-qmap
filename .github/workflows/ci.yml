@@ -178,7 +178,7 @@ jobs:
       - name:              Installing Z3
         shell:             bash
         working-directory: ${{github.workspace}}/z3/build
-        run:               sudo make install
+        run:               cmake --build . --config $BUILD_TYPE --target INSTALL;
 
       - name:  Configure CMake
         shell: bash
