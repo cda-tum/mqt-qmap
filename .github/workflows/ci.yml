@@ -11,23 +11,15 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  ci:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+  ubuntu-ci:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Installing boost
         shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            brew install boost;
-          else
-            sudo apt-get install -y libboost-program-options-dev
-          fi
+        run: sudo apt-get install -y libboost-program-options-dev
 
       - name: Cache Z3
         id: cache-z3
@@ -40,9 +32,9 @@ jobs:
         if: steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
         run: |
-             git clone --depth 1 https://github.com/Z3Prover/z3.git
-             cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
-             cmake --build z3/build --config $BUILD_TYPE --parallel 8
+          git clone --depth 1 https://github.com/Z3Prover/z3.git
+          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
+          cmake --build z3/build --config $BUILD_TYPE --parallel 8
 
       - name: Installing Z3
         shell: bash
@@ -56,34 +48,81 @@ jobs:
       - name: Build
         shell: bash
         run: |
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
         shell: bash
         run: |
-             ./qmap_exact_test
-             ./qmap_heuristic_test
+          ./qmap_exact_test
+          ./qmap_heuristic_test
 
       - name: Coverage
-        if: runner.OS == 'Linux'
         shell: bash
         run: |
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DCOVERAGE=1
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
-             cd buildCov/test
-             ./qmap_exact_test
-             ./qmap_heuristic_test
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DCOVERAGE=1
+          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
+          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
+          cd buildCov/test
+          ./qmap_exact_test
+          ./qmap_heuristic_test
 
       - name: Upload coverage to Codecov
-        if: runner.OS == 'Linux'
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
+
+  macOS-ci:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Installing boost
+        shell: bash
+        run: brew install boost;
+
+      - name: Cache Z3
+        id: cache-z3
+        uses: actions/cache@v2
+        with:
+          path: z3
+          key: ${{ runner.OS }}-z3-static
+
+      - name: Building Z3
+        if: steps.cache-z3.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/Z3Prover/z3.git
+          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
+          cmake --build z3/build --config $BUILD_TYPE --parallel 8
+
+      - name: Installing Z3
+        shell: bash
+        working-directory: ${{github.workspace}}/z3/build
+        run: sudo make install
+
+      - name: Configure CMake
+        shell: bash
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build/test
+        shell: bash
+        run: |
+          ./qmap_exact_test
+          ./qmap_heuristic_test
 
   windows-ci:
     runs-on: windows-latest
@@ -100,8 +139,8 @@ jobs:
       - name:  Building boost
         shell: bash
         run: |
-             wget https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
-             7z x boost_1_70_0.7z -o ${{github.workspace}}
+             C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
+             C:\msys64\usr\bin\7z.exe x boost_1_70_0.7z -o ${{github.workspace}}
              cd "${{github.workspace}}/boost_1_70_0"
              ./bootstrap.bat --with-toolset=clang-win
              ./b2.exe -j8 toolset=clang-win address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
