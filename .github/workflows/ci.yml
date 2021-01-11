@@ -155,7 +155,6 @@ jobs:
       - name: Installing Boost
         shell: bash
         run: |
-             export Boost_DIR="${{github.workspace}}\boost_1_70_0"
              setx path "%path%;${{github.workspace}}\boost_1_70_0"
              setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
              setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
@@ -180,22 +179,23 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run:               cmake --build . --config $BUILD_TYPE --target INSTALL;
 
-      - name:  Configure CMake
-        shell: bash
-        run:   cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -G "Visual Studio 16 2019" -A x64 -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF
-
-      - name:  Build
-        shell: bash
-        run:   |
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
-               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
-
-      - name:              Test
-        working-directory: ${{github.workspace}}/build/test
-        shell:             bash
-        run:               |
-                           cd $BUILD_TYPE
-                           ./qmap_exact_test
-                           ./qmap_heuristic_test
+#      - name:  Configure CMake
+#        shell: bash
+#        run:   cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -G "Visual Studio 16 2019" -A x64 -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_DIR="${{github.workspace}}\boost_1_70_0"
+#
+#
+#      - name:  Build
+#        shell: bash
+#        run:   |
+#               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
+#               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
+#               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
+#               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+#
+#      - name:              Test
+#        working-directory: ${{github.workspace}}/build/test
+#        shell:             bash
+#        run:               |
+#                           cd $BUILD_TYPE
+#                           ./qmap_exact_test
+#                           ./qmap_heuristic_test
