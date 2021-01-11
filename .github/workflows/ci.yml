@@ -140,7 +140,7 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
              C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
-             "C:\Program Files\7-Zip\7z.exe" x boost_1_70_0.7z -o ${{github.workspace}}
+             C:\Program Files\7-Zip\7z.exe x boost_1_70_0.7z -o ${{github.workspace}}
 
       - name:  Building boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
