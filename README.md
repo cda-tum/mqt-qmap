@@ -36,6 +36,8 @@ with the following available methods:
 - **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf).
 - **Exact Mapper**: Exact solution utilizing the SMT Solver Z3. For details see [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
 
+Note that, at the moment, circuits to be mapped are assumed to be already decomposed into elementary gates supported by the targeted device. More specifically, circuits must not contain gates acting on more than two qubits.
+
 For more information, please visit [iic.jku.at/eda/research/ibm_qx_mapping/](https://iic.jku.at/eda/research/ibm_qx_mapping/).
 
 If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/iic-jku/qmap/issues).
@@ -75,7 +77,7 @@ The exact mapping tool `qmap_exact` also offers the `--layering` option, which a
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4)
 
 ### System Requirements
-Building (and running) is continuously tested under Linux and MacOS using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
+Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
 However, the implementation should be compatible with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
 
 `boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
@@ -91,7 +93,7 @@ $ cmake --build build --config Release
 ```
 Windows users need to configure CMake by calling
 ```
-$ cmake -G "Visual Studio 15 2017" -A x64 -DCMAKE_BUILD_TYPE=Release -S . -B build
+$ cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release -S . -B build
 ```
 instead.
 
