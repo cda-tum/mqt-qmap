@@ -178,7 +178,7 @@ jobs:
                setx path "%path%;${{github.workspace}}\boost_1_70_0"
                setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
                setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
-               cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\lib"
+               cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\lib"
 
       - name:  Build
         shell: bash
