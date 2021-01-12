@@ -70,11 +70,11 @@ The heuristic mapping tool `qmap_heuristic` also offers the `--initiallayout` op
 - `static`: determine fixed initial layout statically at the start of mapping,
 - `dynamic` (*default*): determine initial layout on demand during the mapping.
 
-The exact mapping tool `qmap_exact` also offers the `--layering` option, which allows to choose one of the following strategies for partitioning the circuit:
+Both, the exact and the heuristic mapping tool also offer the `--layering` option, which allows to choose one of the following strategies for partitioning the circuit:
 - `individual` (*default*): consider each gate separately,
 - `disjoint`: consider gates acting on disjoint qubits as a layer,
-- `odd`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 and may not work on different architectures)
-- `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4)
+- `odd`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool and may not work on different architectures)
+- `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact mapping tool)
 
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).

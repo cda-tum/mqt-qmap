@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
             ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
             ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
+            ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint"))")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
@@ -48,7 +49,19 @@ int main(int argc, char** argv) {
 	}
 
 	MappingSettings ms{};
-	ms.layeringStrategy = LayeringStrategy::None;
+	ms.layeringStrategy = LayeringStrategy::IndividualGates;
+	if (vm.count("layering")) {
+		std::string layering = vm["layering"].as<std::string>();
+		if (layering == "individual") {
+			ms.layeringStrategy = LayeringStrategy::IndividualGates;
+		} else if (layering == "disjoint") {
+			ms.layeringStrategy = LayeringStrategy::DisjointQubits;
+		} else {
+			ms.layeringStrategy = LayeringStrategy::None;
+		}
+	}
+
+	ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
 	if (vm.count("initiallayout")) {
 		std::string initialLayout = vm["initiallayout"].as<std::string>();
 		if (initialLayout == "identity") {
