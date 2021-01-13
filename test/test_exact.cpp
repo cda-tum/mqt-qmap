@@ -35,14 +35,14 @@ INSTANTIATE_TEST_SUITE_P(Exact, ExactTest,
 	                         return ss.str();});
 
 TEST_P(ExactTest, IndividualGates) {
-	auto IBM_QX4_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	auto IBMQ_London_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
 
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::IndividualGates;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_qx4_individual.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_individual.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 
 	IBMQ_London_mapper.map(settings);
 	IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_individual.qasm");
@@ -51,14 +51,14 @@ TEST_P(ExactTest, IndividualGates) {
 }
 
 TEST_P(ExactTest, DisjointQubits) {
-	auto IBM_QX4_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	auto IBMQ_London_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
 
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::DisjointQubits;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_qx4_disjoint.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_disjoint.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 
 	IBMQ_London_mapper.map(settings);
 	IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_disjoint.qasm");
@@ -67,22 +67,22 @@ TEST_P(ExactTest, DisjointQubits) {
 }
 
 TEST_P(ExactTest, OddGates) {
-	auto IBM_QX4_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::OddGates;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_qx4_odd.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_odd.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 
 TEST_P(ExactTest, QubitTriangle) {
-	auto IBM_QX4_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
+	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::QubitTriangle;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_qx4_triangle.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_triangle.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 

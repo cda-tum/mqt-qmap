@@ -14,8 +14,12 @@
 #include <chrono>
 #include <set>
 #include <unordered_set>
+#include <z3++.h>
 
 #include "Mapper.hpp"
+
+using namespace z3;
+using matrix = std::vector<expr_vector>;
 
 /// Main structure representing the circuit and mapping functionality
 class ExactMapper : public Mapper{
