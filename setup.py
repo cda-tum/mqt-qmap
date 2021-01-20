@@ -2,7 +2,6 @@ import os
 import sys
 import platform
 import subprocess
-import z3
 
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
@@ -35,8 +34,7 @@ class CMakeBuild(build_ext):
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
                       '-DBUILD_QFR_BINDINGS=ON',
-                      '-DBUILD_QMAP_BINDINGS=ON',
-                      '-DZ3_ROOT=' + z3.__path__[0]]
+                      '-DBUILD_QMAP_BINDINGS=ON']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -98,6 +96,5 @@ setup(
         'Research': 'https://iic.jku.at/eda/research/ibm_qx_mapping/',
     },
     python_requires='>=3.6',
-    setup_requires=['cmake>=3.10', 'z3-solver>=4.8.3'],
-    install_requires=['z3-solver>=4.8.3']
+    setup_requires=['cmake>=3.10'],
 )

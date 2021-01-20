@@ -45,6 +45,17 @@ handle_submodule(qfr)
 list (APPEND CMAKE_MODULE_PATH
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(Z3)
+if(Z3_FOUND AND NOT TARGET z3::z3lib)
+	add_library(z3::z3lib IMPORTED INTERFACE)
+	set_property(TARGET z3::z3lib PROPERTY
+	             INTERFACE_INCLUDE_DIRECTORIES ${Z3_CXX_INCLUDE_DIRS})
+	set_property(TARGET z3::z3lib PROPERTY
+	             INTERFACE_LINK_LIBRARIES ${Z3_LIBRARIES})
+endif()
+
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package( Boost 1.50 COMPONENTS program_options)
 
 add_subdirectory(src)
 
@@ -56,7 +67,8 @@ if (BUILD_QMAP_TESTS)
 endif ()
 
 # only build apps if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND Boost_FOUND)
+	message(STATUS "Boost version: ${Boost_VERSION}")
 	add_subdirectory(apps)
 endif()
 

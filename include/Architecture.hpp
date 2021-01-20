@@ -34,21 +34,7 @@ enum class AvailableArchitectures {
 	IBMQ_London,
 	IBMQ_Bogota
 };
-static std::string toString(const AvailableArchitectures architecture) {
-	switch (architecture) {
-		case AvailableArchitectures::IBM_QX4:
-			return "IBM_QX4";
-		case AvailableArchitectures::IBM_QX5:
-			return "IBM_QX5";
-		case AvailableArchitectures::IBMQ_Yorktown:
-			return "IBMQ_Yorktown";
-		case AvailableArchitectures::IBMQ_London:
-			return "IBMQ_London";
-		case AvailableArchitectures::IBMQ_Bogota:
-			return "IBMQ_Bogota";
-	}
-	return " ";
-}
+std::string toString(const AvailableArchitectures architecture);
 // map AvailableArchitectures values to JSON as strings
 NLOHMANN_JSON_SERIALIZE_ENUM( AvailableArchitectures, {
 	{AvailableArchitectures::IBM_QX4, "IBM_QX4"},

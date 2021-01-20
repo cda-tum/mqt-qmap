@@ -34,36 +34,50 @@ function(check_z3_version z3_include z3_lib)
 	endif()
 endfunction(check_z3_version)
 
+# if Z3_ROOT is provided, check there first
 set(Z3_ROOT "" CACHE PATH "Root of Z3 distribution.")
-find_path(Z3_CXX_INCLUDE_DIRS NAMES z3.h z3++.h
-          NO_DEFAULT_PATH
-          PATHS ${Z3_ROOT}/include
-          PATH_SUFFIXES libz3 z3)
+if (DEFINED ENV{Z3_ROOT})
+	set(Z3_ROOT $ENV{Z3_ROOT})
+	message("Z3_ROOT: ${Z3_ROOT}")
+endif ()
+if (NOT ${Z3_ROOT} STREQUAL "")
+	find_path(Z3_CXX_INCLUDE_DIRS NAMES z3.h z3++.h
+	          NO_DEFAULT_PATH
+	          PATHS ${Z3_ROOT}/include
+	          PATH_SUFFIXES libz3 z3)
 
-find_library(Z3_LIBRARIES NAMES z3 libz3
-             NO_DEFAULT_PATH
-             PATHS ${Z3_ROOT}
-             PATH_SUFFIXES lib bin)
+	find_library(Z3_LIBRARIES NAMES z3 libz3
+	             NO_DEFAULT_PATH
+	             PATHS ${Z3_ROOT}
+	             PATH_SUFFIXES lib bin)
+endif ()
 
-# try default paths
-find_path(Z3_CXX_INCLUDE_DIRS NAMES z3.h z3++.h
-          PATH_SUFFIXES libz3 z3)
-find_library(Z3_LIBRARIES NAMES z3 libz3
-             PATH_SUFFIXES lib bin)
-
-unset(Z3_VERSION_STRING)
-
-# Try to check version by compiling a small program that prints Z3's version
-if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
-	check_z3_version(${Z3_CXX_INCLUDE_DIRS} ${Z3_LIBRARIES})
+# see if a config file is available
+if (NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
+	find_package(Z3 CONFIG)
 endif()
 
-if(NOT Z3_VERSION_STRING)
-   set(Z3_VERSION_STRING "0.0.0")
-endif()
+# try default paths as a last hope
+if (NOT Z3_FOUND)
+	find_path(Z3_CXX_INCLUDE_DIRS NAMES z3.h z3++.h
+	          PATH_SUFFIXES libz3 z3)
+	find_library(Z3_LIBRARIES NAMES z3 libz3
+	             PATH_SUFFIXES lib bin)
 
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Z3
-                                  REQUIRED_VARS Z3_LIBRARIES Z3_CXX_INCLUDE_DIRS
-                                  VERSION_VAR Z3_VERSION_STRING)
-mark_as_advanced(Z3_CXX_INCLUDE_DIRS Z3_LIBRARIES)
+	unset(Z3_VERSION_STRING)
+
+	# Try to check version by compiling a small program that prints Z3's version
+	if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+		check_z3_version(${Z3_CXX_INCLUDE_DIRS} ${Z3_LIBRARIES})
+	endif()
+
+	if(NOT Z3_VERSION_STRING)
+		set(Z3_VERSION_STRING "0.0.0")
+	endif()
+
+	include (FindPackageHandleStandardArgs)
+	find_package_handle_standard_args(Z3
+	                                  REQUIRED_VARS Z3_LIBRARIES Z3_CXX_INCLUDE_DIRS
+	                                  VERSION_VAR Z3_VERSION_STRING)
+	mark_as_advanced(Z3_CXX_INCLUDE_DIRS Z3_LIBRARIES)
+endif ()

@@ -26,15 +26,6 @@ else()
 endif ()
 
 if (Z3_FOUND)
-	if(NOT TARGET z3::z3lib)
-		add_library(z3::z3lib IMPORTED INTERFACE)
-		set_property(TARGET z3::z3lib PROPERTY
-		             INTERFACE_INCLUDE_DIRECTORIES ${Z3_CXX_INCLUDE_DIRS})
-		set_property(TARGET z3::z3lib PROPERTY
-		             INTERFACE_LINK_LIBRARIES ${Z3_LIBRARIES})
-	endif()
-	message(STATUS "Z3 version: ${Z3_VERSION_STRING}")
-
 	add_library(${PROJECT_NAME}_exact_lib
 	            ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp

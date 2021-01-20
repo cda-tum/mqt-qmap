@@ -303,10 +303,18 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
 	}
 }
 
-
-
-
-
-
-
-
+std::string toString(const AvailableArchitectures architecture) {
+	switch (architecture) {
+		case AvailableArchitectures::IBM_QX4:
+			return "IBM_QX4";
+		case AvailableArchitectures::IBM_QX5:
+			return "IBM_QX5";
+		case AvailableArchitectures::IBMQ_Yorktown:
+			return "IBMQ_Yorktown";
+		case AvailableArchitectures::IBMQ_London:
+			return "IBMQ_London";
+		case AvailableArchitectures::IBMQ_Bogota:
+			return "IBMQ_Bogota";
+	}
+	return " ";
+}

@@ -1,8 +1,3 @@
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package( Boost 1.50 COMPONENTS program_options REQUIRED )
-message(STATUS "Boost version: ${Boost_VERSION}")
-
 if(NOT TARGET Boost::program_options)
 	add_library(Boost::program_options IMPORTED INTERFACE)
 	set_property(TARGET Boost::program_options PROPERTY

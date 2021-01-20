@@ -1,6 +1,10 @@
 include README.md LICENSE CMakeLists.txt
 include src/*
+include src/exact/*
+include src/heuristic/*
 include include/*
+include include/exact/*
+include include/heuristic/*
 include cmake/*
 include apps/*
 graft jkq/*
