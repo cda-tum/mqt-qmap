@@ -15,8 +15,9 @@ R. Wille, L. Burgholzer, and A. Zulehner. **"Mapping Quantum Circuits to IBM QX 
 Using the Minimal Number of SWAP and H Operations"**. In Design Automation Conference (DAC), 2019.
 
 The tool can be used for mapping quantum circuits in any of the following formats:
-* `Real` (e.g. from [RevLib](http://revlib.org)),
+* `QuantumCircuit` object from IBM's [Qiskit](https://github.com/Qiskit/qiskit) (only through the JKQ QMAP Python bindings)
 * `OpenQASM` (e.g. used by IBM's [Qiskit](https://github.com/Qiskit/qiskit)),
+* `Real` (e.g. from [RevLib](http://revlib.org)),
 * `TFC` (e.g. from [Reversible Logic Synthesis Benchmarks Page](http://webhome.cs.uvic.ca/~dmaslov/mach-read.html))
 * `QC` (e.g. from [Feynman](https://github.com/meamy/feynman))
 
@@ -43,6 +44,49 @@ For more information, please visit [iic.jku.at/eda/research/ibm_qx_mapping/](htt
 If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/iic-jku/qmap/issues).
 
 ## Usage
+
+JKQ QMAP is mainly developed as a C++ library with a [commandline interface](#command-line-executable). However, using it in Python is as easy as
+```bash
+pip install jkq.qmap
+```
+and then in Python
+```python
+from jkq import qmap
+qmap.compile(...)
+```
+where the `compile` function is defined as follows:
+```python
+"""
+Interface to the JKQ QMAP tool for mapping quantum circuits
+
+Params:
+    circ – Path to first circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
+    arch – Path to architecture file or one of the available architectures (Arch)
+    calibration – Path to file containing calibration information
+    method – Mapping technique to use (*heuristic* | exact)
+    initial_layout – Strategy to use for determining initial layout (only relevant for heuristic mapper)
+    layering – Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
+    save_mapped_circuit – Include .qasm string of the mapped circuit in result
+    csv – Create CSV string for result
+    statistics – Print statistics
+    verbose – Print more detailed information during the mapping process
+Returns:
+    JSON object containing results
+"""
+def compile(circ, arch: Union[str, Arch],
+            calibration = "",
+            method: Method = Method.heuristic,
+            initial_layout: InitialLayoutStrategy = InitialLayoutStrategy.dynamic,
+            layering: LayeringStrategy = LayeringStrategy.individual_gates,
+            save_mapped_circuit: bool = False,
+            csv: bool = False,
+            statistics: bool = False,
+            verbose: bool = False
+            ) -> object
+```
+### Command-line Executable
+JKQ QMAP also provides two **standalone executables** with command-line interface called `qmap_heuristic` and `qmap_exact`.
+They provide the same options as the Python module as flags (e.g., `--ps` for printing statistics). Per default, this produces JSON formatted output.
 
 ```commandline
 $ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch ibmq_london.arch --ps
@@ -84,20 +128,91 @@ However, the implementation should be compatible with any current C++ compiler s
 
 In order to build the exact mapping tool, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and on the path.
 
-### Build and Run
+### Library Organisation
+Internally the JKQ QMAP library works in the following way
+- Import input file into a `qc::QuantumComputation` object
+    ```c++
+    qc::QuantumComputation qc{};
+    std::string circ = "<PATH_TO_CIRCUIT_FILE>";
+    qc.import(circ);
+    ```
+- Import architecture file into a `Architecture` object
+    ```c++
+    Architecture arch{};
+    std::string cm = "<PATH_TO_ARCH_FILE>";
+    arch.loadCouplingMap(cm);
+    ```
+- (Optional) Import calibration file into `arch` object
+    ```c++
+    std::string cal = "<PATH_TO_CAL_FILE>";
+    arch.loadCalibrationData(cal);
+    ```
+- Depending on `Method`, instantiate a `HeuristicMapper` or `ExactMapper` object with the circuit and the architecture
+    ```c++
+    HeuristicMapper mapper(qc, arch);
+    ```
+  or
+    ```c++ 
+    ExactMapper mapper(qc, arch);
+    ```
+- Set configuration options, e.g.,
+    ```c++
+    MappingSettings ms{};
+    ms.layeringStrategy = LayeringStrategy::DisjointQubits;
+    ```
+- Perform the actual mapping
+    ```c++
+    mapper.map(ms);
+    ```
+- Dump the mapped circuit
+  ```c++
+  mapper.dumpResult("<PATH_TO_OUTPUT_FILE>");
+  ```
+- Print the results (include statistics by setting `printStatistics=true`)
+    ```c++
+    mapper.printResult(std::cout, printStatistics);
+    ```
 
-For building the commandline applications the following commands should be used
-```
-$ cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
-$ cmake --build build --config Release
-```
-Windows users need to configure CMake by calling
-```
-$ cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release -S . -B build
-```
-instead.
+### Configure, Build, and Install
 
-Afterwards `./build/qmap_heuristic` and `./build/qmap_exact` (requires [Z3 >= 4.8.3](https://github.com/Z3Prover/z3)) are available.
+In order to build the library execute the following in the project's main directory
+1) Configure CMake
+    ```commandline
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+    ```
+   Windows users using Visual Studio and the MSVC compiler may try
+   ```commandline
+   cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release
+   ```
+   Older CMake versions not supporting the above syntax (< 3.13) may be used with
+   ```commandline
+   mkdir build && cd build
+   cmake .. -DCMAKE_BUILD_TYPE=Release
+   ```
+2) Build the respective target.
+    ```commandline
+   cmake --build ./build --config Release --target <target>
+   ```
+   The following CMake targets are available
+    - `qmap_heuristic`: The heuristic mapper commandline executable (only available if Boost is found)
+    - `qmap_exact`: The exact mapper commandline executable (only available if Boost and Z3 is found)
+    - `qmap_heuristic_lib`: The standalone heuristic mapper library
+    - `qmap_exact_lib`: The standalone exact mapper library (only available if Z3 is found)
+    - `qmap_heuristic_test`: Unit tests for heuristic maper using GoogleTest
+    - `qmap_exact_test`: Unit tests for exact maper using GoogleTest (only available if Z3 is found)
+
+3) Optional: The QMAP library and tool may be installed on the system by executing
+
+    ```commandline
+    cmake --build ./build --config Release --target install
+    ```
+
+   It can then also be included in other projects using the following CMake snippet
+
+    ```cmake
+    find_package(qmap)
+    target_link_libraries(${TARGET_NAME} PRIVATE JKQ::qmap)
+    ```
 
 ## Reference
 

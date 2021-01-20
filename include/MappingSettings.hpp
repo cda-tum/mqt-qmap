@@ -6,6 +6,8 @@
 #ifndef QMAP_MAPPINGSETTINGS_HPP
 #define QMAP_MAPPINGSETTINGS_HPP
 
+#include "nlohmann/json.hpp"
+
 /// Identity: q_i -> Q_i
 /// Static: first layer is mapped q_c -> Q_c and q_t -> Q_t
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
@@ -25,6 +27,13 @@ static std::string toString(const InitialLayoutStrategy strategy) {
 	}
 	return " ";
 }
+// map InitialLayoutStrategy values to JSON as strings
+NLOHMANN_JSON_SERIALIZE_ENUM( InitialLayoutStrategy, {
+	{InitialLayoutStrategy::None, "none"},
+	{InitialLayoutStrategy::Identity, "identity"},
+	{InitialLayoutStrategy::Static, "static"},
+	{InitialLayoutStrategy::Dynamic, "dynamic"},
+})
 
 enum class LayeringStrategy {
 	IndividualGates, DisjointQubits, OddGates, QubitTriangle, None
@@ -32,18 +41,26 @@ enum class LayeringStrategy {
 static std::string toString(const LayeringStrategy strategy) {
 	switch (strategy) {
 		case LayeringStrategy::IndividualGates:
-			return "individual gates";
+			return "individual_gates";
 		case LayeringStrategy::DisjointQubits:
-			return "disjoint qubits";
+			return "disjoint_qubits";
 		case LayeringStrategy::OddGates:
-			return "odd gates";
+			return "odd_gates";
 		case LayeringStrategy::QubitTriangle:
-			return "qubit triangle";
+			return "qubit_triangle";
 		case LayeringStrategy::None:
 			return "none";
 	}
 	return " ";
 }
+// map LayeringStrategy values to JSON as strings
+NLOHMANN_JSON_SERIALIZE_ENUM( LayeringStrategy, {
+	{LayeringStrategy::None, "none"},
+	{LayeringStrategy::IndividualGates, "individual_gates"},
+	{LayeringStrategy::DisjointQubits, "disjoint_qubits"},
+	{LayeringStrategy::OddGates, "odd_gates"},
+	{LayeringStrategy::QubitTriangle, "qubit_triangle"},
+})
 
 struct MappingSettings {
 	MappingSettings() = default;

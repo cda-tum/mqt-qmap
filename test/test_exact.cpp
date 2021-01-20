@@ -14,8 +14,17 @@ protected:
 	std::string test_architecture_dir = "./architectures/";
 	std::string test_calibration_dir = "./calibration/";
 
-	void SetUp() override {
+	qc::QuantumComputation qc{};
+	Architecture IBMQ_Yorktown{};
+	Architecture IBMQ_London{};
+	ExactMapper IBMQ_Yorktown_mapper{qc, IBMQ_Yorktown};
+	ExactMapper IBMQ_London_mapper{qc, IBMQ_London};
 
+	void SetUp() override {
+		qc.import(test_example_dir + GetParam() + ".qasm");
+		IBMQ_Yorktown.loadCouplingMap(AvailableArchitectures::IBMQ_Yorktown);
+		IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
+		IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
 	}
 
 };
@@ -35,9 +44,6 @@ INSTANTIATE_TEST_SUITE_P(Exact, ExactTest,
 	                         return ss.str();});
 
 TEST_P(ExactTest, IndividualGates) {
-	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
-	auto IBMQ_London_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
-
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::IndividualGates;
 	IBMQ_Yorktown_mapper.map(settings);
@@ -51,9 +57,6 @@ TEST_P(ExactTest, IndividualGates) {
 }
 
 TEST_P(ExactTest, DisjointQubits) {
-	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
-	auto IBMQ_London_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
-
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::DisjointQubits;
 	IBMQ_Yorktown_mapper.map(settings);
@@ -67,7 +70,6 @@ TEST_P(ExactTest, DisjointQubits) {
 }
 
 TEST_P(ExactTest, OddGates) {
-	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::OddGates;
 	IBMQ_Yorktown_mapper.map(settings);
@@ -77,7 +79,6 @@ TEST_P(ExactTest, OddGates) {
 }
 
 TEST_P(ExactTest, QubitTriangle) {
-	auto IBMQ_Yorktown_mapper = ExactMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_yorktown.arch");
 	MappingSettings settings{};
 	settings.layeringStrategy = LayeringStrategy::QubitTriangle;
 	IBMQ_Yorktown_mapper.map(settings);

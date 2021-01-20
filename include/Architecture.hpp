@@ -14,6 +14,7 @@
 #include <unordered_map>
 
 #include "utils.hpp"
+#include "nlohmann/json.hpp"
 
 constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP = 3;
 constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7;
@@ -25,6 +26,37 @@ constexpr int COST_CNOT_GATE = 10;
 constexpr int COST_UNIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr int COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
 constexpr int COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
+
+enum class AvailableArchitectures {
+	IBM_QX4,
+	IBM_QX5,
+	IBMQ_Yorktown,
+	IBMQ_London,
+	IBMQ_Bogota
+};
+static std::string toString(const AvailableArchitectures architecture) {
+	switch (architecture) {
+		case AvailableArchitectures::IBM_QX4:
+			return "IBM_QX4";
+		case AvailableArchitectures::IBM_QX5:
+			return "IBM_QX5";
+		case AvailableArchitectures::IBMQ_Yorktown:
+			return "IBMQ_Yorktown";
+		case AvailableArchitectures::IBMQ_London:
+			return "IBMQ_London";
+		case AvailableArchitectures::IBMQ_Bogota:
+			return "IBMQ_Bogota";
+	}
+	return " ";
+}
+// map AvailableArchitectures values to JSON as strings
+NLOHMANN_JSON_SERIALIZE_ENUM( AvailableArchitectures, {
+	{AvailableArchitectures::IBM_QX4, "IBM_QX4"},
+	{AvailableArchitectures::IBM_QX5, "IBM_QX5"},
+	{AvailableArchitectures::IBMQ_Yorktown, "IBMQ_Yorktown"},
+	{AvailableArchitectures::IBMQ_London, "IBMQ_London"},
+	{AvailableArchitectures::IBMQ_Bogota, "IBMQ_Bogota"},
+})
 
 class Architecture {
 
@@ -47,6 +79,7 @@ public:
 	void loadCouplingMap(std::istream &&is);
 	void loadCouplingMap(const std::string& filename);
 	void loadCouplingMap(unsigned short nQ, const CouplingMap& cm);
+	void loadCouplingMap(AvailableArchitectures architecture);
 	void loadCalibrationData(std::istream &is);
 	void loadCalibrationData(std::istream &&is);
 	void loadCalibrationData(const std::string& filename);

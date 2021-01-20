@@ -13,7 +13,6 @@
 enum class Method {
 	None, Exact, Heuristic
 };
-
 static std::string toString(const Method method) {
 	switch (method) {
 		case Method::None:
@@ -25,6 +24,12 @@ static std::string toString(const Method method) {
 	}
 	return " ";
 }
+// map Method values to JSON as strings
+NLOHMANN_JSON_SERIALIZE_ENUM( Method, {
+	{Method::None, "none"},
+	{Method::Exact, "exact"},
+	{Method::Heuristic, "heuristic"},
+})
 
 struct MappingResults {
 
@@ -115,6 +120,61 @@ struct MappingResults {
 
 		return out;
 	};
+
+	virtual nlohmann::json produceJSON(bool statistics) {
+		nlohmann::json resultJSON{};
+		resultJSON["circuit"] = {};
+		auto& circuit = resultJSON["circuit"];
+		circuit["name"] = input_name;
+		circuit["n_qubits"] = input_qubits;
+		circuit["n_gates"] = input_gates;
+		circuit["singlequbitgates"] = input_singlequbitgates;
+		circuit["cnots"] = input_cnots;
+		circuit["layers"] = input_layers;
+
+		resultJSON["mapped_circuit"] = {};
+		auto& mapped_circuit = resultJSON["mapped_circuit"];
+		mapped_circuit["name"] = output_name;
+		mapped_circuit["n_qubits"] = output_qubits;
+		mapped_circuit["n_gates"] = output_gates;
+		mapped_circuit["singlequbitgates"] = output_singlequbitgates;
+		mapped_circuit["cnots"] = output_cnots;
+		mapped_circuit["swaps"] = output_swaps;
+		mapped_circuit["direction_reverse"] = output_direction_reverse;
+
+		if (statistics) {
+			resultJSON["statistics"] = {};
+			auto& stats = resultJSON["statistics"];
+			if (timeout)
+				stats["timeout"] = timeout;
+			stats["mapping_time"] = time;
+			stats["additional_gates"] = output_gates-input_gates;
+			stats["method"] = method;
+			if (layeringStrategy != LayeringStrategy::None) {
+				stats["layeringStrategy"] = layeringStrategy;
+			}
+			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
+				stats["initialLayoutStrategy"] = initialLayoutStrategy;
+			}
+			stats["arch"] = architecture;
+			if (!calibration.empty())
+				stats["calibration"] = calibration;
+		}
+
+		return resultJSON;
+	}
+
+	virtual std::string produceCSVEntry() {
+		std::stringstream ss{};
+		ss << input_name << ";" << input_qubits << ";" << input_gates << ";" << output_name << ";" << output_qubits << ";" << output_gates << ";" << toString(method) << ";";
+		if (timeout) {
+			ss << "TO";
+		} else {
+			ss << time;
+		}
+		ss << ";" << toString(initialLayoutStrategy) << ";" << toString(layeringStrategy);
+		return ss.str();
+	}
 };
 
 #endif //QMAP_MAPPINGRESULTS_HPP

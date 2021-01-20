@@ -25,8 +25,6 @@ constexpr unsigned short MAX_DEVICE_QUBITS = 128;
 
 class Mapper {
 protected:
-	Architecture architecture = {};
-
 	// internal structures
 	struct Gate {
 		short control = -1;
@@ -42,7 +40,9 @@ protected:
 		}
 	};
 
-	qc::QuantumComputation qc;
+	qc::QuantumComputation& qc;
+	Architecture& architecture;
+
 	qc::QuantumComputation qcMapped;
 	std::vector<std::vector<Gate>> layers{};
 
@@ -55,9 +55,6 @@ protected:
 	MappingResults results{};
 	MappingSettings settings{};
 
-	explicit Mapper(const std::string& filename);
-	//explicit Mapper(qc::QuantumComputation& qc);
-
 	virtual void initResults();
 
 	virtual void createLayers();
@@ -65,17 +62,8 @@ protected:
 	virtual long getNextLayer(size_t idx);
 
 public:
-	Mapper(const std::string& filename, const std::string& cm_filename);
-	Mapper(const std::string& filename, const std::string& cm_filename, const std::string& cal_filename);
-
-	Mapper(const std::string& filename, unsigned short nQ, const CouplingMap& couplingMap);
-	Mapper(const std::string& filename, unsigned short nQ, const CouplingMap& couplingMap, const std::vector<Architecture::CalibrationData>& calibrationData);
-
-	//Mapper(qc::QuantumComputation& qc, const std::string& cm_filename);
-	//Mapper(qc::QuantumComputation& qc, const std::string& cm_filename, const std::string& cal_filename);
-
-	//Mapper(qc::QuantumComputation& qc, unsigned short nQ, const CouplingMap& couplingMap);
-	//Mapper(qc::QuantumComputation& qc, unsigned short nQ, const CouplingMap& couplingMap, const std::vector<Architecture::CalibrationData>& calibrationData);
+	Mapper(qc::QuantumComputation& qc, Architecture& architecture);
+	virtual ~Mapper() = default;
 
 	virtual void map(const MappingSettings& ms) = 0;
 
@@ -97,6 +85,7 @@ public:
 		}
 
 	}
+
 	virtual void dumpResult(const std::string& outputFilename, qc::Format format) {
 		size_t slash = outputFilename.find_last_of('/');
 		size_t dot = outputFilename.find_last_of('.');
@@ -104,9 +93,20 @@ public:
 		qcMapped.dump(outputFilename, format);
 	}
 
+	virtual void dumpResult(std::ostream& os, qc::Format format) {
+		qcMapped.dump(os, format);
+	}
 
 	virtual std::ostream& printResult(std::ostream& out, bool printStatistics) {
 		return results.print(out, printStatistics);
+	}
+
+	virtual nlohmann::json produceJSON(bool statistics) {
+		return results.produceJSON(statistics);
+	}
+
+	virtual std::string produceCSVEntry() {
+		return results.produceCSVEntry();
 	}
 
 	std::ostream& printLayering(std::ostream& out) {

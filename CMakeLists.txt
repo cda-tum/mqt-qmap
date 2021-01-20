@@ -4,7 +4,7 @@ if(${CMAKE_VERSION} VERSION_LESS 3.12)
 endif()
 
 project(qmap
-        VERSION 1.1.0
+        VERSION 1.2.0
         DESCRIPTION "QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         LANGUAGES CXX)
 
@@ -41,6 +41,11 @@ endmacro()
 
 handle_submodule(qfr)
 
+# Add path for custom modules
+list (APPEND CMAKE_MODULE_PATH
+      "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Z3)
+
 add_subdirectory(src)
 
 option(BUILD_QMAP_TESTS "Also build tests for QMAP project" OFF)
@@ -53,4 +58,9 @@ endif ()
 # only build apps if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	add_subdirectory(apps)
+endif()
+
+option(BUILD_QMAP_BINDINGS "Also build Python bindings for QMAP project" OFF)
+if(BUILD_QMAP_BINDINGS AND Z3_FOUND)
+	add_subdirectory(jkq/qmap)
 endif()

@@ -5,6 +5,20 @@
 
 #include "Architecture.hpp"
 
+void Architecture::loadCouplingMap(AvailableArchitectures architecture) {
+	static std::map<AvailableArchitectures, std::string> architectureMap {
+			{AvailableArchitectures::IBM_QX4, "5\n1 0\n2 0\n2 1\n3 2\n3 4\n2 4"},
+			{AvailableArchitectures::IBM_QX5, "16\n1 0\n15 0\n1 2\n2 3\n15 2\n3 4\n3 14\n5 4\n13 4\n6 5\n12 5\n6 7\n6 11\n8 7\n7 10\n9 8\n9 10\n11 10\n12 11\n12 13\n13 14\n15 14"},
+			{AvailableArchitectures::IBMQ_Yorktown, "5\n0 1\n1 0\n0 2\n2 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3\n2 4\n4 2"},
+			{AvailableArchitectures::IBMQ_London, "5\n0 1\n1 0\n1 2\n2 1\n1 3\n3 1\n3 4\n4 3"},
+			{AvailableArchitectures::IBMQ_Bogota, "5\n0 1\n1 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3"}
+	};
+
+	std::stringstream ss{architectureMap.at(architecture)};
+	architectureName = toString(architecture);
+	loadCouplingMap(ss);
+}
+
 void Architecture::loadCouplingMap(std::istream& is) {
 	loadCouplingMap(std::move(is));
 }

@@ -17,64 +17,11 @@ void Mapper::initResults() {
 	qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
-Mapper::Mapper(const std::string& filename) {
-	qc.import(filename);
+Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch): qc(quantumComputation), architecture(arch) {
 	qubits.fill(DEFAULT_POSITION);
 	locations.fill(DEFAULT_POSITION);
 	fidelities.fill(INITIAL_FIDELITY);
 }
-
-/*
-Mapper::Mapper(qc::QuantumComputation& quantumComputation) {
-	qc = quantumComputation;
-	qubits.fill(DEFAULT_POSITION);
-	locations.fill(DEFAULT_POSITION);
-}
- */
-
-Mapper::Mapper(const std::string& filename, const std::string& cm_filename):
-	Mapper(filename) {
-	architecture = Architecture(cm_filename);
-}
-
-Mapper::Mapper(const std::string& filename, const std::string& cm_filename, const std::string& cal_filename):
-	Mapper(filename, cm_filename) {
-	architecture.loadCalibrationData(cal_filename);
-}
-
-Mapper::Mapper(const std::string& filename, unsigned short nQ, const CouplingMap& couplingMap):
-	Mapper(filename) {
-	architecture = Architecture(nQ, couplingMap);
-}
-
-Mapper::Mapper(const std::string& filename, unsigned short nQ, const CouplingMap& couplingMap,
-		const std::vector<Architecture::CalibrationData>& calibrationData):
-	Mapper(filename, nQ, couplingMap) {
-	architecture.loadCalibrationData(calibrationData);
-}
-
-/*
-Mapper::Mapper(qc::QuantumComputation& qc, const std::string& cm_filename):
-	Mapper(qc) {
-	architecture = Architecture(cm_filename);
-}
-
-Mapper::Mapper(qc::QuantumComputation& qc, const std::string& cm_filename, const std::string& cal_filename):
-	Mapper(qc, cm_filename) {
-	architecture.loadCalibrationData(cal_filename);
-}
-
-Mapper::Mapper(qc::QuantumComputation& qc, unsigned short nQ, const CouplingMap& couplingMap):
-	Mapper(qc) {
-	architecture = Architecture(nQ, couplingMap);
-}
-
-Mapper::Mapper(qc::QuantumComputation& qc, unsigned short nQ, const CouplingMap& couplingMap,
-		const std::vector<Architecture::CalibrationData>& calibrationData):
-	Mapper(qc, nQ, couplingMap) {
-	architecture.loadCalibrationData(calibrationData);
-}
- */
 
 void Mapper::createLayers() {
 	std::array<short, MAX_DEVICE_QUBITS> lastLayer{};

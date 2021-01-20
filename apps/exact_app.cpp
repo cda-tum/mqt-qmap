@@ -37,15 +37,39 @@ int main(int argc, char** argv) {
 
 
     const std::string circuit = vm["in"].as<std::string>();
+	qc::QuantumComputation qc{};
+	try {
+		qc.import(circuit);
+	} catch (std::exception const& e) {
+		std::stringstream ss{};
+		ss << "Could not import circuit: " << e.what();
+		std::cerr << ss.str() << std::endl;
+		std::exit(1);
+	}
     const std::string cm = vm["arch"].as<std::string>();
+	Architecture arch{};
+	try {
+		arch.loadCouplingMap(cm);
+	} catch (std::exception const& e) {
+		std::stringstream ss{};
+		ss << "Could not import coupling map: " << e.what();
+		std::cerr << ss.str() << std::endl;
+		std::exit(1);
+	}
 
-    ExactMapper* mapper;
-    if(vm.count("calibration")) {
-        const std::string cal = vm["calibration"].as<std::string>();
-        mapper = new ExactMapper{circuit, cm, cal};
-    } else {
-        mapper = new ExactMapper{circuit, cm};
-    }
+	if (vm.count("calibration")) {
+		const std::string cal = vm["calibration"].as<std::string>();
+		try {
+			arch.loadCalibrationData(cal);
+		} catch (std::exception const& e) {
+			std::stringstream ss{};
+			ss << "Could not import calibration data: " << e.what();
+			std::cerr << ss.str() << std::endl;
+			std::exit(1);
+		}
+	}
+
+	ExactMapper mapper(qc, arch);
 
     MappingSettings ms{};
     ms.initialLayoutStrategy = InitialLayoutStrategy::None;
@@ -64,9 +88,9 @@ int main(int argc, char** argv) {
 		}
 	}
     ms.verbose = vm.count("verbose") > 0;
-    mapper->map(ms);
+    mapper.map(ms);
 
-    mapper->dumpResult(vm["out"].as<std::string>());
+    mapper.dumpResult(vm["out"].as<std::string>());
 
-    mapper->printResult(std::cout, vm.count("ps"));
+    mapper.printResult(std::cout, vm.count("ps"));
 }

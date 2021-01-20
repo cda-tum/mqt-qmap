@@ -12,6 +12,19 @@ protected:
 	std::string test_example_dir = "./examples/";
 	std::string test_architecture_dir = "./architectures/";
 	std::string test_calibration_dir = "./calibration/";
+
+	qc::QuantumComputation qc{};
+	Architecture IBMQ_Yorktown{};
+	Architecture IBMQ_London{};
+	HeuristicMapper IBMQ_Yorktown_mapper{qc, IBMQ_Yorktown};
+	HeuristicMapper IBMQ_London_mapper{qc, IBMQ_London};
+
+	void SetUp() override {
+		qc.import(test_example_dir + GetParam() + ".qasm");
+		IBMQ_Yorktown.loadCouplingMap(AvailableArchitectures::IBMQ_Yorktown);
+		IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
+		IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
+	}
 };
 
 INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
@@ -32,13 +45,11 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
 	                         return ss.str();});
 
 TEST_P(HeuristicTest5Q, Identity) {
-	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
 	MappingSettings settings{};
 	settings.initialLayoutStrategy = InitialLayoutStrategy::Identity;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 
 	IBMQ_London_mapper.map(settings);
 	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_identity.qasm");
@@ -47,13 +58,11 @@ TEST_P(HeuristicTest5Q, Identity) {
 }
 
 TEST_P(HeuristicTest5Q, Static) {
-	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
 	MappingSettings settings{};
 	settings.initialLayoutStrategy = InitialLayoutStrategy::Static;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	IBMQ_London_mapper.map(settings);
 	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_static.qasm");
 	IBMQ_London_mapper.printResult(std::cout, true);
@@ -61,13 +70,11 @@ TEST_P(HeuristicTest5Q, Static) {
 }
 
 TEST_P(HeuristicTest5Q, Dynamic) {
-	auto IBM_QX4_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx4.arch");
-	auto IBMQ_London_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibmq_london.arch", test_calibration_dir + "ibmq_london.csv");
 	MappingSettings settings{};
 	settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-	IBM_QX4_mapper.map(settings);
-	IBM_QX4_mapper.dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
-	IBM_QX4_mapper.printResult(std::cout, true);
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	IBMQ_London_mapper.map(settings);
 	IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
 	IBMQ_London_mapper.printResult(std::cout, true);
@@ -80,6 +87,14 @@ protected:
 	std::string test_example_dir = "../../examples/";
 	std::string test_architecture_dir = "../../extern/architectures/";
 
+	qc::QuantumComputation qc{};
+	Architecture IBM_QX5{};
+	HeuristicMapper IBM_QX5_mapper{qc, IBM_QX5};
+
+	void SetUp() override {
+		qc.import(test_example_dir + GetParam() + ".qasm");
+		IBM_QX5.loadCouplingMap(test_architecture_dir + "ibm_qx5.arch");
+	}
 };
 
 INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest16Q,
@@ -97,7 +112,6 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest16Q,
 	                         return ss.str();});
 
 TEST_P(HeuristicTest16Q, Dynamic) {
-	auto IBM_QX5_mapper = HeuristicMapper(test_example_dir + GetParam() + ".qasm", test_architecture_dir + "ibm_qx5.arch");
 	MappingSettings settings{};
 	settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
 	IBM_QX5_mapper.map(settings);
