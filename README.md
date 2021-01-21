@@ -84,6 +84,17 @@ def compile(circ, arch: Union[str, Arch],
             verbose: bool = False
             ) -> object
 ```
+
+Note that in order for the bindings to work the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed on the system and the dynamic linker has to be able to find the library.
+This can be accomplished in a multitude of ways:
+- Under Ubuntu 20.04 and newer: `sudo apt-get install z3`
+- Under macOS: `brew install z3`
+- Alternatively: `pip install z3-solver` and then append the corresponding path to the library path (`LD_LIBRARY_PATH` under Linux, `DYLD_LIBRARY_PATH` under macOS), e.g. via
+    ```bash
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -c "import z3; print(z3.__path__[0]+'/lib')")
+    ```
+- Download pre-built binaries from https://github.com/Z3Prover/z3/releases and copy the files to the respective system directories
+- Build Z3 from source and install it to the system
 ### Command-line Executable
 JKQ QMAP also provides two **standalone executables** with command-line interface called `qmap_heuristic` and `qmap_exact`.
 They provide the same options as the Python module as flags (e.g., `--ps` for printing statistics). Per default, this produces JSON formatted output.

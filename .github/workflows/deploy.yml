@@ -140,16 +140,16 @@ jobs:
         with:
           path: dist/*.tar.gz
 
-#  upload_pypi:
-#    needs: [build_manylinux_wheels, build_macos_wheels, build_windows_wheels, build_sdist]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: artifact
-#          path: dist
-#
-#      - uses: pypa/gh-action-pypi-publish@master
-#        with:
-#          user: __token__
-#          password: ${{ secrets.pypi_password }}
+  upload_pypi:
+    needs: [build_manylinux_wheels, build_macos_wheels, build_windows_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
