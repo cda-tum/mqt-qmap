@@ -190,7 +190,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 			}
 		}
 
-		if (swapsIterator != mappingSwaps.end() && layerIterator !=  reducedLayerIndices.end() && i == *layerIterator) {
+		if (mappingSwaps.size()>0 && swapsIterator != mappingSwaps.end() && layerIterator !=  reducedLayerIndices.end() && i == *layerIterator) {
 			// apply swaps before layer
 			for (auto it=(*swapsIterator).rbegin(); it != (*swapsIterator).rend(); ++it) {
 				auto& swap = *it;
