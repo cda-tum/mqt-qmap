@@ -52,9 +52,21 @@ pip install jkq.qmap
 and then in Python
 ```python
 from jkq import qmap
-qmap.compile(...)
+qmap.compile(circ, arch, ...)
 ```
-where the `compile` function is defined as follows:
+where `circ` is either a Qiskit `QuantumCircuit` object or the path to an input file (supporting various formats, such as `.qasm`, `.real`,...)
+and `arch` is either one of the pre-defined architectures (see below) or the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
+
+Architectures that are available per default (under `qmap.Arch.<...>`) include:
+- IBM_QX4 (5 qubit, directed bow tie layout)
+- IBM_QX5 (16 qubit, directed ladder layout)
+- IBMQ_Yorktown (5 qubit, undirected bow tie layout)
+- IBMQ_London (5 qubit, undirected T-shape layout)
+- IBMQ_Bogota (5 qubit, undirected linear chain layout)
+
+Whether the heuristic (*default*) or the exact mapper is used can be controlled by passing `method=qmap.Method.heuristic` or `method=qmap.Method.exact` to the `compile` function.
+
+There are several options that can be passed to the `compile` function:
 ```python
 """
 Interface to the JKQ QMAP tool for mapping quantum circuits
@@ -133,7 +145,7 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
-However, the implementation should be compatible with any current C++ compiler supporting C++14 and a minimum CMake version of 3.10.
+However, the implementation should be compatible with any current C++ compiler supporting C++17 and a minimum CMake version of 3.13.
 
 `boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
 
@@ -186,44 +198,33 @@ Internally the JKQ QMAP library works in the following way
 
 ### Configure, Build, and Install
 
-In order to build the library execute the following in the project's main directory
-1) Configure CMake
-    ```commandline
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    ```
-   Windows users using Visual Studio and the MSVC compiler may try
-   ```commandline
-   cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE=Release
-   ```
-   Older CMake versions not supporting the above syntax (< 3.13) may be used with
-   ```commandline
-   mkdir build && cd build
-   cmake .. -DCMAKE_BUILD_TYPE=Release
-   ```
-2) Build the respective target.
-    ```commandline
-   cmake --build ./build --config Release --target <target>
-   ```
-   The following CMake targets are available
-    - `qmap_heuristic`: The heuristic mapper commandline executable (only available if Boost is found)
-    - `qmap_exact`: The exact mapper commandline executable (only available if Boost and Z3 is found)
-    - `qmap_heuristic_lib`: The standalone heuristic mapper library
-    - `qmap_exact_lib`: The standalone exact mapper library (only available if Z3 is found)
-    - `qmap_heuristic_test`: Unit tests for heuristic maper using GoogleTest
-    - `qmap_exact_test`: Unit tests for exact maper using GoogleTest (only available if Z3 is found)
+To start off, clone this repository using
+```shell
+git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
+```
+Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.
 
-3) Optional: The QMAP library and tool may be installed on the system by executing
+Our projects use CMake as the main build configuration tool. Building a project using CMake is a two-stage process. First, CMake needs to be *configured* by calling
+```shell 
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+```
+This tells CMake to search the current directory `.` (passed via `-S`) for a *CMakeLists.txt* file and process it into a directory `build` (passed via `-B`).
+The flag `-DCMAKE_BUILD_TYPE=Release` tells CMake to configure a *Release* build (as opposed to, e.g., a *Debug* build).
 
-    ```commandline
-    cmake --build ./build --config Release --target install
-    ```
+After configuring with CMake, the project can be built by calling
+```shell
+ cmake --build build --config Release
+```
+This tries to build the project in the `build` directory (passed via `--build`).
+Some operating systems and developer environments explicitly require a configuration to be set, which is why the `--config` flag is also passed to the build command. The flag `--parallel <NUMBER_OF_THREADS>` may be added to trigger a parallel build.
 
-   It can then also be included in other projects using the following CMake snippet
-
-    ```cmake
-    find_package(qmap)
-    target_link_libraries(${TARGET_NAME} PRIVATE JKQ::qmap)
-    ```
+Building the project this way generates
+- the heuristic library `libqmap_heuristic_lib.a` (Unix) / `qmap_heuristic_lib.lib` (Windows) in the `build/src` directory
+- the heuristic mapper commandline executable `qmap_heuristic` in the `build/apps` directory (only available if Boost is found)
+- a test executable `qmap_heuristic_test` containing a small set of unit tests for the heuristic mapper in the `build/test` directory
+- the exact library `libqmap_exact_lib.a` (Unix) / `qmap_exact_lib.lib` (Windows) in the `build/src` directory (only available if Z3 is found)
+- the exact mapper commandline executable `qmap_exact` in the `build/apps` directory (only available if Boost and Z3 is found)
+- a test executable `qmap_exact_test` containing a small set of unit tests for the exact mapper in the `build/test` directory (only available if Z3 is found)
 
 ## Reference
 

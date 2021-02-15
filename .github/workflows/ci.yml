@@ -16,6 +16,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Installing boost
         shell: bash
@@ -75,6 +77,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Installing boost
         shell: bash
@@ -118,6 +122,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Cache Boost
         id:   cache-boost
@@ -167,7 +173,7 @@ jobs:
 
       - name:  Build
         shell: bash
-        run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target INSTALL
+        run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8
 
       - name:              Test
         working-directory: ${{github.workspace}}/build/apps

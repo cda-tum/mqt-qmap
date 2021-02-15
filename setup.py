@@ -33,8 +33,8 @@ class CMakeBuild(build_ext):
 
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DBUILD_QFR_BINDINGS=ON',
-                      '-DBUILD_QMAP_BINDINGS=ON']
+                      '-DBINDINGS=ON',
+                      '-DDEPLOY=ON']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -65,7 +65,7 @@ with open(README_PATH) as readme_file:
 
 setup(
     name='jkq.qmap',
-    version='1.2.0',
+    version='1.2.1',
     author='Lukas Burgholzer',
     author_email='lukas.burgholzer@jku.at',
     description='QMAP - A JKQ tool for Quantum Circuit Mapping',
@@ -96,5 +96,5 @@ setup(
         'Research': 'https://iic.jku.at/eda/research/ibm_qx_mapping/',
     },
     python_requires='>=3.6',
-    setup_requires=['cmake>=3.10'],
+    setup_requires=['cmake>=3.13'],
 )
