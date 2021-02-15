@@ -60,13 +60,13 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
 	}
 
 	ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-	if (jsonConfig.contains("initialLayoutStrategy")) {
-		nl::from_json(jsonConfig["initialLayoutStrategy"].get<std::string>(), ms.initialLayoutStrategy);
+	if (jsonConfig.contains("initialLayout")) {
+		nl::from_json(jsonConfig["initialLayout"].get<std::string>(), ms.initialLayoutStrategy);
 	}
 
 	ms.layeringStrategy = LayeringStrategy::IndividualGates;
-	if (jsonConfig.contains("layeringStrategy")) {
-		nl::from_json(jsonConfig["layeringStrategy"].get<std::string>(), ms.layeringStrategy);
+	if (jsonConfig.contains("layering")) {
+		nl::from_json(jsonConfig["layering"].get<std::string>(), ms.layeringStrategy);
 	}
 
 	if (jsonConfig.contains("verbose")) {
