@@ -34,6 +34,11 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 		qubits = result.qubits;
 		locations = result.locations;
 
+		if (ms.verbose) {
+			printLocations(std::clog );
+			printQubits(std::clog );
+		}
+
 		// initial layer needs no swaps
 		if(i != 0) {
 			for (const auto& swaps: result.swaps) {
@@ -106,7 +111,6 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 					gateidx++;
 				}
 			}
-
 		}
 	}
 
@@ -150,6 +154,12 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 					op->setTargets({ static_cast<unsigned short>(targetLocation)});
 				}
 			}
+		}
+	}
+
+	for (unsigned short i=0; i<qubits.size(); ++i) {
+		if (qubits[i] == -1) {
+			qcMapped.outputPermutation.erase(i);
 		}
 	}
 
@@ -253,10 +263,10 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
 			locations.at(gate.target) = chosenEdge.second;
 			qubits.at(chosenEdge.first) = gate.control;
 			qubits.at(chosenEdge.second) = gate.target;
-			qcMapped.initialLayout.at(chosenEdge.first) = gate.control;
-			qcMapped.initialLayout.at(chosenEdge.second) = gate.target;
-			qcMapped.outputPermutation.at(chosenEdge.first) = gate.control;
-			qcMapped.outputPermutation.at(chosenEdge.second) = gate.target;
+			qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
+			qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
+			qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
+			qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
 		} else if (controlLocation == DEFAULT_POSITION) {
 			mapToMinDistance(gate.target, gate.control);
 		} else if (targetLocation == DEFAULT_POSITION) {
@@ -283,8 +293,8 @@ void HeuristicMapper::mapToMinDistance(unsigned short source, unsigned short tar
 	}
 	qubits.at(pos) = target;
 	locations.at(target) = pos;
-	qcMapped.initialLayout.at(pos) = target;
-	qcMapped.outputPermutation.at(pos) = target;
+	qc::QuantumComputation::findAndSWAP(target, pos, qcMapped.initialLayout);
+	qc::QuantumComputation::findAndSWAP(target, pos, qcMapped.outputPermutation);
 }
 
 HeuristicMapper::Node HeuristicMapper::AstarMap(long layer) {
