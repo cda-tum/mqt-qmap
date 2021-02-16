@@ -1,7 +1,10 @@
-[![CI](https://github.com/iic-jku/qmap/workflows/CI/badge.svg)](https://github.com/iic-jku/qmap/actions?query=workflow%3A%22CI%22)
-[![codecov](https://codecov.io/gh/iic-jku/qmap/branch/master/graph/badge.svg?token=TSFLDIO7HX)](https://codecov.io/gh/iic-jku/qmap)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![toolset: JKQ](https://img.shields.io/badge/toolset-JKQ-blue)](https://github.com/iic-jku/jkq)
+[![PyPI](https://img.shields.io/pypi/v/jkq.qmap?logo=pypi&style=plastic)](https://pypi.org/project/jkq.qmap/)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/iic-jku/qmap/CI?logo=github&style=plastic)](https://github.com/iic-jku/qmap/actions?query=workflow%3A%22CI%22)
+[![Codecov branch](https://img.shields.io/codecov/c/github/iic-jku/qmap/master?label=codecov&logo=codecov&style=plastic)](https://codecov.io/gh/iic-jku/qmap)
+![GitHub](https://img.shields.io/github/license/iic-jku/qmap?style=plastic)
+[![toolset: JKQ](https://img.shields.io/static/v1?label=toolset&message=JKQ&color=blue&style=plastic)](https://github.com/iic-jku/jkq)
+[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=1712.04722&color=inactive&style=plastic)](https://arxiv.org/abs/1712.04722)
+[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2009.02376&color=inactive&style=plastic)](https://arxiv.org/abs/2009.02376)
 
 # QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
 A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
