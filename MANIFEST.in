@@ -6,6 +6,7 @@ include include/*
 include include/exact/*
 include include/heuristic/*
 include test/*
+include cmake/*
 include apps/*
 graft jkq/*
 graft extern/architectures
