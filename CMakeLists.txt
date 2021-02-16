@@ -52,7 +52,7 @@ find_package( Boost 1.50 COMPONENTS program_options)
 add_subdirectory(src)
 
 # add test code
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR BUILD_QMAP_TESTS)
+if (BUILD_QMAP_TESTS)
 	enable_testing()
 	include(GoogleTest)
 	add_subdirectory(test)
