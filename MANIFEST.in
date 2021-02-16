@@ -5,7 +5,7 @@ include src/heuristic/*
 include include/*
 include include/exact/*
 include include/heuristic/*
-include cmake/*
+include test/*
 include apps/*
 graft jkq/*
 graft extern/architectures
