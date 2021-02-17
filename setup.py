@@ -96,5 +96,5 @@ setup(
         'Research': 'https://iic.jku.at/eda/research/ibm_qx_mapping/',
     },
     python_requires='>=3.6',
-    setup_requires=['cmake>=3.13'],
+    setup_requires=['cmake>=3.14'],
 )

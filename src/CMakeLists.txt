@@ -40,7 +40,6 @@ macro(add_qmap_library LIBNAME SRCFILE)
 		if (BINDINGS)
 			# adjust visibility settings for building Python bindings
 			target_compile_options(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC -fvisibility=hidden)
-			set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 		endif()
 		if(NOT DEPLOY)
 			# only include machine-specific optimizations when building for the host machine
@@ -48,7 +47,8 @@ macro(add_qmap_library LIBNAME SRCFILE)
 		endif ()
 	endif()
 
-	if(GENERATE_POSITION_INDEPENDENT_CODE)
+	if(GENERATE_POSITION_INDEPENDENT_CODE OR BINDINGS)
+		include(CheckPIESupported)
 		check_pie_supported()
 		set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 	endif()

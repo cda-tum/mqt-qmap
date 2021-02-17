@@ -148,7 +148,7 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
-However, the implementation should be compatible with any current C++ compiler supporting C++17 and a minimum CMake version of 3.13.
+However, the implementation should be compatible with any current C++ compiler supporting C++17 and a minimum CMake version of 3.14.
 
 `boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
 
