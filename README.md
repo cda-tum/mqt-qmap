@@ -5,17 +5,22 @@
 [![toolset: JKQ](https://img.shields.io/static/v1?label=toolset&message=JKQ&color=blue&style=plastic)](https://github.com/iic-jku/jkq)
 [![arXiv](https://img.shields.io/static/v1?label=arXiv&message=1712.04722&color=inactive&style=plastic)](https://arxiv.org/abs/1712.04722)
 [![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2009.02376&color=inactive&style=plastic)](https://arxiv.org/abs/2009.02376)
+[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2011.07314&color=inactive&style=plastic)](https://arxiv.org/abs/2011.07314)
 
 # QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
-A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
+A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf), [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf), [[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf).
 
 [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
-A. Zulehner, A. Paler, and R. Wille. **"An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures"**.
-IEEE Transactions on Computer Aided Design of Integrated Circuits and Systems (TCAD), 2018.
+A. Zulehner, A. Paler, and R. Wille. An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures.
+*IEEE Transactions on Computer Aided Design of Integrated Circuits and Systems (TCAD)*, 2018.
 
 [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
-R. Wille, L. Burgholzer, and A. Zulehner. **"Mapping Quantum Circuits to IBM QX Architectures
-Using the Minimal Number of SWAP and H Operations"**. In Design Automation Conference (DAC), 2019.
+R. Wille, L. Burgholzer, and A. Zulehner. Mapping Quantum Circuits to IBM QX Architectures
+Using the Minimal Number of SWAP and H Operations. In *Design Automation Conference (DAC)*, 2019.
+
+[[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
+S. Hillmich, A. Zulehner, and R. Wille. Exploiting Quantum Teleportation in Quantum Circuit Mapping. 
+*In Asia and South Pacific Design Automation Conference (ASP-DAC)*, 2021.
 
 The tool can be used for mapping quantum circuits in any of the following formats:
 * `QuantumCircuit` object from IBM's [Qiskit](https://github.com/Qiskit/qiskit) (only through the JKQ QMAP Python bindings)
@@ -37,10 +42,11 @@ to any given architecture, e.g., the IBM Q London architecture, which is specifi
 4 3
 ```
 with the following available methods:
-- **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf).
+- **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf) and [[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf).
 - **Exact Mapper**: Exact solution utilizing the SMT Solver Z3. For details see [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf).
 
-Note that, at the moment, circuits to be mapped are assumed to be already decomposed into elementary gates supported by the targeted device. More specifically, circuits must not contain gates acting on more than two qubits.
+Note that, at the moment, circuits to be mapped are assumed to be already decomposed into elementary gates supported by the targeted device. 
+More specifically, circuits must not contain gates acting on more than two qubits.
 
 For more information, please visit [iic.jku.at/eda/research/ibm_qx_mapping/](https://iic.jku.at/eda/research/ibm_qx_mapping/).
 
@@ -81,6 +87,9 @@ Params:
     method – Mapping technique to use (*heuristic* | exact)
     initial_layout – Strategy to use for determining initial layout (only relevant for heuristic mapper)
     layering – Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
+    use_teleportation - Use teleportation in addition to swaps
+    teleportation_fake - Assign qubits as ancillary for teleportation but don't actually use them
+    teleportation_seed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
     csv – Create CSV string for result
     statistics – Print statistics
@@ -93,11 +102,15 @@ def compile(circ, arch: Union[str, Arch],
             method: Method = Method.heuristic,
             initial_layout: InitialLayoutStrategy = InitialLayoutStrategy.dynamic,
             layering: LayeringStrategy = LayeringStrategy.individual_gates,
+            use_teleportation: bool = False,
+            teleportation_fake: bool = False,
+            teleportation_seed: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
             verbose: bool = False
-            ) -> object
+            ) -> Dict[str, Any]:
+    ...
 ```
 
 Note that in order for the bindings to work the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed on the system and the dynamic linker has to be able to find the library.
@@ -110,6 +123,8 @@ This can be accomplished in a multitude of ways:
     ```
 - Download pre-built binaries from https://github.com/Z3Prover/z3/releases and copy the files to the respective system directories
 - Build Z3 from source and install it to the system
+
+
 ### Command-line Executable
 JKQ QMAP also provides two **standalone executables** with command-line interface called `qmap_heuristic` and `qmap_exact`.
 They provide the same options as the Python module as flags (e.g., `--ps` for printing statistics). Per default, this produces JSON formatted output.
@@ -203,9 +218,10 @@ Internally the JKQ QMAP library works in the following way
 
 To start off, clone this repository using
 ```shell
-git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
+$ git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
 ```
-Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.
+Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. 
+If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.
 
 Our projects use CMake as the main build configuration tool. Building a project using CMake is a two-stage process. First, CMake needs to be *configured* by calling
 ```shell 
@@ -216,7 +232,7 @@ The flag `-DCMAKE_BUILD_TYPE=Release` tells CMake to configure a *Release* build
 
 After configuring with CMake, the project can be built by calling
 ```shell
- cmake --build build --config Release
+$ cmake --build build --config Release
 ```
 This tries to build the project in the `build` directory (passed via `--build`).
 Some operating systems and developer environments explicitly require a configuration to be set, which is why the `--config` flag is also passed to the build command. The flag `--parallel <NUMBER_OF_THREADS>` may be added to trigger a parallel build.
@@ -231,27 +247,40 @@ Building the project this way generates
 
 ## Reference
 
-If you use our tool for your research, we will be thankful if you refer to it by citing one or both of the following publications.
+If you use our tool for your research, we will be thankful if you refer to it by citing the appropriate publications.
 
-If you used the heuristic mapping, please cite
+For the heuristic mapping, please cite
 ```bibtex
-@article{zulehner2019efficient,
-  title={An efficient methodology for mapping quantum circuits to the {IBM} {QX} architectures},
-  author={Zulehner, Alwin and Paler, Alexandru and Wille, Robert},
-  journal={{IEEE} Transactions on Computer-Aided Design of Integrated Circuits and Systems},
-  volume={38},
-  number={7},
-  pages={1226--1236},
-  year={2019}
+@article{DBLP:journals/tcad/ZulehnerPW19,
+  author    = {Alwin Zulehner and Alexandru Paler and Robert Wille},
+  title     = {An Efficient Methodology for Mapping Quantum Circuits to the {IBM QX} Architectures},
+  journal   = {{IEEE} Transactions on Computer-Aided Design of Integrated Circuits and Systems},
+  volume    = {38},
+  number    = {7},
+  pages     = {1226--1236},
+  year      = {2019}
 }
 ```
 
-If you used the exact mapping, please cite
+For the teleportation in the heuristic mapping, please cite
 ```bibtex
-@inproceedings{wille2019mapping,
-    title={Mapping Quantum Circuits to {IBM QX} Architectures Using the Minimal Number of {SWAP} and {H} Operations},
-    author={Wille, Robert and Burgholzer, Lukas and Zulehner, Alwin},
-    booktitle={Design Automation Conference},
-    year={2019}
+@inproceedings{DBLP:conf/aspdac/HillmichZW21,
+  author    = {Stefan Hillmich and Alwin Zulehner and Robert Wille},
+  title     = {Exploiting Quantum Teleportation in Quantum Circuit Mapping},
+  booktitle = {Asia and South Pacific Design Automation Conference},
+  pages     = {792--797},
+  publisher = {{ACM}},
+  year      = {2021}
+}
+```
+
+For the exact mapping, please cite
+```bibtex
+@inproceedings{DBLP:conf/dac/WilleBZ19,
+  author    = {Robert Wille and Lukas Burgholzer and Alwin Zulehner},
+  title     = {Mapping Quantum Circuits to {IBM QX} Architectures Using the Minimal Number of {SWAP} and {H} Operations},
+  booktitle = {Design Automation Conference},
+  publisher = {{ACM}},
+  year      = {2019}
 }
 ````

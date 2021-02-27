@@ -9,10 +9,13 @@ from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch
 
 
 def compile(circ, arch: Union[str, Arch],
-            calibration = "",
+            calibration: str = "",
             method: Method = Method.heuristic,
             initial_layout: InitialLayoutStrategy = InitialLayoutStrategy.dynamic,
             layering: LayeringStrategy = LayeringStrategy.individual_gates,
+            use_teleportation: bool = False,
+            teleportation_fake: bool = False,
+            teleportation_seed: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
@@ -30,6 +33,9 @@ def compile(circ, arch: Union[str, Arch],
     :type initial_layout: InitialLayoutStrategy
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: LayeringStrategy
+    :param use_teleportation:  Use teleportation in addition to swaps
+    :param teleportation_fake: Assign qubits as ancillary for teleportation but don't actually use them
+    :param teleportation_seed: Fix a seed for the initial ancilla placement (0 means no fixed seed)
     :param save_mapped_circuit: Include .qasm string of the mapped circuit in result
     :type save_mapped_circuit: bool
     :param csv: Create CSV string for result
@@ -50,6 +56,9 @@ def compile(circ, arch: Union[str, Arch],
         "method": method.name,
         "initialLayout": initial_layout.name,
         "layering": layering.name,
+        "use_teleportation": use_teleportation,
+        "teleportation_fake": teleportation_fake,
+        "teleportation_seed": teleportation_seed,
         "saveMappedCircuit": save_mapped_circuit,
         "csv": csv,
         "statistics": statistics,

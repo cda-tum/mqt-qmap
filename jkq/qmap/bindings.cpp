@@ -69,6 +69,13 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
 		nl::from_json(jsonConfig["layering"].get<std::string>(), ms.layeringStrategy);
 	}
 
+    if (jsonConfig.contains("use_teleportation")) {
+        ms.teleportation_qubits = std::min((architecture.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+        ms.teleportation_seed = jsonConfig["teleportation_seed"].get<unsigned long long>();
+        ms.teleportation_fake = jsonConfig["teleportation_fake"].get<bool>();
+    }
+
+
 	if (jsonConfig.contains("verbose")) {
 		ms.verbose = jsonConfig["verbose"].get<bool>();
 	}
@@ -133,6 +140,7 @@ PYBIND11_MODULE(pyqmap, m) {
 			.value("IBMQ_Yorktown", AvailableArchitectures::IBMQ_Yorktown)
 			.value("IBMQ_London", AvailableArchitectures::IBMQ_London)
 			.value("IBMQ_Bogota", AvailableArchitectures::IBMQ_Bogota)
+			.value("IBMQ_Tokyo", AvailableArchitectures::IBMQ_Tokyo)
 			.export_values();
 
 	py::enum_<Method>(m, "Method")

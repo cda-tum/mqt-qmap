@@ -155,6 +155,9 @@ struct MappingResults {
 		mapped_circuit["singlequbitgates"] = output_singlequbitgates;
 		mapped_circuit["cnots"] = output_cnots;
 		mapped_circuit["swaps"] = output_swaps;
+        mapped_circuit["teleportations"] = output_teleportations;
+        mapped_circuit["teleportation_qubits"] = output_teleportation_qubits;
+        mapped_circuit["teleportation_fake"] = output_teleportation_fake;
 		mapped_circuit["direction_reverse"] = output_direction_reverse;
 
 		if (statistics) {
@@ -163,6 +166,7 @@ struct MappingResults {
 			if (timeout)
 				stats["timeout"] = timeout;
 			stats["mapping_time"] = time;
+			stats["seed"] = seed;
 			stats["additional_gates"] = output_gates-input_gates;
 			stats["method"] = method;
 			if (layeringStrategy != LayeringStrategy::None) {

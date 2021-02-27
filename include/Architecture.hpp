@@ -33,7 +33,8 @@ enum class AvailableArchitectures {
 	IBM_QX5,
 	IBMQ_Yorktown,
 	IBMQ_London,
-	IBMQ_Bogota
+	IBMQ_Bogota,
+	IBMQ_Tokyo
 };
 std::string toString(const AvailableArchitectures architecture);
 // map AvailableArchitectures values to JSON as strings
@@ -43,6 +44,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( AvailableArchitectures, {
 	{AvailableArchitectures::IBMQ_Yorktown, "IBMQ_Yorktown"},
 	{AvailableArchitectures::IBMQ_London, "IBMQ_London"},
 	{AvailableArchitectures::IBMQ_Bogota, "IBMQ_Bogota"},
+	{AvailableArchitectures::IBMQ_Tokyo, "IBMQ_Tokyo"},
 })
 
 class Architecture {
