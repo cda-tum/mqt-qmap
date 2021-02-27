@@ -54,7 +54,8 @@ If you have any questions, feel free to contact us via [iic-quantum@jku.at](mail
 
 ## Usage
 
-JKQ QMAP is mainly developed as a C++ library with a [commandline interface](#command-line-executable). However, using it in Python is as easy as
+JKQ QMAP is mainly developed as a C++ library with a [commandline interface](#command-line-executable). 
+However, using it in Python is as easy as
 ```bash
 pip install jkq.qmap
 ```
@@ -67,11 +68,12 @@ where `circ` is either a Qiskit `QuantumCircuit` object or the path to an input 
 and `arch` is either one of the pre-defined architectures (see below) or the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
 
 Architectures that are available per default (under `qmap.Arch.<...>`) include:
-- IBM_QX4 (5 qubit, directed bow tie layout)
-- IBM_QX5 (16 qubit, directed ladder layout)
-- IBMQ_Yorktown (5 qubit, undirected bow tie layout)
-- IBMQ_London (5 qubit, undirected T-shape layout)
-- IBMQ_Bogota (5 qubit, undirected linear chain layout)
+- `IBM_QX4` (5 qubit, directed bow tie layout)
+- `IBM_QX5` (16 qubit, directed ladder layout)
+- `IBMQ_Yorktown` (5 qubit, undirected bow tie layout)
+- `IBMQ_London` (5 qubit, undirected T-shape layout)
+- `IBMQ_Bogota` (5 qubit, undirected linear chain layout)
+- `IBMQ_Tokyo` (20 qubit, undirected brick-like layout)
 
 Whether the heuristic (*default*) or the exact mapper is used can be controlled by passing `method=qmap.Method.heuristic` or `method=qmap.Method.exact` to the `compile` function.
 
@@ -98,7 +100,7 @@ Returns:
     JSON object containing results
 """
 def compile(circ, arch: Union[str, Arch],
-            calibration = "",
+            calibration: str = "",
             method: Method = Method.heuristic,
             initial_layout: InitialLayoutStrategy = InitialLayoutStrategy.dynamic,
             layering: LayeringStrategy = LayeringStrategy.individual_gates,
@@ -130,7 +132,7 @@ JKQ QMAP also provides two **standalone executables** with command-line interfac
 They provide the same options as the Python module as flags (e.g., `--ps` for printing statistics). Per default, this produces JSON formatted output.
 
 ```commandline
-$ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch ibmq_london.arch --ps
+$ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch architectures/ibm_london_5qubit.arch --ps
 {
 	"circuit": {
 		"name": "grover_2",
@@ -153,7 +155,7 @@ $ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch ibmq_london.ar
 The heuristic mapping tool `qmap_heuristic` also offers the `--initiallayout` option, which allows to choose one of the following strategies for choosing an initial layout:
 - `identity`: map logical qubit q_i to physical qubit Q_i,
 - `static`: determine fixed initial layout statically at the start of mapping,
-- `dynamic` (*default*): determine initial layout on demand during the mapping.
+- `dynamic` (*default*): determine initial layout on demand during the mapping (this is the only one compatible with teleportation).
 
 Both, the exact and the heuristic mapping tool also offer the `--layering` option, which allows to choose one of the following strategies for partitioning the circuit:
 - `individual` (*default*): consider each gate separately,
@@ -245,11 +247,23 @@ Building the project this way generates
 - the exact mapper commandline executable `qmap_exact` in the `build/apps` directory (only available if Boost and Z3 is found)
 - a test executable `qmap_exact_test` containing a small set of unit tests for the exact mapper in the `build/test` directory (only available if Z3 is found)
 
+### Extending the Python Bindings
+
+To extend the Python bindings you can locally install the package in edit mode, so that changes in the Python code are instantly available.
+The following example assumes you have a [virtual environment](https://docs.python.org/3/library/venv.html) set up and activated.
+
+```commandline
+(venv) $ pip install cmake
+(venv) $ pip install --editable .
+```
+
+If you change parts of the C++ code, you have to run the second line to make the changes visible in Python.
+
 ## Reference
 
 If you use our tool for your research, we will be thankful if you refer to it by citing the appropriate publications.
 
-For the heuristic mapping, please cite
+For the [heuristic mapping](https://dblp.org/rec/journals/tcad/ZulehnerPW19.html?view=bibtex), please cite
 ```bibtex
 @article{DBLP:journals/tcad/ZulehnerPW19,
   author    = {Alwin Zulehner and Alexandru Paler and Robert Wille},
@@ -262,7 +276,7 @@ For the heuristic mapping, please cite
 }
 ```
 
-For the teleportation in the heuristic mapping, please cite
+For the [teleportation in the heuristic mapping](https://dblp.org/rec/conf/aspdac/HillmichZW21.html?view=bibtex), please cite
 ```bibtex
 @inproceedings{DBLP:conf/aspdac/HillmichZW21,
   author    = {Stefan Hillmich and Alwin Zulehner and Robert Wille},
@@ -274,7 +288,7 @@ For the teleportation in the heuristic mapping, please cite
 }
 ```
 
-For the exact mapping, please cite
+For the [exact mapping](https://dblp.org/rec/conf/dac/WilleBZ19.html?view=bibtex), please cite
 ```bibtex
 @inproceedings{DBLP:conf/dac/WilleBZ19,
   author    = {Robert Wille and Lukas Burgholzer and Alwin Zulehner},
