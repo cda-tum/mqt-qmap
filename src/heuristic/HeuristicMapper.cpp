@@ -182,6 +182,7 @@ void HeuristicMapper::initResults() {
 	Mapper::initResults();
 	results.method = Method::Heuristic;
 
+	results.seed = settings.teleportation_seed;
 	results.input_teleportation_qubits = settings.teleportation_qubits;
 	results.output_teleportation_qubits = settings.teleportation_qubits;
 	results.output_teleportation_fake = settings.teleportation_fake;

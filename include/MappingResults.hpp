@@ -51,6 +51,7 @@ struct MappingResults {
 	double time = 0.0;
 	bool timeout = true;
 	std::string output_name;
+	unsigned long long seed = 0;
 	unsigned long output_gates = 0;
 	unsigned long output_singlequbitgates = 0;
 	unsigned long output_cnots = 0;
@@ -73,6 +74,7 @@ struct MappingResults {
 		input_layers = mappingResults.input_layers;
         input_teleportation_qubits = mappingResults.input_teleportation_qubits;
 
+        seed = mappingResults.seed;
 		architecture = mappingResults.architecture;
 		calibration = mappingResults.calibration;
 		method = mappingResults.method;
@@ -112,6 +114,7 @@ struct MappingResults {
 		if (printStatistics) {
 			out << ",\n\t\"statistics\": {\n";
 			out << "\t\t\"mapping_time\": " << (timeout? "\"timeout\"": std::to_string(time)) << ",\n";
+			out << "\t\t\"seed\": " << seed << ",\n";
 			out << "\t\t\"additional_gates\": " << output_gates-input_gates << ",\n";
 			out << "\t\t\"method\": \"" << toString(method) << "\",\n";
 
