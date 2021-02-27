@@ -29,7 +29,7 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	include(CheckIPOSupported)
 	check_ipo_supported(RESULT ipo_supported)
 	if(ipo_supported)
-		set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+		#set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 	endif()
 
 	# set compiler flags depending on compiler

@@ -25,6 +25,7 @@ constexpr int COST_SINGLE_QUBIT_GATE = 1;
 constexpr int COST_CNOT_GATE = 10;
 constexpr int COST_UNIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr int COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
+constexpr int COST_TELEPORTATION = 3 * COST_CNOT_GATE;
 constexpr int COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 enum class AvailableArchitectures {
@@ -98,6 +99,10 @@ public:
 		return couplingMap;
 	}
 
+	CouplingMap& getCurrentTeleportations() {
+		return current_teleportations;
+	}
+
 	const Matrix& getDistanceTable() const {
 		return distanceTable;
 	}
@@ -131,7 +136,12 @@ public:
 	}
 
 	double distance(unsigned short control, unsigned short target) const {
-		return distanceTable.at(control).at(target);
+	    if (current_teleportations.empty()) {
+            return distanceTable.at(control).at(target);
+	    } else {
+	        return bfs(control, target, current_teleportations);
+	    }
+
 	}
 
 	unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
@@ -159,6 +169,7 @@ protected:
 	std::string calibrationName;
 	unsigned short nqubits = 0;
 	CouplingMap couplingMap = {};
+	CouplingMap current_teleportations = {};
 	bool isBidirectional = true;
 	Matrix distanceTable = {};
 
@@ -186,6 +197,12 @@ protected:
 			return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
 		}
 	}
+
+    // added for teleportation
+    static bool contains(const std::vector<int>& v, const int e) {
+        return std::find(v.begin(), v.end(), e) != v.end();
+    }
+    unsigned long bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const;
 
 
 

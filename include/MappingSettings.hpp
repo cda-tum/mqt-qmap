@@ -78,6 +78,9 @@ struct MappingSettings {
 
 	bool lookahead = true;
 	int nrLookaheads = 15;
+    int teleportation_qubits = 0;
+    unsigned long long teleportation_seed = 0;
+    bool teleportation_fake = false;
 	double firstLookaheadFactor = 0.75;
 	double lookaheadFactor = 0.5;
 

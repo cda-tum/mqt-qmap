@@ -18,9 +18,20 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <operations/Operation.hpp>
+
 using Matrix = std::vector<std::vector<double>>;
 using Edge = std::pair<unsigned short, unsigned short>;
 using CouplingMap = std::set<Edge>;
+
+struct Movement {
+    Movement(unsigned short first, unsigned short second, qc::OpType op) : first(first), second(second), middle_ancilla(std::numeric_limits<decltype(middle_ancilla)>::max()), op(op) {}
+    Movement(unsigned short first, unsigned short second, unsigned short middle_anc, qc::OpType op) : first(first), second(second), middle_ancilla(middle_anc), op(op) {}
+    unsigned short first;
+    unsigned short second;
+    unsigned short middle_ancilla;
+    qc::OpType op;
+};
 
 class QMAPException : public std::runtime_error {
 	std::string msg;

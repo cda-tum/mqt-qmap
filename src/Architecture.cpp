@@ -303,6 +303,76 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
 	}
 }
 
+unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const {
+	std::queue<std::vector<int>> queue;
+	std::vector<int> v;
+	v.push_back(start);
+	queue.push(v);
+	std::vector<std::vector<int>> solutions;
+
+	unsigned long length = 0;
+	std::set<int> successors;
+	while (!queue.empty()) {
+		v = queue.front();
+		queue.pop();
+		int current = v[v.size() - 1];
+		if (current == goal) {
+			length = v.size();
+			solutions.push_back(v);
+			break;
+		} else {
+			successors.clear();
+			for (const auto& edge : getCouplingMap()) {
+				if (edge.first == current && !contains(v, edge.second)) {
+					successors.insert(edge.second);
+				}
+				if (edge.second == current && !contains(v, edge.first)) {
+					successors.insert(edge.first);
+				}
+			}
+			for(const auto& edge : teleportations) {
+				if(edge.first == current && !contains(v, edge.second)) {
+					successors.insert(edge.second);
+				}
+				if(edge.second == current && !contains(v, edge.first)) {
+					successors.insert(edge.first); // was v2 but this is probably wrong
+				}
+			}
+
+			for (int successor : successors) {
+				std::vector<int> v2 = v;
+				v2.push_back(successor);
+				queue.push(v2);
+			}
+		}
+	}
+	while (!queue.empty() && queue.front().size() == length) {
+		if (queue.front()[queue.front().size() - 1] == goal) {
+			solutions.push_back(queue.front());
+		}
+		queue.pop();
+	}
+
+	//TODO: different weight if this contains a teleportation
+	for (const auto& s : solutions) {
+		for (int j = 0; j < s.size() - 1; j++) {
+			Edge e{s[j], s[j + 1]};
+			if (getCouplingMap().find(e) != getCouplingMap().end()) {
+				return (length-2)*7;
+			}
+		}
+	}
+
+	if(length == 2
+	   && getCouplingMap().find(Edge {start, goal}) == getCouplingMap().end()
+	   && getCouplingMap().find(Edge {goal, start}) == getCouplingMap().end()) {
+		return 7;
+	}
+
+	return (length - 2)*7 + 4;
+}
+
+
 std::string toString(const AvailableArchitectures architecture) {
 	switch (architecture) {
 		case AvailableArchitectures::IBM_QX4:
