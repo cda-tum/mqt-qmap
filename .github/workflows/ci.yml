@@ -129,13 +129,13 @@ jobs:
         id:   cache-boost
         uses: actions/cache@v2
         with:
-          path: ${{github.workspace}}/boost_1_71_0
-          key:  ${{ runner.OS }}-boost171
+          path: ${{github.workspace}}/boost_1_70_0
+          key:  ${{ runner.OS }}-boost170
 
       - name: Download boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: |
-             C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.7z --no-check-certificate
+             C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
 
       - uses: ilammy/msvc-dev-cmd@v1
 
@@ -143,8 +143,8 @@ jobs:
         if: steps.cache-boost.outputs.cache-hit != 'true'
         shell: bash
         run: |
-             "/c/Program Files/7-Zip/7z.exe" x boost_1_71_0.7z "-o${{github.workspace}}"
-             cd boost_1_71_0
+             "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
+             cd boost_1_70_0
              ./bootstrap.bat
              ./b2.exe -j8 address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
 
@@ -166,10 +166,10 @@ jobs:
       - name:  Configure CMake
         shell: bash
         run:   |
-               setx path "%path%;${{github.workspace}}\boost_1_71_0"
-               setx lib "%lib%;${{github.workspace}}\boost_1_71_0\stage\lib"
-               setx libpath "%libpath%;${{github.workspace}}\boost_1_71_0\stage\lib"
-               cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_71_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_71_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_71_0\stage\lib" -DZ3_ROOT=z3/build
+               setx path "%path%;${{github.workspace}}\boost_1_70_0"
+               setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
+               setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
+               cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\stage\lib" -DZ3_ROOT=z3/build
 
       - name:  Build
         shell: bash
