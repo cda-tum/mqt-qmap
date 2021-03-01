@@ -119,3 +119,13 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 	IBM_QX5_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
+
+TEST_P(HeuristicTest16Q, Teleportation) {
+    MappingSettings settings{};
+    settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+    settings.teleportation_qubits = std::min((IBM_QX5.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+    IBM_QX5_mapper.map(settings);
+    IBM_QX5_mapper.dumpResult(GetParam() + "_heuristic_qx5_teleport.qasm");
+    IBM_QX5_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
+}

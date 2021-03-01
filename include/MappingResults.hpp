@@ -39,6 +39,7 @@ struct MappingResults {
 	unsigned long input_cnots = 0;
 	unsigned long input_qubits = 0;
 	unsigned long input_layers = 0;
+	unsigned long input_teleportation_qubits = 0;
 
 	std::string architecture;
 	std::string calibration;
@@ -50,12 +51,16 @@ struct MappingResults {
 	double time = 0.0;
 	bool timeout = true;
 	std::string output_name;
+	unsigned long long seed = 0;
 	unsigned long output_gates = 0;
 	unsigned long output_singlequbitgates = 0;
 	unsigned long output_cnots = 0;
 	unsigned long output_swaps = 0;
 	unsigned long output_direction_reverse = 0;
 	unsigned long output_qubits = 0;
+	unsigned long output_teleportations = 0;
+    unsigned long output_teleportation_qubits = 0;
+    bool output_teleportation_fake = false;
 
 	MappingResults() = default;
 	virtual ~MappingResults() = default;
@@ -67,7 +72,9 @@ struct MappingResults {
 		input_cnots = mappingResults.input_cnots;
 		input_qubits = mappingResults.input_qubits;
 		input_layers = mappingResults.input_layers;
+        input_teleportation_qubits = mappingResults.input_teleportation_qubits;
 
+        seed = mappingResults.seed;
 		architecture = mappingResults.architecture;
 		calibration = mappingResults.calibration;
 		method = mappingResults.method;
@@ -76,6 +83,9 @@ struct MappingResults {
 
 		output_name = mappingResults.output_name;
 		output_qubits = mappingResults.output_qubits;
+		output_teleportations = mappingResults.output_teleportations;
+		output_teleportation_qubits = mappingResults.output_teleportation_qubits;
+		output_teleportation_fake = mappingResults.output_teleportation_fake;
 	}
 
 	virtual std::ostream& print(std::ostream& out, bool printStatistics) {
@@ -86,7 +96,8 @@ struct MappingResults {
 		out << "\t\t\"gates\": " << input_gates << ",\n";
 		out << "\t\t\"singlequbitgates\": " << input_singlequbitgates << ",\n";
 		out << "\t\t\"cnots\": " << input_cnots << ",\n";
-		out << "\t\t\"layers\": " << input_layers << "\n";
+		out << "\t\t\"layers\": " << input_layers << ",\n";
+		out << "\t\t\"teleportation_qubits\": " << input_teleportation_qubits << "\n";
 		out << "\t},\n";
 		out << "\t\"mapped_circuit\": {\n";
 		out << "\t\t\"name\": \"" << output_name << "\",\n";
@@ -95,11 +106,15 @@ struct MappingResults {
 		out << "\t\t\"singlequbitgates\": " << output_singlequbitgates << ",\n";
 		out << "\t\t\"cnots\": " << output_cnots << ",\n";
 		out << "\t\t\"swaps\": " << output_swaps << ",\n";
+		out << "\t\t\"teleportations\": " << output_teleportations << ",\n";
+		out << "\t\t\"teleportation_qubits\": " << output_teleportation_qubits << ",\n";
+		out << "\t\t\"teleportation_fake\": " << output_teleportation_fake << ",\n";
 		out << "\t\t\"direction_reverse\": " << output_direction_reverse << "\n";
 		out << "\t}";
 		if (printStatistics) {
 			out << ",\n\t\"statistics\": {\n";
 			out << "\t\t\"mapping_time\": " << (timeout? "\"timeout\"": std::to_string(time)) << ",\n";
+			out << "\t\t\"seed\": " << seed << ",\n";
 			out << "\t\t\"additional_gates\": " << output_gates-input_gates << ",\n";
 			out << "\t\t\"method\": \"" << toString(method) << "\",\n";
 
@@ -140,6 +155,9 @@ struct MappingResults {
 		mapped_circuit["singlequbitgates"] = output_singlequbitgates;
 		mapped_circuit["cnots"] = output_cnots;
 		mapped_circuit["swaps"] = output_swaps;
+        mapped_circuit["teleportations"] = output_teleportations;
+        mapped_circuit["teleportation_qubits"] = output_teleportation_qubits;
+        mapped_circuit["teleportation_fake"] = output_teleportation_fake;
 		mapped_circuit["direction_reverse"] = output_direction_reverse;
 
 		if (statistics) {
@@ -148,6 +166,7 @@ struct MappingResults {
 			if (timeout)
 				stats["timeout"] = timeout;
 			stats["mapping_time"] = time;
+			stats["seed"] = seed;
 			stats["additional_gates"] = output_gates-input_gates;
 			stats["method"] = method;
 			if (layeringStrategy != LayeringStrategy::None) {

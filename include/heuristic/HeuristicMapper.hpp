@@ -23,17 +23,17 @@ public:
 		std::array<short, MAX_DEVICE_QUBITS> qubits{}; // get qubit at specific location
 		std::array<short, MAX_DEVICE_QUBITS> locations{}; // get location of specific qubit
 		bool done = true;
-		std::vector<std::vector<Edge>> swaps = {};
+		std::vector<std::vector<Exchange>> swaps = {};
 		unsigned long nswaps = 0;
 
 		Node() = default;
-		Node(const std::array<short, MAX_DEVICE_QUBITS>& q, const std::array<short, MAX_DEVICE_QUBITS>& loc, const std::vector<std::vector<Edge>>& sw = {}) {
+		Node(const std::array<short, MAX_DEVICE_QUBITS>& q, const std::array<short, MAX_DEVICE_QUBITS>& loc, const std::vector<std::vector<Exchange>>& sw = {}) {
 			std::copy(q.begin(), q.end(), qubits.begin());
 			std::copy(loc.begin(), loc.end(), locations.begin());
 			std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
 		}
 
-		void applySWAP(const Edge& swap) {
+		void applySWAP(const Edge& swap, Architecture& arch) {
 			short q1 = qubits.at(swap.first);
 			short q2 = qubits.at(swap.second);
 
@@ -46,7 +46,40 @@ public:
 			if (q2 != -1) {
 				locations.at(q2) = swap.first;
 			}
-			swaps.back().emplace_back(swap);
+
+            if(arch.getCouplingMap().find(swap) != arch.getCouplingMap().end() || arch.getCouplingMap().find(Edge {swap.second, swap.first}) != arch.getCouplingMap().end()) {
+                swaps.back().emplace_back(swap.first, swap.second, qc::SWAP);
+                //std::clog << "SWAP " << swap.first << " <--> " << swap.second << "\n";
+            } else {
+                unsigned short middle_anc = std::numeric_limits<decltype(middle_anc)>::max();
+                for(const auto& t : arch.getCurrentTeleportations()) {
+                    if (t.first == swap.first || t.first == swap.second) {
+                        middle_anc = t.second;
+                        break;
+                    } else if (t.second == swap.first || t.second == swap.second) {
+                        middle_anc = t.first;
+                        break;
+                    }
+                }
+
+                if (middle_anc == std::numeric_limits<decltype(middle_anc)>::max()) {
+                    throw QMAPException("Teleportation between seemingly wrong qubits: " + std::to_string(swap.first) + " <--> " + std::to_string(swap.second));
+                }
+
+                unsigned short source = std::numeric_limits<decltype(source)>::max();
+                unsigned short target = std::numeric_limits<decltype(target)>::max();
+                if(arch.getCouplingMap().find({swap.first, middle_anc}) != arch.getCouplingMap().end()
+                    || arch.getCouplingMap().find({middle_anc, swap.first}) != arch.getCouplingMap().end()) {
+                    source = swap.first;
+                    target = swap.second;
+                } else {
+                    source = swap.second;
+                    target = swap.first;
+                }
+
+                swaps.back().emplace_back(source, middle_anc, target, qc::Teleportation);
+                //std::clog << "TELE " << source << " -(" << middle_anc << ")-> " << target << "\n";
+            }
 		}
 
 		void updateHeuristicCost(const Architecture& arch, const Gate& gate, bool admissibleHeuristic) {
@@ -100,7 +133,7 @@ protected:
 	virtual Node AstarMap(long layer);
 
 	void expandNode(const std::vector<unsigned short>& consideredQubits, Node& node, long layer);
-	void expand_node_add_one_swap(const Edge& swap, Node& node, long layer);
+	void expand_node_add_one_swap(const Edge &swap, Node& node, long layer);
 
 	void lookahead(long layer, Node& node);
 

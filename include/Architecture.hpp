@@ -23,8 +23,10 @@ constexpr unsigned short GATES_OF_DIRECTION_REVERSE = 4;
 
 constexpr int COST_SINGLE_QUBIT_GATE = 1;
 constexpr int COST_CNOT_GATE = 10;
+constexpr int COST_MEASUREMENT = 10;
 constexpr int COST_UNIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr int COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
+constexpr int COST_TELEPORTATION = 2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr int COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 enum class AvailableArchitectures {
@@ -32,7 +34,8 @@ enum class AvailableArchitectures {
 	IBM_QX5,
 	IBMQ_Yorktown,
 	IBMQ_London,
-	IBMQ_Bogota
+	IBMQ_Bogota,
+	IBMQ_Tokyo
 };
 std::string toString(const AvailableArchitectures architecture);
 // map AvailableArchitectures values to JSON as strings
@@ -42,6 +45,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( AvailableArchitectures, {
 	{AvailableArchitectures::IBMQ_Yorktown, "IBMQ_Yorktown"},
 	{AvailableArchitectures::IBMQ_London, "IBMQ_London"},
 	{AvailableArchitectures::IBMQ_Bogota, "IBMQ_Bogota"},
+	{AvailableArchitectures::IBMQ_Tokyo, "IBMQ_Tokyo"},
 })
 
 class Architecture {
@@ -98,6 +102,10 @@ public:
 		return couplingMap;
 	}
 
+	CouplingMap& getCurrentTeleportations() {
+		return current_teleportations;
+	}
+
 	const Matrix& getDistanceTable() const {
 		return distanceTable;
 	}
@@ -131,7 +139,12 @@ public:
 	}
 
 	double distance(unsigned short control, unsigned short target) const {
-		return distanceTable.at(control).at(target);
+	    if (current_teleportations.empty()) {
+            return distanceTable.at(control).at(target);
+	    } else {
+	        return bfs(control, target, current_teleportations);
+	    }
+
 	}
 
 	unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
@@ -159,6 +172,7 @@ protected:
 	std::string calibrationName;
 	unsigned short nqubits = 0;
 	CouplingMap couplingMap = {};
+	CouplingMap current_teleportations = {};
 	bool isBidirectional = true;
 	Matrix distanceTable = {};
 
@@ -186,6 +200,12 @@ protected:
 			return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
 		}
 	}
+
+    // added for teleportation
+    static bool contains(const std::vector<int>& v, const int e) {
+        return std::find(v.begin(), v.end(), e) != v.end();
+    }
+    unsigned long bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const;
 
 
 
