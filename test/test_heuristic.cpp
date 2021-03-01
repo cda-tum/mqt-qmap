@@ -120,12 +120,53 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 	SUCCEED() << "Mapping successful";
 }
 
-TEST_P(HeuristicTest16Q, Teleportation) {
+
+class HeuristicTest20Q: public testing::TestWithParam<std::string> {
+protected:
+
+    std::string test_example_dir = "../../examples/";
+    std::string test_architecture_dir = "../../extern/architectures/";
+
+    qc::QuantumComputation qc{};
+    Architecture arch{};
+    HeuristicMapper tokyo_mapper{qc, arch};
+
+    void SetUp() override {
+        qc.import(test_example_dir + GetParam() + ".qasm");
+        arch.loadCouplingMap(test_architecture_dir + "ibmq_tokyo_20qubit.arch");
+    }
+};
+
+INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest20Q,
+                         testing::Values(
+                                 "ising_model_10",
+                                 "rd73_140",
+                                 "cnt3-5_179",
+                                 "qft_16",
+                                 "z4_268"
+                         ),
+                         [](const testing::TestParamInfo<HeuristicTest20Q::ParamType>& info) {
+                             std::string name = info.param;
+                             std::replace( name.begin(), name.end(), '-', '_');
+                             std::stringstream ss{};
+                             ss << name;
+                             return ss.str();});
+
+TEST_P(HeuristicTest20Q, Dynamic) {
     MappingSettings settings{};
     settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-    settings.teleportation_qubits = std::min((IBM_QX5.getNqubits() - qc.getNqubits()) & ~1u, 8u);
-    IBM_QX5_mapper.map(settings);
-    IBM_QX5_mapper.dumpResult(GetParam() + "_heuristic_qx5_teleport.qasm");
-    IBM_QX5_mapper.printResult(std::cout, true);
+    tokyo_mapper.map(settings);
+    tokyo_mapper.dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
+    tokyo_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTest20Q, Teleportation) {
+    MappingSettings settings{};
+    settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+    settings.teleportation_qubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+    tokyo_mapper.map(settings);
+    tokyo_mapper.dumpResult(GetParam() + "_heuristic_tokyo_teleport.qasm");
+    tokyo_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
