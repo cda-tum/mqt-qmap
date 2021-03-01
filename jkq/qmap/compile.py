@@ -34,8 +34,8 @@ def compile(circ, arch: Union[str, Arch],
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: LayeringStrategy
     :param use_teleportation:  Use teleportation in addition to swaps
-    :param teleportation_fake: Assign qubits as ancillary for teleportation but don't actually use them
-    :param teleportation_seed: Fix a seed for the initial ancilla placement (0 means no fixed seed)
+    :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
+    :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
     :param save_mapped_circuit: Include .qasm string of the mapped circuit in result
     :type save_mapped_circuit: bool
     :param csv: Create CSV string for result

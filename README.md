@@ -67,7 +67,7 @@ qmap.compile(circ, arch, ...)
 where `circ` is either a Qiskit `QuantumCircuit` object or the path to an input file (supporting various formats, such as `.qasm`, `.real`,...)
 and `arch` is either one of the pre-defined architectures (see below) or the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
 
-Architectures that are available per default (under `qmap.Arch.<...>`) include:
+Architectures that are available per default (under `qmap.Arch.<...>`) include (corresponding files are available in `extern/architectures/`):
 - `IBM_QX4` (5 qubit, directed bow tie layout)
 - `IBM_QX5` (16 qubit, directed ladder layout)
 - `IBMQ_Yorktown` (5 qubit, undirected bow tie layout)
@@ -132,7 +132,7 @@ JKQ QMAP also provides two **standalone executables** with command-line interfac
 They provide the same options as the Python module as flags (e.g., `--ps` for printing statistics). Per default, this produces JSON formatted output.
 
 ```commandline
-$ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch architectures/ibm_london_5qubit.arch --ps
+$ ./qmap_heuristic --in grover_2.qasm --out grover_2m.qasm --arch extern/architectures/ibm_london_5qubit.arch --ps
 {
 	"circuit": {
 		"name": "grover_2",

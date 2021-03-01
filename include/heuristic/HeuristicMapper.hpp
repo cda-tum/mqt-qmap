@@ -23,11 +23,11 @@ public:
 		std::array<short, MAX_DEVICE_QUBITS> qubits{}; // get qubit at specific location
 		std::array<short, MAX_DEVICE_QUBITS> locations{}; // get location of specific qubit
 		bool done = true;
-		std::vector<std::vector<Movement>> swaps = {};
+		std::vector<std::vector<Exchange>> swaps = {};
 		unsigned long nswaps = 0;
 
 		Node() = default;
-		Node(const std::array<short, MAX_DEVICE_QUBITS>& q, const std::array<short, MAX_DEVICE_QUBITS>& loc, const std::vector<std::vector<Movement>>& sw = {}) {
+		Node(const std::array<short, MAX_DEVICE_QUBITS>& q, const std::array<short, MAX_DEVICE_QUBITS>& loc, const std::vector<std::vector<Exchange>>& sw = {}) {
 			std::copy(q.begin(), q.end(), qubits.begin());
 			std::copy(loc.begin(), loc.end(), locations.begin());
 			std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));

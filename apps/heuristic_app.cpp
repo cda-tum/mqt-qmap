@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
             ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint"))")
-            ("teleportation", po::value<unsigned long long int>()->implicit_value(0), "Use teleportation with optionally specifying the seed")
-            ("teleportation_fake", "Use the same initial mapping but do not actually use teleportation for comparison")
+            ("teleportation", po::value<unsigned long long int>()->implicit_value(0), "Use teleportation with optionally specifying the seed for the RNG used for initial placement")
+            ("teleportation_fake", "Assign qubits as ancillary for teleportation in the initial placement but don't actually use them")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
