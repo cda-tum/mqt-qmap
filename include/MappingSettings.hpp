@@ -83,6 +83,8 @@ struct MappingSettings {
     bool teleportation_fake = false;
 	double firstLookaheadFactor = 0.75;
 	double lookaheadFactor = 0.5;
+	int encoding = 0;
+	int grouping = 0;
 
 };
 
