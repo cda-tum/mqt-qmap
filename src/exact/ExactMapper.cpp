@@ -7,7 +7,6 @@
 
 void ExactMapper::map(const MappingSettings &settings)
 {
-
 	this->settings = settings;
 	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 	qc.stripIdleQubits(true, true);
@@ -69,6 +68,8 @@ void ExactMapper::map(const MappingSettings &settings)
 		allPossibleQubitChoices.push_back(qubitChoice);
 	} while (next_combination(qubits.begin(), qubits.begin() + qc.getNqubits(), qubits.end()));
 
+	unsigned long maxCost = findLongestPath(architecture.getCouplingMap(), architecture.getNqubits()) ; 
+	this->settings.bddLimits = maxCost;
 	// 3) determine exact mapping for this qubit choice
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
 	mappingSwaps.reserve(reducedLayerIndices.size());
@@ -505,7 +506,9 @@ if (encoding >= 0)
 	/// 	Objective Function				//
 	//////////////////////////////////////////
 	// cost for permutations
+	
 	piCount = 0;
+	std::vector<std::vector<WeightedVar>> weightedVars(reducedLayerIndices.size());
 	do
 	{
 		auto picost = architecture.minimumNumberOfSwaps(pi);
@@ -519,10 +522,28 @@ if (encoding >= 0)
 		}
 		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k)
 		{
+
 			opt.add(!y[k - 1][piCount], picost);
+			if (this->settings.bddLimits>0)
+				weightedVars[k].emplace_back(WeightedVar(piCount, picost));
 		}
 		++piCount;
 	} while (std::next_permutation(pi.begin(), pi.end()));
+	if (this->settings.bddLimits>0){
+		unsigned long maxCost = this->settings.bddLimits;
+		if (architecture.bidirectional())
+		{
+			maxCost *= GATES_OF_BIDIRECTIONAL_SWAP;
+		}
+		else
+		{
+			maxCost *= GATES_OF_UNIDIRECTIONAL_SWAP;
+		}
+		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k)
+		{
+			opt.add(buildBDD(weightedVars[k], y[k-1], auxvars, maxCost, c));
+		}
+	}
 
 	// cost for reversed directions
 	if (!architecture.bidirectional())

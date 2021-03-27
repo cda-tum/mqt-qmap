@@ -2,6 +2,10 @@
 #include "encodings/Encodings.hpp"
 
 std::map<std::pair<unsigned long, long>, SavedLit> history;
+std::vector<std::vector<unsigned short>> connections;
+std::vector<int> d;
+std::vector<bool> visited;
+int maxSum;
 
 bool sortWeightedVar(WeightedVar v1, WeightedVar v2) {
 	return v1.weight < v2.weight;
@@ -216,9 +220,8 @@ std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount
 		result.push_back(v);
 	return result;
 }
-
 int k = 0;
-expr buildBDD(std::vector<WeightedVar> inputLiterals, expr_vector vars, expr_vector& auxVars, int leq, context& c) {
+expr buildBDD(std::vector<WeightedVar> inputLiterals, std::vector<z3::expr> vars, expr_vector& auxVars, int leq, context& c) {
 	std::sort(inputLiterals.begin(), inputLiterals.end(), sortWeightedVar);
 	inputLiterals.erase(std::unique(inputLiterals.begin(), inputLiterals.end(), compWeightedVar), inputLiterals.end());
 	//std::printf(printWeightedVars(inputLiterals, vars).c_str());
@@ -234,7 +237,7 @@ expr buildBDD(std::vector<WeightedVar> inputLiterals, expr_vector vars, expr_vec
 	return result and formula;
 }
 
-expr buildBDD(unsigned long index, long curSum, long maxSum, std::vector<WeightedVar> inputLiterals, expr_vector vars, expr_vector auxVars, expr& formula, expr& true_lit, context& c) {
+expr buildBDD(unsigned long index, long curSum, long maxSum, std::vector<WeightedVar> inputLiterals, std::vector<z3::expr> vars, expr_vector auxVars, expr& formula, expr& true_lit, context& c) {
 	if (curSum + maxSum < k)
 		return true_lit;
 	if (curSum >= k)
@@ -344,4 +347,46 @@ std::string printWeightedVars(std::vector<WeightedVar> wVars, expr_vector vars) 
 		out << vars[var.varID].to_string() << " - " << var.weight << std::endl;
 	}
 	return out.str();
+}
+
+
+int findLongestPath(const CouplingMap cm, int nQubits){
+	connections.clear();
+	connections.resize(nQubits);
+	maxSum = -1;
+	for (auto edge: cm){
+		connections.at(edge.first).emplace_back(edge.second);
+	}
+	for (int q=0; q < nQubits; ++q){
+		d.clear();
+		d.resize(nQubits);
+		std::fill(d.begin(), d.end(), 0);
+		visited.clear();
+		visited.resize(nQubits);
+		std::fill(visited.begin(), visited.end(), false);
+		findLongestPath(q, 0);
+		auto it = std::max_element(d.begin(), d.end());
+		if ((*it)>maxSum)
+			maxSum = (*it);
+	}
+	return maxSum;
+}
+
+void findLongestPath(unsigned short node, int curSum){
+	if (visited.at(node))
+		return;
+	visited[node] = true;
+
+	if (d.at(node)<curSum)
+		d[node] = curSum;
+	if (connections.at(node).empty()){
+		visited[node]=false;
+		return;
+	}
+
+	for (auto child: connections.at(node)){
+		findLongestPath(child, curSum+1);
+	}
+
+	visited[node]=false;
 }

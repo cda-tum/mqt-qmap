@@ -85,6 +85,7 @@ struct MappingSettings {
 	double lookaheadFactor = 0.5;
 	int encoding = 0;
 	int grouping = 0;
+	int bddLimits = 0;
 
 };
 
