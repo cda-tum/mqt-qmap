@@ -12,6 +12,8 @@
 #include <math.h>
 #include <map>
 
+#include "utils.hpp"
+
 using namespace z3;
 
 struct NestedVar
@@ -75,8 +77,8 @@ expr NaiveAtLeastOne(std::vector<expr> clauseVars, context& c);
 expr AtMostOneBiMander(std::vector<z3::expr> vars, std::vector<int> varIDs, expr_vector& auxvars, context& c);
 expr ExactlyOneBiMander(std::vector<z3::expr> vars, std::vector<int> varIDs, expr_vector& auxvars, context& c);
 
-expr buildBDD(std::vector<WeightedVar> inputLiterals, expr_vector vars, expr_vector& auxVars, int leq, context& c);
-expr buildBDD(unsigned long index, long curSum, long maxSum, std::vector<WeightedVar> inputLiterals, expr_vector vars, expr_vector auxVars, expr& formula, expr& true_lit, context& c);
+expr buildBDD(std::vector<WeightedVar> inputLiterals, std::vector<z3::expr>  vars, expr_vector& auxVars, int leq, context& c);
+expr buildBDD(unsigned long index, long curSum, long maxSum, std::vector<WeightedVar> inputLiterals, std::vector<z3::expr> vars, expr_vector auxVars, expr& formula, expr& true_lit, context& c);
 
 std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount);
 std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int groupCount);
@@ -84,4 +86,9 @@ std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int group
 std::string printBimanderVars(std::vector<std::vector<int>> vars);
 std::string printNestedVars(std::vector<NestedVar> vars, int level = 0);
 std::string printWeightedVars(std::vector<WeightedVar> wVars, expr_vector vars);
+
+
+int findLongestPath(const CouplingMap cm, int nQubits);
+
+void findLongestPath(unsigned short node, int curSum);
 #endif

@@ -21,6 +21,9 @@ int main(int argc, char** argv) {
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint" | "odd" | "triangle"))")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
+			("encoding", po::value<std::string>(), "choose commander or bimander encoding")
+			("grouping", po::value<std::string>(), "choose method of grouping (fixed, logarithm)")
+			("bdd_limits", po::value<std::string>(), "enable bdd for limiting swaps per layer (1 to activate)")
             ;
     po::variables_map vm;
     try {
@@ -85,6 +88,53 @@ int main(int argc, char** argv) {
 			ms.layeringStrategy = LayeringStrategy::QubitTriangle;
 		} else {
 			ms.layeringStrategy = LayeringStrategy::None;
+		}
+	}
+	if (vm.count("encoding"))
+	{
+		const std::string encoding = vm["encoding"].as<std::string>();
+		if (encoding == "none")
+		{
+			ms.encoding = 0;
+		}
+		else if (encoding == "cmdr")
+		{
+			ms.encoding = 1;
+		}
+		else if (encoding == "bimander")
+		{
+			ms.encoding = 2;
+		}
+		else
+		{
+			ms.encoding = 0;
+		}
+	}
+	if (vm.count("grouping"))
+	{
+		const std::string grouping = vm["grouping"].as<std::string>();
+		if (grouping == "fixed3")
+		{
+			ms.grouping = 3;
+		}
+		else if (grouping == "fixed2")
+		{
+			ms.grouping = 2;
+		}
+		else if (grouping == "log")
+		{
+			ms.grouping = -1;
+		} else if (grouping == "halves"){
+			ms.grouping = -2;
+		}
+	}
+	if (vm.count("bdd_limits"))
+	{
+		const std::string bdd = vm["bdd_limits"].as<std::string>();
+		if (bdd == "1") {
+			ms.bddLimits = 1;
+		} else {
+			ms.bddLimits = 0;
 		}
 	}
     ms.verbose = vm.count("verbose") > 0;
