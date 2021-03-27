@@ -68,7 +68,12 @@ void ExactMapper::map(const MappingSettings &settings)
 		allPossibleQubitChoices.push_back(qubitChoice);
 	} while (next_combination(qubits.begin(), qubits.begin() + qc.getNqubits(), qubits.end()));
 
+<<<<<<< HEAD
 	this->settings.bddLimits = findLongestPath(architecture.getCouplingMap(), architecture.getNqubits());
+=======
+	unsigned long maxCost = findLongestPath(architecture.getCouplingMap(), architecture.getNqubits()) ; 
+	this->settings.bddLimits = maxCost;
+>>>>>>> 9a7e7c7e5a38c1e137436685572b674a6857d868
 	// 3) determine exact mapping for this qubit choice
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
 	mappingSwaps.reserve(reducedLayerIndices.size());
