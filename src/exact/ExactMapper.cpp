@@ -292,7 +292,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	//////////////////////////////////////////
 	/// 	Consistency Constraints			//
 	//////////////////////////////////////////
-	if (encoding >= 0) {
+	if (encoding == 0) {
 		for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
 			for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
 				expr rowConsistency = c.int_val(0);
