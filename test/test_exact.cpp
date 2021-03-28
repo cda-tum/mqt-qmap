@@ -87,3 +87,73 @@ TEST_P(ExactTest, QubitTriangle) {
 	SUCCEED() << "Mapping successful";
 }
 
+TEST_P(ExactTest, CommanderEncoding) {
+	MappingSettings settings{};
+	settings.encoding = 1; 
+	settings.grouping = 3;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 1; 
+	settings.grouping = 2;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 1; 
+	settings.grouping = -1;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 1; 
+	settings.grouping = -2;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}
+
+TEST_P(ExactTest, BimanderEncoding) {
+	MappingSettings settings{};
+	settings.encoding = 2; 
+	settings.grouping = 3;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 2; 
+	settings.grouping = 2;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 2; 
+	settings.grouping = -1;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+	MappingSettings settings{};
+	settings.encoding = 2; 
+	settings.grouping = -2;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}
+
+TEST_P(ExactTest, BDDLimits) {
+	MappingSettings settings{};
+	settings.bddLimits = 1;
+	IBMQ_Yorktown_mapper.map(settings);
+	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander.qasm");
+	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}
