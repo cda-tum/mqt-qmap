@@ -161,12 +161,43 @@ TEST_P(HeuristicTest20Q, Dynamic) {
     SUCCEED() << "Mapping successful";
 }
 
-/*TEST_P(HeuristicTest20Q, Teleportation) {
+
+
+class HeuristicTest20QTeleport: public testing::TestWithParam<std::tuple<unsigned long long, std::string>> {
+protected:
+
+    std::string test_example_dir = "../../examples/";
+    std::string test_architecture_dir = "../../extern/architectures/";
+
+    qc::QuantumComputation qc{};
+    Architecture arch{};
+    HeuristicMapper tokyo_mapper{qc, arch};
+
+    void SetUp() override {
+        qc.import(test_example_dir + std::get<1>(GetParam()) + ".qasm");
+        arch.loadCouplingMap(test_architecture_dir + "ibmq_tokyo_20qubit.arch");
+    }
+};
+
+INSTANTIATE_TEST_SUITE_P(HeuristicTeleport, HeuristicTest20QTeleport,
+                         testing::Combine(
+                                testing::Values(1, 2, 3, 1337, 1338, 3147),
+                                testing::Values("ising_model_10", "rd73_140", "cnt3-5_179",  "qft_16", "z4_268")
+                         ),
+                         [](const testing::TestParamInfo<HeuristicTest20QTeleport::ParamType>& info) {
+                             std::string name = std::get<1>(info.param);
+                             std::replace( name.begin(), name.end(), '-', '_');
+                             std::stringstream ss{};
+                             ss << name << "_seed" << std::get<0>(info.param);
+                             return ss.str();});
+
+TEST_P(HeuristicTest20QTeleport, Teleportation) {
     MappingSettings settings{};
     settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-    settings.teleportation_qubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+    settings.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+    settings.teleportationSeed = std::get<0>(GetParam());
     tokyo_mapper.map(settings);
-    tokyo_mapper.dumpResult(GetParam() + "_heuristic_tokyo_teleport.qasm");
+    tokyo_mapper.dumpResult(std::get<1>(GetParam()) + "_heuristic_tokyo_teleport.qasm");
     tokyo_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
-}*/
+}
