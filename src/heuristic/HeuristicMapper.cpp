@@ -217,7 +217,6 @@ void HeuristicMapper::createInitialMapping() {
             locations[qc.getNqubits() + i + 1] = e.second;
             qubits[e.first] = qc.getNqubits() + i;
             qubits[e.second] = qc.getNqubits() + i + 1;
-            //std::clog << "initial teleportation pair: " << e.first << ", " << e.second << "\n";
         }
 
         if (settings.teleportation_fake) {
@@ -302,19 +301,40 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
 			}
 
 			if (possibleEdges.empty()) {
-				throw QMAPException("Could not map logical qubits to physical qubits. No suitable edge found.");
+                double bestScore = std::numeric_limits<int>::max();
+                std::pair<unsigned short, unsigned short> bestMapping;
+                for(int i=0; i < architecture.getNqubits(); i++) {
+                    for (int j = i + 1; j < architecture.getNqubits(); j++) {
+                        if (qubits.at(i) == DEFAULT_POSITION && qubits.at(j) == DEFAULT_POSITION) {
+                            double dist = architecture.distance(i, j);
+                            if (dist < bestScore) {
+                                bestScore = dist;
+                                bestMapping = std::make_pair(i, j);
+                            }
+                        }
+                    }
+                }
+                auto& chosenEdge = bestMapping;
+                locations.at(gate.control) = chosenEdge.first;
+                locations.at(gate.target) = chosenEdge.second;
+                qubits.at(chosenEdge.first) = gate.control;
+                qubits.at(chosenEdge.second) = gate.target;
+                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
+                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
+                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
+                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
+			} else {
+                // TODO: Consider fidelity here if available. The best available edge should be chosen
+                auto& chosenEdge = *possibleEdges.begin();
+                locations.at(gate.control) = chosenEdge.first;
+                locations.at(gate.target) = chosenEdge.second;
+                qubits.at(chosenEdge.first) = gate.control;
+                qubits.at(chosenEdge.second) = gate.target;
+                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
+                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
+                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
+                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
 			}
-
-			// TODO: Consider fidelity here if available. The best available edge should be chosen
-			auto& chosenEdge = *possibleEdges.begin();
-			locations.at(gate.control) = chosenEdge.first;
-			locations.at(gate.target) = chosenEdge.second;
-			qubits.at(chosenEdge.first) = gate.control;
-			qubits.at(chosenEdge.second) = gate.target;
-			qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
-			qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
-			qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
-			qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
 		} else if (controlLocation == DEFAULT_POSITION) {
 			mapToMinDistance(gate.target, gate.control);
 		} else if (targetLocation == DEFAULT_POSITION) {
@@ -382,7 +402,9 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
 
     std::set<Edge> perms = architecture.getCouplingMap();
     architecture.getCurrentTeleportations().clear();
+    architecture.teleportation_qubits.clear();
     for(int i = 0; i < settings.teleportation_qubits; i+=2) {
+        architecture.teleportation_qubits.emplace_back(node.locations[qc.getNqubits() + i], node.locations[qc.getNqubits() + i + 1]);
         Edge e;
         for(auto const& g : architecture.getCouplingMap()) {
             if(g.first == node.locations[qc.getNqubits() + i] && g.second != node.locations[qc.getNqubits() + i + 1]) {
@@ -434,14 +456,22 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge &swap, Node& node, lon
 
 	Node new_node = Node(node.qubits, node.locations, node.swaps);
 	new_node.nswaps++;
-	if (architecture.bidirectional()) {
-        new_node.costFixed = node.costFixed + COST_BIDIRECTIONAL_SWAP;
-	} else {
-        new_node.costFixed = node.costFixed + COST_UNIDIRECTIONAL_SWAP;
-	}
 
 	new_node.swaps.emplace_back();
-	new_node.applySWAP(swap, architecture);
+	if(architecture.getCouplingMap().find(swap) != architecture.getCouplingMap().end() ||
+	    architecture.getCouplingMap().find(Edge {swap.second, swap.first}) != architecture.getCouplingMap().end()) {
+
+	    if (architecture.bidirectional()) {
+            new_node.costFixed = node.costFixed + COST_BIDIRECTIONAL_SWAP;
+        } else {
+            new_node.costFixed = node.costFixed + COST_UNIDIRECTIONAL_SWAP;
+        }
+
+        new_node.applySWAP(swap, architecture);
+    } else {
+        new_node.costFixed = node.costFixed + COST_TELEPORTATION;
+	    new_node.applyTeleportation(swap, architecture);
+	}
     new_node.costTotal = new_node.costFixed;
     new_node.done = true;
 

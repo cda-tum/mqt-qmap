@@ -53,6 +53,7 @@ class Architecture {
 	static constexpr bool VERBOSE = false;
 
 public:
+    std::vector<std::pair<short, short>> teleportation_qubits{};
 
 	struct CalibrationData {
 		unsigned short qubit = 0;

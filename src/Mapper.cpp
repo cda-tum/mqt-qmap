@@ -14,7 +14,7 @@ void Mapper::initResults() {
 	results.output_qubits = architecture.getNqubits();
 	results.layeringStrategy = settings.layeringStrategy;
 	results.initialLayoutStrategy = settings.initialLayoutStrategy;
-	qcMapped.addQubitRegister(architecture.getNqubits());
+	qcMapped.addQubitRegister(architecture.getNqubits()+settings.teleportation_qubits);
 }
 
 Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch): qc(quantumComputation), architecture(arch) {

@@ -161,7 +161,7 @@ TEST_P(HeuristicTest20Q, Dynamic) {
     SUCCEED() << "Mapping successful";
 }
 
-/*TEST_P(HeuristicTest20Q, Teleportation) {
+TEST_P(HeuristicTest20Q, Teleportation) {
     MappingSettings settings{};
     settings.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
     settings.teleportation_qubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
@@ -169,4 +169,4 @@ TEST_P(HeuristicTest20Q, Dynamic) {
     tokyo_mapper.dumpResult(GetParam() + "_heuristic_tokyo_teleport.qasm");
     tokyo_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
-}*/
+}
