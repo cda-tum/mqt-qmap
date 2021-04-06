@@ -70,7 +70,7 @@ public:
 
 
             unsigned short middle_anc = std::numeric_limits<decltype(middle_anc)>::max();
-            for(const auto& qpair : arch.teleportation_qubits) {
+            for(const auto& qpair : arch.getTeleportationQubits()) {
                 if (swap.first == qpair.first) {
                     middle_anc = qpair.second;
                 } else if (swap.first == qpair.second) {

@@ -97,7 +97,7 @@ struct MappingResults {
 		out << "\t\t\"singlequbitgates\": " << input_singlequbitgates << ",\n";
 		out << "\t\t\"cnots\": " << input_cnots << ",\n";
 		out << "\t\t\"layers\": " << input_layers << ",\n";
-		out << "\t\t\"teleportation_qubits\": " << input_teleportation_qubits << "\n";
+		out << "\t\t\"teleportationQubits\": " << input_teleportation_qubits << "\n";
 		out << "\t},\n";
 		out << "\t\"mapped_circuit\": {\n";
 		out << "\t\t\"name\": \"" << output_name << "\",\n";
@@ -107,7 +107,7 @@ struct MappingResults {
 		out << "\t\t\"cnots\": " << output_cnots << ",\n";
 		out << "\t\t\"swaps\": " << output_swaps << ",\n";
 		out << "\t\t\"teleportations\": " << output_teleportations << ",\n";
-		out << "\t\t\"teleportation_qubits\": " << output_teleportation_qubits << ",\n";
+		out << "\t\t\"teleportationQubits\": " << output_teleportation_qubits << ",\n";
 		out << "\t\t\"teleportation_fake\": " << output_teleportation_fake << ",\n";
 		out << "\t\t\"direction_reverse\": " << output_direction_reverse << "\n";
 		out << "\t}";
@@ -156,7 +156,7 @@ struct MappingResults {
 		mapped_circuit["cnots"] = output_cnots;
 		mapped_circuit["swaps"] = output_swaps;
         mapped_circuit["teleportations"] = output_teleportations;
-        mapped_circuit["teleportation_qubits"] = output_teleportation_qubits;
+        mapped_circuit["teleportationQubits"] = output_teleportation_qubits;
         mapped_circuit["teleportation_fake"] = output_teleportation_fake;
 		mapped_circuit["direction_reverse"] = output_direction_reverse;
 

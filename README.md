@@ -91,7 +91,7 @@ Params:
     layering – Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     use_teleportation - Use teleportation in addition to swaps
     teleportation_fake - Assign qubits as ancillary for teleportation but don't actually use them
-    teleportation_seed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
+    teleportationSeed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
     csv – Create CSV string for result
     statistics – Print statistics
@@ -106,7 +106,7 @@ def compile(circ, arch: Union[str, Arch],
             layering: LayeringStrategy = LayeringStrategy.individual_gates,
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
-            teleportation_seed: int = 0,
+            teleportationSeed: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,

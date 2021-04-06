@@ -19,7 +19,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 
 	createLayers();
 	if (ms.verbose) {
-        std::clog << "Teleportation qubits: " << ms.teleportation_qubits << "\n";
+        std::clog << "Teleportation qubits: " << ms.teleportationQubits << "\n";
 		printLayering(std::clog);
 	}
 
@@ -182,31 +182,31 @@ void HeuristicMapper::initResults() {
 	Mapper::initResults();
 	results.method = Method::Heuristic;
 
-	results.seed = settings.teleportation_seed;
-	results.input_teleportation_qubits = settings.teleportation_qubits;
-	results.output_teleportation_qubits = settings.teleportation_qubits;
-	results.output_teleportation_fake = settings.teleportation_fake;
+	results.seed = settings.teleportationSeed;
+	results.input_teleportation_qubits = settings.teleportationQubits;
+	results.output_teleportation_qubits = settings.teleportationQubits;
+	results.output_teleportation_fake = settings.teleportationFake;
 }
 
 void HeuristicMapper::createInitialMapping() {
 	if (layers.empty())
 		return;
 
-	if (settings.teleportation_qubits > 0) {
+	if (settings.teleportationQubits > 0) {
         std::mt19937_64 mt;
-        if (settings.teleportation_seed == 0) {
+        if (settings.teleportationSeed == 0) {
             std::array<std::mt19937_64::result_type, std::mt19937_64::state_size> random_data{};
             std::random_device rd;
             std::generate(std::begin(random_data), std::end(random_data), [&rd]() { return rd(); });
             std::seed_seq seeds(std::begin(random_data), std::end(random_data));
             mt.seed(seeds);
         } else {
-            mt.seed(settings.teleportation_seed);
+            mt.seed(settings.teleportationSeed);
         }
 
         std::uniform_int_distribution<> dis(0, architecture.getNqubits() - 1);
 
-        for (int i = 0; i < settings.teleportation_qubits; i += 2) {
+        for (int i = 0; i < settings.teleportationQubits; i += 2) {
             Edge e;
             do {
                 auto it = std::begin(architecture.getCouplingMap());
@@ -219,9 +219,9 @@ void HeuristicMapper::createInitialMapping() {
             qubits[e.second] = qc.getNqubits() + i + 1;
         }
 
-        if (settings.teleportation_fake) {
-            settings.teleportation_qubits = 0;
-            results.output_teleportation_qubits = settings.teleportation_qubits;
+        if (settings.teleportationFake) {
+            settings.teleportationQubits = 0;
+            results.output_teleportation_qubits = settings.teleportationQubits;
         }
     }
 
@@ -299,42 +299,34 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
 					possibleEdges.emplace(edge);
 				}
 			}
+            std::pair<unsigned short, unsigned short> chosenEdge;
 
 			if (possibleEdges.empty()) {
                 double bestScore = std::numeric_limits<int>::max();
-                std::pair<unsigned short, unsigned short> bestMapping;
+
                 for(int i=0; i < architecture.getNqubits(); i++) {
                     for (int j = i + 1; j < architecture.getNqubits(); j++) {
                         if (qubits.at(i) == DEFAULT_POSITION && qubits.at(j) == DEFAULT_POSITION) {
                             double dist = architecture.distance(i, j);
                             if (dist < bestScore) {
                                 bestScore = dist;
-                                bestMapping = std::make_pair(i, j);
+                                chosenEdge = std::make_pair(i, j);
                             }
                         }
                     }
                 }
-                auto& chosenEdge = bestMapping;
-                locations.at(gate.control) = chosenEdge.first;
-                locations.at(gate.target) = chosenEdge.second;
-                qubits.at(chosenEdge.first) = gate.control;
-                qubits.at(chosenEdge.second) = gate.target;
-                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
-                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
-                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
-                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
 			} else {
-                // TODO: Consider fidelity here if available. The best available edge should be chosen
-                auto& chosenEdge = *possibleEdges.begin();
-                locations.at(gate.control) = chosenEdge.first;
-                locations.at(gate.target) = chosenEdge.second;
-                qubits.at(chosenEdge.first) = gate.control;
-                qubits.at(chosenEdge.second) = gate.target;
-                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
-                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
-                qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
-                qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
+                chosenEdge = *possibleEdges.begin();
 			}
+			// TODO: Consider fidelity here if available. The best available edge should be chosen
+            locations.at(gate.control) = chosenEdge.first;
+            locations.at(gate.target) = chosenEdge.second;
+            qubits.at(chosenEdge.first) = gate.control;
+            qubits.at(chosenEdge.second) = gate.target;
+            qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.initialLayout);
+            qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.initialLayout);
+            qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first, qcMapped.outputPermutation);
+            qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second, qcMapped.outputPermutation);
 		} else if (controlLocation == DEFAULT_POSITION) {
 			mapToMinDistance(gate.target, gate.control);
 		} else if (targetLocation == DEFAULT_POSITION) {
@@ -402,9 +394,9 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
 
     std::set<Edge> perms = architecture.getCouplingMap();
     architecture.getCurrentTeleportations().clear();
-    architecture.teleportation_qubits.clear();
-    for(int i = 0; i < settings.teleportation_qubits; i+=2) {
-        architecture.teleportation_qubits.emplace_back(node.locations[qc.getNqubits() + i], node.locations[qc.getNqubits() + i + 1]);
+    architecture.getTeleportationQubits().clear();
+    for(int i = 0; i < settings.teleportationQubits; i+=2) {
+        architecture.getTeleportationQubits().emplace_back(node.locations[qc.getNqubits() + i], node.locations[qc.getNqubits() + i + 1]);
         Edge e;
         for(auto const& g : architecture.getCouplingMap()) {
             if(g.first == node.locations[qc.getNqubits() + i] && g.second != node.locations[qc.getNqubits() + i + 1]) {
