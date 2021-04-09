@@ -54,7 +54,7 @@ class Architecture {
 
 public:
 
-	struct CalibrationData {
+    struct CalibrationData {
 		unsigned short qubit = 0;
 		double t1 = 0.0; // [ms]
 		double t2 = 0.0; // [ms]
@@ -105,6 +105,9 @@ public:
 	CouplingMap& getCurrentTeleportations() {
 		return current_teleportations;
 	}
+    std::vector<std::pair<short, short>>& getTeleportationQubits() {
+        return teleportationQubits;
+    }
 
 	const Matrix& getDistanceTable() const {
 		return distanceTable;
@@ -177,6 +180,7 @@ protected:
 	CouplingMap current_teleportations = {};
 	bool isBidirectional = true;
 	Matrix distanceTable = {};
+    std::vector<std::pair<short, short>> teleportationQubits{};
 
 	std::vector<CalibrationData> calibrationData = {};
 	Matrix fidelityTable = {};

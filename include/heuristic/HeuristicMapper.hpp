@@ -49,38 +49,61 @@ public:
 
             if(arch.getCouplingMap().find(swap) != arch.getCouplingMap().end() || arch.getCouplingMap().find(Edge {swap.second, swap.first}) != arch.getCouplingMap().end()) {
                 swaps.back().emplace_back(swap.first, swap.second, qc::SWAP);
-                //std::clog << "SWAP " << swap.first << " <--> " << swap.second << "\n";
             } else {
-                unsigned short middle_anc = std::numeric_limits<decltype(middle_anc)>::max();
-                for(const auto& t : arch.getCurrentTeleportations()) {
-                    if (t.first == swap.first || t.first == swap.second) {
-                        middle_anc = t.second;
-                        break;
-                    } else if (t.second == swap.first || t.second == swap.second) {
-                        middle_anc = t.first;
-                        break;
-                    }
-                }
-
-                if (middle_anc == std::numeric_limits<decltype(middle_anc)>::max()) {
-                    throw QMAPException("Teleportation between seemingly wrong qubits: " + std::to_string(swap.first) + " <--> " + std::to_string(swap.second));
-                }
-
-                unsigned short source = std::numeric_limits<decltype(source)>::max();
-                unsigned short target = std::numeric_limits<decltype(target)>::max();
-                if(arch.getCouplingMap().find({swap.first, middle_anc}) != arch.getCouplingMap().end()
-                    || arch.getCouplingMap().find({middle_anc, swap.first}) != arch.getCouplingMap().end()) {
-                    source = swap.first;
-                    target = swap.second;
-                } else {
-                    source = swap.second;
-                    target = swap.first;
-                }
-
-                swaps.back().emplace_back(source, middle_anc, target, qc::Teleportation);
-                //std::clog << "TELE " << source << " -(" << middle_anc << ")-> " << target << "\n";
+                throw QMAPException("Something wrong in applySWAP.");
             }
-		}
+        }
+
+        void applyTeleportation(const Edge& swap, Architecture& arch) {
+            short q1 = qubits.at(swap.first);
+            short q2 = qubits.at(swap.second);
+
+            qubits.at(swap.first) = q2;
+            qubits.at(swap.second) = q1;
+
+            if (q1 != -1) {
+                locations.at(q1) = swap.second;
+            }
+            if (q2 != -1) {
+                locations.at(q2) = swap.first;
+            }
+
+
+            unsigned short middle_anc = std::numeric_limits<decltype(middle_anc)>::max();
+            for(const auto& qpair : arch.getTeleportationQubits()) {
+                if (swap.first == qpair.first) {
+                    middle_anc = qpair.second;
+                } else if (swap.first == qpair.second) {
+                    middle_anc = qpair.first;
+                } else if (swap.second == qpair.first) {
+                    middle_anc = qpair.second;
+                } else if (swap.second == qpair.second) {
+                    middle_anc = qpair.first;
+                }
+            }
+
+            if (middle_anc == std::numeric_limits<decltype(middle_anc)>::max()) {
+                throw QMAPException("Teleportation between seemingly wrong qubits: " + std::to_string(swap.first) + " <--> " + std::to_string(swap.second));
+            }
+
+            unsigned short source = std::numeric_limits<decltype(source)>::max();
+            unsigned short target = std::numeric_limits<decltype(target)>::max();
+            if(arch.getCouplingMap().find({swap.first, middle_anc}) != arch.getCouplingMap().end()
+               || arch.getCouplingMap().find({middle_anc, swap.first}) != arch.getCouplingMap().end()) {
+                source = swap.first;
+                target = swap.second;
+            } else {
+                source = swap.second;
+                target = swap.first;
+            }
+
+            if (source == middle_anc || target == middle_anc) {
+                std::clog << "FAIL: TELE " << source << " -(" << middle_anc << ")-> " << target << "\n";
+                throw QMAPException("Overlap between source/target and middle ancillary in teleportation.");
+            }
+
+            swaps.back().emplace_back(source, target, middle_anc, qc::Teleportation);
+        }
 
 		void updateHeuristicCost(const Architecture& arch, const Gate& gate, bool admissibleHeuristic) {
 			auto cost = arch.distance(locations.at(gate.control), locations.at(gate.target));

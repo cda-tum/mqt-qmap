@@ -104,9 +104,9 @@ int main(int argc, char** argv) {
 	ms.verbose = vm.count("verbose") > 0;
 
     if (vm.count("teleportation")) {
-        ms.teleportation_qubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
-        ms.teleportation_seed = vm["teleportation"].as<unsigned long long int>();
-        ms.teleportation_fake = vm.count("teleportation_fake") > 0;
+        ms.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+        ms.teleportationSeed = vm["teleportation"].as<unsigned long long int>();
+        ms.teleportationFake = vm.count("teleportationFake") > 0;
     }
 
     mapper.map(ms);
