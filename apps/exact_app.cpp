@@ -21,9 +21,10 @@ int main(int argc, char** argv) {
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint" | "odd" | "triangle"))")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
-			("encoding", po::value<std::string>(), "choose commander or bimander encoding")
-			("grouping", po::value<std::string>(), "choose method of grouping (fixed, logarithm)")
-			("bdd_limits", po::value<std::string>(), "enable bdd for limiting swaps per layer (1 to activate)")
+			("encoding", po::value<std::string>(), "choose commander or bimander encoding, or none")
+			("grouping", po::value<std::string>(), "choose method of grouping (fixed2, fixed3, log (log2), halves)")
+			("bdd", "enable bdd for limiting swaps per layer")
+			("bdd_limit", po::value<std::string>(), "set a custom limit for max swaps per layer")
             ;
     po::variables_map vm;
     try {
@@ -95,19 +96,19 @@ int main(int argc, char** argv) {
 		const std::string encoding = vm["encoding"].as<std::string>();
 		if (encoding == "none")
 		{
-			ms.encoding = 0;
+			ms.encoding = Encodings::None;
 		}
-		else if (encoding == "cmdr")
+		else if (encoding == "commander")
 		{
-			ms.encoding = 1;
+			ms.encoding = Encodings::Commander;
 		}
 		else if (encoding == "bimander")
 		{
-			ms.encoding = 2;
+			ms.encoding = Encodings::Bimander;
 		}
 		else
 		{
-			ms.encoding = 0;
+			ms.encoding = Encodings::None;
 		}
 	}
 	if (vm.count("grouping"))
@@ -115,27 +116,27 @@ int main(int argc, char** argv) {
 		const std::string grouping = vm["grouping"].as<std::string>();
 		if (grouping == "fixed3")
 		{
-			ms.grouping = 3;
+			ms.grouping = Groupings::Fixed3;
 		}
 		else if (grouping == "fixed2")
 		{
-			ms.grouping = 2;
+			ms.grouping = Groupings::Fixed2;
 		}
 		else if (grouping == "log")
 		{
-			ms.grouping = -1;
+			ms.grouping = Groupings::Logarithm;
 		} else if (grouping == "halves"){
-			ms.grouping = -2;
+			ms.grouping = Groupings::Halves;
 		}
 	}
-	if (vm.count("bdd_limits"))
+	if (vm.count("bdd"))
 	{
-		const std::string bdd = vm["bdd_limits"].as<std::string>();
-		if (bdd == "1") {
-			ms.bddLimits = 1;
-		} else {
-			ms.bddLimits = 0;
+		ms.enableBDDLimits = true;
+		if (vm.count("bdd_limits")) {
+			const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
+			ms.bddLimits = atoi(bdd_limits.c_str());
 		}
+		
 	}
     ms.verbose = vm.count("verbose") > 0;
     mapper.map(ms);

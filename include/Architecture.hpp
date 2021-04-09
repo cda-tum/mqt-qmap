@@ -167,6 +167,8 @@ public:
 			out << std::endl;
 		}
 	};
+
+	long getLongestPath();
 protected:
 	std::string architectureName;
 	std::string calibrationName;

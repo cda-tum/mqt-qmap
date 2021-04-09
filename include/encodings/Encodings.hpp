@@ -6,11 +6,10 @@
 #include <algorithm>
 #include <utility>
 #include <functional>
-#include <chrono>
 #include <z3++.h>
-#include <ciso646>
-#include <math.h>
+#include <cmath>
 #include <map>
+#include <limits>
 
 #include "utils.hpp"
 
@@ -18,67 +17,64 @@ using namespace z3;
 
 struct NestedVar
 {
-	NestedVar(unsigned long id) {
-		varID = id;
-	};
-	NestedVar(unsigned long id, std::vector<NestedVar> list) {
-		this->varID = id;
-		this->list = list;
+	NestedVar(unsigned long varID) : varID(varID), list() {};
+	NestedVar(unsigned long varID, const std::vector<NestedVar>& list) : varID(varID), list(list)
+	{
 	}
-	unsigned long varID = ULONG_MAX;
+	unsigned long varID = std::numeric_limits<unsigned long>::max();
 	std::vector<NestedVar> list;
-} ;
+};
 
 struct WeightedVar
 {
-	WeightedVar(unsigned long varID, int weight) {
-		this->varID = varID;
-		this->weight = weight;
-	}
-	unsigned long varID;
+	WeightedVar(unsigned long varID, int weight) : varID(varID), weight(weight) {}
+	unsigned long varID = std::numeric_limits<unsigned long>::max();
 	int weight = 0;
 };
+inline
+bool operator<(const WeightedVar& rhs, const WeightedVar& lhs) {
+	return rhs.weight < lhs.weight;
+}
+inline
+bool operator==(const WeightedVar& rhs, const WeightedVar& lhs) {
+	return rhs.weight == lhs.weight && rhs.varID == lhs.varID;
+}
 
-struct SavedLit {
-	SavedLit() {
-		this->type = -1;
-		this->id = 0;
-	}
-	SavedLit(int type, unsigned long id) {
-		this->type = type;
-		this->id = id;
-	}
+struct SavedLit
+{
+	SavedLit() :type(-1), varID(0) {}
+	SavedLit(int type, unsigned long varID) : type(type), varID(varID) {}
 	int type = -1;
-	unsigned long id = 0;
+	unsigned long varID = 0;
 };
 
-expr varAlloc(expr_vector& auxvars, context& c);
+expr varAlloc(expr_vector& auxvars, z3::context& c);
 
-expr atMostOneCMDR(std::vector<z3::expr> vars, expr_vector& auxvars, context& c);
-expr atMostOneCMDR(std::vector<z3::expr> vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, context& c);
+expr AtMostOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
+expr AtMostOneCMDR(const std::vector<z3::expr>& vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
-expr exactlyOneCMDR(std::vector<z3::expr> vars, expr_vector& auxvars, context& c);
-expr exactlyOneCMDR(std::vector<z3::expr> vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, context& c);
+expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
+expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
-std::vector<NestedVar> groupVars(std::vector<expr> vars, int maxSize);
-std::vector<NestedVar> groupVars(std::vector<NestedVar> vars, int maxSize);
-std::vector<NestedVar> groupVarsAux(std::vector<NestedVar> vars, int maxSize);
+expr NaiveExactlyOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
+expr NaiveExactlyOne(const std::vector<z3::expr>& vars, std::vector<int> varIDs, z3::context& c);
+expr NaiveExactlyOne(const std::vector<z3::expr>& vars, std::vector<NestedVar> clauseVars, z3::context& c);
 
-expr NaiveExactlyOne(std::vector<z3::expr> clauseVars, context& c);
-expr NaiveExactlyOne(std::vector<z3::expr> vars, std::vector<int> varIDs, context& c);
-expr NaiveExactlyOne(std::vector<z3::expr> vars, std::vector<NestedVar> clauseVars, context& c);
+expr NaiveAtMostOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
+expr NaiveAtMostOne(const std::vector<z3::expr>& vars, std::vector<int> varIDs, z3::context& c);
+expr NaiveAtMostOne(const std::vector<z3::expr>& vars, std::vector<NestedVar> varIDs, z3::context& c);
 
-expr NaiveAtMostOne(std::vector<z3::expr> clauseVars, context& c);
-expr NaiveAtMostOne(std::vector<z3::expr> vars, std::vector<int> varIDs, context& c);
-expr NaiveAtMostOne(std::vector<z3::expr> vars, std::vector<NestedVar> varIDs, context& c);
+expr NaiveAtLeastOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
 
-expr NaiveAtLeastOne(std::vector<expr> clauseVars, context& c);
+expr AtMostOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
+expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
 
-expr AtMostOneBiMander(std::vector<z3::expr> vars, std::vector<int> varIDs, expr_vector& auxvars, context& c);
-expr ExactlyOneBiMander(std::vector<z3::expr> vars, std::vector<int> varIDs, expr_vector& auxvars, context& c);
+expr BuildBDD(std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
+expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c);
 
-expr buildBDD(std::vector<WeightedVar> inputLiterals, std::vector<z3::expr>  vars, expr_vector& auxVars, int leq, context& c);
-expr buildBDD(unsigned long index, long curSum, long maxSum, std::vector<WeightedVar> inputLiterals, std::vector<z3::expr> vars, expr_vector auxVars, expr& formula, expr& true_lit, context& c);
+std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, int maxSize);
+std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, int maxSize);
+std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, int maxSize);
 
 std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount);
 std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int groupCount);
@@ -86,9 +82,4 @@ std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int group
 std::string printBimanderVars(std::vector<std::vector<int>> vars);
 std::string printNestedVars(std::vector<NestedVar> vars, int level = 0);
 std::string printWeightedVars(std::vector<WeightedVar> wVars, expr_vector vars);
-
-
-int findLongestPath(const CouplingMap cm, int nQubits);
-
-void findLongestPath(unsigned short node, int curSum);
 #endif

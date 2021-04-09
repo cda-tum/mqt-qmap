@@ -38,6 +38,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM( InitialLayoutStrategy, {
 enum class LayeringStrategy {
 	IndividualGates, DisjointQubits, OddGates, QubitTriangle, None
 };
+
+enum class Encodings {
+	None, Commander, Bimander
+};
+enum class Groupings {
+	Fixed2, Fixed3, Halves, Logarithm
+};
 static std::string toString(const LayeringStrategy strategy) {
 	switch (strategy) {
 		case LayeringStrategy::IndividualGates:
@@ -83,8 +90,9 @@ struct MappingSettings {
     bool teleportation_fake = false;
 	double firstLookaheadFactor = 0.75;
 	double lookaheadFactor = 0.5;
-	int encoding = 0;
-	int grouping = 0;
+	Encodings encoding = Encodings::None;
+	Groupings grouping = Groupings::Logarithm;
+	bool enableBDDLimits = false;
 	int bddLimits = 0;
 
 };

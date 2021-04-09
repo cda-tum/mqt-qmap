@@ -373,6 +373,14 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
 	return (length - 2)*7 + 4;
 }
 
+long Architecture::getLongestPath() {
+	long maximum = 0;
+	for (auto &it:getDistanceTable()){
+		maximum = std::max(std::lround((*std::max_element(it.begin(), it.end()))), maximum);
+	}
+	return maximum;
+}
+
 
 std::string toString(const AvailableArchitectures architecture) {
 	switch (architecture) {
