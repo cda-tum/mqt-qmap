@@ -21,11 +21,11 @@ int main(int argc, char** argv) {
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint" | "odd" | "triangle"))")
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
-			("encoding", po::value<std::string>(), "choose commander or bimander encoding, or none")
-			("grouping", po::value<std::string>(), "choose method of grouping (fixed2, fixed3, log (log2), halves)")
-			("bdd", "enable bdd for limiting swaps per layer")
-			("bddStrategy", po::value<std::string>(), "choose method of applying bdd limits (None, Custom, ArchitectureSwaps, SubsetSwaps)")
-			("bdd_limit", po::value<std::string>(), "set a custom limit for max swaps per layer")
+			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
+			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "log" | "halves"))")
+			("bdd", "Enable bdd for limiting swaps per layer")
+			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("None" | "Custom" | "ArchitectureSwaps" | "SubsetSwaps"))")
+			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer")
             ;
     po::variables_map vm;
     try {

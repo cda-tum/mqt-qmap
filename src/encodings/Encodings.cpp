@@ -65,9 +65,9 @@ expr NaiveAtMostOne(const std::vector<z3::expr>& vars, std::vector<int> varIDs, 
 expr NaiveAtMostOne(const std::vector<expr>& clauseVars, z3::context& c)
 {
 	expr naiveAtMostOne = c.bool_val(true);
-	for (int i = 0; i < clauseVars.size() - 1; i++)
+	for (long unsigned int i = 0; i < clauseVars.size() - 1; i++)
 	{
-		for (int j = i + 1; j < clauseVars.size(); j++)
+		for (long unsigned int j = i + 1; j < clauseVars.size(); j++)
 		{
 			naiveAtMostOne = naiveAtMostOne and (not clauseVars[i] or not clauseVars[j]);
 		}
@@ -85,10 +85,10 @@ expr AtMostOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varID
 	{
 		binary_vars.push_back(varAlloc(auxvars, c));
 	}
-	for (int i = 0; i < m; i++)
+	for (long unsigned int i = 0; i < m; i++)
 	{
 		expr binary = c.bool_val(true);
-		for (int h = 0; h < subords[i].size(); h++)
+		for (long unsigned int h = 0; h < subords[i].size(); h++)
 		{
 			expr b2 = c.bool_val(true);
 			for (int j = 0; j < ceil(log2(m)); j++)
@@ -181,7 +181,7 @@ expr AtMostOneCMDR(const std::vector<z3::expr>& vars, std::vector<NestedVar> sub
 
 std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, int maxSize)
 {
-	if (vars.size() <= 6)
+	if (vars.size() <= 6) //Since for n<=5 commander is no faster
 		return vars;
 	return groupVarsAux(vars, maxSize);
 }
@@ -294,7 +294,7 @@ expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::
 	if (eq(high, not(true_lit)) && eq(low, true_lit))
 	{
 		node = not(vars[inputLiterals[index].varID]);
-		history[std::pair<unsigned long, long>(inputLiterals[index].varID, curSum)] = SavedLit(0, inputLiterals[index].varID);
+		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(0, inputLiterals[index].varID);
 	}
 	else
 	{
@@ -311,7 +311,7 @@ expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::
 		{
 			formula = formula and (high or not(vars[inputLiterals[index].varID]) or not(node));
 		}
-		history[std::pair<unsigned long, long>(inputLiterals[index].varID, curSum)] = SavedLit(1, auxVars.size() - 1);
+		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(1, auxVars.size() - 1);
 	}
 	return node;
 }

@@ -496,6 +496,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		}
 		++piCount;
 	} while(std::next_permutation(pi.begin(), pi.end()));
+	
     if (this->settings.enableBDDLimits) {
 		unsigned long maxCost = this->settings.bddLimits;
 		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
