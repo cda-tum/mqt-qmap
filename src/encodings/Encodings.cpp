@@ -264,7 +264,7 @@ expr BuildBDD(std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr
 	return result and formula;
 }
 
-expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c)
+expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c)
 {
 	if (curSum + maxSum < k)
 		return true_lit;
@@ -325,7 +325,7 @@ expr varAlloc(expr_vector& auxvars, z3::context& c)
 	return auxvars[auxvars.size() - 1];
 }
 
-std::string printBimanderVars(std::vector<std::vector<int>> vars)
+std::string printBimanderVars(const std::vector<std::vector<int>>& vars)
 {
 	std::stringstream out;
 	for (auto& vec : vars)
@@ -343,7 +343,7 @@ std::string printBimanderVars(std::vector<std::vector<int>> vars)
 	return out.str();
 }
 
-std::string printNestedVars(std::vector<NestedVar> vars, int level)
+std::string printNestedVars(const std::vector<NestedVar>& vars, int level)
 {
 	std::stringstream out;
 
@@ -377,7 +377,7 @@ std::string printNestedVars(std::vector<NestedVar> vars, int level)
 	return out.str();
 }
 
-std::string printWeightedVars(std::vector<WeightedVar> wVars, expr_vector vars)
+std::string printWeightedVars(const std::vector<WeightedVar>& wVars, expr_vector vars)
 {
 	std::stringstream out;
 	for (auto var : wVars)

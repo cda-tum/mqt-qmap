@@ -45,6 +45,9 @@ enum class Encodings {
 enum class Groupings {
 	Fixed2, Fixed3, Halves, Logarithm
 };
+enum class BDDStrategy {
+	None, Custom, ArchitectureSwaps, SubsetSwaps
+};
 static std::string toString(const LayeringStrategy strategy) {
 	switch (strategy) {
 		case LayeringStrategy::IndividualGates:
@@ -93,6 +96,7 @@ struct MappingSettings {
 	Encodings encoding = Encodings::None;
 	Groupings grouping = Groupings::Logarithm;
 	bool enableBDDLimits = false;
+	BDDStrategy bddStrategy = BDDStrategy::None;
 	int bddLimits = 0;
 
 };

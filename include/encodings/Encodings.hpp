@@ -70,7 +70,7 @@ expr AtMostOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varID
 expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
 
 expr BuildBDD(std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
-expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c);
+expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c);
 
 std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, int maxSize);
 std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, int maxSize);
@@ -79,7 +79,7 @@ std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, int maxS
 std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount);
 std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int groupCount);
 
-std::string printBimanderVars(std::vector<std::vector<int>> vars);
-std::string printNestedVars(std::vector<NestedVar> vars, int level = 0);
-std::string printWeightedVars(std::vector<WeightedVar> wVars, expr_vector vars);
+std::string printBimanderVars(const std::vector<std::vector<int>>& vars);
+std::string printNestedVars(const std::vector<NestedVar>& vars, int level = 0);
+std::string printWeightedVars(const std::vector<WeightedVar>& wVars, expr_vector vars);
 #endif

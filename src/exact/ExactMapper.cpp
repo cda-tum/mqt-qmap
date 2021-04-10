@@ -5,6 +5,13 @@
 
 #include "exact/ExactMapper.hpp"
 
+template <typename Enumeration>
+auto as_integer(Enumeration const value)
+    -> typename std::underlying_type<Enumeration>::type
+{
+    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
+}
+
 void ExactMapper::map(const MappingSettings& settings) {
 
 	this->settings = settings;
@@ -312,7 +319,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			}
 		}
 	}
-	else if (this->settings.encoding != Encodings::None) {
+	else if (this->settings.encoding == Encodings::Commander) {
 		for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
 			for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
 				std::vector<expr> varIDs;
@@ -334,6 +341,39 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			}
 
 			for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
+				std::vector<expr> varIDs;
+				for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
+					varIDs.push_back(x[k][i][j]);
+				}
+				
+				if (this->settings.grouping == Groupings::Fixed2) {
+					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), (auxvars.size() - 1), auxvars, c));
+				}
+				else if (this->settings.grouping == Groupings::Fixed3){
+					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), (auxvars.size() - 1), auxvars, c));
+				}
+				else if (this->settings.grouping == Groupings::Logarithm) {
+					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, log(varIDs.size())), (auxvars.size() - 1), auxvars, c));
+				}				
+                else if (this->settings.grouping == Groupings::Halves) {
+					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), (auxvars.size() - 1), auxvars, c));
+				}
+			}
+		}
+	}
+	else if (this->settings.encoding == Encodings::Bimander) {
+		for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
+			for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
+				std::vector<expr> vars;
+				std::vector<int> varIDs;
+				for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
+					vars.emplace_back(x[k][i][j]);
+					varIDs.emplace_back(j);
+				}
+				opt.add(AtMostOneBiMander(vars, varIDs, auxvars, c));
+			}
+
+			for (unsigned short j = 0; j < qc.getNqubits(); ++j) { //There is no exactly one Bimander
 				std::vector<expr> varIDs;
 				for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
 					varIDs.push_back(x[k][i][j]);
@@ -464,7 +504,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		++piCount;
 	} while(std::next_permutation(pi.begin(), pi.end()));
     if (this->settings.enableBDDLimits) {
-		unsigned long maxCost = this->settings.bddLimits?this->settings.bddLimits:this->architecture.getLongestPath();
+		unsigned long maxCost = this->settings.bddLimits;
+		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
+			maxCost = this->architecture.getLongestPath()-1; 
+		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
+			maxCost = this->architecture.getLongestPath(qubitChoice)-1;
+		}
 		if (architecture.bidirectional()) {
 			maxCost *= GATES_OF_BIDIRECTIONAL_SWAP;
 		}

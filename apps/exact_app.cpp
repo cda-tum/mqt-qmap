@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
 			("encoding", po::value<std::string>(), "choose commander or bimander encoding, or none")
 			("grouping", po::value<std::string>(), "choose method of grouping (fixed2, fixed3, log (log2), halves)")
 			("bdd", "enable bdd for limiting swaps per layer")
+			("bddStrategy", po::value<std::string>(), "choose method of applying bdd limits (None, Custom, ArchitectureSwaps, SubsetSwaps)")
 			("bdd_limit", po::value<std::string>(), "set a custom limit for max swaps per layer")
             ;
     po::variables_map vm;
@@ -132,9 +133,22 @@ int main(int argc, char** argv) {
 	if (vm.count("bdd"))
 	{
 		ms.enableBDDLimits = true;
-		if (vm.count("bdd_limits")) {
-			const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
-			ms.bddLimits = atoi(bdd_limits.c_str());
+		if (vm.count("bddStrategy")) {
+			const std::string bddStrat = vm["bddStrategy"].as<std::string>();
+			if (bddStrat == "Custom") {
+				ms.bddStrategy = BDDStrategy::Custom;
+				if (vm.count("bdd_limits")) {
+					const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
+					ms.bddLimits = atoi(bdd_limits.c_str());
+				}
+			} else if (bddStrat == "ArchitectureSwaps") {
+				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
+			} else if (bddStrat == "SubsetSwaps") {
+				ms.bddStrategy == BDDStrategy::SubsetSwaps;
+			} else {
+				ms.bddStrategy = BDDStrategy::None;
+				ms.enableBDDLimits = false;
+			}
 		}
 		
 	}

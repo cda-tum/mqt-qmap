@@ -382,6 +382,16 @@ long Architecture::getLongestPath() {
 }
 
 
+long Architecture::getLongestPath(const std::set<unsigned short> &qubitChoice){
+	long maximum = 0;
+	for (auto it: qubitChoice){
+		for (auto it_inner: qubitChoice)
+		 	maximum = std::max(std::lround(getDistanceTable()[it][it_inner]), maximum);
+	}
+	return maximum;
+}
+
+
 std::string toString(const AvailableArchitectures architecture) {
 	switch (architecture) {
 		case AvailableArchitectures::IBM_QX4:
