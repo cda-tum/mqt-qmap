@@ -481,7 +481,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	//////////////////////////////////////////
 	// cost for permutations
 	piCount=0;
-	std::vector<std::vector<WeightedVar>> weightedVars(reducedLayerIndices.size());
+	std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
 	do {
 		auto picost = architecture.minimumNumberOfSwaps(pi);
 		if (architecture.bidirectional()) {
@@ -492,7 +492,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
 			opt.add(!y[k-1][piCount], picost);
 			if (this->settings.enableBDDLimits)
-				weightedVars[k].emplace_back(WeightedVar(piCount, picost));
+				weightedVars[k].insert(WeightedVar(piCount, picost));
 		}
 		++piCount;
 	} while(std::next_permutation(pi.begin(), pi.end()));

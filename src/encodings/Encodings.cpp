@@ -248,19 +248,19 @@ std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount
 	return result;
 }
 
-expr BuildBDD(std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c)
+expr BuildBDD(const std::set<WeightedVar> &inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c)
 {
-	inputLiterals.erase(std::unique(inputLiterals.begin(), inputLiterals.end()), inputLiterals.end());
+	std::vector<WeightedVar> literals (inputLiterals.begin(), inputLiterals.end());
 	history.clear();
 	long k = leq;
 	long maxSum = 0;
-	for (auto l : inputLiterals)
+	for (auto &l : literals)
 	{
 		maxSum += l.weight;
 	}
 	expr true_lit = varAlloc(auxVars, c);
 	expr formula = varAlloc(auxVars, c);
-	expr result = BuildBDD(0, 0, maxSum, k, inputLiterals, vars, auxVars, formula, true_lit, c);
+	expr result = BuildBDD(0, 0, maxSum, k, literals, vars, auxVars, formula, true_lit, c);
 	return result and formula;
 }
 

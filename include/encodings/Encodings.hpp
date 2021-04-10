@@ -69,7 +69,7 @@ expr NaiveAtLeastOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
 expr AtMostOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
 expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
 
-expr BuildBDD(std::vector<WeightedVar> inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
+expr BuildBDD(const std::set<WeightedVar> &inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
 expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c);
 
 std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, int maxSize);
