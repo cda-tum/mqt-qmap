@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
 				ms.bddStrategy = BDDStrategy::Custom;
 				if (vm.count("bdd_limits")) {
 					const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
-					ms.bddLimits = std::stoi(bdd_limits.c_str());
+					ms.bddLimit = std::stoi(bdd_limits.c_str());
 				}
 			} else if (bddStrat == "architectureswaps") {
 				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
