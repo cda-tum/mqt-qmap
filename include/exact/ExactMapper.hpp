@@ -17,7 +17,7 @@
 #include <z3++.h>
 
 #include "Mapper.hpp"
-#include "encodings/Encodings.hpp"
+#include "Encodings.hpp"
 
 using namespace z3;
 using matrix = std::vector<expr_vector>;

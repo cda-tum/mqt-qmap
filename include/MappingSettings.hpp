@@ -72,6 +72,26 @@ NLOHMANN_JSON_SERIALIZE_ENUM( LayeringStrategy, {
 	{LayeringStrategy::QubitTriangle, "qubit_triangle"},
 })
 
+NLOHMANN_JSON_SERIALIZE_ENUM(Encodings, {
+    {Encodings::None, "none"},
+    {Encodings::Commander, "commander"},
+    {Encodings::Bimander, "bimander"},
+})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Groupings, {
+    {Groupings::Fixed2, "fixed2"},
+    {Groupings::Fixed3, "fixed3"},
+    {Groupings::Halves, "halves"},
+    {Groupings::Logarithm, "logarithm"},
+})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(BDDStrategy, {
+    {BDDStrategy::None, "none"},
+    {BDDStrategy::ArchitectureSwaps, "architectureswaps"},
+    {BDDStrategy::SubsetSwaps, "subsetswaps"},
+    {BDDStrategy::Custom, "custom"},
+})
+
 struct MappingSettings {
 	MappingSettings() = default;
 

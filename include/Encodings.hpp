@@ -41,43 +41,36 @@ bool operator==(const WeightedVar& rhs, const WeightedVar& lhs) {
 	return rhs.weight == lhs.weight && rhs.varID == lhs.varID;
 }
 
+enum class Type {Uninitialized, AuxVar, ProgramVar};
 struct SavedLit
 {
-	SavedLit() :type(-1), varID(0) {}
-	SavedLit(int type, unsigned long varID) : type(type), varID(varID) {}
-	int type = -1;
+	SavedLit() :type(Type::Uninitialized), varID(0) {}
+	SavedLit(Type type, unsigned long varID) : type(type), varID(varID) {}
+	Type type = Type::Uninitialized;
 	unsigned long varID = 0;
 };
 
 expr varAlloc(expr_vector& auxvars, z3::context& c);
 
-expr AtMostOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
 expr AtMostOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
-expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
 expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
 expr NaiveExactlyOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c);
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& clauseVars, z3::context& c);
 
 expr NaiveAtMostOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
 expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c);
-expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& varIDs, z3::context& c);
 
 expr NaiveAtLeastOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
 
 expr AtMostOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, expr_vector& auxvars, z3::context& c);
-expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, expr_vector& auxvars, z3::context& c);
 
 expr BuildBDD(const std::set<WeightedVar> &inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
 expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, expr& formula, expr& true_lit, z3::context& c);
 
 std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, std::size_t maxSize);
-std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, std::size_t maxSize);
 std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, std::size_t maxSize);
 
-std::vector<std::vector<unsigned long>> groupVarsBimander(const expr_vector& vars, std::size_t groupCount);
 std::vector<std::vector<unsigned long>> groupVarsBimander(const std::vector<unsigned long>& vars, std::size_t groupCount);
 
 std::string printBimanderVars(const std::vector<std::vector<unsigned long>>& vars);

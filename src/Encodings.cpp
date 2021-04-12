@@ -1,29 +1,7 @@
 
-#include "encodings/Encodings.hpp"
+#include "Encodings.hpp"
 
 std::map<std::pair<unsigned long, long>, SavedLit> history;
-
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& varIDs, z3::context& c)
-{
-	std::vector<expr> clauseVars;
-	clauseVars.reserve(varIDs.size());
-	for (const auto& var : varIDs)
-	{
-		clauseVars.emplace_back(vars[var.varID]);
-	}
-	return NaiveExactlyOne(clauseVars, c);
-}
-
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c)
-{
-	std::vector<expr> clauseVars;
-	clauseVars.reserve(varIDs.size());
-	for (const auto& var : varIDs)
-	{
-		clauseVars.emplace_back(vars[var]);
-	}
-	return NaiveExactlyOne(clauseVars, c);
-}
 
 expr NaiveExactlyOne(const std::vector<expr>& clauseVars, z3::context& c)
 {
@@ -38,17 +16,6 @@ expr NaiveAtLeastOne(const std::vector<expr>& clauseVars, z3::context& c)
 		naiveAtLeastOne = naiveAtLeastOne or x;
 	}
 	return naiveAtLeastOne;
-}
-
-expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& varIDs, z3::context& c)
-{
-	std::vector<expr> clauseVars;
-	clauseVars.reserve(varIDs.size());
-	for (const auto& var : varIDs)
-	{
-		clauseVars.emplace_back(vars[var.varID]);
-	}
-	return NaiveAtMostOne(clauseVars, c);
 }
 
 expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c)
@@ -109,22 +76,6 @@ expr AtMostOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsi
 	return ret;
 }
 
-expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, expr_vector& auxvars, z3::context& c)
-{
-	std::vector<NestedVar> nVars;
-	nVars.reserve(varIDs.size());
-	for (const auto& id : varIDs)
-	{
-		nVars.emplace_back(id);
-	}
-	return ExactlyOneCMDR(vars, groupVars(nVars, 3), -1, auxvars, c);
-}
-
-expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c)
-{
-	return ExactlyOneCMDR(vars, groupVars(vars, 3), -1, auxvars, c);
-}
-
 expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c)
 {
 	expr ret = c.bool_val(true);
@@ -149,11 +100,6 @@ expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedV
 	return ret and NaiveExactlyOne(clauseVars, c);
 }
 
-expr AtMostOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c)
-{
-	return AtMostOneCMDR(vars, groupVars(vars, 3), -1, auxvars, c);
-}
-
 expr AtMostOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c)
 {
 	expr ret = c.bool_val(true);
@@ -176,13 +122,6 @@ expr AtMostOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVa
 		clauseVars.emplace_back(not auxvars[cmdrVar]);
 	}
 	return ret and NaiveAtMostOne(clauseVars, c);
-}
-
-std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, std::size_t maxSize)
-{
-	if (vars.size() <= 6) //Since for n<=5 commander is no faster
-		return vars;
-	return groupVarsAux(vars, maxSize);
 }
 
 std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, std::size_t maxSize)
@@ -235,26 +174,6 @@ std::vector<std::vector<unsigned long>> groupVarsBimander(const std::vector<unsi
 	return result;
 }
 
-std::vector<std::vector<unsigned long>> groupVarsBimander(const expr_vector& vars, std::size_t groupCount)
-{
-	std::vector<std::vector<unsigned long>> result;
-	std::vector<unsigned long> v;
-	std::size_t maxSize = std::ceil(vars.size() / double(groupCount));
-	size_t i = 0;
-	while (i < vars.size())
-	{
-		if (v.size() == maxSize)
-		{
-			result.emplace_back(v.begin(), v.end());
-			v.clear();
-		}
-		v.emplace_back(i++);
-	}
-	if (!v.empty())
-		result.emplace_back(v);
-	return result;
-}
-
 expr BuildBDD(const std::set<WeightedVar> &inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c)
 {
 	std::vector<WeightedVar> literals (inputLiterals.begin(), inputLiterals.end());
@@ -280,7 +199,7 @@ expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::
 	if (history.count({inputLiterals[index].varID, curSum}) > 0)
 	{
 		const SavedLit& l = history[{inputLiterals[index].varID, curSum}];
-		if (l.type == 0)
+		if (l.type == Type::ProgramVar)
 		{
 			return not(vars[l.varID]);
 		}
@@ -301,7 +220,7 @@ expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::
 	if (eq(high, not(true_lit)) && eq(low, true_lit))
 	{
 		node = not(vars[inputLiterals[index].varID]);
-		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(0, inputLiterals[index].varID);
+		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(Type::ProgramVar, inputLiterals[index].varID);
 	}
 	else
 	{
@@ -318,7 +237,7 @@ expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::
 		{
 			formula = formula and (high or not(vars[inputLiterals[index].varID]) or not(node));
 		}
-		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(1, auxVars.size() - 1);
+		history[std::make_pair(inputLiterals[index].varID, curSum)] = SavedLit(Type::AuxVar, auxVars.size() - 1);
 	}
 	return node;
 }

@@ -6,16 +6,16 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	add_library(${PROJECT_NAME}_${LIBNAME}_lib
 	            ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
-	            ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
+				${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
+				${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/${LIBNAME}/${SRCFILE}.cpp
-				${CMAKE_CURRENT_SOURCE_DIR}/encodings/Encodings.cpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Mapper.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingSettings.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/${LIBNAME}/${SRCFILE}.hpp
-				${${PROJECT_NAME}_SOURCE_DIR}/include/encodings/Encodings.hpp)
+				${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
 
 	# set include directories
 	target_include_directories(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
