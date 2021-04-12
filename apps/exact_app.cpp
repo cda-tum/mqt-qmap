@@ -139,12 +139,12 @@ int main(int argc, char** argv) {
 				ms.bddStrategy = BDDStrategy::Custom;
 				if (vm.count("bdd_limits")) {
 					const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
-					ms.bddLimits = atoi(bdd_limits.c_str());
+					ms.bddLimits = std::stoi(bdd_limits.c_str());
 				}
 			} else if (bddStrat == "ArchitectureSwaps") {
 				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
 			} else if (bddStrat == "SubsetSwaps") {
-				ms.bddStrategy == BDDStrategy::SubsetSwaps;
+				ms.bddStrategy = BDDStrategy::SubsetSwaps;
 			} else {
 				ms.bddStrategy = BDDStrategy::None;
 				ms.enableBDDLimits = false;
