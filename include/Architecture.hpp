@@ -171,8 +171,8 @@ public:
 		}
 	};
 
-	long getLongestPath();
-	long getLongestPath(const std::set<unsigned short> &qubitChoice);
+	[[nodiscard]] long getLongestPath() const;
+	[[nodiscard]] long getLongestPath(const std::set<unsigned short> &qubitChoice) const;
 protected:
 	std::string architectureName;
 	std::string calibrationName;

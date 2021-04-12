@@ -2,6 +2,7 @@
 #define Encodings_hpp
 
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include <utility>
@@ -17,8 +18,8 @@ using namespace z3;
 
 struct NestedVar
 {
-	NestedVar(unsigned long varID) : varID(varID), list() {};
-	NestedVar(unsigned long varID, const std::vector<NestedVar>& list) : varID(varID), list(list)
+	explicit NestedVar(unsigned long varID) : varID(varID), list() {};
+	NestedVar(unsigned long varID, std::vector<NestedVar>  list) : varID(varID), list(std::move(list))
 	{
 	}
 	unsigned long varID = std::numeric_limits<unsigned long>::max();
@@ -51,35 +52,35 @@ struct SavedLit
 expr varAlloc(expr_vector& auxvars, z3::context& c);
 
 expr AtMostOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
-expr AtMostOneCMDR(const std::vector<z3::expr>& vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
+expr AtMostOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
 expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, expr_vector& auxvars, z3::context& c);
-expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, std::vector<NestedVar> subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
+expr ExactlyOneCMDR(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& subords, int cmdrVar, expr_vector& auxvars, z3::context& c);
 
 expr NaiveExactlyOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, std::vector<int> varIDs, z3::context& c);
-expr NaiveExactlyOne(const std::vector<z3::expr>& vars, std::vector<NestedVar> clauseVars, z3::context& c);
+expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c);
+expr NaiveExactlyOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& clauseVars, z3::context& c);
 
 expr NaiveAtMostOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
-expr NaiveAtMostOne(const std::vector<z3::expr>& vars, std::vector<int> varIDs, z3::context& c);
-expr NaiveAtMostOne(const std::vector<z3::expr>& vars, std::vector<NestedVar> varIDs, z3::context& c);
+expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, z3::context& c);
+expr NaiveAtMostOne(const std::vector<z3::expr>& vars, const std::vector<NestedVar>& varIDs, z3::context& c);
 
 expr NaiveAtLeastOne(const std::vector<z3::expr>& clauseVars, z3::context& c);
 
-expr AtMostOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
-expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, std::vector<int> varIDs, expr_vector& auxvars, z3::context& c);
+expr AtMostOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, expr_vector& auxvars, z3::context& c);
+expr ExactlyOneBiMander(const std::vector<z3::expr>& vars, const std::vector<unsigned long>& varIDs, expr_vector& auxvars, z3::context& c);
 
 expr BuildBDD(const std::set<WeightedVar> &inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, int leq, z3::context& c);
-expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector auxVars, expr& formula, expr& true_lit, z3::context& c);
+expr BuildBDD(unsigned long index, long curSum, long maxSum, long k, const std::vector<WeightedVar>& inputLiterals, const std::vector<z3::expr>& vars, expr_vector& auxVars, expr& formula, expr& true_lit, z3::context& c);
 
-std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, int maxSize);
-std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, int maxSize);
-std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, int maxSize);
+std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, std::size_t maxSize);
+std::vector<NestedVar> groupVars(const std::vector<NestedVar>& vars, std::size_t maxSize);
+std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, std::size_t maxSize);
 
-std::vector<std::vector<int>> groupVarsBimander(expr_vector vars, int groupCount);
-std::vector<std::vector<int>> groupVarsBimander(std::vector<int> vars, int groupCount);
+std::vector<std::vector<unsigned long>> groupVarsBimander(const expr_vector& vars, std::size_t groupCount);
+std::vector<std::vector<unsigned long>> groupVarsBimander(const std::vector<unsigned long>& vars, std::size_t groupCount);
 
-std::string printBimanderVars(const std::vector<std::vector<int>>& vars);
+std::string printBimanderVars(const std::vector<std::vector<unsigned long>>& vars);
 std::string printNestedVars(const std::vector<NestedVar>& vars, int level = 0);
-std::string printWeightedVars(const std::vector<WeightedVar>& wVars, expr_vector vars);
+std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_vector& vars);
 #endif
