@@ -137,9 +137,9 @@ int main(int argc, char** argv) {
 			const std::string bddStrat = vm["bddStrategy"].as<std::string>();
 			if (bddStrat == "custom") {
 				ms.bddStrategy = BDDStrategy::Custom;
-				if (vm.count("bdd_limits")) {
-					const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
-					ms.bddLimit = std::stoi(bdd_limits.c_str());
+				if (vm.count("bdd_limit")) {
+					const std::string bdd_limit = vm["bdd_limit"].as<std::string>();
+					ms.bddLimit = std::stoi(bdd_limit.c_str());
 				}
 			} else if (bddStrat == "architectureswaps") {
 				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;

@@ -443,7 +443,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			} while (std::next_permutation(pi.begin(), pi.end()));
 			opt.add(onlyOne.simplify() == 1);
 		}
-	} else if (this->settings.encoding != Encodings::None) {
+	} else {
 		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
 			std::vector<expr> varIDs;
 			piCount = 0;

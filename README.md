@@ -92,10 +92,10 @@ Params:
     use_teleportation - Use teleportation in addition to swaps
     teleportation_fake - Assign qubits as ancillary for teleportation but don't actually use them
     teleportationSeed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
-    encoding - Choose encoding for AMO and exactly one (none | commander | bimander)
-	grouping - Choose method of grouping (fixed2 | fixed3 | logarithm | halves)
+    encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
+	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
 	bdd - Enable bdd for limiting swaps per layer
-	bddStrategy - Choose method of applying bdd limits (none | custom | architectureswaps | subsetswaps)
+	bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps)
     bdd_limit - Set a custom limit for max swaps per layer
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
     csv – Create CSV string for result
@@ -112,6 +112,11 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportationSeed: int = 0,
+            encoding: Encoding = Encoding.none,
+            grouping: Grouping = Grouping.halves,
+            bdd: bool = False,
+            bddStrategy: bddStrategy = BDDStrategy.none,
+            bdd_limit: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
