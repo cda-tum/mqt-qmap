@@ -173,6 +173,22 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 - `odd`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool and may not work on different architectures)
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact mapping tool)
 
+The exact mapping tool offers the `--encoding` and related the `--grouping` option, where the first option allows to chose a different encoding for at most one and exactly one constraints:
+- `none` (*default*): use naive encoding for constraints
+- `commander`: use commander encoding for at most one and exactly one constraints
+- `bimander`: use bimander encoding for at most one and commander for exactly one constraints
+As commander encoding can use different strategies to group the variables, there are different `--grouping` options:
+- `halves` (*default*): each group contains half of the total variables
+- `logarithm`: each group contains at most log2 of the total variables
+- `fixed2`: each group contains exactly two variables
+- `fixed3`: each group contains exactly three variables
+
+The exact mapping tool also offers the `-bdd` option to enable limiting the number of swaps done per layer. Related is the `--bddStrategy` option, which offers the following options:
+- `none` (*default*): disable bdd limiting
+- `architectureswaps`: calculate the max swaps per layer based on the longest path through the whole coupling map
+- `subsetswaps`: calculate the max swaps per layer based on the longest path of current choice of qubits
+- `custom`: set a custom limit, needs the `--bdd_limit` option followed by a number to set the limit
+
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
 However, the implementation should be compatible with any current C++ compiler supporting C++17 and a minimum CMake version of 3.14.
