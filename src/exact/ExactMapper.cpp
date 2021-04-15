@@ -67,10 +67,25 @@ void ExactMapper::map(const MappingSettings& settings) {
 	mappingSwaps.reserve(reducedLayerIndices.size());
 	for (auto& choice: allPossibleQubitChoices) {
 		int limit = 1;
+		int upperLimit = this->settings.bddLimit;
 		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
 			limit = this->architecture.getLongestPath()-1; 
 		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
 			limit = this->architecture.getLongestPath(choice)-1;
+		} else if (this->settings.bddStrategy == BDDStrategy::Increasing) {
+			if (architecture.bidirectional()) {
+				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
+				upperLimit *= GATES_OF_BIDIRECTIONAL_SWAP;
+			} else {
+				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
+				upperLimit *= GATES_OF_UNIDIRECTIONAL_SWAP;
+			}
+		} else { //CustomLimit
+			if (architecture.bidirectional()) {
+				limit = upperLimit * GATES_OF_BIDIRECTIONAL_SWAP;
+			} else {
+				limit = upperLimit * GATES_OF_UNIDIRECTIONAL_SWAP;
+			}
 		}
 		do {
 			// reset swaps
@@ -89,13 +104,17 @@ void ExactMapper::map(const MappingSettings& settings) {
 					reducedCouplingMap.erase(edge);
 				}
 			}
-			if (reducedCouplingMap.empty()) continue;
+			if (reducedCouplingMap.empty()) {
+				break;
+			}
 
 			// 5) Check if E_k is connected. If yes, then possible subset found
 			std::set<unsigned short> reachedQubits{};
 			reachedQubits.insert(*(choice.begin()));
 			dfs(*(choice.begin()), reachedQubits, reducedCouplingMap);
-			if (!(reachedQubits == choice)) continue;
+			if (!(reachedQubits == choice)){
+				break;
+			}
 
 			// 6) call actual mapping routine
 			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, limit);
@@ -110,8 +129,8 @@ void ExactMapper::map(const MappingSettings& settings) {
 				results = choiceResults;
 				mappingSwaps = swaps;
 			}
-			limit ++; //TODO change maybe?
-		} while (this->settings.bddStrategy == BDDStrategy::Increasing && (limit < this->settings.bddLimit || limit < this->architecture.getLongestPath()));
+			limit += 3; //TODO increase geometrically
+		} while (this->settings.bddStrategy == BDDStrategy::Increasing && (limit <= upperLimit || this->settings.bddLimit==0) && limit < this->architecture.getLongestPath());
 	}
 
 	// 8) Write best result and statistics
@@ -499,15 +518,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	} while(std::next_permutation(pi.begin(), pi.end()));
 	
     if (this->settings.enableBDDLimits) {
-		unsigned long maxCost = bddLimit;
-		if (architecture.bidirectional()) {
-			maxCost *= GATES_OF_BIDIRECTIONAL_SWAP;
-		}
-		else {
-			maxCost *= GATES_OF_UNIDIRECTIONAL_SWAP;
-		}
 		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-			opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(maxCost), c));
+			opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(bddLimit), c));
 		}
 	}
 

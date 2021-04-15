@@ -297,3 +297,31 @@ TEST_P(ExactTest, BDDLimitsUnidirectionalCustomLimit) {
 	IBM_QX4_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
+TEST_P(ExactTest, BDDIncreasingCustomLimitUnidirectional) {
+	MappingSettings settings{};
+	settings.enableBDDLimits = true;
+	settings.bddStrategy = BDDStrategy::Increasing;
+	settings.bddLimit = 3;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inccustom.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}
+TEST_P(ExactTest, BDDIncreasingUnidirectional) {
+	MappingSettings settings{};
+	settings.enableBDDLimits = true;
+	settings.bddStrategy = BDDStrategy::Increasing;
+	settings.bddLimit = 0;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inc.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}
+TEST_P(ExactTest, NoSubsets) {
+	MappingSettings settings{};
+	settings.useQubitSubsets = false;
+	IBM_QX4_mapper.map(settings);
+	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_nosubsets.qasm");
+	IBM_QX4_mapper.printResult(std::cout, true);
+	SUCCEED() << "Mapping successful";
+}

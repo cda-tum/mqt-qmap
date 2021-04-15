@@ -45,9 +45,9 @@ def compile(circ, arch: Union[str, Arch],
 	:type grouping: Groupings
     :param bdd - Enable bdd for limiting swaps per layer
 	:type bdd: bool
-    :param bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps)
+    :param bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps | increasing)
     :type bddStrategy: BDDStrategy
-    :param bdd_limit - Set a custom limit for max swaps per layer
+    :param bdd_limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
     :type bdd_limit: int
     :param use_subsets - Use qubit subsets, or consider all available physical qubits at once
     :type use_subsets: bool
