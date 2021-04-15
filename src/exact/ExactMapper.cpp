@@ -50,7 +50,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 		qubits.push_back(i);
 	}
 	std::vector<std::set<unsigned short>> allPossibleQubitChoices{};
-	if (this->settings.useQubitSubsets)
+	if (this->settings.useQubitSubsets) {
 		do {
 			std::set<unsigned short> qubitChoice{};
 			for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
@@ -58,7 +58,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 			}
 			allPossibleQubitChoices.push_back(qubitChoice);
 		} while (next_combination(qubits.begin(), qubits.begin()+qc.getNqubits(), qubits.end()));
-	else {
+	} else {
 		std::set<unsigned short> allQubits(qubits.begin(), qubits.end());
 		allPossibleQubitChoices.push_back(allQubits);
 	}
@@ -66,42 +66,52 @@ void ExactMapper::map(const MappingSettings& settings) {
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
 	mappingSwaps.reserve(reducedLayerIndices.size());
 	for (auto& choice: allPossibleQubitChoices) {
-		// reset swaps
-		for(auto& layer: swaps) {
-			layer.clear();
+		int limit = 1;
+		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
+			limit = this->architecture.getLongestPath()-1; 
+		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
+			limit = this->architecture.getLongestPath(choice)-1;
 		}
-
-		MappingResults choiceResults{};
-		choiceResults.copyInput(results);
-
-		// 4) reduce coupling map
-		CouplingMap reducedCouplingMap = architecture.getCouplingMap();
-		for (const auto& edge: architecture.getCouplingMap()) {
-			if (!choice.count(edge.first) || !choice.count(edge.second)) {
-				reducedCouplingMap.erase(edge);
+		do {
+			// reset swaps
+			for(auto& layer: swaps) {
+				layer.clear();
 			}
-		}
-		if (reducedCouplingMap.empty()) continue;
 
-		// 5) Check if E_k is connected. If yes, then possible subset found
-		std::set<unsigned short> reachedQubits{};
-		reachedQubits.insert(*(choice.begin()));
-		dfs(*(choice.begin()), reachedQubits, reducedCouplingMap);
-		if (!(reachedQubits == choice)) continue;
+			MappingResults choiceResults{};
+			choiceResults.copyInput(results);
+			choiceResults.bddLimit = limit;
 
-		// 6) call actual mapping routine
-		coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps);
+			// 4) reduce coupling map
+			CouplingMap reducedCouplingMap = architecture.getCouplingMap();
+			for (const auto& edge: architecture.getCouplingMap()) {
+				if (!choice.count(edge.first) || !choice.count(edge.second)) {
+					reducedCouplingMap.erase(edge);
+				}
+			}
+			if (reducedCouplingMap.empty()) continue;
 
-		if (settings.verbose) {
-			std::cout << "SWAPs: " << choiceResults.output_swaps << std::endl;
-			std::cout << "Direction reverses: " << choiceResults.output_direction_reverse << std::endl;
-		}
+			// 5) Check if E_k is connected. If yes, then possible subset found
+			std::set<unsigned short> reachedQubits{};
+			reachedQubits.insert(*(choice.begin()));
+			dfs(*(choice.begin()), reachedQubits, reducedCouplingMap);
+			if (!(reachedQubits == choice)) continue;
 
-		// 7) Check if new optimum found
-		if (!choiceResults.timeout && choiceResults.output_gates < results.output_gates) {
-			results = choiceResults;
-			mappingSwaps = swaps;
-		}
+			// 6) call actual mapping routine
+			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, limit);
+
+			if (settings.verbose) {
+				std::cout << "SWAPs: " << choiceResults.output_swaps << std::endl;
+				std::cout << "Direction reverses: " << choiceResults.output_direction_reverse << std::endl;
+			}
+
+			// 7) Check if new optimum found
+			if (!choiceResults.timeout && choiceResults.output_gates < results.output_gates) {
+				results = choiceResults;
+				mappingSwaps = swaps;
+			}
+			limit ++; //TODO change maybe?
+		} while (this->settings.bddStrategy == BDDStrategy::Increasing && (limit < this->settings.bddLimit || limit < this->architecture.getLongestPath()));
 	}
 
 	// 8) Write best result and statistics
@@ -222,7 +232,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 	results.time = diff.count();
 }
 
-void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps) {
+void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, int bddLimit) {
 	// Z3 context
 	context c;
 
@@ -489,12 +499,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	} while(std::next_permutation(pi.begin(), pi.end()));
 	
     if (this->settings.enableBDDLimits) {
-		unsigned long maxCost = this->settings.bddLimit;
-		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
-			maxCost = this->architecture.getLongestPath()-1; 
-		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
-			maxCost = this->architecture.getLongestPath(qubitChoice)-1;
-		}
+		unsigned long maxCost = bddLimit;
 		if (architecture.bidirectional()) {
 			maxCost *= GATES_OF_BIDIRECTIONAL_SWAP;
 		}

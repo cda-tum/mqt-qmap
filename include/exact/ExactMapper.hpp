@@ -30,7 +30,7 @@ protected:
 	// inputs
 	std::vector<unsigned long> reducedLayerIndices{};
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> mappingSwaps{};
-	void coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps);
+	void coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, int bddLimit);
 	void initResults() override;
 
 public:

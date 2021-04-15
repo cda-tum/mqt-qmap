@@ -203,6 +203,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("architectureswaps", BDDStrategy::ArchitectureSwaps)
             .value("subsetswaps", BDDStrategy::SubsetSwaps)
             .value("custom", BDDStrategy::Custom)
+            .value("increasing", BDDStrategy::Increasing)
             .export_values();
 
 	#ifdef VERSION_INFO

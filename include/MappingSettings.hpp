@@ -46,7 +46,7 @@ enum class Groupings {
 	Fixed2, Fixed3, Halves, Logarithm
 };
 enum class BDDStrategy {
-	None, Custom, ArchitectureSwaps, SubsetSwaps
+	None, Custom, ArchitectureSwaps, SubsetSwaps, Increasing
 };
 static std::string toString(const LayeringStrategy strategy) {
 	switch (strategy) {
@@ -121,6 +121,8 @@ static std::string toString(const BDDStrategy strategy) {
             return "custom";
         case BDDStrategy::None:
             return "none";
+        case BDDStrategy::Increasing:
+            return "increasing";
     }
     return " ";
 }
@@ -130,6 +132,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(BDDStrategy, {
     {BDDStrategy::ArchitectureSwaps, "architectureswaps"},
     {BDDStrategy::SubsetSwaps, "subsetswaps"},
     {BDDStrategy::Custom, "custom"},
+	{BDDStrategy::Increasing, "increasing"}
 })
 
 struct MappingSettings {

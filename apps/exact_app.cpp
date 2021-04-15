@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
 			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
 			("bdd", "Enable bdd for limiting swaps per layer")
-			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps"))")
-			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer")
+			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
+			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
             ;
     po::variables_map vm;
@@ -146,6 +146,12 @@ int main(int argc, char** argv) {
 				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
 			} else if (bddStrat == "subsetswaps") {
 				ms.bddStrategy = BDDStrategy::SubsetSwaps;
+			} else if (bddStrat == "increasing") {
+				ms.bddStrategy = BDDStrategy::Increasing;
+				if (vm.count("bdd_limit")) {
+					const std::string bdd_limit = vm["bdd_limit"].as<std::string>();
+					ms.bddLimit = std::stoi(bdd_limit.c_str());
+				}
 			} else {
 				ms.bddStrategy = BDDStrategy::None;
 				ms.enableBDDLimits = false;
