@@ -47,6 +47,11 @@ struct MappingResults {
 	Method method = Method::None;
 	InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
 	LayeringStrategy layeringStrategy = LayeringStrategy::None;
+	Encodings encoding = Encodings::None;
+	Groupings grouping = Groupings::Halves;
+	BDDStrategy bddStrategy = BDDStrategy::None;
+
+	int bddLimit = 0;
 
 	double time = 0.0;
 	bool timeout = true;
@@ -80,6 +85,11 @@ struct MappingResults {
 		method = mappingResults.method;
 		initialLayoutStrategy = mappingResults.initialLayoutStrategy;
 		layeringStrategy = mappingResults.layeringStrategy;
+
+		encoding = mappingResults.encoding;
+		grouping = mappingResults.grouping;
+		bddStrategy = mappingResults.bddStrategy;
+		bddLimit = mappingResults.bddLimit;
 
 		output_name = mappingResults.output_name;
 		output_qubits = mappingResults.output_qubits;
@@ -124,6 +134,16 @@ struct MappingResults {
 			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
 				out << "\t\t\"initialLayoutStrategy\": \"" << toString(initialLayoutStrategy) << "\",\n";
 
+			}
+			if (encoding != Encodings::None){
+                out << "\t\t\"encoding\": \"" << toString(encoding) << "\",\n";
+                out << "\t\t\"grouping\": \"" << toString(grouping) << "\",\n";
+			}
+			if (bddStrategy != BDDStrategy::None) {
+                out << "\t\t\"bddStrategy\": \"" << toString(bddStrategy) << "\",\n";
+                if (bddStrategy == BDDStrategy::Custom) {
+                    out << "\t\t\"bddLimit\": \"" << bddLimit << "\",\n";
+                }
 			}
 			out << "\t\t\"arch\": \"" << architecture << "\"";
 			if (!calibration.empty()) {
@@ -175,6 +195,16 @@ struct MappingResults {
 			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
 				stats["initialLayoutStrategy"] = initialLayoutStrategy;
 			}
+            if (encoding != Encodings::None){
+                stats["encoding"] = encoding;
+                stats["grouping"] = grouping;
+            }
+            if (bddStrategy != BDDStrategy::None) {
+                stats["bddStrategy"] = bddStrategy;
+                if (bddStrategy == BDDStrategy::Custom) {
+                    stats["bddLimit"] = bddLimit;
+                }
+            }
 			stats["arch"] = architecture;
 			if (!calibration.empty())
 				stats["calibration"] = calibration;

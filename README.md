@@ -92,6 +92,11 @@ Params:
     use_teleportation - Use teleportation in addition to swaps
     teleportation_fake - Assign qubits as ancillary for teleportation but don't actually use them
     teleportationSeed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
+    encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
+	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
+	bdd - Enable bdd for limiting swaps per layer
+	bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps)
+    bdd_limit - Set a custom limit for max swaps per layer
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
     csv – Create CSV string for result
     statistics – Print statistics
@@ -107,6 +112,11 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportationSeed: int = 0,
+            encoding: Encoding = Encoding.none,
+            grouping: Grouping = Grouping.halves,
+            bdd: bool = False,
+            bddStrategy: bddStrategy = BDDStrategy.none,
+            bdd_limit: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
@@ -162,6 +172,22 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 - `disjoint`: consider gates acting on disjoint qubits as a layer,
 - `odd`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool and may not work on different architectures)
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact mapping tool)
+
+The exact mapping tool offers the `--encoding` and related the `--grouping` option, where the first option allows to chose a different encoding for at most one and exactly one constraints:
+- `none` (*default*): use naive encoding for constraints
+- `commander`: use commander encoding for at most one and exactly one constraints
+- `bimander`: use bimander encoding for at most one and commander for exactly one constraints
+As commander encoding can use different strategies to group the variables, there are different `--grouping` options:
+- `halves` (*default*): each group contains half of the total variables
+- `logarithm`: each group contains at most log2 of the total variables
+- `fixed2`: each group contains exactly two variables
+- `fixed3`: each group contains exactly three variables
+
+The exact mapping tool also offers the `-bdd` option to enable limiting the number of swaps done per layer. Related is the `--bddStrategy` option, which offers the following options:
+- `none` (*default*): disable bdd limiting
+- `architectureswaps`: calculate the max swaps per layer based on the longest path through the whole coupling map
+- `subsetswaps`: calculate the max swaps per layer based on the longest path of current choice of qubits
+- `custom`: set a custom limit, needs the `--bdd_limit` option followed by a number to set the limit
 
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).

@@ -373,20 +373,20 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
 	return (length - 2)*7 + 4;
 }
 
-long Architecture::getLongestPath() {
+long Architecture::getLongestPath() const {
 	long maximum = 0;
-	for (auto &it:getDistanceTable()){
+	for (const auto &it: distanceTable){
 		maximum = std::max(std::lround((*std::max_element(it.begin(), it.end()))), maximum);
 	}
 	return maximum;
 }
 
 
-long Architecture::getLongestPath(const std::set<unsigned short> &qubitChoice){
+long Architecture::getLongestPath(const std::set<unsigned short> &qubitChoice) const {
 	long maximum = 0;
-	for (auto it: qubitChoice){
-		for (auto it_inner: qubitChoice)
-		 	maximum = std::max(std::lround(getDistanceTable()[it][it_inner]), maximum);
+	for (const auto& it: qubitChoice){
+		for (const auto& it_inner: qubitChoice)
+		 	maximum = std::max(std::lround(distanceTable[it][it_inner]), maximum);
 	}
 	return maximum;
 }

@@ -72,6 +72,66 @@ NLOHMANN_JSON_SERIALIZE_ENUM( LayeringStrategy, {
 	{LayeringStrategy::QubitTriangle, "qubit_triangle"},
 })
 
+static std::string toString(const Encodings encoding) {
+    switch (encoding) {
+        case Encodings::None:
+            return "none";
+        case Encodings::Commander:
+            return "commander";
+        case Encodings::Bimander:
+            return "bimander";
+    }
+    return " ";
+}
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Encodings, {
+    {Encodings::None, "none"},
+    {Encodings::Commander, "commander"},
+    {Encodings::Bimander, "bimander"},
+})
+
+static std::string toString(const Groupings grouping) {
+    switch (grouping) {
+        case Groupings::Fixed2:
+            return "fixed2";
+        case Groupings::Fixed3:
+            return "fixed3";
+        case Groupings::Logarithm:
+            return "logarithm";
+        case Groupings::Halves:
+            return "halves";
+    }
+    return " ";
+}
+
+NLOHMANN_JSON_SERIALIZE_ENUM(Groupings, {
+    {Groupings::Fixed2, "fixed2"},
+    {Groupings::Fixed3, "fixed3"},
+    {Groupings::Halves, "halves"},
+    {Groupings::Logarithm, "logarithm"},
+})
+
+static std::string toString(const BDDStrategy strategy) {
+    switch (strategy) {
+        case BDDStrategy::ArchitectureSwaps:
+            return "architectureswaps";
+        case BDDStrategy::SubsetSwaps:
+            return "subsetswaps";
+        case BDDStrategy::Custom:
+            return "custom";
+        case BDDStrategy::None:
+            return "none";
+    }
+    return " ";
+}
+
+NLOHMANN_JSON_SERIALIZE_ENUM(BDDStrategy, {
+    {BDDStrategy::None, "none"},
+    {BDDStrategy::ArchitectureSwaps, "architectureswaps"},
+    {BDDStrategy::SubsetSwaps, "subsetswaps"},
+    {BDDStrategy::Custom, "custom"},
+})
+
 struct MappingSettings {
 	MappingSettings() = default;
 
@@ -97,7 +157,7 @@ struct MappingSettings {
 	Groupings grouping = Groupings::Logarithm;
 	bool enableBDDLimits = false;
 	BDDStrategy bddStrategy = BDDStrategy::None;
-	int bddLimits = 0;
+	int bddLimit = 0;
 
 };
 

@@ -5,7 +5,7 @@
 import pickle
 from pathlib import Path
 from typing import Any, Dict, Union
-from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch
+from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encodings, Groupings, BDDStrategy
 
 
 def compile(circ, arch: Union[str, Arch],
@@ -16,6 +16,11 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
+            encoding: Encodings = Encodings.none,
+            grouping: Groupings = Groupings.halves,
+            bdd: bool = False,
+            bddstrategy: BDDStrategy = BDDStrategy.none,
+            bdd_limit: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
@@ -33,6 +38,16 @@ def compile(circ, arch: Union[str, Arch],
     :type initial_layout: InitialLayoutStrategy
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: LayeringStrategy
+    :param encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
+	:type encoding: Encodings
+    :param grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
+	:type grouping: Groupings
+    :param bdd - Enable bdd for limiting swaps per layer
+	:type bdd: bool
+    :param bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps)
+    :type bddStrategy: BDDStrategy
+    :param bdd_limit - Set a custom limit for max swaps per layer
+    :type bdd_limit: int
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
@@ -56,6 +71,11 @@ def compile(circ, arch: Union[str, Arch],
         "method": method.name,
         "initialLayout": initial_layout.name,
         "layering": layering.name,
+        "encoding": encoding.name,
+        "grouping": grouping.name,
+        "bdd": bdd,
+        "bddStrategy": bddstrategy.name,
+        "bdd_limit": bdd_limit,
         "use_teleportation": use_teleportation,
         "teleportation_fake": teleportation_fake,
         "teleportation_seed": teleportation_seed,

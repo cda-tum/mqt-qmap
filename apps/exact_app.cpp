@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
 			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
-			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "log" | "halves"))")
+			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
 			("bdd", "Enable bdd for limiting swaps per layer")
-			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("None" | "Custom" | "ArchitectureSwaps" | "SubsetSwaps"))")
+			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps"))")
 			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer")
             ;
     po::variables_map vm;
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 		{
 			ms.grouping = Groupings::Fixed2;
 		}
-		else if (grouping == "log")
+		else if (grouping == "logarithm")
 		{
 			ms.grouping = Groupings::Logarithm;
 		} else if (grouping == "halves"){
@@ -135,16 +135,16 @@ int main(int argc, char** argv) {
 		ms.enableBDDLimits = true;
 		if (vm.count("bddStrategy")) {
 			const std::string bddStrat = vm["bddStrategy"].as<std::string>();
-			if (bddStrat == "Custom") {
+			if (bddStrat == "custom") {
 				ms.bddStrategy = BDDStrategy::Custom;
-				if (vm.count("bdd_limits")) {
-					const std::string bdd_limits = vm["bdd_limits"].as<std::string>();
-					ms.bddLimits = atoi(bdd_limits.c_str());
+				if (vm.count("bdd_limit")) {
+					const std::string bdd_limit = vm["bdd_limit"].as<std::string>();
+					ms.bddLimit = std::stoi(bdd_limit.c_str());
 				}
-			} else if (bddStrat == "ArchitectureSwaps") {
+			} else if (bddStrat == "architectureswaps") {
 				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
-			} else if (bddStrat == "SubsetSwaps") {
-				ms.bddStrategy == BDDStrategy::SubsetSwaps;
+			} else if (bddStrat == "subsetswaps") {
+				ms.bddStrategy = BDDStrategy::SubsetSwaps;
 			} else {
 				ms.bddStrategy = BDDStrategy::None;
 				ms.enableBDDLimits = false;

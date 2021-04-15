@@ -262,7 +262,7 @@ TEST_P(ExactTest, BDDLimitsBidirectionalCustomLimit) {
 	MappingSettings settings{};
 	settings.enableBDDLimits = true;
 	settings.bddStrategy = BDDStrategy::Custom;
-	settings.bddLimits = 10;
+	settings.bddLimit = 10;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -291,7 +291,7 @@ TEST_P(ExactTest, BDDLimitsUnidirectionalCustomLimit) {
 	MappingSettings settings{};
 	settings.enableBDDLimits = true;
 	settings.bddStrategy = BDDStrategy::Custom;
-	settings.bddLimits = 10;
+	settings.bddLimit = 10;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);

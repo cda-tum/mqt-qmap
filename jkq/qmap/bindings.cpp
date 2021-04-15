@@ -69,6 +69,27 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
 		nl::from_json(jsonConfig["layering"].get<std::string>(), ms.layeringStrategy);
 	}
 
+	ms.encoding = Encodings::None;
+	if (jsonConfig.contains("encoding")){
+	    nl::from_json(jsonConfig["encoding"].get<std::string(), ms.encoding);
+	}
+
+    ms.grouping = Groupings::Halves;
+    if (jsonConfig.contains("grouping")){
+        nl::from_json(jsonConfig["grouping"].get<std::string>(), ms.grouping);
+    }
+
+    if (jsonConfig.contains("bdd")){
+        ms.enableBDDLimits = true;
+        ms.bddStrategy = BDDStrategy::None;
+        if (jsonConfig.contains("bddstrategy")){
+            nl::from_json(jsonConfig["bddstrategy"].get<std::string>(), ms.bddStrategy);
+        }
+        if (jsonConfig.contains("bddLlimit")) {
+            ms.bddLimits = jsonConfig["bddlimit"].get<int>();
+        }
+    }
+
     if (jsonConfig.contains("use_teleportation")) {
         ms.teleportationQubits = std::min((architecture.getNqubits() - qc.getNqubits()) & ~1u, 8u);
         ms.teleportationSeed = jsonConfig["teleportationSeed"].get<unsigned long long>();
@@ -160,6 +181,26 @@ PYBIND11_MODULE(pyqmap, m) {
 			.value("odd_gates", LayeringStrategy::OddGates)
 			.value("qubit_triangle", LayeringStrategy::QubitTriangle)
 			.export_values();
+
+	py::enum_<Encodings>(m, "Encoding")
+	        .value("none", Encodings::None)
+	        .value("commander", Encodings::Commander)
+	        .value("bimander", Encodings::Bimander)
+	        .export_values();
+
+	py::enum_<Groupings>(m, "Grouping")
+            .value("fixed2", Groupings::Fixed2)
+            .value("fixed2", Groupings::Fixed3)
+            .value("halves", Groupings::Halves)
+            .value("logarithm", Groupings::Logarithm)
+            .export_values();
+			
+	py::enum_<BDDStrategy>(m, "BDDStrategy")
+            .value("none", BDDStrategy::None)
+            .value("architectureswaps", BDDStrategy::ArchitectureSwaps)
+            .value("subsetswaps", BDDStrategy::SubsetSwaps)
+            .value("custom", BDDStrategy::Custom)
+            .export_values();
 
 	#ifdef VERSION_INFO
 	m.attr("__version__") = VERSION_INFO;
