@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
 			("bdd", "Enable bdd for limiting swaps per layer")
 			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps"))")
 			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer")
+			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
             ;
     po::variables_map vm;
     try {
@@ -152,6 +153,7 @@ int main(int argc, char** argv) {
 		}
 		
 	}
+	ms.useQubitSubsets = vm.count("useSubsets") > 0;
     ms.verbose = vm.count("verbose") > 0;
     mapper.map(ms);
 

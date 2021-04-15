@@ -96,9 +96,12 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         ms.teleportationFake = jsonConfig["teleportation_fake"].get<bool>();
     }
 
-
 	if (jsonConfig.contains("verbose")) {
 		ms.verbose = jsonConfig["verbose"].get<bool>();
+	}
+
+	if (jsonConfig.contains("use_subsets")) {
+		ms.useQubitSubsets = jsonConfig["use_subsets"].get<bool>();
 	}
 
 	bool printStatistics = false;

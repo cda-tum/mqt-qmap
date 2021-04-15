@@ -50,14 +50,18 @@ void ExactMapper::map(const MappingSettings& settings) {
 		qubits.push_back(i);
 	}
 	std::vector<std::set<unsigned short>> allPossibleQubitChoices{};
-	do {
-		std::set<unsigned short> qubitChoice{};
-		for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
-			qubitChoice.insert(qubits.at(i));
-		}
-		allPossibleQubitChoices.push_back(qubitChoice);
-	} while (next_combination(qubits.begin(), qubits.begin()+qc.getNqubits(), qubits.end()));
-
+	if (this->settings.useQubitSubsets)
+		do {
+			std::set<unsigned short> qubitChoice{};
+			for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
+				qubitChoice.insert(qubits.at(i));
+			}
+			allPossibleQubitChoices.push_back(qubitChoice);
+		} while (next_combination(qubits.begin(), qubits.begin()+qc.getNqubits(), qubits.end()));
+	else {
+		std::set<unsigned short> allQubits(qubits.begin(), qubits.end());
+		allPossibleQubitChoices.push_back(allQubits);
+	}
 	// 3) determine exact mapping for this qubit choice
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
 	mappingSwaps.reserve(reducedLayerIndices.size());

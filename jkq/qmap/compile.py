@@ -21,6 +21,7 @@ def compile(circ, arch: Union[str, Arch],
             bdd: bool = False,
             bddstrategy: BDDStrategy = BDDStrategy.none,
             bdd_limit: int = 0,
+            use_subsets: bool = True,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
@@ -48,6 +49,8 @@ def compile(circ, arch: Union[str, Arch],
     :type bddStrategy: BDDStrategy
     :param bdd_limit - Set a custom limit for max swaps per layer
     :type bdd_limit: int
+    :param use_subsets - Use qubit subsets, or consider all available physical qubits at once
+    :type use_subsets: bool
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
@@ -76,6 +79,7 @@ def compile(circ, arch: Union[str, Arch],
         "bdd": bdd,
         "bddStrategy": bddstrategy.name,
         "bdd_limit": bdd_limit,
+        "use_subsets": use_subsets,
         "use_teleportation": use_teleportation,
         "teleportation_fake": teleportation_fake,
         "teleportation_seed": teleportation_seed,

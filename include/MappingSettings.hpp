@@ -158,7 +158,7 @@ struct MappingSettings {
 	bool enableBDDLimits = false;
 	BDDStrategy bddStrategy = BDDStrategy::None;
 	int bddLimit = 0;
-
+	bool useQubitSubsets = true;
 };
 
 #endif //QMAP_MAPPINGSETTINGS_HPP
