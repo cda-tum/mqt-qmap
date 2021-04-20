@@ -15,6 +15,7 @@
 
 #include "utils.hpp"
 #include "nlohmann/json.hpp"
+#include "encodings.hpp"
 
 constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP = 3;
 constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7;

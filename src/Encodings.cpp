@@ -312,3 +312,74 @@ std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_
 	}
 	return out.str();
 }
+
+int findLongestPath(const CouplingMap cm, int nQubits){
+	std::vector<std::vector<unsigned short>> connections;
+	std::vector<int> d;
+	std::vector<bool> visited;
+	connections.resize(nQubits);
+	int maxSum = -1;
+	for (auto edge: cm){
+		connections.at(edge.first).emplace_back(edge.second);
+	}
+	for (int q=0; q < nQubits; ++q){
+		d.clear();
+		d.resize(nQubits);
+		std::fill(d.begin(), d.end(), 0);
+		visited.clear();
+		visited.resize(nQubits);
+		std::fill(visited.begin(), visited.end(), false);
+		findLongestPath(q, 0, connections, d, visited);
+		auto it = std::max_element(d.begin(), d.end());
+		if ((*it)>maxSum)
+			maxSum = (*it);
+	}
+	return maxSum;
+}
+
+
+int findLongestPath(const CouplingMap cm, int nQubits, const std::set<unsigned short> &qubitChoice){
+	std::vector<std::vector<unsigned short>> connections;
+	std::vector<int> d;
+	std::vector<bool> visited;
+	connections.resize(nQubits);
+	int maxSum = -1;
+	for (auto edge: cm){
+		if (qubitChoice.count(edge.first) && qubitChoice.count(edge.second))
+			connections.at(edge.first).emplace_back(edge.second);
+	}
+	for (int q=0; q < nQubits; ++q){
+		if (connections.at(q).empty())
+			continue;
+		d.clear();
+		d.resize(nQubits);
+		std::fill(d.begin(), d.end(), 0);
+		visited.clear();
+		visited.resize(nQubits);
+		std::fill(visited.begin(), visited.end(), false);
+		findLongestPath(q, 0, connections, d, visited);
+		auto it = std::max_element(d.begin(), d.end());
+		if ((*it)>maxSum)
+			maxSum = (*it);
+	}
+	return maxSum;
+}
+
+void findLongestPath(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>> &connections, std::vector<int> &d, std::vector<bool> &visited){
+	if (visited.at(node))
+		return;
+	visited[node] = true;
+
+	if (d.at(node)<curSum)
+		d[node] = curSum;
+	if (connections.at(node).empty()){
+		visited[node]=false;
+		return;
+	}
+
+	for (auto child: connections.at(node)){
+		findLongestPath(child, curSum+1, connections, d, visited);
+	}
+
+	visited[node]=false;
+} 
