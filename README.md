@@ -92,6 +92,7 @@ Params:
     use_teleportation - Use teleportation in addition to swaps
     teleportation_fake - Assign qubits as ancillary for teleportation but don't actually use them
     teleportationSeed - Fix a seed for the initial ancilla placement (0 means no fixed seed)
+    use_subsets - Switch between using qubit-subsets or consider all available qubits at the same time
     encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
 	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
 	bdd - Enable bdd for limiting swaps per layer
@@ -112,6 +113,7 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportationSeed: int = 0,
+            use_subsets: bool = True,
             encoding: Encoding = Encoding.none,
             grouping: Grouping = Grouping.halves,
             bdd: bool = False,
