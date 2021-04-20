@@ -374,21 +374,12 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
 }
 
 long Architecture::getLongestPath() const {
-	long maximum = 0;
-	for (const auto &it: distanceTable){
-		maximum = std::max(std::lround((*std::max_element(it.begin(), it.end()))), maximum);
-	}
-	return maximum;
+	return findLongestPath(getCouplingMap(), getNqubits());
 }
 
 
 long Architecture::getLongestPath(const std::set<unsigned short> &qubitChoice) const {
-	long maximum = 0;
-	for (const auto& it: qubitChoice){
-		for (const auto& it_inner: qubitChoice)
-		 	maximum = std::max(std::lround(distanceTable[it][it_inner]), maximum);
-	}
-	return maximum;
+	return findLongestPath(getCouplingMap(), getNqubits(), qubitChoice);
 }
 
 

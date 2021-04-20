@@ -69,9 +69,19 @@ void ExactMapper::map(const MappingSettings& settings) {
 		int limit = 1;
 		int upperLimit = this->settings.bddLimit;
 		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
-			limit = this->architecture.getLongestPath()-1; 
+			limit = this->architecture.getLongestPath()-1;
+			if (architecture.bidirectional()) {
+				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
+			} else {
+				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
+			} 
 		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
 			limit = this->architecture.getLongestPath(choice)-1;
+			if (architecture.bidirectional()) {
+				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
+			} else {
+				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
+			}
 		} else if (this->settings.bddStrategy == BDDStrategy::Increasing) {
 			if (architecture.bidirectional()) {
 				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
