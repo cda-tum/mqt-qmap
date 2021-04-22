@@ -11,7 +11,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 	qc.stripIdleQubits(true, true);
 	initResults();
-		
+
 	// 1) create layers according to different criteria
 	createLayers();
 	if (settings.verbose) {
@@ -67,35 +67,14 @@ void ExactMapper::map(const MappingSettings& settings) {
 	mappingSwaps.reserve(reducedLayerIndices.size());
 	for (auto& choice: allPossibleQubitChoices) {
 		int limit = 1;
-		int upperLimit = this->settings.bddLimit;
-		if (this->settings.bddStrategy == BDDStrategy::ArchitectureSwaps){
+		int upperLimit = this->settings.limit;
+		if (this->settings.strategy == Strategy::ArchitectureSwaps){
 			limit = this->architecture.getLongestPath()-1;
-			if (architecture.bidirectional()) {
-				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
-			} else {
-				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
-			} 
-		} else if (this->settings.bddStrategy == BDDStrategy::SubsetSwaps) {
+		} else if (this->settings.strategy == Strategy::SubsetSwaps) {
 			limit = this->architecture.getLongestPath(choice)-1;
-			if (architecture.bidirectional()) {
-				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
-			} else {
-				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
-			}
-		} else if (this->settings.bddStrategy == BDDStrategy::Increasing) {
-			if (architecture.bidirectional()) {
-				limit *= GATES_OF_BIDIRECTIONAL_SWAP;
-				upperLimit *= GATES_OF_BIDIRECTIONAL_SWAP;
-			} else {
-				limit *= GATES_OF_UNIDIRECTIONAL_SWAP;
-				upperLimit *= GATES_OF_UNIDIRECTIONAL_SWAP;
-			}
+		} else if (this->settings.strategy == Strategy::Increasing) {
 		} else { //CustomLimit
-			if (architecture.bidirectional()) {
-				limit = upperLimit * GATES_OF_BIDIRECTIONAL_SWAP;
-			} else {
-				limit = upperLimit * GATES_OF_UNIDIRECTIONAL_SWAP;
-			}
+			limit = upperLimit;
 		}
 		do {
 			// reset swaps
@@ -105,7 +84,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 
 			MappingResults choiceResults{};
 			choiceResults.copyInput(results);
-			choiceResults.bddLimit = limit;
+			choiceResults.limit = limit;
 
 			// 4) reduce coupling map
 			CouplingMap reducedCouplingMap = architecture.getCouplingMap();
@@ -127,7 +106,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 			}
 
 			// 6) call actual mapping routine
-			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, limit);
+			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit));
 
 			if (settings.verbose) {
 				std::cout << "SWAPs: " << choiceResults.output_swaps << std::endl;
@@ -140,7 +119,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 				mappingSwaps = swaps;
 			}
 			limit += 3; //TODO increase geometrically
-		} while (this->settings.bddStrategy == BDDStrategy::Increasing && (limit <= upperLimit || this->settings.bddLimit==0) && limit < this->architecture.getLongestPath());
+		} while (this->settings.strategy == Strategy::Increasing && (limit <= upperLimit || this->settings.limit==0) && limit < this->architecture.getLongestPath());
 	}
 
 	// 8) Write best result and statistics
@@ -261,17 +240,32 @@ void ExactMapper::map(const MappingSettings& settings) {
 	results.time = diff.count();
 }
 
-void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, int bddLimit) {
+void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit) {
 	// Z3 context
 	context c;
 
 	std::vector<unsigned short> pi(qubitChoice.begin(), qubitChoice.end());
 	unsigned long long piCount;
+	std::unordered_set<unsigned long long> skipped_pi{};
 	std::unordered_map<unsigned short, unsigned short> physicalQubitIndex{};
 	unsigned short qIdx=0;
 	for (const auto& Q: qubitChoice){
 		physicalQubitIndex[Q] = qIdx;
 		++qIdx;
+	}
+
+	//////////////////////////////////////////
+	/// 	Check necessary permutations	//
+	//////////////////////////////////////////
+	piCount=0;
+	if (this->settings.enableLimits && !this->settings.useBDD) {
+		do {
+			auto picost = architecture.minimumNumberOfSwaps(pi);
+			if (picost > limit) {
+				skipped_pi.insert(piCount);
+			}
+			++piCount;
+		} while(std::next_permutation(pi.begin(), pi.end()));
 	}
 
 	//////////////////////////////////////////
@@ -315,9 +309,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		y.emplace_back();
 		piCount = 0;
 		do {
-			y_name.str("");
-			y_name << "y_" << k << '_' << piCount;
-			y.back().push_back(c.bool_const(y_name.str().c_str()));
+			if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
+				y_name.str("");
+				y_name << "y_" << k << '_' << piCount;
+				y.back().push_back(c.bool_const(y_name.str().c_str()));
+			}
 			++piCount;
 		} while(std::next_permutation(pi.begin(), pi.end()));
 	}
@@ -378,7 +374,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 				for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
 					varIDs.push_back(x[k][i][j]);
 				}
-				
+
 				if (this->settings.grouping == Groupings::Fixed2) {
 					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
 				} else if (this->settings.grouping == Groupings::Fixed3) {
@@ -408,7 +404,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 				for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
 					varIDs.push_back(x[k][i][j]);
 				}
-				
+
 				if (this->settings.grouping == Groupings::Fixed2) {
 					opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
 				} else if (this->settings.grouping == Groupings::Fixed3){
@@ -462,18 +458,20 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		auto& i = x[k-1];
 		auto& j = x[k];
 		do {
-			expr equal = c.bool_val(true);
-			for (unsigned short Q: qubitChoice) {
-				for (unsigned short q=0; q< qc.getNqubits(); ++q) {
-					auto before = i[physicalQubitIndex[Q]][q];
-					auto after = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
-					equal = equal && (before == after);
+			if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
+				expr equal = c.bool_val(true);
+				for (unsigned short Q: qubitChoice) {
+					for (unsigned short q=0; q< qc.getNqubits(); ++q) {
+						auto before = i[physicalQubitIndex[Q]][q];
+						auto after = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
+						equal = equal && (before == after);
+					}
 				}
+				opt.add(implies(y[k-1][piCount],equal.simplify()).simplify());
+				++piCount;
 			}
-			opt.add(implies(y[k-1][piCount],equal.simplify()).simplify());
-			++piCount;
 		} while(std::next_permutation(pi.begin(), pi.end()));
-	}
+}
 
 	// Allow only 1 y_k_pi to be true
     if (this->settings.encoding == Encodings::None) {
@@ -481,8 +479,10 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			expr onlyOne = c.int_val(0);
 			piCount = 0;
 			do {
-				onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
-				++piCount;
+				if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
+					onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
+					++piCount;
+				}
 			} while (std::next_permutation(pi.begin(), pi.end()));
 			opt.add(onlyOne.simplify() == 1);
 		}
@@ -491,8 +491,10 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			std::vector<expr> varIDs;
 			piCount = 0;
 			do {
-				varIDs.push_back(y[k - 1][piCount]);
-				++piCount;
+				if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
+					varIDs.push_back(y[k - 1][piCount]);
+					++piCount;
+				}
 			} while (std::next_permutation(pi.begin(), pi.end()));
 			if (this->settings.grouping == Groupings::Fixed2) {
 				opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
@@ -513,23 +515,25 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	piCount=0;
 	std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
 	do {
-		auto picost = architecture.minimumNumberOfSwaps(pi);
-		if (architecture.bidirectional()) {
-			picost *= GATES_OF_BIDIRECTIONAL_SWAP;
-		} else {
-			picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
-		}
-		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-			opt.add(!y[k-1][piCount], picost);
-			if (this->settings.enableBDDLimits)
-				weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
-		}
-		++piCount;
+			if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
+				auto picost = architecture.minimumNumberOfSwaps(pi);
+				if (architecture.bidirectional()) {
+					picost *= GATES_OF_BIDIRECTIONAL_SWAP;
+				} else {
+					picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
+				}
+				for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
+					opt.add(!y[k-1][piCount], picost);
+					if (this->settings.useBDD)
+						weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
+				}
+				++piCount;
+			}
 	} while(std::next_permutation(pi.begin(), pi.end()));
-	
-    if (this->settings.enableBDDLimits) {
+
+    if (this->settings.enableLimits && this->settings.useBDD) {
 		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-			opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(bddLimit), c));
+			opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(limit), c));
 		}
 	}
 
@@ -638,8 +642,8 @@ void ExactMapper::initResults() {
 	results.output_gates = std::numeric_limits<unsigned long>::max();
 	results.encoding = this->settings.encoding;
 	results.grouping = this->settings.grouping;
-	results.bddStrategy = this->settings.bddStrategy;
-	results.bddLimit = this->settings.bddLimit;
+	results.strategy = this->settings.strategy;
+	results.limit = this->settings.limit;
 }
 
 

@@ -23,9 +23,10 @@ int main(int argc, char** argv) {
             ("verbose", "Increase verbosity and output additional information to stderr")
 			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
 			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
-			("bdd", "Enable bdd for limiting swaps per layer")
-			("bddStrategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
-			("bdd_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
+			("limitSwaps", "Enable bdd for limiting swaps per layer")
+			("useBDD", "Choose to use BDDs instead of directly limiting the permutation variables")
+			("strategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
+			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
             ;
     po::variables_map vm;
@@ -131,30 +132,34 @@ int main(int argc, char** argv) {
 			ms.grouping = Groupings::Halves;
 		}
 	}
-	if (vm.count("bdd"))
+	if (vm.count("limitswaps"))
 	{
-		ms.enableBDDLimits = true;
-		if (vm.count("bddStrategy")) {
-			const std::string bddStrat = vm["bddStrategy"].as<std::string>();
+		ms.enableLimits = true;
+		if (vm.count("useBDD")){
+			ms.useBDD = true;
+		}
+		if (vm.count("strategy")) {
+			const std::string bddStrat = vm["strategy"].as<std::string>();
 			if (bddStrat == "custom") {
-				ms.bddStrategy = BDDStrategy::Custom;
-				if (vm.count("bdd_limit")) {
-					const std::string bdd_limit = vm["bdd_limit"].as<std::string>();
-					ms.bddLimit = std::stoi(bdd_limit.c_str());
+				ms.strategy = Strategy::Custom;
+				if (vm.count("limit")) {
+					const std::string bdd_limit = vm["limit"].as<std::string>();
+					ms.limit = std::stoi(bdd_limit.c_str());
 				}
 			} else if (bddStrat == "architectureswaps") {
-				ms.bddStrategy = BDDStrategy::ArchitectureSwaps;
+				ms.strategy = Strategy::ArchitectureSwaps;
 			} else if (bddStrat == "subsetswaps") {
-				ms.bddStrategy = BDDStrategy::SubsetSwaps;
+				ms.strategy = Strategy::SubsetSwaps;
 			} else if (bddStrat == "increasing") {
-				ms.bddStrategy = BDDStrategy::Increasing;
-				if (vm.count("bdd_limit")) {
-					const std::string bdd_limit = vm["bdd_limit"].as<std::string>();
-					ms.bddLimit = std::stoi(bdd_limit.c_str());
+				ms.strategy = Strategy::Increasing;
+				if (vm.count("limit")) {
+					const std::string bdd_limit = vm["limit"].as<std::string>();
+					ms.limit = std::stoi(bdd_limit.c_str());
 				}
 			} else {
-				ms.bddStrategy = BDDStrategy::None;
-				ms.enableBDDLimits = false;
+				ms.strategy = Strategy::None;
+				ms.enableLimits = false;
+				ms.useBDD = false;
 			}
 		}
 		
