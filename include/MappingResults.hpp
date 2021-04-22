@@ -49,9 +49,9 @@ struct MappingResults {
 	LayeringStrategy layeringStrategy = LayeringStrategy::None;
 	Encodings encoding = Encodings::None;
 	Groupings grouping = Groupings::Halves;
-	BDDStrategy bddStrategy = BDDStrategy::None;
+	Strategy strategy = Strategy::None;
 
-	int bddLimit = 0;
+	int limit = 0;
 
 	double time = 0.0;
 	bool timeout = true;
@@ -88,8 +88,8 @@ struct MappingResults {
 
 		encoding = mappingResults.encoding;
 		grouping = mappingResults.grouping;
-		bddStrategy = mappingResults.bddStrategy;
-		bddLimit = mappingResults.bddLimit;
+		strategy = mappingResults.strategy;
+		limit = mappingResults.limit;
 
 		output_name = mappingResults.output_name;
 		output_qubits = mappingResults.output_qubits;
@@ -139,10 +139,10 @@ struct MappingResults {
                 out << "\t\t\"encoding\": \"" << toString(encoding) << "\",\n";
                 out << "\t\t\"grouping\": \"" << toString(grouping) << "\",\n";
 			}
-			if (bddStrategy != BDDStrategy::None) {
-                out << "\t\t\"bddStrategy\": \"" << toString(bddStrategy) << "\",\n";
-                if (bddStrategy == BDDStrategy::Custom) {
-                    out << "\t\t\"bddLimit\": \"" << bddLimit << "\",\n";
+			if (strategy != Strategy::None) {
+                out << "\t\t\"strategy\": \"" << toString(strategy) << "\",\n";
+                if (strategy == Strategy::Custom) {
+                    out << "\t\t\"limit\": \"" << limit << "\",\n";
                 }
 			}
 			out << "\t\t\"arch\": \"" << architecture << "\"";
@@ -199,10 +199,10 @@ struct MappingResults {
                 stats["encoding"] = encoding;
                 stats["grouping"] = grouping;
             }
-            if (bddStrategy != BDDStrategy::None) {
-                stats["bddStrategy"] = bddStrategy;
-                if (bddStrategy == BDDStrategy::Custom) {
-                    stats["bddLimit"] = bddLimit;
+            if (strategy != Strategy::None) {
+                stats["strategy"] = strategy;
+                if (strategy == Strategy::Custom) {
+                    stats["limit"] = limit;
                 }
             }
 			stats["arch"] = architecture;

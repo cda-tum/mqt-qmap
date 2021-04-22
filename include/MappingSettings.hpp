@@ -45,7 +45,7 @@ enum class Encodings {
 enum class Groupings {
 	Fixed2, Fixed3, Halves, Logarithm
 };
-enum class BDDStrategy {
+enum class Strategy {
 	None, Custom, ArchitectureSwaps, SubsetSwaps, Increasing
 };
 static std::string toString(const LayeringStrategy strategy) {
@@ -111,28 +111,28 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Groupings, {
     {Groupings::Logarithm, "logarithm"},
 })
 
-static std::string toString(const BDDStrategy strategy) {
+static std::string toString(const Strategy strategy) {
     switch (strategy) {
-        case BDDStrategy::ArchitectureSwaps:
+        case Strategy::ArchitectureSwaps:
             return "architectureswaps";
-        case BDDStrategy::SubsetSwaps:
+        case Strategy::SubsetSwaps:
             return "subsetswaps";
-        case BDDStrategy::Custom:
+        case Strategy::Custom:
             return "custom";
-        case BDDStrategy::None:
+        case Strategy::None:
             return "none";
-        case BDDStrategy::Increasing:
+        case Strategy::Increasing:
             return "increasing";
     }
     return " ";
 }
 
-NLOHMANN_JSON_SERIALIZE_ENUM(BDDStrategy, {
-    {BDDStrategy::None, "none"},
-    {BDDStrategy::ArchitectureSwaps, "architectureswaps"},
-    {BDDStrategy::SubsetSwaps, "subsetswaps"},
-    {BDDStrategy::Custom, "custom"},
-	{BDDStrategy::Increasing, "increasing"}
+NLOHMANN_JSON_SERIALIZE_ENUM(Strategy, {
+    {Strategy::None, "none"},
+    {Strategy::ArchitectureSwaps, "architectureswaps"},
+    {Strategy::SubsetSwaps, "subsetswaps"},
+    {Strategy::Custom, "custom"},
+	{Strategy::Increasing, "increasing"}
 })
 
 struct MappingSettings {
@@ -158,9 +158,10 @@ struct MappingSettings {
 	double lookaheadFactor = 0.5;
 	Encodings encoding = Encodings::None;
 	Groupings grouping = Groupings::Logarithm;
-	bool enableBDDLimits = false;
-	BDDStrategy bddStrategy = BDDStrategy::None;
-	int bddLimit = 0;
+	bool enableLimits = false;
+	bool useBDD = false;
+	Strategy strategy = Strategy::None;
+	int limit = 0;
 	bool useQubitSubsets = true;
 };
 

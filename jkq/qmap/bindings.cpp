@@ -79,15 +79,18 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         nl::from_json(jsonConfig["grouping"].get<std::string>(), ms.grouping);
     }
 
-    if (jsonConfig.contains("bdd")){
-        ms.enableBDDLimits = true;
-        ms.bddStrategy = BDDStrategy::None;
-        if (jsonConfig.contains("bddstrategy")){
-            nl::from_json(jsonConfig["bddstrategy"].get<std::string>(), ms.bddStrategy);
+    if (jsonConfig.contains("swaplimit")){
+        ms.enableLimits = true;
+        ms.strategy = Strategy::None;
+        if (jsonConfig.contains("strategy")){
+            nl::from_json(jsonConfig["strategy"].get<std::string>(), ms.strategy);
         }
-        if (jsonConfig.contains("bddLlimit")) {
-            ms.bddLimits = jsonConfig["bddlimit"].get<int>();
+        if (jsonConfig.contains("limit")) {
+            ms.limit = jsonConfig["limit"].get<int>();
         }
+		if (jsonConfig.contains("useBDD")) {
+			ms.useBDD = true;
+		}
     }
 
     if (jsonConfig.contains("use_teleportation")) {
@@ -198,12 +201,12 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("logarithm", Groupings::Logarithm)
             .export_values();
 			
-	py::enum_<BDDStrategy>(m, "BDDStrategy")
-            .value("none", BDDStrategy::None)
-            .value("architectureswaps", BDDStrategy::ArchitectureSwaps)
-            .value("subsetswaps", BDDStrategy::SubsetSwaps)
-            .value("custom", BDDStrategy::Custom)
-            .value("increasing", BDDStrategy::Increasing)
+	py::enum_<Strategy>(m, "Strategy")
+            .value("none", Strategy::None)
+            .value("architectureswaps", Strategy::ArchitectureSwaps)
+            .value("subsetswaps", Strategy::SubsetSwaps)
+            .value("custom", Strategy::Custom)
+            .value("increasing", Strategy::Increasing)
             .export_values();
 
 	#ifdef VERSION_INFO
