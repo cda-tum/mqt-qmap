@@ -65,8 +65,9 @@ void ExactMapper::map(const MappingSettings& settings) {
 	// 3) determine exact mapping for this qubit choice
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
 	mappingSwaps.reserve(reducedLayerIndices.size());
+	int runs = 1;
 	for (auto& choice: allPossibleQubitChoices) {
-		int limit = 1;
+		int limit = 0;
 		int upperLimit = this->settings.limit;
 		if (this->settings.strategy == Strategy::ArchitectureSwaps){
 			limit = this->architecture.getLongestPath()-1;
@@ -118,7 +119,12 @@ void ExactMapper::map(const MappingSettings& settings) {
 				results = choiceResults;
 				mappingSwaps = swaps;
 			}
-			limit += 3; //TODO increase geometrically
+			if (limit == 0) {
+				limit = 1;
+			} else {
+				limit += runs;
+				runs++;
+			}
 		} while (this->settings.strategy == Strategy::Increasing && (limit <= upperLimit || this->settings.limit==0) && limit < this->architecture.getLongestPath());
 	}
 

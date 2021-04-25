@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
 			("strategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
 			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
+			("timeout", po::value<std::string>(), "timeout for the execution")
             ;
     po::variables_map vm;
     try {
@@ -163,6 +164,10 @@ int main(int argc, char** argv) {
 			}
 		}
 		
+	}
+	if (vm.count("timeout")){
+		const std::string timeout = vm["timeout"].as<std::string>();
+		ms.setTimeout(std::stoi(timeout)*1000);
 	}
 	ms.useQubitSubsets = vm.count("useSubsets") > 0;
     ms.verbose = vm.count("verbose") > 0;
