@@ -240,27 +240,27 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionallogarithm) {
 
 TEST_P(ExactTest, LimitsBidirectional) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::ArchitectureSwaps;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 }
 TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::SubsetSwaps;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 }
 TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::Custom;
 	settings.limit = 10;
 	IBMQ_Yorktown_mapper.map(settings);
@@ -271,7 +271,7 @@ TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
 
 TEST_P(ExactTest, LimitsUnidirectional) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::ArchitectureSwaps;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
@@ -280,7 +280,7 @@ TEST_P(ExactTest, LimitsUnidirectional) {
 }
 TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::SubsetSwaps;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
@@ -289,7 +289,7 @@ TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
 }
 TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::Custom;
 	settings.limit = 10;
 	IBM_QX4_mapper.map(settings);
@@ -299,7 +299,7 @@ TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
 }
 TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::Increasing;
 	settings.limit = 3;
 	IBM_QX4_mapper.map(settings);
@@ -309,7 +309,7 @@ TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
 }
 TEST_P(ExactTest, IncreasingUnidirectional) {
 	MappingSettings settings{};
-	settings.enableLimit = true;
+	settings.enableLimits = true;
 	settings.strategy = Strategy::Increasing;
 	settings.limit = 0;
 	IBM_QX4_mapper.map(settings);
