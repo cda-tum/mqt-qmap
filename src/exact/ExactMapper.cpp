@@ -77,7 +77,16 @@ void ExactMapper::map(const MappingSettings& settings) {
 		} else { //CustomLimit
 			limit = upperLimit;
 		}
-		do {
+		unsigned int maxLimit = this->architecture.getLongestPath();
+		unsigned int timeout = 0;
+		do {	
+			timeout += settings.timeout * (static_cast<double>(limit*0.5)/(maxLimit<upperLimit?upperLimit:maxLimit));
+			if (timeout<=10000)
+				timeout = 10000;
+			if (this->settings.strategy != Strategy::Increasing)
+				timeout = settings.timeout;
+			if (settings.verbose)
+				std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
 			// reset swaps
 			for(auto& layer: swaps) {
 				layer.clear();
@@ -107,7 +116,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 			}
 
 			// 6) call actual mapping routine
-			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit));
+			coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit), timeout);
 
 			if (settings.verbose) {
 				std::cout << "SWAPs: " << choiceResults.output_swaps << std::endl;
@@ -246,7 +255,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 	results.time = diff.count();
 }
 
-void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit) {
+void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout) {
 	// Z3 context
 	context c;
 
@@ -327,7 +336,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	// Z3 optimizer
 	optimize opt(c);
 	params p(c);
-	p.set("timeout", settings.timeout);
+	p.set("timeout", timeout);
 	p.set("pb.compile_equality", true);
 	p.set("maxres.hill_climb", true);
 	p.set("maxres.pivot_on_correction_set", false);
