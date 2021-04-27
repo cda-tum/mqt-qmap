@@ -238,80 +238,80 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionallogarithm) {
 	SUCCEED() << "Mapping successful";
 }
 
-TEST_P(ExactTest, BDDLimitsBidirectional) {
+TEST_P(ExactTest, LimitsBidirectional) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::ArchitectureSwaps;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::ArchitectureSwaps;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
-	settings.enableBDDLimits = true;
+	settings.enableLimits = true;
 }
-TEST_P(ExactTest, BDDLimitsBidirectionalSubsetSwaps) {
+TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::SubsetSwaps;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::SubsetSwaps;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
-	settings.enableBDDLimits = true;
+	settings.enableLimits = true;
 }
-TEST_P(ExactTest, BDDLimitsBidirectionalCustomLimit) {
+TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::Custom;
-	settings.bddLimit = 10;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::Custom;
+	settings.limit = 10;
 	IBMQ_Yorktown_mapper.map(settings);
 	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
 	IBMQ_Yorktown_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
 
-TEST_P(ExactTest, BDDLimitsUnidirectional) {
+TEST_P(ExactTest, LimitsUnidirectional) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::ArchitectureSwaps;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::ArchitectureSwaps;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
-TEST_P(ExactTest, BDDLimitsUnidirectionalSubsetSwaps) {
+TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::SubsetSwaps;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::SubsetSwaps;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
-TEST_P(ExactTest, BDDLimitsUnidirectionalCustomLimit) {
+TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::Custom;
-	settings.bddLimit = 10;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::Custom;
+	settings.limit = 10;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
-TEST_P(ExactTest, BDDIncreasingCustomLimitUnidirectional) {
+TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::Increasing;
-	settings.bddLimit = 3;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::Increasing;
+	settings.limit = 3;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inccustom.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);
 	SUCCEED() << "Mapping successful";
 }
-TEST_P(ExactTest, BDDIncreasingUnidirectional) {
+TEST_P(ExactTest, IncreasingUnidirectional) {
 	MappingSettings settings{};
-	settings.enableBDDLimits = true;
-	settings.bddStrategy = BDDStrategy::Increasing;
-	settings.bddLimit = 0;
+	settings.enableLimits = true;
+	settings.strategy = Strategy::Increasing;
+	settings.limit = 0;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inc.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);

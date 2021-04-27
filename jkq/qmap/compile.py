@@ -44,12 +44,14 @@ def compile(circ, arch: Union[str, Arch],
 	:type encoding: Encodings
     :param grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
 	:type grouping: Groupings
-    :param bdd - Enable bdd for limiting swaps per layer
-	:type bdd: bool
-    :param bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps | increasing)
-    :type bddStrategy: BDDStrategy
-    :param bdd_limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
-    :type bdd_limit: int
+    :param limitswaps - Enable limiting of swaps per layer
+	:type limitswaps: bool
+    :param strategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps | increasing)
+    :type strategy: Strategy
+    :param limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
+    :type limit: int
+    :param useBDD - Limit swaps per layer using BDDs
+    :type useBDD: bool
     :param use_subsets - Use qubit subsets, or consider all available physical qubits at once
     :type use_subsets: bool
     :param use_teleportation:  Use teleportation in addition to swaps
@@ -77,7 +79,7 @@ def compile(circ, arch: Union[str, Arch],
         "layering": layering.name,
         "encoding": encoding.name,
         "grouping": grouping.name,
-        "swapLimit": swapLimit,
+        "limitswaps": swapLimit,
         "strategy": strategy.name,
         "limit": limit,
         "useBDD": useBDD,

@@ -95,9 +95,10 @@ Params:
     use_subsets - Switch between using qubit-subsets or consider all available qubits at the same time
     encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
 	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
-	bdd - Enable bdd for limiting swaps per layer
-	bddStrategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps)
-    bdd_limit - Set a custom limit for max swaps per layer
+	swapLimits - Enable limiting of swaps per layer
+    useBDD - Enable BDDs for limiting number of swaps per layer
+	strategy - Choose method of applying limits (*none* | custom | architectureswaps | subsetswaps)
+    limit - Set a custom limit for max swaps per layer
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
     csv – Create CSV string for result
     statistics – Print statistics
@@ -116,9 +117,10 @@ def compile(circ, arch: Union[str, Arch],
             use_subsets: bool = True,
             encoding: Encoding = Encoding.none,
             grouping: Grouping = Grouping.halves,
-            bdd: bool = False,
-            bddStrategy: bddStrategy = BDDStrategy.none,
-            bdd_limit: int = 0,
+            limitSwaps: bool = False, 
+            useBdd: bool = False,
+            strategy: bddStrategy = BDDStrategy.none,
+            limit: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
             statistics: bool = False,
@@ -185,11 +187,14 @@ As commander encoding can use different strategies to group the variables, there
 - `fixed2`: each group contains exactly two variables
 - `fixed3`: each group contains exactly three variables
 
-The exact mapping tool also offers the `-bdd` option to enable limiting the number of swaps done per layer. Related is the `--bddStrategy` option, which offers the following options:
+The exact mapping tool also offers the `--limitswaps` option to enable limiting the number of swaps done per layer. Related is the `--strategy` option, which offers the following options:
 - `none` (*default*): disable bdd limiting
 - `architectureswaps`: calculate the max swaps per layer based on the longest path through the whole coupling map
 - `subsetswaps`: calculate the max swaps per layer based on the longest path of current choice of qubits
-- `custom`: set a custom limit, needs the `--bdd_limit` option followed by a number to set the limit
+- `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
+- `custom`: set a custom limit, needs the `--limit` option followed by a number to set the limit
+Using the `--useBDD` option, the mapping utilizes bdds instead of simply removing the permutations from the core routine. 
+
 
 ### System Requirements
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
