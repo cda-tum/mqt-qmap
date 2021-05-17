@@ -68,7 +68,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 	int runs = 1;
 	for (auto& choice: allPossibleQubitChoices) {
 		int limit = 0;
-		int upperLimit = this->settings.limit;
+		unsigned int upperLimit = this->settings.limit;
 		if (this->settings.strategy == Strategy::ArchitectureSwaps){
 			limit = this->architecture.getLongestPath()-1;
 		} else if (this->settings.strategy == Strategy::SubsetSwaps) {
@@ -262,6 +262,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	std::vector<unsigned short> pi(qubitChoice.begin(), qubitChoice.end());
 	unsigned long long piCount;
 	std::unordered_set<unsigned long long> skipped_pi{};
+	std::vector<std::unordered_set<unsigned long long>> skipped_pi_per_layer{};
 	std::unordered_map<unsigned short, unsigned short> physicalQubitIndex{};
 	unsigned short qIdx=0;
 	for (const auto& Q: qubitChoice){
@@ -272,21 +273,38 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	//////////////////////////////////////////
 	/// 	Check necessary permutations	//
 	//////////////////////////////////////////
-	piCount=0;
+	skipped_pi_per_layer.resize(reducedLayerIndices.size());
 	if (this->settings.enableLimits && !this->settings.useBDD) {
 		do {
 			auto picost = architecture.minimumNumberOfSwaps(pi);
 			if (picost > limit) {
 				skipped_pi.insert(piCount);
-			}
+			} else
+				for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
+					for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
+						if (gate.singleQubit())
+							continue;
+						bool cont = false;
+						for (const auto &edge: rcm) {
+							if ((edge.first == gate.control && edge.second == gate.target) || (edge.first == gate.target && edge.second == gate.control)) {
+								cont = true;
+								continue;
+							}
+						}
+						if (cont)
+							continue;
+						if (pi.at(gate.control) == gate.control && pi.at(gate.target) == gate.target && piCount > 0){
+							skipped_pi_per_layer[k].insert(piCount);
+						}
+					}
+				}
 			++piCount;
 		} while(std::next_permutation(pi.begin(), pi.end()));
 	}
-
 	//////////////////////////////////////////
 	/// 	Boolean Variable Definitions	//
 	//////////////////////////////////////////
-		/*
+	/*
 	 auxilary variable declarations
 	*/
 	expr_vector auxvars(c);
@@ -474,19 +492,21 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 		auto& j = x[k];
 		do {
 			if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
-				expr equal = c.bool_val(true);
-				for (unsigned short Q: qubitChoice) {
-					for (unsigned short q=0; q< qc.getNqubits(); ++q) {
-						auto before = i[physicalQubitIndex[Q]][q];
-						auto after = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
-						equal = equal && (before == after);
+				if ( skipped_pi_per_layer[k].count(piCount) == 0) {
+					expr equal = c.bool_val(true);
+					for (unsigned short Q: qubitChoice) {
+						for (unsigned short q=0; q< qc.getNqubits(); ++q) {
+							auto before = i[physicalQubitIndex[Q]][q];
+							auto after = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
+							equal = equal && (before == after);
+						}
 					}
+					opt.add(implies(y[k-1][piCount],equal.simplify()).simplify());
 				}
-				opt.add(implies(y[k-1][piCount],equal.simplify()).simplify());
 				++piCount;
 			}
 		} while(std::next_permutation(pi.begin(), pi.end()));
-}
+	}
 
 	// Allow only 1 y_k_pi to be true
     if (this->settings.encoding == Encodings::None) {
@@ -495,7 +515,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			piCount = 0;
 			do {
 				if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
-					onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
+					if (skipped_pi_per_layer[k].count(piCount) == 0)
+						onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
 					++piCount;
 				}
 			} while (std::next_permutation(pi.begin(), pi.end()));
@@ -507,7 +528,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			piCount = 0;
 			do {
 				if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits){
-					varIDs.push_back(y[k - 1][piCount]);
+					if (skipped_pi_per_layer[k].count(piCount) == 0)
+						varIDs.push_back(y[k - 1][piCount]);
 					++piCount;
 				}
 			} while (std::next_permutation(pi.begin(), pi.end()));
@@ -538,9 +560,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 					picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
 				}
 				for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-					opt.add(!y[k-1][piCount], picost);
-					if (this->settings.useBDD)
-						weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
+					if (!this->settings.enableLimits || skipped_pi_per_layer[k].count(piCount) == 0) {
+						opt.add(!y[k-1][piCount], picost);
+						if (this->settings.useBDD)
+							weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
+					}
 				}
 				++piCount;
 			}

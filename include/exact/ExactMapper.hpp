@@ -14,6 +14,8 @@
 #include <chrono>
 #include <set>
 #include <unordered_set>
+#include <bitset>
+#include <cmath>
 #include <z3++.h>
 
 #include "Mapper.hpp"
