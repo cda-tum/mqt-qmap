@@ -97,6 +97,7 @@ Params:
 	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
 	swapLimits - Enable limiting of swaps per layer
     useBDD - Enable BDDs for limiting number of swaps per layer
+    useAffectedQubit - Enable limiting based on wether a permutation affects the qubits
 	strategy - Choose method of applying limits (*none* | custom | architectureswaps | subsetswaps)
     limit - Set a custom limit for max swaps per layer
     save_mapped_circuit – Include .qasm string of the mapped circuit in result
@@ -119,6 +120,7 @@ def compile(circ, arch: Union[str, Arch],
             grouping: Grouping = Grouping.halves,
             limitSwaps: bool = False, 
             useBdd: bool = False,
+            useAffectedQubit: bool = False,
             strategy: bddStrategy = BDDStrategy.none,
             limit: int = 0,
             save_mapped_circuit: bool = False,
@@ -194,6 +196,7 @@ The exact mapping tool also offers the `--limitswaps` option to enable limiting 
 - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
 - `custom`: set a custom limit, needs the `--limit` option followed by a number to set the limit
 Using the `--useBDD` option, the mapping utilizes bdds instead of simply removing the permutations from the core routine. 
+Using the `--useAffectedQubitLimit` option enables limiting of permutations based on wether a permutation affects the qubits.
 
 
 ### System Requirements

@@ -91,6 +91,10 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
 		if (jsonConfig.contains("useBDD")) {
 			ms.useBDD = true;
 		}
+		if (jsonConfig.contains("useAffectedQubit"))
+		{
+			ms.useAffectedQubitLimit = true;
+		}
     }
 
     if (jsonConfig.contains("use_teleportation")) {

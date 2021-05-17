@@ -280,6 +280,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			if (picost > limit) {
 				skipped_pi.insert(piCount);
 			} else
+				if (this->settings.useAffectedQubitLimit)
 				for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
 					for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
 						if (gate.singleQubit())
