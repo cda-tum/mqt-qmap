@@ -14,6 +14,8 @@
 #include <chrono>
 #include <set>
 #include <unordered_set>
+#include <bitset>
+#include <cmath>
 #include <z3++.h>
 
 #include "Mapper.hpp"
@@ -30,7 +32,7 @@ protected:
 	// inputs
 	std::vector<unsigned long> reducedLayerIndices{};
 	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> mappingSwaps{};
-	void coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit);
+	void coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout);
 	void initResults() override;
 
 public:

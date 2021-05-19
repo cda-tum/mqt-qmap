@@ -163,6 +163,7 @@ struct MappingSettings {
 	Strategy strategy = Strategy::None;
 	int limit = 0;
 	bool useQubitSubsets = true;
+	bool useAffectedQubitLimit = true;
 };
 
 #endif //QMAP_MAPPINGSETTINGS_HPP
