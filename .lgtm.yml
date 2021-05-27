@@ -1,0 +1,24 @@
+path_classifiers:
+  test:
+    - test
+  library:
+    - extern/qfr
+
+extraction:
+  cpp:
+    prepare:
+      packages:
+        - python-pip
+    after_prepare:
+      - export PATH=~/.local/bin:$PATH
+      - pip3 install cmake --user
+      - cmake --version
+    configure:
+      command:
+        - cmake -S . -B build -DBUILD_QMAP_TESTS=ON -DBUILD_QFR_TESTS=ON -DBUILD_DD_PACKAGE_TESTS=ON -DBINDINGS=ON
+    index:
+      build_command:
+        - cmake --build build --parallel 2
+  python:
+    python_setup:
+      version: 3
