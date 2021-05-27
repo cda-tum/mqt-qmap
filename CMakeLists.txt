@@ -43,11 +43,6 @@ if(Z3_FOUND AND NOT TARGET z3::z3lib)
 	set_property(TARGET z3::z3lib PROPERTY INTERFACE_LINK_LIBRARIES ${Z3_LIBRARIES})
 endif()
 
-# search for Boost program_options
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package( Boost 1.50 COMPONENTS program_options)
-
 # add main library code
 add_subdirectory(src)
 
@@ -59,8 +54,7 @@ if (BUILD_QMAP_TESTS)
 endif ()
 
 # add apps if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND Boost_FOUND)
-	message(STATUS "Boost version: ${Boost_VERSION}")
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	add_subdirectory(apps)
 endif()
 
