@@ -129,8 +129,8 @@ jobs:
 
       - name: Download boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-             C:\msys64\usr\bin\wget.exe https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
+        shell: cmd
+        run: C:\msys64\usr\bin\wget.exe https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
 
       - uses: ilammy/msvc-dev-cmd@v1
 
