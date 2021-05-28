@@ -7,8 +7,14 @@ on:
     branches: [master]
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 env:
   BUILD_TYPE: Release
+  CMAKE_BUILD_PARALLEL_LEVEL: 2
+  Z3_GIT_TAG: z3-4.8.10
 
 jobs:
   ubuntu-ci:
@@ -20,7 +26,6 @@ jobs:
           submodules: recursive
 
       - name: Installing boost
-        shell: bash
         run: sudo apt-get install -y libboost-program-options-dev
 
       - name: Cache Z3
@@ -28,44 +33,36 @@ jobs:
         uses: actions/cache@v2
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-static
+          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
 
       - name: Building Z3
         if: steps.cache-z3.outputs.cache-hit != 'true'
-        shell: bash
         run: |
-          git clone --depth 1 https://github.com/Z3Prover/z3.git
+          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
           cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
-          cmake --build z3/build --config $BUILD_TYPE --parallel 8
+          cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        shell: bash
         run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build -DBINDINGS=ON
 
       - name: Build
-        shell: bash
         run: |
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
-        shell: bash
-        run: |
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+        run: ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Coverage
-        shell: bash
         run: |
-          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DCOVERAGE=1 -DZ3_ROOT=z3/build
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON -DZ3_ROOT=z3/build
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
           cd buildCov/test
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+          ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -81,42 +78,35 @@ jobs:
           submodules: recursive
 
       - name: Installing boost
-        shell: bash
-        run: brew install boost;
+        run: brew install boost
 
       - name: Cache Z3
         id: cache-z3
         uses: actions/cache@v2
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-static
+          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
 
       - name: Building Z3
         if: steps.cache-z3.outputs.cache-hit != 'true'
-        shell: bash
         run: |
-          git clone --depth 1 https://github.com/Z3Prover/z3.git
+          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
           cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
-          cmake --build z3/build --config $BUILD_TYPE --parallel 8
+          cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        shell: bash
         run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build
 
       - name: Build
-        shell: bash
         run: |
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_heuristic_test
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8 --target qmap_exact_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
-        shell: bash
-        run: |
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+        run: ctest -C $BUILD_TYPE --output-on-failure
 
   windows-ci:
     runs-on: windows-latest
@@ -134,14 +124,13 @@ jobs:
 
       - name: Download boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-             C:\msys64\usr\bin\wget.exe https://dl.bintray.com/boostorg/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
+        shell: cmd
+        run: C:\msys64\usr\bin\wget.exe https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
 
       - uses: ilammy/msvc-dev-cmd@v1
 
       - name:  Building boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
-        shell: bash
         run: |
              "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
              cd boost_1_70_0
@@ -153,18 +142,16 @@ jobs:
         uses: actions/cache@v2
         with:
           path: z3
-          key:  ${{ runner.OS }}-z3-static
+          key:  ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
 
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
-        shell: bash
         run:   |
-               git clone --depth 1 https://github.com/Z3Prover/z3.git
+               git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
                cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE
-               cmake --build z3/build --config $BUILD_TYPE --parallel 8
+               cmake --build z3/build --config $BUILD_TYPE
 
       - name:  Configure CMake
-        shell: bash
         run:   |
                setx path "%path%;${{github.workspace}}\boost_1_70_0"
                setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
@@ -172,12 +159,10 @@ jobs:
                cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\stage\lib" -DZ3_ROOT=z3/build
 
       - name:  Build
-        shell: bash
-        run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --parallel 8
+        run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
 
       - name:              Test
         working-directory: ${{github.workspace}}/build/apps
-        shell:             bash
         run:               |
                            cd $BUILD_TYPE
                            ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;

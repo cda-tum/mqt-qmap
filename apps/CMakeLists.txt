@@ -1,3 +1,8 @@
+# search for Boost program_options
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package( Boost 1.50 COMPONENTS program_options)
+
 if(NOT TARGET Boost::program_options)
 	add_library(Boost::program_options IMPORTED INTERFACE)
 	set_property(TARGET Boost::program_options PROPERTY
@@ -17,6 +22,7 @@ macro(add_qmap_executable APPNAME)
 endmacro()
 
 if (Boost_FOUND)
+	message(STATUS "Boost version: ${Boost_VERSION}")
 	if (TARGET ${PROJECT_NAME}_exact_lib)
 		add_qmap_executable(exact)
 	endif()
