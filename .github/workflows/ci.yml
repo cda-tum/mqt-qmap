@@ -13,6 +13,8 @@ defaults:
 
 env:
   BUILD_TYPE: Release
+  CMAKE_BUILD_PARALLEL_LEVEL: 2
+  Z3_GIT_TAG: z3-4.8.10
 
 jobs:
   ubuntu-ci:
@@ -36,7 +38,7 @@ jobs:
       - name: Building Z3
         if: steps.cache-z3.outputs.cache-hit != 'true'
         run: |
-          git clone --branch z3-4.8.10 --depth 1 https://github.com/Z3Prover/z3.git
+          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
           cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
           cmake --build z3/build --config $BUILD_TYPE
 
@@ -61,7 +63,7 @@ jobs:
 
       - name: Coverage
         run: |
-          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=1 -DZ3_ROOT=z3/build
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON -DZ3_ROOT=z3/build
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
           cd buildCov/test
@@ -94,7 +96,7 @@ jobs:
       - name: Building Z3
         if: steps.cache-z3.outputs.cache-hit != 'true'
         run: |
-          git clone --depth 1 https://github.com/Z3Prover/z3.git
+          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
           cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
           cmake --build z3/build --config $BUILD_TYPE
 
@@ -155,7 +157,7 @@ jobs:
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         run:   |
-               git clone --depth 1 https://github.com/Z3Prover/z3.git
+               git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
                cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE
                cmake --build z3/build --config $BUILD_TYPE
 
