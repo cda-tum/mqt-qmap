@@ -13,7 +13,6 @@ defaults:
 
 env:
   BUILD_TYPE: Release
-  CMAKE_BUILD_PARALLEL_LEVEL: 2
 
 jobs:
   ubuntu-ci:
