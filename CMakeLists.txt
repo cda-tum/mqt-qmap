@@ -38,9 +38,12 @@ list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # search for Z3
 find_package(Z3)
 if(Z3_FOUND AND NOT TARGET z3::z3lib)
+	message(STATUS "Found Z3 with version ${Z3_VERSION_STRING}")
 	add_library(z3::z3lib IMPORTED INTERFACE)
 	set_property(TARGET z3::z3lib PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Z3_CXX_INCLUDE_DIRS})
 	set_property(TARGET z3::z3lib PROPERTY INTERFACE_LINK_LIBRARIES ${Z3_LIBRARIES})
+else()
+	message(WARNING "Did not find Z3. Exact library and other depending target will not be available")
 endif()
 
 # add main library code
