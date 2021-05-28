@@ -43,9 +43,7 @@ jobs:
           cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run: |
-             cmake --version
-             cmake --debug-output -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build -DBINDINGS=ON
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build -DBINDINGS=ON
 
       - name: Build
         run: |
@@ -56,10 +54,7 @@ jobs:
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
-
-        run: |
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+        run: ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Coverage
         run: |
@@ -67,8 +62,7 @@ jobs:
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
           cd buildCov/test
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+          ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -101,9 +95,7 @@ jobs:
           cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run: |
-             cmake --version
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build
 
       - name: Build
         run: |
@@ -114,9 +106,7 @@ jobs:
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
-        run: |
-          ./qmap_exact_test
-          ./qmap_heuristic_test
+        run: ctest -C $BUILD_TYPE --output-on-failure
 
   windows-ci:
     runs-on: windows-latest
@@ -166,7 +156,6 @@ jobs:
                setx path "%path%;${{github.workspace}}\boost_1_70_0"
                setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
                setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
-               cmake --version
                cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\stage\lib" -DZ3_ROOT=z3/build
 
       - name:  Build
