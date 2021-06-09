@@ -279,26 +279,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 			auto picost = architecture.minimumNumberOfSwaps(pi);
 			if (picost > limit) {
 				skipped_pi.insert(piCount);
-			} else
-				if (this->settings.useAffectedQubitLimit)
-				for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-					for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
-						if (gate.singleQubit())
-							continue;
-						bool cont = false;
-						for (const auto &edge: rcm) {
-							if ((edge.first == gate.control && edge.second == gate.target) || (edge.first == gate.target && edge.second == gate.control)) {
-								cont = true;
-								continue;
-							}
-						}
-						if (cont)
-							continue;
-						if (pi.at(gate.control) == gate.control && pi.at(gate.target) == gate.target && piCount > 0){
-							skipped_pi_per_layer[k].insert(piCount);
-						}
-					}
-				}
+			}
 			++piCount;
 		} while(std::next_permutation(pi.begin(), pi.end()));
 	}

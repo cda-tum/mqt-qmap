@@ -26,7 +26,6 @@ int main(int argc, char** argv) {
 			("limitswaps", "Enable bdd for limiting swaps per layer")
 			("useBDD", "Choose to use BDDs instead of directly limiting the permutation variables")
 			("strategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
-			("useAffectedQubitLimit", "Enable limiting based on wether a permutation affects the qubits")
 			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
 			("timeout", po::value<std::string>(), "timeout for the execution")
@@ -139,9 +138,6 @@ int main(int argc, char** argv) {
 		ms.enableLimits = true;
 		if (vm.count("useBDD")){
 			ms.useBDD = true;
-		}
-		if (vm.count("useAffectedQubitLimit")){
-			ms.useAffectedQubitLimit = true;
 		}
 		if (vm.count("strategy")) {
 			const std::string bddStrat = vm["strategy"].as<std::string>();

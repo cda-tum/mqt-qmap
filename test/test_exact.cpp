@@ -320,6 +320,7 @@ TEST_P(ExactTest, IncreasingUnidirectional) {
 TEST_P(ExactTest, NoSubsets) {
 	MappingSettings settings{};
 	settings.useQubitSubsets = false;
+	settings.enableLimits = false;
 	IBM_QX4_mapper.map(settings);
 	IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_nosubsets.qasm");
 	IBM_QX4_mapper.printResult(std::cout, true);

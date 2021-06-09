@@ -52,8 +52,6 @@ def compile(circ, arch: Union[str, Arch],
     :type limit: int
     :param useBDD - Limit swaps per layer using BDDs
     :type useBDD: bool
-    :param useAffectedQubit - Limit permutations based on affected qubits
-    :type useAffectedQubit: bool
     :param use_subsets - Use qubit subsets, or consider all available physical qubits at once
     :type use_subsets: bool
     :param use_teleportation:  Use teleportation in addition to swaps
@@ -85,7 +83,6 @@ def compile(circ, arch: Union[str, Arch],
         "strategy": strategy.name,
         "limit": limit,
         "useBDD": useBDD,
-        "useAffectedQubit": useAffectedQubitLimit,
         "use_subsets": use_subsets,
         "use_teleportation": use_teleportation,
         "teleportation_fake": teleportation_fake,

@@ -157,13 +157,12 @@ struct MappingSettings {
 	double firstLookaheadFactor = 0.75;
 	double lookaheadFactor = 0.5;
 	Encodings encoding = Encodings::None;
-	Groupings grouping = Groupings::Logarithm;
+	Groupings grouping = Groupings::Halves;
 	bool enableLimits = false;
 	bool useBDD = false;
 	Strategy strategy = Strategy::None;
 	int limit = 0;
 	bool useQubitSubsets = true;
-	bool useAffectedQubitLimit = true;
 };
 
 #endif //QMAP_MAPPINGSETTINGS_HPP
