@@ -16,7 +16,7 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
-            save_mapped_circuit: bool = False,
+            save_mapped_circuit: bool = True,
             csv: bool = False,
             statistics: bool = False,
             verbose: bool = False

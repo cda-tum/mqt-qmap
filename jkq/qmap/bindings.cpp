@@ -70,11 +70,13 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
 	}
 
     if (jsonConfig.contains("use_teleportation")) {
-        ms.teleportationQubits = std::min((architecture.getNqubits() - qc.getNqubits()) & ~1u, 8u);
-        ms.teleportationSeed = jsonConfig["teleportationSeed"].get<unsigned long long>();
-        ms.teleportationFake = jsonConfig["teleportation_fake"].get<bool>();
+    	auto useTeleportation = jsonConfig["use_teleportation"].get<bool>();
+	    if (useTeleportation) {
+	        ms.teleportationQubits = std::min((architecture.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+	        ms.teleportationSeed = jsonConfig["teleportation_seed"].get<unsigned long long>();
+	        ms.teleportationFake = jsonConfig["teleportation_fake"].get<bool>();
+	    }
     }
-
 
 	if (jsonConfig.contains("verbose")) {
 		ms.verbose = jsonConfig["verbose"].get<bool>();
