@@ -79,12 +79,10 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         nl::from_json(jsonConfig["grouping"].get<std::string>(), ms.grouping);
     }
 
-    if (jsonConfig.contains("limitswaps")){
+    if (jsonConfig.contains("strategy")){
         ms.enableLimits = true;
         ms.strategy = Strategy::None;
-        if (jsonConfig.contains("strategy")){
-            nl::from_json(jsonConfig["strategy"].get<std::string>(), ms.strategy);
-        }
+        nl::from_json(jsonConfig["strategy"].get<std::string>(), ms.strategy);
         if (jsonConfig.contains("limit")) {
             ms.limit = jsonConfig["limit"].get<int>();
         }

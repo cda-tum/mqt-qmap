@@ -95,7 +95,6 @@ Params:
     use_subsets - Switch between using qubit-subsets or consider all available qubits at the same time
     encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
 	grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
-	swapLimits - Enable limiting of swaps per layer
     useBDD - Enable BDDs for limiting number of swaps per layer
 	strategy - Choose method of applying limits (*none* | custom | architectureswaps | subsetswaps)
     limit - Set a custom limit for max swaps per layer
@@ -117,7 +116,6 @@ def compile(circ, arch: Union[str, Arch],
             use_subsets: bool = True,
             encoding: Encoding = Encoding.none,
             grouping: Grouping = Grouping.halves,
-            limitSwaps: bool = False, 
             useBdd: bool = False,
             strategy: bddStrategy = BDDStrategy.none,
             limit: int = 0,
@@ -187,7 +185,7 @@ As commander encoding can use different strategies to group the variables, there
 - `fixed2`: each group contains exactly two variables
 - `fixed3`: each group contains exactly three variables
 
-The exact mapping tool also offers the `--limitswaps` option to enable limiting the number of swaps done per layer. Related is the `--strategy` option, which offers the following options:
+The exact mapping tool also offers the `--strategy` option to enable limiting the number of swaps done per layer, which offers the following options:
 - `none` (*default*): disable bdd limiting
 - `architectureswaps`: calculate the max swaps per layer based on the longest path through the whole coupling map
 - `subsetswaps`: calculate the max swaps per layer based on the longest path of current choice of qubits
