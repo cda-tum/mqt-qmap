@@ -2,7 +2,11 @@ name: Deploy to PyPI
 
 on:
   release:
-    types: [published]
+    types: [ published ]
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
   workflow_dispatch:
 
 env:
@@ -14,6 +18,7 @@ env:
   CIBW_SKIP: "*-win32 *-manylinux_i686 cp35-*"
   CIBW_BUILD_VERBOSITY: 3
   CIBW_TEST_COMMAND: "python -c \"from jkq import qmap\""
+  Z3_GIT_TAG: z3-4.8.10
 
 jobs:
   build_manylinux_wheels:
@@ -24,19 +29,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.8'
-
-      - name: Install dependencies
-        run: |
-              python -m pip install --upgrade pip setuptools wheel cibuildwheel==1.7.4
-
       - name: Build wheels
-        run: |
-              python -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v1.11.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -49,20 +47,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.8'
-
-      - name: Install dependencies
-        run:  |
-              python -m pip install --upgrade pip setuptools wheel cibuildwheel==1.7.4
-              brew install z3
-
+      - name: Install Z3
+        run:  brew install z3
       - name: Build wheels
-        run:  |
-              python -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v1.11.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -75,39 +67,30 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.8'
-
-      - name: Install dependencies
-        run: |
-             python -m pip install --upgrade pip setuptools wheel cibuildwheel==1.7.4
-
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Cache Z3
         id:   cache-z3
         uses: actions/cache@v2
         with:
           path: z3
-          key:  ${{ runner.OS }}-z3-4.8.10-static
-
+          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
         run:   |
-               git clone --depth 1 https://github.com/Z3Prover/z3.git
+               git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
                cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
                cmake --build z3/build --config Release --parallel 8
-
       - name: Installing Z3
         shell: bash
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
-
       - name: Build wheels
-        run: |
-              python -m cibuildwheel --output-dir wheelhouse
+        uses: pypa/cibuildwheel@v1.11.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -119,23 +102,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.8'
-
-      - name: Install dependencies
-        run: |
-             python -m pip install --upgrade pip setuptools wheel
-             brew install z3
-
+      - name: Install Z3
+        run: brew install z3
       - name: Build sdist
         run: python setup.py sdist
-
       - name: Test sdist
         run: pip install --verbose dist/*.tar.gz
-
       - uses: actions/upload-artifact@v2
         with:
           path: dist/*.tar.gz
@@ -143,12 +119,12 @@ jobs:
   upload_pypi:
     needs: [build_manylinux_wheels, build_macos_wheels, build_windows_wheels, build_sdist]
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/download-artifact@v2
         with:
           name: artifact
           path: dist
-
       - uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
