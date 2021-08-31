@@ -11,14 +11,16 @@ on:
 
 env:
   CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-  CIBW_BEFORE_ALL_LINUX: >
-     /opt/python/cp38-cp38/bin/python -m pip install z3-solver;
-  CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp38-cp38/lib/python3.8/site-packages/z3/lib Z3_ROOT=/opt/python/cp38-cp38/lib/python3.8/site-packages/z3 Z3_DIR=/opt/python/cp38-cp38/lib/python3.8/site-packages/z3"
-  CIBW_BUILD: cp3?-*
-  CIBW_SKIP: "*-win32 *-manylinux_i686 cp35-*"
-  CIBW_BUILD_VERBOSITY: 3
-  CIBW_TEST_COMMAND: "python -c \"from jkq import qmap\""
-  Z3_GIT_TAG: z3-4.8.10
+  CIBW_BEFORE_ALL_LINUX:       >
+                               /opt/python/cp38-cp38/bin/python -m pip install z3-solver;
+  CIBW_ENVIRONMENT_LINUX:      "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp38-cp38/lib/python3.8/site-packages/z3/lib Z3_ROOT=/opt/python/cp38-cp38/lib/python3.8/site-packages/z3 Z3_DIR=/opt/python/cp38-cp38/lib/python3.8/site-packages/z3"
+  CIBW_BUILD:                  cp3?-*
+  CIBW_ARCHS_MACOS:            "x86_64 arm64"
+  CIBW_TEST_SKIP:              "*_arm64"
+  CIBW_SKIP:                   "*-win32 *-manylinux_i686"
+  CIBW_BUILD_VERBOSITY:        3
+  CIBW_TEST_COMMAND:           "python -c \"from jkq import qmap\""
+  Z3_GIT_TAG:                  z3-4.8.10
 
 jobs:
   build_manylinux_wheels:
@@ -32,9 +34,9 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.11.1
+        uses: pypa/cibuildwheel@v2.1.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -50,11 +52,11 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - name: Install Z3
         run:  brew install z3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.11.1
+        uses: pypa/cibuildwheel@v2.1.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -70,7 +72,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Cache Z3
         id:   cache-z3
@@ -90,7 +92,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.11.1
+        uses: pypa/cibuildwheel@v2.1.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -105,7 +107,7 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - name: Install Z3
         run: brew install z3
       - name: Build sdist
