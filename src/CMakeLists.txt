@@ -13,7 +13,8 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Mapper.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingSettings.hpp
-	            ${${PROJECT_NAME}_SOURCE_DIR}/include/${LIBNAME}/${SRCFILE}.hpp)
+	            ${${PROJECT_NAME}_SOURCE_DIR}/include/${LIBNAME}/${SRCFILE}.hpp
+	            ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
 
 	# set include directories
 	target_include_directories(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)

@@ -47,7 +47,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 			for (const auto& swaps: result.swaps) {
 				for (const auto& swap: swaps) {
 				    if (swap.op == qc::SWAP) {
-                        qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), std::vector<qc::Control>{ }, swap.first, swap.second, qc::SWAP);
+                        qcMapped.swap(swap.first, swap.second);
                         if (architecture.bidirectional()) {
                             results.output_gates += GATES_OF_BIDIRECTIONAL_SWAP;
                         } else {
@@ -55,7 +55,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
                         }
                         results.output_swaps++;
 				    } else if (swap.op == qc::Teleportation){
-                        qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), std::vector<qc::Control>{}, std::vector{swap.first, swap.second, swap.middle_ancilla}, qc::Teleportation);
+                        qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Targets{static_cast<dd::Qubit>(swap.first), static_cast<dd::Qubit>(swap.second), static_cast<dd::Qubit>(swap.middle_ancilla)}, qc::Teleportation);
                         results.output_gates += COST_TELEPORTATION;
                         results.output_teleportations++;
 				    }
@@ -103,19 +103,19 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 					if (architecture.getCouplingMap().find(reverse) == architecture.getCouplingMap().end()) {
 						throw QMAPException("Invalid CNOT: " + std::to_string(reverse.first) + "-" + std::to_string(reverse.second));
 					}
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Control(reverse.first), reverse.second, qc::X);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
+                    qcMapped.h(reverse.first);
+                    qcMapped.h(reverse.second);
+                    qcMapped.x(reverse.second, dd::Control{static_cast<dd::Qubit>(reverse.first)});
+                    qcMapped.h(reverse.second);
+                    qcMapped.h(reverse.first);
 
 					results.output_direction_reverse++;
 					results.output_cnots++;
 					results.output_gates += 5;
 					gateidx += 5;
 				} else {
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Control(cnot.first), cnot.second, qc::X);
-					results.output_cnots++;
+                    qcMapped.x(cnot.second, dd::Control{static_cast<dd::Qubit>(cnot.first)});
+                    results.output_cnots++;
 					results.output_gates++;
 					gateidx++;
 				}
@@ -156,11 +156,11 @@ void HeuristicMapper::map(const MappingSettings& ms) {
 						++loc;
 					}
 					locations.at(target) = loc;
-					op->setTargets({loc});
+                    op->setTargets({static_cast<dd::Qubit>(loc)});
 					qcMapped.initialLayout.at(target) = loc;
 					qc.outputPermutation.at(target) = loc;
 				} else {
-					op->setTargets({ static_cast<unsigned short>(targetLocation)});
+					op->setTargets({ static_cast<dd::Qubit>(targetLocation)});
 				}
 			}
 		}
