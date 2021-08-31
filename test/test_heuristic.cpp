@@ -35,6 +35,8 @@ TEST(Functionality, EmptyDump) {
     HeuristicMapper mapper(qc, arch);
     mapper.dumpResult("test.qasm");
     mapper.map({});
+    EXPECT_NO_THROW(mapper.dumpResult("test.qasm"););
+    EXPECT_NO_THROW(mapper.dumpResult("test.real"););
     EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
 }
 
