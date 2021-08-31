@@ -28,6 +28,16 @@ protected:
     }
 };
 
+TEST(Functionality, EmptyDump) {
+    qc::QuantumComputation qc{1};
+    qc.x(0);
+    Architecture    arch{1, {}};
+    HeuristicMapper mapper(qc, arch);
+    mapper.dumpResult("test.qasm");
+    mapper.map({});
+    EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
+}
+
 INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
                          testing::Values(
                                  "3_17_13",
