@@ -3,14 +3,15 @@
  * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
  */
 
+#include "heuristic/HeuristicMapper.hpp"
+
+#include <boost/program_options.hpp>
 #include <cmath>
 #include <iostream>
-#include <boost/program_options.hpp>
-
-#include "heuristic/HeuristicMapper.hpp"
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
+    // clang-format off
     po::options_description description("JKQ QMAP heuristic mapper by https://iic.jku.at/eda/quantum -- Options");
     description.add_options()
             ("help,h", "produce help message")
@@ -25,6 +26,7 @@ int main(int argc, char** argv) {
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
+    // clang-format on
     po::variables_map vm;
     try {
         po::store(po::parse_command_line(argc, argv, description), vm);
@@ -33,85 +35,84 @@ int main(int argc, char** argv) {
             return 0;
         }
         po::notify(vm);
-    } catch (const po::error &e) {
+    } catch (const po::error& e) {
         std::cerr << "[ERROR] " << e.what() << "! Try option '--help' for available commandline options.\n";
         std::exit(1);
     }
 
+    const std::string      circuit = vm["in"].as<std::string>();
+    qc::QuantumComputation qc{};
+    try {
+        qc.import(circuit);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not import circuit: " << e.what();
+        std::cerr << ss.str() << std::endl;
+        std::exit(1);
+    }
+    const std::string cm = vm["arch"].as<std::string>();
+    Architecture      arch{};
+    try {
+        arch.loadCouplingMap(cm);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not import coupling map: " << e.what();
+        std::cerr << ss.str() << std::endl;
+        std::exit(1);
+    }
 
-	const std::string circuit = vm["in"].as<std::string>();
-	qc::QuantumComputation qc{};
-	try {
-		qc.import(circuit);
-	} catch (std::exception const& e) {
-		std::stringstream ss{};
-		ss << "Could not import circuit: " << e.what();
-		std::cerr << ss.str() << std::endl;
-		std::exit(1);
-	}
-	const std::string cm = vm["arch"].as<std::string>();
-	Architecture arch{};
-	try {
-		arch.loadCouplingMap(cm);
-	} catch (std::exception const& e) {
-		std::stringstream ss{};
-		ss << "Could not import coupling map: " << e.what();
-		std::cerr << ss.str() << std::endl;
-		std::exit(1);
-	}
-
-	if (vm.count("calibration")) {
-		const std::string cal = vm["calibration"].as<std::string>();
-		try {
-			arch.loadCalibrationData(cal);
-		} catch (std::exception const& e) {
-			std::stringstream ss{};
-			ss << "Could not import calibration data: " << e.what();
-			std::cerr << ss.str() << std::endl;
-			std::exit(1);
-		}
-	}
+    if (vm.count("calibration")) {
+        const std::string cal = vm["calibration"].as<std::string>();
+        try {
+            arch.loadCalibrationData(cal);
+        } catch (std::exception const& e) {
+            std::stringstream ss{};
+            ss << "Could not import calibration data: " << e.what();
+            std::cerr << ss.str() << std::endl;
+            std::exit(1);
+        }
+    }
 
     HeuristicMapper mapper(qc, arch);
 
-	MappingSettings ms{};
-	ms.layeringStrategy = LayeringStrategy::IndividualGates;
-	if (vm.count("layering")) {
-		std::string layering = vm["layering"].as<std::string>();
-		if (layering == "individual") {
-			ms.layeringStrategy = LayeringStrategy::IndividualGates;
-		} else if (layering == "disjoint") {
-			ms.layeringStrategy = LayeringStrategy::DisjointQubits;
-		} else {
-			ms.layeringStrategy = LayeringStrategy::None;
-		}
-	}
+    MappingSettings ms{};
+    ms.layeringStrategy = LayeringStrategy::IndividualGates;
+    if (vm.count("layering")) {
+        std::string layering = vm["layering"].as<std::string>();
+        if (layering == "individual") {
+            ms.layeringStrategy = LayeringStrategy::IndividualGates;
+        } else if (layering == "disjoint") {
+            ms.layeringStrategy = LayeringStrategy::DisjointQubits;
+        } else {
+            ms.layeringStrategy = LayeringStrategy::None;
+        }
+    }
 
-	ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-	if (vm.count("initiallayout")) {
-		std::string initialLayout = vm["initiallayout"].as<std::string>();
-		if (initialLayout == "identity") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Identity;
-		} else if (initialLayout == "static") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Static;
-		} else if (initialLayout == "dynamic") {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-		} else {
-			ms.initialLayoutStrategy = InitialLayoutStrategy::None;
-		}
-	}
+    ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+    if (vm.count("initiallayout")) {
+        std::string initialLayout = vm["initiallayout"].as<std::string>();
+        if (initialLayout == "identity") {
+            ms.initialLayoutStrategy = InitialLayoutStrategy::Identity;
+        } else if (initialLayout == "static") {
+            ms.initialLayoutStrategy = InitialLayoutStrategy::Static;
+        } else if (initialLayout == "dynamic") {
+            ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
+        } else {
+            ms.initialLayoutStrategy = InitialLayoutStrategy::None;
+        }
+    }
 
-	ms.verbose = vm.count("verbose") > 0;
+    ms.verbose = vm.count("verbose") > 0;
 
     if (vm.count("teleportation")) {
         ms.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
-        ms.teleportationSeed = vm["teleportation"].as<unsigned long long int>();
-        ms.teleportationFake = vm.count("teleportationFake") > 0;
+        ms.teleportationSeed   = vm["teleportation"].as<unsigned long long int>();
+        ms.teleportationFake   = vm.count("teleportationFake") > 0;
     }
 
     mapper.map(ms);
 
-	mapper.dumpResult(vm["out"].as<std::string>());
+    mapper.dumpResult(vm["out"].as<std::string>());
 
-	mapper.printResult(std::cout, vm.count("ps"));
+    mapper.printResult(std::cout, vm.count("ps"));
 }
