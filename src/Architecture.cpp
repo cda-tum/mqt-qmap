@@ -98,7 +98,7 @@ void Architecture::loadCalibrationData(const std::string& filename) {
         throw QMAPException("Error opening calibration data file.");
 }
 
-void Architecture::loadCalibrationData(std::istream&& is) {
+void Architecture::loadCalibrationData([[maybe_unused]] std::istream&& is) {
     calibrationData.clear();
     calibrationData.reserve(nqubits);
     // TODO: Read in IBM csv Format into calibrationData
@@ -356,7 +356,7 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
 
     //TODO: different weight if this contains a teleportation
     for (const auto& s: solutions) {
-        for (int j = 0; j < s.size() - 1; j++) {
+        for (std::size_t j = 0; j < s.size() - 1; j++) {
             Edge e{s[j], s[j + 1]};
             if (getCouplingMap().find(e) != getCouplingMap().end()) {
                 return (length - 2) * 7;
