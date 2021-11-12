@@ -82,8 +82,6 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
-#        with:
-#          fail_ci_if_error: true
 
   macOS-ci:
     runs-on: macos-latest
@@ -93,32 +91,18 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Installing boost
-        run: brew install boost
-
-      - name: Cache Z3
-        id: cache-z3
-        uses: actions/cache@v2
-        with:
-          path: z3
-          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
-
-      - name: Building Z3
-        if: steps.cache-z3.outputs.cache-hit != 'true'
-        run: |
-          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DZ3_BUILD_LIBZ3_SHARED=FALSE
-          cmake --build z3/build --config $BUILD_TYPE
+      - name: Installing boost and Z3
+        run:  brew install boost z3
 
       - name: Configure CMake
-        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DZ3_ROOT=z3/build
+        run:  cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
 
       - name: Build
-        run: |
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+        run:  |
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
