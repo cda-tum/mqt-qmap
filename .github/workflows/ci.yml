@@ -129,7 +129,7 @@ jobs:
               cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build -DBUILD_QMAP_TESTS=ON
 
       - name:  Build
         run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
