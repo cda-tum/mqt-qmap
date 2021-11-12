@@ -115,27 +115,13 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Cache Boost
-        id:   cache-boost
-        uses: actions/cache@v2
-        with:
-          path: ${{github.workspace}}/boost_1_70_0
-          key:  ${{ runner.OS }}-boost170
-
-      - name: Download boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        shell: cmd
-        run: C:\msys64\usr\bin\wget.exe https://boostorg.jfrog.io/artifactory/main/release/1.70.0/source/boost_1_70_0.7z --no-check-certificate
-
       - uses: ilammy/msvc-dev-cmd@v1
 
-      - name:  Building boost
-        if: steps.cache-boost.outputs.cache-hit != 'true'
-        run: |
-             "/c/Program Files/7-Zip/7z.exe" x boost_1_70_0.7z "-o${{github.workspace}}"
-             cd boost_1_70_0
-             ./bootstrap.bat
-             ./b2.exe -j8 address-model=64 link=static threading=multi runtime-link=shared variant=release --build-type=minimal --with-program_options
+      - name: Install boost
+        uses: MarkusJx/install-boost@v2.0.0
+        id:   install-boost
+        with:
+          boost_version: 1.73.0
 
       - name: Cache Z3
         id:   cache-z3
@@ -144,19 +130,16 @@ jobs:
           path: z3
           key:  ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
 
-      - name:  Building Z3
-        if:    steps.cache-z3.outputs.cache-hit != 'true'
-        run:   |
+      - name: Building Z3
+        if:   steps.cache-z3.outputs.cache-hit != 'true'
+        run:  |
                git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE
+              cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
                cmake --build z3/build --config $BUILD_TYPE
 
-      - name:  Configure CMake
-        run:   |
-               setx path "%path%;${{github.workspace}}\boost_1_70_0"
-               setx lib "%lib%;${{github.workspace}}\boost_1_70_0\stage\lib"
-               setx libpath "%libpath%;${{github.workspace}}\boost_1_70_0\stage\lib"
-               cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DBOOST_ROOT="${{github.workspace}}\boost_1_70_0" -DBOOST_INCLUDEDIR="${{github.workspace}}\boost_1_70_0\include" -DBOOST_LIBRARYDIR="${{github.workspace}}\boost_1_70_0\stage\lib" -DZ3_ROOT=z3/build
+      - name: Configure CMake
+        run:  |
+              cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DZ3_ROOT=z3/build
 
       - name:  Build
         run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
