@@ -48,18 +48,12 @@ jobs:
       - name: Install Z3
         run:  python -m pip install z3-solver
 
-      - name: Set environment for Z3
-        run:  |
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib 
-              export Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 
-              export Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
-              echo "::set-env name=LD_LIBRAY_PATH::$LD_LIBRARY_PATH"
-              echo "::set-env name=Z3_ROOT::$Z3_ROOT
-              echo "::set-env name=Z3_DIR::$Z3_DIR
-
       - name: Configure CMake
-        run:  |
-              cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
+        run: |
+             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib 
+             export Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 
+             export Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
+             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
 
       - name: Build
         run: |
@@ -74,11 +68,14 @@ jobs:
 
       - name: Coverage
         run: |
-          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
-          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
-          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
-          cd buildCov/test
-          ctest -C $BUILD_TYPE --output-on-failure
+             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib 
+             export Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 
+             export Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
+             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
+             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
+             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
+             cd buildCov/test
+             ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
