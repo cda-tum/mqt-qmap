@@ -114,12 +114,6 @@ jobs:
 
       - uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install boost
-        uses: MarkusJx/install-boost@v2.0.0
-        id:   install-boost
-        with:
-          boost_version: 1.73.0
-
       - name: Cache Z3
         id:   cache-z3
         uses: actions/cache@v2
@@ -132,11 +126,10 @@ jobs:
         run: |
               git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
-               cmake --build z3/build --config $BUILD_TYPE
+              cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run:  |
-              cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DBoost_USE_STATIC_LIBS=ON -DBoost_USE_MULTITHREADED=ON -DBoost_USE_STATIC_RUNTIME=OFF -DZ3_ROOT=z3/build
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build
 
       - name:  Build
         run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
