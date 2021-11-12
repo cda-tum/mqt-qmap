@@ -74,7 +74,7 @@ jobs:
 
       - name: Coverage
         run: |
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
           cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
           cd buildCov/test
