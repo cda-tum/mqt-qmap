@@ -65,7 +65,7 @@ with open(README_PATH) as readme_file:
 
 setup(
     name='jkq.qmap',
-    version='1.4.0',
+    version='1.5.0',
     author='Lukas Burgholzer',
     author_email='lukas.burgholzer@jku.at',
     description='QMAP - A JKQ tool for Quantum Circuit Mapping',
