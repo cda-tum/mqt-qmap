@@ -6,43 +6,42 @@
 #include "exact/ExactMapper.hpp"
 
 void ExactMapper::map(const MappingSettings& settings) {
+    this->settings                                       = settings;
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    qc.stripIdleQubits(true, true);
+    initResults();
 
-	this->settings = settings;
-	std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-	qc.stripIdleQubits(true, true);
-	initResults();
+    // 1) create layers according to different criteria
+    createLayers();
+    if (settings.verbose) {
+        printLayering(std::cout);
+    }
+    unsigned long k = 0;
+    for (const auto& layer: layers) {
+        bool onlySingleQubit = true;
+        for (const auto& gate: layer) {
+            if (!gate.singleQubit()) {
+                onlySingleQubit = false;
+                break;
+            }
+        }
+        if (!onlySingleQubit) {
+            reducedLayerIndices.emplace_back(k);
+        }
+        ++k;
+    }
 
-	// 1) create layers according to different criteria
-	createLayers();
-	if (settings.verbose) {
-		printLayering(std::cout);
-	}
-	unsigned long k = 0;
-	for (const auto& layer: layers) {
-		bool onlySingleQubit = true;
-		for (const auto& gate: layer) {
-			if(!gate.singleQubit()) {
-				onlySingleQubit = false;
-				break;
-			}
-		}
-		if (!onlySingleQubit) {
-			reducedLayerIndices.emplace_back(k);
-		}
-		++k;
-	}
+    unsigned long long maxIndex = factorial(qc.getNqubits()) * reducedLayerIndices.size();
+    if (maxIndex > std::numeric_limits<int>::max()) {
+        std::cerr << "The exact approach can only be used for up to " << std::numeric_limits<int>::max() << " permutation variables, due to 'layers * nq!' overflowing Z3's expr_vector class (uses 'int' index) when trying to instantiate permutation variables y_k_pi. Try reducing the number of layers or the number of qubits." << std::endl;
+        return;
+    }
 
-	unsigned long long maxIndex = factorial(qc.getNqubits()) * reducedLayerIndices.size();
-	if (maxIndex > std::numeric_limits<int>::max()) {
-		std::cerr << "The exact approach can only be used for up to " << std::numeric_limits<int>::max() << " permutation variables, due to 'layers * nq!' overflowing Z3's expr_vector class (uses 'int' index) when trying to instantiate permutation variables y_k_pi. Try reducing the number of layers or the number of qubits." << std::endl;
-		return;
-	}
-
-	maxIndex = qc.getNqubits() * qc.getNqubits() * reducedLayerIndices.size();
-	if (maxIndex > std::numeric_limits<int>::max()) {
-		std::cerr << "The exact approach can only be used for up to " << std::numeric_limits<int>::max() << " X variables, due to nq*nq*nlayers overflowing Z3's expr_vector class (uses 'int' index). Try reducing the number of layers or the number of qubits." << std::endl;
-		return;
-	}
+    maxIndex = qc.getNqubits() * qc.getNqubits() * reducedLayerIndices.size();
+    if (maxIndex > std::numeric_limits<int>::max()) {
+        std::cerr << "The exact approach can only be used for up to " << std::numeric_limits<int>::max() << " X variables, due to nq*nq*nlayers overflowing Z3's expr_vector class (uses 'int' index). Try reducing the number of layers or the number of qubits." << std::endl;
+        return;
+    }
 
 	// 2) For all possibilities k (=m over n) to pick n qubits from m physical qubits
 	std::vector<unsigned short> qubits{};
@@ -79,7 +78,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 		}
 		unsigned int maxLimit = this->architecture.getLongestPath();
 		unsigned int timeout = 0;
-		do {	
+		do {
 			timeout += settings.timeout * (static_cast<double>(limit*0.5)/(maxLimit<upperLimit?upperLimit:maxLimit));
 			if (timeout<=10000)
 				timeout = 10000;
@@ -137,31 +136,31 @@ void ExactMapper::map(const MappingSettings& settings) {
 		} while (this->settings.strategy == Strategy::Increasing && (limit <= upperLimit || this->settings.limit==0) && limit < this->architecture.getLongestPath());
 	}
 
-	// 8) Write best result and statistics
-	auto layerIterator = reducedLayerIndices.begin();
-	auto swapsIterator = mappingSwaps.begin();
+    // 8) Write best result and statistics
+    auto layerIterator = reducedLayerIndices.begin();
+    auto swapsIterator = mappingSwaps.begin();
 
-	if (settings.verbose) {
-		auto it = reducedLayerIndices.begin();
-		for (const auto& layer: mappingSwaps) {
-			std::cout << *it << ": ";
-			for (const auto& swap: layer) {
-				std::cout << "(" << swap.first << "<->" << swap.second << ") ";
-			}
-			++it;
-			std::cout << std::endl;
-		}
-	}
+    if (settings.verbose) {
+        auto it = reducedLayerIndices.begin();
+        for (const auto& layer: mappingSwaps) {
+            std::cout << *it << ": ";
+            for (const auto& swap: layer) {
+                std::cout << "(" << swap.first << "<->" << swap.second << ") ";
+            }
+            ++it;
+            std::cout << std::endl;
+        }
+    }
 
 	for (const auto& q: qubits) {
 		locations.at(q) = static_cast<short>(q);
 	}
 
-	for(unsigned long i=0; i<layers.size(); ++i) {
-		if (i == 0) {
-			qc::permutationMap inverseInitialLayout{ };
-			for (auto& pu: qc.initialLayout)
-				inverseInitialLayout.insert({pu.second, pu.first});
+    for (unsigned long i = 0; i < layers.size(); ++i) {
+        if (i == 0) {
+            qc::Permutation inverseInitialLayout{};
+            for (auto& pu: qc.initialLayout)
+                inverseInitialLayout.insert({pu.second, pu.first});
 
 			// no swaps but initial permutation
 			for(const auto& assignment: *swapsIterator) {
@@ -171,61 +170,57 @@ void ExactMapper::map(const MappingSettings& settings) {
 				qcMapped.outputPermutation.at(assignment.first) = inverseInitialLayout.at(assignment.second);
 			}
 
-			if(settings.verbose) {
-				for (const auto& q:qubits) {
-					std::cout << q << " " ;
-				}
-				std::cout << std::endl;
-			}
-			++swapsIterator;
-		}
+            if (settings.verbose) {
+                for (const auto& q: qubits) {
+                    std::cout << q << " ";
+                }
+                std::cout << std::endl;
+            }
+            ++swapsIterator;
+        }
 
+        // apply all gates of layer
+        for (const auto& gate: layers.at(i)) {
+            auto op = dynamic_cast<qc::StandardOperation*>(gate.op);
+            if (!op) {
+                throw QMAPException("Cast to StandardOperation not possible during mapping. Check that circuit contains only StandardOperations");
+            }
 
+            if (gate.singleQubit()) {
+                if (settings.verbose) {
+                    std::cout << i << ": Added single qubit gate with target: " << locations.at(gate.target) << std::endl;
+                }
 
-		// apply all gates of layer
-		for(const auto& gate: layers.at(i)) {
-			auto op = dynamic_cast<qc::StandardOperation*>(gate.op);
-			if (!op) {
-				throw QMAPException("Cast to StandardOperation not possible during mapping. Check that circuit contains only StandardOperations");
-			}
+                qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
+                                                             locations.at(gate.target),
+                                                             op->getType(),
+                                                             op->getParameter().at(0),
+                                                             op->getParameter().at(1),
+                                                             op->getParameter().at(2));
+            } else {
+                Edge cnot = {locations.at(gate.control), locations.at(gate.target)};
 
-			if (gate.singleQubit()) {
-				if(settings.verbose) {
-					std::cout << i << ": Added single qubit gate with target: " << locations.at(gate.target) << std::endl;
-				}
-
-				qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
-				                                             locations.at(gate.target),
-				                                             op->getType(),
-				                                             op->getParameter().at(0),
-				                                             op->getParameter().at(1),
-				                                             op->getParameter().at(2));
-			} else {
-				Edge cnot = {locations.at(gate.control), locations.at(gate.target)};
-
-				if (architecture.getCouplingMap().find(cnot) == architecture.getCouplingMap().end()) {
-					Edge reverse = {cnot.second, cnot.first};
-					if (architecture.getCouplingMap().find(reverse) == architecture.getCouplingMap().end()) {
-						throw QMAPException("Invalid CNOT: " + std::to_string(reverse.first) + "-" + std::to_string(reverse.second));
-					}
-					if (settings.verbose) {
-						std::cout << i << ": Added (direction-reversed) cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
-					}
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Control(reverse.first), reverse.second, qc::X);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
-
-				} else {
-					if (settings.verbose) {
-						std::cout << i << ": Added cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
-					}
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
-					                                             qc::Control(cnot.first), cnot.second, qc::X);
-				}
-			}
-		}
+                if (architecture.getCouplingMap().find(cnot) == architecture.getCouplingMap().end()) {
+                    Edge reverse = {cnot.second, cnot.first};
+                    if (architecture.getCouplingMap().find(reverse) == architecture.getCouplingMap().end()) {
+                        throw QMAPException("Invalid CNOT: " + std::to_string(reverse.first) + "-" + std::to_string(reverse.second));
+                    }
+                    if (settings.verbose) {
+                        std::cout << i << ": Added (direction-reversed) cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
+                    }
+                    qcMapped.h(reverse.first);
+                    qcMapped.h(reverse.second);
+                    qcMapped.x(reverse.second, dd::Control{static_cast<dd::Qubit>(reverse.first)});
+                    qcMapped.h(reverse.second);
+                    qcMapped.h(reverse.first);
+                } else {
+                    if (settings.verbose) {
+                        std::cout << i << ": Added cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
+                    }
+                    qcMapped.x(cnot.second, dd::Control{static_cast<dd::Qubit>(cnot.first)});
+                }
+            }
+        }
 
 		if (!mappingSwaps.empty() && swapsIterator != mappingSwaps.end() && layerIterator !=  reducedLayerIndices.end() && i == *layerIterator) {
 			// apply swaps before layer
@@ -236,23 +231,22 @@ void ExactMapper::map(const MappingSettings& settings) {
 				std::swap(qubits.at(swap.first), qubits.at(swap.second));
 				std::swap(locations.at(qubits.at(swap.first)), locations.at(qubits.at(swap.second)));
 
-				if (settings.verbose) {
-					for (const auto& q:qubits) {
-						std::cout << q << " " ;
-					}
-					std::cout << std::endl;
-				}
-			}
+                if (settings.verbose) {
+                    for (const auto& q: qubits) {
+                        std::cout << q << " ";
+                    }
+                    std::cout << std::endl;
+                }
+            }
 
-			++swapsIterator;
-			++layerIterator;
-		}
+            ++swapsIterator;
+            ++layerIterator;
+        }
+    }
 
-	}
-
-	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> diff = end - start;
-	results.time = diff.count();
+    auto                          end  = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    results.time                       = diff.count();
 }
 
 void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout) {
@@ -298,21 +292,21 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	 j	logical qubit j
 	 number of variables: (|L|) * m * n
 	 */
-	std::vector<matrix> x{};
-	std::stringstream x_name{};
-	for (unsigned long k=0; k<reducedLayerIndices.size(); ++k) {
-		x.emplace_back();
-		for (unsigned short Q: qubitChoice) {
-			x.back().emplace_back(c);
-			for (unsigned short q=0; q<qc.getNqubits(); ++q) {
-				x_name.str("");
-				x_name << "x_" << k << '_' << Q << '_' << q;
-				x.back().back().push_back(c.bool_const(x_name.str().c_str()));
-			}
-		}
-	}
+    std::vector<matrix> x{};
+    std::stringstream   x_name{};
+    for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
+        x.emplace_back();
+        for (unsigned short Q: qubitChoice) {
+            x.back().emplace_back(c);
+            for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
+                x_name.str("");
+                x_name << "x_" << k << '_' << Q << '_' << q;
+                x.back().back().push_back(c.bool_const(x_name.str().c_str()));
+            }
+        }
+    }
 
-	/*
+    /*
  permutation variables y_k_pi
  k	before layer k
  pi	arbitrary permutation of the m qubits
@@ -434,36 +428,36 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	}
 
 
-	//////////////////////////////////////////
-	///		Coupling Constraints			//
-	//////////////////////////////////////////
-	for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
-		expr allCouplings = c.bool_val(true);
-		for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
-			if (gate.singleQubit())
-				continue;
+    //////////////////////////////////////////
+    ///		Coupling Constraints			//
+    //////////////////////////////////////////
+    for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
+        expr allCouplings = c.bool_val(true);
+        for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
+            if (gate.singleQubit())
+                continue;
 
-			expr coupling = c.bool_val(false);
-			if (architecture.bidirectional()) {
-				for (const auto& edge: rcm) {
-					auto indexFC = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.control)];
-					auto indexST = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.target)];
-					coupling = coupling || (indexFC && indexST);
-				}
-			} else {
-				for (const auto& edge: rcm) {
-					auto indexFC = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.control)];
-					auto indexST = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.target)];
-					auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
-					auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
+            expr coupling = c.bool_val(false);
+            if (architecture.bidirectional()) {
+                for (const auto& edge: rcm) {
+                    auto indexFC = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.control)];
+                    auto indexST = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.target)];
+                    coupling     = coupling || (indexFC && indexST);
+                }
+            } else {
+                for (const auto& edge: rcm) {
+                    auto indexFC = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.control)];
+                    auto indexST = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.target)];
+                    auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
+                    auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
 
-					coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
-				}
-			}
-			allCouplings = allCouplings && coupling.simplify();
-		}
-		opt.add(allCouplings.simplify());
-	}
+                    coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
+                }
+            }
+            allCouplings = allCouplings && coupling.simplify();
+        }
+        opt.add(allCouplings.simplify());
+    }
 
 	//////////////////////////////////////////
 	/// 	Permutation Constraints			//
@@ -565,96 +559,95 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 				if (gate.singleQubit())
 					continue;
 
-				expr reverse = c.bool_val(true);
-				for (const auto& edge: rcm) {
-					auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
-					auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
-					reverse = reverse && (!indexFT || !indexSC);
-				}
-				opt.add(reverse.simplify(), GATES_OF_DIRECTION_REVERSE);
-			}
-		}
-	}
+                expr reverse = c.bool_val(true);
+                for (const auto& edge: rcm) {
+                    auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
+                    auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
+                    reverse      = reverse && (!indexFT || !indexSC);
+                }
+                opt.add(reverse.simplify(), GATES_OF_DIRECTION_REVERSE);
+            }
+        }
+    }
 
-	//////////////////////////////////////////
-	/// 	Solving							//
-	//////////////////////////////////////////
-	if (sat == opt.check()) {
-		model m = opt.get_model();
-		choiceResults.timeout = results.timeout = false;
+    //////////////////////////////////////////
+    /// 	Solving							//
+    //////////////////////////////////////////
+    if (sat == opt.check()) {
+        model m               = opt.get_model();
+        choiceResults.timeout = results.timeout = false;
 
-		if (settings.verbose) {
-			std::cout << "-------- qubit choice: ";
-			for (const auto Q: qubitChoice) {
-				std::cout << Q << " ";
-			}
-			std::cout << "----------" << std::endl;
-		}
+        if (settings.verbose) {
+            std::cout << "-------- qubit choice: ";
+            for (const auto Q: qubitChoice) {
+                std::cout << Q << " ";
+            }
+            std::cout << "----------" << std::endl;
+        }
 
-		// quickly determine cost
-		choiceResults.output_singlequbitgates = choiceResults.input_singlequbitgates;
-		choiceResults.output_cnots = choiceResults.input_cnots;
-		choiceResults.output_gates = choiceResults.output_singlequbitgates + choiceResults.output_cnots;
+        // quickly determine cost
+        choiceResults.output_singlequbitgates = choiceResults.input_singlequbitgates;
+        choiceResults.output_cnots            = choiceResults.input_cnots;
+        choiceResults.output_gates            = choiceResults.output_singlequbitgates + choiceResults.output_cnots;
 
-		// swaps
-		for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-			auto& i = x[k-1];
-			auto& j = x[k];
+        // swaps
+        for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
+            auto& i = x[k - 1];
+            auto& j = x[k];
 
-			for (unsigned short Q: qubitChoice) {
-				for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
-					if (eq(m.eval(i[physicalQubitIndex[Q]][q]), c.bool_val(true))) {
-						// logical qubit q was mapped to physical qubit Q
-						for (unsigned short P: qubitChoice) {
-							// and has been assigned to physical qubit P going forward
-							if (eq(m.eval(j[physicalQubitIndex[P]][q]), c.bool_val(true))) {
-								pi[physicalQubitIndex[Q]] = P;
-							}
-						}
-					}
-				}
-			}
-			architecture.minimumNumberOfSwaps(pi, swaps.at(k));
-			choiceResults.output_swaps += swaps.at(k).size();
-			if (architecture.bidirectional()) {
-				choiceResults.output_gates += GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
-			} else {
-				choiceResults.output_gates += GATES_OF_UNIDIRECTIONAL_SWAP * swaps.at(k).size();
-			}
-		}
+            for (unsigned short Q: qubitChoice) {
+                for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
+                    if (eq(m.eval(i[physicalQubitIndex[Q]][q]), c.bool_val(true))) {
+                        // logical qubit q was mapped to physical qubit Q
+                        for (unsigned short P: qubitChoice) {
+                            // and has been assigned to physical qubit P going forward
+                            if (eq(m.eval(j[physicalQubitIndex[P]][q]), c.bool_val(true))) {
+                                pi[physicalQubitIndex[Q]] = P;
+                            }
+                        }
+                    }
+                }
+            }
+            architecture.minimumNumberOfSwaps(pi, swaps.at(k));
+            choiceResults.output_swaps += swaps.at(k).size();
+            if (architecture.bidirectional()) {
+                choiceResults.output_gates += GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
+            } else {
+                choiceResults.output_gates += GATES_OF_UNIDIRECTIONAL_SWAP * swaps.at(k).size();
+            }
+        }
 
-		// direction reverse
-		if (!architecture.bidirectional()) {
-			for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
-				for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
-					if (gate.singleQubit())
-						continue;
-					for (const auto& edge: rcm) {
-						auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
-						auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
-						if (eq(m.eval(indexFT && indexSC), c.bool_val(true))) {
-							choiceResults.output_direction_reverse++;
-							choiceResults.output_gates += GATES_OF_DIRECTION_REVERSE;
-						}
-					}
-				}
-			}
-		}
+        // direction reverse
+        if (!architecture.bidirectional()) {
+            for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
+                for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
+                    if (gate.singleQubit())
+                        continue;
+                    for (const auto& edge: rcm) {
+                        auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
+                        auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
+                        if (eq(m.eval(indexFT && indexSC), c.bool_val(true))) {
+                            choiceResults.output_direction_reverse++;
+                            choiceResults.output_gates += GATES_OF_DIRECTION_REVERSE;
+                        }
+                    }
+                }
+            }
+        }
 
-		// save initial layout for later
-		for (const auto& Q: qubitChoice) {
-			for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
-				bool set = eq(m.eval(x[0][physicalQubitIndex[Q]][q]), c.bool_val(true));
-				if (set) {
-					swaps.at(0).emplace_back(std::pair<unsigned short, unsigned short>{Q,q});
-				}
-			}
-		}
+        // save initial layout for later
+        for (const auto& Q: qubitChoice) {
+            for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
+                bool set = eq(m.eval(x[0][physicalQubitIndex[Q]][q]), c.bool_val(true));
+                if (set) {
+                    swaps.at(0).emplace_back(std::pair<unsigned short, unsigned short>{Q, q});
+                }
+            }
+        }
 
-	}
-	else {
-		results.timeout = true;
-	}
+    } else {
+        results.timeout = true;
+    }
 }
 
 void ExactMapper::initResults() {
@@ -666,5 +659,3 @@ void ExactMapper::initResults() {
 	results.strategy = this->settings.strategy;
 	results.limit = this->settings.limit;
 }
-
-

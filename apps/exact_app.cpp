@@ -3,15 +3,16 @@
  * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
  */
 
+#include "exact/ExactMapper.hpp"
+
+#include <boost/program_options.hpp>
 #include <iostream>
 #include <locale>
-#include <boost/program_options.hpp>
-
-#include "exact/ExactMapper.hpp"
 
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
     po::options_description description("JKQ QMAP exact mapper by https://iic.jku.at/eda/quantum -- Options");
+    // clang-format off
     description.add_options()
             ("help,h", "produce help message")
             ("in", po::value<std::string>()->required(), "File to read from")
@@ -30,6 +31,7 @@ int main(int argc, char** argv) {
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
 			("timeout", po::value<std::string>(), "timeout for the execution")
             ;
+    // clang-format on
     po::variables_map vm;
     try {
         po::store(po::parse_command_line(argc, argv, description), vm);
@@ -38,46 +40,45 @@ int main(int argc, char** argv) {
             return 0;
         }
         po::notify(vm);
-    } catch (const po::error &e) {
+    } catch (const po::error& e) {
         std::cerr << "[ERROR] " << e.what() << "! Try option '--help' for available commandline options.\n";
         std::exit(1);
     }
 
-
-    const std::string circuit = vm["in"].as<std::string>();
-	qc::QuantumComputation qc{};
-	try {
-		qc.import(circuit);
-	} catch (std::exception const& e) {
-		std::stringstream ss{};
-		ss << "Could not import circuit: " << e.what();
-		std::cerr << ss.str() << std::endl;
-		std::exit(1);
-	}
+    const std::string      circuit = vm["in"].as<std::string>();
+    qc::QuantumComputation qc{};
+    try {
+        qc.import(circuit);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not import circuit: " << e.what();
+        std::cerr << ss.str() << std::endl;
+        std::exit(1);
+    }
     const std::string cm = vm["arch"].as<std::string>();
-	Architecture arch{};
-	try {
-		arch.loadCouplingMap(cm);
-	} catch (std::exception const& e) {
-		std::stringstream ss{};
-		ss << "Could not import coupling map: " << e.what();
-		std::cerr << ss.str() << std::endl;
-		std::exit(1);
-	}
+    Architecture      arch{};
+    try {
+        arch.loadCouplingMap(cm);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not import coupling map: " << e.what();
+        std::cerr << ss.str() << std::endl;
+        std::exit(1);
+    }
 
-	if (vm.count("calibration")) {
-		const std::string cal = vm["calibration"].as<std::string>();
-		try {
-			arch.loadCalibrationData(cal);
-		} catch (std::exception const& e) {
-			std::stringstream ss{};
-			ss << "Could not import calibration data: " << e.what();
-			std::cerr << ss.str() << std::endl;
-			std::exit(1);
-		}
-	}
+    if (vm.count("calibration")) {
+        const std::string cal = vm["calibration"].as<std::string>();
+        try {
+            arch.loadCalibrationData(cal);
+        } catch (std::exception const& e) {
+            std::stringstream ss{};
+            ss << "Could not import calibration data: " << e.what();
+            std::cerr << ss.str() << std::endl;
+            std::exit(1);
+        }
+    }
 
-	ExactMapper mapper(qc, arch);
+    ExactMapper mapper(qc, arch);
 
     MappingSettings ms{};
     ms.initialLayoutStrategy = InitialLayoutStrategy::None;
@@ -163,7 +164,7 @@ int main(int argc, char** argv) {
 			ms.enableLimits = false;
 			ms.useBDD = false;
 		}
-		
+
 	}
 	if (vm.count("timeout")){
 		const std::string timeout = vm["timeout"].as<std::string>();

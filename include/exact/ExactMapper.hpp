@@ -6,16 +6,18 @@
 #ifndef EXACT_MAPPER_hpp
 #define EXACT_MAPPER_hpp
 
-#include <iostream>
-#include <vector>
+#include "Mapper.hpp"
+
 #include <algorithm>
-#include <utility>
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <iostream>
 #include <set>
 #include <unordered_set>
 #include <bitset>
 #include <cmath>
+#include <utility>
+#include <vector>
 #include <z3++.h>
 
 #include "Mapper.hpp"
@@ -25,8 +27,8 @@ using namespace z3;
 using matrix = std::vector<expr_vector>;
 
 /// Main structure representing the circuit and mapping functionality
-class ExactMapper : public Mapper{
-	using Mapper::Mapper;
+class ExactMapper: public Mapper {
+    using Mapper::Mapper;
 
 protected:
 	// inputs
@@ -36,7 +38,7 @@ protected:
 	void initResults() override;
 
 public:
-	void map(const MappingSettings& settings) override;
+    void map(const MappingSettings& settings) override;
 };
 
 #endif /* EXACT_MAPPER_hpp */

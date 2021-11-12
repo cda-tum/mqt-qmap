@@ -17,6 +17,18 @@ env:
   Z3_GIT_TAG: z3-4.8.10
 
 jobs:
+  codestyle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: DoozyX/clang-format-lint-action@v0.12
+        with:
+          source:             'apps include src test jkq/qmap'
+          extensions:         'h,hpp,c,cpp'
+          clangFormatVersion: 12
+
   ubuntu-ci:
     runs-on: ubuntu-latest
 

@@ -15,7 +15,6 @@ graft extern/qfr/src
 graft extern/qfr/include
 graft extern/qfr/jkq/qfr
 include extern/qfr/extern/dd_package/CMakeLists.txt
-graft extern/qfr/extern/dd_package/src
 graft extern/qfr/extern/dd_package/include
 graft extern/qfr/extern/json
 graft extern/qfr/extern/pybind11

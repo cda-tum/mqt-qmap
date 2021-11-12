@@ -4,15 +4,15 @@
  */
 
 #include "exact/ExactMapper.hpp"
-#include "gtest/gtest.h"
+
 #include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
-
-	std::string test_example_dir = "./examples/";
-	std::string test_architecture_dir = "./architectures/";
-	std::string test_calibration_dir = "./calibration/";
+    std::string test_example_dir      = "./examples/";
+    std::string test_architecture_dir = "./architectures/";
+    std::string test_calibration_dir  = "./calibration/";
 
 	qc::QuantumComputation qc{};
 	Architecture IBMQ_Yorktown{};
@@ -47,47 +47,47 @@ INSTANTIATE_TEST_SUITE_P(Exact, ExactTest,
 		return ss.str();});
 
 TEST_P(ExactTest, IndividualGates) {
-	MappingSettings settings{};
-	settings.layeringStrategy = LayeringStrategy::IndividualGates;
-	IBMQ_Yorktown_mapper.map(settings);
-	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_individual.qasm");
-	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    MappingSettings settings{};
+    settings.layeringStrategy = LayeringStrategy::IndividualGates;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_individual.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
 
-	IBMQ_London_mapper.map(settings);
-	IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_individual.qasm");
-	IBMQ_London_mapper.printResult(std::cout, true);
-	SUCCEED() << "Mapping successful";
+    IBMQ_London_mapper.map(settings);
+    IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_individual.qasm");
+    IBMQ_London_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
 }
 
 TEST_P(ExactTest, DisjointQubits) {
-	MappingSettings settings{};
-	settings.layeringStrategy = LayeringStrategy::DisjointQubits;
-	IBMQ_Yorktown_mapper.map(settings);
-	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_disjoint.qasm");
-	IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    MappingSettings settings{};
+    settings.layeringStrategy = LayeringStrategy::DisjointQubits;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_disjoint.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
 
-	IBMQ_London_mapper.map(settings);
-	IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_disjoint.qasm");
-	IBMQ_London_mapper.printResult(std::cout, true);
-	SUCCEED() << "Mapping successful";
+    IBMQ_London_mapper.map(settings);
+    IBMQ_London_mapper.dumpResult(GetParam() + "_exact_london_disjoint.qasm");
+    IBMQ_London_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
 }
 
 TEST_P(ExactTest, OddGates) {
-	MappingSettings settings{};
-	settings.layeringStrategy = LayeringStrategy::OddGates;
-	IBMQ_Yorktown_mapper.map(settings);
-	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_odd.qasm");
-	IBMQ_Yorktown_mapper.printResult(std::cout, true);
-	SUCCEED() << "Mapping successful";
+    MappingSettings settings{};
+    settings.layeringStrategy = LayeringStrategy::OddGates;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_odd.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
 }
 
 TEST_P(ExactTest, QubitTriangle) {
-	MappingSettings settings{};
-	settings.layeringStrategy = LayeringStrategy::QubitTriangle;
-	IBMQ_Yorktown_mapper.map(settings);
-	IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_triangle.qasm");
-	IBMQ_Yorktown_mapper.printResult(std::cout, true);
-	SUCCEED() << "Mapping successful";
+    MappingSettings settings{};
+    settings.layeringStrategy = LayeringStrategy::QubitTriangle;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_triangle.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
 }
 
 TEST_P(ExactTest, CommanderEncodingfixed3) {
