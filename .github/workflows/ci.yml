@@ -132,8 +132,8 @@ jobs:
 
       - name: Building Z3
         if:   steps.cache-z3.outputs.cache-hit != 'true'
-        run:  |
-               git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
+        run: |
+              git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
                cmake --build z3/build --config $BUILD_TYPE
 
