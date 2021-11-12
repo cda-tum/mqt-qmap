@@ -129,14 +129,14 @@ jobs:
               cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build -DBoost_INCLUDE_DIR=$BOOST_ROOT_1_72_0/include
 
       - name:  Build
         run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
 
       - name:              Test
         working-directory: ${{github.workspace}}/build/apps
-        run:               |
-                           cd $BUILD_TYPE
-                           ./qmap_exact.exe --in ../../../examples/3_17_13.qasm --out 3_17_13me.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
-                           ./qmap_heuristic.exe --in ../../../examples/3_17_13.qasm --out 3_17_13mh.qasm --arch ../../../extern/architectures/ibmq_london.arch --ps;
+        run: |
+             cd $BUILD_TYPE
+             ./qmap_exact_test
+             ./qmap_heuristic_test
