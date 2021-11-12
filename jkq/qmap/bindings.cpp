@@ -195,7 +195,7 @@ PYBIND11_MODULE(pyqmap, m) {
 
     py::enum_<Groupings>(m, "Grouping")
             .value("fixed2", Groupings::Fixed2)
-            .value("fixed2", Groupings::Fixed3)
+            .value("fixed3", Groupings::Fixed3)
             .value("halves", Groupings::Halves)
             .value("logarithm", Groupings::Logarithm)
             .export_values();

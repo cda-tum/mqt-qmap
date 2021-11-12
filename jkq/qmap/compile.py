@@ -5,7 +5,7 @@
 import pickle
 from pathlib import Path
 from typing import Any, Dict, Union
-from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encodings, Groupings, BDDStrategy
+from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encoding, Grouping, Strategy
 
 
 def compile(circ, arch: Union[str, Arch],
@@ -16,10 +16,10 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
-            encoding: Encodings = Encodings.none,
-            grouping: Groupings = Groupings.halves,
-            useBDD: bool = False, 
-            strategy: BDDStrategy = BDDStrategy.none,
+            encoding: Encoding = Encoding.none,
+            grouping: Grouping = Grouping.halves,
+            useBDD: bool = False,
+            strategy: Strategy = Strategy.none,
             limit: int = 0,
             use_subsets: bool = True,
             save_mapped_circuit: bool = False,
@@ -40,9 +40,9 @@ def compile(circ, arch: Union[str, Arch],
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: LayeringStrategy
     :param encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
-	:type encoding: Encodings
+    :type encoding: Encoding
     :param grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
-	:type grouping: Groupings
+    :type grouping: Grouping
     :param strategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps | increasing)
     :type strategy: Strategy
     :param limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
