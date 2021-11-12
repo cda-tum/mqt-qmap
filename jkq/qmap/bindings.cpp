@@ -54,33 +54,33 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
     MappingSettings ms{};
     Method          method = Method::Heuristic;
     if (jsonConfig.contains("method")) {
-        nl::from_json(jsonConfig["method"].get<std::string>(), method);
+        method = jsonConfig["method"].get<Method>();
     }
 
     ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
     if (jsonConfig.contains("initialLayout")) {
-        nl::from_json(jsonConfig["initialLayout"].get<std::string>(), ms.initialLayoutStrategy);
+        ms.initialLayoutStrategy = jsonConfig["initialLayout"].get<InitialLayoutStrategy>();
     }
 
     ms.layeringStrategy = LayeringStrategy::IndividualGates;
     if (jsonConfig.contains("layering")) {
-        nl::from_json(jsonConfig["layering"].get<std::string>(), ms.layeringStrategy);
+        ms.layeringStrategy = jsonConfig["layering"].get<LayeringStrategy>();
     }
 
     ms.encoding = Encodings::None;
     if (jsonConfig.contains("encoding")) {
-        nl::from_json(jsonConfig["encoding"].get < std::string(), ms.encoding);
+        ms.encoding = jsonConfig["encoding"].get<Encodings>();
     }
 
     ms.grouping = Groupings::Halves;
     if (jsonConfig.contains("grouping")) {
-        nl::from_json(jsonConfig["grouping"].get<std::string>(), ms.grouping);
+        ms.grouping = jsonConfig["grouping"].get<Groupings>();
     }
 
     if (jsonConfig.contains("strategy")) {
         ms.enableLimits = true;
         ms.strategy     = Strategy::None;
-        nl::from_json(jsonConfig["strategy"].get<std::string>(), ms.strategy);
+        ms.strategy     = jsonConfig["strategy"].get<Strategy>();
         if (jsonConfig.contains("limit")) {
             ms.limit = jsonConfig["limit"].get<int>();
         }
