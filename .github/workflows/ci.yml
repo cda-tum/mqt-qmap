@@ -135,7 +135,7 @@ jobs:
         run:   cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
 
       - name:              Test
-        working-directory: ${{github.workspace}}/build/apps
+        working-directory: ${{github.workspace}}/build/test
         run: |
              cd $BUILD_TYPE
              ./qmap_exact_test
