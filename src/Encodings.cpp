@@ -251,7 +251,7 @@ std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_
     return out.str();
 }
 
-int findLongestPath(const CouplingMap cm, int nQubits) {
+std::size_t findLongestPath(const CouplingMap& cm, int nQubits) {
     std::vector<std::vector<unsigned short>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;
@@ -275,7 +275,7 @@ int findLongestPath(const CouplingMap cm, int nQubits) {
     return maxSum;
 }
 
-int findLongestPath(const CouplingMap cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
+std::size_t findLongestPath(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
     std::vector<std::vector<unsigned short>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;

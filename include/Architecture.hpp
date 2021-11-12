@@ -169,8 +169,8 @@ public:
         }
     };
 
-    [[nodiscard]] long getLongestPath() const;
-    [[nodiscard]] long getLongestPath(const std::set<unsigned short>& qubitChoice) const;
+    [[nodiscard]] std::size_t getLongestPath() const;
+    [[nodiscard]] std::size_t getLongestPath(const std::set<unsigned short>& qubitChoice) const;
 
 protected:
     std::string                          architectureName;

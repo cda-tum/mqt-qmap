@@ -254,7 +254,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     context c;
 
     std::vector<unsigned short>                         pi(qubitChoice.begin(), qubitChoice.end());
-    unsigned long long                                  piCount;
+    unsigned long long                                  piCount{};
     std::unordered_set<unsigned long long>              skipped_pi{};
     std::vector<std::unordered_set<unsigned long long>> skipped_pi_per_layer{};
     std::unordered_map<unsigned short, unsigned short>  physicalQubitIndex{};
