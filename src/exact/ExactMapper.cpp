@@ -73,6 +73,7 @@ void ExactMapper::map(const MappingSettings& settings) {
         } else if (this->settings.strategy == Strategy::SubsetSwaps) {
             limit = this->architecture.getLongestPath(choice) - 1;
         } else if (this->settings.strategy == Strategy::Increasing) {
+            ///  TODO: is there anything supposed to happen here?
         } else { //CustomLimit
             limit = upperLimit;
         }
