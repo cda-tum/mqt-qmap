@@ -67,26 +67,26 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         nl::from_json(jsonConfig["layering"].get<std::string>(), ms.layeringStrategy);
     }
 
-	ms.encoding = Encodings::None;
-	if (jsonConfig.contains("encoding")){
-	    nl::from_json(jsonConfig["encoding"].get<std::string(), ms.encoding);
-	}
+    ms.encoding = Encodings::None;
+    if (jsonConfig.contains("encoding")) {
+        nl::from_json(jsonConfig["encoding"].get < std::string(), ms.encoding);
+    }
 
     ms.grouping = Groupings::Halves;
-    if (jsonConfig.contains("grouping")){
+    if (jsonConfig.contains("grouping")) {
         nl::from_json(jsonConfig["grouping"].get<std::string>(), ms.grouping);
     }
 
-    if (jsonConfig.contains("strategy")){
+    if (jsonConfig.contains("strategy")) {
         ms.enableLimits = true;
-        ms.strategy = Strategy::None;
+        ms.strategy     = Strategy::None;
         nl::from_json(jsonConfig["strategy"].get<std::string>(), ms.strategy);
         if (jsonConfig.contains("limit")) {
             ms.limit = jsonConfig["limit"].get<int>();
         }
-		if (jsonConfig.contains("useBDD")) {
-			ms.useBDD = true;
-		}
+        if (jsonConfig.contains("useBDD")) {
+            ms.useBDD = true;
+        }
     }
 
     if (jsonConfig.contains("use_teleportation")) {
@@ -102,14 +102,14 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         ms.verbose = jsonConfig["verbose"].get<bool>();
     }
 
-	if (jsonConfig.contains("use_subsets")) {
-		ms.useQubitSubsets = jsonConfig["use_subsets"].get<bool>();
-	}
+    if (jsonConfig.contains("use_subsets")) {
+        ms.useQubitSubsets = jsonConfig["use_subsets"].get<bool>();
+    }
 
-	bool printStatistics = false;
-	if (jsonConfig.contains("statistics")) {
-		printStatistics = jsonConfig["statistics"].get<bool>();
-	}
+    bool printStatistics = false;
+    if (jsonConfig.contains("statistics")) {
+        printStatistics = jsonConfig["statistics"].get<bool>();
+    }
 
     bool printCSV = false;
     if (jsonConfig.contains("csv")) {
@@ -180,27 +180,27 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("dynamic", InitialLayoutStrategy::Dynamic)
             .export_values();
 
-	py::enum_<LayeringStrategy>(m, "LayeringStrategy")
-			.value("individual_gates", LayeringStrategy::IndividualGates)
-			.value("disjoint_qubits", LayeringStrategy::DisjointQubits)
-			.value("odd_gates", LayeringStrategy::OddGates)
-			.value("qubit_triangle", LayeringStrategy::QubitTriangle)
-			.export_values();
+    py::enum_<LayeringStrategy>(m, "LayeringStrategy")
+            .value("individual_gates", LayeringStrategy::IndividualGates)
+            .value("disjoint_qubits", LayeringStrategy::DisjointQubits)
+            .value("odd_gates", LayeringStrategy::OddGates)
+            .value("qubit_triangle", LayeringStrategy::QubitTriangle)
+            .export_values();
 
-	py::enum_<Encodings>(m, "Encoding")
-	        .value("none", Encodings::None)
-	        .value("commander", Encodings::Commander)
-	        .value("bimander", Encodings::Bimander)
-	        .export_values();
+    py::enum_<Encodings>(m, "Encoding")
+            .value("none", Encodings::None)
+            .value("commander", Encodings::Commander)
+            .value("bimander", Encodings::Bimander)
+            .export_values();
 
-	py::enum_<Groupings>(m, "Grouping")
+    py::enum_<Groupings>(m, "Grouping")
             .value("fixed2", Groupings::Fixed2)
             .value("fixed2", Groupings::Fixed3)
             .value("halves", Groupings::Halves)
             .value("logarithm", Groupings::Logarithm)
             .export_values();
 
-	py::enum_<Strategy>(m, "Strategy")
+    py::enum_<Strategy>(m, "Strategy")
             .value("none", Strategy::None)
             .value("architectureswaps", Strategy::ArchitectureSwaps)
             .value("subsetswaps", Strategy::SubsetSwaps)

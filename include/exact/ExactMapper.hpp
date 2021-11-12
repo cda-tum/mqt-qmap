@@ -6,22 +6,20 @@
 #ifndef EXACT_MAPPER_hpp
 #define EXACT_MAPPER_hpp
 
+#include "Encodings.hpp"
 #include "Mapper.hpp"
 
 #include <algorithm>
+#include <bitset>
 #include <chrono>
+#include <cmath>
 #include <functional>
 #include <iostream>
 #include <set>
 #include <unordered_set>
-#include <bitset>
-#include <cmath>
 #include <utility>
 #include <vector>
 #include <z3++.h>
-
-#include "Mapper.hpp"
-#include "Encodings.hpp"
 
 using namespace z3;
 using matrix = std::vector<expr_vector>;
@@ -31,11 +29,11 @@ class ExactMapper: public Mapper {
     using Mapper::Mapper;
 
 protected:
-	// inputs
-	std::vector<unsigned long> reducedLayerIndices{};
-	std::vector<std::vector<std::pair<unsigned short, unsigned short>>> mappingSwaps{};
-	void coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout);
-	void initResults() override;
+    // inputs
+    std::vector<unsigned long>                                          reducedLayerIndices{};
+    std::vector<std::vector<std::pair<unsigned short, unsigned short>>> mappingSwaps{};
+    void                                                                coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout);
+    void                                                                initResults() override;
 
 public:
     void map(const MappingSettings& settings) override;

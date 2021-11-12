@@ -46,14 +46,14 @@ struct MappingResults {
     std::string architecture;
     std::string calibration;
 
-	Method method = Method::None;
-	InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
-	LayeringStrategy layeringStrategy = LayeringStrategy::None;
-	Encodings encoding = Encodings::None;
-	Groupings grouping = Groupings::Halves;
-	Strategy strategy = Strategy::None;
+    Method                method                = Method::None;
+    InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
+    LayeringStrategy      layeringStrategy      = LayeringStrategy::None;
+    Encodings             encoding              = Encodings::None;
+    Groupings             grouping              = Groupings::Halves;
+    Strategy              strategy              = Strategy::None;
 
-	int limit = 0;
+    int limit = 0;
 
     double             time    = 0.0;
     bool               timeout = true;
@@ -88,17 +88,17 @@ struct MappingResults {
         initialLayoutStrategy = mappingResults.initialLayoutStrategy;
         layeringStrategy      = mappingResults.layeringStrategy;
 
-		encoding = mappingResults.encoding;
-		grouping = mappingResults.grouping;
-		strategy = mappingResults.strategy;
-		limit = mappingResults.limit;
+        encoding = mappingResults.encoding;
+        grouping = mappingResults.grouping;
+        strategy = mappingResults.strategy;
+        limit    = mappingResults.limit;
 
-		output_name = mappingResults.output_name;
-		output_qubits = mappingResults.output_qubits;
-		output_teleportations = mappingResults.output_teleportations;
-		output_teleportation_qubits = mappingResults.output_teleportation_qubits;
-		output_teleportation_fake = mappingResults.output_teleportation_fake;
-	}
+        output_name                 = mappingResults.output_name;
+        output_qubits               = mappingResults.output_qubits;
+        output_teleportations       = mappingResults.output_teleportations;
+        output_teleportation_qubits = mappingResults.output_teleportation_qubits;
+        output_teleportation_fake   = mappingResults.output_teleportation_fake;
+    }
 
     virtual std::ostream& print(std::ostream& out, bool printStatistics) {
         out << "{\n";
@@ -130,30 +130,29 @@ struct MappingResults {
             out << "\t\t\"additional_gates\": " << output_gates - input_gates << ",\n";
             out << "\t\t\"method\": \"" << toString(method) << "\",\n";
 
-			if (layeringStrategy != LayeringStrategy::None) {
-				out << "\t\t\"layeringStrategy\": \"" << toString(layeringStrategy) << "\",\n";
-			}
-			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
-				out << "\t\t\"initialLayoutStrategy\": \"" << toString(initialLayoutStrategy) << "\",\n";
-
-			}
-			if (encoding != Encodings::None){
+            if (layeringStrategy != LayeringStrategy::None) {
+                out << "\t\t\"layeringStrategy\": \"" << toString(layeringStrategy) << "\",\n";
+            }
+            if (initialLayoutStrategy != InitialLayoutStrategy::None) {
+                out << "\t\t\"initialLayoutStrategy\": \"" << toString(initialLayoutStrategy) << "\",\n";
+            }
+            if (encoding != Encodings::None) {
                 out << "\t\t\"encoding\": \"" << toString(encoding) << "\",\n";
                 out << "\t\t\"grouping\": \"" << toString(grouping) << "\",\n";
-			}
-			if (strategy != Strategy::None) {
+            }
+            if (strategy != Strategy::None) {
                 out << "\t\t\"strategy\": \"" << toString(strategy) << "\",\n";
                 if (strategy == Strategy::Custom) {
                     out << "\t\t\"limit\": \"" << limit << "\",\n";
                 }
-			}
-			out << "\t\t\"arch\": \"" << architecture << "\"";
-			if (!calibration.empty()) {
-				out << ",\n\t\t\"calibration\": \"" << calibration << "\"";
-			}
-			out << "\n\t}";
-		}
-		out << "\n}\n";
+            }
+            out << "\t\t\"arch\": \"" << architecture << "\"";
+            if (!calibration.empty()) {
+                out << ",\n\t\t\"calibration\": \"" << calibration << "\"";
+            }
+            out << "\n\t}";
+        }
+        out << "\n}\n";
 
         return out;
     };
@@ -182,22 +181,22 @@ struct MappingResults {
         mapped_circuit["teleportation_fake"]  = output_teleportation_fake;
         mapped_circuit["direction_reverse"]   = output_direction_reverse;
 
-		if (statistics) {
-			resultJSON["statistics"] = {};
-			auto& stats = resultJSON["statistics"];
-			if (timeout)
-				stats["timeout"] = timeout;
-			stats["mapping_time"] = time;
-			stats["seed"] = seed;
-			stats["additional_gates"] = output_gates-input_gates;
-			stats["method"] = method;
-			if (layeringStrategy != LayeringStrategy::None) {
-				stats["layeringStrategy"] = layeringStrategy;
-			}
-			if (initialLayoutStrategy != InitialLayoutStrategy::None) {
-				stats["initialLayoutStrategy"] = initialLayoutStrategy;
-			}
-            if (encoding != Encodings::None){
+        if (statistics) {
+            resultJSON["statistics"] = {};
+            auto& stats              = resultJSON["statistics"];
+            if (timeout)
+                stats["timeout"] = timeout;
+            stats["mapping_time"]     = time;
+            stats["seed"]             = seed;
+            stats["additional_gates"] = output_gates - input_gates;
+            stats["method"]           = method;
+            if (layeringStrategy != LayeringStrategy::None) {
+                stats["layeringStrategy"] = layeringStrategy;
+            }
+            if (initialLayoutStrategy != InitialLayoutStrategy::None) {
+                stats["initialLayoutStrategy"] = initialLayoutStrategy;
+            }
+            if (encoding != Encodings::None) {
                 stats["encoding"] = encoding;
                 stats["grouping"] = grouping;
             }
@@ -207,10 +206,10 @@ struct MappingResults {
                     stats["limit"] = limit;
                 }
             }
-			stats["arch"] = architecture;
-			if (!calibration.empty())
-				stats["calibration"] = calibration;
-		}
+            stats["arch"] = architecture;
+            if (!calibration.empty())
+                stats["calibration"] = calibration;
+        }
 
         return resultJSON;
     }

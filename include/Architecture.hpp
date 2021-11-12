@@ -6,6 +6,7 @@
 #ifndef QMAP_ARCHITECTURE_HPP
 #define QMAP_ARCHITECTURE_HPP
 
+#include "Encodings.hpp"
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
 
@@ -15,10 +16,6 @@
 #include <regex>
 #include <unordered_map>
 #include <vector>
-
-#include "utils.hpp"
-#include "nlohmann/json.hpp"
-#include "Encodings.hpp"
 
 constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3;
 constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7;
@@ -159,21 +156,22 @@ public:
         std::vector<std::pair<unsigned short, unsigned short>> swaps{};
         std::unordered_map<unsigned short, unsigned short>     permutation{};
 
-		void print(std::ostream& out) {
-			out << swaps.size() << ": ";
-			for (const auto& p: permutation) {
-				out << p.first << "->" << p.second << " ";
-			}
-			out << " | ";
-			for (const auto& swap: swaps) {
-				out << swap.first << "<->" << swap.second << " ";
-			}
-			out << std::endl;
-		}
-	};
+        void print(std::ostream& out) {
+            out << swaps.size() << ": ";
+            for (const auto& p: permutation) {
+                out << p.first << "->" << p.second << " ";
+            }
+            out << " | ";
+            for (const auto& swap: swaps) {
+                out << swap.first << "<->" << swap.second << " ";
+            }
+            out << std::endl;
+        }
+    };
 
-	[[nodiscard]] long getLongestPath() const;
-	[[nodiscard]] long getLongestPath(const std::set<unsigned short> &qubitChoice) const;
+    [[nodiscard]] long getLongestPath() const;
+    [[nodiscard]] long getLongestPath(const std::set<unsigned short>& qubitChoice) const;
+
 protected:
     std::string                          architectureName;
     std::string                          calibrationName;
