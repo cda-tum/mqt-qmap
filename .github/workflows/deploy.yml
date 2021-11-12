@@ -17,8 +17,8 @@ env:
   CIBW_ENVIRONMENT:            "DEPLOY=ON"
   CIBW_ENVIRONMENT_MACOS:      "MACOSX_DEPLOYMENT_TARGET=10.15 DEPLOY=ON"
   CIBW_BUILD:                  cp3*
-  CIBW_ARCHS_MACOS:            "x86_64 universal2"
-  CIBW_TEST_SKIP:              "*_arm64 *_universal2:arm64"
+  CIBW_ARCHS_MACOS:            "x86_64 arm64"
+  CIBW_TEST_SKIP:              "*_arm64"
   CIBW_SKIP:                   "*-win32 *-musllinux_i686 *-manylinux_i686"
   CIBW_BUILD_VERBOSITY:        3
   CIBW_TEST_COMMAND:           "python -c \"from jkq import qmap\""
@@ -113,7 +113,9 @@ jobs:
       - name: Install Z3
         run: brew install z3
       - name: Build sdist
-        run: python setup.py sdist
+        run:  |
+              pip install -q build
+              python -m build --sdist
       - name: Test sdist
         run: pip install --verbose dist/*.tar.gz
       - uses: actions/upload-artifact@v2
