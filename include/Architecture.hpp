@@ -17,11 +17,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "utils.hpp"
-#include "nlohmann/json.hpp"
-#include "Encodings.hpp"
-
-constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP = 3;
+constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3;
 constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7;
 constexpr unsigned short GATES_OF_DIRECTION_REVERSE   = 4;
 
@@ -147,35 +143,35 @@ public:
     [[nodiscard]] double distance(unsigned short control, unsigned short target) const {
         if (current_teleportations.empty()) {
             return distanceTable.at(control).at(target);
-	    } else {
-	        return bfs(control, target, current_teleportations);
-	    }
+        } else {
+            return bfs(control, target, current_teleportations);
+        }
+    }
 
-	}
+    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
+    void          minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
 
-	unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
-	void minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
+    struct Node {
+        unsigned long                                          nswaps = 0;
+        std::vector<std::pair<unsigned short, unsigned short>> swaps{};
+        std::unordered_map<unsigned short, unsigned short>     permutation{};
 
-	struct Node {
-		unsigned long nswaps = 0;
-		std::vector<std::pair<unsigned short, unsigned short>> swaps{};
-		std::unordered_map<unsigned short, unsigned short> permutation{};
+        void print(std::ostream& out) {
+            out << swaps.size() << ": ";
+            for (const auto& p: permutation) {
+                out << p.first << "->" << p.second << " ";
+            }
+            out << " | ";
+            for (const auto& swap: swaps) {
+                out << swap.first << "<->" << swap.second << " ";
+            }
+            out << std::endl;
+        }
+    };
 
-		void print(std::ostream& out) {
-			out << swaps.size() << ": ";
-			for (const auto& p: permutation) {
-				out << p.first << "->" << p.second << " ";
-			}
-			out << " | ";
-			for (const auto& swap: swaps) {
-				out << swap.first << "<->" << swap.second << " ";
-			}
-			out << std::endl;
-		}
-	};
+    [[nodiscard]] std::size_t getLongestPath() const;
+    [[nodiscard]] std::size_t getLongestPath(const std::set<unsigned short>& qubitChoice) const;
 
-	[[nodiscard]] std::size_t getLongestPath() const;
-	[[nodiscard]] std::size_t getLongestPath(const std::set<unsigned short> &qubitChoice) const;
 protected:
     std::string                          architectureName;
     std::string                          calibrationName;
