@@ -33,8 +33,7 @@ class CMakeBuild(build_ext):
 
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable,
-                      '-DBINDINGS=ON',
-                      '-DDEPLOY=ON']
+                      '-DBINDINGS=ON']
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -47,7 +46,10 @@ class CMakeBuild(build_ext):
             build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2']
+            cpus = os.cpu_count()
+            if cpus is None:
+                cpus = 2
+            build_args += ['--', '-j{}'.format(cpus)]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
@@ -65,7 +67,7 @@ with open(README_PATH) as readme_file:
 
 setup(
     name='jkq.qmap',
-    version='1.4.0',
+    version='1.5.0',
     author='Lukas Burgholzer',
     author_email='lukas.burgholzer@jku.at',
     description='QMAP - A JKQ tool for Quantum Circuit Mapping',
@@ -94,7 +96,5 @@ setup(
         'Source': 'https://github.com/iic-jku/qmap/',
         'Tracker': 'https://github.com/iic-jku/qmap/issues',
         'Research': 'https://iic.jku.at/eda/research/ibm_qx_mapping/',
-    },
-    python_requires='>=3.6',
-    setup_requires=['cmake>=3.14'],
+    }
 )

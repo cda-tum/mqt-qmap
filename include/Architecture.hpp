@@ -6,6 +6,7 @@
 #ifndef QMAP_ARCHITECTURE_HPP
 #define QMAP_ARCHITECTURE_HPP
 
+#include "Encodings.hpp"
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
 
@@ -173,8 +174,8 @@ public:
 		}
 	};
 
-	[[nodiscard]] long getLongestPath() const;
-	[[nodiscard]] long getLongestPath(const std::set<unsigned short> &qubitChoice) const;
+	[[nodiscard]] std::size_t getLongestPath() const;
+	[[nodiscard]] std::size_t getLongestPath(const std::set<unsigned short> &qubitChoice) const;
 protected:
     std::string                          architectureName;
     std::string                          calibrationName;

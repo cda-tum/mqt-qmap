@@ -104,7 +104,7 @@ protected:
 
     void SetUp() override {
         qc.import(test_example_dir + GetParam() + ".qasm");
-        IBM_QX5.loadCouplingMap(test_architecture_dir + "ibm_qx5.arch");
+        IBM_QX5.loadCouplingMap(AvailableArchitectures::IBM_QX5);
     }
 };
 
@@ -141,7 +141,7 @@ protected:
 
     void SetUp() override {
         qc.import(test_example_dir + GetParam() + ".qasm");
-        arch.loadCouplingMap(test_architecture_dir + "ibmq_tokyo_20qubit.arch");
+        arch.loadCouplingMap(AvailableArchitectures::IBMQ_Tokyo);
     }
 };
 
@@ -179,7 +179,7 @@ protected:
 
     void SetUp() override {
         qc.import(test_example_dir + std::get<1>(GetParam()) + ".qasm");
-        arch.loadCouplingMap(test_architecture_dir + "ibmq_tokyo_20qubit.arch");
+        arch.loadCouplingMap(AvailableArchitectures::IBMQ_Tokyo);
     }
 };
 
