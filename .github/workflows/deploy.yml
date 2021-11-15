@@ -10,19 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-  CIBW_BEFORE_ALL_LINUX:       >
-                               /opt/python/cp39-cp39/bin/python -m pip install z3-solver;
-  CIBW_ENVIRONMENT_LINUX:      "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 DEPLOY=ON"
-  CIBW_ENVIRONMENT:            "DEPLOY=ON"
-  CIBW_ENVIRONMENT_MACOS:      "MACOSX_DEPLOYMENT_TARGET=10.15 DEPLOY=ON"
-  CIBW_BUILD:                  cp3*
-  CIBW_ARCHS_MACOS:            "x86_64 arm64"
-  CIBW_TEST_SKIP:              "*_arm64"
-  CIBW_SKIP: "*-win32 *-musllinux* *-manylinux_i686"
-  CIBW_BUILD_VERBOSITY:        3
-  CIBW_TEST_COMMAND:           "python -c \"from jkq import qmap\""
-  Z3_GIT_TAG:                  z3-4.8.10
+  Z3_GIT_TAG: z3-4.8.10
 
 jobs:
   build_manylinux_wheels:
@@ -45,7 +33,7 @@ jobs:
 
   build_macos_wheels:
     name:    Build wheels on macOS
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
