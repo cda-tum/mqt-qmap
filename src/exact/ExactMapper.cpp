@@ -159,7 +159,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 
 	for(unsigned long i=0; i<layers.size(); ++i) {
 		if (i == 0) {
-			qc::permutationMap inverseInitialLayout{ };
+			qc::Permutation inverseInitialLayout{ };
 			for (auto& pu: qc.initialLayout)
 				inverseInitialLayout.insert({pu.second, pu.first});
 
@@ -211,18 +211,17 @@ void ExactMapper::map(const MappingSettings& settings) {
 					if (settings.verbose) {
 						std::cout << i << ": Added (direction-reversed) cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
 					}
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Control(reverse.first), reverse.second, qc::X);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.second, qc::H);
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), reverse.first, qc::H);
+                    qcMapped.h(reverse.first);
+                    qcMapped.h(reverse.second);
+                    qcMapped.x(reverse.second, dd::Control{static_cast<dd::Qubit>(reverse.first)});
+                    qcMapped.h(reverse.second);
+                    qcMapped.h(reverse.first);
 
 				} else {
 					if (settings.verbose) {
 						std::cout << i << ": Added cnot with control and target: " << cnot.first << " " << cnot.second << std::endl;
 					}
-					qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
-					                                             qc::Control(cnot.first), cnot.second, qc::X);
+                    qcMapped.x(cnot.second, dd::Control{static_cast<dd::Qubit>(cnot.first)});
 				}
 			}
 		}
@@ -231,7 +230,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 			// apply swaps before layer
 			for (auto it=(*swapsIterator).rbegin(); it != (*swapsIterator).rend(); ++it) {
 				auto& swap = *it;
-				qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), std::vector<qc::Control>{ }, swap.first, swap.second, qc::SWAP);
+				qcMapped.x(swap.second, dd::Control{static_cast<dd::Qubit>(swap.first)});
 				std::swap(qcMapped.outputPermutation.at(swap.first), qcMapped.outputPermutation.at(swap.second));
 				std::swap(qubits.at(swap.first), qubits.at(swap.second));
 				std::swap(locations.at(qubits.at(swap.first)), locations.at(qubits.at(swap.second)));

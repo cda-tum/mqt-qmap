@@ -6,78 +6,78 @@
 #ifndef QMAP_UTILS_HPP
 #define QMAP_UTILS_HPP
 
-#include <stdexcept>
 #include <algorithm>
-#include <set>
-#include <vector>
-#include <string>
-#include <queue>
 #include <functional>
 #include <iostream>
-#include <sstream>
-#include <unordered_set>
-#include <unordered_map>
-
 #include <operations/Operation.hpp>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-using Matrix = std::vector<std::vector<double>>;
-using Edge = std::pair<unsigned short, unsigned short>;
+using Matrix      = std::vector<std::vector<double>>;
+using Edge        = std::pair<unsigned short, unsigned short>;
 using CouplingMap = std::set<Edge>;
 
 struct Exchange {
-    Exchange(unsigned short first, unsigned short second, qc::OpType op) : first(first), second(second), middle_ancilla(std::numeric_limits<decltype(middle_ancilla)>::max()), op(op) {}
-    Exchange(unsigned short first, unsigned short second, unsigned short middle_anc, qc::OpType op) : first(first), second(second), middle_ancilla(middle_anc), op(op) {}
+    Exchange(unsigned short first, unsigned short second, qc::OpType op):
+        first(first), second(second), middle_ancilla(std::numeric_limits<decltype(middle_ancilla)>::max()), op(op) {}
+    Exchange(unsigned short first, unsigned short second, unsigned short middle_anc, qc::OpType op):
+        first(first), second(second), middle_ancilla(middle_anc), op(op) {}
     unsigned short first;
     unsigned short second;
     unsigned short middle_ancilla;
-    qc::OpType op;
+    qc::OpType     op;
 };
 
-class QMAPException : public std::runtime_error {
-	std::string msg;
-public:
-	explicit QMAPException(std::string  msg) : std::runtime_error("QMAP Exception"), msg(std::move(msg)) { }
+class QMAPException: public std::runtime_error {
+    std::string msg;
 
-	const char *what() const noexcept override {
-		return msg.c_str();
-	}
+public:
+    explicit QMAPException(std::string msg):
+        std::runtime_error("QMAP Exception"), msg(std::move(msg)) {}
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return msg.c_str();
+    }
 };
 
 /// Computes n! recursively
 /// \param n interger to compute factorial of
 /// \return n!
-static inline
-unsigned long factorial(unsigned long n) {
-	if (n == 1)
-		return 1;
-	else
-		return n * factorial(n - 1);
+static inline unsigned long factorial(unsigned long n) {
+    if (n == 1)
+        return 1;
+    else
+        return n * factorial(n - 1);
 }
 
 class Dijkstra {
-	static constexpr bool VERBOSE = false;
+    static constexpr bool VERBOSE = false;
 
 public:
-	struct Node {
-		bool   contains_correct_edge = false;
-		bool   visited = false;
-		int    pos = -1;
-		double cost = -1.;
-	};
+    struct Node {
+        bool   contains_correct_edge = false;
+        bool   visited               = false;
+        int    pos                   = -1;
+        double cost                  = -1.;
+    };
 
-	static void build_table(unsigned short n, const std::set<Edge>& graph, Matrix& distanceTable, const std::function<double(const Node&)>& cost);
+    static void build_table(unsigned short n, const std::set<Edge>& graph, Matrix& distanceTable, const std::function<double(const Node&)>& cost);
 
 protected:
-
-	static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes, unsigned short start);
-
+    static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes, unsigned short start);
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
-	if (x.cost != y.cost) {
-		return x.cost < y.cost;
-	}
-	return x.contains_correct_edge && ! y.contains_correct_edge;
+    if (x.cost != y.cost) {
+        return x.cost < y.cost;
+    }
+    return x.contains_correct_edge && !y.contains_correct_edge;
 }
 
 /// Iterating routine through all combinations
@@ -86,38 +86,39 @@ inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
 /// \param k current iterator
 /// \param last iterator to end
 /// \return true if another combination was found
-template<typename Iterator> bool next_combination(Iterator first, Iterator k, Iterator last) {
-	/* Credits: Thomas Draper */
-	if ((first == last) || (first == k) || (last == k))
-		return false;
-	Iterator itr1 = first;
-	Iterator itr2 = last;
-	++itr1;
-	if (last == itr1)
-		return false;
-	itr1 = last;
-	--itr1;
-	itr1 = k;
-	--itr2;
-	while (first != itr1) {
-		if (*--itr1 < *itr2) {
-			Iterator j = k;
-			while (!(*itr1 < *j)) ++j;
-			std::iter_swap(itr1, j);
-			++itr1;
-			++j;
-			itr2 = k;
-			std::rotate(itr1, j, last);
-			while (last != j) {
-				++j;
-				++itr2;
-			}
-			std::rotate(k, itr2, last);
-			return true;
-		}
-	}
-	std::rotate(first, k, last);
-	return false;
+template<typename Iterator>
+bool next_combination(Iterator first, Iterator k, Iterator last) {
+    /* Credits: Thomas Draper */
+    if ((first == last) || (first == k) || (last == k))
+        return false;
+    Iterator itr1 = first;
+    Iterator itr2 = last;
+    ++itr1;
+    if (last == itr1)
+        return false;
+    itr1 = last;
+    --itr1;
+    itr1 = k;
+    --itr2;
+    while (first != itr1) {
+        if (*--itr1 < *itr2) {
+            Iterator j = k;
+            while (!(*itr1 < *j)) ++j;
+            std::iter_swap(itr1, j);
+            ++itr1;
+            ++j;
+            itr2 = k;
+            std::rotate(itr1, j, last);
+            while (last != j) {
+                ++j;
+                ++itr2;
+            }
+            std::rotate(k, itr2, last);
+            return true;
+        }
+    }
+    std::rotate(first, k, last);
+    return false;
 }
 
 /// Create a string representation of a given permutation

@@ -3,33 +3,37 @@
  * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
  */
 
-#include <string>
-#include <iostream>
 #include "MappingSettings.hpp"
 
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #ifndef QMAP_MAPPINGRESULTS_HPP
-#define QMAP_MAPPINGRESULTS_HPP
+    #define QMAP_MAPPINGRESULTS_HPP
 
 enum class Method {
-	None, Exact, Heuristic
+    None,
+    Exact,
+    Heuristic
 };
 static std::string toString(const Method method) {
-	switch (method) {
-		case Method::None:
-			return "none";
-		case Method::Exact:
-			return "exact";
-		case Method::Heuristic:
-			return "heuristic";
-	}
-	return " ";
+    switch (method) {
+        case Method::None:
+            return "none";
+        case Method::Exact:
+            return "exact";
+        case Method::Heuristic:
+            return "heuristic";
+    }
+    return " ";
 }
 // map Method values to JSON as strings
-NLOHMANN_JSON_SERIALIZE_ENUM( Method, {
-	{Method::None, "none"},
-	{Method::Exact, "exact"},
-	{Method::Heuristic, "heuristic"},
-})
+NLOHMANN_JSON_SERIALIZE_ENUM(Method, {
+                                             {Method::None, "none"},
+                                             {Method::Exact, "exact"},
+                                             {Method::Heuristic, "heuristic"},
+                                     })
 
 struct MappingResults {
 
