@@ -74,7 +74,7 @@ void ExactMapper::map(const MappingSettings& settings) {
             else
                 limit = this->architecture.getCouplingLimit() - 1;
         } else if (this->settings.strategy == SwapReductionStrategy::Increasing) {
-            ///  TODO: is there anything supposed to happen here?
+            limit = 0;
         } else { //CustomLimit
             limit = upperLimit;
         }
