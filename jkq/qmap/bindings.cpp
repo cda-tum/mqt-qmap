@@ -67,20 +67,20 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
         ms.layeringStrategy = jsonConfig["layering"].get<LayeringStrategy>();
     }
 
-    ms.encoding = Encodings::None;
+    ms.encoding = Encodings::Naive;
     if (jsonConfig.contains("encoding")) {
         ms.encoding = jsonConfig["encoding"].get<Encodings>();
     }
 
-    ms.grouping = Groupings::Halves;
+    ms.grouping = CMDRVariableGroupings::Halves;
     if (jsonConfig.contains("grouping")) {
-        ms.grouping = jsonConfig["grouping"].get<Groupings>();
+        ms.grouping = jsonConfig["grouping"].get<CMDRVariableGroupings>();
     }
 
     if (jsonConfig.contains("strategy")) {
         ms.enableLimits = true;
-        ms.strategy     = Strategy::None;
-        ms.strategy     = jsonConfig["strategy"].get<Strategy>();
+        ms.strategy     = SwapReductionStrategy::CouplingLimit;
+        ms.strategy     = jsonConfig["strategy"].get<SwapReductionStrategy>();
         if (jsonConfig.contains("limit")) {
             ms.limit = jsonConfig["limit"].get<int>();
         }

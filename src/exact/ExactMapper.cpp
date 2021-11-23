@@ -68,22 +68,23 @@ void ExactMapper::map(const MappingSettings& settings) {
     for (auto& choice: allPossibleQubitChoices) {
         std::size_t limit      = 0;
         std::size_t upperLimit = this->settings.limit;
-        if (this->settings.strategy == Strategy::ArchitectureSwaps) {
-            limit = this->architecture.getLongestPath() - 1;
-        } else if (this->settings.strategy == Strategy::SubsetSwaps) {
-            limit = this->architecture.getLongestPath(choice) - 1;
-        } else if (this->settings.strategy == Strategy::Increasing) {
+        if (this->settings.strategy == SwapReductionStrategy::CouplingLimit) {
+            if (this->settings.useQubitSubsets)
+                limit = this->architecture.getCouplingLimit(choice) - 1;
+            else
+                limit = this->architecture.getCouplingLimit() - 1;
+        } else if (this->settings.strategy == SwapReductionStrategy::Increasing) {
             ///  TODO: is there anything supposed to happen here?
         } else { //CustomLimit
             limit = upperLimit;
         }
-        unsigned int maxLimit = this->architecture.getLongestPath();
+        unsigned int maxLimit = this->architecture.getCouplingLimit();
         unsigned int timeout  = 0;
         do {
             timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
             if (timeout <= 10000)
                 timeout = 10000;
-            if (this->settings.strategy != Strategy::Increasing)
+            if (this->settings.strategy != SwapReductionStrategy::Increasing)
                 timeout = settings.timeout;
             if (settings.verbose)
                 std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
@@ -134,7 +135,7 @@ void ExactMapper::map(const MappingSettings& settings) {
                 limit += runs;
                 runs++;
             }
-        } while (this->settings.strategy == Strategy::Increasing && (limit <= upperLimit || this->settings.limit == 0) && limit < this->architecture.getLongestPath());
+        } while (this->settings.strategy == SwapReductionStrategy::Increasing && (limit <= upperLimit || this->settings.limit == 0) && limit < this->architecture.getCouplingLimit());
     }
 
     // 8) Write best result and statistics
@@ -340,7 +341,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
     /// 	Consistency Constraints			//
     //////////////////////////////////////////
-    if (this->settings.encoding == Encodings::None) {
+    if (this->settings.encoding == Encodings::Naive) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                 expr rowConsistency = c.int_val(0);
@@ -367,13 +368,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     varIDs.push_back(x[k][i][j]);
                 }
-                if (this->settings.grouping == Groupings::Fixed2) {
+                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Fixed3) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Logarithm) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Halves) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
@@ -384,13 +385,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
 
-                if (this->settings.grouping == Groupings::Fixed2) {
+                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Fixed3) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Logarithm) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Halves) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
@@ -413,13 +414,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
 
-                if (this->settings.grouping == Groupings::Fixed2) {
+                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Fixed3) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Logarithm) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == Groupings::Halves) {
+                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
@@ -483,7 +484,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     }
 
     // Allow only 1 y_k_pi to be true
-    if (this->settings.encoding == Encodings::None) {
+    if (this->settings.encoding == Encodings::Naive) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             expr onlyOne = c.int_val(0);
             piCount      = 0;
@@ -507,13 +508,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     ++piCount;
                 }
             } while (std::next_permutation(pi.begin(), pi.end()));
-            if (this->settings.grouping == Groupings::Fixed2) {
+            if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
-            } else if (this->settings.grouping == Groupings::Fixed3) {
+            } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
-            } else if (this->settings.grouping == Groupings::Logarithm) {
+            } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
-            } else if (this->settings.grouping == Groupings::Halves) {
+            } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
             }
         }

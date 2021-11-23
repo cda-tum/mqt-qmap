@@ -47,21 +47,20 @@ enum class LayeringStrategy {
 };
 
 enum class Encodings {
-    None,
+    Naive,
     Commander,
     Bimander
 };
-enum class Groupings {
+enum class CMDRVariableGroupings {
     Fixed2,
     Fixed3,
     Halves,
     Logarithm
 };
-enum class Strategy {
+enum class SwapReductionStrategy {
     None,
     Custom,
-    ArchitectureSwaps,
-    SubsetSwaps,
+    CouplingLimit,
     Increasing
 };
 static std::string toString(const LayeringStrategy strategy) {
@@ -90,8 +89,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(LayeringStrategy, {
 
 static std::string toString(const Encodings encoding) {
     switch (encoding) {
-        case Encodings::None:
-            return "none";
+        case Encodings::Naive:
+            return "naive";
         case Encodings::Commander:
             return "commander";
         case Encodings::Bimander:
@@ -101,53 +100,50 @@ static std::string toString(const Encodings encoding) {
 }
 
 NLOHMANN_JSON_SERIALIZE_ENUM(Encodings, {
-                                                {Encodings::None, "none"},
+                                                {Encodings::Naive, "naive"},
                                                 {Encodings::Commander, "commander"},
                                                 {Encodings::Bimander, "bimander"},
                                         })
 
-static std::string toString(const Groupings grouping) {
+static std::string toString(const CMDRVariableGroupings grouping) {
     switch (grouping) {
-        case Groupings::Fixed2:
+        case CMDRVariableGroupings::Fixed2:
             return "fixed2";
-        case Groupings::Fixed3:
+        case CMDRVariableGroupings::Fixed3:
             return "fixed3";
-        case Groupings::Logarithm:
+        case CMDRVariableGroupings::Logarithm:
             return "logarithm";
-        case Groupings::Halves:
+        case CMDRVariableGroupings::Halves:
             return "halves";
     }
     return " ";
 }
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Groupings, {
-                                                {Groupings::Fixed2, "fixed2"},
-                                                {Groupings::Fixed3, "fixed3"},
-                                                {Groupings::Halves, "halves"},
-                                                {Groupings::Logarithm, "logarithm"},
-                                        })
+NLOHMANN_JSON_SERIALIZE_ENUM(CMDRVariableGroupings, {
+                                                            {CMDRVariableGroupings::Fixed2, "fixed2"},
+                                                            {CMDRVariableGroupings::Fixed3, "fixed3"},
+                                                            {CMDRVariableGroupings::Halves, "halves"},
+                                                            {CMDRVariableGroupings::Logarithm, "logarithm"},
+                                                    })
 
-static std::string toString(const Strategy strategy) {
+static std::string toString(const SwapReductionStrategy strategy) {
     switch (strategy) {
-        case Strategy::ArchitectureSwaps:
-            return "architectureswaps";
-        case Strategy::SubsetSwaps:
-            return "subsetswaps";
-        case Strategy::Custom:
+        case SwapReductionStrategy::CouplingLimit:
+            return "coupling_limit";
+        case SwapReductionStrategy::Custom:
             return "custom";
-        case Strategy::None:
+        case SwapReductionStrategy::None:
             return "none";
-        case Strategy::Increasing:
+        case SwapReductionStrategy::Increasing:
             return "increasing";
     }
     return " ";
 }
 
-NLOHMANN_JSON_SERIALIZE_ENUM(Strategy, {{Strategy::None, "none"},
-                                        {Strategy::ArchitectureSwaps, "architectureswaps"},
-                                        {Strategy::SubsetSwaps, "subsetswaps"},
-                                        {Strategy::Custom, "custom"},
-                                        {Strategy::Increasing, "increasing"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(SwapReductionStrategy, {{SwapReductionStrategy::None, "none"},
+                                                     {SwapReductionStrategy::CouplingLimit, "coupling_limit"},
+                                                     {SwapReductionStrategy::Custom, "custom"},
+                                                     {SwapReductionStrategy::Increasing, "increasing"}})
 
 struct MappingSettings {
     MappingSettings() = default;
@@ -163,20 +159,20 @@ struct MappingSettings {
     bool admissibleHeuristic = true;
     bool verbose             = false;
 
-    bool               lookahead            = true;
-    int                nrLookaheads         = 15;
-    int                teleportationQubits  = 0;
-    unsigned long long teleportationSeed    = 0;
-    bool               teleportationFake    = false;
-    double             firstLookaheadFactor = 0.75;
-    double             lookaheadFactor      = 0.5;
-    Encodings          encoding             = Encodings::None;
-    Groupings          grouping             = Groupings::Halves;
-    bool               enableLimits         = false;
-    bool               useBDD               = false;
-    Strategy           strategy             = Strategy::None;
-    int                limit                = 0;
-    bool               useQubitSubsets      = true;
+    bool                  lookahead            = true;
+    int                   nrLookaheads         = 15;
+    int                   teleportationQubits  = 0;
+    unsigned long long    teleportationSeed    = 0;
+    bool                  teleportationFake    = false;
+    double                firstLookaheadFactor = 0.75;
+    double                lookaheadFactor      = 0.5;
+    Encodings             encoding             = Encodings::Naive;
+    CMDRVariableGroupings grouping             = CMDRVariableGroupings::Halves;
+    bool                  enableLimits         = true;
+    bool                  useBDD               = false;
+    SwapReductionStrategy strategy             = SwapReductionStrategy::CouplingLimit;
+    int                   limit                = 0;
+    bool                  useQubitSubsets      = true;
 };
 
 #endif //QMAP_MAPPINGSETTINGS_HPP

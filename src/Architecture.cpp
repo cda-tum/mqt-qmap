@@ -371,12 +371,12 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
     return (length - 2) * 7 + 4;
 }
 
-std::size_t Architecture::getLongestPath() const {
-    return findLongestPath(getCouplingMap(), getNqubits());
+std::size_t Architecture::getCouplingLimit() const {
+    return findCouplingLimit(getCouplingMap(), getNqubits());
 }
 
-std::size_t Architecture::getLongestPath(const std::set<unsigned short>& qubitChoice) const {
-    return findLongestPath(getCouplingMap(), getNqubits(), qubitChoice);
+std::size_t Architecture::getCouplingLimit(const std::set<unsigned short>& qubitChoice) const {
+    return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
 }
 
 std::string toString(const AvailableArchitectures architecture) {

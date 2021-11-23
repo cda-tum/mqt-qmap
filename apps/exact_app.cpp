@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
 			//("limitswaps", "Enable bdd for limiting swaps per layer")
 			("useBDD", "Choose to use BDDs instead of directly limiting the permutation variables")
-			("strategy", po::value<std::string>(), R"(Choose method of applying bdd limits ("none" | "custom" | "architectureswaps" | "subsetswaps" | "increasing"))")
+			("strategy", po::value<std::string>(), R"(Choose method of limiting the search space ("none" | "custom" | "coupling_limit" | "increasing"))")
 			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
 			("timeout", po::value<std::string>(), "timeout for the execution")
@@ -99,27 +99,27 @@ int main(int argc, char** argv) {
     if (vm.count("encoding")) {
         const std::string encoding = vm["encoding"].as<std::string>();
         if (encoding == "none") {
-            ms.encoding = Encodings::None;
+            ms.encoding = Encodings::Naive;
         } else if (encoding == "commander") {
             ms.encoding = Encodings::Commander;
         } else if (encoding == "bimander") {
             ms.encoding = Encodings::Bimander;
         } else {
-            ms.encoding = Encodings::None;
+            ms.encoding = Encodings::Naive;
         }
     }
     if (vm.count("grouping")) {
         const std::string grouping = vm["grouping"].as<std::string>();
         if (grouping == "fixed3") {
-            ms.grouping = Groupings::Fixed3;
+            ms.grouping = CMDRVariableGroupings::Fixed3;
         } else if (grouping == "fixed2") {
-            ms.grouping = Groupings::Fixed2;
+            ms.grouping = CMDRVariableGroupings::Fixed2;
         } else if (grouping == "logarithm") {
-            ms.grouping = Groupings::Logarithm;
+            ms.grouping = CMDRVariableGroupings::Logarithm;
         } else if (grouping == "halves") {
-            ms.grouping = Groupings::Halves;
+            ms.grouping = CMDRVariableGroupings::Halves;
         } else {
-            ms.grouping = Groupings::Halves;
+            ms.grouping = CMDRVariableGroupings::Halves;
         }
     }
     if (vm.count("strategy")) {
@@ -129,23 +129,21 @@ int main(int argc, char** argv) {
         }
         const std::string bddStrat = vm["strategy"].as<std::string>();
         if (bddStrat == "custom") {
-            ms.strategy = Strategy::Custom;
+            ms.strategy = SwapReductionStrategy::Custom;
             if (vm.count("limit")) {
                 const std::string bdd_limit = vm["limit"].as<std::string>();
                 ms.limit                    = std::stoi(bdd_limit.c_str());
             }
-        } else if (bddStrat == "architectureswaps") {
-            ms.strategy = Strategy::ArchitectureSwaps;
-        } else if (bddStrat == "subsetswaps") {
-            ms.strategy = Strategy::SubsetSwaps;
+        } else if (bddStrat == "coupling_limit") {
+            ms.strategy = SwapReductionStrategy::CouplingLimit;
         } else if (bddStrat == "increasing") {
-            ms.strategy = Strategy::Increasing;
+            ms.strategy = SwapReductionStrategy::Increasing;
             if (vm.count("limit")) {
                 const std::string bdd_limit = vm["limit"].as<std::string>();
                 ms.limit                    = std::stoi(bdd_limit.c_str());
             }
         } else {
-            ms.strategy     = Strategy::None;
+            ms.strategy     = SwapReductionStrategy::None;
             ms.enableLimits = false;
             ms.useBDD       = false;
         }

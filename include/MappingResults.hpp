@@ -50,9 +50,9 @@ struct MappingResults {
     Method                method                = Method::None;
     InitialLayoutStrategy initialLayoutStrategy = InitialLayoutStrategy::None;
     LayeringStrategy      layeringStrategy      = LayeringStrategy::None;
-    Encodings             encoding              = Encodings::None;
-    Groupings             grouping              = Groupings::Halves;
-    Strategy              strategy              = Strategy::None;
+    Encodings             encoding              = Encodings::Naive;
+    CMDRVariableGroupings grouping              = CMDRVariableGroupings::Halves;
+    SwapReductionStrategy strategy              = SwapReductionStrategy::None;
 
     int limit = 0;
 
@@ -137,13 +137,13 @@ struct MappingResults {
             if (initialLayoutStrategy != InitialLayoutStrategy::None) {
                 out << "\t\t\"initialLayoutStrategy\": \"" << toString(initialLayoutStrategy) << "\",\n";
             }
-            if (encoding != Encodings::None) {
+            if (encoding != Encodings::Naive) {
                 out << "\t\t\"encoding\": \"" << toString(encoding) << "\",\n";
                 out << "\t\t\"grouping\": \"" << toString(grouping) << "\",\n";
             }
-            if (strategy != Strategy::None) {
+            if (strategy != SwapReductionStrategy::None) {
                 out << "\t\t\"strategy\": \"" << toString(strategy) << "\",\n";
-                if (strategy == Strategy::Custom) {
+                if (strategy == SwapReductionStrategy::Custom) {
                     out << "\t\t\"limit\": \"" << limit << "\",\n";
                 }
             }
@@ -197,13 +197,13 @@ struct MappingResults {
             if (initialLayoutStrategy != InitialLayoutStrategy::None) {
                 stats["initialLayoutStrategy"] = initialLayoutStrategy;
             }
-            if (encoding != Encodings::None) {
-                stats["encoding"] = encoding;
-                stats["grouping"] = grouping;
+            if (encoding != Encodings::Naive) {
+                stats["encoding"] = toString(encoding);
+                stats["grouping"] = toString(grouping);
             }
-            if (strategy != Strategy::None) {
-                stats["strategy"] = strategy;
-                if (strategy == Strategy::Custom) {
+            if (strategy != SwapReductionStrategy::None) {
+                stats["strategy"] = toString(strategy);
+                if (strategy == SwapReductionStrategy::Custom) {
                     stats["limit"] = limit;
                 }
             }

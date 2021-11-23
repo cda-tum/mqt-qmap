@@ -176,7 +176,7 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact mapping tool)
 
 The exact mapping tool offers the `--encoding` and related the `--grouping` option, where the first option allows to chose a different encoding for at most one and exactly one constraints:
-- `none` (*default*): use naive encoding for constraints
+- `naive` (*default*): use naive encoding for constraints
 - `commander`: use commander encoding for at most one and exactly one constraints
 - `bimander`: use bimander encoding for at most one and commander for exactly one constraints
 As commander encoding can use different strategies to group the variables, there are different `--grouping` options:
@@ -186,12 +186,11 @@ As commander encoding can use different strategies to group the variables, there
 - `fixed3`: each group contains exactly three variables
 
 The exact mapping tool also offers the `--strategy` option to enable limiting the number of swaps done per layer, which offers the following options:
-- `none` (*default*): disable bdd limiting
-- `architectureswaps`: calculate the max swaps per layer based on the longest path through the whole coupling map
-- `subsetswaps`: calculate the max swaps per layer based on the longest path of current choice of qubits
+- `none`: consider whole search space
+- `coupling_limit` (*default*): calculate the max swaps per layer based on the longest path of current choice of qubits, or if `use_subsets` is disabled considers the whole architecture
 - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
 - `custom`: set a custom limit, needs the `--limit` option followed by a number to set the limit
-Using the `--useBDD` option, the mapping utilizes bdds instead of simply removing the permutations from the core routine. 
+Using the `--useBDD` option, the mapping utilizes bdds instead of simply removing the permutations from the core routine. This option is not generally advised, as it is more ressource intensive in most cases, but is something to try in cases of timeout. 
 
 
 ### System Requirements

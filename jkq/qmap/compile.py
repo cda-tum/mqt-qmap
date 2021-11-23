@@ -16,10 +16,10 @@ def compile(circ, arch: Union[str, Arch],
             use_teleportation: bool = False,
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
-            encoding: Encoding = Encoding.none,
+            encoding: Encoding = Encoding.naive,
             grouping: Grouping = Grouping.halves,
-            useBDD: bool = False,
-            strategy: Strategy = Strategy.none,
+            use_bdd: bool = False,
+            strategy: Strategy = Strategy.longest_path,
             limit: int = 0,
             use_subsets: bool = True,
             save_mapped_circuit: bool = False,
@@ -39,11 +39,11 @@ def compile(circ, arch: Union[str, Arch],
     :type initial_layout: InitialLayoutStrategy
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: LayeringStrategy
-    :param encoding - Choose encoding for AMO and exactly one (*none* | commander | bimander)
+    :param encoding - Choose encoding for AMO and exactly one (*naive* | commander | bimander)
     :type encoding: Encoding
     :param grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
     :type grouping: Grouping
-    :param strategy - Choose method of applying bdd limits (*none* | custom | architectureswaps | subsetswaps | increasing)
+    :param strategy - Choose method of limiting the search space (none | custom | *coupling_limit* | increasing)
     :type strategy: Strategy
     :param limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
     :type limit: int
@@ -72,18 +72,18 @@ def compile(circ, arch: Union[str, Arch],
     result = map(circ, arch, {
         "calibration": calibration,
         "method": method.name,
-        "initialLayout": initial_layout.name,
+        "initial_layout": initial_layout.name,
         "layering": layering.name,
         "encoding": encoding.name,
         "grouping": grouping.name,
         "strategy": strategy.name,
         "limit": limit,
-        "useBDD": useBDD,
+        "useBDD": use_bdd,
         "use_subsets": use_subsets,
         "use_teleportation": use_teleportation,
         "teleportation_fake": teleportation_fake,
         "teleportation_seed": teleportation_seed,
-        "saveMappedCircuit": save_mapped_circuit,
+        "save_mapped_circuit": save_mapped_circuit,
         "csv": csv,
         "statistics": statistics,
         "verbose": verbose

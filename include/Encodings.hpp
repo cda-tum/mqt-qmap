@@ -77,7 +77,7 @@ std::string printBimanderVars(const std::vector<std::vector<unsigned long>>& var
 std::string printNestedVars(const std::vector<NestedVar>& vars, int level = 0);
 std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_vector& vars);
 
-std::size_t findLongestPath(const CouplingMap& cm, int nQubits);
-std::size_t findLongestPath(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice);
-void        findLongestPath(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited);
+std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits);
+std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice);
+void        findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited);
 #endif

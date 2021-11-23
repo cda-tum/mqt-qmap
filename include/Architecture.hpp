@@ -169,8 +169,8 @@ public:
         }
     };
 
-    [[nodiscard]] std::size_t getLongestPath() const;
-    [[nodiscard]] std::size_t getLongestPath(const std::set<unsigned short>& qubitChoice) const;
+    [[nodiscard]] std::size_t getCouplingLimit() const;
+    [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
 
 protected:
     std::string                          architectureName;

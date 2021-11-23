@@ -251,7 +251,7 @@ std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_
     return out.str();
 }
 
-std::size_t findLongestPath(const CouplingMap& cm, int nQubits) {
+std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits) {
     std::vector<std::vector<unsigned short>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;
@@ -267,7 +267,7 @@ std::size_t findLongestPath(const CouplingMap& cm, int nQubits) {
         visited.clear();
         visited.resize(nQubits);
         std::fill(visited.begin(), visited.end(), false);
-        findLongestPath(q, 0, connections, d, visited);
+        findCouplingLimit(q, 0, connections, d, visited);
         auto it = std::max_element(d.begin(), d.end());
         if ((*it) > maxSum)
             maxSum = (*it);
@@ -275,7 +275,7 @@ std::size_t findLongestPath(const CouplingMap& cm, int nQubits) {
     return maxSum;
 }
 
-std::size_t findLongestPath(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
+std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
     std::vector<std::vector<unsigned short>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;
@@ -294,7 +294,7 @@ std::size_t findLongestPath(const CouplingMap& cm, int nQubits, const std::set<u
         visited.clear();
         visited.resize(nQubits);
         std::fill(visited.begin(), visited.end(), false);
-        findLongestPath(q, 0, connections, d, visited);
+        findCouplingLimit(q, 0, connections, d, visited);
         auto it = std::max_element(d.begin(), d.end());
         if ((*it) > maxSum)
             maxSum = (*it);
@@ -302,7 +302,7 @@ std::size_t findLongestPath(const CouplingMap& cm, int nQubits, const std::set<u
     return maxSum;
 }
 
-void findLongestPath(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
+void findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
     if (visited.at(node))
         return;
     visited[node] = true;
@@ -315,7 +315,7 @@ void findLongestPath(unsigned short node, int curSum, const std::vector<std::vec
     }
 
     for (auto child: connections.at(node)) {
-        findLongestPath(child, curSum + 1, connections, d, visited);
+        findCouplingLimit(child, curSum + 1, connections, d, visited);
     }
 
     visited[node] = false;
