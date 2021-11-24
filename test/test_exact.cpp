@@ -246,7 +246,6 @@ TEST_P(ExactTest, LimitsBidirectional) {
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
-    settings.enableLimits = true;
 }
 TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
     MappingSettings settings{};
@@ -257,7 +256,6 @@ TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
-    settings.enableLimits = true;
 }
 TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
     MappingSettings settings{};
@@ -328,4 +326,32 @@ TEST_P(ExactTest, NoSubsets) {
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_nosubsets.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
+}
+TEST_P(ExactTest, toStringMethods) {
+    EXPECT_EQ(toString(InitialLayoutStrategy::Identity), "identity");
+    EXPECT_EQ(toString(InitialLayoutStrategy::Static), "static");
+    EXPECT_EQ(toString(InitialLayoutStrategy::Dynamic), "dynamic");
+    EXPECT_EQ(toString(InitialLayoutStrategy::None), "none");
+
+    EXPECT_EQ(toString(LayeringStrategy::IndividualGates), "individual_gates");
+    EXPECT_EQ(toString(LayeringStrategy::DisjointQubits), "disjoint_qubits");
+    EXPECT_EQ(toString(LayeringStrategy::OddGates), "odd_gates");
+    EXPECT_EQ(toString(LayeringStrategy::QubitTriangle), "qubit_triangle");
+    EXPECT_EQ(toString(LayeringStrategy::None), "none");
+
+    EXPECT_EQ(toString(Encodings::Naive), "naive");
+    EXPECT_EQ(toString(Encodings::Commander), "commander");
+    EXPECT_EQ(toString(Encodings::Bimander), "bimander");
+
+    EXPECT_EQ(toString(CMDRVariableGroupings::Fixed2), "fixed2");
+    EXPECT_EQ(toString(CMDRVariableGroupings::Fixed3), "fixed3");
+    EXPECT_EQ(toString(CMDRVariableGroupings::Logarithm), "logarithm");
+    EXPECT_EQ(toString(CMDRVariableGroupings::Halves), "halves");
+
+    EXPECT_EQ(toString(SwapReductionStrategy::CouplingLimit), "coupling_limit");
+    EXPECT_EQ(toString(SwapReductionStrategy::Custom), "custom");
+    EXPECT_EQ(toString(SwapReductionStrategy::None), "none");
+    EXPECT_EQ(toString(SwapReductionStrategy::Increasing), "increasing");
+
+    SUCCEED() << "ToStringMethods working";
 }
