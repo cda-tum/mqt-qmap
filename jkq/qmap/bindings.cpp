@@ -188,7 +188,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .export_values();
 
     py::enum_<Encodings>(m, "Encoding")
-            .value("none", Encodings::Naive)
+            .value("naive", Encodings::Naive)
             .value("commander", Encodings::Commander)
             .value("bimander", Encodings::Bimander)
             .export_values();
