@@ -188,24 +188,23 @@ PYBIND11_MODULE(pyqmap, m) {
             .export_values();
 
     py::enum_<Encodings>(m, "Encoding")
-            .value("none", Encodings::None)
+            .value("none", Encodings::Naive)
             .value("commander", Encodings::Commander)
             .value("bimander", Encodings::Bimander)
             .export_values();
 
-    py::enum_<Groupings>(m, "Grouping")
-            .value("fixed2", Groupings::Fixed2)
-            .value("fixed3", Groupings::Fixed3)
-            .value("halves", Groupings::Halves)
-            .value("logarithm", Groupings::Logarithm)
+    py::enum_<CMDRVariableGroupings>(m, "Grouping")
+            .value("fixed2", CMDRVariableGroupings::Fixed2)
+            .value("fixed3", CMDRVariableGroupings::Fixed3)
+            .value("halves", CMDRVariableGroupings::Halves)
+            .value("logarithm", CMDRVariableGroupings::Logarithm)
             .export_values();
 
-    py::enum_<Strategy>(m, "Strategy")
-            .value("none", Strategy::None)
-            .value("architectureswaps", Strategy::ArchitectureSwaps)
-            .value("subsetswaps", Strategy::SubsetSwaps)
-            .value("custom", Strategy::Custom)
-            .value("increasing", Strategy::Increasing)
+    py::enum_<SwapReductionStrategy>(m, "Strategy")
+            .value("none", SwapReductionStrategy::None)
+            .value("coupling_limit", SwapReductionStrategy::CouplingLimit)
+            .value("custom", SwapReductionStrategy::Custom)
+            .value("increasing", SwapReductionStrategy::Increasing)
             .export_values();
 
 #ifdef VERSION_INFO

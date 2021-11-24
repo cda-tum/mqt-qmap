@@ -92,7 +92,7 @@ TEST_P(ExactTest, QubitTriangle) {
 TEST_P(ExactTest, CommanderEncodingfixed3) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Fixed3;
+    settings.grouping = CMDRVariableGroupings::Fixed3;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander_fixed3.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -101,7 +101,7 @@ TEST_P(ExactTest, CommanderEncodingfixed3) {
 TEST_P(ExactTest, CommanderEncodingfixed2) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Fixed2;
+    settings.grouping = CMDRVariableGroupings::Fixed2;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander_fixed2.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -110,7 +110,7 @@ TEST_P(ExactTest, CommanderEncodingfixed2) {
 TEST_P(ExactTest, CommanderEncodinghalves) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Halves;
+    settings.grouping = CMDRVariableGroupings::Halves;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander_halves.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -119,7 +119,7 @@ TEST_P(ExactTest, CommanderEncodinghalves) {
 TEST_P(ExactTest, CommanderEncodinglogarithm) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Logarithm;
+    settings.grouping = CMDRVariableGroupings::Logarithm;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_commander_log.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -129,7 +129,7 @@ TEST_P(ExactTest, CommanderEncodinglogarithm) {
 TEST_P(ExactTest, CommanderEncodingUnidirectionalfixed3) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Fixed3;
+    settings.grouping = CMDRVariableGroupings::Fixed3;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_commander_fixed3.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -138,7 +138,7 @@ TEST_P(ExactTest, CommanderEncodingUnidirectionalfixed3) {
 TEST_P(ExactTest, CommanderEncodingUnidirectionalfixed2) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Fixed2;
+    settings.grouping = CMDRVariableGroupings::Fixed2;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_commander_fixed2.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -147,7 +147,7 @@ TEST_P(ExactTest, CommanderEncodingUnidirectionalfixed2) {
 TEST_P(ExactTest, CommanderEncodingUnidirectionalhalves) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Halves;
+    settings.grouping = CMDRVariableGroupings::Halves;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_commander_halves.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -156,7 +156,7 @@ TEST_P(ExactTest, CommanderEncodingUnidirectionalhalves) {
 TEST_P(ExactTest, CommanderEncodingUnidirectionallogarithm) {
     MappingSettings settings{};
     settings.encoding = Encodings::Commander;
-    settings.grouping = Groupings::Logarithm;
+    settings.grouping = CMDRVariableGroupings::Logarithm;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_commander_log.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -166,7 +166,7 @@ TEST_P(ExactTest, CommanderEncodingUnidirectionallogarithm) {
 TEST_P(ExactTest, BimanderEncodingfixed3) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Fixed3;
+    settings.grouping = CMDRVariableGroupings::Fixed3;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -175,7 +175,7 @@ TEST_P(ExactTest, BimanderEncodingfixed3) {
 TEST_P(ExactTest, BimanderEncodingfixed2) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Fixed2;
+    settings.grouping = CMDRVariableGroupings::Fixed2;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -184,7 +184,7 @@ TEST_P(ExactTest, BimanderEncodingfixed2) {
 TEST_P(ExactTest, BimanderEncodinghalves) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Halves;
+    settings.grouping = CMDRVariableGroupings::Halves;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -193,7 +193,7 @@ TEST_P(ExactTest, BimanderEncodinghalves) {
 TEST_P(ExactTest, BimanderEncodinglogaritm) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Logarithm;
+    settings.grouping = CMDRVariableGroupings::Logarithm;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -203,7 +203,7 @@ TEST_P(ExactTest, BimanderEncodinglogaritm) {
 TEST_P(ExactTest, BimanderEncodingUnidirectionalfixed3) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Fixed3;
+    settings.grouping = CMDRVariableGroupings::Fixed3;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bimander.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -212,7 +212,7 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionalfixed3) {
 TEST_P(ExactTest, BimanderEncodingUnidirectionalfixed2) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Fixed2;
+    settings.grouping = CMDRVariableGroupings::Fixed2;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bimander.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -221,7 +221,7 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionalfixed2) {
 TEST_P(ExactTest, BimanderEncodingUnidirectionalhalves) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Halves;
+    settings.grouping = CMDRVariableGroupings::Halves;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bimander.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -230,7 +230,7 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionalhalves) {
 TEST_P(ExactTest, BimanderEncodingUnidirectionallogarithm) {
     MappingSettings settings{};
     settings.encoding = Encodings::Bimander;
-    settings.grouping = Groupings::Logarithm;
+    settings.grouping = CMDRVariableGroupings::Logarithm;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bimander.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -239,8 +239,9 @@ TEST_P(ExactTest, BimanderEncodingUnidirectionallogarithm) {
 
 TEST_P(ExactTest, LimitsBidirectional) {
     MappingSettings settings{};
-    settings.enableLimits = true;
-    settings.strategy     = Strategy::ArchitectureSwaps;
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = false;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -249,8 +250,9 @@ TEST_P(ExactTest, LimitsBidirectional) {
 }
 TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
     MappingSettings settings{};
-    settings.enableLimits = true;
-    settings.strategy     = Strategy::SubsetSwaps;
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = true;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
@@ -260,7 +262,7 @@ TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
 TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
     MappingSettings settings{};
     settings.enableLimits = true;
-    settings.strategy     = Strategy::Custom;
+    settings.strategy     = SwapReductionStrategy::Custom;
     settings.limit        = 10;
     IBMQ_Yorktown_mapper.map(settings);
     IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
@@ -270,8 +272,9 @@ TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
 
 TEST_P(ExactTest, LimitsUnidirectional) {
     MappingSettings settings{};
-    settings.enableLimits = true;
-    settings.strategy     = Strategy::ArchitectureSwaps;
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = false;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -279,8 +282,9 @@ TEST_P(ExactTest, LimitsUnidirectional) {
 }
 TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
     MappingSettings settings{};
-    settings.enableLimits = true;
-    settings.strategy     = Strategy::SubsetSwaps;
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = true;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
@@ -289,7 +293,7 @@ TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
 TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
     MappingSettings settings{};
     settings.enableLimits = true;
-    settings.strategy     = Strategy::Custom;
+    settings.strategy     = SwapReductionStrategy::Custom;
     settings.limit        = 10;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
@@ -299,7 +303,7 @@ TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
 TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
     MappingSettings settings{};
     settings.enableLimits = true;
-    settings.strategy     = Strategy::Increasing;
+    settings.strategy     = SwapReductionStrategy::Increasing;
     settings.limit        = 3;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inccustom.qasm");
@@ -309,7 +313,7 @@ TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
 TEST_P(ExactTest, IncreasingUnidirectional) {
     MappingSettings settings{};
     settings.enableLimits = true;
-    settings.strategy     = Strategy::Increasing;
+    settings.strategy     = SwapReductionStrategy::Increasing;
     settings.limit        = 0;
     IBM_QX4_mapper.map(settings);
     IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inc.qasm");
