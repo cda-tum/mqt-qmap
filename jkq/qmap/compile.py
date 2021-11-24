@@ -5,7 +5,7 @@
 import pickle
 from pathlib import Path
 from typing import Any, Dict, Union
-from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encoding, CMDRVariableGroupings, SwapReductionStrategy
+from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encoding, CMDRVariableGrouping, SwapReductionStrategy
 
 
 def compile(circ, arch: Union[str, Arch],
@@ -17,7 +17,7 @@ def compile(circ, arch: Union[str, Arch],
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
             encoding: Encoding = Encoding.naive,
-            cmdr_variable_grouping: CMDRVariableGroupings = CMDRVariableGroupings.halves,
+            cmdr_variable_grouping: CMDRVariableGrouping = CMDRVariableGrouping.halves,
             use_bdd: bool = False,
             swap_reduction_strategy: SwapReductionStrategy = SwapReductionStrategy.coupling_limit,
             limit: int = 0,
