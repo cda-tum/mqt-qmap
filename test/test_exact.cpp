@@ -243,7 +243,7 @@ TEST_P(ExactTest, LimitsBidirectional) {
     settings.useQubitSubsets = false;
     settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_swapreduct.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -253,7 +253,7 @@ TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
     settings.useQubitSubsets = true;
     settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_swapreduct.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -263,7 +263,7 @@ TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
     settings.strategy     = SwapReductionStrategy::Custom;
     settings.limit        = 10;
     IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_bdd.qasm");
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_swapreduct.qasm");
     IBMQ_Yorktown_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -274,7 +274,7 @@ TEST_P(ExactTest, LimitsUnidirectional) {
     settings.useQubitSubsets = false;
     settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBM_QX4_mapper.map(settings);
-    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
+    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_swapreduct.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -284,7 +284,7 @@ TEST_P(ExactTest, LimitsUnidirectionalSubsetSwaps) {
     settings.useQubitSubsets = true;
     settings.strategy        = SwapReductionStrategy::CouplingLimit;
     IBM_QX4_mapper.map(settings);
-    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
+    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_swapreduct.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -294,7 +294,7 @@ TEST_P(ExactTest, LimitsUnidirectionalCustomLimit) {
     settings.strategy     = SwapReductionStrategy::Custom;
     settings.limit        = 10;
     IBM_QX4_mapper.map(settings);
-    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd.qasm");
+    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_swapreduct.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -304,7 +304,7 @@ TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
     settings.strategy     = SwapReductionStrategy::Increasing;
     settings.limit        = 3;
     IBM_QX4_mapper.map(settings);
-    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inccustom.qasm");
+    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_swapreduct_inccustom.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
@@ -314,10 +314,34 @@ TEST_P(ExactTest, IncreasingUnidirectional) {
     settings.strategy     = SwapReductionStrategy::Increasing;
     settings.limit        = 0;
     IBM_QX4_mapper.map(settings);
-    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_bdd_inc.qasm");
+    IBM_QX4_mapper.dumpResult(GetParam() + "_exact_QX4_swapreduct_inc.qasm");
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
+
+TEST_P(ExactTest, LimitsBidirectionalBDD) {
+    MappingSettings settings{};
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = false;
+    settings.useBDD          = true;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_swapreduct_bdd.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
+}
+TEST_P(ExactTest, LimitsBidirectionalSubsetSwapsBDD) {
+    MappingSettings settings{};
+    settings.enableLimits    = true;
+    settings.useQubitSubsets = true;
+    settings.useBDD          = true;
+    settings.strategy        = SwapReductionStrategy::CouplingLimit;
+    IBMQ_Yorktown_mapper.map(settings);
+    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_exact_yorktown_swapreduct_bdd.qasm");
+    IBMQ_Yorktown_mapper.printResult(std::cout, true);
+    SUCCEED() << "Mapping successful";
+}
+
 TEST_P(ExactTest, NoSubsets) {
     MappingSettings settings{};
     settings.useQubitSubsets = false;
@@ -327,6 +351,7 @@ TEST_P(ExactTest, NoSubsets) {
     IBM_QX4_mapper.printResult(std::cout, true);
     SUCCEED() << "Mapping successful";
 }
+
 TEST_P(ExactTest, toStringMethods) {
     EXPECT_EQ(toString(InitialLayoutStrategy::Identity), "identity");
     EXPECT_EQ(toString(InitialLayoutStrategy::Static), "static");

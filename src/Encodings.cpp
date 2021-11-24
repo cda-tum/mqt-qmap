@@ -202,55 +202,6 @@ expr varAlloc(expr_vector& auxvars, z3::context& c) {
     return auxvars[static_cast<int>(auxvars.size() - 1)];
 }
 
-std::string printBimanderVars(const std::vector<std::vector<unsigned long>>& vars) {
-    std::stringstream out;
-    for (const auto& vec: vars) {
-        out << "[" << std::endl;
-        out << "\t";
-        for (const auto& var: vec) {
-            out << var << " ";
-        }
-        out << std::endl;
-        out << "]" << std::endl;
-    }
-
-    return out.str();
-}
-
-std::string printNestedVars(const std::vector<NestedVar>& vars, int level) {
-    std::stringstream out;
-
-    int num = 1;
-    for (const auto& var: vars) {
-        if (var.varID != std::numeric_limits<unsigned long>::max()) {
-            out << var.varID << "-";
-        } else {
-            for (int i = 0; i < level && num > 1; i++) {
-                out << "\t";
-            }
-            out << " [ " << level << ":" << num++ << std::endl;
-            for (int i = 0; i < level + 1; i++) {
-                out << "\t";
-            }
-            out << printNestedVars(var.list, level + 1);
-            for (int i = 0; i < level; i++) {
-                out << "\t";
-            }
-            out << " ] " << std::endl;
-        }
-    }
-    out << std::endl;
-    return out.str();
-}
-
-std::string printWeightedVars(const std::vector<WeightedVar>& wVars, const expr_vector& vars) {
-    std::stringstream out;
-    for (const auto& var: wVars) {
-        out << vars[static_cast<int>(var.varID)].to_string() << " - " << var.weight << std::endl;
-    }
-    return out.str();
-}
-
 std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits) {
     std::vector<std::vector<unsigned short>> connections;
     std::vector<int>                         d;
