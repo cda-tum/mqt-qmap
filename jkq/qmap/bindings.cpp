@@ -73,14 +73,14 @@ nl::json map(const py::object& circ, const py::object& arch, const nl::json& jso
     }
 
     ms.grouping = CMDRVariableGroupings::Halves;
-    if (jsonConfig.contains("grouping")) {
-        ms.grouping = jsonConfig["grouping"].get<CMDRVariableGroupings>();
+    if (jsonConfig.contains("cmdr_variable_grouping")) {
+        ms.grouping = jsonConfig["cmdr_variable_grouping"].get<CMDRVariableGroupings>();
     }
 
-    if (jsonConfig.contains("strategy")) {
+    if (jsonConfig.contains("swap_reduction_strategy")) {
         ms.enableLimits = true;
         ms.strategy     = SwapReductionStrategy::CouplingLimit;
-        ms.strategy     = jsonConfig["strategy"].get<SwapReductionStrategy>();
+        ms.strategy     = jsonConfig["swap_reduction_strategy"].get<SwapReductionStrategy>();
         if (jsonConfig.contains("limit")) {
             ms.limit = jsonConfig["limit"].get<int>();
         }
@@ -193,14 +193,14 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("bimander", Encodings::Bimander)
             .export_values();
 
-    py::enum_<CMDRVariableGroupings>(m, "Grouping")
+    py::enum_<CMDRVariableGroupings>(m, "CMDRVariableGrouping")
             .value("fixed2", CMDRVariableGroupings::Fixed2)
             .value("fixed3", CMDRVariableGroupings::Fixed3)
             .value("halves", CMDRVariableGroupings::Halves)
             .value("logarithm", CMDRVariableGroupings::Logarithm)
             .export_values();
 
-    py::enum_<SwapReductionStrategy>(m, "Strategy")
+    py::enum_<SwapReductionStrategy>(m, "SwapReductionStrategy")
             .value("none", SwapReductionStrategy::None)
             .value("coupling_limit", SwapReductionStrategy::CouplingLimit)
             .value("custom", SwapReductionStrategy::Custom)

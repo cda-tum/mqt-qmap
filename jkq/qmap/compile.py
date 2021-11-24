@@ -5,7 +5,7 @@
 import pickle
 from pathlib import Path
 from typing import Any, Dict, Union
-from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encoding, Grouping, Strategy
+from .pyqmap import map, Method, InitialLayoutStrategy, LayeringStrategy, Arch, Encoding, CMDRVariableGroupings, SwapReductionStrategy
 
 
 def compile(circ, arch: Union[str, Arch],
@@ -17,9 +17,9 @@ def compile(circ, arch: Union[str, Arch],
             teleportation_fake: bool = False,
             teleportation_seed: int = 0,
             encoding: Encoding = Encoding.naive,
-            grouping: Grouping = Grouping.halves,
+            cmdr_variable_grouping: CMDRVariableGroupings = CMDRVariableGroupings.halves,
             use_bdd: bool = False,
-            strategy: Strategy = Strategy.longest_path,
+            swap_reduction_strategy: SwapReductionStrategy = SwapReductionStrategy.coupling_limit,
             limit: int = 0,
             use_subsets: bool = True,
             save_mapped_circuit: bool = False,
@@ -41,15 +41,15 @@ def compile(circ, arch: Union[str, Arch],
     :type layering: LayeringStrategy
     :param encoding - Choose encoding for AMO and exactly one (*naive* | commander | bimander)
     :type encoding: Encoding
-    :param grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
-    :type grouping: Grouping
-    :param strategy - Choose method of limiting the search space (none | custom | *coupling_limit* | increasing)
-    :type strategy: Strategy
-    :param limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps
+    :param cmdr_variable_grouping - Choose method of grouping (*halves* | fixed2 | fixed3 | logarithm)
+    :type cmdr_variable_grouping: CMDRVariableGroupings
+    :param swap_reduction_strategy - Choose method of limiting the search space (none | custom | *coupling_limit* | increasing)
+    :type swap_reduction_strategy: SwapReductionStrategy
+    :param limit - Set a custom limit for max swaps per layer, for increasing it sets the max swaps per layer 
     :type limit: int
-    :param useBDD - Limit swaps per layer using BDDs
+    :param useBDD - Limit swaps per layer using BDDs, faster in some cases, but use with caution (default: False)
     :type useBDD: bool
-    :param use_subsets - Use qubit subsets, or consider all available physical qubits at once
+    :param use_subsets - Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
@@ -75,8 +75,8 @@ def compile(circ, arch: Union[str, Arch],
         "initial_layout": initial_layout.name,
         "layering": layering.name,
         "encoding": encoding.name,
-        "grouping": grouping.name,
-        "strategy": strategy.name,
+        "cmdr_variable_grouping": cmdr_variable_grouping.name,
+        "swap_reduction_strategy": swap_reduction_strategy.name,
         "limit": limit,
         "useBDD": use_bdd,
         "use_subsets": use_subsets,

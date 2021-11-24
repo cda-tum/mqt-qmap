@@ -23,10 +23,10 @@ int main(int argc, char** argv) {
             ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
 			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
-			("grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
+			("cmdrgrouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
 			//("limitswaps", "Enable bdd for limiting swaps per layer")
 			("useBDD", "Choose to use BDDs instead of directly limiting the permutation variables")
-			("strategy", po::value<std::string>(), R"(Choose method of limiting the search space ("none" | "custom" | "coupling_limit" | "increasing"))")
+			("swapstrategy", po::value<std::string>(), R"(Choose method of limiting the search space ("none" | "custom" | "coupling_limit" | "increasing"))")
 			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
 			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
 			("timeout", po::value<std::string>(), "timeout for the execution")
@@ -108,8 +108,8 @@ int main(int argc, char** argv) {
             ms.encoding = Encodings::Naive;
         }
     }
-    if (vm.count("grouping")) {
-        const std::string grouping = vm["grouping"].as<std::string>();
+    if (vm.count("cmdrgrouping")) {
+        const std::string grouping = vm["cmdrgrouping"].as<std::string>();
         if (grouping == "fixed3") {
             ms.grouping = CMDRVariableGroupings::Fixed3;
         } else if (grouping == "fixed2") {
@@ -122,12 +122,12 @@ int main(int argc, char** argv) {
             ms.grouping = CMDRVariableGroupings::Halves;
         }
     }
-    if (vm.count("strategy")) {
+    if (vm.count("swapstrategy")) {
         ms.enableLimits = true;
         if (vm.count("useBDD")) {
             ms.useBDD = true;
         }
-        const std::string bddStrat = vm["strategy"].as<std::string>();
+        const std::string bddStrat = vm["swapstrategy"].as<std::string>();
         if (bddStrat == "custom") {
             ms.strategy = SwapReductionStrategy::Custom;
             if (vm.count("limit")) {

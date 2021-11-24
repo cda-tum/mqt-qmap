@@ -115,9 +115,9 @@ def compile(circ, arch: Union[str, Arch],
             teleportationSeed: int = 0,
             use_subsets: bool = True,
             encoding: Encoding = Encoding.none,
-            grouping: Grouping = Grouping.halves,
+            cmdr_variable_grouping: CMDRVariableGroupings = CMDRVariableGroupings.halves,
             useBdd: bool = False,
-            strategy: bddStrategy = BDDStrategy.none,
+            swap_reduction_strategy: SwapReductionStrategy = SwapReductionStrategy.coupling_limit,
             limit: int = 0,
             save_mapped_circuit: bool = False,
             csv: bool = False,
@@ -175,17 +175,17 @@ Both, the exact and the heuristic mapping tool also offer the `--layering` optio
 - `odd`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool and may not work on different architectures)
 - `triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact mapping tool)
 
-The exact mapping tool offers the `--encoding` and related the `--grouping` option, where the first option allows to chose a different encoding for at most one and exactly one constraints:
+The exact mapping tool offers the `--encoding` and related the `--cmdrgrouping` option, where the first option allows to chose a different encoding for at most one and exactly one constraints:
 - `naive` (*default*): use naive encoding for constraints
 - `commander`: use commander encoding for at most one and exactly one constraints
 - `bimander`: use bimander encoding for at most one and commander for exactly one constraints
-As commander encoding can use different strategies to group the variables, there are different `--grouping` options:
+As commander encoding can use different strategies to group the variables, there are different `--cmdrgrouping` options:
 - `halves` (*default*): each group contains half of the total variables
 - `logarithm`: each group contains at most log2 of the total variables
 - `fixed2`: each group contains exactly two variables
 - `fixed3`: each group contains exactly three variables
 
-The exact mapping tool also offers the `--strategy` option to enable limiting the number of swaps done per layer, which offers the following options:
+The exact mapping tool also offers the `--swapstrategy` option to enable limiting the number of swaps done per layer, which offers the following options:
 - `none`: consider whole search space
 - `coupling_limit` (*default*): calculate the max swaps per layer based on the longest path of current choice of qubits, or if `use_subsets` is disabled considers the whole architecture
 - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
