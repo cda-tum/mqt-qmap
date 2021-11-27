@@ -6,15 +6,13 @@
 #include "Mapper.hpp"
 
 void Mapper::initResults() {
-    results.input_name            = qc.getName();
-    results.input_qubits          = qc.getNqubits();
-    results.architecture          = architecture.getArchitectureName();
-    results.calibration           = architecture.getCalibrationName();
-    results.output_name           = qc.getName() + "_mapped";
-    results.output_qubits         = architecture.getNqubits();
-    results.layeringStrategy      = settings.layeringStrategy;
-    results.initialLayoutStrategy = settings.initialLayoutStrategy;
-    qcMapped.addQubitRegister(architecture.getNqubits() + settings.teleportationQubits);
+    results.input.name    = qc.getName();
+    results.input.qubits  = qc.getNqubits();
+    results.architecture  = architecture.getArchitectureName();
+    results.output.name   = qc.getName() + "_mapped";
+    results.output.qubits = architecture.getNqubits();
+    results.output.gates  = std::numeric_limits<unsigned long>::max();
+    qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
 Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch):
@@ -25,6 +23,7 @@ Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch):
 }
 
 void Mapper::createLayers() {
+    const auto&                          config = results.config;
     std::array<short, MAX_DEVICE_QUBITS> lastLayer{};
     lastLayer.fill(DEFAULT_POSITION);
 
@@ -47,13 +46,13 @@ void Mapper::createLayers() {
         unsigned short target = gate->getTargets().at(0);
         size_t         layer  = 0;
 
-        switch (settings.layeringStrategy) {
-            case LayeringStrategy::IndividualGates:
-            case LayeringStrategy::None:
+        switch (config.layering) {
+            case Layering::IndividualGates:
+            case Layering::None:
                 layers.emplace_back();
                 layers.back().emplace_back(control, target, gate.get());
                 break;
-            case LayeringStrategy::DisjointQubits:
+            case Layering::DisjointQubits:
                 if (singleQubit) {
                     layer                = lastLayer.at(target) + 1;
                     lastLayer.at(target) = layer;
@@ -67,15 +66,15 @@ void Mapper::createLayers() {
                 }
                 layers.at(layer).emplace_back(control, target, gate.get());
                 break;
-            case LayeringStrategy::OddGates:
-                if (results.input_gates % 2 == 0) {
+            case Layering::OddGates:
+                if (results.input.gates % 2 == 0) {
                     layers.emplace_back();
                     layers.back().emplace_back(control, target, gate.get());
                 } else {
                     layers.back().emplace_back(control, target, gate.get());
                 }
                 break;
-            case LayeringStrategy::QubitTriangle:
+            case Layering::QubitTriangle:
                 if (layers.empty()) {
                     layers.emplace_back();
                 }
@@ -101,13 +100,13 @@ void Mapper::createLayers() {
         }
 
         if (singleQubit) {
-            results.input_singlequbitgates++;
+            results.input.singleQubitGates++;
         } else {
-            results.input_cnots++;
+            results.input.cnots++;
         }
-        results.input_gates++;
+        results.input.gates++;
     }
-    results.input_layers = layers.size();
+    results.input.layers = layers.size();
 }
 
 long Mapper::getNextLayer(size_t idx) {

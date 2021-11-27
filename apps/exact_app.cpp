@@ -20,15 +20,14 @@ int main(int argc, char** argv) {
             ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint" | "odd" | "triangle"))")
-            ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
 			("encoding", po::value<std::string>(), R"(Choose encoding for AMO and exactly one ("none" | "commander" | "bimander"))")
-			("cmdrgrouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
+			("commander_grouping", po::value<std::string>(), R"(Choose method of grouping ("fixed2" | "fixed3" | "logarithm" | "halves"))")
 			//("limitswaps", "Enable bdd for limiting swaps per layer")
-			("useBDD", "Choose to use BDDs instead of directly limiting the permutation variables")
-			("swapstrategy", po::value<std::string>(), R"(Choose method of limiting the search space ("none" | "custom" | "coupling_limit" | "increasing"))")
-			("limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
-			("useSubsets", "Use qubit subsets, or consider all available physical qubits at once")
+			("use_bdd", "Choose to use BDDs instead of directly limiting the permutation variables")
+			("swap_reduction", po::value<std::string>(), R"(Choose method of limiting the search space ("none" | "custom" | "coupling_limit" | "increasing"))")
+			("swap_limit", po::value<std::string>(), "Set a custom limit for max swaps per layer, for increasing it sets the max swaps")
+			("use_subsets", "Use qubit subsets, or consider all available physical qubits at once")
 			("timeout", po::value<std::string>(), "timeout for the execution")
             ;
     // clang-format on
@@ -58,7 +57,12 @@ int main(int argc, char** argv) {
     const std::string cm = vm["arch"].as<std::string>();
     Architecture      arch{};
     try {
-        arch.loadCouplingMap(cm);
+        try {
+            auto available = architectureFromString(cm);
+            arch.loadCouplingMap(available);
+        } catch (std::exception const& e) {
+            arch.loadCouplingMap(cm);
+        }
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not import coupling map: " << e.what();
@@ -80,83 +84,55 @@ int main(int argc, char** argv) {
 
     ExactMapper mapper(qc, arch);
 
-    MappingSettings ms{};
-    ms.initialLayoutStrategy = InitialLayoutStrategy::None;
+    Configuration ms{};
+    ms.initialLayout = InitialLayout::None;
     if (vm.count("layering")) {
         std::string layering = vm["layering"].as<std::string>();
-        if (layering == "individual") {
-            ms.layeringStrategy = LayeringStrategy::IndividualGates;
-        } else if (layering == "disjoint") {
-            ms.layeringStrategy = LayeringStrategy::DisjointQubits;
-        } else if (layering == "odd") {
-            ms.layeringStrategy = LayeringStrategy::OddGates;
-        } else if (layering == "triangle") {
-            ms.layeringStrategy = LayeringStrategy::QubitTriangle;
-        } else {
-            ms.layeringStrategy = LayeringStrategy::None;
-        }
+        ms.layering          = layeringFromString(layering);
     }
     if (vm.count("encoding")) {
         const std::string encoding = vm["encoding"].as<std::string>();
-        if (encoding == "none") {
-            ms.encoding = Encodings::Naive;
-        } else if (encoding == "commander") {
-            ms.encoding = Encodings::Commander;
-        } else if (encoding == "bimander") {
-            ms.encoding = Encodings::Bimander;
-        } else {
-            ms.encoding = Encodings::Naive;
-        }
+        ms.encoding                = encodingFromString(encoding);
     }
-    if (vm.count("cmdrgrouping")) {
-        const std::string grouping = vm["cmdrgrouping"].as<std::string>();
-        if (grouping == "fixed3") {
-            ms.grouping = CMDRVariableGroupings::Fixed3;
-        } else if (grouping == "fixed2") {
-            ms.grouping = CMDRVariableGroupings::Fixed2;
-        } else if (grouping == "logarithm") {
-            ms.grouping = CMDRVariableGroupings::Logarithm;
-        } else if (grouping == "halves") {
-            ms.grouping = CMDRVariableGroupings::Halves;
-        } else {
-            ms.grouping = CMDRVariableGroupings::Halves;
-        }
+    if (vm.count("commander_grouping")) {
+        const std::string grouping = vm["commander_grouping"].as<std::string>();
+        ms.commanderGrouping       = groupingFromString(grouping);
     }
-    if (vm.count("swapstrategy")) {
-        ms.enableLimits = true;
-        if (vm.count("useBDD")) {
+    if (vm.count("swap_reduction")) {
+        ms.enableSwapLimits = true;
+        if (vm.count("use_bdd")) {
             ms.useBDD = true;
         }
-        const std::string bddStrat = vm["swapstrategy"].as<std::string>();
-        if (bddStrat == "custom") {
-            ms.strategy = SwapReductionStrategy::Custom;
-            if (vm.count("limit")) {
-                const std::string bdd_limit = vm["limit"].as<std::string>();
-                ms.limit                    = std::stoi(bdd_limit.c_str());
+        const std::string swapReduction = vm["swap_reduction"].as<std::string>();
+        if (swapReduction == "custom") {
+            ms.swapReduction = SwapReduction::Custom;
+            if (vm.count("swap_limit")) {
+                const std::string swap_limit = vm["swap_limit"].as<std::string>();
+                ms.swapLimit                 = std::stoi(swap_limit);
             }
-        } else if (bddStrat == "coupling_limit") {
-            ms.strategy = SwapReductionStrategy::CouplingLimit;
-        } else if (bddStrat == "increasing") {
-            ms.strategy = SwapReductionStrategy::Increasing;
+        } else if (swapReduction == "coupling_limit") {
+            ms.swapReduction = SwapReduction::CouplingLimit;
+        } else if (swapReduction == "increasing") {
+            ms.swapReduction = SwapReduction::Increasing;
             if (vm.count("limit")) {
-                const std::string bdd_limit = vm["limit"].as<std::string>();
-                ms.limit                    = std::stoi(bdd_limit.c_str());
+                const std::string swap_limit = vm["limit"].as<std::string>();
+                ms.swapLimit                 = std::stoi(swap_limit);
             }
         } else {
-            ms.strategy     = SwapReductionStrategy::None;
-            ms.enableLimits = false;
-            ms.useBDD       = false;
+            ms.swapReduction    = SwapReduction::None;
+            ms.enableSwapLimits = false;
+            ms.useBDD           = false;
         }
     }
     if (vm.count("timeout")) {
         const std::string timeout = vm["timeout"].as<std::string>();
         ms.setTimeout(std::stoi(timeout) * 1000);
     }
-    ms.useQubitSubsets = vm.count("useSubsets") > 0;
-    ms.verbose         = vm.count("verbose") > 0;
+    ms.useSubsets = vm.count("use_subsets") > 0;
+    ms.verbose    = vm.count("verbose") > 0;
     mapper.map(ms);
 
     mapper.dumpResult(vm["out"].as<std::string>());
 
-    mapper.printResult(std::cout, vm.count("ps"));
+    mapper.printResult(std::cout);
 }

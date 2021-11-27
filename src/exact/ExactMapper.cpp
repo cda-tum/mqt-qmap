@@ -5,15 +5,17 @@
 
 #include "exact/ExactMapper.hpp"
 
-void ExactMapper::map(const MappingSettings& settings) {
-    this->settings                                       = settings;
+void ExactMapper::map(const Configuration& settings) {
+    results.config     = settings;
+    const auto& config = results.config;
+
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     qc.stripIdleQubits(true, true);
     initResults();
 
     // 1) create layers according to different criteria
     createLayers();
-    if (settings.verbose) {
+    if (config.verbose) {
         printLayering(std::cout);
     }
     unsigned long k = 0;
@@ -48,43 +50,43 @@ void ExactMapper::map(const MappingSettings& settings) {
     for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
         qubits.push_back(i);
     }
-    std::vector<std::set<unsigned short>> allPossibleQubitChoices{};
-    if (this->settings.useQubitSubsets) {
+    std::vector<QubitChoice> allPossibleQubitChoices{};
+    if (config.useSubsets) {
         do {
-            std::set<unsigned short> qubitChoice{};
+            QubitChoice qubitChoice{};
             for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
                 qubitChoice.insert(qubits.at(i));
             }
             allPossibleQubitChoices.push_back(qubitChoice);
         } while (next_combination(qubits.begin(), qubits.begin() + qc.getNqubits(), qubits.end()));
     } else {
-        std::set<unsigned short> allQubits(qubits.begin(), qubits.end());
+        QubitChoice allQubits(qubits.begin(), qubits.end());
         allPossibleQubitChoices.push_back(allQubits);
     }
     // 3) determine exact mapping for this qubit choice
-    std::vector<std::vector<std::pair<unsigned short, unsigned short>>> swaps(reducedLayerIndices.size(), std::vector<std::pair<unsigned short, unsigned short>>{});
+    std::vector<Swaps> swaps(reducedLayerIndices.size(), Swaps{});
     mappingSwaps.reserve(reducedLayerIndices.size());
     int runs = 1;
     for (auto& choice: allPossibleQubitChoices) {
         std::size_t limit      = 0;
-        std::size_t upperLimit = this->settings.limit;
-        if (this->settings.strategy == SwapReductionStrategy::CouplingLimit) {
-            if (this->settings.useQubitSubsets)
-                limit = this->architecture.getCouplingLimit(choice) - 1;
+        std::size_t upperLimit = config.swapLimit;
+        if (config.swapReduction == SwapReduction::CouplingLimit) {
+            if (config.useSubsets)
+                limit = architecture.getCouplingLimit(choice) - 1;
             else
-                limit = this->architecture.getCouplingLimit() - 1;
-        } else if (this->settings.strategy == SwapReductionStrategy::Increasing) {
+                limit = architecture.getCouplingLimit() - 1;
+        } else if (config.swapReduction == SwapReduction::Increasing) {
             limit = 0;
         } else { //CustomLimit
             limit = upperLimit;
         }
-        unsigned int maxLimit = this->architecture.getCouplingLimit();
+        unsigned int maxLimit = architecture.getCouplingLimit();
         unsigned int timeout  = 0;
         do {
             timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
             if (timeout <= 10000)
                 timeout = 10000;
-            if (this->settings.strategy != SwapReductionStrategy::Increasing)
+            if (config.swapReduction != SwapReduction::Increasing)
                 timeout = settings.timeout;
             if (settings.verbose)
                 std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
@@ -95,7 +97,7 @@ void ExactMapper::map(const MappingSettings& settings) {
 
             MappingResults choiceResults{};
             choiceResults.copyInput(results);
-            choiceResults.limit = limit;
+            choiceResults.config.swapLimit = limit;
 
             // 4) reduce coupling map
             CouplingMap reducedCouplingMap = architecture.getCouplingMap();
@@ -119,13 +121,13 @@ void ExactMapper::map(const MappingSettings& settings) {
             // 6) call actual mapping routine
             coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit), timeout);
 
-            if (settings.verbose) {
-                std::cout << "SWAPs: " << choiceResults.output_swaps << std::endl;
-                std::cout << "Direction reverses: " << choiceResults.output_direction_reverse << std::endl;
+            if (config.verbose) {
+                std::cout << "SWAPs: " << choiceResults.output.swaps << std::endl;
+                std::cout << "Direction reverses: " << choiceResults.output.directionReverse << std::endl;
             }
 
             // 7) Check if new optimum found
-            if (!choiceResults.timeout && choiceResults.output_gates < results.output_gates) {
+            if (!choiceResults.timeout && choiceResults.output.gates < results.output.gates) {
                 results      = choiceResults;
                 mappingSwaps = swaps;
             }
@@ -135,7 +137,7 @@ void ExactMapper::map(const MappingSettings& settings) {
                 limit += runs;
                 runs++;
             }
-        } while (this->settings.strategy == SwapReductionStrategy::Increasing && (limit <= upperLimit || this->settings.limit == 0) && limit < this->architecture.getCouplingLimit());
+        } while (config.swapReduction == SwapReduction::Increasing && (limit <= upperLimit || config.swapLimit == 0) && limit < architecture.getCouplingLimit());
     }
 
     // 8) Write best result and statistics
@@ -252,6 +254,8 @@ void ExactMapper::map(const MappingSettings& settings) {
 }
 
 void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout) {
+    const auto& config = results.config;
+
     // Z3 context
     context c;
 
@@ -270,7 +274,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     /// 	Check necessary permutations	//
     //////////////////////////////////////////
     skipped_pi_per_layer.resize(reducedLayerIndices.size());
-    if (this->settings.enableLimits && !this->settings.useBDD) {
+    if (config.enableSwapLimits && !config.useBDD) {
         do {
             auto picost = architecture.minimumNumberOfSwaps(pi);
             if (picost > limit) {
@@ -320,7 +324,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         y.emplace_back();
         piCount = 0;
         do {
-            if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits) {
+            if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                 y_name.str("");
                 y_name << "y_" << k << '_' << piCount;
                 y.back().push_back(c.bool_const(y_name.str().c_str()));
@@ -341,7 +345,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
     /// 	Consistency Constraints			//
     //////////////////////////////////////////
-    if (this->settings.encoding == Encodings::Naive) {
+    if (config.encoding == Encoding::Naive) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                 expr rowConsistency = c.int_val(0);
@@ -361,20 +365,20 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 opt.add(colConsistency.simplify() == 1);
             }
         }
-    } else if (this->settings.encoding == Encodings::Commander) {
+    } else if (config.encoding == Encoding::Commander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                 std::vector<expr> varIDs;
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     varIDs.push_back(x[k][i][j]);
                 }
-                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
+                if (config.commanderGrouping == CommanderGrouping::Fixed2) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
+                } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
+                } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
+                } else if (config.commanderGrouping == CommanderGrouping::Halves) {
                     opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
@@ -385,18 +389,18 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
 
-                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
+                if (config.commanderGrouping == CommanderGrouping::Fixed2) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
+                } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
+                } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
+                } else if (config.commanderGrouping == CommanderGrouping::Halves) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
         }
-    } else if (this->settings.encoding == Encodings::Bimander) {
+    } else if (config.encoding == Encoding::Bimander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                 std::vector<expr>          vars;
@@ -414,13 +418,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
 
-                if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
+                if (config.commanderGrouping == CommanderGrouping::Fixed2) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
+                } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
+                } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
-                } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
+                } else if (config.commanderGrouping == CommanderGrouping::Halves) {
                     opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
                 }
             }
@@ -466,7 +470,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         auto& i = x[k - 1];
         auto& j = x[k];
         do {
-            if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits) {
+            if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                 if (skipped_pi_per_layer[k].count(piCount) == 0) {
                     expr equal = c.bool_val(true);
                     for (unsigned short Q: qubitChoice) {
@@ -484,12 +488,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     }
 
     // Allow only 1 y_k_pi to be true
-    if (this->settings.encoding == Encodings::Naive) {
+    if (config.encoding == Encoding::Naive) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             expr onlyOne = c.int_val(0);
             piCount      = 0;
             do {
-                if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits) {
+                if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                     if (skipped_pi_per_layer[k].count(piCount) == 0)
                         onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
                     ++piCount;
@@ -502,19 +506,19 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             std::vector<expr> varIDs;
             piCount = 0;
             do {
-                if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits) {
+                if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                     if (skipped_pi_per_layer[k].count(piCount) == 0)
                         varIDs.push_back(y[k - 1][piCount]);
                     ++piCount;
                 }
             } while (std::next_permutation(pi.begin(), pi.end()));
-            if (this->settings.grouping == CMDRVariableGroupings::Fixed2) {
+            if (config.commanderGrouping == CommanderGrouping::Fixed2) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
-            } else if (this->settings.grouping == CMDRVariableGroupings::Fixed3) {
+            } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
-            } else if (this->settings.grouping == CMDRVariableGroupings::Logarithm) {
+            } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
-            } else if (this->settings.grouping == CMDRVariableGroupings::Halves) {
+            } else if (config.commanderGrouping == CommanderGrouping::Halves) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
             }
         }
@@ -526,7 +530,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     piCount = 0;
     std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
     do {
-        if (skipped_pi.count(piCount) == 0 || !this->settings.enableLimits) {
+        if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
             auto picost = architecture.minimumNumberOfSwaps(pi);
             if (architecture.bidirectional()) {
                 picost *= GATES_OF_BIDIRECTIONAL_SWAP;
@@ -534,9 +538,9 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
             }
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-                if (!this->settings.enableLimits || skipped_pi_per_layer[k].count(piCount) == 0) {
+                if (!config.enableSwapLimits || skipped_pi_per_layer[k].count(piCount) == 0) {
                     opt.add(!y[k - 1][piCount], picost);
-                    if (this->settings.useBDD)
+                    if (config.useBDD)
                         weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
                 }
             }
@@ -544,7 +548,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         }
     } while (std::next_permutation(pi.begin(), pi.end()));
 
-    if (this->settings.enableLimits && this->settings.useBDD) {
+    if (config.enableSwapLimits && config.useBDD) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(limit), c));
         }
@@ -575,7 +579,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         model m               = opt.get_model();
         choiceResults.timeout = results.timeout = false;
 
-        if (settings.verbose) {
+        if (config.verbose) {
             std::cout << "-------- qubit choice: ";
             for (const auto Q: qubitChoice) {
                 std::cout << Q << " ";
@@ -584,9 +588,9 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         }
 
         // quickly determine cost
-        choiceResults.output_singlequbitgates = choiceResults.input_singlequbitgates;
-        choiceResults.output_cnots            = choiceResults.input_cnots;
-        choiceResults.output_gates            = choiceResults.output_singlequbitgates + choiceResults.output_cnots;
+        choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
+        choiceResults.output.cnots            = choiceResults.input.cnots;
+        choiceResults.output.gates            = choiceResults.output.singleQubitGates + choiceResults.output.cnots;
 
         // swaps
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
@@ -607,11 +611,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
             }
             architecture.minimumNumberOfSwaps(pi, swaps.at(k));
-            choiceResults.output_swaps += swaps.at(k).size();
+            choiceResults.output.swaps += swaps.at(k).size();
             if (architecture.bidirectional()) {
-                choiceResults.output_gates += GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
+                choiceResults.output.gates += GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
             } else {
-                choiceResults.output_gates += GATES_OF_UNIDIRECTIONAL_SWAP * swaps.at(k).size();
+                choiceResults.output.gates += GATES_OF_UNIDIRECTIONAL_SWAP * swaps.at(k).size();
             }
         }
 
@@ -625,8 +629,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                         auto indexFT = x[k][physicalQubitIndex[edge.first]][qc.initialLayout.at(gate.target)];
                         auto indexSC = x[k][physicalQubitIndex[edge.second]][qc.initialLayout.at(gate.control)];
                         if (eq(m.eval(indexFT && indexSC), c.bool_val(true))) {
-                            choiceResults.output_direction_reverse++;
-                            choiceResults.output_gates += GATES_OF_DIRECTION_REVERSE;
+                            choiceResults.output.directionReverse++;
+                            choiceResults.output.gates += GATES_OF_DIRECTION_REVERSE;
                         }
                     }
                 }
@@ -646,14 +650,4 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     } else {
         results.timeout = true;
     }
-}
-
-void ExactMapper::initResults() {
-    Mapper::initResults();
-    results.method       = Method::Exact;
-    results.output_gates = std::numeric_limits<unsigned long>::max();
-    results.encoding     = this->settings.encoding;
-    results.grouping     = this->settings.grouping;
-    results.strategy     = this->settings.strategy;
-    results.limit        = this->settings.limit;
 }

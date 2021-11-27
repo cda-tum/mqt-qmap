@@ -13,7 +13,7 @@ class HeuristicMapper: public Mapper {
 public:
     using Mapper::Mapper; // import constructors from parent class
 
-    void map(const MappingSettings& ms) override;
+    void map(const Configuration& config) override;
 
     struct Node {
         unsigned long                        costFixed        = 0;
@@ -135,8 +135,6 @@ public:
 protected:
     unique_priority_queue<Node> nodes{};
 
-    void initResults() override;
-
     virtual void createInitialMapping();
 
     double distanceOnArchitectureOfLogicalQubits(unsigned short control, unsigned short target) {
@@ -159,7 +157,7 @@ protected:
     void lookahead(long layer, Node& node);
 
     double heuristicCost(double currentCost, double newCost) {
-        if (settings.admissibleHeuristic) {
+        if (results.config.admissibleHeuristic) {
             return std::max(currentCost, newCost);
         } else {
             return currentCost + newCost;

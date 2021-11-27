@@ -7,10 +7,11 @@
 
 #include <chrono>
 
-void HeuristicMapper::map(const MappingSettings& ms) {
-    settings = ms;
-    if (settings.layeringStrategy == LayeringStrategy::OddGates || settings.layeringStrategy == LayeringStrategy::QubitTriangle) {
-        std::cerr << "Layering strategy " << toString(settings.layeringStrategy) << " not suitable for heuristic mapper!" << std::endl;
+void HeuristicMapper::map(const Configuration& ms) {
+    results.config = ms;
+    auto& config   = results.config;
+    if (config.layering == Layering::OddGates || config.layering == Layering::QubitTriangle) {
+        std::cerr << "Layering strategy " << toString(config.layering) << " not suitable for heuristic mapper!" << std::endl;
         return;
     }
     const auto start = std::chrono::steady_clock::now();
@@ -18,13 +19,13 @@ void HeuristicMapper::map(const MappingSettings& ms) {
     initResults();
 
     createLayers();
-    if (ms.verbose) {
-        std::clog << "Teleportation qubits: " << ms.teleportationQubits << "\n";
+    if (config.verbose) {
+        std::clog << "Teleportation qubits: " << config.teleportationQubits << "\n";
         printLayering(std::clog);
     }
 
     createInitialMapping();
-    if (ms.verbose) {
+    if (config.verbose) {
         printLocations(std::clog);
         printQubits(std::clog);
     }
@@ -37,7 +38,7 @@ void HeuristicMapper::map(const MappingSettings& ms) {
         qubits    = result.qubits;
         locations = result.locations;
 
-        if (ms.verbose) {
+        if (config.verbose) {
             printLocations(std::clog);
             printQubits(std::clog);
         }
@@ -49,15 +50,15 @@ void HeuristicMapper::map(const MappingSettings& ms) {
                     if (swap.op == qc::SWAP) {
                         qcMapped.swap(swap.first, swap.second);
                         if (architecture.bidirectional()) {
-                            results.output_gates += GATES_OF_BIDIRECTIONAL_SWAP;
+                            results.output.gates += GATES_OF_BIDIRECTIONAL_SWAP;
                         } else {
-                            results.output_gates += GATES_OF_UNIDIRECTIONAL_SWAP;
+                            results.output.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
                         }
-                        results.output_swaps++;
+                        results.output.swaps++;
                     } else if (swap.op == qc::Teleportation) {
                         qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Targets{static_cast<dd::Qubit>(swap.first), static_cast<dd::Qubit>(swap.second), static_cast<dd::Qubit>(swap.middle_ancilla)}, qc::Teleportation);
-                        results.output_gates += COST_TELEPORTATION;
-                        results.output_teleportations++;
+                        results.output.gates += COST_TELEPORTATION;
+                        results.output.teleportations++;
                     }
                     std::swap(qcMapped.outputPermutation.at(swap.first), qcMapped.outputPermutation.at(swap.second));
 
@@ -82,8 +83,8 @@ void HeuristicMapper::map(const MappingSettings& ms) {
                                                                  op->getParameter().at(1),
                                                                  op->getParameter().at(2));
                     gatesToAdjust.push_back(gateidx);
-                    results.output_gates++;
-                    results.output_singlequbitgates++;
+                    results.output.gates++;
+                    results.output.singleQubitGates++;
                     gateidx++;
                 } else {
                     qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
@@ -92,8 +93,8 @@ void HeuristicMapper::map(const MappingSettings& ms) {
                                                                  op->getParameter().at(0),
                                                                  op->getParameter().at(1),
                                                                  op->getParameter().at(2));
-                    results.output_gates++;
-                    results.output_singlequbitgates++;
+                    results.output.gates++;
+                    results.output.singleQubitGates++;
                     gateidx++;
                 }
             } else {
@@ -109,14 +110,14 @@ void HeuristicMapper::map(const MappingSettings& ms) {
                     qcMapped.h(reverse.second);
                     qcMapped.h(reverse.first);
 
-                    results.output_direction_reverse++;
-                    results.output_cnots++;
-                    results.output_gates += 5;
+                    results.output.directionReverse++;
+                    results.output.cnots++;
+                    results.output.gates += 5;
                     gateidx += 5;
                 } else {
                     qcMapped.x(cnot.second, dd::Control{static_cast<dd::Qubit>(cnot.first)});
-                    results.output_cnots++;
-                    results.output_gates++;
+                    results.output.cnots++;
+                    results.output.gates++;
                     gateidx++;
                 }
             }
@@ -178,36 +179,28 @@ void HeuristicMapper::map(const MappingSettings& ms) {
     results.timeout                    = false;
 }
 
-void HeuristicMapper::initResults() {
-    Mapper::initResults();
-    results.method = Method::Heuristic;
-
-    results.seed                        = settings.teleportationSeed;
-    results.input_teleportation_qubits  = settings.teleportationQubits;
-    results.output_teleportation_qubits = settings.teleportationQubits;
-    results.output_teleportation_fake   = settings.teleportationFake;
-}
-
 void HeuristicMapper::createInitialMapping() {
+    auto& config = results.config;
+
     if (layers.empty())
         return;
 
-    if (settings.teleportationQubits > 0) {
+    if (config.teleportationQubits > 0) {
         std::mt19937_64 mt;
-        if (settings.teleportationSeed == 0) {
+        if (config.teleportationSeed == 0) {
             std::array<std::mt19937_64::result_type, std::mt19937_64::state_size> random_data{};
             std::random_device                                                    rd;
             std::generate(std::begin(random_data), std::end(random_data), [&rd]() { return rd(); });
             std::seed_seq seeds(std::begin(random_data), std::end(random_data));
             mt.seed(seeds);
         } else {
-            mt.seed(settings.teleportationSeed);
+            mt.seed(config.teleportationSeed);
         }
 
         std::uniform_int_distribution<> dis(0, architecture.getNqubits() - 1);
 
-        for (int i = 0; i < settings.teleportationQubits; i += 2) {
-            Edge e;
+        for (int i = 0; i < config.teleportationQubits; i += 2) {
+            Edge e{};
             do {
                 auto it = std::begin(architecture.getCouplingMap());
                 std::advance(it, dis(mt));
@@ -219,14 +212,13 @@ void HeuristicMapper::createInitialMapping() {
             qubits[e.second]                   = qc.getNqubits() + i + 1;
         }
 
-        if (settings.teleportationFake) {
-            settings.teleportationQubits        = 0;
-            results.output_teleportation_qubits = settings.teleportationQubits;
+        if (config.teleportationFake) {
+            config.teleportationQubits = 0;
         }
     }
 
-    switch (settings.initialLayoutStrategy) {
-        case InitialLayoutStrategy::Identity:
+    switch (config.initialLayout) {
+        case InitialLayout::Identity:
             for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
                 if (qc.initialLayout.count(i)) {
                     locations.at(i) = i;
@@ -234,7 +226,7 @@ void HeuristicMapper::createInitialMapping() {
                 }
             }
             break;
-        case InitialLayoutStrategy::Static:
+        case InitialLayout::Static:
             for (const auto& gate: layers.at(0)) {
                 if (gate.singleQubit())
                     continue;
@@ -272,8 +264,8 @@ void HeuristicMapper::createInitialMapping() {
             }
 
             break;
-        case InitialLayoutStrategy::Dynamic:
-        case InitialLayoutStrategy::None:
+        case InitialLayout::Dynamic:
+        case InitialLayout::None:
             // nothing to be done here
             break;
 
@@ -394,7 +386,7 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
     std::set<Edge> perms = architecture.getCouplingMap();
     architecture.getCurrentTeleportations().clear();
     architecture.getTeleportationQubits().clear();
-    for (int i = 0; i < settings.teleportationQubits; i += 2) {
+    for (int i = 0; i < results.config.teleportationQubits; i += 2) {
         architecture.getTeleportationQubits().emplace_back(node.locations[qc.getNqubits() + i], node.locations[qc.getNqubits() + i + 1]);
         Edge e;
         for (auto const& g: architecture.getCouplingMap()) {
@@ -443,7 +435,8 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
 }
 
 void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node, long layer) {
-    auto& currentLayer = layers.at(layer);
+    const auto& config       = results.config;
+    auto&       currentLayer = layers.at(layer);
 
     Node new_node = Node(node.qubits, node.locations, node.swaps);
     new_node.nswaps++;
@@ -469,12 +462,12 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node, lon
         if (gate.singleQubit())
             continue;
 
-        new_node.updateHeuristicCost(architecture, gate, settings.admissibleHeuristic);
+        new_node.updateHeuristicCost(architecture, gate, config.admissibleHeuristic);
         new_node.checkUnfinished(architecture, gate);
     }
 
     // calculate heuristics for the cost of the following layers
-    if (settings.lookahead) {
+    if (config.lookahead) {
         lookahead(getNextLayer(layer), new_node);
     }
 
@@ -482,10 +475,11 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node, lon
 }
 
 void HeuristicMapper::lookahead(long layer, HeuristicMapper::Node& node) {
-    auto   nextLayer = layer;
-    double factor    = settings.firstLookaheadFactor;
+    const auto& config    = results.config;
+    auto        nextLayer = layer;
+    double      factor    = config.firstLookaheadFactor;
 
-    for (int i = 0; i < settings.nrLookaheads; ++i) {
+    for (int i = 0; i < config.nrLookaheads; ++i) {
         if (nextLayer == -1) {
             break;
         }
@@ -524,7 +518,7 @@ void HeuristicMapper::lookahead(long layer, HeuristicMapper::Node& node) {
         }
 
         node.lookaheadPenalty += factor * penalty;
-        factor *= settings.lookaheadFactor;
+        factor *= config.lookaheadFactor;
         nextLayer = getNextLayer(nextLayer); // TODO: consider single qubits here for better fidelity lookahead
     }
 }

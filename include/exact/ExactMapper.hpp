@@ -19,7 +19,9 @@
 #include <z3++.h>
 
 using namespace z3;
-using matrix = std::vector<expr_vector>;
+using matrix      = std::vector<expr_vector>;
+using Swaps       = std::vector<std::pair<unsigned short, unsigned short>>;
+using QubitChoice = std::set<unsigned short>;
 
 /// Main structure representing the circuit and mapping functionality
 class ExactMapper: public Mapper {
@@ -27,13 +29,17 @@ class ExactMapper: public Mapper {
 
 protected:
     // inputs
-    std::vector<unsigned long>                                          reducedLayerIndices{};
-    std::vector<std::vector<std::pair<unsigned short, unsigned short>>> mappingSwaps{};
-    void                                                                coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout);
-    void                                                                initResults() override;
+    std::vector<unsigned long> reducedLayerIndices{};
+    std::vector<Swaps>         mappingSwaps{};
+    void                       coreMappingRoutine(const QubitChoice&  qubitChoice,
+                                                  const CouplingMap&  rcm,
+                                                  MappingResults&     choiceResults,
+                                                  std::vector<Swaps>& swaps,
+                                                  long unsigned int   limit,
+                                                  unsigned int        timeout);
 
 public:
-    void map(const MappingSettings& settings) override;
+    void map(const Configuration& settings) override;
 };
 
 #endif /* EXACT_MAPPER_hpp */

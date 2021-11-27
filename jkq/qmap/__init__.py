@@ -4,4 +4,4 @@
 #
 
 from .compile import compile
-from .pyqmap import Method, InitialLayoutStrategy, LayeringStrategy, Arch, CMDRVariableGrouping, SwapReductionStrategy, Encoding
+from .pyqmap import Method, InitialLayout, Layering, Arch, CommanderGrouping, SwapReduction, Encoding, Configuration, MappingResults
