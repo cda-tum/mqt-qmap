@@ -1,10 +1,6 @@
 # add JKQ::qfr target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
-
 macro(add_qmap_library LIBNAME SRCFILE)
 	# main project library
 	add_library(${PROJECT_NAME}_${LIBNAME}_lib
