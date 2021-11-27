@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.2.2
+        uses: pypa/cibuildwheel@v2.3.0
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -46,7 +46,7 @@ jobs:
       - name: Install Z3
         run:  brew install z3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.2.2
+        uses: pypa/cibuildwheel@v2.3.0
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -82,7 +82,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.2.2
+        uses: pypa/cibuildwheel@v2.3.0
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
