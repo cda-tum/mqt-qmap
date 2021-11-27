@@ -4,7 +4,7 @@
 #
 import pickle
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Union
 from .pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
 
 
