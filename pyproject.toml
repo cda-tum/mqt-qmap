@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "cmake ~= 3.21"]
+requires = ["setuptools", "wheel", "cmake"]
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
