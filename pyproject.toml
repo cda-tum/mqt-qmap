@@ -16,7 +16,7 @@ before-all = "/opt/python/cp39-cp39/bin/python -m pip install z3-solver"
 environment = { LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib", Z3_ROOT = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", Z3_DIR = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", DEPLOY = "ON" }
 
 [tool.cibuildwheel.macos]
-archs = "x86_64"
+archs = "x86_64 arm64"
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.15", DEPLOY = "ON" }
 
 [tool.cibuildwheel.windows]
