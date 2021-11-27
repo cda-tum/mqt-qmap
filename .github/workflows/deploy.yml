@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  Z3_GIT_TAG: z3-4.8.10
+  Z3_GIT_TAG: z3-4.8.12
 
 jobs:
   build_manylinux_wheels:
