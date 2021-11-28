@@ -6,6 +6,8 @@
 #ifndef QMAP_ARCHITECTURE_HPP
 #define QMAP_ARCHITECTURE_HPP
 
+#include "Encodings.hpp"
+#include "configuration/AvailableArchitecture.hpp"
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
 
@@ -28,25 +30,6 @@ constexpr int COST_BIDIRECTIONAL_SWAP  = 3 * COST_CNOT_GATE;
 constexpr int COST_TELEPORTATION       = 2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr int COST_DIRECTION_REVERSE   = 4 * COST_SINGLE_QUBIT_GATE;
 
-enum class AvailableArchitectures {
-    IBM_QX4,
-    IBM_QX5,
-    IBMQ_Yorktown,
-    IBMQ_London,
-    IBMQ_Bogota,
-    IBMQ_Tokyo
-};
-std::string toString(AvailableArchitectures architecture);
-// map AvailableArchitectures values to JSON as strings
-NLOHMANN_JSON_SERIALIZE_ENUM(AvailableArchitectures, {
-                                                             {AvailableArchitectures::IBM_QX4, "IBM_QX4"},
-                                                             {AvailableArchitectures::IBM_QX5, "IBM_QX5"},
-                                                             {AvailableArchitectures::IBMQ_Yorktown, "IBMQ_Yorktown"},
-                                                             {AvailableArchitectures::IBMQ_London, "IBMQ_London"},
-                                                             {AvailableArchitectures::IBMQ_Bogota, "IBMQ_Bogota"},
-                                                             {AvailableArchitectures::IBMQ_Tokyo, "IBMQ_Tokyo"},
-                                                     })
-
 class Architecture {
     static constexpr bool VERBOSE = false;
 
@@ -66,7 +49,7 @@ public:
     void loadCouplingMap(std::istream&& is);
     void loadCouplingMap(const std::string& filename);
     void loadCouplingMap(unsigned short nQ, const CouplingMap& cm);
-    void loadCouplingMap(AvailableArchitectures architecture);
+    void loadCouplingMap(AvailableArchitecture architecture);
     void loadCalibrationData(std::istream& is);
     void loadCalibrationData(std::istream&& is);
     void loadCalibrationData(const std::string& filename);
@@ -167,6 +150,9 @@ public:
             out << std::endl;
         }
     };
+
+    [[nodiscard]] std::size_t getCouplingLimit() const;
+    [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
 
 protected:
     std::string                          architectureName;

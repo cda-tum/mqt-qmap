@@ -8,8 +8,8 @@
 
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
-#include "MappingSettings.hpp"
 #include "QuantumComputation.hpp"
+#include "configuration/Configuration.hpp"
 
 #include <array>
 #include <chrono>
@@ -54,20 +54,19 @@ protected:
 
     std::unordered_set<unsigned short> usedDeviceQubits{};
 
-    MappingResults  results{};
-    MappingSettings settings{};
+    MappingResults results{};
 
     virtual void initResults();
 
     virtual void createLayers();
 
-    virtual long getNextLayer(size_t idx);
+    virtual std::size_t getNextLayer(std::size_t idx);
 
 public:
     Mapper(qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;
 
-    virtual void map(const MappingSettings& ms) = 0;
+    virtual void map(const Configuration& config) = 0;
 
     virtual void dumpResult(const std::string& outputFilename) {
         if (qcMapped.empty()) {
@@ -90,7 +89,7 @@ public:
     virtual void dumpResult(const std::string& outputFilename, qc::Format format) {
         size_t slash        = outputFilename.find_last_of('/');
         size_t dot          = outputFilename.find_last_of('.');
-        results.output_name = outputFilename.substr(slash + 1, dot - slash - 1);
+        results.output.name = outputFilename.substr(slash + 1, dot - slash - 1);
         qcMapped.dump(outputFilename, format);
     }
 
@@ -98,16 +97,19 @@ public:
         qcMapped.dump(os, format);
     }
 
-    virtual std::ostream& printResult(std::ostream& out, bool printStatistics) {
-        return results.print(out, printStatistics);
+    virtual std::ostream& printResult(std::ostream& out) {
+        out << results.toString();
+        return out;
     }
 
-    virtual nlohmann::json produceJSON(bool statistics) {
-        return results.produceJSON(statistics);
+    virtual MappingResults& getResults() { return results; }
+
+    virtual nlohmann::json json() {
+        return results.json();
     }
 
-    virtual std::string produceCSVEntry() {
-        return results.produceCSVEntry();
+    virtual std::string csv() {
+        return results.csv();
     }
 
     std::ostream& printLayering(std::ostream& out) {
@@ -153,8 +155,7 @@ public:
         locations.fill(DEFAULT_POSITION);
         usedDeviceQubits.clear();
 
-        results  = MappingResults();
-        settings = MappingSettings();
+        results = MappingResults();
     }
 };
 

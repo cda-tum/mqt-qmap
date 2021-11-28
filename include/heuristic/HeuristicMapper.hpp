@@ -13,7 +13,7 @@ class HeuristicMapper: public Mapper {
 public:
     using Mapper::Mapper; // import constructors from parent class
 
-    void map(const MappingSettings& ms) override;
+    void map(const Configuration& config) override;
 
     struct Node {
         unsigned long                        costFixed        = 0;
@@ -41,10 +41,10 @@ public:
             qubits.at(swap.second) = q1;
 
             if (q1 != -1) {
-                locations.at(q1) = swap.second;
+                locations.at(q1) = static_cast<short>(swap.second);
             }
             if (q2 != -1) {
-                locations.at(q2) = swap.first;
+                locations.at(q2) = static_cast<short>(swap.first);
             }
 
             if (arch.getCouplingMap().find(swap) != arch.getCouplingMap().end() || arch.getCouplingMap().find(Edge{swap.second, swap.first}) != arch.getCouplingMap().end()) {
@@ -62,21 +62,17 @@ public:
             qubits.at(swap.second) = q1;
 
             if (q1 != -1) {
-                locations.at(q1) = swap.second;
+                locations.at(q1) = static_cast<short>(swap.second);
             }
             if (q2 != -1) {
-                locations.at(q2) = swap.first;
+                locations.at(q2) = static_cast<short>(swap.first);
             }
 
             unsigned short middle_anc = std::numeric_limits<decltype(middle_anc)>::max();
             for (const auto& qpair: arch.getTeleportationQubits()) {
-                if (swap.first == qpair.first) {
+                if (swap.first == qpair.first || swap.second == qpair.first) {
                     middle_anc = qpair.second;
-                } else if (swap.first == qpair.second) {
-                    middle_anc = qpair.first;
-                } else if (swap.second == qpair.first) {
-                    middle_anc = qpair.second;
-                } else if (swap.second == qpair.second) {
+                } else if (swap.first == qpair.second || swap.second == qpair.second) {
                     middle_anc = qpair.first;
                 }
             }
@@ -135,8 +131,6 @@ public:
 protected:
     unique_priority_queue<Node> nodes{};
 
-    void initResults() override;
-
     virtual void createInitialMapping();
 
     double distanceOnArchitectureOfLogicalQubits(unsigned short control, unsigned short target) {
@@ -159,7 +153,7 @@ protected:
     void lookahead(long layer, Node& node);
 
     double heuristicCost(double currentCost, double newCost) {
-        if (settings.admissibleHeuristic) {
+        if (results.config.admissibleHeuristic) {
             return std::max(currentCost, newCost);
         } else {
             return currentCost + newCost;
@@ -181,8 +175,8 @@ inline bool operator<(const HeuristicMapper::Node& x, const HeuristicMapper::Nod
 }
 
 inline bool operator>(const HeuristicMapper::Node& x, const HeuristicMapper::Node& y) {
-    auto xcost = x.costTotal + x.costFixed + x.lookaheadPenalty;
-    auto ycost = y.costTotal + y.costFixed + y.lookaheadPenalty;
+    auto xcost = x.costTotal + static_cast<double>(x.costFixed) + x.lookaheadPenalty;
+    auto ycost = y.costTotal + static_cast<double>(y.costFixed) + y.lookaheadPenalty;
     if (xcost != ycost) {
         return xcost > ycost;
     }

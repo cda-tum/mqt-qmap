@@ -19,11 +19,10 @@ int main(int argc, char** argv) {
             ("out", po::value<std::string>()->required(), "File to write to")
             ("arch", po::value<std::string>()->required(), "Architecture to use (points to a file)")
             ("calibration", po::value<std::string>(), "Calibration to use (points to a file)")
-            ("initiallayout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
+            ("initial_layout", po::value<std::string>(), R"(Initial layout strategy ("identity" | "static" | "dynamic"))")
             ("layering", po::value<std::string>(), R"(Layering strategy ("individual" | "disjoint"))")
             ("teleportation", po::value<unsigned long long int>()->implicit_value(0), "Use teleportation with optionally specifying the seed for the RNG used for initial placement")
             ("teleportation_fake", "Assign qubits as ancillary for teleportation in the initial placement but don't actually use them")
-            ("ps", "print statistics")
             ("verbose", "Increase verbosity and output additional information to stderr")
             ;
     // clang-format on
@@ -53,7 +52,12 @@ int main(int argc, char** argv) {
     const std::string cm = vm["arch"].as<std::string>();
     Architecture      arch{};
     try {
-        arch.loadCouplingMap(cm);
+        try {
+            auto available = architectureFromString(cm);
+            arch.loadCouplingMap(available);
+        } catch (std::exception const& e) {
+            arch.loadCouplingMap(cm);
+        }
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not import coupling map: " << e.what();
@@ -75,31 +79,17 @@ int main(int argc, char** argv) {
 
     HeuristicMapper mapper(qc, arch);
 
-    MappingSettings ms{};
-    ms.layeringStrategy = LayeringStrategy::IndividualGates;
+    Configuration ms{};
+    ms.layering = Layering::IndividualGates;
     if (vm.count("layering")) {
         std::string layering = vm["layering"].as<std::string>();
-        if (layering == "individual") {
-            ms.layeringStrategy = LayeringStrategy::IndividualGates;
-        } else if (layering == "disjoint") {
-            ms.layeringStrategy = LayeringStrategy::DisjointQubits;
-        } else {
-            ms.layeringStrategy = LayeringStrategy::None;
-        }
+        ms.layering          = layeringFromString(layering);
     }
 
-    ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-    if (vm.count("initiallayout")) {
-        std::string initialLayout = vm["initiallayout"].as<std::string>();
-        if (initialLayout == "identity") {
-            ms.initialLayoutStrategy = InitialLayoutStrategy::Identity;
-        } else if (initialLayout == "static") {
-            ms.initialLayoutStrategy = InitialLayoutStrategy::Static;
-        } else if (initialLayout == "dynamic") {
-            ms.initialLayoutStrategy = InitialLayoutStrategy::Dynamic;
-        } else {
-            ms.initialLayoutStrategy = InitialLayoutStrategy::None;
-        }
+    ms.initialLayout = InitialLayout::Dynamic;
+    if (vm.count("initial_layout")) {
+        std::string initialLayout = vm["initial_layout"].as<std::string>();
+        ms.initialLayout          = initialLayoutFromString(initialLayout);
     }
 
     ms.verbose = vm.count("verbose") > 0;
@@ -114,5 +104,5 @@ int main(int argc, char** argv) {
 
     mapper.dumpResult(vm["out"].as<std::string>());
 
-    mapper.printResult(std::cout, vm.count("ps"));
+    mapper.printResult(std::cout);
 }

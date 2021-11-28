@@ -140,5 +140,5 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
         counti++;
     }
 
-    return k * nj * iValues.size() + counti * nj + j;
+    return k * static_cast<std::size_t>(nj) * iValues.size() + counti * static_cast<std::size_t>(nj) + j;
 }
