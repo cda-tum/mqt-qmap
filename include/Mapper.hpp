@@ -60,7 +60,7 @@ protected:
 
     virtual void createLayers();
 
-    virtual long getNextLayer(size_t idx);
+    virtual std::size_t getNextLayer(std::size_t idx);
 
 public:
     Mapper(qc::QuantumComputation& qc, Architecture& architecture);

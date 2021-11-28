@@ -32,7 +32,7 @@ void HeuristicMapper::map(const Configuration& ms) {
 
     unsigned long              gateidx = 0;
     std::vector<unsigned long> gatesToAdjust{};
-    for (size_t i = 0; i < layers.size(); ++i) {
+    for (std::size_t i = 0; i < layers.size(); ++i) {
         Node result = AstarMap(i);
 
         qubits    = result.qubits;
@@ -167,9 +167,9 @@ void HeuristicMapper::map(const Configuration& ms) {
         }
     }
 
-    for (unsigned short i = 0; i < qubits.size(); ++i) {
+    for (std::size_t i = 0; i < qubits.size(); ++i) {
         if (qubits[i] == -1) {
-            qcMapped.outputPermutation.erase(i);
+            qcMapped.outputPermutation.erase(static_cast<dd::Qubit>(i));
         }
     }
 

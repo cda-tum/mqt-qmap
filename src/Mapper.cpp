@@ -109,7 +109,7 @@ void Mapper::createLayers() {
     results.input.layers = layers.size();
 }
 
-long Mapper::getNextLayer(size_t idx) {
+std::size_t Mapper::getNextLayer(std::size_t idx) {
     auto next = idx + 1;
     while (next < layers.size()) {
         for (const auto& gate: layers.at(next)) {
