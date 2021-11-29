@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 project(qmap
         LANGUAGES CXX
-        VERSION 1.5.0
+        VERSION 1.5.1
         DESCRIPTION "QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         )
 
