@@ -21,6 +21,14 @@ if (DEFINED ENV{DEPLOY})
 	message(STATUS "Setting deployment configuration to '${DEPLOY}' from environment")
 endif ()
 
+# set deployment specific options
+if (DEPLOY)
+	# build a universal macOS binary in case this is a deployment build
+	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
+	# set the macOS deployment target appropriately
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
+endif ()
+
 # build type settings
 set(default_build_type "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
