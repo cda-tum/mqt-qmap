@@ -3,7 +3,9 @@
  * See file README.md or go to http://iic.jku.at/eda/research/quantum/ for more information.
  */
 
+#ifdef Z3_FOUND
 #include "exact/ExactMapper.hpp"
+#endif
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -62,9 +64,12 @@ MappingResults map(const py::object& circ, const py::object& arch, Configuration
     try {
         if (config.method == Method::Heuristic) {
             mapper = std::make_unique<HeuristicMapper>(qc, architecture);
-        } else {
+        } 
+        #ifdef Z3_FOUND
+        else {
             mapper = std::make_unique<ExactMapper>(qc, architecture);
         }
+        #endif
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not construct mapper: " << e.what();
