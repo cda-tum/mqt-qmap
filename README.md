@@ -147,7 +147,7 @@ with any current C++ compiler supporting C++17 and a minimum CMake version of 3.
 In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
 accomplished in a multitude of ways:
 
-- Under Ubuntu 20.04 and newer: `sudo apt-get install z3`
+- Under Ubuntu 20.04 and newer: `sudo apt-get install libz3-dev`
 - Under macOS: `brew install z3`
 - Alternatively: `pip install z3-solver` and then append the corresponding path to the library path (`LD_LIBRARY_PATH` under Linux, `DYLD_LIBRARY_PATH` under macOS), e.g. via
     ```bash
