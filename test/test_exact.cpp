@@ -352,7 +352,7 @@ TEST_P(ExactTest, NoSubsets) {
     SUCCEED() << "Mapping successful";
 }
 
-TEST_P(ExactTest, toStringMethods) {
+TEST_P(ExactTest, EnumToString) {
     EXPECT_EQ(toString(InitialLayout::Identity), "identity");
     EXPECT_EQ(toString(InitialLayout::Static), "static");
     EXPECT_EQ(toString(InitialLayout::Dynamic), "dynamic");

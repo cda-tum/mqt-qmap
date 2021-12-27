@@ -15,7 +15,6 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/${LIBNAME}/${SRCFILE}.hpp
-	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
 
 	# set include directories
@@ -26,7 +25,7 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 	# add JKQ::qfr library
-	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC JKQ::qfr z3::z3lib)
+	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC JKQ::qfr)
 
 	# enable interprocedural optimization if it is supported
 	include(CheckIPOSupported)
@@ -69,6 +68,8 @@ endmacro()
 if (Z3_FOUND)
 	# exact mapper project library
 	add_qmap_library(exact ExactMapper)
+	# add encodings 
+	add_library(${PROJECT_NAME}_exact_lib ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
 	# add Z3 library
 	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
 else()
