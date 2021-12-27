@@ -296,6 +296,14 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     }
 }
 
+std::size_t Architecture::getCouplingLimit() const {
+    return findCouplingLimit(getCouplingMap(), getNqubits());
+}
+
+std::size_t Architecture::getCouplingLimit(const std::set<unsigned short>& qubitChoice) const {
+    return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
+}
+
 unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const {
     std::queue<std::vector<int>> queue;
     std::vector<int>             v;
@@ -363,10 +371,72 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
     return (length - 2) * 7 + 4;
 }
 
-std::size_t Architecture::getCouplingLimit() const {
-    return findCouplingLimit(getCouplingMap(), getNqubits());
+std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits) {
+    std::vector<std::vector<unsigned short>> connections;
+    std::vector<int>                         d;
+    std::vector<bool>                        visited;
+    connections.resize(nQubits);
+    int maxSum = -1;
+    for (auto edge: cm) {
+        connections.at(edge.first).emplace_back(edge.second);
+    }
+    for (int q = 0; q < nQubits; ++q) {
+        d.clear();
+        d.resize(nQubits);
+        std::fill(d.begin(), d.end(), 0);
+        visited.clear();
+        visited.resize(nQubits);
+        std::fill(visited.begin(), visited.end(), false);
+        findCouplingLimit(q, 0, connections, d, visited);
+        auto it = std::max_element(d.begin(), d.end());
+        if ((*it) > maxSum)
+            maxSum = (*it);
+    }
+    return maxSum;
 }
 
-std::size_t Architecture::getCouplingLimit(const std::set<unsigned short>& qubitChoice) const {
-    return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
+std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
+    std::vector<std::vector<unsigned short>> connections;
+    std::vector<int>                         d;
+    std::vector<bool>                        visited;
+    connections.resize(nQubits);
+    int maxSum = -1;
+    for (auto edge: cm) {
+        if (qubitChoice.count(edge.first) && qubitChoice.count(edge.second))
+            connections.at(edge.first).emplace_back(edge.second);
+    }
+    for (int q = 0; q < nQubits; ++q) {
+        if (connections.at(q).empty())
+            continue;
+        d.clear();
+        d.resize(nQubits);
+        std::fill(d.begin(), d.end(), 0);
+        visited.clear();
+        visited.resize(nQubits);
+        std::fill(visited.begin(), visited.end(), false);
+        findCouplingLimit(q, 0, connections, d, visited);
+        auto it = std::max_element(d.begin(), d.end());
+        if ((*it) > maxSum)
+            maxSum = (*it);
+    }
+    return maxSum;
+}
+
+void Architecture::findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
+    if (visited.at(node))
+        return;
+    visited[node] = true;
+
+    if (d.at(node) < curSum)
+        d[node] = curSum;
+    if (connections.at(node).empty()) {
+        visited[node] = false;
+        return;
+    }
+
+    for (auto child: connections.at(node)) {
+        findCouplingLimit(child, curSum + 1, connections, d, visited);
+    }
+
+    visited[node] = false;
 }

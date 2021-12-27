@@ -7,6 +7,7 @@
 #define QMAP_AVAILABLEARCHITECTURE_HPP
 
 #include <iostream>
+#include <map>
 
 enum class AvailableArchitecture {
     IBM_QX4,

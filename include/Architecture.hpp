@@ -6,7 +6,6 @@
 #ifndef QMAP_ARCHITECTURE_HPP
 #define QMAP_ARCHITECTURE_HPP
 
-#include "Encodings.hpp"
 #include "configuration/AvailableArchitecture.hpp"
 #include "nlohmann/json.hpp"
 #include "utils.hpp"
@@ -194,6 +193,10 @@ protected:
         return std::find(v.begin(), v.end(), e) != v.end();
     }
     [[nodiscard]] unsigned long bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const;
+
+    static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits);
+    static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice);
+    static void        findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited);
 };
 
 #endif //QMAP_ARCHITECTURE_HPP
