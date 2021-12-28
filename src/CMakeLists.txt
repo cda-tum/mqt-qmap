@@ -73,7 +73,7 @@ if (Z3_FOUND)
 	# exact mapper project library
 	add_qmap_library(exact ExactMapper)
 	# add encodings 
-	add_library(${PROJECT_NAME}_exact_lib 
+	target_sources(${PROJECT_NAME}_exact_lib PUBLIC
 				${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
 				${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
 	# add Z3 library
