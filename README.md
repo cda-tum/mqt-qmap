@@ -72,7 +72,7 @@ JKQ QMAP is developed as a C++ library with an easy to use Python interface.
     ```
   However, in order to get the best performance out of QMAP, it is recommended to build it locally from the source distribution (see [system requirements](#system-requirements)) via
     ```bash
-    pip install --no-binary jkq.qmap jkq.qmap
+    pip install  jkq.qmap --no-binary jkq.qmap
     ```
   This enables platform specific compiler optimizations that cannot be enabled on portable wheels.
 - Once installed, start using it in Python:
