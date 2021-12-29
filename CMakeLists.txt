@@ -21,6 +21,11 @@ if (DEFINED ENV{DEPLOY})
 	message(STATUS "Setting deployment configuration to '${DEPLOY}' from environment")
 endif ()
 
+# set deployment specific options
+if (DEPLOY)
+	set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "" FORCE)
+endif ()
+
 # build type settings
 set(default_build_type "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
