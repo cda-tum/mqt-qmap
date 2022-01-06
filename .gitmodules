@@ -1,5 +1,5 @@
 [submodule "extern/qfr"]
 	path = extern/qfr
 	url = https://github.com/iic-jku/qfr.git
-	branch = revert-universal-binary
+	branch = master
     shallow = true
