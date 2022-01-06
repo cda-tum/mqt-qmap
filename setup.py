@@ -1,6 +1,7 @@
 import os
 import sys
 import platform
+import re
 import subprocess
 
 from setuptools import setup, Extension, find_namespace_packages
@@ -41,7 +42,7 @@ class CMakeBuild(build_ext):
         if platform.system() == "Windows":
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
             cmake_args += ['-T', 'ClangCl']
-            if sys.maxsize > 2**32:
+            if sys.maxsize > 2 ** 32:
                 cmake_args += ['-A', 'x64']
             build_args += ['--', '/m']
         else:
@@ -50,6 +51,14 @@ class CMakeBuild(build_ext):
             if cpus is None:
                 cpus = 2
             build_args += ['--', '-j{}'.format(cpus)]
+
+        # cross-compile support for macOS - respect ARCHFLAGS if set
+        if sys.platform.startswith("darwin"):
+            archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if archs:
+                arch_argument = "-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))
+                print('macOS building with: ', arch_argument, flush=True)
+                cmake_args += [arch_argument]
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
@@ -67,7 +76,7 @@ with open(README_PATH) as readme_file:
 
 setup(
     name='jkq.qmap',
-    version='1.5.0',
+    version='1.5.1',
     author='Lukas Burgholzer',
     author_email='lukas.burgholzer@jku.at',
     description='QMAP - A JKQ tool for Quantum Circuit Mapping',

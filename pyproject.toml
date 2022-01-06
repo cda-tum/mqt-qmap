@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 build = "cp3*"
 skip = "*-win32 *-musllinux* *-manylinux_i686"
 test-skip = "*_arm64"
-manylinux-x86_64-image = "manylinux2014"
 test-command = "python -c \"from jkq import qmap\""
 environment = { DEPLOY = "ON" }
 build-verbosity = 3

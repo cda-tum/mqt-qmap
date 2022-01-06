@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.14...3.21)
+cmake_minimum_required(VERSION 3.14...3.22)
 
 project(qmap
         LANGUAGES CXX
-        VERSION 1.5.0
+        VERSION 1.5.1
         DESCRIPTION "QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
         )
 
@@ -19,6 +19,12 @@ option(BUILD_QMAP_TESTS "Also build tests for QMAP project")
 if (DEFINED ENV{DEPLOY})
 	set(DEPLOY $ENV{DEPLOY} CACHE BOOL "Use deployment configuration from environment" FORCE)
 	message(STATUS "Setting deployment configuration to '${DEPLOY}' from environment")
+endif ()
+
+# set deployment specific options
+if (DEPLOY)
+	# set the macOS deployment target appropriately
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
 endif ()
 
 # build type settings
