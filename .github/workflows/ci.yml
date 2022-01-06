@@ -67,16 +67,18 @@ jobs:
         run: ctest -C $BUILD_TYPE --output-on-failure
 
       - name: Coverage
-        run: |
-             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib 
-             export Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 
-             export Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
-             cd buildCov/test
-             ctest -C $BUILD_TYPE --output-on-failure
-
+        run:  |
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib 
+              export Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3 
+              export Z3_DIR=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
+              cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
+              cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
+              cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
+              cd buildCov/test
+              ctest -C $BUILD_TYPE --output-on-failure
+      - name: Run gcov
+        run:  |
+              find . -type f -name '*.gcno' -exec gcov -p  {} +
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2.1.0
 
