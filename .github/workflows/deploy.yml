@@ -12,7 +12,6 @@ on:
 env:
   Z3_GIT_TAG:   z3-4.8.14
   Z3_HASH:      884f1128a33ea7dea3ad375e50ef5ea36b26623e2999119cf31252dd4650692f
-  CIBW_VERSION: v2.3.1
 
 jobs:
   build_manylinux_wheels:
@@ -28,7 +27,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Build wheels
-        uses: pypa/cibuildwheel@${{ env.CIBW_VERSION }}
+        uses: pypa/cibuildwheel@$v2.3.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -48,7 +47,7 @@ jobs:
       - name: Install Z3
         run:  brew install z3
       - name: Build wheels
-        uses: pypa/cibuildwheel@{{ env.CIBW_VERSION }}
+        uses: pypa/cibuildwheel@v2.3.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -70,7 +69,7 @@ jobs:
               curl -L -H "Authorization: Bearer QQ==" -o z3.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:{{ env.Z3_HASH }}
               brew install -f z3.tar.gz
       - name: Build wheels
-        uses: pypa/cibuildwheel@{{ env.CIBW_VERSION }}
+        uses: pypa/cibuildwheel@v2.3.1
         env:
           CIBW_ARCHS_MACOS: arm64
       - uses: actions/upload-artifact@v2
@@ -108,7 +107,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@{{ env.CIBW_VERSION }}
+        uses: pypa/cibuildwheel@v2.3.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
