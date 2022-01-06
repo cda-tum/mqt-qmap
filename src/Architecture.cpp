@@ -40,7 +40,7 @@ void Architecture::loadCouplingMap(std::istream&& is) {
         if (std::regex_match(line, m, r_nqubits)) {
             nqubits = static_cast<unsigned short>(std::stoul(m.str(1)));
         } else {
-            throw QMAPException("No qubit count found in coupling map file.");
+            throw QMAPException("No qubit count found in coupling map file: " + line);
         }
     } else {
         throw QMAPException("Error reading coupling map file.");
@@ -52,7 +52,7 @@ void Architecture::loadCouplingMap(std::istream&& is) {
             auto v2 = static_cast<unsigned short>(std::stoul(m.str(2)));
             couplingMap.emplace(v1, v2);
         } else {
-            throw QMAPException("No qubit count found in coupling map file.");
+            throw QMAPException("Could not identify edge in coupling map file: " + line);
         }
     }
 
