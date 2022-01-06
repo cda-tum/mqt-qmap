@@ -14,12 +14,14 @@ TEST(General, LoadCouplingMapNonexistentFile) {
 
 TEST(General, LoadCouplingMapEmptyFile) {
     std::ofstream ofs("test.arch");
+    ofs.close();
     EXPECT_THROW(Architecture("test.arch"), QMAPException);
 }
 
 TEST(General, LoadCouplingMapNoQubitCount) {
     std::ofstream ofs("test.arch");
     ofs << "noqubits\n";
+    ofs.close();
     EXPECT_THROW(Architecture("test.arch"), QMAPException);
 }
 
@@ -27,6 +29,7 @@ TEST(General, LoadCouplingMapNoEdge) {
     std::ofstream ofs("test.arch");
     ofs << "1\n"
         << "noedge\n";
+    ofs.close();
     EXPECT_THROW(Architecture("test.arch"), QMAPException);
 }
 
@@ -34,5 +37,6 @@ TEST(General, LoadCalibrationDataNonexistentFile) {
     std::ofstream ofs("test.arch");
     ofs << "2\n"
         << "0 1\n";
+    ofs.close();
     EXPECT_THROW(Architecture("test.arch", "path/that/does/not/exist"), QMAPException);
 }
