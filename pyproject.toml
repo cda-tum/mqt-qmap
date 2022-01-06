@@ -16,5 +16,6 @@ environment = { LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/py
 
 [tool.cibuildwheel.macos]
 archs = "x86_64"
+environment = { MACOSX_DEPLOYMENT_TARGET = "10.15", DEPLOY = "ON" }
 
 [tool.cibuildwheel.windows]
