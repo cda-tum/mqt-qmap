@@ -23,8 +23,6 @@ endif ()
 
 # set deployment specific options
 if (DEPLOY)
-	# build a universal macOS binary in case this is a deployment build
-	set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
 	# set the macOS deployment target appropriately
 	set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
 endif ()
