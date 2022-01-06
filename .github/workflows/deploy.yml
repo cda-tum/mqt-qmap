@@ -66,8 +66,8 @@ jobs:
           python-version: '3.9'
       - name: Install Z3
         run: |
-             curl -L -H "Authorization: Bearer QQ==" -o z3.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
-              brew install -f z3.tar.gz
+             curl -L -H "Authorization: Bearer QQ==" -o z3-4.8.14.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
+             brew install -f z3-4.8.14.big_sur.bottle.tar.gz
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
         env:
