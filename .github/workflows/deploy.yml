@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: '3.9'
       - name: Build wheels
-        uses: pypa/cibuildwheel@$v2.3.1
+        uses: pypa/cibuildwheel@v2.3.1
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -65,8 +65,8 @@ jobs:
         with:
           python-version: '3.9'
       - name: Install Z3
-        run:  |
-              curl -L -H "Authorization: Bearer QQ==" -o z3.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:{{ env.Z3_HASH }}
+        run: |
+             curl -L -H "Authorization: Bearer QQ==" -o z3.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
               brew install -f z3.tar.gz
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
@@ -136,7 +136,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [build_manylinux_wheels, build_macos_wheels, build_windows_wheels, build_sdist]
+    needs: [ build_manylinux_wheels, build_macos_wheels, build_macos_m1_wheels, build_windows_wheels, build_sdist ]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:
