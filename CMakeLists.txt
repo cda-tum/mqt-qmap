@@ -73,6 +73,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 # add Python binding code
-if(BINDINGS AND Z3_FOUND)
+if(BINDINGS)
 	add_subdirectory(jkq/qmap)
 endif()

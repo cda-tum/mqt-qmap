@@ -72,7 +72,7 @@ JKQ QMAP is developed as a C++ library with an easy to use Python interface.
     ```
   However, in order to get the best performance out of QMAP, it is recommended to build it locally from the source distribution (see [system requirements](#system-requirements)) via
     ```bash
-    pip install --no-binary jkq.qmap
+    pip install  jkq.qmap --no-binary jkq.qmap
     ```
   This enables platform specific compiler optimizations that cannot be enabled on portable wheels.
 - Once installed, start using it in Python:
@@ -147,7 +147,7 @@ with any current C++ compiler supporting C++17 and a minimum CMake version of 3.
 In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
 accomplished in a multitude of ways:
 
-- Under Ubuntu 20.04 and newer: `sudo apt-get install z3`
+- Under Ubuntu 20.04 and newer: `sudo apt-get install libz3-dev`
 - Under macOS: `brew install z3`
 - Alternatively: `pip install z3-solver` and then append the corresponding path to the library path (`LD_LIBRARY_PATH` under Linux, `DYLD_LIBRARY_PATH` under macOS), e.g. via
     ```bash
@@ -195,9 +195,9 @@ Internally the JKQ QMAP library works in the following way
     mapper.map(config);
     ```
 - Dump the mapped circuit
-  ```c++
-  mapper.dumpResult("<PATH_TO_OUTPUT_FILE>");
-  ```
+    ```c++
+    mapper.dumpResult("<PATH_TO_OUTPUT_FILE>");
+    ```
 - Print the results
     ```c++
     mapper.printResult(std::cout);
@@ -207,7 +207,7 @@ Internally the JKQ QMAP library works in the following way
 
 To start off, clone this repository using
 ```shell
-$ git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
+git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
 ```
 Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. 
 If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.
@@ -221,7 +221,7 @@ The flag `-DCMAKE_BUILD_TYPE=Release` tells CMake to configure a *Release* build
 
 After configuring with CMake, the project can be built by calling
 ```shell
-$ cmake --build build --config Release
+cmake --build build --config Release
 ```
 This tries to build the project in the `build` directory (passed via `--build`).
 Some operating systems and developer environments explicitly require a configuration to be set, which is why the `--config` flag is also passed to the build command. The flag `--parallel <NUMBER_OF_THREADS>` may be added to trigger a parallel build.

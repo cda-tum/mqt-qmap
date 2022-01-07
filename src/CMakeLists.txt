@@ -7,7 +7,6 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	            ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
-	            ${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/${LIBNAME}/${SRCFILE}.cpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
@@ -15,7 +14,6 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/${LIBNAME}/${SRCFILE}.hpp
-	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
 
 	# set include directories
@@ -26,7 +24,7 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
 	# add JKQ::qfr library
-	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC JKQ::qfr z3::z3lib)
+	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC JKQ::qfr)
 
 	# enable interprocedural optimization if it is supported
 	include(CheckIPOSupported)
@@ -46,7 +44,12 @@ macro(add_qmap_library LIBNAME SRCFILE)
 		endif()
 		if(NOT DEPLOY)
 			# only include machine-specific optimizations when building for the host machine
-			target_compile_options(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC -mtune=native -march=native)
+			target_compile_options(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC -mtune=native)
+			include(CheckCXXCompilerFlag)
+			check_cxx_compiler_flag(-march=native HAS_MARCH_NATIVE)
+			if (HAS_MARCH_NATIVE)
+				target_compile_options(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC -march=native)
+			endif()
 		endif ()
 	endif()
 
@@ -69,6 +72,10 @@ endmacro()
 if (Z3_FOUND)
 	# exact mapper project library
 	add_qmap_library(exact ExactMapper)
+	# add encodings 
+	target_sources(${PROJECT_NAME}_exact_lib PUBLIC
+				${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
+				${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
 	# add Z3 library
 	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
 else()
