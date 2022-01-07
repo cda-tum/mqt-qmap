@@ -1,7 +1,0 @@
-ignore:
-  - "test/**/*"
-  - "extern/**/*"
-
-coverage:
-  range: 60..95
-  precision: 1
