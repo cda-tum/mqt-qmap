@@ -94,7 +94,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}
+          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static-2022
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
