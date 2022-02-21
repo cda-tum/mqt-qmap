@@ -94,13 +94,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
+          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static-2022
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
         run:   |
                git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 16 2019" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
+               cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
                cmake --build z3/build --config Release --parallel 8
       - name: Installing Z3
         shell: bash
