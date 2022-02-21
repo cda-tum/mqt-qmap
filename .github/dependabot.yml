@@ -7,9 +7,9 @@ updates:
     # Check the submodules for updates every week
     schedule:
       interval: "weekly"
+      day: "friday"
+      time: "06:00"
     assignees:
-      - "burgholzer"
-    reviewers:
       - "burgholzer"
 
   # Enable version updates for GitHub Actions
@@ -19,7 +19,7 @@ updates:
     # Check for updates to GitHub Actions every week
     schedule:
       interval: "weekly"
+      day: "friday"
+      time: "06:00"
     assignees:
-      - "burgholzer"
-    reviewers:
       - "burgholzer"
