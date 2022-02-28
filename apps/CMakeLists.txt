@@ -13,7 +13,7 @@ endif()
 
 macro(add_qmap_executable APPNAME)
 	add_executable(${PROJECT_NAME}_${APPNAME} ${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}_app.cpp)
-	target_link_libraries(${PROJECT_NAME}_${APPNAME} PUBLIC JKQ::${PROJECT_NAME}_${APPNAME}_lib Boost::program_options)
+	target_link_libraries(${PROJECT_NAME}_${APPNAME} PUBLIC MQT::${PROJECT_NAME}_${APPNAME}_lib Boost::program_options)
 	add_custom_command(TARGET ${PROJECT_NAME}_${APPNAME}
 	                   POST_BUILD
 	                   COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_${APPNAME}>/${PROJECT_NAME}_${APPNAME} ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_${APPNAME}
@@ -31,4 +31,3 @@ if (Boost_FOUND)
 else()
 	message(STATUS "Did not find Boost! Commandline applications will not be an available target!")
 endif ()
-

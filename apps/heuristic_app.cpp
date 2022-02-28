@@ -1,5 +1,5 @@
 /*
- * This file is part of the JKQ QMAP library which is released under the MIT license.
+ * This file is part of the MQT QMAP library which is released under the MIT license.
  * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
  */
 
@@ -12,7 +12,7 @@
 int main(int argc, char** argv) {
     namespace po = boost::program_options;
     // clang-format off
-    po::options_description description("JKQ QMAP heuristic mapper by https://iic.jku.at/eda/quantum -- Options");
+    po::options_description description("MQT QMAP heuristic mapper by https://iic.jku.at/eda/quantum -- Options");
     description.add_options()
             ("help,h", "produce help message")
             ("in", po::value<std::string>()->required(), "File to read from")

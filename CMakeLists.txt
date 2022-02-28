@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14...3.22)
 project(qmap
         LANGUAGES CXX
         VERSION 1.5.1
-        DESCRIPTION "QMAP  - A JKQ library for mapping of quantum circuits to quantum architectures"
+        DESCRIPTION "MQT QMAP  - A library for mapping of quantum circuits to quantum architectures"
         )
 
 # enable organization of targets into folders
@@ -74,5 +74,5 @@ endif()
 
 # add Python binding code
 if(BINDINGS)
-	add_subdirectory(jkq/qmap)
+	add_subdirectory(mqt/qmap)
 endif()

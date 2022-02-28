@@ -9,12 +9,14 @@ include include/configuration/*
 include cmake/*
 include apps/*
 graft jkq/*
+graft mqt/*
 graft extern/architectures
 graft extern/calibration
 include extern/qfr/CMakeLists.txt
 graft extern/qfr/src
 graft extern/qfr/include
 graft extern/qfr/jkq/qfr
+graft extern/qfr/mqt
 include extern/qfr/extern/dd_package/CMakeLists.txt
 graft extern/qfr/extern/dd_package/include
 graft extern/qfr/extern/json

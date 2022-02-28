@@ -1,4 +1,4 @@
-# add JKQ::qfr target
+# add MQT::qfr target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 
 macro(add_qmap_library LIBNAME SRCFILE)
@@ -23,8 +23,8 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	target_compile_features(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC cxx_std_17)
 	set_target_properties(${PROJECT_NAME}_${LIBNAME}_lib PROPERTIES CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 
-	# add JKQ::qfr library
-	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC JKQ::qfr)
+	# add MQT::qfr library
+	target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC MQT::qfr)
 
 	# enable interprocedural optimization if it is supported
 	include(CheckIPOSupported)
@@ -65,8 +65,8 @@ macro(add_qmap_library LIBNAME SRCFILE)
 		target_link_libraries(${PROJECT_NAME}_${LIBNAME}_lib PUBLIC --coverage)
 	endif()
 
-	# add JKQ alias
-	add_library(JKQ::${PROJECT_NAME}_${LIBNAME}_lib ALIAS ${PROJECT_NAME}_${LIBNAME}_lib)
+	# add MQT alias
+	add_library(MQT::${PROJECT_NAME}_${LIBNAME}_lib ALIAS ${PROJECT_NAME}_${LIBNAME}_lib)
 endmacro()
 
 if (Z3_FOUND)
