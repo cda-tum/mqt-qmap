@@ -1,14 +1,13 @@
-[![PyPI](https://img.shields.io/pypi/v/jkq.qmap?logo=pypi&style=plastic)](https://pypi.org/project/jkq.qmap/)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/iic-jku/qmap/CI?logo=github&style=plastic)](https://github.com/iic-jku/qmap/actions?query=workflow%3A%22CI%22)
-[![Codecov branch](https://img.shields.io/codecov/c/github/iic-jku/qmap/master?label=codecov&logo=codecov&style=plastic)](https://codecov.io/gh/iic-jku/qmap)
-![GitHub](https://img.shields.io/github/license/iic-jku/qmap?style=plastic)
-[![toolset: JKQ](https://img.shields.io/static/v1?label=toolset&message=JKQ&color=blue&style=plastic)](https://github.com/iic-jku/jkq)
+[![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=plastic)](https://pypi.org/project/mqt.qmap/)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/cda-tum/qmap/CI?logo=github&style=plastic)](https://github.com/cda-tum/qmap/actions?query=workflow%3A%22CI%22)
+[![Codecov branch](https://img.shields.io/codecov/c/github/cda-tum/qmap/master?label=codecov&logo=codecov&style=plastic)](https://codecov.io/gh/cda-tum/qmap)
+![GitHub](https://img.shields.io/github/license/cda-tum/qmap?style=plastic)
 [![arXiv](https://img.shields.io/static/v1?label=arXiv&message=1712.04722&color=inactive&style=plastic)](https://arxiv.org/abs/1712.04722)
 [![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2009.02376&color=inactive&style=plastic)](https://arxiv.org/abs/2009.02376)
 [![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2011.07314&color=inactive&style=plastic)](https://arxiv.org/abs/2011.07314)
 
-# QMAP - A JKQ tool for Quantum Circuit Mapping written in C++
-A [JKQ](https://github.com/iic-jku/jkq) tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed
+# MQT QMAP - A tool for Quantum Circuit Mapping written in C++
+A tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed
 in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
 , [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf), [[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
 , [[4]](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf).
@@ -30,7 +29,7 @@ L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal 
 
 The tool can be used for mapping quantum circuits in any of the following formats:
 
-* `QuantumCircuit` object from IBM's [Qiskit](https://github.com/Qiskit/qiskit) (only through the JKQ QMAP Python bindings)
+* `QuantumCircuit` object from IBM's [Qiskit](https://github.com/Qiskit/qiskit) (only through the MQT QMAP Python bindings)
 * `OpenQASM` (e.g. used by IBM's [Qiskit](https://github.com/Qiskit/qiskit)),
 * `Real` (e.g. from [RevLib](http://revlib.org)),
 * `TFC` (e.g. from [Reversible Logic Synthesis Benchmarks Page](http://webhome.cs.uvic.ca/~dmaslov/mach-read.html))
@@ -60,24 +59,24 @@ Note that, at the moment, circuits to be mapped are assumed to be already decomp
 
 For more information, please visit [iic.jku.at/eda/research/ibm_qx_mapping/](https://iic.jku.at/eda/research/ibm_qx_mapping/).
 
-If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/iic-jku/qmap/issues).
+If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/cda-tum/qmap/issues).
 
 ## Usage
 
-JKQ QMAP is developed as a C++ library with an easy to use Python interface.
+MQT QMAP is developed as a C++ library with an easy to use Python interface.
 
 - In order to make the library as easy to use as possible (without compilation), we provide pre-built wheels for most common platforms (64-bit Linux, MacOS, Windows). These can be installed using
     ```bash
-    pip install jkq.qmap
+    pip install mqt.qmap
     ```
   However, in order to get the best performance out of QMAP, it is recommended to build it locally from the source distribution (see [system requirements](#system-requirements)) via
     ```bash
-    pip install  jkq.qmap --no-binary jkq.qmap
+    pip install  mqt.qmap --no-binary mqt.qmap
     ```
   This enables platform specific compiler optimizations that cannot be enabled on portable wheels.
 - Once installed, start using it in Python:
     ```python
-    from jkq.qmap import *
+    from mqt.qmap import *
     results = compile(circ, arch)
     ```
 
@@ -158,7 +157,7 @@ accomplished in a multitude of ways:
 
 ### Library Organisation
 
-Internally the JKQ QMAP library works in the following way
+Internally the MQT QMAP library works in the following way
 
 - Import input file into a `qc::QuantumComputation` object
     ```c++
@@ -207,7 +206,7 @@ Internally the JKQ QMAP library works in the following way
 
 To start off, clone this repository using
 ```shell
-git clone --recurse-submodules -j8 https://github.com/iic-jku/qmap 
+git clone --recurse-submodules -j8 https://github.com/cda-tum/qmap 
 ```
 Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. 
 If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.

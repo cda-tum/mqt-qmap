@@ -1,5 +1,5 @@
 /*
-* This file is part of JKQ QMAP library which is released under the MIT license.
+* This file is part of MQT QMAP library which is released under the MIT license.
 * See file README.md or go to http://iic.jku.at/eda/research/quantum/ for more information.
 */
 

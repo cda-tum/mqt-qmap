@@ -75,19 +75,19 @@ with open(README_PATH) as readme_file:
     README = readme_file.read()
 
 setup(
-    name='jkq.qmap',
-    version='1.5.1',
+    name='mqt.qmap',
+    version='1.6.0',
     author='Lukas Burgholzer',
     author_email='lukas.burgholzer@jku.at',
-    description='QMAP - A JKQ tool for Quantum Circuit Mapping',
+    description='MQT QMAP - A tool for Quantum Circuit Mapping',
     long_description=README,
     long_description_content_type="text/markdown",
     license="MIT",
     url="https://iic.jku.at/eda/research/ibm_qx_mapping/",
-    ext_modules=[CMakeExtension('pyqmap', namespace='jkq.qmap.')],
+    ext_modules=[CMakeExtension('pyqmap', namespace='mqt.qmap.')],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
-    packages=find_namespace_packages(include=['jkq.*']),
+    packages=find_namespace_packages(include=['mqt.*']),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         "Programming Language :: Python :: 3",
@@ -100,10 +100,10 @@ setup(
         "Natural Language :: English",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     ],
-    keywords="jkq quantum compilation mapping",
+    keywords="mqt quantum compilation mapping",
     project_urls={
-        'Source': 'https://github.com/iic-jku/qmap/',
-        'Tracker': 'https://github.com/iic-jku/qmap/issues',
+        'Source': 'https://github.com/cda-tum/qmap/',
+        'Tracker': 'https://github.com/cda-tum/qmap/issues',
         'Research': 'https://iic.jku.at/eda/research/ibm_qx_mapping/',
     }
 )
