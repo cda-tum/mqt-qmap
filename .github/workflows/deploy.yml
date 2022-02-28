@@ -4,9 +4,9 @@ on:
   release:
     types: [ published ]
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 env:
