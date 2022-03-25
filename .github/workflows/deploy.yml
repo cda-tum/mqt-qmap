@@ -91,7 +91,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Cache Z3
         id:   cache-z3
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: z3
           key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static-2022
