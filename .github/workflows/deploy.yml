@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  Z3_GIT_TAG:   z3-4.8.14
-  Z3_HASH:      884f1128a33ea7dea3ad375e50ef5ea36b26623e2999119cf31252dd4650692f
+  Z3_GIT_TAG:   z3-4.8.15
+  Z3_HASH:      5849baf1f53f04149b800eb8a5db7df5bcab1e3f6470bfcd74b0116b8baa1185
 
 jobs:
   build_manylinux_wheels:
@@ -24,10 +24,8 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v3
         name: Install Python
-        with:
-          python-version: '3.9'
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
@@ -42,19 +40,17 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v3
         name: Install Python
-        with:
-          python-version: '3.9'
       - name: Install Z3
         run:  brew install z3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
 
   build_macos_m1_wheels:
     name:    Build wheels on macOS for Apple Silicon
-    runs-on: macos-11
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -62,14 +58,12 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v3
         name: Install Python
-        with:
-          python-version: '3.9'
       - name: Install Z3
         run: |
              curl -L -H "Authorization: Bearer QQ==" -o ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
              brew install -f ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
         env:
           CIBW_ARCHS_MACOS: arm64
       - uses: actions/upload-artifact@v2
@@ -86,8 +80,6 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v3
         name: Install Python
-        with:
-          python-version: '3.9'
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Cache Z3
         id:   cache-z3
@@ -114,15 +106,13 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
       - uses: actions/setup-python@v3
         name: Install Python
-        with:
-          python-version: '3.9'
       - name: Install Z3
         run: brew install z3
       - name: Build sdist
