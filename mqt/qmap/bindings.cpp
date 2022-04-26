@@ -107,6 +107,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("IBMQ_London", AvailableArchitecture::IBMQ_London)
             .value("IBMQ_Bogota", AvailableArchitecture::IBMQ_Bogota)
             .value("IBMQ_Tokyo", AvailableArchitecture::IBMQ_Tokyo)
+            .value("IBMQ_Ehningen", AvailableArchitecture::IBMQ_Ehningen)
             .export_values()
             .def(py::init([](const std::string& str) -> AvailableArchitecture { return architectureFromString(str); }));
 

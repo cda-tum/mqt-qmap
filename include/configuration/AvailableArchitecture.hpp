@@ -15,7 +15,8 @@ enum class AvailableArchitecture {
     IBMQ_Yorktown,
     IBMQ_London,
     IBMQ_Bogota,
-    IBMQ_Tokyo
+    IBMQ_Tokyo,
+    IBMQ_Ehningen
 };
 
 [[maybe_unused]] static std::string toString(const AvailableArchitecture architecture) {
@@ -32,6 +33,8 @@ enum class AvailableArchitecture {
             return "IBMQ_Bogota";
         case AvailableArchitecture::IBMQ_Tokyo:
             return "IBMQ_Tokyo";
+        case AvailableArchitecture::IBMQ_Ehningen:
+            return "IBMQ_Ehningen";
     }
     return " ";
 }
@@ -49,6 +52,8 @@ enum class AvailableArchitecture {
         return AvailableArchitecture::IBMQ_Bogota;
     } else if (architecture == "IBMQ_Tokyo" || architecture == "5") {
         return AvailableArchitecture::IBMQ_Tokyo;
+    } else if (architecture == "IBMQ_Ehningen" || architecture == "6") {
+        return AvailableArchitecture::IBMQ_Ehningen;
     } else {
         throw std::invalid_argument("Invalid architecture value: " + architecture);
     }
@@ -61,7 +66,9 @@ enum class AvailableArchitecture {
             {AvailableArchitecture::IBMQ_Yorktown, "5\n0 1\n1 0\n0 2\n2 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3\n2 4\n4 2"},
             {AvailableArchitecture::IBMQ_London, "5\n0 1\n1 0\n1 2\n2 1\n1 3\n3 1\n3 4\n4 3"},
             {AvailableArchitecture::IBMQ_Bogota, "5\n0 1\n1 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3"},
-            {AvailableArchitecture::IBMQ_Tokyo, "20\n0 1\n1 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3\n5 6\n6 5\n6 7\n7 6\n7 8\n8 7\n8 9\n9 8\n10 11\n11 10\n11 12\n12 11\n12 13\n13 12\n13 14\n14 13\n15 16\n16 15\n16 17\n17 16\n17 18\n18 17\n18 19\n19 18\n0 5\n5 0\n5 10\n10 5\n10 15\n15 10\n1 6\n6 1\n6 11\n11 6\n11 16\n16 11\n2 7\n7 2\n7 12\n12 7\n12 17\n17 12\n3 8\n8 3\n8 13\n13 8\n13 18\n18 13\n4 9\n9 4\n9 14\n14 9\n14 19\n19 14\n5 11\n11 5\n11 17\n17 11\n1 7\n7 1\n7 13\n13 7\n13 9\n9 13\n3 9\n9 3\n2 6\n6 2\n6 10\n10 6\n4 8\n8 4\n8 12\n12 8\n12 16\n16 12\n14 18\n18 14"}};
+            {AvailableArchitecture::IBMQ_Tokyo, "20\n0 1\n1 0\n1 2\n2 1\n2 3\n3 2\n3 4\n4 3\n5 6\n6 5\n6 7\n7 6\n7 8\n8 7\n8 9\n9 8\n10 11\n11 10\n11 12\n12 11\n12 13\n13 12\n13 14\n14 13\n15 16\n16 15\n16 17\n17 16\n17 18\n18 17\n18 19\n19 18\n0 5\n5 0\n5 10\n10 5\n10 15\n15 10\n1 6\n6 1\n6 11\n11 6\n11 16\n16 11\n2 7\n7 2\n7 12\n12 7\n12 17\n17 12\n3 8\n8 3\n8 13\n13 8\n13 18\n18 13\n4 9\n9 4\n9 14\n14 9\n14 19\n19 14\n5 11\n11 5\n11 17\n17 11\n1 7\n7 1\n7 13\n13 7\n13 9\n9 13\n3 9\n9 3\n2 6\n6 2\n6 10\n10 6\n4 8\n8 4\n8 12\n12 8\n12 16\n16 12\n14 18\n18 14"},
+            {AvailableArchitecture::IBMQ_Ehningen, "27\n0 1\n 1 0\n 1 2\n 1 4\n 2 1\n 2 3\n 3 2\n 3 5\n 4 1\n 4 7\n 5 3\n 5 8\n 6 7\n 7 4\n 7 6\n 7 10\n 8 5\n 8 9\n 8 11\n 9 8\n 10 7\n 10 12\n 11 8\n 11 14\n 12 10\n 12 13\n 12 15\n 13 12\n 13 14\n 14 11\n 14 13\n 14 16\n 15 12\n 15 18\n 16 14\n 16 19\n 17 18\n 18 15\n 18 17\n 18 21\n 19 16\n 19 20\n 19 22\n 20 19\n 21 18\n 21 23\n 22 19\n 22 25\n 23 21\n 23 24\n 24 23\n 24 25\n 25 22\n 25 24\n 25 26\n 26 25]"}
+    };
     return architectureMap.at(architecture);
 }
 
