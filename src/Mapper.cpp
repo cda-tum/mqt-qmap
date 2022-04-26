@@ -30,6 +30,11 @@ void Mapper::createLayers() {
     auto qubitsInLayer = std::set<unsigned short>{};
 
     for (auto& gate: qc) {
+        // skip over barrier instructions
+        if (gate->getType() == qc::Barrier || gate->getType() == qc::Measure) {
+            continue;
+        }
+
         if (!gate->isUnitary()) {
             throw QMAPException("Mapping not possible: circuit contains non-unitary operation: " + std::string(gate->getName()));
         }
