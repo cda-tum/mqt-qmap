@@ -273,12 +273,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     // Z3 context
     context c;
 
-    std::vector<unsigned short>                         pi(qubitChoice.begin(), qubitChoice.end());
-    unsigned long long                                  piCount{};
-    std::unordered_set<unsigned long long>              skipped_pi{};
-    std::vector<std::unordered_set<unsigned long long>> skipped_pi_per_layer{};
-    std::unordered_map<unsigned short, unsigned short>  physicalQubitIndex{};
-    unsigned short                                      qIdx = 0;
+    std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
+    unsigned long long                                 piCount{};
+    unsigned long long                                 internalPiCount{};
+    std::unordered_set<unsigned long long>             skipped_pi{};
+    std::unordered_map<unsigned short, unsigned short> physicalQubitIndex{};
+    unsigned short                                     qIdx = 0;
     for (const auto& Q: qubitChoice) {
         physicalQubitIndex[Q] = qIdx;
         ++qIdx;
@@ -287,7 +287,6 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
     /// 	Check necessary permutations	//
     //////////////////////////////////////////
-    skipped_pi_per_layer.resize(reducedLayerIndices.size());
     if (config.enableSwapLimits && !config.useBDD) {
         do {
             auto picost = architecture.minimumNumberOfSwaps(pi);
@@ -480,51 +479,53 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     /// 	Permutation Constraints			//
     //////////////////////////////////////////
     for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-        piCount = 0;
-        auto& i = x[k - 1];
-        auto& j = x[k];
+        piCount         = 0;
+        internalPiCount = 0;
+        auto& i         = x[k - 1];
+        auto& j         = x[k];
         do {
             if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                if (skipped_pi_per_layer[k].count(piCount) == 0) {
-                    expr equal = c.bool_val(true);
-                    for (unsigned short Q: qubitChoice) {
-                        for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
-                            auto before = i[physicalQubitIndex[Q]][q];
-                            auto after  = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
-                            equal       = equal && (before == after);
-                        }
+                expr equal = c.bool_val(true);
+                for (unsigned short Q: qubitChoice) {
+                    for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
+                        auto before = i[physicalQubitIndex[Q]][q];
+                        auto after  = j[physicalQubitIndex[pi[physicalQubitIndex[Q]]]][q];
+                        equal       = equal && (before == after);
                     }
-                    opt.add(implies(y[k - 1][piCount], equal.simplify()).simplify());
                 }
-                ++piCount;
+                opt.add(implies(y[k - 1][internalPiCount], equal.simplify()).simplify());
+                ++internalPiCount;
             }
+            ++piCount;
         } while (std::next_permutation(pi.begin(), pi.end()));
     }
 
     // Allow only 1 y_k_pi to be true
     if (config.encoding == Encoding::Naive) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-            expr onlyOne = c.int_val(0);
-            piCount      = 0;
+            expr onlyOne    = c.int_val(0);
+            piCount         = 0;
+            internalPiCount = 0;
             do {
                 if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                    if (skipped_pi_per_layer[k].count(piCount) == 0)
-                        onlyOne = onlyOne + ite(y[k - 1][piCount], c.int_val(1), c.int_val(0));
-                    ++piCount;
+                    onlyOne = onlyOne + ite(y[k - 1][internalPiCount], c.int_val(1), c.int_val(0));
+                    ++internalPiCount;
                 }
+                ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
             opt.add(onlyOne.simplify() == 1);
         }
     } else {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             std::vector<expr> varIDs;
-            piCount = 0;
+            piCount         = 0;
+            internalPiCount = 0;
             do {
                 if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                    if (skipped_pi_per_layer[k].count(piCount) == 0)
-                        varIDs.push_back(y[k - 1][piCount]);
-                    ++piCount;
+                    varIDs.push_back(y[k - 1][internalPiCount]);
+                    ++internalPiCount;
                 }
+                ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
             if (config.commanderGrouping == CommanderGrouping::Fixed2) {
                 opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
@@ -541,7 +542,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     /// 	Objective Function				//
     //////////////////////////////////////////
     // cost for permutations
-    piCount = 0;
+    piCount         = 0;
+    internalPiCount = 0;
     std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
     do {
         if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
@@ -552,14 +554,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
             }
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-                if (!config.enableSwapLimits || skipped_pi_per_layer[k].count(piCount) == 0) {
-                    opt.add(!y[k - 1][piCount], picost);
-                    if (config.useBDD)
-                        weightedVars[k].insert(WeightedVar(piCount, static_cast<int>(picost)));
-                }
+                opt.add(!y[k - 1][internalPiCount], picost);
+                if (config.useBDD)
+                    weightedVars[k].insert(WeightedVar(internalPiCount, static_cast<int>(picost)));
             }
-            ++piCount;
+            ++internalPiCount;
         }
+        ++piCount;
     } while (std::next_permutation(pi.begin(), pi.end()));
 
     if (config.enableSwapLimits && config.useBDD) {
