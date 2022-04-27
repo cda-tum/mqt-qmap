@@ -48,7 +48,6 @@ def normalize_subgraph(filename: str):
         qubits = int(lines[0])
         edges = lines[1:]
         edges = [(int(a), int(b)) for a, b in (edge.rstrip('\n').split(' ') for edge in edges)]
-        print(qubits, edges)
         # create an empty mapping between logical and physical qubits
         logical_to_physical_mapping = {}
         for i in range(qubits):
@@ -89,6 +88,8 @@ def normalize_subgraph(filename: str):
 def remap_qasm(device_qubits: int, logical_to_physical_mapping: dict, qasm: str):
     qasm_lines = qasm.split('\n')
     new_qasm = ''
+    qubit_register_match = re.compile(r'q\[(\d+)]')
+
     for line in qasm_lines:
         # deal with initial and output permutation info
         if line.startswith('// i') or line.startswith('// o'):
@@ -102,7 +103,6 @@ def remap_qasm(device_qubits: int, logical_to_physical_mapping: dict, qasm: str)
             new_qasm += line + '\n'
         else:
             # try to match a gate
-            qubit_register_match = re.compile(r'q[(\d+)]')
             new_qasm += re.sub(qubit_register_match, lambda x: 'q[' + str(logical_to_physical_mapping[int(x.group(1))]) + ']', line) + '\n'
 
     return new_qasm
@@ -119,10 +119,7 @@ def exact_mapping(device_qubits: int, benchmark_location: str, mapped_circuit_lo
 
             for benchmark in benchmarks:
                 name, qubits = parse_filename(benchmark)
-
-                if qubits > 4:
-                    continue
-                print('Starting benchmark: {} with {} qubits ... '.format(name, qubits), end='\n')
+                print('Starting benchmark: {} with {} qubits ... '.format(name, qubits), end='')
 
                 # orchestrate the exact mapper
                 qc = QuantumCircuit.from_qasm_file(original_benchmark_dir + category + "/" + benchmark)
@@ -139,9 +136,7 @@ def exact_mapping(device_qubits: int, benchmark_location: str, mapped_circuit_lo
                     # print(result.output.swaps, end='')
                     if best_result is None or result.output.swaps < best_result.output.swaps:
                         best_result = result
-                        print(best_result.mapped_circuit)
                         best_result.mapped_circuit = remap_qasm(device_qubits, logical_to_physical_mapping, result.mapped_circuit)
-                        print(best_result.mapped_circuit)
 
                     os.remove(normalized_arch_file)
 
@@ -163,5 +158,7 @@ if __name__ == '__main__':
     heuristic_mapped_benchmark_dir = mapped_benchmark_dir + "heuristic/"
     exact_mapped_benchmark_dir = mapped_benchmark_dir + "exact/"
 
-    # heuristic_mapping(benchmark_location, heuristic_mapped_benchmark_dir)
+    print("Starting heuristic mapping ...")
+    heuristic_mapping(benchmark_location, heuristic_mapped_benchmark_dir)
+    print("Starting exact mapping ...")
     exact_mapping(27, benchmark_location, exact_mapped_benchmark_dir)
