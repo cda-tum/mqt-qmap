@@ -29,6 +29,7 @@ protected:
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
         IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
         IBM_QX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
+        settings.verbose = true;
     }
 };
 
