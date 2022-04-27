@@ -86,7 +86,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static-2022
+          key: deploy-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/deploy.yml') }}
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash

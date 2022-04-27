@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: z3
-          key:  ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static
+          key: ci-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/ci.yml') }}
 
       - name: Building Z3
         if:   steps.cache-z3.outputs.cache-hit != 'true'
