@@ -14,7 +14,7 @@ defaults:
 env:
   BUILD_TYPE: Release
   CMAKE_BUILD_PARALLEL_LEVEL: 2
-  Z3_GIT_TAG: z3-4.8.15
+  Z3_GIT_TAG: z3-4.8.16
 
 jobs:
   codestyle:
