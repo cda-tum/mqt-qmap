@@ -67,9 +67,9 @@ if (BUILD_QMAP_TESTS)
 endif ()
 
 # add apps if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND NOT DEPLOY)
 	add_subdirectory(apps)
-endif()
+endif ()
 
 # add Python binding code
 if(BINDINGS)

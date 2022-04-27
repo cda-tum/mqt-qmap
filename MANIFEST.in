@@ -1,4 +1,3 @@
-graft apps
 prune test
 
 graft extern/qfr
