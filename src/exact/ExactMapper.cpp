@@ -149,6 +149,11 @@ void ExactMapper::map(const Configuration& settings) {
         } while (config.swapReduction == SwapReduction::Increasing && (limit <= upperLimit || config.swapLimit == 0) && limit < architecture.getCouplingLimit());
     }
 
+    // return in case no result has been found
+    if (results.timeout) {
+        return;
+    }
+
     // 8) Write best result and statistics
     auto layerIterator = reducedLayerIndices.begin();
     auto swapsIterator = mappingSwaps.begin();
