@@ -99,7 +99,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
