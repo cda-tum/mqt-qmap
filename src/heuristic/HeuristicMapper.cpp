@@ -32,6 +32,7 @@ void HeuristicMapper::map(const Configuration& ms) {
 
     unsigned long              gateidx = 0;
     std::vector<unsigned long> gatesToAdjust{};
+    results.output.gates = 0U;
     for (std::size_t i = 0; i < layers.size(); ++i) {
         Node result = AstarMap(i);
 
