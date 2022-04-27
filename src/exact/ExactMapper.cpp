@@ -33,6 +33,15 @@ void ExactMapper::map(const Configuration& settings) {
         ++k;
     }
 
+    // quickly terminate if the circuit only contains single-qubit gates
+    if (reducedLayerIndices.empty()) {
+        results.output  = results.input;
+        results.time    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
+        results.timeout = false;
+        qcMapped        = qc.clone();
+        return;
+    }
+
     unsigned long long maxIndex = factorial(qc.getNqubits()) * reducedLayerIndices.size();
     if (maxIndex > std::numeric_limits<int>::max()) {
         std::cerr << "The exact approach can only be used for up to " << std::numeric_limits<int>::max() << " permutation variables, due to 'layers * nq!' overflowing Z3's expr_vector class (uses 'int' index) when trying to instantiate permutation variables y_k_pi. Try reducing the number of layers or the number of qubits." << std::endl;
