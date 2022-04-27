@@ -3,5 +3,5 @@
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
 
-from .compile import compile
-from .pyqmap import Method, InitialLayout, Layering, Arch, CommanderGrouping, SwapReduction, Encoding, Configuration, MappingResults
+from mqt.qmap.compile import compile
+from mqt.qmap.pyqmap import Method, InitialLayout, Layering, Arch, CommanderGrouping, SwapReduction, Encoding, Configuration, MappingResults
