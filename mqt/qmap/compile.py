@@ -5,7 +5,7 @@
 import pickle
 from pathlib import Path
 from typing import Union
-from .pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
+from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
 
 
 def compile(circ, arch: Union[str, Arch],

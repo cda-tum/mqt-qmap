@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2021 Alwin Zulehner, Stefan Hillmich, Lukas Burgholzer, Hartwig Bauer, Alexandru Paler, and Robert Wille
+Copyright (c) 2022 Chair for Design Automation, Technical University of Munich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

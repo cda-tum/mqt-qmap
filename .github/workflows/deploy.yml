@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  Z3_GIT_TAG:   z3-4.8.15
-  Z3_HASH:      5849baf1f53f04149b800eb8a5db7df5bcab1e3f6470bfcd74b0116b8baa1185
+  Z3_GIT_TAG: z3-4.8.16
+  Z3_HASH:    a6274d2eea099f27c19bfbd736f4909ee9a373124ef0c017954fd38d56f4061c
 
 jobs:
   build_manylinux_wheels:
@@ -86,7 +86,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: z3
-          key: ${{ runner.OS }}-z3-${{ env.Z3_GIT_TAG }}-static-2022
+          key: deploy-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/deploy.yml') }}
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
@@ -99,7 +99,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
+        uses: pypa/cibuildwheel@v2.4.0
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl

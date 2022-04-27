@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 project(qmap
         LANGUAGES CXX
-        VERSION 1.6.0
         DESCRIPTION "MQT QMAP - A library for mapping of quantum circuits to quantum architectures"
         )
 
@@ -68,9 +67,9 @@ if (BUILD_QMAP_TESTS)
 endif ()
 
 # add apps if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND NOT DEPLOY)
 	add_subdirectory(apps)
-endif()
+endif ()
 
 # add Python binding code
 if(BINDINGS)

@@ -1,33 +1,35 @@
-[![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=plastic)](https://pypi.org/project/mqt.qmap/)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/cda-tum/qmap/CI?logo=github&style=plastic)](https://github.com/cda-tum/qmap/actions?query=workflow%3A%22CI%22)
-[![Codecov branch](https://img.shields.io/codecov/c/github/cda-tum/qmap/master?label=codecov&logo=codecov&style=plastic)](https://codecov.io/gh/cda-tum/qmap)
-![GitHub](https://img.shields.io/github/license/cda-tum/qmap?style=plastic)
-[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=1712.04722&color=inactive&style=plastic)](https://arxiv.org/abs/1712.04722)
-[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2009.02376&color=inactive&style=plastic)](https://arxiv.org/abs/2009.02376)
-[![arXiv](https://img.shields.io/static/v1?label=arXiv&message=2011.07314&color=inactive&style=plastic)](https://arxiv.org/abs/2011.07314)
+[![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=flat-square)](https://pypi.org/project/mqt.qmap/)
+![OS](https://img.shields.io/badge/os-linux%20%7C%20macos%20%7C%20windows-blue?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/CI?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
+[![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Deploy%20to%20PyPI?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
+[![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
 # MQT QMAP - A tool for Quantum Circuit Mapping written in C++
-A tool for quantum circuit mapping by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at) based on methods proposed
-in [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
-, [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf), [[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
-, [[4]](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf).
 
-[[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
+A tool for quantum circuit mapping developed by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/) based on methods proposed
+in [[1]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
+, [[2]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
+, [[3]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
+, [[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf).
+
+[[1]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
 A. Zulehner, A. Paler, and R. Wille. An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures.
 *IEEE Transactions on Computer Aided Design of Integrated Circuits and Systems (TCAD)*, 2018.
 
-[[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
+[[2]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
 R. Wille, L. Burgholzer, and A. Zulehner. Mapping Quantum Circuits to IBM QX Architectures Using the Minimal Number of SWAP and H Operations. In *Design Automation Conference (DAC)*, 2019.
 
-[[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
+[[3]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
 S. Hillmich, A. Zulehner, and R. Wille. Exploiting Quantum Teleportation in Quantum Circuit Mapping.
 *In Asia and South Pacific Design Automation Conference (ASP-DAC)*, 2021.
 
-[[4]](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
+[[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
 L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal Quantum Circuit Mapping.
 *In Asia and South Pacific Design Automation Conference (ASP-DAC)*, 2022.
 
-The tool can be used for mapping quantum circuits in any of the following formats:
+QMAP is part of the Munich Quantum Toolkit (MQT; formerly known as JKQ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
+It builds upon [our quantum functionality representation (QFR)](https://github.com/cda-tum/qfr) and can be used for mapping quantum circuits in any of the following formats:
 
 * `QuantumCircuit` object from IBM's [Qiskit](https://github.com/Qiskit/qiskit) (only through the MQT QMAP Python bindings)
 * `OpenQASM` (e.g. used by IBM's [Qiskit](https://github.com/Qiskit/qiskit)),
@@ -50,16 +52,16 @@ to any given architecture, e.g., the 5-qubit, T-shaped IBMQ London architecture,
 ```
 with the following available methods:
 
-- **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://iic.jku.at/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
-  and [[3]](https://iic.jku.at/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf).
-- **Exact Mapper**: Exact solution utilizing the SMT Solver Z3. For details see [[2]](https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
-  and [[4]](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf).
+- **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
+  and [[3]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf).
+- **Exact Mapper**: Exact solution utilizing the SMT Solver Z3. For details see [[2]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
+  and [[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf).
 
 Note that, at the moment, circuits to be mapped are assumed to be already decomposed into elementary gates supported by the targeted device. More specifically, circuits must not contain gates acting on more than two qubits.
 
-For more information, please visit [iic.jku.at/eda/research/ibm_qx_mapping/](https://iic.jku.at/eda/research/ibm_qx_mapping/).
+For more information, please visit [cda.cit.tum.de/research/ibm_qx_mapping/](https://www.cda.cit.tum.de/research/ibm_qx_mapping/).
 
-If you have any questions, feel free to contact us via [iic-quantum@jku.at](mailto:iic-quantum@jku.at) or by creating an issue on [GitHub](https://github.com/cda-tum/qmap/issues).
+If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de) or by creating an issue on [GitHub](https://github.com/cda-tum/qmap/issues).
 
 ## Usage
 
@@ -122,7 +124,8 @@ There are several configuration options that can be passed to the `compile` func
 
 - Per default, the exact mapper searches for a suitable mapping by considering every possible (connected) subset of qubits instead of the whole architecture at once. This can be disabled by setting `use_subsets=False`.
 
-- The exact mapper also offers the `swap_reduction` option to enable limiting the number of swaps considered per layer (as proposed in [[4]](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
+- The exact mapper also offers the `swap_reduction` option to enable limiting the number of swaps considered per layer (as proposed
+  in [[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
   , which offers the following options:
     - `none`: consider whole search space
     - `coupling_limit` (*default*): calculate the max swaps per layer based on the longest path of current choice of qubits, or if `use_subsets` is disabled considers the whole architecture
@@ -142,7 +145,7 @@ general, we recommend to use the Python approach described above, as these comma
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments). However, the implementation should be compatible
 with any current C++ compiler supporting C++17 and a minimum CMake version of 3.14.
 
-`boost/program_options >= 1.50` is required for building the the commandline applications of the mapping tool.
+`boost/program_options >= 1.50` is required for building the commandline applications of the mapping tool.
 
 In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
 accomplished in a multitude of ways:
@@ -287,7 +290,7 @@ For the [exact mapping](https://dblp.org/rec/conf/dac/WilleBZ19.html?view=bibtex
 }
 ````
 
-For the [search space limitation in the exact mapping](https://iic.jku.at/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf), please cite
+For the [search space limitation in the exact mapping](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf), please cite
 
 ```bibtex
 @inproceedings{burgholzer2022limitingSearchSpace,
