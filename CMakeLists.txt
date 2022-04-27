@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 project(qmap
         LANGUAGES CXX
-        VERSION 1.6.0
         DESCRIPTION "MQT QMAP - A library for mapping of quantum circuits to quantum architectures"
         )
 

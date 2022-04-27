@@ -1,24 +1,14 @@
-include README.md LICENSE CMakeLists.txt
-include src/*
-include src/exact/*
-include src/heuristic/*
-include include/*
-include include/exact/*
-include include/heuristic/*
-include include/configuration/*
-include cmake/*
-include apps/*
-graft jkq/*
-graft mqt/*
-graft extern/architectures
-graft extern/calibration
-include extern/qfr/CMakeLists.txt
-graft extern/qfr/src
-graft extern/qfr/include
-graft extern/qfr/jkq/qfr
-graft extern/qfr/mqt
-include extern/qfr/extern/dd_package/CMakeLists.txt
-graft extern/qfr/extern/dd_package/include
-graft extern/qfr/extern/json
-graft extern/qfr/extern/pybind11
-graft extern/qfr/extern/pybind11_json
+prune test
+
+graft extern/qfr
+prune **/test
+prune **/tests
+prune **/doc
+prune **/docs
+prune **/apps
+prune **/.github
+
+prune extern/qfr/extern/json/benchmarks
+prune extern/qfr/extern/json/include
+prune extern/qfr/extern/json/third_party
+prune extern/qfr/extern/dd_package/extern

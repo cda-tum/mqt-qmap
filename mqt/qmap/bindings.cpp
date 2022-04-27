@@ -12,6 +12,9 @@
 #include "pybind11_json/pybind11_json.hpp"
 #include "qiskit/QuantumCircuit.hpp"
 
+#define STRINGIFY(x) #x
+#define MACRO_STRINGIFY(x) STRINGIFY(x)
+
 namespace py = pybind11;
 namespace nl = nlohmann;
 using namespace pybind11::literals;
@@ -207,7 +210,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("teleportations", &MappingResults::CircuitInfo::teleportations);
 
 #ifdef VERSION_INFO
-    m.attr("__version__") = VERSION_INFO;
+    m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
     m.attr("__version__") = "dev";
 #endif
