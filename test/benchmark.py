@@ -78,8 +78,7 @@ def normalize_subgraph(filename: str):
                 current_qubit += 1
 
         normalized_edges = [(physical_to_logical_mapping[a], physical_to_logical_mapping[b]) for a, b in edges]
-        print(normalized_edges)
-        normalized_filename = filename.replace('.arch', '_normalized.arch')
+        normalized_filename = "IBMQ_Ehningen.arch"
         with open(normalized_filename, 'w+') as normalized_f:
             normalized_f.write(str(qubits) + '\n')
             for a, b in normalized_edges:
@@ -129,14 +128,14 @@ def exact_mapping(device_qubits: int, benchmark_location: str, mapped_circuit_lo
                 qc = QuantumCircuit.from_qasm_file(original_benchmark_dir + category + "/" + benchmark)
                 qc.name = name
 
-                subgraph_directory = "subgraphs/ibmq_kolkata/" + str(qubits) + "/"
+                subgraph_directory = "subgraphs/ibmq_ehningen/" + str(qubits) + "/"
                 best_result = None
                 for arch in os.listdir(subgraph_directory):
                     arch_file = os.path.join(subgraph_directory, arch)
                     logical_to_physical_mapping = normalize_subgraph(arch_file)
 
-                    normalized_arch_file = arch_file.replace('.arch', '_normalized.arch')
-                    result = qmap.compile(circ=qc, arch=normalized_arch_file, method="exact", verbose=True)
+                    normalized_arch_file = 'IBMQ_Ehningen.arch'
+                    result = qmap.compile(circ=qc, arch=normalized_arch_file, method="exact", verbose=False)
                     # print(result.output.swaps, end='')
                     if best_result is None or result.output.swaps < best_result.output.swaps:
                         best_result = result
