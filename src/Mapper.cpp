@@ -157,3 +157,30 @@ void Mapper::finalizeMappedCircuit() {
     // append measurements according to output permutation
     qcMapped.appendMeasurementsAccordingToOutputPermutation();
 }
+
+void Mapper::placeRemainingArchitectureQubits() {
+    if (qc.getNqubits() < architecture.getNqubits()) {
+        for (auto logical = qc.getNqubits(); logical < static_cast<decltype(logical)>(architecture.getNqubits()); ++logical) {
+            dd::Qubit physical = -1;
+
+            // check if the corresponding physical qubit is already in use
+            if (qcMapped.initialLayout.find(static_cast<dd::Qubit>(logical)) != qcMapped.initialLayout.end()) {
+                // get the next unused physical qubit
+                for (physical = 0; physical < static_cast<dd::Qubit>(architecture.getNqubits()); ++physical) {
+                    if (qcMapped.initialLayout.find(physical) == qcMapped.initialLayout.end()) {
+                        break;
+                    }
+                }
+            } else {
+                physical = static_cast<dd::Qubit>(logical);
+            }
+
+            qubits.at(physical) = logical;
+
+            // mark architecture qubit as ancillary and garbage
+            qcMapped.initialLayout[physical] = static_cast<dd::Qubit>(logical);
+            qcMapped.setLogicalQubitAncillary(logical);
+            qcMapped.setLogicalQubitGarbage(logical);
+        }
+    }
+}

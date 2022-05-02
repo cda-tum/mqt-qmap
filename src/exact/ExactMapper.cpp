@@ -208,30 +208,7 @@ void ExactMapper::map(const Configuration& settings) {
             }
 
             // place remaining architecture qubits
-            if (qc.getNqubits() < architecture.getNqubits()) {
-                for (auto logical = qc.getNqubits(); logical < static_cast<decltype(logical)>(architecture.getNqubits()); ++logical) {
-                    dd::Qubit physical = -1;
-
-                    // check if the corresponding physical qubit is already in use
-                    if (qcMapped.initialLayout.find(static_cast<dd::Qubit>(logical)) != qcMapped.initialLayout.end()) {
-                        // get the next unused physical qubit
-                        for (physical = 0; physical < static_cast<dd::Qubit>(architecture.getNqubits()); ++physical) {
-                            if (qcMapped.initialLayout.find(physical) == qcMapped.initialLayout.end()) {
-                                break;
-                            }
-                        }
-                    } else {
-                        physical = static_cast<dd::Qubit>(logical);
-                    }
-
-                    qubits.at(physical) = logical;
-
-                    // remove logical qubit and add back as ancillary (and garbage) qubit.
-                    qcMapped.initialLayout[physical] = static_cast<dd::Qubit>(logical);
-                    qcMapped.setLogicalQubitAncillary(logical);
-                    qcMapped.setLogicalQubitGarbage(logical);
-                }
-            }
+            placeRemainingArchitectureQubits();
 
             if (settings.verbose) {
                 for (auto q = 0U; q < architecture.getNqubits(); ++q) {
