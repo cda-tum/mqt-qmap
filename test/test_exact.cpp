@@ -24,7 +24,9 @@ protected:
     ExactMapper            IBM_QX4_mapper{qc, IBM_QX4};
 
     void SetUp() override {
-        qc.import(test_example_dir + GetParam() + ".qasm");
+        if (::testing::UnitTest::GetInstance()->current_test_info()->value_param()) {
+            qc.import(test_example_dir + GetParam() + ".qasm");
+        }
         IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
         IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
@@ -350,4 +352,13 @@ TEST_P(ExactTest, toStringMethods) {
     EXPECT_EQ(toString(SwapReduction::Increasing), "increasing");
 
     SUCCEED() << "ToStringMethods working";
+}
+
+TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
+    qc.addQubitRegister(2U);
+    qc.x(0);
+    qc.x(1);
+    IBM_QX4_mapper.map(settings);
+    IBM_QX4_mapper.dumpResult(std::cout, qc::OpenQASM);
+    SUCCEED() << "Mapping successful";
 }
