@@ -62,6 +62,18 @@ protected:
 
     virtual std::size_t getNextLayer(std::size_t idx);
 
+    virtual void finalizeMappedCircuit() {
+        // unify quantum registers
+        qcMapped.unifyQuantumRegisters();
+        // add additional qubits if the architecture contains more qubits than the circuit
+        if (architecture.getNqubits() > qcMapped.getNqubits()) {
+            qcMapped.addQubitRegister(architecture.getNqubits() - qcMapped.getNqubits());
+        }
+
+        // append measurements according to output permutation
+        qcMapped.appendMeasurementsAccordingToOutputPermutation();
+    }
+
 public:
     Mapper(qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;
