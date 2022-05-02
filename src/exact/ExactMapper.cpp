@@ -614,6 +614,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
         choiceResults.output.cnots            = choiceResults.input.cnots;
         choiceResults.output.gates            = choiceResults.output.singleQubitGates + choiceResults.output.cnots;
+        choiceResults.output.swaps            = 0U;
+        choiceResults.output.directionReverse = 0U;
 
         // swaps
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
