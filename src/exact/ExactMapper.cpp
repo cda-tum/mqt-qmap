@@ -227,8 +227,9 @@ void ExactMapper::map(const Configuration& settings) {
                     qubits.at(physical) = logical;
 
                     // remove logical qubit and add back as ancillary (and garbage) qubit.
-                    qcMapped.removeQubit(logical);
-                    qcMapped.addAncillaryQubit(physical, -1);
+                    qcMapped.initialLayout[physical] = static_cast<dd::Qubit>(logical);
+                    qcMapped.setLogicalQubitAncillary(logical);
+                    qcMapped.setLogicalQubitGarbage(logical);
                 }
             }
 
