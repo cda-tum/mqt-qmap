@@ -362,3 +362,35 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
     IBM_QX4_mapper.dumpResult(std::cout, qc::OpenQASM);
     SUCCEED() << "Mapping successful";
 }
+
+TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
+    using namespace dd::literals;
+
+    CouplingMap  cm{{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+    Architecture arch(4, cm);
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    auto mapper = ExactMapper(qc, arch);
+    mapper.map(settings);
+
+    std::ostringstream oss{};
+    mapper.dumpResult(oss, qc::OpenQASM);
+    std::cout << oss.str() << std::endl;
+    EXPECT_STREQ(oss.str().c_str(),
+                 "// i 1 2 3\n"
+                 "// o 1 2 3\n"
+                 "OPENQASM 2.0;\n"
+                 "include \"qelib1.inc\";\n"
+                 "qreg q[4];\n"
+                 "creg c[3];\n"
+                 "cx q[1], q[3];\n"
+                 "cx q[2], q[1];\n"
+                 "cx q[3], q[2];\n"
+                 "measure q[1] -> c[1];\n"
+                 "measure q[2] -> c[2];\n"
+                 "measure q[3] -> c[0];\n");
+}
