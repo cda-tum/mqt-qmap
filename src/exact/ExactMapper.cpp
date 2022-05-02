@@ -39,6 +39,12 @@ void ExactMapper::map(const Configuration& settings) {
         results.time    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
         results.timeout = false;
         qcMapped        = qc.clone();
+
+        // unify quantum registers
+        qcMapped.unifyQuantumRegisters();
+
+        // append measurements according to output permutation
+        qcMapped.appendMeasurementsAccordingToOutputPermutation();
         return;
     }
 
@@ -266,6 +272,12 @@ void ExactMapper::map(const Configuration& settings) {
             ++layerIterator;
         }
     }
+
+    // unify quantum registers
+    qcMapped.unifyQuantumRegisters();
+
+    // append measurements according to output permutation
+    qcMapped.appendMeasurementsAccordingToOutputPermutation();
 
     auto                          end  = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
