@@ -126,3 +126,34 @@ std::size_t Mapper::getNextLayer(std::size_t idx) {
     }
     return -1;
 }
+
+void Mapper::finalizeMappedCircuit() {
+    // add additional qubits if the architecture contains more qubits than the circuit
+    if (architecture.getNqubits() > qcMapped.getNqubits()) {
+        for (auto logicalQubit = qcMapped.getNqubits(); logicalQubit < static_cast<dd::QubitCount>(architecture.getNqubits()); ++logicalQubit) {
+            dd::Qubit physicalQubit = -1;
+
+            // check if the corresponding physical qubit is already in use
+            if (qcMapped.initialLayout.find(static_cast<dd::Qubit>(logicalQubit)) != qcMapped.initialLayout.end()) {
+                // get the next unused physical qubit
+                for (physicalQubit = 0; physicalQubit < static_cast<dd::Qubit>(architecture.getNqubits()); ++physicalQubit) {
+                    if (qcMapped.initialLayout.find(physicalQubit) == qcMapped.initialLayout.end()) {
+                        break;
+                    }
+                }
+            } else {
+                physicalQubit = static_cast<dd::Qubit>(logicalQubit);
+            }
+
+            assert(physicalQubit != -1);
+
+            // the added logical qubits are not used in the circuit itself, so they are regarded garbage
+            qcMapped.addAncillaryQubit(physicalQubit, -1);
+        }
+    }
+    // unify quantum registers
+    qcMapped.unifyQuantumRegisters();
+
+    // append measurements according to output permutation
+    qcMapped.appendMeasurementsAccordingToOutputPermutation();
+}
