@@ -59,21 +59,21 @@ void ExactMapper::map(const Configuration& settings) {
     }
 
     // 2) For all possibilities k (=m over n) to pick n qubits from m physical qubits
-    std::vector<unsigned short> qubits{};
+    std::vector<unsigned short> qubitRange{};
     for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
-        qubits.push_back(i);
+        qubitRange.push_back(i);
     }
     std::vector<QubitChoice> allPossibleQubitChoices{};
     if (config.useSubsets) {
         do {
             QubitChoice qubitChoice{};
             for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
-                qubitChoice.insert(qubits.at(i));
+                qubitChoice.insert(qubitRange.at(i));
             }
             allPossibleQubitChoices.push_back(qubitChoice);
-        } while (next_combination(qubits.begin(), qubits.begin() + qc.getNqubits(), qubits.end()));
+        } while (next_combination(qubitRange.begin(), qubitRange.begin() + qc.getNqubits(), qubitRange.end()));
     } else {
-        QubitChoice allQubits(qubits.begin(), qubits.end());
+        QubitChoice allQubits(qubitRange.begin(), qubitRange.end());
         allPossibleQubitChoices.push_back(allQubits);
     }
     // 3) determine exact mapping for this qubit choice
@@ -182,7 +182,7 @@ void ExactMapper::map(const Configuration& settings) {
         }
     }
 
-    for (const auto& q: qubits) {
+    for (const auto& q: qubitRange) {
         locations.at(q) = static_cast<short>(q);
     }
 
@@ -234,8 +234,8 @@ void ExactMapper::map(const Configuration& settings) {
             }
 
             if (settings.verbose) {
-                for (const auto& q: qubits) {
-                    std::cout << q << " ";
+                for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+                    std::cout << qubits.at(q) << " ";
                 }
                 std::cout << std::endl;
             }
@@ -295,8 +295,8 @@ void ExactMapper::map(const Configuration& settings) {
                 std::swap(locations.at(qubits.at(swap.first)), locations.at(qubits.at(swap.second)));
 
                 if (settings.verbose) {
-                    for (const auto& q: qubits) {
-                        std::cout << q << " ";
+                    for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+                        std::cout << qubits.at(q) << " ";
                     }
                     std::cout << std::endl;
                 }
