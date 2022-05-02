@@ -35,10 +35,13 @@ void ExactMapper::map(const Configuration& settings) {
 
     // quickly terminate if the circuit only contains single-qubit gates
     if (reducedLayerIndices.empty()) {
-        results.output  = results.input;
-        results.time    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
-        results.timeout = false;
-        qcMapped        = qc.clone();
+        results.output.gates            = results.input.gates;
+        results.output.cnots            = results.input.cnots;
+        results.output.singleQubitGates = results.input.singleQubitGates;
+        results.output.layers           = results.input.layers;
+        results.time                    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
+        results.timeout                 = false;
+        qcMapped                        = qc.clone();
         finalizeMappedCircuit();
         return;
     }
@@ -107,7 +110,10 @@ void ExactMapper::map(const Configuration& settings) {
 
             MappingResults choiceResults{};
             choiceResults.copyInput(results);
-            choiceResults.config.swapLimit = limit;
+            choiceResults.config.swapLimit        = limit;
+            choiceResults.output.swaps            = 0U;
+            choiceResults.output.directionReverse = 0U;
+            choiceResults.output.gates            = std::numeric_limits<unsigned long>::max();
 
             // 4) reduce coupling map
             CouplingMap reducedCouplingMap = architecture.getCouplingMap();
@@ -150,7 +156,7 @@ void ExactMapper::map(const Configuration& settings) {
         } while (config.swapReduction == SwapReduction::Increasing && (limit <= upperLimit || config.swapLimit == 0) && limit < architecture.getCouplingLimit());
 
         // stop if a perfect result has been found
-        if (results.output.swaps == 0 && results.output.directionReverse == 0) {
+        if (results.output.swaps == 0U && results.output.directionReverse == 0U) {
             break;
         }
     }
@@ -180,18 +186,50 @@ void ExactMapper::map(const Configuration& settings) {
         locations.at(q) = static_cast<short>(q);
     }
 
-    for (unsigned long i = 0; i < layers.size(); ++i) {
-        if (i == 0) {
+    for (unsigned long i = 0U; i < layers.size(); ++i) {
+        if (i == 0U) {
+            // invert the initial layout of the original circuit (most certainly the identity)
+            // in order to determine the correct qubit mapping
             qc::Permutation inverseInitialLayout{};
-            for (auto& pu: qc.initialLayout)
-                inverseInitialLayout.insert({pu.second, pu.first});
+            for (const auto& [physical, logical]: qc.initialLayout) {
+                inverseInitialLayout.insert({logical, physical});
+            }
+
+            qcMapped.initialLayout.clear();
+            qcMapped.outputPermutation.clear();
 
             // no swaps but initial permutation
-            for (const auto& assignment: *swapsIterator) {
-                locations.at(inverseInitialLayout.at(assignment.second)) = static_cast<short>(assignment.first);
-                qubits.at(assignment.first)                              = inverseInitialLayout.at(assignment.second);
-                qcMapped.initialLayout.at(assignment.first)              = inverseInitialLayout.at(assignment.second);
-                qcMapped.outputPermutation.at(assignment.first)          = inverseInitialLayout.at(assignment.second);
+            for (const auto& [physical, logical]: *swapsIterator) {
+                dd::Qubit inverseLogical                                     = inverseInitialLayout.at(static_cast<dd::Qubit>(logical));
+                locations.at(inverseLogical)                                 = static_cast<short>(physical);
+                qubits.at(physical)                                          = static_cast<unsigned short>(inverseLogical);
+                qcMapped.initialLayout[static_cast<dd::Qubit>(physical)]     = inverseLogical;
+                qcMapped.outputPermutation[static_cast<dd::Qubit>(physical)] = inverseLogical;
+            }
+
+            // place remaining architecture qubits
+            if (qc.getNqubits() < architecture.getNqubits()) {
+                for (auto logical = qc.getNqubits(); logical < static_cast<decltype(logical)>(architecture.getNqubits()); ++logical) {
+                    dd::Qubit physical = -1;
+
+                    // check if the corresponding physical qubit is already in use
+                    if (qcMapped.initialLayout.find(static_cast<dd::Qubit>(logical)) != qcMapped.initialLayout.end()) {
+                        // get the next unused physical qubit
+                        for (physical = 0; physical < static_cast<dd::Qubit>(architecture.getNqubits()); ++physical) {
+                            if (qcMapped.initialLayout.find(physical) == qcMapped.initialLayout.end()) {
+                                break;
+                            }
+                        }
+                    } else {
+                        physical = static_cast<dd::Qubit>(logical);
+                    }
+
+                    qubits.at(physical) = logical;
+
+                    // remove logical qubit and add back as ancillary (and garbage) qubit.
+                    qcMapped.removeQubit(logical);
+                    qcMapped.addAncillaryQubit(physical, -1);
+                }
             }
 
             if (settings.verbose) {
@@ -614,8 +652,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
         choiceResults.output.cnots            = choiceResults.input.cnots;
         choiceResults.output.gates            = choiceResults.output.singleQubitGates + choiceResults.output.cnots;
-        choiceResults.output.swaps            = 0U;
-        choiceResults.output.directionReverse = 0U;
+        assert(choiceResults.output.swaps == 0U);
+        assert(choiceResults.output.directionReverse == 0U);
 
         // swaps
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
