@@ -374,7 +374,7 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
     qc.x(1, 2_pc);
     qc.x(2, 0_pc);
 
-    auto mapper = ExactMapper(qc, arch);
+    auto mapper         = ExactMapper(qc, arch);
     settings.useSubsets = false;
     mapper.map(settings);
 
