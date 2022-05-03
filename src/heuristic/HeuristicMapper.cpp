@@ -61,8 +61,6 @@ void HeuristicMapper::map(const Configuration& ms) {
                         results.output.gates += COST_TELEPORTATION;
                         results.output.teleportations++;
                     }
-                    std::swap(qcMapped.outputPermutation.at(swap.first), qcMapped.outputPermutation.at(swap.second));
-
                     gateidx++;
                 }
             }
@@ -160,7 +158,6 @@ void HeuristicMapper::map(const Configuration& ms) {
                     locations.at(target) = loc;
                     op->setTargets({static_cast<dd::Qubit>(loc)});
                     qcMapped.initialLayout.at(target) = loc;
-                    qc.outputPermutation.at(target)   = loc;
                 } else {
                     op->setTargets({static_cast<dd::Qubit>(targetLocation)});
                 }
@@ -168,11 +165,18 @@ void HeuristicMapper::map(const Configuration& ms) {
         }
     }
 
-    for (std::size_t i = 0; i < qubits.size(); ++i) {
-        if (qubits[i] == -1) {
-            qcMapped.outputPermutation.erase(static_cast<dd::Qubit>(i));
+    // infer output permutation from qubit locations
+    qcMapped.outputPermutation.clear();
+    std::size_t count = 0U;
+    for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
+        if (qubits[i] != -1) {
+            qcMapped.outputPermutation[static_cast<dd::Qubit>(i)] = static_cast<dd::Qubit>(qubits[i]);
+        } else {
+            qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
+            ++count;
         }
     }
+    finalizeMappedCircuit();
 
     const auto                    end  = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end - start;
