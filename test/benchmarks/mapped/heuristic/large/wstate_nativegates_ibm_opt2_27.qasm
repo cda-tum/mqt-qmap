@@ -1,8 +1,9 @@
 // i 26 20 16 19 22 25 24 23 21 17 18 15 6 4 7 10 12 13 14 11 9 8 5 3 2 1 0
-// o 26 25 22 20 16 19 24 23 21 18 17 15 12 10 6 4 7 13 14 11 8 9 5 3 2 1 0
+// o 26 20 16 19 22 25 24 23 21 17 18 15 6 4 7 10 12 13 14 11 9 8 5 3 2 1 0
 OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[27];
+creg c[27];
 sx q[26];
 rz(0.785398163397448) q[26];
 sx q[26];
@@ -230,3 +231,30 @@ swap q[24], q[25];
 swap q[19], q[22];
 cx q[25], q[22];
 cx q[26], q[25];
+measure q[0] -> c[26];
+measure q[1] -> c[25];
+measure q[2] -> c[24];
+measure q[3] -> c[23];
+measure q[4] -> c[13];
+measure q[5] -> c[22];
+measure q[6] -> c[12];
+measure q[7] -> c[14];
+measure q[8] -> c[21];
+measure q[9] -> c[20];
+measure q[10] -> c[15];
+measure q[11] -> c[19];
+measure q[12] -> c[16];
+measure q[13] -> c[17];
+measure q[14] -> c[18];
+measure q[15] -> c[11];
+measure q[16] -> c[2];
+measure q[17] -> c[9];
+measure q[18] -> c[10];
+measure q[19] -> c[3];
+measure q[20] -> c[1];
+measure q[21] -> c[8];
+measure q[22] -> c[4];
+measure q[23] -> c[7];
+measure q[24] -> c[6];
+measure q[25] -> c[5];
+measure q[26] -> c[0];
