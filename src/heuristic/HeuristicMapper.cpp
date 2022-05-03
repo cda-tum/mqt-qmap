@@ -15,7 +15,7 @@ void HeuristicMapper::map(const Configuration& ms) {
         return;
     }
     const auto start = std::chrono::steady_clock::now();
-    qc.stripIdleQubits(true, true);
+    qc.stripIdleQubits(true, false);
     initResults();
 
     createLayers();
