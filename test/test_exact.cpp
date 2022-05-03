@@ -380,18 +380,12 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
 
     std::ostringstream oss{};
     mapper.dumpResult(oss, qc::OpenQASM);
-    std::cout << oss.str() << std::endl;
-    EXPECT_STREQ(oss.str().c_str(),
-                 "// i 1 2 3 0\n"
-                 "// o 1 2 3\n"
-                 "OPENQASM 2.0;\n"
-                 "include \"qelib1.inc\";\n"
-                 "qreg q[4];\n"
-                 "creg c[3];\n"
-                 "cx q[2], q[1];\n"
-                 "cx q[3], q[2];\n"
-                 "cx q[1], q[3];\n"
-                 "measure q[1] -> c[0];\n"
-                 "measure q[2] -> c[1];\n"
-                 "measure q[3] -> c[2];\n");
+    auto               qcMapped = qc::QuantumComputation();
+    std::istringstream iss{oss.str()};
+    qcMapped.import(iss, qc::OpenQASM);
+    std::cout << qcMapped << std::endl;
+    EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
+    EXPECT_EQ(qcMapped.initialLayout[0], 3);
+    EXPECT_EQ(qcMapped.outputPermutation.size(), 3U);
+    EXPECT_TRUE(qcMapped.garbage.at(3));
 }
