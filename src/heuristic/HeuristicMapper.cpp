@@ -176,6 +176,7 @@ void HeuristicMapper::map(const Configuration& ms) {
             ++count;
         }
     }
+    finalizeMappedCircuit();
 
     const auto                    end  = std::chrono::steady_clock::now();
     std::chrono::duration<double> diff = end - start;
