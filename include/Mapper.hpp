@@ -62,6 +62,9 @@ protected:
 
     virtual std::size_t getNextLayer(std::size_t idx);
 
+    virtual void placeRemainingArchitectureQubits();
+    virtual void finalizeMappedCircuit();
+
 public:
     Mapper(qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;

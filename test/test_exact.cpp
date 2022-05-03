@@ -24,7 +24,9 @@ protected:
     ExactMapper            IBM_QX4_mapper{qc, IBM_QX4};
 
     void SetUp() override {
-        qc.import(test_example_dir + GetParam() + ".qasm");
+        if (::testing::UnitTest::GetInstance()->current_test_info()->value_param()) {
+            qc.import(test_example_dir + GetParam() + ".qasm");
+        }
         IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
         IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
@@ -350,4 +352,40 @@ TEST_P(ExactTest, toStringMethods) {
     EXPECT_EQ(toString(SwapReduction::Increasing), "increasing");
 
     SUCCEED() << "ToStringMethods working";
+}
+
+TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
+    qc.addQubitRegister(2U);
+    qc.x(0);
+    qc.x(1);
+    IBM_QX4_mapper.map(settings);
+    IBM_QX4_mapper.dumpResult(std::cout, qc::OpenQASM);
+    SUCCEED() << "Mapping successful";
+}
+
+TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
+    using namespace dd::literals;
+
+    CouplingMap  cm{{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+    Architecture arch(4U, cm);
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    auto mapper         = ExactMapper(qc, arch);
+    settings.useSubsets = false;
+    mapper.map(settings);
+
+    std::ostringstream oss{};
+    mapper.dumpResult(oss, qc::OpenQASM);
+    auto               qcMapped = qc::QuantumComputation();
+    std::istringstream iss{oss.str()};
+    qcMapped.import(iss, qc::OpenQASM);
+    std::cout << qcMapped << std::endl;
+    EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
+    EXPECT_EQ(qcMapped.initialLayout[0], 3);
+    EXPECT_EQ(qcMapped.outputPermutation.size(), 3U);
+    EXPECT_TRUE(qcMapped.garbage.at(3));
 }

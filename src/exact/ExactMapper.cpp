@@ -35,10 +35,14 @@ void ExactMapper::map(const Configuration& settings) {
 
     // quickly terminate if the circuit only contains single-qubit gates
     if (reducedLayerIndices.empty()) {
-        results.output  = results.input;
-        results.time    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
-        results.timeout = false;
-        qcMapped        = qc.clone();
+        results.output.gates            = results.input.gates;
+        results.output.cnots            = results.input.cnots;
+        results.output.singleQubitGates = results.input.singleQubitGates;
+        results.output.layers           = results.input.layers;
+        results.time                    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
+        results.timeout                 = false;
+        qcMapped                        = qc.clone();
+        finalizeMappedCircuit();
         return;
     }
 
@@ -55,21 +59,21 @@ void ExactMapper::map(const Configuration& settings) {
     }
 
     // 2) For all possibilities k (=m over n) to pick n qubits from m physical qubits
-    std::vector<unsigned short> qubits{};
+    std::vector<unsigned short> qubitRange{};
     for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
-        qubits.push_back(i);
+        qubitRange.push_back(i);
     }
     std::vector<QubitChoice> allPossibleQubitChoices{};
     if (config.useSubsets) {
         do {
             QubitChoice qubitChoice{};
             for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
-                qubitChoice.insert(qubits.at(i));
+                qubitChoice.insert(qubitRange.at(i));
             }
             allPossibleQubitChoices.push_back(qubitChoice);
-        } while (next_combination(qubits.begin(), qubits.begin() + qc.getNqubits(), qubits.end()));
+        } while (next_combination(qubitRange.begin(), qubitRange.begin() + qc.getNqubits(), qubitRange.end()));
     } else {
-        QubitChoice allQubits(qubits.begin(), qubits.end());
+        QubitChoice allQubits(qubitRange.begin(), qubitRange.end());
         allPossibleQubitChoices.push_back(allQubits);
     }
     // 3) determine exact mapping for this qubit choice
@@ -106,7 +110,10 @@ void ExactMapper::map(const Configuration& settings) {
 
             MappingResults choiceResults{};
             choiceResults.copyInput(results);
-            choiceResults.config.swapLimit = limit;
+            choiceResults.config.swapLimit        = limit;
+            choiceResults.output.swaps            = 0U;
+            choiceResults.output.directionReverse = 0U;
+            choiceResults.output.gates            = std::numeric_limits<unsigned long>::max();
 
             // 4) reduce coupling map
             CouplingMap reducedCouplingMap = architecture.getCouplingMap();
@@ -149,7 +156,7 @@ void ExactMapper::map(const Configuration& settings) {
         } while (config.swapReduction == SwapReduction::Increasing && (limit <= upperLimit || config.swapLimit == 0) && limit < architecture.getCouplingLimit());
 
         // stop if a perfect result has been found
-        if (results.output.swaps == 0 && results.output.directionReverse == 0) {
+        if (results.output.swaps == 0U && results.output.directionReverse == 0U) {
             break;
         }
     }
@@ -175,27 +182,37 @@ void ExactMapper::map(const Configuration& settings) {
         }
     }
 
-    for (const auto& q: qubits) {
+    for (const auto& q: qubitRange) {
         locations.at(q) = static_cast<short>(q);
     }
 
-    for (unsigned long i = 0; i < layers.size(); ++i) {
-        if (i == 0) {
+    for (unsigned long i = 0U; i < layers.size(); ++i) {
+        if (i == 0U) {
+            // invert the initial layout of the original circuit (most certainly the identity)
+            // in order to determine the correct qubit mapping
             qc::Permutation inverseInitialLayout{};
-            for (auto& pu: qc.initialLayout)
-                inverseInitialLayout.insert({pu.second, pu.first});
-
-            // no swaps but initial permutation
-            for (const auto& assignment: *swapsIterator) {
-                locations.at(inverseInitialLayout.at(assignment.second)) = static_cast<short>(assignment.first);
-                qubits.at(assignment.first)                              = inverseInitialLayout.at(assignment.second);
-                qcMapped.initialLayout.at(assignment.first)              = inverseInitialLayout.at(assignment.second);
-                qcMapped.outputPermutation.at(assignment.first)          = inverseInitialLayout.at(assignment.second);
+            for (const auto& [physical, logical]: qc.initialLayout) {
+                inverseInitialLayout.insert({logical, physical});
             }
 
+            qcMapped.initialLayout.clear();
+            qcMapped.outputPermutation.clear();
+
+            // no swaps but initial permutation
+            for (const auto& [physical, logical]: *swapsIterator) {
+                dd::Qubit inverseLogical                                     = inverseInitialLayout.at(static_cast<dd::Qubit>(logical));
+                locations.at(inverseLogical)                                 = static_cast<short>(physical);
+                qubits.at(physical)                                          = static_cast<unsigned short>(inverseLogical);
+                qcMapped.initialLayout[static_cast<dd::Qubit>(physical)]     = inverseLogical;
+                qcMapped.outputPermutation[static_cast<dd::Qubit>(physical)] = inverseLogical;
+            }
+
+            // place remaining architecture qubits
+            placeRemainingArchitectureQubits();
+
             if (settings.verbose) {
-                for (const auto& q: qubits) {
-                    std::cout << q << " ";
+                for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+                    std::cout << qubits.at(q) << " ";
                 }
                 std::cout << std::endl;
             }
@@ -255,8 +272,8 @@ void ExactMapper::map(const Configuration& settings) {
                 std::swap(locations.at(qubits.at(swap.first)), locations.at(qubits.at(swap.second)));
 
                 if (settings.verbose) {
-                    for (const auto& q: qubits) {
-                        std::cout << q << " ";
+                    for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+                        std::cout << qubits.at(q) << " ";
                     }
                     std::cout << std::endl;
                 }
@@ -266,6 +283,8 @@ void ExactMapper::map(const Configuration& settings) {
             ++layerIterator;
         }
     }
+
+    finalizeMappedCircuit();
 
     auto                          end  = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
@@ -611,6 +630,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
         choiceResults.output.cnots            = choiceResults.input.cnots;
         choiceResults.output.gates            = choiceResults.output.singleQubitGates + choiceResults.output.cnots;
+        assert(choiceResults.output.swaps == 0U);
+        assert(choiceResults.output.directionReverse == 0U);
 
         // swaps
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
