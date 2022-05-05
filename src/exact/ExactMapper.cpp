@@ -375,6 +375,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     params   p(c);
     p.set("timeout", timeout);
     p.set("pb.compile_equality", true);
+    p.set("pp.wcnf", true);
     p.set("maxres.hill_climb", true);
     p.set("maxres.pivot_on_correction_set", false);
     opt.set(p);
@@ -609,6 +610,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 opt.add(reverse.simplify(), GATES_OF_DIRECTION_REVERSE);
             }
         }
+    }
+
+    if (config.includeWCNF) {
+        std::stringstream ss{};
+        ss << opt;
+        choiceResults.wcnf = ss.str();
     }
 
     //////////////////////////////////////////

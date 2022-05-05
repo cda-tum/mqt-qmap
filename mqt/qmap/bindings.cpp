@@ -177,6 +177,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("encoding", &Configuration::encoding)
             .def_readwrite("commander_grouping", &Configuration::commanderGrouping)
             .def_readwrite("use_subsets", &Configuration::useSubsets)
+            .def_readwrite("include_WCNF", &Configuration::includeWCNF)
             .def_readwrite("enable_limits", &Configuration::enableSwapLimits)
             .def_readwrite("swap_reduction", &Configuration::swapReduction)
             .def_readwrite("swap_limit", &Configuration::swapLimit)
@@ -193,6 +194,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("time", &MappingResults::time)
             .def_readwrite("timeout", &MappingResults::timeout)
             .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
+            .def_readwrite("wcnf", &MappingResults::wcnf)
             .def("json", &MappingResults::json)
             .def("csv", &MappingResults::csv)
             .def("__repr__", &MappingResults::toString);

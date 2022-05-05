@@ -39,6 +39,8 @@ struct MappingResults {
     CircuitInfo output{};
     std::string mappedCircuit{};
 
+    std::string wcnf{};
+
     MappingResults()          = default;
     virtual ~MappingResults() = default;
 
@@ -47,6 +49,7 @@ struct MappingResults {
         architecture = mappingResults.architecture;
         config       = mappingResults.config;
         output       = mappingResults.output;
+        wcnf         = mappingResults.wcnf;
     }
 
     [[nodiscard]] std::string toString() const {
