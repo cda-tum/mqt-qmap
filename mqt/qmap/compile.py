@@ -52,7 +52,7 @@ def compile(circ, arch: Union[str, Arch],
     :type include_WCNF: bool
     :param use_subsets: Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
-    :param subgraph: List of qubits to consider for mapping, if None all qubits are considered
+    :param subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered
     :type subgraph: Optional[List[int]]
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)

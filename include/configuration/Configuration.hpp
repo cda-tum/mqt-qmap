@@ -24,7 +24,7 @@ struct Configuration {
 
     bool verbose = false;
 
-    // map to particular subgraph of architecture
+    // map to particular subgraph of architecture (in exact mapper)
     std::set<unsigned short> subgraph{};
 
     // how to cluster the gates into layers
