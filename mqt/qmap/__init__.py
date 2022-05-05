@@ -5,3 +5,4 @@
 
 from mqt.qmap.compile import compile
 from mqt.qmap.pyqmap import Method, InitialLayout, Layering, Arch, CommanderGrouping, SwapReduction, Encoding, Configuration, MappingResults
+from mqt.qmap.subgraphs import load_subgraphs_from_file
