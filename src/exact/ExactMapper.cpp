@@ -60,8 +60,35 @@ void ExactMapper::map(const Configuration& settings) {
 
     // 2) For all possibilities k (=m over n) to pick n qubits from m physical qubits
     std::vector<unsigned short> qubitRange{};
-    for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
-        qubitRange.push_back(i);
+    if (!config.subgraph.empty()) {
+        const auto subgraphQubits = config.subgraph.size();
+        if (subgraphQubits < qc.getNqubits()) {
+            std::cerr << "The subgraph must contain at least as many qubits as the circuit has physical qubits." << std::endl;
+            return;
+        }
+
+        CouplingMap reducedCouplingMap = architecture.getCouplingMap();
+        for (const auto& edge: architecture.getCouplingMap()) {
+            if (!config.subgraph.count(edge.first) || !config.subgraph.count(edge.second)) {
+                reducedCouplingMap.erase(edge);
+            }
+        }
+
+        // check if the subgraph is connected
+        std::set<unsigned short> reachedQubits{};
+        reachedQubits.insert(*(config.subgraph.begin()));
+        dfs(*(config.subgraph.begin()), reachedQubits, reducedCouplingMap);
+        if (!(reachedQubits == config.subgraph)) {
+            std::cerr << "The subgraph is not connected." << std::endl;
+            return;
+        }
+        for (const auto& q: config.subgraph) {
+            qubitRange.emplace_back(q);
+        }
+    } else {
+        for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
+            qubitRange.push_back(i);
+        }
     }
     std::vector<QubitChoice> allPossibleQubitChoices{};
     if (config.useSubsets) {

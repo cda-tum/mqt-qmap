@@ -9,6 +9,7 @@
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 #include "pybind11_json/pybind11_json.hpp"
 #include "qiskit/QuantumCircuit.hpp"
 
@@ -182,6 +183,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("swap_reduction", &Configuration::swapReduction)
             .def_readwrite("swap_limit", &Configuration::swapLimit)
             .def_readwrite("use_bdd", &Configuration::useBDD)
+            .def_readwrite("subgraph", &Configuration::subgraph)
             .def("json", &Configuration::json)
             .def("__repr__", &Configuration::toString);
 

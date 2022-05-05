@@ -24,6 +24,9 @@ struct Configuration {
 
     bool verbose = false;
 
+    // map to particular subgraph of architecture (in exact mapper)
+    std::set<unsigned short> subgraph{};
+
     // how to cluster the gates into layers
     Layering layering = Layering::None;
 
@@ -67,7 +70,10 @@ struct Configuration {
         config["method"]            = ::toString(method);
         config["calibration"]       = calibration;
         config["layering_strategy"] = ::toString(layering);
-        config["verbose"]           = verbose;
+        if (!subgraph.empty()) {
+            config["subgraph"] = subgraph;
+        }
+        config["verbose"] = verbose;
 
         if (method == Method::Heuristic) {
             auto& heuristic             = config["settings"];
