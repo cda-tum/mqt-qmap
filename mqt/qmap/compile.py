@@ -43,7 +43,8 @@ def compile(circ, arch: Union[str, Arch],
     :param commander_grouping - Choose method of grouping in commander and bimander encoding (*halves* | fixed2 | fixed3 | logarithm)
     :type commander_grouping: Union[str, CommanderGrouping]
     :param use_bdd: Limit swaps per layer using BDDs, faster in some cases, but use with caution (default: False)
-    :type use_bdd: bool    :param swap_reduction - Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
+    :type use_bdd: bool
+    :param swap_reduction - Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
     :type swap_reduction: Union[str, SwapReduction]
     :param swap_limit - Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
     :type swap_limit: int
