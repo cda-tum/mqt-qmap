@@ -131,7 +131,7 @@ std::string printPi(std::vector<unsigned short>& pi);
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::set<unsigned short>& visited, CouplingMap& rcm);
+void dfs(unsigned short current, std::set<unsigned short>& visited, const CouplingMap& rcm);
 
 /// Helper function returning correct 1D array index for 3D array
 /// \param k first index
