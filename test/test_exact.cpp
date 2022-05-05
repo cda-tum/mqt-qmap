@@ -406,3 +406,51 @@ TEST_F(ExactTest, WCNF) {
     std::cout << wcnf << std::endl;
     EXPECT_TRUE(!wcnf.empty());
 }
+
+TEST_F(ExactTest, MapToSubgraph) {
+    using namespace dd::literals;
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    const auto connectedSubset = std::set<unsigned short>{0U, 1U, 2U};
+
+    settings.subgraph = connectedSubset;
+    IBMQ_London_mapper.map(settings);
+    const auto& results = IBMQ_London_mapper.getResults();
+    EXPECT_FALSE(results.timeout);
+}
+
+TEST_F(ExactTest, MapToSubgraphTooSmall) {
+    using namespace dd::literals;
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    const auto tooSmallSubset = std::set<unsigned short>{0U, 1U};
+
+    settings.subgraph = tooSmallSubset;
+    IBMQ_London_mapper.map(settings);
+    const auto& results = IBMQ_London_mapper.getResults();
+    EXPECT_TRUE(results.timeout);
+}
+
+TEST_F(ExactTest, MapToSubgraphNotConnected) {
+    using namespace dd::literals;
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    const auto nonConnectedSubset = std::set<unsigned short>{0U, 2U, 3U};
+
+    settings.subgraph = nonConnectedSubset;
+    IBMQ_London_mapper.map(settings);
+    const auto& results = IBMQ_London_mapper.getResults();
+    EXPECT_TRUE(results.timeout);
+}
