@@ -21,6 +21,7 @@ def compile(circ, arch: Union[str, Arch],
             use_bdd: bool = False,
             swap_reduction: Union[str, SwapReduction] = "coupling_limit",
             swap_limit: int = 0,
+            include_WCNF: bool = False,
             use_subsets: bool = True,
             verbose: bool = False
             ) -> MappingResults:
@@ -45,6 +46,8 @@ def compile(circ, arch: Union[str, Arch],
     :type swap_reduction: Union[str, SwapReduction]
     :param swap_limit - Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
     :type swap_limit: int
+    :param include_WCNF: Include WCNF file in the results (default: False)
+    :type include_WCNF: bool
     :param use_subsets: Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
     :param use_teleportation:  Use teleportation in addition to swaps
@@ -69,6 +72,7 @@ def compile(circ, arch: Union[str, Arch],
     config.swap_reduction = SwapReduction(swap_reduction)
     config.swap_limit = swap_limit
     config.use_bdd = use_bdd
+    config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
     config.use_teleportation = use_teleportation
     config.teleportation_fake = teleportation_fake

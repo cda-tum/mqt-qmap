@@ -32,6 +32,7 @@ protected:
         IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
         IBM_QX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
         settings.verbose = true;
+        settings.method  = Method::Exact;
     }
 };
 
@@ -388,4 +389,20 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
     EXPECT_EQ(qcMapped.initialLayout[0], 3);
     EXPECT_EQ(qcMapped.outputPermutation.size(), 3U);
     EXPECT_TRUE(qcMapped.garbage.at(3));
+}
+
+TEST_F(ExactTest, WCNF) {
+    using namespace dd::literals;
+
+    qc.addQubitRegister(3U);
+    qc.x(0, 1_pc);
+    qc.x(1, 2_pc);
+    qc.x(2, 0_pc);
+
+    settings.verbose     = false;
+    settings.includeWCNF = true;
+    IBMQ_London_mapper.map(settings);
+    const auto& wcnf = IBMQ_London_mapper.getResults().wcnf;
+    std::cout << wcnf << std::endl;
+    EXPECT_TRUE(!wcnf.empty());
 }

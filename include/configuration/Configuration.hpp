@@ -53,6 +53,9 @@ struct Configuration {
     // use qubit subsets in exact mapper
     bool useSubsets = true;
 
+    // include WCNF file in results of exact mapper
+    bool includeWCNF = false;
+
     // limit the number of considered swaps
     bool          enableSwapLimits = true;
     SwapReduction swapReduction    = SwapReduction::CouplingLimit;
@@ -91,7 +94,8 @@ struct Configuration {
             if (encoding == Encoding::Commander || encoding == Encoding::Bimander) {
                 exact["commander_grouping"] = ::toString(commanderGrouping);
             }
-            exact["use_subsets"] = useSubsets;
+            exact["include_WCNF"] = includeWCNF;
+            exact["use_subsets"]  = useSubsets;
             if (enableSwapLimits) {
                 auto& limits             = exact["limits"];
                 limits["swap_reduction"] = ::toString(swapReduction);
