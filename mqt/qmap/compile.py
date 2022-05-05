@@ -4,7 +4,7 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional, Set
 from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
 
 
@@ -23,6 +23,7 @@ def compile(circ, arch: Union[str, Arch],
             swap_limit: int = 0,
             include_WCNF: bool = False,
             use_subsets: bool = True,
+            subgraph: Optional[Set[int]] = None,
             verbose: bool = False
             ) -> MappingResults:
     """Interface to the MQT QMAP tool for mapping quantum circuits
@@ -50,6 +51,8 @@ def compile(circ, arch: Union[str, Arch],
     :type include_WCNF: bool
     :param use_subsets: Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
+    :param subgraph: List of qubits to consider for mapping, if None all qubits are considered
+    :type subgraph: Optional[List[int]]
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
@@ -59,6 +62,8 @@ def compile(circ, arch: Union[str, Arch],
     :rtype: MappingResults
     """
 
+    if subgraph is None:
+        subgraph = set()
     if type(circ) == str and Path(circ).suffix == '.pickle':
         circ = pickle.load(open(circ, "rb"))
 
@@ -74,6 +79,7 @@ def compile(circ, arch: Union[str, Arch],
     config.use_bdd = use_bdd
     config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
+    config.subgraph = subgraph
     config.use_teleportation = use_teleportation
     config.teleportation_fake = teleportation_fake
     config.teleportation_seed = teleportation_seed
