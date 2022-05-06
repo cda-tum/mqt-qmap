@@ -8,6 +8,7 @@
 #include "CircuitOptimizer.hpp"
 
 void Mapper::initResults() {
+    countGates(qc, results.input);
     results.input.name    = qc.getName();
     results.input.qubits  = qc.getNqubits();
     results.architecture  = architecture.getArchitectureName();
@@ -22,6 +23,7 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation, Architecture& a
     qubits.fill(DEFAULT_POSITION);
     locations.fill(DEFAULT_POSITION);
     fidelities.fill(INITIAL_FIDELITY);
+    qc.stripIdleQubits(true, true);
 }
 
 void Mapper::createLayers() {
@@ -31,6 +33,7 @@ void Mapper::createLayers() {
 
     auto qubitsInLayer = std::set<unsigned short>{};
 
+    bool even = true;
     for (auto& gate: qc) {
         // skip over barrier instructions
         if (gate->getType() == qc::Barrier || gate->getType() == qc::Measure) {
@@ -74,12 +77,13 @@ void Mapper::createLayers() {
                 layers.at(layer).emplace_back(control, target, gate.get());
                 break;
             case Layering::OddGates:
-                if (results.input.gates % 2 == 0) {
+                if (even) {
                     layers.emplace_back();
                     layers.back().emplace_back(control, target, gate.get());
                 } else {
                     layers.back().emplace_back(control, target, gate.get());
                 }
+                even = !even;
                 break;
             case Layering::QubitTriangle:
                 if (layers.empty()) {
@@ -105,13 +109,6 @@ void Mapper::createLayers() {
                 }
                 break;
         }
-
-        if (singleQubit) {
-            results.input.singleQubitGates++;
-        } else {
-            results.input.cnots++;
-        }
-        results.input.gates++;
     }
     results.input.layers = layers.size();
 }

@@ -10,8 +10,10 @@ void ExactMapper::map(const Configuration& settings) {
     const auto& config = results.config;
 
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-    qc.stripIdleQubits(true, true);
     initResults();
+
+    // 0) perform pre-mapping optimizations
+    preMappingOptimizations(config);
 
     // 1) create layers according to different criteria
     createLayers();
@@ -35,14 +37,14 @@ void ExactMapper::map(const Configuration& settings) {
 
     // quickly terminate if the circuit only contains single-qubit gates
     if (reducedLayerIndices.empty()) {
-        results.output.gates            = results.input.gates;
-        results.output.cnots            = results.input.cnots;
-        results.output.singleQubitGates = results.input.singleQubitGates;
-        results.output.layers           = results.input.layers;
-        results.time                    = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
-        results.timeout                 = false;
-        qcMapped                        = qc.clone();
+        qcMapped = qc.clone();
+        postMappingOptimizations(config);
+        countGates(qcMapped, results.output);
         finalizeMappedCircuit();
+
+        results.output.layers = results.input.layers;
+        results.time          = static_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start).count();
+        results.timeout       = false;
         return;
     }
 
@@ -311,6 +313,16 @@ void ExactMapper::map(const Configuration& settings) {
         }
     }
 
+    // 9) apply post mapping optimizations
+    postMappingOptimizations(config);
+
+    // 10) re-count gates
+    results.output.singleQubitGates = 0U;
+    results.output.cnots            = 0U;
+    results.output.gates            = 0U;
+    countGates(qcMapped, results.output);
+
+    // 11) final post-processing
     finalizeMappedCircuit();
 
     auto                          end  = std::chrono::high_resolution_clock::now();
