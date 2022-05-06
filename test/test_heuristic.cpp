@@ -138,7 +138,7 @@ protected:
     std::string test_example_dir      = "../../examples/";
     std::string test_architecture_dir = "../../extern/architectures/";
 
-    qc::QuantumComputation qc{};
+    qc::QuantumComputation           qc{};
     Architecture                     arch{};
     std::unique_ptr<HeuristicMapper> tokyo_mapper;
 
@@ -177,7 +177,7 @@ protected:
     std::string test_example_dir      = "../../examples/";
     std::string test_architecture_dir = "../../extern/architectures/";
 
-    qc::QuantumComputation qc{};
+    qc::QuantumComputation           qc{};
     Architecture                     arch{};
     std::unique_ptr<HeuristicMapper> tokyo_mapper;
 
