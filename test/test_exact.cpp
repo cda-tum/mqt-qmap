@@ -371,6 +371,7 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
     qc.clear();
     qc.x(0);
     qc.x(1);
+    IBM_QX4_mapper = std::make_unique<ExactMapper>(qc, IBM_QX4);
     IBM_QX4_mapper->map(settings);
     IBM_QX4_mapper->dumpResult(std::cout, qc::OpenQASM);
     SUCCEED() << "Mapping successful";
