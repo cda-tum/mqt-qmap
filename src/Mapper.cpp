@@ -15,8 +15,8 @@ void Mapper::initResults() {
     qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
-Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch):
-    qc(quantumComputation), architecture(arch) {
+Mapper::Mapper(const qc::QuantumComputation& quantumComputation, Architecture& arch):
+    qc(quantumComputation.clone()), architecture(arch) {
     qubits.fill(DEFAULT_POSITION);
     locations.fill(DEFAULT_POSITION);
     fidelities.fill(INITIAL_FIDELITY);

@@ -42,8 +42,8 @@ protected:
         }
     };
 
-    qc::QuantumComputation& qc;
-    Architecture&           architecture;
+    qc::QuantumComputation qc;
+    Architecture&          architecture;
 
     qc::QuantumComputation         qcMapped;
     std::vector<std::vector<Gate>> layers{};
@@ -66,7 +66,7 @@ protected:
     virtual void finalizeMappedCircuit();
 
 public:
-    Mapper(qc::QuantumComputation& qc, Architecture& architecture);
+    Mapper(const qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;
 
     virtual void map(const Configuration& config) = 0;
