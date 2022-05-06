@@ -51,9 +51,9 @@ void Mapper::createLayers() {
         bool  singleQubit = gate->getControls().empty();
         short control     = -1;
         if (!singleQubit) {
-            control = static_cast<short>((*gate->getControls().begin()).qubit);
+            control = static_cast<short>(qc.initialLayout.at((*gate->getControls().begin()).qubit));
         }
-        unsigned short target = gate->getTargets().at(0);
+        unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
         size_t         layer  = 0;
 
         switch (config.layering) {
