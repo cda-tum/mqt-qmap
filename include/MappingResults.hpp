@@ -64,7 +64,6 @@ struct MappingResults {
         circuit["gates"]              = input.gates;
         circuit["single_qubit_gates"] = input.singleQubitGates;
         circuit["cnots"]              = input.cnots;
-        circuit["layers"]             = input.layers;
 
         auto& mapped_circuit                 = resultJSON["mapped_circuit"];
         mapped_circuit["name"]               = output.name;
@@ -72,23 +71,24 @@ struct MappingResults {
         mapped_circuit["gates"]              = output.gates;
         mapped_circuit["single_qubit_gates"] = output.singleQubitGates;
         mapped_circuit["cnots"]              = output.cnots;
-        mapped_circuit["swaps"]              = output.swaps;
         if (!mappedCircuit.empty()) {
             mapped_circuit["qasm"] = mappedCircuit;
-        }
-        if (config.method == Method::Exact) {
-            mapped_circuit["direction_reverse"] = output.directionReverse;
-        } else if (config.method == Method::Heuristic) {
-            mapped_circuit["teleportations"] = output.teleportations;
         }
 
         resultJSON["config"] = config.json();
 
-        auto& stats               = resultJSON["statistics"];
-        stats["timeout"]          = timeout;
-        stats["mapping_time"]     = time;
-        stats["additional_gates"] = output.gates - input.gates;
-        stats["arch"]             = architecture;
+        auto& stats           = resultJSON["statistics"];
+        stats["timeout"]      = timeout;
+        stats["mapping_time"] = time;
+        stats["arch"]         = architecture;
+        stats["layers"]       = input.layers;
+        stats["swaps"]        = output.swaps;
+        if (config.method == Method::Exact) {
+            stats["direction_reverse"] = output.directionReverse;
+        } else if (config.method == Method::Heuristic) {
+            stats["teleportations"] = output.teleportations;
+        }
+        stats["additional_gates"] = static_cast<long>(output.gates) - input.gates;
 
         return resultJSON;
     }
