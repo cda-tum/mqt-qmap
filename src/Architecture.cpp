@@ -152,7 +152,9 @@ void Architecture::createFidelityTable() {
     }
 }
 
-unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation) {
+unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
+    bool tryToAbortEarly = (limit != -1);
+
     // consolidate used qubits
     std::set<unsigned short> qubits{};
     for (const auto& q: permutation) {
@@ -201,6 +203,11 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
     while (!queue.empty()) {
         Node current = queue.top();
         queue.pop();
+
+        // in case no solution has been found using less than `limit` swaps, search can be aborted
+        if (tryToAbortEarly && current.nswaps >= static_cast<unsigned long>(limit)) {
+            return limit + 1U;
+        }
 
         for (const auto& swap: possibleSwaps) {
             Node next = current;

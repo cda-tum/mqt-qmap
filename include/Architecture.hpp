@@ -17,9 +17,10 @@
 #include <unordered_map>
 #include <vector>
 
-constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3;
-constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7;
-constexpr unsigned short GATES_OF_DIRECTION_REVERSE   = 4;
+constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
+constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
+constexpr unsigned short GATES_OF_DIRECTION_REVERSE   = 4U;
+constexpr unsigned short GATES_OF_TELEPORTATION       = 7U;
 
 constexpr int COST_SINGLE_QUBIT_GATE   = 1;
 constexpr int COST_CNOT_GATE           = 10;
@@ -129,7 +130,7 @@ public:
         }
     }
 
-    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
+    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
     void          minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
 
     struct Node {
