@@ -19,7 +19,8 @@ class CMakeBuild(build_ext):
         from setuptools_scm import get_version
         version = get_version(root='.', relative_to=__file__)
 
-        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.namespace + ext.name)))
+        self.package = ext.namespace
+        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         # required for auto-detection of auxiliary "native" libs
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
@@ -97,7 +98,7 @@ setup(
     long_description_content_type="text/markdown",
     license="MIT",
     url="https://www.cda.cit.tum.de/research/ibm_qx_mapping/",
-    ext_modules=[CMakeExtension('pyqmap', namespace='mqt.qmap.')],
+    ext_modules=[CMakeExtension('pyqmap', namespace='mqt.qmap')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     packages=find_namespace_packages(include=['mqt.*']),
