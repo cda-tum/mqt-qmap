@@ -5,6 +5,8 @@
 
 #include "Mapper.hpp"
 
+#include "CircuitOptimizer.hpp"
+
 void Mapper::initResults() {
     results.input.name    = qc.getName();
     results.input.qubits  = qc.getNqubits();
@@ -181,6 +183,59 @@ void Mapper::placeRemainingArchitectureQubits() {
             qcMapped.initialLayout[physical] = static_cast<dd::Qubit>(logical);
             qcMapped.setLogicalQubitAncillary(logical);
             qcMapped.setLogicalQubitGarbage(logical);
+        }
+    }
+}
+
+void Mapper::preMappingOptimizations(const Configuration& config [[maybe_unused]]) {
+    if (!config.preMappingOptimizations) {
+        return;
+    }
+
+    // at the moment there are no pre-mapping optimizations
+}
+
+void Mapper::postMappingOptimizations(const Configuration& config) {
+    if (!config.postMappingOptimizations) {
+        return;
+    }
+
+    // try to cancel adjacent CNOT gates
+    qc::CircuitOptimizer::cancelCNOTs(qcMapped);
+}
+
+void Mapper::countGates(decltype(qcMapped.cbegin()) it, const decltype(qcMapped.cend())& end, MappingResults::CircuitInfo& info) {
+    for (; it != end; ++it) {
+        const auto& g = *it;
+        if (g->getType() == qc::Teleportation) {
+            info.gates += GATES_OF_TELEPORTATION;
+            continue;
+        }
+
+        if (g->isStandardOperation()) {
+            if (g->getType() == qc::SWAP) {
+                if (architecture.bidirectional()) {
+                    info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
+                    info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+                } else {
+                    info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
+                    info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+                    info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
+                }
+            } else if (g->getControls().empty()) {
+                ++info.singleQubitGates;
+                ++info.gates;
+            } else {
+                assert(g->getType() == qc::X);
+                ++info.cnots;
+                ++info.gates;
+            }
+            continue;
+        }
+
+        if (g->isCompoundOperation()) {
+            const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
+            countGates(cg->cbegin(), cg->cend(), info);
         }
     }
 }

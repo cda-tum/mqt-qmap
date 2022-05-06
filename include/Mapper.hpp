@@ -65,6 +65,14 @@ protected:
     virtual void placeRemainingArchitectureQubits();
     virtual void finalizeMappedCircuit();
 
+    virtual void countGates(const qc::QuantumComputation& circuit, MappingResults::CircuitInfo& info) {
+        countGates(circuit.cbegin(), circuit.cend(), info);
+    }
+    virtual void countGates(decltype(qcMapped.cbegin()) it, const decltype(qcMapped.cend())& end, MappingResults::CircuitInfo& info);
+
+    virtual void preMappingOptimizations(const Configuration& config);
+    virtual void postMappingOptimizations(const Configuration& config);
+
 public:
     Mapper(const qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;
