@@ -58,7 +58,7 @@ void HeuristicMapper::map(const Configuration& ms) {
                         results.output.swaps++;
                     } else if (swap.op == qc::Teleportation) {
                         qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Targets{static_cast<dd::Qubit>(swap.first), static_cast<dd::Qubit>(swap.second), static_cast<dd::Qubit>(swap.middle_ancilla)}, qc::Teleportation);
-                        results.output.gates += COST_TELEPORTATION;
+                        results.output.gates += GATES_OF_TELEPORTATION;
                         results.output.teleportations++;
                     }
                     gateidx++;
