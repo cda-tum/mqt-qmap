@@ -340,7 +340,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
     if (config.enableSwapLimits && !config.useBDD) {
         do {
-            auto picost = architecture.minimumNumberOfSwaps(pi);
+            auto picost = architecture.minimumNumberOfSwaps(pi, static_cast<long>(limit));
             if (picost > limit) {
                 skipped_pi.insert(piCount);
             }

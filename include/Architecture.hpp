@@ -129,7 +129,7 @@ public:
         }
     }
 
-    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation);
+    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
     void          minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
 
     struct Node {
