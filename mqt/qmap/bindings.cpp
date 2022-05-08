@@ -9,6 +9,7 @@
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 #include "pybind11_json/pybind11_json.hpp"
 #include "qiskit/QuantumCircuit.hpp"
 
@@ -178,10 +179,14 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("encoding", &Configuration::encoding)
             .def_readwrite("commander_grouping", &Configuration::commanderGrouping)
             .def_readwrite("use_subsets", &Configuration::useSubsets)
+            .def_readwrite("include_WCNF", &Configuration::includeWCNF)
             .def_readwrite("enable_limits", &Configuration::enableSwapLimits)
             .def_readwrite("swap_reduction", &Configuration::swapReduction)
             .def_readwrite("swap_limit", &Configuration::swapLimit)
             .def_readwrite("use_bdd", &Configuration::useBDD)
+            .def_readwrite("subgraph", &Configuration::subgraph)
+            .def_readwrite("pre_mapping_optimizations", &Configuration::preMappingOptimizations)
+            .def_readwrite("post_mapping_optimizations", &Configuration::postMappingOptimizations)
             .def("json", &Configuration::json)
             .def("__repr__", &Configuration::toString);
 
@@ -194,6 +199,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("time", &MappingResults::time)
             .def_readwrite("timeout", &MappingResults::timeout)
             .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
+            .def_readwrite("wcnf", &MappingResults::wcnf)
             .def("json", &MappingResults::json)
             .def("csv", &MappingResults::csv)
             .def("__repr__", &MappingResults::toString);

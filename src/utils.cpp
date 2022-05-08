@@ -97,7 +97,7 @@ std::string printPi(std::vector<unsigned short>& pi) {
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::set<unsigned short>& visited, CouplingMap& rcm) {
+void dfs(unsigned short current, std::set<unsigned short>& visited, const CouplingMap& rcm) {
     for (auto edge: rcm) {
         if (edge.first == current) {
             if (!visited.count(edge.second)) {

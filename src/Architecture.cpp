@@ -152,7 +152,9 @@ void Architecture::createFidelityTable() {
     }
 }
 
-unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation) {
+unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
+    bool tryToAbortEarly = (limit != -1);
+
     // consolidate used qubits
     std::set<unsigned short> qubits{};
     for (const auto& q: permutation) {
@@ -178,6 +180,11 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
     // create selection of swap possibilities
     std::set<std::pair<unsigned short, unsigned short>> possibleSwaps{};
     for (const auto& edge: couplingMap) {
+        // only use SWAPs between qubits that are currently being considered
+        if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
+            continue;
+        }
+
         if (!bidirectional() || (possibleSwaps.count(edge) == 0 && possibleSwaps.count({edge.second, edge.first}) == 0)) {
             possibleSwaps.emplace(edge);
         }
@@ -196,6 +203,11 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
     while (!queue.empty()) {
         Node current = queue.top();
         queue.pop();
+
+        // in case no solution has been found using less than `limit` swaps, search can be aborted
+        if (tryToAbortEarly && current.nswaps >= static_cast<unsigned long>(limit)) {
+            return limit + 1U;
+        }
 
         for (const auto& swap: possibleSwaps) {
             Node next = current;
@@ -247,6 +259,11 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     // create selection of swap possibilities
     std::set<std::pair<unsigned short, unsigned short>> possibleSwaps{};
     for (const auto& edge: couplingMap) {
+        // only use SWAPs between qubits that are currently being considered
+        if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
+            continue;
+        }
+
         if (!bidirectional() || (possibleSwaps.count(edge) == 0 && possibleSwaps.count({edge.second, edge.first}) == 0)) {
             possibleSwaps.emplace(edge);
         }

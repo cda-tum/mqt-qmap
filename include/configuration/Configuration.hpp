@@ -22,7 +22,13 @@ struct Configuration {
     // which method to use
     Method method = Method::Heuristic;
 
+    bool preMappingOptimizations  = true;
+    bool postMappingOptimizations = true;
+
     bool verbose = false;
+
+    // map to particular subgraph of architecture (in exact mapper)
+    std::set<unsigned short> subgraph{};
 
     // how to cluster the gates into layers
     Layering layering = Layering::None;
@@ -53,6 +59,9 @@ struct Configuration {
     // use qubit subsets in exact mapper
     bool useSubsets = true;
 
+    // include WCNF file in results of exact mapper
+    bool includeWCNF = false;
+
     // limit the number of considered swaps
     bool          enableSwapLimits = true;
     SwapReduction swapReduction    = SwapReduction::CouplingLimit;
@@ -64,7 +73,12 @@ struct Configuration {
         config["method"]            = ::toString(method);
         config["calibration"]       = calibration;
         config["layering_strategy"] = ::toString(layering);
-        config["verbose"]           = verbose;
+        if (!subgraph.empty()) {
+            config["subgraph"] = subgraph;
+        }
+        config["pre_mapping_optimizations"]  = preMappingOptimizations;
+        config["post_mapping_optimizations"] = postMappingOptimizations;
+        config["verbose"]                    = verbose;
 
         if (method == Method::Heuristic) {
             auto& heuristic             = config["settings"];
@@ -91,7 +105,8 @@ struct Configuration {
             if (encoding == Encoding::Commander || encoding == Encoding::Bimander) {
                 exact["commander_grouping"] = ::toString(commanderGrouping);
             }
-            exact["use_subsets"] = useSubsets;
+            exact["include_WCNF"] = includeWCNF;
+            exact["use_subsets"]  = useSubsets;
             if (enableSwapLimits) {
                 auto& limits             = exact["limits"];
                 limits["swap_reduction"] = ::toString(swapReduction);

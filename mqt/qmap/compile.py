@@ -4,7 +4,7 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional, Set
 from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
 
 
@@ -21,7 +21,11 @@ def compile(circ, arch: Union[str, Arch],
             use_bdd: bool = False,
             swap_reduction: Union[str, SwapReduction] = "coupling_limit",
             swap_limit: int = 0,
+            include_WCNF: bool = False,
             use_subsets: bool = True,
+            subgraph: Optional[Set[int]] = None,
+            pre_mapping_optimizations: bool = True,
+            post_mapping_optimizations: bool = True,
             verbose: bool = False
             ) -> MappingResults:
     """Interface to the MQT QMAP tool for mapping quantum circuits
@@ -41,21 +45,32 @@ def compile(circ, arch: Union[str, Arch],
     :param commander_grouping - Choose method of grouping in commander and bimander encoding (*halves* | fixed2 | fixed3 | logarithm)
     :type commander_grouping: Union[str, CommanderGrouping]
     :param use_bdd: Limit swaps per layer using BDDs, faster in some cases, but use with caution (default: False)
-    :type use_bdd: bool    :param swap_reduction - Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
+    :type use_bdd: bool
+    :param swap_reduction - Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
     :type swap_reduction: Union[str, SwapReduction]
     :param swap_limit - Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
     :type swap_limit: int
+    :param include_WCNF: Include WCNF file in the results (default: False)
+    :type include_WCNF: bool
     :param use_subsets: Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
+    :param subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered
+    :type subgraph: Optional[List[int]]
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
+    :param pre_mapping_optimizations: Run pre-mapping optimizations (default: True)
+    :type pre_mapping_optimizations: bool
+    :param post_mapping_optimizations: Run post-mapping optimizations (default: True)
+    :type post_mapping_optimizations: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
     :return: Object containing all the results
     :rtype: MappingResults
     """
 
+    if subgraph is None:
+        subgraph = set()
     if type(circ) == str and Path(circ).suffix == '.pickle':
         circ = pickle.load(open(circ, "rb"))
 
@@ -69,10 +84,14 @@ def compile(circ, arch: Union[str, Arch],
     config.swap_reduction = SwapReduction(swap_reduction)
     config.swap_limit = swap_limit
     config.use_bdd = use_bdd
+    config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
+    config.subgraph = subgraph
     config.use_teleportation = use_teleportation
     config.teleportation_fake = teleportation_fake
     config.teleportation_seed = teleportation_seed
+    config.pre_mapping_optimizations = pre_mapping_optimizations
+    config.post_mapping_optimizations = post_mapping_optimizations
     config.verbose = verbose
 
     return map(circ, arch, config)

@@ -14,17 +14,19 @@ protected:
     std::string test_architecture_dir = "./architectures/";
     std::string test_calibration_dir  = "./calibration/";
 
-    qc::QuantumComputation qc{};
-    Architecture           IBMQ_Yorktown{};
-    Architecture           IBMQ_London{};
-    HeuristicMapper        IBMQ_Yorktown_mapper{qc, IBMQ_Yorktown};
-    HeuristicMapper        IBMQ_London_mapper{qc, IBMQ_London};
+    qc::QuantumComputation           qc{};
+    Architecture                     IBMQ_Yorktown{};
+    Architecture                     IBMQ_London{};
+    std::unique_ptr<HeuristicMapper> IBMQ_Yorktown_mapper;
+    std::unique_ptr<HeuristicMapper> IBMQ_London_mapper;
 
     void SetUp() override {
         qc.import(test_example_dir + GetParam() + ".qasm");
         IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
         IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
+        IBMQ_Yorktown_mapper = std::make_unique<HeuristicMapper>(qc, IBMQ_Yorktown);
+        IBMQ_London_mapper   = std::make_unique<HeuristicMapper>(qc, IBMQ_London);
     }
 };
 
@@ -59,37 +61,37 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
 TEST_P(HeuristicTest5Q, Identity) {
     Configuration settings{};
     settings.initialLayout = InitialLayout::Identity;
-    IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
-    IBMQ_Yorktown_mapper.printResult(std::cout);
+    IBMQ_Yorktown_mapper->map(settings);
+    IBMQ_Yorktown_mapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
+    IBMQ_Yorktown_mapper->printResult(std::cout);
 
-    IBMQ_London_mapper.map(settings);
-    IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_identity.qasm");
-    IBMQ_London_mapper.printResult(std::cout);
+    IBMQ_London_mapper->map(settings);
+    IBMQ_London_mapper->dumpResult(GetParam() + "_heuristic_london_identity.qasm");
+    IBMQ_London_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }
 
 TEST_P(HeuristicTest5Q, Static) {
     Configuration settings{};
     settings.initialLayout = InitialLayout::Static;
-    IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
-    IBMQ_Yorktown_mapper.printResult(std::cout);
-    IBMQ_London_mapper.map(settings);
-    IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_static.qasm");
-    IBMQ_London_mapper.printResult(std::cout);
+    IBMQ_Yorktown_mapper->map(settings);
+    IBMQ_Yorktown_mapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
+    IBMQ_Yorktown_mapper->printResult(std::cout);
+    IBMQ_London_mapper->map(settings);
+    IBMQ_London_mapper->dumpResult(GetParam() + "_heuristic_london_static.qasm");
+    IBMQ_London_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }
 
 TEST_P(HeuristicTest5Q, Dynamic) {
     Configuration settings{};
     settings.initialLayout = InitialLayout::Dynamic;
-    IBMQ_Yorktown_mapper.map(settings);
-    IBMQ_Yorktown_mapper.dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
-    IBMQ_Yorktown_mapper.printResult(std::cout);
-    IBMQ_London_mapper.map(settings);
-    IBMQ_London_mapper.dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
-    IBMQ_London_mapper.printResult(std::cout);
+    IBMQ_Yorktown_mapper->map(settings);
+    IBMQ_Yorktown_mapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
+    IBMQ_Yorktown_mapper->printResult(std::cout);
+    IBMQ_London_mapper->map(settings);
+    IBMQ_London_mapper->dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
+    IBMQ_London_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }
 
@@ -98,13 +100,14 @@ protected:
     std::string test_example_dir      = "../../examples/";
     std::string test_architecture_dir = "../../extern/architectures/";
 
-    qc::QuantumComputation qc{};
-    Architecture           IBM_QX5{};
-    HeuristicMapper        IBM_QX5_mapper{qc, IBM_QX5};
+    qc::QuantumComputation           qc{};
+    Architecture                     IBM_QX5{};
+    std::unique_ptr<HeuristicMapper> IBM_QX5_mapper;
 
     void SetUp() override {
         qc.import(test_example_dir + GetParam() + ".qasm");
         IBM_QX5.loadCouplingMap(AvailableArchitecture::IBM_QX5);
+        IBM_QX5_mapper = std::make_unique<HeuristicMapper>(qc, IBM_QX5);
     }
 };
 
@@ -124,9 +127,9 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest16Q,
 TEST_P(HeuristicTest16Q, Dynamic) {
     Configuration settings{};
     settings.initialLayout = InitialLayout::Dynamic;
-    IBM_QX5_mapper.map(settings);
-    IBM_QX5_mapper.dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
-    IBM_QX5_mapper.printResult(std::cout);
+    IBM_QX5_mapper->map(settings);
+    IBM_QX5_mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
+    IBM_QX5_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }
 
@@ -135,13 +138,14 @@ protected:
     std::string test_example_dir      = "../../examples/";
     std::string test_architecture_dir = "../../extern/architectures/";
 
-    qc::QuantumComputation qc{};
-    Architecture           arch{};
-    HeuristicMapper        tokyo_mapper{qc, arch};
+    qc::QuantumComputation           qc{};
+    Architecture                     arch{};
+    std::unique_ptr<HeuristicMapper> tokyo_mapper;
 
     void SetUp() override {
         qc.import(test_example_dir + GetParam() + ".qasm");
         arch.loadCouplingMap(AvailableArchitecture::IBMQ_Tokyo);
+        tokyo_mapper = std::make_unique<HeuristicMapper>(qc, arch);
     }
 };
 
@@ -162,9 +166,9 @@ INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest20Q,
 TEST_P(HeuristicTest20Q, Dynamic) {
     Configuration settings{};
     settings.initialLayout = InitialLayout::Dynamic;
-    tokyo_mapper.map(settings);
-    tokyo_mapper.dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
-    tokyo_mapper.printResult(std::cout);
+    tokyo_mapper->map(settings);
+    tokyo_mapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
+    tokyo_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }
 
@@ -173,13 +177,14 @@ protected:
     std::string test_example_dir      = "../../examples/";
     std::string test_architecture_dir = "../../extern/architectures/";
 
-    qc::QuantumComputation qc{};
-    Architecture           arch{};
-    HeuristicMapper        tokyo_mapper{qc, arch};
+    qc::QuantumComputation           qc{};
+    Architecture                     arch{};
+    std::unique_ptr<HeuristicMapper> tokyo_mapper;
 
     void SetUp() override {
         qc.import(test_example_dir + std::get<1>(GetParam()) + ".qasm");
         arch.loadCouplingMap(AvailableArchitecture::IBMQ_Tokyo);
+        tokyo_mapper = std::make_unique<HeuristicMapper>(qc, arch);
     }
 };
 
@@ -199,8 +204,8 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
     settings.initialLayout       = InitialLayout::Dynamic;
     settings.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
     settings.teleportationSeed   = std::get<0>(GetParam());
-    tokyo_mapper.map(settings);
-    tokyo_mapper.dumpResult(std::get<1>(GetParam()) + "_heuristic_tokyo_teleport.qasm");
-    tokyo_mapper.printResult(std::cout);
+    tokyo_mapper->map(settings);
+    tokyo_mapper->dumpResult(std::get<1>(GetParam()) + "_heuristic_tokyo_teleport.qasm");
+    tokyo_mapper->printResult(std::cout);
     SUCCEED() << "Mapping successful";
 }

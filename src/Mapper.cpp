@@ -5,7 +5,10 @@
 
 #include "Mapper.hpp"
 
+#include "CircuitOptimizer.hpp"
+
 void Mapper::initResults() {
+    countGates(qc, results.input);
     results.input.name    = qc.getName();
     results.input.qubits  = qc.getNqubits();
     results.architecture  = architecture.getArchitectureName();
@@ -15,11 +18,12 @@ void Mapper::initResults() {
     qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
-Mapper::Mapper(qc::QuantumComputation& quantumComputation, Architecture& arch):
-    qc(quantumComputation), architecture(arch) {
+Mapper::Mapper(const qc::QuantumComputation& quantumComputation, Architecture& arch):
+    qc(quantumComputation.clone()), architecture(arch) {
     qubits.fill(DEFAULT_POSITION);
     locations.fill(DEFAULT_POSITION);
     fidelities.fill(INITIAL_FIDELITY);
+    qc.stripIdleQubits(true, true);
 }
 
 void Mapper::createLayers() {
@@ -29,6 +33,7 @@ void Mapper::createLayers() {
 
     auto qubitsInLayer = std::set<unsigned short>{};
 
+    bool even = true;
     for (auto& gate: qc) {
         // skip over barrier instructions
         if (gate->getType() == qc::Barrier || gate->getType() == qc::Measure) {
@@ -46,9 +51,9 @@ void Mapper::createLayers() {
         bool  singleQubit = gate->getControls().empty();
         short control     = -1;
         if (!singleQubit) {
-            control = static_cast<short>((*gate->getControls().begin()).qubit);
+            control = static_cast<short>(qc.initialLayout.at((*gate->getControls().begin()).qubit));
         }
-        unsigned short target = gate->getTargets().at(0);
+        unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
         size_t         layer  = 0;
 
         switch (config.layering) {
@@ -72,12 +77,13 @@ void Mapper::createLayers() {
                 layers.at(layer).emplace_back(control, target, gate.get());
                 break;
             case Layering::OddGates:
-                if (results.input.gates % 2 == 0) {
+                if (even) {
                     layers.emplace_back();
                     layers.back().emplace_back(control, target, gate.get());
                 } else {
                     layers.back().emplace_back(control, target, gate.get());
                 }
+                even = !even;
                 break;
             case Layering::QubitTriangle:
                 if (layers.empty()) {
@@ -103,13 +109,6 @@ void Mapper::createLayers() {
                 }
                 break;
         }
-
-        if (singleQubit) {
-            results.input.singleQubitGates++;
-        } else {
-            results.input.cnots++;
-        }
-        results.input.gates++;
     }
     results.input.layers = layers.size();
 }
@@ -181,6 +180,59 @@ void Mapper::placeRemainingArchitectureQubits() {
             qcMapped.initialLayout[physical] = static_cast<dd::Qubit>(logical);
             qcMapped.setLogicalQubitAncillary(logical);
             qcMapped.setLogicalQubitGarbage(logical);
+        }
+    }
+}
+
+void Mapper::preMappingOptimizations(const Configuration& config [[maybe_unused]]) {
+    if (!config.preMappingOptimizations) {
+        return;
+    }
+
+    // at the moment there are no pre-mapping optimizations
+}
+
+void Mapper::postMappingOptimizations(const Configuration& config) {
+    if (!config.postMappingOptimizations) {
+        return;
+    }
+
+    // try to cancel adjacent CNOT gates
+    qc::CircuitOptimizer::cancelCNOTs(qcMapped);
+}
+
+void Mapper::countGates(decltype(qcMapped.cbegin()) it, const decltype(qcMapped.cend())& end, MappingResults::CircuitInfo& info) {
+    for (; it != end; ++it) {
+        const auto& g = *it;
+        if (g->getType() == qc::Teleportation) {
+            info.gates += GATES_OF_TELEPORTATION;
+            continue;
+        }
+
+        if (g->isStandardOperation()) {
+            if (g->getType() == qc::SWAP) {
+                if (architecture.bidirectional()) {
+                    info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
+                    info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+                } else {
+                    info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
+                    info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+                    info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
+                }
+            } else if (g->getControls().empty()) {
+                ++info.singleQubitGates;
+                ++info.gates;
+            } else {
+                assert(g->getType() == qc::X);
+                ++info.cnots;
+                ++info.gates;
+            }
+            continue;
+        }
+
+        if (g->isCompoundOperation()) {
+            const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
+            countGates(cg->cbegin(), cg->cend(), info);
         }
     }
 }
