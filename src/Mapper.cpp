@@ -23,7 +23,11 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation, Architecture& a
     qubits.fill(DEFAULT_POSITION);
     locations.fill(DEFAULT_POSITION);
     fidelities.fill(INITIAL_FIDELITY);
+
+    // strip away qubits that are not used in the circuit
     qc.stripIdleQubits(true, true);
+    // strip away final measurement gates
+    qc::CircuitOptimizer::removeFinalMeasurements(qc);
 }
 
 void Mapper::createLayers() {
