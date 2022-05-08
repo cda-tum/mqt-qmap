@@ -184,6 +184,8 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("swap_limit", &Configuration::swapLimit)
             .def_readwrite("use_bdd", &Configuration::useBDD)
             .def_readwrite("subgraph", &Configuration::subgraph)
+            .def_readwrite("pre_mapping_optimizations", &Configuration::preMappingOptimizations)
+            .def_readwrite("post_mapping_optimizations", &Configuration::postMappingOptimizations)
             .def("json", &Configuration::json)
             .def("__repr__", &Configuration::toString);
 

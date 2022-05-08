@@ -24,6 +24,8 @@ def compile(circ, arch: Union[str, Arch],
             include_WCNF: bool = False,
             use_subsets: bool = True,
             subgraph: Optional[Set[int]] = None,
+            pre_mapping_optimizations: bool = True,
+            post_mapping_optimizations: bool = True,
             verbose: bool = False
             ) -> MappingResults:
     """Interface to the MQT QMAP tool for mapping quantum circuits
@@ -57,6 +59,10 @@ def compile(circ, arch: Union[str, Arch],
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
+    :param pre_mapping_optimizations: Run pre-mapping optimizations (default: True)
+    :type pre_mapping_optimizations: bool
+    :param post_mapping_optimizations: Run post-mapping optimizations (default: True)
+    :type post_mapping_optimizations: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
     :return: Object containing all the results
@@ -84,6 +90,8 @@ def compile(circ, arch: Union[str, Arch],
     config.use_teleportation = use_teleportation
     config.teleportation_fake = teleportation_fake
     config.teleportation_seed = teleportation_seed
+    config.pre_mapping_optimizations = pre_mapping_optimizations
+    config.post_mapping_optimizations = post_mapping_optimizations
     config.verbose = verbose
 
     return map(circ, arch, config)

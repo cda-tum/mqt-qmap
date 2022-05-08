@@ -15,8 +15,10 @@ void HeuristicMapper::map(const Configuration& ms) {
         return;
     }
     const auto start = std::chrono::steady_clock::now();
-    qc.stripIdleQubits(true, false);
     initResults();
+
+    // perform pre-mapping optimizations
+    preMappingOptimizations(config);
 
     createLayers();
     if (config.verbose) {
@@ -50,15 +52,9 @@ void HeuristicMapper::map(const Configuration& ms) {
                 for (const auto& swap: swaps) {
                     if (swap.op == qc::SWAP) {
                         qcMapped.swap(swap.first, swap.second);
-                        if (architecture.bidirectional()) {
-                            results.output.gates += GATES_OF_BIDIRECTIONAL_SWAP;
-                        } else {
-                            results.output.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
-                        }
                         results.output.swaps++;
                     } else if (swap.op == qc::Teleportation) {
                         qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(), qc::Targets{static_cast<dd::Qubit>(swap.first), static_cast<dd::Qubit>(swap.second), static_cast<dd::Qubit>(swap.middle_ancilla)}, qc::Teleportation);
-                        results.output.gates += GATES_OF_TELEPORTATION;
                         results.output.teleportations++;
                     }
                     gateidx++;
@@ -82,8 +78,6 @@ void HeuristicMapper::map(const Configuration& ms) {
                                                                  op->getParameter().at(1),
                                                                  op->getParameter().at(2));
                     gatesToAdjust.push_back(gateidx);
-                    results.output.gates++;
-                    results.output.singleQubitGates++;
                     gateidx++;
                 } else {
                     qcMapped.emplace_back<qc::StandardOperation>(qcMapped.getNqubits(),
@@ -92,8 +86,6 @@ void HeuristicMapper::map(const Configuration& ms) {
                                                                  op->getParameter().at(0),
                                                                  op->getParameter().at(1),
                                                                  op->getParameter().at(2));
-                    results.output.gates++;
-                    results.output.singleQubitGates++;
                     gateidx++;
                 }
             } else {
@@ -110,13 +102,9 @@ void HeuristicMapper::map(const Configuration& ms) {
                     qcMapped.h(reverse.first);
 
                     results.output.directionReverse++;
-                    results.output.cnots++;
-                    results.output.gates += 5;
                     gateidx += 5;
                 } else {
                     qcMapped.x(cnot.second, dd::Control{static_cast<dd::Qubit>(cnot.first)});
-                    results.output.cnots++;
-                    results.output.gates++;
                     gateidx++;
                 }
             }
@@ -176,6 +164,9 @@ void HeuristicMapper::map(const Configuration& ms) {
             ++count;
         }
     }
+
+    postMappingOptimizations(config);
+    countGates(qcMapped, results.output);
     finalizeMappedCircuit();
 
     const auto                    end  = std::chrono::steady_clock::now();
