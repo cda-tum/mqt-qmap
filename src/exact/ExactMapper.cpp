@@ -39,6 +39,7 @@ void ExactMapper::map(const Configuration& settings) {
     if (reducedLayerIndices.empty()) {
         qcMapped = qc.clone();
         postMappingOptimizations(config);
+        results.output.gates = 0U;
         countGates(qcMapped, results.output);
         finalizeMappedCircuit();
 
