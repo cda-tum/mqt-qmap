@@ -125,20 +125,13 @@ def exact_mapping(device_qubits: int, benchmark_location: str, mapped_circuit_lo
                 qc = QuantumCircuit.from_qasm_file(original_benchmark_dir + category + "/" + benchmark)
                 qc.name = name
 
-                subgraph_directory = "subgraphs/ibmq_ehningen/" + str(qubits) + "/"
+                subgraph_file = "subgraphs/ibmq_ehningen.txt"
+                subgraphs = qmap.load_subgraphs_from_file(subgraph_file, qubits)
                 best_result = None
-                for arch in os.listdir(subgraph_directory):
-                    arch_file = os.path.join(subgraph_directory, arch)
-                    logical_to_physical_mapping = normalize_subgraph(arch_file)
-
-                    normalized_arch_file = 'IBMQ_Ehningen.arch'
-                    result = qmap.compile(circ=qc, arch=normalized_arch_file, method="exact", verbose=False)
-                    # print(result.output.swaps, end='')
+                for subgraph in subgraphs:
+                    result = qmap.compile(circ=qc, arch="IBMQ_Ehningen", method="exact", subgraph=subgraph, verbose=True)
                     if best_result is None or result.output.swaps < best_result.output.swaps:
                         best_result = result
-                        best_result.mapped_circuit = remap_qasm(device_qubits, logical_to_physical_mapping, result.mapped_circuit)
-
-                    os.remove(normalized_arch_file)
 
                 if best_result is not None:
                     print(' finished! Required {} swaps.'.format(best_result.output.swaps))
