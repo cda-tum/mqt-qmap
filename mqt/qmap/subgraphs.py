@@ -4,6 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import itertools
 import json
+from typing import List, Set
 
 path_prefix = '../../test/'
 
@@ -43,6 +44,24 @@ def load_subgraphs(graph, filename: str):
                 sgs[idx] = []
             else:
                 sgs[idx].append(graph.subgraph(json.loads(line)))
+    return sgs
+
+
+def load_subgraphs_from_file(filename: str, nqubits: int) -> List[Set[int]]:
+    sgs = []
+    with open(filename, encoding='utf-8') as f:
+        q = 1
+        for line in f:
+            line = line.rstrip('\n')
+            if q == nqubits:
+                if line == "---":
+                    return sgs
+                else:
+                    sgs.append(set(eval(line)))
+                    print(sgs[-1])
+            else:
+                if line == "---":
+                    q += 1
     return sgs
 
 
