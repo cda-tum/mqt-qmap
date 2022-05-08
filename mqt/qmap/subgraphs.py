@@ -58,7 +58,6 @@ def load_subgraphs_from_file(filename: str, nqubits: int) -> List[Set[int]]:
                     return sgs
                 else:
                     sgs.append(set(eval(line)))
-                    print(sgs[-1])
             else:
                 if line == "---":
                     q += 1
