@@ -1,4 +1,4 @@
-// i 0 1 2 3 5
+// i 0 1 2 3 5 4 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
 // o 0 1 2 3 5
 OPENQASM 2.0;
 include "qelib1.inc";
@@ -42,4 +42,3 @@ measure q[1] -> c[1];
 measure q[2] -> c[2];
 measure q[3] -> c[3];
 measure q[5] -> c[4];
-
