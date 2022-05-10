@@ -186,7 +186,7 @@ void ExactMapper::map(const Configuration& settings) {
         } while (config.swapReduction == SwapReduction::Increasing && (limit <= upperLimit || config.swapLimit == 0) && limit < architecture.getCouplingLimit());
 
         // stop if a perfect result has been found
-        if (results.output.swaps == 0U && results.output.directionReverse == 0U) {
+        if (!results.timeout && results.output.swaps == 0U && results.output.directionReverse == 0U) {
             break;
         }
     }
