@@ -126,9 +126,6 @@ void ExactMapper::map(const Configuration& settings) {
         } else { //CustomLimit
             limit = upperLimit;
         }
-        if (config.verbose && config.swapReduction != SwapReduction::None) {
-            std::cout << "SWAP limit: " << limit << std::endl;
-        }
 
         unsigned int timeout = 0U;
         do {
@@ -175,12 +172,31 @@ void ExactMapper::map(const Configuration& settings) {
                 break;
             }
 
+            if (config.verbose) {
+                std::cout << "-------- qubit choice: ";
+                for (const auto Q: choice) {
+                    std::cout << Q << " ";
+                }
+                std::cout << "---------- ";
+                if (config.swapReduction != SwapReduction::None) {
+                    std::cout << "SWAP limit: " << limit;
+                }
+                std::cout << std::endl;
+            }
+
             // 6) call actual mapping routine
             coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit), timeout);
 
             if (config.verbose) {
-                std::cout << "SWAPs: " << choiceResults.output.swaps << std::endl;
-                std::cout << "Direction reverses: " << choiceResults.output.directionReverse << std::endl;
+                if (!choiceResults.timeout) {
+                    std::cout << "Costs: " << choiceResults.output.swaps << " SWAP(s)";
+                    if (!architecture.bidirectional()) {
+                        std::cout << ", " << choiceResults.output.directionReverse << " direction reverses";
+                    }
+                    std::cout << std::endl;
+                } else {
+                    std::cout << "Did not yield a result" << std::endl;
+                }
             }
 
             // 7) Check if new optimum found
@@ -667,14 +683,6 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     if (sat == opt.check()) {
         model m               = opt.get_model();
         choiceResults.timeout = results.timeout = false;
-
-        if (config.verbose) {
-            std::cout << "-------- qubit choice: ";
-            for (const auto Q: qubitChoice) {
-                std::cout << Q << " ";
-            }
-            std::cout << "----------" << std::endl;
-        }
 
         // quickly determine cost
         choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
