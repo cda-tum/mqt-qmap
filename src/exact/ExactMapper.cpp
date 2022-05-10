@@ -674,6 +674,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     if (config.includeWCNF) {
         std::stringstream ss{};
         ss << opt;
+        try {
+            c.check_error();
+        } catch (const z3::exception& e) {
+            std::cerr << "Z3 reported an exception while trying to gather the WCNF formula: " << e.msg() << std::endl;
+            std::cerr << "Most likely, this is due to the usage of Z3's atMostOne and exactlyOne constraints." << std::endl;
+            std::cerr << "This can be circumvented by using QMAP's `commander` or `bimander` encoding." << std::endl;
+        }
         choiceResults.wcnf = ss.str();
     }
 
