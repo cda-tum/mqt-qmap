@@ -126,13 +126,18 @@ void ExactMapper::map(const Configuration& settings) {
         unsigned int maxLimit = architecture.getCouplingLimit();
         unsigned int timeout  = 0;
         do {
-            timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
-            if (timeout <= 10000)
-                timeout = 10000;
-            if (config.swapReduction != SwapReduction::Increasing)
+            if (config.swapReduction == SwapReduction::Increasing) {
+                timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
+                if (timeout <= 10000U) {
+                    timeout = 10000U;
+                }
+                if (settings.verbose) {
+                    std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
+                }
+            } else {
                 timeout = settings.timeout;
-            if (settings.verbose)
-                std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
+            }
+
             // reset swaps
             for (auto& layer: swaps) {
                 layer.clear();
