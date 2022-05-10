@@ -85,6 +85,9 @@ struct MappingResults {
         stats["swaps"]        = output.swaps;
         if (config.method == Method::Exact) {
             stats["direction_reverse"] = output.directionReverse;
+            if (config.includeWCNF && !wcnf.empty()) {
+                stats["WCNF"] = wcnf;
+            }
         } else if (config.method == Method::Heuristic) {
             stats["teleportations"] = output.teleportations;
         }
