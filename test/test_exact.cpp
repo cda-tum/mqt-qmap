@@ -401,8 +401,8 @@ TEST_F(ExactTest, WCNF) {
     settings.verbose     = false;
     settings.includeWCNF = true;
     IBMQ_London_mapper->map(settings);
+    IBMQ_London_mapper->printResult(std::cout);
     const auto& wcnf = IBMQ_London_mapper->getResults().wcnf;
-    std::cout << wcnf << std::endl;
     EXPECT_TRUE(!wcnf.empty());
 }
 
