@@ -401,9 +401,33 @@ TEST_F(ExactTest, WCNF) {
     settings.verbose     = false;
     settings.includeWCNF = true;
     IBMQ_London_mapper->map(settings);
+    IBMQ_London_mapper->printResult(std::cout);
     const auto& wcnf = IBMQ_London_mapper->getResults().wcnf;
-    std::cout << wcnf << std::endl;
     EXPECT_TRUE(!wcnf.empty());
+}
+
+TEST_F(ExactTest, WCNF_not_available) {
+    using namespace dd::literals;
+
+    settings.verbose     = false;
+    settings.includeWCNF = true;
+
+    auto circ = qc::QuantumComputation(5U);
+    circ.h(0);
+    circ.x(1, 0_pc);
+    circ.x(2, 0_pc);
+    circ.x(3, 0_pc);
+    circ.x(4, 0_pc);
+
+    auto mapper = ExactMapper(circ, IBMQ_London);
+
+    mapper.map(settings);
+    EXPECT_TRUE(mapper.getResults().wcnf.empty());
+
+    auto mapper2      = ExactMapper(circ, IBMQ_London);
+    settings.encoding = Encoding::Commander;
+    mapper2.map(settings);
+    EXPECT_FALSE(mapper2.getResults().wcnf.empty());
 }
 
 TEST_F(ExactTest, MapToSubgraph) {

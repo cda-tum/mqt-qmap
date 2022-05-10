@@ -111,28 +111,36 @@ void ExactMapper::map(const Configuration& settings) {
     mappingSwaps.reserve(reducedLayerIndices.size());
     int runs = 1;
     for (auto& choice: allPossibleQubitChoices) {
-        std::size_t limit      = 0;
+        std::size_t limit      = 0U;
+        std::size_t maxLimit   = 0U;
         std::size_t upperLimit = config.swapLimit;
+        if (config.useSubsets) {
+            maxLimit = architecture.getCouplingLimit(choice) - 1U;
+        } else {
+            maxLimit = architecture.getCouplingLimit() - 1U;
+        }
         if (config.swapReduction == SwapReduction::CouplingLimit) {
-            if (config.useSubsets)
-                limit = architecture.getCouplingLimit(choice) - 1;
-            else
-                limit = architecture.getCouplingLimit() - 1;
+            limit = maxLimit;
         } else if (config.swapReduction == SwapReduction::Increasing) {
-            limit = 0;
+            limit = 0U;
         } else { //CustomLimit
             limit = upperLimit;
         }
-        unsigned int maxLimit = architecture.getCouplingLimit();
-        unsigned int timeout  = 0;
+
+        unsigned int timeout = 0U;
         do {
-            timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
-            if (timeout <= 10000)
-                timeout = 10000;
-            if (config.swapReduction != SwapReduction::Increasing)
+            if (config.swapReduction == SwapReduction::Increasing) {
+                timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
+                if (timeout <= 10000U) {
+                    timeout = 10000U;
+                }
+                if (settings.verbose) {
+                    std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
+                }
+            } else {
                 timeout = settings.timeout;
-            if (settings.verbose)
-                std::cout << "Timeout: " << timeout << "  Max-Timeout: " << settings.timeout << std::endl;
+            }
+
             // reset swaps
             for (auto& layer: swaps) {
                 layer.clear();
@@ -164,12 +172,31 @@ void ExactMapper::map(const Configuration& settings) {
                 break;
             }
 
+            if (config.verbose) {
+                std::cout << "-------- qubit choice: ";
+                for (const auto Q: choice) {
+                    std::cout << Q << " ";
+                }
+                std::cout << "---------- ";
+                if (config.swapReduction != SwapReduction::None) {
+                    std::cout << "SWAP limit: " << limit;
+                }
+                std::cout << std::endl;
+            }
+
             // 6) call actual mapping routine
             coreMappingRoutine(choice, reducedCouplingMap, choiceResults, swaps, static_cast<long unsigned int>(limit), timeout);
 
             if (config.verbose) {
-                std::cout << "SWAPs: " << choiceResults.output.swaps << std::endl;
-                std::cout << "Direction reverses: " << choiceResults.output.directionReverse << std::endl;
+                if (!choiceResults.timeout) {
+                    std::cout << "Costs: " << choiceResults.output.swaps << " SWAP(s)";
+                    if (!architecture.bidirectional()) {
+                        std::cout << ", " << choiceResults.output.directionReverse << " direction reverses";
+                    }
+                    std::cout << std::endl;
+                } else {
+                    std::cout << "Did not yield a result" << std::endl;
+                }
             }
 
             // 7) Check if new optimum found
@@ -647,6 +674,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     if (config.includeWCNF) {
         std::stringstream ss{};
         ss << opt;
+        try {
+            c.check_error();
+        } catch (const z3::exception& e) {
+            std::cerr << "Z3 reported an exception while trying to gather the WCNF formula: " << e.msg() << std::endl;
+            std::cerr << "Most likely, this is due to the usage of Z3's atMostOne and exactlyOne constraints." << std::endl;
+            std::cerr << "This can be circumvented by using QMAP's `commander` or `bimander` encoding." << std::endl;
+        }
         choiceResults.wcnf = ss.str();
     }
 
@@ -656,14 +690,6 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     if (sat == opt.check()) {
         model m               = opt.get_model();
         choiceResults.timeout = results.timeout = false;
-
-        if (config.verbose) {
-            std::cout << "-------- qubit choice: ";
-            for (const auto Q: qubitChoice) {
-                std::cout << Q << " ";
-            }
-            std::cout << "----------" << std::endl;
-        }
 
         // quickly determine cost
         choiceResults.output.singleQubitGates = choiceResults.input.singleQubitGates;
