@@ -111,20 +111,26 @@ void ExactMapper::map(const Configuration& settings) {
     mappingSwaps.reserve(reducedLayerIndices.size());
     int runs = 1;
     for (auto& choice: allPossibleQubitChoices) {
-        std::size_t limit      = 0;
+        std::size_t limit      = 0U;
+        std::size_t maxLimit   = 0U;
         std::size_t upperLimit = config.swapLimit;
+        if (config.useSubsets) {
+            maxLimit = architecture.getCouplingLimit(choice) - 1U;
+        } else {
+            maxLimit = architecture.getCouplingLimit() - 1U;
+        }
         if (config.swapReduction == SwapReduction::CouplingLimit) {
-            if (config.useSubsets)
-                limit = architecture.getCouplingLimit(choice) - 1;
-            else
-                limit = architecture.getCouplingLimit() - 1;
+            limit = maxLimit;
         } else if (config.swapReduction == SwapReduction::Increasing) {
-            limit = 0;
+            limit = 0U;
         } else { //CustomLimit
             limit = upperLimit;
         }
-        unsigned int maxLimit = architecture.getCouplingLimit();
-        unsigned int timeout  = 0;
+        if (config.verbose && config.swapReduction != SwapReduction::None) {
+            std::cout << "SWAP limit: " << limit << std::endl;
+        }
+
+        unsigned int timeout = 0U;
         do {
             if (config.swapReduction == SwapReduction::Increasing) {
                 timeout += settings.timeout * (static_cast<double>(limit * 0.5) / (maxLimit < upperLimit ? upperLimit : maxLimit));
