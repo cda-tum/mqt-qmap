@@ -465,7 +465,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     } else if (config.encoding == Encoding::Commander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
-                std::vector<expr> varIDs;
+                std::vector<expr> varIDs{};
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     varIDs.push_back(x[k][i][j]);
                 }
@@ -481,7 +481,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
-                std::vector<expr> varIDs;
+                std::vector<expr> varIDs{};
                 for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                     varIDs.push_back(x[k][i][j]);
                 }
@@ -500,8 +500,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     } else if (config.encoding == Encoding::Bimander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
-                std::vector<expr>          vars;
-                std::vector<unsigned long> varIDs;
+                std::vector<expr>          vars{};
+                std::vector<unsigned long> varIDs{};
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     vars.emplace_back(x[k][i][j]);
                     varIDs.emplace_back(j);
@@ -510,7 +510,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) { //There is no exactly one Bimander
-                std::vector<expr> varIDs;
+                std::vector<expr> varIDs{};
                 for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                     varIDs.push_back(x[k][i][j]);
                 }

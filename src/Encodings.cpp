@@ -106,7 +106,7 @@ std::vector<NestedVar> groupVars(const std::vector<z3::expr>& vars, std::size_t 
     for (unsigned long i = 0; i < vars.size(); i++) {
         vVars.emplace_back(NestedVar{i});
     }
-    if (vVars.size() <= 6)
+    if (vVars.size() <= 6 || maxSize <= 1)
         return vVars;
     return groupVarsAux(vVars, maxSize);
 }
@@ -123,6 +123,9 @@ std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars, std::siz
         std::advance(from, static_cast<long>(i * numVars / numGr));
         auto to = from;
         std::advance(to, static_cast<long>(numVars / numGr));
+        if (i == numGr - 1) {
+            to = vars.end();
+        }
         ret.emplace_back(std::numeric_limits<unsigned long>::max(), std::vector<NestedVar>(from, to));
     }
     return groupVarsAux(ret, maxSize);
