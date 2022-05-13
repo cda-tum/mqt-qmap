@@ -9,6 +9,7 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	            ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
 	            ${CMAKE_CURRENT_SOURCE_DIR}/${LIBNAME}/${SRCFILE}.cpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
+	            ${${PROJECT_NAME}_SOURCE_DIR}/include/csv_util.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/Mapper.hpp
 	            ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp

@@ -4,6 +4,9 @@
  */
 
 #include "Architecture.hpp"
+#include "csv_util.hpp"
+#include "utils.hpp"
+#include <utility>
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
     std::stringstream ss{getCouplingMapSpecification(architecture)};
@@ -90,18 +93,48 @@ void Architecture::loadCalibrationData(const std::string& filename) {
         throw QMAPException("Error opening calibration data file.");
 }
 
-void Architecture::loadCalibrationData([[maybe_unused]] std::istream&& is) {
+void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
-    calibrationData.reserve(nqubits);
-    // TODO: Read in IBM csv Format into calibrationData
-    // Qubit,T1 (µs),T2 (µs),Frequency (GHz),Readout error,Single-qubit U2 error rate,CNOT error rate,Date
-    // Q0,43.113390027720456,80.43170304899623,5.2540548421267825,3.0000000000000027e-2,6.471748738850555e-4,"cx0_1: 1.286e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q1,57.036278779745814,44.25327200058967,5.04877069952246,5.499999999999994e-2,6.227987234977298e-4,"cx1_0: 1.286e-2, cx1_2: 1.117e-2, cx1_3: 1.006e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q2,81.96027845904459,87.47080521889637,5.230569177436213,2.1666666666666723e-2,5.16080288896023e-4,"cx2_1: 1.117e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q3,67.95013744985455,86.03784184638282,5.200948312700143,1.8333333333333313e-2,3.530411094454146e-4,"cx3_1: 1.006e-2, cx3_4: 1.670e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q4,62.156360190670306,3.731765939150933,5.065777885569538,1.5000000000000013e-2,1.106360359568795e-3,"cx4_3: 1.670e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
+
+    std::string line;
+    std::string word;
+    std::regex  r_dfidelity =
+            std::regex(R"(((\d+).?(\d+):\W*?(\d+\.\d+e?-?\d+)))");
+    std::smatch m;
+    std::getline(is, line); //skip first line
+    // load edges
+    int qubit = 0;
+    while (std::getline(is, line)) {
+        std::stringstream ss(line);
+        CalibrationData cd = {};
+        auto data = CSV::parse_line(line, ',', {'\"'}, {'\\'});
+        cd.qubit = qubit;
+        cd.t1 = std::stod(data[1]);
+        cd.t2 = std::stod(data[2]);
+        cd.frequency = std::stod(data[3]);
+        cd.readoutError = std::stod(data[4]);
+        cd.singleQubitErrorRate = std::stod(data[5]);
+        std::string s           = data[6];
+        while (std::regex_search(s, m, r_dfidelity)) {
+            auto a               = static_cast<unsigned short>(std::stoul(m.str(2U)));
+            auto b               = static_cast<unsigned short>(std::stoul(m.str(3U)));
+            if (nqubits == 0) {
+                couplingMap.emplace(std::make_pair(a, b));
+            }
+            cd.cnotErrorRate.emplace(std::make_pair(a,b),std::stod(m.str(4U)));
+            s                    = m.suffix().str();
+        }
+        cd.date = data[7];
+        calibrationData.emplace_back(cd);
+        qubit++;
+    }
 
     createFidelityTable();
+    
+    if (nqubits == 0) {
+        nqubits = static_cast<unsigned short>(qubit);
+        createDistanceTable();
+    }
 }
 
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
@@ -109,6 +142,7 @@ void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calDa
     architectureName = "generic_" + std::to_string(nqubits);
     createFidelityTable();
 }
+
 
 Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap) {
     loadCouplingMap(nQ, couplingMap);
