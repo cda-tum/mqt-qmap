@@ -92,6 +92,7 @@ Architectures that are available per default (either as strings or under `qmap.A
 - `IBMQ_Yorktown` (5 qubit, undirected bow tie layout)
 - `IBMQ_London` (5 qubit, undirected T-shape layout)
 - `IBMQ_Bogota` (5 qubit, undirected linear chain layout)
+- `IBMQ_Casablanca` (7 qubit, undirected H-shape layout)
 - `IBMQ_Tokyo` (20 qubit, undirected brick-like layout)
 
 Whether the heuristic (*default*) or the exact mapper is used can be controlled by passing `method="heuristic"` or `method="exact"` to the `compile` function.

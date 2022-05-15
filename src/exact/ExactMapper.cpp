@@ -470,13 +470,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
                 }
             }
 
@@ -487,13 +487,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
                 }
             }
         }
@@ -516,13 +516,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), static_cast<int>(auxvars.size() - 1), auxvars, c));
+                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
                 }
             }
         }
