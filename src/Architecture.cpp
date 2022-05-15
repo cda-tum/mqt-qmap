@@ -4,8 +4,10 @@
  */
 
 #include "Architecture.hpp"
+
 #include "csv_util.hpp"
 #include "utils.hpp"
+
 #include <utility>
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
@@ -106,23 +108,23 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     int qubit = 0;
     while (std::getline(is, line)) {
         std::stringstream ss(line);
-        CalibrationData cd = {};
-        auto data = CSV::parse_line(line, ',', {'\"'}, {'\\'});
-        cd.qubit = qubit;
-        cd.t1 = std::stod(data[1]);
-        cd.t2 = std::stod(data[2]);
-        cd.frequency = std::stod(data[3]);
-        cd.readoutError = std::stod(data[4]);
+        CalibrationData   cd    = {};
+        auto              data  = CSV::parse_line(line, ',', {'\"'}, {'\\'});
+        cd.qubit                = qubit;
+        cd.t1                   = std::stod(data[1]);
+        cd.t2                   = std::stod(data[2]);
+        cd.frequency            = std::stod(data[3]);
+        cd.readoutError         = std::stod(data[4]);
         cd.singleQubitErrorRate = std::stod(data[5]);
         std::string s           = data[6];
         while (std::regex_search(s, m, r_dfidelity)) {
-            auto a               = static_cast<unsigned short>(std::stoul(m.str(2U)));
-            auto b               = static_cast<unsigned short>(std::stoul(m.str(3U)));
+            auto a = static_cast<unsigned short>(std::stoul(m.str(2U)));
+            auto b = static_cast<unsigned short>(std::stoul(m.str(3U)));
             if (nqubits == 0) {
                 couplingMap.emplace(std::make_pair(a, b));
             }
-            cd.cnotErrorRate.emplace(std::make_pair(a,b),std::stod(m.str(4U)));
-            s                    = m.suffix().str();
+            cd.cnotErrorRate.emplace(std::make_pair(a, b), std::stod(m.str(4U)));
+            s = m.suffix().str();
         }
         cd.date = data[7];
         calibrationData.emplace_back(cd);
@@ -130,7 +132,7 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     }
 
     createFidelityTable();
-    
+
     if (nqubits == 0) {
         nqubits = static_cast<unsigned short>(qubit);
         createDistanceTable();
@@ -142,7 +144,6 @@ void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calDa
     architectureName = "generic_" + std::to_string(nqubits);
     createFidelityTable();
 }
-
 
 Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap) {
     loadCouplingMap(nQ, couplingMap);
