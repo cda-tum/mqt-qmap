@@ -206,5 +206,5 @@ expr varAlloc(expr_vector& auxvars, z3::context& c) {
     std::stringstream out;
     out << "c_" << nextVar++;
     auxvars.push_back(c.bool_const(out.str().c_str()));
-    return auxvars[static_cast<int>(auxvars.size() - 1)];
+    return auxvars.back();
 }
