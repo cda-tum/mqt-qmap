@@ -571,7 +571,7 @@ double Architecture::getFidelity(const CouplingMap& couplingMap, const std::set<
     if (calibrationData.empty()) {
         return 0.0;
     }
-    double                                              result = 1.0;
+    double         result = 1.0;
     std::set<Edge> qubitPairs;
     for (const auto& edge: couplingMap) {
         if (qubitChoice.find(edge.first) != qubitChoice.end() &&
