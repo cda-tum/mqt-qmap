@@ -142,3 +142,73 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 
     return k * static_cast<std::size_t>(nj) * iValues.size() + counti * static_cast<std::size_t>(nj) + j;
 }
+
+std::vector<std::set<unsigned short>>
+subsets(const std::set<unsigned short>& input, int k) {
+    std::size_t n = input.size();
+
+    std::vector<std::set<unsigned short>> result;
+
+    std::size_t i = (1U << k) - 1U;
+
+    while (!(i >> n)) {
+        std::set<unsigned short> v{};
+        auto                     it = input.begin();
+
+        for (std::size_t j = 0U; j < n; j++) {
+            if (i & (1U << j)) {
+                v.emplace(*it);
+            }
+            std::advance(it, 1);
+        }
+
+        result.push_back(v);
+
+        i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
+    }
+
+    return result;
+}
+
+bool isFullyConnected(const std::set<std::pair<unsigned short, unsigned short>>& cm,
+                      int qubits, const std::set<unsigned short>& qubitChoice) {
+    std::vector<std::set<unsigned short>> connections;
+    std::vector<int>                      d;
+    std::vector<bool>                     visited;
+    connections.resize(qubits);
+    for (const auto& edge: cm) {
+        if ((qubitChoice.count(edge.first) && qubitChoice.count(edge.second)) ||
+            (qubitChoice.count(edge.second) && qubitChoice.count(edge.first))) {
+            connections.at(edge.first).insert(edge.second);
+            connections.at(edge.second).insert(edge.first);
+        }
+    }
+    for (const auto q: qubitChoice) {
+        visited.clear();
+        visited.resize(qubits, false);
+        isFullyConnected(q, connections, visited);
+        for (const auto p: qubitChoice) {
+            if (!visited.at(p)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void isFullyConnected(const unsigned short                         node,
+                      const std::vector<std::set<unsigned short>>& connections,
+                      std::vector<bool>&                           visited) {
+    if (visited.at(node)) {
+        return;
+    }
+    visited[node] = true;
+
+    if (connections.at(node).empty()) {
+        return;
+    }
+
+    for (const auto child: connections.at(node)) {
+        isFullyConnected(child, connections, visited);
+    }
+}

@@ -492,3 +492,109 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
 
     visited[node] = false;
 }
+
+void Architecture::getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& reducedMap) {
+    if (architectureName.empty() || nqubits == nQubits ||
+        calibrationName.empty()) {
+        //result.emplace_back(util::getFullyConnectedMap(nQubits));
+    } else {
+        double              bestFidelity{};
+        std::vector<double> allFidelities{};
+        auto                allConnectedSubsets = getAllConnectedSubsets(nQubits);
+
+        allFidelities.reserve(allConnectedSubsets.size());
+        for (const auto& qubitChoice: allConnectedSubsets) {
+            CouplingMap map{};
+            getReducedCouplingMap(qubitChoice, map);
+            bestFidelity = getFidelity(map, qubitChoice, calibrationData);
+            if (allFidelities.empty()) {
+                allFidelities.emplace_back(bestFidelity);
+                reducedMap = map;
+            } else {
+                auto it = allFidelities.begin();
+                while (it != allFidelities.end() && *it < bestFidelity) {
+                    std::advance(it, 1);
+                }
+                const auto distance = std::abs(std::distance(allFidelities.begin(), it));
+                allFidelities.emplace(allFidelities.begin() + distance, bestFidelity);
+                if (distance == 0) {
+                    reducedMap = map;
+                }
+            }
+        }
+    }
+}
+std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short nQubits) {
+    std::vector<std::set<unsigned short>> result{};
+    if (architectureName.empty() || nqubits == nQubits) {
+        result.emplace_back();
+        for (unsigned short i = 0U; i < nQubits; ++i) {
+            result.back().emplace(i);
+        }
+    } else if (nqubits < nQubits) {
+        throw QMAPException("Architecture too small!");
+    } else {
+        for (const auto& subset: subsets(getQubitSet(), nQubits)) {
+            if (isFullyConnected(couplingMap, static_cast<int>(nqubits), subset)) {
+                result.emplace_back(subset);
+            }
+        }
+    }
+    return result;
+}
+void Architecture::getReducedCouplingMaps(unsigned short nQubits, std::vector<CouplingMap>& couplingMaps) {
+    couplingMaps.clear();
+    if (architectureName.empty()) {
+        throw QMAPException("No architecture!");
+        //        couplingMaps.emplace_back(getFullyConnectedMap(nQubits));
+    } else {
+        for (const auto& qubitChoice: getAllConnectedSubsets(nQubits)) {
+            couplingMaps.emplace_back();
+            getReducedCouplingMap(qubitChoice, couplingMaps.back());
+        }
+    }
+}
+void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
+    if (architectureName.empty()) {
+        throw QMAPException("No architecture!");
+        //reducedMap = getFullyConnectedMap(qubitChoice.size());
+    } else {
+        for (const auto& [q0, q1]: couplingMap) {
+            if (qubitChoice.find(q0) != qubitChoice.end() && qubitChoice.find(q1) != qubitChoice.end()) {
+                reducedMap.emplace(q0, q1);
+            }
+        }
+    }
+}
+
+double Architecture::getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
+    if (calibrationData.empty()) {
+        return 0.0;
+    }
+    double                                              result = 1.0;
+    std::set<Edge> qubitPairs;
+    for (const auto& edge: couplingMap) {
+        if (qubitChoice.find(edge.first) != qubitChoice.end() &&
+            qubitChoice.find(edge.second) != qubitChoice.end()) {
+            qubitPairs.emplace(edge.first, edge.second);
+        }
+    }
+    for (const auto& calibrationEntry: calibrationData) {
+        for (const auto& edge: couplingMap) {
+            if (calibrationEntry.cnotErrorRate.find(edge) != calibrationEntry.cnotErrorRate.end())
+                result *= calibrationEntry.cnotErrorRate.at(edge);
+        }
+        if (qubitChoice.find(calibrationEntry.qubit) != qubitChoice.end())
+            result *= calibrationEntry.singleQubitErrorRate;
+    }
+    return result;
+}
+
+std::vector<unsigned short> Architecture::getQubitMap(const CouplingMap& couplingMap) {
+    std::set<unsigned short> result{};
+    for (const auto& edge: couplingMap) {
+        result.emplace(edge.first);
+        result.emplace(edge.second);
+    }
+    return {result.begin(), result.end()};
+}

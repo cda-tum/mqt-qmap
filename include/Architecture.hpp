@@ -130,6 +130,12 @@ public:
         }
     }
 
+    [[nodiscard]] std::set<unsigned short> getQubitSet() {
+        std::vector<unsigned short> result{nqubits};
+        std::iota(std::begin(result), std::end(result), 0);
+        return {result.begin(), result.end()};
+    }
+
     unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
     void          minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
 
@@ -153,6 +159,14 @@ public:
 
     [[nodiscard]] std::size_t getCouplingLimit() const;
     [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
+
+     void                                  getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& couplingMap);
+    [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short nQubits);
+     void                                  getReducedCouplingMaps(unsigned short nQubits, std::vector<CouplingMap>& couplingMaps);
+     void                                  getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
+    [[nodiscard]] static double getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+
+    [[nodiscard]] static std::vector<unsigned short> getQubitMap(const CouplingMap & couplingMap);
 
 protected:
     std::string                          architectureName;
