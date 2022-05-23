@@ -6,3 +6,5 @@
 [submodule "extern/LogicBlocks"]
 	path = extern/LogicBlocks
 	url = https://github.com/IsFairy/LogicBlocks.git
+	branch = main
+	shallow = true
