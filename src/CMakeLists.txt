@@ -1,9 +1,6 @@
 # add MQT::qfr target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 
-# add logicblocks target
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/logicblocks")
-
 macro(add_qmap_library LIBNAME SRCFILE)
     # main project library
     add_library(${PROJECT_NAME}_${LIBNAME}_lib
@@ -82,8 +79,6 @@ if (Z3_FOUND)
             ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
     # add Z3 library
     target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
-    # add logicblocks library
-    target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Z3Logic)
 else ()
     message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
 endif ()
