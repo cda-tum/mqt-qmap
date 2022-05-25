@@ -90,7 +90,7 @@ void Architecture::loadCalibrationData(const std::string& filename) {
     calibrationName = filename.substr(slash + 1, dot - slash - 1);
     if (architectureName.empty())
         architectureName = calibrationName;
-    auto ifs        = std::ifstream(filename);
+    auto ifs = std::ifstream(filename);
     if (ifs.good())
         this->loadCalibrationData(ifs);
     else
@@ -133,13 +133,12 @@ void Architecture::loadCalibrationData(std::istream&& is) {
         qubit++;
     }
 
-        if (nqubits == 0) {
-            nqubits = static_cast<unsigned short>(qubit);
-            createDistanceTable();
-        }
+    if (nqubits == 0) {
+        nqubits = static_cast<unsigned short>(qubit);
+        createDistanceTable();
+    }
 
     createFidelityTable();
-
 }
 
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {

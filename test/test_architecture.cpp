@@ -21,10 +21,10 @@ INSTANTIATE_TEST_SUITE_P(
                 "ibmq_london.csv"));
 
 TEST_P(TestArchitecture, QubitMap) {
-    auto& arch_name = GetParam();
-    Architecture arch{};
+    auto&             arch_name = GetParam();
+    Architecture      arch{};
     std::stringstream ss{};
-    if (arch_name.find(".arch")!=std::string::npos){
+    if (arch_name.find(".arch") != std::string::npos) {
         ss << test_architecture_dir << arch_name;
         arch.loadCouplingMap(ss.str());
     } else {
@@ -35,10 +35,10 @@ TEST_P(TestArchitecture, QubitMap) {
     EXPECT_EQ(Architecture::getQubitMap(arch.getCouplingMap()).size(), arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetAllConnectedSubsets) {
-    auto& arch_name = GetParam();
-    Architecture arch{};
+    auto&             arch_name = GetParam();
+    Architecture      arch{};
     std::stringstream ss{};
-    if (arch_name.find(".arch")!=std::string::npos){
+    if (arch_name.find(".arch") != std::string::npos) {
         ss << test_architecture_dir << arch_name;
         arch.loadCouplingMap(ss.str());
     } else {
@@ -50,10 +50,10 @@ TEST_P(TestArchitecture, GetAllConnectedSubsets) {
     EXPECT_EQ(arch.getAllConnectedSubsets(1).size(), arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetHighestFidelity) {
-    auto& arch_name = GetParam();
-    Architecture arch{};
+    auto&             arch_name = GetParam();
+    Architecture      arch{};
     std::stringstream ss{};
-    if (arch_name.find(".arch")!=std::string::npos){
+    if (arch_name.find(".arch") != std::string::npos) {
         ss << test_architecture_dir << arch_name;
         arch.loadCouplingMap(ss.str());
     } else {
@@ -68,9 +68,9 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
 
     arch.getHighestFidelityCouplingMap(1, cm);
 
-    CouplingMap expected {};
+    CouplingMap expected{};
 
-    if (arch_name.find(".csv")==std::string::npos){
+    if (arch_name.find(".csv") == std::string::npos) {
         EXPECT_EQ(cm, arch.getCouplingMap());
     } else {
         EXPECT_NE(cm, arch.getCouplingMap());
