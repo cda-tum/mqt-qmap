@@ -88,6 +88,8 @@ void Architecture::loadCalibrationData(const std::string& filename) {
     size_t slash    = filename.find_last_of('/');
     size_t dot      = filename.find_last_of('.');
     calibrationName = filename.substr(slash + 1, dot - slash - 1);
+    if (architectureName.empty())
+        architectureName = calibrationName;
     auto ifs        = std::ifstream(filename);
     if (ifs.good())
         this->loadCalibrationData(ifs);
@@ -131,12 +133,13 @@ void Architecture::loadCalibrationData(std::istream&& is) {
         qubit++;
     }
 
+        if (nqubits == 0) {
+            nqubits = static_cast<unsigned short>(qubit);
+            createDistanceTable();
+        }
+
     createFidelityTable();
 
-    if (nqubits == 0) {
-        nqubits = static_cast<unsigned short>(qubit);
-        createDistanceTable();
-    }
 }
 
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
@@ -496,7 +499,7 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
 void Architecture::getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& reducedMap) {
     if (architectureName.empty() || nqubits == nQubits ||
         calibrationName.empty()) {
-        //result.emplace_back(util::getFullyConnectedMap(nQubits));
+        reducedMap = couplingMap;
     } else {
         double              bestFidelity{};
         std::vector<double> allFidelities{};

@@ -131,8 +131,8 @@ public:
     }
 
     [[nodiscard]] std::set<unsigned short> getQubitSet() {
-        std::vector<unsigned short> result{nqubits};
-        std::iota(std::begin(result), std::end(result), 0);
+        std::vector<unsigned short> result(nqubits);
+        std::iota(result.begin(), result.end(), 0);
         return {result.begin(), result.end()};
     }
 
