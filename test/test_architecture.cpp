@@ -76,3 +76,44 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
         EXPECT_NE(cm, arch.getCouplingMap());
     }
 }
+TEST_P(TestArchitecture, ReducedMaps) {
+    auto&             arch_name = GetParam();
+    Architecture      arch{};
+    std::stringstream ss{};
+    if (arch_name.find(".arch") != std::string::npos) {
+        ss << test_architecture_dir << arch_name;
+        arch.loadCouplingMap(ss.str());
+    } else {
+        ss << test_calibration_dir << arch_name;
+        arch.loadCalibrationData(ss.str());
+    }
+
+    std::vector<CouplingMap> cms;
+
+    arch.getReducedCouplingMaps(1, cms);
+
+    EXPECT_EQ(cms.size(), arch.getNqubits());
+}
+
+TEST(TestArchitecture, ConnectedTest) {
+    Architecture architecture{};
+    CouplingMap  cm{};
+
+    cm.emplace(std::make_pair(0, 1));
+    cm.emplace(std::make_pair(1, 2));
+    cm.emplace(std::make_pair(2, 3));
+    cm.emplace(std::make_pair(3, 4));
+    cm.emplace(std::make_pair(4, 0));
+
+    architecture.loadCouplingMap(5, cm);
+
+    std::vector<CouplingMap> cms;
+
+    architecture.getReducedCouplingMaps(2, cms);
+
+    EXPECT_EQ(cms.size(), 5);
+
+    architecture.getReducedCouplingMaps(4, cms);
+
+    EXPECT_EQ(cms.size(), 5);
+}

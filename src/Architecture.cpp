@@ -548,7 +548,6 @@ void Architecture::getReducedCouplingMaps(unsigned short nQubits, std::vector<Co
     couplingMaps.clear();
     if (architectureName.empty()) {
         throw QMAPException("No architecture!");
-        //        couplingMaps.emplace_back(getFullyConnectedMap(nQubits));
     } else {
         for (const auto& qubitChoice: getAllConnectedSubsets(nQubits)) {
             couplingMaps.emplace_back();
@@ -559,7 +558,6 @@ void Architecture::getReducedCouplingMaps(unsigned short nQubits, std::vector<Co
 void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
     if (architectureName.empty()) {
         throw QMAPException("No architecture!");
-        //reducedMap = getFullyConnectedMap(qubitChoice.size());
     } else {
         for (const auto& [q0, q1]: couplingMap) {
             if (qubitChoice.find(q0) != qubitChoice.end() && qubitChoice.find(q1) != qubitChoice.end()) {
