@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v3
         name: Install Python
       - name: Build wheels
-        uses: pypa/cibuildwheel@2.5.0
+        uses: pypa/cibuildwheel@2.6.0
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -43,7 +43,7 @@ jobs:
       - name: Install Z3
         run:  brew install z3
       - name: Build wheels
-        uses: pypa/cibuildwheel@2.5.0
+        uses: pypa/cibuildwheel@2.6.0
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -63,7 +63,7 @@ jobs:
              curl -L -H "Authorization: Bearer QQ==" -o ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
              brew install -f ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz
       - name: Build wheels
-        uses: pypa/cibuildwheel@2.5.0
+        uses: pypa/cibuildwheel@2.6.0
         env:
           CIBW_ARCHS_MACOS: arm64
       - uses: actions/upload-artifact@v3
@@ -99,7 +99,7 @@ jobs:
         working-directory: ${{github.workspace}}/z3/build
         run: cmake --build . --config Release --target INSTALL;
       - name: Build wheels
-        uses: pypa/cibuildwheel@2.5.0
+        uses: pypa/cibuildwheel@2.6.0
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
