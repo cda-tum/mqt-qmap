@@ -155,60 +155,53 @@ subsets(const std::set<unsigned short>& input, int k) {
         std::set<unsigned short> v{};
         auto                     it = input.begin();
 
-        for (std::size_t j = 0U; j < n; j++) {
+        for (std::size_t j = 0U; j < n; j++, ++it) {
             if (i & (1U << j)) {
                 v.emplace(*it);
             }
-            std::advance(it, 1);
         }
 
-        result.push_back(v);
+        result.emplace_back(v);
 
+        //this computes the lexographical next bitset from a set.
+        //the unsigned int t = v | (v - 1); // t gets v's least significant 0 bits set to 1
+        //// Next set to 1 the most significant bit to change,
+        //// set to 0 the least significant ones, and add the necessary 1 bits.
+        //w = (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctz(v) + 1))
+        // is the original, which involves counting the leading zeros via __builtin_ctz, the version below
+        // uses division to counteract that problem and might be slower on architectures that have a fast
+        // variant of ctz, but more convenient on others
         i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
     }
 
     return result;
 }
 
-bool isFullyConnected(const std::set<std::pair<unsigned short, unsigned short>>& cm,
-                      int qubits, const std::set<unsigned short>& qubitChoice) {
-    std::vector<std::set<unsigned short>> connections;
-    std::vector<int>                      d;
-    std::vector<bool>                     visited;
-    connections.resize(qubits);
-    for (const auto& edge: cm) {
-        if ((qubitChoice.count(edge.first) && qubitChoice.count(edge.second)) ||
-            (qubitChoice.count(edge.second) && qubitChoice.count(edge.first))) {
-            connections.at(edge.first).insert(edge.second);
-            connections.at(edge.second).insert(edge.first);
+void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
+           const std::set<char>& ignored_chars, std::vector<std::string>& result) {
+    std::string              word;
+    bool                     in_escape = false;
+    for (char c: line) {
+        if (ignored_chars.find(c) != ignored_chars.end()) {
+            continue;
         }
-    }
-    for (const auto q: qubitChoice) {
-        visited.clear();
-        visited.resize(qubits, false);
-        isFullyConnected(q, connections, visited);
-        for (const auto p: qubitChoice) {
-            if (!visited.at(p)) {
-                return false;
+        if (in_escape) {
+            if (escape_chars.find(c) != escape_chars.end()) {
+                word += c;
+                in_escape = false;
+            } else {
+                word += c;
+            }
+        } else {
+            if (escape_chars.find(c) != escape_chars.end()) {
+                in_escape = true;
+            } else if (c == separator) {
+                result.push_back(word);
+                word = "";
+            } else {
+                word += c;
             }
         }
     }
-    return true;
-}
-
-void isFullyConnected(const unsigned short                         node,
-                      const std::vector<std::set<unsigned short>>& connections,
-                      std::vector<bool>&                           visited) {
-    if (visited.at(node)) {
-        return;
-    }
-    visited[node] = true;
-
-    if (connections.at(node).empty()) {
-        return;
-    }
-
-    for (const auto child: connections.at(node)) {
-        isFullyConnected(child, connections, visited);
-    }
+    result.push_back(word);
 }

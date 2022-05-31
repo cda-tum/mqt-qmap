@@ -5,7 +5,6 @@
 
 #include "Architecture.hpp"
 
-#include "csv_util.hpp"
 #include "utils.hpp"
 
 #include <utility>
@@ -111,7 +110,8 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     while (std::getline(is, line)) {
         std::stringstream ss(line);
         CalibrationData   cd    = {};
-        auto              data  = CSV::parse_line(line, ',', {'\"'}, {'\\'});
+        std::vector<std::string> data{};
+        parse_line(line, ',', {'\"'}, {'\\'}, &data);
         cd.qubit                = qubit;
         cd.t1                   = std::stod(data[1]);
         cd.t2                   = std::stod(data[2]);
@@ -537,7 +537,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
         throw QMAPException("Architecture too small!");
     } else {
         for (const auto& subset: subsets(getQubitSet(), nQubits)) {
-            if (isFullyConnected(couplingMap, static_cast<int>(nqubits), subset)) {
+            if (isFullyConnected(subset)) {
                 result.emplace_back(subset);
             }
         }
@@ -597,4 +597,19 @@ std::vector<unsigned short> Architecture::getQubitMap(const CouplingMap& couplin
         result.emplace(edge.second);
     }
     return {result.begin(), result.end()};
+}
+
+
+bool Architecture::isFullyConnected(const std::set<unsigned short>& qubitChoice) {
+
+    CouplingMap reducedCouplingMap = getCouplingMap();
+    for (const auto& edge: getCouplingMap()) {
+        if (!qubitChoice.count(edge.first) || !qubitChoice.count(edge.second)) {
+            reducedCouplingMap.erase(edge);
+        }
+    }
+    std::set<unsigned short> reachedQubits{};
+    reachedQubits.insert(*(qubitChoice.begin()));
+    dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);
+    return (reachedQubits == qubitChoice);
 }

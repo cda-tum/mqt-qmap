@@ -131,9 +131,11 @@ public:
     }
 
     [[nodiscard]] std::set<unsigned short> getQubitSet() {
-        std::vector<unsigned short> result(nqubits);
-        std::iota(result.begin(), result.end(), 0);
-        return {result.begin(), result.end()};
+        std::set<unsigned short> result{nqubits};
+        for (int i = 0; i < nqubits; ++i){
+            result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
+        }
+        return result;
     }
 
     unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
@@ -167,6 +169,8 @@ public:
     [[nodiscard]] static double                         getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitMap(const CouplingMap& couplingMap);
+
+    bool                                  isFullyConnected(const std::set<unsigned short>& qubitChoice);
 
 protected:
     std::string                          architectureName;

@@ -142,8 +142,8 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj);
 
 std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int k);
-bool                                  isFullyConnected(const std::set<std::pair<unsigned short, unsigned short>>& cm, int qubits, const std::set<unsigned short>& qubitChoice);
-void                                  isFullyConnected(const unsigned short node, const std::vector<std::set<unsigned short>>& connections,
-                                                       std::vector<bool>& visited);
+
+void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
+                const std::set<char>& ignored_chars, std::vector<std::string>& result);
 
 #endif //QMAP_UTILS_HPP
