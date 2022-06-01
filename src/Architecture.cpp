@@ -98,7 +98,6 @@ void Architecture::loadCalibrationData(const std::string& filename) {
 
 void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
-    bool noArchProvided = (nqubits == 0);
 
     double avrgCnotFidelity = 0.0;
     int    n                = 0;
@@ -122,11 +121,11 @@ void Architecture::loadCalibrationData(std::istream&& is) {
         calibrationEntry.frequency            = std::stod(data[3]);
         calibrationEntry.readoutError         = std::stod(data[4]);
         calibrationEntry.singleQubitErrorRate = std::stod(data[5]);
-        std::string s           = data[6];
+        std::string s                         = data[6];
         while (std::regex_search(s, m, r_dfidelity)) {
             auto a = static_cast<unsigned short>(std::stoul(m.str(2U)));
             auto b = static_cast<unsigned short>(std::stoul(m.str(3U)));
-            if (noArchProvided) {
+            if (!isArchitectureAvailable()) {
                 couplingMap.emplace(a, b);
             }
             avrgCnotFidelity = avrgCnotFidelity + (std::stod(m.str(4U)) - avrgCnotFidelity) / ++n; //calc moving average
@@ -138,7 +137,7 @@ void Architecture::loadCalibrationData(std::istream&& is) {
         qubit++;
     }
 
-    if (!noArchProvided)
+    if (isArchitectureAvailable())
         for (const auto& edge: couplingMap) {
             //check if no fidelity for cnot was provided
             auto calibrationEntry = calibrationData.at(edge.first);
@@ -147,7 +146,7 @@ void Architecture::loadCalibrationData(std::istream&& is) {
             }
         }
 
-    if (noArchProvided) {
+    if (!isArchitectureAvailable()) {
         nqubits = static_cast<unsigned short>(qubit);
         createDistanceTable();
     }
@@ -156,8 +155,17 @@ void Architecture::loadCalibrationData(std::istream&& is) {
 }
 
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
+    if (!isArchitectureAvailable()) {
+        for (const auto& cd: calData) {
+            for (const auto& cnotError: cd.cnotErrorRate) {
+                couplingMap.emplace(cnotError.first);
+            }
+        }
+        nqubits = calData.size();
+    }
     calibrationData  = calData;
     architectureName = "generic_" + std::to_string(nqubits);
+    calibrationName  = "generic_" + std::to_string(nqubits);
     createFidelityTable();
 }
 
@@ -509,33 +517,22 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
     visited[node] = false;
 }
 
-void Architecture::getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& reducedMap) {
-    if (architectureName.empty() || nqubits == nQubits ||
+void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) {
+    if (!isArchitectureAvailable() || nqubits == subsetSize ||
         calibrationName.empty()) {
         reducedMap = couplingMap;
     } else {
-        double              bestFidelity{};
-        std::vector<double> allFidelities{};
-        auto                allConnectedSubsets = getAllConnectedSubsets(nQubits);
+        double bestFidelity{};
+        double currentFidelity     = 0.0;
+        auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
-        allFidelities.reserve(allConnectedSubsets.size());
         for (const auto& qubitChoice: allConnectedSubsets) {
             CouplingMap map{};
             getReducedCouplingMap(qubitChoice, map);
             bestFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
-            if (allFidelities.empty()) {
-                allFidelities.emplace_back(bestFidelity);
-                reducedMap = map;
-            } else {
-                auto it = allFidelities.begin();
-                while (it != allFidelities.end() && *it < bestFidelity) {
-                    std::advance(it, 1);
-                }
-                const auto distance = std::abs(std::distance(allFidelities.begin(), it));
-                allFidelities.emplace(allFidelities.begin() + distance, bestFidelity);
-                if (distance == 0) {
-                    reducedMap = map;
-                }
+            if (currentFidelity < bestFidelity) {
+                reducedMap      = map;
+                currentFidelity = bestFidelity;
             }
         }
     }

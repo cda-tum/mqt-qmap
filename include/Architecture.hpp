@@ -111,8 +111,10 @@ public:
     }
 
     [[nodiscard]] bool isArchitectureAvailable() {
-
-        return architectureName.empty() || nqubits == 0;
+        return !(architectureName.empty()) && nqubits != 0;
+    }
+    [[nodiscard]] bool isCalibrationDataAvailable() {
+        return !(calibrationName.empty()) && calibrationData.size() != 0;
     }
 
     void reset() {
@@ -167,7 +169,7 @@ public:
     [[nodiscard]] std::size_t getCouplingLimit() const;
     [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
 
-    void                                                getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& couplingMap);
+    void                                                getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& couplingMap);
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short nQubits);
     void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
