@@ -32,7 +32,7 @@ TEST_P(TestArchitecture, QubitMap) {
         arch.loadCalibrationData(ss.str());
     }
 
-    EXPECT_EQ(Architecture::getQubitMap(arch.getCouplingMap()).size(), arch.getNqubits());
+    EXPECT_EQ(Architecture::getQubitList(arch.getCouplingMap()).size(), arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetAllConnectedSubsets) {
     auto&             arch_name = GetParam();

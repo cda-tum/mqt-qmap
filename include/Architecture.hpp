@@ -173,7 +173,7 @@ public:
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
     [[nodiscard]] static double                         getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
 
-    [[nodiscard]] static std::vector<unsigned short> getQubitMap(const CouplingMap& couplingMap);
+    [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
     bool isFullyConnected(const std::set<unsigned short>& qubitChoice);
 

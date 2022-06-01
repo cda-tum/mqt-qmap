@@ -601,7 +601,7 @@ double Architecture::getFidelity(const CouplingMap& couplingMap, const std::set<
     return result;
 }
 
-std::vector<unsigned short> Architecture::getQubitMap(const CouplingMap& couplingMap) {
+std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& couplingMap) {
     std::set<unsigned short> result{};
     for (const auto& edge: couplingMap) {
         result.emplace(edge.first);
