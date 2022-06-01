@@ -522,7 +522,7 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short nQubits, Couplin
         for (const auto& qubitChoice: allConnectedSubsets) {
             CouplingMap map{};
             getReducedCouplingMap(qubitChoice, map);
-            bestFidelity = getFidelity(map, qubitChoice, calibrationData);
+            bestFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
             if (allFidelities.empty()) {
                 allFidelities.emplace_back(bestFidelity);
                 reducedMap = map;
@@ -578,7 +578,7 @@ void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitCh
     }
 }
 
-double Architecture::getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
     if (calibrationData.empty()) {
         return 0.0;
     }

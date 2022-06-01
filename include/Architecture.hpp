@@ -171,7 +171,7 @@ public:
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short nQubits);
     void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
-    [[nodiscard]] static double                         getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+    [[nodiscard]] static double                         getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
