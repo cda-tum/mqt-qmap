@@ -47,7 +47,7 @@ TEST_P(TestArchitecture, GetAllConnectedSubsets) {
     }
 
     EXPECT_EQ(arch.getAllConnectedSubsets(arch.getNqubits()).size(), 1);
-    EXPECT_EQ(arch.getAllConnectedSubsets(1).size(), arch.getNqubits());
+    EXPECT_EQ(arch.getAllConnectedSubsets(1).size(), arch.getNqubits()+1);
 }
 TEST_P(TestArchitecture, GetHighestFidelity) {
     auto&             arch_name = GetParam();
@@ -92,7 +92,7 @@ TEST_P(TestArchitecture, ReducedMaps) {
 
     arch.getReducedCouplingMaps(1, cms);
 
-    EXPECT_EQ(cms.size(), arch.getNqubits());
+    EXPECT_EQ(cms.size(), arch.getNqubits()+1);
 }
 
 TEST(TestArchitecture, ConnectedTest) {

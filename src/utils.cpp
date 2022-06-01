@@ -145,33 +145,39 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 
 std::vector<std::set<unsigned short>>
 subsets(const std::set<unsigned short>& input, int k) {
-    std::size_t n = input.size();
-
+    std::size_t                           n = input.size();
     std::vector<std::set<unsigned short>> result;
 
-    std::size_t i = (1U << k) - 1U;
-
-    while (!(i >> n)) {
-        std::set<unsigned short> v{};
-        auto                     it = input.begin();
-
-        for (std::size_t j = 0U; j < n; j++, ++it) {
-            if (i & (1U << j)) {
-                v.emplace(*it);
-            }
+    if (k == 1) {
+        for (const auto& item: input) {
+            result.emplace_back();
+            result.back().emplace(item);
         }
+    } else {
+        std::size_t i = (1U << k) - 1U;
 
-        result.emplace_back(v);
+        while (!(i >> n)) {
+            std::set<unsigned short> v{};
+            auto                     it = input.begin();
 
-        //this computes the lexographical next bitset from a set.
-        //the unsigned int t = v | (v - 1); // t gets v's least significant 0 bits set to 1
-        //// Next set to 1 the most significant bit to change,
-        //// set to 0 the least significant ones, and add the necessary 1 bits.
-        //w = (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctz(v) + 1))
-        // is the original, which involves counting the leading zeros via __builtin_ctz, the version below
-        // uses division to counteract that problem and might be slower on architectures that have a fast
-        // variant of ctz, but more convenient on others
-        i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
+            for (std::size_t j = 0U; j < n; j++, ++it) {
+                if (i & (1U << j)) {
+                    v.emplace(*it);
+                }
+            }
+
+            result.emplace_back(v);
+
+            //this computes the lexographical next bitset from a set.
+            //the unsigned int t = v | (v - 1); // t gets v's least significant 0 bits set to 1
+            //// Next set to 1 the most significant bit to change,
+            //// set to 0 the least significant ones, and add the necessary 1 bits.
+            //w = (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctz(v) + 1))
+            // is the original, which involves counting the leading zeros via __builtin_ctz, the version below
+            // uses division to counteract that problem and might be slower on architectures that have a fast
+            // variant of ctz, but more convenient on others
+            i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
+        }
     }
 
     return result;
