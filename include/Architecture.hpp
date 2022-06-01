@@ -175,7 +175,7 @@ public:
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
-    bool isFullyConnected(const std::set<unsigned short>& qubitChoice);
+    bool isConnected(const std::set<unsigned short>& qubitChoice);
 
 protected:
     std::string                          architectureName;

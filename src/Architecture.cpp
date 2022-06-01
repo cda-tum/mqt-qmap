@@ -548,7 +548,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
         throw QMAPException("Architecture too small!");
     } else {
         for (const auto& subset: subsets(getQubitSet(), subsetSize)) {
-            if (isFullyConnected(subset)) {
+            if (isConnected(subset)) {
                 result.emplace_back(subset);
             }
         }
@@ -610,7 +610,7 @@ std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& coupli
     return {result.begin(), result.end()};
 }
 
-bool Architecture::isFullyConnected(const std::set<unsigned short>& qubitChoice) {
+bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice) {
     CouplingMap reducedCouplingMap = getCouplingMap();
     for (const auto& edge: getCouplingMap()) {
         if (!qubitChoice.count(edge.first) || !qubitChoice.count(edge.second)) {
