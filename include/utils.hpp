@@ -145,5 +145,6 @@ std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& in
 
 void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
                 const std::set<char>& ignored_chars, std::vector<std::string>& result);
-
+std::set<std::pair<unsigned short, unsigned short>>
+getFullyConnectedMap(unsigned short nQubits);
 #endif //QMAP_UTILS_HPP

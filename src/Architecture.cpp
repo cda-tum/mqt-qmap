@@ -98,6 +98,10 @@ void Architecture::loadCalibrationData(const std::string& filename) {
 
 void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
+    bool noArchProvided = (nqubits == 0);
+
+    double avrgCnotFidelity = 0.0;
+    int    n                = 0;
 
     std::string line;
     std::string word;
@@ -108,32 +112,42 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     // load edges
     int qubit = 0;
     while (std::getline(is, line)) {
-        std::stringstream ss(line);
-        CalibrationData   cd    = {};
+        std::stringstream        ss(line);
+        CalibrationData          calibrationEntry = {};
         std::vector<std::string> data{};
-        parse_line(line, ',', {'\"'}, {'\\'}, &data);
-        cd.qubit                = qubit;
-        cd.t1                   = std::stod(data[1]);
-        cd.t2                   = std::stod(data[2]);
-        cd.frequency            = std::stod(data[3]);
-        cd.readoutError         = std::stod(data[4]);
-        cd.singleQubitErrorRate = std::stod(data[5]);
+        parse_line(line, ',', {'\"'}, {'\\'}, data);
+        calibrationEntry.qubit                = qubit;
+        calibrationEntry.t1                   = std::stod(data[1]);
+        calibrationEntry.t2                   = std::stod(data[2]);
+        calibrationEntry.frequency            = std::stod(data[3]);
+        calibrationEntry.readoutError         = std::stod(data[4]);
+        calibrationEntry.singleQubitErrorRate = std::stod(data[5]);
         std::string s           = data[6];
         while (std::regex_search(s, m, r_dfidelity)) {
             auto a = static_cast<unsigned short>(std::stoul(m.str(2U)));
             auto b = static_cast<unsigned short>(std::stoul(m.str(3U)));
-            if (nqubits == 0) {
-                couplingMap.emplace(std::make_pair(a, b));
+            if (noArchProvided) {
+                couplingMap.emplace(a, b);
             }
-            cd.cnotErrorRate.emplace(std::make_pair(a, b), std::stod(m.str(4U)));
+            avrgCnotFidelity = avrgCnotFidelity + (std::stod(m.str(4U)) - avrgCnotFidelity) / ++n; //calc moving average
+            calibrationEntry.cnotErrorRate.emplace(std::make_pair(a, b), std::stod(m.str(4U)));
             s = m.suffix().str();
         }
-        cd.date = data[7];
-        calibrationData.emplace_back(cd);
+        calibrationEntry.date = data[7];
+        calibrationData.emplace_back(calibrationEntry);
         qubit++;
     }
 
-    if (nqubits == 0) {
+    if (!noArchProvided)
+        for (const auto& edge: couplingMap) {
+            //check if no fidelity for cnot was provided
+            auto calibrationEntry = calibrationData.at(edge.first);
+            if (calibrationEntry.cnotErrorRate.find(edge) == calibrationEntry.cnotErrorRate.end()) {
+                calibrationEntry.cnotErrorRate.emplace(edge, avrgCnotFidelity);
+            }
+        }
+
+    if (noArchProvided) {
         nqubits = static_cast<unsigned short>(qubit);
         createDistanceTable();
     }
@@ -526,17 +540,14 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short nQubits, Couplin
         }
     }
 }
-std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short nQubits) {
+std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) {
     std::vector<std::set<unsigned short>> result{};
-    if (architectureName.empty() || nqubits == nQubits) {
-        result.emplace_back();
-        for (unsigned short i = 0U; i < nQubits; ++i) {
-            result.back().emplace(i);
-        }
-    } else if (nqubits < nQubits) {
+    if (architectureName.empty() || nqubits == subsetSize) {
+        result.emplace_back(getQubitSet());
+    } else if (nqubits < subsetSize) {
         throw QMAPException("Architecture too small!");
     } else {
-        for (const auto& subset: subsets(getQubitSet(), nQubits)) {
+        for (const auto& subset: subsets(getQubitSet(), subsetSize)) {
             if (isFullyConnected(subset)) {
                 result.emplace_back(subset);
             }
@@ -544,12 +555,12 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
     }
     return result;
 }
-void Architecture::getReducedCouplingMaps(unsigned short nQubits, std::vector<CouplingMap>& couplingMaps) {
+void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) {
     couplingMaps.clear();
     if (architectureName.empty()) {
-        throw QMAPException("No architecture!");
+        couplingMaps.emplace_back(getFullyConnectedMap(subsetSize));
     } else {
-        for (const auto& qubitChoice: getAllConnectedSubsets(nQubits)) {
+        for (const auto& qubitChoice: getAllConnectedSubsets(subsetSize)) {
             couplingMaps.emplace_back();
             getReducedCouplingMap(qubitChoice, couplingMaps.back());
         }
@@ -557,7 +568,7 @@ void Architecture::getReducedCouplingMaps(unsigned short nQubits, std::vector<Co
 }
 void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
     if (architectureName.empty()) {
-        throw QMAPException("No architecture!");
+        reducedMap = getFullyConnectedMap(qubitChoice.size());
     } else {
         for (const auto& [q0, q1]: couplingMap) {
             if (qubitChoice.find(q0) != qubitChoice.end() && qubitChoice.find(q1) != qubitChoice.end()) {
@@ -599,9 +610,7 @@ std::vector<unsigned short> Architecture::getQubitMap(const CouplingMap& couplin
     return {result.begin(), result.end()};
 }
 
-
 bool Architecture::isFullyConnected(const std::set<unsigned short>& qubitChoice) {
-
     CouplingMap reducedCouplingMap = getCouplingMap();
     for (const auto& edge: getCouplingMap()) {
         if (!qubitChoice.count(edge.first) || !qubitChoice.count(edge.second)) {

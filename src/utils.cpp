@@ -178,9 +178,9 @@ subsets(const std::set<unsigned short>& input, int k) {
 }
 
 void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
-           const std::set<char>& ignored_chars, std::vector<std::string>& result) {
-    std::string              word;
-    bool                     in_escape = false;
+                const std::set<char>& ignored_chars, std::vector<std::string>& result) {
+    std::string word;
+    bool        in_escape = false;
     for (char c: line) {
         if (ignored_chars.find(c) != ignored_chars.end()) {
             continue;
@@ -204,4 +204,16 @@ void parse_line(const std::string& line, char separator, const std::set<char>& e
         }
     }
     result.push_back(word);
+}
+
+std::set<std::pair<unsigned short, unsigned short>>
+getFullyConnectedMap(unsigned short nQubits) {
+    std::set<std::pair<unsigned short, unsigned short>> result{};
+    for (int q = 0; q < nQubits; ++q) {
+        for (int p = q + 1; p < nQubits; ++p) {
+            result.emplace(q, p);
+            result.emplace(p, q);
+        }
+    }
+    return result;
 }

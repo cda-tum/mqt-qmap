@@ -110,6 +110,11 @@ public:
         return isBidirectional;
     }
 
+    [[nodiscard]] bool isArchitectureAvailable() {
+
+        return architectureName.empty() || nqubits == 0;
+    }
+
     void reset() {
         architectureName = "";
         calibrationName  = "";
@@ -132,7 +137,7 @@ public:
 
     [[nodiscard]] std::set<unsigned short> getQubitSet() {
         std::set<unsigned short> result{nqubits};
-        for (int i = 0; i < nqubits; ++i){
+        for (int i = 0; i < nqubits; ++i) {
             result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
         }
         return result;
@@ -164,13 +169,13 @@ public:
 
     void                                                getHighestFidelityCouplingMap(unsigned short nQubits, CouplingMap& couplingMap);
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short nQubits);
-    void                                                getReducedCouplingMaps(unsigned short nQubits, std::vector<CouplingMap>& couplingMaps);
+    void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
     [[nodiscard]] static double                         getFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitMap(const CouplingMap& couplingMap);
 
-    bool                                  isFullyConnected(const std::set<unsigned short>& qubitChoice);
+    bool isFullyConnected(const std::set<unsigned short>& qubitChoice);
 
 protected:
     std::string                          architectureName;
