@@ -94,8 +94,8 @@ Architectures that are available per default (either as strings or under `qmap.A
 - `IBMQ_Bogota` (5 qubit, undirected linear chain layout)
 - `IBMQ_Casablanca` (7 qubit, undirected H-shape layout)
 - `IBMQ_Tokyo` (20 qubit, undirected brick-like layout)
-- `Rigetti_Agave` (8 qubit, bidirected ring layout)
-- `Rigetti_Aspen` (16 qubit, bidirected dumbbell layout)
+- `Rigetti_Agave` (8 qubit, undirected ring layout)
+- `Rigetti_Aspen` (16 qubit, undirected dumbbell layout)
 
 Whether the heuristic (*default*) or the exact mapper is used can be controlled by passing `method="heuristic"` or `method="exact"` to the `compile` function.
 
