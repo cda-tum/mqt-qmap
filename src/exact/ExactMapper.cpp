@@ -70,38 +70,23 @@ void ExactMapper::map(const Configuration& settings) {
             return;
         }
 
-        CouplingMap reducedCouplingMap = architecture.getCouplingMap();
-        for (const auto& edge: architecture.getCouplingMap()) {
-            if (!config.subgraph.count(edge.first) || !config.subgraph.count(edge.second)) {
-                reducedCouplingMap.erase(edge);
-            }
-        }
+        CouplingMap reducedCouplingMap{};
+        architecture.getReducedCouplingMap(config.subgraph, reducedCouplingMap);
 
         // check if the subgraph is connected
-        std::set<unsigned short> reachedQubits{};
-        reachedQubits.insert(*(config.subgraph.begin()));
-        dfs(*(config.subgraph.begin()), reachedQubits, reducedCouplingMap);
-        if (!(reachedQubits == config.subgraph)) {
+        if (!architecture.isConnected(config.subgraph)) {
             std::cerr << "The subgraph is not connected." << std::endl;
             return;
         }
-        for (const auto& q: config.subgraph) {
-            qubitRange.emplace_back(q);
-        }
+        qubitRange = Architecture::getQubitList(reducedCouplingMap);
     } else {
-        for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
-            qubitRange.push_back(i);
-        }
+        qubitRange.clear();
+        auto qubitSet = architecture.getQubitSet();
+        std::copy(qubitSet.begin(), qubitSet.end(), qubitRange.end());
     }
     std::vector<QubitChoice> allPossibleQubitChoices{};
     if (config.useSubsets) {
-        do {
-            QubitChoice qubitChoice{};
-            for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
-                qubitChoice.insert(qubitRange.at(i));
-            }
-            allPossibleQubitChoices.push_back(qubitChoice);
-        } while (next_combination(qubitRange.begin(), qubitRange.begin() + qc.getNqubits(), qubitRange.end()));
+        allPossibleQubitChoices = architecture.getAllConnectedSubsets(qc.getNqubits());
     } else {
         QubitChoice allQubits(qubitRange.begin(), qubitRange.end());
         allPossibleQubitChoices.push_back(allQubits);
@@ -155,22 +140,14 @@ void ExactMapper::map(const Configuration& settings) {
 
             // 4) reduce coupling map
             CouplingMap reducedCouplingMap = architecture.getCouplingMap();
-            for (const auto& edge: architecture.getCouplingMap()) {
-                if (!choice.count(edge.first) || !choice.count(edge.second)) {
-                    reducedCouplingMap.erase(edge);
-                }
-            }
+            architecture.getReducedCouplingMap(choice, reducedCouplingMap);
+
             if (reducedCouplingMap.empty()) {
                 break;
             }
 
             // 5) Check if E_k is connected. If yes, then possible subset found
-            std::set<unsigned short> reachedQubits{};
-            reachedQubits.insert(*(choice.begin()));
-            dfs(*(choice.begin()), reachedQubits, reducedCouplingMap);
-            if (!(reachedQubits == choice)) {
-                break;
-            }
+            // no longer necessary, we only get connected subsets anyway
 
             if (config.verbose) {
                 std::cout << "-------- qubit choice: ";
