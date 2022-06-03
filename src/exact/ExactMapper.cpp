@@ -82,7 +82,8 @@ void ExactMapper::map(const Configuration& settings) {
     } else {
         qubitRange.clear();
         auto qubitSet = architecture.getQubitSet();
-        std::copy(qubitSet.begin(), qubitSet.end(), qubitRange.end());
+        qubitRange.reserve(qubitSet.size());
+        std::copy(qubitSet.begin(), qubitSet.end(), std::back_inserter(qubitRange));
     }
     std::vector<QubitChoice> allPossibleQubitChoices{};
     if (config.useSubsets) {

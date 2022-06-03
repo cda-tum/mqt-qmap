@@ -138,7 +138,7 @@ public:
     }
 
     [[nodiscard]] std::set<unsigned short> getQubitSet() {
-        std::set<unsigned short> result{nqubits};
+        std::set<unsigned short> result{};
         for (int i = 0; i < nqubits; ++i) {
             result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
         }

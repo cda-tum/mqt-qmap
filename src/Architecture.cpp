@@ -564,6 +564,7 @@ void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector
     }
 }
 void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
+    reducedMap.clear();
     if (architectureName.empty()) {
         reducedMap = getFullyConnectedMap(qubitChoice.size());
     } else {
