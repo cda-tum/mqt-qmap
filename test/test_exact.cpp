@@ -456,3 +456,18 @@ TEST_F(ExactTest, MapToSubgraphNotConnected) {
     const auto& results = IBMQ_London_mapper->getResults();
     EXPECT_TRUE(results.timeout);
 }
+TEST_F(ExactTest, CommanderEncodingRigettiArch) {
+    Architecture aspen;
+    aspen.loadCouplingMap(AvailableArchitecture::Rigetti_Aspen);
+    Architecture agave;
+    agave.loadCouplingMap(AvailableArchitecture::Rigetti_Agave);
+
+    auto aspenMapper = ExactMapper(qc, aspen);
+    auto agaveMapper = ExactMapper(qc, agave);
+    aspenMapper.map(settings);
+    agaveMapper.map(settings);
+    aspenMapper.printResult(std::cout);
+    agaveMapper.printResult(std::cout);
+
+    SUCCEED() << "Mapping successful";
+}
