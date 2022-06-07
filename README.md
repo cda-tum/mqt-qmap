@@ -94,45 +94,59 @@ Architectures that are available per default (either as strings or under `qmap.A
 - `IBMQ_Bogota` (5 qubit, undirected linear chain layout)
 - `IBMQ_Casablanca` (7 qubit, undirected H-shape layout)
 - `IBMQ_Tokyo` (20 qubit, undirected brick-like layout)
+- `Rigetti_Agave` (8 qubit, undirected ring layout)
+- `Rigetti_Aspen` (16 qubit, undirected dumbbell layout)
 
 Whether the heuristic (*default*) or the exact mapper is used can be controlled by passing `method="heuristic"` or `method="exact"` to the `compile` function.
 
 There are several configuration options that can be passed to the `compile` function:
 
-- The heuristic mapper offers the `initial_layout` option, which allows to choose one of the following strategies for choosing an initial layout:
-    - `identity`: map logical qubit q_i to physical qubit Q_i,
-    - `static`: determine fixed initial layout statically at the start of mapping,
-    - `dynamic` (*default*): determine initial layout on demand during the mapping (this is the only one compatible with teleportation).
+- The heuristic mapper offers the `initial_layout` option, which allows to choose one of the following strategies for
+  choosing an initial layout:
+  - `identity`: map logical qubit q_i to physical qubit Q_i,
+  - `static`: determine fixed initial layout statically at the start of mapping,
+  - `dynamic` (*default*): determine initial layout on demand during the mapping (this is the only one compatible with
+    teleportation).
 
-- Both, the exact and the heuristic mapper also offer the `layering` option, which allows to choose one of the following strategies for partitioning the circuit:
-    - `individual_gates` (*default*): consider each gate separately,
-    - `disjoint_qubits`: consider gates acting on disjoint qubits as a layer,
-    - `odd_gates`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool and may not work on different architectures)
-    - `qubit_triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact
-      mapping tool)
+- Both, the exact and the heuristic mapper also offer the `layering` option, which allows to choose one of the following
+  strategies for partitioning the circuit:
+  - `individual_gates` (*default*): consider each gate separately,
+  - `disjoint_qubits`: consider gates acting on disjoint qubits as a layer,
+  - `odd_gates`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool
+    and may not work on different architectures)
+  - `qubit_triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy
+    only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact
+    mapping tool)
 
-- The exact mapper offers the `encoding` option, which allows to choose a different encoding for at-most-one and exactly-one constraints:
-    - `naive` (*default*): use naive encoding for constraints
-    - `commander`: use commander encoding for at-most-one and exactly-one constraints
-    - `bimander`: use bimander encoding for at-most-one and commander for exactly-one constraints
+- The exact mapper offers the `encoding` option, which allows to choose a different encoding for at-most-one and
+  exactly-one constraints:
+  - `naive` (*default*): use naive encoding for constraints
+  - `commander`: use commander encoding for at-most-one and exactly-one constraints
+  - `bimander`: use bimander encoding for at-most-one and commander for exactly-one constraints
 
-  As the commander encoding can use different strategies to group the variables, there are different `commander_grouping` options:
-    - `halves` (*default*): each group contains half of the total variables
-    - `logarithm`: each group contains at most log2 of the total variables
-    - `fixed2`: each group contains exactly two variables
-    - `fixed3`: each group contains exactly three variables
+  As the commander encoding can use different strategies to group the variables, there are
+  different `commander_grouping` options:
+  - `halves` (*default*): each group contains half of the total variables
+  - `logarithm`: each group contains at most log2 of the total variables
+  - `fixed2`: each group contains exactly two variables
+  - `fixed3`: each group contains exactly three variables
 
-- Per default, the exact mapper searches for a suitable mapping by considering every possible (connected) subset of qubits instead of the whole architecture at once. This can be disabled by setting `use_subsets=False`.
+- Per default, the exact mapper searches for a suitable mapping by considering every possible (connected) subset of
+  qubits instead of the whole architecture at once. This can be disabled by setting `use_subsets=False`.
 
-- The exact mapper also offers the `swap_reduction` option to enable limiting the number of swaps considered per layer (as proposed
+- The exact mapper also offers the `swap_reduction` option to enable limiting the number of swaps considered per layer (
+  as proposed
   in [[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
   , which offers the following options:
-    - `none`: consider whole search space
-    - `coupling_limit` (*default*): calculate the max swaps per layer based on the longest path of current choice of qubits, or if `use_subsets` is disabled considers the whole architecture
-    - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
-    - `custom`: set a custom limit, needs the `swap_limit` option to set the limit
+  - `none`: consider whole search space
+  - `coupling_limit` (*default*): calculate the max swaps per layer based on the longest path of current choice of
+    qubits, or if `use_subsets` is disabled considers the whole architecture
+  - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
+  - `custom`: set a custom limit, needs the `swap_limit` option to set the limit
 
-  Using the `use_bdd` option, the mapping utilizes BDDs instead of simply removing the permutations from the core routine. This option is not generally advised, as it is more resource intensive in most cases, but is something to try in
+  Using the `use_bdd` option, the mapping utilizes BDDs instead of simply removing the permutations from the core
+  routine. This option is not generally advised, as it is more resource intensive in most cases, but is something to try
+  in
   cases of timeout.
 
 ### Command-line Executable
@@ -209,25 +223,36 @@ Internally the MQT QMAP library works in the following way
 ### Configure, Build, and Install
 
 To start off, clone this repository using
+
 ```shell
 git clone --recurse-submodules -j8 https://github.com/cda-tum/qmap 
 ```
-Note the `--recurse-submodules` flag. It is required to also clone all the required submodules. 
-If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by executing `git submodule update --init --recursive` in the main project directory.
 
-Our projects use CMake as the main build configuration tool. Building a project using CMake is a two-stage process. First, CMake needs to be *configured* by calling
+Note the `--recurse-submodules` flag. It is required to also clone all the required submodules.
+If you happen to forget passing the flag on your initial clone, you can initialize all the submodules by
+executing `git submodule update --init --recursive` in the main project directory.
+
+Our projects use CMake as the main build configuration tool. Building a project using CMake is a two-stage process.
+First, CMake needs to be *configured* by calling
+
 ```shell 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 ```
-This tells CMake to search the current directory `.` (passed via `-S`) for a *CMakeLists.txt* file and process it into a directory `build` (passed via `-B`).
+
+This tells CMake to search the current directory `.` (passed via `-S`) for a *CMakeLists.txt* file and process it into a
+directory `build` (passed via `-B`).
 The flag `-DCMAKE_BUILD_TYPE=Release` tells CMake to configure a *Release* build (as opposed to, e.g., a *Debug* build).
 
 After configuring with CMake, the project can be built by calling
+
 ```shell
 cmake --build build --config Release
 ```
+
 This tries to build the project in the `build` directory (passed via `--build`).
-Some operating systems and developer environments explicitly require a configuration to be set, which is why the `--config` flag is also passed to the build command. The flag `--parallel <NUMBER_OF_THREADS>` may be added to trigger a parallel build.
+Some operating systems and developer environments explicitly require a configuration to be set, which is why
+the `--config` flag is also passed to the build command. The flag `--parallel <NUMBER_OF_THREADS>` may be added to
+trigger a parallel build.
 
 Building the project this way generates
 - the heuristic library `libqmap_heuristic_lib.a` (Unix) / `qmap_heuristic_lib.lib` (Windows) in the `build/src` directory
