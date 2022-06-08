@@ -74,7 +74,7 @@ void ExactMapper::map(const Configuration& settings) {
         architecture.getReducedCouplingMap(config.subgraph, reducedCouplingMap);
 
         // check if the subgraph is connected
-        if (!architecture.isConnected(config.subgraph)) {
+        if (!Architecture::isConnected(config.subgraph, reducedCouplingMap)) {
             std::cerr << "The subgraph is not connected." << std::endl;
             return;
         }
@@ -140,15 +140,12 @@ void ExactMapper::map(const Configuration& settings) {
             choiceResults.output.gates            = std::numeric_limits<unsigned long>::max();
 
             // 4) reduce coupling map
-            CouplingMap reducedCouplingMap = architecture.getCouplingMap();
+            CouplingMap reducedCouplingMap = {};
             architecture.getReducedCouplingMap(choice, reducedCouplingMap);
 
             if (reducedCouplingMap.empty()) {
                 break;
             }
-
-            // 5) Check if E_k is connected. If yes, then possible subset found
-            // no longer necessary, we only get connected subsets anyway
 
             if (config.verbose) {
                 std::cout << "-------- qubit choice: ";
