@@ -3,12 +3,13 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
+
 #ifndef QMAP_CLIFFORDSYNTHESIS_H
 #define QMAP_CLIFFORDSYNTHESIS_H
 
-#include "LBEncodings.hpp"
+#include "Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
-#include "CliffordSynthesisResults.hpp"
+#include "cliffordoptresults.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
