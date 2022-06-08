@@ -100,7 +100,7 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
 
     double average_cnot_fidelity = 0.0;
-    int    n                = 0;
+    int    n                     = 0;
 
     std::string line;
     std::string word;
@@ -522,16 +522,16 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, Coup
         calibrationName.empty()) {
         reducedMap = couplingMap;
     } else {
-        double bestFidelity = 0.0;
+        double bestFidelity        = 0.0;
         auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
         for (const auto& qubitChoice: allConnectedSubsets) {
-            double currentFidelity{};
+            double      currentFidelity{};
             CouplingMap map{};
             getReducedCouplingMap(qubitChoice, map);
             currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
             if (currentFidelity > bestFidelity) {
-                reducedMap      = map;
+                reducedMap   = map;
                 bestFidelity = currentFidelity;
             }
         }
