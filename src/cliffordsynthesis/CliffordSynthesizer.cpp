@@ -4,14 +4,12 @@
 */
 
 
-#include "cliffordsynthesis.hpp"
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "CouplingMap.hpp"
-#include "LogicTerm/LogicTerm.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 #include "utils/logging.hpp"
-#include "utils/util.hpp"
+#include "utils.hpp"
 
 void CliffordOptimizer::optimize() {
     TRACE() << "Strategy: " << toString(strategy) << std::endl;
