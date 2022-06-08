@@ -87,7 +87,7 @@ void Architecture::loadCalibrationData(const std::string& filename) {
     size_t slash    = filename.find_last_of('/');
     size_t dot      = filename.find_last_of('.');
     calibrationName = filename.substr(slash + 1, dot - slash - 1);
-    if (architectureName.empty())
+    if (!isArchitectureAvailable())
         architectureName = calibrationName;
     auto ifs = std::ifstream(filename);
     if (ifs.good())
@@ -99,7 +99,7 @@ void Architecture::loadCalibrationData(const std::string& filename) {
 void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
 
-    double avrgCnotFidelity = 0.0;
+    double average_cnot_fidelity = 0.0;
     int    n                = 0;
 
     std::string line;
@@ -128,8 +128,8 @@ void Architecture::loadCalibrationData(std::istream&& is) {
             if (!isArchitectureAvailable()) {
                 couplingMap.emplace(a, b);
             }
-            avrgCnotFidelity = avrgCnotFidelity + (std::stod(m.str(4U)) - avrgCnotFidelity) / ++n; //calc moving average
-            calibrationEntry.cnotErrorRate.emplace(std::make_pair(a, b), std::stod(m.str(4U)));
+            average_cnot_fidelity = average_cnot_fidelity + (std::stod(m.str(4U)) - average_cnot_fidelity) / ++n; //calc moving average
+            calibrationEntry.cnotErrors.emplace(std::make_pair(a, b), std::stod(m.str(4U)));
             s = m.suffix().str();
         }
         calibrationEntry.date = data[7];
@@ -141,8 +141,8 @@ void Architecture::loadCalibrationData(std::istream&& is) {
         for (const auto& edge: couplingMap) {
             //check if no fidelity for cnot was provided
             auto calibrationEntry = calibrationData.at(edge.first);
-            if (calibrationEntry.cnotErrorRate.find(edge) == calibrationEntry.cnotErrorRate.end()) {
-                calibrationEntry.cnotErrorRate.emplace(edge, avrgCnotFidelity);
+            if (calibrationEntry.cnotErrors.find(edge) == calibrationEntry.cnotErrors.end()) {
+                calibrationEntry.cnotErrors.emplace(edge, average_cnot_fidelity);
             }
         }
 
@@ -157,8 +157,8 @@ void Architecture::loadCalibrationData(std::istream&& is) {
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
     if (!isArchitectureAvailable()) {
         for (const auto& cd: calData) {
-            for (const auto& cnotError: cd.cnotErrorRate) {
-                couplingMap.emplace(cnotError.first);
+            for (const auto& [edge, errorRate]: cd.cnotErrors) {
+                couplingMap.emplace(edge);
             }
         }
         nqubits = calData.size();
@@ -204,7 +204,7 @@ void Architecture::createFidelityTable() {
     singleQubitFidelities.resize(nqubits, 1.0);
 
     for (const auto& qubit: calibrationData) {
-        for (const auto& entry: qubit.cnotErrorRate) {
+        for (const auto& entry: qubit.cnotErrors) {
             fidelityTable.at(entry.first.first).at(entry.first.second) -= entry.second;
         }
         singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
@@ -522,24 +522,24 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, Coup
         calibrationName.empty()) {
         reducedMap = couplingMap;
     } else {
-        double bestFidelity{};
-        double currentFidelity     = 0.0;
+        double bestFidelity = 0.0;
         auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
         for (const auto& qubitChoice: allConnectedSubsets) {
+            double currentFidelity{};
             CouplingMap map{};
             getReducedCouplingMap(qubitChoice, map);
-            bestFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
-            if (currentFidelity < bestFidelity) {
+            currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
+            if (currentFidelity > bestFidelity) {
                 reducedMap      = map;
-                currentFidelity = bestFidelity;
+                bestFidelity = currentFidelity;
             }
         }
     }
 }
 std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) {
     std::vector<std::set<unsigned short>> result{};
-    if (architectureName.empty() || nqubits == subsetSize) {
+    if (!isArchitectureAvailable() || nqubits == subsetSize) {
         result.emplace_back(getQubitSet());
     } else if (nqubits < subsetSize) {
         throw QMAPException("Architecture too small!");
@@ -554,7 +554,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
 }
 void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) {
     couplingMaps.clear();
-    if (architectureName.empty()) {
+    if (!isArchitectureAvailable()) {
         couplingMaps.emplace_back(getFullyConnectedMap(subsetSize));
     } else {
         for (const auto& qubitChoice: getAllConnectedSubsets(subsetSize)) {
@@ -565,7 +565,7 @@ void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector
 }
 void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
     reducedMap.clear();
-    if (architectureName.empty()) {
+    if (!isArchitectureAvailable()) {
         reducedMap = getFullyConnectedMap(qubitChoice.size());
     } else {
         for (const auto& [q0, q1]: couplingMap) {
@@ -581,17 +581,12 @@ double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingM
         return 0.0;
     }
     double         result = 1.0;
-    std::set<Edge> qubitPairs;
-    for (const auto& edge: couplingMap) {
-        if (qubitChoice.find(edge.first) != qubitChoice.end() &&
-            qubitChoice.find(edge.second) != qubitChoice.end()) {
-            qubitPairs.emplace(edge.first, edge.second);
-        }
-    }
+    std::set<Edge> qubitPairs{};
+    getReducedCouplingMap(qubitChoice, qubitPairs);
     for (const auto& calibrationEntry: calibrationData) {
         for (const auto& edge: couplingMap) {
-            if (calibrationEntry.cnotErrorRate.find(edge) != calibrationEntry.cnotErrorRate.end())
-                result *= calibrationEntry.cnotErrorRate.at(edge);
+            if (calibrationEntry.cnotErrors.find(edge) != calibrationEntry.cnotErrors.end())
+                result *= calibrationEntry.cnotErrors.at(edge);
         }
         if (qubitChoice.find(calibrationEntry.qubit) != qubitChoice.end())
             result *= calibrationEntry.singleQubitErrorRate;
@@ -608,13 +603,7 @@ std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& coupli
     return {result.begin(), result.end()};
 }
 
-bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice) {
-    CouplingMap reducedCouplingMap = getCouplingMap();
-    for (const auto& edge: getCouplingMap()) {
-        if (!qubitChoice.count(edge.first) || !qubitChoice.count(edge.second)) {
-            reducedCouplingMap.erase(edge);
-        }
-    }
+bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap) {
     std::set<unsigned short> reachedQubits{};
     reachedQubits.insert(*(qubitChoice.begin()));
     dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);

@@ -126,21 +126,21 @@ TEST(TestArchitecture, FidelityTest) {
     Architecture::CalibrationData data{};
     data.qubit                = 0;
     data.singleQubitErrorRate = 0.9;
-    data.cnotErrorRate.emplace(std::make_pair(0, 1), 0.8);
+    data.cnotErrors.emplace(std::make_pair(0, 1), 0.8);
     calibrationData.push_back(data);
     data.qubit                = 1;
     data.singleQubitErrorRate = 0.9;
-    data.cnotErrorRate.emplace(std::make_pair(1, 0), 0.8);
-    data.cnotErrorRate.emplace(std::make_pair(1, 2), 0.7);
+    data.cnotErrors.emplace(std::make_pair(1, 0), 0.8);
+    data.cnotErrors.emplace(std::make_pair(1, 2), 0.7);
     calibrationData.push_back(data);
     data.qubit                = 2;
     data.singleQubitErrorRate = 0.9;
-    data.cnotErrorRate.emplace(std::make_pair(2, 1), 0.7);
-    data.cnotErrorRate.emplace(std::make_pair(2, 3), 0.6);
+    data.cnotErrors.emplace(std::make_pair(2, 1), 0.7);
+    data.cnotErrors.emplace(std::make_pair(2, 3), 0.6);
     calibrationData.push_back(data);
     data.qubit                = 3;
     data.singleQubitErrorRate = 0.9;
-    data.cnotErrorRate.emplace(std::make_pair(3, 2), 0.6);
+    data.cnotErrors.emplace(std::make_pair(3, 2), 0.6);
     calibrationData.push_back(data);
 
     architecture.loadCalibrationData(calibrationData);
