@@ -545,7 +545,9 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
         throw QMAPException("Architecture too small!");
     } else {
         for (const auto& subset: subsets(getQubitSet(), subsetSize)) {
-            if (isConnected(subset)) {
+            CouplingMap cm = {};
+            getReducedCouplingMap(subset, cm);
+            if (isConnected(subset, cm)) {
                 result.emplace_back(subset);
             }
         }
