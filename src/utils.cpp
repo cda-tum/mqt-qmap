@@ -144,17 +144,17 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 }
 
 std::vector<std::set<unsigned short>>
-subsets(const std::set<unsigned short>& input, int k) {
+subsets(const std::set<unsigned short>& input, int length, bool (*filter)(std::set<unsigned short>)) {
     std::size_t                           n = input.size();
     std::vector<std::set<unsigned short>> result;
 
-    if (k == 1) {
+    if (length == 1) {
         for (const auto& item: input) {
             result.emplace_back();
             result.back().emplace(item);
         }
     } else {
-        std::size_t i = (1U << k) - 1U;
+        std::size_t i = (1U << length) - 1U;
 
         while (!(i >> n)) {
             std::set<unsigned short> v{};
@@ -165,8 +165,10 @@ subsets(const std::set<unsigned short>& input, int k) {
                     v.emplace(*it);
                 }
             }
-
-            result.emplace_back(v);
+            if (filter != nullptr && filter(v))
+            {
+                result.emplace_back(v);
+            }
 
             //this computes the lexographical next bitset from a set.
             //the unsigned int t = v | (v - 1); // t gets v's least significant 0 bits set to 1
