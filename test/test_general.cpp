@@ -49,6 +49,6 @@ TEST(General, TestLineParsing) {
     parse_line(line, ';', {'\"'}, {'\\'}, data);
 
     EXPECT_EQ(data[1], "Entry2");
-    EXPECT_EQ(data[2], "EscapedEntry1");
+    EXPECT_EQ(data[2], "EscapedEntry1;EscapedEntry2\"");
 
 }

@@ -165,7 +165,7 @@ subsets(const std::set<unsigned short>& input, int length, bool (*filter)(std::s
                     v.emplace(*it);
                 }
             }
-            if (filter != nullptr && filter(v))
+            if (filter == nullptr || filter(v))
             {
                 result.emplace_back(v);
             }
