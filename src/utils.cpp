@@ -194,7 +194,6 @@ void parse_line(const std::string& line, char separator, const std::set<char>& e
         }
         if (in_escape) {
             if (escape_chars.find(c) != escape_chars.end()) {
-                word += c;
                 in_escape = false;
             } else {
                 word += c;
