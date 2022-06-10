@@ -156,3 +156,9 @@ TEST(TestArchitecture, FidelityTest) {
     ASSERT_TRUE((qubitList.size() == highestFidelity.size() &&
                  std::equal(qubitList.begin(), qubitList.end(), highestFidelity.begin())));
 }
+
+TEST(TestArchitecture, FullyConnectedTest) {
+    CouplingMap cm = getFullyConnectedMap(3);
+
+    ASSERT_TRUE(cm.size() == 3 * 2);
+}

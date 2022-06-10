@@ -11,6 +11,7 @@
 #include "utils.hpp"
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <regex>
@@ -173,7 +174,7 @@ public:
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize);
     void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
-    [[nodiscard]] double                         getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+    [[nodiscard]] double                                getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
