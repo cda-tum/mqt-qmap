@@ -7,7 +7,7 @@
 #ifndef QMAP_CLIFFORDSYNTHESIS_H
 #define QMAP_CLIFFORDSYNTHESIS_H
 
-#include "Encodings.hpp"
+#include "LBEncodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "cliffordoptresults.hpp"
 #include "operations/OpType.hpp"
