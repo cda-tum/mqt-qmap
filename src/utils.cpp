@@ -144,7 +144,7 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 }
 
 std::vector<std::set<unsigned short>>
-subsets(const std::set<unsigned short>& input, int length, bool (*filter)(std::set<unsigned short>)) {
+subsets(const std::set<unsigned short>& input, int length, filter_function filter) {
     std::size_t                           n = input.size();
     std::vector<std::set<unsigned short>> result;
 

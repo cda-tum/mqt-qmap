@@ -16,6 +16,7 @@
 #include <regex>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
 constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
