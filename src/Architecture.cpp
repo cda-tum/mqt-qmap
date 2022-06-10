@@ -100,7 +100,7 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
 
     double averageCNOTFidelity = 0.0;
-    int    numCNOTFidelities                     = 0;
+    int    numCNOTFidelities   = 0;
 
     std::string line;
     std::string word;
@@ -544,7 +544,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
     } else if (nqubits < subsetSize) {
         throw QMAPException("Architecture too small!");
     } else {
-        auto filter = [&](const std::set<unsigned short >& subset){
+        auto filter = [&](const std::set<unsigned short>& subset) {
             CouplingMap cm = {};
             Architecture::getReducedCouplingMap(subset, cm);
             return isConnected(subset, cm);

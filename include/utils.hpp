@@ -142,7 +142,7 @@ unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std:
 unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj);
 
 using filter_function = std::function<bool(const std::set<unsigned short>&)>;
-std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int size,  filter_function filter= nullptr);
+std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int size, filter_function filter = nullptr);
 
 void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
                 const std::set<char>& ignored_chars, std::vector<std::string>& result);
