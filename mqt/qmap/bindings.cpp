@@ -1,7 +1,7 @@
 /*
- * This file is part of MQT QMAP library which is released under the MIT license.
- * See file README.md or go to http://iic.jku.at/eda/research/quantum/ for more information.
- */
+* This file is part of MQT QMAP library which is released under the MIT license.
+* See file README.md or go to http://iic.jku.at/eda/research/quantum/ for more information.
+*/
 
 #ifdef Z3_FOUND
     #include "exact/ExactMapper.hpp"
@@ -111,6 +111,8 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("IBMQ_London", AvailableArchitecture::IBMQ_London)
             .value("IBMQ_Bogota", AvailableArchitecture::IBMQ_Bogota)
             .value("IBMQ_Tokyo", AvailableArchitecture::IBMQ_Tokyo)
+            .value("Rigetti_Agave", AvailableArchitecture::Rigetti_Agave)
+            .value("Rigetti_Aspen", AvailableArchitecture::Rigetti_Aspen)
             .export_values()
             .def(py::init([](const std::string& str) -> AvailableArchitecture { return architectureFromString(str); }));
 
