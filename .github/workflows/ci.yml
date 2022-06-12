@@ -37,8 +37,10 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         name: Install Python
+        with:
+          python-version: '3.10'
 
       - name: Installing boost
         run:  sudo apt-get install -y libboost-program-options-dev
