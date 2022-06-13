@@ -11,6 +11,7 @@
 #include "utils.hpp"
 
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <regex>
@@ -41,7 +42,7 @@ public:
         double                 frequency            = 0.0; // [GHz]
         double                 readoutError         = 0.0;
         double                 singleQubitErrorRate = 0.0;
-        std::map<Edge, double> cnotErrorRate        = {};
+        std::map<Edge, double> cnotErrors           = {};
         std::string            date;
     };
 
@@ -110,6 +111,13 @@ public:
         return isBidirectional;
     }
 
+    [[nodiscard]] bool isArchitectureAvailable() {
+        return !(architectureName.empty()) && nqubits != 0;
+    }
+    [[nodiscard]] bool isCalibrationDataAvailable() {
+        return !(calibrationName.empty()) && calibrationData.size() != 0;
+    }
+
     void reset() {
         architectureName = "";
         calibrationName  = "";
@@ -128,6 +136,14 @@ public:
         } else {
             return bfs(control, target, current_teleportations);
         }
+    }
+
+    [[nodiscard]] std::set<unsigned short> getQubitSet() {
+        std::set<unsigned short> result{};
+        for (int i = 0; i < nqubits; ++i) {
+            result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
+        }
+        return result;
     }
 
     unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
@@ -153,6 +169,16 @@ public:
 
     [[nodiscard]] std::size_t getCouplingLimit() const;
     [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
+
+    void                                                getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& couplingMap);
+    [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize);
+    void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
+    void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
+    [[nodiscard]] double                                getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+
+    [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
+
+    static bool isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap);
 
 protected:
     std::string                          architectureName;
