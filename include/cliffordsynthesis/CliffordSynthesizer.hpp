@@ -9,7 +9,7 @@
 
 #include "LBEncodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
-#include "cliffordoptresults.hpp"
+#include "CliffordOptimizationResult.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
