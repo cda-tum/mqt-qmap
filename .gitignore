@@ -1,6 +1,7 @@
 /build*
 /cmake-build-*
 .idea/
+.cache/
 
 __pycache__/
 *.so

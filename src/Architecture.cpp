@@ -5,6 +5,10 @@
 
 #include "Architecture.hpp"
 
+#include "utils.hpp"
+
+#include <utility>
+
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
     std::stringstream ss{getCouplingMapSpecification(architecture)};
     architectureName = toString(architecture);
@@ -83,30 +87,85 @@ void Architecture::loadCalibrationData(const std::string& filename) {
     size_t slash    = filename.find_last_of('/');
     size_t dot      = filename.find_last_of('.');
     calibrationName = filename.substr(slash + 1, dot - slash - 1);
-    auto ifs        = std::ifstream(filename);
+    if (!isArchitectureAvailable())
+        architectureName = calibrationName;
+    auto ifs = std::ifstream(filename);
     if (ifs.good())
         this->loadCalibrationData(ifs);
     else
         throw QMAPException("Error opening calibration data file.");
 }
 
-void Architecture::loadCalibrationData([[maybe_unused]] std::istream&& is) {
+void Architecture::loadCalibrationData(std::istream&& is) {
     calibrationData.clear();
-    calibrationData.reserve(nqubits);
-    // TODO: Read in IBM csv Format into calibrationData
-    // Qubit,T1 (µs),T2 (µs),Frequency (GHz),Readout error,Single-qubit U2 error rate,CNOT error rate,Date
-    // Q0,43.113390027720456,80.43170304899623,5.2540548421267825,3.0000000000000027e-2,6.471748738850555e-4,"cx0_1: 1.286e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q1,57.036278779745814,44.25327200058967,5.04877069952246,5.499999999999994e-2,6.227987234977298e-4,"cx1_0: 1.286e-2, cx1_2: 1.117e-2, cx1_3: 1.006e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q2,81.96027845904459,87.47080521889637,5.230569177436213,2.1666666666666723e-2,5.16080288896023e-4,"cx2_1: 1.117e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q3,67.95013744985455,86.03784184638282,5.200948312700143,1.8333333333333313e-2,3.530411094454146e-4,"cx3_1: 1.006e-2, cx3_4: 1.670e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
-    // Q4,62.156360190670306,3.731765939150933,5.065777885569538,1.5000000000000013e-2,1.106360359568795e-3,"cx4_3: 1.670e-2",Fri Feb 28 2020 09:27:24 GMT+0100 (CET)
+
+    double averageCNOTFidelity = 0.0;
+    int    numCNOTFidelities   = 0;
+
+    std::string line;
+    std::string word;
+    std::regex  regexDoubleFidelity =
+            std::regex(R"(((\d+).?(\d+):\W*?(\d+\.\d+e?-?\d+)))");
+    std::smatch sMatch;
+    std::getline(is, line); //skip first line
+    // load edges
+    int qubitNumber = 0;
+    while (std::getline(is, line)) {
+        std::stringstream        ss(line);
+        CalibrationData          calibrationEntry = {};
+        std::vector<std::string> data{};
+        parse_line(line, ',', {'\"'}, {'\\'}, data);
+        calibrationEntry.qubit                = qubitNumber;
+        calibrationEntry.t1                   = std::stod(data[1]);
+        calibrationEntry.t2                   = std::stod(data[2]);
+        calibrationEntry.frequency            = std::stod(data[3]);
+        calibrationEntry.readoutError         = std::stod(data[4]);
+        calibrationEntry.singleQubitErrorRate = std::stod(data[5]);
+        std::string s                         = data[6];
+        while (std::regex_search(s, sMatch, regexDoubleFidelity)) {
+            auto a = static_cast<unsigned short>(std::stoul(sMatch.str(2U)));
+            auto b = static_cast<unsigned short>(std::stoul(sMatch.str(3U)));
+            if (!isArchitectureAvailable()) {
+                couplingMap.emplace(a, b);
+            }
+            averageCNOTFidelity = averageCNOTFidelity + (std::stod(sMatch.str(4U)) - averageCNOTFidelity) / ++numCNOTFidelities; //calc moving average
+            calibrationEntry.cnotErrors.emplace(std::make_pair(a, b), std::stod(sMatch.str(4U)));
+            s = sMatch.suffix().str();
+        }
+        calibrationEntry.date = data[7];
+        calibrationData.emplace_back(calibrationEntry);
+        qubitNumber++;
+    }
+
+    if (isArchitectureAvailable())
+        for (const auto& edge: couplingMap) {
+            //check if no fidelity for cnot was provided
+            auto calibrationEntry = calibrationData.at(edge.first);
+            if (calibrationEntry.cnotErrors.find(edge) == calibrationEntry.cnotErrors.end()) {
+                calibrationEntry.cnotErrors.emplace(edge, averageCNOTFidelity);
+            }
+        }
+
+    if (!isArchitectureAvailable()) {
+        nqubits = static_cast<unsigned short>(qubitNumber);
+        createDistanceTable();
+    }
 
     createFidelityTable();
 }
 
 void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
+    if (!isArchitectureAvailable()) {
+        for (const auto& cd: calData) {
+            for (const auto& [edge, errorRate]: cd.cnotErrors) {
+                couplingMap.emplace(edge);
+            }
+        }
+        nqubits = calData.size();
+    }
     calibrationData  = calData;
     architectureName = "generic_" + std::to_string(nqubits);
+    calibrationName  = "generic_" + std::to_string(nqubits);
     createFidelityTable();
 }
 
@@ -145,7 +204,7 @@ void Architecture::createFidelityTable() {
     singleQubitFidelities.resize(nqubits, 1.0);
 
     for (const auto& qubit: calibrationData) {
-        for (const auto& entry: qubit.cnotErrorRate) {
+        for (const auto& entry: qubit.cnotErrors) {
             fidelityTable.at(entry.first.first).at(entry.first.second) -= entry.second;
         }
         singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
@@ -456,4 +515,100 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
     }
 
     visited[node] = false;
+}
+
+void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) {
+    if (!isArchitectureAvailable() || nqubits == subsetSize ||
+        calibrationName.empty()) {
+        reducedMap = couplingMap;
+    } else {
+        double bestFidelity        = 0.0;
+        auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
+
+        for (const auto& qubitChoice: allConnectedSubsets) {
+            double      currentFidelity{};
+            CouplingMap map{};
+            getReducedCouplingMap(qubitChoice, map);
+            currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
+            if (currentFidelity > bestFidelity) {
+                reducedMap   = map;
+                bestFidelity = currentFidelity;
+            }
+        }
+    }
+}
+std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) {
+    std::vector<std::set<unsigned short>> result{};
+    if (!isArchitectureAvailable() || nqubits == subsetSize) {
+        result.emplace_back(getQubitSet());
+    } else if (nqubits < subsetSize) {
+        throw QMAPException("Architecture too small!");
+    } else {
+        auto filter = [&](const std::set<unsigned short>& subset) {
+            CouplingMap cm = {};
+            Architecture::getReducedCouplingMap(subset, cm);
+            return isConnected(subset, cm);
+        };
+        for (const auto& subset: subsets(getQubitSet(), subsetSize, filter)) {
+            result.emplace_back(subset);
+        }
+    }
+    return result;
+}
+void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) {
+    couplingMaps.clear();
+    if (!isArchitectureAvailable()) {
+        couplingMaps.emplace_back(getFullyConnectedMap(subsetSize));
+    } else {
+        for (const auto& qubitChoice: getAllConnectedSubsets(subsetSize)) {
+            couplingMaps.emplace_back();
+            getReducedCouplingMap(qubitChoice, couplingMaps.back());
+        }
+    }
+}
+void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
+    reducedMap.clear();
+    if (!isArchitectureAvailable()) {
+        reducedMap = getFullyConnectedMap(qubitChoice.size());
+    } else {
+        for (const auto& [q0, q1]: couplingMap) {
+            if (qubitChoice.find(q0) != qubitChoice.end() && qubitChoice.find(q1) != qubitChoice.end()) {
+                reducedMap.emplace(q0, q1);
+            }
+        }
+    }
+}
+
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
+    if (calibrationData.empty()) {
+        return 0.0;
+    }
+    double         result = 1.0;
+    std::set<Edge> qubitPairs{};
+    getReducedCouplingMap(qubitChoice, qubitPairs);
+    for (const auto& calibrationEntry: calibrationData) {
+        for (const auto& edge: couplingMap) {
+            if (calibrationEntry.cnotErrors.find(edge) != calibrationEntry.cnotErrors.end())
+                result *= calibrationEntry.cnotErrors.at(edge);
+        }
+        if (qubitChoice.find(calibrationEntry.qubit) != qubitChoice.end())
+            result *= calibrationEntry.singleQubitErrorRate;
+    }
+    return result;
+}
+
+std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& couplingMap) {
+    std::set<unsigned short> result{};
+    for (const auto& edge: couplingMap) {
+        result.emplace(edge.first);
+        result.emplace(edge.second);
+    }
+    return {result.begin(), result.end()};
+}
+
+bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap) {
+    std::set<unsigned short> reachedQubits{};
+    reachedQubits.insert(*(qubitChoice.begin()));
+    dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);
+    return (reachedQubits == qubitChoice);
 }
