@@ -18,6 +18,7 @@ test-skip = "*-macosx_arm64 *-musllinux* *aarch64"
 test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-verbosity = 3
+manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
 before-all = "/opt/python/cp39-cp39/bin/python -m pip install --upgrade pip && /opt/python/cp39-cp39/bin/python -m pip install z3-solver"

@@ -5,11 +5,3 @@ if (Z3_FOUND)
 	target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_exact_lib)
 	target_compile_definitions(py${PROJECT_NAME} PRIVATE VERSION_INFO=${QMAP_VERSION_INFO})
 endif()
-
-# LTO is disabled since a bug in manylinux2014 prevents the project from linking with it
-if (${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
-	set_target_properties(${PROJECT_NAME}_exact_lib PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
-	set_target_properties(${PROJECT_NAME}_heuristic_lib PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
-	set_target_properties(qfr PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
-	set_target_properties(DDPackage PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
-endif ()
