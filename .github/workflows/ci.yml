@@ -14,7 +14,7 @@ defaults:
 env:
   BUILD_TYPE: Release
   CMAKE_BUILD_PARALLEL_LEVEL: 2
-  Z3_GIT_TAG: z3-4.8.16
+  Z3_GIT_TAG: z3-4.8.17
 
 jobs:
   codestyle:
@@ -57,8 +57,6 @@ jobs:
 
       - name: Build
         run:  |
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
@@ -98,8 +96,6 @@ jobs:
 
       - name: Build
         run:  |
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
