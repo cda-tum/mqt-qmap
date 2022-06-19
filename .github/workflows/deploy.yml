@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  Z3_GIT_TAG: z3-4.8.16
-  Z3_HASH:    a6274d2eea099f27c19bfbd736f4909ee9a373124ef0c017954fd38d56f4061c
+  Z3_GIT_TAG: z3-4.8.17
+  Z3_HASH:    2f59c37465aecdfbcc50a5ba0fe627535c0ff4cffb9080bfbddc0a2af0f97b53
 
 jobs:
   build_manylinux_wheels:
