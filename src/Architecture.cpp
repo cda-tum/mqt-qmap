@@ -197,9 +197,9 @@ void Architecture::createDistanceTable() {
 
 void Architecture::createFidelityTable() {
     fidelityTable.clear();
-    fidelityTable.resize(nqubits, std::vector<double>(nqubits, 1.0));
+    fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
 
-    singleQubitFidelities.resize(nqubits, 1.0);
+    singleQubitFidelities.resize(nqubits, 0.0);
 
     for (const auto& [first, second]: couplingMap) {
         if (properties.twoQubitErrorRateAvailable(first, second)) {
