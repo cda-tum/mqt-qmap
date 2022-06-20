@@ -3,13 +3,13 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
-
 #ifndef QMAP_CLIFFORDSYNTHESIS_H
 #define QMAP_CLIFFORDSYNTHESIS_H
 
+#include "Architecture.hpp"
+#include "CliffordOptimizationResult.hpp"
 #include "LBEncodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
-#include "CliffordOptimizationResult.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -41,9 +41,15 @@
 
 class CliffordOptimizer {
 public:
+    CliffordOptimizer() {
+    }
     void optimize();
 
-    void                   setCouplingMap(const CouplingMap& cm) { couplingMap = cm; }
+    void setCouplingMap(const Architecture& arch) {
+        architecture = arch;
+        auto map = highestFidelityMap.emplace_back();
+        architecture.getHighestFidelityCouplingMap(nqubits, map);
+    }
     bool                   choose_best   = false;
     bool                   use_embedding = false;
     unsigned char          nqubits       = 0U;
@@ -55,6 +61,8 @@ public:
     OptTarget              target            = OptTarget::GATES;
     OptMethod              method            = OptMethod::Z3;
     qc::QuantumComputation circuit;
+
+    std::vector<CouplingMap> highestFidelityMap;
 
     Tableau initialTableau{};
     Tableau targetTableau{};
@@ -119,23 +127,23 @@ protected:
             const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
             const LogicMatrix3D& g_s, const LogicMatrix3D& g_c);
 
-    void        runMinimizer(int timesteps, const QubitPairs& reducedCM,
+    void         runMinimizer(int timesteps, const CouplingMap& reducedCM,
+                              const std::vector<unsigned short>& qubitChoice);
+    void         runStartLow(int timesteps, const CouplingMap& reducedCM,
                              const std::vector<unsigned short>& qubitChoice);
-    void        runStartLow(int timesteps, const QubitPairs& reducedCM,
-                            const std::vector<unsigned short>& qubitChoice);
-    void        runStartHigh(int timesteps, const QubitPairs& reducedCM,
-                             const std::vector<unsigned short>& qubitChoice);
-    void        runMinMax(int timesteps, const QubitPairs& reducedCM,
-                          const std::vector<unsigned short>& qubitChoice);
-    void        runSplitIter(const QubitPairs&                  reducedCM,
-                             const std::vector<unsigned short>& qubitChoice);
-    static void runSplinter(int i, unsigned int circ_split, unsigned int split,
-                            const QubitPairs&                  reducedCM,
-                            const std::vector<unsigned short>& qubitChoice,
-                            qc::QuantumComputation&            circuit,
-                            CliffordOptResults* r, CliffordOptimizer* opt);
-    void        updateResults(CliffordOptResults& r);
-    CouplingMap couplingMap{};
+    void         runStartHigh(int timesteps, const CouplingMap& reducedCM,
+                              const std::vector<unsigned short>& qubitChoice);
+    void         runMinMax(int timesteps, const CouplingMap& reducedCM,
+                           const std::vector<unsigned short>& qubitChoice);
+    void         runSplitIter(const CouplingMap&                 reducedCM,
+                              const std::vector<unsigned short>& qubitChoice);
+    static void  runSplinter(int i, unsigned int circ_split, unsigned int split,
+                             const CouplingMap&                 reducedCM,
+                             const std::vector<unsigned short>& qubitChoice,
+                             qc::QuantumComputation&            circuit,
+                             CliffordOptResults* r, CliffordOptimizer* opt);
+    void         updateResults(CliffordOptResults& r);
+    Architecture architecture{};
 
     void assertTableau(const Tableau& tableau, LogicBlock* lb,
                        const LogicMatrix& x, const LogicMatrix& z,

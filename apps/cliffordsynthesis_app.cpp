@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    CouplingMap couplingMap{};
+    Architecture couplingMap{};
     if (vm.count("arch")) {
         const std::string cm = vm["arch"].as<std::string>();
         try {

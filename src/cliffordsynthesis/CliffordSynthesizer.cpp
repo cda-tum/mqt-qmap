@@ -3,37 +3,36 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "cliffordsynthesis.hpp"
-
-#include "CouplingMap.hpp"
 #include "LogicTerm/LogicTerm.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
+#include "utils.hpp"
 #include "utils/logging.hpp"
-#include "utils/util.hpp"
 
 void CliffordOptimizer::optimize() {
     TRACE() << "Strategy: " << toString(strategy) << std::endl;
     TRACE() << "Target: " << toString(target) << std::endl;
     TRACE() << "Method: " << toString(method) << std::endl;
 
-    auto total_start = std::chrono::high_resolution_clock::now();
+    auto                     total_start = std::chrono::high_resolution_clock::now();
+    std::vector<CouplingMap> reducedMaps;
+    architecture.getReducedCouplingMaps(nqubits, reducedMaps);
     auto subsets =
-            (choose_best ? couplingMap.getHighestFidelityCouplingMap(nqubits) : couplingMap.getReducedCouplingMaps(nqubits));
+            (choose_best ? highestFidelityMap : reducedMaps);
     for (const auto& subset: subsets) {
-        std::vector<unsigned short> qubitMap{CouplingMap::getQubitMap(subset)};
+        std::vector<unsigned short> qubitMap{Architecture::getQubitList(subset)};
 
         DEBUG() << "Reduced Coupling Map" << (choose_best ? " (best)" : "") << ": ";
-        DEBUG() << util::printCouplingMap(subset);
-        DEBUG() << "Qubit Map: " << util::printVector(qubitMap);
+        std::stringstream strings;
+        Architecture::printCouplingMap(subset, strings);
+        DEBUG() << strings.str();
+        DEBUG() << "Qubit Map: " << qubitMap;
         DEBUG() << "Coupling Map Fidelity: "
-                << util::getFidelity(
-                           couplingMap.getCouplingMap(),
-                           std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
-                           couplingMap.getSingleFidelity(),
-                           couplingMap.getDoubleFidelity());
-        ;
+                << architecture.getAverageArchitectureFidelity(architecture.getCouplingMap(),
+                                                               std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
+                                                               architecture.getCalibrationData());
         int timesteps =
                 initial_timesteps == 0 ? nqubits * nqubits : initial_timesteps;
         if (strategy == OptimizingStrategy::UseMinimizer) {
@@ -84,9 +83,9 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             opt.set(p);
             lb = new Z3LogicOptimizer(c, opt, false);
         } else {
-            p.set("threads", unsigned(nthreads/2));
+            p.set("threads", unsigned(nthreads / 2));
             z3::set_param("parallel.enable", true);
-            z3::set_param("parallel.threads.max", nthreads/2);
+            z3::set_param("parallel.threads.max", nthreads / 2);
             slv.set(p);
             lb = new Z3LogicBlock(c, slv, true);
         }
@@ -205,9 +204,9 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     results.target            = target;
     results.total_seconds     = elapsed_milliseconds.count();
     results.sat               = result == Result::SAT;
-    results.doubleFidelity    = couplingMap.getDoubleFidelity();
-    results.singleFidelity    = couplingMap.getSingleFidelity();
-    results.resultCM          = couplingMap.getCouplingMap();
+    results.doubleFidelity    = architecture.getCNOTFidelities();
+    results.singleFidelity    = architecture.getSingleQubitFidelities();
+    results.resultCM          = architecture.getCouplingMap();
     results.resultTableaus.clear();
 
     if (result == Result::SAT) {
@@ -229,10 +228,10 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                     for (auto gate: Gates::singleQubitWithoutNOP) {
                         if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb)) {
                             circuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
-                            if (couplingMap.fidelitySet())
-                                results.fidelity *= (couplingMap.getSingleFidelity()[a]);
+                            if (architecture.fidelitySet())
+                                results.fidelity *= (architecture.getSingleFidelity()[a]);
                             TRACE() << Gates::gateName(gate) << "(" << a << ")"
-                                    << ") Fidelity: " << couplingMap.getSingleFidelity()[a]
+                                    << ") Fidelity: " << architecture.getSingleFidelity()[a]
                                     << std::endl;
                             ++results.gate_count;
                         }
@@ -242,13 +241,13 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                             results.gate_count++;
                             circuit.emplace_back<qc::StandardOperation>(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
-                            if (couplingMap.fidelitySet())
+                            if (architecture.fidelitySet())
                                 results.fidelity *=
-                                        (couplingMap.getDoubleFidelity()[qubitChoice.at(a)]
-                                                                        [qubitChoice.at(b)]);
+                                        (architecture.getDoubleFidelity()[qubitChoice.at(a)]
+                                                                         [qubitChoice.at(b)]);
                             TRACE() << "X(" << a << "," << b << ") Fidelity: "
-                                    << couplingMap.getDoubleFidelity()[qubitChoice.at(a)]
-                                                                      [qubitChoice.at(b)]
+                                    << architecture.getDoubleFidelity()[qubitChoice.at(a)]
+                                                                       [qubitChoice.at(b)]
                                     << std::endl;
                         }
                     }
@@ -322,7 +321,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
         const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
-    if (couplingMap.getFidelityArchitectureName().empty()) {
+    if (architecture.getFidelityArchitectureName().empty()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
@@ -334,7 +333,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each edge in the coupling map, get the fidelity cost
         for (const auto& edge: reducedCM) {
             LogicTerm fidelity = LogicTerm(
-                    couplingMap.getLogDoubleFidelity()[edge.first][edge.second] * 1000);
+                    architecture.getLogDoubleFidelity()[edge.first][edge.second] * 1000);
             // at each time t if there is a gate on the edge, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
                 cost = cost + (g_c[gate_step][edge.first][edge.second] * fidelity);
@@ -343,7 +342,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each qubit, get the fidelity cost
         for (int a = 0; a < nqubits; ++a) {
             LogicTerm fidelity =
-                    LogicTerm(couplingMap.getLogSingleFidelity()[a] * 1000);
+                    LogicTerm(architecture.getLogSingleFidelity()[a] * 1000);
             // at each time t if there is a gate on a, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
                 for (auto gate: Gates::singleQubitWithoutNOP) {

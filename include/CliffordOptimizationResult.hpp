@@ -226,7 +226,7 @@ public:
             if (!skipfirst)
                 os << "," << std::endl;
             os << "\"";
-            os << escapeChars(tableau.getRepresentation(),"\""), "\"");
+            os << escapeChars(tableau.getRepresentation(),"\"");
             os << "\"";
             skipfirst = false;
         }
