@@ -75,7 +75,6 @@ def compile(circ, arch: Union[str, Arch],
         circ = pickle.load(open(circ, "rb"))
 
     config = Configuration()
-    config.calibration = calibration
     config.method = Method(method)
     config.initial_layout = InitialLayout(initial_layout)
     config.layering = Layering(layering)

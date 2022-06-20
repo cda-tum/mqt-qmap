@@ -4,6 +4,7 @@
  */
 
 #include "configuration/Configuration.hpp"
+#include "Architecture.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -30,7 +31,7 @@ struct MappingResults {
 
     CircuitInfo input{};
 
-    std::string   architecture{};
+    Architecture* architecture{};
     Configuration config{};
 
     double time    = 0.0;
@@ -80,7 +81,7 @@ struct MappingResults {
         auto& stats           = resultJSON["statistics"];
         stats["timeout"]      = timeout;
         stats["mapping_time"] = time;
-        stats["arch"]         = architecture;
+        stats["arch"]         = architecture? architecture->getName() : "";
         stats["layers"]       = input.layers;
         stats["swaps"]        = output.swaps;
         if (config.method == Method::Exact) {
@@ -103,7 +104,7 @@ struct MappingResults {
            << input.gates << ";"
            << input.singleQubitGates << ";"
            << input.cnots << ";"
-           << architecture << ";"
+           << (architecture? architecture->getName(): "") << ";"
            << output.name << ";"
            << output.qubits << ";"
            << output.gates << ";"

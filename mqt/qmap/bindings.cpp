@@ -162,7 +162,6 @@ PYBIND11_MODULE(pyqmap, m) {
 
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
-            .def_readwrite("calibration", &Configuration::calibration)
             .def_readwrite("method", &Configuration::method)
             .def_readwrite("verbose", &Configuration::verbose)
             .def_readwrite("layering", &Configuration::layering)
@@ -195,7 +194,6 @@ PYBIND11_MODULE(pyqmap, m) {
             .def(py::init<>())
             .def_readwrite("input", &MappingResults::input)
             .def_readwrite("output", &MappingResults::output)
-            .def_readwrite("architecture", &MappingResults::architecture)
             .def_readwrite("configuration", &MappingResults::config)
             .def_readwrite("time", &MappingResults::time)
             .def_readwrite("timeout", &MappingResults::timeout)
