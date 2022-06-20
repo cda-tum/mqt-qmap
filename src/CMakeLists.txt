@@ -88,6 +88,8 @@ if (Z3_FOUND)
     target_sources(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}/LBEncodings.cpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/LBEncodings.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/CliffordOptimizationResult.hpp)
     # add Z3 library
     target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC z3::z3lib)

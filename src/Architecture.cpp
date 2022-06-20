@@ -612,3 +612,11 @@ bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice, cons
     dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);
     return (reachedQubits == qubitChoice);
 }
+
+void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
+    os << "{";
+    for (const auto& edge: cm) {
+        os << "(" << edge.first << " " << edge.second << ") ";
+    }
+    os << "}" << std::endl;
+}

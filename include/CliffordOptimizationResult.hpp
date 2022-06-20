@@ -1,6 +1,7 @@
-#include "CouplingMap.hpp"
+#include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "Tableau.hpp"
 #include "operations/Operation.hpp"
 #include "utils.hpp"
 
@@ -102,8 +103,6 @@ inline OptimizingStrategy optStrategyFromString(const std::string& strategy) {
     return OptimizingStrategy::MinMax;
 }
 
-using Tableau = std::vector<std::vector<short>>;
-
 class CliffordOptResults {
 public:
     int                verbose           = 0;
@@ -125,7 +124,7 @@ public:
     qc::QuantumComputation resultCircuit{};
     std::vector<Tableau>   resultTableaus{};
 
-    QubitPairs                       resultCM{};
+    CouplingMap                      resultCM{};
     std::vector<double>              singleFidelity{};
     std::vector<std::vector<double>> doubleFidelity{};
 
@@ -220,19 +219,21 @@ public:
         os << "\"resultCircuit\":\"";
         std::stringstream ss;
         resultCircuit.dump(ss, qc::Format::OpenQASM);
-        os << util::escapeChars(ss.str(), "\"") << "\"," << std::endl;
+        os << escapeChars(ss.str(), "\"") << "\"," << std::endl;
         os << "\"resultTableaus\":[" << std::endl;
         bool skipfirst = true;
         for (const auto& tableau: resultTableaus) {
             if (!skipfirst)
                 os << "," << std::endl;
             os << "\"";
-            os << util::escapeChars(util::pretty_s(tableau), "\"");
+            os << escapeChars(tableau.getRepresentation(),"\""), "\"");
             os << "\"";
             skipfirst = false;
         }
         os << "]," << std::endl;
-        os << "\"CouplingMap\":\"" << util::printCouplingMap(resultCM) << "\","
+        std::stringstream strings;
+        Architecture::printCouplingMap(resultCM, strings);
+        os << "\"CouplingMap\":\"" << strings.str() << "\","
            << std::endl;
         os << "\"singleFidelity\":[";
         skipfirst = true;

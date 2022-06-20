@@ -223,3 +223,19 @@ getFullyConnectedMap(unsigned short nQubits) {
     }
     return result;
 }
+
+std::string escapeChars(const std::string& s, const std::string& chars) {
+    std::stringstream ss;
+    for (auto c: s) {
+        if (chars.find(c) != std::string::npos) {
+            ss << "\\" << c;
+        } else if (c == '\n') {
+            ss << "\\n";
+        } else if (c == '\t') {
+            ss << "\\t";
+        } else {
+            ss << c;
+        }
+    }
+    return ss.str();
+}

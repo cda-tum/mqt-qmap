@@ -148,4 +148,6 @@ void parse_line(const std::string& line, char separator, const std::set<char>& e
                 const std::set<char>& ignored_chars, std::vector<std::string>& result);
 std::set<std::pair<unsigned short, unsigned short>>
 getFullyConnectedMap(unsigned short nQubits);
+
+std::string escapeChars(const std::string& s, const std::string& chars);
 #endif //QMAP_UTILS_HPP

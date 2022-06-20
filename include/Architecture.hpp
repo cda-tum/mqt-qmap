@@ -180,6 +180,9 @@ public:
 
     static bool isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap);
 
+    static void printCouplingMap(const CouplingMap& cm,
+                                 std::ostream&      os);
+
 protected:
     std::string                          architectureName;
     std::string                          calibrationName;
