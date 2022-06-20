@@ -36,7 +36,7 @@ protected:
         }
         IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
-        IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
+        IBMQ_London.loadProperties(test_calibration_dir + "ibmq_london.csv");
         IBM_QX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
 
         IBMQ_Yorktown_mapper = std::make_unique<ExactMapper>(qc, IBMQ_Yorktown);
