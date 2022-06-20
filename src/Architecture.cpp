@@ -585,13 +585,13 @@ double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const
     double result = 1.0;
     for (const auto& [control, target]: cm) {
         if (props.twoQubitErrorRateAvailable(control, target)) {
-            result *= props.getTwoQubitErrorRate(control, target);
+            result *= (1.0 - props.getTwoQubitErrorRate(control, target));
         }
     }
 
     for (const auto& qubit: qubitChoice) {
         if (props.singleQubitErrorRate.available(qubit)) {
-            result *= props.getAverageSingleQubitErrorRate(qubit);
+            result *= (1.0 - props.getAverageSingleQubitErrorRate(qubit));
         }
     }
     return result;
