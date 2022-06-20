@@ -209,6 +209,14 @@ void Architecture::createFidelityTable() {
         }
         singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
     }
+
+    CNOTFidelities.resize(nqubits);
+    for (const auto& calibrationEntry: calibrationData) {
+        CNOTFidelities.back().resize(nqubits, 1.0);
+        for (const auto& CNOTError: calibrationEntry.cnotErrors) {
+            CNOTFidelities.at(CNOTError.first.first).at(CNOTError.first.second) -= CNOTError.second;
+        }
+    }
 }
 
 unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
@@ -517,7 +525,7 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
     visited[node] = false;
 }
 
-void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) {
+void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) const {
     if (!isArchitectureAvailable() || nqubits == subsetSize ||
         calibrationName.empty()) {
         reducedMap = couplingMap;
@@ -537,7 +545,7 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, Coup
         }
     }
 }
-std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) {
+std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) const {
     std::vector<std::set<unsigned short>> result{};
     if (!isArchitectureAvailable() || nqubits == subsetSize) {
         result.emplace_back(getQubitSet());
@@ -555,7 +563,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
     }
     return result;
 }
-void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) {
+void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) const {
     couplingMaps.clear();
     if (!isArchitectureAvailable()) {
         couplingMaps.emplace_back(getFullyConnectedMap(subsetSize));
@@ -566,7 +574,7 @@ void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector
         }
     }
 }
-void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) {
+void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) const {
     reducedMap.clear();
     if (!isArchitectureAvailable()) {
         reducedMap = getFullyConnectedMap(qubitChoice.size());
@@ -579,7 +587,7 @@ void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitCh
     }
 }
 
-double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) const {
     if (calibrationData.empty()) {
         return 0.0;
     }

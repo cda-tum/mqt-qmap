@@ -107,11 +107,15 @@ public:
         return singleQubitFidelities;
     }
 
+    [[nodiscard]] const std::vector<std::vector<double>>& getCNOTFidelities() const {
+        return CNOTFidelities;
+    }
+
     [[nodiscard]] bool bidirectional() const {
         return isBidirectional;
     }
 
-    [[nodiscard]] bool isArchitectureAvailable() {
+    [[nodiscard]] bool isArchitectureAvailable() const {
         return !(architectureName.empty()) && nqubits != 0;
     }
     [[nodiscard]] bool isCalibrationDataAvailable() {
@@ -138,7 +142,7 @@ public:
         }
     }
 
-    [[nodiscard]] std::set<unsigned short> getQubitSet() {
+    [[nodiscard]] std::set<unsigned short> getQubitSet() const {
         std::set<unsigned short> result{};
         for (int i = 0; i < nqubits; ++i) {
             result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
@@ -170,11 +174,11 @@ public:
     [[nodiscard]] std::size_t getCouplingLimit() const;
     [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
 
-    void                                                getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& couplingMap);
-    [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize);
-    void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
-    void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
-    [[nodiscard]] double                                getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+    void                                                getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& couplingMap) const;
+    [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize) const;
+    void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) const;
+    void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap) const;
+    [[nodiscard]] double                                getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) const;
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
@@ -193,9 +197,10 @@ protected:
     Matrix                               distanceTable          = {};
     std::vector<std::pair<short, short>> teleportationQubits{};
 
-    std::vector<CalibrationData> calibrationData       = {};
-    Matrix                       fidelityTable         = {};
-    std::vector<double>          singleQubitFidelities = {};
+    std::vector<CalibrationData>     calibrationData       = {};
+    Matrix                           fidelityTable         = {};
+    std::vector<double>              singleQubitFidelities = {};
+    std::vector<std::vector<double>> CNOTFidelities        = {};
 
     void createDistanceTable();
     void createFidelityTable();
