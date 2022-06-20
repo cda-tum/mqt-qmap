@@ -35,15 +35,150 @@ class Architecture {
     static constexpr bool VERBOSE = false;
 
 public:
-    struct CalibrationData {
-        unsigned short         qubit                = 0;
-        double                 t1                   = 0.0; // [ms]
-        double                 t2                   = 0.0; // [ms]
-        double                 frequency            = 0.0; // [GHz]
-        double                 readoutError         = 0.0;
-        double                 singleQubitErrorRate = 0.0;
-        std::map<Edge, double> cnotErrors           = {};
-        std::string            date;
+    class Properties {
+    protected:
+        template<class KeyType, class ValueType>
+        class Property {
+        public:
+            Property() = default;
+
+            [[nodiscard]] auto&       get(const KeyType& key) { return props[key]; }
+            [[nodiscard]] const auto& get(const KeyType& key) const { return props.at(key); }
+            [[nodiscard]] const auto& get() const { return props; }
+            void                      set(const KeyType& key, const ValueType& value) { props[key] = value; }
+            [[nodiscard]] bool        available(const KeyType& key) const { return props.find(key) != props.end(); }
+            void                      clear() { props.clear(); }
+            [[nodiscard]] bool        empty() const { return props.empty(); }
+
+        protected:
+            std::map<KeyType, ValueType> props{};
+        };
+
+    public:
+        Properties() = default;
+
+        [[nodiscard]] std::string getName() const {
+            return name;
+        }
+        void setName(const std::string& propertiesName) {
+            name = propertiesName;
+        }
+
+        [[nodiscard]] unsigned short getNqubits() const {
+            return nq;
+        }
+        void setNqubits(unsigned short nqs) {
+            nq = nqs;
+        }
+
+        Property<unsigned short, Property<qc::OpType, double>>                           singleQubitErrorRate{};
+        Property<unsigned short, Property<unsigned short, Property<qc::OpType, double>>> twoQubitErrorRate{};
+        Property<unsigned short, double>                                                 readoutErrorRate{};
+        Property<unsigned short, double>                                                 t1Time{};
+        Property<unsigned short, double>                                                 t2Time{};
+        Property<unsigned short, double>                                                 qubitFrequency{};
+        Property<unsigned short, std::string>                                            calibrationDate{};
+
+        // convenience functions
+        void setSingleQubitErrorRate(unsigned short qubit, const std::string& operation, double errorRate) {
+            singleQubitErrorRate.get(qubit).set(qc::opTypeFromString(operation), errorRate);
+        }
+        [[nodiscard]] double getSingleQubitErrorRate(unsigned short qubit, const std::string& operation) const {
+            return singleQubitErrorRate.get(qubit).get(qc::opTypeFromString(operation));
+        }
+        [[nodiscard]] double getAverageSingleQubitErrorRate(const unsigned short qubit) const {
+            double avgErrorRate = 0.0;
+            for (const auto& [opType, error]: singleQubitErrorRate.get(qubit).get()) {
+                avgErrorRate += error;
+            }
+            return avgErrorRate / static_cast<double>(singleQubitErrorRate.get(qubit).get().size());
+        }
+
+        void setTwoQubitErrorRate(unsigned short qubit1, unsigned short qubit2, double errorRate, const std::string& operation = "cx") {
+            twoQubitErrorRate.get(qubit1).get(qubit2).set(qc::opTypeFromString(operation), errorRate);
+        }
+        [[nodiscard]] double getTwoQubitErrorRate(unsigned short qubit1, unsigned short qubit2, const std::string& operation = "cx") const {
+            return twoQubitErrorRate.get(qubit1).get(qubit2).get(qc::opTypeFromString(operation));
+        }
+        [[nodiscard]] bool twoQubitErrorRateAvailable(unsigned short qubit1, unsigned short qubit2, const std::string& operation = "cx") const {
+            return twoQubitErrorRate.available(qubit1) && twoQubitErrorRate.get(qubit1).available(qubit2) && twoQubitErrorRate.get(qubit1).get(qubit2).available(qc::opTypeFromString(operation));
+        }
+
+        void clear() {
+            singleQubitErrorRate.clear();
+            twoQubitErrorRate.clear();
+            readoutErrorRate.clear();
+            t1Time.clear();
+            t2Time.clear();
+            qubitFrequency.clear();
+            calibrationDate.clear();
+        }
+
+        [[nodiscard]] bool empty() const {
+            return singleQubitErrorRate.empty() &&
+                   twoQubitErrorRate.empty() &&
+                   readoutErrorRate.empty() &&
+                   t1Time.empty() &&
+                   t2Time.empty() &&
+                   qubitFrequency.empty() &&
+                   calibrationDate.empty();
+        }
+
+        [[nodiscard]] nlohmann::json json() const {
+            nlohmann::json json;
+            if (empty()) {
+                return json;
+            }
+
+            json["name"]   = name;
+            json["qubits"] = {};
+            for (unsigned short i = 0; i < nq; ++i) {
+                auto& qubitProperties = json["qubits"][std::to_string(i)];
+
+                if (singleQubitErrorRate.available(i)) {
+                    auto& singleQubitErrorRates = qubitProperties["single_qubit_error_rate"];
+                    for (const auto& [operation, error]: singleQubitErrorRate.get(i).get()) {
+                        singleQubitErrorRates[qc::toString(operation)] = error;
+                    }
+                }
+
+                if (t1Time.available(i)) {
+                    qubitProperties["t1_time"] = t1Time.get(i);
+                }
+                if (t2Time.available(i)) {
+                    qubitProperties["t2_time"] = t2Time.get(i);
+                }
+                if (qubitFrequency.available(i)) {
+                    qubitProperties["frequency"] = qubitFrequency.get(i);
+                }
+                if (calibrationDate.available(i)) {
+                    qubitProperties["calibration_date"] = calibrationDate.get(i);
+                }
+                if (readoutErrorRate.available(i)) {
+                    qubitProperties["readout_error_rate"] = readoutErrorRate.get(i);
+                }
+
+                if (twoQubitErrorRate.available(i)) {
+                    auto& twoQubitErrorRates = qubitProperties["two_qubit_error_rate"];
+                    for (const auto& [qubit2, errorRates]: twoQubitErrorRate.get(i).get()) {
+                        const std::string pair   = '(' + std::to_string(i) + ',' + std::to_string(qubit2) + ')';
+                        auto&             qubits = twoQubitErrorRates[pair];
+                        for (const auto& [operation, error]: errorRates.get()) {
+                            qubits[qc::toString(operation)] = error;
+                        }
+                    }
+                }
+            }
+
+            return json;
+        }
+        [[nodiscard]] std::string toString() const {
+            return json().dump(2);
+        }
+
+    protected:
+        std::string    name{};
+        unsigned short nq{};
     };
 
     void loadCouplingMap(std::istream& is);
@@ -51,37 +186,46 @@ public:
     void loadCouplingMap(const std::string& filename);
     void loadCouplingMap(unsigned short nQ, const CouplingMap& cm);
     void loadCouplingMap(AvailableArchitecture architecture);
-    void loadCalibrationData(std::istream& is);
-    void loadCalibrationData(std::istream&& is);
-    void loadCalibrationData(const std::string& filename);
-    void loadCalibrationData(const std::vector<CalibrationData>& calData);
+    void loadProperties(std::istream& is);
+    void loadProperties(std::istream&& is);
+    void loadProperties(const std::string& filename);
+    void loadProperties(const Properties& properties);
 
     Architecture() = default;
     explicit Architecture(const std::string& cm_filename) {
         loadCouplingMap(cm_filename);
     }
-    Architecture(const std::string& cm_filename, const std::string& cal_filename):
+    Architecture(const std::string& cm_filename, const std::string& props_filename):
         Architecture(cm_filename) {
-        loadCalibrationData(cal_filename);
+        loadProperties(props_filename);
     }
 
     Architecture(unsigned short nQ, const CouplingMap& couplingMap);
-    Architecture(unsigned short nQ, const CouplingMap& couplingMap, const std::vector<CalibrationData>& calibrationData);
+    Architecture(unsigned short nQ, const CouplingMap& couplingMap, const Properties& properties);
 
     [[nodiscard]] unsigned short getNqubits() const {
         return nqubits;
     }
-
-    [[nodiscard]] const std::string& getArchitectureName() const {
-        return architectureName;
+    void setNqubits(unsigned short nQ) {
+        nqubits = nQ;
     }
 
-    [[nodiscard]] const std::string& getCalibrationName() const {
-        return calibrationName;
+    [[nodiscard]] const std::string& getName() const {
+        return name;
+    }
+    void setName(const std::string& architectureName) {
+        name = architectureName;
     }
 
     [[nodiscard]] const CouplingMap& getCouplingMap() const {
         return couplingMap;
+    }
+    [[nodiscard]] CouplingMap& getCouplingMap() {
+        return couplingMap;
+    }
+    void setCouplingMap(const CouplingMap& cm) {
+        couplingMap = cm;
+        createDistanceTable();
     }
 
     CouplingMap& getCurrentTeleportations() {
@@ -95,8 +239,15 @@ public:
         return distanceTable;
     }
 
-    [[nodiscard]] const std::vector<CalibrationData>& getCalibrationData() const {
-        return calibrationData;
+    [[nodiscard]] const Properties& getProperties() const {
+        return properties;
+    }
+    [[nodiscard]] Properties& getProperties() {
+        return properties;
+    }
+    void setProperties(const Properties& props) {
+        properties = props;
+        createFidelityTable();
     }
 
     [[nodiscard]] const Matrix& getFidelityTable() const {
@@ -112,20 +263,16 @@ public:
     }
 
     [[nodiscard]] bool isArchitectureAvailable() {
-        return !(architectureName.empty()) && nqubits != 0;
-    }
-    [[nodiscard]] bool isCalibrationDataAvailable() {
-        return !(calibrationName.empty()) && calibrationData.size() != 0;
+        return !(name.empty()) && nqubits != 0;
     }
 
     void reset() {
-        architectureName = "";
-        calibrationName  = "";
+        name = "";
         nqubits          = 0;
         couplingMap.clear();
         distanceTable.clear();
         isBidirectional = true;
-        calibrationData.clear();
+        properties.clear();
         fidelityTable.clear();
         singleQubitFidelities.clear();
     }
@@ -134,11 +281,11 @@ public:
         if (current_teleportations.empty()) {
             return distanceTable.at(control).at(target);
         } else {
-            return bfs(control, target, current_teleportations);
+            return static_cast<double>(bfs(control, target, current_teleportations));
         }
     }
 
-    [[nodiscard]] std::set<unsigned short> getQubitSet() {
+    [[nodiscard]] std::set<unsigned short> getQubitSet() const {
         std::set<unsigned short> result{};
         for (int i = 0; i < nqubits; ++i) {
             result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
@@ -174,15 +321,14 @@ public:
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize);
     void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
-    [[nodiscard]] double                                getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData);
+    [[nodiscard]] static double                         getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const Properties& props);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
     static bool isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap);
 
 protected:
-    std::string                          architectureName;
-    std::string                          calibrationName;
+    std::string                          name;
     unsigned short                       nqubits                = 0;
     CouplingMap                          couplingMap            = {};
     CouplingMap                          current_teleportations = {};
@@ -190,9 +336,9 @@ protected:
     Matrix                               distanceTable          = {};
     std::vector<std::pair<short, short>> teleportationQubits{};
 
-    std::vector<CalibrationData> calibrationData       = {};
-    Matrix                       fidelityTable         = {};
-    std::vector<double>          singleQubitFidelities = {};
+    Properties          properties            = {};
+    Matrix              fidelityTable         = {};
+    std::vector<double> singleQubitFidelities = {};
 
     void createDistanceTable();
     void createFidelityTable();
