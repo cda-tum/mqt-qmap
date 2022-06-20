@@ -3,8 +3,8 @@
  * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#include "configuration/Configuration.hpp"
 #include "Architecture.hpp"
+#include "configuration/Configuration.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -81,7 +81,7 @@ struct MappingResults {
         auto& stats           = resultJSON["statistics"];
         stats["timeout"]      = timeout;
         stats["mapping_time"] = time;
-        stats["arch"]         = architecture? architecture->getName() : "";
+        stats["arch"]         = architecture ? architecture->getName() : "";
         stats["layers"]       = input.layers;
         stats["swaps"]        = output.swaps;
         if (config.method == Method::Exact) {
@@ -104,7 +104,7 @@ struct MappingResults {
            << input.gates << ";"
            << input.singleQubitGates << ";"
            << input.cnots << ";"
-           << (architecture? architecture->getName(): "") << ";"
+           << (architecture ? architecture->getName() : "") << ";"
            << output.name << ";"
            << output.qubits << ";"
            << output.gates << ";"

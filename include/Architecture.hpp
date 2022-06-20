@@ -267,8 +267,8 @@ public:
     }
 
     void reset() {
-        name = "";
-        nqubits          = 0;
+        name    = "";
+        nqubits = 0;
         couplingMap.clear();
         distanceTable.clear();
         isBidirectional = true;
