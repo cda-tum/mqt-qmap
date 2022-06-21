@@ -3,25 +3,37 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
-
 #ifndef QMAP_TABLEAU_HPP
 #define QMAP_TABLEAU_HPP
 
 #include "utils/logging.hpp"
 
+#include <limits>
 #include <ostream>
 #include <vector>
 
-using _tableau = std::vector<std::vector<short>>;
+using innerTableau = std::vector<std::vector<short>>;
 
 class Tableau {
 private:
-    _tableau tableau;
+    innerTableau tableau;
 
 public:
-    [[nodiscard]] Tableau() {}
-    [[nodiscard]] Tableau(_tableau tableau1):
-        tableau(tableau1) {}
+    [[nodiscard]] Tableau() = default;
+    [[nodiscard]] explicit Tableau(innerTableau inner):
+        tableau(inner) {}
+
+    Tableau(const Tableau& other) {
+        this->tableau = other.tableau;
+    }
+    Tableau(Tableau& other) {
+        this->tableau = other.tableau;
+    }
+
+    Tableau operator=(Tableau other) {
+        tableau = other.tableau;
+        return *this;
+    }
 
     std::vector<short> operator[](std::size_t index) {
         return tableau.at(index);
@@ -29,6 +41,18 @@ public:
 
     std::vector<short> at(std::size_t index) {
         return tableau.at(index);
+    }
+
+    size_t getQubitCount() const {
+        return tableau.size();
+    }
+
+    void resize(std::size_t size) {
+        tableau.resize(size);
+    }
+
+    void clear() {
+        tableau.clear();
     }
 
     [[nodiscard]] bool empty() const {
@@ -52,26 +76,39 @@ public:
         return result.str();
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
-};
-std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
-    if (dt.empty()) {
-        DEBUG() << "Empty tableau";
-        return os;
-    }
-    for (std::size_t i = 0; i < dt.back().size(); ++i) {
-        os << i << "\t";
-    }
-    os << std::endl;
-    auto i = 1;
-    for (const auto& row: dt) {
-        if (row.size() != dt.back().size()) {
-            FATAL() << "Tableau is not rectangular";
+    void init(size_t nQubits);
+
+    void populateTableauFrom(unsigned long bv, int nQubits,
+                             int column);
+
+    bool operator==(const Tableau& other) const {
+        if (tableau.size() != other.tableau.size()) {
+            return false;
         }
-        os << i++ << "\t";
-        for (const auto& s: row)
-            os << s << '\t';
-        os << std::endl;
-    };
-}
+        for (size_t i = 0; i < getQubitCount(); ++i) {
+            const auto& row1 = tableau[i];
+            const auto& row2 = other.tableau[i];
+            if (row1.size() != row2.size()) {
+                return false;
+            }
+            for (size_t j = 0; j < 2 * getQubitCount() + 1; ++j) {
+                const auto& col1 = row1[j];
+                const auto& col2 = row2[j];
+                if (col1 != col2) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    static Tableau getDiagonalTableau(int nQubits);
+    double         tableauDistance(Tableau other, int nQubits);
+    Tableau        embedTableau(int nQubits);
+    friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
+
+    static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
+
+    unsigned long getBVFrom(int column) const;
+};
 #endif //QMAP_TABLEAU_HPP

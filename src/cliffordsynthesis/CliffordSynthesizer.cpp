@@ -228,10 +228,10 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                     for (auto gate: Gates::singleQubitWithoutNOP) {
                         if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb)) {
                             circuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
-                            if (architecture.fidelitySet())
-                                results.fidelity *= (architecture.getSingleFidelity()[a]);
+                            if (architecture.isCalibrationDataAvailable())
+                                results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
                             TRACE() << Gates::gateName(gate) << "(" << a << ")"
-                                    << ") Fidelity: " << architecture.getSingleFidelity()[a]
+                                    << ") Fidelity: " << architecture.getSingleQubitFidelities()[a]
                                     << std::endl;
                             ++results.gate_count;
                         }
@@ -241,12 +241,12 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                             results.gate_count++;
                             circuit.emplace_back<qc::StandardOperation>(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
-                            if (architecture.fidelitySet())
+                            if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *=
-                                        (architecture.getDoubleFidelity()[qubitChoice.at(a)]
+                                        (architecture.getCNOTFidelities()[qubitChoice.at(a)]
                                                                          [qubitChoice.at(b)]);
                             TRACE() << "X(" << a << "," << b << ") Fidelity: "
-                                    << architecture.getDoubleFidelity()[qubitChoice.at(a)]
+                                    << architecture.getCNOTFidelities()[qubitChoice.at(a)]
                                                                        [qubitChoice.at(b)]
                                     << std::endl;
                         }
@@ -260,15 +260,16 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             generateTableau(tableau, circuit);
             initTableau(modelTableau);
             for (int i = 0; i < nqubits; ++i) {
-                util::populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb),
-                                          nqubits, modelTableau, i);
-                util::populateTableauFrom(model->getBitvectorValue(z[gate_step][i], lb),
-                                          nqubits, modelTableau, i + nqubits);
+                modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb),
+                                                 nqubits, i);
+                modelTableau.populateTableauFrom(model->getBitvectorValue(z[gate_step][i], lb),
+                                                 nqubits, i + nqubits);
             }
-            util::populateTableauFrom(model->getBitvectorValue(r[gate_step], lb),
-                                      nqubits, modelTableau, 2 * nqubits);
-            if (verbose >= 5)
-                TRACE() << util::pretty_s(modelTableau);
+            modelTableau.populateTableauFrom(model->getBitvectorValue(r[gate_step], lb),
+                                             nqubits, 2 * nqubits);
+            if (verbose >= 5) {
+                TRACE() << modelTableau;
+            }
         }
         results.resultCircuit = circuit.clone();
     }
@@ -321,7 +322,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
         const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
-    if (architecture.getFidelityArchitectureName().empty()) {
+    if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
@@ -333,7 +334,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each edge in the coupling map, get the fidelity cost
         for (const auto& edge: reducedCM) {
             LogicTerm fidelity = LogicTerm(
-                    architecture.getLogDoubleFidelity()[edge.first][edge.second] * 1000);
+                    architecture.getLogCNOTFidelities()[edge.first][edge.second] * 1000);
             // at each time t if there is a gate on the edge, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
                 cost = cost + (g_c[gate_step][edge.first][edge.second] * fidelity);
@@ -342,7 +343,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each qubit, get the fidelity cost
         for (int a = 0; a < nqubits; ++a) {
             LogicTerm fidelity =
-                    LogicTerm(architecture.getLogSingleFidelity()[a] * 1000);
+                    LogicTerm(architecture.getLogSingleQubitFidelities()[a] * 1000);
             // at each time t if there is a gate on a, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
                 for (auto gate: Gates::singleQubitWithoutNOP) {
@@ -398,11 +399,11 @@ void CliffordOptimizer::calculateQubitsUsed(qc::QuantumComputation& circ, std::s
             auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
             auto cit    = compOp->begin();
             while (cit != compOp->end()) {
-                util::getGateQubits(*cit, qubits);
+                getGateQubits(*cit, qubits);
                 ++cit;
             }
         } else {
-            util::getGateQubits(gate, qubits);
+            getGateQubits(gate, qubits);
         }
     }
 }
@@ -569,22 +570,11 @@ void CliffordOptimizer::generateTableau(Tableau& tableau, qc::QuantumComputation
 
 void CliffordOptimizer::initTableau(Tableau& tableau) const {
     // tableau.clear();
-    tableau.resize(nqubits);
-    for (auto i = 0U; i < nqubits; i++) {
-        tableau[i].resize(2U * nqubits + 1U);
-        for (auto j = 0U; j < 2U * nqubits; j++) {
-            if (i == j - nqubits) {
-                tableau[i][j] = 1;
-            } else {
-                tableau[i][j] = 0;
-            }
-        }
-        tableau[i][2U * nqubits] = 0;
-    }
+    tableau.init(nqubits);
 }
 
 void CliffordOptimizer::runMinimizer(
-        int timesteps, const QubitPairs& reducedCM,
+        int timesteps, const CouplingMap& reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running minimizer" << std::endl;
     CliffordOptResults r = main_optimization(timesteps, reducedCM, qubitChoice,
@@ -592,7 +582,7 @@ void CliffordOptimizer::runMinimizer(
     updateResults(r);
 }
 void CliffordOptimizer::runStartLow(
-        int timesteps, const QubitPairs& reducedCM,
+        int timesteps, const CouplingMap& reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running start low" << std::endl;
     CliffordOptResults r;
@@ -607,7 +597,7 @@ void CliffordOptimizer::runStartLow(
     }
 }
 void CliffordOptimizer::runStartHigh(
-        int timesteps, const QubitPairs& reducedCM,
+        int timesteps, const CouplingMap& reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running start high" << std::endl;
     CliffordOptResults r;
@@ -626,7 +616,7 @@ void CliffordOptimizer::runStartHigh(
     }
 }
 void CliffordOptimizer::runMinMax(
-        int timesteps, const QubitPairs& reducedCM,
+        int timesteps, const CouplingMap& reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running minmax" << std::endl;
     CliffordOptResults r;
@@ -653,7 +643,7 @@ void CliffordOptimizer::runMinMax(
 
 void CliffordOptimizer::runSplinter(
         int i, unsigned int circuit_split, unsigned int split,
-        const QubitPairs& reducedCM, const std::vector<unsigned short>& qubitChoice,
+        const CouplingMap& reducedCM, const std::vector<unsigned short>& qubitChoice,
         qc::QuantumComputation& circuit, CliffordOptResults* r,
         CliffordOptimizer* opt) {
     Tableau targetTableau{};
@@ -665,7 +655,7 @@ void CliffordOptimizer::runSplinter(
 };
 
 void CliffordOptimizer::runSplitIter(
-        const QubitPairs&                  reducedCM,
+        const CouplingMap&                 reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running split iter" << std::endl;
     Tableau                          fullTableau   = targetTableau;
@@ -730,7 +720,7 @@ void CliffordOptimizer::runSplitIter(
             Tableau resultingTableau{};
             generateTableau(resultingTableau, total_result.resultCircuit);
             DEBUG() << "Equality (Results): "
-                    << util::checkEquality(fullTableau, resultingTableau, nqubits)
+                    << (fullTableau == resultingTableau)
                     << std::endl;
             DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
                     << std::endl;
@@ -791,14 +781,14 @@ void CliffordOptimizer::assertTableau(const Tableau& tableau, LogicBlock* lb,
                                       int position) {
     for (int a = 0; a < nqubits; ++a) {
         lb->assertFormula(x[position][a] ==
-                          LogicTerm(util::getBVFrom(tableau, nqubits, a), nqubits));
+                          LogicTerm(tableau.getBVFrom(a), nqubits));
         lb->assertFormula(
                 z[position][a] ==
-                LogicTerm(util::getBVFrom(tableau, nqubits, a + nqubits), nqubits));
+                LogicTerm(tableau.getBVFrom(a + nqubits), nqubits));
     }
     lb->assertFormula(
             r[position] ==
-            LogicTerm(util::getBVFrom(tableau, nqubits, 2 * nqubits), nqubits));
+            LogicTerm(tableau.getBVFrom(2 * nqubits), nqubits));
 }
 
 void CliffordOptimizer::makeSingleGateConstraints(

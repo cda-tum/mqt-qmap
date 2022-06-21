@@ -3,6 +3,8 @@
  * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
  */
 
+#include "utils/logging.hpp"
+
 #include <utils.hpp>
 
 void Dijkstra::build_table(unsigned short n, const std::set<Edge>& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
@@ -238,4 +240,35 @@ std::string escapeChars(const std::string& s, const std::string& chars) {
         }
     }
     return ss.str();
+}
+
+void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& qubits) {
+    switch (gate->getType()) {
+        case qc::OpType::H:
+        case qc::OpType::Sdag:
+        case qc::OpType::Z:
+        case qc::OpType::Y:
+        case qc::OpType::S: {
+            if (gate->isControlled()) {
+                FATAL() << "Expected single-qubit gate";
+            }
+            const auto a = gate->getTargets().at(0U);
+            qubits.insert(a);
+        } break;
+        case qc::OpType::X: {
+            if (gate->getNcontrols() != 1U) {
+                const auto a = gate->getTargets().at(0U);
+                qubits.insert(a);
+            } else {
+                const auto a = (*gate->getControls().begin()).qubit;
+                const auto b = gate->getTargets().at(0);
+                qubits.insert(a);
+                qubits.insert(b);
+            }
+        } break;
+
+        default:
+            util::fatal("Unsupported gate encountered: " + std::to_string(gate->getType()));
+            break;
+    }
 }

@@ -202,19 +202,24 @@ void Architecture::createFidelityTable() {
     fidelityTable.resize(nqubits, std::vector<double>(nqubits, 1.0));
 
     singleQubitFidelities.resize(nqubits, 1.0);
+    singleQubitLogFidelities.resize(nqubits, 1.0);
 
     for (const auto& qubit: calibrationData) {
         for (const auto& entry: qubit.cnotErrors) {
             fidelityTable.at(entry.first.first).at(entry.first.second) -= entry.second;
         }
         singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
+        singleQubitLogFidelities.at(qubit.qubit) = log(1.0-qubit.singleQubitErrorRate);
     }
 
     CNOTFidelities.resize(nqubits);
+    CNOTLogFidelities.resize(nqubits);
     for (const auto& calibrationEntry: calibrationData) {
-        CNOTFidelities.back().resize(nqubits, 1.0);
+        CNOTFidelities.at(calibrationEntry.qubit).resize(nqubits, 1.0);
+        CNOTLogFidelities.at(calibrationEntry.qubit).resize(nqubits, 1.0);
         for (const auto& CNOTError: calibrationEntry.cnotErrors) {
             CNOTFidelities.at(CNOTError.first.first).at(CNOTError.first.second) -= CNOTError.second;
+            CNOTLogFidelities.at(CNOTError.first.first).at(CNOTError.first.second) = log(1.0 - CNOTError.second);
         }
     }
 }

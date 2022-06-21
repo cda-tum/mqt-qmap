@@ -110,6 +110,13 @@ public:
     [[nodiscard]] const std::vector<std::vector<double>>& getCNOTFidelities() const {
         return CNOTFidelities;
     }
+    [[nodiscard]] const std::vector<double>& getLogSingleQubitFidelities() const {
+        return singleQubitLogFidelities;
+    }
+
+    [[nodiscard]] const std::vector<std::vector<double>>& getLogCNOTFidelities() const {
+        return CNOTLogFidelities;
+    }
 
     [[nodiscard]] bool bidirectional() const {
         return isBidirectional;
@@ -197,10 +204,12 @@ protected:
     Matrix                               distanceTable          = {};
     std::vector<std::pair<short, short>> teleportationQubits{};
 
-    std::vector<CalibrationData>     calibrationData       = {};
-    Matrix                           fidelityTable         = {};
-    std::vector<double>              singleQubitFidelities = {};
-    std::vector<std::vector<double>> CNOTFidelities        = {};
+    std::vector<CalibrationData>     calibrationData          = {};
+    Matrix                           fidelityTable            = {};
+    std::vector<double>              singleQubitFidelities    = {};
+    std::vector<std::vector<double>> CNOTFidelities           = {};
+    std::vector<double>              singleQubitLogFidelities = {};
+    std::vector<std::vector<double>> CNOTLogFidelities        = {};
 
     void createDistanceTable();
     void createFidelityTable();

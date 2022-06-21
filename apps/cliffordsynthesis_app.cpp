@@ -3,9 +3,10 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
+#include "LogicBlock/LogicBlock.hpp"
+#include "algorithms/RandomCliffordCircuit.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "utils/logging.hpp"
-#include "LogicBlock/LogicBlock.hpp"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
         std::exit(1);
     }
 
-        CliffordOptimizer opt{};
+    CliffordOptimizer opt{};
     if (vm.count("logfile")) {
         std::string logfile = vm["logfile"].as<std::string>();
         util::init(logfile);
@@ -83,33 +84,21 @@ int main(int argc, char** argv) {
         switch (opt.verbose) {
             case 0:
                 std::cout << "Verbosity: Error\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::error);
                 break;
             case 1:
                 std::cout << "Verbosity: Warning\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::warning);
                 break;
             case 2:
                 std::cout << "Verbosity: Info\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::info);
                 break;
             case 3:
                 std::cout << "Verbosity: Debug\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::debug);
                 break;
             case 4:
                 std::cout << "Verbosity: Trace\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::trace);
                 break;
             default:
                 std::cout << "Verbosity: Error\n";
-                logging::core::get()->set_filter(logging::trivial::severity >=
-                                                 logging::trivial::error);
                 break;
         }
     }
@@ -130,11 +119,11 @@ int main(int argc, char** argv) {
         }
     }
 
-    Architecture couplingMap{};
+    Architecture architecture{};
     if (vm.count("arch")) {
         const std::string cm = vm["arch"].as<std::string>();
         try {
-            couplingMap.loadCouplingMap(cm);
+            architecture.loadCouplingMap(cm);
         } catch (std::exception const& e) {
             ERROR() << "Could not import coupling map: " << e.what() << std::endl;
             std::exit(1);
@@ -143,9 +132,9 @@ int main(int argc, char** argv) {
 
     if (vm.count("fidelity")) {
         const std::string fid = vm["fidelity"].as<std::string>();
-        couplingMap.loadFidelity(fid);
+        architecture.loadCalibrationData(fid);
     }
-    opt.setCouplingMap(couplingMap);
+    opt.setCouplingMap(architecture);
 
     if (vm.count("target")) {
         const std::string target = vm["target"].as<std::string>();
@@ -173,8 +162,8 @@ int main(int argc, char** argv) {
             std::exit(1);
         }
 
-        opt.targetTableau  = opt.generateTableau(opt.circuit);
-        opt.initialTableau = opt.initTableau(opt.nqubits);
+        opt.generateTableau(opt.targetTableau, opt.circuit);
+        opt.initTableau(opt.initialTableau);
     } else {
         if (vm.count("qubits")) {
             int qubits  = vm["qubits"].as<int>();
@@ -198,8 +187,8 @@ int main(int argc, char** argv) {
         if (opt.verbose >= 2) {
             rnd.printStatistics(std::cout);
         }
-        opt.targetTableau  = opt.generateTableau(rnd);
-        opt.initialTableau = opt.initTableau(opt.nqubits);
+        opt.generateTableau(opt.targetTableau, rnd);
+        opt.initTableau(opt.initialTableau);
         opt.circuit        = rnd.clone();
     }
 
@@ -230,21 +219,19 @@ int main(int argc, char** argv) {
         opt.nthreads = nthreads;
     }
     opt.optimize();
+    Tableau resultTableau{};
+    opt.generateTableau(resultTableau, opt.circuit);
     if (opt.verbose >= 2) {
         DEBUG() << "TargetTableau:" << std::endl
-                << util::pretty_s(opt.targetTableau)
+                << opt.targetTableau
                 << "ResultTableau:" << std::endl
-                << util::pretty_s(
-                           opt.generateTableau(opt.optimal_results.resultCircuit))
+                << resultTableau << std::endl
                 << "Used Gates:" << opt.optimal_results.gate_count << std::endl
                 << "Depth: " << opt.optimal_results.depth << std::endl
                 << "Fidelity: " << opt.optimal_results.fidelity << std::endl;
     }
     DEBUG() << "ResultTableau-Equality: "
-            << (util::checkEquality(
-                        opt.targetTableau,
-                        opt.generateTableau(opt.optimal_results.resultCircuit),
-                        opt.nqubits) ?
+            << (opt.targetTableau ==  resultTableau?
                         "true" :
                         "false")
             << std::endl;
