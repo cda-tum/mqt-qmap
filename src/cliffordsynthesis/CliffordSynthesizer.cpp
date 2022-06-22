@@ -393,7 +393,6 @@ void CliffordOptimizer::make_gate_optimizer(
     }
 }
 
-
 void CliffordOptimizer::runMinimizer(
         int timesteps, const CouplingMap& reducedCM,
         const std::vector<unsigned short>& qubitChoice) {

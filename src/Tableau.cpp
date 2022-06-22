@@ -71,7 +71,6 @@ void Tableau::populateTableauFrom(unsigned long bv, int nQubits,
     }
 }
 
-
 void Tableau::generateTableau(Tableau& tableau, qc::QuantumComputation& circuit, int begin, int end) {
     initTableau(tableau, circuit.getNqubitsWithoutAncillae());
     int current_g = 0;
@@ -97,7 +96,6 @@ void Tableau::generateTableau(Tableau& tableau, qc::QuantumComputation& circuit,
 void Tableau::initTableau(Tableau& tableau, size_t nqubits) {
     tableau.init(nqubits);
 }
-
 
 int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
     auto nqubits = getQubitCount();
@@ -172,15 +170,15 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             return 3U;
@@ -191,11 +189,11 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             return 2U;
@@ -206,27 +204,27 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 std::swap(tableau[i][a], tableau[i][a + nqubits]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 std::swap(tableau[i][a], tableau[i][a + nqubits]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^=  static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
                 tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
             }
             return 6U;
@@ -237,7 +235,6 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
     }
     return 0U;
 }
-
 
 Tableau Tableau::getDiagonalTableau(int nQubits) {
     innerTableau result{};

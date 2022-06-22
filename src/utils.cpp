@@ -274,7 +274,6 @@ void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& 
     }
 }
 
-
 void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits) {
     for (auto& gate: circ) {
         if (gate->getType() == qc::OpType::Compound) {
@@ -289,4 +288,3 @@ void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qu
         }
     }
 }
-

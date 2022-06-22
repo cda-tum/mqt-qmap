@@ -209,7 +209,7 @@ void Architecture::createFidelityTable() {
             fidelityTable.at(entry.first.first).at(entry.first.second) -= entry.second;
         }
         singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
-        singleQubitLogFidelities.at(qubit.qubit) = log(1.0-qubit.singleQubitErrorRate);
+        singleQubitLogFidelities.at(qubit.qubit) = log(1.0 - qubit.singleQubitErrorRate);
     }
 
     CNOTFidelities.resize(nqubits);
