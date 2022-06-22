@@ -257,8 +257,8 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                 results.depth++;
             }
             auto tableau = results.resultTableaus.emplace_back();
-            generateTableau(tableau, circuit);
-            initTableau(modelTableau);
+            Tableau::generateTableau(tableau, circuit);
+            Tableau::initTableau(modelTableau, nqubits);
             for (int i = 0; i < nqubits; ++i) {
                 modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb),
                                                  nqubits, i);
@@ -393,185 +393,6 @@ void CliffordOptimizer::make_gate_optimizer(
     }
 }
 
-void CliffordOptimizer::calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits) {
-    for (auto& gate: circ) {
-        if (gate->getType() == qc::OpType::Compound) {
-            auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-            auto cit    = compOp->begin();
-            while (cit != compOp->end()) {
-                getGateQubits(*cit, qubits);
-                ++cit;
-            }
-        } else {
-            getGateQubits(gate, qubits);
-        }
-    }
-}
-
-int CliffordOptimizer::applyGate(std::unique_ptr<qc::Operation>& gate, Tableau& tableau) const {
-    switch (gate->getType()) {
-        case qc::OpType::H: // HADAMARD
-        {
-            if (gate->isControlled()) {
-                util::fatal("Expected single-qubit gate");
-            }
-            const auto a = gate->getTargets().at(0U);
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                std::swap(tableau[i][a], tableau[i][a + nqubits]);
-            }
-            return 1U;
-        } break;
-        case qc::OpType::S: // PHASE
-        {
-            if (gate->isControlled()) {
-                util::fatal("Expected single-qubit gate");
-            }
-            const auto a = gate->getTargets().at(0U);
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            return 1U;
-        } break;
-        case qc::OpType::X: // CNOT
-        {
-            if (gate->getNcontrols() != 1U) { // NOT = H x S x S x H
-                const auto a = gate->getTargets().at(0U);
-                for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                    std::swap(tableau[i][a], tableau[i][a + nqubits]);
-                }
-                for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                    tableau[i][a + nqubits] ^= tableau[i][a];
-                }
-                for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                    tableau[i][a + nqubits] ^= tableau[i][a];
-                }
-                for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                    std::swap(tableau[i][a], tableau[i][a + nqubits]);
-                }
-                return 4U;
-            } else {
-                const auto a = (*gate->getControls().begin()).qubit;
-                const auto b = gate->getTargets().at(0);
-                if (a == b) {
-                    util::fatal("Invalid CNOT with same control and target.");
-                }
-                for (auto i = 0U; i < nqubits; i++) {
-                    const auto xa = tableau[i][a];
-                    const auto za = tableau[i][a + nqubits];
-                    const auto xb = tableau[i][b];
-                    const auto zb = tableau[i][b + nqubits];
-                    tableau[i][2 * nqubits] ^= ((xa & zb) & ((xb ^ za) ^ 1));
-                    tableau[i][a + nqubits] = za ^ zb;
-                    tableau[i][b]           = xb ^ xa;
-                }
-                return 1U;
-            }
-        } break;
-
-        case qc::OpType::Sdag: { // Sdag  = S x S x S
-            if (gate->isControlled()) {
-                util::fatal("Expected single-qubit gate");
-            }
-            const auto a = gate->getTargets().at(0U);
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            return 3U;
-        } break;
-        case qc::OpType::Z: { // Z = S x S
-            if (gate->isControlled()) {
-                util::fatal("Expected single-qubit gate");
-            }
-            const auto a = gate->getTargets().at(0U);
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            return 2U;
-        } break;
-        case qc::OpType::Y: { // Y = H x S x S x H x S x S
-            if (gate->isControlled()) {
-                util::fatal("Expected single-qubit gate");
-            }
-            const auto a = gate->getTargets().at(0U);
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                std::swap(tableau[i][a], tableau[i][a + nqubits]);
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                std::swap(tableau[i][a], tableau[i][a + nqubits]);
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= (tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= tableau[i][a];
-            }
-            return 6U;
-        } break;
-        default:
-            util::fatal("Unsupported gate encountered: " + std::to_string(gate->getType()));
-            break;
-    }
-    return 0U;
-}
-
-void CliffordOptimizer::generateTableau(Tableau& tableau, qc::QuantumComputation& circuit, int begin, int end) {
-    initTableau(tableau);
-    int current_g = 0;
-    for (auto& gate: circuit) {
-        if (current_g >= begin && (current_g < end || end < 0)) {
-            if (gate->getType() == qc::OpType::Compound) {
-                auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-                auto cit    = compOp->begin();
-                while (cit != compOp->end() && current_g >= begin &&
-                       (current_g < end || end < 0)) {
-                    applyGate((*cit), tableau);
-                    ++cit;
-                    ++current_g;
-                }
-            } else {
-                applyGate(gate, tableau);
-                ++current_g;
-            }
-        }
-    }
-}
-
-void CliffordOptimizer::initTableau(Tableau& tableau) const {
-    // tableau.clear();
-    tableau.init(nqubits);
-}
 
 void CliffordOptimizer::runMinimizer(
         int timesteps, const CouplingMap& reducedCM,
@@ -647,9 +468,9 @@ void CliffordOptimizer::runSplinter(
         qc::QuantumComputation& circuit, CliffordOptResults* r,
         CliffordOptimizer* opt) {
     Tableau targetTableau{};
-    opt->generateTableau(targetTableau, circuit, 0, (i + 1U) * circuit_split);
+    Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circuit_split);
     Tableau initTableau{};
-    opt->generateTableau(initTableau, circuit, 0, i * circuit_split);
+    Tableau::generateTableau(initTableau, circuit, 0, i * circuit_split);
     (*r) = opt->main_optimization(split, reducedCM, qubitChoice, targetTableau,
                                   initTableau);
 };
@@ -718,7 +539,7 @@ void CliffordOptimizer::runSplitIter(
             // TRACE() << "Result Tableau" << std::endl;
             // TRACE() << util::pretty_s(r.resultTableaus.back());
             Tableau resultingTableau{};
-            generateTableau(resultingTableau, total_result.resultCircuit);
+            Tableau::generateTableau(resultingTableau, total_result.resultCircuit);
             DEBUG() << "Equality (Results): "
                     << (fullTableau == resultingTableau)
                     << std::endl;

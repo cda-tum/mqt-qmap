@@ -68,11 +68,6 @@ public:
     Tableau targetTableau{};
     Tableau modelTableau{};
 
-    void generateTableau(Tableau& tableau, qc::QuantumComputation& circ, int begin = 0, int end = -1);
-    void initTableau(Tableau& tableau) const;
-    int  applyGate(std::unique_ptr<qc::Operation>& gate, Tableau& targetTableau) const;
-
-    void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits);
 
     void dumpResult(const std::string& outputFilename) {
         if (optimal_results.resultCircuit.empty()) {

@@ -188,6 +188,7 @@ subsets(const std::set<unsigned short>& input, int length, filter_function filte
 
 void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
                 const std::set<char>& ignored_chars, std::vector<std::string>& result) {
+    result.clear();
     std::string word;
     bool        in_escape = false;
     for (char c: line) {
@@ -272,3 +273,20 @@ void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& 
             break;
     }
 }
+
+
+void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits) {
+    for (auto& gate: circ) {
+        if (gate->getType() == qc::OpType::Compound) {
+            auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+            auto cit    = compOp->begin();
+            while (cit != compOp->end()) {
+                getGateQubits(*cit, qubits);
+                ++cit;
+            }
+        } else {
+            getGateQubits(gate, qubits);
+        }
+    }
+}
+

@@ -162,8 +162,8 @@ int main(int argc, char** argv) {
             std::exit(1);
         }
 
-        opt.generateTableau(opt.targetTableau, opt.circuit);
-        opt.initTableau(opt.initialTableau);
+        Tableau::generateTableau(opt.targetTableau, opt.circuit);
+        Tableau::initTableau(opt.initialTableau, opt.nqubits);
     } else {
         if (vm.count("qubits")) {
             int qubits  = vm["qubits"].as<int>();
@@ -187,8 +187,8 @@ int main(int argc, char** argv) {
         if (opt.verbose >= 2) {
             rnd.printStatistics(std::cout);
         }
-        opt.generateTableau(opt.targetTableau, rnd);
-        opt.initTableau(opt.initialTableau);
+        Tableau::generateTableau(opt.targetTableau, rnd);
+        Tableau::initTableau(opt.initialTableau, opt.nqubits);
         opt.circuit        = rnd.clone();
     }
 
@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
     }
     opt.optimize();
     Tableau resultTableau{};
-    opt.generateTableau(resultTableau, opt.circuit);
+    Tableau::generateTableau(resultTableau, opt.circuit);
     if (opt.verbose >= 2) {
         DEBUG() << "TargetTableau:" << std::endl
                 << opt.targetTableau

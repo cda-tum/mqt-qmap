@@ -6,13 +6,15 @@
 #ifndef QMAP_TABLEAU_HPP
 #define QMAP_TABLEAU_HPP
 
+#include "QuantumComputation.hpp"
 #include "utils/logging.hpp"
 
+#include <fstream>
 #include <limits>
 #include <ostream>
 #include <vector>
 
-using innerTableau = std::vector<std::vector<short>>;
+using innerTableau = std::vector<std::vector<int32_t>>;
 
 class Tableau {
 private:
@@ -35,11 +37,11 @@ public:
         return *this;
     }
 
-    std::vector<short> operator[](std::size_t index) {
-        return tableau.at(index);
+    std::vector<int32_t> operator[](std::size_t index) {
+        return tableau[index];
     }
 
-    std::vector<short> at(std::size_t index) {
+    std::vector<int32_t> at(std::size_t index) {
         return tableau.at(index);
     }
 
@@ -59,16 +61,23 @@ public:
         return tableau.empty();
     }
 
-    [[nodiscard]] std::vector<short> back() const {
+    [[nodiscard]] std::vector<int32_t> back() const {
         return tableau.back();
     }
 
-    [[nodiscard]] std::vector<std::vector<short>>::const_iterator begin() const {
+    [[nodiscard]] std::vector<std::vector<int32_t>>::const_iterator begin() const {
         return tableau.cbegin();
     }
-    [[nodiscard]] std::vector<std::vector<short>>::const_iterator end() const {
+    [[nodiscard]] std::vector<std::vector<int32_t>>::const_iterator end() const {
         return tableau.cend();
     }
+
+    void dump(const std::string& filename) const;
+
+    void dump(std::ostream& of) const;
+
+    void import(const std::string& filename);
+    void import (std::istream& is);
 
     [[nodiscard]] std::string getRepresentation() const {
         std::stringstream result;
@@ -80,6 +89,11 @@ public:
 
     void populateTableauFrom(unsigned long bv, int nQubits,
                              int column);
+
+    static void generateTableau(Tableau& tableau, qc::QuantumComputation& circ, int begin = 0, int end = -1);
+    static void initTableau(Tableau& tableau, size_t nqubits);
+
+    int  applyGate(std::unique_ptr<qc::Operation>& gate);
 
     bool operator==(const Tableau& other) const {
         if (tableau.size() != other.tableau.size()) {
@@ -102,9 +116,9 @@ public:
         return true;
     }
 
-    static Tableau getDiagonalTableau(int nQubits);
-    double         tableauDistance(Tableau other, int nQubits);
-    Tableau        embedTableau(int nQubits);
+    static Tableau       getDiagonalTableau(int nQubits);
+    double               tableauDistance(Tableau other, int nQubits);
+    Tableau              embedTableau(int nQubits);
     friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
 
     static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);

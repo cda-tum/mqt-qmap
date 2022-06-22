@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <operations/Operation.hpp>
+#include "QuantumComputation.hpp"
 #include <queue>
 #include <set>
 #include <sstream>
@@ -152,4 +153,6 @@ getFullyConnectedMap(unsigned short nQubits);
 std::string escapeChars(const std::string& s, const std::string& chars);
 
 void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& qubits);
+
+void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits);
 #endif //QMAP_UTILS_HPP
