@@ -11,7 +11,7 @@ void Mapper::initResults() {
     countGates(qc, results.input);
     results.input.name    = qc.getName();
     results.input.qubits  = qc.getNqubits();
-    results.architecture  = &architecture;
+    results.architecture  = architecture.getName();
     results.output.name   = qc.getName() + "_mapped";
     results.output.qubits = architecture.getNqubits();
     results.output.gates  = std::numeric_limits<unsigned long>::max();

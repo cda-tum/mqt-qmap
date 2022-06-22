@@ -31,7 +31,7 @@ struct MappingResults {
 
     CircuitInfo input{};
 
-    Architecture* architecture{};
+    std::string   architecture{};
     Configuration config{};
 
     double time    = 0.0;
@@ -81,7 +81,7 @@ struct MappingResults {
         auto& stats           = resultJSON["statistics"];
         stats["timeout"]      = timeout;
         stats["mapping_time"] = time;
-        stats["arch"]         = architecture ? architecture->getName() : "";
+        stats["arch"]         = architecture;
         stats["layers"]       = input.layers;
         stats["swaps"]        = output.swaps;
         if (config.method == Method::Exact) {
@@ -104,7 +104,7 @@ struct MappingResults {
            << input.gates << ";"
            << input.singleQubitGates << ";"
            << input.cnots << ";"
-           << (architecture ? architecture->getName() : "") << ";"
+           << architecture << ";"
            << output.name << ";"
            << output.qubits << ";"
            << output.gates << ";"
