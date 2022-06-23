@@ -96,6 +96,7 @@ setup(
     description='A tool for Quantum Circuit Mapping',
     long_description=README,
     long_description_content_type="text/markdown",
+    python_requires='>=3.7',
     license="MIT",
     url="https://www.cda.cit.tum.de/research/ibm_qx_mapping/",
     ext_modules=[CMakeExtension('pyqmap', namespace='mqt.qmap')],
