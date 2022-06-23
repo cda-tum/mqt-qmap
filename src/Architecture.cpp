@@ -139,13 +139,13 @@ void Architecture::loadProperties(std::istream&& is) {
         qubitNumber++;
     }
 
-    if (isArchitectureAvailable())
+    if (isArchitectureAvailable()) {
         for (const auto& edge: couplingMap) {
             if (!properties.twoQubitErrorRateAvailable(edge.first, edge.second)) {
                 properties.setTwoQubitErrorRate(edge.first, edge.second, averageCNOTFidelity);
             }
         }
-
+    }
     properties.setNqubits(qubitNumber);
     if (!isArchitectureAvailable()) {
         nqubits = static_cast<unsigned short>(qubitNumber);
@@ -157,9 +157,11 @@ void Architecture::loadProperties(std::istream&& is) {
 
 void Architecture::loadProperties(const Properties& props) {
     if (!isArchitectureAvailable()) {
-        for (const auto& [control, targetProps]: props.twoQubitErrorRate.get())
-            for (const auto& [target, errorRate]: targetProps.get())
+        for (const auto& [control, targetProps]: props.twoQubitErrorRate.get()) {
+            for (const auto& [target, errorRate]: targetProps.get()) {
                 couplingMap.emplace(control, target);
+            }
+        }
         nqubits = props.getNqubits();
         name    = "generic_" + std::to_string(nqubits);
         createDistanceTable();
