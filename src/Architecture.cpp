@@ -162,6 +162,7 @@ void Architecture::loadProperties(const Properties& props) {
                 couplingMap.emplace(control, target);
         nqubits = props.getNqubits();
         name    = "generic_" + std::to_string(nqubits);
+        createDistanceTable();
     }
     properties = props;
     createFidelityTable();
