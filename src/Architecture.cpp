@@ -11,7 +11,7 @@
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
     std::stringstream ss{getCouplingMapSpecification(architecture)};
-    architectureName = toString(architecture);
+    name = toString(architecture);
     loadCouplingMap(ss);
 }
 
@@ -20,10 +20,10 @@ void Architecture::loadCouplingMap(std::istream& is) {
 }
 
 void Architecture::loadCouplingMap(const std::string& filename) {
-    size_t slash     = filename.find_last_of('/');
-    size_t dot       = filename.find_last_of('.');
-    architectureName = filename.substr(slash + 1, dot - slash - 1);
-    auto ifs         = std::ifstream(filename);
+    size_t slash = filename.find_last_of('/');
+    size_t dot   = filename.find_last_of('.');
+    name         = filename.substr(slash + 1, dot - slash - 1);
+    auto ifs     = std::ifstream(filename);
     if (ifs.good())
         this->loadCouplingMap(ifs);
     else
@@ -32,7 +32,7 @@ void Architecture::loadCouplingMap(const std::string& filename) {
 
 void Architecture::loadCouplingMap(std::istream&& is) {
     couplingMap.clear();
-    calibrationData.clear();
+    properties.clear();
     std::string line;
 
     std::regex  r_nqubits = std::regex("([0-9]+)");
@@ -74,30 +74,32 @@ void Architecture::loadCouplingMap(std::istream&& is) {
 void Architecture::loadCouplingMap(unsigned short nQ, const CouplingMap& cm) {
     nqubits     = nQ;
     couplingMap = cm;
-    calibrationData.clear();
-    architectureName = "generic_" + std::to_string(nQ);
+    properties.clear();
+    name = "generic_" + std::to_string(nQ);
     createDistanceTable();
 }
 
-void Architecture::loadCalibrationData(std::istream& is) {
-    loadCalibrationData(std::move(is));
+void Architecture::loadProperties(std::istream& is) {
+    loadProperties(std::move(is));
 }
 
-void Architecture::loadCalibrationData(const std::string& filename) {
-    size_t slash    = filename.find_last_of('/');
-    size_t dot      = filename.find_last_of('.');
-    calibrationName = filename.substr(slash + 1, dot - slash - 1);
+void Architecture::loadProperties(const std::string& filename) {
+    size_t slash = filename.find_last_of('/');
+    size_t dot   = filename.find_last_of('.');
+    properties.setName(filename.substr(slash + 1, dot - slash - 1));
     if (!isArchitectureAvailable())
-        architectureName = calibrationName;
+        name = properties.getName();
     auto ifs = std::ifstream(filename);
     if (ifs.good())
-        this->loadCalibrationData(ifs);
+        this->loadProperties(ifs);
     else
-        throw QMAPException("Error opening calibration data file.");
+        throw QMAPException("Error opening properties file.");
 }
 
-void Architecture::loadCalibrationData(std::istream&& is) {
-    calibrationData.clear();
+void Architecture::loadProperties(std::istream&& is) {
+    static auto SingleQubitGates = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
+
+    properties.clear();
 
     double averageCNOTFidelity = 0.0;
     int    numCNOTFidelities   = 0;
@@ -112,16 +114,17 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     int qubitNumber = 0;
     while (std::getline(is, line)) {
         std::stringstream        ss(line);
-        CalibrationData          calibrationEntry = {};
         std::vector<std::string> data{};
         parse_line(line, ',', {'\"'}, {'\\'}, data);
-        calibrationEntry.qubit                = qubitNumber;
-        calibrationEntry.t1                   = std::stod(data[1]);
-        calibrationEntry.t2                   = std::stod(data[2]);
-        calibrationEntry.frequency            = std::stod(data[3]);
-        calibrationEntry.readoutError         = std::stod(data[4]);
-        calibrationEntry.singleQubitErrorRate = std::stod(data[5]);
-        std::string s                         = data[6];
+        properties.t1Time.set(qubitNumber, std::stod(data[1]));
+        properties.t2Time.set(qubitNumber, std::stod(data[2]));
+        properties.qubitFrequency.set(qubitNumber, std::stod(data[3]));
+        properties.readoutErrorRate.set(qubitNumber, std::stod(data[4]));
+        // csv file reports average single qubit fidelities
+        for (const auto& operation: SingleQubitGates) {
+            properties.setSingleQubitErrorRate(qubitNumber, operation, std::stod(data[5]));
+        }
+        std::string s = data[6];
         while (std::regex_search(s, sMatch, regexDoubleFidelity)) {
             auto a = static_cast<unsigned short>(std::stoul(sMatch.str(2U)));
             auto b = static_cast<unsigned short>(std::stoul(sMatch.str(3U)));
@@ -129,23 +132,21 @@ void Architecture::loadCalibrationData(std::istream&& is) {
                 couplingMap.emplace(a, b);
             }
             averageCNOTFidelity = averageCNOTFidelity + (std::stod(sMatch.str(4U)) - averageCNOTFidelity) / ++numCNOTFidelities; //calc moving average
-            calibrationEntry.cnotErrors.emplace(std::make_pair(a, b), std::stod(sMatch.str(4U)));
+            properties.setTwoQubitErrorRate(a, b, std::stod(sMatch.str(4U)));
             s = sMatch.suffix().str();
         }
-        calibrationEntry.date = data[7];
-        calibrationData.emplace_back(calibrationEntry);
+        properties.calibrationDate.set(qubitNumber, data[7]);
         qubitNumber++;
     }
 
-    if (isArchitectureAvailable())
+    if (isArchitectureAvailable()) {
         for (const auto& edge: couplingMap) {
-            //check if no fidelity for cnot was provided
-            auto calibrationEntry = calibrationData.at(edge.first);
-            if (calibrationEntry.cnotErrors.find(edge) == calibrationEntry.cnotErrors.end()) {
-                calibrationEntry.cnotErrors.emplace(edge, averageCNOTFidelity);
+            if (!properties.twoQubitErrorRateAvailable(edge.first, edge.second)) {
+                properties.setTwoQubitErrorRate(edge.first, edge.second, averageCNOTFidelity);
             }
         }
-
+    }
+    properties.setNqubits(qubitNumber);
     if (!isArchitectureAvailable()) {
         nqubits = static_cast<unsigned short>(qubitNumber);
         createDistanceTable();
@@ -154,18 +155,18 @@ void Architecture::loadCalibrationData(std::istream&& is) {
     createFidelityTable();
 }
 
-void Architecture::loadCalibrationData(const std::vector<CalibrationData>& calData) {
+void Architecture::loadProperties(const Properties& props) {
     if (!isArchitectureAvailable()) {
-        for (const auto& cd: calData) {
-            for (const auto& [edge, errorRate]: cd.cnotErrors) {
-                couplingMap.emplace(edge);
+        for (const auto& [control, targetProps]: props.twoQubitErrorRate.get()) {
+            for (const auto& [target, errorRate]: targetProps.get()) {
+                couplingMap.emplace(control, target);
             }
         }
-        nqubits = calData.size();
+        nqubits = props.getNqubits();
+        name    = "generic_" + std::to_string(nqubits);
+        createDistanceTable();
     }
-    calibrationData  = calData;
-    architectureName = "generic_" + std::to_string(nqubits);
-    calibrationName  = "generic_" + std::to_string(nqubits);
+    properties = props;
     createFidelityTable();
 }
 
@@ -173,9 +174,9 @@ Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap) {
     loadCouplingMap(nQ, couplingMap);
 }
 
-Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap, const std::vector<CalibrationData>& calibrationData):
+Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap, const Properties& props):
     Architecture(nQ, couplingMap) {
-    loadCalibrationData(calibrationData);
+    loadProperties(props);
 }
 
 void Architecture::createDistanceTable() {
@@ -199,16 +200,18 @@ void Architecture::createDistanceTable() {
 
 void Architecture::createFidelityTable() {
     fidelityTable.clear();
-    fidelityTable.resize(nqubits, std::vector<double>(nqubits, 1.0));
+    fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
 
-    singleQubitFidelities.resize(nqubits, 1.0);
+    singleQubitFidelities.resize(nqubits, 0.0);
 
-    for (const auto& qubit: calibrationData) {
-        for (const auto& entry: qubit.cnotErrors) {
-            fidelityTable.at(entry.first.first).at(entry.first.second) -= entry.second;
+    for (const auto& [first, second]: couplingMap) {
+        if (properties.twoQubitErrorRateAvailable(first, second)) {
+            fidelityTable[first][second] = 1.0 - properties.getTwoQubitErrorRate(first, second);
         }
-        singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
     }
+
+    for (const auto& [qubit, operationProps]: properties.singleQubitErrorRate.get())
+        singleQubitFidelities[qubit] = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
 }
 
 unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
@@ -518,8 +521,7 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
 }
 
 void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) {
-    if (!isArchitectureAvailable() || nqubits == subsetSize ||
-        calibrationName.empty()) {
+    if (!isArchitectureAvailable() || nqubits == subsetSize || properties.empty()) {
         reducedMap = couplingMap;
     } else {
         double bestFidelity        = 0.0;
@@ -529,7 +531,7 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, Coup
             double      currentFidelity{};
             CouplingMap map{};
             getReducedCouplingMap(qubitChoice, map);
-            currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, calibrationData);
+            currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, properties);
             if (currentFidelity > bestFidelity) {
                 reducedMap   = map;
                 bestFidelity = currentFidelity;
@@ -579,20 +581,21 @@ void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitCh
     }
 }
 
-double Architecture::getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const std::vector<CalibrationData>& calibrationData) {
-    if (calibrationData.empty()) {
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props) {
+    if (props.empty()) {
         return 0.0;
     }
-    double         result = 1.0;
-    std::set<Edge> qubitPairs{};
-    getReducedCouplingMap(qubitChoice, qubitPairs);
-    for (const auto& calibrationEntry: calibrationData) {
-        for (const auto& edge: couplingMap) {
-            if (calibrationEntry.cnotErrors.find(edge) != calibrationEntry.cnotErrors.end())
-                result *= calibrationEntry.cnotErrors.at(edge);
+    double result = 1.0;
+    for (const auto& [control, target]: cm) {
+        if (props.twoQubitErrorRateAvailable(control, target)) {
+            result *= (1.0 - props.getTwoQubitErrorRate(control, target));
         }
-        if (qubitChoice.find(calibrationEntry.qubit) != qubitChoice.end())
-            result *= calibrationEntry.singleQubitErrorRate;
+    }
+
+    for (const auto& qubit: qubitChoice) {
+        if (props.singleQubitErrorRate.available(qubit)) {
+            result *= (1.0 - props.getAverageSingleQubitErrorRate(qubit));
+        }
     }
     return result;
 }

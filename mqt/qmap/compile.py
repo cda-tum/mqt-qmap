@@ -5,11 +5,22 @@
 import pickle
 from pathlib import Path
 from typing import Union, Optional, Set
-from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults
+from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
+
+try:
+    from qiskit.providers import Backend
+    from qiskit.providers.models import BackendProperties
+    from qiskit.transpiler.target import Target
+
+    PossibleArchitectureTypes = Union[str, Arch, Architecture, Backend]
+    PossibleCalibrationTypes = Union[str, BackendProperties, Target]
+except ModuleNotFoundError:
+    PossibleArchitectureTypes = Union[str, Arch, Architecture]
+    PossibleCalibrationTypes = Union[str]
 
 
-def compile(circ, arch: Union[str, Arch],
-            calibration: str = "",
+def compile(circ, arch: Optional[PossibleArchitectureTypes],
+            calibration: Optional[PossibleCalibrationTypes] = None,
             method: Union[str, Method] = "heuristic",
             initial_layout: Union[str, InitialLayout] = "dynamic",
             layering: Union[str, Layering] = "individual_gates",
@@ -30,10 +41,11 @@ def compile(circ, arch: Union[str, Arch],
             ) -> MappingResults:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Path to first circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
-    :param arch: Path to architecture file or one of the available architectures (Arch)
-    :type arch: Union[str, Arch]
-    :param calibration: Path to file containing calibration information
+    :param circ: Path to circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
+    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
+    :type arch: Optional[PossibleArchitectureTypes]
+    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
+    :type calibration: Optional[PossibleCalibrationTypes]
     :param method: Mapping technique to use (*heuristic* | exact)
     :type method: Union[str, Method]
     :param initial_layout: Strategy to use for determining initial layout in heuristic mapper (identity | static | *dynamic*)
@@ -74,8 +86,50 @@ def compile(circ, arch: Union[str, Arch],
     if type(circ) == str and Path(circ).suffix == '.pickle':
         circ = pickle.load(open(circ, "rb"))
 
+    architecture = Architecture()
+    if arch is None and calibration is None:
+        raise ValueError("Either arch or calibration must be specified")
+
+    if arch is not None:
+        if type(arch) == str:
+            try:
+                architecture.load_coupling_map(Arch(arch))
+            except ValueError:
+                architecture.load_coupling_map(arch)
+        elif type(arch) == Arch:
+            architecture.load_coupling_map(arch)
+        elif isinstance(arch, Architecture):
+            architecture = arch
+        else:
+            try:
+                from qiskit.providers.backend import Backend
+                from mqt.qmap.qiskit.backend import import_backend
+                if isinstance(arch, Backend):
+                    architecture = import_backend(arch)
+                else:
+                    raise ValueError("No compatible type for architecture:", type(arch))
+            except ModuleNotFoundError:
+                raise ValueError("No compatible type for architecture:", type(arch))
+
+    if calibration is not None:
+        if type(calibration) == str:
+            architecture.load_properties(calibration)
+        else:
+            try:
+                from qiskit.providers.models import BackendProperties
+                from qiskit.transpiler.target import Target
+                from mqt.qmap.qiskit.backend import import_backend_properties, import_target
+
+                if isinstance(calibration, BackendProperties):
+                    architecture.load_properties(import_backend_properties(calibration))
+                elif isinstance(calibration, Target):
+                    architecture.load_properties(import_target(calibration))
+                else:
+                    raise ValueError("No compatible type for calibration:", type(calibration))
+            except ModuleNotFoundError:
+                raise ValueError("No compatible type for calibration:", type(calibration))
+
     config = Configuration()
-    config.calibration = calibration
     config.method = Method(method)
     config.initial_layout = InitialLayout(initial_layout)
     config.layering = Layering(layering)
@@ -94,4 +148,4 @@ def compile(circ, arch: Union[str, Arch],
     config.post_mapping_optimizations = post_mapping_optimizations
     config.verbose = verbose
 
-    return map(circ, arch, config)
+    return map(circ, architecture, config)
