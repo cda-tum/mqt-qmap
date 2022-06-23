@@ -17,41 +17,41 @@ def example_circuit() -> QuantumCircuit:
 
 def test_old_backend_v1(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped to Qiskit BackendV1 instances providing the old basis_gates."""
-    results = qmap.compile(example_circuit, arch=FakeLondon())
+    _, results = qmap.compile(example_circuit, arch=FakeLondon())
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
 
 def test_old_backend_v2(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped to Qiskit BackendV2 instances providing the old basis_gates."""
-    results = qmap.compile(example_circuit, arch=FakeLondonV2())
+    _, results = qmap.compile(example_circuit, arch=FakeLondonV2())
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
 
 def test_new_backend_v1(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped to Qiskit BackendV1 instances providing the new basis_gates."""
-    results = qmap.compile(example_circuit, arch=FakeAthens())
+    _, results = qmap.compile(example_circuit, arch=FakeAthens())
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
 
 def test_new_backend_v2(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped to Qiskit BackendV2 instances providing the new basis_gates."""
-    results = qmap.compile(example_circuit, arch=FakeAthensV2())
+    _, results = qmap.compile(example_circuit, arch=FakeAthensV2())
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
 
 def test_architecture_from_v1_backend_properties(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped by simply providing the backend properties (the BackendV1 way)."""
-    results = qmap.compile(example_circuit, arch=None, calibration=FakeLondon().properties())
+    _, results = qmap.compile(example_circuit, arch=None, calibration=FakeLondon().properties())
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
 
 def test_architecture_from_v2_target(example_circuit: QuantumCircuit):
     """Test that circuits can be mapped by simply providing the target (the BackendV2 way)."""
-    results = qmap.compile(example_circuit, arch=None, calibration=FakeLondonV2().target)
+    _, results = qmap.compile(example_circuit, arch=None, calibration=FakeLondonV2().target)
     assert results.timeout is False
     assert results.mapped_circuit != ""

@@ -12,8 +12,5 @@ if __name__ == '__main__':
     print(qc.draw(fold=-1))
 
     # compile the circuit
-    results = qmap.compile(qc, arch=FakeLondon())
-
-    # get the mapped circuit
-    qc_mapped = QuantumCircuit.from_qasm_str(results.mapped_circuit)
+    qc_mapped, results = qmap.compile(qc, arch=FakeLondon())
     print(qc_mapped.draw(fold=-1))

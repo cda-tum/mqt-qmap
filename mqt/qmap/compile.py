@@ -4,19 +4,47 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union, Optional, Set
+from typing import Union, Optional, Set, List
 from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
 
 try:
+    from qiskit import QuantumCircuit, QuantumRegister
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
+    from qiskit.transpiler import Layout
 
     PossibleArchitectureTypes = Union[str, Arch, Architecture, Backend]
     PossibleCalibrationTypes = Union[str, BackendProperties, Target]
+    CircuitReturnType = QuantumCircuit
+
+
+    def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) -> Layout:
+        """
+        Extracts the initial layout resulting from compiling a circuit from a QASM file.
+        :param qasm: QASM file
+        :type qasm: str
+        :param qregs: The quantum registers to apply the layout to.
+        :type qregs: List[QuantumRegister]
+        :return: layout to be used in Qiskit
+        """
+        for line in qasm.split("\n"):
+            if line.startswith("// i "):
+                # strip away initial part of line
+                line = line[5:]
+                # split line into tokens
+                tokens = line.split(" ")
+                # convert tokens to integers
+                tokens = [int(token) for token in tokens]
+                # create an empty layout
+                layout = Layout().from_intlist(tokens, *qregs)
+                return layout
+
+
 except ModuleNotFoundError:
     PossibleArchitectureTypes = Union[str, Arch, Architecture]
-    PossibleCalibrationTypes = Union[str]
+    PossibleCalibrationTypes = str
+    CircuitReturnType = str
 
 
 def compile(circ, arch: Optional[PossibleArchitectureTypes],
@@ -38,7 +66,7 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
             pre_mapping_optimizations: bool = True,
             post_mapping_optimizations: bool = True,
             verbose: bool = False
-            ) -> MappingResults:
+            ) -> tuple[CircuitReturnType, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
     :param circ: Path to circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
@@ -148,4 +176,15 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
     config.post_mapping_optimizations = post_mapping_optimizations
     config.verbose = verbose
 
-    return map(circ, architecture, config)
+    results = map(circ, architecture, config)
+
+    try:
+        from qiskit import QuantumCircuit
+
+        circ = QuantumCircuit.from_qasm_str(results.mapped_circuit)
+        layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
+        circ._layout = layout
+    except ModuleNotFoundError:
+        circ = results.mapped_circuit
+
+    return circ, results
