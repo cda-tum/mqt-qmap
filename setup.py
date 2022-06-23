@@ -102,6 +102,9 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     packages=find_namespace_packages(include=['mqt.*']),
+    extras_require={
+        "tests": ["pytest~=7.1.1", "qiskit-terra>=0.19.2,<0.21.0"],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3',
