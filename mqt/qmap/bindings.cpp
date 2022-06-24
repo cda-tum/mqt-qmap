@@ -21,7 +21,7 @@ namespace nl = nlohmann;
 using namespace pybind11::literals;
 
 // c++ binding function
-MappingResults map(const py::object& circ, const py::object& arch, Configuration& config) {
+MappingResults map(const py::object& circ, Architecture& arch, Configuration& config) {
     qc::QuantumComputation qc{};
     try {
         if (py::isinstance<py::str>(circ)) {
@@ -36,41 +36,17 @@ MappingResults map(const py::object& circ, const py::object& arch, Configuration
         throw std::invalid_argument(ss.str());
     }
 
-    Architecture architecture{};
-    try {
-        if (py::isinstance<py::str>(arch)) {
-            auto&& cm = arch.cast<std::string>();
-            try {
-                auto available = architectureFromString(cm);
-                architecture.loadCouplingMap(available);
-            } catch (std::exception const& e) {
-                architecture.loadCouplingMap(cm);
-            }
-        } else {
-            auto&& cm = arch.cast<AvailableArchitecture>();
-            architecture.loadCouplingMap(cm);
-        }
-
-        if (!config.calibration.empty()) {
-            architecture.loadCalibrationData(config.calibration);
-        }
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Could not import architecture: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
-
     if (config.useTeleportation) {
-        config.teleportationQubits = std::min((architecture.getNqubits() - qc.getNqubits()) & ~1, 8);
+        config.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1, 8);
     }
 
     std::unique_ptr<Mapper> mapper;
     try {
         if (config.method == Method::Heuristic) {
-            mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+            mapper = std::make_unique<HeuristicMapper>(qc, arch);
         } else if (config.method == Method::Exact) {
 #ifdef Z3_FOUND
-            mapper = std::make_unique<ExactMapper>(qc, architecture);
+            mapper = std::make_unique<ExactMapper>(qc, arch);
 #else
             std::stringstream ss{};
             ss << toString(config.method) << " (Z3 support not enabled)";
@@ -102,7 +78,6 @@ MappingResults map(const py::object& circ, const py::object& arch, Configuration
 
 PYBIND11_MODULE(pyqmap, m) {
     m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
-    m.def("map", &map, "map a quantum circuit");
 
     py::enum_<AvailableArchitecture>(m, "Arch")
             .value("IBM_QX4", AvailableArchitecture::IBM_QX4)
@@ -162,7 +137,6 @@ PYBIND11_MODULE(pyqmap, m) {
 
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
-            .def_readwrite("calibration", &Configuration::calibration)
             .def_readwrite("method", &Configuration::method)
             .def_readwrite("verbose", &Configuration::verbose)
             .def_readwrite("layering", &Configuration::layering)
@@ -195,7 +169,6 @@ PYBIND11_MODULE(pyqmap, m) {
             .def(py::init<>())
             .def_readwrite("input", &MappingResults::input)
             .def_readwrite("output", &MappingResults::output)
-            .def_readwrite("architecture", &MappingResults::architecture)
             .def_readwrite("configuration", &MappingResults::config)
             .def_readwrite("time", &MappingResults::time)
             .def_readwrite("timeout", &MappingResults::timeout)
@@ -217,6 +190,54 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("direction_reverse", &MappingResults::CircuitInfo::directionReverse)
             .def_readwrite("teleportations", &MappingResults::CircuitInfo::teleportations);
 
+    auto arch       = py::class_<Architecture>(m, "Architecture", "Class representing device/backend information");
+    auto properties = py::class_<Architecture::Properties>(arch, "Properties", "Class representing properties of an architecture");
+
+    properties.def(py::init<>())
+            .def_property("name", &Architecture::Properties::getName, &Architecture::Properties::setName)
+            .def_property("num_qubits", &Architecture::Properties::getNqubits, &Architecture::Properties::setNqubits)
+            .def("get_single_qubit_error", &Architecture::Properties::getSingleQubitErrorRate, "qubit"_a, "operation"_a)
+            .def("set_single_qubit_error", &Architecture::Properties::setSingleQubitErrorRate, "qubit"_a, "operation"_a, "error_rate"_a)
+            .def("get_two_qubit_error", &Architecture::Properties::getTwoQubitErrorRate, "control"_a, "target"_a, "operation"_a = "cx")
+            .def("set_two_qubit_error", &Architecture::Properties::setTwoQubitErrorRate, "control"_a, "target"_a, "error_rate"_a, "operation"_a = "cx")
+            .def(
+                    "get_readout_error", [](const Architecture::Properties& props, unsigned short qubit) { return props.readoutErrorRate.get(qubit); }, "qubit"_a)
+            .def(
+                    "set_readout_error", [](Architecture::Properties& props, unsigned short qubit, double rate) { props.readoutErrorRate.set(qubit, rate); }, "qubit"_a, "readout_error_rate"_a)
+            .def(
+                    "get_t1", [](const Architecture::Properties& props, unsigned short qubit) { return props.t1Time.get(qubit); }, "qubit"_a)
+            .def(
+                    "set_t1", [](Architecture::Properties& props, unsigned short qubit, double t1) { props.t1Time.set(qubit, t1); }, "qubit"_a, "t1"_a)
+            .def(
+                    "get_t2", [](const Architecture::Properties& props, unsigned short qubit) { return props.t2Time.get(qubit); }, "qubit"_a)
+            .def(
+                    "set_t2", [](Architecture::Properties& props, unsigned short qubit, double t2) { props.t2Time.set(qubit, t2); }, "qubit"_a, "t2"_a)
+            .def(
+                    "get_frequency", [](const Architecture::Properties& props, unsigned short qubit) { return props.qubitFrequency.get(qubit); }, "qubit"_a)
+            .def(
+                    "set_frequency", [](Architecture::Properties& props, unsigned short qubit, double freq) { props.qubitFrequency.set(qubit, freq); }, "qubit"_a, "qubit_frequency"_a)
+            .def(
+                    "get_calibration_date", [](const Architecture::Properties& props, unsigned short qubit) { return props.calibrationDate.get(qubit); }, "qubit"_a)
+            .def(
+                    "set_calibration_date", [](Architecture::Properties& props, unsigned short qubit, const std::string& date) { props.calibrationDate.set(qubit, date); }, "qubit"_a, "calibration_date"_a)
+            .def("json", &Architecture::Properties::json,
+                 "Returns a JSON-style dictionary of all the information present in the :class:`.Properties`")
+            .def("__repr__", &Architecture::Properties::toString,
+                 "Prints a JSON-formatted representation of all the information present in the :class:`.Properties`");
+
+    arch.def(py::init<>())
+            .def(py::init<unsigned short, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
+            .def(py::init<unsigned short, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
+            .def_property("name", &Architecture::getName, &Architecture::setName)
+            .def_property("num_qubits", &Architecture::getNqubits, &Architecture::setNqubits)
+            .def_property("coupling_map", py::overload_cast<>(&Architecture::getCouplingMap), &Architecture::setCouplingMap)
+            .def_property("properties", py::overload_cast<>(&Architecture::getProperties), &Architecture::setProperties)
+            .def("load_coupling_map", py::overload_cast<AvailableArchitecture>(&Architecture::loadCouplingMap), "available_architecture"_a)
+            .def("load_coupling_map", py::overload_cast<const std::string&>(&Architecture::loadCouplingMap), "coupling_map_file"_a)
+            .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
+            .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
+
+    m.def("map", &map, "map a quantum circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

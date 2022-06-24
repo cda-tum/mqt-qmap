@@ -3,6 +3,7 @@
  * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
+#include "Architecture.hpp"
 #include "configuration/Configuration.hpp"
 
 #include <iostream>

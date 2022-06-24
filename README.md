@@ -37,20 +37,7 @@ It builds upon [our quantum functionality representation (QFR)](https://github.c
 * `TFC` (e.g. from [Reversible Logic Synthesis Benchmarks Page](http://webhome.cs.uvic.ca/~dmaslov/mach-read.html))
 * `QC` (e.g. from [Feynman](https://github.com/meamy/feynman))
 
-to any given architecture, e.g., the 5-qubit, T-shaped IBMQ London architecture, which is specified by the coupling map
-
-```
-5
-0 1
-1 0
-1 2
-2 1
-1 3
-3 1
-3 4
-4 3
-```
-with the following available methods:
+to any given architecture with the following available methods:
 
 - **Heuristic Mapper**:  Heuristic solution based on A* search. For details see [[1]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
   and [[3]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf).
@@ -78,14 +65,18 @@ MQT QMAP is developed as a C++ library with an easy to use Python interface.
   This enables platform specific compiler optimizations that cannot be enabled on portable wheels.
 - Once installed, start using it in Python:
     ```python
-    from mqt.qmap import *
-    results = compile(circ, arch)
+    from mqt import qmap
+    results = qmap.compile(circ, arch)
     ```
 
 where `circ` is either a Qiskit `QuantumCircuit` object or the path to an input file (in any of the formats listed above)
-and `arch` is either one of the pre-defined architectures (see below) or the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
+and `arch` is either
 
-Architectures that are available per default (either as strings or under `qmap.Arch.<...>`) include (corresponding files are available in `extern/architectures/`):
+- a Qiskit `Backend` instance such as those defined under `qiskit.test.mock` **(recommended)**,
+- one of the pre-defined architectures (see below), or
+- the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
+
+Architectures that are available per default (either as strings or under `qmap.Arch.<...>`) include:
 
 - `IBM_QX4` (5 qubit, directed bow tie layout)
 - `IBM_QX5` (16 qubit, directed ladder layout)
@@ -192,7 +183,7 @@ Internally the MQT QMAP library works in the following way
 - (Optional) Import calibration file into `arch` object
     ```c++
     std::string cal = "<PATH_TO_CAL_FILE>";
-    arch.loadCalibrationData(cal);
+    arch.loadProperties(cal);
     ```
 - Depending on `Method`, instantiate a `HeuristicMapper` or `ExactMapper` object with the circuit and the architecture
     ```c++

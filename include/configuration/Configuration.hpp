@@ -17,8 +17,6 @@
 struct Configuration {
     Configuration() = default;
 
-    std::string calibration{};
-
     // which method to use
     Method method = Method::Heuristic;
 
@@ -71,7 +69,6 @@ struct Configuration {
     [[nodiscard]] nlohmann::json json() const {
         nlohmann::json config{};
         config["method"]            = ::toString(method);
-        config["calibration"]       = calibration;
         config["layering_strategy"] = ::toString(layering);
         if (!subgraph.empty()) {
             config["subgraph"] = subgraph;
