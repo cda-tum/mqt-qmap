@@ -1,5 +1,5 @@
 from qiskit import QuantumCircuit
-from qiskit.test.mock.backends import FakeLondon
+from qiskit.providers.fake_provider import FakeLondon
 
 from mqt import qmap
 

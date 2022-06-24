@@ -1,6 +1,6 @@
 import pytest
 from qiskit import QuantumCircuit
-from qiskit.test.mock.backends import FakeLondon, FakeLondonV2, FakeAthens, FakeAthensV2
+from qiskit.providers.fake_provider import FakeLondon, FakeLondonV2, FakeAthens, FakeAthensV2
 
 from mqt import qmap
 
