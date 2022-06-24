@@ -4,7 +4,7 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union, Optional, Set, List
+from typing import Union, Optional, Set, List, Tuple
 from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
 
 try:
@@ -66,7 +66,7 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
             pre_mapping_optimizations: bool = True,
             post_mapping_optimizations: bool = True,
             verbose: bool = False
-            ) -> tuple[CircuitReturnType, MappingResults]:
+            ) -> Tuple[CircuitReturnType, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
     :param circ: Path to circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
@@ -105,8 +105,8 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
     :type post_mapping_optimizations: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
-    :return: Object containing all the results
-    :rtype: MappingResults
+    :return: Mapped circuit (either as Qiskit `QuantumCircuit`, if Qiskit is available, or `.qasm` string) and results
+    :rtype: Tuple[CircuitReturnType, MappingResults]
     """
 
     if subgraph is None:
