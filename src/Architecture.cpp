@@ -201,31 +201,22 @@ void Architecture::createDistanceTable() {
 void Architecture::createFidelityTable() {
     fidelityTable.clear();
     fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
+    CNOTFidelityTable.clear();
+    CNOTFidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
 
     singleQubitFidelities.resize(nqubits, 1.0);
     singleQubitLogFidelities.resize(nqubits, 1.0);
-
     for (const auto& [first, second]: couplingMap) {
         if (properties.twoQubitErrorRateAvailable(first, second)) {
-            fidelityTable[first][second] = 1.0 - properties.getTwoQubitErrorRate(first, second);
-        }
-        singleQubitFidelities.at(qubit.qubit) -= qubit.singleQubitErrorRate;
-        singleQubitLogFidelities.at(qubit.qubit) = log(1.0 - qubit.singleQubitErrorRate);
-    }
-
-    CNOTFidelities.resize(nqubits);
-    CNOTLogFidelities.resize(nqubits);
-    for (const auto& calibrationEntry: calibrationData) {
-        CNOTFidelities.at(calibrationEntry.qubit).resize(nqubits, 1.0);
-        CNOTLogFidelities.at(calibrationEntry.qubit).resize(nqubits, 1.0);
-        for (const auto& CNOTError: calibrationEntry.cnotErrors) {
-            CNOTFidelities.at(CNOTError.first.first).at(CNOTError.first.second) -= CNOTError.second;
-            CNOTLogFidelities.at(CNOTError.first.first).at(CNOTError.first.second) = log(1.0 - CNOTError.second);
+            fidelityTable[first][second]     = 1.0 - properties.getTwoQubitErrorRate(first, second);
+            CNOTFidelityTable[first][second] = log(1.0 - properties.getTwoQubitErrorRate(first, second));
         }
     }
 
-    for (const auto& [qubit, operationProps]: properties.singleQubitErrorRate.get())
-        singleQubitFidelities[qubit] = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
+    for (const auto& [qubit, operationProps]: properties.singleQubitErrorRate.get()) {
+        singleQubitFidelities[qubit]    = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
+        singleQubitLogFidelities[qubit] = log(1.0 - properties.getAverageSingleQubitErrorRate(qubit));
+    }
 }
 
 unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
@@ -595,7 +586,7 @@ void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitCh
     }
 }
 
-double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props) const {
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props)  {
     if (props.empty()) {
         return 0.0;
     }
