@@ -66,13 +66,13 @@ MQT QMAP is developed as a C++ library with an easy to use Python interface.
 - Once installed, start using it in Python:
     ```python
     from mqt import qmap
-    results = qmap.compile(circ, arch)
+    circ_mapped, results = qmap.compile(circ, arch)
     ```
 
 where `circ` is either a Qiskit `QuantumCircuit` object or the path to an input file (in any of the formats listed above)
 and `arch` is either
 
-- a Qiskit `Backend` instance such as those defined under `qiskit.test.mock` **(recommended)**,
+- a Qiskit `Backend` instance such as those defined under `qiskit.providers.fake_provider` **(recommended)**,
 - one of the pre-defined architectures (see below), or
 - the path to a file containing the number of qubits and a line-by-line enumeration of the qubit connections.
 

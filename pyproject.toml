@@ -15,7 +15,7 @@ build = "cp3*"
 archs = "auto64"
 skip = "*-musllinux*"
 test-skip = "*-macosx_arm64 *-musllinux* *aarch64"
-test-extras = ["tests"]
+test-extras = ["test"]
 test-command = "python -m pytest {project}/test/python"
 environment = { DEPLOY = "ON" }
 build-frontend = "build"

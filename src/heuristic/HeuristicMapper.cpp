@@ -111,6 +111,18 @@ void HeuristicMapper::map(const Configuration& ms) {
         }
     }
 
+    // infer output permutation from qubit locations
+    qcMapped.outputPermutation.clear();
+    std::size_t count = 0U;
+    for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
+        if (qubits[i] != -1) {
+            qcMapped.outputPermutation[static_cast<dd::Qubit>(i)] = static_cast<dd::Qubit>(qubits[i]);
+        } else {
+            qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
+            ++count;
+        }
+    }
+
     // fix single qubit gates
     if (!gatesToAdjust.empty()) {
         gateidx--; // index of last operation
@@ -150,18 +162,6 @@ void HeuristicMapper::map(const Configuration& ms) {
                     op->setTargets({static_cast<dd::Qubit>(targetLocation)});
                 }
             }
-        }
-    }
-
-    // infer output permutation from qubit locations
-    qcMapped.outputPermutation.clear();
-    std::size_t count = 0U;
-    for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
-        if (qubits[i] != -1) {
-            qcMapped.outputPermutation[static_cast<dd::Qubit>(i)] = static_cast<dd::Qubit>(qubits[i]);
-        } else {
-            qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
-            ++count;
         }
     }
 

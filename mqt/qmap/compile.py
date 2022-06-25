@@ -4,23 +4,42 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union, Optional, Set
+from typing import Union, Optional, Set, List, Tuple
+
+from qiskit import QuantumCircuit, QuantumRegister
+from qiskit.providers import Backend
+from qiskit.providers.models import BackendProperties
+from qiskit.transpiler.target import Target
+from qiskit.transpiler import Layout
+
 from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
 
-try:
-    from qiskit.providers import Backend
-    from qiskit.providers.models import BackendProperties
-    from qiskit.transpiler.target import Target
 
-    PossibleArchitectureTypes = Union[str, Arch, Architecture, Backend]
-    PossibleCalibrationTypes = Union[str, BackendProperties, Target]
-except ModuleNotFoundError:
-    PossibleArchitectureTypes = Union[str, Arch, Architecture]
-    PossibleCalibrationTypes = Union[str]
+def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) -> Layout:
+    """
+    Extracts the initial layout resulting from compiling a circuit from a QASM file.
+    :param qasm: QASM file
+    :type qasm: str
+    :param qregs: The quantum registers to apply the layout to.
+    :type qregs: List[QuantumRegister]
+    :return: layout to be used in Qiskit
+    """
+    for line in qasm.split("\n"):
+        if line.startswith("// i "):
+            # strip away initial part of line
+            line = line[5:]
+            # split line into tokens
+            tokens = line.split(" ")
+            # convert tokens to integers
+            tokens = [int(token) for token in tokens]
+            # create an empty layout
+            layout = Layout().from_intlist(tokens, *qregs)
+            return layout
 
 
-def compile(circ, arch: Optional[PossibleArchitectureTypes],
-            calibration: Optional[PossibleCalibrationTypes] = None,
+def compile(circ: Union[QuantumCircuit, str],
+            arch: Optional[Union[str, Arch, Architecture, Backend]],
+            calibration: Optional[Union[str, BackendProperties, Target]] = None,
             method: Union[str, Method] = "heuristic",
             initial_layout: Union[str, InitialLayout] = "dynamic",
             layering: Union[str, Layering] = "individual_gates",
@@ -38,14 +57,15 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
             pre_mapping_optimizations: bool = True,
             post_mapping_optimizations: bool = True,
             verbose: bool = False
-            ) -> MappingResults:
+            ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Path to circuit file, path to Qiskit QuantumCircuit pickle, or Qiskit QuantumCircuit object
+    :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
+    :type circ: Union[QuantumCircuit, str]
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
-    :type arch: Optional[PossibleArchitectureTypes]
+    :type arch: Optional[Union[str, Arch, Architecture, Backend]]
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
-    :type calibration: Optional[PossibleCalibrationTypes]
+    :type calibration: Optional[Union[str, BackendProperties, Target]]
     :param method: Mapping technique to use (*heuristic* | exact)
     :type method: Union[str, Method]
     :param initial_layout: Strategy to use for determining initial layout in heuristic mapper (identity | static | *dynamic*)
@@ -77,12 +97,13 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
     :type post_mapping_optimizations: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
-    :return: Object containing all the results
-    :rtype: MappingResults
+    :return: Mapped circuit (as Qiskit `QuantumCircuit`) and results
+    :rtype: Tuple[QuantumCircuit, MappingResults]
     """
 
     if subgraph is None:
         subgraph = set()
+
     if type(circ) == str and Path(circ).suffix == '.pickle':
         circ = pickle.load(open(circ, "rb"))
 
@@ -100,34 +121,26 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
             architecture.load_coupling_map(arch)
         elif isinstance(arch, Architecture):
             architecture = arch
+        elif isinstance(arch, Backend):
+            from mqt.qmap.qiskit.backend import import_backend
+
+            architecture = import_backend(arch)
         else:
-            try:
-                from qiskit.providers.backend import Backend
-                from mqt.qmap.qiskit.backend import import_backend
-                if isinstance(arch, Backend):
-                    architecture = import_backend(arch)
-                else:
-                    raise ValueError("No compatible type for architecture:", type(arch))
-            except ModuleNotFoundError:
-                raise ValueError("No compatible type for architecture:", type(arch))
+            raise ValueError("No compatible type for architecture:", type(arch))
 
     if calibration is not None:
         if type(calibration) == str:
             architecture.load_properties(calibration)
-        else:
-            try:
-                from qiskit.providers.models import BackendProperties
-                from qiskit.transpiler.target import Target
-                from mqt.qmap.qiskit.backend import import_backend_properties, import_target
+        elif isinstance(calibration, BackendProperties):
+            from mqt.qmap.qiskit.backend import import_backend_properties
 
-                if isinstance(calibration, BackendProperties):
-                    architecture.load_properties(import_backend_properties(calibration))
-                elif isinstance(calibration, Target):
-                    architecture.load_properties(import_target(calibration))
-                else:
-                    raise ValueError("No compatible type for calibration:", type(calibration))
-            except ModuleNotFoundError:
-                raise ValueError("No compatible type for calibration:", type(calibration))
+            architecture.load_properties(import_backend_properties(calibration))
+        elif isinstance(calibration, Target):
+            from mqt.qmap.qiskit.backend import import_target
+
+            architecture.load_properties(import_target(calibration))
+        else:
+            raise ValueError("No compatible type for calibration:", type(calibration))
 
     config = Configuration()
     config.method = Method(method)
@@ -148,4 +161,10 @@ def compile(circ, arch: Optional[PossibleArchitectureTypes],
     config.post_mapping_optimizations = post_mapping_optimizations
     config.verbose = verbose
 
-    return map(circ, architecture, config)
+    results = map(circ, architecture, config)
+
+    circ = QuantumCircuit.from_qasm_str(results.mapped_circuit)
+    layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
+    circ._layout = layout
+
+    return circ, results
