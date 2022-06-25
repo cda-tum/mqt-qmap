@@ -3,8 +3,6 @@
  * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#include "utils/logging.hpp"
-
 #include <utils.hpp>
 
 void Dijkstra::build_table(unsigned short n, const std::set<Edge>& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
@@ -251,7 +249,7 @@ void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& 
         case qc::OpType::Y:
         case qc::OpType::S: {
             if (gate->isControlled()) {
-                FATAL() << "Expected single-qubit gate";
+                throw QMAPException("Gate should not be controlled!");
             }
             const auto a = gate->getTargets().at(0U);
             qubits.insert(a);
@@ -269,7 +267,7 @@ void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& 
         } break;
 
         default:
-            util::fatal("Unsupported gate encountered: " + std::to_string(gate->getType()));
+            throw QMAPException("Unsupported gate encountered: " + std::to_string(gate->getType()));
             break;
     }
 }
