@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     if (vm.count("calibration")) {
         const std::string cal = vm["calibration"].as<std::string>();
         try {
-            arch.loadCalibrationData(cal);
+            arch.loadProperties(cal);
         } catch (std::exception const& e) {
             std::stringstream ss{};
             ss << "Could not import calibration data: " << e.what();

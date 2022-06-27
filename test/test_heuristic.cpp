@@ -24,7 +24,7 @@ protected:
         qc.import(test_example_dir + GetParam() + ".qasm");
         IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
-        IBMQ_London.loadCalibrationData(test_calibration_dir + "ibmq_london.csv");
+        IBMQ_London.loadProperties(test_calibration_dir + "ibmq_london.csv");
         IBMQ_Yorktown_mapper = std::make_unique<HeuristicMapper>(qc, IBMQ_Yorktown);
         IBMQ_London_mapper   = std::make_unique<HeuristicMapper>(qc, IBMQ_London);
     }

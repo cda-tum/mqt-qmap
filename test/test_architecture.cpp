@@ -29,7 +29,7 @@ TEST_P(TestArchitecture, QubitMap) {
         arch.loadCouplingMap(ss.str());
     } else {
         ss << test_calibration_dir << arch_name;
-        arch.loadCalibrationData(ss.str());
+        arch.loadProperties(ss.str());
     }
 
     EXPECT_EQ(Architecture::getQubitList(arch.getCouplingMap()).size(), arch.getNqubits());
@@ -43,7 +43,7 @@ TEST_P(TestArchitecture, GetAllConnectedSubsets) {
         arch.loadCouplingMap(ss.str());
     } else {
         ss << test_calibration_dir << arch_name;
-        arch.loadCalibrationData(ss.str());
+        arch.loadProperties(ss.str());
     }
 
     EXPECT_EQ(arch.getAllConnectedSubsets(arch.getNqubits()).size(), 1);
@@ -58,7 +58,7 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
         arch.loadCouplingMap(ss.str());
     } else {
         ss << test_calibration_dir << arch_name;
-        arch.loadCalibrationData(ss.str());
+        arch.loadProperties(ss.str());
     }
     CouplingMap cm{};
 
@@ -85,7 +85,7 @@ TEST_P(TestArchitecture, ReducedMaps) {
         arch.loadCouplingMap(ss.str());
     } else {
         ss << test_calibration_dir << arch_name;
-        arch.loadCalibrationData(ss.str());
+        arch.loadProperties(ss.str());
     }
 
     std::vector<CouplingMap> cms;
@@ -119,42 +119,30 @@ TEST(TestArchitecture, ConnectedTest) {
 }
 
 TEST(TestArchitecture, FidelityTest) {
-    Architecture                               architecture{};
-    CouplingMap                                cm{};
-    std::vector<Architecture::CalibrationData> calibrationData{};
+    Architecture architecture{};
+    CouplingMap  cm{};
 
-    Architecture::CalibrationData data{};
-    data.qubit                = 0;
-    data.singleQubitErrorRate = 0.9;
-    data.cnotErrors.emplace(std::make_pair(0, 1), 0.8);
-    calibrationData.push_back(data);
-    data.qubit                = 1;
-    data.singleQubitErrorRate = 0.9;
-    data.cnotErrors.emplace(std::make_pair(1, 0), 0.8);
-    data.cnotErrors.emplace(std::make_pair(1, 2), 0.7);
-    calibrationData.push_back(data);
-    data.qubit                = 2;
-    data.singleQubitErrorRate = 0.9;
-    data.cnotErrors.emplace(std::make_pair(2, 1), 0.7);
-    data.cnotErrors.emplace(std::make_pair(2, 3), 0.6);
-    calibrationData.push_back(data);
-    data.qubit                = 3;
-    data.singleQubitErrorRate = 0.9;
-    data.cnotErrors.emplace(std::make_pair(3, 2), 0.6);
-    calibrationData.push_back(data);
+    auto props = Architecture::Properties();
+    props.setNqubits(4);
+    props.setSingleQubitErrorRate(0, "x", 0.9);
+    props.setSingleQubitErrorRate(1, "x", 0.9);
+    props.setSingleQubitErrorRate(2, "x", 0.9);
+    props.setSingleQubitErrorRate(3, "x", 0.9);
 
-    architecture.loadCalibrationData(calibrationData);
+    props.setTwoQubitErrorRate(0, 1, 0.8);
+    props.setTwoQubitErrorRate(1, 0, 0.8);
+    props.setTwoQubitErrorRate(1, 2, 0.7);
+    props.setTwoQubitErrorRate(2, 1, 0.7);
+    props.setTwoQubitErrorRate(2, 3, 0.6);
+    props.setTwoQubitErrorRate(3, 2, 0.6);
 
+    architecture.loadProperties(props);
     architecture.getHighestFidelityCouplingMap(2, cm);
 
-    std::vector<unsigned short> highestFidelity{};
-    highestFidelity.push_back(2);
-    highestFidelity.push_back(3);
+    std::vector<unsigned short> highestFidelity{2, 3};
+    auto                        qubitList = Architecture::getQubitList(cm);
 
-    auto qubitList = Architecture::getQubitList(cm);
-
-    ASSERT_TRUE((qubitList.size() == highestFidelity.size() &&
-                 std::equal(qubitList.begin(), qubitList.end(), highestFidelity.begin())));
+    EXPECT_EQ(qubitList, highestFidelity);
 }
 
 TEST(TestArchitecture, FullyConnectedTest) {

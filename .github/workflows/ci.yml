@@ -57,6 +57,8 @@ jobs:
 
       - name: Build
         run:  |
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
@@ -96,6 +98,8 @@ jobs:
 
       - name: Build
         run:  |
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
