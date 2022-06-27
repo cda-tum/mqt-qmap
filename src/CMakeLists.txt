@@ -78,27 +78,8 @@ if (Z3_FOUND)
             ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
     # add Z3 library
     target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
-<<<<<<< HEAD
-=======
     # add LogicBlocks library
     target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic)
-
-    add_qmap_library(cliffordsynthesis CliffordSynthesizer)
-    # add encodings
-    target_sources(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/CliffordOptimizationResult.hpp)
-
-    # add Z3 library
-    target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC z3::z3lib)
-    # add LogicBlocks library
-    target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::Logic)
-    # add Pthreads
-    target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PRIVATE Threads::Threads)
->>>>>>> 1108af1 (Modified Exact Mapper to use LogicBlocks)
 else ()
     message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
 endif ()
