@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
         }
         Tableau::generateTableau(opt.targetTableau, rnd);
         Tableau::initTableau(opt.initialTableau, opt.nqubits);
-        opt.circuit        = rnd.clone();
+        opt.circuit = rnd.clone();
     }
 
     if (vm.count("initial_timesteps")) {
@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
                 << "Fidelity: " << opt.optimal_results.fidelity << std::endl;
     }
     DEBUG() << "ResultTableau-Equality: "
-            << (opt.targetTableau ==  resultTableau?
+            << (opt.targetTableau == resultTableau ?
                         "true" :
                         "false")
             << std::endl;

@@ -6,11 +6,12 @@
 #ifndef QMAP_UTILS_HPP
 #define QMAP_UTILS_HPP
 
+#include "QuantumComputation.hpp"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
 #include <operations/Operation.hpp>
-#include "QuantumComputation.hpp"
 #include <queue>
 #include <set>
 #include <sstream>
