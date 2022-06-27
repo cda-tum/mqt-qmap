@@ -335,7 +335,7 @@ public:
     [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize) const;
     void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) const;
     void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap) const;
-    [[nodiscard]] static double                         getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props) ;
+    [[nodiscard]] static double                         getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props);
 
     [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
 
@@ -352,10 +352,10 @@ protected:
     bool                                 isBidirectional        = true;
     Matrix                               distanceTable          = {};
     std::vector<std::pair<short, short>> teleportationQubits{};
-    Properties          properties            = {};
-    Matrix              fidelityTable         = {};
-    std::vector<double> singleQubitFidelities = {};
-    std::vector<double>              singleQubitLogFidelities = {};
+    Properties                           properties               = {};
+    Matrix                               fidelityTable            = {};
+    std::vector<double>                  singleQubitFidelities    = {};
+    std::vector<double>                  singleQubitLogFidelities = {};
     Matrix                               CNOTFidelityTable        = {};
 
     void createDistanceTable();

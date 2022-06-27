@@ -77,7 +77,7 @@ public:
     void dump(std::ostream& of) const;
 
     void import(const std::string& filename);
-    void import (std::istream& is);
+    void import(std::istream& is);
 
     [[nodiscard]] std::string getRepresentation() const {
         std::stringstream result;
@@ -93,7 +93,7 @@ public:
     static void generateTableau(Tableau& tableau, qc::QuantumComputation& circ, int begin = 0, int end = -1);
     static void initTableau(Tableau& tableau, size_t nqubits);
 
-    int  applyGate(std::unique_ptr<qc::Operation>& gate);
+    int applyGate(std::unique_ptr<qc::Operation>& gate);
 
     bool operator==(const Tableau& other) const {
         if (tableau.size() != other.tableau.size()) {

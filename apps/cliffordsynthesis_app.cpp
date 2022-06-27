@@ -152,17 +152,27 @@ int main(int argc, char** argv) {
 
     if (!vm.count("testing")) {
         qc::QuantumComputation qc{};
-        try {
-            const std::string circuit = vm["in"].as<std::string>();
-            qc.import(circuit);
-            opt.nqubits = qc.getNqubits();
-            opt.circuit = qc.clone();
-        } catch (std::exception const& e) {
-            ERROR() << "Could not import circuit: " << e.what() << std::endl;
-            std::exit(1);
+        if (!vm.count("string")) {
+            try {
+                const std::string circuit = vm["in"].as<std::string>();
+                if (circuit.substr(circuit.find_last_of('.') + 1) == "tabl") {
+                    opt.targetTableau.import(circuit);
+                    opt.nqubits = opt.targetTableau.getQubitCount();
+                } else {
+                    qc.import(circuit);
+                    opt.nqubits = qc.getNqubits();
+                    opt.circuit = qc.clone();
+                    Tableau::generateTableau(opt.targetTableau, opt.circuit);
+                }
+            } catch (std::exception const& e) {
+                ERROR() << "Could not import file: " << e.what() << std::endl;
+                std::exit(1);
+            }
+        } else {
+            const std::string tableau = vm["in"].as<std::string>();
+            //load string
         }
 
-        Tableau::generateTableau(opt.targetTableau, opt.circuit);
         Tableau::initTableau(opt.initialTableau, opt.nqubits);
     } else {
         if (vm.count("qubits")) {
