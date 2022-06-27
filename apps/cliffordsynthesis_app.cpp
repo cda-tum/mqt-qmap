@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 
     if (vm.count("fidelity")) {
         const std::string fid = vm["fidelity"].as<std::string>();
-        architecture.loadCalibrationData(fid);
+        architecture.loadProperties(fid);
     }
     opt.setCouplingMap(architecture);
 

@@ -32,7 +32,7 @@ void CliffordOptimizer::optimize() {
         DEBUG() << "Coupling Map Fidelity: "
                 << architecture.getAverageArchitectureFidelity(architecture.getCouplingMap(),
                                                                std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
-                                                               architecture.getCalibrationData());
+                                                               architecture.getProperties());
         int timesteps =
                 initial_timesteps == 0 ? nqubits * nqubits : initial_timesteps;
         if (strategy == OptimizingStrategy::UseMinimizer) {
