@@ -5,6 +5,8 @@
 
 #include "exact/ExactMapper.hpp"
 
+#include "LogicTerm/LogicTerm.hpp"
+
 void ExactMapper::map(const Configuration& settings) {
     results.config     = settings;
     const auto& config = results.config;
@@ -327,9 +329,36 @@ void ExactMapper::map(const Configuration& settings) {
 
 void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice, const CouplingMap& rcm, MappingResults& choiceResults, std::vector<std::vector<std::pair<unsigned short, unsigned short>>>& swaps, long unsigned int limit, unsigned int timeout) {
     const auto& config = results.config;
-
-    // Z3 context
-    context c;
+    using namespace logicbase;
+    // LogicBlock
+    LogicBlock* lb;
+#ifdef Z3_FOUND
+    using namespace z3logic;
+    z3::context  c;
+    z3::solver   slv(c);
+    z3::optimize opt(c);
+    z3::params   p(c);
+    if (method == OptMethod::Z3) {
+        LogicTerm::termType = TermType::BASE;
+        if (strategy == OptimizingStrategy::UseMinimizer || strategy == OptimizingStrategy::SplitIter) {
+            p.set("pb.compile_equality", true);
+            p.set("maxres.hill_climb", true);
+            p.set("maxres.pivot_on_correction_set", false);
+            // z3::set_param("parallel.enable", true);
+            // z3::set_param("parallel.threads.max", nthreads);
+            opt.set(p);
+            lb = new Z3LogicOptimizer(c, opt, false);
+        } else {
+            p.set("threads", unsigned(nthreads / 2));
+            z3::set_param("parallel.enable", true);
+            z3::set_param("parallel.threads.max", nthreads / 2);
+            slv.set(p);
+            lb = new Z3LogicBlock(c, slv, true);
+        }
+    } else {
+        return CliffordOptResults{};
+    }
+#endif
 
     std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
     unsigned long long                                 piCount{};
@@ -360,7 +389,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     /*
 	 auxilary variable declarations
 	*/
-    expr_vector auxvars(c);
+    std::vector<LogicTerm> auxvars;
 
     /*
 	 locical/physical qubit variables x_k_i_j
@@ -369,16 +398,17 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 	 j	logical qubit j
 	 number of variables: (|L|) * m * n
 	 */
-    std::vector<matrix> x{};
-    std::stringstream   x_name{};
+    LogicMatrix3D     x{};
+    std::stringstream x_name{};
     for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
         x.emplace_back();
         for (unsigned short Q: qubitChoice) {
-            x.back().emplace_back(c);
+            x.back().emplace_back();
             for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
                 x_name.str("");
                 x_name << "x_" << k << '_' << Q << '_' << q;
-                x.back().back().push_back(c.bool_const(x_name.str().c_str()));
+                x.back().back().push_back(
+                        lb->makeVariable(x_name.str(), CType::BOOL));
             }
         }
     }
@@ -389,8 +419,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
  pi	arbitrary permutation of the m qubits
  number of variables: (|L|-1) * m!
  */
-    std::vector<std::vector<expr>> y{};
-    std::stringstream              y_name{};
+    LogicMatrix       y{};
+    std::stringstream y_name{};
     for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
         y.emplace_back();
         piCount = 0;
@@ -398,21 +428,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                 y_name.str("");
                 y_name << "y_" << k << '_' << piCount;
-                y.back().push_back(c.bool_const(y_name.str().c_str()));
+                y.back().push_back(lb->makeVariable(y_name.str(), CType::BOOL));
             }
             ++piCount;
         } while (std::next_permutation(pi.begin(), pi.end()));
     }
-
-    // Z3 optimizer
-    optimize opt(c);
-    params   p(c);
-    p.set("timeout", timeout);
-    p.set("pb.compile_equality", true);
-    p.set("pp.wcnf", true);
-    p.set("maxres.hill_climb", true);
-    p.set("maxres.pivot_on_correction_set", false);
-    opt.set(p);
 
     //////////////////////////////////////////
     /// 	Consistency Constraints			//
@@ -420,84 +440,84 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     if (config.encoding == Encoding::Naive) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
-                expr rowConsistency = c.int_val(0);
+                LogicTerm rowConsistency = LogicTerm(0);
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     rowConsistency = rowConsistency +
-                                     ite(x[k][i][j], c.int_val(1), c.int_val(0));
+                                     LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
                 }
-                opt.add(rowConsistency.simplify() <= 1);
+                lb->assertFormula(rowConsistency < LogicTerm(1) || rowConsistency == LogicTerm(1));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
-                expr colConsistency = c.int_val(0);
+                LogicTerm colConsistency = LogicTerm(0);
                 for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                     colConsistency = colConsistency +
-                                     ite(x[k][i][j], c.int_val(1), c.int_val(0));
+                                     LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
                 }
-                opt.add(colConsistency.simplify() == 1);
+                lb->assertFormula(colConsistency == LogicTerm(1));
             }
         }
     } else if (config.encoding == Encoding::Commander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
-                std::vector<expr> varIDs;
+                std::vector<LogicTerm> varIDs;
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     varIDs.push_back(x[k][i][j]);
                 }
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
+                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
+                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
+                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(AtMostOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
+                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb));
                 }
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
-                std::vector<expr> varIDs;
+                std::vector<LogicTerm> varIDs;
                 for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                     varIDs.push_back(x[k][i][j]);
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb));
                 }
             }
         }
     } else if (config.encoding == Encoding::Bimander) {
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
-                std::vector<expr>          vars;
+                std::vector<LogicTerm>     vars;
                 std::vector<unsigned long> varIDs;
                 for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
                     vars.emplace_back(x[k][i][j]);
                     varIDs.emplace_back(j);
                 }
-                opt.add(AtMostOneBiMander(vars, varIDs, auxvars, c));
+                lb->assertFormula(AtMostOneBiMander(vars));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) { //There is no exactly one Bimander
-                std::vector<expr> varIDs;
+                std::vector<LogicTerm> varIDs;
                 for (unsigned long i = 0; i < qubitChoice.size(); ++i) {
                     varIDs.push_back(x[k][i][j]);
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
+                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb));
                 }
             }
         }
@@ -507,12 +527,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     ///		Coupling Constraints			//
     //////////////////////////////////////////
     for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
-        expr allCouplings = c.bool_val(true);
+        LogicTerm allCouplings = LogicTerm(true);
         for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
             if (gate.singleQubit())
                 continue;
 
-            expr coupling = c.bool_val(false);
+            LogicTerm coupling = LogicTerm(false);
             if (architecture.bidirectional()) {
                 for (const auto& edge: rcm) {
                     auto indexFC = x[k][physicalQubitIndex[edge.first]][gate.control];
@@ -529,9 +549,9 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
                 }
             }
-            allCouplings = allCouplings && coupling.simplify();
+            allCouplings = allCouplings && coupling;
         }
-        opt.add(allCouplings.simplify());
+        lb->assertFormula(allCouplings);
     }
 
     //////////////////////////////////////////
@@ -544,7 +564,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         auto& j         = x[k];
         do {
             if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                expr equal = c.bool_val(true);
+                LogicTerm equal = LogicTerm(true);
                 for (unsigned short Q: qubitChoice) {
                     for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
                         auto before = i[physicalQubitIndex[Q]][q];
@@ -552,7 +572,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                         equal       = equal && (before == after);
                     }
                 }
-                opt.add(implies(y[k - 1][internalPiCount], equal.simplify()).simplify());
+                lb->assertFormula(LogicTerm::implies(y[k - 1][internalPiCount], equal));
                 ++internalPiCount;
             }
             ++piCount;
@@ -562,21 +582,21 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     // Allow only 1 y_k_pi to be true
     if (config.encoding == Encoding::Naive) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-            expr onlyOne    = c.int_val(0);
-            piCount         = 0;
-            internalPiCount = 0;
+            LogicTerm onlyOne = LogicTerm(0);
+            piCount           = 0;
+            internalPiCount   = 0;
             do {
                 if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                    onlyOne = onlyOne + ite(y[k - 1][internalPiCount], c.int_val(1), c.int_val(0));
+                    onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount], LogicTerm(1), LogicTerm(0));
                     ++internalPiCount;
                 }
                 ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
-            opt.add(onlyOne.simplify() == 1);
+            lb->assertFormula(onlyOne == LogicTerm(1));
         }
     } else {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-            std::vector<expr> varIDs;
+            std::vector<LogicTerm> varIDs;
             piCount         = 0;
             internalPiCount = 0;
             do {
@@ -587,13 +607,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
             if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 2), -1, auxvars, c));
+                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb));
             } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, 3), -1, auxvars, c));
+                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb));
             } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), -1, auxvars, c));
+                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb));
             } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                opt.add(ExactlyOneCMDR(varIDs, groupVars(varIDs, varIDs.size() / 2), -1, auxvars, c));
+                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb));
             }
         }
     }
@@ -613,9 +633,9 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
             }
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-                opt.add(!y[k - 1][internalPiCount], picost);
+                dynamic_cast<LogicBlockOptimizer*>(lb)->weightedTerm(!y[k - 1][internalPiCount], picost);
                 if (config.useBDD)
-                    weightedVars[k].insert(WeightedVar(internalPiCount, static_cast<int>(picost)));
+                    weightedVars[k].insert(WeightedVar(y[k - 1][internalPiCount], static_cast<int>(picost)));
             }
             ++internalPiCount;
         }
@@ -624,7 +644,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 
     if (config.enableSwapLimits && config.useBDD) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-            opt.add(BuildBDD(weightedVars[k], y[k - 1], auxvars, static_cast<int>(limit), c));
+            dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(BuildBDD(weightedVars[k], y[k - 1], static_cast<int>(limit)));
         }
     }
 
@@ -635,18 +655,18 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 if (gate.singleQubit())
                     continue;
 
-                expr reverse = c.bool_val(true);
+                LogicTerm reverse = LogicTerm(true);
                 for (const auto& edge: rcm) {
                     auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
                     auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
                     reverse      = reverse && (!indexFT || !indexSC);
                 }
-                opt.add(reverse.simplify(), GATES_OF_DIRECTION_REVERSE);
+                dynamic_cast<LogicBlockOptimizer*>(lb)->weightedTerm(reverse, GATES_OF_DIRECTION_REVERSE);
             }
         }
     }
 
-    if (config.includeWCNF) {
+    /* if (config.includeWCNF) {
         std::stringstream ss{};
         ss << opt;
         try {
@@ -657,13 +677,14 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             std::cerr << "This can be circumvented by using QMAP's `commander` or `bimander` encoding." << std::endl;
         }
         choiceResults.wcnf = ss.str();
-    }
+    }*/
 
     //////////////////////////////////////////
     /// 	Solving							//
     //////////////////////////////////////////
-    if (sat == opt.check()) {
-        model m               = opt.get_model();
+    Result res = lb->solve();
+    if (Result::SAT == res) {
+        Model* m              = lb->getModel();
         choiceResults.timeout = results.timeout = false;
 
         // quickly determine cost
@@ -680,11 +701,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 
             for (unsigned short Q: qubitChoice) {
                 for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
-                    if (eq(m.eval(i[physicalQubitIndex[Q]][q]), c.bool_val(true))) {
+                    if (m->getBoolValue(i[physicalQubitIndex[Q]][q], lb)) {
                         // logical qubit q was mapped to physical qubit Q
                         for (unsigned short P: qubitChoice) {
                             // and has been assigned to physical qubit P going forward
-                            if (eq(m.eval(j[physicalQubitIndex[P]][q]), c.bool_val(true))) {
+                            if (m->getBoolValue(j[physicalQubitIndex[P]][q], lb)) {
                                 pi[physicalQubitIndex[Q]] = P;
                             }
                         }
@@ -709,7 +730,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     for (const auto& edge: rcm) {
                         auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
                         auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
-                        if (eq(m.eval(indexFT && indexSC), c.bool_val(true))) {
+                        if (m->getBoolValue(indexFT, lb) && m->getBoolValue(indexSC, lb)) {
                             choiceResults.output.directionReverse++;
                             choiceResults.output.gates += GATES_OF_DIRECTION_REVERSE;
                         }
@@ -721,7 +742,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         // save initial layout for later
         for (const auto& Q: qubitChoice) {
             for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
-                bool set = eq(m.eval(x[0][physicalQubitIndex[Q]][q]), c.bool_val(true));
+                bool set = m->getBoolValue(x[0][physicalQubitIndex[Q]][q], lb);
                 if (set) {
                     swaps.at(0).emplace_back(std::pair<unsigned short, unsigned short>{Q, q});
                 }

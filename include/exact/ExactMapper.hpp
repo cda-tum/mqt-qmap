@@ -7,6 +7,7 @@
 #define EXACT_MAPPER_hpp
 
 #include "Encodings.hpp"
+#include "LogicBlock/LogicBlock.hpp"
 #include "Mapper.hpp"
 
 #include <algorithm>

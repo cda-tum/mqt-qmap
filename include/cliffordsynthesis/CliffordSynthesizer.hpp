@@ -8,7 +8,7 @@
 
 #include "Architecture.hpp"
 #include "CliffordOptimizationResult.hpp"
-#include "LBEncodings.hpp"
+#include "Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
@@ -47,7 +47,7 @@ public:
 
     void setCouplingMap(const Architecture& arch) {
         architecture = arch;
-        auto map = highestFidelityMap.emplace_back();
+        auto map     = highestFidelityMap.emplace_back();
         architecture.getHighestFidelityCouplingMap(nqubits, map);
     }
     bool                   choose_best   = false;
@@ -67,7 +67,6 @@ public:
     Tableau initialTableau{};
     Tableau targetTableau{};
     Tableau modelTableau{};
-
 
     void dumpResult(const std::string& outputFilename) {
         if (optimal_results.resultCircuit.empty()) {
