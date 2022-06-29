@@ -339,11 +339,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     z3::optimize opt(c);
     z3::params   p(c);
     LogicTerm::termType = TermType::BASE;
+    p.set("timeout", timeout);
     p.set("pb.compile_equality", true);
+    p.set("pp.wcnf", true);
     p.set("maxres.hill_climb", true);
     p.set("maxres.pivot_on_correction_set", false);
     opt.set(p);
-    lb = new Z3LogicOptimizer(c, opt, true);
+    lb = new Z3LogicOptimizer(c, opt, false);
 #endif
 
     std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
@@ -431,7 +433,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     rowConsistency = rowConsistency +
                                      LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
                 }
-                lb->assertFormula((rowConsistency < LogicTerm(1)) || (rowConsistency == LogicTerm(1)));
+                lb->assertFormula(rowConsistency <= LogicTerm(1));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
@@ -487,7 +489,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     vars.emplace_back(x[k][i][j]);
                     varIDs.emplace_back(j);
                 }
-                lb->assertFormula(AtMostOneBiMander(vars));
+                lb->assertFormula(AtMostOneBiMander(vars, lb));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) { //There is no exactly one Bimander

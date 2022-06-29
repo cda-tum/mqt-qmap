@@ -74,14 +74,10 @@ endmacro()
 if (Z3_FOUND)
     # exact mapper project library
     add_qmap_library(exact ExactMapper)
-    # add encodings
-    target_sources(${PROJECT_NAME}_exact_lib PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}/Encodings.cpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/Encodings.hpp)
     # add Z3 library
     target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
     # add LogicBlocks library
-    target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic)
+    target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
 else ()
     message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
 endif ()
