@@ -345,12 +345,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     p.set("maxres.hill_climb", true);
     p.set("maxres.pivot_on_correction_set", false);
     opt.set(p);
-    lb = new Z3LogicOptimizer(c, opt, false);
+    lb = new Z3LogicOptimizer(c, opt, true);
 #endif
 
     std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
     unsigned long long                                 piCount{};
-    unsigned long long                                 internalPiCount{};
+    unsigned long long                                 internalPiCount;
     std::unordered_set<unsigned long long>             skipped_pi{};
     std::unordered_map<unsigned short, unsigned short> physicalQubitIndex{};
     unsigned short                                     qIdx = 0;
@@ -580,7 +580,8 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
                 ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
-            lb->assertFormula(onlyOne == LogicTerm(1));
+            LogicTerm t = onlyOne == LogicTerm(1);
+            lb->assertFormula(t);
         }
     } else {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
@@ -621,7 +622,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
             }
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-                dynamic_cast<LogicBlockOptimizer*>(lb)->weightedTerm(!y[k - 1][internalPiCount], picost);
+                dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(LogicTerm::ite(y[k - 1][internalPiCount], LogicTerm(static_cast<int>(picost)), LogicTerm(0)));
                 if (config.useBDD)
                     weightedVars[k].insert(WeightedVar(y[k - 1][internalPiCount], static_cast<int>(picost)));
             }
@@ -632,7 +633,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 
     if (config.enableSwapLimits && config.useBDD) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-            dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(BuildBDD(weightedVars[k], y[k - 1], static_cast<int>(limit)));
+            lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1], static_cast<int>(limit), lb));
         }
     }
 
@@ -682,7 +683,6 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         choiceResults.output.gates            = choiceResults.output.singleQubitGates + choiceResults.output.cnots;
         assert(choiceResults.output.swaps == 0U);
         assert(choiceResults.output.directionReverse == 0U);
-
         // swaps
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             auto& i = x[k - 1];
@@ -701,6 +701,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     }
                 }
             }
+
             architecture.minimumNumberOfSwaps(pi, swaps.at(k));
             choiceResults.output.swaps += swaps.at(k).size();
             if (architecture.bidirectional()) {
