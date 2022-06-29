@@ -1,5 +1,7 @@
 # add MQT::qfr target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
+# add LogicBlocks target
+add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks")
 
 macro(add_qmap_library LIBNAME SRCFILE)
     # main project library

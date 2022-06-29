@@ -338,26 +338,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     z3::solver   slv(c);
     z3::optimize opt(c);
     z3::params   p(c);
-    if (method == OptMethod::Z3) {
-        LogicTerm::termType = TermType::BASE;
-        if (strategy == OptimizingStrategy::UseMinimizer || strategy == OptimizingStrategy::SplitIter) {
-            p.set("pb.compile_equality", true);
-            p.set("maxres.hill_climb", true);
-            p.set("maxres.pivot_on_correction_set", false);
-            // z3::set_param("parallel.enable", true);
-            // z3::set_param("parallel.threads.max", nthreads);
-            opt.set(p);
-            lb = new Z3LogicOptimizer(c, opt, false);
-        } else {
-            p.set("threads", unsigned(nthreads / 2));
-            z3::set_param("parallel.enable", true);
-            z3::set_param("parallel.threads.max", nthreads / 2);
-            slv.set(p);
-            lb = new Z3LogicBlock(c, slv, true);
-        }
-    } else {
-        return CliffordOptResults{};
-    }
+    LogicTerm::termType = TermType::BASE;
+    p.set("pb.compile_equality", true);
+    p.set("maxres.hill_climb", true);
+    p.set("maxres.pivot_on_correction_set", false);
+    opt.set(p);
+    lb = new Z3LogicOptimizer(c, opt, true);
 #endif
 
     std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
@@ -445,7 +431,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     rowConsistency = rowConsistency +
                                      LogicTerm::ite(x[k][i][j], LogicTerm(1), LogicTerm(0));
                 }
-                lb->assertFormula(rowConsistency < LogicTerm(1) || rowConsistency == LogicTerm(1));
+                lb->assertFormula((rowConsistency < LogicTerm(1)) || (rowConsistency == LogicTerm(1)));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) {
@@ -682,6 +668,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
     /// 	Solving							//
     //////////////////////////////////////////
+    lb->produceInstance();
     Result res = lb->solve();
     if (Result::SAT == res) {
         Model* m              = lb->getModel();
