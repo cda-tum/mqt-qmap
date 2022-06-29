@@ -655,7 +655,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         }
     }
 
-    /* if (config.includeWCNF) {
+    if (config.includeWCNF) {
         std::stringstream ss{};
         ss << opt;
         try {
@@ -666,7 +666,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             std::cerr << "This can be circumvented by using QMAP's `commander` or `bimander` encoding." << std::endl;
         }
         choiceResults.wcnf = ss.str();
-    }*/
+    }
 
     //////////////////////////////////////////
     /// 	Solving							//
