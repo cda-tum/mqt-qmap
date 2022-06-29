@@ -19,11 +19,9 @@
 #include <unordered_set>
 #include <z3++.h>
 
-
 #ifdef Z3_FOUND
     #include "LogicBlock/Z3Logic.hpp"
 #endif
-
 
 using namespace z3;
 using matrix      = std::vector<expr_vector>;
