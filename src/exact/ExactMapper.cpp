@@ -611,7 +611,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     piCount         = 0;
     internalPiCount = 0;
     std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
-    LogicTerm cost = LogicTerm(0);
+    LogicTerm                          cost = LogicTerm(0);
     do {
         if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
             auto picost = architecture.minimumNumberOfSwaps(pi);
