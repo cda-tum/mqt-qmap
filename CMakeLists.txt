@@ -15,6 +15,12 @@ option(COVERAGE "Configure for coverage report generation")
 option(GENERATE_POSITION_INDEPENDENT_CODE "Generate position independent code")
 option(BUILD_QMAP_TESTS "Also build tests for QMAP project")
 
+set(DEPLOY ON)
+#set(BINDINGS ON)
+set(COVERAGE OFF)
+set(GENERATE_POSITION_INDEPENDENT_CODE OFF)
+set(BUILD_QMAP_TESTS ON)
+
 if (DEFINED ENV{DEPLOY})
 	set(DEPLOY $ENV{DEPLOY} CACHE BOOL "Use deployment configuration from environment" FORCE)
 	message(STATUS "Setting deployment configuration to '${DEPLOY}' from environment")
