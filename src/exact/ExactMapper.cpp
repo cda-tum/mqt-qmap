@@ -5,8 +5,6 @@
 
 #include "exact/ExactMapper.hpp"
 
-#include "LogicTerm/LogicTerm.hpp"
-
 void ExactMapper::map(const Configuration& settings) {
     results.config     = settings;
     const auto& config = results.config;
@@ -613,6 +611,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     piCount         = 0;
     internalPiCount = 0;
     std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
+    LogicTerm cost = LogicTerm(0);
     do {
         if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
             auto picost = architecture.minimumNumberOfSwaps(pi);
@@ -622,7 +621,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
             }
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
-                dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(LogicTerm::ite(y[k - 1][internalPiCount], LogicTerm(static_cast<int>(picost)), LogicTerm(0)));
+                cost = cost + LogicTerm::ite(y[k - 1][internalPiCount], LogicTerm(static_cast<int>(picost)), LogicTerm(0));
                 if (config.useBDD)
                     weightedVars[k].insert(WeightedVar(y[k - 1][internalPiCount], static_cast<int>(picost)));
             }
@@ -630,7 +629,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         }
         ++piCount;
     } while (std::next_permutation(pi.begin(), pi.end()));
-
+    dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(cost);
     if (config.enableSwapLimits && config.useBDD) {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
             lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1], static_cast<int>(limit), lb));
