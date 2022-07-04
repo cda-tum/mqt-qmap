@@ -76,11 +76,11 @@ jobs:
              cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
              cd buildCov/test
              ctest -C $BUILD_TYPE --output-on-failure
-      - name: Run gcov
-        run:  |
-              find . -type f -name '*.gcno' -exec gcov -p  {} +
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
+        with:
+          gcov:        true
+          gcov_ignore: "extern/**/*"
 
   macOS-ci:
     runs-on: macos-latest
