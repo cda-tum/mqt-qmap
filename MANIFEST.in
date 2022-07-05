@@ -15,3 +15,5 @@ prune extern/qfr/extern/dd_package/extern
 prune extern/qfr/extern/zx/extern/googletest
 
 graft apps
+
+graft extern/LogicBlocks
