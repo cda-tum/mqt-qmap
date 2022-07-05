@@ -16,7 +16,6 @@
 #include <set>
 #include <unordered_set>
 
-
 using Swaps       = std::vector<std::pair<unsigned short, unsigned short>>;
 using QubitChoice = std::set<unsigned short>;
 
