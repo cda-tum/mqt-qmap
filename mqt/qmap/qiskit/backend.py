@@ -61,7 +61,7 @@ def import_target(target: Target) -> Architecture.Properties:
         props.set_frequency(i, qubit_props.frequency)
 
     for instruction, qargs in target.instructions:
-        if instruction.name == 'reset':
+        if instruction.name == 'reset' or instruction.name == 'delay':
             continue
 
         instruction_props = target[instruction.name][qargs]
