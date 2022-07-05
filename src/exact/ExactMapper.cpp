@@ -651,7 +651,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
                     reverse      = reverse && (!indexFT || !indexSC);
                 }
-               lb->weightedTerm(reverse, GATES_OF_DIRECTION_REVERSE);
+                lb->weightedTerm(reverse, GATES_OF_DIRECTION_REVERSE);
             }
         }
     }
@@ -675,7 +675,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     lb->produceInstance();
     const auto res = lb->solve();
     if (Result::SAT == res) {
-        const auto m              = lb->getModel();
+        const auto m          = lb->getModel();
         choiceResults.timeout = results.timeout = false;
 
         // quickly determine cost
