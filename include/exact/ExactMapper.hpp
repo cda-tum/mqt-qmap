@@ -6,8 +6,6 @@
 #ifndef EXACT_MAPPER_hpp
 #define EXACT_MAPPER_hpp
 
-#include "Encodings.hpp"
-#include "LogicBlock/LogicBlock.hpp"
 #include "Mapper.hpp"
 
 #include <algorithm>
@@ -17,10 +15,7 @@
 #include <functional>
 #include <set>
 #include <unordered_set>
-#include <z3++.h>
 
-using namespace z3;
-using matrix      = std::vector<expr_vector>;
 using Swaps       = std::vector<std::pair<unsigned short, unsigned short>>;
 using QubitChoice = std::set<unsigned short>;
 

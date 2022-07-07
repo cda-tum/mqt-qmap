@@ -12,5 +12,8 @@ prune extern/qfr/extern/json/benchmarks
 prune extern/qfr/extern/json/include
 prune extern/qfr/extern/json/third_party
 prune extern/qfr/extern/dd_package/extern
+prune extern/qfr/extern/zx/extern/googletest
 
 graft apps
+
+graft extern/LogicBlocks

@@ -27,11 +27,11 @@ function(check_z3_version z3_include z3_lib)
 			RUN_OUTPUT_VARIABLE SRC_OUTPUT
 	)
 
-	if(Z3_COMPILED)
+	if (Z3_COMPILED)
 		string(REGEX REPLACE "([0-9]*\\.[0-9]*\\.[0-9]*)" "\\1"
 		       z3_version "${SRC_OUTPUT}")
 		set(Z3_VERSION_STRING ${z3_version} PARENT_SCOPE)
-	endif()
+	endif ()
 endfunction(check_z3_version)
 
 # if Z3_ROOT is provided, check there first
@@ -55,7 +55,7 @@ endif ()
 # see if a config file is available
 if (NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
 	find_package(Z3 CONFIG)
-endif()
+endif ()
 
 # try default paths as a last hope
 if (NOT Z3_FOUND)
@@ -67,15 +67,15 @@ if (NOT Z3_FOUND)
 	unset(Z3_VERSION_STRING)
 
 	# Try to check version by compiling a small program that prints Z3's version
-	if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+	if (Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
 		check_z3_version(${Z3_CXX_INCLUDE_DIRS} ${Z3_LIBRARIES})
-	endif()
+	endif ()
 
-	if(NOT Z3_VERSION_STRING)
+	if (NOT Z3_VERSION_STRING)
 		set(Z3_VERSION_STRING "0.0.0")
-	endif()
+	endif ()
 
-	include (FindPackageHandleStandardArgs)
+	include(FindPackageHandleStandardArgs)
 	find_package_handle_standard_args(Z3
 	                                  REQUIRED_VARS Z3_LIBRARIES Z3_CXX_INCLUDE_DIRS
 	                                  VERSION_VAR Z3_VERSION_STRING)
