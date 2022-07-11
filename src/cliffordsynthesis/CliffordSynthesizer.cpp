@@ -65,7 +65,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, Tableau& initialTab,
         Tableau& targetTab) {
-    LogicBlock* lb;
+    std::unique_ptr<LogicBlock> lb;
 #ifdef Z3_FOUND
     using namespace z3logic;
     z3::context  c;
@@ -81,19 +81,19 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             // z3::set_param("parallel.enable", true);
             // z3::set_param("parallel.threads.max", nthreads);
             opt.set(p);
-            lb = new Z3LogicOptimizer(c, opt, false);
+            lb = std::make_unique<Z3LogicOptimizer>(c, opt, false);
         } else {
             p.set("threads", unsigned(nthreads / 2));
             z3::set_param("parallel.enable", true);
             z3::set_param("parallel.threads.max", nthreads / 2);
             slv.set(p);
-            lb = new Z3LogicBlock(c, slv, true);
+            lb = std::make_unique<Z3LogicBlock>(c, slv, true);
         }
     } else {
         return CliffordOptResults{};
     }
 #endif
-    DEBUG() << "lb 1: " << lb << std::endl;
+    DEBUG() << "lb 1: " << lb.get() << std::endl;
     LogicMatrix   x{};
     LogicMatrix   z{};
     LogicVector   r{};
@@ -186,7 +186,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     diff         = mod_gen - formulation;
     INFO() << "Time to generate Model: " << diff.count() << std::endl;
 
-    TRACE() << "Clauses: " << TermImpl::getNextId(lb) << std::endl;
+    TRACE() << "Clauses: " << TermImpl::getNextId(lb.get()) << std::endl;
     TRACE() << "None Terms: " << TermImpl::getNextId() << std::endl;
 
     Result result = lb->solve();
@@ -226,7 +226,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             if (gate_step > 0) {
                 for (int a = 0; a < nqubits; ++a) {
                     for (auto gate: Gates::singleQubitWithoutNOP) {
-                        if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb)) {
+                        if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb.get())) {
                             circuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
                             if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
@@ -237,7 +237,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                         }
                     }
                     for (int b = 0; b < nqubits; ++b) {
-                        if (model->getBoolValue(g_c[gate_step][a][b], lb)) {
+                        if (model->getBoolValue(g_c[gate_step][a][b], lb.get())) {
                             results.gate_count++;
                             circuit.emplace_back<qc::StandardOperation>(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
@@ -260,12 +260,12 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             Tableau::generateTableau(tableau, circuit);
             Tableau::initTableau(modelTableau, nqubits);
             for (int i = 0; i < nqubits; ++i) {
-                modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb),
+                modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb.get()),
                                                  nqubits, i);
-                modelTableau.populateTableauFrom(model->getBitvectorValue(z[gate_step][i], lb),
+                modelTableau.populateTableauFrom(model->getBitvectorValue(z[gate_step][i], lb.get()),
                                                  nqubits, i + nqubits);
             }
-            modelTableau.populateTableauFrom(model->getBitvectorValue(r[gate_step], lb),
+            modelTableau.populateTableauFrom(model->getBitvectorValue(r[gate_step], lb.get()),
                                              nqubits, 2 * nqubits);
             if (verbose >= 5) {
                 TRACE() << modelTableau;
@@ -274,7 +274,6 @@ CliffordOptResults CliffordOptimizer::main_optimization(
         results.resultCircuit = circuit.clone();
     }
     lb->reset();
-    delete lb;
     if (result == Result::SAT) {
         DEBUG() << "SAT" << std::endl;
         return results;
@@ -289,7 +288,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
 void CliffordOptimizer::make_depth_optimizer(
         int                                                        timesteps,
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
         const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
@@ -312,14 +311,14 @@ void CliffordOptimizer::make_depth_optimizer(
             }
             cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
         }
-        dynamic_cast<LogicBlockOptimizer*>(lb)->maximize(cost);
+        dynamic_cast<LogicBlockOptimizer*>(lb.get())->maximize(cost);
     }
 }
 
 void CliffordOptimizer::make_fidelity_optimizer(
         int                                                        timesteps,
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
         const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
     if (!architecture.isArchitectureAvailable()) {
@@ -351,7 +350,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
                 }
             }
         }
-        dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(cost);
+        dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
         cost = LogicTerm(0);
         for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
             for (int a = 0; a < nqubits; ++a) {
@@ -361,14 +360,14 @@ void CliffordOptimizer::make_fidelity_optimizer(
                 }
             }
         }
-        dynamic_cast<LogicBlockOptimizer*>(lb)->maximize(cost);
+        dynamic_cast<LogicBlockOptimizer*>(lb.get())->maximize(cost);
     }
 }
 
 void CliffordOptimizer::make_gate_optimizer(
         int                                                        timesteps,
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
         const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
     LogicTerm changes = LogicTerm(true);
@@ -379,8 +378,10 @@ void CliffordOptimizer::make_gate_optimizer(
         LogicTerm cost = LogicTerm(0);
         for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
             for (int a = 0; a < nqubits; ++a) {
-                for (auto gate: Gates::singleQubitWithoutNOP) {
-                    cost = cost + g_s[gate_step][Gates::toIndex(gate)][a];
+                if (target != OptTarget::GATES_ONLY_CNOT) {
+                    for (auto gate: Gates::singleQubitWithoutNOP) {
+                        cost = cost + g_s[gate_step][Gates::toIndex(gate)][a];
+                    }
                 }
                 for (int b = 0; b <= a; ++b) {
                     if (a == b)
@@ -389,7 +390,7 @@ void CliffordOptimizer::make_gate_optimizer(
                 }
             }
         }
-        dynamic_cast<LogicBlockOptimizer*>(lb)->minimize(cost);
+        dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
     }
 }
 
@@ -594,7 +595,7 @@ void CliffordOptimizer::updateResults(CliffordOptResults& results) {
     }
 }
 
-void CliffordOptimizer::assertTableau(const Tableau& tableau, LogicBlock* lb,
+void CliffordOptimizer::assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                                       const LogicMatrix& x,
                                       const LogicMatrix& z,
                                       const LogicVector& r, int nqubits,
@@ -612,7 +613,7 @@ void CliffordOptimizer::assertTableau(const Tableau& tableau, LogicBlock* lb,
 }
 
 void CliffordOptimizer::makeSingleGateConstraints(
-        LogicBlock* lb, const LogicMatrix& x, const LogicMatrix& z,
+        std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
         const LogicVector& r, int nqubits, int timesteps,
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,
@@ -635,7 +636,7 @@ void CliffordOptimizer::makeSingleGateConstraints(
         }
         lb->assertFormula(ExactlyOneCMDR(
                 groupVars(vars, static_cast<std::size_t>(vars.size() / 2U)),
-                LogicTerm::noneTerm(), lb));
+                LogicTerm::noneTerm(), lb.get()));
     }
 
     // GATE CONSTRAINTS
@@ -801,7 +802,7 @@ void CliffordOptimizer::makeSingleGateConstraints(
     }
 }
 void CliffordOptimizer::makeMultipleGateConstraints(
-        LogicBlock* lb, const LogicMatrix& x, const LogicMatrix& z,
+        std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
         const LogicVector& r, int nqubits, int timesteps,
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,
@@ -824,7 +825,7 @@ void CliffordOptimizer::makeMultipleGateConstraints(
             }
             lb->assertFormula(ExactlyOneCMDR(
                     groupVars(vars, static_cast<std::size_t>(vars.size() / 2)),
-                    LogicTerm::noneTerm(), lb));
+                    LogicTerm::noneTerm(), lb.get()));
         }
     }
     // Maximum any combination of 1 and 2 qubit gates adding up to n

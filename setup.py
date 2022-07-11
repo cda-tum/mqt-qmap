@@ -103,7 +103,7 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     packages=find_namespace_packages(include=['mqt.*']),
-    install_requires=["qiskit-terra~=0.20.2"],
+    install_requires=["qiskit-terra>=0.20.2,<0.22.0"],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc4"],
         "dev": ["mqt.qmap[test]"]  # requires Pip 21.2 or newer

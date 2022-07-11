@@ -22,7 +22,7 @@ private:
 
 public:
     [[nodiscard]] Tableau() = default;
-    [[nodiscard]] explicit Tableau(innerTableau inner):
+    [[nodiscard]] explicit Tableau(innerTableau& inner):
         tableau(inner) {}
 
     Tableau(const Tableau& other) {
@@ -45,7 +45,7 @@ public:
         return tableau.at(index);
     }
 
-    size_t getQubitCount() const {
+    [[nodiscard]] size_t getQubitCount() const {
         return tableau.size();
     }
 

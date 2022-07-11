@@ -8,7 +8,7 @@
 
 #include "Architecture.hpp"
 #include "CliffordOptimizationResult.hpp"
-#include "Encodings.hpp"
+#include "Encodings/Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
@@ -104,20 +104,20 @@ protected:
     void make_depth_optimizer(
             int                                                        timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-            const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+            const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
             const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
             const LogicMatrix3D& g_s, const LogicMatrix3D& g_c);
 
     void make_gate_optimizer(
             int                                                        timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-            const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+            const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
             const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
             const LogicMatrix3D& g_s, const LogicMatrix3D& g_c);
     void make_fidelity_optimizer(
             int                                                        timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-            const std::vector<unsigned short>& qubitChoice, LogicBlock* lb,
+            const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
             const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
             const LogicMatrix3D& g_s, const LogicMatrix3D& g_c);
 
@@ -139,18 +139,18 @@ protected:
     void         updateResults(CliffordOptResults& r);
     Architecture architecture{};
 
-    void assertTableau(const Tableau& tableau, LogicBlock* lb,
+    void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                        const LogicMatrix& x, const LogicMatrix& z,
                        const LogicVector& r, int nqubits, int position);
 
     static void makeSingleGateConstraints(
-            LogicBlock* lb, const LogicMatrix& x, const LogicMatrix& z,
+            std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
             const LogicVector& r, int nqubits, int timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
             const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,
             const LogicMatrix3D& g_c);
     static void makeMultipleGateConstraints(
-            LogicBlock* lb, const LogicMatrix& x, const LogicMatrix& z,
+            std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
             const LogicVector& r, int nqubits, int timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
             const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,

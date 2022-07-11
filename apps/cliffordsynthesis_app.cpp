@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         "strategy,s", po::value<std::string>(),
         "choose one of use_minimizer, start_high, start_low, minmax, split_iter")(
         "target,r", po::value<std::string>(),
-        R"(choose one metric to optimize ("gates" | "depth" | "fidelity"))")(
+        R"(choose one metric to optimize ("gates" | "gates_only_cnot" | "depth" | "fidelity"))")(
         "method,m", po::value<std::string>(),
         R"(choose method used to solve ("z3" | "optimath" | "smtlibv2" | "dimacs"))")(
         "verbose,v", po::value<int>(),
@@ -140,6 +140,8 @@ int main(int argc, char** argv) {
         const std::string target = vm["target"].as<std::string>();
         if (target == "gates") {
             opt.target = OptTarget::GATES;
+        } else if (target == "gates_only_cnot") {
+            opt.target = OptTarget::GATES_ONLY_CNOT;
         } else if (target == "depth") {
             opt.target = OptTarget::DEPTH;
         } else if (target == "fidelity") {

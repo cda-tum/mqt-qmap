@@ -20,6 +20,7 @@ enum class OptResult { SAT,
                        UNSAT,
                        UNDEF };
 enum class OptTarget { GATES,
+                       GATES_ONLY_CNOT,
                        DEPTH,
                        FIDELITY };
 enum class OptMethod { Z3,
@@ -55,6 +56,8 @@ inline std::string toString(OptTarget target) {
     switch (target) {
         case OptTarget::GATES:
             return "Gates";
+        case OptTarget::GATES_ONLY_CNOT:
+            return "Gates (only CNOT)";
         case OptTarget::DEPTH:
             return "Depth";
         case OptTarget::FIDELITY:
@@ -66,6 +69,8 @@ inline std::string toString(OptTarget target) {
 inline OptTarget optTargetFromString(const std::string& target) {
     if (target == "Gates")
         return OptTarget::GATES;
+    if (target == "Gates (only CNOT)")
+        return OptTarget::GATES_ONLY_CNOT;
     if (target == "Depth")
         return OptTarget::DEPTH;
     if (target == "Fidelity")
