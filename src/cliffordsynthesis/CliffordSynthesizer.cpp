@@ -85,7 +85,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
         } else {
             p.set("threads", unsigned(nthreads / 2));
             z3::set_param("parallel.enable", true);
-            z3::set_param("parallel.threads.max", nthreads / 2);
+            //            z3::set_param("parallel.threads.max", nthreads / 2);
             slv.set(p);
             lb = std::make_unique<Z3LogicBlock>(c, slv, true);
         }
@@ -230,8 +230,9 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                             circuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
                             if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
-                            TRACE() << Gates::gateName(gate) << "(" << a << ")"
-                                    << ") Fidelity: " << architecture.getSingleQubitFidelities()[a]
+                            TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
+                            if (architecture.isCalibrationDataAvailable())
+                                TRACE() << " Fidelity: " << architecture.getSingleQubitFidelities()[a]
                                     << std::endl;
                             ++results.gate_count;
                         }
@@ -245,10 +246,12 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                                 results.fidelity *=
                                         (architecture.getCNOTFidelities()[qubitChoice.at(a)]
                                                                          [qubitChoice.at(b)]);
-                            TRACE() << "X(" << a << "," << b << ") Fidelity: "
-                                    << architecture.getCNOTFidelities()[qubitChoice.at(a)]
-                                                                       [qubitChoice.at(b)]
-                                    << std::endl;
+                            TRACE() << "X(" << a << "," << b << ")" << std::endl;
+                            if (architecture.isCalibrationDataAvailable())
+                                TRACE() << "Fidelity: "
+                                        << architecture.getCNOTFidelities()[qubitChoice.at(a)]
+                                                                           [qubitChoice.at(b)]
+                                        << std::endl;
                         }
                     }
                 }

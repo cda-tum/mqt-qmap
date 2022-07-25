@@ -139,7 +139,7 @@ protected:
     void         updateResults(CliffordOptResults& r);
     Architecture architecture{};
 
-    void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
+    static void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                        const LogicMatrix& x, const LogicMatrix& z,
                        const LogicVector& r, int nqubits, int position);
 

@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
 
     if (vm.count("verbose")) {
         opt.verbose = vm["verbose"].as<int>();
+        opt.verbose = 5;
         switch (opt.verbose) {
             case 0:
                 std::cout << "Verbosity: Error\n";
@@ -99,6 +100,7 @@ int main(int argc, char** argv) {
                 break;
             default:
                 std::cout << "Verbosity: Error\n";
+                opt.verbose = 5;
                 break;
         }
     }
@@ -232,7 +234,7 @@ int main(int argc, char** argv) {
     }
     opt.optimize();
     Tableau resultTableau{};
-    Tableau::generateTableau(resultTableau, opt.circuit);
+    Tableau::generateTableau(resultTableau, opt.optimal_results.resultCircuit);
     if (opt.verbose >= 2) {
         DEBUG() << "TargetTableau:" << std::endl
                 << opt.targetTableau

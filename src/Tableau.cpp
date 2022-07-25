@@ -395,3 +395,8 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     }
     return os;
 }
+std::string Tableau::getStrRepresentation() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}

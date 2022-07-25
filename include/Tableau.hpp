@@ -40,6 +40,9 @@ public:
     std::vector<int32_t> operator[](std::size_t index) {
         return tableau[index];
     }
+    std::vector<int32_t> operator[](std::size_t index) const {
+        return tableau[index];
+    }
 
     std::vector<int32_t> at(std::size_t index) {
         return tableau.at(index);
@@ -124,5 +127,7 @@ public:
     static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
 
     unsigned long getBVFrom(int column) const;
+
+    std::string getStrRepresentation() const;
 };
 #endif //QMAP_TABLEAU_HPP
