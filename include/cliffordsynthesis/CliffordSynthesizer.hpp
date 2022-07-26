@@ -140,8 +140,8 @@ protected:
     Architecture architecture{};
 
     static void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
-                       const LogicMatrix& x, const LogicMatrix& z,
-                       const LogicVector& r, int nqubits, int position);
+                              const LogicMatrix& x, const LogicMatrix& z,
+                              const LogicVector& r, int nqubits, int position);
 
     static void makeSingleGateConstraints(
             std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,

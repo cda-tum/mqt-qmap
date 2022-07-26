@@ -79,6 +79,8 @@ public:
 
     void dump(std::ostream& of) const;
 
+    void importString(const std::string& tableauRepr);
+
     void import(const std::string& filename);
     void import(std::istream& is);
 
@@ -123,6 +125,7 @@ public:
     double               tableauDistance(Tableau other, int nQubits);
     Tableau              embedTableau(int nQubits);
     friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
+    friend std::istream& operator>>(std::istream& is, Tableau& dt);
 
     static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
 

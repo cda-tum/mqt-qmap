@@ -233,7 +233,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                             TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
                             if (architecture.isCalibrationDataAvailable())
                                 TRACE() << " Fidelity: " << architecture.getSingleQubitFidelities()[a]
-                                    << std::endl;
+                                        << std::endl;
                             ++results.gate_count;
                         }
                     }

@@ -46,7 +46,8 @@ int main(int argc, char** argv) {
         "maximum number of threads for use in split_iter strategy (default: 1)")(
         "choosebest", "only choose subset of coupling map with best fidelities "
                     "(default: false)")("useembed", "useembed"
-                                                    "(default: false)");
+"(default: false)")("string", "Use String representation from Qiskit as input"
+"(default: false)");
     // clang-format on
 
     po::variables_map vm;
@@ -174,7 +175,8 @@ int main(int argc, char** argv) {
             }
         } else {
             const std::string tableau = vm["in"].as<std::string>();
-            //load string
+            opt.targetTableau.importString(tableau);
+            opt.nqubits = opt.targetTableau.getQubitCount();
         }
 
         Tableau::initTableau(opt.initialTableau, opt.nqubits);

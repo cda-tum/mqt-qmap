@@ -400,3 +400,89 @@ std::string Tableau::getStrRepresentation() const {
     out << *this;
     return out.str();
 }
+void Tableau::importString(const std::string& tableauRepr) {
+    std::stringstream in(tableauRepr);
+    in >> *this;
+}
+std::istream& operator>>(std::istream& is, Tableau& dt) {
+    std::string line;
+    std::getline(is, line);
+    if (line.empty()) {
+        return is;
+    }
+    std::regex  r_stabilizer = std::regex("([\\+-])([IYZX]+)");
+    std::smatch m;
+    if (line.find("Destablizer") != std::string::npos) {
+        std::string::const_iterator iter = line.cbegin();
+        while (std::regex_search(iter, line.cend(), m, r_stabilizer)) {
+            std::string          s = m.str(0);
+            std::vector<int32_t> row;
+
+            for (auto c: s) {
+                if (c == 'I')
+                    row.push_back(1);
+                else if (c == 'X')
+                    row.push_back(0);
+                else if (c == 'Y')
+                    row.push_back(0);
+                else if (c == 'Z')
+                    row.push_back(1);
+            }
+            for (auto c: s) {
+                if (c == 'I')
+                    row.push_back(1);
+                else if (c == 'X')
+                    row.push_back(1);
+                else if (c == 'Y')
+                    row.push_back(0);
+                else if (c == 'Z')
+                    row.push_back(0);
+            }
+            if (s[0] == '-') {
+                row.push_back(1);
+            } else {
+                row.push_back(0);
+            }
+            std::cout << s << std::endl;
+            dt.tableau.push_back(row);
+            iter = m[0].second;
+        }
+    } else {
+        std::string::const_iterator iter = line.cbegin();
+        while (std::regex_search(iter, line.cend(), m, r_stabilizer)) {
+            std::string          s = m.str(0);
+            std::vector<int32_t> row;
+
+            for (auto c: s) {
+                if (c == 'I')
+                    row.push_back(0);
+                else if (c == 'X')
+                    row.push_back(1);
+                else if (c == 'Y')
+                    row.push_back(1);
+                else if (c == 'Z')
+                    row.push_back(0);
+            }
+            for (auto c: s) {
+                if (c == 'I')
+                    row.push_back(0);
+                else if (c == 'X')
+                    row.push_back(0);
+                else if (c == 'Y')
+                    row.push_back(1);
+                else if (c == 'Z')
+                    row.push_back(1);
+            }
+            if (s[0] == '-') {
+                row.push_back(1);
+            } else {
+                row.push_back(0);
+            }
+            std::cout << s << std::endl;
+            dt.tableau.push_back(row);
+            iter = m[0].second;
+        }
+    }
+    std::cout << "Tableau: " << dt << std::endl;
+    return is;
+}
