@@ -339,7 +339,6 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 #ifdef Z3_FOUND
     using namespace z3logic;
     z3::context  c;
-    z3::solver   slv(c);
     z3::optimize opt(c);
     z3::params   p(c);
     LogicTerm::termType = TermType::BASE;
@@ -743,4 +742,5 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     } else {
         results.timeout = true;
     }
+    lb->reset();
 }
