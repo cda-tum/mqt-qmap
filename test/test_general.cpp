@@ -52,11 +52,11 @@ TEST(General, TestLineParsing) {
 }
 
 TEST(General, TestUtilFunctions) {
-    std::vector<unsigned short> data{3,4,2,1};
+    std::vector<unsigned short> data{3, 4, 2, 1};
     EXPECT_EQ(printPi(data), "(3,4,2,1)");
 
-    std::set<unsigned short> data_set1{3,4,2,1};
-    std::set<unsigned short> data_set2{1,2,3};
-    EXPECT_EQ(idx(10, 4, 2, data_set1, data_set2),  120 + 6 + 4);
-    EXPECT_EQ(idx(10, 4, 2, data_set1, 4),  160 + 8 + 6);
+    std::set<unsigned short> data_set1{3, 4, 2, 1};
+    std::set<unsigned short> data_set2{1, 2, 3};
+    EXPECT_EQ(idx(10, 4, 2, data_set1, data_set2), 120 + 6 + 4);
+    EXPECT_EQ(idx(10, 4, 2, data_set1, 4), 160 + 8 + 6);
 }
