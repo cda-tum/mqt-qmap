@@ -379,7 +379,7 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     for (std::size_t i = 1; i < dt.back().size(); ++i) {
         os << i << '|';
     }
-    os << std::string(nQubits * 2, '-') << std::endl;
+//    os << std::string(nQubits * 2, '-') << std::endl;
     os << std::endl;
     auto i = 1;
     for (const auto& row: dt) {
@@ -391,7 +391,7 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
         for (const auto& s: row)
             os << s << '|';
         os << std::endl;
-        os << std::string(nQubits * 2, '-') << std::endl;
+//        os << std::string(nQubits * 2, '-') << std::endl;
     }
     return os;
 }
@@ -412,7 +412,7 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
     }
     std::regex  r_stabilizer = std::regex("([\\+-])([IYZX]+)");
     std::smatch m;
-    if (line.find("Destablizer") != std::string::npos) {
+    if (line.find("Destabilizer") != std::string::npos) {
         std::string::const_iterator iter = line.cbegin();
         while (std::regex_search(iter, line.cend(), m, r_stabilizer)) {
             std::string          s = m.str(0);
@@ -420,21 +420,21 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
 
             for (auto c: s) {
                 if (c == 'I')
-                    row.push_back(1);
+                    row.push_back(0);
                 else if (c == 'X')
                     row.push_back(0);
                 else if (c == 'Y')
-                    row.push_back(0);
+                    row.push_back(1);
                 else if (c == 'Z')
                     row.push_back(1);
             }
             for (auto c: s) {
                 if (c == 'I')
-                    row.push_back(1);
+                    row.push_back(0);
                 else if (c == 'X')
                     row.push_back(1);
                 else if (c == 'Y')
-                    row.push_back(0);
+                    row.push_back(1);
                 else if (c == 'Z')
                     row.push_back(0);
             }
@@ -443,7 +443,7 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-            std::cout << s << std::endl;
+//            std::cout << "Destabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }
@@ -478,7 +478,7 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-            std::cout << s << std::endl;
+//            std::cout << "Stabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }

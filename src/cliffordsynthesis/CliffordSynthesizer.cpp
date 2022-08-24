@@ -30,7 +30,7 @@ void CliffordOptimizer::optimize() {
         DEBUG() << strings.str();
         DEBUG() << "Qubit Map: " << qubitMap;
         DEBUG() << "Coupling Map Fidelity: "
-                << architecture.getAverageArchitectureFidelity(architecture.getCouplingMap(),
+                << Architecture::getAverageArchitectureFidelity(architecture.getCouplingMap(),
                                                                std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
                                                                architecture.getProperties());
         int timesteps =
@@ -212,8 +212,8 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     if (result == Result::SAT) {
         results.result               = OptResult::SAT;
         Model*                 model = lb->getModel();
-        qc::QuantumComputation circuit;
-        circuit.addQubitRegister(nqubits);
+        qc::QuantumComputation resultCircuit;
+        resultCircuit.addQubitRegister(nqubits);
         results.gate_count = 0;
         results.depth      = 0;
         results.fidelity   = 1;
@@ -227,31 +227,33 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                 for (int a = 0; a < nqubits; ++a) {
                     for (auto gate: Gates::singleQubitWithoutNOP) {
                         if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb.get())) {
-                            circuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
+                            resultCircuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
                             if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
                             TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
-                            if (architecture.isCalibrationDataAvailable())
+                            if (architecture.isCalibrationDataAvailable()) {
                                 TRACE() << " Fidelity: " << architecture.getSingleQubitFidelities()[a]
                                         << std::endl;
+                            }
                             ++results.gate_count;
                         }
                     }
                     for (int b = 0; b < nqubits; ++b) {
                         if (model->getBoolValue(g_c[gate_step][a][b], lb.get())) {
                             results.gate_count++;
-                            circuit.emplace_back<qc::StandardOperation>(
+                            resultCircuit.emplace_back<qc::StandardOperation>(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
                             if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *=
                                         (architecture.getCNOTFidelities()[qubitChoice.at(a)]
                                                                          [qubitChoice.at(b)]);
                             TRACE() << "X(" << a << "," << b << ")" << std::endl;
-                            if (architecture.isCalibrationDataAvailable())
+                            if (architecture.isCalibrationDataAvailable()) {
                                 TRACE() << "Fidelity: "
                                         << architecture.getCNOTFidelities()[qubitChoice.at(a)]
                                                                            [qubitChoice.at(b)]
                                         << std::endl;
+                            }
                         }
                     }
                 }
@@ -260,7 +262,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                 results.depth++;
             }
             auto tableau = results.resultTableaus.emplace_back();
-            Tableau::generateTableau(tableau, circuit);
+            Tableau::generateTableau(tableau, resultCircuit);
             Tableau::initTableau(modelTableau, nqubits);
             for (int i = 0; i < nqubits; ++i) {
                 modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb.get()),
@@ -274,7 +276,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                 TRACE() << modelTableau;
             }
         }
-        results.resultCircuit = circuit.clone();
+        results.resultCircuit = resultCircuit.clone();
     }
     lb->reset();
     if (result == Result::SAT) {
@@ -293,7 +295,7 @@ void CliffordOptimizer::make_depth_optimizer(
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
+        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
                                 qubitChoice, g_s, g_c);
     // COST
@@ -323,7 +325,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
+        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
     if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
@@ -372,7 +374,7 @@ void CliffordOptimizer::make_gate_optimizer(
         const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
         const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
         const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) {
+        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
     LogicTerm changes = LogicTerm(true);
     makeSingleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
                               qubitChoice, g_s, g_c);

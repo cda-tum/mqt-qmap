@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
         const std::string fid = vm["fidelity"].as<std::string>();
         architecture.loadProperties(fid);
     }
-    opt.setCouplingMap(architecture);
+    opt.setArchitecture(architecture);
 
     if (vm.count("target")) {
         const std::string target = vm["target"].as<std::string>();

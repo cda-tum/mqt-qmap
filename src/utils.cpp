@@ -148,6 +148,9 @@ subsets(const std::set<unsigned short>& input, int length, filter_function filte
     std::size_t                           n = input.size();
     std::vector<std::set<unsigned short>> result;
 
+    if (length == 0) {
+        throw std::invalid_argument("Length of subset must be greater than 0");
+    }
     if (length == 1) {
         for (const auto& item: input) {
             result.emplace_back();
