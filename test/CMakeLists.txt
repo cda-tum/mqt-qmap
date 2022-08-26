@@ -44,6 +44,11 @@ package_add_test(${PROJECT_NAME}_heuristic_test heuristic
 
 if (TARGET ${PROJECT_NAME}_exact_lib)
 	package_add_test(${PROJECT_NAME}_exact_test exact
-	                 ${CMAKE_CURRENT_SOURCE_DIR}/test_exact.cpp
-	                 ${CMAKE_CURRENT_SOURCE_DIR}/test_encodings.cpp)
+			${CMAKE_CURRENT_SOURCE_DIR}/test_exact.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/test_encodings.cpp)
+endif ()
+
+if (TARGET ${PROJECT_NAME}_cliffordsynthesis_lib)
+	package_add_test(${PROJECT_NAME}_cliffordsynthesis_test cliffordsynthesis
+			${CMAKE_CURRENT_SOURCE_DIR}/test_cliffordsynthesis.cpp)
 endif ()
