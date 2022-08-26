@@ -50,5 +50,6 @@ endif ()
 
 if (TARGET ${PROJECT_NAME}_cliffordsynthesis_lib)
 	package_add_test(${PROJECT_NAME}_cliffordsynthesis_test cliffordsynthesis
-			${CMAKE_CURRENT_SOURCE_DIR}/test_cliffordsynthesis.cpp)
+			${CMAKE_CURRENT_SOURCE_DIR}/test_cliffordsynthesis.cpp
+			${CMAKE_CURRENT_SOURCE_DIR}/test_tableau.cpp)
 endif ()
