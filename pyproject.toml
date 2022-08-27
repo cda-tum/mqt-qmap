@@ -14,7 +14,7 @@ build-backend = "setuptools.build_meta"
 build = "cp3*"
 archs = "auto64"
 skip = "*-musllinux*"
-test-skip = "*-macosx_arm64 *-musllinux* *aarch64"
+test-skip = "cp311-* *-macosx_arm64 *-musllinux* *aarch64"
 test-extras = ["test"]
 test-command = "python -m pytest {project}/test/python"
 environment = { DEPLOY = "ON" }
