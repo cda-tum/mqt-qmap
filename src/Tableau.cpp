@@ -49,7 +49,7 @@ void Tableau::import(std::istream& is) {
         if (line.find('-', 0) != std::string::npos)
             continue;
         tableau.emplace_back();
-        tableau.back().reserve(nQubits);
+        tableau.back().reserve(2 * nQubits + 1);
         parse_line(line, delimiter, {'\"'}, {'\\'}, data);
         bool skipFirst = true;
         for (const auto& datum: data) {
@@ -57,6 +57,8 @@ void Tableau::import(std::istream& is) {
                 skipFirst = false;
                 continue;
             }
+            if (datum == "")
+                continue;
             tableau.back().emplace_back(static_cast<int32_t>(std::stoul(datum)));
         }
     }
@@ -379,7 +381,7 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     for (std::size_t i = 1; i < dt.back().size(); ++i) {
         os << i << '|';
     }
-//    os << std::string(nQubits * 2, '-') << std::endl;
+    //    os << std::string(nQubits * 2, '-') << std::endl;
     os << std::endl;
     auto i = 1;
     for (const auto& row: dt) {
@@ -391,7 +393,7 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
         for (const auto& s: row)
             os << s << '|';
         os << std::endl;
-//        os << std::string(nQubits * 2, '-') << std::endl;
+        //        os << std::string(nQubits * 2, '-') << std::endl;
     }
     return os;
 }
@@ -443,7 +445,7 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-//            std::cout << "Destabilizer:" << s << std::endl;
+            //            std::cout << "Destabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }
@@ -478,7 +480,7 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-//            std::cout << "Stabilizer:" << s << std::endl;
+            //            std::cout << "Stabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }

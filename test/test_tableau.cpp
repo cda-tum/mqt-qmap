@@ -79,7 +79,7 @@ TEST(TestTableau, AccessValues) {
 
 TEST(TestTableau, BasicFunctions) {
     Tableau     tableau{};
-    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
+    std::string tableau_string = "Destabilizer = ['+XI', '+IX']";
 
     tableau.importString(tableau_string);
 
@@ -99,9 +99,13 @@ TEST(TestTableau, BasicFunctions) {
     EXPECT_EQ(tableau2[1][1], 0);
     EXPECT_EQ(tableau2[1][2], 0);
     EXPECT_EQ(tableau2[1][3], 1);
+
+    EXPECT_EQ(tableau2, tableau);
+
+    EXPECT_EQ(tableau.tableauDistance(tableau2, 2), 0);
 }
 
-TEST(TestTableau, LoadTableauFromQC) {
+TEST(TestTableau, LoadTableauFrom) {
     using namespace dd::literals;
 
     auto qc = qc::QuantumComputation(2U);
@@ -119,7 +123,17 @@ TEST(TestTableau, LoadTableauFromQC) {
 
     tableau1.clear();
 
-    tableau.import("cliffordexamples/basic.qasm");
+    tableau1.import("examples/cliffordexamples/base-tableau.tabl");
 
     EXPECT_EQ(tableau, tableau1);
+
+    tableau1.clear();
+
+    qc.s(0);
+    qc.x(1);
+    qc.sdag(1);
+    qc.z(1);
+    qc.y(1);
+
+    Tableau::generateTableau(tableau1, qc);
 }
