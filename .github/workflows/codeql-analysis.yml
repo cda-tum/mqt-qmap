@@ -8,12 +8,9 @@ on:
   schedule:
     - cron: '15 21 * * 6'
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
-  analyze:
-    name:    Analyze
+  analyze-cpp:
+    name:    Analyze C++
     runs-on: ubuntu-latest
     permissions:
       actions:         read
@@ -23,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'python' ]
+        language: [ 'cpp']
 
     steps:
       - name: Checkout repository
@@ -53,15 +50,42 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$pythonLocation/lib/python3.10/site-packages/z3/lib 
           export Z3_ROOT=$pythonLocation/lib/python3.10/site-packages/z3 
           export Z3_DIR=$pythonLocation/lib/python3.10/site-packages/z3
-          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
 
       - name: Build
-        run:  |
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
-          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+        run:  cmake --build "${{github.workspace}}/build" --parallel 4
 
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  analyze-python:
+    name:    Analyze Python
+    runs-on: ubuntu-latest
+    permissions:
+      actions:         read
+      contents:        read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
