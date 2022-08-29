@@ -632,6 +632,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
 
     // cost for reversed directions
     if (!architecture.bidirectional()) {
+        cost = LogicTerm(0);
         for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
             for (const auto& gate: layers.at(reducedLayerIndices.at(k))) {
                 if (gate.singleQubit())
@@ -643,12 +644,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
                     reverse      = reverse && (!indexFT || !indexSC);
                 }
-                lb->weightedTerm(reverse, GATES_OF_DIRECTION_REVERSE);
+                cost = cost + LogicTerm::ite(reverse, LogicTerm(GATES_OF_DIRECTION_REVERSE), LogicTerm(0));
             }
         }
+        lb->minimize(cost);
     }
 
-    // broken by removing z3
     if (config.includeWCNF) {
         choiceResults.wcnf = lb->dumpInternalSolver();
     }
