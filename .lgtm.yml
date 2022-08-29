@@ -12,9 +12,12 @@ extraction:
     after_prepare:
       - export PATH=~/.local/bin:$PATH
       - pip3 install cmake --user
+      - pip3 install z3-solver --user
       - cmake --version
     configure:
       command:
+        - export Z3_ROOT=~/.local/lib/python3.10/site-packages/z3
+        - export Z3_DIR=~/.local/lib/python3.10/site-packages/z3
         - cmake -S . -B build -DBUILD_QMAP_TESTS=ON -DBUILD_QFR_TESTS=ON -DBUILD_DD_PACKAGE_TESTS=ON -DBINDINGS=ON
     index:
       build_command:
