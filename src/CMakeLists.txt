@@ -71,16 +71,10 @@ macro(add_qmap_library LIBNAME SRCFILE)
 	add_library(MQT::${PROJECT_NAME}_${LIBNAME}_lib ALIAS ${PROJECT_NAME}_${LIBNAME}_lib)
 endmacro()
 
-if (Z3_FOUND)
-	# exact mapper project library
-	add_qmap_library(exact ExactMapper)
-	# add Z3 library
-	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC z3::z3lib)
-	# add LogicBlocks library
-	target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
-else ()
-	message(WARNING "Z3 library not found. Exact mapping library cannot be built without Z3 and will thus not be availbale as target")
-endif ()
+add_qmap_library(exact ExactMapper)
+# add LogicBlocks library
+target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
+
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)

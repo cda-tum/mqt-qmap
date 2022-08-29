@@ -7,9 +7,7 @@
 
 #include "Encodings/Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
-#ifdef Z3_FOUND
-    #include "LogicBlock/Z3Logic.hpp"
-#endif
+#include "LogicUtil/util_logicblock.hpp"
 
 void ExactMapper::map(const Configuration& settings) {
     results.config     = settings;
@@ -335,25 +333,21 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     const auto& config = results.config;
     using namespace logicbase;
     // LogicBlock
-    std::unique_ptr<LogicBlockOptimizer> lb;
-#ifdef Z3_FOUND
-    using namespace z3logic;
-    z3::context  c;
-    z3::optimize opt(c);
-    z3::params   p(c);
-    LogicTerm::termType = TermType::BASE;
-    p.set("timeout", timeout);
-    p.set("pb.compile_equality", true);
-    p.set("pp.wcnf", true);
-    p.set("maxres.hill_climb", true);
-    p.set("maxres.pivot_on_correction_set", false);
-    opt.set(p);
-    lb = std::make_unique<Z3LogicOptimizer>(c, opt, true);
-#endif
+    bool success = false;
+    logicutil::Params params;
+    params.addParam("timeout", timeout);
+    params.addParam("pb.compile_equality", true);
+    params.addParam("pp.wcnf", true);
+    params.addParam("maxres.hill_climb", true);
+    params.addParam("maxres.pivot_on_correction_set", false);
+    std::unique_ptr<LogicBlockOptimizer> lb = logicutil::getZ3LogicOptimizer(success, true, params);
+    if (!success) {
+        throw QMAPException("Could not initialize Z3 logic block optimizer");
+    }
 
     std::vector<unsigned short>                        pi(qubitChoice.begin(), qubitChoice.end());
     unsigned long long                                 piCount{};
-    unsigned long long                                 internalPiCount;
+    unsigned long long                                 internalPiCount{};
     std::unordered_set<unsigned long long>             skipped_pi{};
     std::unordered_map<unsigned short, unsigned short> physicalQubitIndex{};
     unsigned short                                     qIdx = 0;
@@ -394,7 +388,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
                 x_name.str("");
                 x_name << "x_" << k << '_' << Q << '_' << q;
-                x.back().back().push_back(
+                x.back().back().emplace_back(
                         lb->makeVariable(x_name.str(), CType::BOOL));
             }
         }
@@ -415,7 +409,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
                 y_name.str("");
                 y_name << "y_" << k << '_' << piCount;
-                y.back().push_back(lb->makeVariable(y_name.str(), CType::BOOL));
+                y.back().emplace_back(lb->makeVariable(y_name.str(), CType::BOOL));
             }
             ++piCount;
         } while (std::next_permutation(pi.begin(), pi.end()));
@@ -551,7 +545,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         auto& j         = x[k];
         do {
             if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
-                LogicTerm equal = LogicTerm(true);
+                auto equal = LogicTerm(true);
                 for (unsigned short Q: qubitChoice) {
                     for (unsigned short q = 0; q < qc.getNqubits(); ++q) {
                         auto before = i[physicalQubitIndex[Q]][q];
@@ -579,8 +573,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
                 ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
-            auto t = onlyOne == LogicTerm(1);
-            lb->assertFormula(t);
+            lb->assertFormula(onlyOne == LogicTerm(1));
         }
     } else {
         for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
@@ -655,17 +648,9 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
         }
     }
 
+    // broken by removing z3
     if (config.includeWCNF) {
-        std::stringstream ss{};
-        ss << opt;
-        try {
-            c.check_error();
-        } catch (const z3::exception& e) {
-            std::cerr << "Z3 reported an exception while trying to gather the WCNF formula: " << e.msg() << std::endl;
-            std::cerr << "Most likely, this is due to the usage of Z3's atMostOne and exactlyOne constraints." << std::endl;
-            std::cerr << "This can be circumvented by using QMAP's `commander` or `bimander` encoding." << std::endl;
-        }
-        choiceResults.wcnf = ss.str();
+        choiceResults.wcnf = lb->dumpInternalSolver();
     }
 
     //////////////////////////////////////////
