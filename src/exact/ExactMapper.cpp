@@ -333,7 +333,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     const auto& config = results.config;
     using namespace logicbase;
     // LogicBlock
-    bool success = false;
+    bool              success = false;
     logicutil::Params params;
     params.addParam("timeout", timeout);
     params.addParam("pb.compile_equality", true);
