@@ -17,11 +17,6 @@ jobs:
       contents:        read
       security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'cpp']
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -32,7 +27,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: ${{ matrix.language }}
+          languages: 'cpp'
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -67,11 +62,6 @@ jobs:
       contents:        read
       security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'python' ]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -82,7 +72,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: ${{ matrix.language }}
+          languages: 'python'
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
