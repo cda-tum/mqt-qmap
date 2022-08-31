@@ -113,36 +113,6 @@ void dfs(unsigned short current, std::set<unsigned short>& visited, const Coupli
     }
 }
 
-/// Helper function returning correct 1D array index for 3D array
-/// \param k first index
-/// \param i second index
-/// \param j third index
-/// \return index in 1D array
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, const std::set<unsigned short>& jValues) {
-    unsigned short counti = 0;
-    for (unsigned short iVal: iValues) {
-        if (iVal == i) break;
-        counti++;
-    }
-    unsigned short countj = 0;
-    for (unsigned short jVal: jValues) {
-        if (jVal == j) break;
-        countj++;
-    }
-
-    return k * jValues.size() * iValues.size() + counti * jValues.size() + countj;
-}
-
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj) {
-    unsigned short counti = 0;
-    for (unsigned short iVal: iValues) {
-        if (iVal == i) break;
-        counti++;
-    }
-
-    return k * static_cast<std::size_t>(nj) * iValues.size() + counti * static_cast<std::size_t>(nj) + j;
-}
-
 std::vector<std::set<unsigned short>>
 subsets(const std::set<unsigned short>& input, int length, filter_function filter) {
     std::size_t                           n = input.size();
