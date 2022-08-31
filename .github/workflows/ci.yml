@@ -59,8 +59,10 @@ jobs:
         run:  |
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_cliffordsynthesis
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
           cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_cliffordsynthesis_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
@@ -74,6 +76,7 @@ jobs:
              cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
              cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
              cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
+             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_cliffordsynthesis_test
              cd buildCov/test
              ctest -C $BUILD_TYPE --output-on-failure
       - name: Upload coverage to Codecov
@@ -100,8 +103,10 @@ jobs:
         run:  |
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_cliffordsynthesis
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
               cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_cliffordsynthesis_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
@@ -142,3 +147,4 @@ jobs:
              cd $BUILD_TYPE
              ./qmap_exact_test
              ./qmap_heuristic_test
+             ./qmap_cliffordsynthesis_test

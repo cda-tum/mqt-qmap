@@ -157,7 +157,7 @@ public:
         result            = other.result;
     };
 
-    CliffordOptResults operator=(CliffordOptResults other) {
+    CliffordOptResults& operator=(CliffordOptResults other) {
         verbose           = other.verbose;
         choose_best       = other.choose_best;
         strategy          = other.strategy;

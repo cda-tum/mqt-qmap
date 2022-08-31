@@ -5,7 +5,9 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
+#include "LogicBlock/LogicBlock.hpp"
 #include "LogicTerm/LogicTerm.hpp"
+#include "LogicUtil/util_logicblock.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 #include "utils.hpp"
@@ -31,8 +33,8 @@ void CliffordOptimizer::optimize() {
         DEBUG() << "Qubit Map: " << qubitMap;
         DEBUG() << "Coupling Map Fidelity: "
                 << Architecture::getAverageArchitectureFidelity(architecture.getCouplingMap(),
-                                                               std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
-                                                               architecture.getProperties());
+                                                                std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
+                                                                architecture.getProperties());
         int timesteps =
                 initial_timesteps == 0 ? nqubits * nqubits : initial_timesteps;
         if (strategy == OptimizingStrategy::UseMinimizer) {
@@ -66,8 +68,11 @@ CliffordOptResults CliffordOptimizer::main_optimization(
         const std::vector<unsigned short>& qubitChoice, Tableau& initialTab,
         Tableau& targetTab) {
     std::unique_ptr<LogicBlock> lb;
-#ifdef Z3_FOUND
-    using namespace z3logic;
+    using namespace logicbase;
+    bool success = false;
+    if (!success) {
+        throw QMAPException("Could not initialize Z3 logic block optimizer");
+    }
     z3::context  c;
     z3::solver   slv(c);
     z3::optimize opt(c);
@@ -75,24 +80,20 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     if (method == OptMethod::Z3) {
         LogicTerm::termType = TermType::BASE;
         if (strategy == OptimizingStrategy::UseMinimizer || strategy == OptimizingStrategy::SplitIter) {
-            p.set("pb.compile_equality", true);
-            p.set("maxres.hill_climb", true);
-            p.set("maxres.pivot_on_correction_set", false);
-            // z3::set_param("parallel.enable", true);
-            // z3::set_param("parallel.threads.max", nthreads);
-            opt.set(p);
-            lb = std::make_unique<Z3LogicOptimizer>(c, opt, false);
+            logicutil::Params params;
+            params.addParam("pb.compile_equality", true);
+            params.addParam("maxres.hill_climb", true);
+            params.addParam("maxres.pivot_on_correction_set", false);
+            lb = logicutil::getZ3LogicOptimizer(success, true, params);
         } else {
-            p.set("threads", unsigned(nthreads / 2));
-            z3::set_param("parallel.enable", true);
-            //            z3::set_param("parallel.threads.max", nthreads / 2);
+            logicutil::Params params;
+            params.addParam("threads", unsigned(nthreads / 2));
             slv.set(p);
-            lb = std::make_unique<Z3LogicBlock>(c, slv, true);
+            lb = logicutil::getZ3LogicBlock(success, true, params);
         }
     } else {
         return CliffordOptResults{};
     }
-#endif
     DEBUG() << "lb 1: " << lb.get() << std::endl;
     LogicMatrix   x{};
     LogicMatrix   z{};
@@ -498,7 +499,7 @@ void CliffordOptimizer::runSplitIter(
         CliffordOptResults total_result;
         total_result.result = OptResult::SAT;
         total_result.resultCircuit.addQubitRegister(nqubits);
-        for (int i = 0; i * circuit_split < circuit.getNindividualOps();
+        for (size_t i = 0; i * circuit_split < circuit.getNindividualOps();
              i += nThreads) {
             threads.clear();
             DEBUG() << "Currently at " << i * circuit_split << " of "

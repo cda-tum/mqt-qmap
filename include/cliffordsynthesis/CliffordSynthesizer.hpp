@@ -10,6 +10,7 @@
 #include "CliffordOptimizationResult.hpp"
 #include "Encodings/Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
+#include "QuantumComputation.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -32,12 +33,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#ifdef Z3_FOUND
-    #include "LogicBlock/Z3Logic.hpp"
-#endif
-
-#include "QuantumComputation.hpp"
 
 class CliffordOptimizer {
 public:
