@@ -180,48 +180,24 @@ public:
         return *this;
     };
 
-    CliffordOptResults operator+(CliffordOptResults& other) {
-        CliffordOptResults result = *this;
-        result.verbose += other.verbose;
-        result.choose_best = other.choose_best;
-        result.strategy    = other.strategy;
-        result.target      = other.target;
-        result.method      = other.method;
-        result.nqubits     = other.nqubits;
-        result.initial_timesteps += other.initial_timesteps;
-        result.gate_count += other.gate_count;
-        result.depth += other.depth;
-        result.sat = other.sat;
-        result.total_seconds += other.total_seconds;
-        result.final_run_time += other.final_run_time;
-        result.resultCircuit  = resultCircuit.clone();
-        result.resultTableaus = other.resultTableaus;
-        result.resultCM       = other.resultCM;
-        result.singleFidelity = other.singleFidelity;
-        result.doubleFidelity = other.doubleFidelity;
-        result.fidelity += other.fidelity;
-        result.result = other.result;
-        return result;
-    };
-
     void dump(std::ostream& os) {
         os << "{\"CliffordOptimizationResult\":{" << std::endl;
-        os << "\"verbose\":\"" << verbose << "\"," << std::endl;
-        os << "\"choose_best\":\"" << choose_best << "\"," << std::endl;
-        os << "\"strategy\":\"" << toString(strategy) << "\"," << std::endl;
-        os << "\"target\":\"" << toString(target) << "\"," << std::endl;
-        os << "\"method\":\"" << toString(method) << "\"," << std::endl;
-        os << "\"nqubits\":\"" << std::to_string(nqubits) << "\"," << std::endl;
-        os << "\"initial_timesteps\":\"" << std::to_string(initial_timesteps)
+        os << R"("verbose":")" << verbose << "\"," << std::endl;
+        os << R"("choose_best":")" << choose_best << "\"," << std::endl;
+        os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
+        os << R"("target":")" << toString(target) << "\"," << std::endl;
+        os << R"("method":")" << toString(method) << "\"," << std::endl;
+        os << R"("quits":")" << std::to_string(nqubits) << "\"," << std::endl;
+        os << R"("initial_timesteps":")" << std::to_string(initial_timesteps)
            << "\"," << std::endl;
-        os << "\"gate_count\":\"" << std::to_string(gate_count) << "\","
+        os << R"("gate_count":")" << std::to_string(gate_count) << "\","
            << std::endl;
-        os << "\"depth\":\"" << std::to_string(depth) << "\"," << std::endl;
-        os << "\"fidelity\":\"" << std::to_string(fidelity) << "\"," << std::endl;
-        os << "\"sat\":\"" << (sat ? "SAT" : "UNSAT") << "\"," << std::endl;
-        os << "\"total_seconds\":\"" << std::to_string(total_seconds) << "\","
+        os << R"("depth":")" << std::to_string(depth) << "\"," << std::endl;
+        os << R"("fidelity":")" << std::to_string(fidelity) << "\"," << std::endl;
+        os << R"("sat":")" << (sat ? "SAT" : "UNSAT") << "\"," << std::endl;
+        os << R"("total_seconds":")" << std::to_string(total_seconds) << "\","
            << std::endl;
-        os << "\"resultCircuit\":\"";
+        os << R"("resultCircuit":")";
         std::stringstream ss;
         resultCircuit.dump(ss, qc::Format::OpenQASM);
         os << escapeChars(ss.str(), "\"") << "\"," << std::endl;
@@ -238,7 +214,7 @@ public:
         os << "]," << std::endl;
         std::stringstream strings;
         Architecture::printCouplingMap(resultCM, strings);
-        os << "\"CouplingMap\":\"" << strings.str() << "\","
+        os << R"("CouplingMap":")" << strings.str() << "\","
            << std::endl;
         os << "\"singleFidelity\":[";
         skipfirst = true;

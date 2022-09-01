@@ -53,13 +53,15 @@ TEST_P(TestCliffordSynthesis, SimpleOptimization) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
             tableau.clear();
 
+
+            qx4_optimizer->optimal_results.dump(std::cout);
             EXPECT_EQ(qx4_optimizer->optimal_results.result, OptResult::SAT);
         }
     }
@@ -97,9 +99,9 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target = OptTarget::DEPTH;
+            qx4_optimizer->target            = OptTarget::DEPTH;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -123,9 +125,9 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            london_optimizer->nqubits = 2;
+            london_optimizer->nqubits           = 2;
             london_optimizer->initial_timesteps = 5;
-            london_optimizer->target = OptTarget::FIDELITY;
+            london_optimizer->target            = OptTarget::FIDELITY;
             Tableau::initTableau(london_optimizer->initialTableau, 2);
             london_optimizer->targetTableau = tableau;
             london_optimizer->optimize();
@@ -148,9 +150,9 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target = OptTarget::GATES_ONLY_CNOT;
+            qx4_optimizer->target            = OptTarget::GATES_ONLY_CNOT;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -173,10 +175,10 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target = OptTarget::GATES;
-            qx4_optimizer->strategy = OptimizingStrategy::StartLow;
+            qx4_optimizer->target            = OptTarget::GATES;
+            qx4_optimizer->strategy          = OptimizingStrategy::StartLow;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -199,10 +201,10 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 50;
-            qx4_optimizer->target = OptTarget::GATES;
-            qx4_optimizer->strategy = OptimizingStrategy::StartHigh;
+            qx4_optimizer->target            = OptTarget::GATES;
+            qx4_optimizer->strategy          = OptimizingStrategy::StartHigh;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -225,10 +227,10 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target = OptTarget::GATES;
-            qx4_optimizer->strategy = OptimizingStrategy::MinMax;
+            qx4_optimizer->target            = OptTarget::GATES;
+            qx4_optimizer->strategy          = OptimizingStrategy::MinMax;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -251,10 +253,10 @@ TEST_P(TestCliffordSynthesis, TestSplitIter) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.importString(line);
-            qx4_optimizer->nqubits = 2;
+            qx4_optimizer->nqubits           = 2;
             qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target = OptTarget::GATES;
-            qx4_optimizer->strategy = OptimizingStrategy::SplitIter;
+            qx4_optimizer->target            = OptTarget::GATES;
+            qx4_optimizer->strategy          = OptimizingStrategy::SplitIter;
             Tableau::initTableau(qx4_optimizer->initialTableau, 2);
             qx4_optimizer->targetTableau = tableau;
             qx4_optimizer->optimize();
@@ -264,5 +266,3 @@ TEST_P(TestCliffordSynthesis, TestSplitIter) {
         }
     }
 }
-
-

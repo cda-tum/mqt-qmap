@@ -1,6 +1,6 @@
 #include "Architecture.hpp"
-#include "Tableau.hpp"
 #include "QuantumComputation.hpp"
+#include "Tableau.hpp"
 
 #include "gtest/gtest.h"
 
@@ -113,7 +113,7 @@ TEST(TestTableau, LoadTableauFrom) {
     qc.x(1, 0_pc);
 
     Tableau     tableau{};
-    Tableau tableau1{};
+    Tableau     tableau1{};
     std::string tableau_string = "Stabilizer = ['+XX', '+ZZ']";
 
     tableau.importString(tableau_string);
@@ -186,5 +186,3 @@ TEST(TestTableau, EmbedTableau) {
 
     EXPECT_EQ(embededTableau, Tableau::getDiagonalTableau(3));
 }
-
-

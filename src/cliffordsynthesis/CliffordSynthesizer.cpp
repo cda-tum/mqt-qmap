@@ -259,6 +259,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
             }
             auto tableau = results.resultTableaus.emplace_back();
             Tableau::generateTableau(tableau, resultCircuit);
+            results.resultTableaus.back() = tableau;
             Tableau::initTableau(modelTableau, nqubits);
             for (int i = 0; i < nqubits; ++i) {
                 modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb.get()),
@@ -342,7 +343,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
             }
             // at each time t if there is a gate on the edge, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
-                cost = cost + (g_c[gate_step][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(),b)] * fidelity);
+                cost = cost + (g_c[gate_step][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(), b)] * fidelity);
             }
         }
         // For each qubit, get the fidelity cost
