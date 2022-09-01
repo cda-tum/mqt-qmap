@@ -542,12 +542,6 @@ void CliffordOptimizer::runSplitIter(
             delete r;
         }
         if (total_result.result == OptResult::SAT) {
-            // TRACE() << "Full Tableau" << std::endl;
-            // TRACE() << util::pretty_s(fullTableau);
-            // TRACE() << "Target Tableau" << std::endl;
-            // TRACE() << util::pretty_s(targetTableau);
-            // TRACE() << "Result Tableau" << std::endl;
-            // TRACE() << util::pretty_s(r.resultTableaus.back());
             Tableau resultingTableau{};
             Tableau::generateTableau(resultingTableau, total_result.resultCircuit);
             DEBUG() << "Equality (Results): "
@@ -561,8 +555,6 @@ void CliffordOptimizer::runSplitIter(
             std::ostringstream ss;
             total_result.resultCircuit.dump(ss, qc::Format::OpenQASM);
             TRACE() << ss.str() << std::endl;
-            // split *= 1.5;
-            // circ_split *= 1.5;
             auto                          end  = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = end - start;
             INFO() << "Time for complete run: " << diff.count() << std::endl;

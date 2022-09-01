@@ -36,8 +36,7 @@
 
 class CliffordOptimizer {
 public:
-    CliffordOptimizer() {
-    }
+    CliffordOptimizer() = default;
     void optimize();
 
     void setArchitecture(const Architecture& arch) {
