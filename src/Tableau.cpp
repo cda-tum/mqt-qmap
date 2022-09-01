@@ -310,7 +310,7 @@ Tableau Tableau::embedTableau(int nQubits) {
             if (indices[k] == 1) {
                 intermediate_result[k][2 * nQubits] = 0;
             } else {
-                intermediate_result[k][2 * nQubits] = tableau[i][2 * nQubits];
+                intermediate_result[k][2 * nQubits] = tableau[i][2 * getQubitCount()];
                 i++;
             }
             // intermediate_result[2 * nQubits] = tableau[2 * nQubits];
@@ -381,6 +381,7 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     for (std::size_t i = 1; i < dt.back().size(); ++i) {
         os << i << '|';
     }
+    os << "R|";
     //    os << std::string(nQubits * 2, '-') << std::endl;
     os << std::endl;
     auto i = 1;

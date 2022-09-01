@@ -70,13 +70,6 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     std::unique_ptr<LogicBlock> lb;
     using namespace logicbase;
     bool success = false;
-    if (!success) {
-        throw QMAPException("Could not initialize Z3 logic block optimizer");
-    }
-    z3::context  c;
-    z3::solver   slv(c);
-    z3::optimize opt(c);
-    z3::params   p(c);
     if (method == OptMethod::Z3) {
         LogicTerm::termType = TermType::BASE;
         if (strategy == OptimizingStrategy::UseMinimizer || strategy == OptimizingStrategy::SplitIter) {
@@ -88,11 +81,13 @@ CliffordOptResults CliffordOptimizer::main_optimization(
         } else {
             logicutil::Params params;
             params.addParam("threads", unsigned(nthreads / 2));
-            slv.set(p);
             lb = logicutil::getZ3LogicBlock(success, true, params);
         }
     } else {
         return CliffordOptResults{};
+    }
+    if (!success) {
+        throw QMAPException("Could not initialize Z3 logic block optimizer");
     }
     DEBUG() << "lb 1: " << lb.get() << std::endl;
     LogicMatrix   x{};
@@ -166,7 +161,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     if (target == OptTarget::DEPTH) {
         make_depth_optimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, g_s,
                              g_c);
-    } else if (target == OptTarget::GATES) {
+    } else if (target == OptTarget::GATES || target == OptTarget::GATES_ONLY_CNOT) {
         make_gate_optimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, g_s,
                             g_c);
     } else if (target == OptTarget::FIDELITY) {
@@ -340,9 +335,14 @@ void CliffordOptimizer::make_fidelity_optimizer(
         for (const auto& edge: reducedCM) {
             LogicTerm fidelity = LogicTerm(
                     architecture.getLogCNOTFidelities()[edge.first][edge.second] * 1000);
+            auto a = std::find(qubitChoice.begin(), qubitChoice.end(), edge.first);
+            auto b = std::find(qubitChoice.begin(), qubitChoice.end(), edge.second);
+            if (a == qubitChoice.end() || b == qubitChoice.end()) {
+                util::fatal("Coupling map contains invalid qubit.");
+            }
             // at each time t if there is a gate on the edge, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
-                cost = cost + (g_c[gate_step][edge.first][edge.second] * fidelity);
+                cost = cost + (g_c[gate_step][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(),b)] * fidelity);
             }
         }
         // For each qubit, get the fidelity cost
@@ -413,7 +413,7 @@ void CliffordOptimizer::runStartLow(
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running start low" << std::endl;
     CliffordOptResults r;
-    while (r.result != OptResult::SAT) {
+    while (r.result != OptResult::SAT || r.result == OptResult::UNDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
         r = main_optimization(timesteps, reducedCM, qubitChoice, initialTableau,
                               targetTableau);
@@ -429,7 +429,7 @@ void CliffordOptimizer::runStartHigh(
     DEBUG() << "Running start high" << std::endl;
     CliffordOptResults r;
     int                old_timesteps = timesteps;
-    while (r.result == OptResult::SAT) {
+    while (r.result == OptResult::SAT || r.result == OptResult::UNDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
         r = main_optimization(timesteps, reducedCM, qubitChoice, initialTableau,
                               targetTableau);
@@ -484,6 +484,9 @@ void CliffordOptimizer::runSplinter(
 void CliffordOptimizer::runSplitIter(
         const CouplingMap&                 reducedCM,
         const std::vector<unsigned short>& qubitChoice) {
+    if (circuit.size() < 2) {
+        return;
+    }
     DEBUG() << "Running split iter" << std::endl;
     Tableau                          fullTableau   = targetTableau;
     auto                             circuit_split = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
@@ -580,6 +583,7 @@ void CliffordOptimizer::updateResults(CliffordOptResults& results) {
         return;
     switch (target) {
         case OptTarget::GATES:
+        case OptTarget::GATES_ONLY_CNOT:
             if (results.gate_count < optimal_results.gate_count ||
                 optimal_results.gate_count == 0) {
                 optimal_results = results;

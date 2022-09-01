@@ -32,7 +32,7 @@ public:
         this->tableau = other.tableau;
     }
 
-    Tableau operator=(const Tableau& other) {
+    Tableau& operator=(const Tableau& other) {
         tableau = other.tableau;
         return *this;
     }
