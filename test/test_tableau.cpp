@@ -47,7 +47,7 @@ TEST(TestTableau, GetStrRepresentation) {
 
     tableau.importString(tableau_string);
 
-    std::string result_string = "2|1|2|3|4|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
+    std::string result_string = "2|1|2|3|4|R|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
 
     EXPECT_EQ(tableau.getStrRepresentation(), result_string);
 }
@@ -137,3 +137,54 @@ TEST(TestTableau, LoadTableauFrom) {
 
     Tableau::generateTableau(tableau1, qc);
 }
+TEST(TestTableau, InitTableau) {
+    using namespace dd::literals;
+
+    Tableau tableau{};
+    tableau.init(4);
+
+    EXPECT_EQ(tableau[0][0], 0);
+    EXPECT_EQ(tableau[0][1], 0);
+    EXPECT_EQ(tableau[0][2], 0);
+    EXPECT_EQ(tableau[0][3], 0);
+    EXPECT_EQ(tableau[0][4], 1);
+    EXPECT_EQ(tableau[0][5], 0);
+    EXPECT_EQ(tableau[0][6], 0);
+    EXPECT_EQ(tableau[0][7], 0);
+    EXPECT_EQ(tableau[0][8], 0);
+}
+
+TEST(TestTableau, BVTableau) {
+    using namespace dd::literals;
+
+    Tableau tableau{};
+    tableau.init(2);
+    unsigned long bitvector1 = 0b10;
+    unsigned long bitvector2 = 0b01;
+
+    tableau.populateTableauFrom(bitvector1, 2, 0);
+    tableau.populateTableauFrom(bitvector2, 2, 1);
+
+    EXPECT_EQ(tableau[0][0], 0);
+    EXPECT_EQ(tableau[1][0], 1);
+    EXPECT_EQ(tableau[0][1], 1);
+    EXPECT_EQ(tableau[1][1], 0);
+
+    unsigned long bitvector3 = tableau.getBVFrom(0);
+    unsigned long bitvector4 = tableau.getBVFrom(1);
+
+    EXPECT_EQ(bitvector3, bitvector1);
+    EXPECT_EQ(bitvector4, bitvector2);
+}
+TEST(TestTableau, EmbedTableau) {
+    using namespace dd::literals;
+
+    Tableau tableau{};
+    tableau.init(2);
+
+    Tableau embededTableau = tableau.embedTableau(3);
+
+    EXPECT_EQ(embededTableau, Tableau::getDiagonalTableau(3));
+}
+
+
