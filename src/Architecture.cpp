@@ -97,7 +97,7 @@ void Architecture::loadProperties(const std::string& filename) {
 }
 
 void Architecture::loadProperties(std::istream&& is) {
-    static auto SingleQubitGates = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
+    static const auto SingleQubitGates = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
 
     properties.clear();
 
@@ -300,6 +300,10 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     std::set<unsigned short> qubits{};
     for (const auto& q: permutation) {
         qubits.insert(q);
+    }
+
+    if (qubits.size() != permutation.size()) {
+        throw std::runtime_error("Architecture::minimumNumberOfSwaps: permutation contains duplicates");
     }
 
     // create map for goal permutation
