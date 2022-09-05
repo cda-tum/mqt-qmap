@@ -58,9 +58,7 @@ def test_heuristic_non_trivial_swaps():
     print("\n")
     print(qc_mapped)
 
-    config = qcec.Configuration()
-    config.execution.run_alternating_checker = False
-    result = qcec.verify(qc, qc_mapped, config=config)
+    result = qcec.verify(qc, qc_mapped)
     print(result)
 
     assert result.considered_equivalent() is True
