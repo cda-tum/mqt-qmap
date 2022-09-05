@@ -1,8 +1,13 @@
 import pytest
-from qiskit import QuantumCircuit
-from qiskit.providers.fake_provider import FakeLondon, FakeLondonV2, FakeAthens, FakeAthensV2
-
 from mqt import qmap
+
+from qiskit import QuantumCircuit
+from qiskit.providers.fake_provider import (
+    FakeAthens,
+    FakeAthensV2,
+    FakeLondon,
+    FakeLondonV2,
+)
 
 
 @pytest.fixture

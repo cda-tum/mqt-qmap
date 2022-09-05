@@ -1,7 +1,7 @@
 version: 2
 
 submodules:
-  include:   all
+  include: all
   recursive: true
 
 build:
@@ -17,6 +17,6 @@ sphinx:
 python:
   install:
     - method: pip
-      path:   .
+      path: .
       extra_requirements:
         - docs

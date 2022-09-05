@@ -1,7 +1,8 @@
-from qiskit.providers import BackendV1, BackendV2, Backend
+from mqt.qmap import Architecture
+
+from qiskit.providers import Backend, BackendV1, BackendV2
 from qiskit.providers.models import BackendProperties
 from qiskit.transpiler import Target
-from mqt.qmap import Architecture
 
 
 def import_backend(backend: Backend) -> Architecture:
@@ -13,7 +14,7 @@ def import_backend(backend: Backend) -> Architecture:
     elif isinstance(backend, BackendV2):
         return import_backend_v2(backend)
     else:
-        raise ValueError('Backend type not supported.')
+        raise ValueError("Backend type not supported.")
 
 
 def import_backend_properties(backend_properties: BackendProperties) -> Architecture.Properties:
@@ -27,13 +28,17 @@ def import_backend_properties(backend_properties: BackendProperties) -> Architec
         props.set_readout_error(qubit, backend_properties.readout_error(qubit))
 
     for gate in backend_properties.gates:
-        if gate.gate == 'reset':
+        if gate.gate == "reset":
             continue
 
         if len(gate.qubits) == 1:
-            props.set_single_qubit_error(gate.qubits[0], gate.gate, backend_properties.gate_error(gate.gate, gate.qubits))
+            props.set_single_qubit_error(
+                gate.qubits[0], gate.gate, backend_properties.gate_error(gate.gate, gate.qubits)
+            )
         elif len(gate.qubits) == 2:
-            props.set_two_qubit_error(gate.qubits[0], gate.qubits[1], backend_properties.gate_error(gate.gate, gate.qubits), gate.gate)
+            props.set_two_qubit_error(
+                gate.qubits[0], gate.qubits[1], backend_properties.gate_error(gate.gate, gate.qubits), gate.gate
+            )
     return props
 
 
@@ -61,11 +66,11 @@ def import_target(target: Target) -> Architecture.Properties:
         props.set_frequency(i, qubit_props.frequency)
 
     for instruction, qargs in target.instructions:
-        if instruction.name == 'reset' or instruction.name == 'delay':
+        if instruction.name == "reset" or instruction.name == "delay":
             continue
 
         instruction_props = target[instruction.name][qargs]
-        if instruction.name == 'measure':
+        if instruction.name == "measure":
             props.set_readout_error(qargs[0], instruction_props.error)
         elif len(qargs) == 1:
             props.set_single_qubit_error(qargs[0], instruction.name, instruction_props.error)

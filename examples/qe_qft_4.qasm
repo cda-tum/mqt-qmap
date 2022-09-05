@@ -87,4 +87,3 @@ u1(0.7853981633974485) q[2];
 
 // Outputs are q[3], q[2], q[0], q[1]
 // (LSB on the right)
-
