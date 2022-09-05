@@ -111,7 +111,7 @@ setup(
     packages=find_namespace_packages(include=["mqt.*"]),
     install_requires=["qiskit-terra>=0.20.2,<0.22.0"],
     extras_require={
-        "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc4"],
+        "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
         "docs": [
             "sphinx>=5.1.1",
             "sphinx-rtd-theme",
