@@ -5,11 +5,16 @@ submodules:
   recursive: true
 
 build:
-  os: ubuntu-20.04
+  os: ubuntu-22.04
   tools:
     python: "3.9"
   apt_packages:
     - cmake
+  jobs:
+    pre_build:
+      - python -m pip install z3-solver
+      - export Z3_ROOT=$(python -c "import z3, os; print(os.path.dirname(z3.__file__))")
+      - export Z3_DIR=$(python -c "import z3, os; print(os.path.dirname(z3.__file__))")
 
 sphinx:
   configuration: docs/source/conf.py
