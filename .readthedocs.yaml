@@ -10,9 +10,6 @@ build:
     python: "3.9"
   apt_packages:
     - cmake
-  jobs:
-    pre_install:
-      - python -m pip install z3-solver
 
 sphinx:
   configuration: docs/source/conf.py
