@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import re
 import subprocess
@@ -8,10 +9,9 @@ from setuptools.command.build_ext import build_ext
 
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir='', namespace=''):
+    def __init__(self, name, sourcedir=''):
         super().__init__(name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
-        self.namespace = namespace
 
 
 class CMakeBuild(build_ext):
@@ -19,7 +19,6 @@ class CMakeBuild(build_ext):
         from setuptools_scm import get_version
         version = get_version(root='.', relative_to=__file__)
 
-        self.package = ext.namespace
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         # required for auto-detection of auxiliary "native" libs
         if not extdir.endswith(os.path.sep):
@@ -76,12 +75,19 @@ class CMakeBuild(build_ext):
         if sys.platform == "win32":
             cmake_args += ['-T', 'ClangCl']
 
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        else:
-            os.remove(self.build_temp + "/CMakeCache.txt")
+        build_dir = pathlib.Path(self.build_temp)
+        build_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            pathlib.Path(build_dir / "CMakeCache.txt").unlink()
+        except FileNotFoundError:
+            # if the file doesn't exist, it's probably a fresh build
+            pass
+
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp)
-        subprocess.check_call(['cmake', '--build', '.', '--target', ext.name] + build_args, cwd=self.build_temp)
+        subprocess.check_call(
+            ["cmake", "--build", ".", "--target", ext.name.split(".")[-1]] + build_args,
+            cwd=self.build_temp,
+        )
 
 
 README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
@@ -99,7 +105,7 @@ setup(
     python_requires='>=3.7',
     license="MIT",
     url="https://www.cda.cit.tum.de/research/ibm_qx_mapping/",
-    ext_modules=[CMakeExtension('pyqmap', namespace='mqt.qmap')],
+    ext_modules=[CMakeExtension('mqt.qmap.pyqmap')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     packages=find_namespace_packages(include=['mqt.*']),
