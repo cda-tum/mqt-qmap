@@ -97,36 +97,36 @@ There are several configuration options that can be passed to the `compile` func
 - The heuristic mapper offers the `initial_layout` option, which allows to choose one of the following strategies for
   choosing an initial layout:
 
-    - `identity`: map logical qubit q_i to physical qubit Q_i,
-    - `static`: determine fixed initial layout statically at the start of mapping,
-    - `dynamic` (_default_): determine initial layout on demand during the mapping (this is the only one compatible with
-      teleportation).
+  - `identity`: map logical qubit q_i to physical qubit Q_i,
+  - `static`: determine fixed initial layout statically at the start of mapping,
+  - `dynamic` (_default_): determine initial layout on demand during the mapping (this is the only one compatible with
+    teleportation).
 
 - Both, the exact and the heuristic mapper also offer the `layering` option, which allows to choose one of the following
   strategies for partitioning the circuit:
 
-    - `individual_gates` (_default_): consider each gate separately,
-    - `disjoint_qubits`: consider gates acting on disjoint qubits as a layer,
-    - `odd_gates`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool
-      and may not work on different architectures)
-    - `qubit_triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy
-      only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact
-      mapping tool)
+  - `individual_gates` (_default_): consider each gate separately,
+  - `disjoint_qubits`: consider gates acting on disjoint qubits as a layer,
+  - `odd_gates`: group pairs of gates. (Note that this strategy was only tested for IBM QX4 with the exact mapping tool
+    and may not work on different architectures)
+  - `qubit_triangle`: add gates to a layer, as long as no more than three qubits are involved. (Note that this strategy
+    only works if the architecture's coupling map contains a triangle, e.g. IBM QX4, and was only tested using the exact
+    mapping tool)
 
 - The exact mapper offers the `encoding` option, which allows to choose a different encoding for at-most-one and
   exactly-one constraints:
 
-    - `naive` (_default_): use naive encoding for constraints
-    - `commander`: use commander encoding for at-most-one and exactly-one constraints
-    - `bimander`: use bimander encoding for at-most-one and commander for exactly-one constraints
+  - `naive` (_default_): use naive encoding for constraints
+  - `commander`: use commander encoding for at-most-one and exactly-one constraints
+  - `bimander`: use bimander encoding for at-most-one and commander for exactly-one constraints
 
   As the commander encoding can use different strategies to group the variables, there are
   different `commander_grouping` options:
 
-    - `halves` (_default_): each group contains half of the total variables
-    - `logarithm`: each group contains at most log2 of the total variables
-    - `fixed2`: each group contains exactly two variables
-    - `fixed3`: each group contains exactly three variables
+  - `halves` (_default_): each group contains half of the total variables
+  - `logarithm`: each group contains at most log2 of the total variables
+  - `fixed2`: each group contains exactly two variables
+  - `fixed3`: each group contains exactly three variables
 
 - Per default, the exact mapper searches for a suitable mapping by considering every possible (connected) subset of
   qubits instead of the whole architecture at once. This can be disabled by setting `use_subsets=False`.
@@ -136,10 +136,10 @@ There are several configuration options that can be passed to the `compile` func
   in [[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
   , which offers the following options:
 
-    - `none`: consider whole search space
-    - `coupling_limit` (_default_): calculate the max swaps per layer based on the longest path of current choice of
-      qubits, or if `use_subsets` is disabled considers the whole architecture
-    - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
+  - `none`: consider whole search space
+  - `coupling_limit` (_default_): calculate the max swaps per layer based on the longest path of current choice of
+    qubits, or if `use_subsets` is disabled considers the whole architecture
+  - `increasing`: start with 0 swaps and geometrically increase the number of swaps per layer
   - `custom`: set a custom limit, needs the `swap_limit` option to set the limit
 
   Using the `use_bdd` option, the mapping utilizes BDDs instead of simply removing the permutations from the core

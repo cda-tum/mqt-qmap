@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 defaults:
@@ -25,8 +25,8 @@ jobs:
           submodules: recursive
       - uses: DoozyX/clang-format-lint-action@v0.14
         with:
-          source:             "apps include src test mqt/qmap"
-          extensions:         "h,hpp,c,cpp"
+          source: "apps include src test mqt/qmap"
+          extensions: "h,hpp,c,cpp"
           clangFormatVersion: 12
 
   ubuntu-ci:
@@ -50,17 +50,17 @@ jobs:
 
       - name: Configure CMake
         run: |
-             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$pythonLocation/lib/python3.10/site-packages/z3/lib
-             export Z3_ROOT=$pythonLocation/lib/python3.10/site-packages/z3
-             export Z3_DIR=$pythonLocation/lib/python3.10/site-packages/z3
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$pythonLocation/lib/python3.10/site-packages/z3/lib
+          export Z3_ROOT=$pythonLocation/lib/python3.10/site-packages/z3
+          export Z3_DIR=$pythonLocation/lib/python3.10/site-packages/z3
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
 
       - name: Build
         run: |
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
-             cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
@@ -68,14 +68,14 @@ jobs:
 
       - name: Coverage
         run: |
-             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$pythonLocation/lib/python3.10/site-packages/z3/lib
-             export Z3_ROOT=$pythonLocation/lib/python3.10/site-packages/z3
-             export Z3_DIR=$pythonLocation/lib/python3.10/site-packages/z3
-             cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
-             cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
-             cd buildCov/test
-             ctest -C $BUILD_TYPE --output-on-failure
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$pythonLocation/lib/python3.10/site-packages/z3/lib
+          export Z3_ROOT=$pythonLocation/lib/python3.10/site-packages/z3
+          export Z3_DIR=$pythonLocation/lib/python3.10/site-packages/z3
+          cmake -S "${{github.workspace}}" -B "${{github.workspace}}/buildCov" -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON -DBINDINGS=ON
+          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_exact_test
+          cmake --build "${{github.workspace}}/buildCov" --config Debug --target qmap_heuristic_test
+          cd buildCov/test
+          ctest -C $BUILD_TYPE --output-on-failure
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
@@ -97,11 +97,11 @@ jobs:
         run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
 
       - name: Build
-        run:  |
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
-              cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
+        run: |
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_heuristic_test
+          cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE --target qmap_exact_test
 
       - name: Test
         working-directory: ${{github.workspace}}/build/test
@@ -117,28 +117,28 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
 
       - name: Cache Z3
-        id:   cache-z3
+        id: cache-z3
         uses: actions/cache@v3
         with:
           path: z3
           key: ci-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/ci.yml') }}
 
       - name: Building Z3
-        if:   steps.cache-z3.outputs.cache-hit != 'true'
-        run:  |
-              git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-              cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
-              cmake --build z3/build --config $BUILD_TYPE
+        if: steps.cache-z3.outputs.cache-hit != 'true'
+        run: |
+          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
+          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
+          cmake --build z3/build --config $BUILD_TYPE
 
       - name: Configure CMake
-        run:  cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build -DBUILD_QMAP_TESTS=ON
+        run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -T "ClangCl" -DZ3_ROOT=z3/build -DBUILD_QMAP_TESTS=ON
 
       - name: Build
-        run:  cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
+        run: cmake --build "${{github.workspace}}/build" --config $BUILD_TYPE
 
-      - name:              Test
+      - name: Test
         working-directory: ${{github.workspace}}/build/test
-        run:               |
-                           cd $BUILD_TYPE
-                           ./qmap_exact_test
-                           ./qmap_heuristic_test
+        run: |
+          cd $BUILD_TYPE
+          ./qmap_exact_test
+          ./qmap_heuristic_test

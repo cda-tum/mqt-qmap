@@ -4,8 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day:      "friday"
-      time:     "06:00"
+      day: "friday"
+      time: "06:00"
     assignees:
       - "burgholzer"
 
@@ -13,8 +13,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day:      "friday"
-      time:     "06:00"
+      day: "friday"
+      time: "06:00"
     assignees:
       - "burgholzer"
 
@@ -22,7 +22,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day:      "friday"
-      time:     "06:00"
+      day: "friday"
+      time: "06:00"
     assignees:
       - "burgholzer"
