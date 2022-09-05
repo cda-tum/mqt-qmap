@@ -30,3 +30,60 @@ archs = "x86_64"
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.15", DEPLOY = "ON" }
 
 [tool.cibuildwheel.windows]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["test/python"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
+log_cli_level = "INFO"
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["mqt.qmap"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+precision = 1
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+src_paths = ["mqt/qmap", "test/python"]
+
+[tool.mypy]
+files = ["mqt/qmap", "test/python", "setup.py"]
+python_version = "3.7"
+strict = true
+warn_unused_configs = true
+check_untyped_defs = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+
+[tool.pylint]
+master.py-version = "3.7"
+master.jobs = "0"
+reports.output-format = "colorized"
+similarities.ignore-imports = "yes"
+messages_control.enable = [
+    "useless-suppression",
+]
+messages_control.disable = [
+    "invalid-name",
+    "line-too-long",
+    "missing-module-docstring",
+    "no-member",
+    "protected-access",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-locals",
+    "too-many-statements",
+    "ungrouped-imports",
+    "wrong-import-order",
+    "wrong-import-position",
+]
