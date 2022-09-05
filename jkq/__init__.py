@@ -1,6 +1,6 @@
 import warnings
 
-from mqt import qmap
+from mqt import qmap  # noqa: F401
 
 warnings.simplefilter("always", DeprecationWarning)
 warnings.warn(

@@ -1,6 +1,6 @@
 # search for Boost program_options
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
+set(BOOST_USE_MULTITHREADED ON)
+set(BOOST_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.50 COMPONENTS program_options)
 
 if(NOT TARGET Boost::program_options)
@@ -10,18 +10,19 @@ if(NOT TARGET Boost::program_options)
   set_property(TARGET Boost::program_options PROPERTY INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
 endif()
 
-macro(add_qmap_executable APPNAME)
-  add_executable(${PROJECT_NAME}_${APPNAME} ${CMAKE_CURRENT_SOURCE_DIR}/${APPNAME}_app.cpp)
-  target_link_libraries(${PROJECT_NAME}_${APPNAME} PUBLIC MQT::${PROJECT_NAME}_${APPNAME}_lib
+# macro to add a command line executable
+macro(ADD_QMAP_EXECUTABLE appname)
+  add_executable(${PROJECT_NAME}_${appname} ${CMAKE_CURRENT_SOURCE_DIR}/${appname}_app.cpp)
+  target_link_libraries(${PROJECT_NAME}_${appname} PUBLIC MQT::${PROJECT_NAME}_${appname}_lib
                                                           Boost::program_options)
   add_custom_command(
-    TARGET ${PROJECT_NAME}_${APPNAME}
+    TARGET ${PROJECT_NAME}_${appname}
     POST_BUILD
     COMMAND
       ${CMAKE_COMMAND} -E create_symlink
-      $<TARGET_FILE_DIR:${PROJECT_NAME}_${APPNAME}>/${PROJECT_NAME}_${APPNAME}
-      ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_${APPNAME}
-    COMMENT "Creating symlink for ${PROJECT_NAME}_${APPNAME}"
+      $<TARGET_FILE_DIR:${PROJECT_NAME}_${appname}>/${PROJECT_NAME}_${appname}
+      ${CMAKE_BINARY_DIR}/${PROJECT_NAME}_${appname}
+    COMMENT "Creating symlink for ${PROJECT_NAME}_${appname}"
     VERBATIM)
 endmacro()
 

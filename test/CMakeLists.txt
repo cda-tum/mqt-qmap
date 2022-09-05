@@ -1,6 +1,6 @@
 if(NOT TARGET gtest OR NOT TARGET gmock)
   # Prevent overriding the parent project's compiler/linker settings on Windows
-  set(gtest_force_shared_crt
+  set(gtest_force_shared_crt # cmake-lint: disable=C0103
       ON
       CACHE BOOL "" FORCE)
   add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr/extern/dd_package/extern/googletest"
@@ -23,36 +23,37 @@ if(NOT TARGET gtest OR NOT TARGET gmock)
   endif()
 endif()
 
-macro(package_add_test TESTNAME LIBRARY)
-  # create an exectuable in which the tests will be stored
-  add_executable(${TESTNAME} ${ARGN})
-  # link the Google test infrastructure and a default main fuction to the test executable.
-  target_link_libraries(${TESTNAME} PRIVATE MQT::${PROJECT_NAME}_${LIBRARY}_lib gmock gtest_main)
+# macro to add a test executable for one of the project libraries
+macro(PACKAGE_ADD_TEST testname library)
+  # create an executable in which the tests will be stored
+  add_executable(${testname} ${ARGN})
+  # link the Google test infrastructure and a default main function to the test executable.
+  target_link_libraries(${testname} PRIVATE MQT::${PROJECT_NAME}_${library}_lib gmock gtest_main)
   # discover tests
   gtest_discover_tests(
-    ${TESTNAME}
+    ${testname}
     WORKING_DIRECTORY ${PROJECT_DIR}
     PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}")
-  set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
+  set_target_properties(${testname} PROPERTIES FOLDER tests)
 
   add_custom_command(
-    TARGET ${TESTNAME}
+    TARGET ${testname}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${TESTNAME}>/${TESTNAME}
-            ${CMAKE_BINARY_DIR}/${TESTNAME}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/${testname}
+            ${CMAKE_BINARY_DIR}/${testname}
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../examples
-            $<TARGET_FILE_DIR:${TESTNAME}>/examples
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${TESTNAME}>/examples
+            $<TARGET_FILE_DIR:${testname}>/examples
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/examples
             ${CMAKE_BINARY_DIR}/examples
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/architectures
-            $<TARGET_FILE_DIR:${TESTNAME}>/architectures
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${TESTNAME}>/architectures
+            $<TARGET_FILE_DIR:${testname}>/architectures
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/architectures
             ${CMAKE_BINARY_DIR}/architectures
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/calibration
-            $<TARGET_FILE_DIR:${TESTNAME}>/calibration
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${TESTNAME}>/calibration
+            $<TARGET_FILE_DIR:${testname}>/calibration
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/calibration
             ${CMAKE_BINARY_DIR}/calibration
-    COMMENT "Copying files and creating symlinks for ${TESTNAME}"
+    COMMENT "Copying files and creating symlinks for ${testname}"
     VERBATIM)
 endmacro()
 

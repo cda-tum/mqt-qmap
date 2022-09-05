@@ -1,4 +1,3 @@
-import pytest
 from mqt import qcec, qmap
 
 from qiskit import QuantumCircuit
