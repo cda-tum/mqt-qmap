@@ -11,7 +11,7 @@ on:
 
 env:
   Z3_GIT_TAG: z3-4.8.17
-  Z3_HASH:    2f59c37465aecdfbcc50a5ba0fe627535c0ff4cffb9080bfbddc0a2af0f97b53
+  Z3_HASH: 2f59c37465aecdfbcc50a5ba0fe627535c0ff4cffb9080bfbddc0a2af0f97b53
 
 jobs:
   build_manylinux_wheels:
@@ -29,7 +29,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_macos_wheels:
-    name:    Build wheels on macOS
+    name: Build wheels on macOS
     runs-on: macos-11
 
     steps:
@@ -37,7 +37,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install Z3
-        run:  brew install z3
+        run: brew install z3
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -45,7 +45,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_macos_m1_wheels:
-    name:    Build wheels on macOS for Apple Silicon
+    name: Build wheels on macOS for Apple Silicon
     runs-on: macos-latest
 
     steps:
@@ -65,7 +65,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_windows_wheels:
-    name:    Build wheels on Windows
+    name: Build wheels on Windows
     runs-on: windows-latest
 
     steps:
@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: z3
-          key: deploy-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/deploy.yml') }}
+          key:  deploy-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/deploy.yml') }}
       - name:  Building Z3
         if:    steps.cache-z3.outputs.cache-hit != 'true'
         shell: bash
@@ -86,10 +86,10 @@ jobs:
                git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
                cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
                cmake --build z3/build --config Release --parallel 8
-      - name: Installing Z3
-        shell: bash
+      - name:              Installing Z3
+        shell:             bash
         working-directory: ${{github.workspace}}/z3/build
-        run: cmake --build . --config Release --target INSTALL;
+        run:               cmake --build . --config Release --target INSTALL;
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: "3.9"
       - name: Install Z3
         run: brew install z3
       - name: Build sdist
@@ -120,9 +120,16 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [ build_manylinux_wheels, build_macos_wheels, build_macos_m1_wheels, build_windows_wheels, build_sdist ]
+    needs:
+      [
+        build_manylinux_wheels,
+        build_macos_wheels,
+        build_macos_m1_wheels,
+        build_windows_wheels,
+        build_sdist,
+      ]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if:      github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/download-artifact@v3
         with:

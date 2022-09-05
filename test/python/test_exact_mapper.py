@@ -1,8 +1,8 @@
 import pytest
+from mqt import qcec, qmap
+
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
-
-from mqt import qmap, qcec
 
 
 def test_exact_no_swaps_trivial_layout():

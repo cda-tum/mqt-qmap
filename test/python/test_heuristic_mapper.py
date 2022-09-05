@@ -1,8 +1,8 @@
 import pytest
+from mqt import qcec, qmap
+
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
-
-from mqt import qmap, qcec
 
 
 def test_heuristic_no_swaps_trivial_layout():
@@ -56,7 +56,7 @@ def test_heuristic_non_trivial_swaps():
     assert results.mapped_circuit != ""
     assert results.output.swaps == 1
 
-    print('\n')
+    print("\n")
     print(qc_mapped)
 
     config = qcec.Configuration()

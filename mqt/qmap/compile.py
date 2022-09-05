@@ -4,15 +4,27 @@
 #
 import pickle
 from pathlib import Path
-from typing import Union, Optional, Set, List, Tuple
+from typing import List, Optional, Set, Tuple, Union
+
+from mqt.qmap.pyqmap import (
+    Arch,
+    Architecture,
+    CommanderGrouping,
+    Configuration,
+    Encoding,
+    InitialLayout,
+    Layering,
+    MappingResults,
+    Method,
+    SwapReduction,
+    map,
+)
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
-from qiskit.transpiler.target import Target
 from qiskit.transpiler import Layout
-
-from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
+from qiskit.transpiler.target import Target
 
 
 def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) -> Layout:
@@ -37,27 +49,28 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
             return layout
 
 
-def compile(circ: Union[QuantumCircuit, str],
-            arch: Optional[Union[str, Arch, Architecture, Backend]],
-            calibration: Optional[Union[str, BackendProperties, Target]] = None,
-            method: Union[str, Method] = "heuristic",
-            initial_layout: Union[str, InitialLayout] = "dynamic",
-            layering: Union[str, Layering] = "individual_gates",
-            use_teleportation: bool = False,
-            teleportation_fake: bool = False,
-            teleportation_seed: int = 0,
-            encoding: Union[str, Encoding] = "naive",
-            commander_grouping: Union[str, CommanderGrouping] = "halves",
-            use_bdd: bool = False,
-            swap_reduction: Union[str, SwapReduction] = "coupling_limit",
-            swap_limit: int = 0,
-            include_WCNF: bool = False,
-            use_subsets: bool = True,
-            subgraph: Optional[Set[int]] = None,
-            pre_mapping_optimizations: bool = True,
-            post_mapping_optimizations: bool = True,
-            verbose: bool = False
-            ) -> Tuple[QuantumCircuit, MappingResults]:
+def compile(
+        circ: Union[QuantumCircuit, str],
+        arch: Optional[Union[str, Arch, Architecture, Backend]],
+        calibration: Optional[Union[str, BackendProperties, Target]] = None,
+        method: Union[str, Method] = "heuristic",
+        initial_layout: Union[str, InitialLayout] = "dynamic",
+        layering: Union[str, Layering] = "individual_gates",
+        use_teleportation: bool = False,
+        teleportation_fake: bool = False,
+        teleportation_seed: int = 0,
+        encoding: Union[str, Encoding] = "naive",
+        commander_grouping: Union[str, CommanderGrouping] = "halves",
+        use_bdd: bool = False,
+        swap_reduction: Union[str, SwapReduction] = "coupling_limit",
+        swap_limit: int = 0,
+        include_WCNF: bool = False,
+        use_subsets: bool = True,
+        subgraph: Optional[Set[int]] = None,
+        pre_mapping_optimizations: bool = True,
+        post_mapping_optimizations: bool = True,
+        verbose: bool = False,
+) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
     :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
@@ -104,7 +117,7 @@ def compile(circ: Union[QuantumCircuit, str],
     if subgraph is None:
         subgraph = set()
 
-    if type(circ) == str and Path(circ).suffix == '.pickle':
+    if type(circ) == str and Path(circ).suffix == ".pickle":
         circ = pickle.load(open(circ, "rb"))
 
     architecture = Architecture()
