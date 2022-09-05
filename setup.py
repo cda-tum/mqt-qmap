@@ -139,6 +139,6 @@ setup(
         'Source': 'https://github.com/cda-tum/qmap/',
         'Tracker': 'https://github.com/cda-tum/qmap/issues',
         'Research': 'https://www.cda.cit.tum.de/research/ibm_qx_mapping/',
-        'Documentation': 'https://qmap.readthedocs.io',
+        'Documentation': 'https://mqtqmap.readthedocs.io',
     }
 )
