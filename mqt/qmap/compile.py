@@ -47,6 +47,7 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
             # create an empty layout
             layout = Layout().from_intlist(tokens, *qregs)
             return layout
+    raise ValueError("No initial layout found in QASM file.")
 
 
 def compile(
@@ -117,20 +118,21 @@ def compile(
     if subgraph is None:
         subgraph = set()
 
-    if type(circ) == str and Path(circ).suffix == ".pickle":
-        circ = pickle.load(open(circ, "rb"))
+    if isinstance(circ, str) and Path(circ).suffix == ".pickle":
+        with open(circ, "rb") as f:
+            circ = pickle.load(f)
 
     architecture = Architecture()
     if arch is None and calibration is None:
         raise ValueError("Either arch or calibration must be specified")
 
     if arch is not None:
-        if type(arch) == str:
+        if isinstance(arch, str):
             try:
                 architecture.load_coupling_map(Arch(arch))
             except ValueError:
                 architecture.load_coupling_map(arch)
-        elif type(arch) == Arch:
+        elif isinstance(arch, Arch):
             architecture.load_coupling_map(arch)
         elif isinstance(arch, Architecture):
             architecture = arch
@@ -142,7 +144,7 @@ def compile(
             raise ValueError("No compatible type for architecture:", type(arch))
 
     if calibration is not None:
-        if type(calibration) == str:
+        if isinstance(calibration, str):
             architecture.load_properties(calibration)
         elif isinstance(calibration, BackendProperties):
             from mqt.qmap.qiskit.backend import import_backend_properties
