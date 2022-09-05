@@ -2,7 +2,6 @@
 requires = [
     "setuptools>=45",
     "setuptools_scm>=6.4",
-    "wheel>=0.37",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.14",
 ]
