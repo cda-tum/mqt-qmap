@@ -106,7 +106,16 @@ setup(
     install_requires=["qiskit-terra>=0.20.2,<0.22.0"],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc4"],
-        "dev": ["mqt.qmap[test]"]  # requires Pip 21.2 or newer
+        "docs": [
+            "sphinx>=5.1.1",
+            "sphinx-rtd-theme",
+            "sphinxcontrib-bibtex~=2.5",
+            "sphinx-copybutton",
+            "sphinx-hoverxref~=1.1.3",
+            "pybtex>=0.24",
+            "importlib_metadata>=3.6; python_version < '3.10'",
+        ],
+        "dev": ["mqt.qmap[test, docs]"]  # requires Pip 21.2 or newer
     },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -130,5 +139,6 @@ setup(
         'Source': 'https://github.com/cda-tum/qmap/',
         'Tracker': 'https://github.com/cda-tum/qmap/issues',
         'Research': 'https://www.cda.cit.tum.de/research/ibm_qx_mapping/',
+        'Documentation': 'https://qmap.readthedocs.io',
     }
 )
