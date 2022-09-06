@@ -162,6 +162,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("subgraph", &Configuration::subgraph)
             .def_readwrite("pre_mapping_optimizations", &Configuration::preMappingOptimizations)
             .def_readwrite("post_mapping_optimizations", &Configuration::postMappingOptimizations)
+            .def_readwrite("add_measurements_to_mapped_circuit", &Configuration::addMeasurementsToMappedCircuit)
             .def("json", &Configuration::json)
             .def("__repr__", &Configuration::toString);
 
