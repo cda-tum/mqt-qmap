@@ -471,3 +471,21 @@ TEST_F(ExactTest, CommanderEncodingRigettiArch) {
 
     SUCCEED() << "Mapping successful";
 }
+
+TEST_F(ExactTest, NoMeasurmentsAdded) {
+    // configure to not include measurements after mapping
+    settings.addMeasurementsToMappedCircuit = false;
+
+    // perform the mapping
+    IBMQ_London_mapper->map(settings);
+
+    // get the resulting circuit
+    auto              qcMapped = qc::QuantumComputation();
+    std::stringstream qasm{};
+    IBMQ_London_mapper->dumpResult(qasm, qc::OpenQASM);
+    qcMapped.import(qasm, qc::OpenQASM);
+
+    // check no measurements were added
+    EXPECT_EQ(qcMapped.getNops(), 4U);
+    EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
+}
