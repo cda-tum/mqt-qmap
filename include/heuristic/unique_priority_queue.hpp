@@ -37,7 +37,7 @@ public:
 
 /**
  * Priority queue with unique (according to FuncCompare) elements of type T where the sorting is based on CostCompare.
- * If NDEBUG is *not* defined, there are some assertions that help catching errors in the provided comparision functions.
+ * If NDEBUG is *not* defined, there are some assertions that help catching errors in the provided comparison functions.
  */
 template<class T, class CostCompare = std::greater<T>, class FuncCompare = std::less<T>, class CleanObsoleteElement = do_nothing<T>>
 class unique_priority_queue {

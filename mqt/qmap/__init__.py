@@ -4,6 +4,29 @@
 #
 
 from mqt.qmap.compile import compile
-from mqt.qmap.pyqmap import Method, InitialLayout, Layering, Arch, CommanderGrouping, SwapReduction, Encoding, Configuration, MappingResults, Architecture
+from mqt.qmap.pyqmap import (
+    Arch,
+    Architecture,
+    CommanderGrouping,
+    Configuration,
+    Encoding,
+    InitialLayout,
+    Layering,
+    MappingResults,
+    Method,
+    SwapReduction,
+)
 
-__all__ = ['compile', 'Method', 'InitialLayout', 'Layering', 'Arch', 'CommanderGrouping', 'SwapReduction', 'Encoding', 'Configuration', 'MappingResults', 'Architecture']
+__all__ = [
+    "compile",
+    "Method",
+    "InitialLayout",
+    "Layering",
+    "Arch",
+    "CommanderGrouping",
+    "SwapReduction",
+    "Encoding",
+    "Configuration",
+    "MappingResults",
+    "Architecture",
+]
