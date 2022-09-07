@@ -30,5 +30,5 @@ __all__ = [
     "Configuration",
     "MappingResults",
     "Architecture",
-    "SubarchitectureOrder"
+    "SubarchitectureOrder",
 ]
