@@ -1,5 +1,5 @@
-from mqt.qmap.subarchitectures import SubarchitectureOrder
 import retworkx as rx
+from mqt.qmap.subarchitectures import SubarchitectureOrder
 
 
 def test_singleton_graph():
@@ -18,7 +18,7 @@ def test_singleton_graph():
 def test_two_node_graph():
     """Verify ordering for graph with two nodes and one edge."""
 
-    order = SubarchitectureOrder([[0,1]])
+    order = SubarchitectureOrder([[0, 1]])
     assert len(order.sgs) == 3
     assert len(order.sgs[0]) == 0
     assert len(order.sgs[1]) == 1

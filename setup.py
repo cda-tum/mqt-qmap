@@ -108,7 +108,7 @@ setup(
     ext_modules=[CMakeExtension("mqt.qmap.pyqmap")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    packages=find_namespace_packages(include=['mqt.*']),
+    packages=find_namespace_packages(include=["mqt.*"]),
     install_requires=["qiskit-terra>=0.20.2,<0.22.0", "retworkx>=0.11.0", "networkx>=1.9"],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
