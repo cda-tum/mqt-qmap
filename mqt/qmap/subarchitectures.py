@@ -166,7 +166,7 @@ class SubarchitectureOrder:
                         iso_rev = {}
                         for key, val in iso.items():
                             iso_rev[val] = key
-                        self.__isomorphisms[(n, i)][(n+1, j)] = iso_rev
+                        self.__isomorphisms[(n, i)][(n + 1, j)] = iso_rev
                         break  # One isomorphism suffices
 
     def __complete_isos(self) -> None:
@@ -244,7 +244,12 @@ class SubarchitectureOrder:
                 new_des = []
                 for j, (n_prime, i_prime) in enumerate(reversed(des)):
                     j = len(des) - j - 1
-                    if not any(map(lambda k, n_prime=n_prime, i_prime=i_prime: (n_prime, i_prime) in self.subarch_order[k], des[:j])):
+                    if not any(
+                        map(
+                            lambda k, n_prime=n_prime, i_prime=i_prime: (n_prime, i_prime) in self.subarch_order[k],
+                            des[:j],
+                        )
+                    ):
                         new_des.append((n_prime, i_prime))
 
                 self.desirable_subarchitectures[(n, i)] = new_des
