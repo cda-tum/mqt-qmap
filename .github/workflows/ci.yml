@@ -46,7 +46,7 @@ jobs:
         run: sudo apt-get install -y libboost-program-options-dev
 
       - name: Install Z3
-        run: python -m pip install z3-solver
+        run: python -m pip install z3-solver==4.11.2
 
       - name: Configure CMake
         run: |
@@ -91,7 +91,7 @@ jobs:
           submodules: recursive
 
       - name: Installing boost and Z3
-        run: brew install boost z3
+        run: brew install boost z3@4.11.2
 
       - name: Configure CMake
         run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
