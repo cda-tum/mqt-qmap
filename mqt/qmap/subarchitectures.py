@@ -176,7 +176,7 @@ class SubarchitectureOrder:
                     self.__combine_iso_with_parent(n, i, i_prime)
 
     def __combine_iso_with_parent(self, n, i, j) -> None:
-        """Combine all isomorphisms from sgs[n][i] with those frome sgs[n+1][j]."""
+        """Combine all isomorphisms from sgs[n][i] with those from sgs[n+1][j]."""
         first = self.__isomorphisms[(n, i)][(n + 1, j)]
         for (row, k), second in self.__isomorphisms[(n + 1, j)].items():
             self.__isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
