@@ -175,6 +175,43 @@ void HeuristicMapper::map(const Configuration& ms) {
     results.timeout                    = false;
 }
 
+void HeuristicMapper::staticInitialMapping() {
+    for (const auto& gate: layers.at(0U)) {
+        if (gate.singleQubit()) {
+            continue;
+        }
+
+        for (const auto& [q0, q1]: architecture.getCouplingMap()) {
+            if (qubits.at(q0) == DEFAULT_POSITION && qubits.at(q1) == DEFAULT_POSITION) {
+                qubits.at(q0)                     = gate.control;
+                qubits.at(q1)                     = gate.target;
+                locations.at(gate.control)        = q0;
+                locations.at(gate.target)         = q1;
+                qcMapped.initialLayout.at(q0)     = gate.control;
+                qcMapped.initialLayout.at(q1)     = gate.target;
+                qcMapped.outputPermutation.at(q0) = gate.control;
+                qcMapped.outputPermutation.at(q1) = gate.target;
+                break;
+            }
+        }
+    }
+
+    // assign remaining logical qubits
+    for (unsigned short i = 0U; i < architecture.getNqubits(); ++i) {
+        if (qc.initialLayout.count(i) && locations.at(i) == DEFAULT_POSITION) {
+            for (unsigned short j = 0U; j < architecture.getNqubits(); ++j) {
+                if (qubits.at(j) == DEFAULT_POSITION) {
+                    locations.at(i)                  = j;
+                    qubits.at(j)                     = i;
+                    qcMapped.initialLayout.at(j)     = i;
+                    qcMapped.outputPermutation.at(j) = i;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void HeuristicMapper::createInitialMapping() {
     auto& config = results.config;
 
@@ -223,42 +260,7 @@ void HeuristicMapper::createInitialMapping() {
             }
             break;
         case InitialLayout::Static:
-            for (const auto& gate: layers.at(0)) {
-                if (gate.singleQubit())
-                    continue;
-
-                for (const auto& edge: architecture.getCouplingMap()) {
-                    if (qubits.at(edge.first) == DEFAULT_POSITION && qubits.at(edge.second) == DEFAULT_POSITION) {
-                        qubits.at(edge.first)                      = gate.control;
-                        qubits.at(edge.second)                     = gate.target;
-                        locations.at(gate.control)                 = edge.first;
-                        locations.at(gate.target)                  = edge.second;
-                        qcMapped.initialLayout.at(edge.first)      = gate.control;
-                        qcMapped.initialLayout.at(edge.second)     = gate.target;
-                        qcMapped.outputPermutation.at(edge.first)  = gate.control;
-                        qcMapped.outputPermutation.at(edge.second) = gate.target;
-                        break;
-                    }
-                }
-            }
-
-            // assign remaining logical qubits
-            for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
-                if (qc.initialLayout.count(i)) {
-                    if (locations.at(i) == DEFAULT_POSITION) {
-                        for (unsigned short j = 0; j < architecture.getNqubits(); ++j) {
-                            if (qubits.at(j) == DEFAULT_POSITION) {
-                                locations.at(i)                  = j;
-                                qubits.at(j)                     = i;
-                                qcMapped.initialLayout.at(j)     = i;
-                                qcMapped.outputPermutation.at(j) = i;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
+            staticInitialMapping();
             break;
         case InitialLayout::Dynamic:
         case InitialLayout::None:
