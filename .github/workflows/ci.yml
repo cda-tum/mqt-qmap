@@ -91,7 +91,7 @@ jobs:
           submodules: recursive
 
       - name: Installing boost and Z3
-        run: brew install boost z3@4.11.2
+        run: brew install boost z3
 
       - name: Configure CMake
         run: cmake -S "${{github.workspace}}" -B "${{github.workspace}}/build" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_QMAP_TESTS=ON
