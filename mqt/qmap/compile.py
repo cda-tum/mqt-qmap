@@ -70,6 +70,7 @@ def compile(
     subgraph: Optional[Set[int]] = None,
     pre_mapping_optimizations: bool = True,
     post_mapping_optimizations: bool = True,
+    add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
 ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
@@ -109,6 +110,8 @@ def compile(
     :type pre_mapping_optimizations: bool
     :param post_mapping_optimizations: Run post-mapping optimizations (default: True)
     :type post_mapping_optimizations: bool
+    :param add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit (default: True)
+    :type add_measurements_to_mapped_circuit: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
     :return: Mapped circuit (as Qiskit `QuantumCircuit`) and results
@@ -174,6 +177,7 @@ def compile(
     config.teleportation_seed = teleportation_seed
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
+    config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
 
     results = map(circ, architecture, config)

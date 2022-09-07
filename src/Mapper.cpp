@@ -158,7 +158,9 @@ void Mapper::finalizeMappedCircuit() {
     qcMapped.unifyQuantumRegisters();
 
     // append measurements according to output permutation
-    qcMapped.appendMeasurementsAccordingToOutputPermutation();
+    if (results.config.addMeasurementsToMappedCircuit) {
+        qcMapped.appendMeasurementsAccordingToOutputPermutation();
+    }
 }
 
 void Mapper::placeRemainingArchitectureQubits() {
