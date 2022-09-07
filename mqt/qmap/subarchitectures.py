@@ -75,7 +75,6 @@ class SubarchitectureOrder:
 
     def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
         """Return optimal subarchitecture candidate."""
-
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
             raise ValueError('Number of qubits must not be smaller or equal 0 or larger then number of physical qubits of architecture.')
 
@@ -167,14 +166,12 @@ class SubarchitectureOrder:
                         for key, val in iso.items():
                             iso_rev[val] = key
                         self.__isomorphisms[(n, i)][(n+1, j)] = iso_rev
-                     #   self.__isomorphisms[(n+1,j)][(n, i)] = iso
-                        # TODO: might need isos
                         break  # One isomorphism suffices
 
     def __complete_isos(self) -> None:
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
-                for n_prime, i_prime in self.subarch_order[(n, i)]:
+                for _, i_prime in self.subarch_order[(n, i)]:
                     self.__combine_iso_with_parent(n, i, i_prime)
 
     def __combine_iso_with_parent(self, n, i, j) -> None:
@@ -243,13 +240,13 @@ class SubarchitectureOrder:
                 new_des = []
                 for j, (n_prime, i_prime) in (enumerate(reversed(des))):
                     j = len(des) - j - 1
-                    if not any(map(lambda k: (n_prime, i_prime) in self.subarch_order[k], des[:j])):
+                    if not any(map(lambda k, n_prime=n_prime, i_prime=i_prime: (n_prime, i_prime) in self.subarch_order[k], des[:j])):
                         new_des.append((n_prime, i_prime))
 
                 self.desirable_subarchitectures[(n, i)] = new_des
                 if len(self.desirable_subarchitectures[(n,i)]) == 0:
                     self.desirable_subarchitectures[(n,i)].append((n,i))
-        self.desirable_subarchitectures[self.arch.num_nodes(),0]=[(self.arch.num_nodes(),0)]
+        self.desirable_subarchitectures[self.arch.num_nodes(),0] = [(self.arch.num_nodes(),0)]
 
     def __cand(self, nqubits: int) -> set[Subarchitecture]:
         all_desirables = [desirables for (n,i), desirables in self.desirable_subarchitectures.items() if n == nqubits]
