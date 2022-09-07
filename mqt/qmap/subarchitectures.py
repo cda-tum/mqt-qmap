@@ -4,16 +4,20 @@ Functionality for computing good subarchitectures for quantum circuit mapping.
 The function provided in this module... TODO
 """
 
-import pickle
 from collections import defaultdict
 from itertools import combinations
 from typing import NewType, Union
 
 import networkx as nx
 import retworkx as rx
+import os
+import pickle
 
 Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, list[tuple[int, int]]])
 PartialOrder = NewType("PartialOrder", defaultdict[tuple[int, int], tuple[int, int]])
+
+package_directory = os.path.dirname(os.path.abspath(__file__))
+precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
 
 
 class SubarchitectureOrder:
@@ -116,14 +120,10 @@ class SubarchitectureOrder:
 
         while len(cov) > size:
             d = queue.pop()
-            print(d)
             cov_d = cov.intersection(set(po_inv[d]))
-            print(cov_d)
             if len(cov_d) > 1:
                 cov = cov.difference(cov_d)
                 cov.add(d)
-            print(cov)
-            print()
 
         return [self.sgs[n][i] for n, i in cov]
 
@@ -260,3 +260,21 @@ class SubarchitectureOrder:
     def __cand(self, nqubits: int) -> set[Subarchitecture]:
         all_desirables = [desirables for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits]
         return {des for desirables in all_desirables for des in desirables}
+
+
+def sycamore_23_subarchitectures() -> SubarchitectureOrder:
+    """Load the precomputed sycamore subarchitectures."""
+    path = os.path.join(package_directory, "libs/sycamore_23")
+    return SubarchitectureOrder(path)
+
+
+def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
+    """Load the precomputed ibm guadalupe subarchitectures."""
+    path = os.path.join(package_directory, "libs/ibm_guadalupe_16")
+    return SubarchitectureOrder(path)
+
+
+def rigetti_16_subarchitectures() -> SubarchitectureOrder:
+    """Load the precomputed rigetti subarchitectures."""
+    path = os.path.join(package_directory, "libs/rigetti_16")
+    return SubarchitectureOrder(path)
