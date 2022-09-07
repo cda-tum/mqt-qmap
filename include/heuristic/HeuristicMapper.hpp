@@ -132,6 +132,7 @@ protected:
     unique_priority_queue<Node> nodes{};
 
     virtual void createInitialMapping();
+    virtual void staticInitialMapping();
 
     double distanceOnArchitectureOfLogicalQubits(unsigned short control, unsigned short target) {
         return architecture.distance(locations.at(control), locations.at(target));
