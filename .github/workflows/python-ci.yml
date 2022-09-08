@@ -41,6 +41,11 @@ jobs:
       - if: runner.os == 'macOS'
         name: Install Z3 from brew
         run: brew install z3
+      - if: runner.os == 'Windows'
+        name: Install Z3 from chocolatey
+        uses: pavpanchekha/setup-z3@v1.2.2
+        with:
+          version: 4.11.2
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
