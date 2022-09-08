@@ -66,10 +66,10 @@ class SubarchitectureOrder:
         else:
             self.arch = rx.networkx_converter(nx.from_edgelist(arch))
 
-        self.subarch_order = defaultdict(lambda: [])  # type: PartialOrder
-        self.desirable_subarchitectures = defaultdict(lambda: [])  # type: PartialOrder
+        self.subarch_order = defaultdict(lambda: [])
+        self.desirable_subarchitectures = defaultdict(lambda: [])
 
-        self.__isomorphisms = defaultdict(lambda: {})  # type: dict[dict[int,int], dict[int,int]]
+        self.__isomorphisms = defaultdict(lambda: {})
 
         self.__compute_subgraphs()
         self.__compute_subarch_order()
@@ -258,7 +258,7 @@ class SubarchitectureOrder:
                     self.desirable_subarchitectures[(n, i)].append((n, i))
         self.desirable_subarchitectures[self.arch.num_nodes(), 0] = [(self.arch.num_nodes(), 0)]
 
-    def __cand(self, nqubits: int) -> Set[Subarchitecture]:
+    def __cand(self, nqubits: int) -> typing.Set[Subarchitecture]:
         all_desirables = [desirables for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits]
         return {des for desirables in all_desirables for des in desirables}
 
