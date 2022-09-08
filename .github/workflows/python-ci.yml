@@ -43,7 +43,7 @@ jobs:
         run: brew install z3
       - if: runner.os == 'Windows'
         name: Install Z3 from action
-        uses: pavpanchekha/setup-z3@1.2.2
+        uses: pavpanchekha/setup-z3@master
         with:
           version: 4.11.2
           distribution: win
