@@ -17,6 +17,7 @@ if os.environ.get("CI", None):
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install("-e", ".[test]")
+    session.install("z3-solver")
     session.run("pytest", *session.posargs)
 
 

@@ -42,19 +42,17 @@ jobs:
         name: Install Z3 from brew
         run: brew install z3
       - if: runner.os == 'Windows'
-        name: Install Z3 on Windows
-        run: python3 -m pip install z3-solver==4.11.2
-      - if: runner.os == 'Windows'
-        name: Set Z3 root
-        run: |
-          echo Z3_ROOT=$(python3 -c "import z3, os; print(os.path.dirname(z3.__file__))") >> $env:GITHUB_ENV
-          Add-Content $env:GITHUB_PATH "$(python3 -c "import z3, os; print(os.path.dirname(z3.__file__))")\lib"
+        name: Install Z3 from action
+        uses: pavpanchekha/setup-z3@master
+        with:
+          version: 4.11.2
+          distribution: win
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
 
       - name: Test on 🐍 3.7
-        run: nox -s tests-3.7
+        run: nox -s tests-3.7 --verbose
       - name: Test on 🐍 3.8
         if: runner.os == 'Linux'
         run: nox -s tests-3.8
@@ -63,7 +61,7 @@ jobs:
         run: nox -s tests-3.9
       - name: Test on 🐍 3.10
         if: runner.os != 'Linux'
-        run: nox -s tests-3.10
+        run: nox -s tests-3.10 --verbose
 
   coverage:
     runs-on: ubuntu-22.04
