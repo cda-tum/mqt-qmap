@@ -14,14 +14,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  Z3_GIT_TAG: z3-4.11.2
+  Z3_VERSION: 4.11.2
   Z3_HASH: 721683d8c04b84f54408c44ee53de964d11ef33c10d92c36271a03189159fd4b
 
 jobs:
   build_manylinux_wheels:
     name: Build wheels on Linux
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -29,21 +28,26 @@ jobs:
           fetch-depth: 0
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
+        env:
+          CIBW_BEFORE_ALL_LINUX: python -m pip install z3-solver==${{ env.Z3_VERSION }}
+          CIBW_ENVIRONMENT_LINUX: Z3_ROOT=$(python -c 'import os, z3; print(os.path.dirname(z3.__file__))')
+
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
   build_macos_wheels:
     name: Build wheels on macOS
-    runs-on: macos-11
-
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        run: brew install z3
+        run: python -m pip install z3-solver==$Z3_VERSION
+      - name: Set Z3_ROOT
+        run: echo "Z3_ROOT=$(python -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -53,7 +57,6 @@ jobs:
   build_macos_m1_wheels:
     name: Build wheels on macOS for Apple Silicon
     runs-on: macos-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -61,8 +64,8 @@ jobs:
           fetch-depth: 0
       - name: Install Z3
         run: |
-          curl -L -H "Authorization: Bearer QQ==" -o ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
-          brew install -f ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz
+          curl -L -H "Authorization: Bearer QQ==" -o z3-${{ env.Z3_VERSION }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
+          brew install -f z3-${{ env.Z3_VERSION }}.big_sur.bottle.tar.gz
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
@@ -74,30 +77,16 @@ jobs:
   build_windows_wheels:
     name: Build wheels on Windows
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Cache Z3
-        id: cache-z3
-        uses: actions/cache@v3
-        with:
-          path: z3
-          key: deploy-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/deploy.yml') }}
-      - name: Building Z3
-        if: steps.cache-z3.outputs.cache-hit != 'true'
+      - name: Install Z3
+        run: python -m pip install z3-solver==$Z3_VERSION
+      - name: Set Z3_ROOT
         shell: bash
-        run: |
-          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
-          cmake --build z3/build --config Release --parallel 8
-      - name: Installing Z3
-        shell: bash
-        working-directory: ${{github.workspace}}/z3/build
-        run: cmake --build . --config Release --target INSTALL;
+        run: echo "Z3_ROOT=$(python -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -106,22 +95,18 @@ jobs:
 
   build_sdist:
     name: Build source distribution
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: "3.9"
       - name: Install Z3
-        run: brew install z3
+        run: python -m pip install z3-solver==$Z3_VERSION
+      - name: Set Z3_ROOT
+        run: echo "Z3_ROOT=$(python -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
       - name: Build sdist
-        run: |
-          pip install -q build
-          python -m build --sdist
+        run: pipx run build --sdist
       - name: Test sdist
         run: pip install --verbose dist/*.tar.gz
       - uses: actions/upload-artifact@v3
