@@ -48,7 +48,7 @@ jobs:
         name: Set Z3 root
         run: |
           echo Z3_ROOT=$(python3 -c "import z3, os; print(os.path.dirname(z3.__file__))") >> $env:GITHUB_ENV
-          Get-ChildItem -Path $(python3 -c "import z3, os; print(os.path.dirname(z3.__file__))") -Recurse -ErrorAction SilentlyContinue -Force | %{$_.FullName}
+          Add-Content $env:GITHUB_PATH "$(python3 -c "import z3, os; print(os.path.dirname(z3.__file__))")\lib"
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
