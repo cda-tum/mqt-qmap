@@ -75,7 +75,7 @@ def compile(
 ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
+    :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
@@ -120,10 +120,6 @@ def compile(
 
     if subgraph is None:
         subgraph = set()
-
-    if isinstance(circ, str) and Path(circ).suffix == ".pickle":
-        with open(circ, "rb") as f:
-            circ = pickle.load(f)
 
     architecture = Architecture()
     if arch is None and calibration is None:
