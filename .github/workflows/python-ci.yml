@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        runs-on: [ubuntu-22.04, macos-latest, windows-latest]
     name: Tests on ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v3
@@ -38,6 +38,9 @@ jobs:
           submodules: recursive
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
+      - if: runner.os == 'macOS'
+        name: Install Z3 from brew
+        run: brew install z3
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
@@ -55,7 +58,7 @@ jobs:
         run: nox -s tests-3.10
 
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Test and Coverage on 🐍 3.10
     steps:
       - uses: actions/checkout@v3
