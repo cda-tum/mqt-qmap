@@ -40,6 +40,10 @@ if(DEFINED ENV{Z3_ROOT})
   set(Z3_ROOT $ENV{Z3_ROOT})
   message("Z3_ROOT: ${Z3_ROOT}")
 endif()
+if(DEFINED ENV{Z3_DIR})
+  set(Z3_DIR $ENV{Z3_DIR})
+  message("Z3_DIR: ${Z3_DIR}")
+endif()
 if(NOT ${Z3_ROOT} STREQUAL "")
   find_path(
     Z3_CXX_INCLUDE_DIRS
