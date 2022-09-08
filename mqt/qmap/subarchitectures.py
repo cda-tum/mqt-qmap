@@ -8,7 +8,7 @@ import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-from typing import NewType, Union, List, Tuple, Dict, Set
+from typing import Dict, List, NewType, Set, Tuple, Union
 
 import networkx as nx
 import retworkx as rx
