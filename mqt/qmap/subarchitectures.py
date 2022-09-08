@@ -4,14 +4,14 @@ Functionality for computing good subarchitectures for quantum circuit mapping.
 The function provided in this module... TODO
 """
 
+import os
+import pickle
 from collections import defaultdict
 from itertools import combinations
 from typing import NewType, Union
 
 import networkx as nx
 import retworkx as rx
-import os
-import pickle
 
 Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, list[tuple[int, int]]])
 PartialOrder = NewType("PartialOrder", defaultdict[tuple[int, int], tuple[int, int]])
