@@ -8,13 +8,13 @@ import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-from typing import NewType, Union
+from typing import NewType, Union, List, Tuple, Dict
 
 import networkx as nx
 import retworkx as rx
 
-Subarchitecture = Union[rx.PyGraph, list[tuple[int, int]]]
-PartialOrder = defaultdict[tuple[int, int], tuple[int, int]]
+Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, List[Tuple[int, int]]])
+PartialOrder = Dict["PartialOrder", Tuple[int, int], Tuple[int, int]]
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
