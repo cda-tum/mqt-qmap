@@ -116,27 +116,33 @@ void Architecture::loadProperties(std::istream&& is) {
         std::stringstream        ss(line);
         std::vector<std::string> data{};
         parse_line(line, ',', {'\"'}, {'\\'}, data);
-        properties.t1Time.set(qubitNumber, std::stod(data[1]));
-        properties.t2Time.set(qubitNumber, std::stod(data[2]));
-        properties.qubitFrequency.set(qubitNumber, std::stod(data[3]));
-        properties.readoutErrorRate.set(qubitNumber, std::stod(data[4]));
+        properties.t1Time.set(qubitNumber, std::stod(data.at(1)));
+        properties.t2Time.set(qubitNumber, std::stod(data.at(2)));
+        properties.qubitFrequency.set(qubitNumber, std::stod(data.at(3)));
+        properties.readoutErrorRate.set(qubitNumber, std::stod(data.at(4)));
         // csv file reports average single qubit fidelities
         for (const auto& operation: SingleQubitGates) {
-            properties.setSingleQubitErrorRate(qubitNumber, operation, std::stod(data[5]));
+            properties.setSingleQubitErrorRate(qubitNumber, operation, std::stod(data.at(5)));
         }
-        std::string s = data[6];
-        while (std::regex_search(s, sMatch, regexDoubleFidelity)) {
-            auto a = static_cast<unsigned short>(std::stoul(sMatch.str(2U)));
-            auto b = static_cast<unsigned short>(std::stoul(sMatch.str(3U)));
-            if (!isArchitectureAvailable()) {
-                couplingMap.emplace(a, b);
+        // only try to parse CNOT fidelities if there are any
+        if (data.size() >= 7U) {
+            std::string s = data[6];
+            while (std::regex_search(s, sMatch, regexDoubleFidelity)) {
+                auto a = static_cast<unsigned short>(std::stoul(sMatch.str(2U)));
+                auto b = static_cast<unsigned short>(std::stoul(sMatch.str(3U)));
+                if (!isArchitectureAvailable()) {
+                    couplingMap.emplace(a, b);
+                }
+                // calc moving average
+                averageCNOTFidelity = averageCNOTFidelity + (std::stod(sMatch.str(4U)) - averageCNOTFidelity) / ++numCNOTFidelities;
+                properties.setTwoQubitErrorRate(a, b, std::stod(sMatch.str(4U)));
+                s = sMatch.suffix().str();
             }
-            averageCNOTFidelity = averageCNOTFidelity + (std::stod(sMatch.str(4U)) - averageCNOTFidelity) / ++numCNOTFidelities; //calc moving average
-            properties.setTwoQubitErrorRate(a, b, std::stod(sMatch.str(4U)));
-            s = sMatch.suffix().str();
         }
-        properties.calibrationDate.set(qubitNumber, data[7]);
-        qubitNumber++;
+        if (data.size() == 8U) {
+            properties.calibrationDate.set(qubitNumber, data[7]);
+        }
+        ++qubitNumber;
     }
 
     if (isArchitectureAvailable()) {
