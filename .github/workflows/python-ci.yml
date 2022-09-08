@@ -43,7 +43,7 @@ jobs:
         run: brew install z3
       - if: runner.os == 'Windows'
         name: Install Z3 from chocolatey
-        uses: pavpanchekha/setup-z3@v1.2.2
+        uses: pavpanchekha/setup-z3@1.2.2
         with:
           version: 4.11.2
 
