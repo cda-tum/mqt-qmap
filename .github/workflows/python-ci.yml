@@ -1,0 +1,69 @@
+name: Python-CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  FORCE_COLOR: 3
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Run my[py] linter
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup nox
+        uses: excitedleigh/setup-nox@v2.1.0
+      - name: Run mypy via nox
+        run:  nox -s mypy
+
+  tests:
+    runs-on: ${{ matrix.runs-on }}
+    needs: [lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+    name: Tests on ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup nox
+        uses: excitedleigh/setup-nox@v2.1.0
+
+      # On Linux, all supported Python versions are tested.
+      # For the other systems, only the minimum and the maximum Python version are tested.
+
+      - name: Test on 🐍 3.7
+        run: nox -s tests-3.7
+      - name: Test on 🐍 3.8
+        if: runner.os == 'Linux'
+        run: nox -s tests-3.8
+      - name: Test on 🐍 3.9
+        if: runner.os == 'Linux'
+        run: nox -s tests-3.9
+      - name: Test on 🐍 3.10
+        if: runner.os != 'Linux'
+        run: nox -s tests-3.10
+
+  coverage:
+    runs-on: ubuntu-latest
+    name: Test and Coverage on 🐍 3.10
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Setup nox
+        uses: excitedleigh/setup-nox@v2.1.0
+      - name: Run coverage via nox
+        run:  nox -s coverage -- --cov-report=xml
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
