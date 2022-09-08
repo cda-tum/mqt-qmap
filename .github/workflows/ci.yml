@@ -83,10 +83,10 @@ jobs:
         run: brew install boost
 
       - name: Install Z3
-        run: python3 -m pip install z3-solver==$Z3_VERSION
-
-      - name: Set Z3_ROOT
-        run: echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
+        uses: pavpanchekha/setup-z3@master
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: osx
 
       - name: Configure CMake
         run: cmake -S . -B build -DBUILD_QMAP_TESTS=ON
@@ -106,10 +106,10 @@ jobs:
           submodules: recursive
 
       - name: Install Z3
-        run: python3 -m pip install z3-solver==$Z3_VERSION
-
-      - name: Set Z3_ROOT
-        run: echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
+        uses: pavpanchekha/setup-z3@master
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: win
 
       - name: Configure CMake
         run: cmake -S . -B build -T "ClangCl" -DBUILD_QMAP_TESTS=ON
