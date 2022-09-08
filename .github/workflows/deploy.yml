@@ -85,7 +85,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        run: python -m pip install z3-solver==$Z3_VERSION
+        run: python -m pip install z3-solver==$env:Z3_VERSION
       - name: Set Z3_ROOT
         shell: bash
         run: echo "Z3_ROOT=$(python -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
