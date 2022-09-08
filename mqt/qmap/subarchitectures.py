@@ -9,7 +9,8 @@ import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-from typing import NewType, Union, List, Tuple, Set, Dict
+import typing
+from typing import Dict, List, NewType, Tuple, Union
 
 import networkx as nx
 import retworkx as rx
@@ -78,7 +79,7 @@ class SubarchitectureOrder:
         self.desirable_subarchitectures = dict(self.desirable_subarchitectures)
         self.__isomorphisms = dict(self.__isomorphisms)
 
-    def optimal_candidates(self, nqubits: int) -> List[Subarchitecture]:
+    def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
         """Return optimal subarchitecture candidate."""
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
             raise ValueError(
@@ -103,7 +104,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
-    def covering(self, nqubits: int, size: int) -> List[Subarchitecture]:
+    def covering(self, nqubits: int, size: int) -> list[Subarchitecture]:
         """
         Return covering for nqubit circuits.
 
@@ -183,7 +184,7 @@ class SubarchitectureOrder:
             self.__isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
 
     @staticmethod
-    def __combine_isos(first: Dict[int, int], second: Dict[int, int]) -> Dict[int, int]:
+    def __combine_isos(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
         combined = {}
         for src, img in first.items():
             combined[src] = second[img]
