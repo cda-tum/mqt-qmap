@@ -9,14 +9,14 @@ import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-from typing import NewType, Union
+from typing import NewType, Union, List, Tuple, Set, Dict
 
 
 import networkx as nx
 import retworkx as rx
 
-Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, list[tuple[int, int]]])
-PartialOrder = NewType("PartialOrder", dict[tuple[int, int], tuple[int, int]])
+Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, List[Tuple[int, int]]])
+PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Tuple[int, int]])
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
@@ -67,10 +67,10 @@ class SubarchitectureOrder:
         else:
             self.arch = rx.networkx_converter(nx.from_edgelist(arch))
 
-        self.subarch_order = defaultdict(lambda: [])
-        self.desirable_subarchitectures = defaultdict(lambda: [])
+        self.subarch_order = defaultdict(lambda: [])  # type: PartialOrder
+        self.desirable_subarchitectures = defaultdict(lambda: [])  # type: PartialOrder
 
-        self.__isomorphisms = defaultdict(lambda: {})
+        self.__isomorphisms = defaultdict(lambda: {})  # type: dict[dict[int,int], dict[int,int]]
 
         self.__compute_subgraphs()
         self.__compute_subarch_order()
@@ -79,7 +79,7 @@ class SubarchitectureOrder:
         self.desirable_subarchitectures = dict(self.desirable_subarchitectures)
         self.__isomorphisms = dict(self.__isomorphisms)
 
-    def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
+    def optimal_candidates(self, nqubits: int) -> List[Subarchitecture]:
         """Return optimal subarchitecture candidate."""
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
             raise ValueError(
@@ -104,7 +104,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
-    def covering(self, nqubits: int, size: int) -> list[Subarchitecture]:
+    def covering(self, nqubits: int, size: int) -> List[Subarchitecture]:
         """
         Return covering for nqubit circuits.
 
@@ -184,7 +184,7 @@ class SubarchitectureOrder:
             self.__isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
 
     @staticmethod
-    def __combine_isos(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
+    def __combine_isos(first: Dict[int, int], second: Dict[int, int]) -> Dict[int, int]:
         combined = {}
         for src, img in first.items():
             combined[src] = second[img]

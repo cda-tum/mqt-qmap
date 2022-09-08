@@ -60,29 +60,29 @@ def test_ibm_guadalupe_opt():
     assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])
 
 
-def test_ibm_guadalupe_cov():
-    so = SubarchitectureOrder(
-        [
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 5],
-            [1, 4],
-            [5, 8],
-            [4, 7],
-            [6, 7],
-            [8, 9],
-            [7, 10],
-            [8, 11],
-            [10, 12],
-            [12, 15],
-            [12, 13],
-            [13, 14],
-            [11, 14],
-        ]
-    )
+# def test_ibm_guadalupe_cov():
+#     so = SubarchitectureOrder(
+#         [
+#             [0, 1],
+#             [1, 2],
+#             [2, 3],
+#             [3, 5],
+#             [1, 4],
+#             [5, 8],
+#             [4, 7],
+#             [6, 7],
+#             [8, 9],
+#             [7, 10],
+#             [8, 11],
+#             [10, 12],
+#             [12, 15],
+#             [12, 13],
+#             [13, 14],
+#             [11, 14],
+#         ]
+#     )
 
-    cov = so.covering(9, 2)
-    assert len(cov) == 2
-    assert cov[0].num_nodes() == 14
-    assert cov[1].num_nodes() == 11
+#     cov = so.covering(9, 2)
+#     assert len(cov) == 2
+#     assert cov[0].num_nodes() == 14
+#     assert cov[1].num_nodes() == 11
