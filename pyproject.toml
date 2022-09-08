@@ -15,7 +15,7 @@ archs = "auto64"
 skip = "*-musllinux*"
 test-skip = "cp311-* *-macosx_arm64 *-musllinux* *aarch64"
 test-extras = ["test"]
-test-command = "python -m pytest {project}/test/python"
+test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
 build-verbosity = 3
