@@ -3,18 +3,20 @@ Functionality for computing good subarchitectures for quantum circuit mapping.
 
 The function provided in this module... TODO
 """
+from __future__ import annotations
 
 import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-from typing import Dict, List, NewType, Set, Tuple, Union
+from typing import NewType, Union
+
 
 import networkx as nx
 import retworkx as rx
 
-Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, List[Tuple[int, int]]])
-PartialOrder = Dict["PartialOrder", Tuple[int, int], Tuple[int, int]]
+Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, list[tuple[int, int]]])
+PartialOrder = NewType("PartialOrder", dict[tuple[int, int], tuple[int, int]])
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
@@ -77,7 +79,7 @@ class SubarchitectureOrder:
         self.desirable_subarchitectures = dict(self.desirable_subarchitectures)
         self.__isomorphisms = dict(self.__isomorphisms)
 
-    def optimal_candidates(self, nqubits: int) -> List[Subarchitecture]:
+    def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
         """Return optimal subarchitecture candidate."""
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
             raise ValueError(
@@ -102,7 +104,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
-    def covering(self, nqubits: int, size: int) -> List[Subarchitecture]:
+    def covering(self, nqubits: int, size: int) -> list[Subarchitecture]:
         """
         Return covering for nqubit circuits.
 
@@ -182,7 +184,7 @@ class SubarchitectureOrder:
             self.__isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
 
     @staticmethod
-    def __combine_isos(first: Dict[int, int], second: Dict[int, int]) -> Dict[int, int]:
+    def __combine_isos(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
         combined = {}
         for src, img in first.items():
             combined[src] = second[img]
