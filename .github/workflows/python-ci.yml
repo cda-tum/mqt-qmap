@@ -46,7 +46,7 @@ jobs:
         run: choco install z3 --version=4.11.2
       - if: runner.os == 'Windows'
         name: Set Z3 root
-        run: echo "{Z3_ROOT}={C:\ProgramData\chocolatey\lib\z3\tools}" >> $GITHUB_ENV
+        run: echo "Z3_ROOT=C:\ProgramData\chocolatey\lib\z3\tools" >> $GITHUB_ENV
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
