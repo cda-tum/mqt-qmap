@@ -74,7 +74,7 @@ jobs:
         uses: pavpanchekha/setup-z3@master
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: osx
+          distribution: osx-10.16
 
       - name: Configure CMake
         run: cmake -S . -B build -DBUILD_QMAP_TESTS=ON
