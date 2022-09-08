@@ -109,13 +109,13 @@ int main(int argc, char** argv) {
     if (vm.count("method")) {
         const std::string method = vm["method"].as<std::string>();
         if (method == "z3") {
-            opt.method = OptMethod::Z3;
+            opt.method = OptimizationMethod::Z3;
         } else if (method == "optimath") {
-            opt.method = OptMethod::MATHSAT;
+            opt.method = OptimizationMethod::MATHSAT;
         } else if (method == "smtlibv2") {
-            opt.method = OptMethod::SMTLibV2;
+            opt.method = OptimizationMethod::SMTLibV2;
         } else if (method == "dimacs") {
-            opt.method = OptMethod::DIMACS;
+            opt.method = OptimizationMethod::DIMACS;
         } else {
             ERROR() << "[ERROR] Unknown method '" << method << "'!\n";
             std::exit(1);
@@ -142,13 +142,13 @@ int main(int argc, char** argv) {
     if (vm.count("target")) {
         const std::string target = vm["target"].as<std::string>();
         if (target == "gates") {
-            opt.target = OptTarget::GATES;
+            opt.target = OptimizationTarget::GATES;
         } else if (target == "gates_only_cnot") {
-            opt.target = OptTarget::GATES_ONLY_CNOT;
+            opt.target = OptimizationTarget::GATES_ONLY_CNOT;
         } else if (target == "depth") {
-            opt.target = OptTarget::DEPTH;
+            opt.target = OptimizationTarget::DEPTH;
         } else if (target == "fidelity") {
-            opt.target = OptTarget::FIDELITY;
+            opt.target = OptimizationTarget::FIDELITY;
         } else {
             ERROR() << "Unknown target: " << target << std::endl;
             std::exit(1);

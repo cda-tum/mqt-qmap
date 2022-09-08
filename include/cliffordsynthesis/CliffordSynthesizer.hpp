@@ -37,6 +37,7 @@
 class CliffordOptimizer {
 public:
     CliffordOptimizer() = default;
+    void init(qc::QuantumComputation& qc, bool pchoose_best = false, bool puse_embedding = false, unsigned char pnqubits = 0, unsigned short pinitial_timesteps = 0, OptimizingStrategy strategy = OptimizingStrategy::UseMinimizer, OptimizationTarget ptarget = OptimizationTarget::GATES);
     void optimize();
 
     void setArchitecture(const Architecture& arch) {
@@ -55,8 +56,8 @@ public:
     int                    verbose           = 0;
     int                    nthreads          = 1;
     OptimizingStrategy     strategy          = OptimizingStrategy::UseMinimizer;
-    OptTarget              target            = OptTarget::GATES;
-    OptMethod              method            = OptMethod::Z3;
+    OptimizationTarget     target            = OptimizationTarget::GATES;
+    OptimizationMethod     method            = OptimizationMethod::Z3;
     qc::QuantumComputation circuit;
 
     std::vector<CouplingMap> highestFidelityMap;

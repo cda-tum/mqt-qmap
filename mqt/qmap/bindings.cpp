@@ -3,9 +3,8 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum/ for more information.
 */
 
-#ifdef Z3_FOUND
-    #include "exact/ExactMapper.hpp"
-#endif
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -76,6 +75,53 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
     return results;
 }
 
+// c++ binding function
+CliffordOptResults compile(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
+    qc::QuantumComputation qc{};
+    try {
+        if (py::isinstance<py::str>(circ)) {
+            auto&& file = circ.cast<std::string>();
+            qc.import(file);
+        } else {
+            qc::qiskit::QuantumCircuit::import(qc, circ);
+        }
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not import circuit: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    std::unique_ptr<CliffordOptimizer> optimizer;
+    try {
+        optimizer = std::make_unique<CliffordOptimizer>();
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not construct optimizer: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    try {
+        optimizer->init(qc, false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->setArchitecture(arch);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Error during initialization: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    try {
+        optimizer->optimize();
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Error during optimization: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    auto& results = optimizer->optimal_results;
+
+    return results;
+}
+
 PYBIND11_MODULE(pyqmap, m) {
     m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
 
@@ -134,6 +180,23 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("increasing", SwapReduction::Increasing)
             .export_values()
             .def(py::init([](const std::string& str) -> SwapReduction { return swapReductionFromString(str); }));
+
+    py::enum_<OptimizationTarget>(m, "OptimizationTarget")
+            .value("gates", OptimizationTarget::GATES)
+            .value("depth", OptimizationTarget::DEPTH)
+            .value("fidelity", OptimizationTarget::FIDELITY)
+            .value("gates_only_cnot", OptimizationTarget::GATES_ONLY_CNOT)
+            .export_values()
+            .def(py::init([](const std::string& str) -> OptimizationTarget { return optTargetFromString(str); }));
+
+    py::enum_<OptimizingStrategy>(m, "OptimizingStrategy")
+            .value("use_minimizer", OptimizingStrategy::UseMinimizer)
+            .value("minmax", OptimizingStrategy::MinMax)
+            .value("start_low", OptimizingStrategy::StartLow)
+            .value("start_high", OptimizingStrategy::StartHigh)
+            .value("split_iter", OptimizingStrategy::SplitIter)
+            .export_values()
+            .def(py::init([](const std::string& str) -> OptimizingStrategy { return optStrategyFromString(str); }));
 
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
@@ -236,6 +299,16 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_coupling_map", py::overload_cast<const std::string&>(&Architecture::loadCouplingMap), "coupling_map_file"_a)
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
+
+
+    py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP clifford synthesizing tool")
+            .def(py::init<>())
+            .def_readwrite("result", &CliffordOptResults::result)
+            .def_readwrite("circuit", &CliffordOptResults::resultCircuit)
+
+            .def("json", &CliffordOptResults::json)
+            .def("__repr__", &CliffordOptResults::getStrRepr);
+
 
     m.def("map", &map, "map a quantum circuit");
 #ifdef VERSION_INFO

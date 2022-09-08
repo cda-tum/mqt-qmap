@@ -16,94 +16,94 @@ enum class OptimizingStrategy {
     MinMax,
     SplitIter
 };
-enum class OptResult { SAT,
-                       UNSAT,
-                       UNDEF };
-enum class OptTarget { GATES,
-                       GATES_ONLY_CNOT,
-                       DEPTH,
-                       FIDELITY };
-enum class OptMethod { Z3,
-                       MATHSAT,
-                       SMTLibV2,
-                       DIMACS };
+enum class OptimizationResult { SAT,
+                                UNSAT,
+                                UNDEF };
+enum class OptimizationTarget { GATES,
+                                GATES_ONLY_CNOT,
+                                DEPTH,
+                                FIDELITY };
+enum class OptimizationMethod { Z3,
+                                MATHSAT,
+                                SMTLibV2,
+                                DIMACS };
 
-inline std::string toString(OptMethod method) {
+inline std::string toString(OptimizationMethod method) {
     switch (method) {
-        case OptMethod::Z3:
+        case OptimizationMethod::Z3:
             return "Z3";
-        case OptMethod::MATHSAT:
+        case OptimizationMethod::MATHSAT:
             return "MATHSAT";
-        case OptMethod::SMTLibV2:
+        case OptimizationMethod::SMTLibV2:
             return "SMTLibV2";
-        case OptMethod::DIMACS:
+        case OptimizationMethod::DIMACS:
             return "DIMACS";
     }
     return "Error";
 }
-inline OptMethod optMethodFromString(const std::string& method) {
+inline OptimizationMethod optMethodFromString(const std::string& method) {
     if (method == "Z3")
-        return OptMethod::Z3;
+        return OptimizationMethod::Z3;
     if (method == "MATHSAT")
-        return OptMethod::MATHSAT;
+        return OptimizationMethod::MATHSAT;
     if (method == "SMTLibV2")
-        return OptMethod::SMTLibV2;
+        return OptimizationMethod::SMTLibV2;
     if (method == "DIMACS")
-        return OptMethod::DIMACS;
-    return OptMethod::Z3;
+        return OptimizationMethod::DIMACS;
+    return OptimizationMethod::Z3;
 }
-inline std::string toString(OptTarget target) {
+inline std::string toString(OptimizationTarget target) {
     switch (target) {
-        case OptTarget::GATES:
-            return "Gates";
-        case OptTarget::GATES_ONLY_CNOT:
-            return "Gates (only CNOT)";
-        case OptTarget::DEPTH:
-            return "Depth";
-        case OptTarget::FIDELITY:
-            return "Fidelity";
+        case OptimizationTarget::GATES:
+            return "gates";
+        case OptimizationTarget::GATES_ONLY_CNOT:
+            return "gates_only_cnot";
+        case OptimizationTarget::DEPTH:
+            return "depth";
+        case OptimizationTarget::FIDELITY:
+            return "fidelity";
     }
     return "Error";
 }
 
-inline OptTarget optTargetFromString(const std::string& target) {
-    if (target == "Gates")
-        return OptTarget::GATES;
-    if (target == "Gates (only CNOT)")
-        return OptTarget::GATES_ONLY_CNOT;
-    if (target == "Depth")
-        return OptTarget::DEPTH;
-    if (target == "Fidelity")
-        return OptTarget::FIDELITY;
-    return OptTarget::GATES;
+inline OptimizationTarget optTargetFromString(const std::string& target) {
+    if (target == "gates")
+        return OptimizationTarget::GATES;
+    if (target == "gates_only_cnot")
+        return OptimizationTarget::GATES_ONLY_CNOT;
+    if (target == "depth")
+        return OptimizationTarget::DEPTH;
+    if (target == "fidelity")
+        return OptimizationTarget::FIDELITY;
+    return OptimizationTarget::GATES;
 }
 
 inline std::string toString(OptimizingStrategy strategy) {
     switch (strategy) {
         case OptimizingStrategy::MinMax:
-            return "MinMax";
+            return "minmax";
         case OptimizingStrategy::StartHigh:
-            return "Start High";
+            return "start_high";
         case OptimizingStrategy::StartLow:
-            return "Start Low";
+            return "start_low";
         case OptimizingStrategy::UseMinimizer:
-            return "Minimizer";
+            return "useminimizer";
         case OptimizingStrategy::SplitIter:
-            return "Split Iterative";
+            return "split_iterative";
     }
     return "Error";
 }
 
 inline OptimizingStrategy optStrategyFromString(const std::string& strategy) {
-    if (strategy == "MinMax")
+    if (strategy == "minmax")
         return OptimizingStrategy::MinMax;
-    if (strategy == "Start High")
+    if (strategy == "start_high")
         return OptimizingStrategy::StartHigh;
-    if (strategy == "Start Low")
+    if (strategy == "start_low")
         return OptimizingStrategy::StartLow;
-    if (strategy == "Minimizer")
+    if (strategy == "useminimizer")
         return OptimizingStrategy::UseMinimizer;
-    if (strategy == "Split Iterative")
+    if (strategy == "split_iterative")
         return OptimizingStrategy::SplitIter;
     return OptimizingStrategy::MinMax;
 }
@@ -113,9 +113,9 @@ public:
     int                verbose           = 0;
     bool               choose_best       = false;
     OptimizingStrategy strategy          = OptimizingStrategy::UseMinimizer;
-    OptTarget          target            = OptTarget::GATES;
-    OptMethod          method            = OptMethod::Z3;
-    OptResult          result            = OptResult::UNDEF;
+    OptimizationTarget target            = OptimizationTarget::GATES;
+    OptimizationMethod method            = OptimizationMethod::Z3;
+    OptimizationResult result            = OptimizationResult::UNDEF;
     unsigned char      nqubits           = 0;
     int                initial_timesteps = 0;
     int                gate_count        = 0;
@@ -187,7 +187,7 @@ public:
         os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
         os << R"("target":")" << toString(target) << "\"," << std::endl;
         os << R"("method":")" << toString(method) << "\"," << std::endl;
-        os << R"("quits":")" << std::to_string(nqubits) << "\"," << std::endl;
+        os << R"("qubits":")" << std::to_string(nqubits) << "\"," << std::endl;
         os << R"("initial_timesteps":")" << std::to_string(initial_timesteps)
            << "\"," << std::endl;
         os << R"("gate_count":")" << std::to_string(gate_count) << "\","
@@ -244,4 +244,28 @@ public:
         os << "]" << std::endl;
         os << "}}" << std::endl;
     }
+
+[[nodiscard]] virtual nlohmann::json json() const {
+    nlohmann::json resultJSON{};
+    resultJSON["verbose"]           = verbose;
+    resultJSON["choose_best"]       = choose_best;
+    resultJSON["strategy"]          = toString(strategy);
+    resultJSON["target"]            = toString(target);
+    resultJSON["method"]            = toString(method);
+    resultJSON["qubits"]             = nqubits;
+    resultJSON["initial_timesteps"] = initial_timesteps;
+    resultJSON["gate_count"]        = gate_count;
+    resultJSON["depth"]             = depth;
+    resultJSON["fidelity"]          = fidelity;
+    resultJSON["sat"]               = sat;
+    resultJSON["total_seconds"]     = total_seconds;
+
+    return resultJSON;
+}
+
+std::string getStrRepr() {
+    std::stringstream ss;
+    dump(ss);
+    return ss.str();
+}
 };
