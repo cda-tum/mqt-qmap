@@ -49,6 +49,7 @@ jobs:
         run: |
           echo "Z3_ROOT=C:\ProgramData\chocolatey\lib\z3\tools" >> $env:GITHUB_ENV
           echo "Z3_DIR=C:\ProgramData\chocolatey\lib\z3\tools" >> $env:GITHUB_ENV
+          Get-ChildItem -Path C:\ProgramData\chocolatey\lib\z3\tools -Recurse -ErrorAction SilentlyContinue -Force | %{$_.FullName}
 
       # On Linux, all supported Python versions are tested.
       # For the other systems, only the minimum and the maximum Python version are tested.
