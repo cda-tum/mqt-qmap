@@ -9,7 +9,6 @@ import os
 import pickle
 from collections import defaultdict
 from itertools import combinations
-import typing
 from typing import Dict, List, NewType, Tuple, Union
 
 import networkx as nx
@@ -259,7 +258,7 @@ class SubarchitectureOrder:
                     self.desirable_subarchitectures[(n, i)].append((n, i))
         self.desirable_subarchitectures[self.arch.num_nodes(), 0] = [(self.arch.num_nodes(), 0)]
 
-    def __cand(self, nqubits: int) -> typing.Set[Subarchitecture]:
+    def __cand(self, nqubits: int) -> set[Subarchitecture]:
         all_desirables = [desirables for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits]
         return {des for desirables in all_desirables for des in desirables}
 
