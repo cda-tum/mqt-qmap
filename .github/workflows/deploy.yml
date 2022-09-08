@@ -28,10 +28,6 @@ jobs:
           fetch-depth: 0
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
-        env:
-          CIBW_BEFORE_ALL_LINUX: >
-            python3 -m pip install z3-solver==${{ env.Z3_VERSION }} &&
-            export Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -44,12 +40,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Install Z3
-        run: python3 -m pip install z3-solver==$Z3_VERSION
-      - name: Set Z3_ROOT
-        run: |
-          echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
-          echo "$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')"/lib >> $GITHUB_PATH
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -84,11 +74,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Install Z3
-        run: python3 -m pip install z3-solver==$env:Z3_VERSION
-      - name: Set Z3_ROOT
-        shell: bash
-        run: echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -103,10 +88,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Install Z3
-        run: python3 -m pip install z3-solver==$Z3_VERSION
-      - name: Set Z3_ROOT
-        run: echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
       - name: Build sdist
         run: pipx run build --sdist
       - name: Test sdist
