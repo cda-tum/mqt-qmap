@@ -11,7 +11,6 @@ from collections import defaultdict
 from itertools import combinations
 from typing import NewType, Union, List, Tuple, Set, Dict
 
-
 import networkx as nx
 import retworkx as rx
 
@@ -49,7 +48,7 @@ class SubarchitectureOrder:
         serialize this object to avoid recomputing the ordering in the future
     """
 
-    def __init__(self, arch: Union[Subarchitecture, str]):
+    def __init__(self, arch: Subarchitecture | str):
         """
         Initialize the partial order.
 
