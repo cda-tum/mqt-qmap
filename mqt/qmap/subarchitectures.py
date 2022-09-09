@@ -151,7 +151,7 @@ class SubarchitectureOrder:
                 if rx.is_connected(sg):
                     new_class = True
                     for g in self.sgs[i]:
-                        if rx.is_subgraph_isomorphic(sg, g):
+                        if rx.is_isomorphic(g, sg):
                             new_class = False
                             break
                     if new_class:
@@ -261,12 +261,6 @@ class SubarchitectureOrder:
     def __cand(self, nqubits: int) -> set[Subarchitecture]:
         all_desirables = [desirables for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits]
         return {des for desirables in all_desirables for des in desirables}
-
-
-def sycamore_23_subarchitectures() -> SubarchitectureOrder:
-    """Load the precomputed sycamore subarchitectures."""
-    path = os.path.join(package_directory, "libs/sycamore_23")
-    return SubarchitectureOrder(path)
 
 
 def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
