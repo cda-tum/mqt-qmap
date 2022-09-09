@@ -19,7 +19,7 @@ First, save the following lines as :code:`ghz_3.py` in a folder where you want t
 
     .. code-block:: python
 
-        from qiskit import QuantumCircuit, transpile
+        from qiskit import QuantumCircuit
         from qiskit.providers.fake_provider import FakeLondon
         from mqt import qmap
 
