@@ -31,7 +31,9 @@ function(check_z3_version z3_include z3_lib)
           ${z3_version}
           PARENT_SCOPE)
     else()
-      message(STATUS "Compilation succeeded but version could not be determined")
+      message(
+        STATUS
+          "Compilation succeeded but version could not be determined. Determined: ${SRC_OUTPUT}")
     endif()
   endif()
 endfunction(check_z3_version)
