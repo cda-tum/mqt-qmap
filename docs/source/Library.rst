@@ -7,4 +7,3 @@ Library
    library/Mapping
    library/Architecture
    library/MappingResults
-

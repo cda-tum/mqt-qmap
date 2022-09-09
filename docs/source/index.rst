@@ -20,5 +20,3 @@ If you have any questions, feel free to contact us via `quantum.cda@xcit.tum.de 
 .. rubric:: Footnotes
 
 .. [#] The Munich Quantum Toolkit was formerly known under the acronym *JKQ* :cite:labelpar:`wille2020JKQtools` and developed by the `Institute for Integrated Circuits <https://iic.jku.at/eda/>`_ at the `Johannes Kepler University Linz <https://jku.at>`_.
-
-
