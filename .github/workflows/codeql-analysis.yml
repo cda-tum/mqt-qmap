@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 3
+  Z3_VERSION: 4.11.2
+
 jobs:
   analyze-cpp:
     name: Analyze
@@ -53,7 +57,7 @@ jobs:
 
       - if: matrix.language == 'cpp'
         name: Build
-        run: cmake --build build --parallel 4
+        run: cmake --build build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
