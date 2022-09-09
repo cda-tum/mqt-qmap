@@ -75,7 +75,7 @@ def compile(
 
     :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
+    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
     :type calibration: Optional[Union[str, BackendProperties, Target]]

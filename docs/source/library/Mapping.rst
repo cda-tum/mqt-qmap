@@ -1,7 +1,7 @@
 Quantum Circuit Compilation
 ===========================
 
-The main functionality for mapping quantum circuits is the :code:`compile` method.
+The main functionality for mapping quantum circuits is the :code:`compile` method. Note that this method assumes that the input quantum circuit is already decomposed into elementary gates for the specified architecture.
 
     .. currentmodule:: mqt.qmap
     .. automethod:: mqt.qmap::compile
