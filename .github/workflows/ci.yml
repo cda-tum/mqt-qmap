@@ -63,7 +63,7 @@ jobs:
           platform_version: ${{ matrix.config.platform_version }}
           toolset: ${{ matrix.config.toolset }}
       - name: Install Z3
-        uses: pavpanchekha/setup-z3@master
+        uses: burgholzer/setup-z3@improve-findability
         with:
           version: ${{ env.Z3_VERSION }}
           distribution: ${{ matrix.config.distribution }}
