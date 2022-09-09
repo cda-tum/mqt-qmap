@@ -20,93 +20,67 @@ env:
   Z3_VERSION: 4.11.2
 
 jobs:
-  ubuntu-ci:
-    runs-on: ubuntu-latest
-
+  cpp-tests:
+    name: C++ Tests ${{ matrix.config.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+              os: ubuntu-20.04,
+              platform_version: 20.04,
+              toolset: gcc,
+              distribution: glibc-2.31,
+            }
+          - {
+              os: macos-11,
+              platform_version: 11,
+              toolset: clang,
+              distribution: osx-10.16,
+            }
+          - {
+              os: windows-2022,
+              platform_version: 2022,
+              toolset: msvc,
+              distribution: win,
+            }
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-
       - name: Installing boost
-        run: sudo apt-get install -y libboost-program-options-dev
-
+      - name: Install boost
+        uses: MarkusJx/install-boost@v2.3.1
+        id: install-boost
+        with:
+          boost_version: 1.79.0
+          platform_version: ${{ matrix.config.platform_version }}
+          toolset: ${{ matrix.config.toolset }}
       - name: Install Z3
-        run: python3 -m pip install z3-solver==$Z3_VERSION
-
-      - name: Set Z3_ROOT
-        run: echo "Z3_ROOT=$(python3 -c 'import os, z3; print(os.path.dirname(z3.__file__))')" >> $GITHUB_ENV
-
+        uses: pavpanchekha/setup-z3@master
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: ${{ matrix.config.distribution }}
       - name: Configure CMake
-        run: cmake -S . -B build -DBUILD_QMAP_TESTS=ON
-
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       - name: Build
-        run: cmake --build build
-
+        run: cmake --build build --config Release
       - name: Test
         working-directory: build/test
-        run: ctest --output-on-failure
-
-      - name: Coverage
+        run: ctest -C Release --output-on-failure
+      - if: runner.os == 'Linux'
+        name: Coverage
         run: |
           cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON
           cmake --build buildCov --config Debug
           cd buildCov/test
-          ctest --output-on-failure
-      - name: Upload coverage to Codecov
+          ctest -C Debug --output-on-failure
+      - if: runner.os == 'Linux'
+        name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
         with:
           gcov: true
           gcov_ignore: "extern/**/*"
-
-  macOS-ci:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Installing boost
-        run: brew install boost
-
-      - name: Install Z3
-        uses: pavpanchekha/setup-z3@master
-        with:
-          version: ${{ env.Z3_VERSION }}
-          distribution: osx-10.16
-
-      - name: Configure CMake
-        run: cmake -S . -B build -DBUILD_QMAP_TESTS=ON
-
-      - name: Build
-        run: cmake --build build
-
-      - name: Test
-        working-directory: build/test
-        run: ctest --output-on-failure
-
-  windows-ci:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Install Z3
-        uses: pavpanchekha/setup-z3@master
-        with:
-          version: ${{ env.Z3_VERSION }}
-          distribution: win
-
-      - name: Configure CMake
-        run: cmake -S . -B build -T "ClangCl" -DBUILD_QMAP_TESTS=ON
-
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Test
-        working-directory: build/test/Release
-        run: |
-          ./qmap_exact_test
-          ./qmap_heuristic_test
