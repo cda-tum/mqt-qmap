@@ -16,7 +16,7 @@ function(check_z3_version z3_include z3_lib)
        }")
 
   # Get lib path
-  get_filename_component(z3_lib_path ${z3_lib} PATH)
+  get_filename_component(z3_lib_path ${z3_lib} DIRECTORY)
 
   try_run(
     Z3_RETURNCODE Z3_COMPILED ${CMAKE_BINARY_DIR}
