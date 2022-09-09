@@ -71,7 +71,7 @@ endif()
 
 # see if a config file is available
 if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
-  find_package(Z3 CONFIG)
+  find_package(Z3 CONFIG QUIET)
   if(Z3_FOUND)
     message(STATUS "Found Z3 includes and libraries from config file")
     message(STATUS "Z3_CXX_INCLUDE_DIRS: ${Z3_CXX_INCLUDE_DIRS}")
