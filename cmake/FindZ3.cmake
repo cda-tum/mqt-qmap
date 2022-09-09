@@ -97,11 +97,15 @@ endif()
 
 # if they are still not found, try to find them with Python as a last resort
 if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
+  set(PYTHON_FIND_VIRTUALENV FIRST)
   find_package(Python COMPONENTS Interpreter Development.Module)
   if(Python_FOUND)
     execute_process(
       COMMAND ${Python_EXECUTABLE} -c "import os, z3; print(os.path.dirname(z3.__file__))"
-      RESULT_VARIABLE Z3_PYTHON_ROOT)
+      OUTPUT_VARIABLE Z3_PYTHON_ROOT)
+    string(STRIP ${Z3_PYTHON_ROOT} Z3_PYTHON_ROOT)
+    message(STATUS "Z3_PYTHON_ROOT: ${Z3_PYTHON_ROOT}")
+
     if(Z3_PYTHON_ROOT)
       find_path(
         Z3_CXX_INCLUDE_DIRS
