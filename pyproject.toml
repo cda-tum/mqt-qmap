@@ -22,6 +22,11 @@ build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
+repair-wheel-command = [
+  'export Z3_ROOT=$(python -c "import z3, os; print(os.path.dirname(z3.__file__))")',
+  'export LD_LIBRARY_PATH=${Z3_ROOT}/bin:$LD_LIBRARY_PATH',
+  'auditwheel repair -w {dest_dir} {wheel}'
+]
 
 [tool.cibuildwheel.macos]
 archs = "x86_64"
