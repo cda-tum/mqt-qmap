@@ -34,6 +34,12 @@ jobs:
       - name: Installing boost
         run: sudo apt-get install -y libboost-program-options-dev
 
+      - name: Install Z3
+        uses: burgholzer/setup-z3@improve-findability
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: glibc-2.31
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
