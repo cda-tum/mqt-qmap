@@ -28,10 +28,6 @@ jobs:
           fetch-depth: 0
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
-        env:
-          CIBW_BEFORE_BUILD_LINUX: >
-            python3 -m pip install z3-solver==$Z3_VERSION &&
-            export Z3_ROOT=$(python3 -c "import os, z3; print(os.path.dirname(z3.__file__))")
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
