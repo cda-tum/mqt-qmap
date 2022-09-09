@@ -4,7 +4,6 @@ import re
 import subprocess
 import sys
 
-import z3
 from setuptools import Extension, find_namespace_packages, setup
 from setuptools.command.build_ext import build_ext
 
@@ -26,8 +25,6 @@ class CMakeBuild(build_ext):
         if not extdir.endswith(os.path.sep):
             extdir += os.path.sep
 
-        z3_root = os.path.abspath(os.path.dirname(z3.__file__))
-
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
         cfg = "Debug" if self.debug else "Release"
 
@@ -36,7 +33,6 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DQMAP_VERSION_INFO={version}",
             f"-DCMAKE_BUILD_TYPE={cfg}",
-            f"-DZ3_ROOT={z3_root}",
             "-DBINDINGS=ON",
         ]
         build_args = []
