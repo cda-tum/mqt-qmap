@@ -60,7 +60,7 @@ check_submodule_present(LogicBlocks)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # search for Z3
-find_package(Z3)
+find_package(Z3 4.8.15 REQUIRED)
 if(Z3_FOUND)
   if(NOT TARGET z3::z3lib)
     add_library(z3::z3lib IMPORTED INTERFACE)
