@@ -32,14 +32,15 @@ function(check_z3_version z3_include z3_lib)
   endif()
 endfunction(check_z3_version)
 
-# if Z3_ROOT is provided, check there first
 set(Z3_ROOT
     ""
     CACHE PATH "Root of Z3 distribution.")
 if(DEFINED ENV{Z3_ROOT})
   set(Z3_ROOT $ENV{Z3_ROOT})
-  message("Z3_ROOT: ${Z3_ROOT}")
+  message(STATUS "Z3_ROOT from environment: ${Z3_ROOT}")
 endif()
+
+# if Z3_ROOT is provided, check there first
 if(NOT ${Z3_ROOT} STREQUAL "")
   find_path(
     Z3_CXX_INCLUDE_DIRS
@@ -54,24 +55,73 @@ if(NOT ${Z3_ROOT} STREQUAL "")
     NO_DEFAULT_PATH
     PATHS ${Z3_ROOT}
     PATH_SUFFIXES lib bin)
+
+  if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+    message(STATUS "Z3_ROOT provided and includes and libraries found.")
+    message(STATUS "Z3_CXX_INCLUDE_DIRS: ${Z3_CXX_INCLUDE_DIRS}")
+    message(STATUS "Z3_LIBRARIES: ${Z3_LIBRARIES}")
+  endif()
 endif()
 
 # see if a config file is available
 if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
   find_package(Z3 CONFIG)
+  if(Z3_FOUND)
+    message(STATUS "Found Z3 using config file")
+  endif()
 endif()
 
-# try default paths as a last hope
 if(NOT Z3_FOUND)
-  find_path(
-    Z3_CXX_INCLUDE_DIRS
-    NAMES z3.h z3++.h
-    PATH_SUFFIXES libz3 z3)
-  find_library(
-    Z3_LIBRARIES
-    NAMES z3 libz3
-    PATH_SUFFIXES lib bin)
+  # if the include directories or libraries have not been found, look in the system paths
+  if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
+    find_path(
+      Z3_CXX_INCLUDE_DIRS
+      NAMES z3.h z3++.h
+      PATH_SUFFIXES libz3 z3)
+    find_library(
+      Z3_LIBRARIES
+      NAMES z3 libz3
+      PATH_SUFFIXES lib bin)
 
+    if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+      message(STATUS "Found Z3 includes and libraries in system paths.")
+      message(STATUS "Z3_CXX_INCLUDE_DIRS: ${Z3_CXX_INCLUDE_DIRS}")
+      message(STATUS "Z3_LIBRARIES: ${Z3_LIBRARIES}")
+    endif()
+  endif()
+
+  # if they are still not found, try to find them with Python as a last resort
+  if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
+    find_package(Python COMPONENTS Interpreter)
+    if(Python_FOUND)
+      execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import os, z3; print(os.path.dirname(z3.__file__))"
+        RESULT_VARIABLE Z3_PYTHON_ROOT)
+      if(Z3_PYTHON_ROOT)
+        find_path(
+          Z3_CXX_INCLUDE_DIRS
+          NAMES z3.h z3++.h
+          NO_DEFAULT_PATH
+          PATHS ${Z3_PYTHON_ROOT}/include
+          PATH_SUFFIXES libz3 z3)
+
+        find_library(
+          Z3_LIBRARIES
+          NAMES z3 libz3
+          NO_DEFAULT_PATH
+          PATHS ${Z3_PYTHON_ROOT}
+          PATH_SUFFIXES lib bin)
+
+        if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+          message(STATUS "Found Z3 includes and libraries from Python installation.")
+          message(STATUS "Z3_CXX_INCLUDE_DIRS: ${Z3_CXX_INCLUDE_DIRS}")
+          message(STATUS "Z3_LIBRARIES: ${Z3_LIBRARIES}")
+        endif()
+      endif()
+    endif()
+  endif()
+
+  # try to determine version of Z3
   unset(Z3_VERSION_STRING)
 
   # Try to check version by compiling a small program that prints Z3's version
@@ -98,6 +148,7 @@ if(NOT Z3_FOUND)
   endif()
 
   if(NOT Z3_VERSION_STRING)
+    message(STATUS "Could not determine Z3 version")
     set(Z3_VERSION_STRING "0.0.0")
   endif()
 
