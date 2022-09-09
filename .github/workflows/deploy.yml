@@ -28,7 +28,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
-          CIBW_BEFORE_BUILD_LINUX: pip install z3-solver==${{ env.Z3_VERSION }}
+          CIBW_BEFORE_ALL_LINUX: /opt/python/cp39-cp39/bin/pip install -U pip z3-solver==${{ env.Z3_VERSION }}
+          CIBW_ENVIRONMENT_LINUX: Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl

@@ -4,7 +4,6 @@ requires = [
     "setuptools_scm>=6.4",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.14",
-    "z3-solver==4.11.2; sys_platform == 'linux'",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -22,11 +21,6 @@ build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = [
-  'export Z3_ROOT=$(python -c "import z3, os; print(os.path.dirname(z3.__file__))")',
-  'export LD_LIBRARY_PATH=${Z3_ROOT}/bin:$LD_LIBRARY_PATH',
-  'auditwheel repair -w {dest_dir} {wheel}'
-]
 
 [tool.cibuildwheel.macos]
 archs = "x86_64"
