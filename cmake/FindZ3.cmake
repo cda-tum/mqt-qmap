@@ -156,7 +156,9 @@ if(NOT Z3_VERSION_STRING AND (Z3_CXX_INCLUDE_DIRS AND EXISTS "${Z3_CXX_INCLUDE_D
 endif()
 
 if(NOT Z3_VERSION_STRING)
-  message(STATUS "Could not determine Z3 version")
+  if(Z3_CXX_INCLUDE_DIRS AND Z3_LIBRARIES)
+    message(STATUS "Could not determine Z3 version")
+  endif()
   set(Z3_VERSION_STRING "0.0.0")
 endif()
 
