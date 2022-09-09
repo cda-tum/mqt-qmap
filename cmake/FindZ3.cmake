@@ -50,7 +50,7 @@ if(NOT ${Z3_ROOT} STREQUAL "")
 
   find_library(
     Z3_LIBRARIES
-    NAMES libz3.a z3 libz3
+    NAMES z3 libz3
     NO_DEFAULT_PATH
     PATHS ${Z3_ROOT}
     PATH_SUFFIXES lib bin)
@@ -69,7 +69,7 @@ if(NOT Z3_FOUND)
     PATH_SUFFIXES libz3 z3)
   find_library(
     Z3_LIBRARIES
-    NAMES libz3.a z3 libz3
+    NAMES z3 libz3
     PATH_SUFFIXES lib bin)
 
   unset(Z3_VERSION_STRING)
