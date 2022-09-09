@@ -2,8 +2,6 @@
 # This file is part of MQT QMAP library which is released under the MIT license.
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
-import pickle
-from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 from mqt.qmap.pyqmap import (
@@ -43,9 +41,9 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
             # split line into tokens
             tokens = line.split(" ")
             # convert tokens to integers
-            tokens = [int(token) for token in tokens]
+            int_tokens = [int(token) for token in tokens]
             # create an empty layout
-            layout = Layout().from_intlist(tokens, *qregs)
+            layout = Layout().from_intlist(int_tokens, *qregs)
             return layout
     raise ValueError("No initial layout found in QASM file.")
 
@@ -75,7 +73,7 @@ def compile(
 ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
+    :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
@@ -120,10 +118,6 @@ def compile(
 
     if subgraph is None:
         subgraph = set()
-
-    if isinstance(circ, str) and Path(circ).suffix == ".pickle":
-        with open(circ, "rb") as f:
-            circ = pickle.load(f)
 
     architecture = Architecture()
     if arch is None and calibration is None:
