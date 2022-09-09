@@ -48,7 +48,7 @@ jobs:
               platform_version: 2022,
               toolset: msvc,
               distribution: win,
-              test-dir: build\Release\test,
+              test-dir: build\test\Release,
               toolchain: "-T ClangCl",
             }
     steps:
