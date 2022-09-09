@@ -61,8 +61,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Install Z3 from brew
-        run: brew install z3
+      - name: Install Z3
+        uses: burgholzer/setup-z3@improve-findability
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: osx-10.16
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
