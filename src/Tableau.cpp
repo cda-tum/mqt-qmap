@@ -46,18 +46,19 @@ void Tableau::import(std::istream& is) {
     tableau.reserve(nQubits);
 
     while (std::getline(is, line)) {
+
         if (line.find('-', 0) != std::string::npos)
             continue;
         tableau.emplace_back();
         tableau.back().reserve(2 * nQubits + 1);
-        parse_line(line, delimiter, {'\"'}, {'\\'}, data);
+        parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
         bool skipFirst = true;
         for (const auto& datum: data) {
             if (skipFirst) {
                 skipFirst = false;
                 continue;
             }
-            if (datum == "")
+            if (datum.empty())
                 continue;
             tableau.back().emplace_back(static_cast<int32_t>(std::stoul(datum)));
         }

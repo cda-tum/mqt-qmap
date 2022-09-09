@@ -491,7 +491,7 @@ void CliffordOptimizer::runSplitIter(
     DEBUG() << "Running split iter" << std::endl;
     Tableau                          fullTableau   = targetTableau;
     auto                             circuit_split = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
-    int                              split         = std::max(5, nqubits / 2);
+    int                              split         = std::min(5, nqubits / 2);
     std::vector<std::thread*>        threads;
     std::vector<CliffordOptResults*> results;
     int                              nThreads = nthreads;
@@ -545,7 +545,7 @@ void CliffordOptimizer::runSplitIter(
             Tableau resultingTableau{};
             Tableau::generateTableau(resultingTableau, total_result.resultCircuit);
             DEBUG() << "Equality (Results): "
-                    << (fullTableau == resultingTableau)
+                    << ((fullTableau == resultingTableau) ? "True" : "False")
                     << std::endl;
             DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
                     << std::endl;
@@ -569,6 +569,7 @@ void CliffordOptimizer::runSplitIter(
     optimal_results.resultCircuit = circuit.clone();
     optimal_results.resultTableaus.emplace_back(targetTableau);
     optimal_results.gate_count = circuit.getNindividualOps();
+    optimal_results.result     = OptimizationResult::SAT;
 }
 
 void CliffordOptimizer::updateResults(CliffordOptResults& results) {
