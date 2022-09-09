@@ -92,7 +92,7 @@ if(NOT Z3_FOUND)
 
   # if they are still not found, try to find them with Python as a last resort
   if(NOT Z3_CXX_INCLUDE_DIRS OR NOT Z3_LIBRARIES)
-    find_package(Python COMPONENTS Interpreter)
+    find_package(Python COMPONENTS Interpreter Development)
     if(Python_FOUND)
       execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import os, z3; print(os.path.dirname(z3.__file__))"
