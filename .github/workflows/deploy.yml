@@ -15,7 +15,6 @@ concurrency:
 
 env:
   Z3_VERSION: 4.11.2
-  Z3_HASH: 721683d8c04b84f54408c44ee53de964d11ef33c10d92c36271a03189159fd4b
 
 jobs:
   build_manylinux_wheels:
@@ -62,9 +61,11 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        run: |
-          curl -L -H "Authorization: Bearer QQ==" -o z3-${{ env.Z3_VERSION }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
-          brew install -f z3-${{ env.Z3_VERSION }}.big_sur.bottle.tar.gz
+        uses: burgholzer/setup-z3@improve-findability
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: osx-11.0
+          architecture: arm64
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
