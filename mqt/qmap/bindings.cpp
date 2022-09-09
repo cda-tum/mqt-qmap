@@ -79,6 +79,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 PYBIND11_MODULE(pyqmap, m) {
     m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
 
+    // Pre-defined architecture available within QMAP
     py::enum_<AvailableArchitecture>(m, "Arch")
             .value("IBM_QX4", AvailableArchitecture::IBM_QX4,
                    "5 qubit, directed bow tie layout")
@@ -99,52 +100,66 @@ PYBIND11_MODULE(pyqmap, m) {
             .value("Rigetti_Aspen", AvailableArchitecture::Rigetti_Aspen,
                    "16 qubit, undirected dumbbell layout")
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> AvailableArchitecture { return architectureFromString(str); }));
 
+    // Mapping methodology to use
     py::enum_<Method>(m, "Method")
             .value("heuristic", Method::Heuristic)
             .value("exact", Method::Exact)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> Method { return methodFromString(str); }));
 
+    // Initial layout strategy
     py::enum_<InitialLayout>(m, "InitialLayout")
             .value("identity", InitialLayout::Identity)
             .value("static", InitialLayout::Static)
             .value("dynamic", InitialLayout::Dynamic)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> InitialLayout { return initialLayoutFromString(str); }));
 
+    // Gate clustering / layering strategy
     py::enum_<Layering>(m, "Layering")
             .value("individual_gates", Layering::IndividualGates)
             .value("disjoint_qubits", Layering::DisjointQubits)
             .value("odd_gates", Layering::OddGates)
             .value("qubit_triangle", Layering::QubitTriangle)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> Layering { return layeringFromString(str); }));
 
+    // Encoding settings for at-most-one and exactly-one constraints
     py::enum_<Encoding>(m, "Encoding")
             .value("naive", Encoding::Naive)
             .value("commander", Encoding::Commander)
             .value("bimander", Encoding::Bimander)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> Encoding { return encodingFromString(str); }));
 
+    // Grouping settings if using the commander encoding
     py::enum_<CommanderGrouping>(m, "CommanderGrouping")
             .value("fixed2", CommanderGrouping::Fixed2)
             .value("fixed3", CommanderGrouping::Fixed3)
             .value("halves", CommanderGrouping::Halves)
             .value("logarithm", CommanderGrouping::Logarithm)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> CommanderGrouping { return groupingFromString(str); }));
 
+    // Strategy for reducing the number of permutations/swaps considered in front of every gate
     py::enum_<SwapReduction>(m, "SwapReduction")
             .value("none", SwapReduction::None)
             .value("coupling_limit", SwapReduction::CouplingLimit)
             .value("custom", SwapReduction::Custom)
             .value("increasing", SwapReduction::Increasing)
             .export_values()
+            // allow construction from string
             .def(py::init([](const std::string& str) -> SwapReduction { return swapReductionFromString(str); }));
 
+    // All configuration options for QMAP
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
             .def_readwrite("method", &Configuration::method)
@@ -172,9 +187,11 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("subgraph", &Configuration::subgraph)
             .def_readwrite("pre_mapping_optimizations", &Configuration::preMappingOptimizations)
             .def_readwrite("post_mapping_optimizations", &Configuration::postMappingOptimizations)
+            .def_readwrite("add_measurements_to_mapped_circuit", &Configuration::addMeasurementsToMappedCircuit)
             .def("json", &Configuration::json)
             .def("__repr__", &Configuration::toString);
 
+    // Results of the mapping process
     py::class_<MappingResults>(m, "MappingResults", "Results of the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
             .def_readwrite("input", &MappingResults::input)
@@ -188,6 +205,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("csv", &MappingResults::csv)
             .def("__repr__", &MappingResults::toString);
 
+    // Main class for storing circuit information
     py::class_<MappingResults::CircuitInfo>(m, "CircuitInfo", "Circuit information")
             .def(py::init<>())
             .def_readwrite("name", &MappingResults::CircuitInfo::name)
@@ -203,6 +221,7 @@ PYBIND11_MODULE(pyqmap, m) {
     auto arch       = py::class_<Architecture>(m, "Architecture", "Class representing device/backend information");
     auto properties = py::class_<Architecture::Properties>(arch, "Properties", "Class representing properties of an architecture");
 
+    // Properties of an architecture (e.g. number of qubits, connectivity, error rates, ...)
     properties.def(py::init<>())
             .def_property("name", &Architecture::Properties::getName, &Architecture::Properties::setName)
             .def_property("num_qubits", &Architecture::Properties::getNqubits, &Architecture::Properties::setNqubits)
@@ -235,6 +254,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("__repr__", &Architecture::Properties::toString,
                  "Prints a JSON-formatted representation of all the information present in the :class:`.Properties`");
 
+    // Interface to the QMAP internal architecture class
     arch.def(py::init<>())
             .def(py::init<unsigned short, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
             .def(py::init<unsigned short, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
@@ -247,6 +267,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
+    // Main mapping function
     m.def("map", &map, "map a quantum circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

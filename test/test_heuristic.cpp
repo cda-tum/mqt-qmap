@@ -42,6 +42,39 @@ TEST(Functionality, EmptyDump) {
     EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
 }
 
+TEST(Functionality, NoMeasurmentsAdded) {
+    using namespace dd::literals;
+    // construct circuit
+    qc::QuantumComputation qc{4U};
+    qc.x(1, 0_pc);
+    qc.x(1, 2_pc);
+    qc.x(1, 3_pc);
+
+    // load architecture
+    Architecture arch{};
+    arch.loadCouplingMap(AvailableArchitecture::IBMQ_London);
+
+    // create heuristic mapper
+    HeuristicMapper mapper(qc, arch);
+
+    // configure to not include measurements after mapping
+    auto config                           = Configuration{};
+    config.addMeasurementsToMappedCircuit = false;
+
+    // perform the mapping
+    mapper.map(config);
+
+    // get the resulting circuit
+    auto              qcMapped = qc::QuantumComputation();
+    std::stringstream qasm{};
+    mapper.dumpResult(qasm, qc::OpenQASM);
+    qcMapped.import(qasm, qc::OpenQASM);
+
+    // check no measurements were added
+    EXPECT_EQ(qcMapped.getNops(), 3U);
+    EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
+}
+
 INSTANTIATE_TEST_SUITE_P(Heuristic, HeuristicTest5Q,
                          testing::Values(
                                  "3_17_13",

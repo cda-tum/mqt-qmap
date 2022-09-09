@@ -21,6 +21,13 @@ def tests(session: Session) -> None:
 
 
 @nox.session
+def coverage(session: Session) -> None:
+    """Run the test suite and generate a coverage report."""
+    session.install("-e", ".[test,coverage]")
+    session.run("pytest", "--cov", *session.posargs)
+
+
+@nox.session
 def lint(session: Session) -> None:
     """Lint the Python part of the codebase."""
     session.install("pre-commit")
@@ -34,6 +41,14 @@ def pylint(session: Session) -> None:
     session.install("pylint")
     session.install("-e", ".")
     session.run("pylint", "mqt.qmap", "--extension-pkg-allow-list=mqt.qmap.pyqmap", *session.posargs)
+
+
+@nox.session
+def mypy(session: Session) -> None:
+    """Run mypy."""
+
+    session.install("pre-commit")
+    session.run("pre-commit", "run", "--all-files", "--hook-stage", "manual", "mypy", *session.posargs)
 
 
 @nox.session

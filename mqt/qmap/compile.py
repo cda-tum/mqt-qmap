@@ -2,8 +2,6 @@
 # This file is part of MQT QMAP library which is released under the MIT license.
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
-import pickle
-from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
 from mqt.qmap.pyqmap import (
@@ -43,9 +41,9 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
             # split line into tokens
             tokens = line.split(" ")
             # convert tokens to integers
-            tokens = [int(token) for token in tokens]
+            int_tokens = [int(token) for token in tokens]
             # create an empty layout
-            layout = Layout().from_intlist(tokens, *qregs)
+            layout = Layout().from_intlist(int_tokens, *qregs)
             return layout
     raise ValueError("No initial layout found in QASM file.")
 
@@ -70,11 +68,12 @@ def compile(
     subgraph: Optional[Set[int]] = None,
     pre_mapping_optimizations: bool = True,
     post_mapping_optimizations: bool = True,
+    add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
 ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
+    :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
@@ -109,6 +108,8 @@ def compile(
     :type pre_mapping_optimizations: bool
     :param post_mapping_optimizations: Run post-mapping optimizations (default: True)
     :type post_mapping_optimizations: bool
+    :param add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit (default: True)
+    :type add_measurements_to_mapped_circuit: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
 
@@ -118,10 +119,6 @@ def compile(
 
     if subgraph is None:
         subgraph = set()
-
-    if isinstance(circ, str) and Path(circ).suffix == ".pickle":
-        with open(circ, "rb") as f:
-            circ = pickle.load(f)
 
     architecture = Architecture()
     if arch is None and calibration is None:
@@ -175,6 +172,7 @@ def compile(
     config.teleportation_seed = teleportation_seed
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
+    config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
 
     results = map(circ, architecture, config)
