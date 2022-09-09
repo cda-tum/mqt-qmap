@@ -44,12 +44,13 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Install Z3
+        uses: burgholzer/setup-z3@improve-findability
+        with:
+          version: ${{ env.Z3_VERSION }}
+          distribution: osx-10.16
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
-        env:
-          CIBW_BEFORE_BUILD_MACOS: >
-            python3 -m pip install z3-solver==$Z3_VERSION &&
-            export Z3_ROOT=$(python3 -c "import os, z3; print(os.path.dirname(z3.__file__))")
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -83,7 +84,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: pavpanchekha/setup-z3@master
+        uses: burgholzer/setup-z3@improve-findability
         with:
           version: ${{ env.Z3_VERSION }}
           distribution: win
@@ -102,7 +103,7 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: pavpanchekha/setup-z3@master
+        uses: burgholzer/setup-z3@improve-findability
         with:
           version: ${{ env.Z3_VERSION }}
           distribution: glibc-2.31
