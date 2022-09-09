@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  Z3_GIT_TAG: z3-4.11.2
+  Z3_VERSION: 4.11.2
   FORCE_COLOR: 3
 
 concurrency:
@@ -72,24 +72,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Cache Z3
-        id: cache-z3
-        uses: actions/cache@v3
+      - name: Install Z3
+        uses: burgholzer/setup-z3@improve-findability
         with:
-          path: z3
-          key: python-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/python-ci.yml') }}
-      - name: Building Z3
-        if: steps.cache-z3.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
-          cmake --build z3/build --config Release --parallel 2
-      - name: Installing Z3
-        shell: bash
-        working-directory: ${{github.workspace}}/z3/build
-        run: cmake --build . --config Release --target INSTALL;
+          version: ${{ env.Z3_VERSION }}
+          distribution: win
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
