@@ -112,6 +112,7 @@ setup(
     install_requires=["qiskit-terra>=0.20.2,<0.22.0", "retworkx>=0.11.0", "networkx>=1.9"],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
+        "coverage": ["coverage[toml]~=6.4.2", "pytest-cov~=3.0.0"],
         "docs": [
             "sphinx>=5.1.1",
             "sphinx-rtd-theme",
@@ -121,7 +122,7 @@ setup(
             "pybtex>=0.24",
             "importlib_metadata>=3.6; python_version < '3.10'",
         ],
-        "dev": ["mqt.qmap[test, docs]"],  # requires Pip 21.2 or newer
+        "dev": ["mqt.qmap[test, coverage, docs]"],  # requires Pip 21.2 or newer
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

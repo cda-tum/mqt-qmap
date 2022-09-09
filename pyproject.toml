@@ -15,14 +15,14 @@ archs = "auto64"
 skip = "*-musllinux*"
 test-skip = "cp311-* *-macosx_arm64 *-musllinux* *aarch64"
 test-extras = ["test"]
-test-command = "python -m pytest {project}/test/python"
+test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
 build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-before-all = "/opt/python/cp39-cp39/bin/python -m pip install --upgrade pip && /opt/python/cp39-cp39/bin/python -m pip install z3-solver"
+before-all = "/opt/python/cp39-cp39/bin/python -m pip install --upgrade pip && /opt/python/cp39-cp39/bin/python -m pip install z3-solver==4.11.2"
 environment = { LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib", Z3_ROOT = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", Z3_DIR = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", DEPLOY = "ON" }
 
 [tool.cibuildwheel.macos]

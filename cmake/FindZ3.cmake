@@ -79,6 +79,27 @@ if(NOT Z3_FOUND)
     check_z3_version(${Z3_CXX_INCLUDE_DIRS} ${Z3_LIBRARIES})
   endif()
 
+  if(NOT Z3_VERSION_STRING
+     AND (CMAKE_CROSSCOMPILING
+          AND Z3_INCLUDE_DIRS
+          AND EXISTS "${Z3_INCLUDE_DIRS}/z3_version.h"))
+
+    file(STRINGS "${Z3_INCLUDE_DIRS}/z3_version.h" z3_version_str
+         REGEX "^#define[\t ]+Z3_MAJOR_VERSION[\t ]+.*")
+    string(REGEX REPLACE "^.*Z3_MAJOR_VERSION[\t ]+([0-9]).*$" "\\1" Z3_MAJOR "${z3_version_str}")
+
+    file(STRINGS "${Z3_INCLUDE_DIRS}/z3_version.h" z3_version_str
+         REGEX "^#define[\t ]+Z3_MINOR_VERSION[\t ]+.*")
+    string(REGEX REPLACE "^.*Z3_MINOR_VERSION[\t ]+([0-9]).*$" "\\1" Z3_MINOR "${z3_version_str}")
+
+    file(STRINGS "${Z3_INCLUDE_DIRS}/z3_version.h" z3_version_str
+         REGEX "^#define[\t ]+Z3_BUILD_NUMBER[\t ]+.*")
+    string(REGEX REPLACE "^.*Z3_BUILD_VERSION[\t ]+([0-9]).*$" "\\1" Z3_BUILD "${z3_version_str}")
+
+    set(Z3_VERSION_STRING ${Z3_MAJOR}.${Z3_MINOR}.${Z3_BUILD})
+    unset(z3_version_str)
+  endif()
+
   if(NOT Z3_VERSION_STRING)
     set(Z3_VERSION_STRING "0.0.0")
   endif()

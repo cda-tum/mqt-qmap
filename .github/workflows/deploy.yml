@@ -9,9 +9,13 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  Z3_GIT_TAG: z3-4.8.17
-  Z3_HASH: 2f59c37465aecdfbcc50a5ba0fe627535c0ff4cffb9080bfbddc0a2af0f97b53
+  Z3_GIT_TAG: z3-4.11.2
+  Z3_HASH: 721683d8c04b84f54408c44ee53de964d11ef33c10d92c36271a03189159fd4b
 
 jobs:
   build_manylinux_wheels:
@@ -22,6 +26,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -36,6 +41,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Install Z3
         run: brew install z3
       - name: Build wheels
@@ -52,6 +58,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Install Z3
         run: |
           curl -L -H "Authorization: Bearer QQ==" -o ${{ env.Z3_GIT_TAG }}.big_sur.bottle.tar.gz https://ghcr.io/v2/homebrew/core/z3/blobs/sha256:${{ env.Z3_HASH }}
@@ -72,6 +79,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Cache Z3
         id: cache-z3
@@ -103,6 +111,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         name: Install Python
         with:
