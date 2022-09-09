@@ -123,4 +123,3 @@ The resulting HTML documentation (:code:`index.html`) can be found in the :code:
         .. code-block:: console
 
             (venv) $ pip install --editable .[docs]
-

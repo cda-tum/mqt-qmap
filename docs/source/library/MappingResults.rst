@@ -27,4 +27,4 @@ If specified in the call to the :code:`compile` method, the `weighted max-SAT fo
 In addition, the class provides methods to export to other formats.
 
     .. automethod:: MappingResults.json
-    .. automethod:: MappingResults.csv                    
+    .. automethod:: MappingResults.csv

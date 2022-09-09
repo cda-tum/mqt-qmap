@@ -7,7 +7,7 @@ The *architecture* describes the properties of the target device when mapping a 
     .. autoclass:: Architecture
         :undoc-members:
         :members:
-                   
+
 
 
 mqt.qmap.Arch

@@ -6,4 +6,3 @@ This is the main class of QMAP that allows to map quantum circuits based on the 
 
 Constructing an instance
 ########################
-

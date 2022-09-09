@@ -36,7 +36,7 @@ First, save the following lines as :code:`ghz_3.py` in a folder where you want t
         print(circ_mapped.draw(fold=-1))
 
         # print the result
-        print("Additional Gates:%d"%(results.json()['statistics']['additional_gates']))
+        print("Additional Gates:%d" % (results.json()["statistics"]["additional_gates"]))
 
 Then, the following snippet shows the installation process from setting up the virtual environment to running a small example program.
 
@@ -57,20 +57,20 @@ Then, the following snippet shows the installation process from setting up the v
         meas: 3/═══════════════════╩══╩══╩═
                                    0  1  2
                                                             ░
-                    ┌───┐┌───┐          ┌─┐      
+                    ┌───┐┌───┐          ┌─┐
            q_0 -> 0 ┤ H ├┤ X ├──■───────┤M├──────
-                    └───┘└─┬─┘┌─┴─┐     └╥┘┌─┐   
+                    └───┘└─┬─┘┌─┴─┐     └╥┘┌─┐
            q_1 -> 1 ───────■──┤ X ├──■───╫─┤M├───
                               └───┘┌─┴─┐ ║ └╥┘┌─┐
            q_2 -> 2 ───────────────┤ X ├─╫──╫─┤M├
                                    └───┘ ║  ║ └╥┘
            q_3 -> 3 ─────────────────────╫──╫──╫─
-                                         ║  ║  ║ 
+                                         ║  ║  ║
            q_4 -> 4 ─────────────────────╫──╫──╫─
-                                         ║  ║  ║ 
+                                         ║  ║  ║
                c: 3/═════════════════════╩══╩══╩═
-                                         1  0  2 
-           
+                                         1  0  2
+
         Additional Gates:1
 
 
