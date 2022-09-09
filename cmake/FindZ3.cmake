@@ -25,10 +25,14 @@ function(check_z3_version z3_include z3_lib)
     RUN_OUTPUT_VARIABLE SRC_OUTPUT)
 
   if(Z3_COMPILED)
-    string(REGEX REPLACE "([0-9]*\\.[0-9]*\\.[0-9]*)" "\\1" z3_version "${SRC_OUTPUT}")
-    set(Z3_VERSION_STRING
-        ${z3_version}
-        PARENT_SCOPE)
+    string(REGEX MATCH "([0-9]*)\\.([0-9]*)\\.([0-9]*)" z3_version ${SRC_OUTPUT})
+    if(NOT ${z3_version} STREQUAL "")
+      set(Z3_VERSION_STRING
+          ${z3_version}
+          PARENT_SCOPE)
+    else()
+      message(STATUS "Compilation succeeded but version could not be determined")
+    endif()
   endif()
 endfunction(check_z3_version)
 
