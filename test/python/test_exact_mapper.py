@@ -1,11 +1,10 @@
-import pytest
+from mqt import qcec, qmap
+
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
 
-from mqt import qmap, qcec
 
-
-def test_exact_no_swaps_trivial_layout():
+def test_exact_no_swaps_trivial_layout() -> None:
     """Verify that the exact mapper works on a simple circuit that requires no swaps on a trivial initial layout."""
     qc = QuantumCircuit(3)
     qc.h(0)
@@ -22,7 +21,7 @@ def test_exact_no_swaps_trivial_layout():
     assert result.considered_equivalent() is True
 
 
-def test_exact_no_swaps_non_trivial_layout():
+def test_exact_no_swaps_non_trivial_layout() -> None:
     """Verify that the exact mapper works on a simple circuit that requires a non-trivial layout to achieve no swaps."""
     qc = QuantumCircuit(4)
     qc.h(0)
@@ -41,7 +40,7 @@ def test_exact_no_swaps_non_trivial_layout():
     assert result.considered_equivalent() is True
 
 
-def test_exact_non_trivial_swaps():
+def test_exact_non_trivial_swaps() -> None:
     """Verify that the exact mapper works on a simple circuit that requires at least a single SWAP."""
     qc = QuantumCircuit(3)
     qc.h(0)

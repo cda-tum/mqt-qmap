@@ -49,7 +49,7 @@ public:
 };
 
 /// Computes n! recursively
-/// \param n interger to compute factorial of
+/// \param n integer to compute factorial of
 /// \return n!
 static inline unsigned long factorial(unsigned long n) {
     if (n == 1)

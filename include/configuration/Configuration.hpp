@@ -23,6 +23,8 @@ struct Configuration {
     bool preMappingOptimizations  = true;
     bool postMappingOptimizations = true;
 
+    bool addMeasurementsToMappedCircuit = true;
+
     bool verbose = false;
 
     // map to particular subgraph of architecture (in exact mapper)
@@ -73,9 +75,10 @@ struct Configuration {
         if (!subgraph.empty()) {
             config["subgraph"] = subgraph;
         }
-        config["pre_mapping_optimizations"]  = preMappingOptimizations;
-        config["post_mapping_optimizations"] = postMappingOptimizations;
-        config["verbose"]                    = verbose;
+        config["pre_mapping_optimizations"]          = preMappingOptimizations;
+        config["post_mapping_optimizations"]         = postMappingOptimizations;
+        config["add_measurements_to_mapped_circuit"] = addMeasurementsToMappedCircuit;
+        config["verbose"]                            = verbose;
 
         if (method == Method::Heuristic) {
             auto& heuristic             = config["settings"];

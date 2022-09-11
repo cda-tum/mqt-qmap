@@ -2,7 +2,6 @@
 requires = [
     "setuptools>=45",
     "setuptools_scm>=6.4",
-    "wheel>=0.37",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.14",
 ]
@@ -16,14 +15,14 @@ archs = "auto64"
 skip = "*-musllinux*"
 test-skip = "cp311-* *-macosx_arm64 *-musllinux* *aarch64"
 test-extras = ["test"]
-test-command = "python -m pytest {project}/test/python"
+test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
 build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-before-all = "/opt/python/cp39-cp39/bin/python -m pip install --upgrade pip && /opt/python/cp39-cp39/bin/python -m pip install z3-solver"
+before-all = "/opt/python/cp39-cp39/bin/python -m pip install --upgrade pip && /opt/python/cp39-cp39/bin/python -m pip install z3-solver==4.11.2"
 environment = { LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:/opt/python/cp39-cp39/lib/python3.9/site-packages/z3/lib", Z3_ROOT = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", Z3_DIR = "/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", DEPLOY = "ON" }
 
 [tool.cibuildwheel.macos]
@@ -31,3 +30,60 @@ archs = "x86_64"
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.15", DEPLOY = "ON" }
 
 [tool.cibuildwheel.windows]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["test/python"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
+log_cli_level = "INFO"
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["mqt.qmap"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+precision = 1
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+src_paths = ["mqt/qmap", "test/python"]
+
+[tool.mypy]
+files = ["mqt/qmap", "test/python", "setup.py"]
+python_version = "3.7"
+strict = true
+warn_unused_configs = true
+check_untyped_defs = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+
+[tool.pylint]
+master.py-version = "3.7"
+master.jobs = "0"
+reports.output-format = "colorized"
+similarities.ignore-imports = "yes"
+messages_control.enable = [
+    "useless-suppression",
+]
+messages_control.disable = [
+    "invalid-name",
+    "line-too-long",
+    "missing-module-docstring",
+    "no-member",
+    "protected-access",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-locals",
+    "too-many-statements",
+    "ungrouped-imports",
+    "wrong-import-order",
+    "wrong-import-position",
+]

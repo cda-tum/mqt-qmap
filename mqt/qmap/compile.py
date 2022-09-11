@@ -2,17 +2,27 @@
 # This file is part of MQT QMAP library which is released under the MIT license.
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
-import pickle
-from pathlib import Path
-from typing import Union, Optional, Set, List, Tuple
+from typing import List, Optional, Set, Tuple, Union
+
+from mqt.qmap.pyqmap import (
+    Arch,
+    Architecture,
+    CommanderGrouping,
+    Configuration,
+    Encoding,
+    InitialLayout,
+    Layering,
+    MappingResults,
+    Method,
+    SwapReduction,
+    map,
+)
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
-from qiskit.transpiler.target import Target
 from qiskit.transpiler import Layout
-
-from mqt.qmap.pyqmap import map, Method, InitialLayout, Layering, Arch, Encoding, CommanderGrouping, SwapReduction, Configuration, MappingResults, Architecture
+from qiskit.transpiler.target import Target
 
 
 def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) -> Layout:
@@ -31,36 +41,39 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
             # split line into tokens
             tokens = line.split(" ")
             # convert tokens to integers
-            tokens = [int(token) for token in tokens]
+            int_tokens = [int(token) for token in tokens]
             # create an empty layout
-            layout = Layout().from_intlist(tokens, *qregs)
+            layout = Layout().from_intlist(int_tokens, *qregs)
             return layout
+    raise ValueError("No initial layout found in QASM file.")
 
 
-def compile(circ: Union[QuantumCircuit, str],
-            arch: Optional[Union[str, Arch, Architecture, Backend]],
-            calibration: Optional[Union[str, BackendProperties, Target]] = None,
-            method: Union[str, Method] = "heuristic",
-            initial_layout: Union[str, InitialLayout] = "dynamic",
-            layering: Union[str, Layering] = "individual_gates",
-            use_teleportation: bool = False,
-            teleportation_fake: bool = False,
-            teleportation_seed: int = 0,
-            encoding: Union[str, Encoding] = "naive",
-            commander_grouping: Union[str, CommanderGrouping] = "halves",
-            use_bdd: bool = False,
-            swap_reduction: Union[str, SwapReduction] = "coupling_limit",
-            swap_limit: int = 0,
-            include_WCNF: bool = False,
-            use_subsets: bool = True,
-            subgraph: Optional[Set[int]] = None,
-            pre_mapping_optimizations: bool = True,
-            post_mapping_optimizations: bool = True,
-            verbose: bool = False
-            ) -> Tuple[QuantumCircuit, MappingResults]:
+def compile(
+    circ: Union[QuantumCircuit, str],
+    arch: Optional[Union[str, Arch, Architecture, Backend]],
+    calibration: Optional[Union[str, BackendProperties, Target]] = None,
+    method: Union[str, Method] = "heuristic",
+    initial_layout: Union[str, InitialLayout] = "dynamic",
+    layering: Union[str, Layering] = "individual_gates",
+    use_teleportation: bool = False,
+    teleportation_fake: bool = False,
+    teleportation_seed: int = 0,
+    encoding: Union[str, Encoding] = "naive",
+    commander_grouping: Union[str, CommanderGrouping] = "halves",
+    use_bdd: bool = False,
+    swap_reduction: Union[str, SwapReduction] = "coupling_limit",
+    swap_limit: int = 0,
+    include_WCNF: bool = False,
+    use_subsets: bool = True,
+    subgraph: Optional[Set[int]] = None,
+    pre_mapping_optimizations: bool = True,
+    post_mapping_optimizations: bool = True,
+    add_measurements_to_mapped_circuit: bool = True,
+    verbose: bool = False,
+) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
-    :param circ: Qiskit QuantumCircuit object, path to circuit file, or path to Qiskit QuantumCircuit pickle
+    :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
@@ -95,6 +108,8 @@ def compile(circ: Union[QuantumCircuit, str],
     :type pre_mapping_optimizations: bool
     :param post_mapping_optimizations: Run post-mapping optimizations (default: True)
     :type post_mapping_optimizations: bool
+    :param add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit (default: True)
+    :type add_measurements_to_mapped_circuit: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
     :return: Mapped circuit (as Qiskit `QuantumCircuit`) and results
@@ -104,20 +119,17 @@ def compile(circ: Union[QuantumCircuit, str],
     if subgraph is None:
         subgraph = set()
 
-    if type(circ) == str and Path(circ).suffix == '.pickle':
-        circ = pickle.load(open(circ, "rb"))
-
     architecture = Architecture()
     if arch is None and calibration is None:
         raise ValueError("Either arch or calibration must be specified")
 
     if arch is not None:
-        if type(arch) == str:
+        if isinstance(arch, str):
             try:
                 architecture.load_coupling_map(Arch(arch))
             except ValueError:
                 architecture.load_coupling_map(arch)
-        elif type(arch) == Arch:
+        elif isinstance(arch, Arch):
             architecture.load_coupling_map(arch)
         elif isinstance(arch, Architecture):
             architecture = arch
@@ -129,7 +141,7 @@ def compile(circ: Union[QuantumCircuit, str],
             raise ValueError("No compatible type for architecture:", type(arch))
 
     if calibration is not None:
-        if type(calibration) == str:
+        if isinstance(calibration, str):
             architecture.load_properties(calibration)
         elif isinstance(calibration, BackendProperties):
             from mqt.qmap.qiskit.backend import import_backend_properties
@@ -159,6 +171,7 @@ def compile(circ: Union[QuantumCircuit, str],
     config.teleportation_seed = teleportation_seed
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
+    config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
 
     results = map(circ, architecture, config)
