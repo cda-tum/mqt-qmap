@@ -46,7 +46,6 @@ void Tableau::import(std::istream& is) {
     tableau.reserve(nQubits);
 
     while (std::getline(is, line)) {
-
         if (line.find('-', 0) != std::string::npos)
             continue;
         tableau.emplace_back();

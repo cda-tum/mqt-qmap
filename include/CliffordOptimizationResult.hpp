@@ -127,6 +127,7 @@ public:
     double final_run_time = 0;
 
     qc::QuantumComputation resultCircuit{};
+    std::string            resultStringCircuit{};
     std::vector<Tableau>   resultTableaus{};
 
     CouplingMap                      resultCM{};
@@ -149,34 +150,48 @@ public:
         total_seconds     = other.total_seconds;
         final_run_time    = other.final_run_time;
         resultCircuit     = other.resultCircuit.clone();
-        resultTableaus    = other.resultTableaus;
-        resultCM          = other.resultCM;
-        singleFidelity    = other.singleFidelity;
-        doubleFidelity    = other.doubleFidelity;
-        fidelity          = other.fidelity;
-        result            = other.result;
+        if (other.resultStringCircuit.empty()) {
+            std::stringstream ss;
+            other.resultCircuit.dumpOpenQASM(ss);
+            resultStringCircuit = ss.str();
+        } else {
+            resultStringCircuit = other.resultStringCircuit;
+        }
+        resultTableaus = other.resultTableaus;
+        resultCM       = other.resultCM;
+        singleFidelity = other.singleFidelity;
+        doubleFidelity = other.doubleFidelity;
+        fidelity       = other.fidelity;
+        result         = other.result;
     };
 
     CliffordOptResults& operator=(CliffordOptResults other) {
-        verbose           = other.verbose;
-        choose_best       = other.choose_best;
-        strategy          = other.strategy;
-        target            = other.target;
-        method            = other.method;
-        nqubits           = other.nqubits;
-        initial_timesteps = other.initial_timesteps;
-        gate_count        = other.gate_count;
-        depth             = other.depth;
-        sat               = other.sat;
-        total_seconds     = other.total_seconds;
-        final_run_time    = other.final_run_time;
-        resultCircuit     = other.resultCircuit.clone();
-        resultTableaus    = other.resultTableaus;
-        resultCM          = other.resultCM;
-        singleFidelity    = other.singleFidelity;
-        doubleFidelity    = other.doubleFidelity;
-        fidelity          = other.fidelity;
-        result            = other.result;
+        verbose             = other.verbose;
+        choose_best         = other.choose_best;
+        strategy            = other.strategy;
+        target              = other.target;
+        method              = other.method;
+        nqubits             = other.nqubits;
+        initial_timesteps   = other.initial_timesteps;
+        gate_count          = other.gate_count;
+        depth               = other.depth;
+        sat                 = other.sat;
+        total_seconds       = other.total_seconds;
+        final_run_time      = other.final_run_time;
+        resultCircuit       = other.resultCircuit.clone();
+        if (other.resultStringCircuit.empty()) {
+            std::stringstream ss;
+            other.resultCircuit.dumpOpenQASM(ss);
+            resultStringCircuit = ss.str();
+        } else {
+            resultStringCircuit = other.resultStringCircuit;
+        }
+        resultTableaus      = other.resultTableaus;
+        resultCM            = other.resultCM;
+        singleFidelity      = other.singleFidelity;
+        doubleFidelity      = other.doubleFidelity;
+        fidelity            = other.fidelity;
+        result              = other.result;
         return *this;
     };
 
@@ -245,27 +260,28 @@ public:
         os << "}}" << std::endl;
     }
 
-[[nodiscard]] virtual nlohmann::json json() const {
-    nlohmann::json resultJSON{};
-    resultJSON["verbose"]           = verbose;
-    resultJSON["choose_best"]       = choose_best;
-    resultJSON["strategy"]          = toString(strategy);
-    resultJSON["target"]            = toString(target);
-    resultJSON["method"]            = toString(method);
-    resultJSON["qubits"]             = nqubits;
-    resultJSON["initial_timesteps"] = initial_timesteps;
-    resultJSON["gate_count"]        = gate_count;
-    resultJSON["depth"]             = depth;
-    resultJSON["fidelity"]          = fidelity;
-    resultJSON["sat"]               = sat;
-    resultJSON["total_seconds"]     = total_seconds;
+    [[nodiscard]] virtual nlohmann::json json() const {
+        nlohmann::json resultJSON{};
+        resultJSON["verbose"]           = verbose;
+        resultJSON["choose_best"]       = choose_best;
+        resultJSON["strategy"]          = toString(strategy);
+        resultJSON["target"]            = toString(target);
+        resultJSON["method"]            = toString(method);
+        resultJSON["qubits"]            = nqubits;
+        resultJSON["initial_timesteps"] = initial_timesteps;
+        resultJSON["gate_count"]        = gate_count;
+        resultJSON["depth"]             = depth;
+        resultJSON["fidelity"]          = fidelity;
+        resultJSON["sat"]               = sat;
+        resultJSON["total_seconds"]     = total_seconds;
+        resultJSON["resultCircuit"]     = resultStringCircuit;
 
-    return resultJSON;
-}
+        return resultJSON;
+    }
 
-std::string getStrRepr() {
-    std::stringstream ss;
-    dump(ss);
-    return ss.str();
-}
+    std::string getStrRepr() {
+        std::stringstream ss;
+        dump(ss);
+        return ss.str();
+    }
 };

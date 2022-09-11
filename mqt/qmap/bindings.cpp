@@ -76,7 +76,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-CliffordOptResults compile(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
+CliffordOptResults synthesize(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
     qc::QuantumComputation qc{};
     try {
         if (py::isinstance<py::str>(circ)) {
@@ -117,6 +117,7 @@ CliffordOptResults compile(const py::object& circ, Architecture& arch, Optimizin
         throw std::invalid_argument(ss.str());
     }
 
+    //copying automatically generates the qasm dump, so we are done
     auto& results = optimizer->optimal_results;
 
     return results;
@@ -319,17 +320,26 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-
     py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP clifford synthesizing tool")
             .def(py::init<>())
-            .def_readwrite("result", &CliffordOptResults::result)
-            .def_readwrite("circuit", &CliffordOptResults::resultCircuit)
-
+            .def_readwrite("sat", &CliffordOptResults::result)
+            .def_readwrite("resultCircuit", &CliffordOptResults::resultStringCircuit)
+            .def_readwrite("verbose", &CliffordOptResults::verbose)
+            .def_readwrite("choose_best", &CliffordOptResults::choose_best)
+            .def_readwrite("strategy", &CliffordOptResults::strategy)
+            .def_readwrite("target", &CliffordOptResults::target)
+            .def_readwrite("method", &CliffordOptResults::method)
+            .def_readwrite("qubits", &CliffordOptResults::nqubits)
+            .def_readwrite("initial_timesteps", &CliffordOptResults::initial_timesteps)
+            .def_readwrite("gate_count", &CliffordOptResults::gate_count)
+            .def_readwrite("depth", &CliffordOptResults::depth)
+            .def_readwrite("fidelity", &CliffordOptResults::fidelity)
+            .def_readwrite("total_seconds", &CliffordOptResults::total_seconds)
             .def("json", &CliffordOptResults::json)
             .def("__repr__", &CliffordOptResults::getStrRepr);
 
-
     m.def("map", &map, "map a quantum circuit");
+    m.def("synthesize", &synthesize, "synthesize a quantum circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

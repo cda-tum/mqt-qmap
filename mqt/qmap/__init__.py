@@ -4,6 +4,7 @@
 #
 
 from mqt.qmap.compile import compile
+from mqt.qmap.compile import make_circuit
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
@@ -15,6 +16,9 @@ from mqt.qmap.pyqmap import (
     MappingResults,
     Method,
     SwapReduction,
+    OptimizationTarget,
+    OptimizingStrategy,
+    CliffordOptResults
 )
 
 __all__ = [
@@ -29,4 +33,8 @@ __all__ = [
     "Configuration",
     "MappingResults",
     "Architecture",
+    "OptimizationTarget",
+    "OptimizingStrategy",
+    "CliffordOptResults",
+    "make_circuit"
 ]
