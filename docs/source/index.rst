@@ -10,10 +10,10 @@ If you have any questions, feel free to contact us via `quantum.cda@xcit.tum.de 
 .. toctree::
    :maxdepth: 3
 
+   Mapping
    Installation
    Library
    Publications
-   Mapping
 
 ----
 

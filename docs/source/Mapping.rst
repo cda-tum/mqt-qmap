@@ -1,7 +1,10 @@
 Quantum Circuit Mapping
 =======================
 
-Quantum computing architectures often provide only limited connectivity between physical qubits, meaning that two-qubit gates can not be executed with arbitrary qubits. Quantum algorithms are usually developed and implemented without device-specific restrictions in mind. Before running a quantum circuit on a quantum computer the circuit needs to be *mapped*. This involves *qubit allocation* where logical qubits are assigned to physical qubits in an *initial layout* and *routing* where the original circuit is amended with SWAP gates such that it adheres to the target device's *coupling map*.
+Many quantum computing architectures limit the pairs of qubits that two-qubit operations can be applied to.
+This is commonly described by a device's *coupling map*.
+To execute a generic quantum circuit (with arbitrary interactions between its qubits) on such an architecture, the circuit needs to be *mapped*.
+This involves *qubit allocation*, where logical qubits are assigned to physical qubits in an *initial layout*, and *routing*, where the original circuit is augmented with SWAP gates such that it adheres to the target device's *coupling map*.
 
 Consider the following circuit.
 
@@ -35,24 +38,24 @@ Consider the following circuit.
 
     .. code-block:: console
 
-              ┌───┐                ░ ┌───┐ ░                 ░ ┌─┐
-         q_0: ┤ H ├──■────■────■───░─┤ T ├─░───■────■────■───░─┤M├─────────
-              └───┘┌─┴─┐  │    │   ░ ├───┤ ░   │    │  ┌─┴─┐ ░ └╥┘┌─┐
-         q_1: ─────┤ X ├──┼────┼───░─┤ T ├─░───┼────┼──┤ X ├─░──╫─┤M├──────
-                   └───┘┌─┴─┐  │   ░ ├───┤ ░   │  ┌─┴─┐└───┘ ░  ║ └╥┘┌─┐
-         q_2: ──────────┤ X ├──┼───░─┤ T ├─░───┼──┤ X ├──────░──╫──╫─┤M├───
-                        └───┘┌─┴─┐ ░ ├───┤ ░ ┌─┴─┐└───┘      ░  ║  ║ └╥┘┌─┐
-         q_3: ───────────────┤ X ├─░─┤ T ├─░─┤ X ├───────────░──╫──╫──╫─┤M├
-                             └───┘ ░ └───┘ ░ └───┘           ░  ║  ║  ║ └╥┘
-      meas: 4/══════════════════════════════════════════════════╩══╩══╩══╩═
-                                                          0  1  2  3
+               ┌───┐                ░ ┌───┐ ░                 ░ ┌─┐
+          q_0: ┤ H ├──■────■────■───░─┤ T ├─░───■────■────■───░─┤M├─────────
+               └───┘┌─┴─┐  │    │   ░ ├───┤ ░   │    │  ┌─┴─┐ ░ └╥┘┌─┐
+          q_1: ─────┤ X ├──┼────┼───░─┤ T ├─░───┼────┼──┤ X ├─░──╫─┤M├──────
+                    └───┘┌─┴─┐  │   ░ ├───┤ ░   │  ┌─┴─┐└───┘ ░  ║ └╥┘┌─┐
+          q_2: ──────────┤ X ├──┼───░─┤ T ├─░───┼──┤ X ├──────░──╫──╫─┤M├───
+                         └───┘┌─┴─┐ ░ ├───┤ ░ ┌─┴─┐└───┘      ░  ║  ║ └╥┘┌─┐
+          q_3: ───────────────┤ X ├─░─┤ T ├─░─┤ X ├───────────░──╫──╫──╫─┤M├
+                              └───┘ ░ └───┘ ░ └───┘           ░  ║  ║  ║ └╥┘
+       meas: 4/══════════════════════════════════════════════════╩══╩══╩══╩═
+                                                           0  1  2  3
 
 
-Now assume this circuit shall be mapped to a 4-qubit architecture with the following coupling map:
+Now assume this circuit shall be mapped to a 4-qubit architecture defined by the following coupling map:
 
-.. image:: /images/linear_arch_4-1.png
+.. image:: /images/linear_arch.svg
    :width: 80%
-   :alt: 4-qubit Architecture
+   :alt: 5-qubit Architecture
    :align: center
 
 
@@ -60,31 +63,53 @@ In *QMAP* this architecture can be manually defined.
 
     .. code-block:: python3
 
-        arch = qmap.Architecture(4, set([(0, 1), (1, 2), (2, 3), (3, 2), (2, 1), (1, 0)]))
+       arch = qmap.Architecture(
+           4,
+           {
+               (0, 1),
+               (1, 0),
+               (1, 2),
+               (2, 1),
+               (2, 3),
+               (3, 2),
+           },
+       )
 
-The quantum circuit :code:`qc` can not be run directly on this architecture. Naive mapping yields the following possible compiled circuit.
+The quantum circuit :code:`qc` can not be run directly on this architecture since it contains gates that act on qubits not connected on the device architecture.
+Naively inserting SWAP gates that permute the logical-to-physical qubit mapping on the fly may yield the following compiled circuit.
 
     .. code-block:: console
 
                       ┌───┐                      ░ ┌───┐ ░                       ░ ┌─┐
-	  q_0 -> q_0: ┤ H ├──■───X───────────────░─┤ T ├─░───────────────X───■───░─┤M├─────────
-	              └───┘┌─┴─┐ │               ░ ├───┤ ░               │ ┌─┴─┐ ░ └╥┘┌─┐
-	  q_1 -> q_1: ─────┤ X ├─X───■───X───────░─┤ T ├─░───────X───■───X─┤ X ├─░──╫─┤M├──────
-	                   └───┘   ┌─┴─┐ │       ░ ├───┤ ░       │ ┌─┴─┐   └───┘ ░  ║ └╥┘┌─┐
-	  q_2 -> q_2: ─────────────┤ X ├─X───■───░─┤ T ├─░───■───X─┤ X ├─────────░──╫──╫─┤M├───
-	                           └───┘   ┌─┴─┐ ░ ├───┤ ░ ┌─┴─┐   └───┘         ░  ║  ║ └╥┘┌─┐
-	  q_3 -> q_3: ─────────────────────┤ X ├─░─┤ T ├─░─┤ X ├─────────────────░──╫──╫──╫─┤M├
-	                                   └───┘ ░ └───┘ ░ └───┘                 ░  ║  ║  ║ └╥┘
-	      meas: 4/══════════════════════════════════════════════════════════════╩══╩══╩══╩═
+          q_0 -> q_0: ┤ H ├──■───X───────────────░─┤ T ├─░───────────────X───■───░─┤M├─────────
+                      └───┘┌─┴─┐ │               ░ ├───┤ ░               │ ┌─┴─┐ ░ └╥┘┌─┐
+          q_1 -> q_1: ─────┤ X ├─X───■───X───────░─┤ T ├─░───────X───■───X─┤ X ├─░──╫─┤M├──────
+                           └───┘   ┌─┴─┐ │       ░ ├───┤ ░       │ ┌─┴─┐   └───┘ ░  ║ └╥┘┌─┐
+          q_2 -> q_2: ─────────────┤ X ├─X───■───░─┤ T ├─░───■───X─┤ X ├─────────░──╫──╫─┤M├───
+                                   └───┘   ┌─┴─┐ ░ ├───┤ ░ ┌─┴─┐   └───┘         ░  ║  ║ └╥┘┌─┐
+          q_3 -> q_3: ─────────────────────┤ X ├─░─┤ T ├─░─┤ X ├─────────────────░──╫──╫──╫─┤M├
+                                           └───┘ ░ └───┘ ░ └───┘                 ░  ║  ║  ║ └╥┘
+              meas: 4/══════════════════════════════════════════════════════════════╩══╩══╩══╩═
                                                                                     0  1  2  3
 
-This mapping uses 4 SWAPs. As every SWAP decomposes into 3 CNOT gates, this is a very costly overhead for such a small circuit.
-Minimizing the number of additional gates introduced by mapping a quantum circuit is precisely the job of *QMAP*.
+Over the course of the mapping, *four* SWAP gates have been introduce to satisfy the connectivity constraints of the device's architecture.
+Since every additional gate increases the probability of errors, this is a very costly overhead for such a small circuit.
+
+Keeping the number of additionally introduced gates as small as possible is key for ensuring the successful execution of the quantum circuit. Finding an optimal mapping for a quantum circuit is an NP-hard problem.
+*QMAP* offers two dedicated techniques for tackling that problem:
+- An *exact* mapping approach that guarantees (gate-optimal) solutions and is typically suitable for up to 8 qubits.
+- A *heuristic* mapping approach that allows to determine efficient mapping solutions in a scalable fashion for up to hundreds of qubits.
 
 Exact Mapping
 #############
 
-The *exact mapper* implemented in *QMAP* maps quantum circuits using the *minimal* number of SWAP gates. For directional architectures it furthermore tries to minimize the number of additional Hadamard gates. Using the exact mapper is as simple as:
+The *exact mapper* implemented in *QMAP* maps quantum circuits using the *minimal* number of SWAP gates.
+To this end, it encodes the mapping task as a MaxSAT problem and subsequently solves it using the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_. Due to the NP-hardness of the mapping task, this approach is only scalable up to roughly eight qubits in most scenarios.
+
+    .. note::
+        On directional architectures, it can be significantly cheaper to surround a CNOT gate with four Hadamard operations (effectively exchanging its control and target) instead of adding a SWAP gate. For these architectures, QMAP minimizes the number of additional SWAP *and* H gates.
+
+Using the exact mapper is as simple as:
 
     .. code-block:: python3
 
@@ -93,34 +118,34 @@ The *exact mapper* implemented in *QMAP* maps quantum circuits using the *minima
         print(qc_mapped.draw(fold=-1))
 
         print("Additional gates: %d" % res.json()["statistics"]["additional_gates"])
-	print("Additional SWAPs: %d" % res.json()['statistics']['swaps'])
-        print("Runtime:          %f" % res.json()['statistics']['mapping_time'])
+        print("Runtime:          %f" % res.json()["statistics"]["mapping_time"])
 
     .. code-block:: console
 
-		                     ┌───┐┌───┐┌───┐     ┌─┐
-	q_3 -> 0 ────────────────────┤ X ├┤ T ├┤ X ├─────┤M├───────────────────
-	                        ┌───┐└─┬─┘├───┤└─┬─┘┌───┐└╥┘          ┌─┐
-	q_2 -> 1 ────────────■──┤ X ├──■──┤ T ├──■──┤ X ├─╫───■───────┤M├──────
-	         ┌───┐     ┌─┴─┐└─┬─┘┌───┐└───┘     └─┬─┘ ║ ┌─┴─┐     └╥┘┌─┐
-	q_0 -> 2 ┤ H ├──■──┤ X ├──■──┤ T ├────────────■───╫─┤ X ├──■───╫─┤M├───
-	         └───┘┌─┴─┐├───┤     └───┘                ║ └───┘┌─┴─┐ ║ └╥┘┌─┐
-	q_1 -> 3 ─────┤ X ├┤ T ├──────────────────────────╫──────┤ X ├─╫──╫─┤M├
-	              └───┘└───┘                          ║      └───┘ ║  ║ └╥┘
-	    c: 4/═════════════════════════════════════════╩════════════╩══╩══╩═
-	                                                  3            2  0  1
-	Additional gates: 2
-	Additional SWAPs: 2
-        Runtime:          0.015844
+                                       ┌───┐┌───┐┌───┐     ┌─┐
+          q_3 -> 0 ────────────────────┤ X ├┤ T ├┤ X ├─────┤M├───────────────────
+                                  ┌───┐└─┬─┘├───┤└─┬─┘┌───┐└╥┘          ┌─┐
+          q_2 -> 1 ────────────■──┤ X ├──■──┤ T ├──■──┤ X ├─╫───■───────┤M├──────
+                   ┌───┐     ┌─┴─┐└─┬─┘┌───┐└───┘     └─┬─┘ ║ ┌─┴─┐     └╥┘┌─┐
+          q_0 -> 2 ┤ H ├──■──┤ X ├──■──┤ T ├────────────■───╫─┤ X ├──■───╫─┤M├───
+                   └───┘┌─┴─┐├───┤     └───┘                ║ └───┘┌─┴─┐ ║ └╥┘┌─┐
+          q_1 -> 3 ─────┤ X ├┤ T ├──────────────────────────╫──────┤ X ├─╫──╫─┤M├
+                        └───┘└───┘                          ║      └───┘ ║  ║ └╥┘
+              c: 4/═════════════════════════════════════════╩════════════╩══╩══╩═
+                                                            3            2  0  1
+          Additional gates: 2
+          Runtime:          0.015844
 
-Not only does this solution yield less SWAPs, by default the :code:`compile` method optimizes SWAP gates in a post-processing step.
+By default, the :code:`compile` method optimizes sequences of CNOTs preceded/followed by SWAP gates in a post-processing step.
+As a result, *no* SWAP gates are needed at all for mapping the circuit. Instead, only two additional CNOT operations are necessary to map the circuit.
 
 Heuristic Mapping
 #################
 
-Finding an optimal mapping for a quantum circuit is an NP-hard problem. *QMAP* employs the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_ to encode and solve the problem of finding an optimal mapping as a Boolean formula. This, of course, brings scalablity issues along with it.
-
-The *heuristic mapper* implemented in *QMAP* provides an alternative approach to quantum circuit mapping that trades off quality of the mapping result against runtime. Using the heuristic mapper works completely analogous to the exact mapper.
+The *heuristic mapper* implemented in *QMAP* uses A\*-search to efficiently traverse the immense search space of the mapping problem.
+It effectively trades optimality for runtime.
+This allows to reliably determine suitable mappings for circuits with up to hundreds of qubits.
+Using the heuristic mapper works completely analogous to the exact mapper.
 
     .. code-block:: python3
 
@@ -129,7 +154,6 @@ The *heuristic mapper* implemented in *QMAP* provides an alternative approach to
         print(qc_mapped.draw(fold=-1))
 
         print("Additional gates: %d" % res.json()["statistics"]["additional_gates"])
-        print("Additional SWAPs: %d" % res.json()["statistics"]["swaps"])
         print("Runtime:          %f" % res.json()["statistics"]["mapping_time"])
 
     .. code-block:: console
@@ -146,7 +170,6 @@ The *heuristic mapper* implemented in *QMAP* provides an alternative approach to
 	    c: 4/══════════════════════════════════════════╩═════════╩═══╩══╩═
 	                                                   3         2   0  1
 	Additional gates: 3
-	Additional SWAPs: 3
         Runtime:          0.000065
 
 While this solution is not optimal anymore it only requires one more gate and even for such a small example the heuristic mapper is orders of magnitudes faster than the exact mapper.

@@ -11,6 +11,21 @@ Note the :code:`--recurse-submodules` flag. It is required to also clone all the
 
 A C++ compiler supporting *C++17* and a minimum CMake version of *3.14* is required to build the project.
 
+:code:`boost/program_options >= 1.50` is required for building the commandline applications of the mapping tool.
+
+In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver `Z3 >= 4.8.3 <https://github.com/Z3Prover/z3>`_  has to be installed and the dynamic linker has to be able to find the library. This can be accomplished in a multitude of ways:
+
+- Under Ubuntu 20.04 and newer: :code:`sudo apt-get install libz3-dev`
+- Under macOS: :code:`brew install z3`
+- Alternatively: :code:`pip install z3-solver` and then append the corresponding path to the library path (:code:`LD_LIBRARY_PATH` under Linux, :code:`DYLD_LIBRARY_PATH` under macOS), e.g. via
+
+    .. code-block:: console
+
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -c "import z3; print(z3.__path__[0]+'/lib')")
+
+- Download pre-built binaries from https://github.com/Z3Prover/z3/releases and copy the files to the respective system directories
+- Build Z3 from source and install it to the system
+
 .. note::
     We noticed some issues when compiling with Microsoft's *MSCV* compiler toolchain. If you want to start development on this project under Windows, consider using the *clang* compiler toolchain. A detailed description of how to set this up can be found `here <https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-160>`_.
 
@@ -76,7 +91,7 @@ The corresponding test files can be found in the :code:`test` directory. In orde
 
         $ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON
 
-Then, the test executable :code:`qmap_test` is built in the :code:`build/test` directory by calling
+Then, the test executables :code:`qmap_heuristic_test` and :code:`qmap_exact_test` is built in the :code:`build/test` directory by calling
 
     .. code-block:: console
 
@@ -86,7 +101,11 @@ From there, the tests can be started by simply calling
 
     .. code-block:: console
 
-        [.../build/test] $ ./qmap_test
+        [.../build/test] $ ./qmap_heuristic_test
+        [.../build/test] $ ./qmap_exact_test
+
+.. note::
+    The test executable :code:`qmap_exact_test` will only be built if the Z3 solver is available during building.
 
 Python interface and functionality
 ----------------------------------

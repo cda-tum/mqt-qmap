@@ -10,17 +10,17 @@ In addition to the mapped circuit
 
     .. autoattribute:: MappingResults.mapped_circuit
 
-it also includes runtime information of the mapping procedure.
+it also includes runtime information of the mapping procedure
 
     .. autoattribute:: MappingResults.time
     .. autoattribute:: MappingResults.timeout
 
-Information about the input and output circuits are also stored.
+and information about the input and output circuits.
 
     .. autoattribute:: MappingResults.input
     .. autoattribute:: MappingResults.output
 
-If specified in the call to the :code:`compile` method, the `weighted max-SAT formula <http://www.maxhs.org/docs/wdimacs.html>`_ is also tracked.
+If specified in the call to the :code:`compile` method, the `weighted MaxSAT formula <http://www.maxhs.org/docs/wdimacs.html>`_ is also tracked.
 
     .. autoattribute:: MappingResults.wcnf
 
