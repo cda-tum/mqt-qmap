@@ -87,7 +87,7 @@ jobs:
           distribution: win
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
-      - name: Test on 🐍 3.7
-        run: nox -s tests-3.7
+      #      - name: Test on 🐍 3.7
+      #        run: nox -s tests-3.7
       - name: Test on 🐍 3.10
         run: nox -s tests-3.10
