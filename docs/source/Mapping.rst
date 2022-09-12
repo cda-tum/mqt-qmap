@@ -95,10 +95,10 @@ Naively inserting SWAP gates that permute the logical-to-physical qubit mapping 
 Over the course of the mapping, *four* SWAP gates have been introduce to satisfy the connectivity constraints of the device's architecture.
 Since every additional gate increases the probability of errors, this is a very costly overhead for such a small circuit.
 
-Keeping the number of additionally introduced gates as small as possible is key for ensuring the successful execution of the quantum circuit. Finding an optimal mapping for a quantum circuit is an NP-hard problem.
+Keeping the number of additionally introduced gates as small as possible is key for ensuring the successful execution of the quantum circuit. Finding an optimal mapping for a quantum circuit is an NP-hard problem :cite:labelpar:`boteaComplexityQuantumCircuit2018`.
 *QMAP* offers two dedicated techniques for tackling that problem:
-- An *exact* mapping approach that guarantees (gate-optimal) solutions and is typically suitable for up to 8 qubits.
-- A *heuristic* mapping approach that allows to determine efficient mapping solutions in a scalable fashion for up to hundreds of qubits.
+- An *exact* mapping approach (based on :cite:labelpar:`willeMappingQuantumCircuits2019, burgholzer2022limitingSearchSpace`) that guarantees (gate-optimal) solutions and is typically suitable for up to 8 qubits.
+- A *heuristic* mapping approach (based on :cite:labelpar:`zulehnerEfficientMethodologyMapping2019, hillmichExlpoitingQuantumTeleportation2021`) that allows to determine efficient mapping solutions in a scalable fashion for up to hundreds of qubits.
 
 Exact Mapping
 #############
