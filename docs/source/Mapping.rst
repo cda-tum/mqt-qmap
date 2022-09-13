@@ -54,10 +54,11 @@ Consider the following circuit.
 Now assume this circuit shall be mapped to a 4-qubit architecture defined by the following coupling map:
 
 .. image:: /images/linear_arch.svg
-   :width: 80%
-   :alt: 5-qubit Architecture
+   :width: 60%
+   :alt: 4-qubit Architecture
    :align: center
 
+|
 
 In *QMAP* this architecture can be manually defined.
 
@@ -97,8 +98,8 @@ Since every additional gate increases the probability of errors, this is a very 
 
 Keeping the number of additionally introduced gates as small as possible is key for ensuring the successful execution of the quantum circuit. Finding an optimal mapping for a quantum circuit is an NP-hard problem :cite:labelpar:`boteaComplexityQuantumCircuit2018`.
 *QMAP* offers two dedicated techniques for tackling that problem:
-- An *exact* mapping approach (based on :cite:labelpar:`willeMappingQuantumCircuits2019, burgholzer2022limitingSearchSpace`) that guarantees (gate-optimal) solutions and is typically suitable for up to 8 qubits.
-- A *heuristic* mapping approach (based on :cite:labelpar:`zulehnerEfficientMethodologyMapping2019, hillmichExlpoitingQuantumTeleportation2021`) that allows to determine efficient mapping solutions in a scalable fashion for up to hundreds of qubits.
+- An *exact* mapping approach (based on :cite:labelpar:`willeMappingQuantumCircuits2019`, :cite:labelpar:`burgholzer2022limitingSearchSpace`) that guarantees (gate-optimal) solutions and is typically suitable for up to 8 qubits.
+- A *heuristic* mapping approach (based on :cite:labelpar:`zulehnerEfficientMethodologyMapping2019`, :cite:labelpar:`hillmichExlpoitingQuantumTeleportation2021`) that allows to determine efficient mapping solutions in a scalable fashion for up to hundreds of qubits.
 
 Exact Mapping
 #############

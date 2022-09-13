@@ -13,7 +13,7 @@ A C++ compiler supporting *C++17* and a minimum CMake version of *3.14* is requi
 
 :code:`boost/program_options >= 1.50` is required for building the commandline applications of the mapping tool.
 
-In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver `Z3 >= 4.8.3 <https://github.com/Z3Prover/z3>`_  has to be installed and the dynamic linker has to be able to find the library. This can be accomplished in a multitude of ways:
+In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver `Z3 >= 4.8.15 <https://github.com/Z3Prover/z3>`_  has to be installed and the dynamic linker has to be able to find the library. This can be accomplished in a multitude of ways:
 
 - Under Ubuntu 20.04 and newer: :code:`sudo apt-get install libz3-dev`
 - Under macOS: :code:`brew install z3`
@@ -95,7 +95,8 @@ Then, the test executables :code:`qmap_heuristic_test` and :code:`qmap_exact_tes
 
     .. code-block:: console
 
-        $ cmake --build build --config Release --target qmap_test
+        $ cmake --build build --config Release --target qmap_heuristic_test
+        $ cmake --build build --config Release --target qmap_exact_test
 
 From there, the tests can be started by simply calling
 
