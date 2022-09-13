@@ -43,10 +43,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: osx-10.16
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -62,10 +61,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: osx-11.0
           architecture: arm64
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
@@ -84,10 +82,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: win
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
       - uses: actions/upload-artifact@v3
@@ -103,10 +100,9 @@ jobs:
           submodules: recursive
           fetch-depth: 0
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: glibc-2.31
       - name: Build sdist
         run: pipx run build --sdist
       - name: Test sdist

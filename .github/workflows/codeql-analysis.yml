@@ -39,10 +39,9 @@ jobs:
         run: sudo apt-get install -y libboost-program-options-dev
 
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: glibc-2.31
 
       - name: Set up Python
         uses: actions/setup-python@v4

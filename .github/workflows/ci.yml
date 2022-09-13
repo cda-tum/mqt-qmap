@@ -31,7 +31,6 @@ jobs:
               os: ubuntu-20.04,
               platform_version: 20.04,
               toolset: gcc,
-              distribution: glibc-2.31,
               test-dir: build/test,
               toolchain: "",
             }
@@ -39,7 +38,6 @@ jobs:
               os: macos-11,
               platform_version: 11,
               toolset: clang,
-              distribution: osx-10.16,
               test-dir: build/test,
               toolchain: "",
             }
@@ -47,7 +45,6 @@ jobs:
               os: windows-2022,
               platform_version: 2022,
               toolset: msvc,
-              distribution: win,
               test-dir: build\test\Release,
               toolchain: "-T ClangCl",
             }
@@ -63,10 +60,9 @@ jobs:
           platform_version: ${{ matrix.config.platform_version }}
           toolset: ${{ matrix.config.toolset }}
       - name: Install Z3
-        uses: burgholzer/setup-z3@improve-findability
+        uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-          distribution: ${{ matrix.config.distribution }}
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }}
         env:
