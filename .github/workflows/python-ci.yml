@@ -36,6 +36,8 @@ jobs:
         uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
@@ -64,6 +66,8 @@ jobs:
         uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
@@ -82,6 +86,8 @@ jobs:
         uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Copy Z3 DLLs
         run: |
           $z3_dlls = Get-ChildItem -Path $env:Z3_ROOT -Filter *.dll

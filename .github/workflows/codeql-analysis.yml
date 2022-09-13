@@ -42,6 +42,8 @@ jobs:
         uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
