@@ -12,8 +12,7 @@ build:
     - cmake
   jobs:
     pre_install:
-      - python -m pip install z3-solver
-      - export Z3_ROOT=$(python -c "import os, z3; print(os.path.dirname(z3.__file__))")
+      - python -m pip install z3-solver && export Z3_ROOT=$(python -c "import os, z3; print(os.path.dirname(z3.__file__))")
 
 sphinx:
   configuration: docs/source/conf.py
