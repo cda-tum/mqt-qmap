@@ -46,8 +46,6 @@ void Tableau::import(std::istream& is) {
     tableau.reserve(nQubits);
 
     while (std::getline(is, line)) {
-        if (line.find('-', 0) != std::string::npos)
-            continue;
         tableau.emplace_back();
         tableau.back().reserve(2 * nQubits + 1);
         parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
@@ -297,8 +295,6 @@ Tableau Tableau::embedTableau(int nQubits) {
             intermediate_result[k].resize(2 * nQubits + 1);
             int n = 0;
             for (auto j = 0; j < 2 * nQubits; j++) {
-                DEBUG() << "i = " << i << " n = " << n << " j = " << j << " k = " << k
-                        << std::endl;
                 if (indices[k] == 1 || (j < nQubits && indices[j] == 1) ||
                     (j >= nQubits && indices[j - nQubits] == 1)) {
                     intermediate_result[k][j] = diagonal[k][j];
@@ -313,7 +309,6 @@ Tableau Tableau::embedTableau(int nQubits) {
                 intermediate_result[k][2 * nQubits] = tableau[i][2 * getQubitCount()];
                 i++;
             }
-            // intermediate_result[2 * nQubits] = tableau[2 * nQubits];
         }
         if (Tableau::tableauDistance(diagonal.tableau, intermediate_result, nQubits) <
             Tableau::tableauDistance(diagonal.tableau, result, nQubits)) {
@@ -343,7 +338,6 @@ double Tableau::tableauDistance(innerTableau tableau1, innerTableau tableau2, in
             result += static_cast<double>(std::abs(d1 - d3)) / 2.0 + static_cast<double>(std::abs(d2 - d4)) / 2.0;
         }
     }
-    // DEBUG() << "Tableau distance: " << result << std::endl;
     return result;
 }
 
@@ -382,7 +376,6 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
         os << i << '|';
     }
     os << "R|";
-    //    os << std::string(nQubits * 2, '-') << std::endl;
     os << std::endl;
     auto i = 1;
     for (const auto& row: dt) {
@@ -394,7 +387,6 @@ std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
         for (const auto& s: row)
             os << s << '|';
         os << std::endl;
-        //        os << std::string(nQubits * 2, '-') << std::endl;
     }
     return os;
 }
@@ -446,7 +438,6 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-            //            std::cout << "Destabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }
@@ -481,11 +472,9 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
             } else {
                 row.push_back(0);
             }
-            //            std::cout << "Stabilizer:" << s << std::endl;
             dt.tableau.push_back(row);
             iter = m[0].second;
         }
     }
-    std::cout << "Tableau: " << dt << std::endl;
     return is;
 }

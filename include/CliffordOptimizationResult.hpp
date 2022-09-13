@@ -166,19 +166,19 @@ public:
     };
 
     CliffordOptResults& operator=(CliffordOptResults other) {
-        verbose             = other.verbose;
-        choose_best         = other.choose_best;
-        strategy            = other.strategy;
-        target              = other.target;
-        method              = other.method;
-        nqubits             = other.nqubits;
-        initial_timesteps   = other.initial_timesteps;
-        gate_count          = other.gate_count;
-        depth               = other.depth;
-        sat                 = other.sat;
-        total_seconds       = other.total_seconds;
-        final_run_time      = other.final_run_time;
-        resultCircuit       = other.resultCircuit.clone();
+        verbose           = other.verbose;
+        choose_best       = other.choose_best;
+        strategy          = other.strategy;
+        target            = other.target;
+        method            = other.method;
+        nqubits           = other.nqubits;
+        initial_timesteps = other.initial_timesteps;
+        gate_count        = other.gate_count;
+        depth             = other.depth;
+        sat               = other.sat;
+        total_seconds     = other.total_seconds;
+        final_run_time    = other.final_run_time;
+        resultCircuit     = other.resultCircuit.clone();
         if (other.resultStringCircuit.empty()) {
             std::stringstream ss;
             other.resultCircuit.dumpOpenQASM(ss);
@@ -186,12 +186,12 @@ public:
         } else {
             resultStringCircuit = other.resultStringCircuit;
         }
-        resultTableaus      = other.resultTableaus;
-        resultCM            = other.resultCM;
-        singleFidelity      = other.singleFidelity;
-        doubleFidelity      = other.doubleFidelity;
-        fidelity            = other.fidelity;
-        result              = other.result;
+        resultTableaus = other.resultTableaus;
+        resultCM       = other.resultCM;
+        singleFidelity = other.singleFidelity;
+        doubleFidelity = other.doubleFidelity;
+        fidelity       = other.fidelity;
+        result         = other.result;
         return *this;
     };
 

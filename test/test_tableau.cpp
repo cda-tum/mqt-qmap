@@ -52,6 +52,17 @@ TEST(TestTableau, GetStrRepresentation) {
     EXPECT_EQ(tableau.getStrRepresentation(), result_string);
 }
 
+TEST(TestTableau, DumpTableau) {
+    Tableau     tableau{};
+    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
+
+    tableau.importString(tableau_string);
+
+    std::string result_string = "2|1|2|3|4|R|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
+
+    tableau.dump("tableau_dump.txt");
+}
+
 TEST(TestTableau, AccessValues) {
     Tableau     tableau{};
     std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
@@ -136,6 +147,17 @@ TEST(TestTableau, LoadTableauFrom) {
     qc.y(1);
 
     Tableau::generateTableau(tableau1, qc);
+
+    auto compOP = std::make_unique<qc::CompoundOperation>(2);
+    auto h0     = std::make_unique<qc::StandardOperation>(1, 0, qc::H);
+    auto x1     = std::make_unique<qc::StandardOperation>(1, 0_pc, 1, qc::X);
+    compOP->emplace_back(h0);
+    compOP->emplace_back(x1);
+
+    qc::QuantumComputation qc2(2U);
+    qc2.emplace_back(compOP);
+
+    Tableau::generateTableau(tableau, qc2);
 }
 TEST(TestTableau, InitTableau) {
     using namespace dd::literals;

@@ -1,5 +1,4 @@
 #include "Architecture.hpp"
-#include "Tableau.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "gtest/gtest.h"
