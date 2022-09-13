@@ -10,6 +10,10 @@ build:
     python: "3.9"
   apt_packages:
     - cmake
+  jobs:
+    pre_install:
+      - python -m pip install z3-solver>=4.8.15
+      - export Z3_ROOT=$(python -c "import os, z3; print(os.path.dirname(z3.__file__))")
 
 sphinx:
   configuration: docs/source/conf.py
