@@ -92,6 +92,8 @@ jobs:
         run: |
           $z3_dir = (Get-ChildItem -Path $env:Z3_ROOT -Directory).FullName
           Copy-Item -Path $z3_dir -Destination "C:/Program Files/Z3" -Recurse
+          $env:Z3_ROOT = "C:/Program Files/Z3"
+          echo "Z3_ROOT=$env:Z3_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       #      - name: Test on 🐍 3.7
