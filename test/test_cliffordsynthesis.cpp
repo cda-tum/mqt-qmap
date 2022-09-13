@@ -1,4 +1,3 @@
-#include "Architecture.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "gtest/gtest.h"

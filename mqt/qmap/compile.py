@@ -16,7 +16,6 @@ from mqt.qmap.pyqmap import (
     Method,
     SwapReduction,
     map,
-    OptimizationTarget,
     OptimizingStrategy,
     CliffordOptResults,
     synthesize

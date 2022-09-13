@@ -129,8 +129,8 @@ public:
 
     static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
 
-    unsigned long getBVFrom(int column) const;
+    [[nodiscard]] unsigned long getBVFrom(int column) const;
 
-    std::string getStrRepresentation() const;
+    [[nodiscard]] std::string getStrRepresentation() const;
 };
 #endif //QMAP_TABLEAU_HPP
