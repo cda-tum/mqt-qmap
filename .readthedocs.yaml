@@ -13,6 +13,7 @@ build:
   jobs:
     pre_install:
       - pip install z3-solver>=4.8.15
+      - export Z3_ROOT=$(python -c "import z3, os; print(os.path.dirname(z3.__file__))")
 
 sphinx:
   configuration: docs/source/conf.py
