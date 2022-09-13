@@ -25,26 +25,26 @@ public:
     [[nodiscard]] explicit Tableau(innerTableau& inner):
         tableau(inner) {}
 
-    Tableau(const Tableau& other) {
+    [[nodiscard]] Tableau(const Tableau& other) {
         this->tableau = other.tableau;
     }
-    Tableau(Tableau& other) {
+    [[nodiscard]] Tableau(Tableau& other) {
         this->tableau = other.tableau;
     }
 
-    Tableau& operator=(const Tableau& other) {
+    [[nodiscard]] Tableau& operator=(const Tableau& other) {
         tableau = other.tableau;
         return *this;
     }
 
-    std::vector<int32_t> operator[](std::size_t index) {
+    [[nodiscard]] std::vector<int32_t> operator[](std::size_t index) {
         return tableau[index];
     }
-    std::vector<int32_t> operator[](std::size_t index) const {
+    [[nodiscard]] std::vector<int32_t> operator[](std::size_t index) const {
         return tableau[index];
     }
 
-    std::vector<int32_t> at(std::size_t index) {
+    [[nodiscard]] std::vector<int32_t> at(std::size_t index) {
         return tableau.at(index);
     }
 
@@ -52,11 +52,11 @@ public:
         return tableau.size();
     }
 
-    void resize(std::size_t size) {
+    inline void resize(std::size_t size) {
         tableau.resize(size);
     }
 
-    void clear() {
+    inline void clear() {
         tableau.clear();
     }
 
@@ -84,11 +84,7 @@ public:
     void import(const std::string& filename);
     void import(std::istream& is);
 
-    [[nodiscard]] std::string getRepresentation() const {
-        std::stringstream result;
-        result << *this;
-        return result.str();
-    }
+    [[nodiscard]] std::string getRepresentation() const;
 
     void init(size_t nQubits);
 
@@ -98,36 +94,17 @@ public:
     static void generateTableau(Tableau& tableau, qc::QuantumComputation& circ, int begin = 0, int end = -1);
     static void initTableau(Tableau& tableau, size_t nqubits);
 
-    int applyGate(std::unique_ptr<qc::Operation>& gate);
+    [[nodiscard]] int applyGate(std::unique_ptr<qc::Operation>& gate);
 
-    bool operator==(const Tableau& other) const {
-        if (tableau.size() != other.tableau.size()) {
-            return false;
-        }
-        for (size_t i = 0; i < getQubitCount(); ++i) {
-            const auto& row1 = tableau[i];
-            const auto& row2 = other.tableau[i];
-            if (row1.size() != row2.size()) {
-                return false;
-            }
-            for (size_t j = 0; j < 2 * getQubitCount() + 1; ++j) {
-                const auto& col1 = row1[j];
-                const auto& col2 = row2[j];
-                if (col1 != col2) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+    [[nodiscard]] bool operator==(const Tableau& other) const;
 
-    static Tableau       getDiagonalTableau(int nQubits);
-    double               tableauDistance(Tableau other, int nQubits);
-    Tableau              embedTableau(int nQubits);
+    [[nodiscard]] static Tableau       getDiagonalTableau(int nQubits);
+    [[nodiscard]] double               tableauDistance(Tableau other, int nQubits);
+    [[nodiscard]] Tableau              embedTableau(int nQubits);
     friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
     friend std::istream& operator>>(std::istream& is, Tableau& dt);
 
-    static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
+    [[nodiscard]] static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
 
     [[nodiscard]] unsigned long getBVFrom(int column) const;
 

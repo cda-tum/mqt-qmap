@@ -478,3 +478,30 @@ std::istream& operator>>(std::istream& is, Tableau& dt) {
     }
     return is;
 }
+
+bool Tableau::operator==(const Tableau& other) const {
+    if (tableau.size() != other.tableau.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < getQubitCount(); ++i) {
+        const auto& row1 = tableau[i];
+        const auto& row2 = other.tableau[i];
+        if (row1.size() != row2.size()) {
+            return false;
+        }
+        for (size_t j = 0; j < 2 * getQubitCount() + 1; ++j) {
+            const auto& col1 = row1[j];
+            const auto& col2 = row2[j];
+            if (col1 != col2) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+std::string Tableau::getRepresentation() const {
+    std::stringstream result;
+    result << *this;
+    return result.str();
+}
