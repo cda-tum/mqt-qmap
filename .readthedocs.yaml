@@ -10,9 +10,6 @@ build:
     python: "3.9"
   apt_packages:
     - cmake
-  jobs:
-    pre_install:
-      - pip install z3-solver>=4.8.15
 
 sphinx:
   configuration: docs/source/conf.py
@@ -23,4 +20,3 @@ python:
       path: .
       extra_requirements:
         - docs
-  system_packages: true
