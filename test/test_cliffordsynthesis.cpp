@@ -60,6 +60,8 @@ TEST_P(TestCliffordSynthesis, SimpleOptimization) {
             qx4_optimizer->optimize();
             tableau.clear();
 
+            london_optimizer->optimal_results.dump(std::cout);
+
             qx4_optimizer->optimal_results.dump(std::cout);
             EXPECT_EQ(qx4_optimizer->optimal_results.result, OptimizationResult::SAT);
         }
@@ -104,13 +106,14 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             qx4_optimizer->optimize();
             tableau.clear();
 
+            london_optimizer->optimal_results.dump(std::cout);
+
             EXPECT_EQ(qx4_optimizer->optimal_results.result, OptimizationResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
-    //util::init();
     auto&   input_file = GetParam();
     Tableau tableau{};
     if (input_file.find(".txt") != std::string::npos) {
@@ -129,6 +132,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             london_optimizer->targetTableau = tableau;
             london_optimizer->optimize();
             tableau.clear();
+
+            london_optimizer->optimal_results.dump(std::cout);
 
             EXPECT_EQ(london_optimizer->optimal_results.result, OptimizationResult::SAT);
         }

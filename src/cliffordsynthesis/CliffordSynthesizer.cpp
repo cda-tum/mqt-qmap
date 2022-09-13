@@ -176,7 +176,6 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     INFO() << "Time to prduce Formulation: " << diff.count() << std::endl;
 
     lb->produceInstance();
-    // lb->dumpAll(std::cout);
 
     auto mod_gen = std::chrono::high_resolution_clock::now();
     diff         = mod_gen - formulation;
