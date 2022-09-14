@@ -130,6 +130,8 @@ if(NOT FOUND_SUITABLE_VERSION)
         PATHS ${Z3_PYTHON_ROOT}
         PATH_SUFFIXES libz3 z3 include)
 
+      message(STATUS "Find library suffixes: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
+
       find_library(
         Z3_LIBRARIES
         NAMES z3 libz3
