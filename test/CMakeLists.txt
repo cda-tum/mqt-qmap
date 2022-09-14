@@ -41,25 +41,34 @@ macro(PACKAGE_ADD_TEST testname library)
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/${testname}
             ${CMAKE_BINARY_DIR}/${testname}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../examples
-            $<TARGET_FILE_DIR:${testname}>/examples
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/examples
-            ${CMAKE_BINARY_DIR}/examples
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/architectures
-            $<TARGET_FILE_DIR:${testname}>/architectures
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/architectures
-            ${CMAKE_BINARY_DIR}/architectures
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/calibration
-            $<TARGET_FILE_DIR:${testname}>/calibration
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${testname}>/calibration
-            ${CMAKE_BINARY_DIR}/calibration
-    COMMENT "Copying files and creating symlinks for ${testname}"
+    COMMENT "Creating symlink for ${testname} in build directory"
     VERBATIM)
 endmacro()
 
 package_add_test(
   ${PROJECT_NAME}_heuristic_test heuristic ${CMAKE_CURRENT_SOURCE_DIR}/test_heuristic.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_general.cpp ${CMAKE_CURRENT_SOURCE_DIR}/test_architecture.cpp)
+
+add_custom_command(
+  TARGET ${PROJECT_NAME}_heuristic_test
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../examples
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/examples
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/examples ${CMAKE_BINARY_DIR}/examples
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/architectures
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/architectures
+  COMMAND
+    ${CMAKE_COMMAND} -E create_symlink
+    $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/architectures
+    ${CMAKE_BINARY_DIR}/architectures
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../extern/calibration
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/calibration
+  COMMAND
+    ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_DIR:${PROJECT_NAME}_heuristic_test>/calibration
+    ${CMAKE_BINARY_DIR}/calibration
+  COMMENT "Copying files and creating symlinks"
+  VERBATIM)
 
 if(TARGET ${PROJECT_NAME}_exact_lib)
   package_add_test(${PROJECT_NAME}_exact_test exact ${CMAKE_CURRENT_SOURCE_DIR}/test_exact.cpp

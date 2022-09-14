@@ -81,14 +81,24 @@ PYBIND11_MODULE(pyqmap, m) {
 
     // Pre-defined architecture available within QMAP
     py::enum_<AvailableArchitecture>(m, "Arch")
-            .value("IBM_QX4", AvailableArchitecture::IBM_QX4)
-            .value("IBM_QX5", AvailableArchitecture::IBM_QX5)
-            .value("IBMQ_Yorktown", AvailableArchitecture::IBMQ_Yorktown)
-            .value("IBMQ_London", AvailableArchitecture::IBMQ_London)
-            .value("IBMQ_Bogota", AvailableArchitecture::IBMQ_Bogota)
-            .value("IBMQ_Tokyo", AvailableArchitecture::IBMQ_Tokyo)
-            .value("Rigetti_Agave", AvailableArchitecture::Rigetti_Agave)
-            .value("Rigetti_Aspen", AvailableArchitecture::Rigetti_Aspen)
+            .value("IBM_QX4", AvailableArchitecture::IBM_QX4,
+                   "5 qubit, directed bow tie layout")
+            .value("IBM_QX5", AvailableArchitecture::IBM_QX5,
+                   "16 qubit, directed ladder layout")
+            .value("IBMQ_Yorktown", AvailableArchitecture::IBMQ_Yorktown,
+                   "5 qubit, undirected bow tie layout")
+            .value("IBMQ_London", AvailableArchitecture::IBMQ_London,
+                   "5 qubit, undirected T-shape layout")
+            .value("IBMQ_Bogota", AvailableArchitecture::IBMQ_Bogota,
+                   "5 qubit, undirected linear chain layout")
+            .value("IBMQ_Casablanca", AvailableArchitecture::IBMQ_Casablanca,
+                   "7 qubit, undirected H-shape layout")
+            .value("IBMQ_Tokyo", AvailableArchitecture::IBMQ_Tokyo,
+                   "20 qubit, undirected brick-like layout")
+            .value("Rigetti_Agave", AvailableArchitecture::Rigetti_Agave,
+                   "8 qubit, undirected ring layout")
+            .value("Rigetti_Aspen", AvailableArchitecture::Rigetti_Aspen,
+                   "16 qubit, undirected dumbbell layout")
             .export_values()
             // allow construction from string
             .def(py::init([](const std::string& str) -> AvailableArchitecture { return architectureFromString(str); }));
