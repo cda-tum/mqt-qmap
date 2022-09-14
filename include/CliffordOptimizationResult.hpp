@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
