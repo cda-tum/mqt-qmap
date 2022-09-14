@@ -6,7 +6,7 @@
 import os
 import sys
 
-if sys.platform == "win32" and "Z3_ROOT" in os.environ:
+if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
     lib_path = os.path.join(os.environ["Z3_ROOT"], "lib")
     if os.path.exists(lib_path):
         os.add_dll_directory(lib_path)
