@@ -1,10 +1,8 @@
 name: "CodeQL"
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
+  push:
   schedule:
     - cron: "15 21 * * 6"
 
@@ -12,10 +10,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 3
+  Z3_VERSION: 4.11.2
+
 jobs:
-  analyze-cpp:
-    name: Analyze
-    runs-on: ubuntu-22.04
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
     permissions:
       security-events: write
 
@@ -34,6 +36,13 @@ jobs:
       - name: Installing boost
         run: sudo apt-get install -y libboost-program-options-dev
 
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
@@ -47,7 +56,7 @@ jobs:
 
       - if: matrix.language == 'cpp'
         name: Build
-        run: cmake --build build --parallel 4
+        run: cmake --build build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2

@@ -1,8 +1,9 @@
 [![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=flat-square)](https://pypi.org/project/mqt.qmap/)
 ![OS](https://img.shields.io/badge/os-linux%20%7C%20macos%20%7C%20windows-blue?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/CI?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
-[![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Deploy%20to%20PyPI?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
+[![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/C++?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
+[![Python-CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/python-ci.yml)
+[![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python%20Packaging?style=flat-square&logo=github&label=packaging)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
 # MQT QMAP - A tool for Quantum Circuit Mapping written in C++
@@ -155,19 +156,15 @@ general, we recommend to use the Python approach described above, as these comma
 ### System Requirements
 
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments). However, the implementation should be compatible
-with any current C++ compiler supporting C++17 and a minimum CMake version of 3.14.
+with any current C++ compiler supporting C++17 and a minimum CMake version of 3.18.
 
 `boost/program_options >= 1.50` is required for building the commandline applications of the mapping tool.
 
-In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
+In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.15](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
 accomplished in a multitude of ways:
 
-- Under Ubuntu 20.04 and newer: `sudo apt-get install libz3-dev`
 - Under macOS: `brew install z3`
-- Alternatively: `pip install z3-solver` and then append the corresponding path to the library path (`LD_LIBRARY_PATH` under Linux, `DYLD_LIBRARY_PATH` under macOS), e.g. via
-  ```bash
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -c "import z3; print(z3.__path__[0]+'/lib')")
-  ```
+- Alternatively: `pip install z3-solver` in the environment used for development
 - Download pre-built binaries from https://github.com/Z3Prover/z3/releases and copy the files to the respective system directories
 - Build Z3 from source and install it to the system
 
