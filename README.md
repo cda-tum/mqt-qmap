@@ -156,19 +156,15 @@ general, we recommend to use the Python approach described above, as these comma
 ### System Requirements
 
 Building (and running) is continuously tested under Linux, MacOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments). However, the implementation should be compatible
-with any current C++ compiler supporting C++17 and a minimum CMake version of 3.14.
+with any current C++ compiler supporting C++17 and a minimum CMake version of 3.18.
 
 `boost/program_options >= 1.50` is required for building the commandline applications of the mapping tool.
 
-In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
+In order to build the exact mapping tool and for the Python bindings to work, the SMT Solver [Z3 >= 4.8.15](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library. This can be
 accomplished in a multitude of ways:
 
-- Under Ubuntu 20.04 and newer: `sudo apt-get install libz3-dev`
 - Under macOS: `brew install z3`
-- Alternatively: `pip install z3-solver` and then append the corresponding path to the library path (`LD_LIBRARY_PATH` under Linux, `DYLD_LIBRARY_PATH` under macOS), e.g. via
-  ```bash
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python -c "import z3; print(z3.__path__[0]+'/lib')")
-  ```
+- Alternatively: `pip install z3-solver` in the environment used for development
 - Download pre-built binaries from https://github.com/Z3Prover/z3/releases and copy the files to the respective system directories
 - Build Z3 from source and install it to the system
 
