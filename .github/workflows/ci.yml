@@ -1,4 +1,4 @@
-name: C++-CI
+name: C++
 
 on:
   pull_request:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   cpp-tests:
-    name: C++ Tests ${{ matrix.config.os }}
+    name: Tests ${{ matrix.config.os }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false

@@ -1,8 +1,9 @@
 [![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=flat-square)](https://pypi.org/project/mqt.qmap/)
 ![OS](https://img.shields.io/badge/os-linux%20%7C%20macos%20%7C%20windows-blue?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/CI?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
-[![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Deploy%20to%20PyPI?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
+[![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/C++?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
+[![Python-CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/python-ci.yml)
+[![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python%20Packaging?style=flat-square&logo=github&label=packaging)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
 # MQT QMAP - A tool for Quantum Circuit Mapping written in C++

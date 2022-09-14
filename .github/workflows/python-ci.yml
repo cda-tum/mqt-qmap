@@ -1,4 +1,4 @@
-name: Python-CI
+name: Python
 
 on:
   pull_request:
@@ -27,7 +27,7 @@ jobs:
         run: nox -s mypy
 
   python-tests:
-    name: Python Tests ${{ matrix.os }}
+    name: Tests ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
