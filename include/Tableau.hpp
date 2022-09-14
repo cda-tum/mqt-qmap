@@ -98,11 +98,11 @@ public:
 
     [[nodiscard]] bool operator==(const Tableau& other) const;
 
-    [[nodiscard]] static Tableau       getDiagonalTableau(int nQubits);
-    [[nodiscard]] double               tableauDistance(Tableau other, int nQubits);
-    [[nodiscard]] Tableau              embedTableau(int nQubits);
-    friend std::ostream& operator<<(std::ostream& os, const Tableau& dt);
-    friend std::istream& operator>>(std::istream& is, Tableau& dt);
+    [[nodiscard]] static Tableau getDiagonalTableau(int nQubits);
+    [[nodiscard]] double         tableauDistance(Tableau other, int nQubits);
+    [[nodiscard]] Tableau        embedTableau(int nQubits);
+    friend std::ostream&         operator<<(std::ostream& os, const Tableau& dt);
+    friend std::istream&         operator>>(std::istream& is, Tableau& dt);
 
     [[nodiscard]] static double tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits);
 

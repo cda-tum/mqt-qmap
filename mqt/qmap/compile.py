@@ -7,6 +7,7 @@ from typing import List, Optional, Set, Tuple, Union
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
+    CliffordOptResults,
     CommanderGrouping,
     Configuration,
     Encoding,
@@ -14,12 +15,12 @@ from mqt.qmap.pyqmap import (
     Layering,
     MappingResults,
     Method,
+    OptimizingStrategy,
     SwapReduction,
     map,
-    OptimizingStrategy,
-    CliffordOptResults,
-    synthesize
+    synthesize,
 )
+
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
@@ -51,27 +52,27 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
 
 
 def compile(
-        circ: Union[QuantumCircuit, str],
-        arch: Optional[Union[str, Arch, Architecture, Backend]],
-        calibration: Optional[Union[str, BackendProperties, Target]] = None,
-        method: Union[str, Method] = "heuristic",
-        initial_layout: Union[str, InitialLayout] = "dynamic",
-        layering: Union[str, Layering] = "individual_gates",
-        use_teleportation: bool = False,
-        teleportation_fake: bool = False,
-        teleportation_seed: int = 0,
-        encoding: Union[str, Encoding] = "naive",
-        commander_grouping: Union[str, CommanderGrouping] = "halves",
-        use_bdd: bool = False,
-        swap_reduction: Union[str, SwapReduction] = "coupling_limit",
-        swap_limit: int = 0,
-        include_WCNF: bool = False,
-        use_subsets: bool = True,
-        subgraph: Optional[Set[int]] = None,
-        pre_mapping_optimizations: bool = True,
-        post_mapping_optimizations: bool = True,
-        add_measurements_to_mapped_circuit: bool = True,
-        verbose: bool = False,
+    circ: Union[QuantumCircuit, str],
+    arch: Optional[Union[str, Arch, Architecture, Backend]],
+    calibration: Optional[Union[str, BackendProperties, Target]] = None,
+    method: Union[str, Method] = "heuristic",
+    initial_layout: Union[str, InitialLayout] = "dynamic",
+    layering: Union[str, Layering] = "individual_gates",
+    use_teleportation: bool = False,
+    teleportation_fake: bool = False,
+    teleportation_seed: int = 0,
+    encoding: Union[str, Encoding] = "naive",
+    commander_grouping: Union[str, CommanderGrouping] = "halves",
+    use_bdd: bool = False,
+    swap_reduction: Union[str, SwapReduction] = "coupling_limit",
+    swap_limit: int = 0,
+    include_WCNF: bool = False,
+    use_subsets: bool = True,
+    subgraph: Optional[Set[int]] = None,
+    pre_mapping_optimizations: bool = True,
+    post_mapping_optimizations: bool = True,
+    add_measurements_to_mapped_circuit: bool = True,
+    verbose: bool = False,
 ) -> Tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
@@ -185,10 +186,13 @@ def compile(
 
     return circ, results
 
-def make_circuit(circ: Union[QuantumCircuit, str],
-               arch: Optional[Union[str, Arch, Architecture, Backend]],
-               calibration: Optional[Union[str, BackendProperties, Target]] = None,
-               use_binarysearch: Optional[bool] = False) -> Tuple[QuantumCircuit, CliffordOptResults]:
+
+def make_circuit(
+    circ: Union[QuantumCircuit, str],
+    arch: Optional[Union[str, Arch, Architecture, Backend]],
+    calibration: Optional[Union[str, BackendProperties, Target]] = None,
+    use_binarysearch: Optional[bool] = False,
+) -> Tuple[QuantumCircuit, CliffordOptResults]:
     """
     Synthesize a circuit using the clifford synthesizer.
     :param circ: Qiskit QuantumCircuit object or path to circuit file
@@ -197,8 +201,8 @@ def make_circuit(circ: Union[QuantumCircuit, str],
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
     :type calibration: Optional[Union[str, BackendProperties, Target]]
-    :param use_binarysearch: 
-    :return: 
+    :param use_binarysearch:
+    :return:
     """
     architecture = Architecture()
     if arch is None and calibration is None:

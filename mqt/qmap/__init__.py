@@ -3,11 +3,11 @@
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
 
-from mqt.qmap.compile import compile
-from mqt.qmap.compile import make_circuit
+from mqt.qmap.compile import compile, make_circuit
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
+    CliffordOptResults,
     CommanderGrouping,
     Configuration,
     Encoding,
@@ -15,10 +15,9 @@ from mqt.qmap.pyqmap import (
     Layering,
     MappingResults,
     Method,
-    SwapReduction,
     OptimizationTarget,
     OptimizingStrategy,
-    CliffordOptResults
+    SwapReduction,
 )
 
 __all__ = [
@@ -36,5 +35,5 @@ __all__ = [
     "OptimizationTarget",
     "OptimizingStrategy",
     "CliffordOptResults",
-    "make_circuit"
+    "make_circuit",
 ]
