@@ -83,6 +83,16 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - name: Update packages
+        run: python -m pip install --upgrade pip setuptools wheel
+      - name: Run local install
+        run: python -m pip install -e .[test] -v
+      - name: Run tests
+        run: python -m pytest
       #      - name: Install Z3
       #        uses: cda-tum/setup-z3@v1
       #        with:
@@ -95,9 +105,9 @@ jobs:
       #          Copy-Item -Path $z3_dir -Destination "C:\Program Files\Z3" -Recurse
       #          $env:Z3_ROOT = "C:\Program Files\Z3"
       #          echo "Z3_ROOT=$env:Z3_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Setup nox
-        uses: excitedleigh/setup-nox@v2.1.0
-      - name: Test on 🐍 3.7
-        run: nox -s tests-3.7 --verbose
-      - name: Test on 🐍 3.10
-        run: nox -s tests-3.10 --verbose
+      #      - name: Setup nox
+      #        uses: excitedleigh/setup-nox@v2.1.0
+      #      - name: Test on 🐍 3.7
+      #        run: nox -s tests-3.7 --verbose
+      #      - name: Test on 🐍 3.10
+      #        run: nox -s tests-3.10 --verbose
