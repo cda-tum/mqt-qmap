@@ -77,7 +77,7 @@ def compile(
 
     :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: Union[QuantumCircuit, str]
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
+    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
     :type arch: Optional[Union[str, Arch, Architecture, Backend]]
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
     :type calibration: Optional[Union[str, BackendProperties, Target]]
@@ -87,15 +87,15 @@ def compile(
     :type initial_layout: Union[str, InitialLayout]
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
     :type layering: Union[str, Layering]
-    :param encoding - Choose encoding for AMO and exactly one constraints (*naive* | commander | bimander)
+    :param encoding: Choose encoding for AMO and exactly one constraints (*naive* | commander | bimander)
     :type encoding: Union[str, Encoding]
-    :param commander_grouping - Choose method of grouping in commander and bimander encoding (*halves* | fixed2 | fixed3 | logarithm)
+    :param commander_grouping: Choose method of grouping in commander and bimander encoding (*halves* | fixed2 | fixed3 | logarithm)
     :type commander_grouping: Union[str, CommanderGrouping]
     :param use_bdd: Limit swaps per layer using BDDs, faster in some cases, but use with caution (default: False)
     :type use_bdd: bool
-    :param swap_reduction - Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
+    :param swap_reduction: Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
     :type swap_reduction: Union[str, SwapReduction]
-    :param swap_limit - Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
+    :param swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
     :type swap_limit: int
     :param include_WCNF: Include WCNF file in the results (default: False)
     :type include_WCNF: bool
@@ -114,6 +114,7 @@ def compile(
     :type add_measurements_to_mapped_circuit: bool
     :param verbose: Print more detailed information during the mapping process
     :type verbose: bool
+
     :return: Mapped circuit (as Qiskit `QuantumCircuit`) and results
     :rtype: Tuple[QuantumCircuit, MappingResults]
     """
