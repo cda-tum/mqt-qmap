@@ -96,7 +96,11 @@ jobs:
           echo "Z3_ROOT=$env:Z3_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
-      #      - name: Test on 🐍 3.7
-      #        run: nox -s tests-3.7
+      - name: Test on 🐍 3.7
+        run: nox -s tests-3.7 --verbose
+      - name: Test on 🐍 3.8
+        run: nox -s tests-3.8 --verbose
+      - name: Test on 🐍 3.9
+        run: nox -s tests-3.9 --verbose
       - name: Test on 🐍 3.10
         run: nox -s tests-3.10 --verbose
