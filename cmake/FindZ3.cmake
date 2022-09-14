@@ -127,8 +127,8 @@ if(NOT FOUND_SUITABLE_VERSION)
         Z3_CXX_INCLUDE_DIRS
         NAMES z3.h z3++.h
         NO_DEFAULT_PATH
-        PATHS ${Z3_PYTHON_ROOT}/include
-        PATH_SUFFIXES libz3 z3)
+        PATHS ${Z3_PYTHON_ROOT}
+        PATH_SUFFIXES libz3 z3 include)
 
       find_library(
         Z3_LIBRARIES
