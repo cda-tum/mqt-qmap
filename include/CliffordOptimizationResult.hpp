@@ -134,7 +134,8 @@ public:
     std::vector<double>              singleFidelity{};
     std::vector<std::vector<double>> doubleFidelity{};
 
-    CliffordOptResults(){};
+    CliffordOptResults()          = default;
+    virtual ~CliffordOptResults() = default;
 
     CliffordOptResults(CliffordOptResults& other) {
         verbose           = other.verbose;
