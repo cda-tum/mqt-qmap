@@ -260,14 +260,10 @@ double Tableau::tableauDistance(Tableau other, int nQubits) {
         result = std::numeric_limits<double>::max();
     } else {
         for (int i = 0; i < nQubits; ++i) {
-            auto first  = std::find_if(tableau[i].begin(), tableau[i].end(),
-                                       [](const auto x) { return x == 1; });
-            auto last   = std::find_if(tableau[i].rbegin(), tableau[i].rend(),
-                                       [](const auto x) { return x == 1; });
-            auto first2 = std::find_if(other.tableau[i].begin(), other.tableau[i].end(),
-                                       [](const auto x) { return x == 1; });
-            auto last2  = std::find_if(other.tableau[i].rbegin(), other.tableau[i].rend(),
-                                       [](const auto x) { return x == 1; });
+            auto first  = std::find_if(tableau[i].begin(), tableau[i].end(), [](const auto x) { return x == 1; });
+            auto last   = std::find_if(tableau[i].rbegin(), tableau[i].rend(), [](const auto x) { return x == 1; });
+            auto first2 = std::find_if(other.tableau[i].begin(), other.tableau[i].end(), [](const auto x) { return x == 1; });
+            auto last2  = std::find_if(other.tableau[i].rbegin(), other.tableau[i].rend(), [](const auto x) { return x == 1; });
             auto d1     = std::distance(tableau[i].begin(), first);
             auto d2     = std::distance(tableau[i].rbegin(), last);
             auto d3     = std::distance(other.tableau[i].begin(), first2);
@@ -323,14 +319,10 @@ double Tableau::tableauDistance(const TableauType& tableau1, const TableauType& 
         result = std::numeric_limits<double>::max();
     } else {
         for (std::size_t i = 0U; i < nQubits; ++i) {
-            auto first  = std::find_if(tableau1[i].begin(), tableau1[i].end(),
-                                       [](const auto x) { return x == 1; });
-            auto last   = std::find_if(tableau1[i].rbegin(), tableau1[i].rend(),
-                                       [](const auto x) { return x == 1; });
-            auto first2 = std::find_if(tableau2[i].begin(), tableau2[i].end(),
-                                       [](const auto x) { return x == 1; });
-            auto last2  = std::find_if(tableau2[i].rbegin(), tableau2[i].rend(),
-                                       [](const auto x) { return x == 1; });
+            auto first  = std::find_if(tableau1[i].begin(), tableau1[i].end(), [](const auto x) { return x == 1; });
+            auto last   = std::find_if(tableau1[i].rbegin(), tableau1[i].rend(), [](const auto x) { return x == 1; });
+            auto first2 = std::find_if(tableau2[i].begin(), tableau2[i].end(), [](const auto x) { return x == 1; });
+            auto last2  = std::find_if(tableau2[i].rbegin(), tableau2[i].rend(), [](const auto x) { return x == 1; });
             auto d1     = std::distance(tableau1[i].begin(), first);
             auto d2     = std::distance(tableau1[i].rbegin(), last);
             auto d3     = std::distance(tableau2[i].begin(), first2);

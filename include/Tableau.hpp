@@ -91,31 +91,33 @@ public:
     [[nodiscard]] static Tableau getDiagonalTableau(int nQubits);
     [[nodiscard]] double         tableauDistance(Tableau other, int nQubits);
     [[nodiscard]] Tableau        embedTableau(int nQubits);
-    friend std::ostream&         operator<<(std::ostream& os, const Tableau& dt) {
-                std::size_t nQubits = dt.getQubitCount();
-                if (dt.empty()) {
-                    DEBUG() << "Empty tableau";
-                    return os;
+
+    friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
+        std::size_t nQubits = dt.getQubitCount();
+
+        if (dt.empty()) {
+            DEBUG() << "Empty tableau";
+            return os;
         }
-                os << nQubits << '|';
-                for (std::size_t i = 1U; i < dt.back().size(); ++i) {
-                    os << i << '|';
+        os << nQubits << '|';
+        for (std::size_t i = 1U; i < dt.back().size(); ++i) {
+            os << i << '|';
         }
-                os << "R|";
-                os << std::endl;
-                auto i = 1;
-                for (const auto& row: dt) {
-                    if (row.size() != dt.back().size()) {
-                        FATAL() << "Tableau is not rectangular";
-                        return os;
+        os << "R|";
+        os << std::endl;
+        auto i = 1;
+        for (const auto& row: dt) {
+            if (row.size() != dt.back().size()) {
+                FATAL() << "Tableau is not rectangular";
+                return os;
             }
 
-                    os << i++ << "|";
-                    for (const auto& s: row)
+            os << i++ << "|";
+            for (const auto& s: row)
                 os << s << '|';
             os << std::endl;
         }
-                return os;
+        return os;
     }
     friend std::istream& operator>>(std::istream& is, Tableau& dt) {
         std::string line;
