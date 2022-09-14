@@ -30,7 +30,7 @@ void Tableau::import(const std::string& filename) {
 void Tableau::import(std::istream& is) {
     tableau.clear();
 
-    size_t                   nQubits = 0;
+    std::size_t              nQubits = 0;
     std::string              token;
     std::string              line;
     std::vector<std::string> data{};
@@ -40,7 +40,7 @@ void Tableau::import(std::istream& is) {
         if (line.find('|', 0) == std::string::npos)
             delimiter = ',';
         parse_line(line, delimiter, {'\"'}, {'\\'}, data);
-        nQubits = static_cast<size_t>(std::stoul(data.at(0)));
+        nQubits = static_cast<std::size_t>(std::stoul(data.at(0)));
     }
 
     tableau.reserve(nQubits);
@@ -57,7 +57,7 @@ void Tableau::import(std::istream& is) {
             }
             if (datum.empty())
                 continue;
-            tableau.back().emplace_back(static_cast<int32_t>(std::stoul(datum)));
+            tableau.back().emplace_back(static_cast<EntryType>(std::stoul(datum)));
         }
     }
 }
@@ -71,10 +71,10 @@ void Tableau::populateTableauFrom(unsigned long bv, int nQubits,
     }
 }
 
-void Tableau::generateTableau(Tableau& tableau, qc::QuantumComputation& circuit, int begin, int end) {
+void Tableau::generateTableau(Tableau& tableau, const qc::QuantumComputation& circuit, int begin, int end) {
     initTableau(tableau, circuit.getNqubitsWithoutAncillae());
     int current_g = 0;
-    for (auto& gate: circuit) {
+    for (const auto& gate: circuit) {
         if (current_g >= begin && (current_g < end || end < 0)) {
             if (gate->getType() == qc::OpType::Compound) {
                 auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
@@ -93,11 +93,11 @@ void Tableau::generateTableau(Tableau& tableau, qc::QuantumComputation& circuit,
     }
 }
 
-void Tableau::initTableau(Tableau& tableau, size_t nqubits) {
+void Tableau::initTableau(Tableau& tableau, std::size_t nqubits) {
     tableau.init(nqubits);
 }
 
-int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
+int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
     auto nqubits = getQubitCount();
     switch (gate->getType()) {
         case qc::OpType::H: // HADAMARD
@@ -119,8 +119,8 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             return 1U;
         }
@@ -129,19 +129,19 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             if (gate->getNcontrols() != 1U) { // NOT = H x S x S x H
                 const auto a = gate->getTargets().at(0U);
                 for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                    tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
                     std::swap(tableau[i][a], tableau[i][a + nqubits]);
                 }
                 for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                    tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                    tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                    tableau[i][a + nqubits] ^= tableau[i][a];
                 }
                 for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                    tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                    tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                    tableau[i][a + nqubits] ^= tableau[i][a];
                 }
                 for (auto i = 0U; i < nqubits; i++) {
-                    tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                    tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
                     std::swap(tableau[i][a], tableau[i][a + nqubits]);
                 }
                 return 4U;
@@ -152,11 +152,11 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
                     util::fatal("Invalid CNOT with same control and target.");
                 }
                 for (auto i = 0U; i < nqubits; i++) {
-                    const auto xa = static_cast<int32_t>(tableau[i][a]);
-                    const auto za = static_cast<int32_t>(tableau[i][a + nqubits]);
-                    const auto xb = static_cast<int32_t>(tableau[i][b]);
-                    const auto zb = static_cast<int32_t>(tableau[i][b + nqubits]);
-                    tableau[i][2 * nqubits] ^= static_cast<int32_t>((xa & zb) & ((xb ^ za) ^ 1));
+                    const auto xa = tableau[i][a];
+                    const auto za = tableau[i][a + nqubits];
+                    const auto xb = tableau[i][b];
+                    const auto zb = tableau[i][b + nqubits];
+                    tableau[i][2 * nqubits] ^= (xa & zb) & ((xb ^ za) ^ 1);
                     tableau[i][a + nqubits] = za ^ zb;
                     tableau[i][b]           = xb ^ xa;
                 }
@@ -170,16 +170,16 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             return 3U;
         }
@@ -189,12 +189,12 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             return 2U;
         }
@@ -204,28 +204,28 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
                 std::swap(tableau[i][a], tableau[i][a + nqubits]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
                 std::swap(tableau[i][a], tableau[i][a + nqubits]);
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             for (auto i = 0U; i < nqubits; i++) {
-                tableau[i][2U * nqubits] ^= static_cast<int32_t>(tableau[i][a] & tableau[i][a + nqubits]);
-                tableau[i][a + nqubits] ^= static_cast<int32_t>(tableau[i][a]);
+                tableau[i][2U * nqubits] ^= tableau[i][a] & tableau[i][a + nqubits];
+                tableau[i][a + nqubits] ^= tableau[i][a];
             }
             return 6U;
         }
@@ -237,7 +237,7 @@ int Tableau::applyGate(std::unique_ptr<qc::Operation>& gate) {
 }
 
 Tableau Tableau::getDiagonalTableau(int nQubits) {
-    innerTableau result{};
+    TableauType result{};
     result.resize(nQubits);
     for (auto i = 0; i < nQubits; i++) {
         result[i].resize(2U * nQubits + 1U);
@@ -261,13 +261,13 @@ double Tableau::tableauDistance(Tableau other, int nQubits) {
     } else {
         for (int i = 0; i < nQubits; ++i) {
             auto first  = std::find_if(tableau[i].begin(), tableau[i].end(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto last   = std::find_if(tableau[i].rbegin(), tableau[i].rend(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto first2 = std::find_if(other.tableau[i].begin(), other.tableau[i].end(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto last2  = std::find_if(other.tableau[i].rbegin(), other.tableau[i].rend(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto d1     = std::distance(tableau[i].begin(), first);
             auto d2     = std::distance(tableau[i].rbegin(), last);
             auto d3     = std::distance(other.tableau[i].begin(), first2);
@@ -279,7 +279,7 @@ double Tableau::tableauDistance(Tableau other, int nQubits) {
 }
 
 Tableau Tableau::embedTableau(int nQubits) {
-    innerTableau     result{};
+    TableauType      result{};
     auto             diagonal = getDiagonalTableau(nQubits);
     std::vector<int> indices{};
     auto             m = tableau.size();
@@ -288,8 +288,8 @@ Tableau Tableau::embedTableau(int nQubits) {
         indices.push_back(i < m ? 0 : 1);
     }
     do {
-        innerTableau intermediate_result{};
-        int          i = 0;
+        TableauType intermediate_result{};
+        int         i = 0;
         intermediate_result.resize(nQubits);
         for (auto k = 0; k < nQubits; k++) {
             intermediate_result[k].resize(2 * nQubits + 1);
@@ -317,20 +317,20 @@ Tableau Tableau::embedTableau(int nQubits) {
     } while (std::next_permutation(indices.begin(), indices.end()));
     return Tableau(result);
 }
-double Tableau::tableauDistance(innerTableau tableau1, innerTableau tableau2, int nQubits) {
+double Tableau::tableauDistance(const TableauType& tableau1, const TableauType& tableau2, std::size_t nQubits) {
     double result = 0.0;
     if (tableau1.size() != tableau2.size()) {
         result = std::numeric_limits<double>::max();
     } else {
-        for (int i = 0; i < nQubits; ++i) {
+        for (std::size_t i = 0U; i < nQubits; ++i) {
             auto first  = std::find_if(tableau1[i].begin(), tableau1[i].end(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto last   = std::find_if(tableau1[i].rbegin(), tableau1[i].rend(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto first2 = std::find_if(tableau2[i].begin(), tableau2[i].end(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto last2  = std::find_if(tableau2[i].rbegin(), tableau2[i].rend(),
-                                       [](int32_t x) { return x == 1; });
+                                       [](const auto x) { return x == 1; });
             auto d1     = std::distance(tableau1[i].begin(), first);
             auto d2     = std::distance(tableau1[i].rbegin(), last);
             auto d3     = std::distance(tableau2[i].begin(), first2);
@@ -343,14 +343,14 @@ double Tableau::tableauDistance(innerTableau tableau1, innerTableau tableau2, in
 
 unsigned long Tableau::getBVFrom(int column) const {
     unsigned long result = 0UL;
-    for (size_t j = 0; j < getQubitCount(); ++j) {
+    for (std::size_t j = 0; j < getQubitCount(); ++j) {
         if (tableau[j][column] == 1) {
             result |= (1U << j);
         }
     }
     return result;
 }
-void Tableau::init(size_t nQubits) {
+void Tableau::init(std::size_t nQubits) {
     tableau.resize(nQubits);
     for (auto i = 0U; i < nQubits; i++) {
         tableau[i].resize(2U * nQubits + 1U);
@@ -365,31 +365,6 @@ void Tableau::init(size_t nQubits) {
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
-    size_t nQubits = dt.getQubitCount();
-    if (dt.empty()) {
-        DEBUG() << "Empty tableau";
-        return os;
-    }
-    os << nQubits << '|';
-    for (std::size_t i = 1; i < dt.back().size(); ++i) {
-        os << i << '|';
-    }
-    os << "R|";
-    os << std::endl;
-    auto i = 1;
-    for (const auto& row: dt) {
-        if (row.size() != dt.back().size()) {
-            FATAL() << "Tableau is not rectangular";
-            return os;
-        }
-        os << i++ << "|";
-        for (const auto& s: row)
-            os << s << '|';
-        os << std::endl;
-    }
-    return os;
-}
 std::string Tableau::getStrRepresentation() const {
     std::stringstream out;
     out << *this;
@@ -399,97 +374,18 @@ void Tableau::importString(const std::string& tableauRepr) {
     std::stringstream in(tableauRepr);
     in >> *this;
 }
-std::istream& operator>>(std::istream& is, Tableau& dt) {
-    std::string line;
-    std::getline(is, line);
-    if (line.empty()) {
-        return is;
-    }
-    std::regex  r_stabilizer = std::regex("([\\+-])([IYZX]+)");
-    std::smatch m;
-    if (line.find("Destabilizer") != std::string::npos) {
-        std::string::const_iterator iter = line.cbegin();
-        while (std::regex_search(iter, line.cend(), m, r_stabilizer)) {
-            std::string          s = m.str(0);
-            std::vector<int32_t> row;
-
-            for (auto c: s) {
-                if (c == 'I')
-                    row.push_back(0);
-                else if (c == 'X')
-                    row.push_back(0);
-                else if (c == 'Y')
-                    row.push_back(1);
-                else if (c == 'Z')
-                    row.push_back(1);
-            }
-            for (auto c: s) {
-                if (c == 'I')
-                    row.push_back(0);
-                else if (c == 'X')
-                    row.push_back(1);
-                else if (c == 'Y')
-                    row.push_back(1);
-                else if (c == 'Z')
-                    row.push_back(0);
-            }
-            if (s[0] == '-') {
-                row.push_back(1);
-            } else {
-                row.push_back(0);
-            }
-            dt.tableau.push_back(row);
-            iter = m[0].second;
-        }
-    } else {
-        std::string::const_iterator iter = line.cbegin();
-        while (std::regex_search(iter, line.cend(), m, r_stabilizer)) {
-            std::string          s = m.str(0);
-            std::vector<int32_t> row;
-
-            for (auto c: s) {
-                if (c == 'I')
-                    row.push_back(0);
-                else if (c == 'X')
-                    row.push_back(1);
-                else if (c == 'Y')
-                    row.push_back(1);
-                else if (c == 'Z')
-                    row.push_back(0);
-            }
-            for (auto c: s) {
-                if (c == 'I')
-                    row.push_back(0);
-                else if (c == 'X')
-                    row.push_back(0);
-                else if (c == 'Y')
-                    row.push_back(1);
-                else if (c == 'Z')
-                    row.push_back(1);
-            }
-            if (s[0] == '-') {
-                row.push_back(1);
-            } else {
-                row.push_back(0);
-            }
-            dt.tableau.push_back(row);
-            iter = m[0].second;
-        }
-    }
-    return is;
-}
 
 bool Tableau::operator==(const Tableau& other) const {
     if (tableau.size() != other.tableau.size()) {
         return false;
     }
-    for (size_t i = 0; i < getQubitCount(); ++i) {
+    for (std::size_t i = 0; i < getQubitCount(); ++i) {
         const auto& row1 = tableau[i];
         const auto& row2 = other.tableau[i];
         if (row1.size() != row2.size()) {
             return false;
         }
-        for (size_t j = 0; j < 2 * getQubitCount() + 1; ++j) {
+        for (std::size_t j = 0; j < 2 * getQubitCount() + 1; ++j) {
             const auto& col1 = row1[j];
             const auto& col2 = row2[j];
             if (col1 != col2) {
