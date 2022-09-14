@@ -42,6 +42,8 @@ jobs:
           architecture: ${{ matrix.config.arch }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: ${{ matrix.config.arch }} == 'arm64'
+        run: echo "CIBW_ARCHS_MACOS=arm64" >> $GITHUB_ENV
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
