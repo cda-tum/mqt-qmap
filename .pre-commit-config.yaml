@@ -107,7 +107,7 @@ repos:
     rev: "v2.2.1"
     hooks:
       - id: codespell
-        args: ["-L", "wille,linz"]
+        args: ["-L", "wille,linz,tabl"]
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
