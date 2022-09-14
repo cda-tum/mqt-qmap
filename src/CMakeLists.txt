@@ -87,8 +87,8 @@ add_qmap_library(cliffordsynthesis CliffordSynthesizer)
 # add encodings
 target_sources(
   ${PROJECT_NAME}_cliffordsynthesis_lib
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
-         ${${PROJECT_NAME}_SOURCE_DIR}/include/CliffordOptimizationResult.hpp)
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/CliffordOptimizationResult.hpp)
 
 # add LogicBlocks library
 target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::Logic
