@@ -159,4 +159,13 @@ find_package_handle_standard_args(
   REQUIRED_VARS Z3_LIBRARIES Z3_CXX_INCLUDE_DIRS
   VERSION_VAR Z3_VERSION_STRING)
 
+if(Z3_FOUND)
+  if(NOT TARGET z3::z3lib)
+    add_library(z3::z3lib INTERFACE IMPORTED GLOBAL)
+    target_include_directories(z3::z3lib INTERFACE ${Z3_CXX_INCLUDE_DIRS})
+    target_link_libraries(z3::z3lib INTERFACE ${Z3_LIBRARIES})
+  endif()
+  add_compile_definitions(Z3_FOUND)
+endif()
+
 mark_as_advanced(Z3_CXX_INCLUDE_DIRS Z3_LIBRARIES Z3_VERSION_STRING)
