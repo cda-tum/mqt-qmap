@@ -4,6 +4,7 @@ requires = [
     "setuptools_scm>=6.4",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.14",
+    "z3-solver>=4.8.15,<4.12.0",
 ]
 build-backend = "setuptools.build_meta"
 
