@@ -16,7 +16,7 @@ if os.environ.get("CI", None):
 @nox.session(python=PYTHON_ALL_VERSIONS)
 def tests(session: Session) -> None:
     """Run the test suite."""
-    session.install("-e", ".[test]", "-vvv")
+    session.install(".[test]", "-vv")
     session.run("pytest", *session.posargs)
 
 
