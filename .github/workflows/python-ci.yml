@@ -89,16 +89,16 @@ jobs:
           python-version: "3.8"
       - name: Update packages
         run: python -m pip install --upgrade pip setuptools wheel
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run local install
         run: python -m pip install -e .[test] -v
       - name: Run tests
         run: python -m pytest
-      #      - name: Install Z3
-      #        uses: cda-tum/setup-z3@v1
-      #        with:
-      #          version: ${{ env.Z3_VERSION }}
-      #        env:
-      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #      - name: Install Z3 to system files
       #        run: |
       #          $z3_dir = (Get-ChildItem -Path $env:Z3_ROOT -Directory).FullName

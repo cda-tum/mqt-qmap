@@ -130,10 +130,6 @@ if(NOT FOUND_SUITABLE_VERSION)
         PATHS ${Z3_PYTHON_ROOT}
         PATH_SUFFIXES libz3 z3 include)
 
-      if(WIN32)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .dll)
-      endif()
-
       find_library(
         Z3_LIBRARIES
         NAMES z3 libz3
