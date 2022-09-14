@@ -3,10 +3,10 @@ name: Deploy to PyPI
 on:
   release:
     types: [published]
-  push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -17,82 +17,35 @@ env:
   Z3_VERSION: 4.11.2
 
 jobs:
-  build_manylinux_wheels:
-    name: Build wheels on Linux
-    runs-on: ubuntu-latest
+  build_wheels:
+    name: Build ${{ matrix.config.arch }} wheels on ${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-latest, arch: x64 }
+          - { os: macos-latest, arch: x64 }
+          - { os: macos-latest, arch: arm64 }
+          - { os: windows-latest, arch: x64 }
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
-        env:
-          CIBW_BEFORE_ALL_LINUX: /opt/python/cp39-cp39/bin/pip install -U pip z3-solver==${{ env.Z3_VERSION }}
-          CIBW_ENVIRONMENT_LINUX: Z3_ROOT=/opt/python/cp39-cp39/lib/python3.9/site-packages/z3
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  build_macos_wheels:
-    name: Build wheels on macOS
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Install Z3
+      # Under Linux the action does not work because it can't install to the manylinux container.
+      - if: runner.os != 'Linux'
+        name: Install Z3
         uses: cda-tum/setup-z3@v1
         with:
           version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  build_macos_m1_wheels:
-    name: Build wheels on macOS for Apple Silicon
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-          architecture: arm64
+          architecture: ${{ matrix.config.arch }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
-          CIBW_ARCHS_MACOS: arm64
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  build_windows_wheels:
-    name: Build wheels on Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.9.0
+          CIBW_BEFORE_ALL_LINUX: /opt/python/cp39-cp39/bin/pip install z3-solver==${{ env.Z3_VERSION }}
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -120,14 +73,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs:
-      [
-        build_manylinux_wheels,
-        build_macos_wheels,
-        build_macos_m1_wheels,
-        build_windows_wheels,
-        build_sdist,
-      ]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'published'
     steps:

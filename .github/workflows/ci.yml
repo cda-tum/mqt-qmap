@@ -1,10 +1,10 @@
-name: CI
+name: C++-CI
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:

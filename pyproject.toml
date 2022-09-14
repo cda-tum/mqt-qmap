@@ -22,6 +22,7 @@ build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
+environment = { Z3_ROOT="/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", DEPLOY = "ON"}
 
 [tool.cibuildwheel.macos]
 archs = "x86_64"
