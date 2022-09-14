@@ -1,18 +1,19 @@
-name: Python-CI
+name: Python
 
 on:
   pull_request:
   push:
     branches:
       - main
-
-env:
-  Z3_GIT_TAG: z3-4.11.2
-  FORCE_COLOR: 3
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  Z3_VERSION: 4.11.2
+  FORCE_COLOR: 3
 
 jobs:
   lint:
@@ -25,74 +26,51 @@ jobs:
       - name: Run mypy via nox
         run: nox -s mypy
 
-  python-tests-ubuntu:
-    runs-on: ubuntu-22.04
-    name: Python Tests Ubuntu
+  python-tests:
+    name: Tests ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 0
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
         run: nox -s tests-3.7
-      - name: Test on 🐍 3.8
+      # Python 3.8 and 3.9 are only tested on Linux.
+      - if: runner.os == 'Linux'
+        name: Test on 🐍 3.8
         run: nox -s tests-3.8
-      - name: Test on 🐍 3.9
+      - if: runner.os == 'Linux'
+        name: Test on 🐍 3.9
         run: nox -s tests-3.9
-      - uses: actions/setup-python@v4
+      # Python 3.10 under Linux is tested separately as part of the coverage job.
+      - if: runner.os != 'Linux'
+        name: Test on 🐍 3.10
+        run: nox -s tests-3.10
+      # Setup Python 3.10, run the coverage job, and upload the coverage data.
+      - if: runner.os == 'Linux'
+        uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: "3.10"
-      - name: Test and Coverage on 🐍 3.10
+      - if: runner.os == 'Linux'
+        name: Test and Coverage on 🐍 3.10
         run: nox -s coverage -- --cov-report=xml
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
-
-  python-tests-macos:
-    runs-on: macos-latest
-    name: Python Tests macOS
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Install Z3 from brew
-        run: brew install z3
-      - name: Setup nox
-        uses: excitedleigh/setup-nox@v2.1.0
-      - name: Test on 🐍 3.7
-        run: nox -s tests-3.7
-      - name: Test on 🐍 3.10
-        run: nox -s tests-3.10
-
-  python-tests-windows:
-    runs-on: windows-latest
-    name: Python Tests Windows
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Cache Z3
-        id: cache-z3
-        uses: actions/cache@v3
-        with:
-          path: z3
-          key: python-${{ runner.OS }}-${{ env.Z3_GIT_TAG }}-${{ hashFiles('**/python-ci.yml') }}
-      - name: Building Z3
-        if: steps.cache-z3.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          git clone --branch $Z3_GIT_TAG --depth 1 https://github.com/Z3Prover/z3.git
-          cmake -S z3 -B z3/build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A x64 -DZ3_BUILD_LIBZ3_SHARED=FALSE -DZ3_BUILD_EXECUTABLE=False -DZ3_BUILD_TEST_EXECUTABLES=False
-          cmake --build z3/build --config Release --parallel 2
-      - name: Installing Z3
-        shell: bash
-        working-directory: ${{github.workspace}}/z3/build
-        run: cmake --build . --config Release --target INSTALL;
-      - name: Setup nox
-        uses: excitedleigh/setup-nox@v2.1.0
-      - name: Test on 🐍 3.7
-        run: nox -s tests-3.7
-      - name: Test on 🐍 3.10
-        run: nox -s tests-3.10
+      - if: runner.os == 'Linux'
+        name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3.1.0
