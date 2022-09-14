@@ -82,25 +82,21 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install Z3 to system files
-        run: |
-          $z3_dir = (Get-ChildItem -Path $env:Z3_ROOT -Directory).FullName
-          Copy-Item -Path $z3_dir -Destination "C:\Program Files\Z3" -Recurse
-          $env:Z3_ROOT = "C:\Program Files\Z3"
-          echo "Z3_ROOT=$env:Z3_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      #      - name: Install Z3
+      #        uses: cda-tum/setup-z3@v1
+      #        with:
+      #          version: ${{ env.Z3_VERSION }}
+      #        env:
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #      - name: Install Z3 to system files
+      #        run: |
+      #          $z3_dir = (Get-ChildItem -Path $env:Z3_ROOT -Directory).FullName
+      #          Copy-Item -Path $z3_dir -Destination "C:\Program Files\Z3" -Recurse
+      #          $env:Z3_ROOT = "C:\Program Files\Z3"
+      #          echo "Z3_ROOT=$env:Z3_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Setup nox
         uses: excitedleigh/setup-nox@v2.1.0
       - name: Test on 🐍 3.7
         run: nox -s tests-3.7 --verbose
-      - name: Test on 🐍 3.8
-        run: nox -s tests-3.8 --verbose
-      - name: Test on 🐍 3.9
-        run: nox -s tests-3.9 --verbose
       - name: Test on 🐍 3.10
         run: nox -s tests-3.10 --verbose
