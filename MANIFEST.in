@@ -1,18 +1,26 @@
+prune docs
 prune test
+prune .idea
 
 graft extern/qfr
-prune **/test
-prune **/tests
+prune **/.github
+prune **/apps
 prune **/doc
 prune **/docs
-prune **/apps
-prune **/.github
+prune **/meta
+prune **/plots
+prune **/test
+prune **/tests
 
-prune extern/qfr/extern/json/benchmarks
 prune extern/qfr/extern/json/include
-prune extern/qfr/extern/json/third_party
 prune extern/qfr/extern/dd_package/extern
 prune extern/qfr/extern/zx/extern/googletest
+prune extern/qfr/extern/zx/extern/boost/config/checks
+prune extern/qfr/extern/zx/extern/boost/config/tools
+prune extern/qfr/extern/zx/extern/boost/multiprecision/config
+prune extern/qfr/extern/zx/extern/boost/multiprecision/example
+prune extern/qfr/extern/zx/extern/boost/multiprecision/performance
+prune extern/qfr/extern/zx/extern/boost/multiprecision/tools
 
 graft apps
 
