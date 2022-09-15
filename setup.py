@@ -12,7 +12,7 @@ from setuptools.command.build_ext import build_ext
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
         super().__init__(name, sources=[])
-        self.sourcedir = Path(sourcedir).resolve()
+        self.sourcedir = str(Path(sourcedir).resolve())
 
 
 class CMakeBuild(build_ext):
