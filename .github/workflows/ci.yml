@@ -78,7 +78,7 @@ jobs:
         name: Coverage
         run: |
           cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON
-          cmake --build buildCov --config Debug
+          cmake --build buildCov --config Debug --target qmap_exact_test qmap_heuristic_test
           cd buildCov/test
           ctest -C Debug --output-on-failure
       - if: runner.os == 'Linux'
