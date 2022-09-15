@@ -36,6 +36,20 @@ repos:
       - id: fix-ligatures
       - id: fix-smartquotes
 
+  # Run Flake8 checks
+  - repo: https://github.com/PyCQA/flake8
+    rev: "5.0.4"
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-future-annotations
+          - flake8-new-union-types
+          - flake8-simplify
+          - flake8-use-pathlib
+          - flake8-2020
+
   # Upgrade old Python syntax
   - repo: https://github.com/asottile/pyupgrade
     rev: "v2.37.3"
@@ -75,13 +89,6 @@ repos:
       - id: rst-backticks
       - id: rst-directive-colons
       - id: rst-inline-touching-normal
-
-  # Run Flake8 checks
-  - repo: https://github.com/PyCQA/flake8
-    rev: "5.0.4"
-    hooks:
-      - id: flake8
-        additional_dependencies: [flake8-bugbear]
 
   # Check the manifest for missing files
   - repo: https://github.com/mgedmin/check-manifest
