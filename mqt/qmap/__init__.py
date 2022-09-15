@@ -5,14 +5,15 @@
 
 import os
 import sys
+from pathlib import Path
 
 if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
-    lib_path = os.path.join(os.environ["Z3_ROOT"], "lib")
-    if os.path.exists(lib_path):
-        os.add_dll_directory(lib_path)
-    bin_path = os.path.join(os.environ["Z3_ROOT"], "bin")
-    if os.path.exists(bin_path):
-        os.add_dll_directory(bin_path)
+    lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
+    if lib_path.exists():
+        os.add_dll_directory(str(lib_path))
+    bin_path = Path(os.environ["Z3_ROOT"]) / "bin"
+    if bin_path.exists():
+        os.add_dll_directory(str(bin_path))
 
 from mqt.qmap.compile import compile, make_circuit
 from mqt.qmap.pyqmap import (

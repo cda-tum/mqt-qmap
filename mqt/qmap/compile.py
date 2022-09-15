@@ -2,7 +2,7 @@
 # This file is part of MQT QMAP library which is released under the MIT license.
 # See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
 #
-from typing import List, Optional, Set, Tuple, Union
+from __future__ import annotations
 
 from mqt.qmap.pyqmap import (
     Arch,
@@ -28,13 +28,13 @@ from qiskit.transpiler import Layout
 from qiskit.transpiler.target import Target
 
 
-def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) -> Layout:
+def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) -> Layout:
     """
     Extracts the initial layout resulting from compiling a circuit from a QASM file.
     :param qasm: QASM file
     :type qasm: str
     :param qregs: The quantum registers to apply the layout to.
-    :type qregs: List[QuantumRegister]
+    :type qregs: list[QuantumRegister]
     :return: layout to be used in Qiskit
     """
     for line in qasm.split("\n"):
@@ -52,50 +52,50 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: List[QuantumRegister]) ->
 
 
 def compile(
-    circ: Union[QuantumCircuit, str],
-    arch: Optional[Union[str, Arch, Architecture, Backend]],
-    calibration: Optional[Union[str, BackendProperties, Target]] = None,
-    method: Union[str, Method] = "heuristic",
-    initial_layout: Union[str, InitialLayout] = "dynamic",
-    layering: Union[str, Layering] = "individual_gates",
+    circ: QuantumCircuit | str,
+    arch: str | Arch | Architecture | Backend | None,
+    calibration: str | BackendProperties | Target | None = None,
+    method: str | Method = "heuristic",
+    initial_layout: str | InitialLayout = "dynamic",
+    layering: str | Layering = "individual_gates",
     use_teleportation: bool = False,
     teleportation_fake: bool = False,
     teleportation_seed: int = 0,
-    encoding: Union[str, Encoding] = "naive",
-    commander_grouping: Union[str, CommanderGrouping] = "halves",
+    encoding: str | Encoding = "naive",
+    commander_grouping: str | CommanderGrouping = "halves",
     use_bdd: bool = False,
-    swap_reduction: Union[str, SwapReduction] = "coupling_limit",
+    swap_reduction: str | SwapReduction = "coupling_limit",
     swap_limit: int = 0,
     include_WCNF: bool = False,
     use_subsets: bool = True,
-    subgraph: Optional[Set[int]] = None,
+    subgraph: set[int] | None = None,
     pre_mapping_optimizations: bool = True,
     post_mapping_optimizations: bool = True,
     add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
-) -> Tuple[QuantumCircuit, MappingResults]:
+) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
     :param circ: Qiskit QuantumCircuit object or path to circuit file
-    :type circ: Union[QuantumCircuit, str]
+    :type circ: QuantumCircuit | str
     :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
-    :type arch: Optional[Union[str, Arch, Architecture, Backend]]
+    :type arch: str | Arch | Architecture | Backend | None
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
-    :type calibration: Optional[Union[str, BackendProperties, Target]]
+    :type calibration: str | BackendProperties | Target | None
     :param method: Mapping technique to use (*heuristic* | exact)
-    :type method: Union[str, Method]
+    :type method: str | Method
     :param initial_layout: Strategy to use for determining initial layout in heuristic mapper (identity | static | *dynamic*)
-    :type initial_layout: Union[str, InitialLayout]
+    :type initial_layout: str | InitialLayout
     :param layering: Circuit layering strategy to use (*individual_gates* | disjoint_qubits | odd_qubits | qubit_triangle)
-    :type layering: Union[str, Layering]
+    :type layering: str | Layering
     :param encoding: Choose encoding for AMO and exactly one constraints (*naive* | commander | bimander)
-    :type encoding: Union[str, Encoding]
+    :type encoding: str | Encoding
     :param commander_grouping: Choose method of grouping in commander and bimander encoding (*halves* | fixed2 | fixed3 | logarithm)
-    :type commander_grouping: Union[str, CommanderGrouping]
+    :type commander_grouping: str | CommanderGrouping
     :param use_bdd: Limit swaps per layer using BDDs, faster in some cases, but use with caution (default: False)
     :type use_bdd: bool
     :param swap_reduction: Choose method of limiting the search space (none | *coupling_limit* | custom | increasing)
-    :type swap_reduction: Union[str, SwapReduction]
+    :type swap_reduction: str | SwapReduction
     :param swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer
     :type swap_limit: int
     :param include_WCNF: Include WCNF file in the results (default: False)
@@ -103,7 +103,7 @@ def compile(
     :param use_subsets: Use qubit subsets, or consider all available physical qubits at once (default: True)
     :type use_subsets: bool
     :param subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered
-    :type subgraph: Optional[List[int]]
+    :type subgraph: set[int] | None
     :param use_teleportation:  Use teleportation in addition to swaps
     :param teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons)
     :param teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar)
@@ -117,7 +117,7 @@ def compile(
     :type verbose: bool
 
     :return: Mapped circuit (as Qiskit `QuantumCircuit`) and results
-    :rtype: Tuple[QuantumCircuit, MappingResults]
+    :rtype: tuple[QuantumCircuit, MappingResults]
     """
 
     if subgraph is None:
