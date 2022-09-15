@@ -62,15 +62,10 @@ jobs:
       - if: runner.os != 'Linux'
         name: Test on 🐍 3.10
         run: nox -s tests-3.10
-      # Setup Python 3.10, run the coverage job, and upload the coverage data.
-      - if: runner.os == 'Linux'
-        uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: "3.10"
+      # Run the coverage job on Python 3.10 and upload the coverage data.
       - if: runner.os == 'Linux'
         name: Test and Coverage on 🐍 3.10
-        run: nox -s coverage -- --cov-report=xml
+        run: nox --force-python 3.10 -s coverage -- --cov-report=xml
       - if: runner.os == 'Linux'
         name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
