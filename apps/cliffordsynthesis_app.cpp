@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         "Fidelities of the architectures")(
         "initial_timesteps,t", po::value<int>(),
         "Initial timesteps for the generated circuit (Depth for "
-        "Depth-Optimization, Gates for Gate-Optimization)\n\t\t Sensible Values "
+        "Depth-Synthesis, Gates for Gate-Synthesis)\n\t\t Sensible Values "
         "are for Depth: nQubit+log(nQubit) For Gates: nQubits*log(nQubits)")(
         "strategy,s", po::value<std::string>(),
         "choose one of use_minimizer, start_high, start_low, minmax, split_iter")(
@@ -109,13 +109,13 @@ int main(int argc, char** argv) {
     if (vm.count("method")) {
         const std::string method = vm["method"].as<std::string>();
         if (method == "z3") {
-            opt.method = OptimizationMethod::Z3;
+            opt.method = SynthesisMethod::Z3;
         } else if (method == "optimath") {
-            opt.method = OptimizationMethod::MATHSAT;
+            opt.method = SynthesisMethod::MATHSAT;
         } else if (method == "smtlibv2") {
-            opt.method = OptimizationMethod::SMTLibV2;
+            opt.method = SynthesisMethod::SMTLibV2;
         } else if (method == "dimacs") {
-            opt.method = OptimizationMethod::DIMACS;
+            opt.method = SynthesisMethod::DIMACS;
         } else {
             ERROR() << "[ERROR] Unknown method '" << method << "'!\n";
             std::exit(1);
@@ -142,13 +142,13 @@ int main(int argc, char** argv) {
     if (vm.count("target")) {
         const std::string target = vm["target"].as<std::string>();
         if (target == "gates") {
-            opt.target = OptimizationTarget::GATES;
+            opt.target = SynthesisTarget::GATES;
         } else if (target == "gates_only_cnot") {
-            opt.target = OptimizationTarget::GATES_ONLY_CNOT;
+            opt.target = SynthesisTarget::GATES_ONLY_CNOT;
         } else if (target == "depth") {
-            opt.target = OptimizationTarget::DEPTH;
+            opt.target = SynthesisTarget::DEPTH;
         } else if (target == "fidelity") {
-            opt.target = OptimizationTarget::FIDELITY;
+            opt.target = SynthesisTarget::FIDELITY;
         } else {
             ERROR() << "Unknown target: " << target << std::endl;
             std::exit(1);
@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
             }
         } else {
             const std::string tableau = vm["in"].as<std::string>();
-            opt.targetTableau.importQiskitStabilizerString(tableau);
+            opt.targetTableau.fromString(tableau);
             opt.nqubits = opt.targetTableau.getQubitCount();
         }
 
@@ -218,16 +218,16 @@ int main(int argc, char** argv) {
     if (vm.count("strategy")) {
         const std::string strategy = vm["strategy"].as<std::string>();
         if (strategy == "start_high") {
-            opt.strategy = OptimizingStrategy::StartHigh;
+            opt.strategy = SynthesisStrategy::StartHigh;
         } else if (strategy == "start_low") {
-            opt.strategy = OptimizingStrategy::StartLow;
+            opt.strategy = SynthesisStrategy::StartLow;
         } else if (strategy == "minmax") {
-            opt.strategy = OptimizingStrategy::MinMax;
+            opt.strategy = SynthesisStrategy::MinMax;
         } else if (strategy == "split_iter") {
-            opt.strategy = OptimizingStrategy::SplitIter;
+            opt.strategy = SynthesisStrategy::SplitIter;
 
         } else {
-            opt.strategy = OptimizingStrategy::UseMinimizer;
+            opt.strategy = SynthesisStrategy::UseMinimizer;
         }
     }
     if (vm.count("nthread")) {

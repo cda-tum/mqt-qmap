@@ -37,7 +37,7 @@
 class CliffordOptimizer {
 public:
     CliffordOptimizer() = default;
-    void init(bool pchoose_best = false, bool puse_embedding = false, unsigned char pnqubits = 0, unsigned short pinitial_timesteps = 0, OptimizingStrategy strategy = OptimizingStrategy::UseMinimizer, OptimizationTarget ptarget = OptimizationTarget::GATES);
+    void init(bool pchoose_best = false, bool puse_embedding = false, unsigned char pnqubits = 0, unsigned short pinitial_timesteps = 0, SynthesisStrategy strategy = SynthesisStrategy::UseMinimizer, SynthesisTarget ptarget = SynthesisTarget::GATES);
     void setCircuit(const qc::QuantumComputation& qc);
     void setTableau(Tableau& targetTabl);
     void optimize();
@@ -57,9 +57,9 @@ public:
     unsigned short         initial_timesteps = 0U;
     int                    verbose           = 0;
     int                    nthreads          = 1;
-    OptimizingStrategy     strategy          = OptimizingStrategy::UseMinimizer;
-    OptimizationTarget     target            = OptimizationTarget::GATES;
-    OptimizationMethod     method            = OptimizationMethod::Z3;
+    SynthesisStrategy     strategy          = SynthesisStrategy::UseMinimizer;
+    SynthesisTarget     target            = SynthesisTarget::GATES;
+    SynthesisMethod     method            = SynthesisMethod::Z3;
     qc::QuantumComputation circuit;
 
     std::vector<CouplingMap> highestFidelityMap;
@@ -92,11 +92,11 @@ public:
         optimal_results.resultCircuit.dump(os, format);
     }
 
-    CliffordOptResults optimal_results{};
+    CliffordOptimizationResults optimal_results{};
 
 protected:
     Architecture       architecture{};
-    CliffordOptResults main_optimization(
+    CliffordOptimizationResults main_optimization(
             int                                                        timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
             const std::vector<unsigned short>& qubitChoice, Tableau& initialTableau,
@@ -136,8 +136,8 @@ protected:
                             const CouplingMap&                 reducedCM,
                             const std::vector<unsigned short>& qubitChoice,
                             qc::QuantumComputation&            circuit,
-                            CliffordOptResults* r, CliffordOptimizer* opt);
-    void        updateResults(CliffordOptResults& r);
+                            CliffordOptimizationResults* r, CliffordOptimizer* opt);
+    void        updateResults(CliffordOptimizationResults& r);
 
     static void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                               const LogicMatrix& x, const LogicMatrix& z,

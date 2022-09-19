@@ -4,6 +4,10 @@
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "Tableau.hpp"
+#include "configuration/SynthesisMethod.hpp"
+#include "configuration/SynthesisResult.hpp"
+#include "configuration/SynthesisStrategy.hpp"
+#include "configuration/SynthesisTarget.hpp"
 #include "operations/Operation.hpp"
 #include "utils.hpp"
 
@@ -11,119 +15,20 @@
 #include <sstream>
 #include <string>
 
-enum class OptimizingStrategy {
-    StartLow,
-    StartHigh,
-    UseMinimizer,
-    MinMax,
-    SplitIter
-};
-enum class OptimizationResult { SAT,
-                                UNSAT,
-                                UNDEF };
-enum class OptimizationTarget { GATES,
-                                GATES_ONLY_CNOT,
-                                DEPTH,
-                                FIDELITY };
-enum class OptimizationMethod { Z3,
-                                MATHSAT,
-                                SMTLibV2,
-                                DIMACS };
-
-inline std::string toString(OptimizationMethod method) {
-    switch (method) {
-        case OptimizationMethod::Z3:
-            return "Z3";
-        case OptimizationMethod::MATHSAT:
-            return "MATHSAT";
-        case OptimizationMethod::SMTLibV2:
-            return "SMTLibV2";
-        case OptimizationMethod::DIMACS:
-            return "DIMACS";
-    }
-    return "Error";
-}
-inline OptimizationMethod optMethodFromString(const std::string& method) {
-    if (method == "Z3")
-        return OptimizationMethod::Z3;
-    if (method == "MATHSAT")
-        return OptimizationMethod::MATHSAT;
-    if (method == "SMTLibV2")
-        return OptimizationMethod::SMTLibV2;
-    if (method == "DIMACS")
-        return OptimizationMethod::DIMACS;
-    return OptimizationMethod::Z3;
-}
-inline std::string toString(OptimizationTarget target) {
-    switch (target) {
-        case OptimizationTarget::GATES:
-            return "gates";
-        case OptimizationTarget::GATES_ONLY_CNOT:
-            return "gates_only_cnot";
-        case OptimizationTarget::DEPTH:
-            return "depth";
-        case OptimizationTarget::FIDELITY:
-            return "fidelity";
-    }
-    return "Error";
-}
-
-inline OptimizationTarget optTargetFromString(const std::string& target) {
-    if (target == "gates")
-        return OptimizationTarget::GATES;
-    if (target == "gates_only_cnot")
-        return OptimizationTarget::GATES_ONLY_CNOT;
-    if (target == "depth")
-        return OptimizationTarget::DEPTH;
-    if (target == "fidelity")
-        return OptimizationTarget::FIDELITY;
-    return OptimizationTarget::GATES;
-}
-
-inline std::string toString(OptimizingStrategy strategy) {
-    switch (strategy) {
-        case OptimizingStrategy::MinMax:
-            return "minmax";
-        case OptimizingStrategy::StartHigh:
-            return "start_high";
-        case OptimizingStrategy::StartLow:
-            return "start_low";
-        case OptimizingStrategy::UseMinimizer:
-            return "useminimizer";
-        case OptimizingStrategy::SplitIter:
-            return "split_iterative";
-    }
-    return "Error";
-}
-
-inline OptimizingStrategy optStrategyFromString(const std::string& strategy) {
-    if (strategy == "minmax")
-        return OptimizingStrategy::MinMax;
-    if (strategy == "start_high")
-        return OptimizingStrategy::StartHigh;
-    if (strategy == "start_low")
-        return OptimizingStrategy::StartLow;
-    if (strategy == "useminimizer")
-        return OptimizingStrategy::UseMinimizer;
-    if (strategy == "split_iterative")
-        return OptimizingStrategy::SplitIter;
-    return OptimizingStrategy::MinMax;
-}
-
-class CliffordOptResults {
+class CliffordOptimizationResults {
 public:
-    int                verbose           = 0;
-    bool               choose_best       = false;
-    OptimizingStrategy strategy          = OptimizingStrategy::UseMinimizer;
-    OptimizationTarget target            = OptimizationTarget::GATES;
-    OptimizationMethod method            = OptimizationMethod::Z3;
-    OptimizationResult result            = OptimizationResult::UNDEF;
-    unsigned char      nqubits           = 0;
-    int                initial_timesteps = 0;
-    int                gate_count        = 0;
-    int                depth             = 0;
-    bool               sat               = false;
-    double             fidelity          = 0.0;
+    int               verbose           = 0;
+    bool              choose_best       = false;
+    SynthesisStrategy strategy          = SynthesisStrategy::UseMinimizer;
+    SynthesisTarget   target            = SynthesisTarget::GATES;
+    SynthesisMethod   method            = SynthesisMethod::Z3;
+    SynthesisResult   result            = SynthesisResult::UNDEF;
+    unsigned char     nqubits           = 0;
+    int               initial_timesteps = 0;
+    int               gate_count        = 0;
+    int               depth             = 0;
+    bool              sat               = false;
+    double            fidelity          = 0.0;
 
     double total_seconds  = 0;
     double final_run_time = 0;
@@ -136,10 +41,10 @@ public:
     std::vector<double>              singleFidelity{};
     std::vector<std::vector<double>> doubleFidelity{};
 
-    CliffordOptResults()          = default;
-    virtual ~CliffordOptResults() = default;
+    CliffordOptimizationResults()          = default;
+    virtual ~CliffordOptimizationResults() = default;
 
-    CliffordOptResults(CliffordOptResults& other) {
+    CliffordOptimizationResults(CliffordOptimizationResults& other) {
         verbose           = other.verbose;
         choose_best       = other.choose_best;
         strategy          = other.strategy;
@@ -168,7 +73,7 @@ public:
         result         = other.result;
     };
 
-    CliffordOptResults& operator=(CliffordOptResults other) {
+    CliffordOptimizationResults& operator=(CliffordOptimizationResults other) {
         verbose           = other.verbose;
         choose_best       = other.choose_best;
         strategy          = other.strategy;
