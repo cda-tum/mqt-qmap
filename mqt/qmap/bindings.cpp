@@ -19,9 +19,7 @@ namespace py = pybind11;
 namespace nl = nlohmann;
 using namespace pybind11::literals;
 
-// c++ binding function
-MappingResults map(const py::object& circ, Architecture& arch, Configuration& config) {
-    qc::QuantumComputation qc{};
+void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
     try {
         if (py::isinstance<py::str>(circ)) {
             auto&& file = circ.cast<std::string>();
@@ -34,6 +32,13 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
         ss << "Could not import circuit: " << e.what();
         throw std::invalid_argument(ss.str());
     }
+}
+
+// c++ binding function
+MappingResults map(const py::object& circ, Architecture& arch, Configuration& config) {
+    qc::QuantumComputation qc{};
+
+    loadQC(qc, circ);
 
     if (config.useTeleportation) {
         config.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1, 8);
@@ -44,13 +49,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
         if (config.method == Method::Heuristic) {
             mapper = std::make_unique<HeuristicMapper>(qc, arch);
         } else if (config.method == Method::Exact) {
-#ifdef Z3_FOUND
             mapper = std::make_unique<ExactMapper>(qc, arch);
-#else
-            std::stringstream ss{};
-            ss << toString(config.method) << " (Z3 support not enabled)";
-            throw std::invalid_argument(ss.str());
-#endif
         }
     } catch (std::exception const& e) {
         std::stringstream ss{};
@@ -76,20 +75,10 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-CliffordOptResults synthesize(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
+CliffordOptResults optimize(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
     qc::QuantumComputation qc{};
-    try {
-        if (py::isinstance<py::str>(circ)) {
-            auto&& file = circ.cast<std::string>();
-            qc.import(file);
-        } else {
-            qc::qiskit::QuantumCircuit::import(qc, circ);
-        }
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Could not import circuit: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
+
+    loadQC(qc, circ);
 
     std::unique_ptr<CliffordOptimizer> optimizer;
     try {
@@ -101,7 +90,8 @@ CliffordOptResults synthesize(const py::object& circ, Architecture& arch, Optimi
     }
 
     try {
-        optimizer->init(qc, false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->init(false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->setCircuit(qc);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
         std::stringstream ss{};
@@ -117,10 +107,52 @@ CliffordOptResults synthesize(const py::object& circ, Architecture& arch, Optimi
         throw std::invalid_argument(ss.str());
     }
 
-    //copying automatically generates the qasm dump, so we are done
-    auto& results = optimizer->optimal_results;
+    optimizer->optimal_results.generateStringCircuit();
 
-    return results;
+    return optimizer->optimal_results;
+}
+
+// c++ binding function
+CliffordOptResults synthesize(const std::string& tableau, Architecture& arch, OptimizingStrategy& strategy) {
+    auto tab = Tableau();
+    try {
+        tab.importQiskitStabilizerString(tableau);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not parse tableau: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    std::unique_ptr<CliffordOptimizer> optimizer;
+    try {
+        optimizer = std::make_unique<CliffordOptimizer>();
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not construct optimizer: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    try {
+        optimizer->init( false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->setTableau(tab);
+        optimizer->setArchitecture(arch);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Error during initialization: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    try {
+        optimizer->optimize();
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Error during optimization: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    optimizer->optimal_results.generateStringCircuit();
+
+    return optimizer->optimal_results;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -332,7 +364,8 @@ PYBIND11_MODULE(pyqmap, m) {
 
     py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP clifford synthesizing tool")
             .def(py::init<>())
-            .def_readwrite("sat", &CliffordOptResults::result)
+            .def_readwrite("result", &CliffordOptResults::result)
+            .def_readwrite("sat", &CliffordOptResults::sat)
             .def_readwrite("resultCircuit", &CliffordOptResults::resultStringCircuit)
             .def_readwrite("verbose", &CliffordOptResults::verbose)
             .def_readwrite("choose_best", &CliffordOptResults::choose_best)
@@ -349,7 +382,8 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("__repr__", &CliffordOptResults::getStrRepr);
 
     m.def("map", &map, "map a quantum circuit");
-    m.def("synthesize", &synthesize, "synthesize a quantum circuit");
+    m.def("synthesize", &synthesize, "synthesize a clifford circuit");
+    m.def("optimize", &synthesize, "optimize a clifford circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

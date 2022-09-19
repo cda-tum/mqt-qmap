@@ -7,7 +7,6 @@ from __future__ import annotations
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
-    CliffordOptResults,
     CommanderGrouping,
     Configuration,
     Encoding,
@@ -15,11 +14,11 @@ from mqt.qmap.pyqmap import (
     Layering,
     MappingResults,
     Method,
-    OptimizingStrategy,
     SwapReduction,
     map,
-    synthesize,
 )
+from mqt.qmap.load_architecture import load_architecture
+from mqt.qmap.load_calibration import load_calibration
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers import Backend
@@ -51,28 +50,30 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) ->
     raise ValueError("No initial layout found in QASM file.")
 
 
+
+
 def compile(
-    circ: QuantumCircuit | str,
-    arch: str | Arch | Architecture | Backend | None,
-    calibration: str | BackendProperties | Target | None = None,
-    method: str | Method = "heuristic",
-    initial_layout: str | InitialLayout = "dynamic",
-    layering: str | Layering = "individual_gates",
-    use_teleportation: bool = False,
-    teleportation_fake: bool = False,
-    teleportation_seed: int = 0,
-    encoding: str | Encoding = "naive",
-    commander_grouping: str | CommanderGrouping = "halves",
-    use_bdd: bool = False,
-    swap_reduction: str | SwapReduction = "coupling_limit",
-    swap_limit: int = 0,
-    include_WCNF: bool = False,
-    use_subsets: bool = True,
-    subgraph: set[int] | None = None,
-    pre_mapping_optimizations: bool = True,
-    post_mapping_optimizations: bool = True,
-    add_measurements_to_mapped_circuit: bool = True,
-    verbose: bool = False,
+        circ: QuantumCircuit | str,
+        arch: str | Arch | Architecture | Backend | None,
+        calibration: str | BackendProperties | Target | None = None,
+        method: str | Method = "heuristic",
+        initial_layout: str | InitialLayout = "dynamic",
+        layering: str | Layering = "individual_gates",
+        use_teleportation: bool = False,
+        teleportation_fake: bool = False,
+        teleportation_seed: int = 0,
+        encoding: str | Encoding = "naive",
+        commander_grouping: str | CommanderGrouping = "halves",
+        use_bdd: bool = False,
+        swap_reduction: str | SwapReduction = "coupling_limit",
+        swap_limit: int = 0,
+        include_WCNF: bool = False,
+        use_subsets: bool = True,
+        subgraph: set[int] | None = None,
+        pre_mapping_optimizations: bool = True,
+        post_mapping_optimizations: bool = True,
+        add_measurements_to_mapped_circuit: bool = True,
+        verbose: bool = False,
 ) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
@@ -123,40 +124,12 @@ def compile(
     if subgraph is None:
         subgraph = set()
 
-    architecture = Architecture()
     if arch is None and calibration is None:
         raise ValueError("Either arch or calibration must be specified")
 
-    if arch is not None:
-        if isinstance(arch, str):
-            try:
-                architecture.load_coupling_map(Arch(arch))
-            except ValueError:
-                architecture.load_coupling_map(arch)
-        elif isinstance(arch, Arch):
-            architecture.load_coupling_map(arch)
-        elif isinstance(arch, Architecture):
-            architecture = arch
-        elif isinstance(arch, Backend):
-            from mqt.qmap.qiskit.backend import import_backend
+    architecture = load_architecture(arch)
 
-            architecture = import_backend(arch)
-        else:
-            raise ValueError("No compatible type for architecture:", type(arch))
-
-    if calibration is not None:
-        if isinstance(calibration, str):
-            architecture.load_properties(calibration)
-        elif isinstance(calibration, BackendProperties):
-            from mqt.qmap.qiskit.backend import import_backend_properties
-
-            architecture.load_properties(import_backend_properties(calibration))
-        elif isinstance(calibration, Target):
-            from mqt.qmap.qiskit.backend import import_target
-
-            architecture.load_properties(import_target(calibration))
-        else:
-            raise ValueError("No compatible type for calibration:", type(calibration))
+    architecture = load_calibration(calibration, architecture)
 
     config = Configuration()
     config.method = Method(method)
@@ -187,62 +160,3 @@ def compile(
     return circ, results
 
 
-def make_circuit(
-    circ: Union[QuantumCircuit, str],
-    arch: Optional[Union[str, Arch, Architecture, Backend]],
-    calibration: Optional[Union[str, BackendProperties, Target]] = None,
-    use_binarysearch: Optional[bool] = False,
-) -> Tuple[QuantumCircuit, CliffordOptResults]:
-    """
-    Synthesize a circuit using the clifford synthesizer.
-    :param circ: Qiskit QuantumCircuit object or path to circuit file
-    :type circ: Union[QuantumCircuit, str]
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (Arch), qmap.Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
-    :type arch: Optional[Union[str, Arch, Architecture, Backend]]
-    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
-    :type calibration: Optional[Union[str, BackendProperties, Target]]
-    :param use_binarysearch:
-    :return:
-    """
-    architecture = Architecture()
-    if arch is None and calibration is None:
-        raise ValueError("Either arch or calibration must be specified")
-
-    if arch is not None:
-        if isinstance(arch, str):
-            try:
-                architecture.load_coupling_map(Arch(arch))
-            except ValueError:
-                architecture.load_coupling_map(arch)
-        elif isinstance(arch, Arch):
-            architecture.load_coupling_map(arch)
-        elif isinstance(arch, Architecture):
-            architecture = arch
-        elif isinstance(arch, Backend):
-            from mqt.qmap.qiskit.backend import import_backend
-
-            architecture = import_backend(arch)
-        else:
-            raise ValueError("No compatible type for architecture:", type(arch))
-
-    if calibration is not None:
-        if isinstance(calibration, str):
-            architecture.load_properties(calibration)
-        elif isinstance(calibration, BackendProperties):
-            from mqt.qmap.qiskit.backend import import_backend_properties
-
-            architecture.load_properties(import_backend_properties(calibration))
-        elif isinstance(calibration, Target):
-            from mqt.qmap.qiskit.backend import import_target
-
-            architecture.load_properties(import_target(calibration))
-        else:
-            raise ValueError("No compatible type for calibration:", type(calibration))
-
-    strategy = OptimizingStrategy.use_minimizer
-    if use_binarysearch:
-        strategy = OptimizingStrategy.minmax
-
-    results = synthesize(circ, architecture, strategy)
-
-    return QuantumCircuit.from_qasm_str(results.resultCircuit), results
