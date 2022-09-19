@@ -117,7 +117,7 @@ CliffordOptResults synthesize(const py::object& circ, Architecture& arch, Optimi
         throw std::invalid_argument(ss.str());
     }
 
-    //copying automatically generates the qasm dump, so we are done
+    // copying automatically generates the qasm dump, so we are done
     auto& results = optimizer->optimal_results;
 
     return results;
