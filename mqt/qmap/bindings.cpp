@@ -362,11 +362,10 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-    py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP clifford synthesizing tool")
+    py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
-            .def_readwrite("result", &CliffordOptResults::result)
-            .def_readwrite("sat", &CliffordOptResults::sat)
-            .def_readwrite("resultCircuit", &CliffordOptResults::resultStringCircuit)
+            .def_readwrite("sat", &CliffordOptResults::result)
+            .def_readwrite("result_circuit", &CliffordOptResults::resultStringCircuit)
             .def_readwrite("verbose", &CliffordOptResults::verbose)
             .def_readwrite("choose_best", &CliffordOptResults::choose_best)
             .def_readwrite("strategy", &CliffordOptResults::strategy)
