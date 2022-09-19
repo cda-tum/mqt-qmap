@@ -15,6 +15,9 @@ option(COVERAGE "Configure for coverage report generation")
 option(GENERATE_POSITION_INDEPENDENT_CODE "Generate position independent code")
 option(BUILD_QMAP_TESTS "Also build tests for QMAP project")
 
+set(BUILD_QMAP_TESTS ON)
+set(BINDINGS ON)
+
 if(DEFINED ENV{DEPLOY})
   set(DEPLOY
       $ENV{DEPLOY}

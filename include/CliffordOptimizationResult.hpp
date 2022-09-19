@@ -225,7 +225,7 @@ public:
             if (!skipfirst)
                 os << "," << std::endl;
             os << "\"";
-            os << escapeChars(tableau.getRepresentation(), "\"");
+            os << escapeChars(tableau.toString(), "\"");
             os << "\"";
             skipfirst = false;
         }
@@ -286,5 +286,11 @@ public:
         std::stringstream ss;
         dump(ss);
         return ss.str();
+    }
+
+    void generateStringCircuit() {
+        std::stringstream ss;
+        resultCircuit.dumpOpenQASM(ss);
+        resultStringCircuit = ss.str();
     }
 };

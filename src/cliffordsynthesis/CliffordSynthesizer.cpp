@@ -199,7 +199,7 @@ CliffordOptResults CliffordOptimizer::main_optimization(
     results.target            = target;
     results.total_seconds     = elapsed_milliseconds.count();
     results.sat               = result == Result::SAT;
-    results.doubleFidelity    = architecture.getCNOTFidelities();
+    results.doubleFidelity    = architecture.getFidelityTable();
     results.singleFidelity    = architecture.getSingleQubitFidelities();
     results.resultCM          = architecture.getCouplingMap();
     results.resultTableaus.clear();
@@ -240,13 +240,13 @@ CliffordOptResults CliffordOptimizer::main_optimization(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
                             if (architecture.isCalibrationDataAvailable())
                                 results.fidelity *=
-                                        (architecture.getCNOTFidelities()[qubitChoice.at(a)]
-                                                                         [qubitChoice.at(b)]);
+                                        (1 - std::log(architecture.getFidelityTable()[qubitChoice.at(a)]
+                                                                                     [qubitChoice.at(b)]));
                             TRACE() << "X(" << a << "," << b << ")" << std::endl;
                             if (architecture.isCalibrationDataAvailable()) {
                                 TRACE() << "Fidelity: "
-                                        << architecture.getCNOTFidelities()[qubitChoice.at(a)]
-                                                                           [qubitChoice.at(b)]
+                                        << (1 - std::log(architecture.getFidelityTable()[qubitChoice.at(a)]
+                                                                                        [qubitChoice.at(b)]))
                                         << std::endl;
                             }
                         }
@@ -334,7 +334,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each edge in the coupling map, get the fidelity cost
         for (const auto& edge: reducedCM) {
             LogicTerm fidelity = LogicTerm(
-                    architecture.getLogCNOTFidelities()[edge.first][edge.second] * 1000);
+                    (1 - std::log(architecture.getFidelityTable()[edge.first][edge.second])) * 1000);
             auto a = std::find(qubitChoice.begin(), qubitChoice.end(), edge.first);
             auto b = std::find(qubitChoice.begin(), qubitChoice.end(), edge.second);
             if (a == qubitChoice.end() || b == qubitChoice.end()) {
@@ -348,7 +348,7 @@ void CliffordOptimizer::make_fidelity_optimizer(
         // For each qubit, get the fidelity cost
         for (int a = 0; a < nqubits; ++a) {
             LogicTerm fidelity =
-                    LogicTerm(architecture.getLogSingleQubitFidelities()[a] * 1000);
+                    LogicTerm((1 - std::log(architecture.getSingleQubitFidelities()[a])) * 1000);
             // at each time t if there is a gate on a, add the cost
             for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
                 for (auto gate: Gates::singleQubitWithoutNOP) {
@@ -956,18 +956,25 @@ void CliffordOptimizer::makeMultipleGateConstraints(
     }
 }
 
-void CliffordOptimizer::init(qc::QuantumComputation& qc, bool pchoose_best, bool puse_embedding, unsigned char pnqubits, unsigned short pinitial_timesteps, OptimizingStrategy pstrategy, OptimizationTarget ptarget) {
+void CliffordOptimizer::init(bool pchoose_best, bool puse_embedding, unsigned char pnqubits, unsigned short pinitial_timesteps, OptimizingStrategy pstrategy, OptimizationTarget ptarget) {
     this->nqubits           = pnqubits;
     this->initial_timesteps = pinitial_timesteps;
     this->strategy          = pstrategy;
     this->target            = ptarget;
     this->choose_best       = pchoose_best;
     this->use_embedding     = puse_embedding;
-    this->circuit           = qc.clone();
     if (this->nqubits == 0) {
         this->nqubits = this->circuit.getNqubits();
     }
+}
 
+void CliffordOptimizer::setCircuit(const qc::QuantumComputation& qc) {
+    this->circuit = qc.clone();
     Tableau::initTableau(this->initialTableau, this->nqubits);
     Tableau::generateTableau(this->targetTableau, this->circuit);
+}
+
+void CliffordOptimizer::setTableau(Tableau& targetTabl) {
+    Tableau::initTableau(this->initialTableau, this->nqubits);
+    this->targetTableau = targetTabl;
 }

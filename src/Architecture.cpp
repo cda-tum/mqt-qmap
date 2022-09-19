@@ -207,21 +207,16 @@ void Architecture::createDistanceTable() {
 void Architecture::createFidelityTable() {
     fidelityTable.clear();
     fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
-    CNOTFidelityTable.clear();
-    CNOTFidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
 
     singleQubitFidelities.resize(nqubits, 1.0);
-    singleQubitLogFidelities.resize(nqubits, 1.0);
     for (const auto& [first, second]: couplingMap) {
         if (properties.twoQubitErrorRateAvailable(first, second)) {
             fidelityTable[first][second]     = 1.0 - properties.getTwoQubitErrorRate(first, second);
-            CNOTFidelityTable[first][second] = log(1.0 - properties.getTwoQubitErrorRate(first, second));
         }
     }
 
     for (const auto& [qubit, operationProps]: properties.singleQubitErrorRate.get()) {
         singleQubitFidelities[qubit]    = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
-        singleQubitLogFidelities[qubit] = log(1.0 - properties.getAverageSingleQubitErrorRate(qubit));
     }
 }
 
@@ -632,7 +627,7 @@ bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice, cons
 }
 
 void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
-    os << "{";
+    os << "{ ";
     for (const auto& edge: cm) {
         os << "(" << edge.first << " " << edge.second << ") ";
     }

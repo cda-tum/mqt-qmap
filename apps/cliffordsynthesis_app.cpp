@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
             }
         } else {
             const std::string tableau = vm["in"].as<std::string>();
-            opt.targetTableau.importString(tableau);
+            opt.targetTableau.importQiskitStabilizerString(tableau);
             opt.nqubits = opt.targetTableau.getQubitCount();
         }
 

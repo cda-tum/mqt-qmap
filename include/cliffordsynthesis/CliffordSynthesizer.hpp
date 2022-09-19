@@ -37,7 +37,9 @@
 class CliffordOptimizer {
 public:
     CliffordOptimizer() = default;
-    void init(qc::QuantumComputation& qc, bool pchoose_best = false, bool puse_embedding = false, unsigned char pnqubits = 0, unsigned short pinitial_timesteps = 0, OptimizingStrategy strategy = OptimizingStrategy::UseMinimizer, OptimizationTarget ptarget = OptimizationTarget::GATES);
+    void init(bool pchoose_best = false, bool puse_embedding = false, unsigned char pnqubits = 0, unsigned short pinitial_timesteps = 0, OptimizingStrategy strategy = OptimizingStrategy::UseMinimizer, OptimizationTarget ptarget = OptimizationTarget::GATES);
+    void setCircuit(const qc::QuantumComputation& qc);
+    void setTableau(Tableau& targetTabl);
     void optimize();
 
     void setArchitecture(const Architecture& arch) {
@@ -165,7 +167,9 @@ public:
         Y,
         Z,
         Sdag,
-        CX
+        CX,
+        CY,
+        CZ,
     };
 
     static std::string gateName(GATES gate) {
@@ -186,6 +190,10 @@ public:
                 return "Sdag";
             case CX:
                 return "CX";
+            case CY:
+                return "CY";
+            case CZ:
+                return "CZ";
             default:
                 return "";
         }
@@ -209,6 +217,10 @@ public:
                 return 6;
             case CX:
                 return 7;
+            case CY:
+                return 8;
+            case CZ:
+                return 9;
             default:
                 return -1;
         }
@@ -232,6 +244,10 @@ public:
                 return qc::OpType::Sdag;
             case CX:
                 return qc::OpType::X;
+            case CY:
+                return qc::OpType::Y;
+            case CZ:
+                return qc::OpType::Z;
             default:
                 return qc::OpType::None;
         }
@@ -247,7 +263,9 @@ public:
             GATES::Sdag};
 
     static constexpr GATES twoQubit[] = {
-            GATES::CX};
+            GATES::CX,
+            GATES::CY,
+            GATES::CZ};
 
     static constexpr GATES singleQubitWithoutNOP[] = {
             GATES::H,
@@ -264,6 +282,8 @@ public:
             GATES::Y,
             GATES::Z,
             GATES::Sdag,
-            GATES::CX};
+            GATES::CX,
+            GATES::CY,
+            GATES::CZ};
 };
 #endif //QMAP_CLIFFORDSYNTHESIS_H

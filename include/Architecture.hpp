@@ -258,17 +258,6 @@ public:
         return singleQubitFidelities;
     }
 
-    [[nodiscard]] const std::vector<std::vector<double>>& getCNOTFidelities() const {
-        return CNOTFidelityTable;
-    }
-    [[nodiscard]] const std::vector<double>& getLogSingleQubitFidelities() const {
-        return singleQubitLogFidelities;
-    }
-
-    [[nodiscard]] const std::vector<std::vector<double>>& getLogCNOTFidelities() const {
-        return CNOTFidelityTable;
-    }
-
     [[nodiscard]] bool bidirectional() const {
         return isBidirectional;
     }
@@ -276,7 +265,7 @@ public:
     [[nodiscard]] bool isArchitectureAvailable() const {
         return !(name.empty()) && nqubits != 0;
     }
-    [[nodiscard]] bool isCalibrationDataAvailable() {
+    [[nodiscard]] bool isCalibrationDataAvailable() const {
         return !(name.empty()) && !properties.empty();
     }
 
@@ -355,8 +344,6 @@ protected:
     Properties                           properties               = {};
     Matrix                               fidelityTable            = {};
     std::vector<double>                  singleQubitFidelities    = {};
-    std::vector<double>                  singleQubitLogFidelities = {};
-    Matrix                               CNOTFidelityTable        = {};
 
     void createDistanceTable();
     void createFidelityTable();

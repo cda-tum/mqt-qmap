@@ -144,8 +144,4 @@ std::set<std::pair<unsigned short, unsigned short>>
 getFullyConnectedMap(unsigned short nQubits);
 
 std::string escapeChars(const std::string& s, const std::string& chars);
-
-void getGateQubits(std::unique_ptr<qc::Operation>& gate, std::set<signed char>& qubits);
-
-void calculateQubitsUsed(qc::QuantumComputation& circ, std::set<signed char>& qubits);
 #endif //QMAP_UTILS_HPP

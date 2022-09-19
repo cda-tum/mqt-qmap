@@ -19,23 +19,23 @@ TEST(TestTableau, LoadTableau) {
     Tableau     tableau2{};
     std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     tableau_string = "Stabilizer = ['+IZ', '+ZI']";
 
-    tableau2.importString(tableau_string);
+    tableau2.fromString(tableau_string);
 
     EXPECT_EQ(tableau, tableau2);
 
     tableau_string = "Destabilizer = ['+IZ', '+XI']";
 
     tableau.clear();
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     tableau_string = "Stabilizer = ['+IX', '+ZI']";
 
     tableau2.clear();
-    tableau2.importString(tableau_string);
+    tableau2.fromString(tableau_string);
 
     EXPECT_EQ(tableau, tableau2);
 }
@@ -45,20 +45,18 @@ TEST(TestTableau, GetStrRepresentation) {
     Tableau     tableau2{};
     std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     std::string result_string = "2|1|2|3|4|R|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
 
-    EXPECT_EQ(tableau.getStrRepresentation(), result_string);
+    EXPECT_EQ(tableau.toString(), result_string);
 }
 
 TEST(TestTableau, DumpTableau) {
     Tableau     tableau{};
     std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
 
-    tableau.importString(tableau_string);
-
-    std::string result_string = "2|1|2|3|4|R|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
+    tableau.fromString(tableau_string);
 
     tableau.dump("tableau_dump.txt");
 }
@@ -67,7 +65,7 @@ TEST(TestTableau, AccessValues) {
     Tableau     tableau{};
     std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     EXPECT_EQ(tableau[0][0], 0);
     EXPECT_EQ(tableau[0][1], 0);
@@ -92,13 +90,13 @@ TEST(TestTableau, BasicFunctions) {
     Tableau     tableau{};
     std::string tableau_string = "Destabilizer = ['+XI', '+IX']";
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     tableau.clear();
 
     EXPECT_EQ(tableau.empty(), true);
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
 
     auto tableau2 = Tableau::getDiagonalTableau(2);
 
@@ -127,7 +125,7 @@ TEST(TestTableau, LoadTableauFrom) {
     Tableau     tableau1{};
     std::string tableau_string = "Stabilizer = ['+XX', '+ZZ']";
 
-    tableau.importString(tableau_string);
+    tableau.fromString(tableau_string);
     Tableau::generateTableau(tableau1, qc);
 
     EXPECT_EQ(tableau, tableau1);
