@@ -333,7 +333,7 @@ PYBIND11_MODULE(pyqmap, m) {
     py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
             .def_readwrite("sat", &CliffordOptResults::result)
-            .def_readwrite("resultCircuit", &CliffordOptResults::resultStringCircuit)
+            .def_readwrite("result_circuit", &CliffordOptResults::resultStringCircuit)
             .def_readwrite("verbose", &CliffordOptResults::verbose)
             .def_readwrite("choose_best", &CliffordOptResults::choose_best)
             .def_readwrite("strategy", &CliffordOptResults::strategy)
