@@ -10,8 +10,8 @@ from mqt.qmap.pyqmap import (
     Target,
 )
 
-from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
+
 
 def load_calibration(calibration: str | BackendProperties | Target | None = None,
                      architecture: Architecture = None) -> Architecture:
@@ -39,4 +39,3 @@ def load_calibration(calibration: str | BackendProperties | Target | None = None
         else:
             raise ValueError("No compatible type for calibration:", type(calibration))
     return architecture
-

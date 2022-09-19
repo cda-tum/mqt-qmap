@@ -107,6 +107,7 @@ public:
         os << "{\"CliffordOptimizationResult\":{" << std::endl;
         os << R"("verbose":")" << verbose << "\"," << std::endl;
         os << R"("choose_best":")" << choose_best << "\"," << std::endl;
+        os << R"("result":")" << toString(result) << "\"," << std::endl;
         os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
         os << R"("target":")" << toString(target) << "\"," << std::endl;
         os << R"("method":")" << toString(method) << "\"," << std::endl;
@@ -172,6 +173,7 @@ public:
         nlohmann::json resultJSON{};
         resultJSON["verbose"]           = verbose;
         resultJSON["choose_best"]       = choose_best;
+        resultJSON["result"]            = toString(result);
         resultJSON["strategy"]          = toString(strategy);
         resultJSON["target"]            = toString(target);
         resultJSON["method"]            = toString(method);

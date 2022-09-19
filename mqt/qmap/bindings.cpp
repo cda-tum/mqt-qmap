@@ -75,7 +75,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-CliffordOptResults optimize(const py::object& circ, Architecture& arch, OptimizingStrategy& strategy) {
+CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch, SynthesisStrategy& strategy) {
     qc::QuantumComputation qc{};
 
     loadQC(qc, circ);
@@ -90,7 +90,7 @@ CliffordOptResults optimize(const py::object& circ, Architecture& arch, Optimizi
     }
 
     try {
-        optimizer->init(false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->init(false, false, 0, 0, strategy, SynthesisTarget::GATES);
         optimizer->setCircuit(qc);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
@@ -113,10 +113,10 @@ CliffordOptResults optimize(const py::object& circ, Architecture& arch, Optimizi
 }
 
 // c++ binding function
-CliffordOptResults synthesize(const std::string& tableau, Architecture& arch, OptimizingStrategy& strategy) {
+CliffordOptimizationResults synthesize(const std::string& tableau, Architecture& arch, SynthesisStrategy& strategy) {
     auto tab = Tableau();
     try {
-        tab.importQiskitStabilizerString(tableau);
+        tab.fromString(tableau);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not parse tableau: " << e.what();
@@ -133,7 +133,7 @@ CliffordOptResults synthesize(const std::string& tableau, Architecture& arch, Op
     }
 
     try {
-        optimizer->init( false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->init(false, false, 0, 0, strategy, SynthesisTarget::GATES);
         optimizer->setTableau(tab);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
@@ -238,22 +238,29 @@ PYBIND11_MODULE(pyqmap, m) {
             // allow construction from string
             .def(py::init([](const std::string& str) -> SwapReduction { return swapReductionFromString(str); }));
 
-    py::enum_<OptimizationTarget>(m, "OptimizationTarget")
-            .value("gates", OptimizationTarget::GATES)
-            .value("depth", OptimizationTarget::DEPTH)
-            .value("fidelity", OptimizationTarget::FIDELITY)
-            .value("gates_only_cnot", OptimizationTarget::GATES_ONLY_CNOT)
+    py::enum_<SynthesisTarget>(m, "SynthesisTarget")
+            .value("gates", SynthesisTarget::GATES)
+            .value("depth", SynthesisTarget::DEPTH)
+            .value("fidelity", SynthesisTarget::FIDELITY)
+            .value("gates_only_cnot", SynthesisTarget::GATES_ONLY_CNOT)
             .export_values()
-            .def(py::init([](const std::string& str) -> OptimizationTarget { return optTargetFromString(str); }));
+            .def(py::init([](const std::string& str) -> SynthesisTarget { return synthesisTargetFromString(str); }));
 
-    py::enum_<OptimizingStrategy>(m, "OptimizingStrategy")
-            .value("use_minimizer", OptimizingStrategy::UseMinimizer)
-            .value("minmax", OptimizingStrategy::MinMax)
-            .value("start_low", OptimizingStrategy::StartLow)
-            .value("start_high", OptimizingStrategy::StartHigh)
-            .value("split_iter", OptimizingStrategy::SplitIter)
+    py::enum_<SynthesisStrategy>(m, "SynthesisStrategy")
+            .value("use_minimizer", SynthesisStrategy::UseMinimizer)
+            .value("minmax", SynthesisStrategy::MinMax)
+            .value("start_low", SynthesisStrategy::StartLow)
+            .value("start_high", SynthesisStrategy::StartHigh)
+            .value("split_iter", SynthesisStrategy::SplitIter)
             .export_values()
-            .def(py::init([](const std::string& str) -> OptimizingStrategy { return optStrategyFromString(str); }));
+            .def(py::init([](const std::string& str) -> SynthesisStrategy { return synthesisStrategyFromString(str); }));
+
+    py::enum_<SynthesisResult>(m, "SynthesisResult")
+            .value("sat", SynthesisResult::SAT)
+            .value("unsat", SynthesisResult::UNSAT)
+            .value("undef", SynthesisResult::UNDEF)
+            .export_values()
+            .def(py::init([](const std::string& str) -> SynthesisResult { return synthesisResultFromString(str); }));
 
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
@@ -362,23 +369,23 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-    py::class_<CliffordOptResults>(m, "CliffordOptResults", "Results of the MQT QMAP Clifford synthesis tool")
+    py::class_<CliffordOptimizationResults>(m, "CliffordOptimizationResults", "Results of the MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
-            .def_readwrite("sat", &CliffordOptResults::result)
-            .def_readwrite("result_circuit", &CliffordOptResults::resultStringCircuit)
-            .def_readwrite("verbose", &CliffordOptResults::verbose)
-            .def_readwrite("choose_best", &CliffordOptResults::choose_best)
-            .def_readwrite("strategy", &CliffordOptResults::strategy)
-            .def_readwrite("target", &CliffordOptResults::target)
-            .def_readwrite("method", &CliffordOptResults::method)
-            .def_readwrite("qubits", &CliffordOptResults::nqubits)
-            .def_readwrite("initial_timesteps", &CliffordOptResults::initial_timesteps)
-            .def_readwrite("gate_count", &CliffordOptResults::gate_count)
-            .def_readwrite("depth", &CliffordOptResults::depth)
-            .def_readwrite("fidelity", &CliffordOptResults::fidelity)
-            .def_readwrite("total_seconds", &CliffordOptResults::total_seconds)
-            .def("json", &CliffordOptResults::json)
-            .def("__repr__", &CliffordOptResults::getStrRepr);
+            .def_readwrite("sat", &CliffordOptimizationResults::result, "Whether the optimization problem was satisfiable")
+            .def_readwrite("result_circuit", &CliffordOptimizationResults::resultStringCircuit, "The resulting circuit")
+            .def_readwrite("verbose", &CliffordOptimizationResults::verbose, "Verbosity of the debug messages")
+            .def_readwrite("choose_best", &CliffordOptimizationResults::choose_best, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
+            .def_readwrite("strategy", &CliffordOptimizationResults::strategy, "The strategy used to optimize the circuit")
+            .def_readwrite("target", &CliffordOptimizationResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
+            .def_readwrite("method", &CliffordOptimizationResults::method, "The synthesis method, at the moment only 'z3' is supported")
+            .def_readwrite("qubits", &CliffordOptimizationResults::nqubits, "The number of qubits in the resulting circuit")
+            .def_readwrite("initial_timesteps", &CliffordOptimizationResults::initial_timesteps, "The number of initial timesteps alloted for synthesis")
+            .def_readwrite("gate_count", &CliffordOptimizationResults::gate_count, "The number of gates in the resulting circuit")
+            .def_readwrite("depth", &CliffordOptimizationResults::depth, "The depth of the resulting circuit")
+            .def_readwrite("fidelity", &CliffordOptimizationResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
+            .def_readwrite("total_seconds", &CliffordOptimizationResults::total_seconds, "The total time taken to synthesize the circuit")
+            .def("json", &CliffordOptimizationResults::json)
+            .def("__repr__", &CliffordOptimizationResults::getStrRepr);
 
     m.def("map", &map, "map a quantum circuit");
     m.def("synthesize", &synthesize, "synthesize a clifford circuit");

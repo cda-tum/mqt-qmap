@@ -12,6 +12,7 @@ from mqt.qmap.pyqmap import (
 
 from qiskit.providers import Backend
 
+
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
     """
     Load an architecture from a string, Arch, Architecture, or Backend.
@@ -41,4 +42,3 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
             raise ValueError("No compatible type for architecture:", type(arch))
 
     return architecture
-

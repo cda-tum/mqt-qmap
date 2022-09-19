@@ -9,8 +9,8 @@ from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     CliffordOptResults,
-    OptimizingStrategy,
-    Configuration,
+    SynthesisStrategy,
+    SynthesisTarget,
     optimize,
     synthesize,
 )
@@ -27,7 +27,8 @@ def optimize_clifford(
         circ: QuantumCircuit | str,
         arch: str | Arch | Architecture | Backend | None = None,
         calibration: str | BackendProperties | Target | None = None,
-        use_binary_search: bool = False,
+        target: str | None = None,
+        strategy: str | None = None,
 ) -> tuple[QuantumCircuit, CliffordOptResults]:
     """
     Optimize a circuit using the clifford synthesizer.
@@ -37,9 +38,8 @@ def optimize_clifford(
 
     architecture = load_calibration(calibration, architecture)
 
-    strategy = OptimizingStrategy.use_minimizer
-    if use_binary_search:
-        strategy = OptimizingStrategy.minmax
+    strategy = SynthesisStrategy(strategy)
+    target = SynthesisTarget(target)
 
     results = optimize(circ, architecture, strategy)
 
@@ -50,7 +50,8 @@ def synthesize_clifford(
         tableau: str,
         arch: str | Arch | Architecture | Backend | None = None,
         calibration: str | BackendProperties | Target | None = None,
-        use_binary_search: bool = False,
+        target: str | None = None,
+        strategy: str | None = None,
 ) -> tuple[QuantumCircuit, CliffordOptResults]:
     """
     Synthesize a clifford circuit using the clifford synthesizer and a tableau input.
@@ -60,9 +61,8 @@ def synthesize_clifford(
 
     architecture = load_calibration(calibration, architecture)
 
-    strategy = OptimizingStrategy.use_minimizer
-    if use_binary_search:
-        strategy = OptimizingStrategy.minmax
+    strategy = SynthesisStrategy(strategy)
+    target = SynthesisTarget(target)
 
     results = synthesize(tableau, architecture, strategy)
 
