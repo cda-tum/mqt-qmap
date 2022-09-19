@@ -5,16 +5,15 @@
 
 from __future__ import annotations
 
-from mqt.qmap.pyqmap import (
-    Architecture,
-    Target,
-)
+from mqt.qmap.pyqmap import Architecture, Target
 
 from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
 
-def load_calibration(calibration: str | BackendProperties | Target | None = None,
-                     architecture: Architecture = None) -> Architecture:
+
+def load_calibration(
+    calibration: str | BackendProperties | Target | None = None, architecture: Architecture = None
+) -> Architecture:
     """
     Load a calibration from a string, BackendProperties, or Target.
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
@@ -39,4 +38,3 @@ def load_calibration(calibration: str | BackendProperties | Target | None = None
         else:
             raise ValueError("No compatible type for calibration:", type(calibration))
     return architecture
-

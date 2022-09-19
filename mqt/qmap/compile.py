@@ -4,6 +4,8 @@
 #
 from __future__ import annotations
 
+from mqt.qmap.load_architecture import load_architecture
+from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
@@ -17,8 +19,6 @@ from mqt.qmap.pyqmap import (
     SwapReduction,
     map,
 )
-from mqt.qmap.load_architecture import load_architecture
-from mqt.qmap.load_calibration import load_calibration
 
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.providers import Backend
@@ -50,30 +50,28 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) ->
     raise ValueError("No initial layout found in QASM file.")
 
 
-
-
 def compile(
-        circ: QuantumCircuit | str,
-        arch: str | Arch | Architecture | Backend | None,
-        calibration: str | BackendProperties | Target | None = None,
-        method: str | Method = "heuristic",
-        initial_layout: str | InitialLayout = "dynamic",
-        layering: str | Layering = "individual_gates",
-        use_teleportation: bool = False,
-        teleportation_fake: bool = False,
-        teleportation_seed: int = 0,
-        encoding: str | Encoding = "naive",
-        commander_grouping: str | CommanderGrouping = "halves",
-        use_bdd: bool = False,
-        swap_reduction: str | SwapReduction = "coupling_limit",
-        swap_limit: int = 0,
-        include_WCNF: bool = False,
-        use_subsets: bool = True,
-        subgraph: set[int] | None = None,
-        pre_mapping_optimizations: bool = True,
-        post_mapping_optimizations: bool = True,
-        add_measurements_to_mapped_circuit: bool = True,
-        verbose: bool = False,
+    circ: QuantumCircuit | str,
+    arch: str | Arch | Architecture | Backend | None,
+    calibration: str | BackendProperties | Target | None = None,
+    method: str | Method = "heuristic",
+    initial_layout: str | InitialLayout = "dynamic",
+    layering: str | Layering = "individual_gates",
+    use_teleportation: bool = False,
+    teleportation_fake: bool = False,
+    teleportation_seed: int = 0,
+    encoding: str | Encoding = "naive",
+    commander_grouping: str | CommanderGrouping = "halves",
+    use_bdd: bool = False,
+    swap_reduction: str | SwapReduction = "coupling_limit",
+    swap_limit: int = 0,
+    include_WCNF: bool = False,
+    use_subsets: bool = True,
+    subgraph: set[int] | None = None,
+    pre_mapping_optimizations: bool = True,
+    post_mapping_optimizations: bool = True,
+    add_measurements_to_mapped_circuit: bool = True,
+    verbose: bool = False,
 ) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits
 
@@ -158,5 +156,3 @@ def compile(
     circ._layout = layout
 
     return circ, results
-
-

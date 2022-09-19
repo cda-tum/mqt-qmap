@@ -5,12 +5,10 @@
 
 from __future__ import annotations
 
-from mqt.qmap.pyqmap import (
-    Arch,
-    Architecture
-)
+from mqt.qmap.pyqmap import Arch, Architecture
 
 from qiskit.providers import Backend
+
 
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
     """
@@ -41,4 +39,3 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
             raise ValueError("No compatible type for architecture:", type(arch))
 
     return architecture
-

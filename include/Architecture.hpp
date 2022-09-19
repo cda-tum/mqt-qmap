@@ -341,9 +341,9 @@ protected:
     bool                                 isBidirectional        = true;
     Matrix                               distanceTable          = {};
     std::vector<std::pair<short, short>> teleportationQubits{};
-    Properties                           properties               = {};
-    Matrix                               fidelityTable            = {};
-    std::vector<double>                  singleQubitFidelities    = {};
+    Properties                           properties            = {};
+    Matrix                               fidelityTable         = {};
+    std::vector<double>                  singleQubitFidelities = {};
 
     void createDistanceTable();
     void createFidelityTable();

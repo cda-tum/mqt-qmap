@@ -133,7 +133,7 @@ CliffordOptResults synthesize(const std::string& tableau, Architecture& arch, Op
     }
 
     try {
-        optimizer->init( false, false, 0, 0, strategy, OptimizationTarget::GATES);
+        optimizer->init(false, false, 0, 0, strategy, OptimizationTarget::GATES);
         optimizer->setTableau(tab);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
