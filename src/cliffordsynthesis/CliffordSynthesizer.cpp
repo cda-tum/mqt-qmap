@@ -405,7 +405,7 @@ void CliffordOptimizer::runMinimizer(
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running minimizer" << std::endl;
     CliffordOptimizationResults r = main_optimization(timesteps, reducedCM, qubitChoice,
-                                             initialTableau, targetTableau);
+                                                      initialTableau, targetTableau);
     updateResults(r);
 }
 void CliffordOptimizer::runStartLow(
@@ -428,7 +428,7 @@ void CliffordOptimizer::runStartHigh(
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running start high" << std::endl;
     CliffordOptimizationResults r;
-    int                old_timesteps = timesteps;
+    int                         old_timesteps = timesteps;
     while (r.result == SynthesisResult::SAT || r.result == SynthesisResult::UNDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
         r = main_optimization(timesteps, reducedCM, qubitChoice, initialTableau,
@@ -447,8 +447,8 @@ void CliffordOptimizer::runMinMax(
         const std::vector<unsigned short>& qubitChoice) {
     DEBUG() << "Running minmax" << std::endl;
     CliffordOptimizationResults r;
-    int                t     = timesteps;
-    int                upper = timesteps, lower = 0;
+    int                         t     = timesteps;
+    int                         upper = timesteps, lower = 0;
     while (std::abs(upper - lower) > 1) {
         DEBUG() << "Current t=" << t << std::endl;
         r = main_optimization(t, reducedCM, qubitChoice, initialTableau,
@@ -488,17 +488,17 @@ void CliffordOptimizer::runSplitIter(
         return;
     }
     DEBUG() << "Running split iter" << std::endl;
-    Tableau                          fullTableau   = targetTableau;
-    auto                             circuit_split = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
-    int                              split         = std::min(5, nqubits / 2);
-    std::vector<std::thread*>        threads;
+    Tableau                                   fullTableau   = targetTableau;
+    auto                                      circuit_split = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
+    int                                       split         = std::min(5, nqubits / 2);
+    std::vector<std::thread*>                 threads;
     std::vector<CliffordOptimizationResults*> results;
-    int                              nThreads = nthreads;
+    int                                       nThreads = nthreads;
     while (true) {
         results.clear();
         DEBUG() << "Current split size: " << split << std::endl;
         DEBUG() << "Current circuit split size: " << circuit_split << std::endl;
-        auto               start = std::chrono::high_resolution_clock::now();
+        auto                        start = std::chrono::high_resolution_clock::now();
         CliffordOptimizationResults total_result;
         total_result.result = SynthesisResult::SAT;
         total_result.resultCircuit.addQubitRegister(nqubits);

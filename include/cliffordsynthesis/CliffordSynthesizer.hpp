@@ -57,9 +57,9 @@ public:
     unsigned short         initial_timesteps = 0U;
     int                    verbose           = 0;
     int                    nthreads          = 1;
-    SynthesisStrategy     strategy          = SynthesisStrategy::UseMinimizer;
-    SynthesisTarget     target            = SynthesisTarget::GATES;
-    SynthesisMethod     method            = SynthesisMethod::Z3;
+    SynthesisStrategy      strategy          = SynthesisStrategy::UseMinimizer;
+    SynthesisTarget        target            = SynthesisTarget::GATES;
+    SynthesisMethod        method            = SynthesisMethod::Z3;
     qc::QuantumComputation circuit;
 
     std::vector<CouplingMap> highestFidelityMap;
@@ -95,7 +95,7 @@ public:
     CliffordOptimizationResults optimal_results{};
 
 protected:
-    Architecture       architecture{};
+    Architecture                architecture{};
     CliffordOptimizationResults main_optimization(
             int                                                        timesteps,
             const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
