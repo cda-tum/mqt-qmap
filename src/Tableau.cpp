@@ -80,7 +80,7 @@ void Tableau::generateTableau(Tableau& tableau, const qc::QuantumComputation& ci
                 auto compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
                 auto cit    = compOp->begin();
                 while (cit != compOp->end() && current_g >= begin &&
-                       (current_g < end )) {
+                       (current_g < end)) {
                     tableau.applyGate((*cit));
                     ++cit;
                     ++current_g;

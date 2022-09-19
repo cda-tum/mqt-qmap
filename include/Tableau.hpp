@@ -92,8 +92,8 @@ public:
     [[nodiscard]] Tableau        embedTableau(std::size_t nQubits);
 
     friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
-       os << dt.toString();
-       return os;
+        os << dt.toString();
+        return os;
     }
     friend std::istream& operator>>(std::istream& is, Tableau& dt) {
         if (is.good()) {
@@ -105,7 +105,7 @@ public:
     }
 
     [[nodiscard]] std::string toString() const;
-    void fromString(const std::string& str);
+    void                      fromString(const std::string& str);
 
     [[nodiscard]] static double tableauDistance(const TableauType& tableau1, const TableauType& tableau2, std::size_t nQubits);
 
@@ -116,6 +116,5 @@ private:
     void applyGateS(dd::Qubit target, std::size_t nqubits);
     void applyGateSdag(dd::Qubit target, std::size_t nqubits);
     void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
-
 };
 #endif //QMAP_TABLEAU_HPP

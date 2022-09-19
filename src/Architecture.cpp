@@ -211,12 +211,12 @@ void Architecture::createFidelityTable() {
     singleQubitFidelities.resize(nqubits, 1.0);
     for (const auto& [first, second]: couplingMap) {
         if (properties.twoQubitErrorRateAvailable(first, second)) {
-            fidelityTable[first][second]     = 1.0 - properties.getTwoQubitErrorRate(first, second);
+            fidelityTable[first][second] = 1.0 - properties.getTwoQubitErrorRate(first, second);
         }
     }
 
     for (const auto& [qubit, operationProps]: properties.singleQubitErrorRate.get()) {
-        singleQubitFidelities[qubit]    = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
+        singleQubitFidelities[qubit] = 1.0 - properties.getAverageSingleQubitErrorRate(qubit);
     }
 }
 

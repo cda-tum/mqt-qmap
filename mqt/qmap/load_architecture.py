@@ -5,10 +5,7 @@
 
 from __future__ import annotations
 
-from mqt.qmap.pyqmap import (
-    Arch,
-    Architecture
-)
+from mqt.qmap.pyqmap import Arch, Architecture
 
 from qiskit.providers import Backend
 
