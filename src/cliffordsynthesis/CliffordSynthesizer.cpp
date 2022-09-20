@@ -13,30 +13,30 @@
 #include "utils.hpp"
 #include "utils/logging.hpp"
 
-void CliffordOptimizer::optimize() {
+void CliffordSynthesizer::optimize() {
     TRACE() << "Strategy: " << toString(strategy) << std::endl;
     TRACE() << "Target: " << toString(target) << std::endl;
     TRACE() << "Method: " << toString(method) << std::endl;
 
-    auto                     total_start = std::chrono::high_resolution_clock::now();
+    auto                     totalStart = std::chrono::high_resolution_clock::now();
     std::vector<CouplingMap> reducedMaps;
     architecture.getReducedCouplingMaps(nqubits, reducedMaps);
     auto subsets =
-            (choose_best ? highestFidelityMap : reducedMaps);
+            (chooseBest ? highestFidelityMap : reducedMaps);
     for (const auto& subset: subsets) {
-        std::vector<unsigned short> qubitMap{Architecture::getQubitList(subset)};
+        std::vector<std::uint16_t> qubitMap{Architecture::getQubitList(subset)};
 
-        DEBUG() << "Reduced Coupling Map" << (choose_best ? " (best)" : "") << ": ";
+        DEBUG() << "Reduced Coupling Map" << (chooseBest ? " (best)" : "") << ": ";
         std::stringstream strings;
         Architecture::printCouplingMap(subset, strings);
         DEBUG() << strings.str();
         DEBUG() << "Qubit Map: " << qubitMap;
         DEBUG() << "Coupling Map Fidelity: "
                 << Architecture::getAverageArchitectureFidelity(architecture.getCouplingMap(),
-                                                                std::set<unsigned short>(qubitMap.begin(), qubitMap.end()),
+                                                                std::set<std::uint16_t>(qubitMap.begin(), qubitMap.end()),
                                                                 architecture.getProperties());
         int timesteps =
-                initial_timesteps == 0 ? nqubits * nqubits : initial_timesteps;
+                initialTimesteps == 0 ? nqubits * nqubits : initialTimesteps;
         if (strategy == SynthesisStrategy::UseMinimizer) {
             runMinimizer(timesteps, subset, qubitMap);
         }
@@ -52,20 +52,21 @@ void CliffordOptimizer::optimize() {
         if (strategy == SynthesisStrategy::SplitIter) {
             runSplitIter(subset, qubitMap);
         }
-        if (choose_best && optimal_results.sat)
+        if (chooseBest && optimalResults.sat) {
             break;
+        }
     }
 
-    auto                          total_end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff      = total_end - total_start;
+    auto                          totalEnd = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff     = totalEnd - totalStart;
     INFO() << "Time: " << diff.count() << std::endl;
-    optimal_results.total_seconds = diff.count();
+    optimalResults.totalSeconds = diff.count();
 }
 
-CliffordOptimizationResults CliffordOptimizer::main_optimization(
-        int                                                        timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, Tableau& initialTab,
+CliffordOptimizationResults CliffordSynthesizer::mainOptimization(
+        int                                            timesteps,
+        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
+        const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTab,
         Tableau& targetTab) {
     std::unique_ptr<LogicBlock> lb;
     using namespace logicbase;
@@ -80,7 +81,7 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
             lb = logicutil::getZ3LogicOptimizer(success, true, params);
         } else {
             logicutil::Params params;
-            params.addParam("threads", unsigned(nthreads / 2));
+            params.addParam("threads", static_cast<unsigned>(nthreads / 2));
             lb = logicutil::getZ3LogicBlock(success, true, params);
         }
     } else {
@@ -93,8 +94,8 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
     LogicMatrix   x{};
     LogicMatrix   z{};
     LogicVector   r{};
-    LogicMatrix3D g_s{};
-    LogicMatrix3D g_c{};
+    LogicMatrix3D gS{};
+    LogicMatrix3D gC{};
 
     LogicTerm changes = LogicTerm(true);
 
@@ -104,25 +105,25 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
    * k before gate k is applied
    * i column
    */
-    std::stringstream x_name{};
-    std::stringstream z_name{};
-    std::stringstream r_name{};
+    std::stringstream xName{};
+    std::stringstream zName{};
+    std::stringstream rName{};
     for (int k = 0; k < timesteps + 1; ++k) {
         x.emplace_back();
         z.emplace_back();
         for (int i = 0; i < nqubits; ++i) {
-            x_name.str("");
-            z_name.str("");
-            x_name << "x_" << k << "_" << i;
-            z_name << "z_" << k << "_" << i;
+            xName.str("");
+            zName.str("");
+            xName << "x_" << k << "_" << i;
+            zName << "z_" << k << "_" << i;
             x.back().push_back(
-                    lb->makeVariable(x_name.str(), CType::BITVECTOR, nqubits));
+                    lb->makeVariable(xName.str(), CType::BITVECTOR, nqubits));
             z.back().push_back(
-                    lb->makeVariable(z_name.str(), CType::BITVECTOR, nqubits));
+                    lb->makeVariable(zName.str(), CType::BITVECTOR, nqubits));
         }
-        r_name.str("");
-        r_name << "r_" << k;
-        r.push_back(lb->makeVariable(r_name.str(), CType::BITVECTOR, nqubits));
+        rName.str("");
+        rName << "r_" << k;
+        r.push_back(lb->makeVariable(rName.str(), CType::BITVECTOR, nqubits));
     }
 
     /*
@@ -131,26 +132,26 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
    * i qubit 1
    * j qubit
    */
-    std::stringstream g_name{};
-    for (int gate_step = 0; gate_step < timesteps + 1; ++gate_step) {
-        g_s.emplace_back();
-        for (auto gate: Gates::singleQubit) {
-            g_s.back().emplace_back();
+    std::stringstream gName{};
+    for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        gS.emplace_back();
+        for (auto gate: Gates::SINGLE_QUBIT) {
+            gS.back().emplace_back();
             for (int j = 0; j < nqubits; ++j) {
-                g_name.str("");
-                g_name << "g_" << gate_step << "_" << Gates::gateName(gate) << "_" << j;
-                g_s.back().back().push_back(lb->makeVariable(g_name.str()));
+                gName.str("");
+                gName << "g_" << gateStep << "_" << Gates::gateName(gate) << "_" << j;
+                gS.back().back().push_back(lb->makeVariable(gName.str()));
             }
         }
     }
-    for (int gate_step = 0; gate_step < timesteps + 1; ++gate_step) {
-        g_c.emplace_back();
+    for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        gC.emplace_back();
         for (int j = 0; j < nqubits; ++j) {
-            g_c.back().emplace_back();
+            gC.back().emplace_back();
             for (int l = 0; l < nqubits; ++l) {
-                g_name.str("");
-                g_name << "g_" << gate_step << "_CNOT_" << j << "_" << l;
-                g_c.back().back().push_back(lb->makeVariable(g_name.str()));
+                gName.str("");
+                gName << "g_" << gateStep << "_CNOT_" << j << "_" << l;
+                gC.back().back().push_back(lb->makeVariable(gName.str()));
             }
         }
     }
@@ -159,14 +160,14 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
     assertTableau(targetTab, lb, x, z, r, nqubits, timesteps);
 
     if (target == SynthesisTarget::DEPTH) {
-        make_depth_optimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, g_s,
-                             g_c);
+        makeDepthOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
+                           gC);
     } else if (target == SynthesisTarget::GATES || target == SynthesisTarget::GATES_ONLY_CNOT) {
-        make_gate_optimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, g_s,
-                            g_c);
+        makeGateOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
+                          gC);
     } else if (target == SynthesisTarget::FIDELITY) {
-        make_fidelity_optimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, g_s,
-                                g_c);
+        makeFidelityOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
+                              gC);
     } else {
         ERROR() << "Unknown target" << std::endl;
         return CliffordOptimizationResults{};
@@ -177,8 +178,8 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
 
     lb->produceInstance();
 
-    auto mod_gen = std::chrono::high_resolution_clock::now();
-    diff         = mod_gen - formulation;
+    auto modGen = std::chrono::high_resolution_clock::now();
+    diff        = modGen - formulation;
     INFO() << "Time to generate Model: " << diff.count() << std::endl;
 
     TRACE() << "Clauses: " << TermImpl::getNextId(lb.get()) << std::endl;
@@ -187,21 +188,21 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
     Result result = lb->solve();
 
     auto end = std::chrono::high_resolution_clock::now();
-    diff     = end - mod_gen;
+    diff     = end - modGen;
     INFO() << "Time to solve Model: " << diff.count() << std::endl;
-    std::chrono::duration<double, std::milli> elapsed_milliseconds = end - start;
+    std::chrono::duration<double, std::milli> elapsedMilliseconds = end - start;
     CliffordOptimizationResults               results{};
-    results.verbose           = verbose;
-    results.choose_best       = choose_best;
-    results.nqubits           = nqubits;
-    results.initial_timesteps = timesteps;
-    results.strategy          = strategy;
-    results.target            = target;
-    results.total_seconds     = elapsed_milliseconds.count();
-    results.sat               = result == Result::SAT;
-    results.doubleFidelity    = architecture.getFidelityTable();
-    results.singleFidelity    = architecture.getSingleQubitFidelities();
-    results.resultCM          = architecture.getCouplingMap();
+    results.verbose          = verbose;
+    results.chooseBest       = chooseBest;
+    results.nqubits          = nqubits;
+    results.initialTimesteps = timesteps;
+    results.strategy         = strategy;
+    results.target           = target;
+    results.totalSeconds     = elapsedMilliseconds.count();
+    results.sat              = result == Result::SAT;
+    results.doubleFidelity   = architecture.getFidelityTable();
+    results.singleFidelity   = architecture.getSingleQubitFidelities();
+    results.resultCM         = architecture.getCouplingMap();
     results.resultTableaus.clear();
 
     if (result == Result::SAT) {
@@ -209,39 +210,41 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
         Model*                 model = lb->getModel();
         qc::QuantumComputation resultCircuit;
         resultCircuit.addQubitRegister(nqubits);
-        results.gate_count = 0;
-        results.depth      = 0;
-        results.fidelity   = 1;
-        for (int gate_step = 0; gate_step < timesteps + 1; ++gate_step) {
-            int old_gate_count = results.gate_count;
-            TRACE() << "Gate Step: " << gate_step << std::endl
-                    << " Actual gate count: " << results.gate_count << std::endl
+        results.gateCount = 0;
+        results.depth     = 0;
+        results.fidelity  = 1;
+        for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+            int oldGateCount = results.gateCount;
+            TRACE() << "Gate Step: " << gateStep << std::endl
+                    << " Actual gate count: " << results.gateCount << std::endl
                     << " Depth: " << results.depth << std::endl
                     << " Fidelity: " << results.fidelity << std::endl;
-            if (gate_step > 0) {
+            if (gateStep > 0) {
                 for (int a = 0; a < nqubits; ++a) {
-                    for (auto gate: Gates::singleQubitWithoutNOP) {
-                        if (model->getBoolValue(g_s[gate_step][Gates::toIndex(gate)][a], lb.get())) {
+                    for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                        if (model->getBoolValue(gS[gateStep][Gates::toIndex(gate)][a], lb.get())) {
                             resultCircuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
-                            if (architecture.isCalibrationDataAvailable())
+                            if (architecture.isCalibrationDataAvailable()) {
                                 results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
+                            }
                             TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
                             if (architecture.isCalibrationDataAvailable()) {
                                 TRACE() << " Fidelity: " << architecture.getSingleQubitFidelities()[a]
                                         << std::endl;
                             }
-                            ++results.gate_count;
+                            ++results.gateCount;
                         }
                     }
                     for (int b = 0; b < nqubits; ++b) {
-                        if (model->getBoolValue(g_c[gate_step][a][b], lb.get())) {
-                            results.gate_count++;
+                        if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
+                            results.gateCount++;
                             resultCircuit.emplace_back<qc::StandardOperation>(
                                     nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
-                            if (architecture.isCalibrationDataAvailable())
+                            if (architecture.isCalibrationDataAvailable()) {
                                 results.fidelity *=
                                         (1 - std::log(architecture.getFidelityTable()[qubitChoice.at(a)]
                                                                                      [qubitChoice.at(b)]));
+                            }
                             TRACE() << "X(" << a << "," << b << ")" << std::endl;
                             if (architecture.isCalibrationDataAvailable()) {
                                 TRACE() << "Fidelity: "
@@ -253,7 +256,7 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
                     }
                 }
             }
-            if (old_gate_count < results.gate_count) {
+            if (oldGateCount < results.gateCount) {
                 results.depth++;
             }
             auto tableau = results.resultTableaus.emplace_back();
@@ -261,12 +264,12 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
             results.resultTableaus.back() = tableau;
             Tableau::initTableau(modelTableau, nqubits);
             for (int i = 0; i < nqubits; ++i) {
-                modelTableau.populateTableauFrom(model->getBitvectorValue(x[gate_step][i], lb.get()),
+                modelTableau.populateTableauFrom(model->getBitvectorValue(x[gateStep][i], lb.get()),
                                                  nqubits, i);
-                modelTableau.populateTableauFrom(model->getBitvectorValue(z[gate_step][i], lb.get()),
+                modelTableau.populateTableauFrom(model->getBitvectorValue(z[gateStep][i], lb.get()),
                                                  nqubits, i + nqubits);
             }
-            modelTableau.populateTableauFrom(model->getBitvectorValue(r[gate_step], lb.get()),
+            modelTableau.populateTableauFrom(model->getBitvectorValue(r[gateStep], lb.get()),
                                              nqubits, 2 * nqubits);
             if (verbose >= 5) {
                 TRACE() << modelTableau;
@@ -278,7 +281,8 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
     if (result == Result::SAT) {
         DEBUG() << "SAT" << std::endl;
         return results;
-    } else {
+    }
+    {
         results.result = SynthesisResult::UNSAT;
         DEBUG() << "UNSAT" << std::endl;
         return results;
@@ -286,28 +290,24 @@ CliffordOptimizationResults CliffordOptimizer::main_optimization(
     return results;
 }
 
-void CliffordOptimizer::make_depth_optimizer(
-        int                                                        timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-        const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
+void CliffordSynthesizer::makeDepthOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                                qubitChoice, g_s, g_c);
+                                qubitChoice, gS, gC);
     // COST
     if (strategy == SynthesisStrategy::UseMinimizer ||
         strategy == SynthesisStrategy::SplitIter) {
         LogicTerm cost = LogicTerm(0);
-        for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+        for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
             LogicTerm anyGate = LogicTerm(true);
             for (int a = 0; a < nqubits; ++a) {
-                for (auto gate: Gates::singleQubitWithoutNOP) {
-                    anyGate = anyGate && !g_s[gate_step][Gates::toIndex(gate)][a];
+                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                    anyGate = anyGate && !gS[gateStep][Gates::toIndex(gate)][a];
                 }
                 for (int b = 0; b <= a; ++b) {
-                    if (a == b)
+                    if (a == b) {
                         continue;
-                    anyGate = anyGate && !g_c[gate_step][a][b] && !g_c[gate_step][b][a];
+                    }
+                    anyGate = anyGate && !gC[gateStep][a][b] && !gC[gateStep][b][a];
                 }
             }
             cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
@@ -316,17 +316,12 @@ void CliffordOptimizer::make_depth_optimizer(
     }
 }
 
-void CliffordOptimizer::make_fidelity_optimizer(
-        int                                                        timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-        const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
+void CliffordSynthesizer::makeFidelityOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
     if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
     makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                                qubitChoice, g_s, g_c);
+                                qubitChoice, gS, gC);
     // COST
     if (strategy == SynthesisStrategy::UseMinimizer ||
         strategy == SynthesisStrategy::SplitIter) {
@@ -341,8 +336,8 @@ void CliffordOptimizer::make_fidelity_optimizer(
                 util::fatal("Coupling map contains invalid qubit.");
             }
             // at each time t if there is a gate on the edge, add the cost
-            for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
-                cost = cost + (g_c[gate_step][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(), b)] * fidelity);
+            for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
+                cost = cost + (gC[gateStep][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(), b)] * fidelity);
             }
         }
         // For each qubit, get the fidelity cost
@@ -350,19 +345,19 @@ void CliffordOptimizer::make_fidelity_optimizer(
             LogicTerm fidelity =
                     LogicTerm((1 - std::log(architecture.getSingleQubitFidelities()[a])) * 1000);
             // at each time t if there is a gate on a, add the cost
-            for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
-                for (auto gate: Gates::singleQubitWithoutNOP) {
-                    cost = cost + (g_s[gate_step][Gates::toIndex(gate)][a] * fidelity);
+            for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
+                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                    cost = cost + (gS[gateStep][Gates::toIndex(gate)][a] * fidelity);
                 }
             }
         }
         dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
         cost = LogicTerm(0);
-        for (int gate_step = 0; gate_step < timesteps; ++gate_step) {
+        for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
             for (int a = 0; a < nqubits; ++a) {
-                cost = cost + g_s[gate_step][1][a] + g_s[gate_step][2][a];
+                cost = cost + gS[gateStep][1][a] + gS[gateStep][2][a];
                 for (int b = 0; b < nqubits; ++b) {
-                    cost = cost + g_c[gate_step][a][b];
+                    cost = cost + gC[gateStep][a][b];
                 }
             }
         }
@@ -370,29 +365,25 @@ void CliffordOptimizer::make_fidelity_optimizer(
     }
 }
 
-void CliffordOptimizer::make_gate_optimizer(
-        int                                                        timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-        const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-        const LogicMatrix3D& g_s, const LogicMatrix3D& g_c) const {
+void CliffordSynthesizer::makeGateOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
     LogicTerm changes = LogicTerm(true);
     makeSingleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                              qubitChoice, g_s, g_c);
+                              qubitChoice, gS, gC);
     // COST
     if (strategy == SynthesisStrategy::UseMinimizer) {
         LogicTerm cost = LogicTerm(0);
-        for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+        for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
             for (int a = 0; a < nqubits; ++a) {
                 if (target != SynthesisTarget::GATES_ONLY_CNOT) {
-                    for (auto gate: Gates::singleQubitWithoutNOP) {
-                        cost = cost + g_s[gate_step][Gates::toIndex(gate)][a];
+                    for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                        cost = cost + gS[gateStep][Gates::toIndex(gate)][a];
                     }
                 }
                 for (int b = 0; b <= a; ++b) {
-                    if (a == b)
+                    if (a == b) {
                         continue;
-                    cost = cost + g_c[gate_step][a][b] + g_c[gate_step][b][a];
+                    }
+                    cost = cost + gC[gateStep][a][b] + gC[gateStep][b][a];
                 }
             }
         }
@@ -400,59 +391,60 @@ void CliffordOptimizer::make_gate_optimizer(
     }
 }
 
-void CliffordOptimizer::runMinimizer(
+void CliffordSynthesizer::runMinimizer(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<unsigned short>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running minimizer" << std::endl;
-    CliffordOptimizationResults r = main_optimization(timesteps, reducedCM, qubitChoice,
-                                             initialTableau, targetTableau);
+    CliffordOptimizationResults r = mainOptimization(timesteps, reducedCM, qubitChoice,
+                                                     initialTableau, targetTableau);
     updateResults(r);
 }
-void CliffordOptimizer::runStartLow(
+void CliffordSynthesizer::runStartLow(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<unsigned short>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running start low" << std::endl;
     CliffordOptimizationResults r;
     while (r.result != SynthesisResult::SAT || r.result == SynthesisResult::UNDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
-        r = main_optimization(timesteps, reducedCM, qubitChoice, initialTableau,
-                              targetTableau);
+        r = mainOptimization(timesteps, reducedCM, qubitChoice, initialTableau,
+                             targetTableau);
         updateResults(r);
         if (r.result == SynthesisResult::UNSAT) {
             timesteps *= 1.5;
         }
     }
 }
-void CliffordOptimizer::runStartHigh(
+void CliffordSynthesizer::runStartHigh(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<unsigned short>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running start high" << std::endl;
     CliffordOptimizationResults r;
-    int                old_timesteps = timesteps;
+    int                         oldTimesteps = timesteps;
     while (r.result == SynthesisResult::SAT || r.result == SynthesisResult::UNDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
-        r = main_optimization(timesteps, reducedCM, qubitChoice, initialTableau,
-                              targetTableau);
+        r = mainOptimization(timesteps, reducedCM, qubitChoice, initialTableau,
+                             targetTableau);
         updateResults(r);
         if (r.result == SynthesisResult::SAT) {
-            old_timesteps = timesteps;
+            oldTimesteps = timesteps;
             timesteps *= 0.5;
         } else {
-            timesteps = old_timesteps;
+            timesteps = oldTimesteps;
         }
     }
 }
-void CliffordOptimizer::runMinMax(
+void CliffordSynthesizer::runMinMax(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<unsigned short>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running minmax" << std::endl;
     CliffordOptimizationResults r;
-    int                t     = timesteps;
-    int                upper = timesteps, lower = 0;
+    int                         t     = timesteps;
+    int                         upper = timesteps;
+    int                         lower = 0;
     while (std::abs(upper - lower) > 1) {
         DEBUG() << "Current t=" << t << std::endl;
-        r = main_optimization(t, reducedCM, qubitChoice, initialTableau,
-                              targetTableau);
+        r = mainOptimization(t, reducedCM, qubitChoice, initialTableau,
+                             targetTableau);
         updateResults(r);
         if (r.result == SynthesisResult::SAT) {
             upper = t;
@@ -468,129 +460,130 @@ void CliffordOptimizer::runMinMax(
     }
 }
 
-void CliffordOptimizer::runSplinter(
-        int i, unsigned int circuit_split, unsigned int split,
-        const CouplingMap& reducedCM, const std::vector<unsigned short>& qubitChoice,
+void CliffordSynthesizer::runSplinter(
+        int i, unsigned int circuitSplit, unsigned int split,
+        const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice,
         qc::QuantumComputation& circuit, CliffordOptimizationResults* r,
-        CliffordOptimizer* opt) {
+        CliffordSynthesizer* opt) {
     Tableau targetTableau{};
-    Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circuit_split);
+    Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circuitSplit);
     Tableau initTableau{};
-    Tableau::generateTableau(initTableau, circuit, 0, i * circuit_split);
-    (*r) = opt->main_optimization(split, reducedCM, qubitChoice, targetTableau,
-                                  initTableau);
+    Tableau::generateTableau(initTableau, circuit, 0, i * circuitSplit);
+    (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,
+                                 initTableau);
 };
 
-void CliffordOptimizer::runSplitIter(
-        const CouplingMap&                 reducedCM,
-        const std::vector<unsigned short>& qubitChoice) {
+void CliffordSynthesizer::runSplitIter(
+        const CouplingMap&           reducedCM,
+        const std::vector<std::uint16_t>& qubitChoice) {
     if (circuit.size() < 2) {
         return;
     }
     DEBUG() << "Running split iter" << std::endl;
-    Tableau                          fullTableau   = targetTableau;
-    auto                             circuit_split = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
-    int                              split         = std::min(5, nqubits / 2);
-    std::vector<std::thread*>        threads;
+    Tableau                                   fullTableau  = targetTableau;
+    auto                                      circuitSplit = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
+    int                                       split        = std::min(5, nqubits / 2);
+    std::vector<std::thread*>                 threads;
     std::vector<CliffordOptimizationResults*> results;
-    int                              nThreads = nthreads;
+    int                                       nThreads = nthreads;
     while (true) {
         results.clear();
         DEBUG() << "Current split size: " << split << std::endl;
-        DEBUG() << "Current circuit split size: " << circuit_split << std::endl;
-        auto               start = std::chrono::high_resolution_clock::now();
-        CliffordOptimizationResults total_result;
-        total_result.result = SynthesisResult::SAT;
-        total_result.resultCircuit.addQubitRegister(nqubits);
-        for (size_t i = 0; i * circuit_split < circuit.getNindividualOps();
+        DEBUG() << "Current circuit split size: " << circuitSplit << std::endl;
+        auto                        start = std::chrono::high_resolution_clock::now();
+        CliffordOptimizationResults totalResult;
+        totalResult.result = SynthesisResult::SAT;
+        totalResult.resultCircuit.addQubitRegister(nqubits);
+        for (size_t i = 0; i * circuitSplit < circuit.getNindividualOps();
              i += nThreads) {
             threads.clear();
-            DEBUG() << "Currently at " << i * circuit_split << " of "
+            DEBUG() << "Currently at " << i * circuitSplit << " of "
                     << circuit.getNindividualOps() << std::endl;
             for (int j = 0; j < nThreads; j++) {
-                auto r = new CliffordOptimizationResults();
-                auto t = new std::thread(CliffordOptimizer::runSplinter, i, circuit_split,
-                                         split, std::ref(reducedCM), std::ref(qubitChoice),
-                                         std::ref(circuit), r, this);
+                auto* r = new CliffordOptimizationResults();
+                auto* t = new std::thread(CliffordSynthesizer::runSplinter, i, circuitSplit,
+                                          split, std::ref(reducedCM), std::ref(qubitChoice),
+                                          std::ref(circuit), r, this);
                 threads.push_back(t);
                 results.push_back(r);
             }
-            for (auto t: threads) {
+            for (auto* t: threads) {
                 t->join();
             }
-            for (auto t: threads) {
+            for (auto* t: threads) {
                 delete t;
             }
-            for (auto r: results) {
+            for (auto* r: results) {
                 if (r->result == SynthesisResult::UNSAT) {
-                    total_result.result = SynthesisResult::UNSAT;
+                    totalResult.result = SynthesisResult::UNSAT;
                     break;
                 }
             }
-            if (total_result.result == SynthesisResult::UNSAT) {
+            if (totalResult.result == SynthesisResult::UNSAT) {
                 DEBUG() << "UNSAT, increasing split size." << std::endl;
                 split += std::max(1.0, split * 0.2);
                 break;
             }
         }
-        for (auto r: results) {
+        for (auto* r: results) {
             for (const auto& gate: r->resultCircuit) {
-                total_result.resultCircuit.insert(total_result.resultCircuit.end(),
-                                                  gate->clone());
+                totalResult.resultCircuit.insert(totalResult.resultCircuit.end(),
+                                                 gate->clone());
             }
             delete r;
         }
-        if (total_result.result == SynthesisResult::SAT) {
+        if (totalResult.result == SynthesisResult::SAT) {
             Tableau resultingTableau{};
-            Tableau::generateTableau(resultingTableau, total_result.resultCircuit);
+            Tableau::generateTableau(resultingTableau, totalResult.resultCircuit);
             DEBUG() << "Equality (Results): "
                     << ((fullTableau == resultingTableau) ? "True" : "False")
                     << std::endl;
             DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
                     << std::endl;
             DEBUG() << "Optimized Circuit size: "
-                    << total_result.resultCircuit.getNindividualOps() << std::endl;
+                    << totalResult.resultCircuit.getNindividualOps() << std::endl;
             TRACE() << "Resulting Circuit: " << std::endl;
             std::ostringstream ss;
-            total_result.resultCircuit.dump(ss, qc::Format::OpenQASM);
+            totalResult.resultCircuit.dump(ss, qc::Format::OpenQASM);
             TRACE() << ss.str() << std::endl;
             auto                          end  = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = end - start;
             INFO() << "Time for complete run: " << diff.count() << std::endl;
             if (circuit.getNindividualOps() ==
-                total_result.resultCircuit.getNindividualOps()) {
+                totalResult.resultCircuit.getNindividualOps()) {
                 split *= 1.2;
                 break;
             }
-            circuit = total_result.resultCircuit.clone();
+            circuit = totalResult.resultCircuit.clone();
         }
     }
-    optimal_results.resultCircuit = circuit.clone();
-    optimal_results.resultTableaus.emplace_back(targetTableau);
-    optimal_results.gate_count = circuit.getNindividualOps();
-    optimal_results.result     = SynthesisResult::SAT;
+    optimalResults.resultCircuit = circuit.clone();
+    optimalResults.resultTableaus.emplace_back(targetTableau);
+    optimalResults.gateCount = circuit.getNindividualOps();
+    optimalResults.result    = SynthesisResult::SAT;
 }
 
-void CliffordOptimizer::updateResults(CliffordOptimizationResults& results) {
-    if (!results.sat)
+void CliffordSynthesizer::updateResults(CliffordOptimizationResults& results) {
+    if (!results.sat) {
         return;
+    }
     switch (target) {
         case SynthesisTarget::GATES:
         case SynthesisTarget::GATES_ONLY_CNOT:
-            if (results.gate_count < optimal_results.gate_count ||
-                optimal_results.gate_count == 0) {
-                optimal_results = results;
+            if (results.gateCount < optimalResults.gateCount ||
+                optimalResults.gateCount == 0) {
+                optimalResults = results;
             }
             break;
         case SynthesisTarget::DEPTH:
-            if (results.depth < optimal_results.depth || optimal_results.depth == 0) {
-                optimal_results = results;
+            if (results.depth < optimalResults.depth || optimalResults.depth == 0) {
+                optimalResults = results;
             }
             break;
         case SynthesisTarget::FIDELITY:
-            if (results.fidelity >= optimal_results.fidelity ||
-                optimal_results.fidelity == 0) {
-                optimal_results = results;
+            if (results.fidelity >= optimalResults.fidelity ||
+                optimalResults.fidelity == 0) {
+                optimalResults = results;
             }
             break;
         default:
@@ -598,7 +591,7 @@ void CliffordOptimizer::updateResults(CliffordOptimizationResults& results) {
     }
 }
 
-void CliffordOptimizer::assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
+void CliffordSynthesizer::assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                                       const LogicMatrix& x,
                                       const LogicMatrix& z,
                                       const LogicVector& r, int nqubits,
@@ -615,26 +608,27 @@ void CliffordOptimizer::assertTableau(const Tableau& tableau, std::unique_ptr<Lo
             LogicTerm(tableau.getBVFrom(2 * nqubits), nqubits));
 }
 
-void CliffordOptimizer::makeSingleGateConstraints(
+void CliffordSynthesizer::makeSingleGateConstraints(
         std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
         const LogicVector& r, int nqubits, int timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,
-        const LogicMatrix3D& g_c) {
+        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
+        const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
+        const LogicMatrix3D& gC) {
     LogicTerm changes = LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
-    for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
         std::vector<LogicTerm> vars{};
         for (int a = 0; a < nqubits; ++a) {
-            for (auto gate: Gates::singleQubit) {
-                vars.emplace_back(g_s[gate_step][Gates::toIndex(gate)][a]);
+            for (auto gate: Gates::SINGLE_QUBIT) {
+                vars.emplace_back(gS[gateStep][Gates::toIndex(gate)][a]);
             }
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b || reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
-                                      reducedCM.end())
+                                      reducedCM.end()) {
                     continue;
-                vars.emplace_back(g_c[gate_step][a][b]);
+                }
+                vars.emplace_back(gC[gateStep][a][b]);
             }
         }
         lb->assertFormula(ExactlyOneCMDR(
@@ -643,188 +637,189 @@ void CliffordOptimizer::makeSingleGateConstraints(
     }
 
     // GATE CONSTRAINTS
-    for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
         for (int a = 0; a < nqubits; ++a) {
             // NO GATE
-            changes = (x[gate_step][a] == x[gate_step - 1][a]);
-            changes = changes && (z[gate_step][a] == z[gate_step - 1][a]);
+            changes = (x[gateStep][a] == x[gateStep - 1][a]);
+            changes = changes && (z[gateStep][a] == z[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
-            changes = changes && (r[gate_step] == r[gate_step - 1]);
-            changes = LogicTerm::implies(g_s[gate_step][0][a], changes);
+            changes = changes && (r[gateStep] == r[gateStep - 1]);
+            changes = LogicTerm::implies(gS[gateStep][0][a], changes);
             lb->assertFormula(changes);
 
             // H
-            changes = (z[gate_step][a] == x[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == z[gate_step - 1][a]);
+            changes = (z[gateStep][a] == x[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == z[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^
-                                        (x[gate_step - 1][a] & z[gate_step - 1][a])));
-            changes = LogicTerm::implies(g_s[gate_step][1][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^
+                                       (x[gateStep - 1][a] & z[gateStep - 1][a])));
+            changes = LogicTerm::implies(gS[gateStep][1][a], changes);
 
             lb->assertFormula(changes);
 
             // S
             changes =
-                    (z[gate_step][a] == (z[gate_step - 1][a] ^ x[gate_step - 1][a]));
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^
-                                        (x[gate_step - 1][a] & z[gate_step - 1][a])));
-            changes = LogicTerm::implies(g_s[gate_step][2][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^
+                                       (x[gateStep - 1][a] & z[gateStep - 1][a])));
+            changes = LogicTerm::implies(gS[gateStep][2][a], changes);
             lb->assertFormula(changes);
 
             // Sdag
             changes =
-                    (z[gate_step][a] == (z[gate_step - 1][a] ^ x[gate_step - 1][a]));
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^
-                                        (x[gate_step - 1][a] & (x[gate_step - 1][a] ^ z[gate_step - 1][a]))));
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^
+                                       (x[gateStep - 1][a] & (x[gateStep - 1][a] ^ z[gateStep - 1][a]))));
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
             lb->assertFormula(changes);
 
             // Z
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^ x[gate_step - 1][a]));
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Z)][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^ x[gateStep - 1][a]));
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
             lb->assertFormula(changes);
 
             // X
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^ z[gate_step - 1][a]));
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::X)][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^ z[gateStep - 1][a]));
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
             lb->assertFormula(changes);
 
             // Y
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gate_step][b] == x[gate_step - 1][b]);
-                changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
+                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gate_step] == (r[gate_step - 1] ^ (z[gate_step - 1][a]) ^ x[gate_step - 1][a]));
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Y)][a], changes);
+                      (r[gateStep] == (r[gateStep - 1] ^ (z[gateStep - 1][a]) ^ x[gateStep - 1][a]));
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
             lb->assertFormula(changes);
 
             // CNOT
             for (int b = 0; b < nqubits; ++b) {
                 if (reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
                     reducedCM.end()) {
-                    lb->assertFormula(!g_c[gate_step][a][b]);
+                    lb->assertFormula(!gC[gateStep][a][b]);
                 } else {
                     changes =
-                            (r[gate_step] == (r[gate_step - 1] ^
-                                              ((x[gate_step - 1][a] & z[gate_step - 1][b]) &
-                                               ((x[gate_step - 1][b] ^ z[gate_step - 1][a]) ^
-                                                LogicTerm((1 << nqubits) - 1, nqubits)))));
-                    changes = changes && (x[gate_step][b] ==
-                                          (x[gate_step - 1][b] ^ x[gate_step - 1][a]));
-                    changes = changes && (z[gate_step][a] ==
-                                          (z[gate_step - 1][a] ^ z[gate_step - 1][b]));
-                    changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
-                    changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
+                            (r[gateStep] == (r[gateStep - 1] ^
+                                             ((x[gateStep - 1][a] & z[gateStep - 1][b]) &
+                                              ((x[gateStep - 1][b] ^ z[gateStep - 1][a]) ^
+                                               LogicTerm((1 << nqubits) - 1, nqubits)))));
+                    changes = changes && (x[gateStep][b] ==
+                                          (x[gateStep - 1][b] ^ x[gateStep - 1][a]));
+                    changes = changes && (z[gateStep][a] ==
+                                          (z[gateStep - 1][a] ^ z[gateStep - 1][b]));
+                    changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
 
                     for (int c = 0; c < nqubits; ++c) { // All other entries do not change
-                        if (a == c || b == c)
+                        if (a == c || b == c) {
                             continue;
-                        changes = changes && (x[gate_step][c] == x[gate_step - 1][c]);
-                        changes = changes && (z[gate_step][c] == z[gate_step - 1][c]);
+                        }
+                        changes = changes && (x[gateStep][c] == x[gateStep - 1][c]);
+                        changes = changes && (z[gateStep][c] == z[gateStep - 1][c]);
                     }
 
-                    changes = LogicTerm::implies(g_c[gate_step][a][b], changes);
+                    changes = LogicTerm::implies(gC[gateStep][a][b], changes);
                     lb->assertFormula(changes);
                 }
             }
         }
     }
 }
-void CliffordOptimizer::makeMultipleGateConstraints(
+void CliffordSynthesizer::makeMultipleGateConstraints(
         std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
         const LogicVector& r, int nqubits, int timesteps,
-        const std::set<std::pair<unsigned short, unsigned short>>& reducedCM,
-        const std::vector<unsigned short>& qubitChoice, const LogicMatrix3D& g_s,
-        const LogicMatrix3D& g_c) {
+        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
+        const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
+        const LogicMatrix3D& gC) {
     LogicTerm changes = LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
-    for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
         for (int a = 0; a < nqubits; ++a) {
             std::vector<LogicTerm> vars{};
-            for (auto gate: Gates::singleQubit) {
-                vars.emplace_back(g_s[gate_step][Gates::toIndex(gate)][a]);
+            for (auto gate: Gates::SINGLE_QUBIT) {
+                vars.emplace_back(gS[gateStep][Gates::toIndex(gate)][a]);
             }
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                vars.emplace_back(g_c[gate_step][a][b]);
-                vars.emplace_back(g_c[gate_step][b][a]);
+                vars.emplace_back(gC[gateStep][a][b]);
+                vars.emplace_back(gC[gateStep][b][a]);
             }
             lb->assertFormula(ExactlyOneCMDR(
                     groupVars(vars, static_cast<std::size_t>(vars.size() / 2)),
@@ -832,17 +827,17 @@ void CliffordOptimizer::makeMultipleGateConstraints(
         }
     }
     // Maximum any combination of 1 and 2 qubit gates adding up to n
-    for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
+    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
         changes = LogicTerm(0);
         for (int a = 0; a < nqubits; ++a) {
-            for (auto gate: Gates::singleQubit) {
-                changes = changes + g_s[gate_step][Gates::toIndex(gate)][a];
+            for (auto gate: Gates::SINGLE_QUBIT) {
+                changes = changes + gS[gateStep][Gates::toIndex(gate)][a];
             }
             for (int b = 0; b < nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes + g_c[gate_step][a][b] + g_c[gate_step][a][b];
+                changes = changes + gC[gateStep][a][b] + gC[gateStep][a][b];
             }
         }
         changes = changes < LogicTerm(static_cast<int>(nqubits + 1));
@@ -850,131 +845,125 @@ void CliffordOptimizer::makeMultipleGateConstraints(
     }
 
     // GATE CONSTRAINTS
-    for (int gate_step = 1; gate_step < timesteps + 1; ++gate_step) {
-        LogicTerm r_changes = r[gate_step - 1];
+    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
+        LogicTerm rChanges = r[gateStep - 1];
         for (int a = 0; a < nqubits; ++a) {
             // NO GATE
             changes = LogicTerm(true);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
-            changes = changes && (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = LogicTerm::implies(g_s[gate_step][0][a], changes);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+            changes = changes && (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = LogicTerm::implies(gS[gateStep][0][a], changes);
             lb->assertFormula(changes);
 
             // H
             changes = LogicTerm(true);
-            changes = changes && (z[gate_step][a] == x[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == z[gate_step - 1][a]);
+            changes = changes && (z[gateStep][a] == x[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == z[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][1][a],
-                    r_changes ^ (x[gate_step - 1][a] & z[gate_step - 1][a]), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][1][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][1][a],
+                    rChanges ^ (x[gateStep - 1][a] & z[gateStep - 1][a]), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][1][a], changes);
 
             lb->assertFormula(changes);
 
             // S
             changes = LogicTerm(true);
-            changes = changes && (z[gate_step][a] ==
-                                  (z[gate_step - 1][a] ^ x[gate_step - 1][a]));
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+            changes = changes && (z[gateStep][a] ==
+                                  (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][2][a],
-                    r_changes ^ (x[gate_step - 1][a] & z[gate_step - 1][a]), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][2][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][2][a],
+                    rChanges ^ (x[gateStep - 1][a] & z[gateStep - 1][a]), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][2][a], changes);
             lb->assertFormula(changes);
 
             // Sdag
             changes =
-                    (z[gate_step][a] == (z[gate_step - 1][a] ^ x[gate_step - 1][a]));
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][Gates::toIndex(Gates::GATES::Sdag)][a],
-                    r_changes ^ (x[gate_step - 1][a] & (x[gate_step - 1][a] ^ z[gate_step - 1][a])), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a],
+                    rChanges ^ (x[gateStep - 1][a] & (x[gateStep - 1][a] ^ z[gateStep - 1][a])), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
             lb->assertFormula(changes);
 
             // Z
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][Gates::toIndex(Gates::GATES::Z)][a],
-                    r_changes ^ (x[gate_step - 1][a]), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Z)][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a],
+                    rChanges ^ (x[gateStep - 1][a]), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
             lb->assertFormula(changes);
 
             // X
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][Gates::toIndex(Gates::GATES::X)][a],
-                    r_changes ^ (z[gate_step - 1][a]), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::X)][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][Gates::toIndex(Gates::GATES::X)][a],
+                    rChanges ^ (z[gateStep - 1][a]), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
             lb->assertFormula(changes);
 
             // Y
             changes =
-                    (z[gate_step][a] == z[gate_step - 1][a]);
-            changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
+                    (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
 
-            r_changes = LogicTerm::ite(
-                    g_s[gate_step][Gates::toIndex(Gates::GATES::Y)][a],
-                    r_changes ^ (z[gate_step - 1][a] ^ x[gate_step - 1][a]), r_changes);
-            changes = LogicTerm::implies(g_s[gate_step][Gates::toIndex(Gates::GATES::Y)][a], changes);
+            rChanges = LogicTerm::ite(
+                    gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a],
+                    rChanges ^ (z[gateStep - 1][a] ^ x[gateStep - 1][a]), rChanges);
+            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
             lb->assertFormula(changes);
 
             // CNOT
             for (int b = 0; b < nqubits; ++b) {
                 if (reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
                     reducedCM.end()) {
-                    lb->assertFormula(!g_c[gate_step][a][b]);
+                    lb->assertFormula(!gC[gateStep][a][b]);
                 } else {
-                    changes   = LogicTerm(true);
-                    r_changes = LogicTerm::ite(
-                            g_c[gate_step][a][b],
-                            (r_changes ^ ((x[gate_step - 1][a] & z[gate_step - 1][b]) &
-                                          ((x[gate_step - 1][b] ^ z[gate_step - 1][a]) ^
-                                           LogicTerm((1 << nqubits) - 1, nqubits)))),
-                            r_changes);
-                    changes = changes && (x[gate_step][b] ==
-                                          (x[gate_step - 1][b] ^ x[gate_step - 1][a]));
-                    changes = changes && (z[gate_step][a] ==
-                                          (z[gate_step - 1][a] ^ z[gate_step - 1][b]));
-                    changes = changes && (x[gate_step][a] == x[gate_step - 1][a]);
-                    changes = changes && (z[gate_step][b] == z[gate_step - 1][b]);
-                    changes = LogicTerm::implies(g_c[gate_step][a][b], changes);
+                    changes  = LogicTerm(true);
+                    rChanges = LogicTerm::ite(
+                            gC[gateStep][a][b],
+                            (rChanges ^ ((x[gateStep - 1][a] & z[gateStep - 1][b]) &
+                                         ((x[gateStep - 1][b] ^ z[gateStep - 1][a]) ^
+                                          LogicTerm((1 << nqubits) - 1, nqubits)))),
+                            rChanges);
+                    changes = changes && (x[gateStep][b] ==
+                                          (x[gateStep - 1][b] ^ x[gateStep - 1][a]));
+                    changes = changes && (z[gateStep][a] ==
+                                          (z[gateStep - 1][a] ^ z[gateStep - 1][b]));
+                    changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                    changes = LogicTerm::implies(gC[gateStep][a][b], changes);
                     lb->assertFormula(changes);
                 }
             }
         }
-        lb->assertFormula(r[gate_step] == r_changes);
+        lb->assertFormula(r[gateStep] == rChanges);
     }
 }
 
-void CliffordOptimizer::init(bool pchoose_best, bool puse_embedding, unsigned char pnqubits, unsigned short pinitial_timesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget) {
-    this->nqubits           = pnqubits;
-    this->initial_timesteps = pinitial_timesteps;
-    this->strategy          = pstrategy;
-    this->target            = ptarget;
-    this->choose_best       = pchoose_best;
-    this->use_embedding     = puse_embedding;
-    if (this->nqubits == 0) {
-        this->nqubits = this->circuit.getNqubits();
-    }
-}
 
-void CliffordOptimizer::setCircuit(const qc::QuantumComputation& qc) {
+void CliffordSynthesizer::setCircuit(const qc::QuantumComputation& qc) {
     this->circuit = qc.clone();
     Tableau::initTableau(this->initialTableau, this->nqubits);
     Tableau::generateTableau(this->targetTableau, this->circuit);
 }
 
-void CliffordOptimizer::setTableau(Tableau& targetTabl) {
+void CliffordSynthesizer::setTargetTableau(Tableau& targetTabl) {
     Tableau::initTableau(this->initialTableau, this->nqubits);
     this->targetTableau = targetTabl;
 }
+void CliffordSynthesizer::setInitialTableau(Tableau& initialTabl) {
+    this->initialTableau = initialTabl;
+}
+
+

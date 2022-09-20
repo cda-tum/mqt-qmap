@@ -24,10 +24,11 @@ void Architecture::loadCouplingMap(const std::string& filename) {
     size_t dot   = filename.find_last_of('.');
     name         = filename.substr(slash + 1, dot - slash - 1);
     auto ifs     = std::ifstream(filename);
-    if (ifs.good())
+    if (ifs.good()) {
         this->loadCouplingMap(ifs);
-    else
+    } else {
         throw QMAPException("Error opening coupling map file.");
+}
 }
 
 void Architecture::loadCouplingMap(std::istream&& is) {
@@ -35,14 +36,14 @@ void Architecture::loadCouplingMap(std::istream&& is) {
     properties.clear();
     std::string line;
 
-    std::regex  r_nqubits = std::regex("([0-9]+)");
-    std::regex  r_edge    = std::regex("([0-9]+) ([0-9]+)");
+    std::regex  rNqubits = std::regex("([0-9]+)");
+    std::regex  rEdge    = std::regex("([0-9]+) ([0-9]+)");
     std::smatch m;
 
     // get number of qubits
     if (std::getline(is, line)) {
-        if (std::regex_match(line, m, r_nqubits)) {
-            nqubits = static_cast<unsigned short>(std::stoul(m.str(1)));
+        if (std::regex_match(line, m, rNqubits)) {
+            nqubits = static_cast<std::uint16_t>(std::stoul(m.str(1)));
         } else {
             throw QMAPException("No qubit count found in coupling map file: " + line);
         }
@@ -51,9 +52,9 @@ void Architecture::loadCouplingMap(std::istream&& is) {
     }
     // load edges
     while (std::getline(is, line)) {
-        if (std::regex_match(line, m, r_edge)) {
-            auto v1 = static_cast<unsigned short>(std::stoul(m.str(1)));
-            auto v2 = static_cast<unsigned short>(std::stoul(m.str(2)));
+        if (std::regex_match(line, m, rEdge)) {
+            auto v1 = static_cast<std::uint16_t>(std::stoul(m.str(1)));
+            auto v2 = static_cast<std::uint16_t>(std::stoul(m.str(2)));
             couplingMap.emplace(v1, v2);
         } else {
             throw QMAPException("Could not identify edge in coupling map file: " + line);
@@ -71,7 +72,7 @@ void Architecture::loadCouplingMap(std::istream&& is) {
     createDistanceTable();
 }
 
-void Architecture::loadCouplingMap(unsigned short nQ, const CouplingMap& cm) {
+void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
     nqubits     = nQ;
     couplingMap = cm;
     properties.clear();
@@ -87,17 +88,19 @@ void Architecture::loadProperties(const std::string& filename) {
     size_t slash = filename.find_last_of('/');
     size_t dot   = filename.find_last_of('.');
     properties.setName(filename.substr(slash + 1, dot - slash - 1));
-    if (!isArchitectureAvailable())
+    if (!isArchitectureAvailable()) {
         name = properties.getName();
+}
     auto ifs = std::ifstream(filename);
-    if (ifs.good())
+    if (ifs.good()) {
         this->loadProperties(ifs);
-    else
+    } else {
         throw QMAPException("Error opening properties file.");
+}
 }
 
 void Architecture::loadProperties(std::istream&& is) {
-    static const auto SingleQubitGates = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
+    static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
 
     properties.clear();
 
@@ -121,15 +124,15 @@ void Architecture::loadProperties(std::istream&& is) {
         properties.qubitFrequency.set(qubitNumber, std::stod(data.at(3)));
         properties.readoutErrorRate.set(qubitNumber, std::stod(data.at(4)));
         // csv file reports average single qubit fidelities
-        for (const auto& operation: SingleQubitGates) {
+        for (const auto& operation: SINGLE_QUBIT_GATES) {
             properties.setSingleQubitErrorRate(qubitNumber, operation, std::stod(data.at(5)));
         }
         // only try to parse CNOT fidelities if there are any
         if (data.size() >= 7U) {
             std::string s = data[6];
             while (std::regex_search(s, sMatch, regexDoubleFidelity)) {
-                auto a = static_cast<unsigned short>(std::stoul(sMatch.str(2U)));
-                auto b = static_cast<unsigned short>(std::stoul(sMatch.str(3U)));
+                auto a = static_cast<std::uint16_t>(std::stoul(sMatch.str(2U)));
+                auto b = static_cast<std::uint16_t>(std::stoul(sMatch.str(3U)));
                 if (!isArchitectureAvailable()) {
                     couplingMap.emplace(a, b);
                 }
@@ -154,7 +157,7 @@ void Architecture::loadProperties(std::istream&& is) {
     }
     properties.setNqubits(qubitNumber);
     if (!isArchitectureAvailable()) {
-        nqubits = static_cast<unsigned short>(qubitNumber);
+        nqubits = static_cast<std::uint16_t>(qubitNumber);
         createDistanceTable();
     }
 
@@ -176,11 +179,11 @@ void Architecture::loadProperties(const Properties& props) {
     createFidelityTable();
 }
 
-Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap) {
+Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap) {
     loadCouplingMap(nQ, couplingMap);
 }
 
-Architecture::Architecture(unsigned short nQ, const CouplingMap& couplingMap, const Properties& props):
+Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, const Properties& props):
     Architecture(nQ, couplingMap) {
     loadProperties(props);
 }
@@ -220,18 +223,18 @@ void Architecture::createFidelityTable() {
     }
 }
 
-unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit) {
+std::uint64_t Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation, int64_t limit) {
     bool tryToAbortEarly = (limit != -1);
 
     // consolidate used qubits
-    std::set<unsigned short> qubits{};
+    std::set<std::uint16_t> qubits{};
     for (const auto& q: permutation) {
         qubits.insert(q);
     }
 
     // create map for goal permutation
-    std::unordered_map<unsigned short, unsigned short> goalPermutation{};
-    unsigned short                                     count    = 0;
+    std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
+    std::uint16_t                                     count    = 0;
     bool                                               identity = true;
     for (const auto q: qubits) {
         goalPermutation.emplace(q, permutation.at(count));
@@ -246,7 +249,7 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
     }
 
     // create selection of swap possibilities
-    std::set<std::pair<unsigned short, unsigned short>> possibleSwaps{};
+    std::set<std::pair<std::uint16_t, std::uint16_t>> possibleSwaps{};
     for (const auto& edge: couplingMap) {
         // only use SWAPs between qubits that are currently being considered
         if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
@@ -260,7 +263,7 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
 
     Node start{};
     // start with identity permutation
-    for (unsigned short i = 0; i < nqubits; ++i) {
+    for (std::uint16_t i = 0; i < nqubits; ++i) {
         start.permutation.emplace(i, i);
     }
 
@@ -273,7 +276,7 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
         queue.pop();
 
         // in case no solution has been found using less than `limit` swaps, search can be aborted
-        if (tryToAbortEarly && current.nswaps >= static_cast<unsigned long>(limit)) {
+        if (tryToAbortEarly && current.nswaps >= static_cast<std::uint64_t>(limit)) {
             return limit + 1U;
         }
 
@@ -301,9 +304,9 @@ unsigned long Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& pe
     return start.nswaps;
 }
 
-void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps) {
+void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation, std::vector<std::pair<std::uint16_t, std::uint16_t>>& swaps) {
     // consolidate used qubits
-    std::set<unsigned short> qubits{};
+    std::set<std::uint16_t> qubits{};
     for (const auto& q: permutation) {
         qubits.insert(q);
     }
@@ -313,8 +316,8 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     }
 
     // create map for goal permutation
-    std::unordered_map<unsigned short, unsigned short> goalPermutation{};
-    unsigned short                                     count    = 0;
+    std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
+    std::uint16_t                                     count    = 0;
     bool                                               identity = true;
     for (const auto q: qubits) {
         goalPermutation.emplace(q, permutation.at(count));
@@ -329,7 +332,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     }
 
     // create selection of swap possibilities
-    std::set<std::pair<unsigned short, unsigned short>> possibleSwaps{};
+    std::set<std::pair<std::uint16_t, std::uint16_t>> possibleSwaps{};
     for (const auto& edge: couplingMap) {
         // only use SWAPs between qubits that are currently being considered
         if (qubits.count(edge.first) == 0 || qubits.count(edge.second) == 0) {
@@ -345,7 +348,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
     Node start{};
 
     // start with identity permutation
-    for (unsigned short i = 0; i < nqubits; ++i) {
+    for (std::uint16_t i = 0; i < nqubits; ++i) {
         start.permutation.emplace(i, i);
     }
 
@@ -360,8 +363,9 @@ void Architecture::minimumNumberOfSwaps(std::vector<unsigned short>& permutation
         for (const auto& swap: possibleSwaps) {
             Node next = current;
             // continue if the same swap was applied earlier
-            if (!next.swaps.empty() && next.swaps.back() == swap)
+            if (!next.swaps.empty() && next.swaps.back() == swap) {
                 continue;
+}
 
             // apply and insert swap
             std::swap(next.permutation.at(swap.first), next.permutation.at(swap.second));
@@ -389,18 +393,18 @@ std::size_t Architecture::getCouplingLimit() const {
     return findCouplingLimit(getCouplingMap(), getNqubits());
 }
 
-std::size_t Architecture::getCouplingLimit(const std::set<unsigned short>& qubitChoice) const {
+std::size_t Architecture::getCouplingLimit(const std::set<std::uint16_t>& qubitChoice) const {
     return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
 }
 
-unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const {
+std::uint64_t Architecture::bfs(std::uint16_t start, std::uint16_t goal, const std::set<Edge>& teleportations) const {
     std::queue<std::vector<int>> queue;
     std::vector<int>             v;
     v.push_back(start);
     queue.push(v);
     std::vector<std::vector<int>> solutions;
 
-    unsigned long length = 0;
+    std::uint64_t length = 0;
     std::set<int> successors;
     while (!queue.empty()) {
         v = queue.front();
@@ -410,7 +414,7 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
             length = v.size();
             solutions.push_back(v);
             break;
-        } else {
+        } {
             successors.clear();
             for (const auto& edge: getCouplingMap()) {
                 if (edge.first == current && !contains(v, edge.second)) {
@@ -461,7 +465,7 @@ unsigned long Architecture::bfs(unsigned short start, unsigned short goal, const
 }
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits) {
-    std::vector<std::vector<unsigned short>> connections;
+    std::vector<std::vector<std::uint16_t>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;
     connections.resize(nQubits);
@@ -478,25 +482,28 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits) 
         std::fill(visited.begin(), visited.end(), false);
         findCouplingLimit(q, 0, connections, d, visited);
         auto it = std::max_element(d.begin(), d.end());
-        if ((*it) > maxSum)
+        if ((*it) > maxSum) {
             maxSum = (*it);
+}
     }
     return maxSum;
 }
 
-std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice) {
-    std::vector<std::vector<unsigned short>> connections;
+std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<std::uint16_t>& qubitChoice) {
+    std::vector<std::vector<std::uint16_t>> connections;
     std::vector<int>                         d;
     std::vector<bool>                        visited;
     connections.resize(nQubits);
     int maxSum = -1;
     for (auto edge: cm) {
-        if (qubitChoice.count(edge.first) && qubitChoice.count(edge.second))
+        if ((qubitChoice.count(edge.first) != 0U) && (qubitChoice.count(edge.second) != 0U)) {
             connections.at(edge.first).emplace_back(edge.second);
+}
     }
     for (int q = 0; q < nQubits; ++q) {
-        if (connections.at(q).empty())
+        if (connections.at(q).empty()) {
             continue;
+}
         d.clear();
         d.resize(nQubits);
         std::fill(d.begin(), d.end(), 0);
@@ -505,19 +512,22 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, 
         std::fill(visited.begin(), visited.end(), false);
         findCouplingLimit(q, 0, connections, d, visited);
         auto it = std::max_element(d.begin(), d.end());
-        if ((*it) > maxSum)
+        if ((*it) > maxSum) {
             maxSum = (*it);
+}
     }
     return maxSum;
 }
 
-void Architecture::findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
-    if (visited.at(node))
+void Architecture::findCouplingLimit(std::uint16_t node, int curSum, const std::vector<std::vector<std::uint16_t>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
+    if (visited.at(node)) {
         return;
+}
     visited[node] = true;
 
-    if (d.at(node) < curSum)
+    if (d.at(node) < curSum) {
         d[node] = curSum;
+}
     if (connections.at(node).empty()) {
         visited[node] = false;
         return;
@@ -530,7 +540,7 @@ void Architecture::findCouplingLimit(unsigned short node, int curSum, const std:
     visited[node] = false;
 }
 
-void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& reducedMap) const {
+void Architecture::getHighestFidelityCouplingMap(std::uint16_t subsetSize, CouplingMap& reducedMap) const {
     if (!isArchitectureAvailable() || nqubits == subsetSize || properties.empty()) {
         reducedMap = couplingMap;
     } else {
@@ -549,14 +559,14 @@ void Architecture::getHighestFidelityCouplingMap(unsigned short subsetSize, Coup
         }
     }
 }
-std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsigned short subsetSize) const {
-    std::vector<std::set<unsigned short>> result{};
+std::vector<std::set<std::uint16_t>> Architecture::getAllConnectedSubsets(std::uint16_t subsetSize) const {
+    std::vector<std::set<std::uint16_t>> result{};
     if (!isArchitectureAvailable() || nqubits == subsetSize) {
         result.emplace_back(getQubitSet());
     } else if (nqubits < subsetSize) {
         throw QMAPException("Architecture too small!");
     } else {
-        auto filter = [&](const std::set<unsigned short>& subset) {
+        auto filter = [&](const std::set<std::uint16_t>& subset) {
             CouplingMap cm = {};
             Architecture::getReducedCouplingMap(subset, cm);
             return isConnected(subset, cm);
@@ -567,7 +577,7 @@ std::vector<std::set<unsigned short>> Architecture::getAllConnectedSubsets(unsig
     }
     return result;
 }
-void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps) const {
+void Architecture::getReducedCouplingMaps(std::uint16_t subsetSize, std::vector<CouplingMap>& couplingMaps) const {
     couplingMaps.clear();
     if (!isArchitectureAvailable()) {
         couplingMaps.emplace_back(getFullyConnectedMap(subsetSize));
@@ -578,7 +588,7 @@ void Architecture::getReducedCouplingMaps(unsigned short subsetSize, std::vector
         }
     }
 }
-void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& reducedMap) const {
+void Architecture::getReducedCouplingMap(const std::set<std::uint16_t>& qubitChoice, CouplingMap& reducedMap) const {
     reducedMap.clear();
     if (!isArchitectureAvailable()) {
         reducedMap = getFullyConnectedMap(qubitChoice.size());
@@ -591,7 +601,7 @@ void Architecture::getReducedCouplingMap(const std::set<unsigned short>& qubitCh
     }
 }
 
-double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<unsigned short>& qubitChoice, const Properties& props) {
+double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const std::set<std::uint16_t>& qubitChoice, const Properties& props) {
     if (props.empty()) {
         return 0.0;
     }
@@ -610,8 +620,8 @@ double Architecture::getAverageArchitectureFidelity(const CouplingMap& cm, const
     return result;
 }
 
-std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& couplingMap) {
-    std::set<unsigned short> result{};
+std::vector<std::uint16_t> Architecture::getQubitList(const CouplingMap& couplingMap) {
+    std::set<std::uint16_t> result{};
     for (const auto& edge: couplingMap) {
         result.emplace(edge.first);
         result.emplace(edge.second);
@@ -619,8 +629,8 @@ std::vector<unsigned short> Architecture::getQubitList(const CouplingMap& coupli
     return {result.begin(), result.end()};
 }
 
-bool Architecture::isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap) {
-    std::set<unsigned short> reachedQubits{};
+bool Architecture::isConnected(const std::set<std::uint16_t>& qubitChoice, const CouplingMap& reducedCouplingMap) {
+    std::set<std::uint16_t> reachedQubits{};
     reachedQubits.insert(*(qubitChoice.begin()));
     dfs(*(qubitChoice.begin()), reachedQubits, reducedCouplingMap);
     return (reachedQubits == qubitChoice);

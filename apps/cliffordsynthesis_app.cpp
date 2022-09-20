@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         "Architecture that the circuit should be executed on/mapped to")(
         "fidelity,f", po::value<std::string>(),
         "Fidelities of the architectures")(
-        "initial_timesteps,t", po::value<int>(),
+        "initialTimesteps,t", po::value<int>(),
         "Initial timesteps for the generated circuit (Depth for "
         "Depth-Synthesis, Gates for Gate-Synthesis)\n\t\t Sensible Values "
         "are for Depth: nQubit+log(nQubit) For Gates: nQubits*log(nQubits)")(
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         std::exit(1);
     }
 
-    CliffordOptimizer opt{};
+    CliffordSynthesizer opt = CliffordSynthesizer();
     if (vm.count("logfile")) {
         std::string logfile = vm["logfile"].as<std::string>();
         util::init(logfile);
@@ -73,11 +73,11 @@ int main(int argc, char** argv) {
     }
 
     if (vm.count("choosebest")) {
-        opt.choose_best = true;
+        opt.chooseBest = true;
     }
 
     if (vm.count("useembed")) {
-        opt.use_embedding = true;
+        opt.useEmbedding = true;
     }
 
     if (vm.count("verbose")) {
@@ -208,11 +208,11 @@ int main(int argc, char** argv) {
         opt.circuit = rnd.clone();
     }
 
-    if (vm.count("initial_timesteps")) {
-        int initial_timesteps = vm["initial_timesteps"].as<int>();
-        opt.initial_timesteps = initial_timesteps;
+    if (vm.count("initialTimesteps")) {
+        int initialTimesteps = vm["initialTimesteps"].as<int>();
+        opt.initialTimesteps = initialTimesteps;
     } else {
-        opt.initial_timesteps = 4 * (opt.nqubits + log(opt.nqubits));
+        opt.initialTimesteps = 4 * (opt.nqubits + log(opt.nqubits));
     }
 
     if (vm.count("strategy")) {
@@ -236,15 +236,15 @@ int main(int argc, char** argv) {
     }
     opt.optimize();
     Tableau resultTableau{};
-    Tableau::generateTableau(resultTableau, opt.optimal_results.resultCircuit);
+    Tableau::generateTableau(resultTableau, opt.optimalResults.resultCircuit);
     if (opt.verbose >= 2) {
         DEBUG() << "TargetTableau:" << std::endl
                 << opt.targetTableau
                 << "ResultTableau:" << std::endl
                 << resultTableau << std::endl
-                << "Used Gates:" << opt.optimal_results.gate_count << std::endl
-                << "Depth: " << opt.optimal_results.depth << std::endl
-                << "Fidelity: " << opt.optimal_results.fidelity << std::endl;
+                << "Used Gates:" << opt.optimalResults.gateCount << std::endl
+                << "Depth: " << opt.optimalResults.depth << std::endl
+                << "Fidelity: " << opt.optimalResults.fidelity << std::endl;
     }
     DEBUG() << "ResultTableau-Equality: "
             << (opt.targetTableau == resultTableau ?
@@ -252,18 +252,18 @@ int main(int argc, char** argv) {
                         "false")
             << std::endl;
     if ((vm.count("testing") || opt.verbose >= 2) &&
-        opt.optimal_results.gate_count > 0) {
+        opt.optimalResults.gateCount > 0) {
         opt.dumpResult(std::cout, qc::Format::OpenQASM);
     }
-    if (vm.count("out") && opt.optimal_results.gate_count > 0) {
+    if (vm.count("out") && opt.optimalResults.gateCount > 0) {
         const std::string out = vm["out"].as<std::string>();
         opt.dumpResult(out, qc::Format::OpenQASM);
     }
     if (vm.count("stats")) {
         const std::string stats = vm["stats"].as<std::string>();
         std::ofstream     ofs(stats);
-        opt.optimal_results.dump(ofs);
+        opt.optimalResults.dump(ofs);
     } else {
-        opt.optimal_results.dump(std::cout);
+        opt.optimalResults.dump(std::cout);
     }
 }

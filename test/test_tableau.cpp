@@ -123,7 +123,7 @@ TEST(TestTableau, LoadTableauFrom) {
 
     Tableau     tableau{};
     Tableau     tableau1{};
-    std::string tableau_string = "Stabilizer = ['+XX', '+ZZ']";
+    std::string tableau_string = "Stabilizer = ['+XI', '+IZ']";
 
     tableau.fromString(tableau_string);
     Tableau::generateTableau(tableau1, qc);

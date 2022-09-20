@@ -16,7 +16,6 @@
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 namespace py = pybind11;
-namespace nl = nlohmann;
 using namespace pybind11::literals;
 
 void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
@@ -80,9 +79,9 @@ CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch,
 
     loadQC(qc, circ);
 
-    std::unique_ptr<CliffordOptimizer> optimizer;
+    std::unique_ptr<CliffordSynthesizer> optimizer;
     try {
-        optimizer = std::make_unique<CliffordOptimizer>();
+        optimizer = std::make_unique<CliffordSynthesizer>(false, false, 0, 0, strategy, SynthesisTarget::GATES);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not construct optimizer: " << e.what();
@@ -90,7 +89,6 @@ CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch,
     }
 
     try {
-        optimizer->init(false, false, 0, 0, strategy, SynthesisTarget::GATES);
         optimizer->setCircuit(qc);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
@@ -107,9 +105,9 @@ CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch,
         throw std::invalid_argument(ss.str());
     }
 
-    optimizer->optimal_results.generateStringCircuit();
+    optimizer->optimalResults.generateStringCircuit();
 
-    return optimizer->optimal_results;
+    return optimizer->optimalResults;
 }
 
 // c++ binding function
@@ -123,9 +121,9 @@ CliffordOptimizationResults synthesize(const std::string& tableau, Architecture&
         throw std::invalid_argument(ss.str());
     }
 
-    std::unique_ptr<CliffordOptimizer> optimizer;
+    std::unique_ptr<CliffordSynthesizer> optimizer;
     try {
-        optimizer = std::make_unique<CliffordOptimizer>();
+        optimizer = std::make_unique<CliffordSynthesizer>(false, false, 0, 0, strategy, SynthesisTarget::GATES);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not construct optimizer: " << e.what();
@@ -133,8 +131,7 @@ CliffordOptimizationResults synthesize(const std::string& tableau, Architecture&
     }
 
     try {
-        optimizer->init(false, false, 0, 0, strategy, SynthesisTarget::GATES);
-        optimizer->setTableau(tab);
+        optimizer->setTargetTableau(tab);
         optimizer->setArchitecture(arch);
     } catch (std::exception const& e) {
         std::stringstream ss{};
@@ -150,9 +147,9 @@ CliffordOptimizationResults synthesize(const std::string& tableau, Architecture&
         throw std::invalid_argument(ss.str());
     }
 
-    optimizer->optimal_results.generateStringCircuit();
+    optimizer->optimalResults.generateStringCircuit();
 
-    return optimizer->optimal_results;
+    return optimizer->optimalResults;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -332,25 +329,25 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("get_two_qubit_error", &Architecture::Properties::getTwoQubitErrorRate, "control"_a, "target"_a, "operation"_a = "cx")
             .def("set_two_qubit_error", &Architecture::Properties::setTwoQubitErrorRate, "control"_a, "target"_a, "error_rate"_a, "operation"_a = "cx")
             .def(
-                    "get_readout_error", [](const Architecture::Properties& props, unsigned short qubit) { return props.readoutErrorRate.get(qubit); }, "qubit"_a)
+                    "get_readout_error", [](const Architecture::Properties& props, uint16_t qubit) { return props.readoutErrorRate.get(qubit); }, "qubit"_a)
             .def(
-                    "set_readout_error", [](Architecture::Properties& props, unsigned short qubit, double rate) { props.readoutErrorRate.set(qubit, rate); }, "qubit"_a, "readout_error_rate"_a)
+                    "set_readout_error", [](Architecture::Properties& props, uint16_t qubit, double rate) { props.readoutErrorRate.set(qubit, rate); }, "qubit"_a, "readout_error_rate"_a)
             .def(
-                    "get_t1", [](const Architecture::Properties& props, unsigned short qubit) { return props.t1Time.get(qubit); }, "qubit"_a)
+                    "get_t1", [](const Architecture::Properties& props, uint16_t qubit) { return props.t1Time.get(qubit); }, "qubit"_a)
             .def(
-                    "set_t1", [](Architecture::Properties& props, unsigned short qubit, double t1) { props.t1Time.set(qubit, t1); }, "qubit"_a, "t1"_a)
+                    "set_t1", [](Architecture::Properties& props, uint16_t qubit, double t1) { props.t1Time.set(qubit, t1); }, "qubit"_a, "t1"_a)
             .def(
-                    "get_t2", [](const Architecture::Properties& props, unsigned short qubit) { return props.t2Time.get(qubit); }, "qubit"_a)
+                    "get_t2", [](const Architecture::Properties& props, uint16_t qubit) { return props.t2Time.get(qubit); }, "qubit"_a)
             .def(
-                    "set_t2", [](Architecture::Properties& props, unsigned short qubit, double t2) { props.t2Time.set(qubit, t2); }, "qubit"_a, "t2"_a)
+                    "set_t2", [](Architecture::Properties& props, uint16_t qubit, double t2) { props.t2Time.set(qubit, t2); }, "qubit"_a, "t2"_a)
             .def(
-                    "get_frequency", [](const Architecture::Properties& props, unsigned short qubit) { return props.qubitFrequency.get(qubit); }, "qubit"_a)
+                    "get_frequency", [](const Architecture::Properties& props, uint16_t qubit) { return props.qubitFrequency.get(qubit); }, "qubit"_a)
             .def(
-                    "set_frequency", [](Architecture::Properties& props, unsigned short qubit, double freq) { props.qubitFrequency.set(qubit, freq); }, "qubit"_a, "qubit_frequency"_a)
+                    "set_frequency", [](Architecture::Properties& props, uint16_t qubit, double freq) { props.qubitFrequency.set(qubit, freq); }, "qubit"_a, "qubit_frequency"_a)
             .def(
-                    "get_calibration_date", [](const Architecture::Properties& props, unsigned short qubit) { return props.calibrationDate.get(qubit); }, "qubit"_a)
+                    "get_calibration_date", [](const Architecture::Properties& props, uint16_t qubit) { return props.calibrationDate.get(qubit); }, "qubit"_a)
             .def(
-                    "set_calibration_date", [](Architecture::Properties& props, unsigned short qubit, const std::string& date) { props.calibrationDate.set(qubit, date); }, "qubit"_a, "calibration_date"_a)
+                    "set_calibration_date", [](Architecture::Properties& props, uint16_t qubit, const std::string& date) { props.calibrationDate.set(qubit, date); }, "qubit"_a, "calibration_date"_a)
             .def("json", &Architecture::Properties::json,
                  "Returns a JSON-style dictionary of all the information present in the :class:`.Properties`")
             .def("__repr__", &Architecture::Properties::toString,
@@ -358,8 +355,8 @@ PYBIND11_MODULE(pyqmap, m) {
 
     // Interface to the QMAP internal architecture class
     arch.def(py::init<>())
-            .def(py::init<unsigned short, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
-            .def(py::init<unsigned short, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
+            .def(py::init<uint16_t, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
+            .def(py::init<uint16_t, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
             .def_property("name", &Architecture::getName, &Architecture::setName)
             .def_property("num_qubits", &Architecture::getNqubits, &Architecture::setNqubits)
             .def_property("coupling_map", py::overload_cast<>(&Architecture::getCouplingMap), &Architecture::setCouplingMap)
@@ -374,16 +371,16 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("sat", &CliffordOptimizationResults::result, "Whether the optimization problem was satisfiable")
             .def_readwrite("result_circuit", &CliffordOptimizationResults::resultStringCircuit, "The resulting circuit")
             .def_readwrite("verbose", &CliffordOptimizationResults::verbose, "Verbosity of the debug messages")
-            .def_readwrite("choose_best", &CliffordOptimizationResults::choose_best, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
+            .def_readwrite("choose_best", &CliffordOptimizationResults::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
             .def_readwrite("strategy", &CliffordOptimizationResults::strategy, "The strategy used to optimize the circuit")
             .def_readwrite("target", &CliffordOptimizationResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
             .def_readwrite("method", &CliffordOptimizationResults::method, "The synthesis method, at the moment only 'z3' is supported")
             .def_readwrite("qubits", &CliffordOptimizationResults::nqubits, "The number of qubits in the resulting circuit")
-            .def_readwrite("initial_timesteps", &CliffordOptimizationResults::initial_timesteps, "The number of initial timesteps alloted for synthesis")
-            .def_readwrite("gate_count", &CliffordOptimizationResults::gate_count, "The number of gates in the resulting circuit")
+            .def_readwrite("initial_timesteps", &CliffordOptimizationResults::initialTimesteps, "The number of initial timesteps alloted for synthesis")
+            .def_readwrite("gate_count", &CliffordOptimizationResults::gateCount, "The number of gates in the resulting circuit")
             .def_readwrite("depth", &CliffordOptimizationResults::depth, "The depth of the resulting circuit")
             .def_readwrite("fidelity", &CliffordOptimizationResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
-            .def_readwrite("total_seconds", &CliffordOptimizationResults::total_seconds, "The total time taken to synthesize the circuit")
+            .def_readwrite("total_seconds", &CliffordOptimizationResults::totalSeconds, "The total time taken to synthesize the circuit")
             .def("json", &CliffordOptimizationResults::json)
             .def("__repr__", &CliffordOptimizationResults::getStrRepr);
 

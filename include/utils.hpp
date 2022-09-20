@@ -136,7 +136,7 @@ std::string printPi(std::vector<unsigned short>& pi);
 void dfs(unsigned short current, std::set<unsigned short>& visited, const CouplingMap& rcm);
 
 using filter_function = std::function<bool(const std::set<unsigned short>&)>;
-std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int size, filter_function filter = nullptr);
+std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int size, const filter_function& filter = nullptr);
 
 void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
                 const std::set<char>& ignored_chars, std::vector<std::string>& result);

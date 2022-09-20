@@ -4,65 +4,65 @@
 
 class TestCliffordSynthesis: public testing::TestWithParam<std::string> {
 protected:
-    std::string test_architecture_dir = "./architectures/";
-    std::string test_calibration_dir  = "./calibration/";
-    std::string test_example_dir      = "./examples/cliffordexamples/";
+    std::string testArchitectureDir = "./architectures/";
+    std::string testCalibrationDir  = "./calibration/";
+    std::string testExampleDir      = "./examples/cliffordexamples/";
 
-    Architecture IBMQ_Yorktown{};
-    Architecture IBMQ_London{};
-    Architecture IBM_QX4{};
+    Architecture ibmqYorktown{};
+    Architecture ibmqLondon{};
+    Architecture ibmQX4{};
 
-    std::unique_ptr<CliffordOptimizer> qx4_optimizer{};
-    std::unique_ptr<CliffordOptimizer> yorktown_optimizer{};
-    std::unique_ptr<CliffordOptimizer> london_optimizer{};
+    std::unique_ptr<CliffordSynthesizer> qx4Optimizer{};
+    std::unique_ptr<CliffordSynthesizer> yorktownOptimizer{};
+    std::unique_ptr<CliffordSynthesizer> londonOptimizer{};
 
     void SetUp() override {
         using namespace dd::literals;
         util::init();
-        IBMQ_Yorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
-        IBMQ_London.loadCouplingMap(test_architecture_dir + "ibmq_london.arch");
-        IBMQ_London.loadProperties(test_calibration_dir + "ibmq_london.csv");
-        IBM_QX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
+        ibmqYorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
+        ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
+        ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
+        ibmQX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
 
-        yorktown_optimizer = std::make_unique<CliffordOptimizer>();
-        yorktown_optimizer->setArchitecture(IBMQ_Yorktown);
+        yorktownOptimizer = std::make_unique<CliffordSynthesizer>();
+        yorktownOptimizer->setArchitecture(ibmqYorktown);
 
-        london_optimizer = std::make_unique<CliffordOptimizer>();
-        london_optimizer->setArchitecture(IBMQ_London);
+        londonOptimizer = std::make_unique<CliffordSynthesizer>();
+        londonOptimizer->setArchitecture(ibmqLondon);
 
-        qx4_optimizer = std::make_unique<CliffordOptimizer>();
-        qx4_optimizer->setArchitecture(IBM_QX4);
+        qx4Optimizer = std::make_unique<CliffordSynthesizer>();
+        qx4Optimizer->setArchitecture(ibmQX4);
     }
 };
 
 INSTANTIATE_TEST_SUITE_P(
-        CliffordOptimizer, TestCliffordSynthesis,
+        CliffordSynthesizer, TestCliffordSynthesis,
         testing::Values(
                 "destabilizer.txt"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 10;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 10;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            london_optimizer->optimal_results.dump(std::cout);
+            londonOptimizer->optimalResults.dump(std::cout);
 
-            qx4_optimizer->optimal_results.dump(std::cout);
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            qx4Optimizer->optimalResults.dump(std::cout);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
@@ -70,7 +70,7 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
 TEST(TestCliffordSynthesis, SanityCheck) {
     util::init();
     qc::QuantumComputation qc{};
-    CliffordOptimizer      optimizer{};
+    CliffordSynthesizer    optimizer{false, false, 2, 10, SynthesisStrategy::UseMinimizer, SynthesisTarget::DEPTH};
     qc.addQubitRegister(2U);
     qc.h(0);
     qc.h(0);
@@ -78,167 +78,166 @@ TEST(TestCliffordSynthesis, SanityCheck) {
     qc.h(0);
     qc.h(0);
 
-    optimizer.init(false, false, 2, 10, SynthesisStrategy::UseMinimizer, SynthesisTarget::DEPTH);
     optimizer.setCircuit(qc);
 
     optimizer.optimize();
 
-    EXPECT_EQ(optimizer.optimal_results.depth, 1);
+    EXPECT_EQ(optimizer.optimalResults.depth, 1);
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target            = SynthesisTarget::DEPTH;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 10;
+            qx4Optimizer->target            = SynthesisTarget::DEPTH;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            london_optimizer->optimal_results.dump(std::cout);
+            londonOptimizer->optimalResults.dump(std::cout);
 
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            london_optimizer->nqubits           = 2;
-            london_optimizer->initial_timesteps = 5;
-            london_optimizer->target            = SynthesisTarget::FIDELITY;
-            Tableau::initTableau(london_optimizer->initialTableau, 2);
-            london_optimizer->targetTableau = tableau;
-            london_optimizer->optimize();
+            londonOptimizer->nqubits           = 2;
+            londonOptimizer->initialTimesteps = 5;
+            londonOptimizer->target            = SynthesisTarget::FIDELITY;
+            Tableau::initTableau(londonOptimizer->initialTableau, 2);
+            londonOptimizer->targetTableau = tableau;
+            londonOptimizer->optimize();
             tableau.clear();
 
-            london_optimizer->optimal_results.dump(std::cout);
+            londonOptimizer->optimalResults.dump(std::cout);
 
-            EXPECT_EQ(london_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(londonOptimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target            = SynthesisTarget::GATES_ONLY_CNOT;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 10;
+            qx4Optimizer->target            = SynthesisTarget::GATES_ONLY_CNOT;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestStartLow) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target            = SynthesisTarget::GATES;
-            qx4_optimizer->strategy          = SynthesisStrategy::StartLow;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 10;
+            qx4Optimizer->target            = SynthesisTarget::GATES;
+            qx4Optimizer->strategy          = SynthesisStrategy::StartLow;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestStartHigh) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 25;
-            qx4_optimizer->target            = SynthesisTarget::GATES;
-            qx4_optimizer->strategy          = SynthesisStrategy::StartHigh;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 25;
+            qx4Optimizer->target            = SynthesisTarget::GATES;
+            qx4Optimizer->strategy          = SynthesisStrategy::StartHigh;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
 
 TEST_P(TestCliffordSynthesis, TestMinMax) {
-    auto&   input_file = GetParam();
+    const auto&   inputFile = GetParam();
     Tableau tableau{};
-    if (input_file.find(".txt") != std::string::npos) {
-        auto is = std::ifstream(test_example_dir + input_file);
+    if (inputFile.find(".txt") != std::string::npos) {
+        auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
-            FATAL() << "Error opening file " << input_file;
+            FATAL() << "Error opening file " << inputFile;
         }
 
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4_optimizer->nqubits           = 2;
-            qx4_optimizer->initial_timesteps = 10;
-            qx4_optimizer->target            = SynthesisTarget::GATES;
-            qx4_optimizer->strategy          = SynthesisStrategy::MinMax;
-            Tableau::initTableau(qx4_optimizer->initialTableau, 2);
-            qx4_optimizer->targetTableau = tableau;
-            qx4_optimizer->optimize();
+            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->initialTimesteps = 10;
+            qx4Optimizer->target            = SynthesisTarget::GATES;
+            qx4Optimizer->strategy          = SynthesisStrategy::MinMax;
+            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
+            qx4Optimizer->targetTableau = tableau;
+            qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4_optimizer->optimal_results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
         }
     }
 }
@@ -247,7 +246,7 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     util::init();
     using namespace dd::literals;
     qc::QuantumComputation qc{};
-    CliffordOptimizer      optimizer{};
+    CliffordSynthesizer    optimizer{};
     qc.addQubitRegister(2U);
 
     qc.x(1);
@@ -302,12 +301,12 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     qc.y(1);
 
     optimizer.nqubits           = 2;
-    optimizer.initial_timesteps = 20;
+    optimizer.initialTimesteps = 20;
     optimizer.nthreads          = 1;
     optimizer.circuit           = qc.clone();
     optimizer.target            = SynthesisTarget::GATES;
     optimizer.strategy          = SynthesisStrategy::SplitIter;
 
     optimizer.optimize();
-    EXPECT_EQ(optimizer.optimal_results.result, SynthesisResult::SAT);
+    EXPECT_EQ(optimizer.optimalResults.result, SynthesisResult::SAT);
 }

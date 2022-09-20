@@ -17,7 +17,7 @@
 #include <vector>
 
 class Tableau {
-    using EntryType   = std::int32_t;
+    using EntryType   = std::uint8_t;
     using RowType     = std::vector<EntryType>;
     using TableauType = std::vector<RowType>;
     TableauType tableau;
@@ -109,7 +109,7 @@ public:
 
     [[nodiscard]] static double tableauDistance(const TableauType& tableau1, const TableauType& tableau2, std::size_t nQubits);
 
-    [[nodiscard]] unsigned long getBVFrom(int column) const;
+    [[nodiscard]] std::uint64_t getBVFrom(int column) const;
 
 private:
     void applyGateH(dd::Qubit target, std::size_t nqubits);
