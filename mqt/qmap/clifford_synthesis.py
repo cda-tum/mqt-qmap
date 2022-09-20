@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from mqt.qmap.load_architecture import load_architecture
+from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
@@ -14,8 +16,6 @@ from mqt.qmap.pyqmap import (
     optimize,
     synthesize,
 )
-from mqt.qmap.load_architecture import load_architecture
-from mqt.qmap.load_calibration import load_calibration
 
 from qiskit import QuantumCircuit
 from qiskit.providers import Backend
@@ -24,11 +24,11 @@ from qiskit.transpiler.target import Target
 
 
 def optimize_clifford(
-        circ: QuantumCircuit | str,
-        arch: str | Arch | Architecture | Backend | None = None,
-        calibration: str | BackendProperties | Target | None = None,
-        target: str | None = None,
-        strategy: str | None = None,
+    circ: QuantumCircuit | str,
+    arch: str | Arch | Architecture | Backend | None = None,
+    calibration: str | BackendProperties | Target | None = None,
+    target: str | None = None,
+    strategy: str | None = None,
 ) -> tuple[QuantumCircuit, CliffordOptResults]:
     """
     Optimize a circuit using the clifford synthesizer.
@@ -47,11 +47,11 @@ def optimize_clifford(
 
 
 def synthesize_clifford(
-        tableau: str,
-        arch: str | Arch | Architecture | Backend | None = None,
-        calibration: str | BackendProperties | Target | None = None,
-        target: str | None = None,
-        strategy: str | None = None,
+    tableau: str,
+    arch: str | Arch | Architecture | Backend | None = None,
+    calibration: str | BackendProperties | Target | None = None,
+    target: str | None = None,
+    strategy: str | None = None,
 ) -> tuple[QuantumCircuit, CliffordOptResults]:
     """
     Synthesize a clifford circuit using the clifford synthesizer and a tableau input.
