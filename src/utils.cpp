@@ -43,7 +43,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes
     std::priority_queue<Node*> queue{};
     queue.push(&nodes.at(start));
     while (!queue.empty()) {
-        auto *current     = queue.top();
+        auto* current    = queue.top();
         current->visited = true;
         queue.pop();
         auto pos = current->pos;
@@ -60,7 +60,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes
             if (to != -1) {
                 if (nodes.at(to).visited) {
                     continue;
-}
+                }
 
                 Node newNode;
                 newNode.cost                  = current->cost + 1.0;
@@ -116,7 +116,7 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited, const Coupling
 
 std::vector<std::set<std::uint16_t>>
 subsets(const std::set<std::uint16_t>& input, int length, const filter_function& filter) {
-    std::size_t                           n = input.size();
+    std::size_t                          n = input.size();
     std::vector<std::set<std::uint16_t>> result;
 
     if (length == 0) {
@@ -132,7 +132,7 @@ subsets(const std::set<std::uint16_t>& input, int length, const filter_function&
 
         while ((i >> n) == 0U) {
             std::set<std::uint16_t> v{};
-            auto                     it = input.begin();
+            auto                    it = input.begin();
 
             for (std::size_t j = 0U; j < n; j++, ++it) {
                 if ((i & (1U << j)) != 0U) {

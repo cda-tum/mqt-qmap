@@ -28,7 +28,7 @@ void Architecture::loadCouplingMap(const std::string& filename) {
         this->loadCouplingMap(ifs);
     } else {
         throw QMAPException("Error opening coupling map file.");
-}
+    }
 }
 
 void Architecture::loadCouplingMap(std::istream&& is) {
@@ -90,13 +90,13 @@ void Architecture::loadProperties(const std::string& filename) {
     properties.setName(filename.substr(slash + 1, dot - slash - 1));
     if (!isArchitectureAvailable()) {
         name = properties.getName();
-}
+    }
     auto ifs = std::ifstream(filename);
     if (ifs.good()) {
         this->loadProperties(ifs);
     } else {
         throw QMAPException("Error opening properties file.");
-}
+    }
 }
 
 void Architecture::loadProperties(std::istream&& is) {
@@ -234,8 +234,8 @@ std::uint64_t Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& per
 
     // create map for goal permutation
     std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
-    std::uint16_t                                     count    = 0;
-    bool                                               identity = true;
+    std::uint16_t                                    count    = 0;
+    bool                                             identity = true;
     for (const auto q: qubits) {
         goalPermutation.emplace(q, permutation.at(count));
         if (q != permutation.at(count)) {
@@ -317,8 +317,8 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 
     // create map for goal permutation
     std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
-    std::uint16_t                                     count    = 0;
-    bool                                               identity = true;
+    std::uint16_t                                    count    = 0;
+    bool                                             identity = true;
     for (const auto q: qubits) {
         goalPermutation.emplace(q, permutation.at(count));
         if (q != permutation.at(count)) {
@@ -365,7 +365,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
             // continue if the same swap was applied earlier
             if (!next.swaps.empty() && next.swaps.back() == swap) {
                 continue;
-}
+            }
 
             // apply and insert swap
             std::swap(next.permutation.at(swap.first), next.permutation.at(swap.second));
@@ -414,7 +414,8 @@ std::uint64_t Architecture::bfs(std::uint16_t start, std::uint16_t goal, const s
             length = v.size();
             solutions.push_back(v);
             break;
-        } {
+        }
+        {
             successors.clear();
             for (const auto& edge: getCouplingMap()) {
                 if (edge.first == current && !contains(v, edge.second)) {
@@ -466,8 +467,8 @@ std::uint64_t Architecture::bfs(std::uint16_t start, std::uint16_t goal, const s
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits) {
     std::vector<std::vector<std::uint16_t>> connections;
-    std::vector<int>                         d;
-    std::vector<bool>                        visited;
+    std::vector<int>                        d;
+    std::vector<bool>                       visited;
     connections.resize(nQubits);
     int maxSum = -1;
     for (auto edge: cm) {
@@ -484,26 +485,26 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits) 
         auto it = std::max_element(d.begin(), d.end());
         if ((*it) > maxSum) {
             maxSum = (*it);
-}
+        }
     }
     return maxSum;
 }
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<std::uint16_t>& qubitChoice) {
     std::vector<std::vector<std::uint16_t>> connections;
-    std::vector<int>                         d;
-    std::vector<bool>                        visited;
+    std::vector<int>                        d;
+    std::vector<bool>                       visited;
     connections.resize(nQubits);
     int maxSum = -1;
     for (auto edge: cm) {
         if ((qubitChoice.count(edge.first) != 0U) && (qubitChoice.count(edge.second) != 0U)) {
             connections.at(edge.first).emplace_back(edge.second);
-}
+        }
     }
     for (int q = 0; q < nQubits; ++q) {
         if (connections.at(q).empty()) {
             continue;
-}
+        }
         d.clear();
         d.resize(nQubits);
         std::fill(d.begin(), d.end(), 0);
@@ -514,7 +515,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, 
         auto it = std::max_element(d.begin(), d.end());
         if ((*it) > maxSum) {
             maxSum = (*it);
-}
+        }
     }
     return maxSum;
 }
@@ -522,12 +523,12 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits, 
 void Architecture::findCouplingLimit(std::uint16_t node, int curSum, const std::vector<std::vector<std::uint16_t>>& connections, std::vector<int>& d, std::vector<bool>& visited) {
     if (visited.at(node)) {
         return;
-}
+    }
     visited[node] = true;
 
     if (d.at(node) < curSum) {
         d[node] = curSum;
-}
+    }
     if (connections.at(node).empty()) {
         visited[node] = false;
         return;

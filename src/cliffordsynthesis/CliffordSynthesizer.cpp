@@ -64,7 +64,7 @@ void CliffordSynthesizer::optimize() {
 }
 
 CliffordOptimizationResults CliffordSynthesizer::mainOptimization(
-        int                                            timesteps,
+        int                                                      timesteps,
         const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
         const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTab,
         Tableau& targetTab) {
@@ -474,7 +474,7 @@ void CliffordSynthesizer::runSplinter(
 };
 
 void CliffordSynthesizer::runSplitIter(
-        const CouplingMap&           reducedCM,
+        const CouplingMap&                reducedCM,
         const std::vector<std::uint16_t>& qubitChoice) {
     if (circuit.size() < 2) {
         return;
@@ -592,10 +592,10 @@ void CliffordSynthesizer::updateResults(CliffordOptimizationResults& results) {
 }
 
 void CliffordSynthesizer::assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
-                                      const LogicMatrix& x,
-                                      const LogicMatrix& z,
-                                      const LogicVector& r, int nqubits,
-                                      int position) {
+                                        const LogicMatrix& x,
+                                        const LogicMatrix& z,
+                                        const LogicVector& r, int nqubits,
+                                        int position) {
     for (int a = 0; a < nqubits; ++a) {
         lb->assertFormula(x[position][a] ==
                           LogicTerm(tableau.getBVFrom(a), nqubits));
@@ -951,7 +951,6 @@ void CliffordSynthesizer::makeMultipleGateConstraints(
     }
 }
 
-
 void CliffordSynthesizer::setCircuit(const qc::QuantumComputation& qc) {
     this->circuit = qc.clone();
     Tableau::initTableau(this->initialTableau, this->nqubits);
@@ -965,5 +964,3 @@ void CliffordSynthesizer::setTargetTableau(Tableau& targetTabl) {
 void CliffordSynthesizer::setInitialTableau(Tableau& initialTabl) {
     this->initialTableau = initialTabl;
 }
-
-

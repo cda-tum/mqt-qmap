@@ -41,8 +41,8 @@ INSTANTIATE_TEST_SUITE_P(
                 "destabilizer.txt"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -52,7 +52,7 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 10;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
@@ -86,8 +86,8 @@ TEST(TestCliffordSynthesis, SanityCheck) {
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -97,9 +97,9 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target            = SynthesisTarget::DEPTH;
+            qx4Optimizer->target           = SynthesisTarget::DEPTH;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
             qx4Optimizer->optimize();
@@ -113,8 +113,8 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -124,9 +124,9 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            londonOptimizer->nqubits           = 2;
+            londonOptimizer->nqubits          = 2;
             londonOptimizer->initialTimesteps = 5;
-            londonOptimizer->target            = SynthesisTarget::FIDELITY;
+            londonOptimizer->target           = SynthesisTarget::FIDELITY;
             Tableau::initTableau(londonOptimizer->initialTableau, 2);
             londonOptimizer->targetTableau = tableau;
             londonOptimizer->optimize();
@@ -140,8 +140,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -151,9 +151,9 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target            = SynthesisTarget::GATES_ONLY_CNOT;
+            qx4Optimizer->target           = SynthesisTarget::GATES_ONLY_CNOT;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
             qx4Optimizer->optimize();
@@ -165,8 +165,8 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestStartLow) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -176,10 +176,10 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target            = SynthesisTarget::GATES;
-            qx4Optimizer->strategy          = SynthesisStrategy::StartLow;
+            qx4Optimizer->target           = SynthesisTarget::GATES;
+            qx4Optimizer->strategy         = SynthesisStrategy::StartLow;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
             qx4Optimizer->optimize();
@@ -191,8 +191,8 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
 }
 
 TEST_P(TestCliffordSynthesis, TestStartHigh) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -202,10 +202,10 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 25;
-            qx4Optimizer->target            = SynthesisTarget::GATES;
-            qx4Optimizer->strategy          = SynthesisStrategy::StartHigh;
+            qx4Optimizer->target           = SynthesisTarget::GATES;
+            qx4Optimizer->strategy         = SynthesisStrategy::StartHigh;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
             qx4Optimizer->optimize();
@@ -217,8 +217,8 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
 }
 
 TEST_P(TestCliffordSynthesis, TestMinMax) {
-    const auto&   inputFile = GetParam();
-    Tableau tableau{};
+    const auto& inputFile = GetParam();
+    Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
         auto is = std::ifstream(testExampleDir + inputFile);
         if (!is.good()) {
@@ -228,10 +228,10 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits           = 2;
+            qx4Optimizer->nqubits          = 2;
             qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target            = SynthesisTarget::GATES;
-            qx4Optimizer->strategy          = SynthesisStrategy::MinMax;
+            qx4Optimizer->target           = SynthesisTarget::GATES;
+            qx4Optimizer->strategy         = SynthesisStrategy::MinMax;
             Tableau::initTableau(qx4Optimizer->initialTableau, 2);
             qx4Optimizer->targetTableau = tableau;
             qx4Optimizer->optimize();
@@ -300,12 +300,12 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     qc.z(0);
     qc.y(1);
 
-    optimizer.nqubits           = 2;
+    optimizer.nqubits          = 2;
     optimizer.initialTimesteps = 20;
-    optimizer.nthreads          = 1;
-    optimizer.circuit           = qc.clone();
-    optimizer.target            = SynthesisTarget::GATES;
-    optimizer.strategy          = SynthesisStrategy::SplitIter;
+    optimizer.nthreads         = 1;
+    optimizer.circuit          = qc.clone();
+    optimizer.target           = SynthesisTarget::GATES;
+    optimizer.strategy         = SynthesisStrategy::SplitIter;
 
     optimizer.optimize();
     EXPECT_EQ(optimizer.optimalResults.result, SynthesisResult::SAT);
