@@ -192,7 +192,7 @@ CliffordOptimizationResults CliffordSynthesizer::mainOptimization(
     INFO() << "Time to solve Model: " << diff.count() << std::endl;
     std::chrono::duration<double, std::milli> elapsedMilliseconds = end - start;
     CliffordOptimizationResults               results{};
-    results.verbose          = verbose;
+    results.verbose          = verbosity;
     results.chooseBest       = chooseBest;
     results.nqubits          = nqubits;
     results.initialTimesteps = timesteps;
@@ -271,7 +271,7 @@ CliffordOptimizationResults CliffordSynthesizer::mainOptimization(
             }
             modelTableau.populateTableauFrom(model->getBitvectorValue(r[gateStep], lb.get()),
                                              nqubits, 2 * nqubits);
-            if (verbose >= 5) {
+            if (verbosity >= 5) {
                 TRACE() << modelTableau;
             }
         }

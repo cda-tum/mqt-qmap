@@ -70,7 +70,7 @@ public:
     unsigned char          nqubits      = 0U;
     std::set<signed char>  usedQubits{};
     std::uint16_t               initialTimesteps = 0U;
-    int                    verbose          = 0;
+    int                         verbosity        = 0;
     int                    nthreads         = 1;
     SynthesisStrategy      strategy         = SynthesisStrategy::UseMinimizer;
     SynthesisTarget        target           = SynthesisTarget::GATES;

@@ -94,7 +94,7 @@ public:
 
     void dump(std::ostream& os) {
         os << "{\"CliffordOptimizationResult\":{" << std::endl;
-        os << R"("verbose":")" << verbose << "\"," << std::endl;
+        os << R"("verbosity":")" << verbose << "\"," << std::endl;
         os << R"("choose_best":")" << chooseBest << "\"," << std::endl;
         os << R"("result":")" << toString(result) << "\"," << std::endl;
         os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
@@ -164,7 +164,7 @@ public:
 
     [[nodiscard]] virtual nlohmann::json json() const {
         nlohmann::json resultJSON{};
-        resultJSON["verbose"]           = verbose;
+        resultJSON["verbosity"]           = verbose;
         resultJSON["choose_best"]       = chooseBest;
         resultJSON["result"]            = toString(result);
         resultJSON["strategy"]          = toString(strategy);

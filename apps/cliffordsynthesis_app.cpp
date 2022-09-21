@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
         R"(choose one metric to optimize ("gates" | "gates_only_cnot" | "depth" | "fidelity"))")(
         "method,m", po::value<std::string>(),
         R"(choose method used to solve ("z3" | "optimath" | "smtlibv2" | "dimacs"))")(
-        "verbose,v", po::value<int>(),
+        "verbosity,v", po::value<int>(),
         "print more information")("testing", "toggle switch for testing mode")(
         "qubits", po::value<int>(), "qubits for test circuit generation")(
         "seed", po::value<int>(),
@@ -80,10 +80,10 @@ int main(int argc, char** argv) {
         opt.useEmbedding = true;
     }
 
-    if (vm.count("verbose")) {
-        opt.verbose = vm["verbose"].as<int>();
-        opt.verbose = 5;
-        switch (opt.verbose) {
+    if (vm.count("verbosity")) {
+        opt.verbosity = vm["verbosity"].as<int>();
+        opt.verbosity = 5;
+        switch (opt.verbosity) {
             case 0:
                 std::cout << "Verbosity: Error\n";
                 break;
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
                 break;
             default:
                 std::cout << "Verbosity: Error\n";
-                opt.verbose = 5;
+                opt.verbosity = 5;
                 break;
         }
     }
@@ -197,10 +197,10 @@ int main(int argc, char** argv) {
         }
         qc::RandomCliffordCircuit rnd(opt.nqubits, circ_depth, seed);
 
-        if (opt.verbose >= 5) {
+        if (opt.verbosity >= 5) {
             rnd.dumpOpenQASM(std::cout);
         }
-        if (opt.verbose >= 2) {
+        if (opt.verbosity >= 2) {
             rnd.printStatistics(std::cout);
         }
         Tableau::generateTableau(opt.targetTableau, rnd);
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
     opt.optimize();
     Tableau resultTableau{};
     Tableau::generateTableau(resultTableau, opt.optimalResults.resultCircuit);
-    if (opt.verbose >= 2) {
+    if (opt.verbosity >= 2) {
         DEBUG() << "TargetTableau:" << std::endl
                 << opt.targetTableau
                 << "ResultTableau:" << std::endl
@@ -251,7 +251,7 @@ int main(int argc, char** argv) {
                         "true" :
                         "false")
             << std::endl;
-    if ((vm.count("testing") || opt.verbose >= 2) &&
+    if ((vm.count("testing") || opt.verbosity >= 2) &&
         opt.optimalResults.gateCount > 0) {
         opt.dumpResult(std::cout, qc::Format::OpenQASM);
     }
