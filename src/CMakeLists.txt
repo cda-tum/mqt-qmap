@@ -4,27 +4,8 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks")
 
 # macro to add core libraries
-macro(ADD_QMAP_LIBRARY libname srcfile)
-  set(lib ${PROJECT_NAME}_${libname}_lib)
-
-  # main project library
-  add_library(
-    ${lib}
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/Mapper.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
-
-  # set include directories
-  target_include_directories(${lib}
-                             PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+macro(ADD_INT_LIBRARY libname srcfile)
+  set(lib ${libname})
 
   # set required C++ standard and disable compiler specific extensions
   target_compile_features(${lib} PUBLIC cxx_std_17)
@@ -76,6 +57,56 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
   # add MQT alias
   add_library(MQT::${lib} ALIAS ${lib})
 endmacro()
+# macro to add core libraries
+macro(ADD_QMAP_LIBRARY libname srcfile)
+  set(lib ${PROJECT_NAME}_${libname}_lib)
+
+  # main project library
+  add_library(
+          ${lib}
+          ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/Mapper.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
+
+  # set include directories
+  target_include_directories(${lib}
+          PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+
+  add_int_library(${lib} ${srcfile})
+endmacro()
+# macro to add core libraries
+macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
+  set(lib ${PROJECT_NAME}_${libname}_lib)
+
+  # main project library
+  add_library(
+          ${lib}
+          ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/Synthesizer.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/Synthesizer.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/SynthesisResults.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
+
+  # set include directories
+  target_include_directories(${lib}
+          PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+
+  add_int_library(${lib} ${srcfile})
+endmacro()
 
 # exact mapper project library
 add_qmap_library(exact ExactMapper)
@@ -83,12 +114,12 @@ add_qmap_library(exact ExactMapper)
 # add LogicBlocks library
 target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
 
-add_qmap_library(cliffordsynthesis CliffordSynthesizer)
+add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
 # add encodings
 target_sources(
   ${PROJECT_NAME}_cliffordsynthesis_lib
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
-          ${${PROJECT_NAME}_SOURCE_DIR}/include/CliffordOptimizationResult.hpp)
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/SynthesisResults.hpp)
 
 # add LogicBlocks library
 target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::Logic

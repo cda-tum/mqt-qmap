@@ -74,7 +74,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch, SynthesisStrategy& strategy) {
+SynthesisResults optimize(const py::object& circ, Architecture& arch, SynthesisStrategy& strategy) {
     qc::QuantumComputation qc{};
 
     loadQC(qc, circ);
@@ -111,7 +111,7 @@ CliffordOptimizationResults optimize(const py::object& circ, Architecture& arch,
 }
 
 // c++ binding function
-CliffordOptimizationResults synthesize(const std::string& tableau, Architecture& arch, SynthesisStrategy& strategy) {
+SynthesisResults synthesize(const std::string& tableau, Architecture& arch, SynthesisStrategy& strategy) {
     auto tab = Tableau();
     try {
         tab.fromString(tableau);
@@ -366,23 +366,23 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-    py::class_<CliffordOptimizationResults>(m, "CliffordOptimizationResults", "Results of the MQT QMAP Clifford synthesis tool")
+    py::class_<SynthesisResults>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
-            .def_readwrite("sat", &CliffordOptimizationResults::result, "Whether the optimization problem was satisfiable")
-            .def_readwrite("result_circuit", &CliffordOptimizationResults::resultStringCircuit, "The resulting circuit")
-            .def_readwrite("verbosity", &CliffordOptimizationResults::verbose, "Verbosity of the debug messages")
-            .def_readwrite("choose_best", &CliffordOptimizationResults::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
-            .def_readwrite("strategy", &CliffordOptimizationResults::strategy, "The strategy used to optimize the circuit")
-            .def_readwrite("target", &CliffordOptimizationResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
-            .def_readwrite("method", &CliffordOptimizationResults::method, "The synthesis method, at the moment only 'z3' is supported")
-            .def_readwrite("qubits", &CliffordOptimizationResults::nqubits, "The number of qubits in the resulting circuit")
-            .def_readwrite("initial_timesteps", &CliffordOptimizationResults::initialTimesteps, "The number of initial timesteps alloted for synthesis")
-            .def_readwrite("gate_count", &CliffordOptimizationResults::gateCount, "The number of gates in the resulting circuit")
-            .def_readwrite("depth", &CliffordOptimizationResults::depth, "The depth of the resulting circuit")
-            .def_readwrite("fidelity", &CliffordOptimizationResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
-            .def_readwrite("total_seconds", &CliffordOptimizationResults::totalSeconds, "The total time taken to synthesize the circuit")
-            .def("json", &CliffordOptimizationResults::json)
-            .def("__repr__", &CliffordOptimizationResults::getStrRepr);
+            .def_readwrite("sat", &SynthesisResults::result, "Whether the optimization problem was satisfiable")
+            .def_readwrite("result_circuit", &SynthesisResults::resultStringCircuit, "The resulting circuit")
+            .def_readwrite("verbosity", &SynthesisResults::verbose, "Verbosity of the debug messages")
+            .def_readwrite("choose_best", &SynthesisResults::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
+            .def_readwrite("strategy", &SynthesisResults::strategy, "The strategy used to optimize the circuit")
+            .def_readwrite("target", &SynthesisResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
+            .def_readwrite("method", &SynthesisResults::method, "The synthesis method, at the moment only 'z3' is supported")
+            .def_readwrite("qubits", &SynthesisResults::nqubits, "The number of qubits in the resulting circuit")
+            .def_readwrite("initial_timesteps", &SynthesisResults::initialTimesteps, "The number of initial timesteps alloted for synthesis")
+            .def_readwrite("gate_count", &SynthesisResults::gateCount, "The number of gates in the resulting circuit")
+            .def_readwrite("depth", &SynthesisResults::depth, "The depth of the resulting circuit")
+            .def_readwrite("fidelity", &SynthesisResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
+            .def_readwrite("total_seconds", &SynthesisResults::totalSeconds, "The total time taken to synthesize the circuit")
+            .def("json", &SynthesisResults::json)
+            .def("__repr__", &SynthesisResults::getStrRepr);
 
     m.def("map", &map, "map a quantum circuit");
     m.def("synthesize", &synthesize, "synthesize a clifford circuit");

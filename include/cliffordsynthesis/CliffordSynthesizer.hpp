@@ -7,10 +7,10 @@
 #define QMAP_CLIFFORDSYNTHESIS_H
 
 #include "Architecture.hpp"
-#include "CliffordOptimizationResult.hpp"
 #include "Encodings/Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "QuantumComputation.hpp"
+#include "SynthesisResults.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -77,7 +77,7 @@ public:
     SynthesisMethod        method           = SynthesisMethod::Z3;
     qc::QuantumComputation circuit;
 
-    std::vector<CouplingMap> highestFidelityMap;
+        std::vector<CouplingMap> highestFidelityMap;
 
     Tableau initialTableau{};
     Tableau targetTableau{};
@@ -103,11 +103,11 @@ public:
         optimalResults.resultCircuit.dump(os, format);
     }
 
-    CliffordOptimizationResults optimalResults{};
+    SynthesisResults optimalResults{};
 
 protected:
     Architecture                architecture{};
-    CliffordOptimizationResults mainOptimization(
+    SynthesisResults            mainOptimization(
             int                                                      timesteps,
             const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
             const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTableau,
@@ -147,8 +147,8 @@ protected:
                             const CouplingMap&                reducedCM,
                             const std::vector<std::uint16_t>& qubitChoice,
                             qc::QuantumComputation&           circuit,
-                            CliffordOptimizationResults* r, CliffordSynthesizer* opt);
-    void        updateResults(CliffordOptimizationResults& r);
+                            SynthesisResults* r, CliffordSynthesizer* opt);
+    void        updateResults(SynthesisResults& r);
 
     static void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
                               const LogicMatrix& x, const LogicMatrix& z,

@@ -5,7 +5,6 @@
 #include "QuantumComputation.hpp"
 #include "Tableau.hpp"
 #include "configuration/SynthesisMethod.hpp"
-#include "configuration/SynthesisResult.hpp"
 #include "configuration/SynthesisStrategy.hpp"
 #include "configuration/SynthesisTarget.hpp"
 #include "operations/Operation.hpp"
@@ -15,20 +14,22 @@
 #include <sstream>
 #include <string>
 
-class CliffordOptimizationResults {
+class SynthesisResults {
 public:
     int               verbose          = 0;
     bool              chooseBest       = false;
     SynthesisStrategy strategy         = SynthesisStrategy::UseMinimizer;
     SynthesisTarget   target           = SynthesisTarget::GATES;
     SynthesisMethod   method           = SynthesisMethod::Z3;
-    SynthesisResult   result           = SynthesisResult::UNDEF;
+    logicbase::Result   result           = logicbase::Result::NDEF;
     unsigned char     nqubits          = 0;
+    std::uint8_t      architectureQubits = 0;
     int               initialTimesteps = 0;
     int               gateCount        = 0;
     int               depth            = 0;
     bool              sat              = false;
     double            fidelity         = 0.0;
+    std::string      architectureName = "";
 
     double totalSeconds = 0;
     double finalRunTime = 0;
@@ -41,10 +42,10 @@ public:
     std::vector<double>              singleFidelity{};
     std::vector<std::vector<double>> doubleFidelity{};
 
-    CliffordOptimizationResults()          = default;
-    virtual ~CliffordOptimizationResults() = default;
+    SynthesisResults()          = default;
+    virtual ~SynthesisResults() = default;
 
-    CliffordOptimizationResults(CliffordOptimizationResults& other):
+    SynthesisResults(SynthesisResults& other):
         verbose(other.verbose), chooseBest(other.chooseBest), strategy(other.strategy), target(other.target), method(other.method), nqubits(other.nqubits), initialTimesteps(other.initialTimesteps), gateCount(other.gateCount), depth(other.depth), sat(other.sat), totalSeconds(other.totalSeconds), finalRunTime(other.finalRunTime) {
         resultCircuit = other.resultCircuit.clone();
         if (other.resultStringCircuit.empty()) {
@@ -60,9 +61,11 @@ public:
         doubleFidelity = other.doubleFidelity;
         fidelity       = other.fidelity;
         result         = other.result;
+        architectureName   = other.architectureName;
+        architectureQubits = other.architectureQubits;
     };
 
-    CliffordOptimizationResults& operator=(CliffordOptimizationResults other) {
+    SynthesisResults& operator=(SynthesisResults other) {
         verbose          = other.verbose;
         chooseBest       = other.chooseBest;
         strategy         = other.strategy;
@@ -89,6 +92,8 @@ public:
         doubleFidelity = other.doubleFidelity;
         fidelity       = other.fidelity;
         result         = other.result;
+        architectureName   = other.architectureName;
+        architectureQubits = other.architectureQubits;
         return *this;
     };
 
