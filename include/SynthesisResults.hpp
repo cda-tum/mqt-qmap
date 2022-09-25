@@ -9,6 +9,7 @@
 #include "configuration/SynthesisTarget.hpp"
 #include "operations/Operation.hpp"
 #include "utils.hpp"
+#include "LogicTerm/Logic.hpp"
 
 #include <ostream>
 #include <sstream>
@@ -101,7 +102,7 @@ public:
         os << "{\"CliffordOptimizationResult\":{" << std::endl;
         os << R"("verbosity":")" << verbose << "\"," << std::endl;
         os << R"("choose_best":")" << chooseBest << "\"," << std::endl;
-        os << R"("result":")" << toString(result) << "\"," << std::endl;
+        os << R"("result":")" << logicbase::toString(result) << "\"," << std::endl;
         os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
         os << R"("target":")" << toString(target) << "\"," << std::endl;
         os << R"("method":")" << toString(method) << "\"," << std::endl;

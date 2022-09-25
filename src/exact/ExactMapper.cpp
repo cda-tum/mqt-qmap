@@ -446,13 +446,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     varIDs.push_back(x[k][i][j]);
                 }
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::atMostOneCmdr(encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::atMostOneCmdr(encodings::groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::atMostOneCmdr(encodings::groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    lb->assertFormula(AtMostOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::atMostOneCmdr(encodings::groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
                 }
             }
 
@@ -463,13 +463,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
                 }
             }
         }
@@ -482,7 +482,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                     vars.emplace_back(x[k][i][j]);
                     varIDs.emplace_back(j);
                 }
-                lb->assertFormula(AtMostOneBiMander(vars, lb.get()));
+                lb->assertFormula(encodings::atMostOneBiMander(vars, lb.get()));
             }
 
             for (unsigned short j = 0; j < qc.getNqubits(); ++j) { //There is no exactly one Bimander
@@ -492,13 +492,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 }
 
                 if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
                 } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                    lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
+                    lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
                 }
             }
         }
@@ -588,13 +588,13 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
                 ++piCount;
             } while (std::next_permutation(pi.begin(), pi.end()));
             if (config.commanderGrouping == CommanderGrouping::Fixed2) {
-                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
+                lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 2), LogicTerm::noneTerm(), lb.get()));
             } else if (config.commanderGrouping == CommanderGrouping::Fixed3) {
-                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
+                lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, 3), LogicTerm::noneTerm(), lb.get()));
             } else if (config.commanderGrouping == CommanderGrouping::Logarithm) {
-                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
+                lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, static_cast<std::size_t>(std::log(varIDs.size()))), LogicTerm::noneTerm(), lb.get()));
             } else if (config.commanderGrouping == CommanderGrouping::Halves) {
-                lb->assertFormula(ExactlyOneCMDR(groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
+                lb->assertFormula(encodings::exactlyOneCmdr(encodings::groupVars(varIDs, varIDs.size() / 2), LogicTerm::noneTerm(), lb.get()));
             }
         }
     }
@@ -604,7 +604,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     // cost for permutations
     piCount         = 0;
     internalPiCount = 0;
-    std::vector<std::set<WeightedVar>> weightedVars(reducedLayerIndices.size());
+    std::vector<std::set<encodings::WeightedVar>> weightedVars(reducedLayerIndices.size());
     auto                               cost = LogicTerm(0);
     do {
         if (skipped_pi.count(piCount) == 0 || !config.enableSwapLimits) {
@@ -617,7 +617,7 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
             for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
                 cost = cost + LogicTerm::ite(y[k - 1][internalPiCount], LogicTerm(static_cast<int>(picost)), LogicTerm(0));
                 if (config.useBDD)
-                    weightedVars[k].emplace(WeightedVar(y[k - 1][internalPiCount], static_cast<int>(picost)));
+                    weightedVars[k].emplace(encodings::WeightedVar(y[k - 1][internalPiCount], static_cast<int>(picost)));
             }
             ++internalPiCount;
         }
