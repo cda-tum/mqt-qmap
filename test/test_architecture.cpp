@@ -150,3 +150,10 @@ TEST(TestArchitecture, FullyConnectedTest) {
 
     ASSERT_TRUE(cm.size() == 3 * 2);
 }
+
+TEST(TestArchitecture, MinimumNumberOfSwapsError) {
+    Architecture                                           architecture{};
+    std::vector<unsigned short>                            permutation{1, 1, 2, 3, 4};
+    std::vector<std::pair<unsigned short, unsigned short>> swaps{};
+    EXPECT_THROW(architecture.minimumNumberOfSwaps(permutation, swaps), std::runtime_error);
+}

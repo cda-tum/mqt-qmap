@@ -1,0 +1,71 @@
+name: Python
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  Z3_VERSION: 4.11.2
+  FORCE_COLOR: 3
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Run my[py] linter
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup nox
+        uses: excitedleigh/setup-nox@v2.1.0
+      - name: Run mypy via nox
+        run: nox -s mypy
+
+  python-tests:
+    name: Tests ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup nox
+        uses: excitedleigh/setup-nox@v2.1.0
+      - name: Test on 🐍 3.7
+        run: nox -s tests-3.7
+      # Python 3.8 and 3.9 are only tested on Linux.
+      - if: runner.os == 'Linux'
+        name: Test on 🐍 3.8
+        run: nox -s tests-3.8
+      - if: runner.os == 'Linux'
+        name: Test on 🐍 3.9
+        run: nox -s tests-3.9
+      # Python 3.10 under Linux is tested separately as part of the coverage job.
+      - if: runner.os != 'Linux'
+        name: Test on 🐍 3.10
+        run: nox -s tests-3.10
+      # Run the coverage job on Python 3.10 and upload the coverage data.
+      - if: runner.os == 'Linux'
+        name: Test and Coverage on 🐍 3.10
+        run: nox -s coverage-3.10 -- --cov-report=xml
+      - if: runner.os == 'Linux'
+        name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3.1.1

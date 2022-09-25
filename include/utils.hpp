@@ -47,7 +47,7 @@ public:
 };
 
 /// Computes n! recursively
-/// \param n interger to compute factorial of
+/// \param n integer to compute factorial of
 /// \return n!
 static inline unsigned long factorial(unsigned long n) {
     if (n == 1)
@@ -132,14 +132,6 @@ std::string printPi(std::vector<unsigned short>& pi);
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
 void dfs(unsigned short current, std::set<unsigned short>& visited, const CouplingMap& rcm);
-
-/// Helper function returning correct 1D array index for 3D array
-/// \param k first index
-/// \param i second index
-/// \param j third index
-/// \return index in 1D array
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, const std::set<unsigned short>& jValues);
-unsigned long idx(unsigned int k, unsigned short i, unsigned short j, const std::set<unsigned short>& iValues, unsigned short nj);
 
 using filter_function = std::function<bool(const std::set<unsigned short>&)>;
 std::vector<std::set<unsigned short>> subsets(const std::set<unsigned short>& input, int size, filter_function filter = nullptr);
