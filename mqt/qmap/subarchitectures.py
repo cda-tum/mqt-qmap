@@ -74,8 +74,8 @@ class SubarchitectureOrder:
 
         if isinstance(arch, rx.PyGraph):
             self.arch = arch
-        else:
-            num_nodes = max(max(edge) for edge in arch)
+        elif isinstance(arch, list):
+            num_nodes = max(max(int(u), int(v)) for u,v in arch)
             self.arch = rx.PyGraph()
             self.arch.add_nodes_from(list(range(num_nodes + 1)))
             self.arch.add_edges_from_no_data([tuple(edge) for edge in arch])

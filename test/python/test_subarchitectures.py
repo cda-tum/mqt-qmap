@@ -4,7 +4,7 @@ from mqt.qmap.subarchitectures import SubarchitectureOrder
 
 
 @pytest.fixture
-def ibm_guadalupe():
+def ibm_guadalupe() -> SubarchitectureOrder:
     return SubarchitectureOrder(
         [
             [0, 1],
@@ -28,13 +28,13 @@ def ibm_guadalupe():
 
 
 @pytest.fixture
-def singleton_graph():
+def singleton_graph() -> rx.PyGraph:
     g = rx.PyGraph()
     g.add_node(0)
     return g
 
 
-def test_singleton_graph(singleton_graph):
+def test_singleton_graph(singleton_graph : rx.PyGraph) -> None:
     """Verify that singleton graph has trivial ordering."""
 
     order = SubarchitectureOrder(singleton_graph)
@@ -45,7 +45,7 @@ def test_singleton_graph(singleton_graph):
     assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)
 
 
-def test_two_node_graph(singleton_graph):
+def test_two_node_graph(singleton_graph : rx.PyGraph) -> None:
     """Verify ordering for graph with two nodes and one edge."""
 
     order = SubarchitectureOrder([[0, 1]])
@@ -57,7 +57,7 @@ def test_two_node_graph(singleton_graph):
     assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)
 
 
-def test_ibm_guadalupe_opt(ibm_guadalupe):
+def test_ibm_guadalupe_opt(ibm_guadalupe : SubarchitectureOrder) -> None:
 
     opt_cand_9 = ibm_guadalupe.optimal_candidates(9)
     assert len(opt_cand_9) == 2
@@ -66,7 +66,7 @@ def test_ibm_guadalupe_opt(ibm_guadalupe):
     assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])
 
 
-def test_ibm_guadalupe_cov(ibm_guadalupe):
+def test_ibm_guadalupe_cov(ibm_guadalupe : SubarchitectureOrder) -> None:
     cov = ibm_guadalupe.covering(9, 2)
     assert 1 <= len(cov) <= 2
 
