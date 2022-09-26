@@ -11,7 +11,6 @@ else:
 
 import pathlib
 import pickle
-from collections import defaultdict
 from itertools import combinations
 from typing import Dict, List, NewType, Tuple, Union
 
@@ -69,20 +68,20 @@ class SubarchitectureOrder:
         else:
             self.arch = rx.networkx_converter(nx.from_edgelist(arch))
 
-        self.subarch_order = defaultdict(lambda: [])
-        self.desirable_subarchitectures = defaultdict(lambda: [])
+        self.subarch_order = dict()
+        self.desirable_subarchitectures = dict()
+        self.__isomorphisms = dict()
 
-        self.__isomorphisms = defaultdict(lambda: {})
-
-        self.__compute_subgraphs()
+        self.__compute_subarchs()
         self.__compute_subarch_order()
         self.__compute_desirable_subarchitectures()
-        self.subarch_order = dict(self.subarch_order)
-        self.desirable_subarchitectures = dict(self.desirable_subarchitectures)
-        self.__isomorphisms = dict(self.__isomorphisms)
 
     def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
-        """Return optimal subarchitecture candidate."""
+        """Return optimal subarchitecture candidate.
+
+        nqubits : int
+            size of circuit for which the optimal candidate should be given.
+        """
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
             raise ValueError(
                 "Number of qubits must not be smaller or equal 0 or larger then number of physical qubits of architecture."
@@ -153,7 +152,7 @@ class SubarchitectureOrder:
         self.desirable_subarchitectures = temp.desirable_subarchitectures
         self.sgs = temp.sgs
 
-    def __compute_subgraphs(self) -> None:
+    def __compute_subarchs(self) -> None:
         self.sgs = [[] for i in range(self.arch.num_nodes() + 1)]
 
         for i in range(1, self.arch.num_nodes() + 1):
@@ -167,6 +166,12 @@ class SubarchitectureOrder:
                             break
                     if new_class:
                         self.sgs[i].append(sg)
+        # init orders
+        for n in range(self.arch.num_nodes()+1):
+            for i in range(len(self.sgs[i])):
+                self.subarch_order[(n,i)] = []
+                self.desirable_subarchitectures[(n,i)] = []
+                self.__isomorphisms[(n,i)] = []
 
     def __compute_subarch_order(self) -> None:
         for n, sgs_n in enumerate(self.sgs[:-1]):
@@ -201,7 +206,8 @@ class SubarchitectureOrder:
         return combined
 
     def __transitive_closure(self, po: PartialOrder) -> PartialOrder:
-        po_trans = defaultdict(lambda: [])
+        po_trans = dict()
+
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
                 new_rel = po[(n, i)].copy()
@@ -213,7 +219,7 @@ class SubarchitectureOrder:
         return po_trans
 
     def __reflexive_closure(self, po: PartialOrder) -> PartialOrder:
-        po_ref = defaultdict(lambda: [])
+        po_ref = dict()
         for k, v in po.items():
             v_copy = v.copy()
             v_copy.append(k)
@@ -221,7 +227,7 @@ class SubarchitectureOrder:
         return po_ref
 
     def __inverse_relation(self, po: PartialOrder) -> PartialOrder:
-        po_inv = defaultdict(lambda: [])
+        po_inv = dict()
         for k, v in po.items():
             for e in v:
                 po_inv[e].append(k)
