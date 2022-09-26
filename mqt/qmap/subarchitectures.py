@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-import os
+import sys
+
+if sys.version_info < (3, 10, 0):
+    import importlib_resources as resources
+else:
+    from importlib import resources
+
+import pathlib
 import pickle
 from collections import defaultdict
 from itertools import combinations
@@ -14,7 +21,6 @@ import retworkx as rx
 Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, List[Tuple[int, int]]])
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Tuple[int, int]])
 
-package_directory = os.path.dirname(os.path.abspath(__file__))
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
 
 
@@ -125,19 +131,27 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for n, i in cov]
 
-    def store_library(self, lib_name: str):
+    def store_library(self, lib_name: Union[str, pathlib.Path]):
         """Store ordering."""
-        with open(lib_name, "wb") as f:
-            pickle.dump(self, file=f)
+        if type(lib_name) is str:
+            with open(lib_name, "wb") as f:
+                pickle.dump(self, file=f)
+        else:
+            pickle.dump(self, file=lib_name)
 
-    def __load_library(self, lib_name_str):
-        with open(lib_name_str, "rb") as f:
-            temp = pickle.load(f)
-            self.__isomorphisms = temp.__isomorphisms
-            self.arch = temp.arch
-            self.subarch_order = temp.subarch_order
-            self.desirable_subarchitectures = temp.desirable_subarchitectures
-            self.sgs = temp.sgs
+    def __load_library(self, lib_name: Union[str, pathlib.Path]):
+        temp = None
+        if type(lib_name) is str:
+            with open(lib_name, "rb") as f:
+                temp = pickle.load(f)
+        else:
+            temp = pickle.load(lib_name)
+
+        self.__isomorphisms = temp.__isomorphisms
+        self.arch = temp.arch
+        self.subarch_order = temp.subarch_order
+        self.desirable_subarchitectures = temp.desirable_subarchitectures
+        self.sgs = temp.sgs
 
     def __compute_subgraphs(self) -> None:
         self.sgs = [[] for i in range(self.arch.num_nodes() + 1)]
@@ -262,11 +276,13 @@ class SubarchitectureOrder:
 
 def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
     """Load the precomputed ibm guadalupe subarchitectures."""
-    path = os.path.join(package_directory, "libs/ibm_guadalupe_16")
-    return SubarchitectureOrder(path)
+    ref = resources.files("mqt.qmap") / "libs" / "ibm_guadalupe_16"
+    with resources.as_file(ref) as path:
+        return SubarchitectureOrder(path)
 
 
 def rigetti_16_subarchitectures() -> SubarchitectureOrder:
     """Load the precomputed rigetti subarchitectures."""
-    path = os.path.join(package_directory, "libs/rigetti_16")
-    return SubarchitectureOrder(path)
+    ref = resources.files("mqt.qmap") / "libs" / "rigetti_16"
+    with resources.as_file(ref) as path:
+        return SubarchitectureOrder(path)
