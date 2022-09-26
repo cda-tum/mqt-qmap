@@ -1,8 +1,5 @@
-"""
-Functionality for computing good subarchitectures for quantum circuit mapping.
+"""Functionality for computing good subarchitectures for quantum circuit mapping."""
 
-The function provided in this module... TODO
-"""
 from __future__ import annotations
 
 import os
