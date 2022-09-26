@@ -12,12 +12,10 @@ else:
 import pathlib
 import pickle
 from itertools import combinations
-from typing import Dict, List, NewType, Tuple, Union, Set
+from typing import Dict, NewType, Set, Tuple
 
-import networkx as nx
 import retworkx as rx
 
-Subarchitecture = NewType("Subarchitecture", Union[rx.PyGraph, List[Tuple[int, int]]])
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
@@ -50,7 +48,7 @@ class SubarchitectureOrder:
         serialize this object to avoid recomputing the ordering in the future
     """
 
-    def __init__(self, arch: Subarchitecture | str | pathlib.path):
+    def __init__(self, arch: rx.PyGraph | list[tuple[int, int]] | str | pathlib.Path):
         """
         Initialize the partial order.
 
@@ -61,7 +59,7 @@ class SubarchitectureOrder:
         """
         if type(arch) is str:
             if arch in precomputed_backends:
-                ref = resources.files("mqt.qmap") / "libs" / (arch+".pickle")
+                ref = resources.files("mqt.qmap") / "libs" / (arch + ".pickle")
                 with resources.as_file(ref) as path:
                     self.__load_library(path)
             else:
@@ -77,20 +75,21 @@ class SubarchitectureOrder:
         if isinstance(arch, rx.PyGraph):
             self.arch = arch
         else:
-            num_nodes = max(map(lambda edge: max(edge), arch))
+            num_nodes = max(max(edge) for edge in arch)
             self.arch = rx.PyGraph()
-            self.arch.add_nodes_from(list(range(num_nodes+1)))
-            self.arch.add_edges_from_no_data(list(map(lambda edge: tuple(edge), arch)))
+            self.arch.add_nodes_from(list(range(num_nodes + 1)))
+            self.arch.add_edges_from_no_data([tuple(edge) for edge in arch])
 
-        self.subarch_order = {}
-        self.desirable_subarchitectures = {}
-        self.__isomorphisms = {}
+        self.subarch_order: PartialOrder = PartialOrder({})
+        self.desirable_subarchitectures: PartialOrder = PartialOrder({})
+        self.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
 
         self.__compute_subarchs()
         self.__compute_subarch_order()
         self.__compute_desirable_subarchitectures()
+        return
 
-    def optimal_candidates(self, nqubits: int) -> list[Subarchitecture]:
+    def optimal_candidates(self, nqubits: int) -> list[rx.PyGraph]:
         """Return optimal subarchitecture candidate.
 
         nqubits : int
@@ -119,7 +118,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
-    def covering(self, nqubits: int, size: int) -> list[Subarchitecture]:
+    def covering(self, nqubits: int, size: int) -> list[rx.PyGraph]:
         """
         Return covering for nqubit circuits.
 
@@ -143,31 +142,28 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for n, i in cov]
 
-    def store_library(self, lib_name: Union[str, pathlib.Path]):
+    def store_library(self, lib_name: str | pathlib.Path) -> None:
         """Store ordering."""
         if type(lib_name) is str:
-            with open(lib_name+".pickle", "wb") as f:
+            with pathlib.Path(lib_name + ".pickle").open("wb") as f:
                 pickle.dump(self, file=f)
         else:
-            pickle.dump(self, file=lib_name)
+            with pathlib.Path(lib_name).open("wb") as f:
+                pickle.dump(self, file=f)
 
-    def __load_library(self, lib_name: Union[str, pathlib.Path]) -> SubarchitectureOrder:
+    def __load_library(self, lib_name: str | pathlib.Path) -> None:
         temp = None
         if type(lib_name) is str:
             lib_name += ".pickle"
-        with open(lib_name, "rb") as f:
+        with pathlib.Path(lib_name).open("rb") as f:
             temp = pickle.load(f)
 
         self.__dict__.update(temp.__dict__)
 
-        # self.__isomorphisms = temp.__isomorphisms
-        # self.arch = temp.arch
-        # self.subarch_order = temp.subarch_order
-        # self.desirable_subarchitectures = temp.desirable_subarchitectures
-        # self.sgs = temp.sgs
+        return
 
     def __compute_subarchs(self) -> None:
-        self.sgs = [[] for i in range(self.arch.num_nodes() + 1)]
+        self.sgs: list[list[rx.PyGraph]] = [[] for i in range(self.arch.num_nodes() + 1)]
 
         for i in range(1, self.arch.num_nodes() + 1):
             node_combinations = combinations(range(self.arch.num_nodes()), i)
@@ -181,11 +177,11 @@ class SubarchitectureOrder:
                     if new_class:
                         self.sgs[i].append(sg)
         # init orders
-        for n in range(self.arch.num_nodes()+1):
+        for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
-                self.subarch_order[(n,i)] = set()
-                self.desirable_subarchitectures[(n,i)] = set()
-                self.__isomorphisms[(n,i)] = {}
+                self.subarch_order[(n, i)] = set()
+                self.desirable_subarchitectures[(n, i)] = set()
+                self.__isomorphisms[(n, i)] = {}
 
     def __compute_subarch_order(self) -> None:
         for n, sgs_n in enumerate(self.sgs[:-1]):
@@ -206,7 +202,7 @@ class SubarchitectureOrder:
                 for _, i_prime in self.subarch_order[(n, i)]:
                     self.__combine_iso_with_parent(n, i, i_prime)
 
-    def __combine_iso_with_parent(self, n, i, j) -> None:
+    def __combine_iso_with_parent(self, n: int, i: int, j: int) -> None:
         """Combine all isomorphisms from sgs[n][i] with those from sgs[n+1][j]."""
         first = self.__isomorphisms[(n, i)][(n + 1, j)]
         for (row, k), second in self.__isomorphisms[(n + 1, j)].items():
@@ -220,7 +216,7 @@ class SubarchitectureOrder:
         return combined
 
     def __transitive_closure(self, po: PartialOrder) -> PartialOrder:
-        po_trans = {}
+        po_trans: PartialOrder = PartialOrder({})
         po_trans[self.arch.num_nodes(), 0] = set()
 
         for n in reversed(range(1, len(self.sgs[:-1]))):
@@ -234,7 +230,7 @@ class SubarchitectureOrder:
         return po_trans
 
     def __reflexive_closure(self, po: PartialOrder) -> PartialOrder:
-        po_ref = dict()
+        po_ref = PartialOrder({})
         for k, v in po.items():
             v_copy = v.copy()
             v_copy.add(k)
@@ -242,16 +238,16 @@ class SubarchitectureOrder:
         return po_ref
 
     def __inverse_relation(self, po: PartialOrder) -> PartialOrder:
-        po_inv = dict()
+        po_inv = PartialOrder({})
         for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
-                po_inv[(n,i)] = set()
+                po_inv[(n, i)] = set()
         for k, v in po.items():
             for e in v:
                 po_inv[e].add(k)
         return po_inv
 
-    def __path_order_less(self, n, i, n_prime, i_prime) -> bool:
+    def __path_order_less(self, n: int, i: int, n_prime: int, i_prime: int) -> bool:
         lhs = self.sgs[n][i]
         rhs = self.sgs[n_prime][i_prime]
         iso = self.__isomorphisms[(n, i)][(n_prime, i_prime)]
@@ -266,35 +262,31 @@ class SubarchitectureOrder:
                     return True
         return False
 
-    def __compute_desirable_subarchitectures(self):
+    def __compute_desirable_subarchitectures(self) -> None:
         self.__complete_isos()
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
                 val = self.__isomorphisms[(n, i)]
-                # for (n, i), val in self.__isomorphisms.items():
                 for n_prime, i_prime in val.keys():
                     if self.__path_order_less(n, i, n_prime, i_prime):
                         self.desirable_subarchitectures[(n, i)].add((n_prime, i_prime))
                 des = list(self.desirable_subarchitectures[(n, i)])
                 des.sort()
-                new_des = []
+                new_des: set[tuple[int, int]] = set()
                 for j, (n_prime, i_prime) in enumerate(reversed(des)):
                     j = len(des) - j - 1
-                    if not any(
-                        map(
-                            lambda k, n_prime=n_prime, i_prime=i_prime: (n_prime, i_prime) in self.subarch_order[k],
-                            des[:j],
-                        )
-                    ):
-                        new_des.append((n_prime, i_prime))
+                    if not any([(n_prime, i_prime) in self.subarch_order[k] for k in des[:j]]):
+                        new_des.add((n_prime, i_prime))
 
                 self.desirable_subarchitectures[(n, i)] = new_des
                 if len(self.desirable_subarchitectures[(n, i)]) == 0:
-                    self.desirable_subarchitectures[(n, i)].append((n, i))
-        self.desirable_subarchitectures[self.arch.num_nodes(), 0] = [(self.arch.num_nodes(), 0)]
+                    self.desirable_subarchitectures[(n, i)].add((n, i))
+        self.desirable_subarchitectures[self.arch.num_nodes(), 0] = {(self.arch.num_nodes(), 0)}
 
-    def __cand(self, nqubits: int) -> set[Subarchitecture]:
-        return {des for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits for des in desirables}
+    def __cand(self, nqubits: int) -> set[tuple[int, int]]:
+        return {
+            des for (n, i), desirables in self.desirable_subarchitectures.items() if n == nqubits for des in desirables
+        }
 
 
 def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
