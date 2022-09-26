@@ -84,9 +84,11 @@ protected:
     SynthesisResults mainOptimization(
             std::uint32_t timesteps,
             const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
+            const std::vector<std::uint16_t>& qubitChoice,
+            const Tableau& targetTableau, const Tableau& initialTableau,
+            const SynthesisConfiguration& configuration);
 
-    virtual void makeSpecificEncoding(const SynthesisData& data) = 0;
+    virtual void makeSpecificEncoding(const SynthesisData& data, const SynthesisConfiguration& configuration) = 0;
 
     void        runMinimizer(int timesteps, const CouplingMap& reducedCM,
                              const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);

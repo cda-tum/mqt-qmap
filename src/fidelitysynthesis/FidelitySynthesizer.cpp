@@ -1,12 +1,12 @@
 #include "fidelitysynthesis/FidelitySynthesizer.hpp"
-void FidelitySynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
+void FidelitySynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
     makeMultipleGateConstraints(data);
     // COST
-    if (strategy == SynthesisStrategy::UseMinimizer ||
-        strategy == SynthesisStrategy::SplitIter) {
+    if (configuration.strategy == SynthesisStrategy::UseMinimizer ||
+        configuration.strategy == SynthesisStrategy::SplitIter) {
         logicbase::LogicTerm cost = logicbase::LogicTerm(0);
         // For each edge in the coupling map, get the fidelity cost
         for (const auto& edge: data.reducedCM) {

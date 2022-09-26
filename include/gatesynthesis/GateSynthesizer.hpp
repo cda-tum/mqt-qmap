@@ -4,7 +4,7 @@
 #define QMAP_GATESYNTHESIZER_HPP
 class GateSynthesizer: public CliffordSynthesizer {
 protected:
-    void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) override;
+    void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) override;
     void updateResults(SynthesisResults& results) override;
 };
 #endif //QMAP_GATESYNTHESIZER_HPP

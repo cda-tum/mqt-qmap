@@ -1,13 +1,13 @@
 #include "gatesynthesis/GateSynthesizer.hpp"
-void GateSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
+void GateSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     makeSingleGateConstraints(data);
     // COST
-    if (strategy == SynthesisStrategy::UseMinimizer) {
+    if (configuration.strategy == SynthesisStrategy::UseMinimizer) {
         logicbase::LogicTerm cost = logicbase::LogicTerm(0);
         for (int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
-            for (int a = 0; a < nqubits; ++a) {
-                if (target != SynthesisTarget::GATES_ONLY_CNOT) {
+            for (int a = 0; a < configuration.nqubits; ++a) {
+                if (configuration.target != SynthesisTarget::GATES_ONLY_CNOT) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
                     }

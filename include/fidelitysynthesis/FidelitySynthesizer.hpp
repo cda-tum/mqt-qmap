@@ -5,7 +5,7 @@
 
 class FidelitySynthesizer: public CliffordSynthesizer {
 protected:
-    void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) override;
+    void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) override;
     void updateResults(SynthesisResults& results) override;
 };
 

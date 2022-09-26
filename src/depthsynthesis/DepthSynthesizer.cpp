@@ -1,14 +1,14 @@
 #include "depthsynthesis/DepthSynthesizer.hpp"
-void DepthSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
+void DepthSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     using namespace logicbase;
     makeMultipleGateConstraints(data);
     // COST
-    if (strategy == SynthesisStrategy::UseMinimizer ||
-        strategy == SynthesisStrategy::SplitIter) {
+    if (configuration.strategy == SynthesisStrategy::UseMinimizer ||
+        configuration.strategy == SynthesisStrategy::SplitIter) {
         LogicTerm cost = LogicTerm(0);
         for (int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
             LogicTerm anyGate = LogicTerm(true);
-            for (int a = 0; a < nqubits; ++a) {
+            for (int a = 0; a < configuration.nqubits; ++a) {
                 for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                     anyGate = anyGate && !data.gS[gateStep][Gates::toIndex(gate)][a];
                 }
