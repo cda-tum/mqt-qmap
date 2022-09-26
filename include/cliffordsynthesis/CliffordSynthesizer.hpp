@@ -11,6 +11,7 @@
 #include "LogicBlock/LogicBlock.hpp"
 #include "QuantumComputation.hpp"
 #include "SynthesisResults.hpp"
+#include "Synthesizer.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -34,11 +35,26 @@
 #include <utility>
 #include <vector>
 
-class CliffordSynthesizer {
+class CliffordSynthesizer: public Synthesizer {
 public:
-    CliffordSynthesizer() = default;
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding = false, unsigned char pnqubits = 0, std::uint16_t pinitialTimesteps = 0, SynthesisStrategy pstrategy = SynthesisStrategy::UseMinimizer, SynthesisTarget ptarget = SynthesisTarget::GATES):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget) {}
+    struct SynthesisData {
+        std::uint32_t                                            nqubits;
+        std::uint32_t                                            timesteps;
+        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM;
+        const std::vector<std::uint16_t>&                        qubitChoice;
+        std::unique_ptr<logicbase::LogicBlock>&                  lb;
+        const logicbase::LogicMatrix&                            x;
+        const logicbase::LogicMatrix&                            z;
+        const logicbase::LogicVector&                            r;
+        const logicbase::LogicMatrix3D&                          gS;
+        const logicbase::LogicMatrix3D&                          gC;
+    };
+
+public:
+    virtual ~CliffordSynthesizer() = default;
+    CliffordSynthesizer()          = default;
+    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding = false, unsigned char pnqubits = 0, std::uint16_t pinitialTimesteps = 0, SynthesisStrategy pstrategy = SynthesisStrategy::UseMinimizer):
+        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy) {}
     explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, Tableau& targetTabl, Tableau& initTabl, Architecture parchitecture = Architecture()):
         chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget), initialTableau(initTabl), targetTableau(targetTabl), architecture(std::move(parchitecture)) {}
     explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, Tableau& targetTabl, Architecture parchitecture = Architecture()):
@@ -55,7 +71,7 @@ public:
     void setCircuit(const qc::QuantumComputation& qc);
     void setTargetTableau(Tableau& targetTabl);
     void setInitialTableau(Tableau& initialTabl);
-    void optimize();
+    void synthesize();
 
     void setArchitecture(const Architecture& arch) {
         architecture = arch;
@@ -77,7 +93,7 @@ public:
     SynthesisMethod        method           = SynthesisMethod::Z3;
     qc::QuantumComputation circuit;
 
-        std::vector<CouplingMap> highestFidelityMap;
+    std::vector<CouplingMap> highestFidelityMap;
 
     Tableau initialTableau{};
     Tableau targetTableau{};
@@ -106,32 +122,14 @@ public:
     SynthesisResults optimalResults{};
 
 protected:
-    Architecture                architecture{};
-    SynthesisResults            mainOptimization(
-            int                                                      timesteps,
+    Architecture     architecture{};
+    SynthesisResults mainOptimization(
+            std::uint32_t                                            timesteps,
             const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
             const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTableau,
             Tableau& targetTableau);
 
-    void makeDepthOptimizer(
-            int                                                      timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-            const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-            const LogicMatrix3D& gS, const LogicMatrix3D& gC) const;
-
-    void makeGateOptimizer(
-            int                                                      timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-            const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-            const LogicMatrix3D& gS, const LogicMatrix3D& gC) const;
-    void makeFidelityOptimizer(
-            int                                                      timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb,
-            const LogicMatrix& x, const LogicMatrix& z, const LogicVector& r,
-            const LogicMatrix3D& gS, const LogicMatrix3D& gC) const;
+    virtual void makeSynthesis(const SynthesisData& data) = 0;
 
     void        runMinimizer(int timesteps, const CouplingMap& reducedCM,
                              const std::vector<std::uint16_t>& qubitChoice);
@@ -148,24 +146,14 @@ protected:
                             const std::vector<std::uint16_t>& qubitChoice,
                             qc::QuantumComputation&           circuit,
                             SynthesisResults* r, CliffordSynthesizer* opt);
-    void        updateResults(SynthesisResults& r);
+    void        updateResults(SynthesisResults& r) override;
 
-    static void assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
-                              const LogicMatrix& x, const LogicMatrix& z,
-                              const LogicVector& r, int nqubits, int position);
+    static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
 
     static void makeSingleGateConstraints(
-            std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
-            const LogicVector& r, int nqubits, int timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
-            const LogicMatrix3D& gC);
+            const SynthesisData& data);
     static void makeMultipleGateConstraints(
-            std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
-            const LogicVector& r, int nqubits, int timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
-            const LogicMatrix3D& gC);
+            const SynthesisData& data);
 };
 
 class Gates {

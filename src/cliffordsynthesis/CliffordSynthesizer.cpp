@@ -13,7 +13,7 @@
 #include "utils.hpp"
 #include "utils/logging.hpp"
 
-void CliffordSynthesizer::optimize() {
+void CliffordSynthesizer::synthesize() {
     TRACE() << "Strategy: " << toString(strategy) << std::endl;
     TRACE() << "Target: " << toString(target) << std::endl;
     TRACE() << "Method: " << toString(method) << std::endl;
@@ -64,15 +64,15 @@ void CliffordSynthesizer::optimize() {
 }
 
 SynthesisResults CliffordSynthesizer::mainOptimization(
-        int                                                      timesteps,
+        std::uint32_t                                            timesteps,
         const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
         const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTab,
         Tableau& targetTab) {
-    std::unique_ptr<LogicBlock> lb;
+    std::unique_ptr<logicbase::LogicBlock> lb;
     using namespace logicbase;
     bool success = false;
     if (method == SynthesisMethod::Z3) {
-        LogicTerm::termType = TermType::BASE;
+        logicbase::LogicTerm::termType = TermType::BASE;
         if (strategy == SynthesisStrategy::UseMinimizer || strategy == SynthesisStrategy::SplitIter) {
             logicutil::Params params;
             params.addParam("pb.compile_equality", true);
@@ -91,13 +91,13 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
         throw QMAPException("Could not initialize Z3 logic block optimizer");
     }
     DEBUG() << "lb 1: " << lb.get() << std::endl;
-    LogicMatrix   x{};
-    LogicMatrix   z{};
-    LogicVector   r{};
-    LogicMatrix3D gS{};
-    LogicMatrix3D gC{};
+    logicbase::LogicMatrix   x{};
+    logicbase::LogicMatrix   z{};
+    logicbase::LogicVector   r{};
+    logicbase::LogicMatrix3D gS{};
+    logicbase::LogicMatrix3D gC{};
 
-    LogicTerm changes = LogicTerm(true);
+    logicbase::LogicTerm changes = logicbase::LogicTerm(true);
 
     auto start = std::chrono::high_resolution_clock::now();
     /*
@@ -156,22 +156,11 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
         }
     }
 
-    assertTableau(initialTab, lb, x, z, r, nqubits, 0);
-    assertTableau(targetTab, lb, x, z, r, nqubits, timesteps);
+    assertTableau(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, initialTab, 0);
+    assertTableau(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, targetTab, timesteps);
 
-    if (target == SynthesisTarget::DEPTH) {
-        makeDepthOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
-                           gC);
-    } else if (target == SynthesisTarget::GATES || target == SynthesisTarget::GATES_ONLY_CNOT) {
-        makeGateOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
-                          gC);
-    } else if (target == SynthesisTarget::FIDELITY) {
-        makeFidelityOptimizer(timesteps, reducedCM, qubitChoice, lb, x, z, r, gS,
-                              gC);
-    } else {
-        ERROR() << "Unknown target" << std::endl;
-        return SynthesisResults{};
-    }
+    makeSynthesis(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC});
+
     auto                          formulation = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff        = formulation - start;
     INFO() << "Time to prduce Formulation: " << diff.count() << std::endl;
@@ -290,113 +279,12 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
     return results;
 }
 
-void CliffordSynthesizer::makeDepthOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
-    makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                                qubitChoice, gS, gC);
-    // COST
-    if (strategy == SynthesisStrategy::UseMinimizer ||
-        strategy == SynthesisStrategy::SplitIter) {
-        LogicTerm cost = LogicTerm(0);
-        for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-            LogicTerm anyGate = LogicTerm(true);
-            for (int a = 0; a < nqubits; ++a) {
-                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-                    anyGate = anyGate && !gS[gateStep][Gates::toIndex(gate)][a];
-                }
-                for (int b = 0; b <= a; ++b) {
-                    if (a == b) {
-                        continue;
-                    }
-                    anyGate = anyGate && !gC[gateStep][a][b] && !gC[gateStep][b][a];
-                }
-            }
-            cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
-        }
-        dynamic_cast<LogicBlockOptimizer*>(lb.get())->maximize(cost);
-    }
-}
-
-void CliffordSynthesizer::makeFidelityOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
-    if (!architecture.isArchitectureAvailable()) {
-        util::fatal("No fidelity architecture specified in coupling map.");
-    }
-    makeMultipleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                                qubitChoice, gS, gC);
-    // COST
-    if (strategy == SynthesisStrategy::UseMinimizer ||
-        strategy == SynthesisStrategy::SplitIter) {
-        LogicTerm cost = LogicTerm(0);
-        // For each edge in the coupling map, get the fidelity cost
-        for (const auto& edge: reducedCM) {
-            LogicTerm fidelity = LogicTerm(
-                    (1 - std::log(architecture.getFidelityTable()[edge.first][edge.second])) * 1000);
-            auto a = std::find(qubitChoice.begin(), qubitChoice.end(), edge.first);
-            auto b = std::find(qubitChoice.begin(), qubitChoice.end(), edge.second);
-            if (a == qubitChoice.end() || b == qubitChoice.end()) {
-                util::fatal("Coupling map contains invalid qubit.");
-            }
-            // at each time t if there is a gate on the edge, add the cost
-            for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
-                cost = cost + (gC[gateStep][std::distance(qubitChoice.begin(), a)][std::distance(qubitChoice.begin(), b)] * fidelity);
-            }
-        }
-        // For each qubit, get the fidelity cost
-        for (int a = 0; a < nqubits; ++a) {
-            LogicTerm fidelity =
-                    LogicTerm((1 - std::log(architecture.getSingleQubitFidelities()[a])) * 1000);
-            // at each time t if there is a gate on a, add the cost
-            for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
-                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-                    cost = cost + (gS[gateStep][Gates::toIndex(gate)][a] * fidelity);
-                }
-            }
-        }
-        dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
-        cost = LogicTerm(0);
-        for (int gateStep = 0; gateStep < timesteps; ++gateStep) {
-            for (int a = 0; a < nqubits; ++a) {
-                cost = cost + gS[gateStep][1][a] + gS[gateStep][2][a];
-                for (int b = 0; b < nqubits; ++b) {
-                    cost = cost + gC[gateStep][a][b];
-                }
-            }
-        }
-        dynamic_cast<LogicBlockOptimizer*>(lb.get())->maximize(cost);
-    }
-}
-
-void CliffordSynthesizer::makeGateOptimizer(int timesteps, const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM, const std::vector<std::uint16_t>& qubitChoice, std::unique_ptr<LogicBlock>& lb, const logicbase::LogicMatrix& x, const logicbase::LogicMatrix& z, const logicbase::LogicVector& r, const logicbase::LogicMatrix3D& gS, const logicbase::LogicMatrix3D& gC) const {
-    LogicTerm changes = LogicTerm(true);
-    makeSingleGateConstraints(lb, x, z, r, nqubits, timesteps, reducedCM,
-                              qubitChoice, gS, gC);
-    // COST
-    if (strategy == SynthesisStrategy::UseMinimizer) {
-        LogicTerm cost = LogicTerm(0);
-        for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-            for (int a = 0; a < nqubits; ++a) {
-                if (target != SynthesisTarget::GATES_ONLY_CNOT) {
-                    for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-                        cost = cost + gS[gateStep][Gates::toIndex(gate)][a];
-                    }
-                }
-                for (int b = 0; b <= a; ++b) {
-                    if (a == b) {
-                        continue;
-                    }
-                    cost = cost + gC[gateStep][a][b] + gC[gateStep][b][a];
-                }
-            }
-        }
-        dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
-    }
-}
-
 void CliffordSynthesizer::runMinimizer(
         int timesteps, const CouplingMap& reducedCM,
         const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running minimizer" << std::endl;
     SynthesisResults r = mainOptimization(timesteps, reducedCM, qubitChoice,
-                                                     initialTableau, targetTableau);
+                                          initialTableau, targetTableau);
     updateResults(r);
 }
 void CliffordSynthesizer::runStartLow(
@@ -418,8 +306,8 @@ void CliffordSynthesizer::runStartHigh(
         int timesteps, const CouplingMap& reducedCM,
         const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running start high" << std::endl;
-    SynthesisResults            r;
-    int                         oldTimesteps = timesteps;
+    SynthesisResults r;
+    int              oldTimesteps = timesteps;
     while (r.result == logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
         r = mainOptimization(timesteps, reducedCM, qubitChoice, initialTableau,
@@ -437,10 +325,10 @@ void CliffordSynthesizer::runMinMax(
         int timesteps, const CouplingMap& reducedCM,
         const std::vector<std::uint16_t>& qubitChoice) {
     DEBUG() << "Running minmax" << std::endl;
-    SynthesisResults            r;
-    int                         t     = timesteps;
-    int                         upper = timesteps;
-    int                         lower = 0;
+    SynthesisResults r;
+    int              t     = timesteps;
+    int              upper = timesteps;
+    int              lower = 0;
     while (std::abs(upper - lower) > 1) {
         DEBUG() << "Current t=" << t << std::endl;
         r = mainOptimization(t, reducedCM, qubitChoice, initialTableau,
@@ -480,18 +368,18 @@ void CliffordSynthesizer::runSplitIter(
         return;
     }
     DEBUG() << "Running split iter" << std::endl;
-    Tableau                                   fullTableau  = targetTableau;
-    auto                                      circuitSplit = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
-    int                                       split        = std::min(5, nqubits / 2);
-    std::vector<std::thread*>                 threads;
+    Tableau                        fullTableau  = targetTableau;
+    auto                           circuitSplit = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
+    int                            split        = std::min(5, nqubits / 2);
+    std::vector<std::thread*>      threads;
     std::vector<SynthesisResults*> results;
-    int                                       nThreads = nthreads;
+    int                            nThreads = nthreads;
     while (true) {
         results.clear();
         DEBUG() << "Current split size: " << split << std::endl;
         DEBUG() << "Current circuit split size: " << circuitSplit << std::endl;
-        auto                        start = std::chrono::high_resolution_clock::now();
-        SynthesisResults            totalResult;
+        auto             start = std::chrono::high_resolution_clock::now();
+        SynthesisResults totalResult;
         totalResult.result = logicbase::Result::SAT;
         totalResult.resultCircuit.addQubitRegister(nqubits);
         for (size_t i = 0; i * circuitSplit < circuit.getNindividualOps();
@@ -591,363 +479,351 @@ void CliffordSynthesizer::updateResults(SynthesisResults& results) {
     }
 }
 
-void CliffordSynthesizer::assertTableau(const Tableau& tableau, std::unique_ptr<LogicBlock>& lb,
-                                        const LogicMatrix& x,
-                                        const LogicMatrix& z,
-                                        const LogicVector& r, int nqubits,
-                                        int position) {
-    for (int a = 0; a < nqubits; ++a) {
-        lb->assertFormula(x[position][a] ==
-                          LogicTerm(tableau.getBVFrom(a), nqubits));
-        lb->assertFormula(
-                z[position][a] ==
-                LogicTerm(tableau.getBVFrom(a + nqubits), nqubits));
+void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position) {
+    for (unsigned int a = 0; a < data.nqubits; ++a) {
+        data.lb->assertFormula(data.x[position][a] ==
+                               logicbase::LogicTerm(tableau.getBVFrom(a), data.nqubits));
+        data.lb->assertFormula(
+                data.z[position][a] ==
+                logicbase::LogicTerm(tableau.getBVFrom(a + data.nqubits), data.nqubits));
     }
-    lb->assertFormula(
-            r[position] ==
-            LogicTerm(tableau.getBVFrom(2 * nqubits), nqubits));
+    data.lb->assertFormula(
+            data.r[position] ==
+            logicbase::LogicTerm(tableau.getBVFrom(2 * data.nqubits), data.nqubits));
 }
 
 void CliffordSynthesizer::makeSingleGateConstraints(
-        std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
-        const LogicVector& r, int nqubits, int timesteps,
-        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
-        const LogicMatrix3D& gC) {
-    LogicTerm changes = LogicTerm(true);
+        const SynthesisData& data) {
+    logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
-    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-        std::vector<LogicTerm> vars{};
-        for (int a = 0; a < nqubits; ++a) {
+    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        std::vector<logicbase::LogicTerm> vars{};
+        for (unsigned int a = 0; a < data.nqubits; ++a) {
             for (auto gate: Gates::SINGLE_QUBIT) {
-                vars.emplace_back(gS[gateStep][Gates::toIndex(gate)][a]);
+                vars.emplace_back(data.gS[gateStep][Gates::toIndex(gate)][a]);
             }
-            for (int b = 0; b < nqubits; ++b) {
-                if (a == b || reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
-                                      reducedCM.end()) {
+            for (int b = 0; b < data.nqubits; ++b) {
+                if (a == b || data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
+                                      data.reducedCM.end()) {
                     continue;
                 }
-                vars.emplace_back(gC[gateStep][a][b]);
+                vars.emplace_back(data.gC[gateStep][a][b]);
             }
         }
-        lb->assertFormula(ExactlyOneCMDR(
-                groupVars(vars, static_cast<std::size_t>(vars.size() / 2U)),
-                LogicTerm::noneTerm(), lb.get()));
+        data.lb->assertFormula(encodings::exactlyOneCmdr(
+                encodings::groupVars(vars, static_cast<std::size_t>(vars.size() / 2U)),
+                logicbase::LogicTerm::noneTerm(), data.lb.get()));
     }
 
     // GATE CONSTRAINTS
-    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-        for (int a = 0; a < nqubits; ++a) {
+    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        for (unsigned int a = 0; a < data.nqubits; ++a) {
             // NO GATE
-            changes = (x[gateStep][a] == x[gateStep - 1][a]);
-            changes = changes && (z[gateStep][a] == z[gateStep - 1][a]);
+            changes = (data.x[gateStep][a] == data.x[gateStep - 1][a]);
+            changes = changes && (data.z[gateStep][a] == data.z[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
-            changes = changes && (r[gateStep] == r[gateStep - 1]);
-            changes = LogicTerm::implies(gS[gateStep][0][a], changes);
-            lb->assertFormula(changes);
+            changes = changes && (data.r[gateStep] == data.r[gateStep - 1]);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][0][a], changes);
+            data.lb->assertFormula(changes);
 
             // H
-            changes = (z[gateStep][a] == x[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == z[gateStep - 1][a]);
+            changes = (data.z[gateStep][a] == data.x[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.z[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^
-                                       (x[gateStep - 1][a] & z[gateStep - 1][a])));
-            changes = LogicTerm::implies(gS[gateStep][1][a], changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^
+                                            (data.x[gateStep - 1][a] & data.z[gateStep - 1][a])));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][1][a], changes);
 
-            lb->assertFormula(changes);
+            data.lb->assertFormula(changes);
 
             // S
             changes =
-                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^
-                                       (x[gateStep - 1][a] & z[gateStep - 1][a])));
-            changes = LogicTerm::implies(gS[gateStep][2][a], changes);
-            lb->assertFormula(changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^
+                                            (data.x[gateStep - 1][a] & data.z[gateStep - 1][a])));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][2][a], changes);
+            data.lb->assertFormula(changes);
 
             // Sdag
             changes =
-                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^
-                                       (x[gateStep - 1][a] & (x[gateStep - 1][a] ^ z[gateStep - 1][a]))));
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
-            lb->assertFormula(changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^
+                                            (data.x[gateStep - 1][a] & (data.x[gateStep - 1][a] ^ data.z[gateStep - 1][a]))));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
+            data.lb->assertFormula(changes);
 
             // Z
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^ x[gateStep - 1][a]));
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
-            lb->assertFormula(changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^ data.x[gateStep - 1][a]));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
+            data.lb->assertFormula(changes);
 
             // X
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^ z[gateStep - 1][a]));
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
-            lb->assertFormula(changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^ data.z[gateStep - 1][a]));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
+            data.lb->assertFormula(changes);
 
             // Y
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes && (x[gateStep][b] == x[gateStep - 1][b]);
-                changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                changes = changes && (data.x[gateStep][b] == data.x[gateStep - 1][b]);
+                changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
             }
 
             changes = changes &&
-                      (r[gateStep] == (r[gateStep - 1] ^ (z[gateStep - 1][a]) ^ x[gateStep - 1][a]));
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
-            lb->assertFormula(changes);
+                      (data.r[gateStep] == (data.r[gateStep - 1] ^ (data.z[gateStep - 1][a]) ^ data.x[gateStep - 1][a]));
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
+            data.lb->assertFormula(changes);
 
             // CNOT
-            for (int b = 0; b < nqubits; ++b) {
-                if (reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
-                    reducedCM.end()) {
-                    lb->assertFormula(!gC[gateStep][a][b]);
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
+                if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
+                    data.reducedCM.end()) {
+                    data.lb->assertFormula(!data.gC[gateStep][a][b]);
                 } else {
                     changes =
-                            (r[gateStep] == (r[gateStep - 1] ^
-                                             ((x[gateStep - 1][a] & z[gateStep - 1][b]) &
-                                              ((x[gateStep - 1][b] ^ z[gateStep - 1][a]) ^
-                                               LogicTerm((1 << nqubits) - 1, nqubits)))));
-                    changes = changes && (x[gateStep][b] ==
-                                          (x[gateStep - 1][b] ^ x[gateStep - 1][a]));
-                    changes = changes && (z[gateStep][a] ==
-                                          (z[gateStep - 1][a] ^ z[gateStep - 1][b]));
-                    changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
-                    changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
+                            (data.r[gateStep] == (data.r[gateStep - 1] ^
+                                                  ((data.x[gateStep - 1][a] & data.z[gateStep - 1][b]) &
+                                                   ((data.x[gateStep - 1][b] ^ data.z[gateStep - 1][a]) ^
+                                                    logicbase::LogicTerm((1 << data.nqubits) - 1, data.nqubits)))));
+                    changes = changes && (data.x[gateStep][b] ==
+                                          (data.x[gateStep - 1][b] ^ data.x[gateStep - 1][a]));
+                    changes = changes && (data.z[gateStep][a] ==
+                                          (data.z[gateStep - 1][a] ^ data.z[gateStep - 1][b]));
+                    changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
+                    changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
 
-                    for (int c = 0; c < nqubits; ++c) { // All other entries do not change
+                    for (unsigned int c = 0; c < data.nqubits; ++c) { // All other entries do not change
                         if (a == c || b == c) {
                             continue;
                         }
-                        changes = changes && (x[gateStep][c] == x[gateStep - 1][c]);
-                        changes = changes && (z[gateStep][c] == z[gateStep - 1][c]);
+                        changes = changes && (data.x[gateStep][c] == data.x[gateStep - 1][c]);
+                        changes = changes && (data.z[gateStep][c] == data.z[gateStep - 1][c]);
                     }
 
-                    changes = LogicTerm::implies(gC[gateStep][a][b], changes);
-                    lb->assertFormula(changes);
+                    changes = logicbase::LogicTerm::implies(data.gC[gateStep][a][b], changes);
+                    data.lb->assertFormula(changes);
                 }
             }
         }
     }
 }
 void CliffordSynthesizer::makeMultipleGateConstraints(
-        std::unique_ptr<LogicBlock>& lb, const LogicMatrix& x, const LogicMatrix& z,
-        const LogicVector& r, int nqubits, int timesteps,
-        const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice, const LogicMatrix3D& gS,
-        const LogicMatrix3D& gC) {
-    LogicTerm changes = LogicTerm(true);
+        const SynthesisData& data) {
+    logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
-    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-        for (int a = 0; a < nqubits; ++a) {
-            std::vector<LogicTerm> vars{};
+    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        for (unsigned int a = 0; a < data.nqubits; ++a) {
+            std::vector<logicbase::LogicTerm> vars{};
             for (auto gate: Gates::SINGLE_QUBIT) {
-                vars.emplace_back(gS[gateStep][Gates::toIndex(gate)][a]);
+                vars.emplace_back(data.gS[gateStep][Gates::toIndex(gate)][a]);
             }
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                vars.emplace_back(gC[gateStep][a][b]);
-                vars.emplace_back(gC[gateStep][b][a]);
+                vars.emplace_back(data.gC[gateStep][a][b]);
+                vars.emplace_back(data.gC[gateStep][b][a]);
             }
-            lb->assertFormula(ExactlyOneCMDR(
-                    groupVars(vars, static_cast<std::size_t>(vars.size() / 2)),
-                    LogicTerm::noneTerm(), lb.get()));
+            data.lb->assertFormula(encodings::exactlyOneCmdr(
+                    encodings::groupVars(vars, static_cast<std::size_t>(vars.size() / 2)),
+                    logicbase::LogicTerm::noneTerm(), data.lb.get()));
         }
     }
     // Maximum any combination of 1 and 2 qubit gates adding up to n
-    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-        changes = LogicTerm(0);
-        for (int a = 0; a < nqubits; ++a) {
+    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        changes = logicbase::LogicTerm(0);
+        for (unsigned int a = 0; a < data.nqubits; ++a) {
             for (auto gate: Gates::SINGLE_QUBIT) {
-                changes = changes + gS[gateStep][Gates::toIndex(gate)][a];
+                changes = changes + data.gS[gateStep][Gates::toIndex(gate)][a];
             }
-            for (int b = 0; b < nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes + gC[gateStep][a][b] + gC[gateStep][a][b];
+                changes = changes + data.gC[gateStep][a][b] + data.gC[gateStep][a][b];
             }
         }
-        changes = changes < LogicTerm(static_cast<int>(nqubits + 1));
-        lb->assertFormula(changes);
+        changes = changes < logicbase::LogicTerm(static_cast<int>(data.nqubits + 1));
+        data.lb->assertFormula(changes);
     }
 
     // GATE CONSTRAINTS
-    for (int gateStep = 1; gateStep < timesteps + 1; ++gateStep) {
-        LogicTerm rChanges = r[gateStep - 1];
-        for (int a = 0; a < nqubits; ++a) {
+    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        logicbase::LogicTerm rChanges = data.r[gateStep - 1];
+        for (unsigned int a = 0; a < data.nqubits; ++a) {
             // NO GATE
-            changes = LogicTerm(true);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
-            changes = changes && (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = LogicTerm::implies(gS[gateStep][0][a], changes);
-            lb->assertFormula(changes);
+            changes = logicbase::LogicTerm(true);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
+            changes = changes && (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][0][a], changes);
+            data.lb->assertFormula(changes);
 
             // H
-            changes = LogicTerm(true);
-            changes = changes && (z[gateStep][a] == x[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == z[gateStep - 1][a]);
+            changes = logicbase::LogicTerm(true);
+            changes = changes && (data.z[gateStep][a] == data.x[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.z[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][1][a],
-                    rChanges ^ (x[gateStep - 1][a] & z[gateStep - 1][a]), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][1][a], changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][1][a],
+                    rChanges ^ (data.x[gateStep - 1][a] & data.z[gateStep - 1][a]), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][1][a], changes);
 
-            lb->assertFormula(changes);
+            data.lb->assertFormula(changes);
 
             // S
-            changes = LogicTerm(true);
-            changes = changes && (z[gateStep][a] ==
-                                  (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+            changes = logicbase::LogicTerm(true);
+            changes = changes && (data.z[gateStep][a] ==
+                                  (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][2][a],
-                    rChanges ^ (x[gateStep - 1][a] & z[gateStep - 1][a]), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][2][a], changes);
-            lb->assertFormula(changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][2][a],
+                    rChanges ^ (data.x[gateStep - 1][a] & data.z[gateStep - 1][a]), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][2][a], changes);
+            data.lb->assertFormula(changes);
 
             // Sdag
             changes =
-                    (z[gateStep][a] == (z[gateStep - 1][a] ^ x[gateStep - 1][a]));
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a],
-                    rChanges ^ (x[gateStep - 1][a] & (x[gateStep - 1][a] ^ z[gateStep - 1][a])), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
-            lb->assertFormula(changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a],
+                    rChanges ^ (data.x[gateStep - 1][a] & (data.x[gateStep - 1][a] ^ data.z[gateStep - 1][a])), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Sdag)][a], changes);
+            data.lb->assertFormula(changes);
 
             // Z
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a],
-                    rChanges ^ (x[gateStep - 1][a]), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
-            lb->assertFormula(changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a],
+                    rChanges ^ (data.x[gateStep - 1][a]), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Z)][a], changes);
+            data.lb->assertFormula(changes);
 
             // X
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][Gates::toIndex(Gates::GATES::X)][a],
-                    rChanges ^ (z[gateStep - 1][a]), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
-            lb->assertFormula(changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][Gates::toIndex(Gates::GATES::X)][a],
+                    rChanges ^ (data.z[gateStep - 1][a]), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::X)][a], changes);
+            data.lb->assertFormula(changes);
 
             // Y
             changes =
-                    (z[gateStep][a] == z[gateStep - 1][a]);
-            changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
+                    (data.z[gateStep][a] == data.z[gateStep - 1][a]);
+            changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 
-            rChanges = LogicTerm::ite(
-                    gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a],
-                    rChanges ^ (z[gateStep - 1][a] ^ x[gateStep - 1][a]), rChanges);
-            changes = LogicTerm::implies(gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
-            lb->assertFormula(changes);
+            rChanges = logicbase::LogicTerm::ite(
+                    data.gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a],
+                    rChanges ^ (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]), rChanges);
+            changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
+            data.lb->assertFormula(changes);
 
             // CNOT
-            for (int b = 0; b < nqubits; ++b) {
-                if (reducedCM.find({qubitChoice.at(a), qubitChoice.at(b)}) ==
-                    reducedCM.end()) {
-                    lb->assertFormula(!gC[gateStep][a][b]);
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
+                if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
+                    data.reducedCM.end()) {
+                    data.lb->assertFormula(!data.gC[gateStep][a][b]);
                 } else {
-                    changes  = LogicTerm(true);
-                    rChanges = LogicTerm::ite(
-                            gC[gateStep][a][b],
-                            (rChanges ^ ((x[gateStep - 1][a] & z[gateStep - 1][b]) &
-                                         ((x[gateStep - 1][b] ^ z[gateStep - 1][a]) ^
-                                          LogicTerm((1 << nqubits) - 1, nqubits)))),
+                    changes  = logicbase::LogicTerm(true);
+                    rChanges = logicbase::LogicTerm::ite(
+                            data.gC[gateStep][a][b],
+                            (rChanges ^ ((data.x[gateStep - 1][a] & data.z[gateStep - 1][b]) &
+                                         ((data.x[gateStep - 1][b] ^ data.z[gateStep - 1][a]) ^
+                                          logicbase::LogicTerm((1 << data.nqubits) - 1, data.nqubits)))),
                             rChanges);
-                    changes = changes && (x[gateStep][b] ==
-                                          (x[gateStep - 1][b] ^ x[gateStep - 1][a]));
-                    changes = changes && (z[gateStep][a] ==
-                                          (z[gateStep - 1][a] ^ z[gateStep - 1][b]));
-                    changes = changes && (x[gateStep][a] == x[gateStep - 1][a]);
-                    changes = changes && (z[gateStep][b] == z[gateStep - 1][b]);
-                    changes = LogicTerm::implies(gC[gateStep][a][b], changes);
-                    lb->assertFormula(changes);
+                    changes = changes && (data.x[gateStep][b] ==
+                                          (data.x[gateStep - 1][b] ^ data.x[gateStep - 1][a]));
+                    changes = changes && (data.z[gateStep][a] ==
+                                          (data.z[gateStep - 1][a] ^ data.z[gateStep - 1][b]));
+                    changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
+                    changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
+                    changes = logicbase::LogicTerm::implies(data.gC[gateStep][a][b], changes);
+                    data.lb->assertFormula(changes);
                 }
             }
         }
-        lb->assertFormula(r[gateStep] == rChanges);
+        data.lb->assertFormula(data.r[gateStep] == rChanges);
     }
 }
 

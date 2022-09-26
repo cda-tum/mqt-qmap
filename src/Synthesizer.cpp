@@ -4,10 +4,10 @@
 
 #include "Synthesizer.hpp"
 void Synthesizer::initResults() {
-    results = SynthesisResults();
+    results                  = SynthesisResults();
     results.architectureName = architecture.getName();
     resultCircuit.addQubitRegister(architecture.getNqubits());
 }
 
-Synthesizer::Synthesizer(Architecture& architecture):
+Synthesizer::Synthesizer(Architecture architecture):
     architecture(architecture) {}

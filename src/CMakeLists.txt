@@ -4,7 +4,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr")
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks")
 
 # macro to add core libraries
-macro(ADD_INT_LIBRARY libname srcfile)
+macro(ADD_INTERNAL_LIBRARY libname srcfile)
   set(lib ${libname})
 
   # set required C++ standard and disable compiler specific extensions
@@ -80,7 +80,7 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
   target_include_directories(${lib}
           PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
 
-  add_int_library(${lib} ${srcfile})
+  add_internal_library(${lib} ${srcfile})
 endmacro()
 # macro to add core libraries
 macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
@@ -105,7 +105,24 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
   target_include_directories(${lib}
           PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
 
-  add_int_library(${lib} ${srcfile})
+  target_sources(
+          ${lib}
+          PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/SynthesisResults.hpp
+          ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/CliffordSynthesizer.hpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/CliffordSynthesizer.cpp)
+
+  # add LogicBlocks library
+  target_link_libraries(
+          ${lib}
+          PUBLIC logicblocks::Logic
+          logicblocks::Encodings)
+  # add Pthreads
+  target_link_libraries(
+          ${lib}
+          PRIVATE Threads::Threads)
+
+  add_internal_library(${lib} ${srcfile})
 endmacro()
 
 # exact mapper project library
@@ -114,18 +131,10 @@ add_qmap_library(exact ExactMapper)
 # add LogicBlocks library
 target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
 
-add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
-# add encodings
-target_sources(
-  ${PROJECT_NAME}_cliffordsynthesis_lib
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Tableau.cpp ${${PROJECT_NAME}_SOURCE_DIR}/include/Tableau.hpp
-          ${${PROJECT_NAME}_SOURCE_DIR}/include/SynthesisResults.hpp)
+add_synthesis_library(depthsynthesis DepthSynthesizer)
+add_synthesis_library(gatesynthesis GateSynthesizer)
+add_synthesis_library(fidelitysynthesis FidelitySynthesizer)
 
-# add LogicBlocks library
-target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::Logic
-                                                                   logicblocks::Encodings)
-# add Pthreads
-target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PRIVATE Threads::Threads)
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)

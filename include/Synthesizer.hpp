@@ -12,7 +12,7 @@
 
 class Synthesizer {
 protected:
-    Architecture& architecture;
+    Architecture architecture;
 
     SynthesisResults results{};
 
@@ -27,7 +27,8 @@ protected:
     virtual void updateResults(SynthesisResults& results) = 0;
 
 public:
-    Synthesizer(Architecture& architecture);
+    Synthesizer(Architecture architecture);
+    Synthesizer()                                                        = default;
     virtual void synthesize(const SynthesisConfiguration& configuration) = 0;
 };
 
