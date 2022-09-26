@@ -50,54 +50,12 @@ public:
         const logicbase::LogicMatrix3D&                          gC;
     };
 
-public:
+    Tableau modelTableau{};
+
     virtual ~CliffordSynthesizer() = default;
     CliffordSynthesizer()          = default;
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding = false, unsigned char pnqubits = 0, std::uint16_t pinitialTimesteps = 0, SynthesisStrategy pstrategy = SynthesisStrategy::UseMinimizer):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy) {}
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, Tableau& targetTabl, Tableau& initTabl, Architecture parchitecture = Architecture()):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget), initialTableau(initTabl), targetTableau(targetTabl), architecture(std::move(parchitecture)) {}
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, Tableau& targetTabl, Architecture parchitecture = Architecture()):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget), targetTableau(targetTabl), architecture(std::move(parchitecture)) {
-        Tableau::initTableau(initialTableau, nqubits);
-    }
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, qc::QuantumComputation& qc, Architecture parchitecture = Architecture()):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget), circuit(qc.clone()), architecture(std::move(parchitecture)) {
-        Tableau::initTableau(initialTableau, nqubits);
-    }
-    explicit CliffordSynthesizer(bool pchooseBest, bool puseEmbedding, unsigned char pnqubits, std::uint16_t pinitialTimesteps, SynthesisStrategy pstrategy, SynthesisTarget ptarget, qc::QuantumComputation& qc, Tableau& initTabl, Architecture parchitecture = Architecture()):
-        chooseBest(pchooseBest), useEmbedding(puseEmbedding), nqubits(pnqubits), initialTimesteps(pinitialTimesteps), strategy(pstrategy), target(ptarget), circuit(qc.clone()), initialTableau(initTabl), architecture(std::move(parchitecture)) {}
 
-    void setCircuit(const qc::QuantumComputation& qc);
-    void setTargetTableau(Tableau& targetTabl);
-    void setInitialTableau(Tableau& initialTabl);
-    void synthesize();
-
-    void setArchitecture(const Architecture& arch) {
-        architecture = arch;
-        if (nqubits == 0) {
-            nqubits = architecture.getNqubits();
-        }
-        auto map = highestFidelityMap.emplace_back();
-        architecture.getHighestFidelityCouplingMap(nqubits, map);
-    }
-    bool                   chooseBest   = false;
-    bool                   useEmbedding = false;
-    unsigned char          nqubits      = 0U;
-    std::set<signed char>  usedQubits{};
-    std::uint16_t          initialTimesteps = 0U;
-    int                    verbose          = 0;
-    int                    nthreads         = 1;
-    SynthesisStrategy      strategy         = SynthesisStrategy::UseMinimizer;
-    SynthesisTarget        target           = SynthesisTarget::GATES;
-    SynthesisMethod        method           = SynthesisMethod::Z3;
-    qc::QuantumComputation circuit;
-
-    std::vector<CouplingMap> highestFidelityMap;
-
-    Tableau initialTableau{};
-    Tableau targetTableau{};
-    Tableau modelTableau{};
+    void synthesize(const SynthesisConfiguration& configuration) override;
 
     void dumpResult(const std::string& outputFilename) {
         if (optimalResults.resultCircuit.empty()) {
@@ -124,29 +82,27 @@ public:
 protected:
     Architecture     architecture{};
     SynthesisResults mainOptimization(
-            std::uint32_t                                            timesteps,
+            std::uint32_t timesteps,
             const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTableau,
-            Tableau& targetTableau);
+            const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
 
-    virtual void makeSynthesis(const SynthesisData& data) = 0;
+    virtual void makeSpecificEncoding(const SynthesisData& data) = 0;
 
     void        runMinimizer(int timesteps, const CouplingMap& reducedCM,
-                             const std::vector<std::uint16_t>& qubitChoice);
+                             const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
     void        runStartLow(int timesteps, const CouplingMap& reducedCM,
-                            const std::vector<std::uint16_t>& qubitChoice);
+                            const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
     void        runStartHigh(int timesteps, const CouplingMap& reducedCM,
-                             const std::vector<std::uint16_t>& qubitChoice);
+                             const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
     void        runMinMax(int timesteps, const CouplingMap& reducedCM,
-                          const std::vector<std::uint16_t>& qubitChoice);
+                          const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
     void        runSplitIter(const CouplingMap&                reducedCM,
-                             const std::vector<std::uint16_t>& qubitChoice);
+                             const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration);
     static void runSplinter(int i, unsigned int circSplit, unsigned int split,
                             const CouplingMap&                reducedCM,
                             const std::vector<std::uint16_t>& qubitChoice,
                             qc::QuantumComputation&           circuit,
-                            SynthesisResults* r, CliffordSynthesizer* opt);
-    void        updateResults(SynthesisResults& r) override;
+                            SynthesisResults* r, CliffordSynthesizer* opt, const SynthesisConfiguration& configuration);
 
     static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
 

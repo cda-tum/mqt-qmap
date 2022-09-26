@@ -13,20 +13,24 @@
 #include "utils.hpp"
 #include "utils/logging.hpp"
 
-void CliffordSynthesizer::synthesize() {
-    TRACE() << "Strategy: " << toString(strategy) << std::endl;
-    TRACE() << "Target: " << toString(target) << std::endl;
-    TRACE() << "Method: " << toString(method) << std::endl;
+void CliffordSynthesizer::synthesize(const SynthesisConfiguration& configuration) {
+    TRACE() << "Strategy: " << toString(configuration.strategy) << std::endl;
+    TRACE() << "Target: " << toString(configuration.target) << std::endl;
+    TRACE() << "Method: " << toString(configuration.method) << std::endl;
+
+    initResults();
+
+    initCouplingMap(configuration.nqubits);
 
     auto                     totalStart = std::chrono::high_resolution_clock::now();
     std::vector<CouplingMap> reducedMaps;
-    architecture.getReducedCouplingMaps(nqubits, reducedMaps);
+    architecture.getReducedCouplingMaps(configuration.nqubits, reducedMaps);
     auto subsets =
-            (chooseBest ? highestFidelityMap : reducedMaps);
+            (configuration.chooseBest ? highestFidelityCouplingMap : reducedMaps);
     for (const auto& subset: subsets) {
         std::vector<std::uint16_t> qubitMap{Architecture::getQubitList(subset)};
 
-        DEBUG() << "Reduced Coupling Map" << (chooseBest ? " (best)" : "") << ": ";
+        DEBUG() << "Reduced Coupling Map" << (configuration.chooseBest ? " (best)" : "") << ": ";
         std::stringstream strings;
         Architecture::printCouplingMap(subset, strings);
         DEBUG() << strings.str();
@@ -36,23 +40,23 @@ void CliffordSynthesizer::synthesize() {
                                                                 std::set<std::uint16_t>(qubitMap.begin(), qubitMap.end()),
                                                                 architecture.getProperties());
         int timesteps =
-                initialTimesteps == 0 ? nqubits * nqubits : initialTimesteps;
-        if (strategy == SynthesisStrategy::UseMinimizer) {
-            runMinimizer(timesteps, subset, qubitMap);
+                configuration.initialTimesteps == 0 ? configuration.nqubits * configuration.nqubits : configuration.initialTimesteps;
+        if (configuration.strategy == SynthesisStrategy::UseMinimizer) {
+            runMinimizer(timesteps, subset, qubitMap, configuration);
         }
-        if (strategy == SynthesisStrategy::StartLow) {
-            runStartLow(timesteps, subset, qubitMap);
+        if (configuration.strategy == SynthesisStrategy::StartLow) {
+            runStartLow(timesteps, subset, qubitMap, configuration);
         }
-        if (strategy == SynthesisStrategy::StartHigh) {
-            runStartHigh(timesteps, subset, qubitMap);
+        if (configuration.strategy == SynthesisStrategy::StartHigh) {
+            runStartHigh(timesteps, subset, qubitMap, configuration);
         }
-        if (strategy == SynthesisStrategy::MinMax) {
-            runMinMax(timesteps, subset, qubitMap);
+        if (configuration.strategy == SynthesisStrategy::MinMax) {
+            runMinMax(timesteps, subset, qubitMap, configuration);
         }
-        if (strategy == SynthesisStrategy::SplitIter) {
-            runSplitIter(subset, qubitMap);
+        if (configuration.strategy == SynthesisStrategy::SplitIter) {
+            runSplitIter(subset, qubitMap, configuration);
         }
-        if (chooseBest && optimalResults.sat) {
+        if (configuration.chooseBest && optimalResults.sat) {
             break;
         }
     }
@@ -64,16 +68,15 @@ void CliffordSynthesizer::synthesize() {
 }
 
 SynthesisResults CliffordSynthesizer::mainOptimization(
-        std::uint32_t                                            timesteps,
+        std::uint32_t timesteps,
         const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice, Tableau& initialTab,
-        Tableau& targetTab) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
     std::unique_ptr<logicbase::LogicBlock> lb;
     using namespace logicbase;
     bool success = false;
-    if (method == SynthesisMethod::Z3) {
+    if (configuration.method == SynthesisMethod::Z3) {
         logicbase::LogicTerm::termType = TermType::BASE;
-        if (strategy == SynthesisStrategy::UseMinimizer || strategy == SynthesisStrategy::SplitIter) {
+        if (configuration.strategy == SynthesisStrategy::UseMinimizer || configuration.strategy == SynthesisStrategy::SplitIter) {
             logicutil::Params params;
             params.addParam("pb.compile_equality", true);
             params.addParam("maxres.hill_climb", true);
@@ -81,7 +84,7 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
             lb = logicutil::getZ3LogicOptimizer(success, true, params);
         } else {
             logicutil::Params params;
-            params.addParam("threads", static_cast<unsigned>(nthreads / 2));
+            params.addParam("threads", static_cast<unsigned>(configuration.nThreads / 2));
             lb = logicutil::getZ3LogicBlock(success, true, params);
         }
     } else {
@@ -111,19 +114,19 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
     for (int k = 0; k < timesteps + 1; ++k) {
         x.emplace_back();
         z.emplace_back();
-        for (int i = 0; i < nqubits; ++i) {
+        for (int i = 0; i < configuration.nqubits; ++i) {
             xName.str("");
             zName.str("");
             xName << "x_" << k << "_" << i;
             zName << "z_" << k << "_" << i;
             x.back().push_back(
-                    lb->makeVariable(xName.str(), CType::BITVECTOR, nqubits));
+                    lb->makeVariable(xName.str(), CType::BITVECTOR, configuration.nqubits));
             z.back().push_back(
-                    lb->makeVariable(zName.str(), CType::BITVECTOR, nqubits));
+                    lb->makeVariable(zName.str(), CType::BITVECTOR, configuration.nqubits));
         }
         rName.str("");
         rName << "r_" << k;
-        r.push_back(lb->makeVariable(rName.str(), CType::BITVECTOR, nqubits));
+        r.push_back(lb->makeVariable(rName.str(), CType::BITVECTOR, configuration.nqubits));
     }
 
     /*
@@ -137,7 +140,7 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
         gS.emplace_back();
         for (auto gate: Gates::SINGLE_QUBIT) {
             gS.back().emplace_back();
-            for (int j = 0; j < nqubits; ++j) {
+            for (int j = 0; j < configuration.nqubits; ++j) {
                 gName.str("");
                 gName << "g_" << gateStep << "_" << Gates::gateName(gate) << "_" << j;
                 gS.back().back().push_back(lb->makeVariable(gName.str()));
@@ -146,9 +149,9 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
     }
     for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
         gC.emplace_back();
-        for (int j = 0; j < nqubits; ++j) {
+        for (int j = 0; j < configuration.nqubits; ++j) {
             gC.back().emplace_back();
-            for (int l = 0; l < nqubits; ++l) {
+            for (int l = 0; l < configuration.nqubits; ++l) {
                 gName.str("");
                 gName << "g_" << gateStep << "_CNOT_" << j << "_" << l;
                 gC.back().back().push_back(lb->makeVariable(gName.str()));
@@ -156,10 +159,10 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
         }
     }
 
-    assertTableau(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, initialTab, 0);
-    assertTableau(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, targetTab, timesteps);
+    assertTableau(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, configuration.initialTab, 0);
+    assertTableau(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, configuration.targetTab, timesteps);
 
-    makeSynthesis(SynthesisData{nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC});
+    makeSpecificEncoding(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC});
 
     auto                          formulation = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff        = formulation - start;
@@ -181,12 +184,12 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
     INFO() << "Time to solve Model: " << diff.count() << std::endl;
     std::chrono::duration<double, std::milli> elapsedMilliseconds = end - start;
     SynthesisResults                          results{};
-    results.verbose          = verbose;
-    results.chooseBest       = chooseBest;
-    results.nqubits          = nqubits;
+    results.verbose          = configuration.verbosity;
+    results.chooseBest       = configuration.chooseBest;
+    results.nqubits          = configuration.nqubits;
     results.initialTimesteps = timesteps;
-    results.strategy         = strategy;
-    results.target           = target;
+    results.strategy         = configuration.strategy;
+    results.target           = configuration.target;
     results.totalSeconds     = elapsedMilliseconds.count();
     results.sat              = result == Result::SAT;
     results.doubleFidelity   = architecture.getFidelityTable();
@@ -198,7 +201,7 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
         results.result               = logicbase::Result::SAT;
         Model*                 model = lb->getModel();
         qc::QuantumComputation resultCircuit;
-        resultCircuit.addQubitRegister(nqubits);
+        resultCircuit.addQubitRegister(configuration.nqubits);
         results.gateCount = 0;
         results.depth     = 0;
         results.fidelity  = 1;
@@ -209,10 +212,10 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
                     << " Depth: " << results.depth << std::endl
                     << " Fidelity: " << results.fidelity << std::endl;
             if (gateStep > 0) {
-                for (int a = 0; a < nqubits; ++a) {
+                for (int a = 0; a < configuration.nqubits; ++a) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         if (model->getBoolValue(gS[gateStep][Gates::toIndex(gate)][a], lb.get())) {
-                            resultCircuit.emplace_back<qc::StandardOperation>(nqubits, a, Gates::toOpType(gate));
+                            resultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, a, Gates::toOpType(gate));
                             if (architecture.isCalibrationDataAvailable()) {
                                 results.fidelity *= (architecture.getSingleQubitFidelities()[a]);
                             }
@@ -224,11 +227,11 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
                             ++results.gateCount;
                         }
                     }
-                    for (int b = 0; b < nqubits; ++b) {
+                    for (int b = 0; b < configuration.nqubits; ++b) {
                         if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
                             results.gateCount++;
                             resultCircuit.emplace_back<qc::StandardOperation>(
-                                    nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
+                                    configuration.nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
                             if (architecture.isCalibrationDataAvailable()) {
                                 results.fidelity *=
                                         (1 - std::log(architecture.getFidelityTable()[qubitChoice.at(a)]
@@ -251,16 +254,16 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
             auto tableau = results.resultTableaus.emplace_back();
             Tableau::generateTableau(tableau, resultCircuit);
             results.resultTableaus.back() = tableau;
-            Tableau::initTableau(modelTableau, nqubits);
-            for (int i = 0; i < nqubits; ++i) {
+            Tableau::initTableau(modelTableau, configuration.nqubits);
+            for (int i = 0; i < configuration.nqubits; ++i) {
                 modelTableau.populateTableauFrom(model->getBitvectorValue(x[gateStep][i], lb.get()),
-                                                 nqubits, i);
+                                                 configuration.nqubits, i);
                 modelTableau.populateTableauFrom(model->getBitvectorValue(z[gateStep][i], lb.get()),
-                                                 nqubits, i + nqubits);
+                                                 configuration.nqubits, i + configuration.nqubits);
             }
             modelTableau.populateTableauFrom(model->getBitvectorValue(r[gateStep], lb.get()),
-                                             nqubits, 2 * nqubits);
-            if (verbose >= 5) {
+                                             configuration.nqubits, 2 * configuration.nqubits);
+            if (configuration.verbosity >= 5) {
                 TRACE() << modelTableau;
             }
         }
@@ -281,21 +284,20 @@ SynthesisResults CliffordSynthesizer::mainOptimization(
 
 void CliffordSynthesizer::runMinimizer(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
     DEBUG() << "Running minimizer" << std::endl;
     SynthesisResults r = mainOptimization(timesteps, reducedCM, qubitChoice,
-                                          initialTableau, targetTableau);
+                                          configuration);
     updateResults(r);
 }
 void CliffordSynthesizer::runStartLow(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
     DEBUG() << "Running start low" << std::endl;
     SynthesisResults r;
     while (r.result != logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
-        r = mainOptimization(timesteps, reducedCM, qubitChoice, initialTableau,
-                             targetTableau);
+        r = mainOptimization(timesteps, reducedCM, qubitChoice, configuration);
         updateResults(r);
         if (r.result == logicbase::Result::UNSAT) {
             timesteps *= 1.5;
@@ -304,14 +306,13 @@ void CliffordSynthesizer::runStartLow(
 }
 void CliffordSynthesizer::runStartHigh(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
     DEBUG() << "Running start high" << std::endl;
     SynthesisResults r;
     int              oldTimesteps = timesteps;
     while (r.result == logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
         DEBUG() << "Current t=" << timesteps << std::endl;
-        r = mainOptimization(timesteps, reducedCM, qubitChoice, initialTableau,
-                             targetTableau);
+        r = mainOptimization(timesteps, reducedCM, qubitChoice, configuration);
         updateResults(r);
         if (r.result == logicbase::Result::SAT) {
             oldTimesteps = timesteps;
@@ -323,7 +324,7 @@ void CliffordSynthesizer::runStartHigh(
 }
 void CliffordSynthesizer::runMinMax(
         int timesteps, const CouplingMap& reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
     DEBUG() << "Running minmax" << std::endl;
     SynthesisResults r;
     int              t     = timesteps;
@@ -331,8 +332,7 @@ void CliffordSynthesizer::runMinMax(
     int              lower = 0;
     while (std::abs(upper - lower) > 1) {
         DEBUG() << "Current t=" << t << std::endl;
-        r = mainOptimization(t, reducedCM, qubitChoice, initialTableau,
-                             targetTableau);
+        r = mainOptimization(t, reducedCM, qubitChoice, configuration);
         updateResults(r);
         if (r.result == logicbase::Result::SAT) {
             upper = t;
@@ -352,7 +352,7 @@ void CliffordSynthesizer::runSplinter(
         int i, unsigned int circuitSplit, unsigned int split,
         const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice,
         qc::QuantumComputation& circuit, SynthesisResults* r,
-        CliffordSynthesizer* opt) {
+        CliffordSynthesizer* opt, const SynthesisConfiguration& configuration) {
     Tableau targetTableau{};
     Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circuitSplit);
     Tableau initTableau{};
@@ -363,17 +363,17 @@ void CliffordSynthesizer::runSplinter(
 
 void CliffordSynthesizer::runSplitIter(
         const CouplingMap&                reducedCM,
-        const std::vector<std::uint16_t>& qubitChoice) {
-    if (circuit.size() < 2) {
+        const std::vector<std::uint16_t>& qubitChoice, const SynthesisConfiguration& configuration) {
+    if (configuration.targetCircuit.size() < 2) {
         return;
     }
     DEBUG() << "Running split iter" << std::endl;
-    Tableau                        fullTableau  = targetTableau;
-    auto                           circuitSplit = static_cast<unsigned int>(std::log(circuit.getNindividualOps()));
-    int                            split        = std::min(5, nqubits / 2);
+    Tableau                        fullTableau  = configuration.targetTableau;
+    auto                           circuitSplit = static_cast<unsigned int>(std::log(configuration.targetCircuit.getNindividualOps()));
+    int                            split        = std::min(5, configuration.nqubits / 2);
     std::vector<std::thread*>      threads;
     std::vector<SynthesisResults*> results;
-    int                            nThreads = nthreads;
+    int                            nThreads = 4;
     while (true) {
         results.clear();
         DEBUG() << "Current split size: " << split << std::endl;
@@ -381,17 +381,17 @@ void CliffordSynthesizer::runSplitIter(
         auto             start = std::chrono::high_resolution_clock::now();
         SynthesisResults totalResult;
         totalResult.result = logicbase::Result::SAT;
-        totalResult.resultCircuit.addQubitRegister(nqubits);
-        for (size_t i = 0; i * circuitSplit < circuit.getNindividualOps();
+        totalResult.resultCircuit.addQubitRegister(configuration.nqubits);
+        for (size_t i = 0; i * circuitSplit < configuration.targetCircuit.getNindividualOps();
              i += nThreads) {
             threads.clear();
             DEBUG() << "Currently at " << i * circuitSplit << " of "
-                    << circuit.getNindividualOps() << std::endl;
+                    << configuration.targetCircuit.getNindividualOps() << std::endl;
             for (int j = 0; j < nThreads; j++) {
                 auto* r = new SynthesisResults();
                 auto* t = new std::thread(CliffordSynthesizer::runSplinter, i, circuitSplit,
                                           split, std::ref(reducedCM), std::ref(qubitChoice),
-                                          std::ref(circuit), r, this);
+                                          std::ref(configuration.targetCircuit), r, this);
                 threads.push_back(t);
                 results.push_back(r);
             }
@@ -426,7 +426,7 @@ void CliffordSynthesizer::runSplitIter(
             DEBUG() << "Equality (Results): "
                     << ((fullTableau == resultingTableau) ? "True" : "False")
                     << std::endl;
-            DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
+            DEBUG() << "Original Circuit size: " << configuration.targetCircuit.getNindividualOps()
                     << std::endl;
             DEBUG() << "Optimized Circuit size: "
                     << totalResult.resultCircuit.getNindividualOps() << std::endl;
@@ -437,46 +437,18 @@ void CliffordSynthesizer::runSplitIter(
             auto                          end  = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> diff = end - start;
             INFO() << "Time for complete run: " << diff.count() << std::endl;
-            if (circuit.getNindividualOps() ==
+            if (configuration.targetCircuit.getNindividualOps() ==
                 totalResult.resultCircuit.getNindividualOps()) {
                 split *= 1.2;
                 break;
             }
-            circuit = totalResult.resultCircuit.clone();
+            configuration.targetCircuit = totalResult.resultCircuit.clone();
         }
     }
-    optimalResults.resultCircuit = circuit.clone();
-    optimalResults.resultTableaus.emplace_back(targetTableau);
-    optimalResults.gateCount = circuit.getNindividualOps();
+    optimalResults.resultCircuit = configuration.targetCircuit.clone();
+    optimalResults.resultTableaus.emplace_back(configuration.targetTableau);
+    optimalResults.gateCount = configuration.targetCircuit.getNindividualOps();
     optimalResults.result    = logicbase::Result::SAT;
-}
-
-void CliffordSynthesizer::updateResults(SynthesisResults& results) {
-    if (!results.sat) {
-        return;
-    }
-    switch (target) {
-        case SynthesisTarget::GATES:
-        case SynthesisTarget::GATES_ONLY_CNOT:
-            if (results.gateCount < optimalResults.gateCount ||
-                optimalResults.gateCount == 0) {
-                optimalResults = results;
-            }
-            break;
-        case SynthesisTarget::DEPTH:
-            if (results.depth < optimalResults.depth || optimalResults.depth == 0) {
-                optimalResults = results;
-            }
-            break;
-        case SynthesisTarget::FIDELITY:
-            if (results.fidelity >= optimalResults.fidelity ||
-                optimalResults.fidelity == 0) {
-                optimalResults = results;
-            }
-            break;
-        default:
-            break;
-    }
 }
 
 void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position) {
@@ -825,18 +797,4 @@ void CliffordSynthesizer::makeMultipleGateConstraints(
         }
         data.lb->assertFormula(data.r[gateStep] == rChanges);
     }
-}
-
-void CliffordSynthesizer::setCircuit(const qc::QuantumComputation& qc) {
-    this->circuit = qc.clone();
-    Tableau::initTableau(this->initialTableau, this->nqubits);
-    Tableau::generateTableau(this->targetTableau, this->circuit);
-}
-
-void CliffordSynthesizer::setTargetTableau(Tableau& targetTabl) {
-    Tableau::initTableau(this->initialTableau, this->nqubits);
-    this->targetTableau = targetTabl;
-}
-void CliffordSynthesizer::setInitialTableau(Tableau& initialTabl) {
-    this->initialTableau = initialTabl;
 }

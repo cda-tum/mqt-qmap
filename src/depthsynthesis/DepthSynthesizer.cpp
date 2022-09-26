@@ -1,5 +1,5 @@
 #include "depthsynthesis/DepthSynthesizer.hpp"
-void DepthSynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData& data) {
+void DepthSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
     using namespace logicbase;
     makeMultipleGateConstraints(data);
     // COST
@@ -22,5 +22,10 @@ void DepthSynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData& d
             cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
         }
         dynamic_cast<LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
+    }
+}
+void DepthSynthesizer::updateResults(SynthesisResults& results) {
+    if (results.depth < optimalResults.depth || optimalResults.depth == 0) {
+        optimalResults = results;
     }
 }

@@ -3,6 +3,8 @@
 //
 
 #include "Synthesizer.hpp"
+
+#include <utility>
 void Synthesizer::initResults() {
     results                  = SynthesisResults();
     results.architectureName = architecture.getName();
@@ -10,4 +12,11 @@ void Synthesizer::initResults() {
 }
 
 Synthesizer::Synthesizer(Architecture architecture):
-    architecture(architecture) {}
+    architecture(std::move(architecture)) {}
+
+void Synthesizer::initCouplingMap(std::uint32_t nqubits) {
+    if (architecture.isArchitectureAvailable()){
+        auto& cm = highestFidelityCouplingMap.emplace_back();
+        architecture.getHighestFidelityCouplingMap(nqubits, cm);
+    }
+}

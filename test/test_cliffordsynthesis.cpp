@@ -1,4 +1,6 @@
-#include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "depthsynthesis/DepthSynthesizer.hpp"
+#include "fidelitysynthesis/FidelitySynthesizer.hpp"
+#include "gatesynthesis/GateSynthesizer.hpp"
 
 #include "gtest/gtest.h"
 
@@ -24,7 +26,7 @@ protected:
         ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
         ibmQX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
 
-        yorktownOptimizer = std::make_unique<CliffordSynthesizer>();
+        yorktownOptimizer = std::make_unique<GateSynthesizer>();
         yorktownOptimizer->setArchitecture(ibmqYorktown);
 
         londonOptimizer = std::make_unique<CliffordSynthesizer>();

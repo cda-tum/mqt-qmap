@@ -22,7 +22,7 @@ protected:
 
     virtual void initResults();
 
-    virtual void initCouplingMap() = 0;
+    virtual void initCouplingMap(std::uint32_t nqubits);
 
     virtual void updateResults(SynthesisResults& results) = 0;
 

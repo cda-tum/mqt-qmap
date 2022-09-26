@@ -1,5 +1,5 @@
-#include "fidelitysynthesis/Fidelitysynthesizer.hpp"
-void Fidelitysynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData& data) {
+#include "fidelitysynthesis/FidelitySynthesizer.hpp"
+void FidelitySynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
     if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
     }
@@ -44,5 +44,11 @@ void Fidelitysynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData
             }
         }
         dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
+    }
+}
+void FidelitySynthesizer::updateResults(SynthesisResults& results) {
+    if (results.fidelity >= optimalResults.fidelity ||
+        optimalResults.fidelity == 0) {
+        optimalResults = results;
     }
 }

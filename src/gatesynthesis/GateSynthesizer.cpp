@@ -1,5 +1,5 @@
 #include "gatesynthesis/GateSynthesizer.hpp"
-void GateSynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData& data) {
+void GateSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data) {
     logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     makeSingleGateConstraints(data);
     // COST
@@ -21,5 +21,11 @@ void GateSynthesizer::makeSynthesis(const CliffordSynthesizer::SynthesisData& da
             }
         }
         dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->minimize(cost);
+    }
+}
+void GateSynthesizer::updateResults(SynthesisResults& results) {
+    if (results.gateCount < optimalResults.gateCount ||
+        optimalResults.gateCount == 0) {
+        optimalResults = results;
     }
 }

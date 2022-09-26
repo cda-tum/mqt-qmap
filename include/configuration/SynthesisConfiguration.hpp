@@ -14,10 +14,15 @@
 struct SynthesisConfiguration {
     SynthesisConfiguration() = default;
 
+    SynthesisConfiguration(const SynthesisConfiguration& other) : chooseBest(other.chooseBest), nqubits(other.nqubits), useEmbedding(other.useEmbedding), verbosity(other.verbosity), strategy(other.strategy), nThreads(other.nThreads), target(other.target), method(other.method), initialTableau(other.initialTableau), targetTableau(other.targetTableau), initialTimesteps(other.initialTimesteps){
+        this->targetCircuit = other.targetCircuit.clone();
+    }
+
     bool            chooseBest       = false;
     bool useEmbedding = false;
     std::uint8_t   nqubits          = 0;
     std::uint16_t initialTimesteps = 0;
+    std::uint8_t nThreads = 1;
     std::uint8_t verbosity = 0;
     SynthesisStrategy strategy = SynthesisStrategy::UseMinimizer;
     SynthesisTarget   target   = SynthesisTarget::GATES;
