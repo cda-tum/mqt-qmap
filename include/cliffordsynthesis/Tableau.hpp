@@ -3,8 +3,8 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
-#ifndef QMAP_TABLEAU_HPP
-#define QMAP_TABLEAU_HPP
+#ifndef CS_TABLEAU_HPP
+#define CS_TABLEAU_HPP
 
 #include "QuantumComputation.hpp"
 #include "utils/logging.hpp"
@@ -117,4 +117,4 @@ private:
     void applyGateSdag(dd::Qubit target, std::size_t nqubits);
     void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
 };
-#endif //QMAP_TABLEAU_HPP
+#endif //CS_TABLEAU_HPP

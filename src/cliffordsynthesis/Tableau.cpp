@@ -3,7 +3,7 @@
 * See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
 */
 
-#include "Tableau.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 
 #include "utils.hpp"
 
@@ -35,20 +35,13 @@ void Tableau::import(std::istream& is) {
     std::string              line;
     std::vector<std::string> data{};
     char                     delimiter = '|';
-    // Try to find out size by reading first line
-    if (std::getline(is, line)) {
-        if (line.find('|', 0) == std::string::npos) {
-            delimiter = ',';
-        }
-        parse_line(line, delimiter, {'\"'}, {'\\'}, data);
-        nQubits = static_cast<std::size_t>(std::stoul(data.at(0)));
-    }
-
-    tableau.reserve(nQubits);
 
     while (std::getline(is, line)) {
+        nQubits++;
+        if (line.find('|', 0) == std::string::npos) {
+            delimiter = ';';
+        }
         tableau.emplace_back();
-        tableau.back().reserve(2 * nQubits + 1);
         parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
         bool skipFirst = true;
         for (const auto& datum: data) {
@@ -329,22 +322,14 @@ std::string Tableau::toString() const {
         DEBUG() << "Empty tableau";
         return "";
     }
-    ss << nQubits << '|';
-    for (std::size_t i = 1U; i < back().size(); ++i) {
-        ss << i << '|';
-    }
-    ss << "R|";
-    ss << std::endl;
     auto i = 1;
     for (const auto& row: tableau) {
         if (row.size() != back().size()) {
             FATAL() << "Tableau is not rectangular";
             return "";
         }
-
-        ss << i++ << "|";
         for (const auto& s: row) {
-            ss << s << '|';
+            ss << s << ';';
         }
         ss << std::endl;
     }

@@ -6,8 +6,6 @@
 #ifndef QMAP_UTILS_HPP
 #define QMAP_UTILS_HPP
 
-#include "QuantumComputation.hpp"
-
 #include <algorithm>
 #include <functional>
 #include <iostream>
