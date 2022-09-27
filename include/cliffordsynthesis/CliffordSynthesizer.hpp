@@ -8,11 +8,11 @@
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
-#include "SynthesisData.hpp"
 #include "Encodings/Encodings.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "QuantumComputation.hpp"
 #include "Results.hpp"
+#include "SynthesisData.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -38,16 +38,13 @@
 namespace cs {
     class CliffordSynthesizer {
     public:
-
-
         Tableau modelTableau{};
 
         virtual ~CliffordSynthesizer() = default;
         CliffordSynthesizer()          = default;
 
-        void setArchitecture(Architecture lArchitecture);
-
         void synthesize(const Configuration& configuration);
+        void optimize(Configuration& configuration);
 
         void dumpResult(const std::string& outputFilename) {
             if (optimalResults.resultCircuit.empty()) {
@@ -71,6 +68,13 @@ namespace cs {
 
         Results optimalResults{};
 
+        Results mainOptimization(
+                std::uint32_t                                            timesteps,
+                const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
+                const std::vector<std::uint16_t>&                        qubitChoice,
+                const Tableau& targetTableau, const Tableau& initialTableau,
+                const Configuration& configuration);
+
     protected:
         qc::QuantumComputation resultCircuit{};
 
@@ -78,27 +82,8 @@ namespace cs {
 
         virtual void initResults();
 
-        virtual void initCouplingMap(std::uint32_t nqubits);
+        virtual void initCouplingMap(const Configuration& configuration);
 
-        virtual void updateResults(Results& results) = 0;
-        Architecture architecture{};
-        Results      mainOptimization(
-                     std::uint32_t                                            timesteps,
-                     const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-                     const std::vector<std::uint16_t>&                        qubitChoice,
-                     const Tableau& targetTableau, const Tableau& initialTableau,
-                     const Configuration& configuration);
-
-        virtual void makeSpecificEncoding(const SynthesisData& data, const Configuration& configuration) = 0;
-
-        void        runMinimizer(int timesteps, const CouplingMap& reducedCM,
-                                 const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
-        void        runStartLow(int timesteps, const CouplingMap& reducedCM,
-                                const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
-        void        runStartHigh(int timesteps, const CouplingMap& reducedCM,
-                                 const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
-        void        runMinMax(int timesteps, const CouplingMap& reducedCM,
-                              const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
         void        runSplitIter(const CouplingMap&                reducedCM,
                                  const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
         static void runSplinter(int i, unsigned int circSplit, unsigned int split,
@@ -108,8 +93,6 @@ namespace cs {
                                 Results* r, CliffordSynthesizer* opt, const Configuration& configuration);
 
         static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
-
-        static void makeGateEncoding(const SynthesisData& data, const Configuration& configuration);
     };
 
     class Gates {
@@ -123,8 +106,6 @@ namespace cs {
             Z,
             Sdag,
             CX,
-            CY,
-            CZ,
         };
 
         static std::string gateName(GATES gate) {
@@ -145,10 +126,6 @@ namespace cs {
                     return "Sdag";
                 case CX:
                     return "CX";
-                case CY:
-                    return "CY";
-                case CZ:
-                    return "CZ";
                 default:
                     return "";
             }
@@ -172,10 +149,6 @@ namespace cs {
                     return 6;
                 case CX:
                     return 7;
-                case CY:
-                    return 8;
-                case CZ:
-                    return 9;
                 default:
                     return -1;
             }
@@ -199,10 +172,6 @@ namespace cs {
                     return qc::OpType::Sdag;
                 case CX:
                     return qc::OpType::X;
-                case CY:
-                    return qc::OpType::Y;
-                case CZ:
-                    return qc::OpType::Z;
                 default:
                     return qc::OpType::None;
             }
@@ -218,9 +187,7 @@ namespace cs {
                 GATES::Sdag};
 
         static constexpr auto TWO_QUBIT = std::array<GATES, 3>{
-                GATES::CX,
-                GATES::CY,
-                GATES::CZ};
+                GATES::CX};
 
         static constexpr auto SINGLE_QUBIT_WITHOUT_NOP = std::array<GATES, 6>{
                 GATES::H,
@@ -237,9 +204,7 @@ namespace cs {
                 GATES::Y,
                 GATES::Z,
                 GATES::Sdag,
-                GATES::CX,
-                GATES::CY,
-                GATES::CZ};
+                GATES::CX};
     };
 } // namespace cs
 #endif //CS_CLIFFORDSYNTHESIS_H

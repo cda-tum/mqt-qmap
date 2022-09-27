@@ -1,8 +1,8 @@
-#include "cliffordsynthesis/DepthSynthesizer.hpp"
-#include "cliffordsynthesis/FidelitySynthesizer.hpp"
-#include "cliffordsynthesis/GateSynthesizer.hpp"
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "gtest/gtest.h"
+
+using namespace cs;
 
 class TestCliffordSynthesis: public testing::TestWithParam<std::string> {
 protected:
@@ -26,14 +26,11 @@ protected:
         ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
         ibmQX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
 
-        yorktownOptimizer = std::make_unique<GateSynthesizer>();
-        yorktownOptimizer->setArchitecture(ibmqYorktown);
+        yorktownOptimizer = std::make_unique<CliffordSynthesizer>();
 
         londonOptimizer = std::make_unique<CliffordSynthesizer>();
-        londonOptimizer->setArchitecture(ibmqLondon);
 
         qx4Optimizer = std::make_unique<CliffordSynthesizer>();
-        qx4Optimizer->setArchitecture(ibmQX4);
     }
 };
 
@@ -54,17 +51,18 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 10;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            londonOptimizer->results.dump(std::cout);
+            qx4Optimizer->optimalResults.dump(std::cout);
 
-            qx4Optimizer->results.dump(std::cout);
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -72,7 +70,9 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
 TEST(TestCliffordSynthesis, SanityCheck) {
     util::init();
     qc::QuantumComputation qc{};
-    CliffordSynthesizer    optimizer{false, false, 2, 10, SynthesisStrategy::UseMinimizer, SynthesisTarget::DEPTH};
+    CliffordSynthesizer    cs{};
+    Configuration          configuration{false, false, 2, 10, OptimizationStrategy::UseMinimizer, TargetMetric::DEPTH};
+    configuration.verbosity = 5;
     qc.addQubitRegister(2U);
     qc.h(0);
     qc.h(0);
@@ -80,11 +80,11 @@ TEST(TestCliffordSynthesis, SanityCheck) {
     qc.h(0);
     qc.h(0);
 
-    optimizer.setCircuit(qc);
+    configuration.targetCircuit = qc.clone();
 
-    optimizer.optimize();
+    cs.optimize(configuration);
 
-    EXPECT_EQ(optimizer.results.depth, 1);
+    EXPECT_EQ(cs.optimalResults.depth, 1);
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
@@ -99,17 +99,19 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target           = SynthesisTarget::DEPTH;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            configuration.target           = TargetMetric::DEPTH;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            londonOptimizer->results.dump(std::cout);
+            qx4Optimizer->optimalResults.dump(std::cout);
 
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -126,17 +128,20 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            londonOptimizer->nqubits          = 2;
-            londonOptimizer->initialTimesteps = 5;
-            londonOptimizer->target           = SynthesisTarget::FIDELITY;
-            Tableau::initTableau(londonOptimizer->initialTableau, 2);
-            londonOptimizer->targetTableau = tableau;
-            londonOptimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            configuration.target           = TargetMetric::FIDELITY;
+            configuration.architecture     = ibmqLondon;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            londonOptimizer->synthesize(configuration);
             tableau.clear();
 
-            londonOptimizer->results.dump(std::cout);
+            londonOptimizer->optimalResults.dump(std::cout);
 
-            EXPECT_EQ(londonOptimizer->results.result, SynthesisResult::SAT);
+            EXPECT_EQ(londonOptimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -153,15 +158,19 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target           = SynthesisTarget::GATES_ONLY_CNOT;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            configuration.target           = TargetMetric::GATES_ONLY_CNOT;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            qx4Optimizer->optimalResults.dump(std::cout);
+
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -178,16 +187,20 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target           = SynthesisTarget::GATES;
-            qx4Optimizer->strategy         = SynthesisStrategy::StartLow;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            configuration.target           = TargetMetric::GATES;
+            configuration.strategy         = OptimizationStrategy::StartLow;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            qx4Optimizer->optimalResults.dump(std::cout);
+
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -204,16 +217,20 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 25;
-            qx4Optimizer->target           = SynthesisTarget::GATES;
-            qx4Optimizer->strategy         = SynthesisStrategy::StartHigh;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 50;
+            configuration.target           = TargetMetric::GATES;
+            configuration.strategy         = OptimizationStrategy::StartHigh;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            qx4Optimizer->optimalResults.dump(std::cout);
+
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -230,16 +247,20 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
         std::string line;
         while (std::getline(is, line)) {
             tableau.fromString(line);
-            qx4Optimizer->nqubits          = 2;
-            qx4Optimizer->initialTimesteps = 10;
-            qx4Optimizer->target           = SynthesisTarget::GATES;
-            qx4Optimizer->strategy         = SynthesisStrategy::MinMax;
-            Tableau::initTableau(qx4Optimizer->initialTableau, 2);
-            qx4Optimizer->targetTableau = tableau;
-            qx4Optimizer->optimize();
+            Configuration configuration{};
+
+            configuration.nqubits          = 2;
+            configuration.initialTimesteps = 10;
+            configuration.target           = TargetMetric::GATES;
+            configuration.strategy         = OptimizationStrategy::MinMax;
+            Tableau::initTableau(configuration.initialTableau, 2);
+            configuration.targetTableau = tableau;
+            qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
+            qx4Optimizer->optimalResults.dump(std::cout);
+
+            EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
         }
     }
 }
@@ -302,13 +323,14 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     qc.z(0);
     qc.y(1);
 
-    optimizer.nqubits          = 2;
-    optimizer.initialTimesteps = 20;
-    optimizer.nthreads         = 1;
-    optimizer.circuit          = qc.clone();
-    optimizer.target           = SynthesisTarget::GATES;
-    optimizer.strategy         = SynthesisStrategy::SplitIter;
+    Configuration configuration{};
+    configuration.nqubits          = 2;
+    configuration.initialTimesteps = 10;
+    configuration.nThreads         = 4;
+    configuration.targetCircuit    = qc.clone();
+    configuration.target           = TargetMetric::GATES;
+    configuration.strategy         = OptimizationStrategy::SplitIter;
 
-    optimizer.optimize();
-    EXPECT_EQ(optimizer.results.result, SynthesisResult::SAT);
+    optimizer.synthesize(configuration);
+    EXPECT_EQ(optimizer.optimalResults.result, logicbase::Result::SAT);
 }

@@ -190,7 +190,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
         }
     }
 }
-void cs::GateEncoding::makeMultiGateEncoding(const cs::CliffordSynthesizer::SynthesisData& data) {
+void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
     logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
@@ -336,14 +336,14 @@ void cs::GateEncoding::makeMultiGateEncoding(const cs::CliffordSynthesizer::Synt
         data.lb->assertFormula(data.r[gateStep] == rChanges);
     }
 }
-void cs::GateEncoding::makeGateEncoding(const cs::CliffordSynthesizer::SynthesisData& data, const cs::Configuration& configuration) {
+void cs::GateEncoding::makeGateEncoding(const SynthesisData& data, const cs::Configuration& configuration) {
     switch (configuration.target) {
         case cs::TargetMetric::DEPTH:
         case cs::TargetMetric::FIDELITY:
             makeMultiGateEncoding(data);
             break;
         case cs::TargetMetric::GATES:
-        case cs::TargetMetric::GatesOnlyCnot:
+        case cs::TargetMetric::GATES_ONLY_CNOT:
         default:
             makeSingleGateEncoding(data);
             break;

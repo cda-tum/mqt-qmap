@@ -3,7 +3,6 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
 
-
 #ifndef CS_SYNTHESISDATA_HPP
 #define CS_SYNTHESISDATA_HPP
 
@@ -21,6 +20,6 @@ namespace cs {
         const logicbase::LogicMatrix3D&                          gS;
         const logicbase::LogicMatrix3D&                          gC;
     };
-}
+} // namespace cs
 
 #endif //CS_SYNTHESISDATA_HPP

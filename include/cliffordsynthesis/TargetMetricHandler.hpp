@@ -1,0 +1,24 @@
+//
+// Created by Sarah on 27.09.2022.
+//
+
+#ifndef CS_TARGETMETRICHANDLER_HPP
+#define CS_TARGETMETRICHANDLER_HPP
+#include "Architecture.hpp"
+#include "Configuration.hpp"
+#include "Results.hpp"
+#include "SynthesisData.hpp"
+namespace cs {
+
+    class TargetMetricHandler {
+        static void makeGateMetric(const SynthesisData& data, bool useMaxSat, bool onlyCNOT);
+        static void makeDepthMetric(const SynthesisData& data, bool useMaxSat);
+        static void makeFidelityMetric(const SynthesisData& data, bool useMaxSat, const Architecture& architecture);
+
+    public:
+        static void makeTargetMetric(const SynthesisData& data, const Configuration& configuration);
+
+        static void updateResults(const Configuration& configuration, Results& results, Results& currentResults);
+    };
+} // namespace cs
+#endif //CS_TARGETMETRICHANDLER_HPP

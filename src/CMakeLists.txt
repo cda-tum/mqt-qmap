@@ -91,18 +91,24 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
             ${lib}
             ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis
+            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/Tableau.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/ExactStrategy.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/HeuristicStrategy.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/GateEncoding.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/TargetMetricHandler.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/GateEncoding.hpp
-            ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/ReasoningEngine.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/OptimizationStrategy.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/SynthesisData.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetricHandler.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/ExactStrategy.hpp
+            ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/HeuristicStrategy.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
             ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
 

@@ -3,7 +3,6 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
 
-
 #ifndef CS_CONFIGURATION_HPP
 #define CS_CONFIGURATION_HPP
 
@@ -17,8 +16,15 @@ namespace cs {
     struct Configuration {
         Configuration() = default;
 
+        explicit Configuration(bool chooseBest, bool useEmbedding, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint8_t nThreads,
+                               std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target, ReasoningEngine method):
+            chooseBest(chooseBest),
+            useEmbedding(useEmbedding), nqubits(nqubits), initialTimesteps(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target), method(method) {}
+        explicit Configuration(bool chooseBest, bool useEmbedding, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
+            chooseBest(chooseBest), useEmbedding(useEmbedding), nqubits(nqubits), initialTimesteps(initialTimesteps), nThreads(2), verbosity(1), strategy(strategy), target(target), method(ReasoningEngine::Z3) {}
+
         Configuration(const Configuration& other):
-            chooseBest(other.chooseBest), nqubits(other.nqubits), useEmbedding(other.useEmbedding), verbosity(other.verbosity), strategy(other.strategy), nThreads(other.nThreads), target(other.target), method(other.method), initialTableau(other.initialTableau), targetTableau(other.targetTableau), initialTimesteps(other.initialTimesteps) {
+            chooseBest(other.chooseBest), useEmbedding(other.useEmbedding), nqubits(other.nqubits), initialTimesteps(other.initialTimesteps), nThreads(other.nThreads), verbosity(other.verbosity), strategy(other.strategy), target(other.target), method(other.method), targetTableau(other.targetTableau), initialTableau(other.initialTableau) {
             this->targetCircuit = other.targetCircuit.clone();
         }
 
@@ -29,12 +35,14 @@ namespace cs {
         std::uint8_t         nThreads         = 1;
         std::uint8_t         verbosity        = 0;
         OptimizationStrategy strategy         = OptimizationStrategy::UseMinimizer;
-        TargetMetric target           = TargetMetric::GATES;
+        TargetMetric         target           = TargetMetric::GATES;
         ReasoningEngine      method           = ReasoningEngine::Z3;
 
         qc::QuantumComputation targetCircuit{};
         Tableau                targetTableau{};
         Tableau                initialTableau{};
+
+        Architecture architecture{};
 
         [[nodiscard]] nlohmann::json json() const {
             nlohmann::json j;
@@ -44,10 +52,11 @@ namespace cs {
             j["initialTimesteps"] = initialTimesteps;
             j["verbosity"]        = verbosity;
             j["strategy"]         = strategy;
-            j["target"]           = TargetMetric::toString(target);
+            j["target"]           = target;
             j["method"]           = method;
             j["targetTableau"]    = targetTableau.toString();
             j["initialTableau"]   = initialTableau.toString();
+            j["architecture"]     = architecture.getName();
             return j;
         }
         [[nodiscard]] std::string toString() const {

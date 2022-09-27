@@ -3,26 +3,29 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
 
-
 #ifndef CS_RESONINGENGINE_HPP
 #define CS_RESONINGENGINE_HPP
 #include <iostream>
 
 namespace cs {
     enum class ReasoningEngine { Z3,
-                                MATHSAT,
-                                SMTLibV2,
-                                DIMACS };
+                                 MATHSAT,
+                                 SMTLibV2,
+                                 DIMACS };
 
     [[maybe_unused]] static ReasoningEngine synthesisMethodfromString(const std::string& method) {
-        if (method == "Z3")
+        if (method == "Z3") {
             return ReasoningEngine::Z3;
-        if (method == "MATHSAT")
+        }
+        if (method == "MATHSAT") {
             return ReasoningEngine::MATHSAT;
-        if (method == "SMTLibV2")
+        }
+        if (method == "SMTLibV2") {
             return ReasoningEngine::SMTLibV2;
-        if (method == "DIMACS")
+        }
+        if (method == "DIMACS") {
             return ReasoningEngine::DIMACS;
+        }
         return ReasoningEngine::Z3;
     }
     static std::string toString(const ReasoningEngine method) {

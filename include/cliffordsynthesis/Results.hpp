@@ -34,7 +34,7 @@ namespace cs {
         int                  depth              = 0;
         bool                 sat                = false;
         double               fidelity           = 0.0;
-        std::string          architectureName   = "";
+        std::string          architectureName;
 
         double totalSeconds = 0;
         double finalRunTime = 0;
@@ -108,7 +108,7 @@ namespace cs {
             os << R"("choose_best":")" << chooseBest << "\"," << std::endl;
             os << R"("result":")" << logicbase::toString(result) << "\"," << std::endl;
             os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
-            os << R"("target":")" << TargetMetric::toString(target) << "\"," << std::endl;
+            os << R"("target":")" << toString(target) << "\"," << std::endl;
             os << R"("method":")" << toString(method) << "\"," << std::endl;
             os << R"("qubits":")" << std::to_string(nqubits) << "\"," << std::endl;
             os << R"("initial_timesteps":")" << std::to_string(initialTimesteps)
@@ -178,7 +178,7 @@ namespace cs {
             resultJSON["choose_best"]       = chooseBest;
             resultJSON["result"]            = toString(result);
             resultJSON["strategy"]          = toString(strategy);
-            resultJSON["target"]            = TargetMetric::toString(target);
+            resultJSON["target"]            = toString(target);
             resultJSON["method"]            = toString(method);
             resultJSON["qubits"]            = nqubits;
             resultJSON["initial_timesteps"] = initialTimesteps;

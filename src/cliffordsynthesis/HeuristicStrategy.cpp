@@ -1,0 +1,110 @@
+/*
+* This file is part of the MQT QMAP library which is released under the MIT license.
+* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+*/
+
+#include "cliffordsynthesis/HeuristicStrategy.hpp"
+namespace cs {
+    void cs::HeuristicStrategy::runHeuristicStrategy(const CouplingMap& reducedCM, const std::vector<uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+        if (configuration.strategy == OptimizationStrategy::SplitIter) {
+            runSplitIter(reducedCM, qubitChoice, configuration, synthesizer);
+        }
+    }
+
+    void HeuristicStrategy::runSplitIter(const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+        if (configuration.targetCircuit.size() < 2) {
+            return;
+        }
+        DEBUG() << "Running split iter" << std::endl;
+        Tableau                   fullTableau  = configuration.targetTableau;
+        auto                      circuitSplit = static_cast<unsigned int>(std::log(configuration.targetCircuit.getNindividualOps()));
+        int                       split        = std::min(5, configuration.nqubits / 2);
+        std::vector<std::thread*> threads;
+        std::vector<Results*>     results;
+        int                       nThreads = configuration.nThreads;
+        qc::QuantumComputation    circuit  = configuration.targetCircuit.clone();
+        while (true) {
+            results.clear();
+            DEBUG() << "Current split size: " << split << std::endl;
+            DEBUG() << "Current circuit split size: " << circuitSplit << std::endl;
+            auto    start = std::chrono::high_resolution_clock::now();
+            Results totalResult;
+            totalResult.result = logicbase::Result::SAT;
+            totalResult.resultCircuit.addQubitRegister(configuration.nqubits);
+            for (size_t i = 0; i * circuitSplit < configuration.targetCircuit.getNindividualOps();
+                 i += nThreads) {
+                threads.clear();
+                DEBUG() << "Currently at " << i * circuitSplit << " of "
+                        << configuration.targetCircuit.getNindividualOps() << std::endl;
+                for (int j = 0; j < nThreads; j++) {
+                    auto* r = new Results();
+                    auto* t = new std::thread(runSplinter, i, circuitSplit,
+                                              split, std::ref(reducedCM), std::ref(qubitChoice),
+                                              std::ref(circuit), r, &synthesizer, configuration);
+                    threads.push_back(t);
+                    results.push_back(r);
+                }
+                for (auto* t: threads) {
+                    t->join();
+                }
+                for (auto* t: threads) {
+                    delete t;
+                }
+                for (auto* r: results) {
+                    if (r->result == logicbase::Result::UNSAT) {
+                        totalResult.result = logicbase::Result::UNSAT;
+                        break;
+                    }
+                }
+                if (totalResult.result == logicbase::Result::UNSAT) {
+                    DEBUG() << "UNSAT, increasing split size." << std::endl;
+                    split += std::max(1.0, split * 0.2);
+                    break;
+                }
+            }
+            for (auto* r: results) {
+                for (const auto& gate: r->resultCircuit) {
+                    totalResult.resultCircuit.insert(totalResult.resultCircuit.end(),
+                                                     gate->clone());
+                }
+                delete r;
+            }
+            if (totalResult.result == logicbase::Result::SAT) {
+                Tableau resultingTableau{};
+                Tableau::generateTableau(resultingTableau, totalResult.resultCircuit);
+                DEBUG() << "Equality (Results): "
+                        << ((fullTableau == resultingTableau) ? "True" : "False")
+                        << std::endl;
+                DEBUG() << "Original Circuit size: " << configuration.targetCircuit.getNindividualOps()
+                        << std::endl;
+                DEBUG() << "Optimized Circuit size: "
+                        << totalResult.resultCircuit.getNindividualOps() << std::endl;
+                TRACE() << "Resulting Circuit: " << std::endl;
+                std::ostringstream ss;
+                totalResult.resultCircuit.dump(ss, qc::Format::OpenQASM);
+                TRACE() << ss.str() << std::endl;
+                auto                          end  = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> diff = end - start;
+                INFO() << "Time for complete run: " << diff.count() << std::endl;
+                if (configuration.targetCircuit.getNindividualOps() ==
+                    totalResult.resultCircuit.getNindividualOps()) {
+                    split *= 1.2;
+                    break;
+                }
+                circuit = totalResult.resultCircuit.clone();
+            }
+        }
+        synthesizer.optimalResults.resultCircuit = configuration.targetCircuit.clone();
+        synthesizer.optimalResults.resultTableaus.emplace_back(configuration.targetTableau);
+        synthesizer.optimalResults.gateCount = configuration.targetCircuit.getNindividualOps();
+        synthesizer.optimalResults.result    = logicbase::Result::SAT;
+    }
+    void HeuristicStrategy::runSplinter(int i, unsigned int circSplit, unsigned int split, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, qc::QuantumComputation& circuit, Results* r, CliffordSynthesizer* opt, const Configuration& configuration) {
+        Tableau targetTableau{};
+        Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circSplit);
+        Tableau initTableau{};
+        Tableau::generateTableau(initTableau, circuit, 0, i * circSplit);
+        (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,
+                                     initTableau, configuration);
+    }
+} // namespace cs
