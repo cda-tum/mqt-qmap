@@ -285,7 +285,7 @@ namespace cs {
             }
             results.resultCircuit = resultCircuit.clone();
         }
-        lb->reset();
+        //lb->reset();
         if (result == Result::SAT) {
             DEBUG() << "SAT" << std::endl;
             return results;
@@ -295,7 +295,6 @@ namespace cs {
             DEBUG() << "UNSAT" << std::endl;
             return results;
         }
-        return results;
     }
 
     void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position) {

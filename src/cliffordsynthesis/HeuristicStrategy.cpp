@@ -23,7 +23,8 @@ namespace cs {
         std::vector<Results*>     results;
         int                       nThreads = configuration.nThreads;
         qc::QuantumComputation    circuit  = configuration.targetCircuit.clone();
-        while (true) {
+        bool stopping = false;
+        while (!stopping) {
             results.clear();
             DEBUG() << "Current split size: " << split << std::endl;
             DEBUG() << "Current circuit split size: " << circuitSplit << std::endl;
@@ -59,6 +60,11 @@ namespace cs {
                 if (totalResult.result == logicbase::Result::UNSAT) {
                     DEBUG() << "UNSAT, increasing split size." << std::endl;
                     split += std::max(1.0, split * 0.2);
+                    circuitSplit += std::max(1.0, circuitSplit * 0.2);
+                    if (circuitSplit > configuration.targetCircuit.getNindividualOps()) {
+                        stopping = true;
+                        break;
+                    }
                     break;
                 }
             }
