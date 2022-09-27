@@ -1,10 +1,11 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#ifndef QMAP_GATESYNTHESIZER_HPP
-#define QMAP_GATESYNTHESIZER_HPP
-class GateSynthesizer: public CliffordSynthesizer {
+#ifndef CS_DEPTHSYNTHESIZER_HPP
+    #define CS_DEPTHSYNTHESIZER_HPP
+
+class DepthSynthesizer: public CliffordSynthesizer {
 protected:
     void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) override;
     void updateResults(SynthesisResults& results) override;
 };
-#endif //QMAP_GATESYNTHESIZER_HPP
+#endif //CS_DEPTHSYNTHESIZER_HPP

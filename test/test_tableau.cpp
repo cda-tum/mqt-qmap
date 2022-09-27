@@ -1,6 +1,6 @@
 #include "Architecture.hpp"
 #include "QuantumComputation.hpp"
-#include "Tableau.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 
 #include "gtest/gtest.h"
 

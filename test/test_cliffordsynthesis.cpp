@@ -1,6 +1,6 @@
-#include "depthsynthesis/DepthSynthesizer.hpp"
-#include "fidelitysynthesis/FidelitySynthesizer.hpp"
-#include "gatesynthesis/GateSynthesizer.hpp"
+#include "cliffordsynthesis/DepthSynthesizer.hpp"
+#include "cliffordsynthesis/FidelitySynthesizer.hpp"
+#include "cliffordsynthesis/GateSynthesizer.hpp"
 
 #include "gtest/gtest.h"
 
@@ -61,10 +61,10 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            londonOptimizer->optimalResults.dump(std::cout);
+            londonOptimizer->results.dump(std::cout);
 
-            qx4Optimizer->optimalResults.dump(std::cout);
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            qx4Optimizer->results.dump(std::cout);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -84,7 +84,7 @@ TEST(TestCliffordSynthesis, SanityCheck) {
 
     optimizer.optimize();
 
-    EXPECT_EQ(optimizer.optimalResults.depth, 1);
+    EXPECT_EQ(optimizer.results.depth, 1);
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
@@ -107,9 +107,9 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            londonOptimizer->optimalResults.dump(std::cout);
+            londonOptimizer->results.dump(std::cout);
 
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -134,9 +134,9 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             londonOptimizer->optimize();
             tableau.clear();
 
-            londonOptimizer->optimalResults.dump(std::cout);
+            londonOptimizer->results.dump(std::cout);
 
-            EXPECT_EQ(londonOptimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(londonOptimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -161,7 +161,7 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -187,7 +187,7 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -213,7 +213,7 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -239,7 +239,7 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
             qx4Optimizer->optimize();
             tableau.clear();
 
-            EXPECT_EQ(qx4Optimizer->optimalResults.result, SynthesisResult::SAT);
+            EXPECT_EQ(qx4Optimizer->results.result, SynthesisResult::SAT);
         }
     }
 }
@@ -310,5 +310,5 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     optimizer.strategy         = SynthesisStrategy::SplitIter;
 
     optimizer.optimize();
-    EXPECT_EQ(optimizer.optimalResults.result, SynthesisResult::SAT);
+    EXPECT_EQ(optimizer.results.result, SynthesisResult::SAT);
 }

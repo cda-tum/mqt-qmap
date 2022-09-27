@@ -1,12 +1,10 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#ifndef QMAP_FIDELITYSYNTHESIZER_HPP
-#define QMAP_FIDELITYSYNTHESIZER_HPP
-
-class FidelitySynthesizer: public CliffordSynthesizer {
+#ifndef CS_GATESYNTHESIZER_HPP
+    #define CS_GATESYNTHESIZER_HPP
+class GateSynthesizer: public CliffordSynthesizer {
 protected:
     void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) override;
     void updateResults(SynthesisResults& results) override;
 };
-
-#endif //QMAP_FIDELITYSYNTHESIZER_HPP
+#endif //CS_GATESYNTHESIZER_HPP

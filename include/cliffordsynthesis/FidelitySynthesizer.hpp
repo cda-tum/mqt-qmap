@@ -1,11 +1,12 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#ifndef QMAP_DEPTHSYNTHESIZER_HPP
-    #define QMAP_DEPTHSYNTHESIZER_HPP
+#ifndef CS_FIDELITYSYNTHESIZER_HPP
+    #define CS_FIDELITYSYNTHESIZER_HPP
 
-class DepthSynthesizer: public CliffordSynthesizer {
+class FidelitySynthesizer: public CliffordSynthesizer {
 protected:
     void makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) override;
     void updateResults(SynthesisResults& results) override;
 };
-#endif //QMAP_DEPTHSYNTHESIZER_HPP
+
+#endif //CS_FIDELITYSYNTHESIZER_HPP

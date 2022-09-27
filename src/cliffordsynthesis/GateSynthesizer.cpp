@@ -1,4 +1,4 @@
-#include "gatesynthesis/GateSynthesizer.hpp"
+#include "cliffordsynthesis/GateSynthesizer.hpp"
 void GateSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     logicbase::LogicTerm changes = logicbase::LogicTerm(true);
     makeSingleGateConstraints(data);
@@ -24,8 +24,8 @@ void GateSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisD
     }
 }
 void GateSynthesizer::updateResults(SynthesisResults& results) {
-    if (results.gateCount < optimalResults.gateCount ||
-        optimalResults.gateCount == 0) {
-        optimalResults = results;
+    if (results.gateCount < results.gateCount ||
+        results.gateCount == 0) {
+        results = results;
     }
 }

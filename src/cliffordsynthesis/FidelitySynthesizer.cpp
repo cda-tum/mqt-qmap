@@ -1,4 +1,4 @@
-#include "fidelitysynthesis/FidelitySynthesizer.hpp"
+#include "cliffordsynthesis/FidelitySynthesizer.hpp"
 void FidelitySynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     if (!architecture.isArchitectureAvailable()) {
         util::fatal("No fidelity architecture specified in coupling map.");
@@ -47,8 +47,8 @@ void FidelitySynthesizer::makeSpecificEncoding(const CliffordSynthesizer::Synthe
     }
 }
 void FidelitySynthesizer::updateResults(SynthesisResults& results) {
-    if (results.fidelity >= optimalResults.fidelity ||
-        optimalResults.fidelity == 0) {
-        optimalResults = results;
+    if (results.fidelity >= results.fidelity ||
+        results.fidelity == 0) {
+        results = results;
     }
 }

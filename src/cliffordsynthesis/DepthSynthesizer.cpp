@@ -1,4 +1,4 @@
-#include "depthsynthesis/DepthSynthesizer.hpp"
+#include "cliffordsynthesis/DepthSynthesizer.hpp"
 void DepthSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::SynthesisData& data, const SynthesisConfiguration& configuration) {
     using namespace logicbase;
     makeMultipleGateConstraints(data);
@@ -25,7 +25,7 @@ void DepthSynthesizer::makeSpecificEncoding(const CliffordSynthesizer::Synthesis
     }
 }
 void DepthSynthesizer::updateResults(SynthesisResults& results) {
-    if (results.depth < optimalResults.depth || optimalResults.depth == 0) {
-        optimalResults = results;
+    if (results.depth < results.depth || results.depth == 0) {
+        results = results;
     }
 }
