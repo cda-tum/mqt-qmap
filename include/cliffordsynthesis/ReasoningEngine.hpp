@@ -13,7 +13,7 @@ namespace cs {
                                  SMTLibV2,
                                  DIMACS };
 
-    [[maybe_unused]] static ReasoningEngine synthesisMethodfromString(const std::string& method) {
+    [[maybe_unused]] static ReasoningEngine reasoningEngineFromString(const std::string& method) {
         if (method == "Z3") {
             return ReasoningEngine::Z3;
         }

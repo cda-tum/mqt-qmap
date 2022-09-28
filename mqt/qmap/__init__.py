@@ -20,7 +20,6 @@ from mqt.qmap.compile import compile
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
-    CliffordOptimizationResults,
     CommanderGrouping,
     Configuration,
     Encoding,
@@ -29,8 +28,11 @@ from mqt.qmap.pyqmap import (
     MappingResults,
     Method,
     SwapReduction,
-    SynthesisStrategy,
-    SynthesisTarget,
+    SynthesisResults,
+    SynthesisConfiguration,
+    TargetMetric,
+    OptimizationStrategy,
+    Result,
 )
 
 __all__ = [
@@ -45,9 +47,10 @@ __all__ = [
     "Configuration",
     "MappingResults",
     "Architecture",
-    "SynthesisTarget",
-    "SynthesisStrategy",
-    "CliffordOptimizationResults",
+    "SynthesisResults",
+    "SynthesisConfiguration",
+    "TargetMetric",
+    "OptimizationStrategy",
     "synthesize_clifford",
     "optimize_clifford",
 ]

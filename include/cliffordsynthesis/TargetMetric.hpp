@@ -27,7 +27,7 @@ namespace cs {
         return "Error";
     }
 
-    [[maybe_unused]] static TargetMetric synthesisTargetFromString(const std::string& target) {
+    [[maybe_unused]] static TargetMetric targetMetricFromString(const std::string& target) {
         if (target == "gates") {
             return TargetMetric::GATES;
         }

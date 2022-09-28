@@ -33,7 +33,7 @@ namespace cs {
         return "Error";
     }
 
-    [[maybe_unused]] static OptimizationStrategy synthesisStrategyFromString(const std::string& strategy) {
+    [[maybe_unused]] static OptimizationStrategy optimizationStrategyFromString(const std::string& strategy) {
         if (strategy == "minmax") {
             return OptimizationStrategy::MinMax;
         }

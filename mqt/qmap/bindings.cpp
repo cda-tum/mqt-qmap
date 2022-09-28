@@ -74,14 +74,17 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-SynthesisResults optimize(const py::object& circ, Architecture& arch, SynthesisStrategy& strategy) {
+cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configuration& config) {
     qc::QuantumComputation qc{};
 
     loadQC(qc, circ);
+    config.targetCircuit = qc.clone();
+    config.nqubits = qc.getNqubits();
+    config.architecture = arch;
 
-    std::unique_ptr<CliffordSynthesizer> optimizer;
+    std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {
-        optimizer = std::make_unique<CliffordSynthesizer>(false, false, 0, 0, strategy, SynthesisTarget::GATES);
+        optimizer = std::make_unique<cs::CliffordSynthesizer>();
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not construct optimizer: " << e.what();
@@ -89,16 +92,7 @@ SynthesisResults optimize(const py::object& circ, Architecture& arch, SynthesisS
     }
 
     try {
-        optimizer->setCircuit(qc);
-        optimizer->setArchitecture(arch);
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Error during initialization: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
-
-    try {
-        optimizer->optimize();
+        optimizer->optimize(config);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Error during optimization: " << e.what();
@@ -111,7 +105,7 @@ SynthesisResults optimize(const py::object& circ, Architecture& arch, SynthesisS
 }
 
 // c++ binding function
-SynthesisResults synthesize(const std::string& tableau, Architecture& arch, SynthesisStrategy& strategy) {
+cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Configuration& config) {
     auto tab = Tableau();
     try {
         tab.fromString(tableau);
@@ -120,10 +114,14 @@ SynthesisResults synthesize(const std::string& tableau, Architecture& arch, Synt
         ss << "Could not parse tableau: " << e.what();
         throw std::invalid_argument(ss.str());
     }
+    config.targetTableau = tab;
+    Tableau::initTableau(config.initialTableau, config.targetTableau.getQubitCount());
+    config.nqubits = config.targetTableau.getQubitCount();
+    config.architecture = arch;
 
-    std::unique_ptr<CliffordSynthesizer> optimizer;
+    std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {
-        optimizer = std::make_unique<CliffordSynthesizer>(false, false, 0, 0, strategy, SynthesisTarget::GATES);
+        optimizer = std::make_unique<cs::CliffordSynthesizer>();
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not construct optimizer: " << e.what();
@@ -131,16 +129,7 @@ SynthesisResults synthesize(const std::string& tableau, Architecture& arch, Synt
     }
 
     try {
-        optimizer->setTargetTableau(tab);
-        optimizer->setArchitecture(arch);
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Error during initialization: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
-
-    try {
-        optimizer->optimize();
+        optimizer->synthesize(config);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Error during optimization: " << e.what();
@@ -234,30 +223,6 @@ PYBIND11_MODULE(pyqmap, m) {
             .export_values()
             // allow construction from string
             .def(py::init([](const std::string& str) -> SwapReduction { return swapReductionFromString(str); }));
-
-    py::enum_<SynthesisTarget>(m, "SynthesisTarget")
-            .value("gates", SynthesisTarget::GATES)
-            .value("depth", SynthesisTarget::DEPTH)
-            .value("fidelity", SynthesisTarget::FIDELITY)
-            .value("gates_only_cnot", SynthesisTarget::GATES_ONLY_CNOT)
-            .export_values()
-            .def(py::init([](const std::string& str) -> SynthesisTarget { return synthesisTargetFromString(str); }));
-
-    py::enum_<SynthesisStrategy>(m, "SynthesisStrategy")
-            .value("use_minimizer", SynthesisStrategy::UseMinimizer)
-            .value("minmax", SynthesisStrategy::MinMax)
-            .value("start_low", SynthesisStrategy::StartLow)
-            .value("start_high", SynthesisStrategy::StartHigh)
-            .value("split_iter", SynthesisStrategy::SplitIter)
-            .export_values()
-            .def(py::init([](const std::string& str) -> SynthesisStrategy { return synthesisStrategyFromString(str); }));
-
-    py::enum_<SynthesisResult>(m, "SynthesisResult")
-            .value("sat", SynthesisResult::SAT)
-            .value("unsat", SynthesisResult::UNSAT)
-            .value("undef", SynthesisResult::UNDEF)
-            .export_values()
-            .def(py::init([](const std::string& str) -> SynthesisResult { return synthesisResultFromString(str); }));
 
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
@@ -366,23 +331,60 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-    py::class_<SynthesisResults>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
+    py::enum_<cs::TargetMetric>(m, "TargetMetric")
+            .value("gates", cs::TargetMetric::GATES)
+            .value("depth", cs::TargetMetric::DEPTH)
+            .value("fidelity", cs::TargetMetric::FIDELITY)
+            .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES)
+            .export_values()
+            .def(py::init([](const std::string& str) -> cs::TargetMetric { return cs::targetMetricFromString(str); }));
+
+    py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
+            .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer)
+            .value("minmax", cs::OptimizationStrategy::MinMax)
+            .value("start_low", cs::OptimizationStrategy::StartLow)
+            .value("start_high", cs::OptimizationStrategy::StartHigh)
+            .value("split_iter", cs::OptimizationStrategy::SplitIter)
+            .export_values()
+            .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
+
+    py::enum_<logicbase::Result>(m, "Result")
+            .value("sat", logicbase::Result::SAT)
+            .value("unsat", logicbase::Result::UNSAT)
+            .value("ndef", logicbase::Result::NDEF)
+            .export_values()
+            .def(py::init([](const std::string& str) -> logicbase::Result { return logicbase::resultFromString(str); }));
+
+    py::class_<cs::Configuration>(m, "SynthesisConfiguration", "Configuration options for MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
-            .def_readwrite("sat", &SynthesisResults::result, "Whether the optimization problem was satisfiable")
-            .def_readwrite("result_circuit", &SynthesisResults::resultStringCircuit, "The resulting circuit")
-            .def_readwrite("verbosity", &SynthesisResults::verbose, "Verbosity of the debug messages")
-            .def_readwrite("choose_best", &SynthesisResults::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
-            .def_readwrite("strategy", &SynthesisResults::strategy, "The strategy used to optimize the circuit")
-            .def_readwrite("target", &SynthesisResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
-            .def_readwrite("method", &SynthesisResults::method, "The synthesis method, at the moment only 'z3' is supported")
-            .def_readwrite("qubits", &SynthesisResults::nqubits, "The number of qubits in the resulting circuit")
-            .def_readwrite("initial_timesteps", &SynthesisResults::initialTimesteps, "The number of initial timesteps allotted for synthesis")
-            .def_readwrite("gate_count", &SynthesisResults::gateCount, "The number of gates in the resulting circuit")
-            .def_readwrite("depth", &SynthesisResults::depth, "The depth of the resulting circuit")
-            .def_readwrite("fidelity", &SynthesisResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
-            .def_readwrite("total_seconds", &SynthesisResults::totalSeconds, "The total time taken to synthesize the circuit")
-            .def("json", &SynthesisResults::json)
-            .def("__repr__", &SynthesisResults::getStrRepr);
+            .def_readwrite("choose_best", &cs::Configuration::chooseBest, "if true, the fully connected subgraph of an architecture with the lowest overall fidelity will be chosen, otherwise all possible fully connected subgraphs are tries")
+            .def_readwrite("nqubits", &cs::Configuration::nqubits)
+            .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep)
+            .def_readwrite("nthreads", &cs::Configuration::nThreads)
+            .def_readwrite("verbosity", &cs::Configuration::verbosity)
+            .def_readwrite("optimization_strategy", &cs::Configuration::strategy)
+            .def_readwrite("target_metric", &cs::Configuration::target)
+            .def_readwrite("reasoning_engine", &cs::Configuration::method)
+            .def("json", &cs::Configuration::json)
+            .def("__repr__", &cs::Configuration::toString);
+
+    py::class_<cs::Results>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
+            .def(py::init<>())
+            .def_readwrite("sat", &cs::Results::result, "Whether the optimization problem was satisfiable")
+            .def_readwrite("result_circuit", &cs::Results::resultStringCircuit, "The resulting circuit")
+            .def_readwrite("verbosity", &cs::Results::verbose, "Verbosity of the debug messages")
+            .def_readwrite("choose_best", &cs::Results::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
+            .def_readwrite("strategy", &cs::Results::strategy, "The strategy used to optimize the circuit")
+            .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
+            .def_readwrite("method", &cs::Results::method, "The synthesis method, at the moment only 'z3' is supported")
+            .def_readwrite("qubits", &cs::Results::nqubits, "The number of qubits in the resulting circuit")
+            .def_readwrite("initial_timestep", &cs::Results::initialTimesteps, "The number of initial timesteps allotted for synthesis")
+            .def_readwrite("gate_count", &cs::Results::gateCount, "The number of gates in the resulting circuit")
+            .def_readwrite("depth", &cs::Results::depth, "The depth of the resulting circuit")
+            .def_readwrite("fidelity", &cs::Results::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
+            .def_readwrite("total_seconds", &cs::Results::totalSeconds, "The total time taken to synthesize the circuit")
+            .def("json", &cs::Results::json)
+            .def("__repr__", &cs::Results::getStrRepr);
 
     m.def("map", &map, "map a quantum circuit");
     m.def("synthesize", &synthesize, "synthesize a clifford circuit");

@@ -55,7 +55,7 @@ namespace cs {
                                                                     std::set<std::uint16_t>(qubitMap.begin(), qubitMap.end()),
                                                                     configuration.architecture.getProperties());
             int timesteps =
-                    configuration.initialTimesteps == 0 ? configuration.nqubits * configuration.nqubits : configuration.initialTimesteps;
+                    configuration.initialTimestep == 0 ? configuration.nqubits * configuration.nqubits : configuration.initialTimestep;
             if (isExact(configuration.strategy)) {
                 ExactStrategy::runExactStrategy(timesteps, subset, qubitMap, configuration, *this);
             } else {

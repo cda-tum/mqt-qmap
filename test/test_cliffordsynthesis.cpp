@@ -59,7 +59,7 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -107,7 +107,7 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             configuration.target           = TargetMetric::DEPTH;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
@@ -136,7 +136,7 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             configuration.target           = TargetMetric::FIDELITY;
             configuration.architecture     = ibmqLondon;
             Tableau::initTableau(configuration.initialTableau, 2);
@@ -166,7 +166,7 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             configuration.target           = TargetMetric::TWO_QUBIT_GATES;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
@@ -195,7 +195,7 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             configuration.target           = TargetMetric::GATES;
             configuration.strategy         = OptimizationStrategy::StartLow;
             Tableau::initTableau(configuration.initialTableau, 2);
@@ -225,7 +225,7 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 50;
+            configuration.initialTimestep  = 50;
             configuration.target           = TargetMetric::GATES;
             configuration.strategy         = OptimizationStrategy::StartHigh;
             Tableau::initTableau(configuration.initialTableau, 2);
@@ -255,7 +255,7 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
             Configuration configuration{};
 
             configuration.nqubits          = 2;
-            configuration.initialTimesteps = 10;
+            configuration.initialTimestep  = 10;
             configuration.target           = TargetMetric::GATES;
             configuration.strategy         = OptimizationStrategy::MinMax;
             Tableau::initTableau(configuration.initialTableau, 2);
@@ -313,7 +313,7 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
 
     Configuration configuration{};
     configuration.nqubits          = 2;
-    configuration.initialTimesteps = 20;
+    configuration.initialTimestep  = 20;
     configuration.nThreads         = 1;
     configuration.targetCircuit    = qc.clone();
     configuration.target           = TargetMetric::GATES;
