@@ -103,7 +103,10 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     packages=find_namespace_packages(include=["mqt.*"]),
-    install_requires=["qiskit-terra>=0.20.2,<0.22.0", "retworkx>=0.11.0"],
+    install_requires=[
+        "qiskit-terra>=0.20.2,<0.22.0",
+        "retworkx>=0.11.0,<0.12.0",
+    ],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
         "coverage": ["coverage[toml]~=6.4.2", "pytest-cov~=3.0.0"],
