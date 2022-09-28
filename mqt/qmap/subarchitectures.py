@@ -63,7 +63,7 @@ class SubarchitectureOrder:
                 with resources.as_file(ref) as path:
                     self.__load_library(path)
             else:
-                self.__load_library(path)
+                self.__load_library(arch)
             return
 
         if isinstance(arch, pathlib.Path):
