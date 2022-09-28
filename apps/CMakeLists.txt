@@ -34,7 +34,7 @@ if(Boost_FOUND)
 
   add_qmap_executable(heuristic)
 
-  #add_qmap_executable(cliffordsynthesis)
+  # add_qmap_executable(cliffordsynthesis)
 else()
   message(STATUS "Did not find Boost! Commandline applications will not be an available target!")
 endif()
