@@ -58,8 +58,8 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -76,7 +76,7 @@ TEST(TestCliffordSynthesis, SanityCheck) {
     util::init();
     qc::QuantumComputation qc{};
     CliffordSynthesizer    cs{};
-    Configuration          configuration{false, false, 2, 10, OptimizationStrategy::UseMinimizer, TargetMetric::DEPTH};
+    Configuration          configuration{false, 2, 10, OptimizationStrategy::UseMinimizer, TargetMetric::DEPTH};
     configuration.verbosity = 5;
     qc.addQubitRegister(2U);
     qc.h(0);
@@ -106,9 +106,9 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
-            configuration.target           = TargetMetric::DEPTH;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
+            configuration.target          = TargetMetric::DEPTH;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -135,10 +135,10 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
-            configuration.target           = TargetMetric::FIDELITY;
-            configuration.architecture     = ibmqLondon;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
+            configuration.target          = TargetMetric::FIDELITY;
+            configuration.architecture    = ibmqLondon;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             londonOptimizer->synthesize(configuration);
@@ -151,7 +151,7 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
     }
 }
 
-TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
+TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
     const auto& inputFile = GetParam();
     Tableau     tableau{};
     if (inputFile.find(".txt") != std::string::npos) {
@@ -165,9 +165,9 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
-            configuration.target           = TargetMetric::TWO_QUBIT_GATES;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
+            configuration.target          = TargetMetric::TWO_QUBIT_GATES;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -194,10 +194,10 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
-            configuration.target           = TargetMetric::GATES;
-            configuration.strategy         = OptimizationStrategy::StartLow;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
+            configuration.target          = TargetMetric::GATES;
+            configuration.strategy        = OptimizationStrategy::StartLow;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -224,10 +224,10 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 50;
-            configuration.target           = TargetMetric::GATES;
-            configuration.strategy         = OptimizationStrategy::StartHigh;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 50;
+            configuration.target          = TargetMetric::GATES;
+            configuration.strategy        = OptimizationStrategy::StartHigh;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -254,10 +254,10 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
             tableau.fromString(line);
             Configuration configuration{};
 
-            configuration.nqubits          = 2;
-            configuration.initialTimestep  = 10;
-            configuration.target           = TargetMetric::GATES;
-            configuration.strategy         = OptimizationStrategy::MinMax;
+            configuration.nqubits         = 2;
+            configuration.initialTimestep = 10;
+            configuration.target          = TargetMetric::GATES;
+            configuration.strategy        = OptimizationStrategy::MinMax;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
@@ -312,12 +312,12 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     qc.y(0);
 
     Configuration configuration{};
-    configuration.nqubits          = 2;
-    configuration.initialTimestep  = 20;
-    configuration.nThreads         = 1;
-    configuration.targetCircuit    = qc.clone();
-    configuration.target           = TargetMetric::GATES;
-    configuration.strategy         = OptimizationStrategy::SplitIter;
+    configuration.nqubits         = 2;
+    configuration.initialTimestep = 20;
+    configuration.nThreads        = 1;
+    configuration.targetCircuit   = qc.clone();
+    configuration.target          = TargetMetric::GATES;
+    configuration.strategy        = OptimizationStrategy::SplitIter;
 
     optimizer.synthesize(configuration);
     EXPECT_EQ(optimizer.optimalResults.result, logicbase::Result::SAT);

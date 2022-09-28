@@ -115,8 +115,7 @@ TEST(TestTableau, BasicFunctions) {
     EXPECT_EQ(tableau2[1][3], 1);
 
     EXPECT_EQ(tableau2, tableau);
-
-    EXPECT_EQ(tableau.tableauDistance(tableau2, 2), 0);
+    ;
 }
 
 TEST(TestTableau, LoadTableauFrom) {
@@ -200,14 +199,4 @@ TEST(TestTableau, BVTableau) {
 
     EXPECT_EQ(bitvector3, bitvector1);
     EXPECT_EQ(bitvector4, bitvector2);
-}
-TEST(TestTableau, EmbedTableau) {
-    using namespace dd::literals;
-
-    Tableau tableau{};
-    tableau.init(2);
-
-    Tableau embededTableau = tableau.embedTableau(3);
-
-    EXPECT_EQ(embededTableau, Tableau::getDiagonalTableau(3));
 }

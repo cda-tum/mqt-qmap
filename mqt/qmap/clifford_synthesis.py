@@ -10,11 +10,10 @@ from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
-    SynthesisResults,
-    SynthesisConfiguration,
-    TargetMetric,
     OptimizationStrategy,
-    Result,
+    SynthesisConfiguration,
+    SynthesisResults,
+    TargetMetric,
     optimize,
     synthesize,
 )
@@ -26,15 +25,15 @@ from qiskit.transpiler.target import Target
 
 
 def optimize_clifford(
-        circ: QuantumCircuit | str,
-        arch: str | Arch | Architecture | Backend | None = None,
-        calibration: str | BackendProperties | Target | None = None,
-        target: str | None = None,
-        strategy: str | None = None,
-        choose_best: bool = False,
-        initial_timestep: int = 10,
-        nthreads: int = 1,
-        verbosity: int = 0,
+    circ: QuantumCircuit | str,
+    arch: str | Arch | Architecture | Backend | None = None,
+    calibration: str | BackendProperties | Target | None = None,
+    target: str | None = None,
+    strategy: str | None = None,
+    choose_best: bool = False,
+    initial_timestep: int = 10,
+    nthreads: int = 1,
+    verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """
     Optimize a circuit using the clifford synthesizer
@@ -79,15 +78,15 @@ def optimize_clifford(
 
 
 def synthesize_clifford(
-        tableau: str,
-        arch: str | Arch | Architecture | Backend | None = None,
-        calibration: str | BackendProperties | Target | None = None,
-        target: str | TargetMetric = 'gates',
-        strategy: str | OptimizationStrategy = 'use_minimizer',
-        choose_best: bool = False,
-        initial_timestep: int = 10,
-        nthreads: int = 1,
-        verbosity: int = 0,
+    tableau: str,
+    arch: str | Arch | Architecture | Backend | None = None,
+    calibration: str | BackendProperties | Target | None = None,
+    target: str | TargetMetric = "gates",
+    strategy: str | OptimizationStrategy = "use_minimizer",
+    choose_best: bool = False,
+    initial_timestep: int = 10,
+    nthreads: int = 1,
+    verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """
     Synthesize a clifford circuit using the clifford synthesizer and a tableau input.
