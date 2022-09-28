@@ -1,7 +1,7 @@
 /*
- * This file is part of the MQT QMAP library which is released under the MIT license.
- * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
- */
+* This file is part of the MQT QMAP library which is released under the MIT license.
+* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+*/
 
 #include "exact/ExactMapper.hpp"
 
@@ -373,12 +373,12 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     //////////////////////////////////////////
 
     /*
-	 locical/physical qubit variables x_k_i_j
-	 k	before layer k
-	 i	physical qubit i
-	 j	logical qubit j
-	 number of variables: (|L|) * m * n
-	 */
+    locical/physical qubit variables x_k_i_j
+    k	before layer k
+    i	physical qubit i
+    j	logical qubit j
+    number of variables: (|L|) * m * n
+    */
     LogicMatrix3D     x{};
     std::stringstream x_name{};
     for (unsigned long k = 0; k < reducedLayerIndices.size(); ++k) {
@@ -395,11 +395,11 @@ void ExactMapper::coreMappingRoutine(const std::set<unsigned short>& qubitChoice
     }
 
     /*
- permutation variables y_k_pi
- k	before layer k
- pi	arbitrary permutation of the m qubits
- number of variables: (|L|-1) * m!
- */
+permutation variables y_k_pi
+k	before layer k
+pi	arbitrary permutation of the m qubits
+number of variables: (|L|-1) * m!
+*/
     LogicMatrix       y{};
     std::stringstream y_name{};
     for (unsigned long k = 1; k < reducedLayerIndices.size(); ++k) {
