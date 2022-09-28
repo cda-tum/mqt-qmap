@@ -5,9 +5,10 @@
 
 from __future__ import annotations
 
-from mqt.qmap.pyqmap import Architecture, Target
+from mqt.qmap.pyqmap import Architecture
 
 from qiskit.providers.models import BackendProperties
+from qiskit.transpiler.target import Target
 
 
 def load_calibration(
