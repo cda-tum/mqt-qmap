@@ -4,6 +4,7 @@
 */
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
+
 #include "LogicBlock/LogicBlock.hpp"
 #include "LogicTerm/LogicTerm.hpp"
 #include "LogicUtil/util_logicblock.hpp"

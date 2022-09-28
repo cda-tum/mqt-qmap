@@ -48,15 +48,15 @@ namespace cs {
             nlohmann::json j;
             j["choose_best"]       = chooseBest;
             j["use_embedding"]     = useEmbedding;
-            j["nqubits"]          = nqubits;
+            j["nqubits"]           = nqubits;
             j["initial_timesteps"] = initialTimesteps;
-            j["verbosity"]        = verbosity;
-            j["strategy"]         = strategy;
-            j["target"]           = target;
-            j["method"]           = method;
+            j["verbosity"]         = verbosity;
+            j["strategy"]          = strategy;
+            j["target"]            = target;
+            j["method"]            = method;
             j["target_tableau"]    = targetTableau.toString();
             j["initial_tableau"]   = initialTableau.toString();
-            j["architecture"]     = architecture.getName();
+            j["architecture"]      = architecture.getName();
             return j;
         }
         [[nodiscard]] std::string toString() const {
