@@ -11,6 +11,7 @@ from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     OptimizationStrategy,
+    Result,
     SynthesisConfiguration,
     SynthesisResults,
     TargetMetric,

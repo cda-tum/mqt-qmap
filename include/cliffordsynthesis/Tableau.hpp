@@ -105,7 +105,6 @@ public:
     [[nodiscard]] std::string toString() const;
     void                      fromString(const std::string& str);
 
-
     [[nodiscard]] std::uint64_t getBVFrom(std::int32_t column) const;
 
 private:
