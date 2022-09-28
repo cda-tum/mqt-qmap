@@ -9,17 +9,21 @@
 namespace cs {
     void cs::ExactStrategy::runExactStrategy(int timesteps, const CouplingMap& reducedCM,
                                              const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        if (configuration.strategy == OptimizationStrategy::UseMinimizer) {
-            runMaxSat(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-        }
-        if (configuration.strategy == OptimizationStrategy::StartLow) {
-            runStartLow(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-        }
-        if (configuration.strategy == OptimizationStrategy::StartHigh) {
-            runStartHigh(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-        }
-        if (configuration.strategy == OptimizationStrategy::MinMax) {
-            runBinarySearch(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+        switch (configuration.strategy) {
+            case OptimizationStrategy::UseMinimizer:
+                runMaxSat(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+                break;
+            case OptimizationStrategy::StartLow:
+                runStartLow(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+                break;
+            case OptimizationStrategy::StartHigh:
+                runStartHigh(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+                break;
+            case OptimizationStrategy::MinMax:
+                runBinarySearch(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+                break;
+            default:
+                throw std::runtime_error("Unknown optimization strategy");
         }
     }
     void ExactStrategy::runMaxSat(int timesteps, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {

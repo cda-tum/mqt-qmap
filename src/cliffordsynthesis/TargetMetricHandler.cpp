@@ -2,6 +2,7 @@
 * This file is part of the MQT QMAP library which is released under the MIT license.
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
+
 #include "cliffordsynthesis/TargetMetricHandler.hpp"
 
 #include "cliffordsynthesis/GateEncoding.hpp"
@@ -9,11 +10,11 @@ namespace cs {
 
     void TargetMetricHandler::makeTargetMetric(const SynthesisData& data, const Configuration& configuration) {
         bool useMaxSat = configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter;
-        bool onlyCnot  = configuration.target == TargetMetric::GATES_ONLY_CNOT;
+        bool onlyCnot  = configuration.target == TargetMetric::TWO_QUBIT_GATES;
 
         switch (configuration.target) {
             case TargetMetric::GATES:
-            case TargetMetric::GATES_ONLY_CNOT:
+            case TargetMetric::TWO_QUBIT_GATES:
                 makeGateMetric(data, useMaxSat, onlyCnot);
                 break;
             case TargetMetric::DEPTH:
@@ -120,7 +121,7 @@ namespace cs {
     void TargetMetricHandler::updateResults(const Configuration& configuration, Results& results, Results& currentResults) {
         switch (configuration.target) {
             case TargetMetric::GATES:
-            case TargetMetric::GATES_ONLY_CNOT:
+            case TargetMetric::TWO_QUBIT_GATES:
                 if ((results.sat && results.gateCount < currentResults.gateCount) || currentResults.gateCount == 0) {
                     currentResults = results;
                 }

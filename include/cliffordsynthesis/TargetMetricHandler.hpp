@@ -1,6 +1,7 @@
-//
-// Created by Sarah on 27.09.2022.
-//
+/*
+* This file is part of the MQT QMAP library which is released under the MIT license.
+* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+*/
 
 #ifndef CS_TARGETMETRICHANDLER_HPP
 #define CS_TARGETMETRICHANDLER_HPP

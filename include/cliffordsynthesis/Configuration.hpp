@@ -46,16 +46,16 @@ namespace cs {
 
         [[nodiscard]] nlohmann::json json() const {
             nlohmann::json j;
-            j["chooseBest"]       = chooseBest;
-            j["useEmbedding"]     = useEmbedding;
+            j["choose_best"]       = chooseBest;
+            j["use_embedding"]     = useEmbedding;
             j["nqubits"]          = nqubits;
-            j["initialTimesteps"] = initialTimesteps;
+            j["initial_timesteps"] = initialTimesteps;
             j["verbosity"]        = verbosity;
             j["strategy"]         = strategy;
             j["target"]           = target;
             j["method"]           = method;
-            j["targetTableau"]    = targetTableau.toString();
-            j["initialTableau"]   = initialTableau.toString();
+            j["target_tableau"]    = targetTableau.toString();
+            j["initial_tableau"]   = initialTableau.toString();
             j["architecture"]     = architecture.getName();
             return j;
         }

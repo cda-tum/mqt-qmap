@@ -6,8 +6,12 @@
 #include "cliffordsynthesis/HeuristicStrategy.hpp"
 namespace cs {
     void cs::HeuristicStrategy::runHeuristicStrategy(const CouplingMap& reducedCM, const std::vector<uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        if (configuration.strategy == OptimizationStrategy::SplitIter) {
-            runSplitIter(reducedCM, qubitChoice, configuration, synthesizer);
+        switch (configuration.strategy) {
+            case OptimizationStrategy::SplitIter:
+                runSplitIter(reducedCM, qubitChoice, configuration, synthesizer);
+                break;
+            default:
+                throw std::runtime_error("Unknown optimization strategy");
         }
     }
 

@@ -9,7 +9,7 @@
 
 namespace cs {
     enum class TargetMetric { GATES,
-                              GATES_ONLY_CNOT,
+                              TWO_QUBIT_GATES,
                               DEPTH,
                               FIDELITY };
 
@@ -17,8 +17,8 @@ namespace cs {
         switch (target) {
             case TargetMetric::GATES:
                 return "gates";
-            case TargetMetric::GATES_ONLY_CNOT:
-                return "gates_only_cnot";
+            case TargetMetric::TWO_QUBIT_GATES:
+                return "two_qubit_gates";
             case TargetMetric::DEPTH:
                 return "depth";
             case TargetMetric::FIDELITY:
@@ -31,8 +31,8 @@ namespace cs {
         if (target == "gates") {
             return TargetMetric::GATES;
         }
-        if (target == "gates_only_cnot") {
-            return TargetMetric::GATES_ONLY_CNOT;
+        if (target == "two_qubit_gates") {
+            return TargetMetric::TWO_QUBIT_GATES;
         }
         if (target == "depth") {
             return TargetMetric::DEPTH;

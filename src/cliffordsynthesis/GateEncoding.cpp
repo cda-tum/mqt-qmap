@@ -343,7 +343,7 @@ void cs::GateEncoding::makeGateEncoding(const SynthesisData& data, const cs::Con
             makeMultiGateEncoding(data);
             break;
         case cs::TargetMetric::GATES:
-        case cs::TargetMetric::GATES_ONLY_CNOT:
+        case cs::TargetMetric::TWO_QUBIT_GATES:
         default:
             makeSingleGateEncoding(data);
             break;

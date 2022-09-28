@@ -1,14 +1,9 @@
 /*
 * This file is part of the MQT QMAP library which is released under the MIT license.
-* See file README.md or go to https://iic.jku.at/eda/research/ibm_qx_mapping/ for more information.
-*/
-
-#include "cliffordsynthesis/CliffordSynthesizer.hpp"
-/*
-* This file is part of the MQT QMAP library which is released under the MIT license.
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
 
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "LogicTerm/LogicTerm.hpp"
 #include "LogicUtil/util_logicblock.hpp"

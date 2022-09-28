@@ -1,3 +1,8 @@
+/*
+* This file is part of the MQT QMAP library which is released under the MIT license.
+* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+*/
+
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "gtest/gtest.h"
@@ -162,7 +167,7 @@ TEST_P(TestCliffordSynthesis, TestCNOTONLYOpt) {
 
             configuration.nqubits          = 2;
             configuration.initialTimesteps = 10;
-            configuration.target           = TargetMetric::GATES_ONLY_CNOT;
+            configuration.target           = TargetMetric::TWO_QUBIT_GATES;
             Tableau::initTableau(configuration.initialTableau, 2);
             configuration.targetTableau = tableau;
             qx4Optimizer->synthesize(configuration);
