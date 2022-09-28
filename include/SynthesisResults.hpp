@@ -2,6 +2,7 @@
 
 #include "Architecture.hpp"
 #include "Definitions.hpp"
+#include "LogicTerm/Logic.hpp"
 #include "QuantumComputation.hpp"
 #include "Tableau.hpp"
 #include "configuration/SynthesisMethod.hpp"
@@ -9,7 +10,6 @@
 #include "configuration/SynthesisTarget.hpp"
 #include "operations/Operation.hpp"
 #include "utils.hpp"
-#include "LogicTerm/Logic.hpp"
 
 #include <ostream>
 #include <sstream>
@@ -17,20 +17,20 @@
 
 class SynthesisResults {
 public:
-    int               verbose          = 0;
-    bool              chooseBest       = false;
-    SynthesisStrategy strategy         = SynthesisStrategy::UseMinimizer;
-    SynthesisTarget   target           = SynthesisTarget::GATES;
-    SynthesisMethod   method           = SynthesisMethod::Z3;
-    logicbase::Result   result           = logicbase::Result::NDEF;
-    unsigned char     nqubits          = 0;
+    int               verbose            = 0;
+    bool              chooseBest         = false;
+    SynthesisStrategy strategy           = SynthesisStrategy::UseMinimizer;
+    SynthesisTarget   target             = SynthesisTarget::GATES;
+    SynthesisMethod   method             = SynthesisMethod::Z3;
+    logicbase::Result result             = logicbase::Result::NDEF;
+    unsigned char     nqubits            = 0;
     std::uint8_t      architectureQubits = 0;
-    int               initialTimesteps = 0;
-    int               gateCount        = 0;
-    int               depth            = 0;
-    bool              sat              = false;
-    double            fidelity         = 0.0;
-    std::string      architectureName = "";
+    int               initialTimesteps   = 0;
+    int               gateCount          = 0;
+    int               depth              = 0;
+    bool              sat                = false;
+    double            fidelity           = 0.0;
+    std::string       architectureName   = "";
 
     double totalSeconds = 0;
     double finalRunTime = 0;
@@ -56,12 +56,12 @@ public:
         } else {
             resultStringCircuit = other.resultStringCircuit;
         }
-        resultTableaus = other.resultTableaus;
-        resultCM       = other.resultCM;
-        singleFidelity = other.singleFidelity;
-        doubleFidelity = other.doubleFidelity;
-        fidelity       = other.fidelity;
-        result         = other.result;
+        resultTableaus     = other.resultTableaus;
+        resultCM           = other.resultCM;
+        singleFidelity     = other.singleFidelity;
+        doubleFidelity     = other.doubleFidelity;
+        fidelity           = other.fidelity;
+        result             = other.result;
         architectureName   = other.architectureName;
         architectureQubits = other.architectureQubits;
     };
@@ -87,12 +87,12 @@ public:
         } else {
             resultStringCircuit = other.resultStringCircuit;
         }
-        resultTableaus = other.resultTableaus;
-        resultCM       = other.resultCM;
-        singleFidelity = other.singleFidelity;
-        doubleFidelity = other.doubleFidelity;
-        fidelity       = other.fidelity;
-        result         = other.result;
+        resultTableaus     = other.resultTableaus;
+        resultCM           = other.resultCM;
+        singleFidelity     = other.singleFidelity;
+        doubleFidelity     = other.doubleFidelity;
+        fidelity           = other.fidelity;
+        result             = other.result;
         architectureName   = other.architectureName;
         architectureQubits = other.architectureQubits;
         return *this;
@@ -170,7 +170,7 @@ public:
 
     [[nodiscard]] virtual nlohmann::json json() const {
         nlohmann::json resultJSON{};
-        resultJSON["verbosity"]           = verbose;
+        resultJSON["verbosity"]         = verbose;
         resultJSON["choose_best"]       = chooseBest;
         resultJSON["result"]            = toString(result);
         resultJSON["strategy"]          = toString(strategy);

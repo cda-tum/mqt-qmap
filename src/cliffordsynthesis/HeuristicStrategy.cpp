@@ -23,7 +23,7 @@ namespace cs {
         std::vector<Results*>     results;
         int                       nThreads = configuration.nThreads;
         qc::QuantumComputation    circuit  = configuration.targetCircuit.clone();
-        bool stopping = false;
+        bool                      stopping = false;
         while (!stopping) {
             results.clear();
             DEBUG() << "Current split size: " << split << std::endl;
@@ -32,11 +32,11 @@ namespace cs {
             Results totalResult;
             totalResult.result = logicbase::Result::SAT;
             totalResult.resultCircuit.addQubitRegister(configuration.nqubits);
-            for (size_t i = 0; i * circuitSplit < configuration.targetCircuit.getNindividualOps();
+            for (size_t i = 0; i * circuitSplit < circuit.getNindividualOps();
                  i += nThreads) {
                 threads.clear();
                 DEBUG() << "Currently at " << i * circuitSplit << " of "
-                        << configuration.targetCircuit.getNindividualOps() << std::endl;
+                        << circuit.getNindividualOps() << std::endl;
                 for (int j = 0; j < nThreads; j++) {
                     auto* r = new Results();
                     auto* t = new std::thread(runSplinter, i, circuitSplit,
@@ -81,7 +81,7 @@ namespace cs {
                 DEBUG() << "Equality (Results): "
                         << ((fullTableau == resultingTableau) ? "True" : "False")
                         << std::endl;
-                DEBUG() << "Original Circuit size: " << configuration.targetCircuit.getNindividualOps()
+                DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
                         << std::endl;
                 DEBUG() << "Optimized Circuit size: "
                         << totalResult.resultCircuit.getNindividualOps() << std::endl;
@@ -92,9 +92,8 @@ namespace cs {
                 auto                          end  = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> diff = end - start;
                 INFO() << "Time for complete run: " << diff.count() << std::endl;
-                if (configuration.targetCircuit.getNindividualOps() ==
+                if (circuit.getNindividualOps() ==
                     totalResult.resultCircuit.getNindividualOps()) {
-                    split *= 1.2;
                     break;
                 }
                 circuit = totalResult.resultCircuit.clone();

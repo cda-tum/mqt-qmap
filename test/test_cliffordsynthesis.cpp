@@ -37,7 +37,7 @@ protected:
 INSTANTIATE_TEST_SUITE_P(
         CliffordSynthesizer, TestCliffordSynthesis,
         testing::Values(
-                "destabilizer.txt"));
+                "stabilizer.txt"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
     const auto& inputFile = GetParam();

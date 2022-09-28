@@ -285,7 +285,7 @@ namespace cs {
             }
             results.resultCircuit = resultCircuit.clone();
         }
-        //lb->reset();
+        lb->reset();
         if (result == Result::SAT) {
             DEBUG() << "SAT" << std::endl;
             return results;

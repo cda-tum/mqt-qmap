@@ -30,25 +30,18 @@ void Tableau::import(const std::string& filename) {
 void Tableau::import(std::istream& is) {
     tableau.clear();
 
-    std::size_t              nQubits = 0;
     std::string              token;
     std::string              line;
     std::vector<std::string> data{};
     char                     delimiter = '|';
 
     while (std::getline(is, line)) {
-        nQubits++;
         if (line.find('|', 0) == std::string::npos) {
             delimiter = ';';
         }
         tableau.emplace_back();
         parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
-        bool skipFirst = true;
         for (const auto& datum: data) {
-            if (skipFirst) {
-                skipFirst = false;
-                continue;
-            }
             if (datum.empty()) {
                 continue;
             }
@@ -316,20 +309,18 @@ bool Tableau::operator==(const Tableau& other) const {
 
 std::string Tableau::toString() const {
     std::stringstream ss;
-    std::size_t       nQubits = getQubitCount();
 
     if (empty()) {
         DEBUG() << "Empty tableau";
         return "";
     }
-    auto i = 1;
     for (const auto& row: tableau) {
         if (row.size() != back().size()) {
             FATAL() << "Tableau is not rectangular";
             return "";
         }
         for (const auto& s: row) {
-            ss << s << ';';
+            ss << std::to_string(s) << ';';
         }
         ss << std::endl;
     }

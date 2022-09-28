@@ -47,7 +47,7 @@ TEST(TestTableau, GetStrRepresentation) {
 
     tableau.fromString(tableau_string);
 
-    std::string result_string = "2|1|2|3|4|R|\n1|0|0|0|1|0|\n2|0|0|1|0|0|\n";
+    std::string result_string = "0;0;0;1;0;\n0;0;1;0;0;\n";
 
     EXPECT_EQ(tableau.toString(), result_string);
 }
