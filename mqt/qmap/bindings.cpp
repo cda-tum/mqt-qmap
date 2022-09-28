@@ -227,7 +227,7 @@ PYBIND11_MODULE(pyqmap, m) {
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
             .def_readwrite("method", &Configuration::method)
-            .def_readwrite("verbosity", &Configuration::verbose)
+            .def_readwrite("verbose", &Configuration::verbose)
             .def_readwrite("layering", &Configuration::layering)
             .def_readwrite("initial_layout", &Configuration::initialLayout)
             .def_readwrite("lookahead", &Configuration::lookahead)
