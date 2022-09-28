@@ -88,8 +88,6 @@ public:
     }
 
     [[nodiscard]] static Tableau getDiagonalTableau(std::size_t nQubits);
-    [[nodiscard]] double         tableauDistance(const Tableau& other, std::size_t nQubits);
-    [[nodiscard]] Tableau        embedTableau(std::size_t nQubits);
 
     friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
         os << dt.toString();
@@ -107,7 +105,6 @@ public:
     [[nodiscard]] std::string toString() const;
     void                      fromString(const std::string& str);
 
-    [[nodiscard]] static double tableauDistance(const TableauType& tableau1, const TableauType& tableau2, std::size_t nQubits);
 
     [[nodiscard]] std::uint64_t getBVFrom(std::int32_t column) const;
 
