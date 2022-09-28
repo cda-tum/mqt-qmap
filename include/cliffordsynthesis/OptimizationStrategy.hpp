@@ -52,7 +52,7 @@ namespace cs {
         return OptimizationStrategy::MinMax;
     }
 
-    static bool isExact(OptimizationStrategy strategy) {
+    [[maybe_unused]] static bool isExact(OptimizationStrategy strategy) {
         switch (strategy) {
             case OptimizationStrategy::MinMax:
             case OptimizationStrategy::StartHigh:

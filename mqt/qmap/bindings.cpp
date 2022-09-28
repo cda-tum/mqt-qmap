@@ -376,7 +376,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("target", &SynthesisResults::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
             .def_readwrite("method", &SynthesisResults::method, "The synthesis method, at the moment only 'z3' is supported")
             .def_readwrite("qubits", &SynthesisResults::nqubits, "The number of qubits in the resulting circuit")
-            .def_readwrite("initial_timesteps", &SynthesisResults::initialTimesteps, "The number of initial timesteps alloted for synthesis")
+            .def_readwrite("initial_timesteps", &SynthesisResults::initialTimesteps, "The number of initial timesteps allotted for synthesis")
             .def_readwrite("gate_count", &SynthesisResults::gateCount, "The number of gates in the resulting circuit")
             .def_readwrite("depth", &SynthesisResults::depth, "The depth of the resulting circuit")
             .def_readwrite("fidelity", &SynthesisResults::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")

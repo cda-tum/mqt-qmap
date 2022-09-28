@@ -74,13 +74,13 @@ public:
 
     void init(std::size_t nQubits);
 
-    void populateTableauFrom(unsigned long bv, std::size_t nQubits,
-                             int column);
+    void populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
+                             std::int32_t column);
 
     static void generateTableau(Tableau& tableau, const qc::QuantumComputation& circ, std::size_t begin = 0, std::size_t end = -1);
     static void initTableau(Tableau& tableau, std::size_t nqubits);
 
-    [[nodiscard]] int applyGate(const std::unique_ptr<qc::Operation>& gate);
+    [[nodiscard]] std::int32_t applyGate(const std::unique_ptr<qc::Operation>& gate);
 
     [[nodiscard]] bool operator==(const Tableau& other) const;
     [[nodiscard]] bool operator!=(const Tableau& other) const {
@@ -109,7 +109,7 @@ public:
 
     [[nodiscard]] static double tableauDistance(const TableauType& tableau1, const TableauType& tableau2, std::size_t nQubits);
 
-    [[nodiscard]] std::uint64_t getBVFrom(int column) const;
+    [[nodiscard]] std::uint64_t getBVFrom(std::int32_t column) const;
 
 private:
     void applyGateH(dd::Qubit target, std::size_t nqubits);
