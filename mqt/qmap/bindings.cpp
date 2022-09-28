@@ -79,8 +79,8 @@ cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configurati
 
     loadQC(qc, circ);
     config.targetCircuit = qc.clone();
-    config.nqubits = qc.getNqubits();
-    config.architecture = arch;
+    config.nqubits       = qc.getNqubits();
+    config.architecture  = arch;
 
     std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {
@@ -116,7 +116,7 @@ cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Confi
     }
     config.targetTableau = tab;
     Tableau::initTableau(config.initialTableau, config.targetTableau.getQubitCount());
-    config.nqubits = config.targetTableau.getQubitCount();
+    config.nqubits      = config.targetTableau.getQubitCount();
     config.architecture = arch;
 
     std::unique_ptr<cs::CliffordSynthesizer> optimizer;

@@ -18,8 +18,9 @@ namespace cs {
 
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint8_t nThreads,
                                std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target, ReasoningEngine method):
-            chooseBest(chooseBest),nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target), method(method) {}
-        explicit Configuration(bool chooseBest,  std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
+            chooseBest(chooseBest),
+            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target), method(method) {}
+        explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(2), verbosity(1), strategy(strategy), target(target), method(ReasoningEngine::Z3) {}
 
         Configuration(const Configuration& other):
@@ -27,14 +28,14 @@ namespace cs {
             this->targetCircuit = other.targetCircuit.clone();
         }
 
-        bool                 chooseBest       = false;
-        std::uint8_t         nqubits          = 0;
-        std::uint16_t        initialTimestep  = 0;
-        std::uint8_t         nThreads         = 1;
-        std::uint8_t         verbosity        = 0;
-        OptimizationStrategy strategy         = OptimizationStrategy::UseMinimizer;
-        TargetMetric         target           = TargetMetric::GATES;
-        ReasoningEngine      method           = ReasoningEngine::Z3;
+        bool                 chooseBest      = false;
+        std::uint8_t         nqubits         = 0;
+        std::uint16_t        initialTimestep = 0;
+        std::uint8_t         nThreads        = 1;
+        std::uint8_t         verbosity       = 0;
+        OptimizationStrategy strategy        = OptimizationStrategy::UseMinimizer;
+        TargetMetric         target          = TargetMetric::GATES;
+        ReasoningEngine      method          = ReasoningEngine::Z3;
 
         qc::QuantumComputation targetCircuit{};
         Tableau                targetTableau{};

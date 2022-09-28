@@ -27,12 +27,12 @@ from mqt.qmap.pyqmap import (
     Layering,
     MappingResults,
     Method,
-    SwapReduction,
-    SynthesisResults,
-    SynthesisConfiguration,
-    TargetMetric,
     OptimizationStrategy,
     Result,
+    SwapReduction,
+    SynthesisConfiguration,
+    SynthesisResults,
+    TargetMetric,
 )
 
 __all__ = [
