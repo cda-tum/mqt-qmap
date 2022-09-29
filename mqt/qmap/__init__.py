@@ -28,7 +28,6 @@ from mqt.qmap.pyqmap import (
     MappingResults,
     Method,
     OptimizationStrategy,
-    Result,
     SwapReduction,
     SynthesisConfiguration,
     SynthesisResults,

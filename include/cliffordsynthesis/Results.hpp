@@ -19,8 +19,7 @@
 #include <sstream>
 #include <string>
 namespace cs {
-    class Results {
-    public:
+    struct Results {
         int                  verbose            = 0;
         bool                 chooseBest         = false;
         OptimizationStrategy strategy           = OptimizationStrategy::UseMinimizer;

@@ -99,9 +99,11 @@ cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configurati
         throw std::invalid_argument(ss.str());
     }
 
-    optimizer->optimalResults.generateStringCircuit();
+    auto& results = optimizer->optimalResults;
 
-    return optimizer->optimalResults;
+    results.generateStringCircuit();
+
+    return results;
 }
 
 // c++ binding function
@@ -136,9 +138,11 @@ cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Confi
         throw std::invalid_argument(ss.str());
     }
 
-    optimizer->optimalResults.generateStringCircuit();
+    auto& results = optimizer->optimalResults;
 
-    return optimizer->optimalResults;
+    results.generateStringCircuit();
+
+    return results;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -388,7 +392,7 @@ PYBIND11_MODULE(pyqmap, m) {
 
     m.def("map", &map, "map a quantum circuit");
     m.def("synthesize", &synthesize, "synthesize a clifford circuit");
-    m.def("optimize", &synthesize, "optimize a clifford circuit");
+    m.def("optimize", &optimize, "optimize a clifford circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

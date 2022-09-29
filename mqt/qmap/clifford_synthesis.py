@@ -11,7 +11,6 @@ from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     OptimizationStrategy,
-    Result,
     SynthesisConfiguration,
     SynthesisResults,
     TargetMetric,
@@ -29,8 +28,8 @@ def optimize_clifford(
     circ: QuantumCircuit | str,
     arch: str | Arch | Architecture | Backend | None = None,
     calibration: str | BackendProperties | Target | None = None,
-    target: str | None = None,
-    strategy: str | None = None,
+    target: str | TargetMetric = "gates",
+    strategy: str | OptimizationStrategy = "use_minimizer",
     choose_best: bool = False,
     initial_timestep: int = 10,
     nthreads: int = 1,
@@ -66,8 +65,8 @@ def optimize_clifford(
     architecture = load_calibration(calibration, architecture)
 
     config = SynthesisConfiguration()
-    config.target = TargetMetric(target)
-    config.strategy = OptimizationStrategy(strategy)
+    config.target_metric = TargetMetric(target)
+    config.optimization_strategy = OptimizationStrategy(strategy)
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
     config.nthreads = nthreads
@@ -119,8 +118,8 @@ def synthesize_clifford(
     architecture = load_calibration(calibration, architecture)
 
     config = SynthesisConfiguration()
-    config.target = TargetMetric(target)
-    config.strategy = OptimizationStrategy(strategy)
+    config.target_metric = TargetMetric(target)
+    config.optimization_strategy = OptimizationStrategy(strategy)
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
     config.nthreads = nthreads

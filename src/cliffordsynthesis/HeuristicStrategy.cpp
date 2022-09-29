@@ -4,6 +4,8 @@
 */
 
 #include "cliffordsynthesis/HeuristicStrategy.hpp"
+
+#include <cstddef>
 namespace cs {
     void cs::HeuristicStrategy::runHeuristicStrategy(const CouplingMap& reducedCM, const std::vector<uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         switch (configuration.strategy) {
@@ -103,16 +105,16 @@ namespace cs {
                 circuit = totalResult.resultCircuit.clone();
             }
         }
-        synthesizer.optimalResults.resultCircuit = configuration.targetCircuit.clone();
+        synthesizer.optimalResults.resultCircuit = circuit.clone();
         synthesizer.optimalResults.resultTableaus.emplace_back(configuration.targetTableau);
-        synthesizer.optimalResults.gateCount = configuration.targetCircuit.getNindividualOps();
+        synthesizer.optimalResults.gateCount = circuit.getNindividualOps();
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }
     void HeuristicStrategy::runSplinter(int i, unsigned int circSplit, unsigned int split, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, qc::QuantumComputation& circuit, Results* r, CliffordSynthesizer* opt, const Configuration& configuration) {
         Tableau targetTableau{};
-        Tableau::generateTableau(targetTableau, circuit, 0, (i + 1U) * circSplit);
+        Tableau::generateTableau(targetTableau, circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit);
         Tableau initTableau{};
-        Tableau::generateTableau(initTableau, circuit, 0, i * circSplit);
+        Tableau::generateTableau(initTableau, circuit, 0, static_cast<std::size_t>(i) * circSplit);
         (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,
                                      initTableau, configuration);
     }
