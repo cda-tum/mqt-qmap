@@ -48,7 +48,7 @@ Using the circuit synthesis is as simple as:
 
     .. code-block:: python3
 
-        qc_mapped, results = qmap.synthesize_clifford(tableau, target='gates')
+        qc_mapped, results = qmap.synthesize_clifford(tableau, target="gates")
 
         print(qc_mapped.draw(fold=-1))
 
@@ -63,10 +63,12 @@ To maximize expected fidelity if architecture/fidelity information is given :cod
 
     .. code-block:: python3
 
-        arch = 'ibmq_london.arch'
-        calibration = 'ibmq_london.csv'
+        arch = "ibmq_london.arch"
+        calibration = "ibmq_london.csv"
 
-        qc_mapped, results = qmap.synthesize_clifford(tableau, arch, calibration, target='fidelity')
+        qc_mapped, results = qmap.synthesize_clifford(
+            tableau, arch, calibration, target="fidelity"
+        )
 
         print(qc_mapped.draw(fold=-1))
 
@@ -81,7 +83,7 @@ Using the circuit optimization is as simple as:
 
     .. code-block:: python3
 
-        qc_mapped, results = qmap.optimize_clifford(qc, target='gates')
+        qc_mapped, results = qmap.optimize_clifford(qc, target="gates")
 
         print(qc_mapped.draw(fold=-1))
 
@@ -95,10 +97,12 @@ To maximize expected fidelity if architecture/fidelity information is given :cod
 
     .. code-block:: python3
 
-        arch = 'ibmq_london.arch'
-        calibration = 'ibmq_london.csv'
+        arch = "ibmq_london.arch"
+        calibration = "ibmq_london.csv"
 
-        qc_mapped, results = qmap.synthesize_clifford(tableau, arch, calibration, target='fidelity')
+        qc_mapped, results = qmap.synthesize_clifford(
+            tableau, arch, calibration, target="fidelity"
+        )
 
         print(qc_mapped.draw(fold=-1))
 
