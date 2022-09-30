@@ -101,8 +101,6 @@ cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configurati
 
     auto& results = optimizer->optimalResults;
 
-    results.generateStringCircuit();
-
     return results;
 }
 
@@ -139,8 +137,6 @@ cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Confi
     }
 
     auto& results = optimizer->optimalResults;
-
-    results.generateStringCircuit();
 
     return results;
 }

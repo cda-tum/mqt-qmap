@@ -14,7 +14,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
             for (auto gate: Gates::SINGLE_QUBIT) {
                 vars.emplace_back(data.gS[gateStep][Gates::toIndex(gate)][a]);
             }
-            for (int b = 0; b < data.nqubits; ++b) {
+            for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (a == b || data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
                                       data.reducedCM.end()) {
                     continue;
