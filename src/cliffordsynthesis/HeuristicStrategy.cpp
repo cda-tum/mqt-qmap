@@ -79,11 +79,11 @@ namespace cs {
                 if (r->resultStringCircuit.empty())
                     continue;
                 qc::QuantumComputation splitResult;
-                std::istringstream iss(r->resultStringCircuit);
+                std::istringstream     iss(r->resultStringCircuit);
                 splitResult.import(iss, qc::OpenQASM);
                 for (const auto& gate: splitResult) {
                     localResultCircuit.insert(localResultCircuit.end(),
-                                                     gate->clone());
+                                              gate->clone());
                 }
                 delete r;
             }
