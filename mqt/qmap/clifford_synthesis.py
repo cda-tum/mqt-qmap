@@ -74,7 +74,7 @@ def optimize_clifford(
 
     results = optimize(circ, architecture, config)
 
-    return QuantumCircuit.from_qasm_str(results.resultCircuit), results
+    return QuantumCircuit.from_qasm_str(results.result_circuit), results
 
 
 def synthesize_clifford(
@@ -127,4 +127,4 @@ def synthesize_clifford(
 
     results = synthesize(tableau, architecture, config)
 
-    return QuantumCircuit.from_qasm_str(results.resultCircuit), results
+    return QuantumCircuit.from_qasm_str(results.result_circuit), results

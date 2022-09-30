@@ -11,7 +11,7 @@ def test_cliffordsynthesis_simple_binary_search() -> None:
 
     qc_mapped, results = qmap.optimize_clifford(qc, strategy="minmax")
 
-    assert results.mapped_circuit != ""
+    assert results.result_circuit != ""
 
 
 def test_cliffordsynthesis_simple_minimizer() -> None:
@@ -22,4 +22,4 @@ def test_cliffordsynthesis_simple_minimizer() -> None:
 
     qc_mapped, results = qmap.optimize_clifford(qc, strategy="use_minimizer")
 
-    assert results.mapped_circuit != ""
+    assert results.result_circuit != ""
