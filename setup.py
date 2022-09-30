@@ -106,7 +106,7 @@ setup(
     install_requires=["qiskit-terra>=0.20.2,<0.22.0"],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
-        "coverage": ["coverage[toml]~=6.4.2", "pytest-cov~=3.0.0"],
+        "coverage": ["coverage[toml]~=6.4.2", "pytest-cov>=3.0,<4.1"],
         "docs": [
             "sphinx>=5.1.1",
             "sphinx-rtd-theme",
