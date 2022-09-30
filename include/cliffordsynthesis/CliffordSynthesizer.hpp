@@ -48,11 +48,10 @@ namespace cs {
 
         void dumpResult(const std::string& outputFilename, qc::Format format) {
             qc::QuantumComputation splitResult;
-            std::istringstream iss(optimalResults.resultStringCircuit);
+            std::istringstream     iss(optimalResults.resultStringCircuit);
             splitResult.import(iss, qc::OpenQASM);
             splitResult.dump(outputFilename, format);
         }
-
 
         Results optimalResults{};
 

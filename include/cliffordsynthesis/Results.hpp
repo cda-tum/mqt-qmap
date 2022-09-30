@@ -38,8 +38,8 @@ namespace cs {
         double totalSeconds = 0;
         double finalRunTime = 0;
 
-        std::string            resultStringCircuit{};
-        std::vector<Tableau>   resultTableaus{};
+        std::string          resultStringCircuit{};
+        std::vector<Tableau> resultTableaus{};
 
         CouplingMap                      resultCM{};
         std::vector<double>              singleFidelity{};
@@ -48,11 +48,10 @@ namespace cs {
         Results()          = default;
         virtual ~Results() = default;
 
-        Results(const Results& other) = default;
-        Results(Results&& other)      = default;
+        Results(const Results& other)            = default;
+        Results(Results&& other)                 = default;
         Results& operator=(const Results& other) = default;
-        Results& operator=(Results&& other) = default;
-
+        Results& operator=(Results&& other)      = default;
 
         void dump(std::ostream& os) {
             os << "{\"Results\":{" << std::endl;
