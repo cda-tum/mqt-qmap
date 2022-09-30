@@ -46,25 +46,13 @@ namespace cs {
         void synthesize(const Configuration& configuration);
         void optimize(Configuration& configuration);
 
-        void dumpResult(const std::string& outputFilename) {
-            if (optimalResults.resultCircuit.empty()) {
-                std::cerr << "Circuit is empty." << std::endl;
-                return;
-            }
-
-            size_t      dot       = outputFilename.find_last_of('.');
-            std::string extension = outputFilename.substr(dot + 1U);
-            std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return ::tolower(c); });
-            dumpResult(outputFilename, qc::OpenQASM);
-        }
-
         void dumpResult(const std::string& outputFilename, qc::Format format) {
-            optimalResults.resultCircuit.dump(outputFilename, format);
+            qc::QuantumComputation splitResult;
+            std::istringstream iss(optimalResults.resultStringCircuit);
+            splitResult.import(iss, qc::OpenQASM);
+            splitResult.dump(outputFilename, format);
         }
 
-        void dumpResult(std::ostream& os, qc::Format format) {
-            optimalResults.resultCircuit.dump(os, format);
-        }
 
         Results optimalResults{};
 
@@ -83,14 +71,6 @@ namespace cs {
         virtual void initResults();
 
         virtual void initCouplingMap(const Configuration& configuration);
-
-        void        runSplitIter(const CouplingMap&                reducedCM,
-                                 const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration);
-        static void runSplinter(int i, unsigned int circSplit, unsigned int split,
-                                const CouplingMap&                reducedCM,
-                                const std::vector<std::uint16_t>& qubitChoice,
-                                qc::QuantumComputation&           circuit,
-                                Results* r, CliffordSynthesizer* opt, const Configuration& configuration);
 
         static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
     };

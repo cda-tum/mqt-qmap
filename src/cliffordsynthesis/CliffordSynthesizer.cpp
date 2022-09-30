@@ -119,10 +119,10 @@ namespace cs {
         std::stringstream xName{};
         std::stringstream zName{};
         std::stringstream rName{};
-        for (int k = 0; k < timesteps + 1; ++k) {
+        for (unsigned int k = 0; k < timesteps + 1; ++k) {
             x.emplace_back();
             z.emplace_back();
-            for (int i = 0; i < configuration.nqubits; ++i) {
+            for (unsigned int i = 0; i < configuration.nqubits; ++i) {
                 xName.str("");
                 zName.str("");
                 xName << "x_" << k << "_" << i;
@@ -144,7 +144,7 @@ namespace cs {
    * j qubit
    */
         std::stringstream gName{};
-        for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
             gS.emplace_back();
             for (auto gate: Gates::SINGLE_QUBIT) {
                 gS.back().emplace_back();
@@ -155,7 +155,7 @@ namespace cs {
                 }
             }
         }
-        for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
             gC.emplace_back();
             for (int j = 0; j < configuration.nqubits; ++j) {
                 gC.back().emplace_back();
@@ -212,22 +212,22 @@ namespace cs {
         if (result == Result::SAT) {
             results.result               = logicbase::Result::SAT;
             Model*                 model = lb->getModel();
-            qc::QuantumComputation resultCircuit;
-            resultCircuit.addQubitRegister(configuration.nqubits);
+            qc::QuantumComputation localResultCircuit{};
+            localResultCircuit.addQubitRegister(configuration.nqubits);
             results.gateCount = 0;
             results.depth     = 0;
             results.fidelity  = 1;
-            for (int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+            for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
                 int oldGateCount = results.gateCount;
                 TRACE() << "Gate Step: " << gateStep << std::endl
                         << " Actual gate count: " << results.gateCount << std::endl
                         << " Depth: " << results.depth << std::endl
                         << " Fidelity: " << results.fidelity << std::endl;
                 if (gateStep > 0) {
-                    for (int a = 0; a < configuration.nqubits; ++a) {
+                    for (unsigned int a = 0; a < configuration.nqubits; ++a) {
                         for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                             if (model->getBoolValue(gS[gateStep][Gates::toIndex(gate)][a], lb.get())) {
-                                resultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, a, Gates::toOpType(gate));
+                                localResultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, a, Gates::toOpType(gate));
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
                                     results.fidelity *= (configuration.architecture.getSingleQubitFidelities()[a]);
                                 }
@@ -239,10 +239,10 @@ namespace cs {
                                 ++results.gateCount;
                             }
                         }
-                        for (int b = 0; b < configuration.nqubits; ++b) {
+                        for (unsigned int b = 0; b < configuration.nqubits; ++b) {
                             if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
                                 results.gateCount++;
-                                resultCircuit.emplace_back<qc::StandardOperation>(
+                                localResultCircuit.emplace_back<qc::StandardOperation>(
                                         configuration.nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
                                     results.fidelity *=
@@ -264,7 +264,7 @@ namespace cs {
                     results.depth++;
                 }
                 auto tableau = results.resultTableaus.emplace_back();
-                Tableau::generateTableau(tableau, resultCircuit);
+                Tableau::generateTableau(tableau, localResultCircuit);
                 results.resultTableaus.back() = tableau;
                 Tableau::initTableau(modelTableau, configuration.nqubits);
                 for (int i = 0; i < configuration.nqubits; ++i) {
@@ -279,7 +279,10 @@ namespace cs {
                     TRACE() << modelTableau;
                 }
             }
-            results.resultCircuit = resultCircuit.clone();
+            std::stringstream ss;
+            localResultCircuit.dumpOpenQASM(ss);
+            results.resultStringCircuit = ss.str();
+            resultCircuit               = localResultCircuit.clone();
         }
         lb->reset();
         if (result == Result::SAT) {

@@ -37,7 +37,8 @@ namespace cs {
             auto    start = std::chrono::high_resolution_clock::now();
             Results totalResult;
             totalResult.result = logicbase::Result::SAT;
-            totalResult.resultCircuit.addQubitRegister(configuration.nqubits);
+            qc::QuantumComputation localResultCircuit;
+            localResultCircuit.addQubitRegister(configuration.nqubits);
             for (size_t i = 0; i * circuitSplit < circuit.getNindividualOps();
                  i += nThreads) {
                 threads.clear();
@@ -75,37 +76,44 @@ namespace cs {
                 }
             }
             for (auto* r: results) {
-                for (const auto& gate: r->resultCircuit) {
-                    totalResult.resultCircuit.insert(totalResult.resultCircuit.end(),
+                if (r->resultStringCircuit.empty())
+                    continue;
+                qc::QuantumComputation splitResult;
+                std::istringstream iss(r->resultStringCircuit);
+                splitResult.import(iss, qc::OpenQASM);
+                for (const auto& gate: splitResult) {
+                    localResultCircuit.insert(localResultCircuit.end(),
                                                      gate->clone());
                 }
                 delete r;
             }
             if (totalResult.result == logicbase::Result::SAT) {
                 Tableau resultingTableau{};
-                Tableau::generateTableau(resultingTableau, totalResult.resultCircuit);
+                Tableau::generateTableau(resultingTableau, localResultCircuit);
                 DEBUG() << "Equality (Results): "
                         << ((fullTableau == resultingTableau) ? "True" : "False")
                         << std::endl;
                 DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
                         << std::endl;
                 DEBUG() << "Optimized Circuit size: "
-                        << totalResult.resultCircuit.getNindividualOps() << std::endl;
+                        << localResultCircuit.getNindividualOps() << std::endl;
                 TRACE() << "Resulting Circuit: " << std::endl;
                 std::ostringstream ss;
-                totalResult.resultCircuit.dump(ss, qc::Format::OpenQASM);
+                localResultCircuit.dump(ss, qc::Format::OpenQASM);
                 TRACE() << ss.str() << std::endl;
                 auto                          end  = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double> diff = end - start;
                 INFO() << "Time for complete run: " << diff.count() << std::endl;
                 if (circuit.getNindividualOps() ==
-                    totalResult.resultCircuit.getNindividualOps()) {
+                    localResultCircuit.getNindividualOps()) {
                     break;
                 }
-                circuit = totalResult.resultCircuit.clone();
+                circuit = localResultCircuit.clone();
             }
         }
-        synthesizer.optimalResults.resultCircuit = circuit.clone();
+        std::stringstream ss;
+        circuit.dump(ss, qc::Format::OpenQASM);
+        synthesizer.optimalResults.resultStringCircuit = ss.str();
         synthesizer.optimalResults.resultTableaus.emplace_back(configuration.targetTableau);
         synthesizer.optimalResults.gateCount = circuit.getNindividualOps();
         synthesizer.optimalResults.result    = logicbase::Result::SAT;

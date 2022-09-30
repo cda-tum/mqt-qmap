@@ -30,14 +30,14 @@ namespace cs {
         // COST
         if (useMaxSat) {
             logicbase::LogicTerm cost = logicbase::LogicTerm(0);
-            for (int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
-                for (int a = 0; a < data.nqubits; ++a) {
+            for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+                for (unsigned int a = 0; a < data.nqubits; ++a) {
                     if (!onlyCNOT) {
                         for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                             cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
                         }
                     }
-                    for (int b = 0; b <= a; ++b) {
+                    for (unsigned int b = 0; b <= a; ++b) {
                         if (a == b) {
                             continue;
                         }
@@ -54,13 +54,13 @@ namespace cs {
         // COST
         if (useMaxSat) {
             LogicTerm cost = LogicTerm(0);
-            for (int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+            for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
                 LogicTerm anyGate = LogicTerm(true);
-                for (int a = 0; a < data.nqubits; ++a) {
+                for (unsigned int a = 0; a < data.nqubits; ++a) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         anyGate = anyGate && !data.gS[gateStep][Gates::toIndex(gate)][a];
                     }
-                    for (int b = 0; b <= a; ++b) {
+                    for (unsigned int b = 0; b <= a; ++b) {
                         if (a == b) {
                             continue;
                         }
@@ -99,7 +99,7 @@ namespace cs {
                 logicbase::LogicTerm fidelity =
                         logicbase::LogicTerm((1 - std::log(architecture.getSingleQubitFidelities()[a])) * 1000);
                 // at each time t if there is a gate on a, add the cost
-                for (int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
+                for (unsigned int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         cost = cost + (data.gS[gateStep][Gates::toIndex(gate)][a] * fidelity);
                     }

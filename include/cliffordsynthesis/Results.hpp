@@ -38,7 +38,6 @@ namespace cs {
         double totalSeconds = 0;
         double finalRunTime = 0;
 
-        qc::QuantumComputation resultCircuit{};
         std::string            resultStringCircuit{};
         std::vector<Tableau>   resultTableaus{};
 
@@ -49,57 +48,11 @@ namespace cs {
         Results()          = default;
         virtual ~Results() = default;
 
-        Results(Results& other):
-            verbose(other.verbose), chooseBest(other.chooseBest), strategy(other.strategy), target(other.target), method(other.method), nqubits(other.nqubits), initialTimesteps(other.initialTimesteps), gateCount(other.gateCount), depth(other.depth), sat(other.sat), totalSeconds(other.totalSeconds), finalRunTime(other.finalRunTime) {
-            resultCircuit = other.resultCircuit.clone();
-            if (other.resultStringCircuit.empty()) {
-                std::stringstream ss;
-                other.resultCircuit.dumpOpenQASM(ss);
-                resultStringCircuit = ss.str();
-            } else {
-                resultStringCircuit = other.resultStringCircuit;
-            }
-            resultTableaus     = other.resultTableaus;
-            resultCM           = other.resultCM;
-            singleFidelity     = other.singleFidelity;
-            doubleFidelity     = other.doubleFidelity;
-            fidelity           = other.fidelity;
-            result             = other.result;
-            architectureName   = other.architectureName;
-            architectureQubits = other.architectureQubits;
-        };
+        Results(const Results& other) = default;
+        Results(Results&& other)      = default;
+        Results& operator=(const Results& other) = default;
+        Results& operator=(Results&& other) = default;
 
-        Results& operator=(Results other) {
-            verbose          = other.verbose;
-            chooseBest       = other.chooseBest;
-            strategy         = other.strategy;
-            target           = other.target;
-            method           = other.method;
-            nqubits          = other.nqubits;
-            initialTimesteps = other.initialTimesteps;
-            gateCount        = other.gateCount;
-            depth            = other.depth;
-            sat              = other.sat;
-            totalSeconds     = other.totalSeconds;
-            finalRunTime     = other.finalRunTime;
-            resultCircuit    = other.resultCircuit.clone();
-            if (other.resultStringCircuit.empty()) {
-                std::stringstream ss;
-                other.resultCircuit.dumpOpenQASM(ss);
-                resultStringCircuit = ss.str();
-            } else {
-                resultStringCircuit = other.resultStringCircuit;
-            }
-            resultTableaus     = other.resultTableaus;
-            resultCM           = other.resultCM;
-            singleFidelity     = other.singleFidelity;
-            doubleFidelity     = other.doubleFidelity;
-            fidelity           = other.fidelity;
-            result             = other.result;
-            architectureName   = other.architectureName;
-            architectureQubits = other.architectureQubits;
-            return *this;
-        };
 
         void dump(std::ostream& os) {
             os << "{\"Results\":{" << std::endl;
@@ -120,9 +73,7 @@ namespace cs {
             os << R"("total_seconds":")" << std::to_string(totalSeconds) << "\","
                << std::endl;
             os << R"("resultCircuit":")";
-            std::stringstream ss;
-            resultCircuit.dump(ss, qc::Format::OpenQASM);
-            os << escapeChars(ss.str(), "\"") << "\"," << std::endl;
+            os << resultStringCircuit << "\"," << std::endl;
             os << "\"resultTableaus\":[" << std::endl;
             bool skipfirst = true;
             for (const auto& tableau: resultTableaus) {
@@ -197,7 +148,7 @@ namespace cs {
             return ss.str();
         }
 
-        void generateStringCircuit() {
+        void generateStringCircuit(qc::QuantumComputation& resultCircuit) {
             std::stringstream ss;
             resultCircuit.dumpOpenQASM(ss);
             resultStringCircuit = ss.str();
