@@ -59,7 +59,7 @@ void Tableau::populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
     }
 }
 
-int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
+void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
     auto nqubits = getQubitCount();
     switch (gate->getType()) {
         case qc::OpType::H: // HADAMARD
@@ -69,7 +69,6 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             applyGateH(a, nqubits);
-            return 1U;
         }
         case qc::OpType::S: // PHASE
         {
@@ -78,7 +77,6 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             applyGateS(a, nqubits);
-            return 1U;
         }
         case qc::OpType::X: // CNOT
         {
@@ -88,15 +86,14 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateS(a, nqubits);
                 applyGateS(a, nqubits);
                 applyGateH(a, nqubits);
-                return 4U;
+            } else {
+                const auto a = (*gate->getControls().begin()).qubit;
+                const auto b = gate->getTargets().at(0);
+                if (a == b) {
+                    util::fatal("Invalid CNOT with same control and target.");
+                }
+                applyGateCX(a, b, nqubits);
             }
-            const auto a = (*gate->getControls().begin()).qubit;
-            const auto b = gate->getTargets().at(0);
-            if (a == b) {
-                util::fatal("Invalid CNOT with same control and target.");
-            }
-            applyGateCX(a, b, nqubits);
-            return 1U;
         }
         case qc::OpType::Sdag: { // Sdag  = S x S x S
             if (gate->isControlled()) {
@@ -106,24 +103,23 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
-            return 3U;
+
         }
         case qc::OpType::Z: { // Z = S x S
             if (!gate->isControlled()) {
                 const auto a = gate->getTargets().at(0U);
                 applyGateS(a, nqubits);
                 applyGateS(a, nqubits);
-                return 2U;
-            } // CZ = H(1) x CX(0,1) x H(1)
-            const auto a = (*gate->getControls().begin()).qubit;
-            const auto b = gate->getTargets().at(0);
-            if (a == b) {
-                util::fatal("Invalid CNOT with same control and target.");
+            } else { // CZ = H(1) x CX(0,1) x H(1)
+                const auto a = (*gate->getControls().begin()).qubit;
+                const auto b = gate->getTargets().at(0);
+                if (a == b) {
+                    util::fatal("Invalid CNOT with same control and target.");
+                }
+                applyGateH(b, nqubits);
+                applyGateCX(a, b, nqubits);
+                applyGateH(b, nqubits);
             }
-            applyGateH(b, nqubits);
-            applyGateCX(a, b, nqubits);
-            applyGateH(b, nqubits);
-            return 3U;
         }
         case qc::OpType::Y: { // Y = H x S x S x H x S x S
             if (!gate->isControlled()) {
@@ -134,17 +130,16 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateH(a, nqubits);
                 applyGateS(a, nqubits);
                 applyGateS(a, nqubits);
-                return 6U;
-            } // CY = Sdag(1) x CX(0,1) x S(1)
-            const auto a = (*gate->getControls().begin()).qubit;
-            const auto b = gate->getTargets().at(0);
-            if (a == b) {
-                util::fatal("Invalid CNOT with same control and target.");
+            } else { // CY = Sdag(1) x CX(0,1) x S(1)
+                const auto a = (*gate->getControls().begin()).qubit;
+                const auto b = gate->getTargets().at(0);
+                if (a == b) {
+                    util::fatal("Invalid CNOT with same control and target.");
+                }
+                applyGateSdag(b, nqubits);
+                applyGateCX(a, b, nqubits);
+                applyGateS(b, nqubits);
             }
-            applyGateSdag(b, nqubits);
-            applyGateCX(a, b, nqubits);
-            applyGateS(b, nqubits);
-            return 3U;
         }
         case qc::OpType::SWAP: {
             const auto a = (*gate->getControls().begin()).qubit;
@@ -155,13 +150,11 @@ int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             applyGateCX(a, b, nqubits);
             applyGateCX(b, a, nqubits);
             applyGateCX(a, b, nqubits);
-            return 3U;
         }
         default:
             util::fatal("Unsupported gate encountered: " + std::to_string(gate->getType()));
             break;
     }
-    return 0U;
 }
 
 Tableau Tableau::getDiagonalTableau(std::size_t nQubits) {

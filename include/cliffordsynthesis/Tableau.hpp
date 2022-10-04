@@ -80,7 +80,7 @@ public:
     void populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
                              std::int32_t column);
 
-    [[nodiscard]] std::int32_t applyGate(const std::unique_ptr<qc::Operation>& gate);
+    [[nodiscard]] void applyGate(const std::unique_ptr<qc::Operation>& gate);
 
     [[nodiscard]] bool operator==(const Tableau& other) const;
     [[nodiscard]] bool operator!=(const Tableau& other) const {
