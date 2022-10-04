@@ -103,7 +103,6 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
-
         }
         case qc::OpType::Z: { // Z = S x S
             if (!gate->isControlled()) {
