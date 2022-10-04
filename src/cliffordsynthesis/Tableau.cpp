@@ -69,7 +69,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             applyGateH(a, nqubits);
-        }
+        } break;
         case qc::OpType::S: // PHASE
         {
             if (gate->isControlled()) {
@@ -77,7 +77,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             }
             const auto a = gate->getTargets().at(0U);
             applyGateS(a, nqubits);
-        }
+        } break;
         case qc::OpType::X: // CNOT
         {
             if (gate->getNcontrols() != 1U) { // NOT = H x S x S x H
@@ -94,7 +94,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 }
                 applyGateCX(a, b, nqubits);
             }
-        }
+        } break;
         case qc::OpType::Sdag: { // Sdag  = S x S x S
             if (gate->isControlled()) {
                 util::fatal("Expected single-qubit gate");
@@ -103,8 +103,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
             applyGateS(a, nqubits);
-
-        }
+        } break;
         case qc::OpType::Z: { // Z = S x S
             if (!gate->isControlled()) {
                 const auto a = gate->getTargets().at(0U);
@@ -120,7 +119,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateCX(a, b, nqubits);
                 applyGateH(b, nqubits);
             }
-        }
+        } break;
         case qc::OpType::Y: { // Y = H x S x S x H x S x S
             if (!gate->isControlled()) {
                 const auto a = gate->getTargets().at(0U);
@@ -140,7 +139,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateCX(a, b, nqubits);
                 applyGateS(b, nqubits);
             }
-        }
+        } break;
         case qc::OpType::SWAP: {
             const auto a = (*gate->getControls().begin()).qubit;
             const auto b = gate->getTargets().at(0);
@@ -150,7 +149,7 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             applyGateCX(a, b, nqubits);
             applyGateCX(b, a, nqubits);
             applyGateCX(a, b, nqubits);
-        }
+        } break;
         default:
             util::fatal("Unsupported gate encountered: " + std::to_string(gate->getType()));
             break;
