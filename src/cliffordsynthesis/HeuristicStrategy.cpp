@@ -76,8 +76,9 @@ namespace cs {
                 }
             }
             for (auto* r: results) {
-                if (r->resultStringCircuit.empty())
+                if (r->resultStringCircuit.empty()) {
                     continue;
+}
                 qc::QuantumComputation splitResult;
                 std::istringstream     iss(r->resultStringCircuit);
                 splitResult.import(iss, qc::OpenQASM);

@@ -19,7 +19,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
                                       data.reducedCM.end()) {
                     continue;
                 }
-                vars.emplace_back(data.gC[gateStep][a][b]);
+                vars.emplace_back(data.gTwoQubit[gateStep][a][b]);
             }
         }
         data.lb->assertFormula(encodings::exactlyOneCmdr(
@@ -157,12 +157,12 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
             changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
             data.lb->assertFormula(changes);
 
-            // CNOT
             for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
                     data.reducedCM.end()) {
-                    data.lb->assertFormula(!data.gC[gateStep][a][b]);
+                    data.lb->assertFormula(!data.gTwoQubit[gateStep][a][b]);
                 } else {
+                    // CNOT
                     changes =
                             (data.r[gateStep] == (data.r[gateStep - 1] ^
                                                   ((data.x[gateStep - 1][a] & data.z[gateStep - 1][b]) &
@@ -183,7 +183,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
                         changes = changes && (data.z[gateStep][c] == data.z[gateStep - 1][c]);
                     }
 
-                    changes = logicbase::LogicTerm::implies(data.gC[gateStep][a][b], changes);
+                    changes = logicbase::LogicTerm::implies(data.gTwoQubit[gateStep][a][b], changes);
                     data.lb->assertFormula(changes);
                 }
             }
@@ -204,8 +204,8 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
                 if (a == b) {
                     continue;
                 }
-                vars.emplace_back(data.gC[gateStep][a][b]);
-                vars.emplace_back(data.gC[gateStep][b][a]);
+                vars.emplace_back(data.gTwoQubit[gateStep][a][b]);
+                vars.emplace_back(data.gTwoQubit[gateStep][b][a]);
             }
             data.lb->assertFormula(encodings::exactlyOneCmdr(
                     encodings::groupVars(vars, static_cast<std::size_t>(vars.size() / 2)),
@@ -223,7 +223,7 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
                 if (a == b) {
                     continue;
                 }
-                changes = changes + data.gC[gateStep][a][b] + data.gC[gateStep][a][b];
+                changes = changes + data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][a][b];
             }
         }
         changes = changes < logicbase::LogicTerm(static_cast<int>(data.nqubits + 1));
@@ -313,11 +313,11 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
             for (unsigned int b = 0; b < data.nqubits; ++b) {
                 if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
                     data.reducedCM.end()) {
-                    data.lb->assertFormula(!data.gC[gateStep][a][b]);
+                    data.lb->assertFormula(!data.gTwoQubit[gateStep][a][b]);
                 } else {
                     changes  = logicbase::LogicTerm(true);
                     rChanges = logicbase::LogicTerm::ite(
-                            data.gC[gateStep][a][b],
+                            data.gTwoQubit[gateStep][a][b],
                             (rChanges ^ ((data.x[gateStep - 1][a] & data.z[gateStep - 1][b]) &
                                          ((data.x[gateStep - 1][b] ^ data.z[gateStep - 1][a]) ^
                                           logicbase::LogicTerm((1 << data.nqubits) - 1, data.nqubits)))),
@@ -328,7 +328,7 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
                                           (data.z[gateStep - 1][a] ^ data.z[gateStep - 1][b]));
                     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
                     changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
-                    changes = logicbase::LogicTerm::implies(data.gC[gateStep][a][b], changes);
+                    changes = logicbase::LogicTerm::implies(data.gTwoQubit[gateStep][a][b], changes);
                     data.lb->assertFormula(changes);
                 }
             }

@@ -41,7 +41,7 @@ namespace cs {
                         if (a == b) {
                             continue;
                         }
-                        cost = cost + data.gC[gateStep][a][b] + data.gC[gateStep][b][a];
+                        cost = cost + data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][b][a];
                     }
                 }
             }
@@ -64,7 +64,7 @@ namespace cs {
                         if (a == b) {
                             continue;
                         }
-                        anyGate = anyGate && !data.gC[gateStep][a][b] && !data.gC[gateStep][b][a];
+                        anyGate = anyGate && !data.gTwoQubit[gateStep][a][b] && !data.gTwoQubit[gateStep][b][a];
                     }
                 }
                 cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
@@ -91,7 +91,7 @@ namespace cs {
                 }
                 // at each time t if there is a gate on the edge, add the cost
                 for (unsigned int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
-                    cost = cost + (data.gC[gateStep][std::distance(data.qubitChoice.begin(), a)][std::distance(data.qubitChoice.begin(), b)] * fidelity);
+                    cost = cost + (data.gTwoQubit[gateStep][std::distance(data.qubitChoice.begin(), a)][std::distance(data.qubitChoice.begin(), b)] * fidelity);
                 }
             }
             // For each qubit, get the fidelity cost
@@ -111,7 +111,7 @@ namespace cs {
                 for (unsigned int a = 0; a < data.nqubits; ++a) {
                     cost = cost + data.gS[gateStep][1][a] + data.gS[gateStep][2][a];
                     for (unsigned int b = 0; b < data.nqubits; ++b) {
-                        cost = cost + data.gC[gateStep][a][b];
+                        cost = cost + data.gTwoQubit[gateStep][a][b];
                     }
                 }
             }

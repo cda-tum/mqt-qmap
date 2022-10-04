@@ -18,7 +18,7 @@ namespace cs {
         const logicbase::LogicMatrix&                            z;
         const logicbase::LogicVector&                            r;
         const logicbase::LogicMatrix3D&                          gS;
-        const logicbase::LogicMatrix3D&                          gC;
+        const logicbase::LogicMatrix3D&                          gTwoQubit;
     };
 } // namespace cs
 
