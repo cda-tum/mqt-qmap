@@ -114,10 +114,10 @@ cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Confi
         ss << "Could not parse tableau: " << e.what();
         throw std::invalid_argument(ss.str());
     }
-    config.targetTableau = tab;
-    Tableau::initTableau(config.initialTableau, config.targetTableau.getQubitCount());
-    config.nqubits      = config.targetTableau.getQubitCount();
-    config.architecture = arch;
+    config.targetTableau  = tab;
+    config.initialTableau = Tableau(config.targetTableau.getQubitCount());
+    config.nqubits        = config.targetTableau.getQubitCount();
+    config.architecture   = arch;
 
     std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {

@@ -22,9 +22,9 @@ namespace cs {
 
     void CliffordSynthesizer::optimize(Configuration& configuration) {
         // we dont already have a tableau
-        configuration.nqubits = configuration.targetCircuit.getNqubits();
-        Tableau::initTableau(configuration.initialTableau, configuration.nqubits);
-        Tableau::generateTableau(configuration.targetTableau, configuration.targetCircuit);
+        configuration.nqubits        = configuration.targetCircuit.getNqubits();
+        configuration.initialTableau = Tableau(configuration.nqubits);
+        configuration.targetTableau  = Tableau(configuration.targetCircuit);
         synthesize(configuration);
     }
 
@@ -263,10 +263,10 @@ namespace cs {
                 if (oldGateCount < results.gateCount) {
                     results.depth++;
                 }
-                auto tableau = results.resultTableaus.emplace_back();
-                Tableau::generateTableau(tableau, localResultCircuit);
+                auto tableau                  = results.resultTableaus.emplace_back();
+                tableau                       = Tableau(localResultCircuit);
                 results.resultTableaus.back() = tableau;
-                Tableau::initTableau(modelTableau, configuration.nqubits);
+                modelTableau                  = Tableau(configuration.nqubits);
                 for (int i = 0; i < configuration.nqubits; ++i) {
                     modelTableau.populateTableauFrom(model->getBitvectorValue(x[gateStep][i], lb.get()),
                                                      configuration.nqubits, i);

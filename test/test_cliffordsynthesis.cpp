@@ -60,8 +60,8 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
 
             configuration.nqubits         = 2;
             configuration.initialTimestep = 10;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -109,8 +109,8 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             configuration.nqubits         = 2;
             configuration.initialTimestep = 10;
             configuration.target          = TargetMetric::DEPTH;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -139,8 +139,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             configuration.initialTimestep = 10;
             configuration.target          = TargetMetric::FIDELITY;
             configuration.architecture    = ibmqLondon;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             londonOptimizer->synthesize(configuration);
             tableau.clear();
 
@@ -168,8 +168,8 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
             configuration.nqubits         = 2;
             configuration.initialTimestep = 10;
             configuration.target          = TargetMetric::TWO_QUBIT_GATES;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -198,8 +198,8 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
             configuration.initialTimestep = 10;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::StartLow;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -228,8 +228,8 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
             configuration.initialTimestep = 50;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::StartHigh;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -258,8 +258,8 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
             configuration.initialTimestep = 10;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::MinMax;
-            Tableau::initTableau(configuration.initialTableau, 2);
-            configuration.targetTableau = tableau;
+            configuration.initialTableau  = Tableau(2);
+            configuration.targetTableau   = tableau;
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 

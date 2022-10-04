@@ -130,7 +130,7 @@ TEST(TestTableau, LoadTableauFrom) {
     std::string tableau_string = "Stabilizer = ['+XI', '+IZ']";
 
     tableau.fromString(tableau_string);
-    Tableau::generateTableau(tableau1, qc);
+    tableau1 = Tableau(qc);
 
     EXPECT_EQ(tableau, tableau1);
 
@@ -148,7 +148,7 @@ TEST(TestTableau, LoadTableauFrom) {
     qc.z(1);
     qc.y(1);
 
-    Tableau::generateTableau(tableau1, qc);
+    tableau1 = Tableau(qc);
 
     auto compOP = std::make_unique<qc::CompoundOperation>(2);
     auto h0     = std::make_unique<qc::StandardOperation>(1, 0, qc::H);
@@ -159,7 +159,7 @@ TEST(TestTableau, LoadTableauFrom) {
     qc::QuantumComputation qc2(2U);
     qc2.emplace_back(compOP);
 
-    Tableau::generateTableau(tableau, qc2);
+    tableau = Tableau(qc2);
 }
 TEST(TestTableau, InitTableau) {
     using namespace dd::literals;

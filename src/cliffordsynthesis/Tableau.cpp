@@ -59,32 +59,6 @@ void Tableau::populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
     }
 }
 
-void Tableau::generateTableau(Tableau& tableau, const qc::QuantumComputation& circuit, std::size_t begin, std::size_t end) {
-    initTableau(tableau, circuit.getNqubits());
-    std::size_t currentG = 0;
-    for (const auto& gate: circuit) {
-        if (currentG >= begin && (currentG < end)) {
-            if (gate->getType() == qc::OpType::Compound) {
-                auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-                auto  cit    = compOp->begin();
-                while (cit != compOp->end() && currentG >= begin &&
-                       (currentG < end)) {
-                    tableau.applyGate((*cit));
-                    ++cit;
-                    ++currentG;
-                }
-            } else {
-                tableau.applyGate(gate);
-                ++currentG;
-            }
-        }
-    }
-}
-
-void Tableau::initTableau(Tableau& tableau, std::size_t nqubits) {
-    tableau.init(nqubits);
-}
-
 int Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
     auto nqubits = getQubitCount();
     switch (gate->getType()) {
@@ -357,4 +331,30 @@ void Tableau::applyGateSdag(dd::Qubit target, std::size_t nqubits) {
     applyGateS(target, nqubits);
     applyGateS(target, nqubits);
     applyGateS(target, nqubits);
+}
+Tableau::Tableau(const qc::QuantumComputation& qc, std::size_t begin, std::size_t end) {
+    init(qc.getNqubits());
+    std::size_t currentG = 0;
+    for (const auto& gate: qc) {
+        if (currentG >= begin && (currentG < end)) {
+            if (gate->getType() == qc::OpType::Compound) {
+                auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+                auto  cit    = compOp->begin();
+                while (cit != compOp->end() && currentG >= begin &&
+                       (currentG < end)) {
+                    applyGate((*cit));
+                    ++cit;
+                    ++currentG;
+                }
+            } else {
+                applyGate(gate);
+                ++currentG;
+            }
+        }
+    }
+}
+Tableau::Tableau(std::size_t nQubits) {
+    tableau.clear();
+    tableau.resize(nQubits);
+    this->tableau = Tableau::getDiagonalTableau(nQubits).tableau;
 }

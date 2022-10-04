@@ -27,6 +27,9 @@ public:
     [[nodiscard]] explicit Tableau(TableauType tableau):
         tableau(std::move(tableau)) {}
 
+    [[nodiscard]] explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0, std::size_t end = -1);
+    [[nodiscard]] explicit Tableau(std::size_t nQubits);
+
     [[nodiscard]] RowType operator[](std::size_t index) {
         return tableau[index];
     }
@@ -76,9 +79,6 @@ public:
 
     void populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
                              std::int32_t column);
-
-    static void generateTableau(Tableau& tableau, const qc::QuantumComputation& circ, std::size_t begin = 0, std::size_t end = -1);
-    static void initTableau(Tableau& tableau, std::size_t nqubits);
 
     [[nodiscard]] std::int32_t applyGate(const std::unique_ptr<qc::Operation>& gate);
 

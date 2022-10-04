@@ -88,8 +88,7 @@ namespace cs {
                 delete r;
             }
             if (totalResult.result == logicbase::Result::SAT) {
-                Tableau resultingTableau{};
-                Tableau::generateTableau(resultingTableau, localResultCircuit);
+                Tableau resultingTableau{localResultCircuit};
                 DEBUG() << "Equality (Results): "
                         << ((fullTableau == resultingTableau) ? "True" : "False")
                         << std::endl;
@@ -119,10 +118,8 @@ namespace cs {
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }
     void HeuristicStrategy::runSplinter(int i, unsigned int circSplit, unsigned int split, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, qc::QuantumComputation& circuit, Results* r, CliffordSynthesizer* opt, const Configuration& configuration) {
-        Tableau targetTableau{};
-        Tableau::generateTableau(targetTableau, circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit);
-        Tableau initTableau{};
-        Tableau::generateTableau(initTableau, circuit, 0, static_cast<std::size_t>(i) * circSplit);
+        Tableau targetTableau{circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit};
+        Tableau initTableau{circuit, 0, static_cast<std::size_t>(i) * circSplit};
         (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,
                                      initTableau, configuration);
     }

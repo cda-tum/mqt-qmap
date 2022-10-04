@@ -175,15 +175,6 @@ namespace cs {
                 GATES::Y,
                 GATES::Z,
                 GATES::Sdag};
-
-        static constexpr auto ALL_GATES = std::array<GATES, 10>{
-                GATES::H,
-                GATES::S,
-                GATES::X,
-                GATES::Y,
-                GATES::Z,
-                GATES::Sdag,
-                GATES::CX};
     };
 } // namespace cs
 #endif //CS_CLIFFORDSYNTHESIS_H
