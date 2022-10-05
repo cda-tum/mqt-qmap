@@ -236,35 +236,8 @@ void Tableau::fromString(const std::string& str) {
     }
     auto        rStabilizer = std::regex("([\\+-])([IYZX]+)");
     std::smatch m;
-    if (line.find("Destabilizer") != std::string::npos) { // Qiskit
-        auto iter = line.cbegin();
-        while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
-            std::string s = m.str(0U);
-            RowType     row;
-
-            for (const auto c: s) {
-                if (c == 'I' || c == 'X') {
-                    row.push_back(0);
-                } else if (c == 'Y' || c == 'Z') {
-                    row.push_back(1);
-                }
-            }
-            for (auto c: s) {
-                if (c == 'I' || c == 'Z') {
-                    row.push_back(0);
-                } else if (c == 'X' || c == 'Y') {
-                    row.push_back(1);
-                }
-            }
-            if (s[0U] == '-') {
-                row.push_back(1);
-            } else {
-                row.push_back(0);
-            }
-            tableau.push_back(row);
-            iter = m[0].second;
-        }
-    } else if (line.find("Stabilizer") != std::string::npos) { // Qiskit
+    if (std::regex_search(line, rStabilizer)) {
+        // string is a list of stabilizers
         auto iter = line.cbegin();
         while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
             std::string s = m.str(0U);
@@ -292,7 +265,8 @@ void Tableau::fromString(const std::string& str) {
             tableau.push_back(row);
             iter = m[0].second;
         }
-    } else { // Exported binary matrix
+    } else {
+        // assume string is a semicolon separated binary matrix
         import(ss);
     }
 }
