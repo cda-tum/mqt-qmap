@@ -289,8 +289,8 @@ void Tableau::applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubi
         const auto xb = tableau[i][control];
         const auto zb = tableau[i][control + nqubits];
         tableau[i][2 * nqubits] ^= (xa & zb) & ((xb ^ za) ^ 1);
-        tableau[i][target + nqubits] = za ^ zb;
-        tableau[i][control]          = xb ^ xa;
+        tableau[i][control + nqubits] = za ^ zb;
+        tableau[i][target]          = xb ^ xa;
     }
 }
 void Tableau::applyGateSdag(dd::Qubit target, std::size_t nqubits) {
