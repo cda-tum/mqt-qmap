@@ -1,16 +1,50 @@
-Quantum Circuit Synthesis
-=======================
+Synthesis of Clifford Circuits
+================================
 
-Many quantum algorithms are not available in circuit representation, that is directly executable on a quantum computer.
-They rather are represented in a *functional representation*, which first needs to be translated into machine executable instructions.
-The functional representation considered here is called *tableau*, which is a representation of a limited set of quantum functionality, called the *clifford group*.
-This translation is commonly called *synthesis*.
+Executing quantum circuits on a quantum computer requires compilation to representations that conform to all restrictions imposed by the device.
+Due to device's limited coherence times and gate fidelity, the compilation process has to be optimized as much as possible.
+To this end, an algorithm's description first has to be *synthesized* using the device's gate library.
+In addition, circuits have to be *mapped* to the target quantum device to satisfy its connectivity constraints.
+Even though Clifford circuits form a finite subgroup of all quantum circuits -- one that is not even universal for quantum computing -- the search space for these problems grows exponentially with respect to the number of considered qubits.
 
-Consider the following circuit.
+The *Clifford synthesis approach* in QMAP can be used to produce optimal Clifford circuits based on the methods proposed in :cite:labelpar:`schneider2023satEncodingOptimalClifford`.
+To this end, it encodes the underlying task as a satisfiability (SAT) problem and solves it using the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_ in conjunction with a binary search scheme.
+
+The following gives a brief overview on Clifford circuits and how QMAP can be used for their synthesis.
+
+Clifford Circuits
+#################
+
+Clifford circuits, i.e., circuits generated from the set :math:`\{H, S, \mathit{CNOT}\}`, form an important subclass of quantum circuits.
+This is due to several factors
+
+- According to the Gottesman-Knill theorem, they can be simulated in polynomial time and space on classical computers using the *stabilizer* formalism.
+- They can be used to describe several quantum phenomena such as superposition, entanglement, superdense coding, and teleportation.
+- Many error correcting codes rely on them.
+
+Quantum states that can be obtained from the all-zero basis state :math:`|0\dots 0\rangle` by applying Clifford operations are called stabilizer states.
+The name originates from the fact that such a state is uniquely and efficiently described by the set of operators that generate the group of its stabilizers.
+Specifically, any *n*-qubit stabilizer state can be described by a set of *n* Pauli strings :math:`\pm P_{i,0}P_{i,1}P_{i,2}\dots P_{i,n-1}`, with :math:`P_{i,j}\in\{I, X, Y, Z\}` and :math:`i, j\in 0,\dots, n-1`.
+Hence,two bits per qubit are needed to identify the Pauli operator, as well as one additional bit for the phase, which leads to a total of :math:`n(2n+1)` bits needed to uniquely describe a particular stabilizer state.
+
+The stabilizer representation of a quantum state is conveniently described by a *tableau*:
+
+.. math::
+
+    \begin{bmatrix}
+        x_{0,0}   & \cdots & x_{0,n-1}   & z_{0,0}    & \cdots & z_{0,n-1}   & r_0    \\
+        \vdots    & \ddots &  \vdots         & \vdots     & \ddots &    \vdots         & \vdots \\
+        x_{n-1,0} & \cdots & x_{n-1,n-1} & z_{n-1,0} & \cdots & z_{n-1,n-1} & r_{n-1}  \\
+    \end{bmatrix}
+
+Here, the binary variables :math:`x_{ij}` and :math:`z_{ij}` specify whether the Pauli term :math:`P_{i,j}` is :math:`X` or :math`Z`, respectively.
+Since :math:`Y = iXZ`, setting :math:`x_{ij} = z_{ij} = 1` corresponds to :math:`P_{i,j}=Y`.
+Finally, :math:`r_i` describes whether the generator has a negative phase.
+
+Consider the following quantum circuit
 
     .. code-block:: python3
 
-        from mqt import qmap
         from qiskit import QuantumCircuit
 
         qc = QuantumCircuit(2)
@@ -21,89 +55,58 @@ Consider the following circuit.
 
         print(qc.draw(fold=-1))
 
-It has a corresponding functional representation, the *tableau* looks like the following:
+Then, the corresponding stabilizer tableau is
 
     .. code-block:: console
 
         0 0 | 1 1 | 0
         1 1 | 0 0 | 0
 
-with the corresponding *generators*:
+which corresponds to the stabilizers
 
     .. code-block:: python3
 
-        tableau = "Stabilizer = ['+XX', '+ZZ']"
+        stabilizers = ["+XX", "+ZZ"]
 
+Using QMAP for Optimal Synthesis
+################################
 
-Keeping the number of used gates as small as possible is key for ensuring the successful execution of a quantum circuit. Finding an optimal circuit even for a finite group such as the Clifford Group grows with complexity 2^O(n^2).
-In recent years the focus has shifted from gate optimal synthesis to optimizing depth or expected fidelity of a circuit. The complexity for these goals is of equal magnitude to gate optimal synthesis.
+*QMAP* can be used in a multitude of ways to efficiently synthesize Clifford circuits:
 
-Circuit Synthesis
-#################
-
-The *clifford circuit synthesis* implemented in *QMAP* synthesizes quantum circuits using either minimal *gates*, *depth* or maximal expected *fidelity*. The latter is only available if the corresponding architecture information is given.
-To this end, it encodes the mapping task as a MaxSAT problem and subsequently solves it using the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_. Due to the complexity of 2^O(n^2) the mapping task, this approach is only scalable up to 26 qubits for most application.
-
-Using the circuit synthesis is as simple as:
+- Starting from an initial (Clifford) circuit :code:`qc`, an optimal realization of that circuit's functionality can be determined as follows
 
     .. code-block:: python3
+        from qiskit import QuantumCircuit
+        from mqt import qmap
 
-        qc_mapped, results = qmap.synthesize_clifford(tableau, target="gates")
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        qc.h(0)
+        qc.h(1)
 
-        print(qc_mapped.draw(fold=-1))
+        qc_synth, results = qmap.synthesize_clifford(qc)
+
+        print(qc_synth.draw(fold=-1))
 
     .. code-block:: console
 
+        TODO!
 
-
-By default, the :code:`synthesize_clifford` method synthesizes a circuit with the minimum number of gates.
-There are are also options for optimizing depth instead using :code:`target='depth'`.
-
-To maximize expected fidelity if architecture/fidelity information is given :code:`target='fidelity'`:
+- Starting from a functional description, e.g., a list of stabilizers, an optimal realization of that functionality can be determined as follows
 
     .. code-block:: python3
+        from qiskit.quantum_info import StabilizerTable
+        from mqt import qmap
 
-        arch = "ibmq_london.arch"
-        calibration = "ibmq_london.csv"
+        stabilizers = ["+XX", "+ZZ"]
+        table = StabilizerTable.from_labels(stabilizers)
+        qc_synth, results = qmap.synthesize_clifford(table)
 
-        qc_mapped, results = qmap.synthesize_clifford(
-            tableau, arch, calibration, target="fidelity"
-        )
-
-        print(qc_mapped.draw(fold=-1))
-
-
-Circuit Optimization
-####################
-
-The *clifford circuit optimization* implemented in *QMAP* optimizes quantum circuits using either minimal *gates*, *depth* or maximal expected *fidelity*. The latter is only available if the corresponding architecture information is given.
-Similar to synthesis, it encodes the mapping task as a MaxSAT problem and subsequently solves it using the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_. Due to the complexity of 2^O(n^2) the mapping task, this approach is only scalable up to 26 qubits for most application.
-
-Using the circuit optimization is as simple as:
-
-    .. code-block:: python3
-
-        qc_mapped, results = qmap.optimize_clifford(qc, target="gates")
-
-        print(qc_mapped.draw(fold=-1))
+        print(qc_synth.draw(fold=-1))
 
     .. code-block:: console
 
+        TODO!
 
-By default, the :code:`optimize_clifford` method synthesizes a circuit with the minimum number of gates.
-There are are also options for optimizing depth instead using :code:`target='depth'`.
-
-To maximize expected fidelity if architecture/fidelity information is given :code:`target='fidelity'`:
-
-    .. code-block:: python3
-
-        arch = "ibmq_london.arch"
-        calibration = "ibmq_london.csv"
-
-        qc_mapped, results = qmap.synthesize_clifford(
-            tableau, arch, calibration, target="fidelity"
-        )
-
-        print(qc_mapped.draw(fold=-1))
-
-If architecture information is given, both the synthesis and optimization of a clifford circuit produce an already mapped circuit, in what is called *architecture aware synthesis*.
+The synthesis method offers lots of configuration options to fine-tune the synthesis procedure, change the cost metric, or to perform architecture-aware synthesis. Further details on that will be included in a future update.
