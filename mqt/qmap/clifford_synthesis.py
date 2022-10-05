@@ -78,9 +78,9 @@ def synthesize_clifford(
 
     stabilizers: str = ""
     if isinstance(description, Clifford):
-        stabilizers = description.stabilizer.to_labels()
+        stabilizers = str(description.stabilizer.to_labels())
     elif isinstance(description, StabilizerTable):
-        stabilizers = description.to_labels()
+        stabilizers = str(description.to_labels())
     elif isinstance(description, str) and not description.endswith(".qasm"):
         stabilizers = description
 
