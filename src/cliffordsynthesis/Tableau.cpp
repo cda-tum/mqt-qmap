@@ -78,14 +78,11 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             const auto a = gate->getTargets().at(0U);
             applyGateS(a, nqubits);
         } break;
-        case qc::OpType::X: // CNOT
+        case qc::OpType::X: // CNOT and X
         {
-            if (gate->getNcontrols() != 1U) { // NOT = H x S x S x H
+            if (gate->getNcontrols() != 1U) {
                 const auto a = gate->getTargets().at(0U);
-                applyGateH(a, nqubits);
-                applyGateS(a, nqubits);
-                applyGateS(a, nqubits);
-                applyGateH(a, nqubits);
+                applyGateX(a, nqubits);
             } else {
                 const auto a = (*gate->getControls().begin()).qubit;
                 const auto b = gate->getTargets().at(0);
@@ -95,20 +92,17 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateCX(a, b, nqubits);
             }
         } break;
-        case qc::OpType::Sdag: { // Sdag  = S x S x S
+        case qc::OpType::Sdag: {
             if (gate->isControlled()) {
                 util::fatal("Expected single-qubit gate");
             }
             const auto a = gate->getTargets().at(0U);
-            applyGateS(a, nqubits);
-            applyGateS(a, nqubits);
-            applyGateS(a, nqubits);
+            applyGateSdag(a, nqubits);
         } break;
         case qc::OpType::Z: { // Z = S x S
             if (!gate->isControlled()) {
                 const auto a = gate->getTargets().at(0U);
-                applyGateS(a, nqubits);
-                applyGateS(a, nqubits);
+                applyGateZ(a, nqubits);
             } else { // CZ = H(1) x CX(0,1) x H(1)
                 const auto a = (*gate->getControls().begin()).qubit;
                 const auto b = gate->getTargets().at(0);
@@ -120,15 +114,10 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
                 applyGateH(b, nqubits);
             }
         } break;
-        case qc::OpType::Y: { // Y = H x S x S x H x S x S
+        case qc::OpType::Y: {
             if (!gate->isControlled()) {
                 const auto a = gate->getTargets().at(0U);
-                applyGateH(a, nqubits);
-                applyGateS(a, nqubits);
-                applyGateS(a, nqubits);
-                applyGateH(a, nqubits);
-                applyGateS(a, nqubits);
-                applyGateS(a, nqubits);
+                applyGateY(a, nqubits);
             } else { // CY = Sdag(1) x CX(0,1) x S(1)
                 const auto a = (*gate->getControls().begin()).qubit;
                 const auto b = gate->getTargets().at(0);
@@ -294,10 +283,28 @@ void Tableau::applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubi
     }
 }
 void Tableau::applyGateSdag(dd::Qubit target, std::size_t nqubits) {
+    // Sdag  = S x S x S
     applyGateS(target, nqubits);
     applyGateS(target, nqubits);
     applyGateS(target, nqubits);
 }
+void Tableau::applyGateX(dd::Qubit target, std::size_t nqubits) {
+    // X  = H x Z x H
+    applyGateH(target, nqubits);
+    applyGateZ(target, nqubits);
+    applyGateH(target, nqubits);
+}
+void Tableau::applyGateY(dd::Qubit target, std::size_t nqubits) {
+    // Y  = X x Z
+    applyGateX(target, nqubits);
+    applyGateZ(target, nqubits);
+}
+void Tableau::applyGateZ(dd::Qubit target, std::size_t nqubits) {
+    // Z  = S x S
+    applyGateS(target, nqubits);
+    applyGateS(target, nqubits);
+}
+
 Tableau::Tableau(const qc::QuantumComputation& qc, std::size_t begin, std::size_t end) {
     init(qc.getNqubits());
     std::size_t currentG = 0;

@@ -80,7 +80,7 @@ public:
     void populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
                              std::int32_t column);
 
-    [[nodiscard]] void applyGate(const std::unique_ptr<qc::Operation>& gate);
+    void applyGate(const std::unique_ptr<qc::Operation>& gate);
 
     [[nodiscard]] bool operator==(const Tableau& other) const;
     [[nodiscard]] bool operator!=(const Tableau& other) const {
@@ -111,6 +111,9 @@ private:
     void applyGateH(dd::Qubit target, std::size_t nqubits);
     void applyGateS(dd::Qubit target, std::size_t nqubits);
     void applyGateSdag(dd::Qubit target, std::size_t nqubits);
+    void applyGateX(dd::Qubit target, std::size_t nqubits);
+    void applyGateY(dd::Qubit target, std::size_t nqubits);
+    void applyGateZ(dd::Qubit target, std::size_t nqubits);
     void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
 };
 #endif //CS_TABLEAU_HPP
