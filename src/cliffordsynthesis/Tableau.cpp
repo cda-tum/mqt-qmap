@@ -141,8 +141,8 @@ void Tableau::applyGate(const std::unique_ptr<qc::Operation>& gate) {
             }
         } break;
         case qc::OpType::SWAP: {
-            const auto a = (*gate->getControls().begin()).qubit;
-            const auto b = gate->getTargets().at(0);
+            const auto a = gate->getTargets().at(0);
+            const auto b = gate->getTargets().at(1);
             if (a == b) {
                 util::fatal("Invalid SWAP with same control and target.");
             }
