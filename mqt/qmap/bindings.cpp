@@ -74,7 +74,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 // c++ binding function
-cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configuration& config) {
+cs::Results optimize(const py::object& circ, const Architecture& arch, cs::Configuration& config) {
     qc::QuantumComputation qc{};
 
     loadQC(qc, circ);
@@ -99,13 +99,11 @@ cs::Results optimize(const py::object& circ, Architecture& arch, cs::Configurati
         throw std::invalid_argument(ss.str());
     }
 
-    auto& results = optimizer->optimalResults;
-
-    return results;
+    return optimizer->optimalResults;
 }
 
 // c++ binding function
-cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Configuration& config) {
+cs::Results synthesize(const std::string& tableau, const Architecture& arch, cs::Configuration& config) {
     auto tab = Tableau();
     try {
         tab.fromString(tableau);
@@ -136,9 +134,7 @@ cs::Results synthesize(const std::string& tableau, Architecture& arch, cs::Confi
         throw std::invalid_argument(ss.str());
     }
 
-    auto& results = optimizer->optimalResults;
-
-    return results;
+    return optimizer->optimalResults;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -387,8 +383,8 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("__repr__", &cs::Results::getStrRepr);
 
     m.def("map", &map, "map a quantum circuit");
-    m.def("synthesize", &synthesize, "synthesize a clifford circuit");
-    m.def("optimize", &optimize, "optimize a clifford circuit");
+    m.def("synthesize", &synthesize, "synthesize a Clifford circuit");
+    m.def("optimize", &optimize, "optimize a Clifford circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
