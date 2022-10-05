@@ -11,180 +11,91 @@
 
 class TestTableau: public testing::TestWithParam<std::string> {
 protected:
-    std::string test_architecture_dir = "./architectures/";
-    std::string test_calibration_dir  = "./calibration/";
-
     void SetUp() override {
-        using namespace dd::literals;
+        tableau.fromString("['+ZI', '+IZ']");
     }
+
+    Tableau tableau{};
+    Tableau tableau2{};
 };
 
-TEST(TestTableau, LoadTableau) {
-    Tableau     tableau{};
-    Tableau     tableau2{};
-    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
-
-    tableau.fromString(tableau_string);
-
-    tableau_string = "Stabilizer = ['+IZ', '+ZI']";
-
-    tableau2.fromString(tableau_string);
+TEST_F(TestTableau, InitialTableau) {
+    tableau2.init(2);
 
     EXPECT_EQ(tableau, tableau2);
-
-    tableau_string = "Destabilizer = ['+IZ', '+XI']";
-
-    tableau.clear();
-    tableau.fromString(tableau_string);
-
-    tableau_string = "Stabilizer = ['+IX', '+ZI']";
-
-    tableau2.clear();
-    tableau2.fromString(tableau_string);
-
-    EXPECT_EQ(tableau, tableau2);
-}
-
-TEST(TestTableau, GetStrRepresentation) {
-    Tableau     tableau{};
-    Tableau     tableau2{};
-    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
-
-    tableau.fromString(tableau_string);
-
-    std::string result_string = "0;0;0;1;0;\n0;0;1;0;0;\n";
-
-    EXPECT_EQ(tableau.toString(), result_string);
-}
-
-TEST(TestTableau, DumpTableau) {
-    Tableau     tableau{};
-    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
-
-    tableau.fromString(tableau_string);
-
-    tableau.dump("tableau_dump.txt");
-}
-
-TEST(TestTableau, AccessValues) {
-    Tableau     tableau{};
-    std::string tableau_string = "Destabilizer = ['+IX', '+XI']";
-
-    tableau.fromString(tableau_string);
 
     EXPECT_EQ(tableau[0][0], 0);
     EXPECT_EQ(tableau[0][1], 0);
-    EXPECT_EQ(tableau[0][3], 1);
+    EXPECT_EQ(tableau[0][2], 1);
+    EXPECT_EQ(tableau[0][3], 0);
+    EXPECT_EQ(tableau[0][4], 0);
+    EXPECT_EQ(tableau[1][0], 0);
+    EXPECT_EQ(tableau[1][1], 0);
+    EXPECT_EQ(tableau[1][2], 0);
+    EXPECT_EQ(tableau[1][3], 1);
+    EXPECT_EQ(tableau[1][4], 0);
 
-    auto val = tableau.at(0);
-
-    EXPECT_EQ(val[0], 0);
-    EXPECT_EQ(val[1], 0);
-    EXPECT_EQ(val[3], 1);
-
-    auto tableau2 = tableau;
-
-    EXPECT_EQ(tableau2[0][0], 0);
-    EXPECT_EQ(tableau2[0][1], 0);
-    EXPECT_EQ(tableau2[0][3], 1);
-
-    EXPECT_EQ(tableau.back(), tableau2.back());
+    const std::string result_string = "0;0;1;0;0;\n0;0;0;1;0;\n";
+    EXPECT_EQ(tableau.toString(), result_string);
 }
 
-TEST(TestTableau, BasicFunctions) {
-    Tableau     tableau{};
-    std::string tableau_string = "Destabilizer = ['+XI', '+IX']";
-
-    tableau.fromString(tableau_string);
-
-    tableau.clear();
-
-    EXPECT_EQ(tableau.empty(), true);
-
-    tableau.fromString(tableau_string);
-
-    auto tableau2 = Tableau::getDiagonalTableau(2);
-
-    EXPECT_EQ(tableau2[0][0], 0);
-    EXPECT_EQ(tableau2[0][1], 0);
-    EXPECT_EQ(tableau2[0][2], 1);
-    EXPECT_EQ(tableau2[0][3], 0);
-    EXPECT_EQ(tableau2[1][0], 0);
-    EXPECT_EQ(tableau2[1][1], 0);
-    EXPECT_EQ(tableau2[1][2], 0);
-    EXPECT_EQ(tableau2[1][3], 1);
-
-    EXPECT_EQ(tableau2, tableau);
-    ;
+TEST_F(TestTableau, TableauIO) {
+    const auto filename = "tableau.txt";
+    tableau.dump(filename);
+    tableau2.import(filename);
+    EXPECT_EQ(tableau, tableau2);
 }
 
-TEST(TestTableau, LoadTableauFrom) {
+TEST_F(TestTableau, BellCircuit) {
     using namespace dd::literals;
 
     auto qc = qc::QuantumComputation(2U);
     qc.h(0);
     qc.x(1, 0_pc);
 
-    Tableau     tableau{};
-    Tableau     tableau1{};
-    std::string tableau_string = "Stabilizer = ['+XI', '+IZ']";
+    tableau = Tableau(qc);
 
-    tableau.fromString(tableau_string);
-    tableau1 = Tableau(qc);
+    tableau2.fromString("[+XX, +ZZ]");
+    EXPECT_EQ(tableau, tableau2);
+}
 
-    EXPECT_EQ(tableau, tableau1);
+TEST_F(TestTableau, TestOperations) {
+    using namespace dd::literals;
 
-    tableau1.clear();
+    qc::QuantumComputation qc1(2U);
+    qc1.x(0);
+    qc1.y(0);
+    qc1.z(0);
+    qc1.h(0);
+    qc1.s(0);
+    qc1.sdag(0);
+    qc1.x(1, 0_pc);
+    qc1.y(1, 0_pc);
+    qc1.z(1, 0_pc);
+    qc1.swap(0, 1);
 
-    tableau1.import("examples/cliffordexamples/base-tableau.tabl");
+    EXPECT_NO_THROW(tableau = Tableau(qc1););
+}
 
-    EXPECT_EQ(tableau, tableau1);
+TEST_F(TestTableau, TestCompoundOperation) {
+    using namespace dd::literals;
 
-    tableau1.clear();
-
-    qc.s(0);
-    qc.x(1);
-    qc.sdag(1);
-    qc.z(1);
-    qc.y(1);
-
-    tableau1 = Tableau(qc);
+    auto qc = qc::QuantumComputation(2U);
 
     auto compOP = std::make_unique<qc::CompoundOperation>(2);
-    auto h0     = std::make_unique<qc::StandardOperation>(1, 0, qc::H);
-    auto x1     = std::make_unique<qc::StandardOperation>(1, 0_pc, 1, qc::X);
-    compOP->emplace_back(h0);
-    compOP->emplace_back(x1);
+    compOP->emplace_back<qc::StandardOperation>(2, 0, qc::H);
+    compOP->emplace_back<qc::StandardOperation>(2, 0_pc, 1, qc::X);
+    qc.emplace_back(compOP);
 
-    qc::QuantumComputation qc2(2U);
-    qc2.emplace_back(compOP);
+    tableau = Tableau(qc);
 
-    tableau = Tableau(qc2);
-}
-TEST(TestTableau, InitTableau) {
-    using namespace dd::literals;
-
-    Tableau tableau{};
-    tableau.init(4);
-
-    EXPECT_EQ(tableau[0][0], 0);
-    EXPECT_EQ(tableau[0][1], 0);
-    EXPECT_EQ(tableau[0][2], 0);
-    EXPECT_EQ(tableau[0][3], 0);
-    EXPECT_EQ(tableau[0][4], 1);
-    EXPECT_EQ(tableau[0][5], 0);
-    EXPECT_EQ(tableau[0][6], 0);
-    EXPECT_EQ(tableau[0][7], 0);
-    EXPECT_EQ(tableau[0][8], 0);
+    tableau2.fromString("[+XX, +ZZ]");
+    EXPECT_EQ(tableau, tableau2);
 }
 
-TEST(TestTableau, BVTableau) {
-    using namespace dd::literals;
-
-    Tableau tableau{};
-    tableau.init(2);
-    unsigned long bitvector1 = 0b10;
-    unsigned long bitvector2 = 0b01;
+TEST_F(TestTableau, BVTableau) {
+    const auto bitvector1 = 0b10;
+    const auto bitvector2 = 0b01;
 
     tableau.populateTableauFrom(bitvector1, 2, 0);
     tableau.populateTableauFrom(bitvector2, 2, 1);
@@ -194,8 +105,8 @@ TEST(TestTableau, BVTableau) {
     EXPECT_EQ(tableau[0][1], 1);
     EXPECT_EQ(tableau[1][1], 0);
 
-    unsigned long bitvector3 = tableau.getBVFrom(0);
-    unsigned long bitvector4 = tableau.getBVFrom(1);
+    const auto bitvector3 = tableau.getBVFrom(0);
+    const auto bitvector4 = tableau.getBVFrom(1);
 
     EXPECT_EQ(bitvector3, bitvector1);
     EXPECT_EQ(bitvector4, bitvector2);
