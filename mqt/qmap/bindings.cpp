@@ -73,14 +73,10 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
     return results;
 }
 
-// c++ binding function
 cs::Results optimize(const py::object& circ, const Architecture& arch, cs::Configuration& config) {
-    qc::QuantumComputation qc{};
-
-    loadQC(qc, circ);
-    config.targetCircuit = qc.clone();
-    config.nqubits       = qc.getNqubits();
-    config.architecture  = arch;
+    loadQC(config.targetCircuit, circ);
+    config.nqubits      = config.targetCircuit.getNqubits();
+    config.architecture = arch;
 
     std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {
