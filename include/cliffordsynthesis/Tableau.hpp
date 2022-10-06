@@ -29,6 +29,7 @@ public:
 
     [[nodiscard]] explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0, std::size_t end = -1);
     [[nodiscard]] explicit Tableau(std::size_t nQubits);
+    [[nodiscard]] explicit Tableau(const std::string& description);
 
     [[nodiscard]] RowType operator[](std::size_t index) {
         return tableau[index];

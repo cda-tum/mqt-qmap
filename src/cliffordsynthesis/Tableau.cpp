@@ -331,3 +331,7 @@ Tableau::Tableau(std::size_t nQubits) {
     tableau.resize(nQubits);
     this->tableau = Tableau::getDiagonalTableau(nQubits).tableau;
 }
+
+Tableau::Tableau(const std::string& description) {
+    fromString(description);
+}

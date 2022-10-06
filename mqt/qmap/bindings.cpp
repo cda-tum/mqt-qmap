@@ -102,17 +102,14 @@ cs::Results optimize(const py::object& circ, const Architecture& arch, cs::Confi
     return optimizer->optimalResults;
 }
 
-// c++ binding function
 cs::Results synthesize(const std::string& tableau, const Architecture& arch, cs::Configuration& config) {
-    auto tab = Tableau();
     try {
-        tab.fromString(tableau);
+        config.targetTableau = Tableau(tableau);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not parse tableau: " << e.what();
         throw std::invalid_argument(ss.str());
     }
-    config.targetTableau  = tab;
     config.initialTableau = Tableau(config.targetTableau.getQubitCount());
     config.nqubits        = config.targetTableau.getQubitCount();
     config.architecture   = arch;

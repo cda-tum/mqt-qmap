@@ -11,11 +11,7 @@
 
 class TestTableau: public testing::TestWithParam<std::string> {
 protected:
-    void SetUp() override {
-        tableau.fromString("['+ZI', '+IZ']");
-    }
-
-    Tableau tableau{};
+    Tableau tableau{"['+ZI', '+IZ']"};
     Tableau tableau2{};
 };
 
