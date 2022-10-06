@@ -337,7 +337,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .export_values()
             .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
 
-    py::enum_<logicbase::Result>(m, "Result")
+    py::enum_<logicbase::Result>(m, "SatSolverResult")
             .value("sat", logicbase::Result::SAT)
             .value("unsat", logicbase::Result::UNSAT)
             .value("ndef", logicbase::Result::NDEF)
