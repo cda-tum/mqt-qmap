@@ -9,7 +9,7 @@ def test_cliffordsynthesis_simple_binary_search() -> None:
     qc.h(0)
     qc.cx(0, 1)
 
-    qc_mapped, results = qmap.optimize_clifford(qc, strategy="minmax")
+    qc_mapped, results = qmap.synthesize_clifford(qc, strategy="minmax")
 
     assert results.result_circuit != ""
 
@@ -20,6 +20,6 @@ def test_cliffordsynthesis_simple_minimizer() -> None:
     qc.h(0)
     qc.cx(0, 1)
 
-    qc_mapped, results = qmap.optimize_clifford(qc, strategy="use_minimizer")
+    qc_mapped, results = qmap.synthesize_clifford(qc, strategy="use_minimizer")
 
     assert results.result_circuit != ""
