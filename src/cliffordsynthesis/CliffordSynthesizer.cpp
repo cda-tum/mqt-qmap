@@ -35,14 +35,10 @@ namespace cs {
 
         initResults();
 
-        initCouplingMap(configuration);
+        auto totalStart = std::chrono::high_resolution_clock::now();
+        initCouplingMaps(configuration);
 
-        auto                     totalStart = std::chrono::high_resolution_clock::now();
-        std::vector<CouplingMap> reducedMaps;
-        configuration.architecture.getReducedCouplingMaps(configuration.nqubits, reducedMaps);
-        auto subsets =
-                (configuration.chooseBest ? highestFidelityCouplingMap : reducedMaps);
-        for (const auto& subset: subsets) {
+        for (const auto& subset: couplingMaps) {
             std::vector<std::uint16_t> qubitMap{Architecture::getQubitList(subset)};
 
             DEBUG() << "Reduced Coupling Map" << (configuration.chooseBest ? " (best)" : "") << ": ";
@@ -289,11 +285,10 @@ namespace cs {
             DEBUG() << "SAT" << std::endl;
             return results;
         }
-        {
-            results.result = logicbase::Result::UNSAT;
-            DEBUG() << "UNSAT" << std::endl;
-            return results;
-        }
+
+        results.result = logicbase::Result::UNSAT;
+        DEBUG() << "UNSAT" << std::endl;
+        return results;
     }
 
     void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position) {
@@ -309,13 +304,12 @@ namespace cs {
                 logicbase::LogicTerm(tableau.getBVFrom(2 * data.nqubits), data.nqubits));
     }
 
-    void CliffordSynthesizer::initCouplingMap(const Configuration& configuration) {
-        if (configuration.architecture.isArchitectureAvailable()) {
-            auto& cm = highestFidelityCouplingMap.emplace_back();
+    void CliffordSynthesizer::initCouplingMaps(const Configuration& configuration) {
+        if (configuration.chooseBest) {
+            auto& cm = couplingMaps.emplace_back();
             configuration.architecture.getHighestFidelityCouplingMap(configuration.nqubits, cm);
         } else {
-            highestFidelityCouplingMap.emplace_back(
-                    getFullyConnectedMap(configuration.nqubits));
+            configuration.architecture.getReducedCouplingMaps(configuration.nqubits, couplingMaps);
         }
     }
     void CliffordSynthesizer::initResults() {

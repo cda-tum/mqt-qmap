@@ -65,11 +65,11 @@ namespace cs {
     protected:
         qc::QuantumComputation resultCircuit{};
 
-        std::vector<CouplingMap> highestFidelityCouplingMap;
+        std::vector<CouplingMap> couplingMaps{};
 
         virtual void initResults();
 
-        virtual void initCouplingMap(const Configuration& configuration);
+        virtual void initCouplingMaps(const Configuration& configuration);
 
         static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
     };

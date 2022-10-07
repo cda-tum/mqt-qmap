@@ -542,21 +542,27 @@ void Architecture::findCouplingLimit(std::uint16_t node, int curSum, const std::
 }
 
 void Architecture::getHighestFidelityCouplingMap(std::uint16_t subsetSize, CouplingMap& reducedMap) const {
-    if (!isArchitectureAvailable() || nqubits == subsetSize || properties.empty()) {
-        reducedMap = couplingMap;
-    } else {
-        double bestFidelity        = 0.0;
-        auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
+    if (!isArchitectureAvailable()) {
+        reducedMap = getFullyConnectedMap(subsetSize);
+        return;
+    }
 
-        for (const auto& qubitChoice: allConnectedSubsets) {
-            double      currentFidelity{};
-            CouplingMap map{};
-            getReducedCouplingMap(qubitChoice, map);
-            currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, properties);
-            if (currentFidelity > bestFidelity) {
-                reducedMap   = map;
-                bestFidelity = currentFidelity;
-            }
+    if (nqubits == subsetSize) {
+        reducedMap = couplingMap;
+        return;
+    }
+
+    double bestFidelity        = std::numeric_limits<double>::lowest();
+    auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
+
+    for (const auto& qubitChoice: allConnectedSubsets) {
+        double      currentFidelity{};
+        CouplingMap map{};
+        getReducedCouplingMap(qubitChoice, map);
+        currentFidelity = getAverageArchitectureFidelity(map, qubitChoice, properties);
+        if (currentFidelity > bestFidelity) {
+            reducedMap   = map;
+            bestFidelity = currentFidelity;
         }
     }
 }
