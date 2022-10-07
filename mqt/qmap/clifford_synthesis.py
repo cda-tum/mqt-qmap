@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from mqt.qmap.compile import extract_initial_layout_from_qasm
 from mqt.qmap.load_architecture import load_architecture
 from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
@@ -89,4 +90,8 @@ def synthesize_clifford(
     else:
         results = optimize(description, architecture, config)
 
-    return QuantumCircuit.from_qasm_str(results.result_circuit), results
+    circ = QuantumCircuit.from_qasm_str(results.result_circuit)
+    layout = extract_initial_layout_from_qasm(results.result_circuit, circ.qregs)
+    circ._layout = layout
+
+    return circ, results
