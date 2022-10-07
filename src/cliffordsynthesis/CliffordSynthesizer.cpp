@@ -211,51 +211,59 @@ namespace cs {
             results.result               = logicbase::Result::SAT;
             auto*                  model = lb->getModel();
             qc::QuantumComputation localResultCircuit{};
-            localResultCircuit.addQubitRegister(configuration.nqubits);
-            results.gateCount = 0;
-            results.depth     = 0;
-            results.fidelity  = 1;
-            for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
-                int oldGateCount = results.gateCount;
+            if (configuration.architecture.isArchitectureAvailable()) {
+                localResultCircuit.addQubitRegister(configuration.architecture.getNqubits());
+            } else {
+                localResultCircuit.addQubitRegister(configuration.nqubits);
+            }
+            results.gateCount = 0U;
+            results.depth     = 0U;
+            results.fidelity  = 1.;
+            assert(configuration.nqubits == qubitChoice.size());
+            for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
+                auto oldGateCount = results.gateCount;
                 TRACE() << "Gate Step: " << gateStep << std::endl
                         << " Actual gate count: " << results.gateCount << std::endl
                         << " Depth: " << results.depth << std::endl
                         << " Fidelity: " << results.fidelity << std::endl;
-                if (gateStep > 0) {
-                    for (unsigned int a = 0; a < configuration.nqubits; ++a) {
+                if (gateStep > 0U) {
+                    auto aIt = qubitChoice.cbegin();
+                    for (std::size_t a = 0U; a < configuration.nqubits; ++a) {
+                        const auto q0 = *aIt;
                         for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                             if (model->getBoolValue(gS[gateStep][Gates::toIndex(gate)][a], lb.get())) {
-                                localResultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, a, Gates::toOpType(gate));
+                                localResultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, q0, Gates::toOpType(gate));
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    results.fidelity *= (configuration.architecture.getSingleQubitFidelities()[a]);
+                                    results.fidelity *= (configuration.architecture.getSingleQubitFidelities()[q0]);
                                 }
-                                TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
+                                TRACE() << Gates::gateName(gate) << "(" << q0 << ")" << std::endl;
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    TRACE() << " Fidelity: " << configuration.architecture.getSingleQubitFidelities()[a]
+                                    TRACE() << " Fidelity: " << configuration.architecture.getSingleQubitFidelities()[q0]
                                             << std::endl;
                                 }
                                 ++results.gateCount;
                             }
                         }
-                        for (unsigned int b = 0; b < configuration.nqubits; ++b) {
+                        auto bIt = qubitChoice.cbegin();
+                        for (std::size_t b = 0U; b < configuration.nqubits; ++b) {
+                            const auto q1 = *bIt;
                             if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
                                 results.gateCount++;
                                 localResultCircuit.emplace_back<qc::StandardOperation>(
-                                        configuration.nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
+                                        configuration.nqubits, dd::Control{static_cast<dd::Qubit>(q0)}, q1, qc::X);
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    results.fidelity *=
-                                            (1 - std::log(configuration.architecture.getFidelityTable()[qubitChoice.at(a)]
-                                                                                                       [qubitChoice.at(b)]));
+                                    results.fidelity *= configuration.architecture.getFidelityTable()[q0][q1];
                                 }
-                                TRACE() << "X(" << a << "," << b << ")" << std::endl;
+                                TRACE() << "X(" << q0 << "," << q1 << ")" << std::endl;
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
                                     TRACE() << "Fidelity: "
-                                            << (1 - std::log(configuration.architecture.getFidelityTable()[qubitChoice.at(a)]
-                                                                                                          [qubitChoice.at(b)]))
+                                            << configuration.architecture.getFidelityTable()[q0][q1]
                                             << std::endl;
                                 }
                             }
+                            ++bIt;
                         }
+                        ++aIt;
                     }
                 }
                 if (oldGateCount < results.gateCount) {
