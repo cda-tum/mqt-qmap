@@ -63,18 +63,10 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
     CouplingMap cm{};
 
     arch.getHighestFidelityCouplingMap(arch.getNqubits(), cm);
-
     EXPECT_EQ(cm, arch.getCouplingMap());
 
-    arch.getHighestFidelityCouplingMap(1, cm);
-
-    const CouplingMap expected{};
-
-    if (arch_name.find(".csv") == std::string::npos) {
-        EXPECT_EQ(cm, arch.getCouplingMap());
-    } else {
-        EXPECT_NE(cm, arch.getCouplingMap());
-    }
+    arch.getHighestFidelityCouplingMap(1U, cm);
+    EXPECT_TRUE(cm.empty());
 }
 TEST_P(TestArchitecture, ReducedMaps) {
     auto&             arch_name = GetParam();
