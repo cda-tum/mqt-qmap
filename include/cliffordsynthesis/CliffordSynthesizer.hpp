@@ -43,8 +43,7 @@ namespace cs {
         virtual ~CliffordSynthesizer() = default;
         CliffordSynthesizer()          = default;
 
-        void synthesize(const Configuration& configuration);
-        void optimize(Configuration& configuration);
+        void synthesize(Configuration& configuration);
 
         void dumpResult(const std::string& outputFilename, qc::Format format) {
             qc::QuantumComputation splitResult;
@@ -66,6 +65,8 @@ namespace cs {
         qc::QuantumComputation resultCircuit{};
 
         std::vector<CouplingMap> highestFidelityCouplingMap;
+
+        void initConfiguration(Configuration& configuration);
 
         virtual void initResults();
 

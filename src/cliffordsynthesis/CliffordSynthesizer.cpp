@@ -20,18 +20,21 @@
 
 namespace cs {
 
-    void CliffordSynthesizer::optimize(Configuration& configuration) {
+    void CliffordSynthesizer::initConfiguration(Configuration& configuration) {
         // we dont already have a tableau
-        configuration.nqubits        = configuration.targetCircuit.getNqubits();
-        configuration.initialTableau = Tableau(configuration.nqubits);
-        configuration.targetTableau  = Tableau(configuration.targetCircuit);
-        synthesize(configuration);
+        if (configuration.initialTableau.empty()) {
+            configuration.nqubits        = configuration.targetCircuit.getNqubits();
+            configuration.initialTableau = Tableau(configuration.nqubits);
+            configuration.targetTableau  = Tableau(configuration.targetCircuit);
+        }
     }
 
-    void CliffordSynthesizer::synthesize(const Configuration& configuration) {
+    void CliffordSynthesizer::synthesize(Configuration& configuration) {
         TRACE() << "OptimizationStrategy: " << toString(configuration.strategy) << std::endl;
         TRACE() << "Target: " << toString(configuration.target) << std::endl;
         TRACE() << "ReasoningEngine: " << toString(configuration.method) << std::endl;
+
+        initConfiguration(configuration);
 
         initResults();
 
