@@ -87,7 +87,7 @@ TEST(TestCliffordSynthesis, SanityCheck) {
 
     configuration.targetCircuit = qc.clone();
 
-    cs.optimize(configuration);
+    cs.synthesize(configuration);
 
     EXPECT_EQ(cs.optimalResults.depth, 1);
 }
