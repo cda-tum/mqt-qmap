@@ -22,7 +22,7 @@ namespace cs {
 
     void CliffordSynthesizer::initConfiguration(Configuration& configuration) {
         // we dont already have a tableau
-        if (configuration.initialTableau.empty()) {
+        if (configuration.initialTableau.empty() || configuration.targetTableau.empty()) {
             configuration.nqubits        = configuration.targetCircuit.getNqubits();
             configuration.initialTableau = Tableau(configuration.nqubits);
             configuration.targetTableau  = Tableau(configuration.targetCircuit);

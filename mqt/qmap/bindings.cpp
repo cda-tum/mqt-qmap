@@ -73,42 +73,32 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
     return results;
 }
 
-cs::Results optimize(const py::object& circ, const Architecture& arch, cs::Configuration& config) {
-    loadQC(config.targetCircuit, circ);
-    config.nqubits      = config.targetCircuit.getNqubits();
-    config.architecture = arch;
+cs::Results synthesize(const py::object& description, const Architecture& arch, cs::Configuration& config) {
+    if (py::isinstance<py::str>(description)) { // either file or tableau
+        auto str = description.cast<std::string>();
+        std::string qasmEnding = ".qasm";
+        if (std::equal(qasmEnding.rbegin(), qasmEnding.rend(), str.rbegin())){ // file
+            loadQC(config.targetCircuit, description);
+            config.nqubits      = config.targetCircuit.getNqubits();
+            config.architecture = arch;
+        } else { // tableau
+            try {
+                config.targetTableau = Tableau(str);
+            } catch (std::exception const& e) {
+                std::stringstream ss{};
+                ss << "Could not parse tableau: " << e.what();
+                throw std::invalid_argument(ss.str());
+            }
 
-    std::unique_ptr<cs::CliffordSynthesizer> optimizer;
-    try {
-        optimizer = std::make_unique<cs::CliffordSynthesizer>();
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Could not construct optimizer: " << e.what();
-        throw std::invalid_argument(ss.str());
+            config.initialTableau = Tableau(config.targetTableau.getQubitCount());
+            config.nqubits        = config.targetTableau.getQubitCount();
+            config.architecture   = arch;
+        }
+    } else { // qiskit circuit
+        loadQC(config.targetCircuit, description);
+        config.nqubits      = config.targetCircuit.getNqubits();
+        config.architecture = arch;
     }
-
-    try {
-        optimizer->optimize(config);
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Error during optimization: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
-
-    return optimizer->optimalResults;
-}
-
-cs::Results synthesize(const std::string& tableau, const Architecture& arch, cs::Configuration& config) {
-    try {
-        config.targetTableau = Tableau(tableau);
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Could not parse tableau: " << e.what();
-        throw std::invalid_argument(ss.str());
-    }
-    config.initialTableau = Tableau(config.targetTableau.getQubitCount());
-    config.nqubits        = config.targetTableau.getQubitCount();
-    config.architecture   = arch;
 
     std::unique_ptr<cs::CliffordSynthesizer> optimizer;
     try {
@@ -377,7 +367,6 @@ PYBIND11_MODULE(pyqmap, m) {
 
     m.def("map", &map, "map a quantum circuit");
     m.def("synthesize", &synthesize, "synthesize a Clifford circuit");
-    m.def("optimize", &optimize, "optimize a Clifford circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
