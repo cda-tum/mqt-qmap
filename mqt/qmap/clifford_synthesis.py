@@ -81,7 +81,7 @@ def optimize_clifford(
 
 
 def synthesize_clifford(
-        description: str | StabilizerTable | Clifford | QuantumCircuit,
+        description: str | StabilizerTable | Clifford,
         arch: str | Arch | Architecture | Backend | None = None,
         calibration: str | BackendProperties | Target | None = None,
         target: str | TargetMetric = "gates",
