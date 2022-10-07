@@ -7,8 +7,8 @@
 
 #include "cliffordsynthesis/TargetMetricHandler.hpp"
 namespace cs {
-    void cs::ExactStrategy::runExactStrategy(int timesteps, const CouplingMap& reducedCM,
-                                             const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void cs::ExactStrategy::runExactStrategy(std::size_t timesteps, const CouplingMap& reducedCM,
+                                             const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         switch (configuration.strategy) {
             case OptimizationStrategy::UseMinimizer:
                 runMaxSat(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
@@ -26,13 +26,13 @@ namespace cs {
                 throw std::runtime_error("Unknown optimization strategy");
         }
     }
-    void ExactStrategy::runMaxSat(int timesteps, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void ExactStrategy::runMaxSat(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running minimizer" << std::endl;
         Results r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau,
                                                  configuration);
         TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
     }
-    void ExactStrategy::runStartLow(int timesteps, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void ExactStrategy::runStartLow(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running start low" << std::endl;
         Results r;
         while (r.result != logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
@@ -44,10 +44,10 @@ namespace cs {
             }
         }
     }
-    void ExactStrategy::runStartHigh(int timesteps, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void ExactStrategy::runStartHigh(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running start high" << std::endl;
         Results r;
-        int     oldTimesteps = timesteps;
+        auto    oldTimesteps = timesteps;
         while (r.result == logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
             DEBUG() << "Current t=" << timesteps << std::endl;
             r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau, configuration);
@@ -60,11 +60,11 @@ namespace cs {
             }
         }
     }
-    void ExactStrategy::runBinarySearch(int timesteps, const CouplingMap& reducedCM, const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void ExactStrategy::runBinarySearch(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running minmax" << std::endl;
         Results r;
-        int     t     = timesteps;
-        int     upper = timesteps;
+        auto    t     = static_cast<int>(timesteps);
+        auto    upper = static_cast<int>(timesteps);
         int     lower = 0;
         while (std::abs(upper - lower) > 1) {
             DEBUG() << "Current t=" << t << std::endl;

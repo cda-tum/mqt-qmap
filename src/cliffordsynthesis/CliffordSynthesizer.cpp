@@ -38,31 +38,28 @@ namespace cs {
 
         initResults();
 
-        initCouplingMap(configuration);
+        auto totalStart = std::chrono::high_resolution_clock::now();
+        initCouplingMaps(configuration);
 
-        auto                     totalStart = std::chrono::high_resolution_clock::now();
-        std::vector<CouplingMap> reducedMaps;
-        configuration.architecture.getReducedCouplingMaps(configuration.nqubits, reducedMaps);
-        auto subsets =
-                (configuration.chooseBest ? highestFidelityCouplingMap : reducedMaps);
-        for (const auto& subset: subsets) {
-            std::vector<std::uint16_t> qubitMap{Architecture::getQubitList(subset)};
+        for (const auto& subset: couplingMaps) {
+            auto qubitSet{Architecture::getQubitSet(subset)};
 
             DEBUG() << "Reduced Coupling Map" << (configuration.chooseBest ? " (best)" : "") << ": ";
             std::stringstream strings;
             Architecture::printCouplingMap(subset, strings);
             DEBUG() << strings.str();
-            DEBUG() << "Qubit Map: " << qubitMap;
+            DEBUG() << "Qubit Set: " << qubitSet;
             DEBUG() << "Coupling Map Fidelity: "
-                    << Architecture::getAverageArchitectureFidelity(configuration.architecture.getCouplingMap(),
-                                                                    std::set<std::uint16_t>(qubitMap.begin(), qubitMap.end()),
+                    << Architecture::getAverageArchitectureFidelity(configuration.architecture.getCouplingMap(), qubitSet,
                                                                     configuration.architecture.getProperties());
-            int timesteps =
-                    configuration.initialTimestep == 0 ? configuration.nqubits * configuration.nqubits : configuration.initialTimestep;
+            std::size_t timesteps = configuration.initialTimestep;
+            if (timesteps == 0U) {
+                timesteps = configuration.nqubits * configuration.nqubits;
+            }
             if (isExact(configuration.strategy)) {
-                ExactStrategy::runExactStrategy(timesteps, subset, qubitMap, configuration, *this);
+                ExactStrategy::runExactStrategy(timesteps, subset, qubitSet, configuration, *this);
             } else {
-                HeuristicStrategy::runHeuristicStrategy(subset, qubitMap, configuration, *this);
+                HeuristicStrategy::runHeuristicStrategy(subset, qubitSet, configuration, *this);
             }
 
             if (configuration.chooseBest && optimalResults.sat) {
@@ -77,16 +74,17 @@ namespace cs {
     }
 
     Results CliffordSynthesizer::mainOptimization(
-            std::uint32_t                                            timesteps,
-            const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-            const std::vector<std::uint16_t>&                        qubitChoice,
-            const Tableau& targetTableau, const Tableau& initialTableau,
+            std::size_t          timesteps,
+            const CouplingMap&   reducedCM,
+            const QubitSubset&   qubitChoice,
+            const Tableau&       targetTableau,
+            const Tableau&       initialTableau,
             const Configuration& configuration) {
-        std::unique_ptr<logicbase::LogicBlock> lb;
         using namespace logicbase;
-        bool success = false;
+        std::unique_ptr<LogicBlock> lb;
+        bool                        success = false;
         if (configuration.method == ReasoningEngine::Z3) {
-            logicbase::LogicTerm::termType = TermType::BASE;
+            LogicTerm::termType = TermType::BASE;
             if (configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter) {
                 logicutil::Params params;
                 params.addParam("pb.compile_equality", true);
@@ -111,7 +109,7 @@ namespace cs {
         logicbase::LogicMatrix3D gS{};
         logicbase::LogicMatrix3D gC{};
 
-        logicbase::LogicTerm changes = logicbase::LogicTerm(true);
+        auto changes = logicbase::LogicTerm(true);
 
         auto start = std::chrono::high_resolution_clock::now();
         /*
@@ -122,10 +120,10 @@ namespace cs {
         std::stringstream xName{};
         std::stringstream zName{};
         std::stringstream rName{};
-        for (unsigned int k = 0; k < timesteps + 1; ++k) {
+        for (std::size_t k = 0U; k < timesteps + 1U; ++k) {
             x.emplace_back();
             z.emplace_back();
-            for (unsigned int i = 0; i < configuration.nqubits; ++i) {
+            for (std::size_t i = 0U; i < configuration.nqubits; ++i) {
                 xName.str("");
                 zName.str("");
                 xName << "x_" << k << "_" << i;
@@ -147,22 +145,22 @@ namespace cs {
    * j qubit
    */
         std::stringstream gName{};
-        for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
             gS.emplace_back();
-            for (auto gate: Gates::SINGLE_QUBIT) {
+            for (const auto gate: Gates::SINGLE_QUBIT) {
                 gS.back().emplace_back();
-                for (int j = 0; j < configuration.nqubits; ++j) {
+                for (std::size_t j = 0U; j < configuration.nqubits; ++j) {
                     gName.str("");
                     gName << "g_" << gateStep << "_" << Gates::gateName(gate) << "_" << j;
                     gS.back().back().push_back(lb->makeVariable(gName.str()));
                 }
             }
         }
-        for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
+        for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
             gC.emplace_back();
-            for (int j = 0; j < configuration.nqubits; ++j) {
+            for (std::size_t j = 0U; j < configuration.nqubits; ++j) {
                 gC.back().emplace_back();
-                for (int l = 0; l < configuration.nqubits; ++l) {
+                for (std::size_t l = 0U; l < configuration.nqubits; ++l) {
                     gName.str("");
                     gName << "g_" << gateStep << "_CNOT_" << j << "_" << l;
                     gC.back().back().push_back(lb->makeVariable(gName.str()));
@@ -170,7 +168,7 @@ namespace cs {
             }
         }
 
-        assertTableau(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, initialTableau, 0);
+        assertTableau(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, initialTableau, 0U);
         assertTableau(SynthesisData{configuration.nqubits, timesteps, reducedCM, qubitChoice, lb, x, z, r, gS, gC}, targetTableau, timesteps);
 
         // assert gate limits
@@ -181,7 +179,7 @@ namespace cs {
 
         auto                          formulation = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> diff        = formulation - start;
-        INFO() << "Time to prduce Formulation: " << diff.count() << std::endl;
+        INFO() << "Time to produce Formulation: " << diff.count() << std::endl;
 
         lb->produceInstance();
 
@@ -214,53 +212,61 @@ namespace cs {
 
         if (result == Result::SAT) {
             results.result               = logicbase::Result::SAT;
-            Model*                 model = lb->getModel();
+            auto*                  model = lb->getModel();
             qc::QuantumComputation localResultCircuit{};
-            localResultCircuit.addQubitRegister(configuration.nqubits);
-            results.gateCount = 0;
-            results.depth     = 0;
-            results.fidelity  = 1;
-            for (unsigned int gateStep = 0; gateStep < timesteps + 1; ++gateStep) {
-                int oldGateCount = results.gateCount;
+            if (configuration.architecture.isArchitectureAvailable()) {
+                localResultCircuit.addQubitRegister(configuration.architecture.getNqubits());
+            } else {
+                localResultCircuit.addQubitRegister(configuration.nqubits);
+            }
+            results.gateCount = 0U;
+            results.depth     = 0U;
+            results.fidelity  = 1.;
+            assert(configuration.nqubits == qubitChoice.size());
+            for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
+                auto oldGateCount = results.gateCount;
                 TRACE() << "Gate Step: " << gateStep << std::endl
                         << " Actual gate count: " << results.gateCount << std::endl
                         << " Depth: " << results.depth << std::endl
                         << " Fidelity: " << results.fidelity << std::endl;
-                if (gateStep > 0) {
-                    for (unsigned int a = 0; a < configuration.nqubits; ++a) {
+                if (gateStep > 0U) {
+                    auto aIt = qubitChoice.cbegin();
+                    for (std::size_t a = 0U; a < configuration.nqubits; ++a) {
+                        const auto q0 = *aIt;
                         for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                             if (model->getBoolValue(gS[gateStep][Gates::toIndex(gate)][a], lb.get())) {
-                                localResultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, a, Gates::toOpType(gate));
+                                localResultCircuit.emplace_back<qc::StandardOperation>(configuration.nqubits, q0, Gates::toOpType(gate));
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    results.fidelity *= (configuration.architecture.getSingleQubitFidelities()[a]);
+                                    results.fidelity *= (configuration.architecture.getSingleQubitFidelities()[q0]);
                                 }
-                                TRACE() << Gates::gateName(gate) << "(" << a << ")" << std::endl;
+                                TRACE() << Gates::gateName(gate) << "(" << q0 << ")" << std::endl;
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    TRACE() << " Fidelity: " << configuration.architecture.getSingleQubitFidelities()[a]
+                                    TRACE() << " Fidelity: " << configuration.architecture.getSingleQubitFidelities()[q0]
                                             << std::endl;
                                 }
                                 ++results.gateCount;
                             }
                         }
-                        for (unsigned int b = 0; b < configuration.nqubits; ++b) {
+                        auto bIt = qubitChoice.cbegin();
+                        for (std::size_t b = 0U; b < configuration.nqubits; ++b) {
+                            const auto q1 = *bIt;
                             if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
                                 results.gateCount++;
                                 localResultCircuit.emplace_back<qc::StandardOperation>(
-                                        configuration.nqubits, dd::Control{static_cast<dd::Qubit>(a)}, b, qc::X);
+                                        configuration.nqubits, dd::Control{static_cast<dd::Qubit>(q0)}, q1, qc::X);
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
-                                    results.fidelity *=
-                                            (1 - std::log(configuration.architecture.getFidelityTable()[qubitChoice.at(a)]
-                                                                                                       [qubitChoice.at(b)]));
+                                    results.fidelity *= configuration.architecture.getFidelityTable()[q0][q1];
                                 }
-                                TRACE() << "X(" << a << "," << b << ")" << std::endl;
+                                TRACE() << "X(" << q0 << "," << q1 << ")" << std::endl;
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
                                     TRACE() << "Fidelity: "
-                                            << (1 - std::log(configuration.architecture.getFidelityTable()[qubitChoice.at(a)]
-                                                                                                          [qubitChoice.at(b)]))
+                                            << configuration.architecture.getFidelityTable()[q0][q1]
                                             << std::endl;
                                 }
                             }
+                            ++bIt;
                         }
+                        ++aIt;
                     }
                 }
                 if (oldGateCount < results.gateCount) {
@@ -292,15 +298,14 @@ namespace cs {
             DEBUG() << "SAT" << std::endl;
             return results;
         }
-        {
-            results.result = logicbase::Result::UNSAT;
-            DEBUG() << "UNSAT" << std::endl;
-            return results;
-        }
+
+        results.result = logicbase::Result::UNSAT;
+        DEBUG() << "UNSAT" << std::endl;
+        return results;
     }
 
-    void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position) {
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+    void CliffordSynthesizer::assertTableau(const SynthesisData& data, const Tableau& tableau, std::size_t position) {
+        for (auto a = 0U; a < data.nqubits; ++a) {
             data.lb->assertFormula(data.x[position][a] ==
                                    logicbase::LogicTerm(tableau.getBVFrom(a), data.nqubits));
             data.lb->assertFormula(
@@ -312,13 +317,12 @@ namespace cs {
                 logicbase::LogicTerm(tableau.getBVFrom(2 * data.nqubits), data.nqubits));
     }
 
-    void CliffordSynthesizer::initCouplingMap(const Configuration& configuration) {
-        if (configuration.architecture.isArchitectureAvailable()) {
-            auto& cm = highestFidelityCouplingMap.emplace_back();
+    void CliffordSynthesizer::initCouplingMaps(const Configuration& configuration) {
+        if (configuration.chooseBest) {
+            auto& cm = couplingMaps.emplace_back();
             configuration.architecture.getHighestFidelityCouplingMap(configuration.nqubits, cm);
         } else {
-            highestFidelityCouplingMap.emplace_back(
-                    getFullyConnectedMap(configuration.nqubits));
+            configuration.architecture.getReducedCouplingMaps(configuration.nqubits, couplingMaps);
         }
     }
     void CliffordSynthesizer::initResults() {

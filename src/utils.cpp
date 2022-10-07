@@ -5,7 +5,7 @@
 
 #include <utils.hpp>
 
-void Dijkstra::build_table(std::uint16_t n, const std::set<Edge>& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
+void Dijkstra::build_table(std::uint16_t n, const CouplingMap& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
     distanceTable.clear();
     distanceTable.resize(n, std::vector<double>(n, -1.));
 
@@ -114,10 +114,10 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited, const Coupling
     }
 }
 
-std::vector<std::set<std::uint16_t>>
-subsets(const std::set<std::uint16_t>& input, int length, const filter_function& filter) {
-    std::size_t                          n = input.size();
-    std::vector<std::set<std::uint16_t>> result;
+std::vector<QubitSubset>
+subsets(const QubitSubset& input, int length, const filter_function& filter) {
+    std::size_t              n = input.size();
+    std::vector<QubitSubset> result{};
 
     if (length == 0) {
         throw std::invalid_argument("Length of subset must be greater than 0");
@@ -187,9 +187,8 @@ void parse_line(const std::string& line, char separator, const std::set<char>& e
     result.push_back(word);
 }
 
-std::set<std::pair<std::uint16_t, std::uint16_t>>
-getFullyConnectedMap(std::uint16_t nQubits) {
-    std::set<std::pair<std::uint16_t, std::uint16_t>> result{};
+CouplingMap getFullyConnectedMap(std::uint16_t nQubits) {
+    CouplingMap result{};
     for (int q = 0; q < nQubits; ++q) {
         for (int p = q + 1; p < nQubits; ++p) {
             result.emplace(q, p);

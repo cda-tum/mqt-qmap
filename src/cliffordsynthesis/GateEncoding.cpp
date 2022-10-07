@@ -5,22 +5,27 @@
 
 #include "cliffordsynthesis/GateEncoding.hpp"
 void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
-    logicbase::LogicTerm changes = logicbase::LogicTerm(true);
+    auto changes = logicbase::LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
-    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+    for (std::size_t gateStep = 1U; gateStep < data.timesteps + 1U; ++gateStep) {
         std::vector<logicbase::LogicTerm> vars{};
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+        auto                              aIt = data.qubitChoice.cbegin();
+        for (std::size_t a = 0U; a < data.nqubits; ++a) {
             for (auto gate: Gates::SINGLE_QUBIT) {
                 vars.emplace_back(data.gS[gateStep][Gates::toIndex(gate)][a]);
             }
-            for (unsigned int b = 0; b < data.nqubits; ++b) {
-                if (a == b || data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
-                                      data.reducedCM.end()) {
+            auto bIt = data.qubitChoice.cbegin();
+            for (std::size_t b = 0; b < data.nqubits; ++b) {
+                const auto q0 = *aIt;
+                const auto q1 = *bIt;
+                ++bIt;
+                if (a == b || data.reducedCM.find({q0, q1}) == data.reducedCM.end()) {
                     continue;
                 }
                 vars.emplace_back(data.gTwoQubit[gateStep][a][b]);
             }
+            ++aIt;
         }
         data.lb->assertFormula(encodings::exactlyOneCmdr(
                 encodings::groupVars(vars, static_cast<std::size_t>(vars.size() / 2U)),
@@ -29,6 +34,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
 
     // GATE CONSTRAINTS
     for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        auto aIt = data.qubitChoice.cbegin();
         for (unsigned int a = 0; a < data.nqubits; ++a) {
             // NO GATE
             changes = (data.x[gateStep][a] == data.x[gateStep - 1][a]);
@@ -157,9 +163,11 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
             changes = logicbase::LogicTerm::implies(data.gS[gateStep][Gates::toIndex(Gates::GATES::Y)][a], changes);
             data.lb->assertFormula(changes);
 
+            auto bIt = data.qubitChoice.cbegin();
             for (unsigned int b = 0; b < data.nqubits; ++b) {
-                if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
-                    data.reducedCM.end()) {
+                const auto q0 = *aIt;
+                const auto q1 = *bIt;
+                if (data.reducedCM.find({q0, q1}) == data.reducedCM.end()) {
                     data.lb->assertFormula(!data.gTwoQubit[gateStep][a][b]);
                 } else {
                     // CNOT
@@ -186,12 +194,14 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
                     changes = logicbase::LogicTerm::implies(data.gTwoQubit[gateStep][a][b], changes);
                     data.lb->assertFormula(changes);
                 }
+                ++bIt;
             }
+            ++aIt;
         }
     }
 }
 void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
-    logicbase::LogicTerm changes = logicbase::LogicTerm(true);
+    auto changes = logicbase::LogicTerm(true);
     // CONSISTENCY
     // One gate per qubit, per step
     for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
@@ -233,6 +243,7 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
     // GATE CONSTRAINTS
     for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
         logicbase::LogicTerm rChanges = data.r[gateStep - 1];
+        auto                 aIt      = data.qubitChoice.cbegin();
         for (unsigned int a = 0; a < data.nqubits; ++a) {
             // NO GATE
             changes = logicbase::LogicTerm(true);
@@ -310,9 +321,11 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
             data.lb->assertFormula(changes);
 
             // CNOT
+            auto bIt = data.qubitChoice.cbegin();
             for (unsigned int b = 0; b < data.nqubits; ++b) {
-                if (data.reducedCM.find({data.qubitChoice.at(a), data.qubitChoice.at(b)}) ==
-                    data.reducedCM.end()) {
+                const auto q0 = *aIt;
+                const auto q1 = *bIt;
+                if (data.reducedCM.find({q0, q1}) == data.reducedCM.end()) {
                     data.lb->assertFormula(!data.gTwoQubit[gateStep][a][b]);
                 } else {
                     changes  = logicbase::LogicTerm(true);
@@ -331,7 +344,9 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
                     changes = logicbase::LogicTerm::implies(data.gTwoQubit[gateStep][a][b], changes);
                     data.lb->assertFormula(changes);
                 }
+                ++bIt;
             }
+            ++aIt;
         }
         data.lb->assertFormula(data.r[gateStep] == rChanges);
     }
@@ -342,8 +357,6 @@ void cs::GateEncoding::makeGateEncoding(const SynthesisData& data, const cs::Con
         case cs::TargetMetric::FIDELITY:
             makeMultiGateEncoding(data);
             break;
-        case cs::TargetMetric::GATES:
-        case cs::TargetMetric::TWO_QUBIT_GATES:
         default:
             makeSingleGateEncoding(data);
             break;

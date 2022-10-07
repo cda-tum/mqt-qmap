@@ -327,7 +327,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .export_values()
             .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
 
-    py::enum_<logicbase::Result>(m, "Result")
+    py::enum_<logicbase::Result>(m, "SatSolverResult")
             .value("sat", logicbase::Result::SAT)
             .value("unsat", logicbase::Result::UNSAT)
             .value("ndef", logicbase::Result::NDEF)
@@ -350,11 +350,11 @@ PYBIND11_MODULE(pyqmap, m) {
     py::class_<cs::Results>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
             .def_readwrite("sat", &cs::Results::result, "Whether the optimization problem was satisfiable")
-            .def_readwrite("result_circuit", &cs::Results::resultStringCircuit, "The resulting circuit")
+            .def_readwrite("result_circuit", &cs::Results::resultStringCircuit, "The resulting circuit (as OpenQASM string)")
             .def_readwrite("verbosity", &cs::Results::verbose, "Verbosity of the debug messages")
             .def_readwrite("choose_best", &cs::Results::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
             .def_readwrite("strategy", &cs::Results::strategy, "The strategy used to optimize the circuit")
-            .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'gates_only_cnot', 'depth', or 'fidelity'")
+            .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'two_qubit_gates', 'depth', or 'fidelity'")
             .def_readwrite("method", &cs::Results::method, "The synthesis method, at the moment only 'z3' is supported")
             .def_readwrite("qubits", &cs::Results::nqubits, "The number of qubits in the resulting circuit")
             .def_readwrite("initial_timestep", &cs::Results::initialTimesteps, "The number of initial timesteps allotted for synthesis")

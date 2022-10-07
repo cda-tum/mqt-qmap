@@ -10,18 +10,18 @@
 #include "Configuration.hpp"
 namespace cs {
     class ExactStrategy {
-        static void runMaxSat(int timesteps, const CouplingMap& reducedCM,
-                              const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
-        static void runStartLow(int timesteps, const CouplingMap& reducedCM,
-                                const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
-        static void runStartHigh(int timesteps, const CouplingMap& reducedCM,
-                                 const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
-        static void runBinarySearch(int timesteps, const CouplingMap& reducedCM,
-                                    const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runMaxSat(std::size_t timesteps, const CouplingMap& reducedCM,
+                              const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runStartLow(std::size_t timesteps, const CouplingMap& reducedCM,
+                                const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runStartHigh(std::size_t timesteps, const CouplingMap& reducedCM,
+                                 const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runBinarySearch(std::size_t timesteps, const CouplingMap& reducedCM,
+                                    const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
 
     public:
-        static void runExactStrategy(int timesteps, const CouplingMap& reducedCM,
-                                     const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runExactStrategy(std::size_t timesteps, const CouplingMap& reducedCM,
+                                     const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
     };
 
 } // namespace cs
