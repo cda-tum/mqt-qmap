@@ -15,7 +15,7 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
     if bin_path.exists():
         os.add_dll_directory(str(bin_path))
 
-from mqt.qmap.clifford_synthesis import synthesize_clifford, optimize_clifford
+from mqt.qmap.clifford_synthesis import optimize_clifford, synthesize_clifford
 from mqt.qmap.compile import compile
 from mqt.qmap.pyqmap import (
     Arch,
