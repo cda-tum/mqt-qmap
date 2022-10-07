@@ -26,11 +26,11 @@ namespace cs {
         TargetMetric         target             = TargetMetric::GATES;
         ReasoningEngine      method             = ReasoningEngine::Z3;
         logicbase::Result    result             = logicbase::Result::NDEF;
-        unsigned char        nqubits            = 0;
-        std::uint8_t         architectureQubits = 0;
-        int                  initialTimesteps   = 0;
-        int                  gateCount          = 0;
-        int                  depth              = 0;
+        std::uint16_t        nqubits            = 0U;
+        std::uint16_t        architectureQubits = 0U;
+        std::size_t          initialTimesteps   = 0U;
+        std::size_t          gateCount          = 0U;
+        std::size_t          depth              = 0U;
         bool                 sat                = false;
         double               fidelity           = 0.0;
         std::string          architectureName;
@@ -53,7 +53,7 @@ namespace cs {
         Results& operator=(const Results& other) = default;
         Results& operator=(Results&& other)      = default;
 
-        void dump(std::ostream& os) {
+        void dump(std::ostream& os) const {
             os << "{\"Results\":{" << std::endl;
             os << R"("verbosity":")" << verbose << "\"," << std::endl;
             os << R"("choose_best":")" << chooseBest << "\"," << std::endl;
@@ -141,7 +141,7 @@ namespace cs {
             return resultJSON;
         }
 
-        std::string getStrRepr() {
+        [[nodiscard]] std::string getStrRepr() const {
             std::stringstream ss;
             dump(ss);
             return ss.str();

@@ -56,10 +56,11 @@ namespace cs {
         Results optimalResults{};
 
         Results mainOptimization(
-                std::uint32_t                                            timesteps,
-                const std::set<std::pair<std::uint16_t, std::uint16_t>>& reducedCM,
-                const std::vector<std::uint16_t>&                        qubitChoice,
-                const Tableau& targetTableau, const Tableau& initialTableau,
+                std::size_t          timesteps,
+                const CouplingMap&   reducedCM,
+                const QubitSubset&   qubitChoice,
+                const Tableau&       targetTableau,
+                const Tableau&       initialTableau,
                 const Configuration& configuration);
 
     protected:
@@ -71,7 +72,7 @@ namespace cs {
 
         virtual void initCouplingMaps(const Configuration& configuration);
 
-        static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::uint32_t position);
+        static void assertTableau(const SynthesisData& data, const Tableau& tableau, std::size_t position);
     };
 
     class Gates {

@@ -10,17 +10,17 @@
 #include "Configuration.hpp"
 namespace cs {
     class HeuristicStrategy {
-        static void runSplitIter(const CouplingMap&                reducedCM,
-                                 const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runSplitIter(const CouplingMap& reducedCM, const QubitSubset& qubitChoice,
+                                 const Configuration& configuration, CliffordSynthesizer& synthesizer);
         static void runSplinter(int i, unsigned int circSplit, unsigned int split,
-                                const CouplingMap&                reducedCM,
-                                const std::vector<std::uint16_t>& qubitChoice,
-                                qc::QuantumComputation&           circuit,
+                                const CouplingMap&      reducedCM,
+                                const QubitSubset&      qubitChoice,
+                                qc::QuantumComputation& circuit,
                                 Results* r, CliffordSynthesizer* opt, const Configuration& configuration);
 
     public:
-        static void runHeuristicStrategy(const CouplingMap&                reducedCM,
-                                         const std::vector<std::uint16_t>& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer);
+        static void runHeuristicStrategy(const CouplingMap& reducedCM, const QubitSubset& qubitChoice,
+                                         const Configuration& configuration, CliffordSynthesizer& synthesizer);
     };
 
 } // namespace cs
