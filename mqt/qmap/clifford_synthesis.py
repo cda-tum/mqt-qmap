@@ -81,15 +81,15 @@ def optimize_clifford(
 
 
 def synthesize_clifford(
-        description: str | StabilizerTable | Clifford,
-        arch: str | Arch | Architecture | Backend | None = None,
-        calibration: str | BackendProperties | Target | None = None,
-        target: str | TargetMetric = "gates",
-        strategy: str | OptimizationStrategy = "use_minimizer",
-        choose_best: bool = False,
-        initial_timestep: int = 10,
-        nthreads: int = 1,
-        verbosity: int = 0,
+    description: str | StabilizerTable | Clifford,
+    arch: str | Arch | Architecture | Backend | None = None,
+    calibration: str | BackendProperties | Target | None = None,
+    target: str | TargetMetric = "gates",
+    strategy: str | OptimizationStrategy = "use_minimizer",
+    choose_best: bool = False,
+    initial_timestep: int = 10,
+    nthreads: int = 1,
+    verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """
     Synthesize a Clifford circuit using the Clifford synthesizer.
