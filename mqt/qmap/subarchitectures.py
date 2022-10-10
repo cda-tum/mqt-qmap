@@ -15,8 +15,9 @@ from itertools import combinations
 from typing import Dict, NewType, Set, Tuple
 
 import retworkx as rx
-from qiskit.providers import Backend
 from mqt.qmap import Architecture
+
+from qiskit.providers import Backend
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
@@ -110,7 +111,7 @@ class SubarchitectureOrder:
         return so
 
     @classmethod
-    def from_coupling_map(cls, coupling_map : set[tuple[int, int]] | list[tuple[int, int]]) -> SubarchitectureOrder:
+    def from_coupling_map(cls, coupling_map: set[tuple[int, int]] | list[tuple[int, int]]) -> SubarchitectureOrder:
         """Construct SubarchitectureOrder from coupling map defined as set of tuples of connected qubits."""
         num_nodes = max(max(int(u), int(v)) for u, v in coupling_map)
         graph = rx.PyGraph()
@@ -120,13 +121,13 @@ class SubarchitectureOrder:
         return cls.from_retworkx_graph(graph)
 
     @classmethod
-    def from_backend(cls, backend : Backend) -> SubarchitectureOrder:
+    def from_backend(cls, backend: Backend) -> SubarchitectureOrder:
         """Construct SubarchitectureOrder from coupling map defined by qiskit backend."""
         coupling_map = {(a, b) for a, b in backend.configuration().coupling_map}
         return cls.from_coupling_map(coupling_map)
 
     @classmethod
-    def from_qmap_architecture(cls, arch : Architecture) -> SubarchitectureOrder:
+    def from_qmap_architecture(cls, arch: Architecture) -> SubarchitectureOrder:
         """Construct SubarchitectureOrder from qmap Architecture object."""
         return cls.from_coupling_map(arch.coupling_map)
 
