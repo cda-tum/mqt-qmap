@@ -8,6 +8,7 @@ Furthermore, if you use any of the particular algorithms such as
 
 - the heuristic mapping scheme using teleportation :cite:labelpar:`hillmichExlpoitingQuantumTeleportation2021`
 - the search space limitation techniques of the exact mapper (some of which are enabled per default) :cite:labelpar:`burgholzer2022limitingSearchSpace`
+- the method for finding (near-)optimal subarchitectures :cite:labelpar:`pehamOptimalSubarchitectures`
 
 please consider citing their respective papers as well. A full list of related papers is given below.
 

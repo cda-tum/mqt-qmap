@@ -23,35 +23,37 @@ from qiskit.providers import Backend
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
+#: Architectures for which precomputed orderings are available
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
 
 
 class SubarchitectureOrder:
-    """
-    Class representing partial order of Subarchitectures.
+    """Class representing partial order of Subarchitectures."""
 
-    Attributes
-    ----------
-    arch : Architecture
-        quantum computing architecture whose subarchitectures should be ordered
-    sgs: list[list[Architecture]]
-        subarchitectures of arch. sgs[i][j]: the j-th subarchitecture of size i
-    subarch_order : dict[tuple[int, int], list[tuple[int, int]]]
-        ordering of variables according to subarchitecture order.
-        tuples (n, i) are indices into self.sgs
-    desirable_subarchitectures: dict[tuple[int, int], list[tuple[int, int]]]
-        mapping of indices (n, i) to its desirable subarchitectures
-        tuples (n, i) are indices into self.sgs
+    # Attributes
+    # ----------
+    # arch : rx.PyGraph
+    #     quantum computing architecture whose subarchitectures should be ordered
+    # sgs: list[list[Architecture]]
+    #     subarchitectures of arch. sgs[i][j]: the j-th subarchitecture of size i
+    # subarch_order : dict[tuple[int, int], list[tuple[int, int]]]
+    #     ordering of variables according to subarchitecture order.
+    #     tuples (n, i) are indices into self.sgs
+    # desirable_subarchitectures: dict[tuple[int, int], list[tuple[int, int]]]
+    #     mapping of indices (n, i) to its desirable subarchitectures
+    #     tuples (n, i) are indices into self.sgs
 
-    Methods
-    -------
-    optimal_candidates(nqubits)
-        return optimal candidate for mapping quantum circuits of a given size
-    covering(nqubits, size)
-        return a covering for nqubit circuits limited by size
-    store_library(lib_name)
-        serialize this object to avoid recomputing the ordering in the future
-    """
+    # Methods
+    # -------
+    # from
+    # optimal_candidates(nqubits)
+    #     return optimal candidate for mapping quantum circuits of a given size
+    # covering(nqubits, size)
+    #     return a covering for nqubit circuits limited by size
+    # store_library(lib_name)
+    #     serialize this object to avoid recomputing the ordering in the future
+
+    # """
 
     __inactive_color: str = "#1f78b4"
     __active_color: str = "#faf18e"
