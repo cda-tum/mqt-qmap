@@ -51,6 +51,18 @@ class SubarchitectureOrder:
         serialize this object to avoid recomputing the ordering in the future
     """
 
+    def __init__(self) -> None:
+        """Default constructor."""
+        self.arch: rx.PyGraph = rx.PyGraph()
+        self.subarch_order: PartialOrder = PartialOrder({})
+        self.desirable_subarchitectures: PartialOrder = PartialOrder({})
+        self.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
+
+        self.__compute_subarchs()
+        self.__compute_subarch_order()
+        self.__compute_desirable_subarchitectures()
+        return
+
     # def __init__(self, arch: rx.PyGraph | list[tuple[int, int]] | str | pathlib.Path | Backend | Architecture):
     #     """
     #     Initialize the partial order.
@@ -101,9 +113,6 @@ class SubarchitectureOrder:
         """Construct SubarchitectureOrder from retworkx graph."""
         so = SubarchitectureOrder()
         so.arch = graph
-        so.subarch_order: PartialOrder = PartialOrder({})
-        so.desirable_subarchitectures: PartialOrder = PartialOrder({})
-        so.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
 
         so.__compute_subarchs()
         so.__compute_subarch_order()
@@ -150,6 +159,7 @@ class SubarchitectureOrder:
             ref = resources.files("mqt.qmap") / "libs" / (path + ".pickle")
             with resources.as_file(ref) as lib_path:
                 return cls.from_library(lib_path)
+        return SubarchitectureOrder()
 
     def optimal_candidates(self, nqubits: int) -> list[rx.PyGraph]:
         """Return optimal subarchitecture candidate.
@@ -344,11 +354,11 @@ def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
     """Load the precomputed ibm guadalupe subarchitectures."""
     ref = resources.files("mqt.qmap") / "libs" / "ibm_guadalupe_16.pickle"
     with resources.as_file(ref) as path:
-        return SubarchitectureOrder(path)
+        return SubarchitectureOrder.from_library(path)
 
 
 def rigetti_16_subarchitectures() -> SubarchitectureOrder:
     """Load the precomputed rigetti subarchitectures."""
     ref = resources.files("mqt.qmap") / "libs" / "rigetti_16.pickle"
     with resources.as_file(ref) as path:
-        return SubarchitectureOrder(path)
+        return SubarchitectureOrder.from_library(path)
