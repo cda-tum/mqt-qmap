@@ -5,7 +5,7 @@ from mqt.qmap.subarchitectures import SubarchitectureOrder
 
 @pytest.fixture
 def ibm_guadalupe() -> SubarchitectureOrder:
-    return SubarchitectureOrder(
+    return SubarchitectureOrder.from_coupling_map(
         [
             [0, 1],
             [1, 2],
@@ -28,6 +28,61 @@ def ibm_guadalupe() -> SubarchitectureOrder:
 
 
 @pytest.fixture
+def rigetti16() -> SubarchitectureOrder:
+    return SubarchitectureOrder.from_coupling_map(
+        [
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4],
+            [4, 5],
+            [5, 6],
+            [6, 7],
+            [7, 8],
+            [8, 9],
+            [9, 10],
+            [10, 11],
+            [11, 12],
+            [12, 13],
+            [13, 14],
+            [14, 15],
+            [0, 15],
+            [3, 12],
+            [4, 11],
+        ]
+    )
+
+
+@pytest.fixture
+def rigetti16_opt() -> rx.PyGraph:
+    cm = (
+        [
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4],
+            [4, 5],
+            [5, 6],
+            [6, 7],
+            [7, 8],
+            [8, 9],
+            [9, 10],
+            [10, 11],
+            [11, 12],
+            [12, 13],
+            [3, 12],
+            [4, 11],
+        ]
+    )
+
+    num_nodes = max(max(int(u), int(v)) for u, v in cm)
+    graph = rx.PyGraph()
+    graph.add_nodes_from(list(range(num_nodes + 1)))
+    graph.add_edges_from_no_data([tuple(edge) for edge in cm])
+    return graph
+
+
+@pytest.fixture
 def singleton_graph() -> rx.PyGraph:
     g = rx.PyGraph()
     g.add_node(0)
@@ -37,7 +92,7 @@ def singleton_graph() -> rx.PyGraph:
 def test_singleton_graph(singleton_graph: rx.PyGraph) -> None:
     """Verify that singleton graph has trivial ordering."""
 
-    order = SubarchitectureOrder(singleton_graph)
+    order = SubarchitectureOrder.from_retworkx_graph(singleton_graph)
 
     assert len(order.sgs) == 2
     assert len(order.sgs[0]) == 0
@@ -48,7 +103,7 @@ def test_singleton_graph(singleton_graph: rx.PyGraph) -> None:
 def test_two_node_graph(singleton_graph: rx.PyGraph) -> None:
     """Verify ordering for graph with two nodes and one edge."""
 
-    order = SubarchitectureOrder([[0, 1]])
+    order = SubarchitectureOrder.from_coupling_map([[0, 1]])
     assert len(order.sgs) == 3
     assert len(order.sgs[0]) == 0
     assert len(order.sgs[1]) == 1
@@ -58,7 +113,6 @@ def test_two_node_graph(singleton_graph: rx.PyGraph) -> None:
 
 
 def test_ibm_guadalupe_opt(ibm_guadalupe: SubarchitectureOrder) -> None:
-
     opt_cand_9 = ibm_guadalupe.optimal_candidates(9)
     assert len(opt_cand_9) == 2
     assert opt_cand_9[0].num_nodes() == 15
@@ -77,3 +131,11 @@ def test_ibm_guadalupe_cov(ibm_guadalupe: SubarchitectureOrder) -> None:
                 covered = True
                 break
         assert covered
+
+
+def test_rigetti16_opt(rigetti16: SubarchitectureOrder, rigetti16_opt: rx.PyGraph) -> None:
+    opt = rigetti16.optimal_candidates(10)
+    assert len(opt) == 1
+
+    opt_cand = opt[0]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
