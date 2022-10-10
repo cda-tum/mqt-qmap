@@ -15,7 +15,9 @@ from itertools import combinations
 from typing import Dict, NewType, Set, Tuple
 
 import retworkx as rx
+from matplotlib import figure
 from mqt.qmap import Architecture
+from retworkx import visualization
 
 from qiskit.providers import Backend
 
@@ -51,8 +53,11 @@ class SubarchitectureOrder:
         serialize this object to avoid recomputing the ordering in the future
     """
 
+    __inactive_color: str = "#1f78b4"
+    __active_color: str = "#faf18e"
+
     def __init__(self) -> None:
-        """Default constructor."""
+        """Construct SubarchitectureOrder with default fields."""
         self.arch: rx.PyGraph = rx.PyGraph()
         self.subarch_order: PartialOrder = PartialOrder({})
         self.desirable_subarchitectures: PartialOrder = PartialOrder({})
@@ -62,51 +67,6 @@ class SubarchitectureOrder:
         self.__compute_subarch_order()
         self.__compute_desirable_subarchitectures()
         return
-
-    # def __init__(self, arch: rx.PyGraph | list[tuple[int, int]] | str | pathlib.Path | Backend | Architecture):
-    #     """
-    #     Initialize the partial order.
-
-    #     If an architecture is given, the order will be computed for this
-    #     specific architecture.
-    #     If a str or a path is given instead, the ordering will be loaded from the
-    #     subarchitecture library of that name.
-    #     """
-    #     if type(arch) is str:
-    #         if arch in precomputed_backends:
-    #             ref = resources.files("mqt.qmap") / "libs" / (arch + ".pickle")
-    #             with resources.as_file(ref) as path:
-    #                 self.__load_library(path)
-    #         else:
-    #             self.__load_library(arch)
-    #         return
-
-    #     if isinstance(arch, pathlib.Path):
-    #         self.__load_library(arch)
-    #         return
-
-    #     print(type(arch))
-
-    #     if isinstance(arch, rx.PyGraph):
-    #         self.arch = arch
-    #     elif isinstance(arch, list) or isinstance(arch, Backend) or isinstance(arch, Architecture):
-    #         if isinstance(arch, Backend):
-    #             arch = {(a, b) for a, b in arch.configuration().coupling_map}
-    #         elif isinstance(arch, Architecture):
-    #             arch = arch.coupling_map
-    #         num_nodes = max(max(int(u), int(v)) for u, v in arch)
-    #         self.arch = rx.PyGraph()
-    #         self.arch.add_nodes_from(list(range(num_nodes + 1)))
-    #         self.arch.add_edges_from_no_data([tuple(edge) for edge in arch])
-
-    #     self.subarch_order: PartialOrder = PartialOrder({})
-    #     self.desirable_subarchitectures: PartialOrder = PartialOrder({})
-    #     self.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
-
-    #     self.__compute_subarchs()
-    #     self.__compute_subarch_order()
-    #     self.__compute_desirable_subarchitectures()
-    #     return
 
     @classmethod
     def from_retworkx_graph(cls, graph: rx.PyGraph) -> SubarchitectureOrder:
@@ -222,6 +182,28 @@ class SubarchitectureOrder:
         else:
             with pathlib.Path(lib_name).open("wb") as f:
                 pickle.dump(self, file=f)
+
+    def draw_subarchitecture(self, subarchitecture: rx.PyGraph | tuple[int, int]) -> figure.Figure:
+        """Return matplotlib figure showing subarchitecture within the entire architecture.
+
+        Nodes that are part of the subarchitecture are drawn yellow.
+        Nodes that are not part of the subarchitecture are drawn blue.
+        """
+        if isinstance(subarchitecture, tuple):
+            subarchitecture = self.sgs[subarchitecture[0]][subarchitecture[1]]
+        colors = [SubarchitectureOrder.__inactive_color for node in range(self.arch.num_nodes())]
+        for node in subarchitecture.nodes():
+            colors[node] = SubarchitectureOrder.__active_color
+            return visualization.mpl_draw(subarchitecture, node_color=colors)
+
+    def draw_subarchitectures(self, subarchitectures: list[rx.PyGraph] | list[tuple[int, int]]) -> list[figure.Figure]:
+        """Return matplotlib figures showing subarchitectures within the entire architecture.
+
+        For each subarchitecture one figure is drawn.
+        Nodes that are part of the subarchitecture are drawn yellow.
+        Nodes that are not part of the subarchitecture are drawn blue.
+        """
+        return [self.draw_subarchitecture(subarchitecture) for subarchitecture in subarchitectures]
 
     def __compute_subarchs(self) -> None:
         self.sgs: list[list[rx.PyGraph]] = [[] for i in range(self.arch.num_nodes() + 1)]
