@@ -24,7 +24,7 @@ from qiskit.providers import Backend
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
 #: Architectures for which precomputed orderings are available
-precomputed_backends = ["rigetti_16", "ibm_guadalupe_16", "sycamore_23"]
+precomputed_backends = ["rigetti_16", "ibm_guadalupe_16"]
 
 
 class SubarchitectureOrder:
