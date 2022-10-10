@@ -17,7 +17,6 @@ from typing import Dict, NewType, Set, Tuple
 import retworkx as rx
 from matplotlib import figure
 from mqt.qmap import Architecture
-from retworkx import visualization
 
 from qiskit.providers import Backend
 
@@ -196,7 +195,7 @@ class SubarchitectureOrder:
         colors = [SubarchitectureOrder.__inactive_color for node in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
             colors[node] = SubarchitectureOrder.__active_color
-            return visualization.mpl_draw(subarchitecture, node_color=colors)
+            return rx.visualization.mpl_draw(subarchitecture, node_color=colors)
 
     def draw_subarchitectures(self, subarchitectures: list[rx.PyGraph] | list[tuple[int, int]]) -> list[figure.Figure]:
         """Return matplotlib figures showing subarchitectures within the entire architecture.
