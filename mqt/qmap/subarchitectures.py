@@ -183,6 +183,7 @@ class SubarchitectureOrder:
         else:
             with pathlib.Path(lib_name).open("wb") as f:
                 pickle.dump(self, file=f)
+        return
 
     def draw_subarchitecture(self, subarchitecture: rx.PyGraph | tuple[int, int]) -> figure.Figure:
         """Return matplotlib figure showing subarchitecture within the entire architecture.
@@ -195,7 +196,7 @@ class SubarchitectureOrder:
         colors = [SubarchitectureOrder.__inactive_color for node in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
             colors[node] = SubarchitectureOrder.__active_color
-            return rx.visualization.mpl_draw(subarchitecture, node_color=colors)
+        return rx.visualization.mpl_draw(subarchitecture, node_color=colors)
 
     def draw_subarchitectures(self, subarchitectures: list[rx.PyGraph] | list[tuple[int, int]]) -> list[figure.Figure]:
         """Return matplotlib figures showing subarchitectures within the entire architecture.
