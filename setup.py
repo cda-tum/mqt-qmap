@@ -107,7 +107,7 @@ setup(
         "qiskit-terra>=0.20.2,<0.22.0",
         "retworkx>=0.11.0,<0.12.0",
         "importlib_resources>=5.9; python_version < '3.10'",
-        "matplotlib>=3.6,<3.7",
+        "matplotlib>=3.5,<3.7",
     ],
     extras_require={
         "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
