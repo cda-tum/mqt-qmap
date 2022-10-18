@@ -60,13 +60,17 @@ void Mapper::createLayers() {
         unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
         size_t         layer  = 0;
 
+        // methods of layering described in methods of layering described in https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
         switch (config.layering) {
             case Layering::IndividualGates:
             case Layering::None:
+                // each gate is put in a new layer
                 layers.emplace_back();
                 layers.back().emplace_back(control, target, gate.get());
                 break;
             case Layering::DisjointQubits:
+                // gates are put in the last layer (from the back of the circuit) in which all of its qubits are not yet used by another gate
+                // in a circuit diagram this can be thought of shifting all gates as far left as possible and defining each column of gates as one layer
                 if (singleQubit) {
                     layer                = lastLayer.at(target) + 1;
                     lastLayer.at(target) = layer;
@@ -81,6 +85,7 @@ void Mapper::createLayers() {
                 layers.at(layer).emplace_back(control, target, gate.get());
                 break;
             case Layering::OddGates:
+                // every other gate is put in a new layer
                 if (even) {
                     layers.emplace_back();
                     layers.back().emplace_back(control, target, gate.get());

@@ -26,6 +26,12 @@ constexpr unsigned short MAX_DEVICE_QUBITS = 128;
 class Mapper {
 protected:
     // internal structures
+    
+    /**
+     * @brief Structure to store an operation on 1 or 2 logical qubits.
+     * 
+     * For a single qubit operation `control` is set to `-1`
+     */
     struct Gate {
         short          control = -1;
         unsigned short target  = 0;
@@ -42,13 +48,39 @@ protected:
         }
     };
 
+    /**
+     * @brief The quantum circuit to be mapped
+     */
     qc::QuantumComputation qc;
+    /**
+     * @brief The quantum architecture on which to map the circuit
+     */
     Architecture&          architecture;
 
+    /**
+     * @brief The resulting quantum circuit after mapping
+     */
     qc::QuantumComputation         qcMapped;
+    /**
+     * @brief The gates of the circuit split into layers
+     * 
+     * Each entry in the outer vector corresponds to 1 layer, containing all its gates in an inner vector
+     */
     std::vector<std::vector<Gate>> layers{};
 
+    /**
+     * @brief containing the logical qubit currently mapped to each physical qubit.
+     * `qubits[physical_qubit] = logical_qubit`
+     * 
+     * The inverse of `locations`
+     */
     std::array<short, MAX_DEVICE_QUBITS>  qubits{};
+    /**
+     * @brief containing the logical qubit currently mapped to each physical qubit.
+     * `locations[logical_qubit] = physical_qubit`
+     * 
+     * The inverse of `qubits`
+     */
     std::array<short, MAX_DEVICE_QUBITS>  locations{};
     std::array<double, MAX_DEVICE_QUBITS> fidelities{};
 
@@ -56,27 +88,74 @@ protected:
 
     MappingResults results{};
 
+    /**
+     * @brief Initialize the results structure with circuit names, registers in the output circuit, gate counts, etc.
+     */
     virtual void initResults();
-
+    
+    /**
+     * @brief Splits the circuit into layers according to the method set in `config.layering` and saves the result in `layers`
+     * 
+     * methods of layering described in https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
+     * 
+     * Layering::IndividualGates/Layering::None -> each gate on separate layer
+     * Layering::DisjointQubits -> each layer contains gates acting on only a disjoint set of qubits 
+     * Layering::OddGates -> always 2 gates per layer (assigned by order of original gate index in the circuit)
+     * Layering::QubitTriangle -> intended for architectures which contain triangles of physical qubits, each layer contains only gates acting on 3 distinct qubits
+     */
     virtual void createLayers();
-
+    
+    /**
+     * @brief Get the index of the next layer after the given index containing a gate acting on more than one qubit
+     */
     virtual std::size_t getNextLayer(std::size_t idx);
 
+    /**
+     * @brief adding additional qubits to the result circuit if architecture has more physical qubits than the original 
+     * circuit has logical qubits
+     */
     virtual void placeRemainingArchitectureQubits();
+    
+    /**
+     * @brief finalizes the circuit after mapping 
+     * (e.g. adding unused qubits if architecture has more physical qubits than mapped circuit has logical qubits)
+     */
     virtual void finalizeMappedCircuit();
-
+    
+    /**
+     * @brief count number of elementary gates and cnots in circuit and save the results in `info.gates` and `info.cnots`
+     */
     virtual void countGates(const qc::QuantumComputation& circuit, MappingResults::CircuitInfo& info) {
         countGates(circuit.cbegin(), circuit.cend(), info);
     }
+    /**
+     * @brief count number of elementary gates and cnots in circuit and save the results in `info.gates` and `info.cnots`
+     */
     virtual void countGates(decltype(qcMapped.cbegin()) it, const decltype(qcMapped.cend())& end, MappingResults::CircuitInfo& info);
 
+    /**
+     * @brief performs optimizations on the circuit before mapping
+     * 
+     * @param config contains settings of the current mapping run (e.g. `config.preMappingOptimizations` controls if pre-mapping optimizations are performed)
+     */
     virtual void preMappingOptimizations(const Configuration& config);
+    
+    /**
+     * @brief performs optimizations on the circuit before mapping
+     * 
+     * @param config contains settings of the current mapping run (e.g. `config.postMappingOptimizations` controls if post-mapping optimizations are performed)
+     */
     virtual void postMappingOptimizations(const Configuration& config);
 
 public:
     Mapper(const qc::QuantumComputation& qc, Architecture& architecture);
     virtual ~Mapper() = default;
-
+    
+    /**
+     * @brief map the circuit passed at initialization to the architecture
+     * 
+     * @param config the settings for this mapping run (controls e.g. layering methods, pre- and post-optimizations, etc.)
+     */
     virtual void map(const Configuration& config) = 0;
 
     virtual void dumpResult(const std::string& outputFilename) {
