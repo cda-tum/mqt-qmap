@@ -284,6 +284,7 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
 
         if (controlLocation == DEFAULT_POSITION && targetLocation == DEFAULT_POSITION) {
             std::set<Edge> possibleEdges{};
+            // gather all edges in the architecture for which both qubits are unmapped
             for (const auto& edge: architecture.getCouplingMap()) {
                 if (qubits.at(edge.first) == DEFAULT_POSITION && qubits.at(edge.second) == DEFAULT_POSITION) {
                     possibleEdges.emplace(edge);
@@ -292,6 +293,7 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
             std::pair<unsigned short, unsigned short> chosenEdge;
 
             if (possibleEdges.empty()) {
+                // map to 2 qubits with minimal distance
                 double bestScore = std::numeric_limits<int>::max();
 
                 for (int i = 0; i < architecture.getNqubits(); i++) {
@@ -322,9 +324,12 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
         } else if (targetLocation == DEFAULT_POSITION) {
             mapToMinDistance(gate.control, gate.target);
         }
+        // TODO: use HeuristicMapper::Node::updateHeuristicCost instead to have heuristic function implementation isolated to one place
         node.costHeur = std::max(node.costHeur, distanceOnArchitectureOfLogicalQubits(gate.control, gate.target));
     }
 
+    // if all considered qubit pairs are mapped next to each other, the mapping is done
+    // (at most separated by 1 edge possibly directed in the wrong direction requiring 1 reversing gate)
     node.done = node.costHeur <= COST_DIRECTION_REVERSE;
 }
 
@@ -367,6 +372,7 @@ HeuristicMapper::Node HeuristicMapper::AstarMap(long layer) {
     Node result = nodes.top();
     nodes.pop();
 
+    // clear nodes
     while (!nodes.empty()) {
         nodes.pop();
     }
@@ -381,6 +387,7 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
         used_swaps.emplace_back(architecture.getNqubits());
     }
 
+    // set up new teleportation qubits
     std::set<Edge> perms = architecture.getCouplingMap();
     architecture.getCurrentTeleportations().clear();
     architecture.getTeleportationQubits().clear();
