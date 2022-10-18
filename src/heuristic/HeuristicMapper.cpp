@@ -327,8 +327,8 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
         // TODO: use HeuristicMapper::Node::updateHeuristicCost instead to have heuristic function implementation isolated to one place
         node.costHeur = std::max(node.costHeur, distanceOnArchitectureOfLogicalQubits(gate.control, gate.target));
     }
-    
-    // if all considered qubits pairs are mapped next to each other the mapping is done 
+
+    // if all considered qubits pairs are mapped next to each other the mapping is done
     // (at most separated by 1 edge possibly directed in the wrong direction requiring 1 reversing gate)
     node.done = node.costHeur <= COST_DIRECTION_REVERSE;
 }
@@ -371,7 +371,7 @@ HeuristicMapper::Node HeuristicMapper::AstarMap(long layer) {
 
     Node result = nodes.top();
     nodes.pop();
-    
+
     // clear nodes
     while (!nodes.empty()) {
         nodes.pop();
@@ -386,7 +386,7 @@ void HeuristicMapper::expandNode(const std::vector<unsigned short>& consideredQu
     for (int p = 0; p < architecture.getNqubits(); ++p) {
         used_swaps.emplace_back(architecture.getNqubits());
     }
-    
+
     // set up new teleportation qubits
     std::set<Edge> perms = architecture.getCouplingMap();
     architecture.getCurrentTeleportations().clear();
