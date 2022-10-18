@@ -328,7 +328,7 @@ void HeuristicMapper::mapUnmappedGates(long layer, HeuristicMapper::Node& node, 
         node.costHeur = std::max(node.costHeur, distanceOnArchitectureOfLogicalQubits(gate.control, gate.target));
     }
 
-    // if all considered qubits pairs are mapped next to each other the mapping is done
+    // if all considered qubit pairs are mapped next to each other, the mapping is done
     // (at most separated by 1 edge possibly directed in the wrong direction requiring 1 reversing gate)
     node.done = node.costHeur <= COST_DIRECTION_REVERSE;
 }

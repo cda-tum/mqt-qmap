@@ -30,7 +30,7 @@ protected:
     /**
      * @brief Structure to store an operation on 1 or 2 logical qubits.
      *
-     * For a single qubit operation `control` is set to `-1`
+     * For a single-qubit operation `control` is set to `-1`
      */
     struct Gate {
         short          control = -1;
@@ -99,9 +99,9 @@ protected:
      * methods of layering described in https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
      *
      * Layering::IndividualGates/Layering::None -> each gate on separate layer
-     * Layering::DisjointQubits -> each layer contains gates acting on only a disjoint set of qubits
+     * Layering::DisjointQubits -> each layer contains gates only acting on a disjoint set of qubits
      * Layering::OddGates -> always 2 gates per layer (assigned by order of original gate index in the circuit)
-     * Layering::QubitTriangle -> intended for architectures which contain triangles of physical qubits, each layer contains only gates acting on 3 distinct qubits
+     * Layering::QubitTriangle -> intended for architectures which contain triangles of physical qubits, each layer only contains gates acting on 3 distinct qubits
      */
     virtual void createLayers();
 

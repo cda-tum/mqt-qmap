@@ -60,7 +60,7 @@ void Mapper::createLayers() {
         unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
         size_t         layer  = 0;
 
-        // methods of layering described in methods of layering described in https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
+        // methods of layering described in https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
         switch (config.layering) {
             case Layering::IndividualGates:
             case Layering::None:

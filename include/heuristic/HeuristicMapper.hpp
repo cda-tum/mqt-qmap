@@ -37,14 +37,14 @@ public:
          *
          * The inverse of `locations`
          */
-        std::array<short, MAX_DEVICE_QUBITS> qubits{}; // get qubit at specific location
+        std::array<short, MAX_DEVICE_QUBITS> qubits{};
         /**
          * containing the logical qubit currently mapped to each physical qubit.
          * `locations[logical_qubit] = physical_qubit`
          *
          * The inverse of `qubits`
          */
-        std::array<short, MAX_DEVICE_QUBITS> locations{}; // get location of specific qubit
+        std::array<short, MAX_DEVICE_QUBITS> locations{};
         /** true if all qubit pairs are mapped next to each other on the architecture */
         bool done = true;
         /** swaps used to get from mapping after last layer to the current mapping;
@@ -142,7 +142,7 @@ public:
         }
 
         /**
-         * @brief checks if the qubits of the given gate are mapped next to each other, if not set `done` to false
+         * @brief checks if the qubits of the given gate are mapped next to each other. If not, set `done` to false
          */
         void checkUnfinished(const Architecture& arch, const Gate& gate) {
             if (arch.distance(locations.at(gate.control), locations.at(gate.target)) > COST_DIRECTION_REVERSE) {
@@ -208,7 +208,7 @@ protected:
      *
      * All gates are mapped in order of their index in the layer. The qubits are mapped to any 2 qubits with minimal distance on the architecture.
      *
-     * Additionally sets the fields `costHeur` (maximum of distance between any 2 qubits which share a gate) and `done` (all qubit considered pairs
+     * Additionally sets the fields `costHeur` (maximum distance between any 2 qubits which share a gate) and `done` (all qubit considered pairs
      * are mapped next to each other) in the current search node.
      *
      * @param layer index of the circuit layer to consider
