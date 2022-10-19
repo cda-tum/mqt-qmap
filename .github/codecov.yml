@@ -1,8 +1,8 @@
 ignore:
   - "extern/**/*"
   - "apps/*"
-  - "test/*.cpp"
-  - "mqt/**/*"
+  - "test/**/*.cpp"
+  - "mqt/**/*.cpp"
 
 coverage:
   range: 60..90
