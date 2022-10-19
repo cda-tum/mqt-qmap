@@ -1,4 +1,8 @@
-"""Functionality for computing good subarchitectures for quantum circuit mapping."""
+"""
+Functionality for computing good subarchitectures for quantum circuit mapping.
+
+This file implements the methods presented in https://arxiv.org/abs/2210.09321.
+"""
 
 from __future__ import annotations
 
