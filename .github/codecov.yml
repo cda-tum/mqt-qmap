@@ -1,19 +1,37 @@
 ignore:
   - "extern/**/*"
   - "apps/*"
-  - "test/*.cpp"
-  - "mqt/**/*"
+  - "test/**/*"
+  - "mqt/**/*.cpp"
 
 coverage:
   range: 60..90
   precision: 1
   status:
-    project:
-      default:
-        threshold: 0.5%
-    patch:
-      default:
-        threshold: 1%
+    project: off
+    patch: off
+
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: cpp
+      paths:
+        - "include/**/*.hpp"
+        - "src/**/*.cpp"
+      statuses:
+        - type: project
+          threshold: 0.5%
+        - type: patch
+          threshold: 1%
+    - name: python
+      paths:
+        - "mqt/**/*.py"
+      statuses:
+        - type: project
+          threshold: 0.5%
+        - type: patch
+          threshold: 1%
 
 parsers:
   gcov:
