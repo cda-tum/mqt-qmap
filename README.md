@@ -72,4 +72,8 @@ _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2021.
 L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal Quantum Circuit Mapping.
 _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 
+[[5]](https://arxiv.org/pdf/2210.09321.pdf)
+T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
+_arXiv:2210.09321_, 2022.
+
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).

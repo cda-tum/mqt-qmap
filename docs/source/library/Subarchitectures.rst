@@ -1,7 +1,7 @@
 Optimal Subarchitectures
 ========================
 
-To compute (near-)optimal subarchitectures of quantum computing architectures with restricted connectivity as described in :cite:labelpar:`pehamOptimalSubarchitectures` the :code:`SubarchitectureOrder` class is provided. This class has functionality to compute the quasi-order that allows for fast computation of optimal subarchitectures.
+To compute (near-)optimal subarchitectures of quantum computing architectures with restricted connectivity as described in :cite:labelpar:`peham2022OptimalSubarchitectures` the :code:`SubarchitectureOrder` class is provided. This class has functionality to compute the quasi-order that allows for fast computation of optimal subarchitectures.
 
 Note that the initial construction of the ordering might take a while for larger architectures.
 
