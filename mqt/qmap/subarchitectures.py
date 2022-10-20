@@ -13,9 +13,9 @@ if sys.version_info < (3, 10, 0):
 else:
     from importlib import resources
 
-import pathlib
 import pickle
 from itertools import combinations
+from pathlib import Path
 from typing import Dict, NewType, Set, Tuple
 
 import retworkx as rx
@@ -81,10 +81,10 @@ class SubarchitectureOrder:
         return cls.from_coupling_map(arch.coupling_map)
 
     @classmethod
-    def from_library(cls, path: pathlib.Path) -> SubarchitectureOrder:
+    def from_library(cls, lib_name: str | Path) -> SubarchitectureOrder:
         """Construct SubarchitectureOrder from stored library."""
-        temp = None
-        with pathlib.Path(path).open("rb") as f:
+        path = Path(lib_name).with_suffix(".pickle")
+        with path.open("rb") as f:
             temp = pickle.load(f)
 
         so = SubarchitectureOrder()
@@ -154,15 +154,11 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for n, i in cov]
 
-    def store_library(self, lib_name: str | pathlib.Path) -> None:
+    def store_library(self, lib_name: str | Path) -> None:
         """Store ordering."""
-        if isinstance(lib_name, str):
-            with pathlib.Path(lib_name + ".pickle").open("wb") as f:
-                pickle.dump(self, file=f)
-        else:
-            with pathlib.Path(lib_name).open("wb") as f:
-                pickle.dump(self, file=f)
-        return
+        path = Path(lib_name).with_suffix(".pickle")
+        with path.open("wb") as f:
+            pickle.dump(self, f)
 
     def draw_subarchitecture(self, subarchitecture: rx.PyGraph | tuple[int, int]) -> figure.Figure:
         """Return matplotlib figure showing subarchitecture within the entire architecture.
