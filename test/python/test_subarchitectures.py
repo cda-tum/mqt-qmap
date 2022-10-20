@@ -194,8 +194,7 @@ def test_subarchitecture_from_qmap_arch() -> None:
     so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
 
-    for sg_arch, sg_cm in zip(so_arch.sgs, so_cm.sgs):
-        rx.is_isomorphic(sg_arch, sg_cm)
+    assert so_arch.subarch_order == so_cm.subarch_order
 
 
 def test_invalid_opt_cand_arg(ibm_guadalupe: SubarchitectureOrder) -> None:
