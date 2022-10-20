@@ -7,3 +7,4 @@ Library
    Mapping
    Architecture
    MappingResults
+   Subarchitectures
