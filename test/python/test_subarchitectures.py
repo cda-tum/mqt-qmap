@@ -164,9 +164,10 @@ def test_ibm_guadalupe_library() -> None:
 def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
     ibm_guadalupe.store_library("tmp")
 
-    loaded_tmp = SubarchitectureOrder.from_string("tmp")
-
     p = Path("tmp.pickle")
+
+    loaded_tmp = SubarchitectureOrder.from_library(p)
+
     if p.exists():
         p.unlink()
 
