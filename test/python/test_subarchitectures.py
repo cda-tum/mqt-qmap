@@ -198,6 +198,6 @@ def test_subarchitecture_from_qmap_arch() -> None:
         rx.is_isomorphic(sg_arch, sg_cm)
 
 
-def test_invalid_opt_cand_arg(ibm_guadalupe) -> None:
+def test_invalid_opt_cand_arg(ibm_guadalupe: SubarchitectureOrder) -> None:
     with pytest.raises(ValueError):
         ibm_guadalupe.optimal_candidates(100)
