@@ -194,7 +194,7 @@ def test_subarchitecture_from_qmap_arch() -> None:
     so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
 
-    for sg_arch, sg_cm in zip(so_arch, so_cm):
+    for sg_arch, sg_cm in zip(so_arch.sgs, so_cm.sgs):
         rx.is_isomorphic(sg_arch, sg_cm)
 
 
