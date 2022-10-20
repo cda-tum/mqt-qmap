@@ -1,6 +1,12 @@
+from pathlib import Path
+
 import pytest
 import retworkx as rx
-from mqt.qmap.subarchitectures import SubarchitectureOrder
+from mqt.qmap.subarchitectures import (
+    SubarchitectureOrder,
+    ibm_guadalupe_subarchitectures,
+    rigetti_16_subarchitectures,
+)
 
 
 @pytest.fixture
@@ -137,3 +143,35 @@ def test_rigetti16_opt(rigetti16: SubarchitectureOrder, rigetti16_opt: rx.PyGrap
 
     opt_cand = opt[0]
     assert rx.is_isomorphic(opt_cand, rigetti16_opt)
+
+
+def test_rigetti16_opt_library(rigetti16_opt: rx.PyGraph) -> None:
+    opt = rigetti_16_subarchitectures().optimal_candidates(10)
+    assert len(opt) == 1
+
+    opt_cand = opt[0]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
+
+
+def test_ibm_guadalupe_library() -> None:
+    opt_cand_9 = ibm_guadalupe_subarchitectures().optimal_candidates(9)
+    assert len(opt_cand_9) == 2
+    assert opt_cand_9[0].num_nodes() == 15
+    assert opt_cand_9[1].num_nodes() == 15
+    assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])
+
+
+def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
+    ibm_guadalupe.store_library("tmp")
+    p = Path("tmp.pickle")
+    if p.exists():
+        p.unlink()
+
+    loaded_tmp = SubarchitectureOrder.from_string("tmp")
+
+    opt_origin = ibm_guadalupe.optimal_candidates(8)
+    opt_loaded = loaded_tmp.optimal_candidates(8)
+
+    assert len(opt_origin) == len(opt_loaded)
+    for opt_cand_orig, opt_cand_load in zip(opt_origin, opt_loaded):
+        assert rx.is_isomorphic(opt_cand_load, opt_cand_orig)
