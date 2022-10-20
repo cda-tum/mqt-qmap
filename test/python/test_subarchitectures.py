@@ -189,7 +189,7 @@ def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
 
 
 def test_subarchitecture_from_qmap_arch() -> None:
-    cm = {[0, 1], [1, 0], [1, 2], [2, 1]}
+    cm = {(0, 1), (1, 0), (1, 2), (2, 1)}
     arch = Architecture(cm)
     so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
