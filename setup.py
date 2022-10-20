@@ -105,8 +105,8 @@ setup(
     packages=find_namespace_packages(include=["mqt.*"]),
     install_requires=["qiskit-terra>=0.20.2,<0.23.0", "retworkx>=0.11.0,<0.12.0"],
     extras_require={
-        "test": ["pytest~=7.1.1", "mqt.qcec~=2.0.0rc7"],
-        "coverage": ["coverage[toml]>=6.4.2,<6.6.0", "pytest-cov>=3.0,<4.1"],
+        "test": ["pytest>=7", "mqt.qcec~=2.0.0rc9"],
+        "coverage": ["mqt.qcec[test]", "coverage[toml]>=6.4.2,<6.6.0", "pytest-cov>=3.0,<4.1"],
         "docs": [
             "sphinx>=5.1.1",
             "sphinx-rtd-theme",
@@ -116,7 +116,7 @@ setup(
             "pybtex>=0.24",
             "importlib_metadata>=3.6; python_version < '3.10'",
         ],
-        "dev": ["mqt.qmap[test, coverage, docs]"],  # requires Pip 21.2 or newer
+        "dev": ["mqt.qmap[coverage, docs]"],  # requires Pip 21.2 or newer
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
