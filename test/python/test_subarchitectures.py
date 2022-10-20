@@ -163,11 +163,12 @@ def test_ibm_guadalupe_library() -> None:
 
 def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
     ibm_guadalupe.store_library("tmp")
+
+    loaded_tmp = SubarchitectureOrder.from_string("tmp")
+
     p = Path("tmp.pickle")
     if p.exists():
         p.unlink()
-
-    loaded_tmp = SubarchitectureOrder.from_string("tmp")
 
     opt_origin = ibm_guadalupe.optimal_candidates(8)
     opt_loaded = loaded_tmp.optimal_candidates(8)
