@@ -29,6 +29,7 @@ flag_management:
       paths:
         - "mqt/**/*.py"
       statuses:
+        - type: project
         - type: patch
           target: 95%
 
