@@ -106,7 +106,7 @@ setup(
     install_requires=["qiskit-terra>=0.20.2,<0.23.0", "retworkx>=0.11.0,<0.12.0"],
     extras_require={
         "test": ["pytest>=7", "mqt.qcec~=2.0.0rc9"],
-        "coverage": ["mqt.qcec[test]", "coverage[toml]>=6.4.2,<6.6.0", "pytest-cov>=3.0,<4.1"],
+        "coverage": ["mqt.qmap[test]", "coverage[toml]>=6.4.2,<6.6.0", "pytest-cov>=3.0,<4.1"],
         "docs": [
             "sphinx>=5.1.1",
             "sphinx-rtd-theme",
