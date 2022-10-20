@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 import retworkx as rx
+from mqt.qmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
@@ -153,6 +154,14 @@ def test_rigetti16_opt_library(rigetti16_opt: rx.PyGraph) -> None:
     assert rx.is_isomorphic(opt_cand, rigetti16_opt)
 
 
+def test_rigetti16_opt_library_from_str(rigetti16_opt: rx.PyGraph) -> None:
+    opt = SubarchitectureOrder.from_string("rigetti_16").optimal_candidates(10)
+    assert len(opt) == 1
+
+    opt_cand = opt[0]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
+
+
 def test_ibm_guadalupe_library() -> None:
     opt_cand_9 = ibm_guadalupe_subarchitectures().optimal_candidates(9)
     assert len(opt_cand_9) == 2
@@ -177,3 +186,18 @@ def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
     assert len(opt_origin) == len(opt_loaded)
     for opt_cand_orig, opt_cand_load in zip(opt_origin, opt_loaded):
         assert rx.is_isomorphic(opt_cand_load, opt_cand_orig)
+
+
+def test_subarchitecture_from_qmap_arch() -> None:
+    cm = {[0, 1], [1, 0], [1, 2], [2, 1]}
+    arch = Architecture(cm)
+    so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
+    so_cm = SubarchitectureOrder.from_coupling_map(cm)
+
+    for sg_arch, sg_cm in zip(so_arch, so_cm):
+        rx.is_isomorphic(sg_arch, sg_cm)
+
+
+def test_invalid_opt_cand_arg(ibm_guadalupe) -> None:
+    with pytest.raises(ValueError):
+        ibm_guadalupe.optimal_candidates(100)
