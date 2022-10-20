@@ -13,25 +13,25 @@ coverage:
 
 flag_management:
   default_rules:
-    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 0.5%
+      - type: patch
+        target: 90%
+        threshold: 1%
   individual_flags:
     - name: cpp
       paths:
-        - "include/**/*.hpp"
-        - "src/**/*.cpp"
-      statuses:
-        - type: project
-          threshold: 0.5%
-        - type: patch
-          threshold: 1%
+        - "include"
+        - "src"
     - name: python
       paths:
         - "mqt/**/*.py"
       statuses:
         - type: project
-          threshold: 0.5%
         - type: patch
-          threshold: 1%
+          target: 95%
 
 parsers:
   gcov:
