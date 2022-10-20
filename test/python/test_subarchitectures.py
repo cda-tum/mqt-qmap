@@ -9,6 +9,8 @@ from mqt.qmap.subarchitectures import (
     rigetti_16_subarchitectures,
 )
 
+from qiskit.providers.fake_provider import FakeLondon
+
 
 @pytest.fixture
 def ibm_guadalupe() -> SubarchitectureOrder:
@@ -193,6 +195,14 @@ def test_subarchitecture_from_qmap_arch() -> None:
     arch = Architecture(3, cm)
     so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
+
+    assert so_arch.subarch_order == so_cm.subarch_order
+
+
+def test_subarchitecture_from_qiskit_backend() -> None:
+    arch = FakeLondon()
+    so_arch = SubarchitectureOrder.from_backend(arch)
+    so_cm = SubarchitectureOrder.from_coupling_map(arch.configuration().coupling_map)
 
     assert so_arch.subarch_order == so_cm.subarch_order
 
