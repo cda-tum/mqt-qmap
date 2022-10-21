@@ -4,6 +4,7 @@
 [![CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/C++?style=flat-square&logo=github&label=c%2B%2B)](https://github.com/cda-tum/qmap/actions/workflows/ci.yml)
 [![Python-CI](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python?style=flat-square&logo=github&label=python)](https://github.com/cda-tum/qmap/actions/workflows/python-ci.yml)
 [![Bindings](https://img.shields.io/github/workflow/status/cda-tum/qmap/Python%20Packaging?style=flat-square&logo=github&label=packaging)](https://github.com/cda-tum/qmap/actions/workflows/deploy.yml)
+[![Documentation](https://img.shields.io/readthedocs/mqtqmap?logo=readthedocs&style=flat-square)](https://mqtqmap.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
 # MQT QMAP - A tool for Quantum Circuit Compilation
@@ -86,7 +87,11 @@ _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2021.
 L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal Quantum Circuit Mapping.
 _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 
-[[5]](https://arxiv.org/abs/2208.11713)
+[[5]](https://arxiv.org/pdf/2210.09321.pdf)
+T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
+_arXiv:2210.09321_, 2022.
+
+[[6]](https://arxiv.org/pdf/2208.11713.pdf)
 S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
 _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 

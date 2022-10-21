@@ -34,6 +34,7 @@ from mqt.qmap.pyqmap import (
     SynthesisResults,
     TargetMetric,
 )
+from mqt.qmap.subarchitectures import SubarchitectureOrder
 
 __all__ = [
     "compile",
@@ -47,6 +48,7 @@ __all__ = [
     "Configuration",
     "MappingResults",
     "Architecture",
+    "SubarchitectureOrder",
     "SatSolverResult",
     "SynthesisResults",
     "SynthesisConfiguration",
