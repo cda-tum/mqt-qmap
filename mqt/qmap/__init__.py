@@ -28,6 +28,7 @@ from mqt.qmap.pyqmap import (
     Method,
     SwapReduction,
 )
+from mqt.qmap.subarchitectures import SubarchitectureOrder
 
 __all__ = [
     "compile",
@@ -41,4 +42,5 @@ __all__ = [
     "Configuration",
     "MappingResults",
     "Architecture",
+    "SubarchitectureOrder",
 ]
