@@ -109,7 +109,7 @@ setup(
         "importlib_resources>=5.9; python_version < '3.10'",
     ],
     extras_require={
-        "test": ["pytest>=7", "mqt.qcec~=2.0.0rc9"],
+        "test": ["pytest>=7", "mqt.qcec>=2"],
         "coverage": ["mqt.qmap[test]", "coverage[toml]>=6.4.2,<6.6.0", "pytest-cov>=3.0,<4.1"],
         "docs": [
             "sphinx>=5.1.1",
