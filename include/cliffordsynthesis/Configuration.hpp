@@ -20,12 +20,7 @@ namespace cs {
             chooseBest(chooseBest),
             nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
-            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(2), verbosity(1), strategy(strategy), target(target){}
-
-        Configuration(const Configuration& other):
-            chooseBest(other.chooseBest), nqubits(other.nqubits), initialTimestep(other.initialTimestep), nThreads(other.nThreads), verbosity(other.verbosity), strategy(other.strategy), target(other.target), targetTableau(other.targetTableau), initialTableau(other.initialTableau) {
-            this->targetCircuit = other.targetCircuit.clone();
-        }
+            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), strategy(strategy), target(target){}
 
         bool                 chooseBest      = false;
         std::uint8_t         nqubits         = 0;
@@ -35,9 +30,9 @@ namespace cs {
         OptimizationStrategy strategy        = OptimizationStrategy::UseMinimizer;
         TargetMetric         target          = TargetMetric::GATES;
 
-        qc::QuantumComputation targetCircuit{};
-        Tableau                targetTableau{};
-        Tableau                initialTableau{};
+        std::shared_ptr<qc::QuantumComputation> targetCircuit{};
+        std::shared_ptr<Tableau>                targetTableau{};
+        std::shared_ptr<Tableau>                initialTableau{};
 
         Architecture architecture{};
 
@@ -49,8 +44,8 @@ namespace cs {
             j["verbosity"]           = verbosity;
             j["optimizing_strategy"] = strategy;
             j["target_metric"]       = target;
-            j["target_tableau"]      = targetTableau.toString();
-            j["initial_tableau"]     = initialTableau.toString();
+            j["target_tableau"]      = targetTableau->toString();
+            j["initial_tableau"]     = initialTableau->toString();
             j["architecture"]        = architecture.getName();
             return j;
         }

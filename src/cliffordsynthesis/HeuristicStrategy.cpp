@@ -18,17 +18,17 @@ namespace cs {
     }
 
     void HeuristicStrategy::runSplitIter(const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        if (configuration.targetCircuit.size() < 2) {
+        if (configuration.targetCircuit->size() < 2) {
             return;
         }
         DEBUG() << "Running split iter" << std::endl;
-        Tableau                   fullTableau  = configuration.targetTableau;
-        auto                      circuitSplit = static_cast<unsigned int>(std::log(configuration.targetCircuit.getNindividualOps()));
+        Tableau                   fullTableau  = *configuration.targetTableau;
+        auto                      circuitSplit = static_cast<unsigned int>(std::log(configuration.targetCircuit->getNindividualOps()));
         int                       split        = std::min(5, configuration.nqubits / 2);
         std::vector<std::thread*> threads;
         std::vector<Results*>     results;
         int                       nThreads = configuration.nThreads;
-        qc::QuantumComputation    circuit  = configuration.targetCircuit.clone();
+        qc::QuantumComputation    circuit  = configuration.targetCircuit->clone();
         bool                      stopping = false;
         while (!stopping) {
             results.clear();
@@ -68,7 +68,7 @@ namespace cs {
                     DEBUG() << "UNSAT, increasing split size." << std::endl;
                     split += std::max(1.0, split * 0.2);
                     circuitSplit += std::max(1.0, circuitSplit * 0.2);
-                    if (circuitSplit > configuration.targetCircuit.getNindividualOps()) {
+                    if (circuitSplit > configuration.targetCircuit->getNindividualOps()) {
                         stopping = true;
                         break;
                     }
@@ -114,7 +114,7 @@ namespace cs {
         std::stringstream ss;
         circuit.dump(ss, qc::Format::OpenQASM);
         synthesizer.optimalResults.resultStringCircuit = ss.str();
-        synthesizer.optimalResults.resultTableaus.emplace_back(configuration.targetTableau);
+        synthesizer.optimalResults.resultTableaus.emplace_back(*configuration.targetTableau);
         synthesizer.optimalResults.gateCount = circuit.getNindividualOps();
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }

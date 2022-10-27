@@ -78,25 +78,25 @@ cs::Results synthesize(const py::object& description, const Architecture& arch, 
         auto        str        = description.cast<std::string>();
         std::string qasmEnding = ".qasm";
         if (std::equal(qasmEnding.rbegin(), qasmEnding.rend(), str.rbegin())) { // file
-            loadQC(config.targetCircuit, description);
-            config.nqubits      = config.targetCircuit.getNqubits();
+            loadQC(*config.targetCircuit, description);
+            config.nqubits      = config.targetCircuit->getNqubits();
             config.architecture = arch;
         } else { // tableau
             try {
-                config.targetTableau = Tableau(str);
+                config.targetTableau = std::make_shared<Tableau>(str);
             } catch (std::exception const& e) {
                 std::stringstream ss{};
                 ss << "Could not parse tableau: " << e.what();
                 throw std::invalid_argument(ss.str());
             }
 
-            config.initialTableau = Tableau(config.targetTableau.getQubitCount());
-            config.nqubits        = config.targetTableau.getQubitCount();
+            config.initialTableau = std::make_shared<Tableau>(config.targetTableau->getQubitCount());
+            config.nqubits        = config.targetTableau->getQubitCount();
             config.architecture   = arch;
         }
     } else { // qiskit circuit
-        loadQC(config.targetCircuit, description);
-        config.nqubits      = config.targetCircuit.getNqubits();
+        loadQC(*config.targetCircuit, description);
+        config.nqubits      = config.targetCircuit->getNqubits();
         config.architecture = arch;
     }
 

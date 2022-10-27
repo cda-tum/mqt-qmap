@@ -28,7 +28,7 @@ namespace cs {
     }
     void ExactStrategy::runMaxSat(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running minimizer" << std::endl;
-        Results r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau,
+        Results r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau,
                                                  configuration);
         TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
     }
@@ -37,7 +37,7 @@ namespace cs {
         Results r;
         while (r.result != logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
             DEBUG() << "Current t=" << timesteps << std::endl;
-            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau, configuration);
+            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
             TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
             if (r.result == logicbase::Result::UNSAT) {
                 timesteps *= 1.5;
@@ -50,7 +50,7 @@ namespace cs {
         auto    oldTimesteps = timesteps;
         while (r.result == logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
             DEBUG() << "Current t=" << timesteps << std::endl;
-            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau, configuration);
+            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
             TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
             if (r.result == logicbase::Result::SAT) {
                 oldTimesteps = timesteps;
@@ -68,7 +68,7 @@ namespace cs {
         int     lower = 0;
         while (std::abs(upper - lower) > 1) {
             DEBUG() << "Current t=" << t << std::endl;
-            r = synthesizer.mainOptimization(t, reducedCM, qubitChoice, configuration.targetTableau, configuration.initialTableau, configuration);
+            r = synthesizer.mainOptimization(t, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
             TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
             if (r.result == logicbase::Result::SAT) {
                 upper = t;

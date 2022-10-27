@@ -60,8 +60,8 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
 
             configuration.nqubits         = 2;
             configuration.initialTimestep = 10;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -85,7 +85,7 @@ TEST(TestCliffordSynthesis, SanityCheck) {
     qc.h(0);
     qc.h(0);
 
-    configuration.targetCircuit = qc.clone();
+    configuration.targetCircuit = std::make_shared<qc::QuantumComputation>(qc.clone());
 
     cs.synthesize(configuration);
 
@@ -109,8 +109,8 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
             configuration.nqubits         = 2;
             configuration.initialTimestep = 4;
             configuration.target          = TargetMetric::DEPTH;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -140,8 +140,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             configuration.target          = TargetMetric::FIDELITY;
             configuration.strategy        = OptimizationStrategy::UseMinimizer;
             configuration.architecture    = ibmqLondon;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             londonOptimizer->synthesize(configuration);
             tableau.clear();
 
@@ -169,8 +169,8 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
             configuration.nqubits         = 2;
             configuration.initialTimestep = 6;
             configuration.target          = TargetMetric::TWO_QUBIT_GATES;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -199,8 +199,8 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
             configuration.initialTimestep = 4;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::StartLow;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -229,8 +229,8 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
             configuration.initialTimestep = 100;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::StartHigh;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -259,8 +259,8 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
             configuration.initialTimestep = 4;
             configuration.target          = TargetMetric::GATES;
             configuration.strategy        = OptimizationStrategy::MinMax;
-            configuration.initialTableau  = Tableau(2);
-            configuration.targetTableau   = tableau;
+            configuration.initialTableau  = std::make_shared<Tableau>(2);
+            configuration.targetTableau   = std::make_shared<Tableau>(tableau);
             qx4Optimizer->synthesize(configuration);
             tableau.clear();
 
@@ -316,7 +316,7 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     configuration.nqubits         = 2;
     configuration.initialTimestep = 10;
     configuration.nThreads        = 1;
-    configuration.targetCircuit   = qc.clone();
+    configuration.targetCircuit = std::make_shared<qc::QuantumComputation>(qc.clone());
     configuration.target          = TargetMetric::GATES;
     configuration.strategy        = OptimizationStrategy::SplitIter;
 

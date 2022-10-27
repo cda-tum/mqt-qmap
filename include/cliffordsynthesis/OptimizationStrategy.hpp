@@ -29,8 +29,9 @@ namespace cs {
                 return "use_minimizer";
             case OptimizationStrategy::SplitIter:
                 return "split_iterative";
+            default:
+                return "Error";
         }
-        return "Error";
     }
 
     [[maybe_unused]] static OptimizationStrategy optimizationStrategyFromString(const std::string& strategy) {
@@ -61,8 +62,9 @@ namespace cs {
                 return true;
             case OptimizationStrategy::SplitIter:
                 return false;
+            default:
+                return false;
         }
-        return false;
     }
 } // namespace cs
 #endif //CS_OPTIMIZATIONSTRATEGY_HPP
