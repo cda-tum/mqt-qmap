@@ -101,7 +101,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/GateEncoding.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/ReasoningEngine.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Gates.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/OptimizationStrategy.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/SynthesisData.hpp
