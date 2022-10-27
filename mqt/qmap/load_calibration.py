@@ -24,7 +24,7 @@ def load_calibration(
     :return: Architecture
     :rtype: Architecture
     """
-    if calibration is not None:
+    if calibration is not None and architecture is not None:
         if isinstance(calibration, str):
             architecture.load_properties(calibration)
         elif isinstance(calibration, BackendProperties):

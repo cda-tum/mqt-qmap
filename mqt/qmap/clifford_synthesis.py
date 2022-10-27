@@ -95,10 +95,9 @@ def synthesize_clifford(
     Synthesize a Clifford circuit using the Clifford synthesizer.
 
     :param description: Description of the Clifford functionality to be synthesized. Either
-     - a Qiskit :code:`QuantumCircuit`, :code`StabilizerTable` or :code:`Clifford` operator
+     - a Qiskit :code`StabilizerTable` or :code:`Clifford` operator
      - a list of stabilizers (as exported by Qiskit) or as a semicolon separated binary matrix
-     - a path to a qasm file
-    :type description: str | StabilizerTable | Clifford | QuantumCircuit
+    :type description: str | StabilizerTable | Clifford
     :param arch: Architecture to synthesize the circuit on, optional. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend`
     :type arch: str | Arch | Architecture | Backend | None
     :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object

@@ -12,8 +12,8 @@ from qiskit.providers import Backend
 
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
     """
-    Load an architecture from a string, Arch, Architecture, or Backend.
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
+    Load an architecture from a string, Arch, Architecture, or Backend. If None is passed, no architecture is loaded.
+    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend`
     :type arch: str | Arch | Architecture | Backend | None
 
     :return: Architecture
