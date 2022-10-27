@@ -73,7 +73,7 @@ namespace cs {
     }
 
     Results CliffordSynthesizer::mainOptimization(
-            const std::size_t          timesteps,
+            const std::size_t    timesteps,
             const CouplingMap&   reducedCM,
             const QubitSubset&   qubitChoice,
             const Tableau&       targetTableau,
@@ -82,7 +82,7 @@ namespace cs {
         using namespace logicbase;
         std::unique_ptr<LogicBlock> lb;
         bool                        success = false;
-        LogicTerm::termType = TermType::BASE;
+        LogicTerm::termType                 = TermType::BASE;
         if (configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter) {
             logicutil::Params params;
             params.addParam("pb.compile_equality", true);

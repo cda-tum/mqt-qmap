@@ -28,7 +28,6 @@ namespace cs {
         static void makeSingleGateConsistency(const SynthesisData&);
         static void makeMultiGateConsistency(const SynthesisData&);
 
-
     public:
         static void makeGateEncoding(const SynthesisData& data, const Configuration& configuration);
     };

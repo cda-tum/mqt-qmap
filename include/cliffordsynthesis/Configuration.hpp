@@ -18,9 +18,9 @@ namespace cs {
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint8_t nThreads,
                                std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest),
-            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
+            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target) {}
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
-            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), strategy(strategy), target(target){}
+            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), strategy(strategy), target(target) {}
 
         bool                 chooseBest      = false;
         std::uint8_t         nqubits         = 0;

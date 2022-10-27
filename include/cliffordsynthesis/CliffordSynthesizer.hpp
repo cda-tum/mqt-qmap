@@ -9,9 +9,9 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "Encodings/Encodings.hpp"
+#include "Gates.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "QuantumComputation.hpp"
-#include "Gates.hpp"
 #include "Results.hpp"
 #include "SynthesisData.hpp"
 #include "operations/OpType.hpp"
@@ -56,7 +56,7 @@ namespace cs {
         Results optimalResults{};
 
         Results mainOptimization(
-                const std::size_t          timesteps,
+                const std::size_t    timesteps,
                 const CouplingMap&   reducedCM,
                 const QubitSubset&   qubitChoice,
                 const Tableau&       targetTableau,

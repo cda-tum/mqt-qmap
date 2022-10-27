@@ -9,7 +9,7 @@ macro(ADD_INTERNAL_LIBRARY libname srcfile)
 
   # set include directories
   target_include_directories(${lib}
-          PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+                             PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
 
   # set required C++ standard and disable compiler specific extensions
   target_compile_features(${lib} PUBLIC cxx_std_17)

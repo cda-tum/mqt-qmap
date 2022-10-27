@@ -110,6 +110,6 @@ namespace cs {
                 GATES::Z,
                 GATES::Sdag};
     };
-}
+} // namespace cs
 
 #endif //QMAP_GATES_HPP
