@@ -7,6 +7,10 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks"
 macro(ADD_INTERNAL_LIBRARY libname srcfile)
   set(lib ${libname})
 
+  # set include directories
+  target_include_directories(${lib}
+          PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+
   # set required C++ standard and disable compiler specific extensions
   target_compile_features(${lib} PUBLIC cxx_std_17)
   set_target_properties(${lib} PROPERTIES CMAKE_CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
@@ -76,10 +80,6 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
     ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
 
-  # set include directories
-  target_include_directories(${lib}
-                             PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
-
   add_internal_library(${lib} ${srcfile})
 endmacro()
 # macro to add core libraries
@@ -109,12 +109,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetricHandler.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/ExactStrategy.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/HeuristicStrategy.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
-
-  # set include directories
-  target_include_directories(${lib}
-                             PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include/>)
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp)
 
   add_internal_library(${lib} ${srcfile})
 endmacro()
