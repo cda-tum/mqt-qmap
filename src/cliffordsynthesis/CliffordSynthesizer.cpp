@@ -73,7 +73,7 @@ namespace cs {
     }
 
     Results CliffordSynthesizer::mainOptimization(
-            std::size_t          timesteps,
+            const std::size_t          timesteps,
             const CouplingMap&   reducedCM,
             const QubitSubset&   qubitChoice,
             const Tableau&       targetTableau,
@@ -123,14 +123,14 @@ namespace cs {
                 zName.str("");
                 xName << "x_" << k << "_" << i;
                 zName << "z_" << k << "_" << i;
-                x.back().push_back(
+                x.back().emplace_back(
                         lb->makeVariable(xName.str(), CType::BITVECTOR, configuration.nqubits));
-                z.back().push_back(
+                z.back().emplace_back(
                         lb->makeVariable(zName.str(), CType::BITVECTOR, configuration.nqubits));
             }
             rName.str("");
             rName << "r_" << k;
-            r.push_back(lb->makeVariable(rName.str(), CType::BITVECTOR, configuration.nqubits));
+            r.emplace_back(lb->makeVariable(rName.str(), CType::BITVECTOR, configuration.nqubits));
         }
 
         /*
@@ -147,7 +147,7 @@ namespace cs {
                 for (std::size_t j = 0U; j < configuration.nqubits; ++j) {
                     gName.str("");
                     gName << "g_" << gateStep << "_" << Gates::gateName(gate) << "_" << j;
-                    gS.back().back().push_back(lb->makeVariable(gName.str()));
+                    gS.back().back().emplace_back(lb->makeVariable(gName.str()));
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace cs {
                 for (std::size_t l = 0U; l < configuration.nqubits; ++l) {
                     gName.str("");
                     gName << "g_" << gateStep << "_CNOT_" << j << "_" << l;
-                    gC.back().back().push_back(lb->makeVariable(gName.str()));
+                    gC.back().back().emplace_back(lb->makeVariable(gName.str()));
                 }
             }
         }
