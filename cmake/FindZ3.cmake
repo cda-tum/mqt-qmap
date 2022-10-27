@@ -119,7 +119,7 @@ if(NOT FOUND_SUITABLE_VERSION)
     execute_process(
       COMMAND ${Python_EXECUTABLE} -c "import os, z3; print(os.path.dirname(z3.__file__))"
       OUTPUT_VARIABLE Z3_PYTHON_ROOT)
-    string(STRIP ${Z3_PYTHON_ROOT} Z3_PYTHON_ROOT)
+    string(STRIP "${Z3_PYTHON_ROOT}" Z3_PYTHON_ROOT)
     message(STATUS "Z3_PYTHON_ROOT: ${Z3_PYTHON_ROOT}")
 
     if(Z3_PYTHON_ROOT)
