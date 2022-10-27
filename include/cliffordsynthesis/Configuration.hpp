@@ -7,7 +7,6 @@
 #define CS_CONFIGURATION_HPP
 
 #include "OptimizationStrategy.hpp"
-#include "ReasoningEngine.hpp"
 #include "TargetMetric.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "nlohmann/json.hpp"
@@ -17,14 +16,14 @@ namespace cs {
         Configuration() = default;
 
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint8_t nThreads,
-                               std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target, ReasoningEngine method):
+                               std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest),
-            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target), method(method) {}
+            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
-            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(2), verbosity(1), strategy(strategy), target(target), method(ReasoningEngine::Z3) {}
+            chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(2), verbosity(1), strategy(strategy), target(target){}
 
         Configuration(const Configuration& other):
-            chooseBest(other.chooseBest), nqubits(other.nqubits), initialTimestep(other.initialTimestep), nThreads(other.nThreads), verbosity(other.verbosity), strategy(other.strategy), target(other.target), method(other.method), targetTableau(other.targetTableau), initialTableau(other.initialTableau) {
+            chooseBest(other.chooseBest), nqubits(other.nqubits), initialTimestep(other.initialTimestep), nThreads(other.nThreads), verbosity(other.verbosity), strategy(other.strategy), target(other.target), targetTableau(other.targetTableau), initialTableau(other.initialTableau) {
             this->targetCircuit = other.targetCircuit.clone();
         }
 
@@ -35,7 +34,6 @@ namespace cs {
         std::uint8_t         verbosity       = 0;
         OptimizationStrategy strategy        = OptimizationStrategy::UseMinimizer;
         TargetMetric         target          = TargetMetric::GATES;
-        ReasoningEngine      method          = ReasoningEngine::Z3;
 
         qc::QuantumComputation targetCircuit{};
         Tableau                targetTableau{};
@@ -51,7 +49,6 @@ namespace cs {
             j["verbosity"]           = verbosity;
             j["optimizing_strategy"] = strategy;
             j["target_metric"]       = target;
-            j["reasoning_engine"]    = method;
             j["target_tableau"]      = targetTableau.toString();
             j["initial_tableau"]     = initialTableau.toString();
             j["architecture"]        = architecture.getName();

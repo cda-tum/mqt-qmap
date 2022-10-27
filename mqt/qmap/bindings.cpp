@@ -100,24 +100,24 @@ cs::Results synthesize(const py::object& description, const Architecture& arch, 
         config.architecture = arch;
     }
 
-    std::unique_ptr<cs::CliffordSynthesizer> optimizer;
+    std::unique_ptr<cs::CliffordSynthesizer> synthesizer;
     try {
-        optimizer = std::make_unique<cs::CliffordSynthesizer>();
+        synthesizer = std::make_unique<cs::CliffordSynthesizer>();
     } catch (std::exception const& e) {
         std::stringstream ss{};
-        ss << "Could not construct optimizer: " << e.what();
+        ss << "Could not construct synthesizer: " << e.what();
         throw std::invalid_argument(ss.str());
     }
 
     try {
-        optimizer->synthesize(config);
+        synthesizer->synthesize(config);
     } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Error during optimization: " << e.what();
         throw std::invalid_argument(ss.str());
     }
 
-    return optimizer->optimalResults;
+    return synthesizer->optimalResults;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -336,14 +336,13 @@ PYBIND11_MODULE(pyqmap, m) {
 
     py::class_<cs::Configuration>(m, "SynthesisConfiguration", "Configuration options for MQT QMAP Clifford synthesis tool")
             .def(py::init<>())
-            .def_readwrite("choose_best", &cs::Configuration::chooseBest, "if true, the fully connected subgraph of an architecture with the lowest overall fidelity will be chosen, otherwise all possible fully connected subgraphs are tries")
-            .def_readwrite("nqubits", &cs::Configuration::nqubits)
-            .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep)
-            .def_readwrite("nthreads", &cs::Configuration::nThreads)
-            .def_readwrite("verbosity", &cs::Configuration::verbosity)
-            .def_readwrite("optimization_strategy", &cs::Configuration::strategy)
-            .def_readwrite("target_metric", &cs::Configuration::target)
-            .def_readwrite("reasoning_engine", &cs::Configuration::method)
+            .def_readwrite("choose_best", &cs::Configuration::chooseBest, "Whether to choose the fully connected subset from the architecture with the highest fidelity, or try all possible subsets, only relevant if architecture information is given")
+            .def_readwrite("nqubits", &cs::Configuration::nqubits, "number of qubits used in the circuit")
+            .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep, "Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high")
+            .def_readwrite("nthreads", &cs::Configuration::nThreads, "Number of threads to use for parallelization of the solver if supported or number of threads used by split_iter heuristic")
+            .def_readwrite("verbosity", &cs::Configuration::verbosity, "Verbosity level of the debug output, 0 being the lowest, 5 the highest amount of output")
+            .def_readwrite("optimization_strategy", &cs::Configuration::strategy, "Optimization strategy to use. One of the available strategies (*use_minimizer* | minmax | start_low | start_high | split_iter)")
+            .def_readwrite("target_metric", &cs::Configuration::target, "Target metric to synthesize for. One of the available metrics (*gates* | depth | fidelity | two_qubit_gates)")
             .def("json", &cs::Configuration::json)
             .def("__repr__", &cs::Configuration::toString);
 
@@ -355,7 +354,6 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("choose_best", &cs::Results::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
             .def_readwrite("strategy", &cs::Results::strategy, "The strategy used to optimize the circuit")
             .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'two_qubit_gates', 'depth', or 'fidelity'")
-            .def_readwrite("method", &cs::Results::method, "The synthesis method, at the moment only 'z3' is supported")
             .def_readwrite("qubits", &cs::Results::nqubits, "The number of qubits in the resulting circuit")
             .def_readwrite("initial_timestep", &cs::Results::initialTimesteps, "The number of initial timesteps allotted for synthesis")
             .def_readwrite("gate_count", &cs::Results::gateCount, "The number of gates in the resulting circuit")

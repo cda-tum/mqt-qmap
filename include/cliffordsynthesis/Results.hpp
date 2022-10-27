@@ -9,7 +9,6 @@
 #include "LogicTerm/Logic.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/OptimizationStrategy.hpp"
-#include "cliffordsynthesis/ReasoningEngine.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "operations/Operation.hpp"
@@ -24,7 +23,6 @@ namespace cs {
         bool                 chooseBest         = false;
         OptimizationStrategy strategy           = OptimizationStrategy::UseMinimizer;
         TargetMetric         target             = TargetMetric::GATES;
-        ReasoningEngine      method             = ReasoningEngine::Z3;
         logicbase::Result    result             = logicbase::Result::NDEF;
         std::uint16_t        nqubits            = 0U;
         std::uint16_t        architectureQubits = 0U;
@@ -60,7 +58,6 @@ namespace cs {
             os << R"("result":")" << logicbase::toString(result) << "\"," << std::endl;
             os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
             os << R"("target":")" << toString(target) << "\"," << std::endl;
-            os << R"("method":")" << toString(method) << "\"," << std::endl;
             os << R"("qubits":")" << std::to_string(nqubits) << "\"," << std::endl;
             os << R"("initial_timesteps":")" << std::to_string(initialTimesteps)
                << "\"," << std::endl;
@@ -128,7 +125,6 @@ namespace cs {
             resultJSON["result"]            = toString(result);
             resultJSON["strategy"]          = toString(strategy);
             resultJSON["target"]            = toString(target);
-            resultJSON["method"]            = toString(method);
             resultJSON["qubits"]            = nqubits;
             resultJSON["initial_timesteps"] = initialTimesteps;
             resultJSON["gate_count"]        = gateCount;

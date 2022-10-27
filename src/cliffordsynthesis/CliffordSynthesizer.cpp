@@ -32,7 +32,6 @@ namespace cs {
     void CliffordSynthesizer::synthesize(Configuration& configuration) {
         TRACE() << "OptimizationStrategy: " << toString(configuration.strategy) << std::endl;
         TRACE() << "Target: " << toString(configuration.target) << std::endl;
-        TRACE() << "ReasoningEngine: " << toString(configuration.method) << std::endl;
 
         initConfiguration(configuration);
 
@@ -83,21 +82,17 @@ namespace cs {
         using namespace logicbase;
         std::unique_ptr<LogicBlock> lb;
         bool                        success = false;
-        if (configuration.method == ReasoningEngine::Z3) {
-            LogicTerm::termType = TermType::BASE;
-            if (configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter) {
-                logicutil::Params params;
-                params.addParam("pb.compile_equality", true);
-                params.addParam("maxres.hill_climb", true);
-                params.addParam("maxres.pivot_on_correction_set", false);
-                lb = logicutil::getZ3LogicOptimizer(success, true, params);
-            } else {
-                logicutil::Params params;
-                params.addParam("threads", static_cast<unsigned>(configuration.nThreads / 2));
-                lb = logicutil::getZ3LogicBlock(success, true, params);
-            }
+        LogicTerm::termType = TermType::BASE;
+        if (configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter) {
+            logicutil::Params params;
+            params.addParam("pb.compile_equality", true);
+            params.addParam("maxres.hill_climb", true);
+            params.addParam("maxres.pivot_on_correction_set", false);
+            lb = logicutil::getZ3LogicOptimizer(success, true, params);
         } else {
-            return Results{};
+            logicutil::Params params;
+            params.addParam("threads", static_cast<unsigned>(configuration.nThreads / 2));
+            lb = logicutil::getZ3LogicBlock(success, true, params);
         }
         if (!success) {
             throw QMAPException("Could not initialize Z3 logic block optimizer");
