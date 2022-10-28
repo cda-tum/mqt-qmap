@@ -311,26 +311,26 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
     py::enum_<cs::TargetMetric>(m, "TargetMetric")
-            .value("gates", cs::TargetMetric::GATES)
-            .value("depth", cs::TargetMetric::DEPTH)
-            .value("fidelity", cs::TargetMetric::FIDELITY)
-            .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES)
+            .value("gates", cs::TargetMetric::GATES, "Optimizie number of gates")
+            .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth")
+            .value("fidelity", cs::TargetMetric::FIDELITY, "Optimize expected circuit fidelity")
+            .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES, "Optimize number of two-qubit gates")
             .export_values()
             .def(py::init([](const std::string& str) -> cs::TargetMetric { return cs::targetMetricFromString(str); }));
 
     py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
-            .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer)
-            .value("minmax", cs::OptimizationStrategy::MinMax)
-            .value("start_low", cs::OptimizationStrategy::StartLow)
-            .value("start_high", cs::OptimizationStrategy::StartHigh)
-            .value("split_iter", cs::OptimizationStrategy::SplitIter)
+            .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer, "Use MaxSAT")
+            .value("minmax", cs::OptimizationStrategy::MinMax, "Use Binary Search")
+            .value("start_low", cs::OptimizationStrategy::StartLow, "Start Low and slowly increase until SAT")
+            .value("start_high", cs::OptimizationStrategy::StartHigh, "Start High and slowly decrease until SAT")
+            .value("split_iter", cs::OptimizationStrategy::SplitIter, "Split the circuit in multiple small instances and optimize those, before reassembling and repeating until convergence")
             .export_values()
             .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
 
     py::enum_<logicbase::Result>(m, "SatSolverResult")
-            .value("sat", logicbase::Result::SAT)
-            .value("unsat", logicbase::Result::UNSAT)
-            .value("ndef", logicbase::Result::NDEF)
+            .value("sat", logicbase::Result::SAT, "Satisfiable Result")
+            .value("unsat", logicbase::Result::UNSAT, "Unsatisfiable Result")
+            .value("ndef", logicbase::Result::NDEF, "Undefined Result")
             .export_values()
             .def(py::init([](const std::string& str) -> logicbase::Result { return logicbase::resultFromString(str); }));
 
