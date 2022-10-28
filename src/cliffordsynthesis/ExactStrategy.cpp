@@ -26,9 +26,9 @@ namespace cs {
                 throw std::runtime_error("Unknown optimization strategy");
         }
     }
-    void ExactStrategy::runMaxSat(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
+    void ExactStrategy::runMaxSat(const std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running minimizer" << std::endl;
-        Results r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau,
+        auto r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau,
                                                  configuration);
         TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
     }
@@ -40,7 +40,7 @@ namespace cs {
             r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
             TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
             if (r.result == logicbase::Result::UNSAT) {
-                timesteps *= 1.5;
+                timesteps *= 1.0 + configuration.limitFindingFactor;
             }
         }
     }
@@ -54,7 +54,7 @@ namespace cs {
             TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
             if (r.result == logicbase::Result::SAT) {
                 oldTimesteps = timesteps;
-                timesteps *= 0.5;
+                timesteps *= configuration.limitFindingFactor;
             } else {
                 timesteps = oldTimesteps;
             }
@@ -63,9 +63,9 @@ namespace cs {
     void ExactStrategy::runBinarySearch(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
         DEBUG() << "Running minmax" << std::endl;
         Results r;
-        auto    t     = static_cast<int>(timesteps);
-        auto    upper = static_cast<int>(timesteps);
-        int     lower = 0;
+        auto    t     = static_cast<std::int32_t>(timesteps);
+        auto    upper = static_cast<std::int32_t>(timesteps);
+        std::int32_t    lower = 0;
         while (std::abs(upper - lower) > 1) {
             DEBUG() << "Current t=" << t << std::endl;
             r = synthesizer.mainOptimization(t, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);

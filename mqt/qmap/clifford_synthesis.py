@@ -34,6 +34,7 @@ def optimize_clifford(
     choose_best: bool = False,
     initial_timestep: int = 10,
     fidelity_scaling: int = 1000,
+    limit_finding_factor: float = 0.5,
     nthreads: int = 1,
     verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
@@ -58,6 +59,8 @@ def optimize_clifford(
     :type initial_timestep: int
     :param fidelity_scaling: Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high
     :type fidelity_scaling: int
+    :param limit_finding_factor: Factor to multiply the initial guess for timesteps used in startLow (increase by 1 + factor) or startHigh (decrease by factor) *0.5*
+    :type limit_finding_factor: float
     :param nthreads: Number of threads to use for the synthesis
     :type nthreads: int
     :param verbosity: Verbosity level of the debug output takes values from 0 (no output) to 5 (most output)
@@ -76,6 +79,7 @@ def optimize_clifford(
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
     config.fidelity_scaling = fidelity_scaling
+    config.limit_finding_factor = limit_finding_factor
     config.nthreads = nthreads
     config.verbosity = verbosity
 
@@ -93,6 +97,7 @@ def synthesize_clifford(
     choose_best: bool = False,
     initial_timestep: int = 10,
     fidelity_scaling: int = 1000,
+    limit_finding_factor: float = 0.5,
     nthreads: int = 1,
     verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
@@ -117,6 +122,8 @@ def synthesize_clifford(
     :type initial_timestep: int
     :param fidelity_scaling: Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high
     :type fidelity_scaling: int
+    :param limit_finding_factor: Factor to multiply the initial guess for timesteps used in startLow (increase by 1 + factor) or startHigh (decrease by factor) *0.5*
+    :type limit_finding_factor: float
     :param nthreads: Number of threads to use for the synthesis
     :type nthreads: int
     :param verbosity: Verbosity level of the debug output takes values from 0 (no output) to 5 (most output)
@@ -135,6 +142,7 @@ def synthesize_clifford(
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
     config.fidelity_scaling = fidelity_scaling
+    config.limit_finding_factor = limit_finding_factor
     config.nthreads = nthreads
     config.verbosity = verbosity
 
