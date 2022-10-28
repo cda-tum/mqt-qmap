@@ -104,7 +104,7 @@ In order to get the best performance out of QMAP and enable platform-specific co
 
         (venv) $ pip install mqt.qmap --no-binary mqt.qmap
 
-This requires a `C++ compiler <https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers>`_ compiler supporting *C++17*, a minimum `CMake <https://cmake.org/>`_ version of *3.18* and the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_. Z3 has to be installed and the dynamic linker has to be able to find the library. This can be accomplished in a multitude of ways:
+This requires a `C++ compiler <https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers>`_ compiler supporting *C++17*, a minimum `CMake <https://cmake.org/>`_ version of *3.19* and the `SMT solver Z3 <https://github.com/Z3Prover/z3>`_. Z3 has to be installed and the dynamic linker has to be able to find the library. This can be accomplished in a multitude of ways:
 
 - Under Ubuntu 20.04 and newer: :code:`sudo apt-get install libz3-dev`
 - Under macOS: :code:`brew install z3`
