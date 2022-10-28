@@ -10,9 +10,9 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
     makeSingleGateConsistency(data);
 
     // GATE CONSTRAINTS
-    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+    for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
         auto aIt = data.qubitChoice.cbegin();
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+        for (std::size_t a = 0; a < data.nqubits; ++a) {
             // NO GATE
             changes = logicbase::LogicTerm(true);
             makeIConstraints(data, a, gateStep, changes);
@@ -87,7 +87,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
             data.lb->assertFormula(changes);
 
             auto bIt = data.qubitChoice.cbegin();
-            for (unsigned int b = 0; b < data.nqubits; ++b) {
+            for (std::size_t b = 0; b < data.nqubits; ++b) {
                 const auto q0 = *aIt;
                 const auto q1 = *bIt;
                 if (data.reducedCM.find({q0, q1}) == data.reducedCM.end()) {
@@ -100,7 +100,7 @@ void cs::GateEncoding::makeSingleGateEncoding(const SynthesisData& data) {
                                                    ((data.x[gateStep - 1][b] ^ data.z[gateStep - 1][a]) ^
                                                     logicbase::LogicTerm((1 << data.nqubits) - 1, data.nqubits)))));
                     makeCNOTConstraints(data, a, b, gateStep, changes);
-                    for (unsigned int c = 0; c < data.nqubits; ++c) { // All other entries do not change
+                    for (std::size_t c = 0; c < data.nqubits; ++c) { // All other entries do not change
                         if (a == c || b == c) {
                             continue;
                         }
@@ -123,10 +123,10 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
     makeMultiGateConsistency(data);
 
     // GATE CONSTRAINTS
-    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+    for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
         logicbase::LogicTerm rChanges = data.r[gateStep - 1];
         auto                 aIt      = data.qubitChoice.cbegin();
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+        for (std::size_t a = 0; a < data.nqubits; ++a) {
             // NO GATE
             changes = logicbase::LogicTerm(true);
             makeIConstraints(data, a, gateStep, changes);
@@ -197,7 +197,7 @@ void cs::GateEncoding::makeMultiGateEncoding(const SynthesisData& data) {
 
             // CNOT
             auto bIt = data.qubitChoice.cbegin();
-            for (unsigned int b = 0; b < data.nqubits; ++b) {
+            for (std::size_t b = 0; b < data.nqubits; ++b) {
                 const auto q0 = *aIt;
                 const auto q1 = *bIt;
                 if (data.reducedCM.find({q0, q1}) == data.reducedCM.end()) {
@@ -232,8 +232,8 @@ void cs::GateEncoding::makeGateEncoding(const SynthesisData& data, const cs::Con
             break;
     }
 }
-void cs::GateEncoding::makeNotChangingSet(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
-    for (unsigned int b = 0; b < data.nqubits; ++b) {
+void cs::GateEncoding::makeNotChangingSet(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
+    for (std::size_t b = 0; b < data.nqubits; ++b) {
         if (a == b) {
             continue;
         }
@@ -241,35 +241,35 @@ void cs::GateEncoding::makeNotChangingSet(const cs::SynthesisData& data, unsigne
         changes = changes && (data.z[gateStep][b] == data.z[gateStep - 1][b]);
     }
 }
-void cs::GateEncoding::makeIConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeIConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
     changes = changes && (data.z[gateStep][a] == data.z[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeHConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeHConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes = changes && (data.z[gateStep][a] == data.x[gateStep - 1][a]);
     changes = changes && (data.x[gateStep][a] == data.z[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeSConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeSConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes = changes && (data.z[gateStep][a] ==
                           (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeSdagConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeSdagConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes =
             (data.z[gateStep][a] == (data.z[gateStep - 1][a] ^ data.x[gateStep - 1][a]));
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeXConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeXConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes =
             (data.z[gateStep][a] == data.z[gateStep - 1][a]);
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeYConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeYConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes =
             (data.z[gateStep][a] == data.z[gateStep - 1][a]);
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
 }
-void cs::GateEncoding::makeZConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeZConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes =
             (data.z[gateStep][a] == data.z[gateStep - 1][a]);
     changes = changes && (data.x[gateStep][a] == data.x[gateStep - 1][a]);
@@ -304,13 +304,13 @@ void cs::GateEncoding::makeSingleGateConsistency(const cs::SynthesisData& data) 
 void cs::GateEncoding::makeMultiGateConsistency(const cs::SynthesisData& data) {
     auto changes = logicbase::LogicTerm(true);
     // One gate per qubit, per step
-    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+    for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+        for (std::size_t a = 0; a < data.nqubits; ++a) {
             std::vector<logicbase::LogicTerm> vars{};
             for (auto gate: Gates::SINGLE_QUBIT) {
                 vars.emplace_back(data.gS[gateStep][Gates::toIndex(gate)][a]);
             }
-            for (unsigned int b = 0; b < data.nqubits; ++b) {
+            for (std::size_t b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
@@ -323,13 +323,13 @@ void cs::GateEncoding::makeMultiGateConsistency(const cs::SynthesisData& data) {
         }
     }
     // Maximum any combination of 1 and 2 qubit gates adding up to n
-    for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+    for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
         changes = logicbase::LogicTerm(0);
-        for (unsigned int a = 0; a < data.nqubits; ++a) {
+        for (std::size_t a = 0; a < data.nqubits; ++a) {
             for (auto gate: Gates::SINGLE_QUBIT) {
                 changes = changes + data.gS[gateStep][Gates::toIndex(gate)][a];
             }
-            for (unsigned int b = 0; b < data.nqubits; ++b) {
+            for (std::size_t b = 0; b < data.nqubits; ++b) {
                 if (a == b) {
                     continue;
                 }
@@ -340,7 +340,7 @@ void cs::GateEncoding::makeMultiGateConsistency(const cs::SynthesisData& data) {
         data.lb->assertFormula(changes);
     }
 }
-void cs::GateEncoding::makeCNOTConstraints(const cs::SynthesisData& data, unsigned int a, unsigned int b, unsigned int gateStep, encodings::LogicTerm& changes) {
+void cs::GateEncoding::makeCNOTConstraints(const cs::SynthesisData& data, std::size_t a, std::size_t b, std::size_t gateStep, encodings::LogicTerm& changes) {
     changes = changes && (data.x[gateStep][b] ==
                           (data.x[gateStep - 1][b] ^ data.x[gateStep - 1][a]));
     changes = changes && (data.z[gateStep][a] ==

@@ -9,35 +9,36 @@
 namespace cs {
 
     void TargetMetricHandler::makeTargetMetric(const SynthesisData& data, const Configuration& configuration) {
-        bool useMaxSat = configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter;
-        bool onlyCnot  = configuration.target == TargetMetric::TWO_QUBIT_GATES;
+        const bool useMaxSat = configuration.strategy == OptimizationStrategy::UseMinimizer || configuration.strategy == OptimizationStrategy::SplitIter;
+        const bool onlyCnot  = configuration.target == TargetMetric::TWO_QUBIT_GATES;
 
-        switch (configuration.target) {
-            case TargetMetric::GATES:
-            case TargetMetric::TWO_QUBIT_GATES:
-                makeGateMetric(data, useMaxSat, onlyCnot);
-                break;
-            case TargetMetric::DEPTH:
-                makeDepthMetric(data, useMaxSat);
-                break;
-            case TargetMetric::FIDELITY:
-                makeFidelityMetric(data, useMaxSat, configuration.architecture);
-                break;
-        }
+                if (useMaxSat) {
+                    switch (configuration.target) {
+                        case TargetMetric::GATES:
+                        case TargetMetric::TWO_QUBIT_GATES:
+                            makeGateMetric(data, onlyCnot);
+                            break;
+                        case TargetMetric::DEPTH:
+                            makeDepthMetric(data);
+                            break;
+                        case TargetMetric::FIDELITY:
+                            makeFidelityMetric(data, configuration.architecture, configuration.fidelityScaling);
+                            break;
+                    }
+                }
     }
-    void TargetMetricHandler::makeGateMetric(const SynthesisData& data, bool useMaxSat, bool onlyCNOT) {
+    void TargetMetricHandler::makeGateMetric(const SynthesisData& data, bool onlyCNOT) {
         logicbase::LogicTerm changes = logicbase::LogicTerm(true);
         // COST
-        if (useMaxSat) {
             logicbase::LogicTerm cost = logicbase::LogicTerm(0);
-            for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
-                for (unsigned int a = 0; a < data.nqubits; ++a) {
+            for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+                for (std::size_t a = 0; a < data.nqubits; ++a) {
                     if (!onlyCNOT) {
                         for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                             cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
                         }
                     }
-                    for (unsigned int b = 0; b <= a; ++b) {
+                    for (std::size_t b = 0; b <= a; ++b) {
                         if (a == b) {
                             continue;
                         }
@@ -46,77 +47,66 @@ namespace cs {
                 }
             }
             dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->minimize(cost);
-        }
+
     }
 
-    void TargetMetricHandler::makeDepthMetric(const SynthesisData& data, bool useMaxSat) {
+    void TargetMetricHandler::makeDepthMetric(const SynthesisData& data) {
         using namespace logicbase;
         // COST
-        if (useMaxSat) {
             LogicTerm cost = LogicTerm(0);
-            for (unsigned int gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
+            for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
                 LogicTerm anyGate = LogicTerm(true);
-                for (unsigned int a = 0; a < data.nqubits; ++a) {
+                for (std::size_t a = 0; a < data.nqubits; ++a) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         anyGate = anyGate && !data.gS[gateStep][Gates::toIndex(gate)][a];
                     }
-                    for (unsigned int b = 0; b <= a; ++b) {
+                    for (std::size_t b = 0; b <= a; ++b) {
                         if (a == b) {
                             continue;
                         }
                         anyGate = anyGate && !data.gTwoQubit[gateStep][a][b] && !data.gTwoQubit[gateStep][b][a];
                     }
                 }
-                cost = cost + LogicTerm::ite(anyGate, LogicTerm(5), LogicTerm(0));
+                cost = cost + LogicTerm::ite(anyGate, LogicTerm(1), LogicTerm(0));
             }
             dynamic_cast<LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
-        }
+
     }
 
-    void TargetMetricHandler::makeFidelityMetric(const SynthesisData& data, bool useMaxSat, const Architecture& architecture) {
+    void TargetMetricHandler::makeFidelityMetric(const SynthesisData& data, const Architecture& architecture, const std::uint32_t fidelityScaling) {
         if (!architecture.isArchitectureAvailable() || !architecture.isCalibrationDataAvailable()) {
             util::fatal("No fidelity architecture specified in coupling map.");
         }
         // COST
-        if (useMaxSat) {
             logicbase::LogicTerm cost = logicbase::LogicTerm(0);
             // For each edge in the coupling map, get the fidelity cost
             for (const auto& edge: data.reducedCM) {
                 logicbase::LogicTerm fidelity = logicbase::LogicTerm(
-                        (1 - std::log(architecture.getFidelityTable()[edge.first][edge.second])) * 1000);
-                auto a = std::find(data.qubitChoice.begin(), data.qubitChoice.end(), edge.first);
-                auto b = std::find(data.qubitChoice.begin(), data.qubitChoice.end(), edge.second);
+                        (std::log(architecture.getFidelityTable()[edge.first][edge.second])) * fidelityScaling);
+                const auto a = std::find(data.qubitChoice.begin(), data.qubitChoice.end(), edge.first);
+                const auto b = std::find(data.qubitChoice.begin(), data.qubitChoice.end(), edge.second);
                 if (a == data.qubitChoice.end() || b == data.qubitChoice.end()) {
                     util::fatal("Coupling map contains invalid qubit.");
                 }
                 // at each time t if there is a gate on the edge, add the cost
-                for (unsigned int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
-                    cost = cost + (data.gTwoQubit[gateStep][std::distance(data.qubitChoice.begin(), a)][std::distance(data.qubitChoice.begin(), b)] * fidelity);
+                const auto a_dist = std::distance(data.qubitChoice.begin(), a);
+                const auto b_dist = std::distance(data.qubitChoice.begin(), b);
+                for (std::size_t gateStep = 0; gateStep < data.timesteps; ++gateStep) {
+                    cost = cost + (data.gTwoQubit[gateStep][a_dist][b_dist] * fidelity);
                 }
             }
             // For each qubit, get the fidelity cost
-            for (unsigned int a = 0; a < data.nqubits; ++a) {
+            for (std::size_t a = 0; a < data.nqubits; ++a) {
                 logicbase::LogicTerm fidelity =
-                        logicbase::LogicTerm((1 - std::log(architecture.getSingleQubitFidelities()[a])) * 1000);
+                        logicbase::LogicTerm((std::log(architecture.getSingleQubitFidelities()[a])) * fidelityScaling);
                 // at each time t if there is a gate on a, add the cost
-                for (unsigned int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
+                for (std::size_t gateStep = 0; gateStep < data.timesteps; ++gateStep) {
                     for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
                         cost = cost + (data.gS[gateStep][Gates::toIndex(gate)][a] * fidelity);
                     }
                 }
             }
             dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->minimize(cost);
-            cost = logicbase::LogicTerm(0);
-            for (unsigned int gateStep = 0; gateStep < data.timesteps; ++gateStep) {
-                for (unsigned int a = 0; a < data.nqubits; ++a) {
-                    cost = cost + data.gS[gateStep][1][a] + data.gS[gateStep][2][a];
-                    for (unsigned int b = 0; b < data.nqubits; ++b) {
-                        cost = cost + data.gTwoQubit[gateStep][a][b];
-                    }
-                }
-            }
-            dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
-        }
     }
     void TargetMetricHandler::updateResults(const Configuration& configuration, Results& results, Results& currentResults) {
         switch (configuration.target) {
@@ -132,7 +122,7 @@ namespace cs {
                 }
                 break;
             case TargetMetric::FIDELITY:
-                if ((results.sat && results.fidelity < currentResults.fidelity) || currentResults.fidelity == 0) {
+                if ((results.sat && results.fidelity > currentResults.fidelity) || currentResults.fidelity == 0) {
                     currentResults = results;
                 }
                 break;

@@ -33,6 +33,7 @@ def optimize_clifford(
     strategy: str | OptimizationStrategy = "use_minimizer",
     choose_best: bool = False,
     initial_timestep: int = 10,
+    fidelity_scaling: int = 1000,
     nthreads: int = 1,
     verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
@@ -55,6 +56,8 @@ def optimize_clifford(
     :type choose_best: bool
     :param initial_timestep: Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high
     :type initial_timestep: int
+    :param fidelity_scaling: Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high
+    :type fidelity_scaling: int
     :param nthreads: Number of threads to use for the synthesis
     :type nthreads: int
     :param verbosity: Verbosity level of the debug output takes values from 0 (no output) to 5 (most output)
@@ -72,6 +75,7 @@ def optimize_clifford(
     config.optimization_strategy = OptimizationStrategy(strategy)
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
+    config.fidelity_scaling = fidelity_scaling
     config.nthreads = nthreads
     config.verbosity = verbosity
 
@@ -88,6 +92,7 @@ def synthesize_clifford(
     strategy: str | OptimizationStrategy = "use_minimizer",
     choose_best: bool = False,
     initial_timestep: int = 10,
+    fidelity_scaling: int = 1000,
     nthreads: int = 1,
     verbosity: int = 0,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
@@ -110,6 +115,8 @@ def synthesize_clifford(
     :type choose_best: bool
     :param initial_timestep: Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high
     :type initial_timestep: int
+    :param fidelity_scaling: Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high
+    :type fidelity_scaling: int
     :param nthreads: Number of threads to use for the synthesis
     :type nthreads: int
     :param verbosity: Verbosity level of the debug output takes values from 0 (no output) to 5 (most output)
@@ -127,6 +134,7 @@ def synthesize_clifford(
     config.optimization_strategy = OptimizationStrategy(strategy)
     config.choose_best = choose_best
     config.initial_timestep = initial_timestep
+    config.fidelity_scaling = fidelity_scaling
     config.nthreads = nthreads
     config.verbosity = verbosity
 

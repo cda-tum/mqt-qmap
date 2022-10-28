@@ -23,7 +23,7 @@ namespace cs {
         }
         DEBUG() << "Running split iter" << std::endl;
         Tableau                   fullTableau  = *configuration.targetTableau;
-        auto                      circuitSplit = static_cast<unsigned int>(std::log(configuration.targetCircuit->getNindividualOps()));
+        auto                      circuitSplit = static_cast<std::size_t>(std::log(configuration.targetCircuit->getNindividualOps()));
         int                       split        = std::min(5, configuration.nqubits / 2);
         std::vector<std::thread*> threads;
         std::vector<Results*>     results;
@@ -118,7 +118,7 @@ namespace cs {
         synthesizer.optimalResults.gateCount = circuit.getNindividualOps();
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }
-    void HeuristicStrategy::runSplinter(int i, unsigned int circSplit, unsigned int split, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, qc::QuantumComputation& circuit, Results* r, CliffordSynthesizer* opt, const Configuration& configuration) {
+    void HeuristicStrategy::runSplinter(int i, std::size_t circSplit, std::size_t split, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, qc::QuantumComputation& circuit, Results* r, CliffordSynthesizer* opt, const Configuration& configuration) {
         Tableau targetTableau{circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit};
         Tableau initTableau{circuit, 0, static_cast<std::size_t>(i) * circSplit};
         (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,

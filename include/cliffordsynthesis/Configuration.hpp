@@ -15,16 +15,17 @@ namespace cs {
     struct Configuration {
         Configuration() = default;
 
-        explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint8_t nThreads,
+        explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint32_t fidelityScaling, std::uint8_t nThreads,
                                std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest),
-            nqubits(nqubits), initialTimestep(initialTimesteps), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
+            nqubits(nqubits), initialTimestep(initialTimesteps), fidelityScaling(fidelityScaling), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), strategy(strategy), target(target){}
 
         bool                 chooseBest      = false;
         std::uint8_t         nqubits         = 0;
         std::uint16_t        initialTimestep = 0;
+        std::uint32_t        fidelityScaling = 1000;
         std::uint8_t         nThreads        = 1;
         std::uint8_t         verbosity       = 0;
         OptimizationStrategy strategy        = OptimizationStrategy::UseMinimizer;
@@ -41,6 +42,7 @@ namespace cs {
             j["choose_best"]         = chooseBest;
             j["nqubits"]             = nqubits;
             j["initial_timestep"]    = initialTimestep;
+            j["fidelity_scaling"]    = fidelityScaling;
             j["verbosity"]           = verbosity;
             j["optimizing_strategy"] = strategy;
             j["target_metric"]       = target;

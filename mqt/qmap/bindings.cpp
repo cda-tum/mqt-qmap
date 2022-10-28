@@ -339,6 +339,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("choose_best", &cs::Configuration::chooseBest, "Whether to choose the fully connected subset from the architecture with the highest fidelity, or try all possible subsets, only relevant if architecture information is given")
             .def_readwrite("nqubits", &cs::Configuration::nqubits, "number of qubits used in the circuit")
             .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep, "Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high")
+            .def_readwrite("fidelity_scaling", &cs::Configuration::fidelityScaling, "Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high")
             .def_readwrite("nthreads", &cs::Configuration::nThreads, "Number of threads to use for parallelization of the solver if supported or number of threads used by split_iter heuristic")
             .def_readwrite("verbosity", &cs::Configuration::verbosity, "Verbosity level of the debug output, 0 being the lowest, 5 the highest amount of output")
             .def_readwrite("optimization_strategy", &cs::Configuration::strategy, "Optimization strategy to use. One of the available strategies (*use_minimizer* | minmax | start_low | start_high | split_iter)")

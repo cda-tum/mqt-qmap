@@ -22,7 +22,7 @@ namespace cs {
 
     void CliffordSynthesizer::initConfiguration(Configuration& configuration) {
         // we dont already have a tableau
-        if (configuration.initialTableau->empty() || configuration.targetTableau->empty()) {
+        if (configuration.initialTableau == nullptr || configuration.targetTableau == nullptr || configuration.initialTableau->empty() || configuration.targetTableau->empty()) {
             configuration.nqubits        = configuration.targetCircuit->getNqubits();
             configuration.initialTableau = std::make_shared<Tableau>(configuration.nqubits);
             configuration.targetTableau  = std::make_shared<Tableau>(*configuration.targetCircuit);
