@@ -179,6 +179,14 @@ def compile(
 
     circ = QuantumCircuit.from_qasm_str(results.mapped_circuit)
     layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
-    circ._layout = layout
+
+    # qiskit-terra 0.22.0 introduced a breaking change in the `_layout` of the `QuantumCircuit` class.
+    # To maintain backwards compatibility, the following `try... except` block is necessary.
+    try:
+        from qiskit.transpiler.layout import TranspileLayout
+
+        circ._layout = TranspileLayout(initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits())
+    except ImportError:
+        circ._layout = layout
 
     return circ, results
