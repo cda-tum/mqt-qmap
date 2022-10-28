@@ -2,7 +2,8 @@
 * This file is part of the MQT QMAP library which is released under the MIT license.
 * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
 */
-#pragma once
+#ifndef CS_RESULTS_HPP
+#define CS_RESULTS_HPP
 
 #include "Architecture.hpp"
 #include "Definitions.hpp"
@@ -52,70 +53,7 @@ namespace cs {
         Results& operator=(Results&& other)      = default;
 
         void dump(std::ostream& os) const {
-            os << "{\"Results\":{" << std::endl;
-            os << R"("verbosity":")" << verbose << "\"," << std::endl;
-            os << R"("choose_best":")" << chooseBest << "\"," << std::endl;
-            os << R"("result":")" << logicbase::toString(result) << "\"," << std::endl;
-            os << R"("strategy":")" << toString(strategy) << "\"," << std::endl;
-            os << R"("target":")" << toString(target) << "\"," << std::endl;
-            os << R"("qubits":")" << std::to_string(nqubits) << "\"," << std::endl;
-            os << R"("initial_timesteps":")" << std::to_string(initialTimesteps)
-               << "\"," << std::endl;
-            os << R"("gate_count":")" << std::to_string(gateCount) << "\","
-               << std::endl;
-            os << R"("depth":")" << std::to_string(depth) << "\"," << std::endl;
-            os << R"("fidelity":")" << std::to_string(fidelity) << "\"," << std::endl;
-            os << R"("sat":")" << (sat ? "SAT" : "UNSAT") << "\"," << std::endl;
-            os << R"("total_seconds":")" << std::to_string(totalSeconds) << "\","
-               << std::endl;
-            os << R"("resultCircuit":")";
-            os << resultStringCircuit << "\"," << std::endl;
-            os << "\"resultTableaus\":[" << std::endl;
-            bool skipfirst = true;
-            for (const auto& tableau: resultTableaus) {
-                if (!skipfirst) {
-                    os << "," << std::endl;
-                }
-                os << "\"";
-                os << escapeChars(tableau.toString(), "\"");
-                os << "\"";
-                skipfirst = false;
-            }
-            os << "]," << std::endl;
-            std::stringstream strings;
-            Architecture::printCouplingMap(resultCM, strings);
-            os << R"("CouplingMap":")" << strings.str() << "\","
-               << std::endl;
-            os << "\"singleFidelity\":[";
-            skipfirst = true;
-            for (const auto& f: singleFidelity) {
-                if (!skipfirst) {
-                    os << ",";
-                }
-                os << "\"" << std::to_string(f) << "\"";
-                skipfirst = false;
-            }
-            os << "]," << std::endl;
-            os << "\"doubleFidelity\":[";
-            skipfirst = true;
-            for (const auto& f: doubleFidelity) {
-                if (!skipfirst) {
-                    os << ",";
-                }
-                os << "[";
-                bool skipfirst2 = true;
-                for (const auto& f2: f) {
-                    if (!skipfirst2) {
-                        os << ",";
-                    }
-                    os << "\"" << std::to_string(f2) << "\"";
-                    skipfirst2 = false;
-                }
-                os << "]";
-                skipfirst = false;
-            }
-            os << "]" << std::endl;
-            os << "}}" << std::endl;
+            os << json();
         }
 
         [[nodiscard]] virtual nlohmann::json json() const {
@@ -133,6 +71,23 @@ namespace cs {
             resultJSON["sat"]               = sat;
             resultJSON["total_seconds"]     = totalSeconds;
             resultJSON["resultCircuit"]     = resultStringCircuit;
+            std::stringstream strings;
+            Architecture::printCouplingMap(resultCM, strings);
+            resultJSON["CouplingMap"] = strings.str();
+            resultJSON["singleFidelity"] =
+                nlohmann::json::array();
+            for (const auto& f: singleFidelity) {
+                resultJSON["singleFidelity"].push_back(f);
+            }
+            resultJSON["doubleFidelity"] =
+                nlohmann::json::array();
+            for (const auto& f: doubleFidelity) {
+                resultJSON["doubleFidelity"].push_back(f);
+            }
+            resultJSON["resultTableaus"] = nlohmann::json::array();
+            for (const auto& tableau: resultTableaus) {
+                resultJSON["resultTableaus"].push_back(tableau.toString());
+            }
 
             return resultJSON;
         }
@@ -151,3 +106,5 @@ namespace cs {
     };
 
 } // namespace cs
+
+#endif // CSIMULATOR_RESULTS_HPP
