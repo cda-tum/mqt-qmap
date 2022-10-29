@@ -316,7 +316,7 @@ TEST(TestCliffordSynthesis, TestSplitIter) {
     configuration.nqubits         = 2;
     configuration.initialTimestep = 10;
     configuration.nThreads        = 1;
-    configuration.targetCircuit = std::make_shared<qc::QuantumComputation>(qc.clone());
+    configuration.targetCircuit   = std::make_shared<qc::QuantumComputation>(qc.clone());
     configuration.target          = TargetMetric::GATES;
     configuration.strategy        = OptimizationStrategy::SplitIter;
 
