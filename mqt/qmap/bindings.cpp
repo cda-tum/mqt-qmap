@@ -341,6 +341,7 @@ PYBIND11_MODULE(pyqmap, m) {
             .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep, "Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high")
             .def_readwrite("fidelity_scaling", &cs::Configuration::fidelityScaling, "Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high")
             .def_readwrite("limit_finding_factor", &cs::Configuration::limitFindingFactor, "Factor to multiply the initial guess for timesteps used in startLow (increase by 1 + factor) or startHigh (decrease by factor) *0.5*")
+            .def_readwrite("circuit_splitting_increase", &cs::Configuration::circuitSplittingIncrease, "Factor to multiply circuit splitting size by, calculation is as follows increase if a unsat instance is found is max(1, split * factor) *0.2*")
             .def_readwrite("nthreads", &cs::Configuration::nThreads, "Number of threads to use for parallelization of the solver if supported or number of threads used by split_iter heuristic")
             .def_readwrite("verbosity", &cs::Configuration::verbosity, "Verbosity level of the debug output, 0 being the lowest, 5 the highest amount of output")
             .def_readwrite("optimization_strategy", &cs::Configuration::strategy, "Optimization strategy to use. One of the available strategies (*use_minimizer* | minmax | start_low | start_high | split_iter)")

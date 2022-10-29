@@ -15,10 +15,10 @@ namespace cs {
     struct Configuration {
         Configuration() = default;
 
-        explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint32_t fidelityScaling, double limitFindingFactor, std::uint8_t nThreads,
+        explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, std::uint32_t fidelityScaling, double limitFindingFactor, double circuitSplittingIncrease, std::uint8_t nThreads,
                                std::uint8_t verbosity, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest),
-            nqubits(nqubits), initialTimestep(initialTimesteps), fidelityScaling(fidelityScaling), limitFindingFactor(limitFindingFactor), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
+            nqubits(nqubits), initialTimestep(initialTimesteps), fidelityScaling(fidelityScaling), limitFindingFactor(limitFindingFactor), circuitSplittingIncrease(circuitSplittingIncrease), nThreads(nThreads), verbosity(verbosity), strategy(strategy), target(target){}
         explicit Configuration(bool chooseBest, std::uint8_t nqubits, std::uint16_t initialTimesteps, OptimizationStrategy strategy, TargetMetric target):
             chooseBest(chooseBest), nqubits(nqubits), initialTimestep(initialTimesteps), strategy(strategy), target(target){}
 
@@ -27,6 +27,7 @@ namespace cs {
         std::uint16_t        initialTimestep = 0;
         std::uint32_t        fidelityScaling = 1000;
             double           limitFindingFactor   = 0.5;
+            double           circuitSplittingIncrease = 0.2;
         std::uint8_t         nThreads        = 1;
         std::uint8_t         verbosity       = 0;
         OptimizationStrategy strategy        = OptimizationStrategy::UseMinimizer;
@@ -45,6 +46,7 @@ namespace cs {
             j["initial_timestep"]    = initialTimestep;
             j["fidelity_scaling"]    = fidelityScaling;
             j["limit_finding_factor"] = limitFindingFactor;
+            j["circuit_splitting_increase"] = circuitSplittingIncrease;
             j["verbosity"]           = verbosity;
             j["optimizing_strategy"] = strategy;
             j["target_metric"]       = target;

@@ -24,10 +24,10 @@ namespace cs {
         DEBUG() << "Running split iter" << std::endl;
         Tableau                   fullTableau  = *configuration.targetTableau;
         auto                      circuitSplit = static_cast<std::size_t>(std::log(configuration.targetCircuit->getNindividualOps()));
-        int                       split        = std::min(5, configuration.nqubits / 2);
+        std::uint16_t             split        = std::min(5, configuration.nqubits / 2);
         std::vector<std::shared_ptr<std::thread>> threads;
         std::vector<std::shared_ptr<Results>>     results;
-        int                       nThreads = configuration.nThreads;
+        std::uint32_t             nThreads = configuration.nThreads;
         qc::QuantumComputation    circuit  = configuration.targetCircuit->clone();
         bool                      stopping = false;
         while (!stopping) {
@@ -44,7 +44,7 @@ namespace cs {
                 threads.clear();
                 DEBUG() << "Currently at " << i * circuitSplit << " of "
                         << circuit.getNindividualOps() << std::endl;
-                for (int j = 0; j < nThreads; j++) {
+                for (std::uint32_t j = 0; j < nThreads; j++) {
                     std::shared_ptr<Results> r = std::make_shared<Results>();
                     std::shared_ptr<std::thread> t = std::make_unique<std::thread>(runSplinter, i, circuitSplit,
                                               split, std::ref(reducedCM), std::ref(qubitChoice),
@@ -63,8 +63,8 @@ namespace cs {
                 }
                 if (totalResult.result == logicbase::Result::UNSAT) {
                     DEBUG() << "UNSAT, increasing split size." << std::endl;
-                    split += std::max(1.0, split * 0.2);
-                    circuitSplit += std::max(1.0, circuitSplit * 0.2);
+                    split += std::max(1.0, split * configuration.circuitSplittingIncrease);
+                    circuitSplit += std::max(1.0, circuitSplit * configuration.circuitSplittingIncrease);
                     if (circuitSplit > configuration.targetCircuit->getNindividualOps()) {
                         stopping = true;
                         break;
@@ -72,7 +72,7 @@ namespace cs {
                     break;
                 }
             }
-            for (auto* r: results) {
+            for (const auto& r: results) {
                 if (r->resultStringCircuit.empty()) {
                     continue;
                 }
@@ -83,7 +83,6 @@ namespace cs {
                     localResultCircuit.insert(localResultCircuit.end(),
                                               gate->clone());
                 }
-                delete r;
             }
             if (totalResult.result == logicbase::Result::SAT) {
                 Tableau resultingTableau{localResultCircuit};
@@ -116,8 +115,8 @@ namespace cs {
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }
     void HeuristicStrategy::runSplinter(int i, std::size_t circSplit, std::size_t split, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, qc::QuantumComputation& circuit, std::shared_ptr<Results> r, CliffordSynthesizer* opt, const Configuration& configuration) {
-        Tableau targetTableau{circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit};
-        Tableau initTableau{circuit, 0, static_cast<std::size_t>(i) * circSplit};
+        const Tableau targetTableau{circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit};
+        const Tableau initTableau{circuit, 0, static_cast<std::size_t>(i) * circSplit};
         (*r) = opt->mainOptimization(split, reducedCM, qubitChoice, targetTableau,
                                      initTableau, configuration);
     }
