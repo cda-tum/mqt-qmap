@@ -20,14 +20,14 @@ namespace cs {
             return;
         }
         DEBUG() << "Running split iter" << std::endl;
-        Tableau                   fullTableau  = *configuration.targetTableau;
-        auto                      circuitSplit = static_cast<std::size_t>(std::log(configuration.targetCircuit->getNindividualOps()));
-        std::uint16_t             split        = std::min(5, configuration.nqubits / 2);
+        Tableau                                   fullTableau  = *configuration.targetTableau;
+        auto                                      circuitSplit = static_cast<std::size_t>(std::log(configuration.targetCircuit->getNindividualOps()));
+        std::uint16_t                             split        = std::min(5, configuration.nqubits / 2);
         std::vector<std::shared_ptr<std::thread>> threads;
         std::vector<std::shared_ptr<Results>>     results;
-        std::uint32_t             nThreads = configuration.nThreads;
-        qc::QuantumComputation    circuit  = configuration.targetCircuit->clone();
-        bool                      stopping = false;
+        std::uint32_t                             nThreads = configuration.nThreads;
+        qc::QuantumComputation                    circuit  = configuration.targetCircuit->clone();
+        bool                                      stopping = false;
         while (!stopping) {
             results.clear();
             DEBUG() << "Current split size: " << split << std::endl;
@@ -43,10 +43,10 @@ namespace cs {
                 DEBUG() << "Currently at " << i * circuitSplit << " of "
                         << circuit.getNindividualOps() << std::endl;
                 for (std::uint32_t j = 0; j < nThreads; j++) {
-                    std::shared_ptr<Results> r = std::make_shared<Results>();
+                    std::shared_ptr<Results>     r = std::make_shared<Results>();
                     std::shared_ptr<std::thread> t = std::make_unique<std::thread>(runSplinter, i, circuitSplit,
-                                              split, std::ref(reducedCM), std::ref(qubitChoice),
-                                              std::ref(circuit), r, &synthesizer, configuration);
+                                                                                   split, std::ref(reducedCM), std::ref(qubitChoice),
+                                                                                   std::ref(circuit), r, &synthesizer, configuration);
                     threads.emplace_back(t);
                     results.push_back(r);
                 }

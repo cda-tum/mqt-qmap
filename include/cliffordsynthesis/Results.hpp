@@ -75,12 +75,12 @@ namespace cs {
             Architecture::printCouplingMap(resultCM, strings);
             resultJSON["CouplingMap"] = strings.str();
             resultJSON["singleFidelity"] =
-                nlohmann::json::array();
+                    nlohmann::json::array();
             for (const auto& f: singleFidelity) {
                 resultJSON["singleFidelity"].push_back(f);
             }
             resultJSON["doubleFidelity"] =
-                nlohmann::json::array();
+                    nlohmann::json::array();
             for (const auto& f: doubleFidelity) {
                 resultJSON["doubleFidelity"].push_back(f);
             }

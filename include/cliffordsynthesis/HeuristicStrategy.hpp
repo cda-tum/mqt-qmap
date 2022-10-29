@@ -13,9 +13,9 @@ namespace cs {
         static void runSplitIter(const CouplingMap& reducedCM, const QubitSubset& qubitChoice,
                                  const Configuration& configuration, CliffordSynthesizer& synthesizer);
         static void runSplinter(int i, std::size_t circSplit, std::size_t split,
-                                const CouplingMap&      reducedCM,
-                                const QubitSubset&      qubitChoice,
-                                qc::QuantumComputation& circuit,
+                                const CouplingMap&       reducedCM,
+                                const QubitSubset&       qubitChoice,
+                                qc::QuantumComputation&  circuit,
                                 std::shared_ptr<Results> r, CliffordSynthesizer* opt, const Configuration& configuration);
 
     public:
