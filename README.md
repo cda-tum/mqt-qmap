@@ -44,7 +44,7 @@ circ.cx(0, 2)
 circ_mapped, results = qmap.compile(circ, arch=FakeLondon())
 ```
 
-Optimally synthesizing a Clifford circuit is as easy as
+Optimizing a Clifford circuit is as easy as
 
 ```python3
 from mqt import qmap
@@ -56,8 +56,7 @@ circ.cx(0, 1)
 circ.h(0)
 circ.h(1)
 
-circ_synth, results = qmap.synthesize_clifford(circ)
-```
+circ_opt, results = qmap.optimize_clifford(circ)
 
 **Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqtqmap.readthedocs.io/en/latest/).**
 
