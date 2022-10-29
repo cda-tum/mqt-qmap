@@ -16,7 +16,7 @@ namespace cs {
                                 const CouplingMap&      reducedCM,
                                 const QubitSubset&      qubitChoice,
                                 qc::QuantumComputation& circuit,
-                                Results* r, CliffordSynthesizer* opt, const Configuration& configuration);
+                                std::shared_ptr<Results> r, CliffordSynthesizer* opt, const Configuration& configuration);
 
     public:
         static void runHeuristicStrategy(const CouplingMap& reducedCM, const QubitSubset& qubitChoice,
