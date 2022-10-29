@@ -8,12 +8,10 @@
 #include <cstddef>
 namespace cs {
     void cs::HeuristicStrategy::runHeuristicStrategy(const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        switch (configuration.strategy) {
-            case OptimizationStrategy::SplitIter:
-                runSplitIter(reducedCM, qubitChoice, configuration, synthesizer);
-                break;
-            default:
-                throw std::runtime_error("Unknown optimization strategy");
+        if (configuration.strategy == OptimizationStrategy::SplitIter) {
+            runSplitIter(reducedCM, qubitChoice, configuration, synthesizer);
+        } else {
+            throw std::runtime_error("Unknown optimization strategy");
         }
     }
 
