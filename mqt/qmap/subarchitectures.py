@@ -18,7 +18,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Dict, NewType, Set, Tuple
 
-import retworkx as rx
+import rustworkx as rx
 from matplotlib import figure
 from mqt.qmap import Architecture
 
