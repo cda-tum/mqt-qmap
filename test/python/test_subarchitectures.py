@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-import retworkx as rx
+import rustworkx as rx
 from mqt.qmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,

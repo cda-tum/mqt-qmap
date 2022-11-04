@@ -105,7 +105,7 @@ setup(
     packages=find_namespace_packages(include=["mqt.*"]),
     install_requires=[
         "qiskit-terra>=0.20.2",
-        "retworkx[all]>=0.11.0,<0.13.0",
+        "rustworkx[all]>=0.12.0",
         "importlib_resources>=5.0; python_version < '3.10'",
     ],
     extras_require={
