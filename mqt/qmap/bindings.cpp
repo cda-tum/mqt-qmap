@@ -74,6 +74,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
 }
 
 cs::Results synthesize(const py::object& description, const Architecture& arch, cs::Configuration& config) {
+    config.targetCircuit = std::make_shared<qc::QuantumComputation>();
     if (py::isinstance<py::str>(description)) { // either file or tableau
         auto        str        = description.cast<std::string>();
         std::string qasmEnding = ".qasm";
