@@ -16,7 +16,7 @@ namespace cs {
             switch (configuration.target) {
                 case TargetMetric::GATES:
                 case TargetMetric::TWO_QUBIT_GATES:
-                    makeGateMetric(data, onlyCnot);
+                    makeGateMetric(data, onlyCnot, 10U);
                     break;
                 case TargetMetric::DEPTH:
                     makeDepthMetric(data);
@@ -27,22 +27,20 @@ namespace cs {
             }
         }
     }
-    void TargetMetricHandler::makeGateMetric(const SynthesisData& data, bool onlyCNOT) {
+    void TargetMetricHandler::makeGateMetric(const SynthesisData& data, bool onlyCNOT, const std::uint16_t cnotMultiplier) {
         logicbase::LogicTerm changes = logicbase::LogicTerm(true);
         // COST
         logicbase::LogicTerm cost = logicbase::LogicTerm(0);
         for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
             for (std::size_t a = 0; a < data.nqubits; ++a) {
-                if (!onlyCNOT) {
-                    for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-                        cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
-                    }
+                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                    cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
                 }
                 for (std::size_t b = 0; b <= a; ++b) {
                     if (a == b) {
                         continue;
                     }
-                    cost = cost + data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][b][a];
+                    cost = cost + (data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][b][a]) * logicbase::LogicTerm(onlyCNOT ? cnotMultiplier : 1);
                 }
             }
         }
