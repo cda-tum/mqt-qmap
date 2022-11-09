@@ -110,7 +110,7 @@ namespace cs {
         switch (configuration.target) {
             case TargetMetric::GATES:
             case TargetMetric::TWO_QUBIT_GATES:
-                if ((results.sat && results.gateCount < currentResults.gateCount) || currentResults.gateCount == 0) {
+                if ((results.sat && (results.twoQubitGates + results.singleQubitGates) < (currentResults.singleQubitGates + currentResults.twoQubitGates)) || (currentResults.singleQubitGates + currentResults.twoQubitGates) == 0) {
                     currentResults = results;
                 }
                 break;

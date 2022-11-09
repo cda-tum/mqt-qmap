@@ -109,7 +109,8 @@ namespace cs {
         circuit.dump(ss, qc::Format::OpenQASM);
         synthesizer.optimalResults.resultStringCircuit = ss.str();
         synthesizer.optimalResults.resultTableaus.emplace_back(*configuration.targetTableau);
-        synthesizer.optimalResults.gateCount = circuit.getNindividualOps();
+        synthesizer.optimalResults.singleQubitGates = getSingleQubitOperations(circuit);
+        synthesizer.optimalResults.twoQubitGates   = circuit.getNindividualOps() - synthesizer.optimalResults.singleQubitGates;
         synthesizer.optimalResults.result    = logicbase::Result::SAT;
     }
     void HeuristicStrategy::runSplinter(int i, std::size_t circSplit, std::size_t split, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, qc::QuantumComputation& circuit, std::shared_ptr<Results> r, CliffordSynthesizer* opt, const Configuration& configuration) {

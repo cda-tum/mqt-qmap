@@ -28,7 +28,8 @@ namespace cs {
         std::uint16_t        nqubits            = 0U;
         std::uint16_t        architectureQubits = 0U;
         std::size_t          initialTimesteps   = 0U;
-        std::size_t          gateCount          = 0U;
+        std::size_t          singleQubitGates   = 0U;
+        std::size_t          twoQubitGates      = 0U;
         std::size_t          depth              = 0U;
         bool                 sat                = false;
         double               fidelity           = 0.0;
@@ -65,7 +66,8 @@ namespace cs {
             resultJSON["target"]            = toString(target);
             resultJSON["qubits"]            = nqubits;
             resultJSON["initial_timesteps"] = initialTimesteps;
-            resultJSON["gate_count"]        = gateCount;
+            resultJSON["singleQubitGates"]  = singleQubitGates;
+            resultJSON["twoQubitGates"]     = twoQubitGates;
             resultJSON["depth"]             = depth;
             resultJSON["fidelity"]          = fidelity;
             resultJSON["sat"]               = sat;

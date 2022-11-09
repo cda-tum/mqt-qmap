@@ -16,7 +16,8 @@ it also includes runtime information of the mapping procedure
 
 and information about the synthesized circuit
 
-    .. autoattribute:: SynthesisResults.gate_count
+    .. autoattribute:: SynthesisResults.single_qubit_gates
+    .. autoattribute:: SynthesisResults.two_qubit_gates
     .. autoattribute:: SynthesisResults.depth
     .. autoattribute:: SynthesisResults.fidelity
     .. autoattribute:: SynthesisResults.qubits

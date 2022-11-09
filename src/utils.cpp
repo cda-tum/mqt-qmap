@@ -213,3 +213,24 @@ std::string escapeChars(const std::string& s, const std::string& chars) {
     }
     return ss.str();
 }
+std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc) {
+    std::uint16_t result = 0;
+    for (const auto& gate: qc) {
+        if (gate->getType() == qc::OpType::Compound) {
+            auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+            auto  cit    = compOp->begin();
+            while (cit != compOp->end()) {
+                    if (cit->get()->getNcontrols() == 0 && cit->get()->getNtargets() == 1) {
+                        ++result;
+                    }
+                ++cit;
+            }
+        } else {
+            if (gate->getNcontrols() == 0 && gate->getNtargets() == 1) {
+                ++result;
+            }
+        }
+
+    }
+    return result;
+}

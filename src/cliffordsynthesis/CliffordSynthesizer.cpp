@@ -214,14 +214,15 @@ namespace cs {
             } else {
                 localResultCircuit.addQubitRegister(configuration.nqubits);
             }
-            results.gateCount = 0U;
+            results.singleQubitGates = 0U;
+            results.twoQubitGates = 0U;
             results.depth     = 0U;
             results.fidelity  = 1.;
             assert(configuration.nqubits == qubitChoice.size());
             for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
-                auto oldGateCount = results.gateCount;
+                auto oldGateCount = results.singleQubitGates + results.twoQubitGates;
                 TRACE() << "Gate Step: " << gateStep << std::endl
-                        << " Actual gate count: " << results.gateCount << std::endl
+                        << " Actual gate count: " << oldGateCount << std::endl
                         << " Depth: " << results.depth << std::endl
                         << " Fidelity: " << results.fidelity << std::endl;
                 if (gateStep > 0U) {
@@ -239,14 +240,13 @@ namespace cs {
                                     TRACE() << " Fidelity: " << configuration.architecture.getSingleQubitFidelities()[q0]
                                             << std::endl;
                                 }
-                                ++results.gateCount;
+                                ++results.singleQubitGates;
                             }
                         }
                         auto bIt = qubitChoice.cbegin();
                         for (std::size_t b = 0U; b < configuration.nqubits; ++b) {
                             const auto q1 = *bIt;
                             if (model->getBoolValue(gC[gateStep][a][b], lb.get())) {
-                                results.gateCount++;
                                 localResultCircuit.emplace_back<qc::StandardOperation>(
                                         configuration.nqubits, dd::Control{static_cast<dd::Qubit>(q0)}, q1, qc::X);
                                 if (configuration.architecture.isCalibrationDataAvailable()) {
@@ -258,13 +258,14 @@ namespace cs {
                                             << configuration.architecture.getFidelityTable()[q0][q1]
                                             << std::endl;
                                 }
+                                ++results.twoQubitGates;
                             }
                             ++bIt;
                         }
                         ++aIt;
                     }
                 }
-                if (oldGateCount < results.gateCount) {
+                if (oldGateCount < results.singleQubitGates + results.twoQubitGates) {
                     results.depth++;
                 }
                 auto tableau                  = results.resultTableaus.emplace_back();

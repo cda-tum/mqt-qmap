@@ -15,27 +15,18 @@ protected:
     std::string testCalibrationDir  = "./calibration/";
     std::string testExampleDir      = "./examples/cliffordexamples/";
 
-    Architecture ibmqYorktown{};
     Architecture ibmqLondon{};
-    Architecture ibmQX4{};
 
-    std::unique_ptr<CliffordSynthesizer> qx4Optimizer{};
-    std::unique_ptr<CliffordSynthesizer> yorktownOptimizer{};
     std::unique_ptr<CliffordSynthesizer> londonOptimizer{};
 
     void SetUp() override {
         using namespace dd::literals;
         util::init();
-        ibmqYorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
         ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
         ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
-        ibmQX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
 
-        yorktownOptimizer = std::make_unique<CliffordSynthesizer>();
 
         londonOptimizer = std::make_unique<CliffordSynthesizer>();
-
-        qx4Optimizer = std::make_unique<CliffordSynthesizer>();
     }
 };
 
@@ -54,20 +45,21 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 10;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LE(qx4Optimizer->optimalResults.gateCount, 5);
-    EXPECT_GT(qx4Optimizer->optimalResults.gateCount, 1);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_LE(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 5);
+    EXPECT_GT(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 1);
 }
 
 TEST(TestCliffordSynthesis, SanityCheckDepth1) {
@@ -130,7 +122,7 @@ TEST(TestCliffordSynthesis, SanityCheckGates) {
 
     cs.synthesize(configuration);
 
-    EXPECT_EQ(cs.optimalResults.gateCount, 1);
+    EXPECT_EQ(cs.optimalResults.singleQubitGates, 1);
 }
 TEST(TestCliffordSynthesis, SanityCheck2QubitGates) {
     using namespace dd::literals;
@@ -148,13 +140,14 @@ TEST(TestCliffordSynthesis, SanityCheck2QubitGates) {
 
     cs.synthesize(configuration);
 
-    EXPECT_EQ(cs.optimalResults.gateCount, 1);
+    EXPECT_EQ(cs.optimalResults.twoQubitGates, 1);
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
@@ -162,14 +155,14 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
     configuration.target          = TargetMetric::DEPTH;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LE(qx4Optimizer->optimalResults.depth, 4);
-    EXPECT_GE(qx4Optimizer->optimalResults.depth, 1);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_LE(cs.optimalResults.depth, 4);
+    EXPECT_GE(cs.optimalResults.depth, 1);
 
 }
 
@@ -192,8 +185,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
     londonOptimizer->optimalResults.dump(std::cout);
 
     EXPECT_EQ(londonOptimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LE(londonOptimizer->optimalResults.gateCount, 6);
-    EXPECT_GT(londonOptimizer->optimalResults.gateCount, 3);
+    EXPECT_LE(londonOptimizer->optimalResults.singleQubitGates + londonOptimizer->optimalResults.twoQubitGates, 6);
+    EXPECT_GT(londonOptimizer->optimalResults.singleQubitGates + londonOptimizer->optimalResults.twoQubitGates, 3);
 
 
 }
@@ -202,6 +195,7 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
@@ -209,20 +203,21 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
     configuration.target          = TargetMetric::TWO_QUBIT_GATES;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LE(qx4Optimizer->optimalResults.gateCount, 6);
-    EXPECT_GE(qx4Optimizer->optimalResults.gateCount, 2);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_LE(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 6);
+    EXPECT_GE(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 2);
 }
 
 TEST_P(TestCliffordSynthesis, TestStartLow) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
@@ -231,19 +226,20 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
     configuration.strategy        = OptimizationStrategy::StartLow;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_GE(qx4Optimizer->optimalResults.initialTimesteps, 2);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_GE(cs.optimalResults.initialTimesteps, 2);
 }
 
 TEST_P(TestCliffordSynthesis, TestStartHigh) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
@@ -252,19 +248,20 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
     configuration.strategy        = OptimizationStrategy::StartHigh;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LT(qx4Optimizer->optimalResults.initialTimesteps, 100);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_LT(cs.optimalResults.initialTimesteps, 100);
 }
 
 TEST_P(TestCliffordSynthesis, TestMinMax) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
+    CliffordSynthesizer    cs{};
     Configuration configuration{};
 
     configuration.nqubits         = 2;
@@ -273,14 +270,14 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
     configuration.strategy        = OptimizationStrategy::MinMax;
     configuration.initialTableau  = std::make_shared<Tableau>(2);
     configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-    qx4Optimizer->synthesize(configuration);
+    cs.synthesize(configuration);
     tableau.clear();
 
-    qx4Optimizer->optimalResults.dump(std::cout);
+    cs.optimalResults.dump(std::cout);
 
-    EXPECT_EQ(qx4Optimizer->optimalResults.result, logicbase::Result::SAT);
-    EXPECT_LE(qx4Optimizer->optimalResults.gateCount, 5);
-    EXPECT_GT(qx4Optimizer->optimalResults.gateCount, 1);
+    EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
+    EXPECT_LE(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 5);
+    EXPECT_GT(cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 1);
 }
 
 TEST(TestCliffordSynthesis, TestSplitIter) {

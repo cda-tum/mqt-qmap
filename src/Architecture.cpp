@@ -667,4 +667,7 @@ Architecture::Architecture(std::initializer_list<double> singleFidelities, std::
         }
     }
     couplingMap = getFullyConnectedMap(nqubits);
+
+    createDistanceTable();
+    createFidelityTable();
 }

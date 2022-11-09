@@ -6,6 +6,8 @@
 #ifndef QMAP_UTILS_HPP
 #define QMAP_UTILS_HPP
 
+#include "QuantumComputation.hpp"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
@@ -142,4 +144,7 @@ void        parse_line(const std::string& line, char separator, const std::set<c
 CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
 
 std::string escapeChars(const std::string& s, const std::string& chars);
+
+
+std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc);
 #endif //QMAP_UTILS_HPP
