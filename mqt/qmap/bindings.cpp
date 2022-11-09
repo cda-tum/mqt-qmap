@@ -3,9 +3,8 @@
 * See file README.md or go to https://www.cda.cit.tum.de/research/quantum/ for more information.
 */
 
-#ifdef Z3_FOUND
-    #include "exact/ExactMapper.hpp"
-#endif
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -17,12 +16,9 @@
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 namespace py = pybind11;
-namespace nl = nlohmann;
 using namespace pybind11::literals;
 
-// c++ binding function
-MappingResults map(const py::object& circ, Architecture& arch, Configuration& config) {
-    qc::QuantumComputation qc{};
+void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
     try {
         if (py::isinstance<py::str>(circ)) {
             auto&& file = circ.cast<std::string>();
@@ -35,6 +31,13 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
         ss << "Could not import circuit: " << e.what();
         throw std::invalid_argument(ss.str());
     }
+}
+
+// c++ binding function
+MappingResults map(const py::object& circ, Architecture& arch, Configuration& config) {
+    qc::QuantumComputation qc{};
+
+    loadQC(qc, circ);
 
     if (config.useTeleportation) {
         config.teleportationQubits = std::min((arch.getNqubits() - qc.getNqubits()) & ~1, 8);
@@ -45,13 +48,7 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
         if (config.method == Method::Heuristic) {
             mapper = std::make_unique<HeuristicMapper>(qc, arch);
         } else if (config.method == Method::Exact) {
-#ifdef Z3_FOUND
             mapper = std::make_unique<ExactMapper>(qc, arch);
-#else
-            std::stringstream ss{};
-            ss << toString(config.method) << " (Z3 support not enabled)";
-            throw std::invalid_argument(ss.str());
-#endif
         }
     } catch (std::exception const& e) {
         std::stringstream ss{};
@@ -74,6 +71,54 @@ MappingResults map(const py::object& circ, Architecture& arch, Configuration& co
     results.mappedCircuit = qasm.str();
 
     return results;
+}
+
+cs::Results synthesize(const py::object& description, const Architecture& arch, cs::Configuration& config) {
+    config.targetCircuit = std::make_shared<qc::QuantumComputation>();
+    if (py::isinstance<py::str>(description)) { // either file or tableau
+        auto        str        = description.cast<std::string>();
+        std::string qasmEnding = ".qasm";
+        if (std::equal(qasmEnding.rbegin(), qasmEnding.rend(), str.rbegin())) { // file
+            loadQC(*config.targetCircuit, description);
+            config.nqubits      = config.targetCircuit->getNqubits();
+            config.architecture = arch;
+        } else { // tableau
+            try {
+                config.targetTableau = std::make_shared<Tableau>(str);
+            } catch (std::exception const& e) {
+                std::stringstream ss{};
+                ss << "Could not parse tableau: " << e.what();
+                throw std::invalid_argument(ss.str());
+            }
+
+            config.initialTableau = std::make_shared<Tableau>(config.targetTableau->getQubitCount());
+            config.nqubits        = config.targetTableau->getQubitCount();
+            config.architecture   = arch;
+        }
+    } else { // qiskit circuit
+        loadQC(*config.targetCircuit, description);
+        config.nqubits      = config.targetCircuit->getNqubits();
+        config.architecture = arch;
+    }
+
+    std::unique_ptr<cs::CliffordSynthesizer> synthesizer;
+    try {
+        synthesizer = std::make_unique<cs::CliffordSynthesizer>();
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Could not construct synthesizer: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    try {
+        synthesizer->synthesize(config);
+    } catch (std::exception const& e) {
+        std::stringstream ss{};
+        ss << "Error during optimization: " << e.what();
+        throw std::invalid_argument(ss.str());
+    }
+
+    return synthesizer->optimalResults;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -159,7 +204,6 @@ PYBIND11_MODULE(pyqmap, m) {
             // allow construction from string
             .def(py::init([](const std::string& str) -> SwapReduction { return swapReductionFromString(str); }));
 
-    // All configuration options for QMAP
     py::class_<Configuration>(m, "Configuration", "Configuration options for the MQT QMAP quantum circuit mapping tool")
             .def(py::init<>())
             .def_readwrite("method", &Configuration::method)
@@ -230,25 +274,25 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("get_two_qubit_error", &Architecture::Properties::getTwoQubitErrorRate, "control"_a, "target"_a, "operation"_a = "cx")
             .def("set_two_qubit_error", &Architecture::Properties::setTwoQubitErrorRate, "control"_a, "target"_a, "error_rate"_a, "operation"_a = "cx")
             .def(
-                    "get_readout_error", [](const Architecture::Properties& props, unsigned short qubit) { return props.readoutErrorRate.get(qubit); }, "qubit"_a)
+                    "get_readout_error", [](const Architecture::Properties& props, uint16_t qubit) { return props.readoutErrorRate.get(qubit); }, "qubit"_a)
             .def(
-                    "set_readout_error", [](Architecture::Properties& props, unsigned short qubit, double rate) { props.readoutErrorRate.set(qubit, rate); }, "qubit"_a, "readout_error_rate"_a)
+                    "set_readout_error", [](Architecture::Properties& props, uint16_t qubit, double rate) { props.readoutErrorRate.set(qubit, rate); }, "qubit"_a, "readout_error_rate"_a)
             .def(
-                    "get_t1", [](const Architecture::Properties& props, unsigned short qubit) { return props.t1Time.get(qubit); }, "qubit"_a)
+                    "get_t1", [](const Architecture::Properties& props, uint16_t qubit) { return props.t1Time.get(qubit); }, "qubit"_a)
             .def(
-                    "set_t1", [](Architecture::Properties& props, unsigned short qubit, double t1) { props.t1Time.set(qubit, t1); }, "qubit"_a, "t1"_a)
+                    "set_t1", [](Architecture::Properties& props, uint16_t qubit, double t1) { props.t1Time.set(qubit, t1); }, "qubit"_a, "t1"_a)
             .def(
-                    "get_t2", [](const Architecture::Properties& props, unsigned short qubit) { return props.t2Time.get(qubit); }, "qubit"_a)
+                    "get_t2", [](const Architecture::Properties& props, uint16_t qubit) { return props.t2Time.get(qubit); }, "qubit"_a)
             .def(
-                    "set_t2", [](Architecture::Properties& props, unsigned short qubit, double t2) { props.t2Time.set(qubit, t2); }, "qubit"_a, "t2"_a)
+                    "set_t2", [](Architecture::Properties& props, uint16_t qubit, double t2) { props.t2Time.set(qubit, t2); }, "qubit"_a, "t2"_a)
             .def(
-                    "get_frequency", [](const Architecture::Properties& props, unsigned short qubit) { return props.qubitFrequency.get(qubit); }, "qubit"_a)
+                    "get_frequency", [](const Architecture::Properties& props, uint16_t qubit) { return props.qubitFrequency.get(qubit); }, "qubit"_a)
             .def(
-                    "set_frequency", [](Architecture::Properties& props, unsigned short qubit, double freq) { props.qubitFrequency.set(qubit, freq); }, "qubit"_a, "qubit_frequency"_a)
+                    "set_frequency", [](Architecture::Properties& props, uint16_t qubit, double freq) { props.qubitFrequency.set(qubit, freq); }, "qubit"_a, "qubit_frequency"_a)
             .def(
-                    "get_calibration_date", [](const Architecture::Properties& props, unsigned short qubit) { return props.calibrationDate.get(qubit); }, "qubit"_a)
+                    "get_calibration_date", [](const Architecture::Properties& props, uint16_t qubit) { return props.calibrationDate.get(qubit); }, "qubit"_a)
             .def(
-                    "set_calibration_date", [](Architecture::Properties& props, unsigned short qubit, const std::string& date) { props.calibrationDate.set(qubit, date); }, "qubit"_a, "calibration_date"_a)
+                    "set_calibration_date", [](Architecture::Properties& props, uint16_t qubit, const std::string& date) { props.calibrationDate.set(qubit, date); }, "qubit"_a, "calibration_date"_a)
             .def("json", &Architecture::Properties::json,
                  "Returns a JSON-style dictionary of all the information present in the :class:`.Properties`")
             .def("__repr__", &Architecture::Properties::toString,
@@ -256,8 +300,8 @@ PYBIND11_MODULE(pyqmap, m) {
 
     // Interface to the QMAP internal architecture class
     arch.def(py::init<>())
-            .def(py::init<unsigned short, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
-            .def(py::init<unsigned short, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
+            .def(py::init<uint16_t, const CouplingMap&>(), "num_qubits"_a, "coupling_map"_a)
+            .def(py::init<uint16_t, const CouplingMap&, const Architecture::Properties&>(), "num_qubits"_a, "coupling_map"_a, "properties"_a)
             .def_property("name", &Architecture::getName, &Architecture::setName)
             .def_property("num_qubits", &Architecture::getNqubits, &Architecture::setNqubits)
             .def_property("coupling_map", py::overload_cast<>(&Architecture::getCouplingMap), &Architecture::setCouplingMap)
@@ -267,8 +311,65 @@ PYBIND11_MODULE(pyqmap, m) {
             .def("load_properties", py::overload_cast<const Architecture::Properties&>(&Architecture::loadProperties), "properties"_a)
             .def("load_properties", py::overload_cast<const std::string&>(&Architecture::loadProperties), "properties"_a);
 
-    // Main mapping function
+    py::enum_<cs::TargetMetric>(m, "TargetMetric")
+            .value("gates", cs::TargetMetric::GATES, "Optimizie number of gates")
+            .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth")
+            .value("fidelity", cs::TargetMetric::FIDELITY, "Optimize expected circuit fidelity")
+            .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES, "Optimize number of two-qubit gates")
+            .export_values()
+            .def(py::init([](const std::string& str) -> cs::TargetMetric { return cs::targetMetricFromString(str); }));
+
+    py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
+            .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer, "Use MaxSAT")
+            .value("minmax", cs::OptimizationStrategy::MinMax, "Use Binary Search")
+            .value("start_low", cs::OptimizationStrategy::StartLow, "Start Low and slowly increase until SAT")
+            .value("start_high", cs::OptimizationStrategy::StartHigh, "Start High and slowly decrease until SAT")
+            .value("split_iter", cs::OptimizationStrategy::SplitIter, "Split the circuit in multiple small instances and optimize those, before reassembling and repeating until convergence")
+            .export_values()
+            .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
+
+    py::enum_<logicbase::Result>(m, "SatSolverResult")
+            .value("sat", logicbase::Result::SAT, "Satisfiable Result")
+            .value("unsat", logicbase::Result::UNSAT, "Unsatisfiable Result")
+            .value("ndef", logicbase::Result::NDEF, "Undefined Result")
+            .export_values()
+            .def(py::init([](const std::string& str) -> logicbase::Result { return logicbase::resultFromString(str); }));
+
+    py::class_<cs::Configuration>(m, "SynthesisConfiguration", "Configuration options for MQT QMAP Clifford synthesis tool")
+            .def(py::init<>())
+            .def_readwrite("choose_best", &cs::Configuration::chooseBest, "Whether to choose the fully connected subset from the architecture with the highest fidelity, or try all possible subsets, only relevant if architecture information is given")
+            .def_readwrite("nqubits", &cs::Configuration::nqubits, "number of qubits used in the circuit")
+            .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep, "Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high")
+            .def_readwrite("fidelity_scaling", &cs::Configuration::fidelityScaling, "Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high")
+            .def_readwrite("limit_finding_factor", &cs::Configuration::limitFindingFactor, "Factor to multiply the initial guess for timesteps used in startLow (increase by 1 + factor) or startHigh (decrease by factor) *0.5*")
+            .def_readwrite("circuit_splitting_increase", &cs::Configuration::circuitSplittingIncrease, "Factor to multiply circuit splitting size by, calculation is as follows increase if a unsat instance is found is max(1, split * factor) *0.2*")
+            .def_readwrite("nthreads", &cs::Configuration::nThreads, "Number of threads to use for parallelization of the solver if supported or number of threads used by split_iter heuristic")
+            .def_readwrite("verbosity", &cs::Configuration::verbosity, "Verbosity level of the debug output, 0 being the lowest, 5 the highest amount of output")
+            .def_readwrite("optimization_strategy", &cs::Configuration::strategy, "Optimization strategy to use. One of the available strategies (*use_minimizer* | minmax | start_low | start_high | split_iter)")
+            .def_readwrite("target_metric", &cs::Configuration::target, "Target metric to synthesize for. One of the available metrics (*gates* | depth | fidelity | two_qubit_gates)")
+            .def("json", &cs::Configuration::json)
+            .def("__repr__", &cs::Configuration::toString);
+
+    py::class_<cs::Results>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
+            .def(py::init<>())
+            .def_readwrite("sat", &cs::Results::result, "Whether the optimization problem was satisfiable")
+            .def_readwrite("result_circuit", &cs::Results::resultStringCircuit, "The resulting circuit (as OpenQASM string)")
+            .def_readwrite("verbosity", &cs::Results::verbose, "Verbosity of the debug messages")
+            .def_readwrite("choose_best", &cs::Results::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
+            .def_readwrite("strategy", &cs::Results::strategy, "The strategy used to optimize the circuit")
+            .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'two_qubit_gates', 'depth', or 'fidelity'")
+            .def_readwrite("qubits", &cs::Results::nqubits, "The number of qubits in the resulting circuit")
+            .def_readwrite("initial_timestep", &cs::Results::initialTimesteps, "The number of initial timesteps allotted for synthesis")
+            .def_readwrite("single_qubit_gates", &cs::Results::singleQubitGates, "The number of single qubit gates in the resulting circuit")
+            .def_readwrite("two_qubit_gates", &cs::Results::twoQubitGates, "The number of two qubit gates in the resulting circuit")
+            .def_readwrite("depth", &cs::Results::depth, "The depth of the resulting circuit")
+            .def_readwrite("fidelity", &cs::Results::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
+            .def_readwrite("total_seconds", &cs::Results::totalSeconds, "The total time taken to synthesize the circuit")
+            .def("json", &cs::Results::json)
+            .def("__repr__", &cs::Results::getStrRepr);
+
     m.def("map", &map, "map a quantum circuit");
+    m.def("synthesize", &synthesize, "synthesize a Clifford circuit");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

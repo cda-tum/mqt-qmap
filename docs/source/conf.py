@@ -1,7 +1,9 @@
-try:
-    from importlib import metadata
-except ImportError:
+import sys
+
+if sys.version_info < (3, 10, 0):
     import importlib_metadata as metadata
+else:
+    from importlib import metadata
 
 import pybtex.plugin
 from pybtex.style.formatting.unsrt import Style as UnsrtStyle
@@ -13,6 +15,8 @@ author = "Lukas Burgholzer"
 
 release = metadata.version("mqt.qmap")
 version = ".".join(release.split(".")[:3])
+language = "en"
+copyright = "Chair for Design Automation, Technical University of Munich"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -45,6 +49,7 @@ hoverxref_role_types = {
     "attr": "tooltip",
     "property": "tooltip",
 }
+exclude_patterns = ["_build", "build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", ".env"]
 
 
 class CDAStyle(UnsrtStyle):
@@ -66,3 +71,5 @@ autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "sphinx_rtd_theme"
+
+html_baseurl = "https://mqtqmap.readthedocs.io/en/latest/"
