@@ -33,14 +33,16 @@ namespace cs {
         logicbase::LogicTerm cost = logicbase::LogicTerm(0);
         for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
             for (std::size_t a = 0; a < data.nqubits; ++a) {
-                for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-                    cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
+                if (!onlyCNOT) {
+                    for (auto gate: Gates::SINGLE_QUBIT_WITHOUT_NOP) {
+                        cost = cost + data.gS[gateStep][Gates::toIndex(gate)][a];
+                    }
                 }
                 for (std::size_t b = 0; b <= a; ++b) {
                     if (a == b) {
                         continue;
                     }
-                    cost = cost + (data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][b][a]) * logicbase::LogicTerm(onlyCNOT ? cnotMultiplier : 1);
+                    cost = cost + (data.gTwoQubit[gateStep][a][b] + data.gTwoQubit[gateStep][b][a]) * logicbase::LogicTerm(cnotMultiplier);
                 }
             }
         }

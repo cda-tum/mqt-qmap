@@ -203,6 +203,8 @@ public:
     Architecture(std::uint16_t nQ, const CouplingMap& couplingMap);
     Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, const Properties& properties);
 
+    Architecture(std::initializer_list<double> singleFidelities, std::initializer_list<std::initializer_list<double>> twoFidelities, std::initializer_list<double> readoutFidelities);
+
     [[nodiscard]] std::uint16_t getNqubits() const {
         return nqubits;
     }
