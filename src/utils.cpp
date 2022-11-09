@@ -5,13 +5,13 @@
 
 #include <utils.hpp>
 
-void Dijkstra::build_table(unsigned short n, const std::set<Edge>& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
+void Dijkstra::build_table(std::uint16_t n, const CouplingMap& couplingMap, Matrix& distanceTable, const std::function<double(const Node&)>& cost) {
     distanceTable.clear();
     distanceTable.resize(n, std::vector<double>(n, -1.));
 
-    for (unsigned short i = 0; i < n; ++i) {
+    for (std::uint16_t i = 0; i < n; ++i) {
         std::vector<Dijkstra::Node> nodes(n);
-        for (unsigned short j = 0; j < n; ++j) {
+        for (std::uint16_t j = 0; j < n; ++j) {
             nodes.at(j).contains_correct_edge = false;
             nodes.at(j).visited               = false;
             nodes.at(j).pos                   = j;
@@ -39,11 +39,11 @@ void Dijkstra::build_table(unsigned short n, const std::set<Edge>& couplingMap, 
     }
 }
 
-void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes, unsigned short start) {
+void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes, std::uint16_t start) {
     std::priority_queue<Node*> queue{};
     queue.push(&nodes.at(start));
     while (!queue.empty()) {
-        auto current     = queue.top();
+        auto* current    = queue.top();
         current->visited = true;
         queue.pop();
         auto pos = current->pos;
@@ -58,15 +58,16 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes
                 to = edge.first;
             }
             if (to != -1) {
-                if (nodes.at(to).visited)
+                if (nodes.at(to).visited) {
                     continue;
+                }
 
-                Node new_node;
-                new_node.cost                  = current->cost + 1.0;
-                new_node.pos                   = to;
-                new_node.contains_correct_edge = correctEdge;
-                if (nodes.at(to).cost < 0 || new_node < nodes.at(to)) {
-                    nodes.at(to) = new_node;
+                Node newNode;
+                newNode.cost                  = current->cost + 1.0;
+                newNode.pos                   = to;
+                newNode.contains_correct_edge = correctEdge;
+                if (nodes.at(to).cost < 0 || newNode < nodes.at(to)) {
+                    nodes.at(to) = newNode;
                     queue.push(&nodes.at(to));
                 }
             }
@@ -77,14 +78,14 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes
 /// Create a string representation of a given permutation
 /// \param pi permutation
 /// \return string representation of pi
-std::string printPi(std::vector<unsigned short>& pi) {
+std::string printPi(std::vector<std::uint16_t>& pi) {
     if (std::is_sorted(pi.begin(), pi.end())) {
         return "( )";
     }
 
     std::stringstream perm{};
     perm << '(';
-    for (unsigned long i = 0; i < pi.size() - 1; i++) {
+    for (std::uint64_t i = 0; i < pi.size() - 1; i++) {
         perm << pi[i] << ',';
     }
     perm << pi[pi.size() - 1] << ')';
@@ -97,15 +98,15 @@ std::string printPi(std::vector<unsigned short>& pi) {
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::set<unsigned short>& visited, const CouplingMap& rcm) {
+void dfs(std::uint16_t current, std::set<std::uint16_t>& visited, const CouplingMap& rcm) {
     for (auto edge: rcm) {
         if (edge.first == current) {
-            if (!visited.count(edge.second)) {
+            if (visited.count(edge.second) == 0U) {
                 visited.insert(edge.second);
                 dfs(edge.second, visited, rcm);
             }
         } else if (edge.second == current) {
-            if (!visited.count(edge.first)) {
+            if (visited.count(edge.first) == 0U) {
                 visited.insert(edge.first);
                 dfs(edge.first, visited, rcm);
             }
@@ -113,11 +114,14 @@ void dfs(unsigned short current, std::set<unsigned short>& visited, const Coupli
     }
 }
 
-std::vector<std::set<unsigned short>>
-subsets(const std::set<unsigned short>& input, int length, filter_function filter) {
-    std::size_t                           n = input.size();
-    std::vector<std::set<unsigned short>> result;
+std::vector<QubitSubset>
+subsets(const QubitSubset& input, int length, const filter_function& filter) {
+    std::size_t              n = input.size();
+    std::vector<QubitSubset> result{};
 
+    if (length == 0) {
+        throw std::invalid_argument("Length of subset must be greater than 0");
+    }
     if (length == 1) {
         for (const auto& item: input) {
             result.emplace_back();
@@ -126,12 +130,12 @@ subsets(const std::set<unsigned short>& input, int length, filter_function filte
     } else {
         std::size_t i = (1U << length) - 1U;
 
-        while (!(i >> n)) {
-            std::set<unsigned short> v{};
-            auto                     it = input.begin();
+        while ((i >> n) == 0U) {
+            std::set<std::uint16_t> v{};
+            auto                    it = input.begin();
 
             for (std::size_t j = 0U; j < n; j++, ++it) {
-                if (i & (1U << j)) {
+                if ((i & (1U << j)) != 0U) {
                     v.emplace(*it);
                 }
             }
@@ -154,23 +158,24 @@ subsets(const std::set<unsigned short>& input, int length, filter_function filte
     return result;
 }
 
-void parse_line(const std::string& line, char separator, const std::set<char>& escape_chars,
-                const std::set<char>& ignored_chars, std::vector<std::string>& result) {
+void parse_line(const std::string& line, char separator, const std::set<char>& escapeChars,
+                const std::set<char>& ignoredChars, std::vector<std::string>& result) {
+    result.clear();
     std::string word;
-    bool        in_escape = false;
+    bool        inEscape = false;
     for (char c: line) {
-        if (ignored_chars.find(c) != ignored_chars.end()) {
+        if (ignoredChars.find(c) != ignoredChars.end()) {
             continue;
         }
-        if (in_escape) {
-            if (escape_chars.find(c) != escape_chars.end()) {
-                in_escape = false;
+        if (inEscape) {
+            if (escapeChars.find(c) != escapeChars.end()) {
+                inEscape = false;
             } else {
                 word += c;
             }
         } else {
-            if (escape_chars.find(c) != escape_chars.end()) {
-                in_escape = true;
+            if (escapeChars.find(c) != escapeChars.end()) {
+                inEscape = true;
             } else if (c == separator) {
                 result.push_back(word);
                 word = "";
@@ -182,14 +187,50 @@ void parse_line(const std::string& line, char separator, const std::set<char>& e
     result.push_back(word);
 }
 
-std::set<std::pair<unsigned short, unsigned short>>
-getFullyConnectedMap(unsigned short nQubits) {
-    std::set<std::pair<unsigned short, unsigned short>> result{};
+CouplingMap getFullyConnectedMap(std::uint16_t nQubits) {
+    CouplingMap result{};
     for (int q = 0; q < nQubits; ++q) {
         for (int p = q + 1; p < nQubits; ++p) {
             result.emplace(q, p);
             result.emplace(p, q);
         }
+    }
+    return result;
+}
+
+std::string escapeChars(const std::string& s, const std::string& chars) {
+    std::stringstream ss;
+    for (auto c: s) {
+        if (chars.find(c) != std::string::npos) {
+            ss << "\\" << c;
+        } else if (c == '\n') {
+            ss << "\\n";
+        } else if (c == '\t') {
+            ss << "\\t";
+        } else {
+            ss << c;
+        }
+    }
+    return ss.str();
+}
+std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc) {
+    std::uint16_t result = 0;
+    for (const auto& gate: qc) {
+        if (gate->getType() == qc::OpType::Compound) {
+            auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+            auto  cit    = compOp->begin();
+            while (cit != compOp->end()) {
+                    if (cit->get()->getNcontrols() == 0 && cit->get()->getNtargets() == 1) {
+                        ++result;
+                    }
+                ++cit;
+            }
+        } else {
+            if (gate->getNcontrols() == 0 && gate->getNtargets() == 1) {
+                ++result;
+            }
+        }
+
     }
     return result;
 }

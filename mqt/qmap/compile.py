@@ -4,6 +4,8 @@
 #
 from __future__ import annotations
 
+from mqt.qmap.load_architecture import load_architecture
+from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
@@ -75,9 +77,9 @@ def compile(
 
     :param circ: Qiskit QuantumCircuit object or path to circuit file
     :type circ: QuantumCircuit | str
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend` (if Qiskit is installed)
+    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend`
     :type arch: str | Arch | Architecture | Backend | None
-    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
+    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object
     :type calibration: str | BackendProperties | Target | None
     :param method: Mapping technique to use (*heuristic* | exact)
     :type method: str | Method
@@ -120,40 +122,12 @@ def compile(
     if subgraph is None:
         subgraph = set()
 
-    architecture = Architecture()
     if arch is None and calibration is None:
         raise ValueError("Either arch or calibration must be specified")
 
-    if arch is not None:
-        if isinstance(arch, str):
-            try:
-                architecture.load_coupling_map(Arch(arch))
-            except ValueError:
-                architecture.load_coupling_map(arch)
-        elif isinstance(arch, Arch):
-            architecture.load_coupling_map(arch)
-        elif isinstance(arch, Architecture):
-            architecture = arch
-        elif isinstance(arch, Backend):
-            from mqt.qmap.qiskit.backend import import_backend
+    architecture = load_architecture(arch)
 
-            architecture = import_backend(arch)
-        else:
-            raise ValueError("No compatible type for architecture:", type(arch))
-
-    if calibration is not None:
-        if isinstance(calibration, str):
-            architecture.load_properties(calibration)
-        elif isinstance(calibration, BackendProperties):
-            from mqt.qmap.qiskit.backend import import_backend_properties
-
-            architecture.load_properties(import_backend_properties(calibration))
-        elif isinstance(calibration, Target):
-            from mqt.qmap.qiskit.backend import import_target
-
-            architecture.load_properties(import_target(calibration))
-        else:
-            raise ValueError("No compatible type for calibration:", type(calibration))
+    architecture = load_calibration(calibration, architecture)
 
     config = Configuration()
     config.method = Method(method)

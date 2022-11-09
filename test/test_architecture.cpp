@@ -63,18 +63,10 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
     CouplingMap cm{};
 
     arch.getHighestFidelityCouplingMap(arch.getNqubits(), cm);
-
     EXPECT_EQ(cm, arch.getCouplingMap());
 
-    arch.getHighestFidelityCouplingMap(1, cm);
-
-    CouplingMap expected{};
-
-    if (arch_name.find(".csv") == std::string::npos) {
-        EXPECT_EQ(cm, arch.getCouplingMap());
-    } else {
-        EXPECT_NE(cm, arch.getCouplingMap());
-    }
+    arch.getHighestFidelityCouplingMap(1U, cm);
+    EXPECT_TRUE(cm.empty());
 }
 TEST_P(TestArchitecture, ReducedMaps) {
     auto&             arch_name = GetParam();
@@ -139,15 +131,14 @@ TEST(TestArchitecture, FidelityTest) {
     architecture.loadProperties(props);
     architecture.getHighestFidelityCouplingMap(2, cm);
 
-    std::vector<unsigned short> highestFidelity{2, 3};
-    auto                        qubitList = Architecture::getQubitList(cm);
+    const std::vector<unsigned short> highestFidelity{2, 3};
+    auto                              qubitList = Architecture::getQubitList(cm);
 
     EXPECT_EQ(qubitList, highestFidelity);
 }
 
 TEST(TestArchitecture, FullyConnectedTest) {
-    CouplingMap cm = getFullyConnectedMap(3);
-
+    const auto cm = getFullyConnectedMap(3);
     ASSERT_TRUE(cm.size() == 3 * 2);
 }
 
@@ -156,4 +147,11 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
     std::vector<unsigned short>                            permutation{1, 1, 2, 3, 4};
     std::vector<std::pair<unsigned short, unsigned short>> swaps{};
     EXPECT_THROW(architecture.minimumNumberOfSwaps(permutation, swaps), std::runtime_error);
+}
+
+TEST(TestArchitecture, CreateArchFromFidelities) {
+    Architecture architecture{{0.9, 0.9, 0.9, 0.9}, {{0, 0, 0.8, 0.8}, {0, 0, 0.7, 0.7}, {0, 0.8, 0, 0.6}, {0.8, 0.8, 0, 0}}, {0.9, 0.9, 0.9, 0.9}};
+
+    EXPECT_EQ(architecture.getNqubits(), 4);
+    EXPECT_EQ(architecture.getSingleQubitFidelities()[0], 0.9);
 }

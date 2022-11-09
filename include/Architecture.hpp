@@ -18,10 +18,10 @@
 #include <unordered_map>
 #include <vector>
 
-constexpr unsigned short GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
-constexpr unsigned short GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
-constexpr unsigned short GATES_OF_DIRECTION_REVERSE   = 4U;
-constexpr unsigned short GATES_OF_TELEPORTATION       = 7U;
+constexpr std::uint8_t GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
+constexpr std::uint8_t GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
+constexpr std::uint8_t GATES_OF_DIRECTION_REVERSE   = 4U;
+constexpr std::uint8_t GATES_OF_TELEPORTATION       = 7U;
 
 constexpr int COST_SINGLE_QUBIT_GATE   = 1;
 constexpr int COST_CNOT_GATE           = 10;
@@ -64,29 +64,29 @@ public:
             name = propertiesName;
         }
 
-        [[nodiscard]] unsigned short getNqubits() const {
+        [[nodiscard]] std::uint16_t getNqubits() const {
             return nq;
         }
-        void setNqubits(unsigned short nqs) {
+        void setNqubits(std::uint16_t nqs) {
             nq = nqs;
         }
 
-        Property<unsigned short, Property<qc::OpType, double>>                           singleQubitErrorRate{};
-        Property<unsigned short, Property<unsigned short, Property<qc::OpType, double>>> twoQubitErrorRate{};
-        Property<unsigned short, double>                                                 readoutErrorRate{};
-        Property<unsigned short, double>                                                 t1Time{};
-        Property<unsigned short, double>                                                 t2Time{};
-        Property<unsigned short, double>                                                 qubitFrequency{};
-        Property<unsigned short, std::string>                                            calibrationDate{};
+        Property<std::uint16_t, Property<qc::OpType, double>>                          singleQubitErrorRate{};
+        Property<std::uint16_t, Property<std::uint16_t, Property<qc::OpType, double>>> twoQubitErrorRate{};
+        Property<std::uint16_t, double>                                                readoutErrorRate{};
+        Property<std::uint16_t, double>                                                t1Time{};
+        Property<std::uint16_t, double>                                                t2Time{};
+        Property<std::uint16_t, double>                                                qubitFrequency{};
+        Property<std::uint16_t, std::string>                                           calibrationDate{};
 
         // convenience functions
-        void setSingleQubitErrorRate(unsigned short qubit, const std::string& operation, double errorRate) {
+        void setSingleQubitErrorRate(std::uint16_t qubit, const std::string& operation, double errorRate) {
             singleQubitErrorRate.get(qubit).set(qc::opTypeFromString(operation), errorRate);
         }
-        [[nodiscard]] double getSingleQubitErrorRate(unsigned short qubit, const std::string& operation) const {
+        [[nodiscard]] double getSingleQubitErrorRate(std::uint16_t qubit, const std::string& operation) const {
             return singleQubitErrorRate.get(qubit).get(qc::opTypeFromString(operation));
         }
-        [[nodiscard]] double getAverageSingleQubitErrorRate(const unsigned short qubit) const {
+        [[nodiscard]] double getAverageSingleQubitErrorRate(const std::uint16_t qubit) const {
             double avgErrorRate = 0.0;
             for (const auto& [opType, error]: singleQubitErrorRate.get(qubit).get()) {
                 avgErrorRate += error;
@@ -94,13 +94,13 @@ public:
             return avgErrorRate / static_cast<double>(singleQubitErrorRate.get(qubit).get().size());
         }
 
-        void setTwoQubitErrorRate(unsigned short qubit1, unsigned short qubit2, double errorRate, const std::string& operation = "cx") {
+        void setTwoQubitErrorRate(std::uint16_t qubit1, std::uint16_t qubit2, double errorRate, const std::string& operation = "cx") {
             twoQubitErrorRate.get(qubit1).get(qubit2).set(qc::opTypeFromString(operation), errorRate);
         }
-        [[nodiscard]] double getTwoQubitErrorRate(unsigned short qubit1, unsigned short qubit2, const std::string& operation = "cx") const {
+        [[nodiscard]] double getTwoQubitErrorRate(std::uint16_t qubit1, std::uint16_t qubit2, const std::string& operation = "cx") const {
             return twoQubitErrorRate.get(qubit1).get(qubit2).get(qc::opTypeFromString(operation));
         }
-        [[nodiscard]] bool twoQubitErrorRateAvailable(unsigned short qubit1, unsigned short qubit2, const std::string& operation = "cx") const {
+        [[nodiscard]] bool twoQubitErrorRateAvailable(std::uint16_t qubit1, std::uint16_t qubit2, const std::string& operation = "cx") const {
             return twoQubitErrorRate.available(qubit1) && twoQubitErrorRate.get(qubit1).available(qubit2) && twoQubitErrorRate.get(qubit1).get(qubit2).available(qc::opTypeFromString(operation));
         }
 
@@ -132,7 +132,7 @@ public:
 
             json["name"]   = name;
             json["qubits"] = {};
-            for (unsigned short i = 0; i < nq; ++i) {
+            for (std::uint16_t i = 0U; i < nq; ++i) {
                 auto& qubitProperties = json["qubits"][std::to_string(i)];
 
                 if (singleQubitErrorRate.available(i)) {
@@ -177,14 +177,14 @@ public:
         }
 
     protected:
-        std::string    name{};
-        unsigned short nq{};
+        std::string   name{};
+        std::uint16_t nq{};
     };
 
     void loadCouplingMap(std::istream& is);
     void loadCouplingMap(std::istream&& is);
     void loadCouplingMap(const std::string& filename);
-    void loadCouplingMap(unsigned short nQ, const CouplingMap& cm);
+    void loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm);
     void loadCouplingMap(AvailableArchitecture architecture);
     void loadProperties(std::istream& is);
     void loadProperties(std::istream&& is);
@@ -200,13 +200,15 @@ public:
         loadProperties(props_filename);
     }
 
-    Architecture(unsigned short nQ, const CouplingMap& couplingMap);
-    Architecture(unsigned short nQ, const CouplingMap& couplingMap, const Properties& properties);
+    Architecture(std::uint16_t nQ, const CouplingMap& couplingMap);
+    Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, const Properties& properties);
 
-    [[nodiscard]] unsigned short getNqubits() const {
+    Architecture(std::initializer_list<double> singleFidelities, std::initializer_list<std::initializer_list<double>> twoFidelities, std::initializer_list<double> readoutFidelities);
+
+    [[nodiscard]] std::uint16_t getNqubits() const {
         return nqubits;
     }
-    void setNqubits(unsigned short nQ) {
+    void setNqubits(std::uint16_t nQ) {
         nqubits = nQ;
     }
 
@@ -231,7 +233,7 @@ public:
     CouplingMap& getCurrentTeleportations() {
         return current_teleportations;
     }
-    std::vector<std::pair<short, short>>& getTeleportationQubits() {
+    std::vector<std::pair<std::int16_t, std::int16_t>>& getTeleportationQubits() {
         return teleportationQubits;
     }
 
@@ -262,8 +264,11 @@ public:
         return isBidirectional;
     }
 
-    [[nodiscard]] bool isArchitectureAvailable() {
+    [[nodiscard]] bool isArchitectureAvailable() const {
         return !(name.empty()) && nqubits != 0;
+    }
+    [[nodiscard]] bool isCalibrationDataAvailable() const {
+        return !(name.empty()) && !properties.empty();
     }
 
     void reset() {
@@ -277,7 +282,7 @@ public:
         singleQubitFidelities.clear();
     }
 
-    [[nodiscard]] double distance(unsigned short control, unsigned short target) const {
+    [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target) const {
         if (current_teleportations.empty()) {
             return distanceTable.at(control).at(target);
         } else {
@@ -285,21 +290,21 @@ public:
         }
     }
 
-    [[nodiscard]] std::set<unsigned short> getQubitSet() const {
-        std::set<unsigned short> result{};
+    [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
+        std::set<std::uint16_t> result{};
         for (int i = 0; i < nqubits; ++i) {
             result.insert(result.end(), i); //should be constant with gcc, or at most O(nqubits)
         }
         return result;
     }
 
-    unsigned long minimumNumberOfSwaps(std::vector<unsigned short>& permutation, long limit = -1);
-    void          minimumNumberOfSwaps(std::vector<unsigned short>& permutation, std::vector<std::pair<unsigned short, unsigned short>>& swaps);
+    std::uint64_t minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation, std::int64_t limit = -1);
+    void          minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation, std::vector<Edge>& swaps);
 
     struct Node {
-        unsigned long                                          nswaps = 0;
-        std::vector<std::pair<unsigned short, unsigned short>> swaps{};
-        std::unordered_map<unsigned short, unsigned short>     permutation{};
+        std::uint64_t                                    nswaps = 0;
+        std::vector<Edge>                                swaps{};
+        std::unordered_map<std::uint16_t, std::uint16_t> permutation{};
 
         void print(std::ostream& out) {
             out << swaps.size() << ": ";
@@ -315,30 +320,36 @@ public:
     };
 
     [[nodiscard]] std::size_t getCouplingLimit() const;
-    [[nodiscard]] std::size_t getCouplingLimit(const std::set<unsigned short>& qubitChoice) const;
+    [[nodiscard]] std::size_t getCouplingLimit(const std::set<std::uint16_t>& qubitChoice) const;
 
-    void                                                getHighestFidelityCouplingMap(unsigned short subsetSize, CouplingMap& couplingMap);
-    [[nodiscard]] std::vector<std::set<unsigned short>> getAllConnectedSubsets(unsigned short subsetSize);
-    void                                                getReducedCouplingMaps(unsigned short subsetSize, std::vector<CouplingMap>& couplingMaps);
-    void                                                getReducedCouplingMap(const std::set<unsigned short>& qubitChoice, CouplingMap& couplingMap);
-    [[nodiscard]] static double                         getAverageArchitectureFidelity(const CouplingMap& couplingMap, const std::set<unsigned short>& qubitChoice, const Properties& props);
+    void                                   getHighestFidelityCouplingMap(std::uint16_t subsetSize, CouplingMap& couplingMap) const;
+    [[nodiscard]] std::vector<QubitSubset> getAllConnectedSubsets(std::uint16_t subsetSize) const;
+    void                                   getReducedCouplingMaps(std::uint16_t subsetSize, std::vector<CouplingMap>& couplingMaps) const;
+    void                                   getReducedCouplingMap(const QubitSubset& qubitChoice, CouplingMap& couplingMap) const;
+    [[nodiscard]] static double            getAverageArchitectureFidelity(const CouplingMap& cm, const QubitSubset& qubitChoice, const Properties& props);
 
-    [[nodiscard]] static std::vector<unsigned short> getQubitList(const CouplingMap& couplingMap);
+    [[nodiscard]] static QubitSubset                getQubitSet(const CouplingMap& cm);
+    [[nodiscard]] static std::vector<std::uint16_t> getQubitList(const CouplingMap& cm) {
+        const auto qubitSet = getQubitSet(cm);
+        return {qubitSet.begin(), qubitSet.end()};
+    }
 
-    static bool isConnected(const std::set<unsigned short>& qubitChoice, const CouplingMap& reducedCouplingMap);
+    static bool isConnected(const QubitSubset& qubitChoice, const CouplingMap& reducedCouplingMap);
+
+    static void printCouplingMap(const CouplingMap& cm,
+                                 std::ostream&      os);
 
 protected:
-    std::string                          name;
-    unsigned short                       nqubits                = 0;
-    CouplingMap                          couplingMap            = {};
-    CouplingMap                          current_teleportations = {};
-    bool                                 isBidirectional        = true;
-    Matrix                               distanceTable          = {};
-    std::vector<std::pair<short, short>> teleportationQubits{};
-
-    Properties          properties            = {};
-    Matrix              fidelityTable         = {};
-    std::vector<double> singleQubitFidelities = {};
+    std::string                                        name;
+    std::uint16_t                                      nqubits                = 0;
+    CouplingMap                                        couplingMap            = {};
+    CouplingMap                                        current_teleportations = {};
+    bool                                               isBidirectional        = true;
+    Matrix                                             distanceTable          = {};
+    std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
+    Properties                                         properties            = {};
+    Matrix                                             fidelityTable         = {};
+    std::vector<double>                                singleQubitFidelities = {};
 
     void createDistanceTable();
     void createFidelityTable();
@@ -365,11 +376,11 @@ protected:
     static bool contains(const std::vector<int>& v, const int e) {
         return std::find(v.begin(), v.end(), e) != v.end();
     }
-    [[nodiscard]] unsigned long bfs(unsigned short start, unsigned short goal, const std::set<Edge>& teleportations) const;
+    [[nodiscard]] std::uint64_t bfs(std::uint16_t start, std::uint16_t goal, const std::set<Edge>& teleportations) const;
 
     static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits);
-    static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<unsigned short>& qubitChoice);
-    static void        findCouplingLimit(unsigned short node, int curSum, const std::vector<std::vector<unsigned short>>& connections, std::vector<int>& d, std::vector<bool>& visited);
+    static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits, const std::set<std::uint16_t>& qubitChoice);
+    static void        findCouplingLimit(std::uint16_t node, int curSum, const std::vector<std::vector<std::uint16_t>>& connections, std::vector<int>& d, std::vector<bool>& visited);
 };
 
 #endif //QMAP_ARCHITECTURE_HPP
