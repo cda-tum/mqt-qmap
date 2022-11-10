@@ -87,7 +87,7 @@ Using QMAP for Optimal Synthesis
 
         qc_opt, results = qmap.optimize_clifford(qc)
 
-        print(qc_synth.draw(fold=-1))
+        print(qc_opt.draw(fold=-1))
 
     .. code-block:: console
 
