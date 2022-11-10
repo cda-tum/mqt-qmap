@@ -110,8 +110,8 @@ namespace cs {
         synthesizer.optimalResults.resultStringCircuit = ss.str();
         synthesizer.optimalResults.resultTableaus.emplace_back(*configuration.targetTableau);
         synthesizer.optimalResults.singleQubitGates = getSingleQubitOperations(circuit);
-        synthesizer.optimalResults.twoQubitGates   = circuit.getNindividualOps() - synthesizer.optimalResults.singleQubitGates;
-        synthesizer.optimalResults.result    = logicbase::Result::SAT;
+        synthesizer.optimalResults.twoQubitGates    = circuit.getNindividualOps() - synthesizer.optimalResults.singleQubitGates;
+        synthesizer.optimalResults.result           = logicbase::Result::SAT;
     }
     void HeuristicStrategy::runSplinter(int i, std::size_t circSplit, std::size_t split, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, qc::QuantumComputation& circuit, std::shared_ptr<Results> r, CliffordSynthesizer* opt, const Configuration& configuration) {
         const Tableau targetTableau{circuit, 0, static_cast<std::size_t>((i + 1U)) * circSplit};

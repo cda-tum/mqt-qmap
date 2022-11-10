@@ -655,7 +655,7 @@ Architecture::Architecture(std::initializer_list<double> singleFidelities, std::
         throw QMAPException("Architecture: Invalid input!");
     }
     static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
-    nqubits = singleFidelities.size();
+    nqubits                              = singleFidelities.size();
     for (std::uint16_t i = 0; i < nqubits; ++i) {
         for (const auto operation: SINGLE_QUBIT_GATES) {
             properties.setSingleQubitErrorRate(i, operation, 1.0 - singleFidelities.begin()[i]);

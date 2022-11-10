@@ -145,6 +145,5 @@ CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
 
 std::string escapeChars(const std::string& s, const std::string& chars);
 
-
 std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc);
 #endif //QMAP_UTILS_HPP

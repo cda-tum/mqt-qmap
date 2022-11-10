@@ -25,7 +25,6 @@ protected:
         ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
         ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
 
-
         londonOptimizer = std::make_unique<CliffordSynthesizer>();
     }
 };
@@ -45,8 +44,8 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 10;
@@ -147,8 +146,8 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 4;
@@ -163,7 +162,6 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
     EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
     EXPECT_LE(cs.optimalResults.depth, 4);
     EXPECT_GE(cs.optimalResults.depth, 1);
-
 }
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
@@ -187,16 +185,14 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
     EXPECT_EQ(londonOptimizer->optimalResults.result, logicbase::Result::SAT);
     EXPECT_LE(londonOptimizer->optimalResults.singleQubitGates + londonOptimizer->optimalResults.twoQubitGates, 6);
     EXPECT_GT(londonOptimizer->optimalResults.singleQubitGates + londonOptimizer->optimalResults.twoQubitGates, 3);
-
-
 }
 
 TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 6;
@@ -217,8 +213,8 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 2;
@@ -239,8 +235,8 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 100;
@@ -261,8 +257,8 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
     const auto& line = GetParam();
     Tableau     tableau{};
     tableau.fromString(line);
-    CliffordSynthesizer    cs{};
-    Configuration configuration{};
+    CliffordSynthesizer cs{};
+    Configuration       configuration{};
 
     configuration.nqubits         = 2;
     configuration.initialTimestep = 4;

@@ -220,9 +220,9 @@ std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc) {
             auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
             auto  cit    = compOp->begin();
             while (cit != compOp->end()) {
-                    if (cit->get()->getNcontrols() == 0 && cit->get()->getNtargets() == 1) {
-                        ++result;
-                    }
+                if (cit->get()->getNcontrols() == 0 && cit->get()->getNtargets() == 1) {
+                    ++result;
+                }
                 ++cit;
             }
         } else {
@@ -230,7 +230,6 @@ std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc) {
                 ++result;
             }
         }
-
     }
     return result;
 }

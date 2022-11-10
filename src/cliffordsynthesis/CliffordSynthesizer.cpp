@@ -215,9 +215,9 @@ namespace cs {
                 localResultCircuit.addQubitRegister(configuration.nqubits);
             }
             results.singleQubitGates = 0U;
-            results.twoQubitGates = 0U;
-            results.depth     = 0U;
-            results.fidelity  = 1.;
+            results.twoQubitGates    = 0U;
+            results.depth            = 0U;
+            results.fidelity         = 1.;
             assert(configuration.nqubits == qubitChoice.size());
             for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
                 auto oldGateCount = results.singleQubitGates + results.twoQubitGates;
