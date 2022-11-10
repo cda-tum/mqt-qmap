@@ -95,3 +95,4 @@ S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford C
 _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
+```
