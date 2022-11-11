@@ -119,6 +119,7 @@ setup(
             "sphinx-hoverxref",
             "pybtex>=0.24",
             "importlib_metadata>=4.4; python_version < '3.10'",
+            "nbsphinx",
         ],
         "dev": ["mqt.qmap[coverage, docs]"],  # requires Pip 21.2 or newer
     },
