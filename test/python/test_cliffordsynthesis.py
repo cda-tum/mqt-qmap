@@ -67,3 +67,12 @@ def test_cliffordsynthesis_sanity_check_fidelity() -> None:
     qc_mapped, results = qmap.optimize_clifford(qc, arch=FakeLondon(), target="fidelity")
 
     assert results.fidelity != 0.0
+
+def test_cliffordsynthesis_sanity_check_empty_tableau() -> None:
+    """Verify that fidelity is 0 if none is given"""
+
+    stabilizers = '["+ZI", "+IZ"]'
+
+    qc_mapped, results = qmap.synthesize_clifford(stabilizers, target="gates")
+
+    assert results.single_qubit_gates == 0

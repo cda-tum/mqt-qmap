@@ -38,7 +38,8 @@ INSTANTIATE_TEST_SUITE_P(
                         "Stabilizer = ['+XY', '+ZZ']",
                         "Stabilizer = ['+XX', '+ZZ']",
                         "Stabilizer = ['-XX', '+ZZ']",
-                        "Stabilizer = ['+XX', '-ZZ']"));
+                        "Stabilizer = ['+XX', '-ZZ']",
+                        "Stabilizer = ['+ZI', '+IZ']"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
     const auto& line = GetParam();
