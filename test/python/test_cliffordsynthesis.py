@@ -68,6 +68,7 @@ def test_cliffordsynthesis_sanity_check_fidelity() -> None:
 
     assert results.fidelity != 0.0
 
+
 def test_cliffordsynthesis_sanity_check_empty_tableau() -> None:
     """Verify that fidelity is 0 if none is given"""
 
