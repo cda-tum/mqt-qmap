@@ -10,18 +10,18 @@ from setuptools.command.build_ext import build_ext
 
 
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=""):
+    def __init__(self, name: str, sourcedir: str = "") -> None:
         super().__init__(name, sources=[])
         self.sourcedir = str(Path(sourcedir).resolve())
 
 
 class CMakeBuild(build_ext):
-    def build_extension(self, ext):
-        from setuptools_scm import get_version
+    def build_extension(self, ext: CMakeExtension) -> None:
+        from setuptools_scm import get_version  # type: ignore[import]
 
         version = get_version(root=".", relative_to=__file__)
 
-        extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.resolve())
+        extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.resolve())  # type: ignore[no-untyped-call]
 
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
         cfg = "Debug" if self.debug else "Release"
