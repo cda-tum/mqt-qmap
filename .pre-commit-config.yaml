@@ -107,7 +107,10 @@ repos:
         files: ^(mqt/qmap|test/python)
         args:
           [--no-strict-optional, --ignore-missing-imports, --no-warn-return-any]
-        additional_dependencies: ["types-setuptools", "pytest>=7.0"]
+        additional_dependencies:
+          - "types-setuptools"
+          - "pytest>=7.0"
+          - "mqt.qcec>=2"
 
   # Check for spelling
   - repo: https://github.com/codespell-project/codespell
