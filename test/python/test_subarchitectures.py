@@ -16,22 +16,22 @@ from qiskit.providers.fake_provider import FakeLondon
 def ibm_guadalupe() -> SubarchitectureOrder:
     return SubarchitectureOrder.from_coupling_map(
         [
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 5],
-            [1, 4],
-            [5, 8],
-            [4, 7],
-            [6, 7],
-            [8, 9],
-            [7, 10],
-            [8, 11],
-            [10, 12],
-            [12, 15],
-            [12, 13],
-            [13, 14],
-            [11, 14],
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 5),
+            (1, 4),
+            (5, 8),
+            (4, 7),
+            (6, 7),
+            (8, 9),
+            (7, 10),
+            (8, 11),
+            (10, 12),
+            (12, 15),
+            (12, 13),
+            (13, 14),
+            (11, 14),
         ]
     )
 
@@ -40,24 +40,24 @@ def ibm_guadalupe() -> SubarchitectureOrder:
 def rigetti16() -> SubarchitectureOrder:
     return SubarchitectureOrder.from_coupling_map(
         [
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 4],
-            [4, 5],
-            [5, 6],
-            [6, 7],
-            [7, 8],
-            [8, 9],
-            [9, 10],
-            [10, 11],
-            [11, 12],
-            [12, 13],
-            [13, 14],
-            [14, 15],
-            [0, 15],
-            [3, 12],
-            [4, 11],
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+            (9, 10),
+            (10, 11),
+            (11, 12),
+            (12, 13),
+            (13, 14),
+            (14, 15),
+            (0, 15),
+            (3, 12),
+            (4, 11),
         ]
     )
 
@@ -110,7 +110,7 @@ def test_singleton_graph(singleton_graph: rx.PyGraph) -> None:
 def test_two_node_graph(singleton_graph: rx.PyGraph) -> None:
     """Verify ordering for graph with two nodes and one edge."""
 
-    order = SubarchitectureOrder.from_coupling_map([[0, 1]])
+    order = SubarchitectureOrder.from_coupling_map([(0, 1)])
     assert len(order.sgs) == 3
     assert len(order.sgs[0]) == 0
     assert len(order.sgs[1]) == 1

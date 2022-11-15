@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import pytest
-from mqt import qcec, qmap
+from mqt import qmap
+from mqt.qcec import verify
 
 from qiskit import QuantumCircuit
 
@@ -41,7 +42,7 @@ def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str)
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
-    result = qcec.verify(example_circuit, example_circuit_mapped)
+    result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -65,7 +66,7 @@ def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: qma
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
-    result = qcec.verify(example_circuit, example_circuit_mapped)
+    result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -78,7 +79,7 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
-    result = qcec.verify(example_circuit, example_circuit_mapped)
+    result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -89,7 +90,7 @@ def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
-    result = qcec.verify(example_circuit, example_circuit_mapped)
+    result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -105,5 +106,5 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
     assert results.timeout is False
     assert results.mapped_circuit != ""
 
-    result = qcec.verify(example_circuit, example_circuit_mapped)
+    result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
