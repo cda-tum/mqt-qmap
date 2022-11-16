@@ -3,7 +3,7 @@ requires = [
     "setuptools>=61",
     "setuptools_scm[toml]>=7",
     "ninja>=1.10; sys_platform != 'win32'",
-    "cmake>=3.14",
+    "cmake>=3.19",
     "z3-solver>=4.8.15,<4.12.0",
 ]
 build-backend = "setuptools.build_meta"
