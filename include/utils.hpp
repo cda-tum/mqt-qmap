@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_UTILS_HPP
-#define QMAP_UTILS_HPP
+#pragma once
 
 #include <algorithm>
 #include <functional>
@@ -154,4 +153,3 @@ void parse_line(const std::string& line, char separator,
                 std::vector<std::string>& result);
 std::set<std::pair<unsigned short, unsigned short>>
 getFullyConnectedMap(unsigned short nQubits);
-#endif // QMAP_UTILS_HPP

@@ -11,8 +11,7 @@
 #include <sstream>
 #include <string>
 
-#ifndef QMAP_MAPPINGRESULTS_HPP
-#define QMAP_MAPPINGRESULTS_HPP
+#pragma once
 
 struct MappingResults {
   struct CircuitInfo {
@@ -113,5 +112,3 @@ struct MappingResults {
     return ss.str();
   }
 };
-
-#endif // QMAP_MAPPINGRESULTS_HPP

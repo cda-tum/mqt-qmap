@@ -10,8 +10,7 @@
 #include <set>
 #include <vector>
 
-#ifndef UNIQUE_PRIORITY_QUEUE_H
-#define UNIQUE_PRIORITY_QUEUE_H
+#pragma once
 
 #define UNUSED(x)                                                              \
   { (void)x; }
@@ -148,4 +147,3 @@ private:
   std::set<T, FuncCompare>                           membership_;
   unsigned int                                       last_node_copied = 0;
 };
-#endif

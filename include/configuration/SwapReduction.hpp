@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_SWAPREDUCTION_HPP
-#define QMAP_SWAPREDUCTION_HPP
+#pragma once
 
 #include <iostream>
 
@@ -39,5 +38,3 @@ swapReductionFromString(const std::string& reduction) {
     throw std::invalid_argument("Invalid swap reduction value: " + reduction);
   }
 }
-
-#endif // QMAP_SWAPREDUCTION_HPP

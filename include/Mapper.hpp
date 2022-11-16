@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_MAPPER_HPP
-#define QMAP_MAPPER_HPP
+#pragma once
 
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
@@ -264,5 +263,3 @@ public:
     results = MappingResults();
   }
 };
-
-#endif // QMAP_MAPPER_HPP

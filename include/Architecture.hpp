@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_ARCHITECTURE_HPP
-#define QMAP_ARCHITECTURE_HPP
+#pragma once
 
 #include "configuration/AvailableArchitecture.hpp"
 #include "nlohmann/json.hpp"
@@ -394,5 +393,3 @@ protected:
                     const std::vector<std::vector<unsigned short>>& connections,
                     std::vector<int>& d, std::vector<bool>& visited);
 };
-
-#endif // QMAP_ARCHITECTURE_HPP
