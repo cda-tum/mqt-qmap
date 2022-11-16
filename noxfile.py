@@ -7,7 +7,7 @@ from nox.sessions import Session
 
 nox.options.sessions = ["lint", "tests"]
 
-PYTHON_ALL_VERSIONS = ["3.7", "3.8", "3.9", "3.10"]
+PYTHON_ALL_VERSIONS = ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
@@ -42,6 +42,17 @@ def coverage(session: Session) -> None:
         session.posargs.remove("skip-install")
     if run_install:
         session.install("-e", ".[coverage]")
+    session.run("pytest", "--cov", *session.posargs)
+
+
+@nox.session()
+def min_qiskit_version(session: Session) -> None:
+    """
+    Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage.
+    """
+    session.install("qiskit-terra~=0.20.2")
+    session.install("-e", ".[coverage]")
+    session.run("pip", "show", "qiskit-terra")
     session.run("pytest", "--cov", *session.posargs)
 
 
