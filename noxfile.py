@@ -45,6 +45,17 @@ def coverage(session: Session) -> None:
     session.run("pytest", "--cov", *session.posargs)
 
 
+@nox.session()
+def min_qiskit_version(session: Session) -> None:
+    """
+    Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage.
+    """
+    session.install("qiskit-terra~=0.20.2")
+    session.install("-e", ".[coverage]")
+    session.run("pip", "show", "qiskit-terra")
+    session.run("pytest", "--cov", *session.posargs)
+
+
 @nox.session
 def lint(session: Session) -> None:
     """
