@@ -18,10 +18,7 @@ namespace py = pybind11;
 namespace nl = nlohmann;
 using namespace pybind11::literals;
 
-// c++ binding function
-MappingResults map(const py::object& circ, Architecture& arch,
-                   Configuration& config) {
-  qc::QuantumComputation qc{};
+void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
   try {
     if (py::isinstance<py::str>(circ)) {
       auto&& file = circ.cast<std::string>();
@@ -34,6 +31,14 @@ MappingResults map(const py::object& circ, Architecture& arch,
     ss << "Could not import circuit: " << e.what();
     throw std::invalid_argument(ss.str());
   }
+}
+
+// c++ binding function
+MappingResults map(const py::object& circ, Architecture& arch,
+                   Configuration& config) {
+  qc::QuantumComputation qc{};
+
+  loadQC(qc, circ);
 
   if (config.useTeleportation) {
     config.teleportationQubits =
