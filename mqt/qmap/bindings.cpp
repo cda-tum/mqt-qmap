@@ -3,9 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#ifdef Z3_FOUND
 #include "exact/ExactMapper.hpp"
-#endif
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -47,13 +45,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
     if (config.method == Method::Heuristic) {
       mapper = std::make_unique<HeuristicMapper>(qc, arch);
     } else if (config.method == Method::Exact) {
-#ifdef Z3_FOUND
       mapper = std::make_unique<ExactMapper>(qc, arch);
-#else
-      std::stringstream ss{};
-      ss << toString(config.method) << " (Z3 support not enabled)";
-      throw std::invalid_argument(ss.str());
-#endif
     }
   } catch (std::exception const& e) {
     std::stringstream ss{};
