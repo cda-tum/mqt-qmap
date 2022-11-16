@@ -1,8 +1,7 @@
-/*
- * This file is part of the MQT QMAP library which is released under the MIT
- * license. See file README.md or go to
- * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
- */
+//
+// This file is part of the MQT QMAP library released under the MIT license.
+// See README.md or go to https://github.com/cda-tum/qmap for more information.
+//
 
 #ifndef QMAP_METHOD_HPP
 #define QMAP_METHOD_HPP
