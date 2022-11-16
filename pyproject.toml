@@ -80,7 +80,7 @@ include = ["mqt.*"]
 build = "cp3*"
 archs = "auto64"
 skip = "*-musllinux*"
-test-skip = "cp311-* *-macosx_arm64 *-musllinux* *aarch64"
+test-skip = "*-macosx_arm64"
 test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
