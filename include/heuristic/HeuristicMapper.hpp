@@ -7,8 +7,7 @@
 #include "Mapper.hpp"
 #include "heuristic/unique_priority_queue.hpp"
 
-#ifndef QMAP_HEURISTICMAPPER_HPP
-#define QMAP_HEURISTICMAPPER_HPP
+#pragma once
 
 class HeuristicMapper : public Mapper {
 public:
@@ -348,5 +347,3 @@ inline bool operator>(const HeuristicMapper::Node& x,
     return x < y;
   }
 }
-
-#endif // QMAP_HEURISTICMAPPER_HPP

@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef EXACT_MAPPER_hpp
-#define EXACT_MAPPER_hpp
+#pragma once
 
 #include "Mapper.hpp"
 
@@ -36,5 +35,3 @@ protected:
 public:
   void map(const Configuration& settings) override;
 };
-
-#endif /* EXACT_MAPPER_hpp */

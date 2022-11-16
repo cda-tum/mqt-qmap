@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_AVAILABLEARCHITECTURE_HPP
-#define QMAP_AVAILABLEARCHITECTURE_HPP
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -106,5 +105,3 @@ getCouplingMapSpecification(AvailableArchitecture architecture) {
        "8"}};
   return architectureMap.at(architecture);
 }
-
-#endif // QMAP_AVAILABLEARCHITECTURE_HPP

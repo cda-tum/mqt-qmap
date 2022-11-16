@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_CONFIGURATION_HPP
-#define QMAP_CONFIGURATION_HPP
+#pragma once
 
 #include "CommanderGrouping.hpp"
 #include "Encoding.hpp"
@@ -125,5 +124,3 @@ struct Configuration {
 
   void setTimeout(unsigned int sec) { timeout = sec; }
 };
-
-#endif // QMAP_CONFIGURATION_HPP

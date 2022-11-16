@@ -4,8 +4,7 @@
  * for more information.
  */
 
-#ifndef QMAP_LAYERING_HPP
-#define QMAP_LAYERING_HPP
+#pragma once
 
 #include <iostream>
 
@@ -49,5 +48,3 @@ layeringFromString(const std::string& layering) {
     throw std::invalid_argument("Invalid layering value: " + layering);
   }
 }
-
-#endif // QMAP_LAYERING_HPP

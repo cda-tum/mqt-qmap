@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_ENCODING_HPP
-#define QMAP_ENCODING_HPP
+#pragma once
 
 #include <iostream>
 
@@ -35,5 +34,3 @@ encodingFromString(const std::string& encoding) {
     throw std::invalid_argument("Invalid encoding value: " + encoding);
   }
 }
-
-#endif // QMAP_ENCODING_HPP

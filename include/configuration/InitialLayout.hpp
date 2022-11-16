@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_INITIALLAYOUT_HPP
-#define QMAP_INITIALLAYOUT_HPP
+#pragma once
 
 #include <iostream>
 
@@ -43,5 +42,3 @@ initialLayoutFromString(const std::string& initialLayout) {
                                 initialLayout);
   }
 }
-
-#endif // QMAP_INITIALLAYOUT_HPP

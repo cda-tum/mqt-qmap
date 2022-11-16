@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_METHOD_HPP
-#define QMAP_METHOD_HPP
+#pragma once
 
 #include <iostream>
 
@@ -34,5 +33,3 @@ static std::string toString(const Method method) {
     throw std::invalid_argument("Invalid method value: " + method);
   }
 }
-
-#endif // QMAP_METHOD_HPP

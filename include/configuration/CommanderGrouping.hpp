@@ -4,8 +4,7 @@
  * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
-#ifndef QMAP_COMMANDERGROUPING_HPP
-#define QMAP_COMMANDERGROUPING_HPP
+#pragma once
 
 #include <iostream>
 
@@ -39,5 +38,3 @@ groupingFromString(const std::string& grouping) {
     throw std::invalid_argument("Invalid grouping value: " + grouping);
   }
 }
-
-#endif // QMAP_COMMANDERGROUPING_HPP
