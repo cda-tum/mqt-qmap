@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "setuptools>=45",
-    "setuptools_scm>=6.4",
+    "setuptools_scm>=7",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.14",
     "z3-solver>=4.8.15,<4.12.0",
