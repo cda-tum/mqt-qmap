@@ -1,12 +1,78 @@
 [build-system]
 requires = [
-    "setuptools>=45",
-    "setuptools_scm>=7",
+    "setuptools>=61",
+    "setuptools_scm[toml]>=7",
     "ninja>=1.10; sys_platform != 'win32'",
-    "cmake>=3.14",
+    "cmake>=3.19",
     "z3-solver>=4.8.15,<4.12.0",
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "mqt.qmap"
+description = "A tool for Quantum Circuit Mapping"
+readme = "README.md"
+authors = [
+    { name = "Lukas Burgholzer", email = "lukas.burgholzer@jku.at" },
+    { name = "Sarah Schneider", email = "sarah.schneider@jku.at" },
+    { name = "Stefan Hillmich", email = "stefan.hillmich@jku.at" },
+    { name = "Tom Peham", email = "tom.peham@tum.de" }
+]
+keywords = ["MQT", "quantum computing", "design automation", "mapping", "compilation", "qubit routing"]
+license = { file = "LICENSE.md" }
+
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: C++",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "qiskit-terra>=0.20.2",
+    "rustworkx[all]>=0.12.0",
+    "importlib_resources>=5.0; python_version < '3.10'",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = ["pytest>=7", "mqt.qcec>=2"]
+coverage = ["mqt.qmap[test]", "coverage[toml]>=6.3", "pytest-cov>=3"]
+docs = [
+    "sphinx>=5",
+    "sphinx-rtd-theme",
+    "sphinxcontrib-bibtex>=2.4.2",
+    "sphinx-copybutton",
+    "sphinx-hoverxref",
+    "pybtex>=0.24",
+    "importlib_metadata>=4.4; python_version < '3.10'",
+    "ipython",
+    "ipykernel",
+    "nbsphinx",
+    "qiskit-terra[visualization]",
+]
+dev = ["mqt.qmap[coverage, docs]"]
+
+[project.urls]
+Homepage = "https://github.com/cda-tum/qmap"
+Documentation = "https://mqtqmap.readthedocs.io"
+"Bug Tracker" = "https://github.com/cda-tum/qmap/issues"
+Discussions = "https://github.com/cda-tum/qmap/discussions"
+Research = "https://www.cda.cit.tum.de/research/ibm_qx_mapping/"
+
+[tool.setuptools.packages.find]
+include = ["mqt.*"]
 
 [tool.setuptools_scm]
 
@@ -33,7 +99,7 @@ before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel}"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
 testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
