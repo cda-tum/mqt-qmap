@@ -133,7 +133,7 @@ TEST(TestArchitecture, FidelityTest) {
   architecture.getHighestFidelityCouplingMap(2, cm);
 
   const std::vector<std::uint16_t> highestFidelity{2, 3};
-  auto                              qubitList = Architecture::getQubitList(cm);
+  auto                             qubitList = Architecture::getQubitList(cm);
 
   EXPECT_EQ(qubitList, highestFidelity);
 }
@@ -145,9 +145,9 @@ TEST(TestArchitecture, FullyConnectedTest) {
 }
 
 TEST(TestArchitecture, MinimumNumberOfSwapsError) {
-  Architecture                architecture{};
+  Architecture               architecture{};
   std::vector<std::uint16_t> permutation{1, 1, 2, 3, 4};
-  std::vector<Edge> swaps{};
+  std::vector<Edge>          swaps{};
   EXPECT_THROW(architecture.minimumNumberOfSwaps(permutation, swaps),
                std::runtime_error);
 }
