@@ -35,9 +35,6 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Installing boost
-        run: sudo apt-get install -y libboost-program-options-dev
-
       - name: Install Z3
         uses: cda-tum/setup-z3@v1
         with:

@@ -75,11 +75,6 @@ if(BUILD_QMAP_TESTS)
   add_subdirectory(test)
 endif()
 
-# add apps if this is the main project
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  add_subdirectory(apps)
-endif()
-
 # add Python binding code
 if(BINDINGS)
   add_subdirectory(mqt/qmap)
