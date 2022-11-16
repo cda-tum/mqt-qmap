@@ -127,7 +127,7 @@ def compile(
         raise ValueError("Either arch or calibration must be specified")
 
     architecture = load_architecture(arch)
-    architecture = load_calibration(calibration, architecture)
+    load_calibration(architecture, calibration)
 
     config = Configuration()
     config.method = Method(method)

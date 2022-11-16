@@ -6,30 +6,26 @@ from qiskit.providers.models import BackendProperties
 from qiskit.transpiler.target import Target
 
 
-def load_calibration(
-    calibration: str | BackendProperties | Target | None = None, architecture: Architecture = None
-) -> Architecture:
+def load_calibration(architecture: Architecture, calibration: str | BackendProperties | Target | None = None) -> None:
     """
     Load a calibration from a string, BackendProperties, or Target.
-    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object (if Qiskit is installed), or `qiskit.transpiler.target.Target` object (if Qiskit is installed)
-    :type calibration: str | BackendProperties | Target | None
     :param architecture: Architecture to load the calibration for
     :type architecture: Architecture
-
-    :return: Architecture
-    :rtype: Architecture
+    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object, or `qiskit.transpiler.target.Target` object
+    :type calibration: str | BackendProperties | Target | None
     """
-    if calibration is not None and architecture is not None:
-        if isinstance(calibration, str):
-            architecture.load_properties(calibration)
-        elif isinstance(calibration, BackendProperties):
-            from mqt.qmap.qiskit.backend import import_backend_properties
+    if calibration is None:
+        return
 
-            architecture.load_properties(import_backend_properties(calibration))
-        elif isinstance(calibration, Target):
-            from mqt.qmap.qiskit.backend import import_target
+    if isinstance(calibration, str):
+        architecture.load_properties(calibration)
+    elif isinstance(calibration, BackendProperties):
+        from mqt.qmap.qiskit.backend import import_backend_properties
 
-            architecture.load_properties(import_target(calibration))
-        else:
-            raise ValueError("No compatible type for calibration:", type(calibration))
-    return architecture
+        architecture.load_properties(import_backend_properties(calibration))
+    elif isinstance(calibration, Target):
+        from mqt.qmap.qiskit.backend import import_target
+
+        architecture.load_properties(import_target(calibration))
+    else:
+        raise ValueError("No compatible type for calibration:", type(calibration))
