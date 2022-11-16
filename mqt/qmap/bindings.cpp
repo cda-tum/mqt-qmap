@@ -1,8 +1,7 @@
-/*
- * This file is part of MQT QMAP library which is released under the MIT
- * license. See file README.md or go to
- * https://www.cda.cit.tum.de/research/quantum/ for more information.
- */
+//
+// This file is part of the MQT QMAP library released under the MIT license.
+// See README.md or go to https://github.com/cda-tum/qmap for more information.
+//
 
 #ifdef Z3_FOUND
 #include "exact/ExactMapper.hpp"
