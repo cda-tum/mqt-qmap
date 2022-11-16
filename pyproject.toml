@@ -99,7 +99,7 @@ before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel}"
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
 testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
