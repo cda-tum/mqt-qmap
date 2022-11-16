@@ -24,6 +24,9 @@ from qiskit.providers.models import BackendProperties
 from qiskit.transpiler import Layout
 from qiskit.transpiler.target import Target
 
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
+
 
 def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) -> Layout:
     """
@@ -120,40 +123,11 @@ def compile(
     if subgraph is None:
         subgraph = set()
 
-    architecture = Architecture()
     if arch is None and calibration is None:
         raise ValueError("Either arch or calibration must be specified")
 
-    if arch is not None:
-        if isinstance(arch, str):
-            try:
-                architecture.load_coupling_map(Arch(arch))
-            except ValueError:
-                architecture.load_coupling_map(arch)
-        elif isinstance(arch, Arch):
-            architecture.load_coupling_map(arch)
-        elif isinstance(arch, Architecture):
-            architecture = arch
-        elif isinstance(arch, Backend):
-            from mqt.qmap.qiskit.backend import import_backend
-
-            architecture = import_backend(arch)
-        else:
-            raise ValueError("No compatible type for architecture:", type(arch))
-
-    if calibration is not None:
-        if isinstance(calibration, str):
-            architecture.load_properties(calibration)
-        elif isinstance(calibration, BackendProperties):
-            from mqt.qmap.qiskit.backend import import_backend_properties
-
-            architecture.load_properties(import_backend_properties(calibration))
-        elif isinstance(calibration, Target):
-            from mqt.qmap.qiskit.backend import import_target
-
-            architecture.load_properties(import_target(calibration))
-        else:
-            raise ValueError("No compatible type for calibration:", type(calibration))
+    architecture = load_architecture(arch)
+    architecture = load_calibration(calibration, architecture)
 
     config = Configuration()
     config.method = Method(method)
