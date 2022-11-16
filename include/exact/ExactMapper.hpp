@@ -1,6 +1,7 @@
 /*
- * This file is part of the MQT QMAP library which is released under the MIT license.
- * See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+ * This file is part of the MQT QMAP library which is released under the MIT
+ * license. See file README.md or go to
+ * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
  */
 
 #ifndef EXACT_MAPPER_hpp
@@ -20,22 +21,20 @@ using Swaps       = std::vector<std::pair<unsigned short, unsigned short>>;
 using QubitChoice = std::set<unsigned short>;
 
 /// Main structure representing the circuit and mapping functionality
-class ExactMapper: public Mapper {
-    using Mapper::Mapper;
+class ExactMapper : public Mapper {
+  using Mapper::Mapper;
 
 protected:
-    // inputs
-    std::vector<unsigned long> reducedLayerIndices{};
-    std::vector<Swaps>         mappingSwaps{};
-    void                       coreMappingRoutine(const QubitChoice&  qubitChoice,
-                                                  const CouplingMap&  rcm,
-                                                  MappingResults&     choiceResults,
-                                                  std::vector<Swaps>& swaps,
-                                                  long unsigned int   limit,
-                                                  unsigned int        timeout);
+  // inputs
+  std::vector<unsigned long> reducedLayerIndices{};
+  std::vector<Swaps>         mappingSwaps{};
+  void                       coreMappingRoutine(const QubitChoice& qubitChoice,
+                                                const CouplingMap& rcm, MappingResults& choiceResults,
+                                                std::vector<Swaps>& swaps, long unsigned int limit,
+                                                unsigned int timeout);
 
 public:
-    void map(const Configuration& settings) override;
+  void map(const Configuration& settings) override;
 };
 
 #endif /* EXACT_MAPPER_hpp */
