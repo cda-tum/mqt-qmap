@@ -98,6 +98,8 @@ TEST(TestArchitecture, ConnectedTest) {
   cm.emplace(std::make_pair(3, 4));
   cm.emplace(std::make_pair(4, 0));
 
+  Architecture::printCouplingMap(cm, std::cout);
+
   architecture.loadCouplingMap(5, cm);
 
   std::vector<CouplingMap> cms;
@@ -147,7 +149,8 @@ TEST(TestArchitecture, FullyConnectedTest) {
 TEST(TestArchitecture, MinimumNumberOfSwapsError) {
   Architecture               architecture{};
   std::vector<std::uint16_t> permutation{1, 1, 2, 3, 4};
-  std::vector<Edge>          swaps{};
+  printPi(permutation);
+  std::vector<Edge> swaps{};
   EXPECT_THROW(architecture.minimumNumberOfSwaps(permutation, swaps),
                std::runtime_error);
 }
