@@ -5,7 +5,7 @@ import sys
 from contextlib import suppress
 from pathlib import Path
 
-from setuptools import Extension, find_namespace_packages, setup
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
 
@@ -85,65 +85,7 @@ class CMakeBuild(build_ext):
         )
 
 
-README_PATH = Path(__file__).parent.resolve() / "README.md"
-with README_PATH.open() as readme_file:
-    README = readme_file.read()
-
 setup(
-    name="mqt.qmap",
-    author="Lukas Burgholzer",
-    author_email="lukas.burgholzer@jku.at",
-    description="A tool for Quantum Circuit Mapping",
-    long_description=README,
-    long_description_content_type="text/markdown",
-    python_requires=">=3.7",
-    license="MIT",
-    url="https://www.cda.cit.tum.de/research/ibm_qx_mapping/",
     ext_modules=[CMakeExtension("mqt.qmap.pyqmap")],
     cmdclass={"build_ext": CMakeBuild},
-    zip_safe=False,
-    packages=find_namespace_packages(include=["mqt.*"]),
-    install_requires=[
-        "qiskit-terra>=0.20.2",
-        "rustworkx[all]>=0.12.0",
-        "importlib_resources>=5.0; python_version < '3.10'",
-    ],
-    extras_require={
-        "test": ["pytest>=7", "mqt.qcec>=2"],
-        "coverage": ["mqt.qmap[test]", "coverage[toml]>=6.3", "pytest-cov>=3"],
-        "docs": [
-            "sphinx>=5",
-            "sphinx-rtd-theme",
-            "sphinxcontrib-bibtex>=2.4.2",
-            "sphinx-copybutton",
-            "sphinx-hoverxref",
-            "pybtex>=0.24",
-            "importlib_metadata>=4.4; python_version < '3.10'",
-        ],
-        "dev": ["mqt.qmap[coverage, docs]"],  # requires Pip 21.2 or newer
-    },
-    classifiers=[
-        "Development Status :: 5 - Production/Stable",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: C++",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS",
-        "Operating System :: POSIX :: Linux",
-        "Intended Audience :: Science/Research",
-        "Natural Language :: English",
-        "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-    ],
-    keywords="MQT quantum compilation mapping",
-    project_urls={
-        "Source": "https://github.com/cda-tum/qmap/",
-        "Tracker": "https://github.com/cda-tum/qmap/issues",
-        "Research": "https://www.cda.cit.tum.de/research/ibm_qx_mapping/",
-        "Documentation": "https://mqtqmap.readthedocs.io",
-    },
 )
