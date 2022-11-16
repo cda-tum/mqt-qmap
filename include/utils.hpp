@@ -19,8 +19,9 @@
 #include <vector>
 
 using Matrix      = std::vector<std::vector<double>>;
-using Edge        = std::pair<unsigned short, unsigned short>;
+using Edge        = std::pair<std::uint16_t, std::uint16_t>;
 using CouplingMap = std::set<Edge>;
+using QubitSubset = std::set<std::uint16_t>;
 
 struct Exchange {
   Exchange(unsigned short first, unsigned short second, qc::OpType op)
@@ -69,7 +70,7 @@ public:
     double cost                  = -1.;
   };
 
-  static void build_table(unsigned short n, const std::set<Edge>& graph,
+  static void build_table(unsigned short n, const CouplingMap& graph,
                           Matrix& distanceTable,
                           const std::function<double(const Node&)>& cost);
 
@@ -138,17 +139,15 @@ std::string printPi(std::vector<unsigned short>& pi);
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::set<unsigned short>& visited,
+void dfs(unsigned short current, std::set<std::uint16_t>& visited,
          const CouplingMap& rcm);
 
-using filter_function = std::function<bool(const std::set<unsigned short>&)>;
-std::vector<std::set<unsigned short>>
-subsets(const std::set<unsigned short>& input, int size,
-        filter_function filter = nullptr);
+using filter_function = std::function<bool(const QubitSubset&)>;
+std::vector<QubitSubset> subsets(const QubitSubset& input, int size,
+                                 const filter_function& filter = nullptr);
 
-void parse_line(const std::string& line, char separator,
-                const std::set<char>&     escape_chars,
-                const std::set<char>&     ignored_chars,
-                std::vector<std::string>& result);
-std::set<std::pair<unsigned short, unsigned short>>
-getFullyConnectedMap(unsigned short nQubits);
+void        parse_line(const std::string& line, char separator,
+                       const std::set<char>&     escape_chars,
+                       const std::set<char>&     ignored_chars,
+                       std::vector<std::string>& result);
+CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
