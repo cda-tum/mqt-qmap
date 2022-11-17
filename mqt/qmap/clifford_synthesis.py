@@ -6,8 +6,6 @@
 from __future__ import annotations
 
 from mqt.qmap.compile import extract_initial_layout_from_qasm
-from mqt.qmap.load_architecture import load_architecture
-from mqt.qmap.load_calibration import load_calibration
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
@@ -23,6 +21,9 @@ from qiskit.providers import Backend
 from qiskit.providers.models import BackendProperties
 from qiskit.quantum_info import Clifford, StabilizerTable
 from qiskit.transpiler.target import Target
+
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
 
 
 def optimize_clifford(
@@ -73,8 +74,7 @@ def optimize_clifford(
     :rtype: tuple[QuantumCircuit, SynthesisResults]
     """
     architecture = load_architecture(arch)
-
-    architecture = load_calibration(calibration, architecture)
+    load_calibration(architecture, calibration)
 
     config = SynthesisConfiguration()
     config.target_metric = TargetMetric(target)
@@ -140,8 +140,7 @@ def synthesize_clifford(
     :rtype: tuple[QuantumCircuit, SynthesisResults]
     """
     architecture = load_architecture(arch)
-
-    architecture = load_calibration(calibration, architecture)
+    load_calibration(architecture, calibration)
 
     config = SynthesisConfiguration()
     config.target_metric = TargetMetric(target)
