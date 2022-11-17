@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -22,20 +22,48 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup nox
-        uses: excitedleigh/setup-nox@v2.1.0
+        run: pipx install nox
       - name: Run mypy via nox
         run: nox -s mypy
 
   python-tests:
-    name: Tests ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: 🐍 ${{ matrix.python-version }} Tests on ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.7", "3.11"]
+        include:
+          - runs-on: ubuntu-latest
+            python-version: "3.8"
+          - runs-on: ubuntu-latest
+            python-version: "3.9"
+          - runs-on: ubuntu-latest
+            python-version: "3.10"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup nox
+        run: pipx install nox
+      - name: Test on 🐍 ${{ matrix.python-version }}
+        run: nox -s tests-${{ matrix.python-version }}
+
+  min-qiskit-version:
+    name: ⚛️ Min. Qiskit Test
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -48,26 +76,43 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
-        uses: excitedleigh/setup-nox@v2.1.0
-      - name: Test on 🐍 3.7
-        run: nox -s tests-3.7
-      # Python 3.8 and 3.9 are only tested on Linux.
-      - if: runner.os == 'Linux'
-        name: Test on 🐍 3.8
-        run: nox -s tests-3.8
-      - if: runner.os == 'Linux'
-        name: Test on 🐍 3.9
-        run: nox -s tests-3.9
-      # Python 3.10 under Linux is tested separately as part of the coverage job.
-      - if: runner.os != 'Linux'
-        name: Test on 🐍 3.10
-        run: nox -s tests-3.10
-      # Run the coverage job on Python 3.10 and upload the coverage data.
-      - if: runner.os == 'Linux'
-        name: Test and Coverage on 🐍 3.10
-        run: nox -s coverage-3.10 -- --cov-report=xml
-      - if: runner.os == 'Linux'
-        name: Upload Coverage to Codecov
+        run: pipx install nox
+      - name: Run session
+        run: nox -s min_qiskit_version -- --cov-report=xml
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3.1.1
+        with:
+          fail_ci_if_error: true
+          flags: python
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  coverage:
+    name: 🐍 ${{ matrix.python-version }} Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.11"]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup nox
+        run: pipx install nox
+      - name: Run session
+        run: nox -s coverage-${{ matrix.python-version }} -- --cov-report=xml
+      - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
           fail_ci_if_error: true

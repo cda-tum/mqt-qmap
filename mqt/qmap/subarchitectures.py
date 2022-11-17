@@ -11,7 +11,7 @@ import sys
 if sys.version_info < (3, 10, 0):
     import importlib_resources as resources
 else:
-    from importlib import resources
+    from importlib import resources  # type: ignore[no-redef]
 
 import pickle
 from itertools import combinations

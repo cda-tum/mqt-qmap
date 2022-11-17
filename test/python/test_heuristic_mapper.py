@@ -1,4 +1,5 @@
-from mqt import qcec, qmap
+from mqt import qmap
+from mqt.qcec import verify
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
@@ -17,7 +18,7 @@ def test_heuristic_no_swaps_trivial_layout() -> None:
     assert results.mapped_circuit != ""
     # assert results.output.swaps == 0
 
-    result = qcec.verify(qc, qc_mapped)
+    result = verify(qc, qc_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -36,7 +37,7 @@ def test_heuristic_no_swaps_non_trivial_layout() -> None:
     assert results.mapped_circuit != ""
     # assert results.output.swaps == 0
 
-    result = qcec.verify(qc, qc_mapped)
+    result = verify(qc, qc_mapped)
     assert result.considered_equivalent() is True
 
 
@@ -58,7 +59,7 @@ def test_heuristic_non_trivial_swaps() -> None:
     print("\n")
     print(qc_mapped)
 
-    result = qcec.verify(qc, qc_mapped)
+    result = verify(qc, qc_mapped)
     print(result)
 
     assert result.considered_equivalent() is True

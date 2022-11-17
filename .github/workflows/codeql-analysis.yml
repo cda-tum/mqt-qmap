@@ -9,7 +9,7 @@ on:
     - cron: "15 21 * * 6"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -34,9 +34,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-
-      - name: Installing boost
-        run: sudo apt-get install -y libboost-program-options-dev
 
       - name: Install Z3
         uses: cda-tum/setup-z3@v1
