@@ -75,52 +75,55 @@ MappingResults map(const py::object& circ, Architecture& arch,
   return results;
 }
 
-cs::Results synthesize(const py::object& description, const Architecture& arch, cs::Configuration& config) {
-    config.targetCircuit = std::make_shared<qc::QuantumComputation>();
-    if (py::isinstance<py::str>(description)) { // either file or tableau
-        auto        str        = description.cast<std::string>();
-        std::string qasmEnding = ".qasm";
-        if (std::equal(qasmEnding.rbegin(), qasmEnding.rend(), str.rbegin())) { // file
-            loadQC(*config.targetCircuit, description);
-            config.nqubits      = config.targetCircuit->getNqubits();
-            config.architecture = arch;
-        } else { // tableau
-            try {
-                config.targetTableau = std::make_shared<Tableau>(str);
-            } catch (std::exception const& e) {
-                std::stringstream ss{};
-                ss << "Could not parse tableau: " << e.what();
-                throw std::invalid_argument(ss.str());
-            }
-
-            config.initialTableau = std::make_shared<Tableau>(config.targetTableau->getQubitCount());
-            config.nqubits        = config.targetTableau->getQubitCount();
-            config.architecture   = arch;
-        }
-    } else { // qiskit circuit
-        loadQC(*config.targetCircuit, description);
-        config.nqubits      = config.targetCircuit->getNqubits();
-        config.architecture = arch;
-    }
-
-    std::unique_ptr<cs::CliffordSynthesizer> synthesizer;
-    try {
-        synthesizer = std::make_unique<cs::CliffordSynthesizer>();
-    } catch (std::exception const& e) {
+cs::Results synthesize(const py::object& description, const Architecture& arch,
+                       cs::Configuration& config) {
+  config.targetCircuit = std::make_shared<qc::QuantumComputation>();
+  if (py::isinstance<py::str>(description)) { // either file or tableau
+    auto        str        = description.cast<std::string>();
+    std::string qasmEnding = ".qasm";
+    if (std::equal(qasmEnding.rbegin(), qasmEnding.rend(),
+                   str.rbegin())) { // file
+      loadQC(*config.targetCircuit, description);
+      config.nqubits      = config.targetCircuit->getNqubits();
+      config.architecture = arch;
+    } else { // tableau
+      try {
+        config.targetTableau = std::make_shared<Tableau>(str);
+      } catch (std::exception const& e) {
         std::stringstream ss{};
-        ss << "Could not construct synthesizer: " << e.what();
+        ss << "Could not parse tableau: " << e.what();
         throw std::invalid_argument(ss.str());
-    }
+      }
 
-    try {
-        synthesizer->synthesize(config);
-    } catch (std::exception const& e) {
-        std::stringstream ss{};
-        ss << "Error during optimization: " << e.what();
-        throw std::invalid_argument(ss.str());
+      config.initialTableau =
+          std::make_shared<Tableau>(config.targetTableau->getQubitCount());
+      config.nqubits      = config.targetTableau->getQubitCount();
+      config.architecture = arch;
     }
+  } else { // qiskit circuit
+    loadQC(*config.targetCircuit, description);
+    config.nqubits      = config.targetCircuit->getNqubits();
+    config.architecture = arch;
+  }
 
-    return synthesizer->optimalResults;
+  std::unique_ptr<cs::CliffordSynthesizer> synthesizer;
+  try {
+    synthesizer = std::make_unique<cs::CliffordSynthesizer>();
+  } catch (std::exception const& e) {
+    std::stringstream ss{};
+    ss << "Could not construct synthesizer: " << e.what();
+    throw std::invalid_argument(ss.str());
+  }
+
+  try {
+    synthesizer->synthesize(config);
+  } catch (std::exception const& e) {
+    std::stringstream ss{};
+    ss << "Error during optimization: " << e.what();
+    throw std::invalid_argument(ss.str());
+  }
+
+  return synthesizer->optimalResults;
 }
 
 PYBIND11_MODULE(pyqmap, m) {
@@ -415,65 +418,126 @@ PYBIND11_MODULE(pyqmap, m) {
            py::overload_cast<const std::string&>(&Architecture::loadProperties),
            "properties"_a);
 
-    py::enum_<cs::TargetMetric>(m, "TargetMetric")
-            .value("gates", cs::TargetMetric::GATES, "Optimizie number of gates")
-            .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth")
-            .value("fidelity", cs::TargetMetric::FIDELITY, "Optimize expected circuit fidelity")
-            .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES, "Optimize number of two-qubit gates")
-            .export_values()
-            .def(py::init([](const std::string& str) -> cs::TargetMetric { return cs::targetMetricFromString(str); }));
+  py::enum_<cs::TargetMetric>(m, "TargetMetric")
+      .value("gates", cs::TargetMetric::GATES, "Optimizie number of gates")
+      .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth")
+      .value("fidelity", cs::TargetMetric::FIDELITY,
+             "Optimize expected circuit fidelity")
+      .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES,
+             "Optimize number of two-qubit gates")
+      .export_values()
+      .def(py::init([](const std::string& str) -> cs::TargetMetric {
+        return cs::targetMetricFromString(str);
+      }));
 
-    py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
-            .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer, "Use MaxSAT")
-            .value("minmax", cs::OptimizationStrategy::MinMax, "Use Binary Search")
-            .value("start_low", cs::OptimizationStrategy::StartLow, "Start Low and slowly increase until SAT")
-            .value("start_high", cs::OptimizationStrategy::StartHigh, "Start High and slowly decrease until SAT")
-            .value("split_iter", cs::OptimizationStrategy::SplitIter, "Split the circuit in multiple small instances and optimize those, before reassembling and repeating until convergence")
-            .export_values()
-            .def(py::init([](const std::string& str) -> cs::OptimizationStrategy { return cs::optimizationStrategyFromString(str); }));
+  py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
+      .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer,
+             "Use MaxSAT")
+      .value("minmax", cs::OptimizationStrategy::MinMax, "Use Binary Search")
+      .value("start_low", cs::OptimizationStrategy::StartLow,
+             "Start Low and slowly increase until SAT")
+      .value("start_high", cs::OptimizationStrategy::StartHigh,
+             "Start High and slowly decrease until SAT")
+      .value("split_iter", cs::OptimizationStrategy::SplitIter,
+             "Split the circuit in multiple small instances and optimize "
+             "those, before reassembling and repeating until convergence")
+      .export_values()
+      .def(py::init([](const std::string& str) -> cs::OptimizationStrategy {
+        return cs::optimizationStrategyFromString(str);
+      }));
 
-    py::enum_<logicbase::Result>(m, "SatSolverResult")
-            .value("sat", logicbase::Result::SAT, "Satisfiable Result")
-            .value("unsat", logicbase::Result::UNSAT, "Unsatisfiable Result")
-            .value("ndef", logicbase::Result::NDEF, "Undefined Result")
-            .export_values()
-            .def(py::init([](const std::string& str) -> logicbase::Result { return logicbase::resultFromString(str); }));
+  py::enum_<logicbase::Result>(m, "SatSolverResult")
+      .value("sat", logicbase::Result::SAT, "Satisfiable Result")
+      .value("unsat", logicbase::Result::UNSAT, "Unsatisfiable Result")
+      .value("ndef", logicbase::Result::NDEF, "Undefined Result")
+      .export_values()
+      .def(py::init([](const std::string& str) -> logicbase::Result {
+        return logicbase::resultFromString(str);
+      }));
 
-    py::class_<cs::Configuration>(m, "SynthesisConfiguration", "Configuration options for MQT QMAP Clifford synthesis tool")
-            .def(py::init<>())
-            .def_readwrite("choose_best", &cs::Configuration::chooseBest, "Whether to choose the fully connected subset from the architecture with the highest fidelity, or try all possible subsets, only relevant if architecture information is given")
-            .def_readwrite("nqubits", &cs::Configuration::nqubits, "number of qubits used in the circuit")
-            .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep, "Initial timesteps for the synthesis, lower limit for start_low and upper limit for start_high")
-            .def_readwrite("fidelity_scaling", &cs::Configuration::fidelityScaling, "Fidelity scaling factor for the synthesis *1000*, higher values are needed if the fidelities are very similar or high")
-            .def_readwrite("limit_finding_factor", &cs::Configuration::limitFindingFactor, "Factor to multiply the initial guess for timesteps used in startLow (increase by 1 + factor) or startHigh (decrease by factor) *0.5*")
-            .def_readwrite("circuit_splitting_increase", &cs::Configuration::circuitSplittingIncrease, "Factor to multiply circuit splitting size by, calculation is as follows increase if a unsat instance is found is max(1, split * factor) *0.2*")
-            .def_readwrite("nthreads", &cs::Configuration::nThreads, "Number of threads to use for parallelization of the solver if supported or number of threads used by split_iter heuristic")
-            .def_readwrite("verbosity", &cs::Configuration::verbosity, "Verbosity level of the debug output, 0 being the lowest, 5 the highest amount of output")
-            .def_readwrite("optimization_strategy", &cs::Configuration::strategy, "Optimization strategy to use. One of the available strategies (*use_minimizer* | minmax | start_low | start_high | split_iter)")
-            .def_readwrite("target_metric", &cs::Configuration::target, "Target metric to synthesize for. One of the available metrics (*gates* | depth | fidelity | two_qubit_gates)")
-            .def("json", &cs::Configuration::json)
-            .def("__repr__", &cs::Configuration::toString);
+  py::class_<cs::Configuration>(
+      m, "SynthesisConfiguration",
+      "Configuration options for MQT QMAP Clifford synthesis tool")
+      .def(py::init<>())
+      .def_readwrite(
+          "choose_best", &cs::Configuration::chooseBest,
+          "Whether to choose the fully connected subset from the architecture "
+          "with the highest fidelity, or try all possible subsets, only "
+          "relevant if architecture information is given")
+      .def_readwrite("nqubits", &cs::Configuration::nqubits,
+                     "number of qubits used in the circuit")
+      .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep,
+                     "Initial timesteps for the synthesis, lower limit for "
+                     "start_low and upper limit for start_high")
+      .def_readwrite(
+          "fidelity_scaling", &cs::Configuration::fidelityScaling,
+          "Fidelity scaling factor for the synthesis *1000*, higher values are "
+          "needed if the fidelities are very similar or high")
+      .def_readwrite(
+          "limit_finding_factor", &cs::Configuration::limitFindingFactor,
+          "Factor to multiply the initial guess for timesteps used in startLow "
+          "(increase by 1 + factor) or startHigh (decrease by factor) *0.5*")
+      .def_readwrite("circuit_splitting_increase",
+                     &cs::Configuration::circuitSplittingIncrease,
+                     "Factor to multiply circuit splitting size by, "
+                     "calculation is as follows increase if a unsat instance "
+                     "is found is max(1, split * factor) *0.2*")
+      .def_readwrite(
+          "nthreads", &cs::Configuration::nThreads,
+          "Number of threads to use for parallelization of the solver if "
+          "supported or number of threads used by split_iter heuristic")
+      .def_readwrite("verbosity", &cs::Configuration::verbosity,
+                     "Verbosity level of the debug output, 0 being the lowest, "
+                     "5 the highest amount of output")
+      .def_readwrite(
+          "optimization_strategy", &cs::Configuration::strategy,
+          "Optimization strategy to use. One of the available strategies "
+          "(*use_minimizer* | minmax | start_low | start_high | split_iter)")
+      .def_readwrite("target_metric", &cs::Configuration::target,
+                     "Target metric to synthesize for. One of the available "
+                     "metrics (*gates* | depth | fidelity | two_qubit_gates)")
+      .def("json", &cs::Configuration::json)
+      .def("__repr__", &cs::Configuration::toString);
 
-    py::class_<cs::Results>(m, "SynthesisResults", "Results of the MQT QMAP Clifford synthesis tool")
-            .def(py::init<>())
-            .def_readwrite("sat", &cs::Results::result, "Whether the optimization problem was satisfiable")
-            .def_readwrite("result_circuit", &cs::Results::resultStringCircuit, "The resulting circuit (as OpenQASM string)")
-            .def_readwrite("verbosity", &cs::Results::verbose, "Verbosity of the debug messages")
-            .def_readwrite("choose_best", &cs::Results::chooseBest, "If true, the subgraph of an architecture with the lowest overall fidelity has been chosen, otherwise all possible subgraphs are tried")
-            .def_readwrite("strategy", &cs::Results::strategy, "The strategy used to optimize the circuit")
-            .def_readwrite("target", &cs::Results::target, "The synthesis target, either 'gates', 'two_qubit_gates', 'depth', or 'fidelity'")
-            .def_readwrite("qubits", &cs::Results::nqubits, "The number of qubits in the resulting circuit")
-            .def_readwrite("initial_timestep", &cs::Results::initialTimesteps, "The number of initial timesteps allotted for synthesis")
-            .def_readwrite("single_qubit_gates", &cs::Results::singleQubitGates, "The number of single qubit gates in the resulting circuit")
-            .def_readwrite("two_qubit_gates", &cs::Results::twoQubitGates, "The number of two qubit gates in the resulting circuit")
-            .def_readwrite("depth", &cs::Results::depth, "The depth of the resulting circuit")
-            .def_readwrite("fidelity", &cs::Results::fidelity, "The fidelity of the resulting circuit, only available if fidelity data is given")
-            .def_readwrite("total_seconds", &cs::Results::totalSeconds, "The total time taken to synthesize the circuit")
-            .def("json", &cs::Results::json)
-            .def("__repr__", &cs::Results::getStrRepr);
+  py::class_<cs::Results>(m, "SynthesisResults",
+                          "Results of the MQT QMAP Clifford synthesis tool")
+      .def(py::init<>())
+      .def_readwrite("sat", &cs::Results::result,
+                     "Whether the optimization problem was satisfiable")
+      .def_readwrite("result_circuit", &cs::Results::resultStringCircuit,
+                     "The resulting circuit (as OpenQASM string)")
+      .def_readwrite("verbosity", &cs::Results::verbose,
+                     "Verbosity of the debug messages")
+      .def_readwrite("choose_best", &cs::Results::chooseBest,
+                     "If true, the subgraph of an architecture with the lowest "
+                     "overall fidelity has been chosen, otherwise all possible "
+                     "subgraphs are tried")
+      .def_readwrite("strategy", &cs::Results::strategy,
+                     "The strategy used to optimize the circuit")
+      .def_readwrite("target", &cs::Results::target,
+                     "The synthesis target, either 'gates', 'two_qubit_gates', "
+                     "'depth', or 'fidelity'")
+      .def_readwrite("qubits", &cs::Results::nqubits,
+                     "The number of qubits in the resulting circuit")
+      .def_readwrite("initial_timestep", &cs::Results::initialTimesteps,
+                     "The number of initial timesteps allotted for synthesis")
+      .def_readwrite(
+          "single_qubit_gates", &cs::Results::singleQubitGates,
+          "The number of single qubit gates in the resulting circuit")
+      .def_readwrite("two_qubit_gates", &cs::Results::twoQubitGates,
+                     "The number of two qubit gates in the resulting circuit")
+      .def_readwrite("depth", &cs::Results::depth,
+                     "The depth of the resulting circuit")
+      .def_readwrite("fidelity", &cs::Results::fidelity,
+                     "The fidelity of the resulting circuit, only available if "
+                     "fidelity data is given")
+      .def_readwrite("total_seconds", &cs::Results::totalSeconds,
+                     "The total time taken to synthesize the circuit")
+      .def("json", &cs::Results::json)
+      .def("__repr__", &cs::Results::getStrRepr);
 
-    m.def("map", &map, "map a quantum circuit");
-    m.def("synthesize", &synthesize, "synthesize a Clifford circuit");
+  m.def("map", &map, "map a quantum circuit");
+  m.def("synthesize", &synthesize, "synthesize a Clifford circuit");
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

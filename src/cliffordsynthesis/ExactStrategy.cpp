@@ -1,86 +1,120 @@
 /*
-* This file is part of the MQT QMAP library which is released under the MIT license.
-* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
-*/
+ * This file is part of the MQT QMAP library which is released under the MIT
+ * license. See file README.md or go to
+ * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+ */
 
 #include "cliffordsynthesis/ExactStrategy.hpp"
 
 #include "cliffordsynthesis/TargetMetricHandler.hpp"
 namespace cs {
-    void cs::ExactStrategy::runExactStrategy(std::size_t timesteps, const CouplingMap& reducedCM,
-                                             const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        switch (configuration.strategy) {
-            case OptimizationStrategy::UseMinimizer:
-                runMaxSat(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-                break;
-            case OptimizationStrategy::StartLow:
-                runStartLow(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-                break;
-            case OptimizationStrategy::StartHigh:
-                runStartHigh(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-                break;
-            case OptimizationStrategy::MinMax:
-                runBinarySearch(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
-                break;
-            default:
-                throw std::runtime_error("Unknown optimization strategy");
-        }
+void cs::ExactStrategy::runExactStrategy(std::size_t          timesteps,
+                                         const CouplingMap&   reducedCM,
+                                         const QubitSubset&   qubitChoice,
+                                         const Configuration& configuration,
+                                         CliffordSynthesizer& synthesizer) {
+  switch (configuration.strategy) {
+  case OptimizationStrategy::UseMinimizer:
+    runMaxSat(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+    break;
+  case OptimizationStrategy::StartLow:
+    runStartLow(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+    break;
+  case OptimizationStrategy::StartHigh:
+    runStartHigh(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
+    break;
+  case OptimizationStrategy::MinMax:
+    runBinarySearch(timesteps, reducedCM, qubitChoice, configuration,
+                    synthesizer);
+    break;
+  default:
+    throw std::runtime_error("Unknown optimization strategy");
+  }
+}
+void ExactStrategy::runMaxSat(const std::size_t    timesteps,
+                              const CouplingMap&   reducedCM,
+                              const QubitSubset&   qubitChoice,
+                              const Configuration& configuration,
+                              CliffordSynthesizer& synthesizer) {
+  DEBUG() << "Running minimizer" << std::endl;
+  auto r = synthesizer.mainOptimization(
+      timesteps, reducedCM, qubitChoice, *configuration.targetTableau,
+      *configuration.initialTableau, configuration);
+  TargetMetricHandler::updateResults(configuration, r,
+                                     synthesizer.optimalResults);
+}
+void ExactStrategy::runStartLow(std::size_t          timesteps,
+                                const CouplingMap&   reducedCM,
+                                const QubitSubset&   qubitChoice,
+                                const Configuration& configuration,
+                                CliffordSynthesizer& synthesizer) {
+  DEBUG() << "Running start low" << std::endl;
+  Results r;
+  while (r.result != logicbase::Result::SAT ||
+         r.result == logicbase::Result::NDEF) {
+    DEBUG() << "Current t=" << timesteps << std::endl;
+    r = synthesizer.mainOptimization(
+        timesteps, reducedCM, qubitChoice, *configuration.targetTableau,
+        *configuration.initialTableau, configuration);
+    TargetMetricHandler::updateResults(configuration, r,
+                                       synthesizer.optimalResults);
+    if (r.result == logicbase::Result::UNSAT) {
+      timesteps *= 1.0 + configuration.limitFindingFactor;
     }
-    void ExactStrategy::runMaxSat(const std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        DEBUG() << "Running minimizer" << std::endl;
-        auto r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau,
-                                              configuration);
-        TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
+  }
+}
+void ExactStrategy::runStartHigh(std::size_t          timesteps,
+                                 const CouplingMap&   reducedCM,
+                                 const QubitSubset&   qubitChoice,
+                                 const Configuration& configuration,
+                                 CliffordSynthesizer& synthesizer) {
+  DEBUG() << "Running start high" << std::endl;
+  Results r;
+  auto    oldTimesteps = timesteps;
+  while (r.result == logicbase::Result::SAT ||
+         r.result == logicbase::Result::NDEF) {
+    DEBUG() << "Current t=" << timesteps << std::endl;
+    r = synthesizer.mainOptimization(
+        timesteps, reducedCM, qubitChoice, *configuration.targetTableau,
+        *configuration.initialTableau, configuration);
+    TargetMetricHandler::updateResults(configuration, r,
+                                       synthesizer.optimalResults);
+    if (r.result == logicbase::Result::SAT) {
+      oldTimesteps = timesteps;
+      timesteps *= configuration.limitFindingFactor;
+    } else {
+      timesteps = oldTimesteps;
     }
-    void ExactStrategy::runStartLow(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        DEBUG() << "Running start low" << std::endl;
-        Results r;
-        while (r.result != logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
-            DEBUG() << "Current t=" << timesteps << std::endl;
-            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
-            TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
-            if (r.result == logicbase::Result::UNSAT) {
-                timesteps *= 1.0 + configuration.limitFindingFactor;
-            }
-        }
+  }
+}
+void ExactStrategy::runBinarySearch(std::size_t          timesteps,
+                                    const CouplingMap&   reducedCM,
+                                    const QubitSubset&   qubitChoice,
+                                    const Configuration& configuration,
+                                    CliffordSynthesizer& synthesizer) {
+  DEBUG() << "Running minmax" << std::endl;
+  Results      r;
+  auto         t     = static_cast<std::int32_t>(timesteps);
+  auto         upper = static_cast<std::int32_t>(timesteps);
+  std::int32_t lower = 0;
+  while (std::abs(upper - lower) > 1) {
+    DEBUG() << "Current t=" << t << std::endl;
+    r = synthesizer.mainOptimization(
+        t, reducedCM, qubitChoice, *configuration.targetTableau,
+        *configuration.initialTableau, configuration);
+    TargetMetricHandler::updateResults(configuration, r,
+                                       synthesizer.optimalResults);
+    if (r.result == logicbase::Result::SAT) {
+      upper = t;
+    } else if (r.result == logicbase::Result::UNSAT) {
+      lower = t;
+    } else {
+      break;
     }
-    void ExactStrategy::runStartHigh(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        DEBUG() << "Running start high" << std::endl;
-        Results r;
-        auto    oldTimesteps = timesteps;
-        while (r.result == logicbase::Result::SAT || r.result == logicbase::Result::NDEF) {
-            DEBUG() << "Current t=" << timesteps << std::endl;
-            r = synthesizer.mainOptimization(timesteps, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
-            TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
-            if (r.result == logicbase::Result::SAT) {
-                oldTimesteps = timesteps;
-                timesteps *= configuration.limitFindingFactor;
-            } else {
-                timesteps = oldTimesteps;
-            }
-        }
+    if (upper - lower < 1 && r.result == logicbase::Result::UNSAT) {
+      upper *= 1.5;
     }
-    void ExactStrategy::runBinarySearch(std::size_t timesteps, const CouplingMap& reducedCM, const QubitSubset& qubitChoice, const Configuration& configuration, CliffordSynthesizer& synthesizer) {
-        DEBUG() << "Running minmax" << std::endl;
-        Results      r;
-        auto         t     = static_cast<std::int32_t>(timesteps);
-        auto         upper = static_cast<std::int32_t>(timesteps);
-        std::int32_t lower = 0;
-        while (std::abs(upper - lower) > 1) {
-            DEBUG() << "Current t=" << t << std::endl;
-            r = synthesizer.mainOptimization(t, reducedCM, qubitChoice, *configuration.targetTableau, *configuration.initialTableau, configuration);
-            TargetMetricHandler::updateResults(configuration, r, synthesizer.optimalResults);
-            if (r.result == logicbase::Result::SAT) {
-                upper = t;
-            } else if (r.result == logicbase::Result::UNSAT) {
-                lower = t;
-            } else {
-                break;
-            }
-            if (upper - lower < 1 && r.result == logicbase::Result::UNSAT) {
-                upper *= 1.5;
-            }
-            t = lower + std::abs(upper - lower) / 2;
-        }
-    }
+    t = lower + std::abs(upper - lower) / 2;
+  }
+}
 } // namespace cs

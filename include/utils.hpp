@@ -148,9 +148,9 @@ using filter_function = std::function<bool(const QubitSubset&)>;
 std::vector<QubitSubset> subsets(const QubitSubset& input, int size,
                                  const filter_function& filter = nullptr);
 
-void        parse_line(const std::string& line, char separator,
-                       const std::set<char>&     escape_chars,
-                       const std::set<char>&     ignored_chars,
-                       std::vector<std::string>& result);
-CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
+void          parse_line(const std::string& line, char separator,
+                         const std::set<char>&     escape_chars,
+                         const std::set<char>&     ignored_chars,
+                         std::vector<std::string>& result);
+CouplingMap   getFullyConnectedMap(std::uint16_t nQubits);
 std::uint16_t getSingleQubitOperations(const qc::QuantumComputation& qc);

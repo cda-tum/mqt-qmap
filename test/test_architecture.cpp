@@ -155,8 +155,11 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
 }
 
 TEST(TestArchitecture, CreateArchFromFidelities) {
-    Architecture architecture{{0.9, 0.9, 0.9, 0.9}, {{0, 0, 0.8, 0.8}, {0, 0, 0.7, 0.7}, {0, 0.8, 0, 0.6}, {0.8, 0.8, 0, 0}}, {0.9, 0.9, 0.9, 0.9}};
+  Architecture architecture{
+      {0.9, 0.9, 0.9, 0.9},
+      {{0, 0, 0.8, 0.8}, {0, 0, 0.7, 0.7}, {0, 0.8, 0, 0.6}, {0.8, 0.8, 0, 0}},
+      {0.9, 0.9, 0.9, 0.9}};
 
-    EXPECT_EQ(architecture.getNqubits(), 4);
-    EXPECT_EQ(architecture.getSingleQubitFidelities()[0], 0.9);
+  EXPECT_EQ(architecture.getNqubits(), 4);
+  EXPECT_EQ(architecture.getSingleQubitFidelities()[0], 0.9);
 }

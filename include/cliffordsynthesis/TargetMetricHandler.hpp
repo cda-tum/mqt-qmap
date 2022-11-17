@@ -1,7 +1,8 @@
 /*
-* This file is part of the MQT QMAP library which is released under the MIT license.
-* See file README.md or go to https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
-*/
+ * This file is part of the MQT QMAP library which is released under the MIT
+ * license. See file README.md or go to
+ * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
+ */
 
 #ifndef CS_TARGETMETRICHANDLER_HPP
 #define CS_TARGETMETRICHANDLER_HPP
@@ -11,15 +12,20 @@
 #include "SynthesisData.hpp"
 namespace cs {
 
-    class TargetMetricHandler {
-        static void makeGateMetric(const SynthesisData& data, bool onlyCNOT, std::uint16_t cnotMultiplier);
-        static void makeDepthMetric(const SynthesisData& data);
-        static void makeFidelityMetric(const SynthesisData& data, const Architecture& architecture, std::uint32_t fidelityScaling);
+class TargetMetricHandler {
+  static void makeGateMetric(const SynthesisData& data, bool onlyCNOT,
+                             std::uint16_t cnotMultiplier);
+  static void makeDepthMetric(const SynthesisData& data);
+  static void makeFidelityMetric(const SynthesisData& data,
+                                 const Architecture&  architecture,
+                                 std::uint32_t        fidelityScaling);
 
-    public:
-        static void makeTargetMetric(const SynthesisData& data, const Configuration& configuration);
+public:
+  static void makeTargetMetric(const SynthesisData& data,
+                               const Configuration& configuration);
 
-        static void updateResults(const Configuration& configuration, Results& results, Results& currentResults);
-    };
+  static void updateResults(const Configuration& configuration,
+                            Results& results, Results& currentResults);
+};
 } // namespace cs
-#endif //CS_TARGETMETRICHANDLER_HPP
+#endif // CS_TARGETMETRICHANDLER_HPP

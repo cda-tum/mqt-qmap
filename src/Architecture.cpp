@@ -698,19 +698,26 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   }
   os << "}" << std::endl;
 }
-Architecture::Architecture(std::initializer_list<double> singleFidelities, std::initializer_list<std::initializer_list<double>> twoFidelities, std::initializer_list<double> readoutFidelities) {
-  if (singleFidelities.size() != twoFidelities.size() || singleFidelities.size() != readoutFidelities.size()) {
+Architecture::Architecture(
+    std::initializer_list<double>                        singleFidelities,
+    std::initializer_list<std::initializer_list<double>> twoFidelities,
+    std::initializer_list<double>                        readoutFidelities) {
+  if (singleFidelities.size() != twoFidelities.size() ||
+      singleFidelities.size() != readoutFidelities.size()) {
     throw QMAPException("Architecture: Invalid input!");
   }
-  static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3", "rz", "sx", "x"};
+  static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
+                                          "rz", "sx", "x"};
   nqubits                              = singleFidelities.size();
   for (std::uint16_t i = 0; i < nqubits; ++i) {
-    for (const auto operation: SINGLE_QUBIT_GATES) {
-      properties.setSingleQubitErrorRate(i, operation, 1.0 - singleFidelities.begin()[i]);
+    for (const auto operation : SINGLE_QUBIT_GATES) {
+      properties.setSingleQubitErrorRate(i, operation,
+                                         1.0 - singleFidelities.begin()[i]);
     }
     for (std::uint16_t j = 0; j < nqubits; ++j) {
       if (i != j && twoFidelities.begin()[i].begin()[j] > 0.0) {
-        properties.setTwoQubitErrorRate(i, j, 1.0 - twoFidelities.begin()[i].begin()[j]);
+        properties.setTwoQubitErrorRate(
+            i, j, 1.0 - twoFidelities.begin()[i].begin()[j]);
       }
     }
   }
