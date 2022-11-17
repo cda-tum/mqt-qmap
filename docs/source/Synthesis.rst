@@ -76,6 +76,7 @@ Using QMAP for Optimal Synthesis
 - Starting from an initial (Clifford) circuit :code:`qc`, an optimal realization of that circuit's functionality can be determined as follows
 
     .. code-block:: python3
+
         from qiskit import QuantumCircuit
         from mqt import qmap
 
@@ -96,6 +97,7 @@ Using QMAP for Optimal Synthesis
 - Starting from a functional description, e.g., a list of stabilizers, an optimal realization of that functionality can be determined as follows
 
     .. code-block:: python3
+
         from qiskit.quantum_info import StabilizerTable
         from mqt import qmap
 
