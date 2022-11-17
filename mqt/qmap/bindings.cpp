@@ -3,9 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#ifdef Z3_FOUND
 #include "exact/ExactMapper.hpp"
-#endif
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -17,13 +15,9 @@
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 namespace py = pybind11;
-namespace nl = nlohmann;
 using namespace pybind11::literals;
 
-// c++ binding function
-MappingResults map(const py::object& circ, Architecture& arch,
-                   Configuration& config) {
-  qc::QuantumComputation qc{};
+void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
   try {
     if (py::isinstance<py::str>(circ)) {
       auto&& file = circ.cast<std::string>();
@@ -36,6 +30,14 @@ MappingResults map(const py::object& circ, Architecture& arch,
     ss << "Could not import circuit: " << e.what();
     throw std::invalid_argument(ss.str());
   }
+}
+
+// c++ binding function
+MappingResults map(const py::object& circ, Architecture& arch,
+                   Configuration& config) {
+  qc::QuantumComputation qc{};
+
+  loadQC(qc, circ);
 
   if (config.useTeleportation) {
     config.teleportationQubits =
@@ -47,13 +49,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
     if (config.method == Method::Heuristic) {
       mapper = std::make_unique<HeuristicMapper>(qc, arch);
     } else if (config.method == Method::Exact) {
-#ifdef Z3_FOUND
       mapper = std::make_unique<ExactMapper>(qc, arch);
-#else
-      std::stringstream ss{};
-      ss << toString(config.method) << " (Z3 support not enabled)";
-      throw std::invalid_argument(ss.str());
-#endif
     }
   } catch (std::exception const& e) {
     std::stringstream ss{};
@@ -275,59 +271,59 @@ PYBIND11_MODULE(pyqmap, m) {
            "target"_a, "error_rate"_a, "operation"_a = "cx")
       .def(
           "get_readout_error",
-          [](const Architecture::Properties& props, unsigned short qubit) {
+          [](const Architecture::Properties& props, std::uint16_t qubit) {
             return props.readoutErrorRate.get(qubit);
           },
           "qubit"_a)
       .def(
           "set_readout_error",
-          [](Architecture::Properties& props, unsigned short qubit,
+          [](Architecture::Properties& props, std::uint16_t qubit,
              double rate) { props.readoutErrorRate.set(qubit, rate); },
           "qubit"_a, "readout_error_rate"_a)
       .def(
           "get_t1",
-          [](const Architecture::Properties& props, unsigned short qubit) {
+          [](const Architecture::Properties& props, std::uint16_t qubit) {
             return props.t1Time.get(qubit);
           },
           "qubit"_a)
       .def(
           "set_t1",
-          [](Architecture::Properties& props, unsigned short qubit, double t1) {
+          [](Architecture::Properties& props, std::uint16_t qubit, double t1) {
             props.t1Time.set(qubit, t1);
           },
           "qubit"_a, "t1"_a)
       .def(
           "get_t2",
-          [](const Architecture::Properties& props, unsigned short qubit) {
+          [](const Architecture::Properties& props, std::uint16_t qubit) {
             return props.t2Time.get(qubit);
           },
           "qubit"_a)
       .def(
           "set_t2",
-          [](Architecture::Properties& props, unsigned short qubit, double t2) {
+          [](Architecture::Properties& props, std::uint16_t qubit, double t2) {
             props.t2Time.set(qubit, t2);
           },
           "qubit"_a, "t2"_a)
       .def(
           "get_frequency",
-          [](const Architecture::Properties& props, unsigned short qubit) {
+          [](const Architecture::Properties& props, std::uint16_t qubit) {
             return props.qubitFrequency.get(qubit);
           },
           "qubit"_a)
       .def(
           "set_frequency",
-          [](Architecture::Properties& props, unsigned short qubit,
+          [](Architecture::Properties& props, std::uint16_t qubit,
              double freq) { props.qubitFrequency.set(qubit, freq); },
           "qubit"_a, "qubit_frequency"_a)
       .def(
           "get_calibration_date",
-          [](const Architecture::Properties& props, unsigned short qubit) {
+          [](const Architecture::Properties& props, std::uint16_t qubit) {
             return props.calibrationDate.get(qubit);
           },
           "qubit"_a)
       .def(
           "set_calibration_date",
-          [](Architecture::Properties& props, unsigned short qubit,
+          [](Architecture::Properties& props, std::uint16_t qubit,
              const std::string& date) {
             props.calibrationDate.set(qubit, date);
           },
@@ -341,9 +337,9 @@ PYBIND11_MODULE(pyqmap, m) {
 
   // Interface to the QMAP internal architecture class
   arch.def(py::init<>())
-      .def(py::init<unsigned short, const CouplingMap&>(), "num_qubits"_a,
+      .def(py::init<std::uint16_t, const CouplingMap&>(), "num_qubits"_a,
            "coupling_map"_a)
-      .def(py::init<unsigned short, const CouplingMap&,
+      .def(py::init<std::uint16_t, const CouplingMap&,
                     const Architecture::Properties&>(),
            "num_qubits"_a, "coupling_map"_a, "properties"_a)
       .def_property("name", &Architecture::getName, &Architecture::setName)
