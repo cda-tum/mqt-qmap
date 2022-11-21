@@ -29,7 +29,7 @@ macro(ADD_INTERNAL_LIBRARY libname srcfile)
   if(MSVC)
     target_compile_options(${lib} PUBLIC /utf-8)
   else()
-    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-Og>)
+    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-g3>)
     if(BINDINGS)
       # adjust visibility settings for building Python bindings
       target_compile_options(${lib} PUBLIC -fvisibility=hidden)
