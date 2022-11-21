@@ -131,11 +131,6 @@ void Tableau::createDiagonalTableau(const std::size_t nQ) {
 
 std::string Tableau::toString() const {
   std::stringstream ss;
-
-  if (tableau.empty()) {
-    util::debug("Tableau is empty.");
-    return "";
-  }
   for (const auto& row : tableau) {
     if (row.size() != tableau.back().size()) {
       util::fatal("Tableau is not rectangular.");
