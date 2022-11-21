@@ -95,7 +95,7 @@ void Tableau::applyGate(const qc::Operation* gate) {
     const auto a = gate->getTargets().at(0U);
     applyGateSdag(a, nqubits);
   } break;
-  case qc::OpType::Z: { // Z = S x S
+  case qc::OpType::Z: { // Z = S * S
     if (!gate->isControlled()) {
       const auto a = gate->getTargets().at(0U);
       applyGateZ(a, nqubits);
@@ -114,7 +114,7 @@ void Tableau::applyGate(const qc::Operation* gate) {
     if (!gate->isControlled()) {
       const auto a = gate->getTargets().at(0U);
       applyGateY(a, nqubits);
-    } else { // CY = Sdag(1) x CX(0,1) x S(1)
+    } else { // CY = Sdag(1) * CX(0,1) * S(1)
       const auto a = (*gate->getControls().begin()).qubit;
       const auto b = gate->getTargets().at(0);
       if (a == b) {
@@ -271,27 +271,27 @@ void Tableau::applyGateCX(const std::uint16_t control,
 }
 void Tableau::applyGateSdag(const std::uint16_t target,
                             const std::size_t   nqubits) {
-  // Sdag  = S x S x S
+  // Sdag = S * S * S
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
 }
 void Tableau::applyGateX(const std::uint16_t target,
                          const std::size_t   nqubits) {
-  // X  = H x Z x H
+  // X = H * Z * H
   applyGateH(target, nqubits);
   applyGateZ(target, nqubits);
   applyGateH(target, nqubits);
 }
 void Tableau::applyGateY(const std::uint16_t target,
                          const std::size_t   nqubits) {
-  // Y  = X x Z
+  // Y = X * Z
   applyGateX(target, nqubits);
   applyGateZ(target, nqubits);
 }
 void Tableau::applyGateZ(const std::uint16_t target,
                          const std::size_t   nqubits) {
-  // Z  = S x S
+  // Z = S * S
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
 }
