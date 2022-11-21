@@ -24,14 +24,13 @@ class Tableau {
   TableauType tableau;
 
 public:
-  [[nodiscard]] Tableau() = default;
-  [[nodiscard]] explicit Tableau(
-      const qc::QuantumComputation& qc, std::size_t begin = 0,
-      std::size_t end = std::numeric_limits<std::size_t>::max());
-  [[nodiscard]] explicit Tableau(const std::size_t nQubits) : nQubits(nQubits) {
+  Tableau() = default;
+  explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
+                   std::size_t end = std::numeric_limits<std::size_t>::max());
+  explicit Tableau(const std::size_t nQubits) : nQubits(nQubits) {
     createDiagonalTableau(nQubits);
   }
-  [[nodiscard]] explicit Tableau(const std::string& description) {
+  explicit Tableau(const std::string& description) {
     fromString(description);
     nQubits = tableau.size();
   }
