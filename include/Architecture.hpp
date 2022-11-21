@@ -235,8 +235,8 @@ public:
   }
   [[nodiscard]] CouplingMap& getCouplingMap() { return couplingMap; }
   void                       setCouplingMap(const CouplingMap& cm) {
-                          couplingMap = cm;
-                          createDistanceTable();
+    couplingMap = cm;
+    createDistanceTable();
   }
 
   CouplingMap& getCurrentTeleportations() { return current_teleportations; }
@@ -249,8 +249,8 @@ public:
   [[nodiscard]] const Properties& getProperties() const { return properties; }
   [[nodiscard]] Properties&       getProperties() { return properties; }
   void                            setProperties(const Properties& props) {
-                               properties = props;
-                               createFidelityTable();
+    properties = props;
+    createFidelityTable();
   }
 
   [[nodiscard]] const Matrix& getFidelityTable() const { return fidelityTable; }

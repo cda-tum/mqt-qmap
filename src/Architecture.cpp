@@ -110,7 +110,7 @@ void Architecture::loadProperties(std::istream&& is) {
   std::string line;
   std::string word;
   std::regex  regexDoubleFidelity = std::regex(
-       R"(((\d+).?(\d+):\W*?(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)))");
+      R"(((\d+).?(\d+):\W*?(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)))");
   std::smatch sMatch;
   std::getline(is, line); // skip first line
   // load edges
