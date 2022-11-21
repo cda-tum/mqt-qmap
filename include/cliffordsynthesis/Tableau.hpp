@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+namespace cs {
 class Tableau {
   using EntryType   = std::uint8_t;
   using RowType     = std::vector<EntryType>;
@@ -99,3 +100,4 @@ private:
   void applyGateZ(dd::Qubit target, std::size_t nqubits);
   void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
 };
+} // namespace cs

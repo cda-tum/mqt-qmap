@@ -11,8 +11,8 @@
 
 class TestTableau : public testing::TestWithParam<std::string> {
 protected:
-  Tableau tableau{"['+ZI', '+IZ']"};
-  Tableau tableau2{};
+  cs::Tableau tableau{"['+ZI', '+IZ']"};
+  cs::Tableau tableau2{};
 };
 
 TEST_F(TestTableau, InitialTableau) {
@@ -49,7 +49,7 @@ TEST_F(TestTableau, BellCircuit) {
   qc.h(0);
   qc.x(1, 0_pc);
 
-  tableau = Tableau(qc);
+  tableau = cs::Tableau(qc);
 
   tableau2.fromString("[+XX, +ZZ]");
   EXPECT_EQ(tableau, tableau2);
@@ -70,7 +70,7 @@ TEST_F(TestTableau, TestOperations) {
   qc1.z(1, 0_pc);
   qc1.swap(0, 1);
 
-  EXPECT_NO_THROW(tableau = Tableau(qc1););
+  EXPECT_NO_THROW(tableau = cs::Tableau(qc1););
 }
 
 TEST_F(TestTableau, TestCompoundOperation) {
@@ -83,7 +83,7 @@ TEST_F(TestTableau, TestCompoundOperation) {
   compOP->emplace_back<qc::StandardOperation>(2, 0_pc, 1, qc::X);
   qc.emplace_back(compOP);
 
-  tableau = Tableau(qc);
+  tableau = cs::Tableau(qc);
 
   tableau2.fromString("[+XX, +ZZ]");
   EXPECT_EQ(tableau, tableau2);

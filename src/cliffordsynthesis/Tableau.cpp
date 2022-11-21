@@ -7,6 +7,8 @@
 
 #include "utils.hpp"
 
+namespace cs {
+
 void Tableau::dump(const std::string& filename) const {
   auto of = std::ofstream(filename);
   if (!of.good()) {
@@ -335,3 +337,4 @@ Tableau::Tableau(std::size_t nQubits) {
 }
 
 Tableau::Tableau(const std::string& description) { fromString(description); }
+} // namespace cs
