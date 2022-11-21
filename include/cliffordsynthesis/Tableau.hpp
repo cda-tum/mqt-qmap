@@ -1,11 +1,9 @@
-/*
- * This file is part of the MQT QMAP library which is released under the MIT
- * license. See file README.md or go to
- * https://www.cda.cit.tum.de/research/ibm_qx_mapping/ for more information.
- */
+//
+// This file is part of the MQT QMAP library released under the MIT license.
+// See README.md or go to https://github.com/cda-tum/qmap for more information.
+//
 
-#ifndef CS_TABLEAU_HPP
-#define CS_TABLEAU_HPP
+#pragma once
 
 #include "QuantumComputation.hpp"
 #include "utils/logging.hpp"
@@ -101,4 +99,3 @@ private:
   void applyGateZ(dd::Qubit target, std::size_t nqubits);
   void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
 };
-#endif // CS_TABLEAU_HPP
