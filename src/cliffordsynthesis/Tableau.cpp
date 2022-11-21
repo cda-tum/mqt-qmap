@@ -237,6 +237,7 @@ void Tableau::fromString(const std::string& str) {
     }
   } else {
     // assume string is a semicolon separated binary matrix
+    ss = std::stringstream(str);
     import(ss);
   }
 }
