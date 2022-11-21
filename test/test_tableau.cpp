@@ -266,9 +266,9 @@ TEST_F(TestTableau, UnsupportedOperations) {
   qc.t(0);
   EXPECT_THROW(tableau = cs::Tableau(qc), std::runtime_error);
 
-  // two-qubit gate not supported
+  // controlled two-qubit gate not supported
   qc.clear();
-  qc.iswap(0, 1);
+  qc.s(0, 1_pc);
   EXPECT_THROW(tableau = cs::Tableau(qc), std::runtime_error);
 }
 
