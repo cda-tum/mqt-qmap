@@ -8,7 +8,6 @@
 #include "utils.hpp"
 
 namespace cs {
-
 void Tableau::dump(const std::string& filename) const {
   auto of = std::ofstream(filename);
   if (!of.good()) {
@@ -30,7 +29,6 @@ void Tableau::import(const std::string& filename) {
 void Tableau::import(std::istream& is) {
   tableau.clear();
 
-  std::string              token;
   std::string              line;
   std::vector<std::string> data{};
   char                     delimiter = '|';
@@ -40,7 +38,7 @@ void Tableau::import(std::istream& is) {
       delimiter = ';';
     }
     tableau.emplace_back();
-    parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
+    ::parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
     for (const auto& datum : data) {
       if (datum.empty()) {
         continue;
@@ -50,8 +48,9 @@ void Tableau::import(std::istream& is) {
   }
 }
 
-void Tableau::populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
-                                  int column) {
+void Tableau::populateTableauFrom(const std::uint64_t bv,
+                                  const std::size_t   nQubits,
+                                  const std::size_t   column) {
   for (std::size_t j = 0; j < nQubits; ++j) {
     if ((bv & (1U << j)) != 0U) {
       tableau[j][column] = 1;
@@ -60,26 +59,23 @@ void Tableau::populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
 }
 
 void Tableau::applyGate(const qc::Operation* gate) {
-  auto nqubits = getQubitCount();
+  const auto nqubits = getQubitCount();
   switch (gate->getType()) {
-  case qc::OpType::H: // HADAMARD
-  {
+  case qc::OpType::H: { // HADAMARD
     if (gate->isControlled()) {
       util::fatal("Expected single-qubit gate");
     }
     const auto a = gate->getTargets().at(0U);
     applyGateH(a, nqubits);
   } break;
-  case qc::OpType::S: // PHASE
-  {
+  case qc::OpType::S: { // PHASE
     if (gate->isControlled()) {
       util::fatal("Expected single-qubit gate");
     }
     const auto a = gate->getTargets().at(0U);
     applyGateS(a, nqubits);
   } break;
-  case qc::OpType::X: // CNOT and X
-  {
+  case qc::OpType::X: { // CNOT and X
     if (gate->getNcontrols() != 1U) {
       const auto a = gate->getTargets().at(0U);
       applyGateX(a, nqubits);
@@ -146,13 +142,13 @@ void Tableau::applyGate(const qc::Operation* gate) {
   }
 }
 
-Tableau Tableau::getDiagonalTableau(std::size_t nQubits) {
+Tableau Tableau::getDiagonalTableau(const std::size_t nQubits) {
   TableauType result{};
   result.resize(nQubits);
-  for (std::size_t i = 0; i < nQubits; i++) {
-    result[i].resize(2U * nQubits + 1U);
-    for (std::size_t j = 0; j < 2 * nQubits; j++) {
-      if (i == j - nQubits) {
+  for (std::size_t i = 0U; i < nQubits; ++i) {
+    result[i].resize((2U * nQubits) + 1U);
+    for (std::size_t j = 0U; j < (2 * nQubits); ++j) {
+      if (i == (j - nQubits)) {
         result[i][j] = 1;
       }
     }
@@ -162,16 +158,17 @@ Tableau Tableau::getDiagonalTableau(std::size_t nQubits) {
   return Tableau(result);
 }
 
-std::uint64_t Tableau::getBVFrom(int column) const {
-  std::uint64_t result = 0UL;
-  for (std::size_t j = 0; j < getQubitCount(); ++j) {
+std::uint64_t Tableau::getBVFrom(const std::size_t column) const {
+  std::uint64_t result  = 0UL;
+  const auto    nQubits = getQubitCount();
+  for (std::size_t j = 0U; j < nQubits; ++j) {
     if (tableau[j][column] == 1) {
       result |= (1U << j);
     }
   }
   return result;
 }
-void Tableau::init(std::size_t nQubits) {
+void Tableau::init(const std::size_t nQubits) {
   tableau.clear();
   tableau.resize(nQubits);
   this->tableau = Tableau::getDiagonalTableau(nQubits).tableau;
@@ -213,7 +210,7 @@ std::string Tableau::toString() const {
     for (const auto& s : row) {
       ss << std::to_string(s) << ';';
     }
-    ss << std::endl;
+    ss << "\n";
   }
   return ss.str();
 }
@@ -224,7 +221,7 @@ void Tableau::fromString(const std::string& str) {
   if (line.empty()) {
     return;
   }
-  auto        rStabilizer = std::regex("([\\+-])([IYZX]+)");
+  const auto  rStabilizer = std::regex("([\\+-])([IYZX]+)");
   std::smatch m;
   if (std::regex_search(line, rStabilizer)) {
     // string is a list of stabilizers
@@ -260,23 +257,26 @@ void Tableau::fromString(const std::string& str) {
     import(ss);
   }
 }
-void Tableau::applyGateH(dd::Qubit target, std::size_t nqubits) {
-  for (auto i = 0U; i < nqubits; i++) {
+void Tableau::applyGateH(const std::uint16_t target,
+                         const std::size_t   nqubits) {
+  for (auto i = 0U; i < nqubits; ++i) {
     tableau[i][2U * nqubits] ^=
         (tableau[i][target] & tableau[i][target + nqubits]);
     std::swap(tableau[i][target], tableau[i][target + nqubits]);
   }
 }
-void Tableau::applyGateS(dd::Qubit target, std::size_t nqubits) {
-  for (auto i = 0U; i < nqubits; i++) {
+void Tableau::applyGateS(const std::uint16_t target,
+                         const std::size_t   nqubits) {
+  for (auto i = 0U; i < nqubits; ++i) {
     tableau[i][2U * nqubits] ^=
         tableau[i][target] & tableau[i][target + nqubits];
     tableau[i][target + nqubits] ^= tableau[i][target];
   }
 }
-void Tableau::applyGateCX(dd::Qubit control, dd::Qubit target,
-                          std::size_t nqubits) {
-  for (auto i = 0U; i < nqubits; i++) {
+void Tableau::applyGateCX(const std::uint16_t control,
+                          const std::uint16_t target,
+                          const std::size_t   nqubits) {
+  for (auto i = 0U; i < nqubits; ++i) {
     const auto xa = tableau[i][target];
     const auto za = tableau[i][target + nqubits];
     const auto xb = tableau[i][control];
@@ -286,38 +286,42 @@ void Tableau::applyGateCX(dd::Qubit control, dd::Qubit target,
     tableau[i][target]            = xb ^ xa;
   }
 }
-void Tableau::applyGateSdag(dd::Qubit target, std::size_t nqubits) {
+void Tableau::applyGateSdag(const std::uint16_t target,
+                            const std::size_t   nqubits) {
   // Sdag  = S x S x S
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
 }
-void Tableau::applyGateX(dd::Qubit target, std::size_t nqubits) {
+void Tableau::applyGateX(const std::uint16_t target,
+                         const std::size_t   nqubits) {
   // X  = H x Z x H
   applyGateH(target, nqubits);
   applyGateZ(target, nqubits);
   applyGateH(target, nqubits);
 }
-void Tableau::applyGateY(dd::Qubit target, std::size_t nqubits) {
+void Tableau::applyGateY(const std::uint16_t target,
+                         const std::size_t   nqubits) {
   // Y  = X x Z
   applyGateX(target, nqubits);
   applyGateZ(target, nqubits);
 }
-void Tableau::applyGateZ(dd::Qubit target, std::size_t nqubits) {
+void Tableau::applyGateZ(const std::uint16_t target,
+                         const std::size_t   nqubits) {
   // Z  = S x S
   applyGateS(target, nqubits);
   applyGateS(target, nqubits);
 }
 
-Tableau::Tableau(const qc::QuantumComputation& qc, std::size_t begin,
-                 std::size_t end) {
+Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
+                 const std::size_t end) {
   init(qc.getNqubits());
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
     if (currentG >= begin && (currentG < end)) {
       if (gate->getType() == qc::OpType::Compound) {
-        auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-        auto  cit    = compOp->begin();
+        const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+        auto        cit    = compOp->begin();
         while (cit != compOp->end() && currentG >= begin && (currentG < end)) {
           applyGate((*cit).get());
           ++cit;
@@ -330,7 +334,7 @@ Tableau::Tableau(const qc::QuantumComputation& qc, std::size_t begin,
     }
   }
 }
-Tableau::Tableau(std::size_t nQubits) {
+Tableau::Tableau(const std::size_t nQubits) {
   tableau.clear();
   tableau.resize(nQubits);
   this->tableau = Tableau::getDiagonalTableau(nQubits).tableau;

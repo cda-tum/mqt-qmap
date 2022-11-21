@@ -27,23 +27,28 @@ public:
   [[nodiscard]] explicit Tableau(TableauType tableau)
       : tableau(std::move(tableau)) {}
 
-  [[nodiscard]] explicit Tableau(const qc::QuantumComputation& qc,
-                                 std::size_t begin = 0, std::size_t end = -1);
+  [[nodiscard]] explicit Tableau(
+      const qc::QuantumComputation& qc, std::size_t begin = 0,
+      std::size_t end = std::numeric_limits<std::size_t>::max());
   [[nodiscard]] explicit Tableau(std::size_t nQubits);
   [[nodiscard]] explicit Tableau(const std::string& description);
 
-  [[nodiscard]] RowType operator[](std::size_t index) { return tableau[index]; }
-  [[nodiscard]] RowType operator[](std::size_t index) const {
+  [[nodiscard]] RowType operator[](const std::size_t index) {
+    return tableau[index];
+  }
+  [[nodiscard]] RowType operator[](const std::size_t index) const {
     return tableau[index];
   }
 
-  [[nodiscard]] RowType at(std::size_t index) { return tableau.at(index); }
+  [[nodiscard]] RowType at(const std::size_t index) {
+    return tableau.at(index);
+  }
 
   [[nodiscard]] auto getQubitCount() const { return tableau.size(); }
 
-  inline void resize(std::size_t size) { tableau.resize(size); }
+  void resize(const std::size_t size) { tableau.resize(size); }
 
-  inline void clear() { tableau.clear(); }
+  void clear() { tableau.clear(); }
 
   [[nodiscard]] bool empty() const { return tableau.empty(); }
 
@@ -62,7 +67,7 @@ public:
   void init(std::size_t nQubits);
 
   void populateTableauFrom(std::uint64_t bv, std::size_t nQubits,
-                           std::int32_t column);
+                           std::size_t column);
 
   void applyGate(const qc::Operation* gate);
 
@@ -89,15 +94,16 @@ public:
   [[nodiscard]] std::string toString() const;
   void                      fromString(const std::string& str);
 
-  [[nodiscard]] std::uint64_t getBVFrom(std::int32_t column) const;
+  [[nodiscard]] std::uint64_t getBVFrom(std::size_t column) const;
 
 private:
-  void applyGateH(dd::Qubit target, std::size_t nqubits);
-  void applyGateS(dd::Qubit target, std::size_t nqubits);
-  void applyGateSdag(dd::Qubit target, std::size_t nqubits);
-  void applyGateX(dd::Qubit target, std::size_t nqubits);
-  void applyGateY(dd::Qubit target, std::size_t nqubits);
-  void applyGateZ(dd::Qubit target, std::size_t nqubits);
-  void applyGateCX(dd::Qubit control, dd::Qubit target, std::size_t nqubits);
+  void applyGateH(std::uint16_t target, std::size_t nqubits);
+  void applyGateS(std::uint16_t target, std::size_t nqubits);
+  void applyGateSdag(std::uint16_t target, std::size_t nqubits);
+  void applyGateX(std::uint16_t target, std::size_t nqubits);
+  void applyGateY(std::uint16_t target, std::size_t nqubits);
+  void applyGateZ(std::uint16_t target, std::size_t nqubits);
+  void applyGateCX(std::uint16_t control, std::uint16_t target,
+                   std::size_t nqubits);
 };
 } // namespace cs
