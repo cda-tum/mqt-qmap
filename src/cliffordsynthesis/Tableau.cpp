@@ -11,7 +11,7 @@ namespace cs {
 void Tableau::dump(const std::string& filename) const {
   auto of = std::ofstream(filename);
   if (!of.good()) {
-    FATAL() << "Error opening file " << filename;
+    util::fatal("Error opening file " + filename);
   }
   dump(of);
 }
@@ -21,7 +21,7 @@ void Tableau::dump(std::ostream& of) const { of << *this; }
 void Tableau::import(const std::string& filename) {
   auto is = std::ifstream(filename);
   if (!is.good()) {
-    FATAL() << "Error opening file " << filename;
+    util::fatal("Error opening file " + filename);
   }
   import(is);
 }
@@ -182,12 +182,12 @@ std::string Tableau::toString() const {
   std::stringstream ss;
 
   if (empty()) {
-    DEBUG() << "Empty tableau";
+    util::debug("Tableau is empty.");
     return "";
   }
   for (const auto& row : tableau) {
     if (row.size() != back().size()) {
-      FATAL() << "Tableau is not rectangular";
+      util::fatal("Tableau is not rectangular.");
       return "";
     }
     for (const auto& s : row) {
