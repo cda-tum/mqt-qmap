@@ -58,7 +58,7 @@ void Tableau::populateTableauFrom(const std::uint64_t bv,
   }
 }
 
-void Tableau::applyGate(const qc::Operation* gate) {
+void Tableau::applyGate(const qc::Operation* const gate) {
   const auto nqubits = getQubitCount();
   switch (gate->getType()) {
   case qc::OpType::H: { // HADAMARD
@@ -302,8 +302,9 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
     if (gate->getType() == qc::OpType::Compound) {
-      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-      auto        cit    = compOp->begin();
+      const auto* const compOp =
+          dynamic_cast<const qc::CompoundOperation* const>(gate.get());
+      auto cit = compOp->begin();
       while (cit != compOp->end()) {
         if (currentG >= begin && (currentG < end)) {
           applyGate((*cit).get());
