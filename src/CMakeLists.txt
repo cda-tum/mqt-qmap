@@ -94,7 +94,8 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/Tableau.cpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp)
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration/AvailableArchitecture.hpp)
 
   add_internal_library(${lib} ${srcfile})
 endmacro()
