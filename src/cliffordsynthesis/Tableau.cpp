@@ -301,19 +301,24 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
   init(qc.getNqubits());
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
-    if (currentG >= begin && (currentG < end)) {
-      if (gate->getType() == qc::OpType::Compound) {
-        const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
-        auto        cit    = compOp->begin();
-        while (cit != compOp->end() && currentG >= begin && (currentG < end)) {
+    if (gate->getType() == qc::OpType::Compound) {
+      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+      auto        cit    = compOp->begin();
+      while (cit != compOp->end()) {
+        if (currentG >= begin && (currentG < end)) {
           applyGate((*cit).get());
-          ++cit;
-          ++currentG;
         }
-      } else {
-        applyGate(gate.get());
+        ++cit;
         ++currentG;
       }
+    } else {
+      if (currentG >= begin && (currentG < end)) {
+        applyGate(gate.get());
+      }
+      ++currentG;
+    }
+    if (currentG >= end) {
+      break;
     }
   }
 }
