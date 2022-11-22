@@ -65,6 +65,9 @@ if(NOT Z3_FOUND)
   message(WARNING "Did not find Z3. Exact library and other depending target will not be available")
 endif()
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 # add main library code
 add_subdirectory(src)
 
