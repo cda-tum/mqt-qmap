@@ -507,7 +507,6 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node,
     new_node.costFixed = node.costFixed + COST_TELEPORTATION;
     new_node.applyTeleportation(swap, architecture);
   }
-  new_node.costTotal = new_node.costFixed;
   new_node.done      = true;
 
   for (const auto& gate : currentLayer) {

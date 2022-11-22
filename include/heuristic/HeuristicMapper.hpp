@@ -33,7 +33,6 @@ public:
     /** heuristic cost expected for future swaps needed in later circuit layers
      * (further layers contribute less) */
     double lookaheadPenalty = 0.;
-    double costTotal        = 0.;
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `qubits[physical_qubit] = logical_qubit`
@@ -179,7 +178,6 @@ public:
       out << "\t\"cost\": {\n";
       out << "\t\t\"fixed\": " << costFixed << ",\n";
       out << "\t\t\"heuristic\": " << costHeur << ",\n";
-      out << "\t\t\"total\": " << costTotal << ",\n";
       out << "\t\t\"lookahead_penalty\": " << lookaheadPenalty << "\n";
       out << "\t},\n";
       out << "\t\"nswaps\": " << nswaps << "\n}\n";
@@ -324,9 +322,9 @@ inline bool operator<(const HeuristicMapper::Node& x,
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
   const auto xcost =
-      x.costTotal + static_cast<double>(x.costFixed) + x.lookaheadPenalty;
+      static_cast<double>(x.costFixed) + x.lookaheadPenalty;
   const auto ycost =
-      y.costTotal + static_cast<double>(y.costFixed) + y.lookaheadPenalty;
+      static_cast<double>(y.costFixed) + y.lookaheadPenalty;
   if (std::abs(xcost - ycost) > 1e-6) {
     return xcost > ycost;
   }
