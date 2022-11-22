@@ -190,10 +190,10 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
   EXPECT_EQ(londonOptimizer->optimalResults.result, logicbase::Result::SAT);
   EXPECT_LE(londonOptimizer->optimalResults.singleQubitGates +
                 londonOptimizer->optimalResults.twoQubitGates,
-            6);
-  EXPECT_GT(londonOptimizer->optimalResults.singleQubitGates +
+            5);
+  EXPECT_GE(londonOptimizer->optimalResults.singleQubitGates +
                 londonOptimizer->optimalResults.twoQubitGates,
-            3);
+            0);
 }
 
 TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
@@ -277,8 +277,8 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
   EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
   EXPECT_LE(
       cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 5);
-  EXPECT_GT(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 1);
+  EXPECT_GE(
+      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 0);
 }
 
 TEST(TestCliffordSynthesis, TestSplitIter) {
