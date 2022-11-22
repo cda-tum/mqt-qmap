@@ -63,22 +63,22 @@ void TargetMetricHandler::makeDepthMetric(const SynthesisData& data) {
   // COST
   LogicTerm cost = LogicTerm(0);
   for (std::size_t gateStep = 1; gateStep < data.timesteps + 1; ++gateStep) {
-    LogicTerm anyGate = LogicTerm(true);
+    LogicTerm anyGate = LogicTerm(false);
     for (std::size_t a = 0; a < data.nqubits; ++a) {
       for (auto gate : Gates::SINGLE_QUBIT_WITHOUT_NOP) {
-        anyGate = anyGate && !data.gS[gateStep][Gates::toIndex(gate)][a];
+        anyGate = anyGate || data.gS[gateStep][Gates::toIndex(gate)][a];
       }
       for (std::size_t b = 0; b <= a; ++b) {
         if (a == b) {
           continue;
         }
-        anyGate = anyGate && !data.gTwoQubit[gateStep][a][b] &&
-                  !data.gTwoQubit[gateStep][b][a];
+        anyGate = anyGate || data.gTwoQubit[gateStep][a][b] ||
+                  data.gTwoQubit[gateStep][b][a];
       }
     }
     cost = cost + LogicTerm::ite(anyGate, LogicTerm(1), LogicTerm(0));
   }
-  dynamic_cast<LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
+  dynamic_cast<LogicBlockOptimizer*>(data.lb.get())->minimize(cost);
 }
 
 void TargetMetricHandler::makeFidelityMetric(
@@ -121,7 +121,7 @@ void TargetMetricHandler::makeFidelityMetric(
       }
     }
   }
-  dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->minimize(cost);
+  dynamic_cast<logicbase::LogicBlockOptimizer*>(data.lb.get())->maximize(cost);
 }
 void TargetMetricHandler::updateResults(const Configuration& configuration,
                                         Results&             results,
