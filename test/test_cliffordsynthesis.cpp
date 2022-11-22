@@ -53,7 +53,6 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
@@ -166,7 +165,6 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
@@ -189,7 +187,6 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   londonOptimizer->synthesize(configuration);
-  tableau.clear();
 
   londonOptimizer->optimalResults.dump(std::cout);
 
@@ -215,7 +212,6 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
@@ -240,7 +236,6 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
@@ -262,7 +257,6 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
@@ -284,7 +278,6 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);
-  tableau.clear();
 
   cs.optimalResults.dump(std::cout);
 
