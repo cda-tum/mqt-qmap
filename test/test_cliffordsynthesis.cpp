@@ -42,9 +42,8 @@ INSTANTIATE_TEST_SUITE_P(CliffordSynthesizer, TestCliffordSynthesis,
                                          "Stabilizer = ['+ZI', '+IZ']"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -153,9 +152,8 @@ TEST(TestCliffordSynthesis, SanityCheck2QubitGates) {
 }
 
 TEST_P(TestCliffordSynthesis, TestDepthOpt) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -174,9 +172,8 @@ TEST_P(TestCliffordSynthesis, TestDepthOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&   line = GetParam();
+  const Tableau tableau(line);
   Configuration configuration{};
 
   configuration.nqubits         = 2;
@@ -200,9 +197,8 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -223,9 +219,8 @@ TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
 }
 
 TEST_P(TestCliffordSynthesis, TestStartLow) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -244,9 +239,8 @@ TEST_P(TestCliffordSynthesis, TestStartLow) {
 }
 
 TEST_P(TestCliffordSynthesis, TestStartHigh) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -265,9 +259,8 @@ TEST_P(TestCliffordSynthesis, TestStartHigh) {
 }
 
 TEST_P(TestCliffordSynthesis, TestMinMax) {
-  const auto& line = GetParam();
-  Tableau     tableau{};
-  tableau.fromString(line);
+  const auto&         line = GetParam();
+  const Tableau       tableau(line);
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
