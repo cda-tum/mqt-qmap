@@ -48,6 +48,8 @@ public:
 
   [[nodiscard]] auto getQubitCount() const { return nQubits; }
 
+  [[nodiscard]] bool empty() const { return tableau.empty(); }
+
   void dump(const std::string& filename) const;
 
   void dump(std::ostream& of) const;
