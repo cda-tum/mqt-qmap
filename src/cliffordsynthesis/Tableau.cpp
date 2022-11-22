@@ -187,6 +187,7 @@ void Tableau::fromString(const std::string& str) {
     ss = std::stringstream(str);
     import(ss);
   }
+  nQubits = tableau.size();
 }
 
 void Tableau::applyH(const std::size_t target) {

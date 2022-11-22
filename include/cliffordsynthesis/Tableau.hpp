@@ -30,10 +30,7 @@ public:
   explicit Tableau(const std::size_t nQubits) : nQubits(nQubits) {
     createDiagonalTableau(nQubits);
   }
-  explicit Tableau(const std::string& description) {
-    fromString(description);
-    nQubits = tableau.size();
-  }
+  explicit Tableau(const std::string& description) { fromString(description); }
 
   [[nodiscard]] RowType operator[](const std::size_t index) {
     return tableau[index];
