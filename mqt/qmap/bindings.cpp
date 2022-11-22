@@ -88,7 +88,7 @@ cs::Results synthesize(const py::object& description, const Architecture& arch,
       config.architecture = arch;
     } else { // tableau
       try {
-        config.targetTableau = std::make_shared<Tableau>(str);
+        config.targetTableau = std::make_shared<cs::Tableau>(str);
       } catch (std::exception const& e) {
         std::stringstream ss{};
         ss << "Could not parse tableau: " << e.what();
@@ -96,7 +96,7 @@ cs::Results synthesize(const py::object& description, const Architecture& arch,
       }
 
       config.initialTableau =
-          std::make_shared<Tableau>(config.targetTableau->getQubitCount());
+          std::make_shared<cs::Tableau>(config.targetTableau->getQubitCount());
       config.nqubits      = config.targetTableau->getQubitCount();
       config.architecture = arch;
     }
