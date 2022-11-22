@@ -117,11 +117,11 @@ repos:
     rev: "v2.2.2"
     hooks:
       - id: codespell
-        args: ["-L", "wille,linz", "--skip", "*.ipynb"]
+        args: ["-L", "wille,linz,applys", "--skip", "*.ipynb"]
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v14.0.6"
+    rev: "v15.0.4"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]

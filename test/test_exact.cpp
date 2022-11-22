@@ -395,7 +395,7 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
 
 TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
   CouplingMap  cm{{0, 1}, {1, 0}, {1, 2}, {2, 1},
-                 {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+                  {2, 3}, {3, 2}, {1, 3}, {3, 1}};
   Architecture arch(4U, cm);
 
   auto mapper         = ExactMapper(qc, arch);

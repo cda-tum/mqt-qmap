@@ -29,7 +29,7 @@ macro(ADD_INTERNAL_LIBRARY libname srcfile)
   if(MSVC)
     target_compile_options(${lib} PUBLIC /utf-8)
   else()
-    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-Og>)
+    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-g3>)
     if(BINDINGS)
       # adjust visibility settings for building Python bindings
       target_compile_options(${lib} PUBLIC -fvisibility=hidden)
@@ -109,7 +109,8 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetricHandler.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/ExactStrategy.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/HeuristicStrategy.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp)
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration/AvailableArchitecture.hpp)
 
   add_internal_library(${lib} ${srcfile})
 endmacro()
