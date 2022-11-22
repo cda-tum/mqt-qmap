@@ -80,6 +80,10 @@ void ExactStrategy::runStartHigh(std::size_t          timesteps,
     TargetMetricHandler::updateResults(configuration, r,
                                        synthesizer.optimalResults);
     if (r.result == logicbase::Result::SAT) {
+      if (timesteps == 0) {
+        break;
+      }
+
       oldTimesteps = timesteps;
       timesteps *= configuration.limitFindingFactor;
     } else {
