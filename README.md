@@ -57,7 +57,7 @@ circ.h(0)
 circ.h(1)
 
 circ_opt, results = qmap.optimize_clifford(circ)
-
+```
 **Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqtqmap.readthedocs.io/en/latest/).**
 
 ## System Requirements and Building
