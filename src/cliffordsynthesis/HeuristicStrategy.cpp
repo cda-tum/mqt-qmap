@@ -26,7 +26,7 @@ void HeuristicStrategy::runSplitIter(const CouplingMap&   reducedCM,
     return;
   }
   DEBUG() << "Running split iter" << std::endl;
-  Tableau fullTableau  = *configuration.targetTableau;
+  auto fullTableau  = configuration.targetTableau;
   auto    circuitSplit = static_cast<std::size_t>(
       std::log(configuration.targetCircuit->getNindividualOps()));
   std::uint16_t split = std::min(5, configuration.nqubits / 2);
@@ -50,13 +50,13 @@ void HeuristicStrategy::runSplitIter(const CouplingMap&   reducedCM,
       DEBUG() << "Currently at " << i * circuitSplit << " of "
               << circuit.getNindividualOps() << std::endl;
       for (std::uint32_t j = 0; j < nThreads; j++) {
-        std::shared_ptr<Results>     r = std::make_shared<Results>();
-        std::shared_ptr<std::thread> t = std::make_unique<std::thread>(
+        auto    r = std::make_shared<Results>();
+        auto t = std::make_shared<std::thread>(
             runSplinter, i, circuitSplit, split, std::ref(reducedCM),
             std::ref(qubitChoice), std::ref(circuit), r, &synthesizer,
             configuration);
         threads.emplace_back(t);
-        results.push_back(r);
+        results.emplace_back(r);
       }
       for (const auto& t : threads) {
         t->join();
@@ -93,7 +93,7 @@ void HeuristicStrategy::runSplitIter(const CouplingMap&   reducedCM,
     if (totalResult.result == logicbase::Result::SAT) {
       Tableau resultingTableau{localResultCircuit};
       DEBUG() << "Equality (Results): "
-              << ((fullTableau == resultingTableau) ? "True" : "False")
+              << ((*fullTableau == resultingTableau) ? "True" : "False")
               << std::endl;
       DEBUG() << "Original Circuit size: " << circuit.getNindividualOps()
               << std::endl;
