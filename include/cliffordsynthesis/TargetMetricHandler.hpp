@@ -13,8 +13,7 @@
 namespace cs {
 
 class TargetMetricHandler {
-  static void makeGateMetric(const SynthesisData& data, bool onlyCNOT,
-                             std::uint16_t cnotMultiplier);
+  static void makeGateMetric(const SynthesisData& data, bool onlyCNOT);
   static void makeDepthMetric(const SynthesisData& data);
   static void makeFidelityMetric(const SynthesisData& data,
                                  const Architecture&  architecture,
