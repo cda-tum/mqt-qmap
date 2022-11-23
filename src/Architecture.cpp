@@ -713,5 +713,8 @@ Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, dou
   for (const auto& [qubit1, qubit2] : couplingMap) {
       properties.setTwoQubitErrorRate(qubit1, qubit2, 1.0 - twoQubitFidelity);
   }
+
+  createDistanceTable();
+  createFidelityTable();
 }
 

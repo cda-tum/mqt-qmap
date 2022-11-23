@@ -172,5 +172,5 @@ TEST(TestArchitecture, CreateArchFromFidelities) {
   EXPECT_EQ(architecture.getNqubits(), 5);
   EXPECT_EQ(architecture.getSingleQubitFidelities()[0], 0.999);
   EXPECT_EQ(architecture.getSingleQubitFidelities()[1], 0.999);
-  EXPECT_EQ(architecture.getFidelityTable()[0][0], 0.99);
+  EXPECT_EQ(architecture.getFidelityTable()[0][1], 0.99);
 }
