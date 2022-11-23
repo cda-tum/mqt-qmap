@@ -1,79 +1,73 @@
 from mqt import qmap
 
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
 
 
-def test_cliffordsynthesis_sanity_check() -> None:
-    """Verify that the clifford synthesis works on a simple circuit that requires no actual optimization"""
+@pytest.fixture
+def example_2_qubit_circuit() -> QuantumCircuit:
+    qc = QuantumCircuit(2)
+    qc.cx(0, 1)
+    qc.cx(0, 1)
+    qc.cx(0, 1)
+    return qc
+
+@pytest.fixture
+def example_h_qubit_circuit() -> QuantumCircuit:
     qc = QuantumCircuit(2)
     qc.h(0)
     qc.h(0)
     qc.h(0)
     qc.h(0)
     qc.h(0)
+    return qc
 
-    qc_mapped, results = qmap.optimize_clifford(qc, strategy="minmax")
+def test_cliffordsynthesis_sanity_check(example_h_qubit_circuit) -> None:
+    """Sanity check Synthesis for 1 gate"""
+
+    qc_mapped, results = qmap.optimize_clifford(example_h_qubit_circuit, strategy="binary_search")
 
     assert results.single_qubit_gates == 1
 
 
-def test_cliffordsynthesis_sanity_check_minimizer() -> None:
-    """Verify that the clifford synthesis works on a simple circuit that requires no actual optimization"""
-    qc = QuantumCircuit(2)
-    qc.h(0)
-    qc.h(0)
-    qc.h(0)
-    qc.h(0)
-    qc.h(0)
+def test_cliffordsynthesis_sanity_check_minimizer(example_h_qubit_circuit) -> None:
+    """Sanity check maxsat minimizer"""
 
-    qc_mapped, results = qmap.optimize_clifford(qc, strategy="use_minimizer")
+    qc_mapped, results = qmap.optimize_clifford(example_h_qubit_circuit, strategy="use_minimizer")
 
     assert results.single_qubit_gates == 1
 
 
-def test_cliffordsynthesis_sanity_check_depth() -> None:
+def test_cliffordsynthesis_sanity_check_depth(example_2_qubit_circuit) -> None:
     """Verify that the clifford synthesis works on a simple circuit that requires no actual optimization"""
-    qc = QuantumCircuit(2)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
 
-    qc_mapped, results = qmap.optimize_clifford(qc, target="depth")
+    qc_mapped, results = qmap.optimize_clifford(example_2_qubit_circuit, target="depth")
 
     assert results.depth == 1
 
 
-def test_cliffordsynthesis_sanity_check_depth_minmax() -> None:
+def test_cliffordsynthesis_sanity_check_depth_minmax(example_2_qubit_circuit) -> None:
     """Verify that the clifford synthesis works on a simple circuit that requires no actual optimization"""
-    qc = QuantumCircuit(2)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
 
-    qc_mapped, results = qmap.optimize_clifford(qc, target="depth", strategy="minmax")
+    qc_mapped, results = qmap.optimize_clifford(example_2_qubit_circuit, target="depth", strategy="binary_search")
 
     assert results.depth == 1
 
 
-def test_cliffordsynthesis_sanity_check_fidelity() -> None:
+def test_cliffordsynthesis_sanity_check_fidelity(example_2_qubit_circuit) -> None:
     """Verify that fidelity is 0 if none is given"""
 
-    qc = QuantumCircuit(2)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
-    qc.cx(0, 1)
-
-    qc_mapped, results = qmap.optimize_clifford(qc, arch=FakeLondon(), target="fidelity")
+    qc_mapped, results = qmap.optimize_clifford(example_2_qubit_circuit, arch=FakeLondon(), target="fidelity")
 
     assert results.fidelity != 0.0
 
 
 def test_cliffordsynthesis_sanity_check_empty_tableau() -> None:
-    """Verify that fidelity is 0 if none is given"""
+    """Verify that fidelity is 1 if none is given"""
 
     stabilizers = '["+ZI", "+IZ"]'
 
     qc_mapped, results = qmap.synthesize_clifford(stabilizers, target="gates")
 
-    assert results.single_qubit_gates == 0
+    assert results.fidelity == 1.0

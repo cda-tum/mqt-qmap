@@ -14,14 +14,14 @@ enum class OptimizationStrategy {
   StartLow,
   StartHigh,
   UseMinimizer,
-  MinMax,
+  BinarySearch,
   SplitIter
 };
 
 static std::string toString(OptimizationStrategy strategy) {
   switch (strategy) {
-  case OptimizationStrategy::MinMax:
-    return "minmax";
+  case OptimizationStrategy::BinarySearch:
+    return "binary_search";
   case OptimizationStrategy::StartHigh:
     return "start_high";
   case OptimizationStrategy::StartLow:
@@ -37,8 +37,8 @@ static std::string toString(OptimizationStrategy strategy) {
 
 [[maybe_unused]] static OptimizationStrategy
 optimizationStrategyFromString(const std::string& strategy) {
-  if (strategy == "minmax") {
-    return OptimizationStrategy::MinMax;
+  if (strategy == "binary_search") {
+    return OptimizationStrategy::BinarySearch;
   }
   if (strategy == "start_high") {
     return OptimizationStrategy::StartHigh;
@@ -52,12 +52,12 @@ optimizationStrategyFromString(const std::string& strategy) {
   if (strategy == "split_iterative") {
     return OptimizationStrategy::SplitIter;
   }
-  return OptimizationStrategy::MinMax;
+  return OptimizationStrategy::BinarySearch;
 }
 
 [[maybe_unused]] static bool isExact(OptimizationStrategy strategy) {
   switch (strategy) {
-  case OptimizationStrategy::MinMax:
+  case OptimizationStrategy::BinarySearch:
   case OptimizationStrategy::StartHigh:
   case OptimizationStrategy::StartLow:
   case OptimizationStrategy::UseMinimizer:

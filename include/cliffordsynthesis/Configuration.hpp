@@ -42,8 +42,8 @@ struct Configuration {
   double               circuitSplittingIncrease = 0.2;
   std::uint8_t         nThreads                 = 1;
   std::uint8_t         verbosity                = 0;
-  OptimizationStrategy strategy = OptimizationStrategy::UseMinimizer;
-  TargetMetric         target   = TargetMetric::GATES;
+  OptimizationStrategy strategy = OptimizationStrategy::BinarySearch;
+  TargetMetric         target   = TargetMetric::TWO_QUBIT_GATES;
 
   std::shared_ptr<qc::QuantumComputation> targetCircuit{};
   std::shared_ptr<Tableau>                targetTableau{};

@@ -31,15 +31,15 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(CliffordSynthesizer, TestCliffordSynthesis,
-                         testing::Values("Stabilizer = ['+IZ', '+XI']",
-                                         "Stabilizer = ['-XX', '+XI']",
-                                         "Stabilizer = ['+XX', '+XI']",
-                                         "Stabilizer = ['+XY', '+XI']",
-                                         "Stabilizer = ['+XY', '+ZZ']",
-                                         "Stabilizer = ['+XX', '+ZZ']",
-                                         "Stabilizer = ['-XX', '+ZZ']",
-                                         "Stabilizer = ['+XX', '-ZZ']",
-                                         "Stabilizer = ['+ZI', '+IZ']"));
+                         testing::Values("['+IZ', '+XI']",
+                                         "['-XX', '+XI']",
+                                         "['+XX', '+XI']",
+                                         "['+XY', '+XI']",
+                                         "['+XY', '+ZZ']",
+                                         "['+XX', '+ZZ']",
+                                         "['-XX', '+ZZ']",
+                                         "['+XX', '-ZZ']",
+                                         "['+ZI', '+IZ']"));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
   const auto&         line = GetParam();
@@ -267,7 +267,7 @@ TEST_P(TestCliffordSynthesis, TestMinMax) {
   configuration.nqubits         = 2;
   configuration.initialTimestep = 4;
   configuration.target          = TargetMetric::GATES;
-  configuration.strategy        = OptimizationStrategy::MinMax;
+  configuration.strategy        = OptimizationStrategy::BinarySearch;
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
   cs.synthesize(configuration);

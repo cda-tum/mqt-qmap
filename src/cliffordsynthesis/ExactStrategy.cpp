@@ -23,7 +23,7 @@ void cs::ExactStrategy::runExactStrategy(std::size_t          timesteps,
   case OptimizationStrategy::StartHigh:
     runStartHigh(timesteps, reducedCM, qubitChoice, configuration, synthesizer);
     break;
-  case OptimizationStrategy::MinMax:
+  case OptimizationStrategy::BinarySearch:
     runBinarySearch(timesteps, reducedCM, qubitChoice, configuration,
                     synthesizer);
     break;

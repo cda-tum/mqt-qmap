@@ -65,8 +65,8 @@ struct Results {
     resultJSON["target"]            = toString(target);
     resultJSON["qubits"]            = nqubits;
     resultJSON["initial_timesteps"] = initialTimesteps;
-    resultJSON["singleQubitGates"]  = singleQubitGates;
-    resultJSON["twoQubitGates"]     = twoQubitGates;
+    resultJSON["single_qubit_gates"]  = singleQubitGates;
+    resultJSON["two_qubit_gates"]     = twoQubitGates;
     resultJSON["depth"]             = depth;
     resultJSON["fidelity"]          = fidelity;
     resultJSON["sat"]               = sat;
