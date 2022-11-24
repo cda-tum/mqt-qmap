@@ -10,7 +10,9 @@
 
 using namespace cs;
 
-class TestCliffordSynthesis : public testing::TestWithParam<std::string> {
+class TestCliffordSynthesis
+    : public testing::TestWithParam<
+          std::tuple<OptimizationStrategy, TargetMetric, std::string>> {
 protected:
   std::string testArchitectureDir = "./architectures/";
   std::string testCalibrationDir  = "./calibration/";
@@ -30,20 +32,23 @@ protected:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(CliffordSynthesizer, TestCliffordSynthesis,
-                         testing::Values("['+IZ', '+XI']",
-                                         "['-XX', '+XI']",
-                                         "['+XX', '+XI']",
-                                         "['+XY', '+XI']",
-                                         "['+XY', '+ZZ']",
-                                         "['+XX', '+ZZ']",
-                                         "['-XX', '+ZZ']",
-                                         "['+XX', '-ZZ']",
-                                         "['+ZI', '+IZ']"));
+INSTANTIATE_TEST_SUITE_P(
+    CliffordSynthesizer, TestCliffordSynthesis,
+    testing::Combine(testing::Values(OptimizationStrategy::UseMinimizer,
+                                     OptimizationStrategy::BinarySearch,
+                                     OptimizationStrategy::StartLow,
+                                     OptimizationStrategy::StartHigh),
+                     testing::Values(TargetMetric::TWO_QUBIT_GATES,
+                                     TargetMetric::GATES, TargetMetric::DEPTH),
+                     testing::Values("['+IZ', '+XI']", "['-XX', '+XI']",
+                                     "['+XX', '+XI']", "['+XY', '+XI']",
+                                     "['+XY', '+ZZ']", "['+XX', '+ZZ']",
+                                     "['-XX', '+ZZ']", "['+XX', '-ZZ']",
+                                     "['+ZI', '+IZ']")));
 
 TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
   const auto&         line = GetParam();
-  const Tableau       tableau(line);
+  const Tableau       tableau(std::get<2>(line));
   CliffordSynthesizer cs{};
   Configuration       configuration{};
 
@@ -51,129 +56,21 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
   configuration.initialTimestep = 10;
   configuration.initialTableau  = std::make_shared<Tableau>(2);
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
+
+  configuration.strategy = std::get<0>(line);
+  configuration.target = std::get<1>(line);
+
   cs.synthesize(configuration);
 
   cs.optimalResults.dump(std::cout);
 
   EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_LE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 5);
-  EXPECT_GE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 0);
 }
 
-TEST(TestCliffordSynthesis, SanityCheckDepth1) {
-  using namespace dd::literals;
-  util::init();
-  qc::QuantumComputation qc{};
-  CliffordSynthesizer    cs{};
-  Configuration configuration{false, 2, 10, OptimizationStrategy::UseMinimizer,
-                              TargetMetric::DEPTH};
-  configuration.verbosity = 5;
-  qc.addQubitRegister(2U);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-
-  configuration.targetCircuit =
-      std::make_shared<qc::QuantumComputation>(qc.clone());
-
-  cs.synthesize(configuration);
-
-  EXPECT_EQ(cs.optimalResults.depth, 1);
-}
-
-TEST(TestCliffordSynthesis, SanityCheckDepth2) {
-  using namespace dd::literals;
-  util::init();
-  qc::QuantumComputation qc{};
-  CliffordSynthesizer    cs{};
-  Configuration configuration{false, 2, 10, OptimizationStrategy::UseMinimizer,
-                              TargetMetric::DEPTH};
-  configuration.verbosity = 5;
-
-  qc.addQubitRegister(2U);
-  qc.h(0);
-  qc.h(1);
-  qc.x(0, 1_pc);
-  qc.h(1);
-  qc.h(0);
-
-  configuration.targetCircuit =
-      std::make_shared<qc::QuantumComputation>(qc.clone());
-
-  cs.synthesize(configuration);
-
-  EXPECT_EQ(cs.optimalResults.depth, 1);
-}
-
-TEST(TestCliffordSynthesis, SanityCheckGates) {
-  util::init();
-  qc::QuantumComputation qc{};
-  CliffordSynthesizer    cs{};
-  Configuration configuration{false, 2, 10, OptimizationStrategy::UseMinimizer,
-                              TargetMetric::GATES};
-  configuration.verbosity = 5;
-  qc.addQubitRegister(2U);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-  qc.h(0);
-
-  configuration.targetCircuit =
-      std::make_shared<qc::QuantumComputation>(qc.clone());
-
-  cs.synthesize(configuration);
-
-  EXPECT_EQ(cs.optimalResults.singleQubitGates, 1);
-}
-TEST(TestCliffordSynthesis, SanityCheck2QubitGates) {
-  using namespace dd::literals;
-  util::init();
-  qc::QuantumComputation qc{};
-  CliffordSynthesizer    cs{};
-  Configuration configuration{false, 2, 10, OptimizationStrategy::UseMinimizer,
-                              TargetMetric::TWO_QUBIT_GATES};
-  configuration.verbosity = 5;
-  qc.addQubitRegister(2U);
-  qc.x(0, 1_pc);
-  qc.x(0, 1_pc);
-  qc.x(0, 1_pc);
-
-  configuration.targetCircuit =
-      std::make_shared<qc::QuantumComputation>(qc.clone());
-
-  cs.synthesize(configuration);
-
-  EXPECT_EQ(cs.optimalResults.twoQubitGates, 1);
-}
-
-TEST_P(TestCliffordSynthesis, TestDepthOpt) {
-  const auto&         line = GetParam();
-  const Tableau       tableau(line);
-  CliffordSynthesizer cs{};
-  Configuration       configuration{};
-
-  configuration.nqubits         = 2;
-  configuration.initialTimestep = 4;
-  configuration.target          = TargetMetric::DEPTH;
-  configuration.initialTableau  = std::make_shared<Tableau>(2);
-  configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-  cs.synthesize(configuration);
-
-  cs.optimalResults.dump(std::cout);
-
-  EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_LE(cs.optimalResults.depth, 4);
-  EXPECT_GE(cs.optimalResults.depth, 0);
-}
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
   const auto&   line = GetParam();
-  const Tableau tableau(line);
+  const Tableau tableau(std::get<2>(line));
   Configuration configuration{};
 
   configuration.nqubits         = 2;
@@ -196,89 +93,35 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
             0);
 }
 
-TEST_P(TestCliffordSynthesis, TestTwoQubitGatesOpt) {
-  const auto&         line = GetParam();
-  const Tableau       tableau(line);
-  CliffordSynthesizer cs{};
-  Configuration       configuration{};
+TEST(TestCliffordSynthesis, TestSanityCheckFidelity) {
+  CouplingMap  cm = getFullyConnectedMap(2);
+  Architecture architecture{
+      2,
+      cm,
+      0.999,
+      0.99,
+      0.995};
 
-  configuration.nqubits         = 2;
-  configuration.initialTimestep = 6;
-  configuration.target          = TargetMetric::TWO_QUBIT_GATES;
-  configuration.initialTableau  = std::make_shared<Tableau>(2);
-  configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-  cs.synthesize(configuration);
+    qc::QuantumComputation qc{};
+    CliffordSynthesizer    optimizer{};
+    qc.addQubitRegister(2U);
 
-  cs.optimalResults.dump(std::cout);
+    qc.h(0);
+    qc.h(1);
 
-  EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_LE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 6);
-  EXPECT_GE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 2);
-}
+    Configuration configuration{};
+    configuration.nqubits         = 2;
+    configuration.initialTimestep = 10;
+    configuration.architecture    = architecture;
+    configuration.fidelityScaling = 10000;
+    configuration.targetCircuit =
+        std::make_shared<qc::QuantumComputation>(qc.clone());
+    configuration.target   = TargetMetric::FIDELITY;
+    configuration.strategy = OptimizationStrategy::UseMinimizer;
 
-TEST_P(TestCliffordSynthesis, TestStartLow) {
-  const auto&         line = GetParam();
-  const Tableau       tableau(line);
-  CliffordSynthesizer cs{};
-  Configuration       configuration{};
+    optimizer.synthesize(configuration);
 
-  configuration.nqubits         = 2;
-  configuration.initialTimestep = 2;
-  configuration.target          = TargetMetric::GATES;
-  configuration.strategy        = OptimizationStrategy::StartLow;
-  configuration.initialTableau  = std::make_shared<Tableau>(2);
-  configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-  cs.synthesize(configuration);
-
-  cs.optimalResults.dump(std::cout);
-
-  EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_GE(cs.optimalResults.initialTimesteps, 2);
-}
-
-TEST_P(TestCliffordSynthesis, TestStartHigh) {
-  const auto&         line = GetParam();
-  const Tableau       tableau(line);
-  CliffordSynthesizer cs{};
-  Configuration       configuration{};
-
-  configuration.nqubits         = 2;
-  configuration.initialTimestep = 100;
-  configuration.target          = TargetMetric::GATES;
-  configuration.strategy        = OptimizationStrategy::StartHigh;
-  configuration.initialTableau  = std::make_shared<Tableau>(2);
-  configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-  cs.synthesize(configuration);
-
-  cs.optimalResults.dump(std::cout);
-
-  EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_LT(cs.optimalResults.initialTimesteps, 100);
-}
-
-TEST_P(TestCliffordSynthesis, TestMinMax) {
-  const auto&         line = GetParam();
-  const Tableau       tableau(line);
-  CliffordSynthesizer cs{};
-  Configuration       configuration{};
-
-  configuration.nqubits         = 2;
-  configuration.initialTimestep = 4;
-  configuration.target          = TargetMetric::GATES;
-  configuration.strategy        = OptimizationStrategy::BinarySearch;
-  configuration.initialTableau  = std::make_shared<Tableau>(2);
-  configuration.targetTableau   = std::make_shared<Tableau>(tableau);
-  cs.synthesize(configuration);
-
-  cs.optimalResults.dump(std::cout);
-
-  EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
-  EXPECT_LE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 5);
-  EXPECT_GE(
-      cs.optimalResults.singleQubitGates + cs.optimalResults.twoQubitGates, 0);
+    EXPECT_EQ(optimizer.optimalResults.fidelity, 0.999*0.999);
 }
 
 TEST(TestCliffordSynthesis, TestSplitIter) {
