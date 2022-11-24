@@ -93,8 +93,7 @@ void TargetMetricHandler::makeFidelityMetric(
   const auto& fidelityTable = architecture.getFidelityTable();
   for (const auto& edge : data.reducedCM) {
     logicbase::LogicTerm fidelity = logicbase::LogicTerm(
-        (std::log(fidelityTable[edge.first][edge.second])) *
-        fidelityScaling);
+        (std::log(fidelityTable[edge.first][edge.second])) * fidelityScaling);
     const auto a =
         std::find(data.qubitChoice.begin(), data.qubitChoice.end(), edge.first);
     const auto b = std::find(data.qubitChoice.begin(), data.qubitChoice.end(),
@@ -113,8 +112,7 @@ void TargetMetricHandler::makeFidelityMetric(
   const auto& singleQubitFidelities = architecture.getSingleQubitFidelities();
   for (std::size_t a = 0; a < data.nqubits; ++a) {
     logicbase::LogicTerm fidelity = logicbase::LogicTerm(
-        (std::log(singleQubitFidelities[a])) *
-        fidelityScaling);
+        (std::log(singleQubitFidelities[a])) * fidelityScaling);
     // at each time t if there is a gate on a, add the cost
     for (std::size_t gateStep = 0; gateStep < data.timesteps; ++gateStep) {
       for (auto gate : Gates::SINGLE_QUBIT_WITHOUT_NOP) {
@@ -135,10 +133,10 @@ void TargetMetricHandler::updateResults(const Configuration& configuration,
         (currentResults.singleQubitGates + currentResults.twoQubitGates) == 0) {
       currentResults = results;
     }
-        break;
+    break;
   case TargetMetric::TWO_QUBIT_GATES:
-    if ((results.sat && (results.twoQubitGates) <
-                            (currentResults.twoQubitGates)) ||
+    if ((results.sat &&
+         (results.twoQubitGates) < (currentResults.twoQubitGates)) ||
         (currentResults.twoQubitGates) == 0) {
       currentResults = results;
     }

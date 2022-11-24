@@ -698,23 +698,25 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   }
   os << "}" << std::endl;
 }
-Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, double singleQubitFidelity, double twoQubitFidelity, double readoutFidelity) {
+Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
+                           double singleQubitFidelity, double twoQubitFidelity,
+                           double readoutFidelity) {
   static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
                                           "rz", "sx", "x"};
 
   loadCouplingMap(nQ, couplingMap);
 
-  for (const auto& qubit1: getQubitSet()) {
+  for (const auto& qubit1 : getQubitSet()) {
     for (const auto& gate : SINGLE_QUBIT_GATES) {
       properties.setSingleQubitErrorRate(qubit1, gate,
                                          1.0 - singleQubitFidelity);
     }
   }
   for (const auto& [qubit1, qubit2] : couplingMap) {
-      properties.setTwoQubitErrorRate(qubit1, qubit2, 1.0 - twoQubitFidelity);
+    properties.setTwoQubitErrorRate(qubit1, qubit2, 1.0 - twoQubitFidelity);
   }
 
-  for (const auto& qubit1: getQubitSet()) {
+  for (const auto& qubit1 : getQubitSet()) {
     properties.readoutErrorRate.set(qubit1, 1.0 - readoutFidelity);
   }
 
@@ -722,4 +724,3 @@ Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, dou
 
   name = "Custom";
 }
-

@@ -58,20 +58,20 @@ struct Results {
 
   [[nodiscard]] virtual nlohmann::json json() const {
     nlohmann::json resultJSON{};
-    resultJSON["verbosity"]         = verbose;
-    resultJSON["choose_best"]       = chooseBest;
-    resultJSON["result"]            = toString(result);
-    resultJSON["strategy"]          = toString(strategy);
-    resultJSON["target"]            = toString(target);
-    resultJSON["qubits"]            = nqubits;
-    resultJSON["initial_timesteps"] = initialTimesteps;
-    resultJSON["single_qubit_gates"]  = singleQubitGates;
-    resultJSON["two_qubit_gates"]     = twoQubitGates;
-    resultJSON["depth"]             = depth;
-    resultJSON["fidelity"]          = fidelity;
-    resultJSON["sat"]               = sat;
-    resultJSON["total_seconds"]     = totalSeconds;
-    resultJSON["resultCircuit"]     = resultStringCircuit;
+    resultJSON["verbosity"]          = verbose;
+    resultJSON["choose_best"]        = chooseBest;
+    resultJSON["result"]             = toString(result);
+    resultJSON["strategy"]           = toString(strategy);
+    resultJSON["target"]             = toString(target);
+    resultJSON["qubits"]             = nqubits;
+    resultJSON["initial_timesteps"]  = initialTimesteps;
+    resultJSON["single_qubit_gates"] = singleQubitGates;
+    resultJSON["two_qubit_gates"]    = twoQubitGates;
+    resultJSON["depth"]              = depth;
+    resultJSON["fidelity"]           = fidelity;
+    resultJSON["sat"]                = sat;
+    resultJSON["total_seconds"]      = totalSeconds;
+    resultJSON["resultCircuit"]      = resultStringCircuit;
     std::stringstream strings;
     Architecture::printCouplingMap(resultCM, strings);
     resultJSON["CouplingMap"]    = strings.str();

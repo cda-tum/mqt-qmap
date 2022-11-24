@@ -58,7 +58,7 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
   configuration.targetTableau   = std::make_shared<Tableau>(tableau);
 
   configuration.strategy = std::get<0>(line);
-  configuration.target = std::get<1>(line);
+  configuration.target   = std::get<1>(line);
 
   cs.synthesize(configuration);
 
@@ -66,7 +66,6 @@ TEST_P(TestCliffordSynthesis, SimpleSynthesis) {
 
   EXPECT_EQ(cs.optimalResults.result, logicbase::Result::SAT);
 }
-
 
 TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
   const auto&   line = GetParam();
@@ -95,33 +94,28 @@ TEST_P(TestCliffordSynthesis, TestFidelityOpt) {
 
 TEST(TestCliffordSynthesis, TestSanityCheckFidelity) {
   CouplingMap  cm = getFullyConnectedMap(2);
-  Architecture architecture{
-      2,
-      cm,
-      0.999,
-      0.99,
-      0.995};
+  Architecture architecture{2, cm, 0.999, 0.99, 0.995};
 
-    qc::QuantumComputation qc{};
-    CliffordSynthesizer    optimizer{};
-    qc.addQubitRegister(2U);
+  qc::QuantumComputation qc{};
+  CliffordSynthesizer    optimizer{};
+  qc.addQubitRegister(2U);
 
-    qc.h(0);
-    qc.h(1);
+  qc.h(0);
+  qc.h(1);
 
-    Configuration configuration{};
-    configuration.nqubits         = 2;
-    configuration.initialTimestep = 10;
-    configuration.architecture    = architecture;
-    configuration.fidelityScaling = 10000;
-    configuration.targetCircuit =
-        std::make_shared<qc::QuantumComputation>(qc.clone());
-    configuration.target   = TargetMetric::FIDELITY;
-    configuration.strategy = OptimizationStrategy::UseMinimizer;
+  Configuration configuration{};
+  configuration.nqubits         = 2;
+  configuration.initialTimestep = 10;
+  configuration.architecture    = architecture;
+  configuration.fidelityScaling = 10000;
+  configuration.targetCircuit =
+      std::make_shared<qc::QuantumComputation>(qc.clone());
+  configuration.target   = TargetMetric::FIDELITY;
+  configuration.strategy = OptimizationStrategy::UseMinimizer;
 
-    optimizer.synthesize(configuration);
+  optimizer.synthesize(configuration);
 
-    EXPECT_EQ(optimizer.optimalResults.fidelity, 0.999*0.999);
+  EXPECT_EQ(optimizer.optimalResults.fidelity, 0.999 * 0.999);
 }
 
 TEST(TestCliffordSynthesis, TestSplitIter) {

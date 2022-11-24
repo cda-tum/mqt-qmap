@@ -27,7 +27,7 @@ void HeuristicStrategy::runSplitIter(const CouplingMap&   reducedCM,
   }
   DEBUG() << "Running split iter" << std::endl;
   auto fullTableau  = configuration.targetTableau;
-  auto    circuitSplit = static_cast<std::size_t>(
+  auto circuitSplit = static_cast<std::size_t>(
       std::log(configuration.targetCircuit->getNindividualOps()));
   std::uint16_t split = std::min(5, configuration.nqubits / 2);
   std::vector<std::shared_ptr<std::thread>> threads;
@@ -50,7 +50,7 @@ void HeuristicStrategy::runSplitIter(const CouplingMap&   reducedCM,
       DEBUG() << "Currently at " << i * circuitSplit << " of "
               << circuit.getNindividualOps() << std::endl;
       for (std::uint32_t j = 0; j < nThreads; j++) {
-        auto    r = std::make_shared<Results>();
+        auto r = std::make_shared<Results>();
         auto t = std::make_shared<std::thread>(
             runSplinter, i, circuitSplit, split, std::ref(reducedCM),
             std::ref(qubitChoice), std::ref(circuit), r, &synthesizer,

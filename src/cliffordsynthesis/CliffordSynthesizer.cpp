@@ -243,7 +243,8 @@ Results CliffordSynthesizer::mainOptimization(
     results.fidelity         = 1.;
     assert(configuration.nqubits == qubitChoice.size());
     for (std::size_t gateStep = 0U; gateStep < timesteps + 1U; ++gateStep) {
-      const auto oldGateCount = results.singleQubitGates + results.twoQubitGates;
+      const auto oldGateCount =
+          results.singleQubitGates + results.twoQubitGates;
       TRACE() << "Gate Step: " << gateStep << std::endl
               << " Actual gate count: " << oldGateCount << std::endl
               << " Depth: " << results.depth << std::endl

@@ -1,6 +1,6 @@
+import pytest
 from mqt import qmap
 
-import pytest
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
 
@@ -13,6 +13,7 @@ def example_2_qubit_circuit() -> QuantumCircuit:
     qc.cx(0, 1)
     return qc
 
+
 @pytest.fixture
 def example_h_qubit_circuit() -> QuantumCircuit:
     qc = QuantumCircuit(2)
@@ -22,6 +23,7 @@ def example_h_qubit_circuit() -> QuantumCircuit:
     qc.h(0)
     qc.h(0)
     return qc
+
 
 def test_cliffordsynthesis_sanity_check_binary_search(example_h_qubit_circuit) -> None:
     """Sanity check Synthesis for 1 gate"""
@@ -71,6 +73,7 @@ def test_cliffordsynthesis_sanity_check_empty_tableau() -> None:
     qc_mapped, results = qmap.synthesize_clifford(stabilizers, target="gates")
 
     assert results.fidelity == 1.0
+
 
 @pytest.mark.parametrize("strategy", ["use_minimizer", "binary_search", "start_low", "start_high", "split_iter"])
 @pytest.mark.parametrize("target", ["gates", "depth"])

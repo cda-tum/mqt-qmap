@@ -224,7 +224,9 @@ public:
   Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
                const Properties& properties);
 
-  Architecture(std::uint16_t nQ, const CouplingMap& couplingMap, double singleQubitFidelity, double twoQubitFidelity, double readoutFidelity);
+  Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
+               double singleQubitFidelity, double twoQubitFidelity,
+               double readoutFidelity);
 
   [[nodiscard]] std::uint16_t getNqubits() const { return nqubits; }
   void                        setNqubits(std::uint16_t nQ) { nqubits = nQ; }

@@ -155,19 +155,14 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
 }
 
 TEST(TestArchitecture, CreateArchFromFidelities) {
-  CouplingMap  cm{};
+  CouplingMap cm{};
 
   cm.emplace(std::make_pair(0, 1));
   cm.emplace(std::make_pair(1, 2));
   cm.emplace(std::make_pair(2, 3));
   cm.emplace(std::make_pair(3, 4));
   cm.emplace(std::make_pair(4, 0));
-  Architecture architecture{
-      5,
-      cm,
-      0.999,
-      0.99,
-      0.995};
+  Architecture architecture{5, cm, 0.999, 0.99, 0.995};
 
   EXPECT_EQ(architecture.getNqubits(), 5);
   EXPECT_EQ(architecture.getSingleQubitFidelities()[0], 0.999);

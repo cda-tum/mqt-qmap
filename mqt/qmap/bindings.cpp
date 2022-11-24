@@ -433,7 +433,8 @@ PYBIND11_MODULE(pyqmap, m) {
   py::enum_<cs::OptimizationStrategy>(m, "OptimizationStrategy")
       .value("use_minimizer", cs::OptimizationStrategy::UseMinimizer,
              "Use MaxSAT")
-      .value("binary_search", cs::OptimizationStrategy::BinarySearch, "Use Binary Search")
+      .value("binary_search", cs::OptimizationStrategy::BinarySearch,
+             "Use Binary Search")
       .value("start_low", cs::OptimizationStrategy::StartLow,
              "Start Low and slowly increase until SAT")
       .value("start_high", cs::OptimizationStrategy::StartHigh,
@@ -466,17 +467,24 @@ PYBIND11_MODULE(pyqmap, m) {
           "relevant if architecture information is given")
       .def_readwrite("nqubits", &cs::Configuration::nqubits,
                      "number of qubits used in the circuit")
-      .def_readwrite("initial_timestep", &cs::Configuration::initialTimestep,
-                     "Initial timesteps for the synthesis. Specifies the lower limit for the start_low method and the upper limit for the start_high method.")
       .def_readwrite(
-          "fidelity_scaling", &cs::Configuration::fidelityScaling,
-          "Fidelity scaling factor for the synthesis. Defaults to *1000*. Higher values are needed if the fidelities are very similar or high.")
-      .def_readwrite(
-          "limit_finding_factor", &cs::Configuration::limitFindingFactor,
-          "Factor to geometrically increase the initial guess for timesteps used in start_low (increase by 1 + factor) or start_high (decrease by factor). Defaults to *0.5*.")
+          "initial_timestep", &cs::Configuration::initialTimestep,
+          "Initial timesteps for the synthesis. Specifies the lower limit for "
+          "the start_low method and the upper limit for the start_high method.")
+      .def_readwrite("fidelity_scaling", &cs::Configuration::fidelityScaling,
+                     "Fidelity scaling factor for the synthesis. Defaults to "
+                     "*1000*. Higher values are needed if the fidelities are "
+                     "very similar or high.")
+      .def_readwrite("limit_finding_factor",
+                     &cs::Configuration::limitFindingFactor,
+                     "Factor to geometrically increase the initial guess for "
+                     "timesteps used in start_low (increase by 1 + factor) or "
+                     "start_high (decrease by factor). Defaults to *0.5*.")
       .def_readwrite("circuit_splitting_increase",
                      &cs::Configuration::circuitSplittingIncrease,
-                     "Factor to increase circuit splitting size. Calculation is as follows: Increase by max(1, split * factor) if an unsat instance is found. Defaults to *0.2*.")
+                     "Factor to increase circuit splitting size. Calculation "
+                     "is as follows: Increase by max(1, split * factor) if an "
+                     "unsat instance is found. Defaults to *0.2*.")
       .def_readwrite(
           "nthreads", &cs::Configuration::nThreads,
           "Number of threads to use for parallelization of the solver if "
@@ -487,7 +495,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite(
           "optimization_strategy", &cs::Configuration::strategy,
           "Optimization strategy to use. One of the available strategies "
-          "(use_minimizer | *binary_search* | start_low | start_high | split_iter)")
+          "(use_minimizer | *binary_search* | start_low | start_high | "
+          "split_iter)")
       .def_readwrite("target_metric", &cs::Configuration::target,
                      "Target metric to synthesize for. One of the available "
                      "metrics (gates | depth | fidelity | *two_qubit_gates*)")
