@@ -35,6 +35,10 @@ static std::vector<SynthesisTest> getTests(const std::string& path) {
 class TableauSynthesisTest : public ::testing::TestWithParam<SynthesisTest> {
 protected:
   void SetUp() override {
+    if (plog::get() == nullptr) {
+      util::init();
+    }
+
     const auto& test = GetParam();
 
     initialTableau = Tableau(test.initialTableau);
