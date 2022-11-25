@@ -32,8 +32,8 @@ macro(PACKAGE_ADD_TEST testname library)
   # discover tests
   gtest_discover_tests(
     ${testname}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    WORKING_DIRECTORY ${PROJECT_DIR}
+    PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${PROJECT_DIR}")
   set_target_properties(${testname} PROPERTIES FOLDER tests)
 
   add_custom_command(
@@ -76,15 +76,11 @@ if(TARGET ${PROJECT_NAME}_exact_lib)
 endif()
 
 if(TARGET ${PROJECT_NAME}_cliffordsynthesis_lib)
+  configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
+                 ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json COPYONLY)
+
   package_add_test(
     ${PROJECT_NAME}_cliffordsynthesis_test cliffordsynthesis
     ${CMAKE_CURRENT_SOURCE_DIR}/test_tableau.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/test_tableau_synthesis.cpp)
-
-  add_custom_command(
-    TARGET ${PROJECT_NAME}_cliffordsynthesis_test
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
-            ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json
-    COMMENT "Copying tableaus.json")
 endif()
