@@ -18,7 +18,7 @@ void SATEncoder::initializeSolver(const Configuration& config) {
   bool success        = false;
   LogicTerm::termType = TermType::BASE;
   logicutil::Params params;
-  if (config.useMaxSAT) {
+  if (useMaxSAT) {
     params.addParam("pb.compile_equality", true);
     params.addParam("maxres.hill_climb", true);
     params.addParam("maxres.pivot_on_correction_set", false);
@@ -115,13 +115,23 @@ void SATEncoder::createFormulation(const Tableau&       initialTableau,
   asserTableau(initialTableau, 0U);
   asserTableau(targetTableau, T);
 
-  if (config.target == TargetMetric::GATES) {
-    createIndividualGateEncoding();
+  if (!config.useMultiGateEncoding.has_value()) {
+    // if not specified otherwise, the appropriate encoding is chosen based on
+    // the target metric.
+    if (config.target == TargetMetric::GATES) {
+      createIndividualGateEncoding();
+    } else {
+      createMultiGateEncoding();
+    }
   } else {
-    createMultiGateEncoding();
+    if (*config.useMultiGateEncoding) {
+      createMultiGateEncoding();
+    } else {
+      createIndividualGateEncoding();
+    }
   }
 
-  if (config.useMaxSAT) {
+  if (useMaxSAT || config.gateLimit.has_value()) {
     createObjectiveFunction(config);
   }
 
@@ -238,7 +248,7 @@ void SATEncoder::createObjectiveFunction(const Configuration& config) {
 
   switch (config.target) {
   case TargetMetric::GATES:
-    createGateObjectiveFunction();
+    createGateObjectiveFunction(config);
     break;
   case TargetMetric::DEPTH:
     createDepthObjectiveFunction();
@@ -246,7 +256,7 @@ void SATEncoder::createObjectiveFunction(const Configuration& config) {
   }
 }
 
-void SATEncoder::createGateObjectiveFunction() {
+void SATEncoder::createGateObjectiveFunction(const Configuration& config) {
   auto cost = LogicTerm(0);
   for (std::size_t t = 0U; t < T; ++t) {
     const auto& singleQubitGates = vars.gS[t];
@@ -267,7 +277,13 @@ void SATEncoder::createGateObjectiveFunction() {
     }
   }
 
-  dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
+  if (!useMaxSAT && config.gateLimit.has_value()) {
+    const auto gateLimit = config.gateLimit.value();
+    DEBUG() << "Limiting number of gates to <= " << gateLimit;
+    lb->assertFormula(cost <= LogicTerm(static_cast<int>(gateLimit)));
+  } else {
+    dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
+  }
 }
 
 void SATEncoder::createDepthObjectiveFunction() {

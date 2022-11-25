@@ -56,6 +56,7 @@ protected:
   std::optional<std::size_t> initialGates{};
 
   std::size_t timestepLimit{};
+  std::size_t lowerTimestepLimit{};
 
   Configuration configuration{};
 
@@ -64,9 +65,32 @@ protected:
   Tableau                                 resultTableau{};
   std::size_t                             solverCalls{};
 
+  void    determineUpperBound();
+  void    minimizeGatesFixedDepth();
   void    runMaxSAT();
-  void    runBinarySearch();
-  Results mainOptimization();
+  Results mainOptimization(bool useMaxSAT);
+
+  template <typename T>
+  void runBinarySearch(T& value, T lowerBound, T upperBound) {
+    INFO() << "Running binary search in range [" << lowerBound << ", "
+           << upperBound << ")";
+
+    while (lowerBound != upperBound) {
+      value = (lowerBound + upperBound) / 2;
+      INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
+             << upperBound << ")";
+      const auto r = mainOptimization(false);
+      updateResults(configuration, r, results);
+      if (r.sat()) {
+        upperBound = value;
+        INFO() << "Found solution. New upper bound is " << upperBound;
+      } else {
+        lowerBound = value + 1;
+        INFO() << "No solution found. New lower bound is " << lowerBound;
+      }
+    }
+    INFO() << "Found optimum: " << lowerBound;
+  }
 
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);

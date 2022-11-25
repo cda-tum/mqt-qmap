@@ -21,8 +21,9 @@ using namespace logicbase;
 class SATEncoder {
 public:
   SATEncoder() = default;
-  SATEncoder(const std::size_t nQubits, const std::size_t timestepLimit)
-      : N(nQubits), T(timestepLimit) {}
+  SATEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
+             const bool useMaxSAT)
+      : N(nQubits), T(timestepLimit), useMaxSAT(useMaxSAT) {}
 
   void   createFormulation(const Tableau&       initialTableau,
                            const Tableau&       targetTableau,
@@ -89,7 +90,7 @@ protected:
                                                   std::size_t trgt);
 
   void createObjectiveFunction(const Configuration& config);
-  void createGateObjectiveFunction();
+  void createGateObjectiveFunction(const Configuration& config);
   void createDepthObjectiveFunction();
 
   void extractCircuitFromModel(Results& res, Model& model);
@@ -140,6 +141,8 @@ protected:
   const std::size_t N{};
   // timestep limit T
   const std::size_t T{};
+  // whether to use the MaxSAT solver
+  const bool useMaxSAT = false;
 };
 
 } // namespace cs::encoding

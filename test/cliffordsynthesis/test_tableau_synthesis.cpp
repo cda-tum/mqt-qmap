@@ -101,7 +101,6 @@ TEST_P(TableauSynthesisTest, Gates) {
 }
 
 TEST_P(TableauSynthesisTest, Depth) {
-  //  util::init("", plog::info);
   config.target = TargetMetric::DEPTH;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();

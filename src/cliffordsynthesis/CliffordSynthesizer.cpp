@@ -35,11 +35,20 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     }
   }
 
+  determineUpperBound();
+
   if (configuration.useMaxSAT) {
     runMaxSAT();
   } else {
-    runBinarySearch();
+    runBinarySearch(timestepLimit, lowerTimestepLimit, timestepLimit);
   }
+
+  if (configuration.target == TargetMetric::DEPTH &&
+      configuration.minimizeGatesAfterDepthOptimization) {
+    minimizeGatesFixedDepth();
+  }
+
+  results.setSolverCalls(solverCalls);
 
   const auto end = std::chrono::high_resolution_clock::now();
   const std::chrono::duration<double> diff = end - start;
@@ -47,72 +56,61 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   results.setRuntime(diff.count());
 }
 
-void CliffordSynthesizer::runMaxSAT() {
-  bool found = false;
-  INFO() << "Running MaxSAT scheme with timestep limit " << timestepLimit;
-  while (!found) {
-    results = mainOptimization();
-    if (results.sat()) {
-      found = true;
-    } else {
-      timestepLimit *= 2;
-      INFO() << "No solution found. Doubling timestep limit. New limit: "
-             << timestepLimit;
-    }
-  }
-  results.setSolverCalls(solverCalls);
-}
-
-void CliffordSynthesizer::runBinarySearch() {
-  INFO() << "Running binary search scheme with timestep limit "
-         << timestepLimit;
-  std::size_t upper = timestepLimit;
-  std::size_t lower = 0U;
-
-  INFO() << "Searching for upper bound.";
+void CliffordSynthesizer::determineUpperBound() {
+  INFO() << "Searching for upper bound for the number of timesteps starting "
+         << "with " << timestepLimit;
   while (!results.sat()) {
-    results = mainOptimization();
+    results = mainOptimization(false);
     if (!results.sat()) {
-      lower = upper + 1;
-      upper *= 2;
-      timestepLimit = upper;
-      INFO() << "No solution found. Doubling timestep limit. New limit: "
-             << timestepLimit;
-    } else {
-      INFO() << "Found solution with timestep limit " << timestepLimit << ". "
-             << "Searching for lower bound.";
+      lowerTimestepLimit = timestepLimit + 1U;
+      INFO() << "No solution found for " << timestepLimit << " timestep(s). "
+             << "Doubling timestep limit to " << 2 * timestepLimit;
+      timestepLimit *= 2U;
     }
   }
-
-  while (lower != upper) {
-    timestepLimit = (lower + upper) / 2;
-    INFO() << "Searching for solution with timestep limit " << timestepLimit
-           << " (lower: " << lower << ", upper: " << upper << ")";
-    const auto r = mainOptimization();
-    updateResults(configuration, r, results);
-    if (r.sat()) {
-      upper = timestepLimit;
-      INFO() << "Found solution. Adjusting upper bound to " << upper;
-    } else if (r.unsat()) {
-      lower = timestepLimit + 1U;
-      INFO() << "No solution found. Adjusting lower bound to " << lower;
-    } else {
-      FATAL() << "Unexpected result from main optimization";
-    }
-  }
-  INFO() << "Binary search finished. Found solution with timestep limit "
-         << lower;
-  results.setSolverCalls(solverCalls);
+  INFO() << "Found upper bound for the number of timesteps: " << timestepLimit;
 }
 
-Results CliffordSynthesizer::mainOptimization() {
+void CliffordSynthesizer::minimizeGatesFixedDepth() {
+  if (results.getDepth() == 0U) {
+    return;
+  }
+
+  if (results.getDepth() == results.getGates()) {
+    return;
+  }
+
+  INFO() << "Found a depth-optimal circuit with depth " << results.getDepth()
+         << " and " << results.getGates()
+         << " gate(s). Trying to minimize the number of gates.";
+  configuration.target               = TargetMetric::GATES;
+  timestepLimit                      = results.getDepth();
+  configuration.useMultiGateEncoding = true;
+
+  if (configuration.useMaxSAT) {
+    runMaxSAT();
+  } else {
+    configuration.gateLimit = results.getGates();
+    runBinarySearch(*configuration.gateLimit, timestepLimit,
+                    results.getGates());
+  }
+  INFO() << "Found a depth " << results.getDepth() << " circuit with "
+         << results.getGates() << " gate(s).";
+}
+
+void CliffordSynthesizer::runMaxSAT() {
+  INFO() << "Running MaxSAT scheme with timestep limit " << timestepLimit;
+  results = mainOptimization(true);
+}
+
+Results CliffordSynthesizer::mainOptimization(const bool useMaxSAT) {
   using namespace logicbase;
 
   ++solverCalls;
   const auto start = std::chrono::high_resolution_clock::now();
 
-  auto encoder =
-      encoding::SATEncoder(initialTableau.getQubitCount(), timestepLimit);
+  auto encoder = encoding::SATEncoder(initialTableau.getQubitCount(),
+                                      timestepLimit, useMaxSAT);
   encoder.createFormulation(initialTableau, targetTableau, configuration);
   encoder.produceInstance();
   const auto solverResult = encoder.solve();
