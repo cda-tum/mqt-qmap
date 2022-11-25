@@ -29,7 +29,7 @@ macro(ADD_INTERNAL_LIBRARY libname srcfile)
   if(MSVC)
     target_compile_options(${lib} PUBLIC /utf-8)
   else()
-    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-g3>)
+    target_compile_options(${lib} PUBLIC -Wall -Wextra $<$<CONFIG:DEBUG>:-g3 -ggdb>)
     if(BINDINGS)
       # adjust visibility settings for building Python bindings
       target_compile_options(${lib} PUBLIC -fvisibility=hidden)
@@ -90,12 +90,16 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
   add_library(
     ${lib}
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/SATEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/Tableau.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/SATEncoder.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration/AvailableArchitecture.hpp)
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp)
 
   add_internal_library(${lib} ${srcfile})
 endmacro()
