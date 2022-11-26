@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 
 namespace cs::encoding {
 
@@ -20,21 +21,47 @@ using namespace logicbase;
 
 class SATEncoder {
 public:
-  SATEncoder() = default;
-  SATEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-             const bool useMaxSAT)
-      : N(nQubits), T(timestepLimit), useMaxSAT(useMaxSAT) {}
+  struct Configuration {
+    // the initial tableau to encode at t=0
+    Tableau* initialTableau{};
 
-  void   createFormulation(const Tableau&       initialTableau,
-                           const Tableau&       targetTableau,
-                           const Configuration& config);
+    // the target tableau to encode at t=T
+    Tableau* targetTableau{};
+
+    // the number of qubits to encode
+    std::size_t nQubits{};
+
+    // the number of timesteps to encode
+    std::size_t timestepLimit{};
+
+    // the metric to optimize
+    TargetMetric targetMetric = TargetMetric::GATES;
+
+    // whether to use MaxSAT or Binary Search
+    bool useMaxSAT = false;
+
+    // whether to allow multiple gates per timestep
+    bool useMultiGateEncoding = false;
+
+    // the number of threads to pass to the SAT solver
+    std::size_t nThreads = 1U;
+
+    // an optional limit on the total number of gates
+    std::optional<std::size_t> gateLimit = std::nullopt;
+  };
+
+  SATEncoder() = default;
+  explicit SATEncoder(const Configuration& config)
+      : config(config), N(config.nQubits), T(config.timestepLimit) {}
+
+  void   createFormulation();
   void   produceInstance();
   Result solve();
   void   extractResultsFromModel(Results& res);
   void   cleanup();
 
 protected:
-  void initializeSolver(const Configuration& config);
+  void initializeSolver();
 
   void createTableauVariables();
   void createSingleQubitGateVariables();
@@ -89,8 +116,8 @@ protected:
                                                   std::size_t ctrl,
                                                   std::size_t trgt);
 
-  void createObjectiveFunction(const Configuration& config);
-  void createGateObjectiveFunction(const Configuration& config);
+  void createObjectiveFunction();
+  void createGateObjectiveFunction();
   void createDepthObjectiveFunction();
 
   void extractCircuitFromModel(Results& res, Model& model);
@@ -137,12 +164,13 @@ protected:
   std::unique_ptr<LogicBlock> lb;
   Variables                   vars{};
 
+  // all configuration options for the encoder
+  const Configuration config{};
+
   // number of qubits N
   const std::size_t N{};
   // timestep limit T
   const std::size_t T{};
-  // whether to use the MaxSAT solver
-  const bool useMaxSAT = false;
 };
 
 } // namespace cs::encoding

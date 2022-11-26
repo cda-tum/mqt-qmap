@@ -8,6 +8,7 @@
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/SATEncoder.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 
 #include <cstddef>
@@ -25,8 +26,7 @@ public:
       : initialTableau(targetTableau.getQubitCount()),
         targetTableau(std::move(targetTableau)) {}
   CliffordSynthesizer(Tableau initialTableau, const qc::QuantumComputation& qc)
-      : initialTableau(std::move(initialTableau)), targetTableau(qc),
-        initialGates(qc.getNindividualOps()) {}
+      : initialTableau(std::move(initialTableau)), targetTableau(qc) {}
   explicit CliffordSynthesizer(const qc::QuantumComputation& qc)
       : initialTableau(qc.getNqubits()), targetTableau(qc) {}
 
@@ -53,11 +53,6 @@ protected:
   Tableau initialTableau{};
   Tableau targetTableau{};
 
-  std::optional<std::size_t> initialGates{};
-
-  std::size_t timestepLimit{};
-  std::size_t lowerTimestepLimit{};
-
   Configuration configuration{};
 
   Results                                 results{};
@@ -65,13 +60,21 @@ protected:
   Tableau                                 resultTableau{};
   std::size_t                             solverCalls{};
 
-  void    determineUpperBound();
-  void    minimizeGatesFixedDepth();
-  void    runMaxSAT();
-  Results mainOptimization(bool useMaxSAT);
+  static bool requiresMultiGateEncoding(const TargetMetric metric) {
+    return metric == TargetMetric::DEPTH;
+  }
+
+  static void
+  determineInitialTimestepLimit(encoding::SATEncoder::Configuration& config);
+  std::pair<std::size_t, std::size_t>
+          determineUpperBound(encoding::SATEncoder::Configuration config);
+  void    minimizeGatesFixedDepth(encoding::SATEncoder::Configuration config);
+  void    runMaxSAT(const encoding::SATEncoder::Configuration& config);
+  Results mainOptimization(const encoding::SATEncoder::Configuration& config);
 
   template <typename T>
-  void runBinarySearch(T& value, T lowerBound, T upperBound) {
+  void runBinarySearch(T& value, T lowerBound, T upperBound,
+                       const encoding::SATEncoder::Configuration& config) {
     INFO() << "Running binary search in range [" << lowerBound << ", "
            << upperBound << ")";
 
@@ -79,7 +82,7 @@ protected:
       value = (lowerBound + upperBound) / 2;
       INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
              << upperBound << ")";
-      const auto r = mainOptimization(false);
+      const auto r = mainOptimization(config);
       updateResults(configuration, r, results);
       if (r.sat()) {
         upperBound = value;

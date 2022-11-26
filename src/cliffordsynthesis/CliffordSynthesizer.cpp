@@ -6,7 +6,6 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "LogicTerm/Logic.hpp"
-#include "cliffordsynthesis/SATEncoder.hpp"
 #include "utils/logging.hpp"
 
 #include <chrono>
@@ -20,32 +19,37 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
 
   const auto start = std::chrono::high_resolution_clock::now();
 
-  timestepLimit = configuration.initialTimestepLimit;
-  if (timestepLimit == 0U) {
-    // Infeasibility checks are inexpensive, so we can afford to start with a
-    // timestep limit of 1 and increase geometrically until we find a feasible
-    // solution.
-    timestepLimit = 1U;
+  // create the general configuration for the SAT encoder
+  auto encoderConfig           = encoding::SATEncoder::Configuration();
+  encoderConfig.initialTableau = &initialTableau;
+  encoderConfig.targetTableau  = &targetTableau;
+  encoderConfig.nQubits        = initialTableau.getQubitCount();
+  encoderConfig.timestepLimit  = configuration.initialTimestepLimit;
+  encoderConfig.targetMetric   = configuration.target;
+  encoderConfig.useMaxSAT      = configuration.useMaxSAT;
+  encoderConfig.nThreads       = configuration.nThreads;
+  encoderConfig.useMultiGateEncoding =
+      requiresMultiGateEncoding(encoderConfig.targetMetric);
 
-    // if a circuit was provided to start with, we can use its characteristics
-    // as an upper bound for the number of timesteps.
-    if (configuration.target == TargetMetric::GATES &&
-        initialGates.has_value()) {
-      timestepLimit = *initialGates;
-    }
-  }
+  // determine an initial guess for the number of timesteps
+  determineInitialTimestepLimit(encoderConfig);
 
-  determineUpperBound();
+  // determine an upper bound for the number of timesteps by solving the SAT
+  // problem repeatedly with increasing timestep limits until a satisfying
+  // assignment is found.
+  const auto [lower, upper] = determineUpperBound(encoderConfig);
 
+  encoderConfig.timestepLimit = upper;
+  // run the optimal synthesis approach
   if (configuration.useMaxSAT) {
-    runMaxSAT();
+    runMaxSAT(encoderConfig);
   } else {
-    runBinarySearch(timestepLimit, lowerTimestepLimit, timestepLimit);
+    runBinarySearch(encoderConfig.timestepLimit, lower, upper, encoderConfig);
   }
 
   if (configuration.target == TargetMetric::DEPTH &&
       configuration.minimizeGatesAfterDepthOptimization) {
-    minimizeGatesFixedDepth();
+    minimizeGatesFixedDepth(encoderConfig);
   }
 
   results.setSolverCalls(solverCalls);
@@ -56,22 +60,41 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   results.setRuntime(diff.count());
 }
 
-void CliffordSynthesizer::determineUpperBound() {
-  INFO() << "Searching for upper bound for the number of timesteps starting "
-         << "with " << timestepLimit;
-  while (!results.sat()) {
-    results = mainOptimization(false);
-    if (!results.sat()) {
-      lowerTimestepLimit = timestepLimit + 1U;
-      INFO() << "No solution found for " << timestepLimit << " timestep(s). "
-             << "Doubling timestep limit to " << 2 * timestepLimit;
-      timestepLimit *= 2U;
-    }
+void CliffordSynthesizer::determineInitialTimestepLimit(
+    encoding::SATEncoder::Configuration& config) {
+  if (config.timestepLimit == 0U) {
+    // Infeasibility checks are inexpensive, so we can afford to start with a
+    // timestep limit of 1 and increase geometrically until we find a feasible
+    // solution.
+    config.timestepLimit = 1U;
   }
-  INFO() << "Found upper bound for the number of timesteps: " << timestepLimit;
 }
 
-void CliffordSynthesizer::minimizeGatesFixedDepth() {
+std::pair<std::size_t, std::size_t> CliffordSynthesizer::determineUpperBound(
+    encoding::SATEncoder::Configuration config) {
+  std::size_t lowerBound = 0U;
+  std::size_t upperBound = config.timestepLimit;
+
+  INFO() << "Searching for upper bound for the number of timesteps starting "
+         << "with " << upperBound;
+
+  config.useMaxSAT = false;
+  while (!results.sat()) {
+    results = mainOptimization(config);
+    if (!results.sat()) {
+      lowerBound = upperBound + 1U;
+      upperBound *= 2U;
+      INFO() << "No solution found for " << config.timestepLimit
+             << " timestep(s). Doubling timestep limit to " << upperBound;
+      config.timestepLimit = upperBound;
+    }
+  }
+  INFO() << "Found upper bound for the number of timesteps: " << upperBound;
+  return {lowerBound, upperBound};
+}
+
+void CliffordSynthesizer::minimizeGatesFixedDepth(
+    encoding::SATEncoder::Configuration config) {
   if (results.getDepth() == 0U) {
     return;
   }
@@ -83,35 +106,39 @@ void CliffordSynthesizer::minimizeGatesFixedDepth() {
   INFO() << "Found a depth-optimal circuit with depth " << results.getDepth()
          << " and " << results.getGates()
          << " gate(s). Trying to minimize the number of gates.";
-  configuration.target               = TargetMetric::GATES;
-  timestepLimit                      = results.getDepth();
-  configuration.useMultiGateEncoding = true;
 
-  if (configuration.useMaxSAT) {
-    runMaxSAT();
+  config.targetMetric         = TargetMetric::GATES;
+  config.timestepLimit        = results.getDepth();
+  config.useMultiGateEncoding = true;
+  config.useMaxSAT            = configuration.useMaxSAT;
+
+  if (config.useMaxSAT) {
+    runMaxSAT(config);
   } else {
-    configuration.gateLimit = results.getGates();
-    runBinarySearch(*configuration.gateLimit, timestepLimit,
-                    results.getGates());
+    config.gateLimit = results.getGates();
+    runBinarySearch(*config.gateLimit, results.getDepth(), results.getGates(),
+                    config);
   }
   INFO() << "Found a depth " << results.getDepth() << " circuit with "
          << results.getGates() << " gate(s).";
 }
 
-void CliffordSynthesizer::runMaxSAT() {
-  INFO() << "Running MaxSAT scheme with timestep limit " << timestepLimit;
-  results = mainOptimization(true);
+void CliffordSynthesizer::runMaxSAT(
+    const encoding::SATEncoder::Configuration& config) {
+  INFO() << "Running MaxSAT scheme with timestep limit "
+         << config.timestepLimit;
+  results = mainOptimization(config);
 }
 
-Results CliffordSynthesizer::mainOptimization(const bool useMaxSAT) {
+Results CliffordSynthesizer::mainOptimization(
+    const encoding::SATEncoder::Configuration& config) {
   using namespace logicbase;
 
   ++solverCalls;
   const auto start = std::chrono::high_resolution_clock::now();
 
-  auto encoder = encoding::SATEncoder(initialTableau.getQubitCount(),
-                                      timestepLimit, useMaxSAT);
-  encoder.createFormulation(initialTableau, targetTableau, configuration);
+  auto encoder = encoding::SATEncoder(config);
+  encoder.createFormulation();
   encoder.produceInstance();
   const auto solverResult = encoder.solve();
 
@@ -124,14 +151,9 @@ Results CliffordSynthesizer::mainOptimization(const bool useMaxSAT) {
 
   if (solverResult == Result::SAT) {
     encoder.extractResultsFromModel(res);
-  } else if (solverResult == Result::UNSAT) {
-    encoder.cleanup();
-    return res;
-  } else {
-    FATAL() << "Solver returned NDEF. Something went wrong.";
   }
-  encoder.cleanup();
 
+  encoder.cleanup();
   return res;
 }
 

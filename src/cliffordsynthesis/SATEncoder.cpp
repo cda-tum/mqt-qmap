@@ -13,12 +13,12 @@
 
 namespace cs::encoding {
 
-void SATEncoder::initializeSolver(const Configuration& config) {
+void SATEncoder::initializeSolver() {
   DEBUG() << "Initializing solver engine.";
   bool success        = false;
   LogicTerm::termType = TermType::BASE;
   logicutil::Params params;
-  if (useMaxSAT) {
+  if (config.useMaxSAT) {
     params.addParam("pb.compile_equality", true);
     params.addParam("maxres.hill_climb", true);
     params.addParam("maxres.pivot_on_correction_set", false);
@@ -101,39 +101,25 @@ void SATEncoder::asserTableau(const Tableau& tableau, const std::size_t pos) {
   lb->assertFormula(vars.r[pos] == LogicTerm(targetR, N));
 }
 
-void SATEncoder::createFormulation(const Tableau&       initialTableau,
-                                   const Tableau&       targetTableau,
-                                   const Configuration& config) {
+void SATEncoder::createFormulation() {
   INFO() << "Creating formulation.";
   const auto start = std::chrono::high_resolution_clock::now();
-  initializeSolver(config);
+  initializeSolver();
 
   createTableauVariables();
   createSingleQubitGateVariables();
   createTwoQubitGateVariables();
 
-  asserTableau(initialTableau, 0U);
-  asserTableau(targetTableau, T);
+  asserTableau(*config.initialTableau, 0U);
+  asserTableau(*config.targetTableau, T);
 
-  if (!config.useMultiGateEncoding.has_value()) {
-    // if not specified otherwise, the appropriate encoding is chosen based on
-    // the target metric.
-    if (config.target == TargetMetric::GATES) {
-      createIndividualGateEncoding();
-    } else {
-      createMultiGateEncoding();
-    }
+  if (config.useMultiGateEncoding) {
+    createMultiGateEncoding();
   } else {
-    if (*config.useMultiGateEncoding) {
-      createMultiGateEncoding();
-    } else {
-      createIndividualGateEncoding();
-    }
+    createIndividualGateEncoding();
   }
 
-  if (useMaxSAT || config.gateLimit.has_value()) {
-    createObjectiveFunction(config);
-  }
+  createObjectiveFunction();
 
   const auto end = std::chrono::high_resolution_clock::now();
   const auto duration =
@@ -243,12 +229,12 @@ void SATEncoder::extractTableauFromModel(Results& res, const std::size_t pos,
   res.setResultTableau(tableau);
 }
 
-void SATEncoder::createObjectiveFunction(const Configuration& config) {
+void SATEncoder::createObjectiveFunction() {
   DEBUG() << "Creating objective function.";
 
-  switch (config.target) {
+  switch (config.targetMetric) {
   case TargetMetric::GATES:
-    createGateObjectiveFunction(config);
+    createGateObjectiveFunction();
     break;
   case TargetMetric::DEPTH:
     createDepthObjectiveFunction();
@@ -256,7 +242,13 @@ void SATEncoder::createObjectiveFunction(const Configuration& config) {
   }
 }
 
-void SATEncoder::createGateObjectiveFunction(const Configuration& config) {
+void SATEncoder::createGateObjectiveFunction() {
+  // if MaxSAT should not be used and no gate limit is set, the objective
+  // function is not needed since any valid solution is accepted.
+  if (!config.useMaxSAT && !config.gateLimit.has_value()) {
+    return;
+  }
+
   auto cost = LogicTerm(0);
   for (std::size_t t = 0U; t < T; ++t) {
     const auto& singleQubitGates = vars.gS[t];
@@ -277,7 +269,7 @@ void SATEncoder::createGateObjectiveFunction(const Configuration& config) {
     }
   }
 
-  if (!useMaxSAT && config.gateLimit.has_value()) {
+  if (!config.useMaxSAT && config.gateLimit.has_value()) {
     const auto gateLimit = config.gateLimit.value();
     DEBUG() << "Limiting number of gates to <= " << gateLimit;
     lb->assertFormula(cost <= LogicTerm(static_cast<int>(gateLimit)));
@@ -287,6 +279,12 @@ void SATEncoder::createGateObjectiveFunction(const Configuration& config) {
 }
 
 void SATEncoder::createDepthObjectiveFunction() {
+  // if MaxSAT should not be used, the objective function is not needed since
+  // any valid solution is accepted.
+  if (!config.useMaxSAT) {
+    return;
+  }
+
   auto cost = LogicTerm(0);
   for (std::size_t t = 0U; t < T; ++t) {
     auto anyGate = LogicTerm(false);
@@ -477,11 +475,6 @@ void SATEncoder::assertIndividualGateSingleQubitGateConstraints(
           createIndividualGateSingleQubitGateConstraint(pos, q, gate);
 
       DEBUG() << "Asserting " << toString(gate) << " on " << q;
-      IF_PLOG(plog::verbose) {
-        std::stringstream ss;
-        changes.prettyPrint(ss);
-        TRACE() << "\n" << ss.str();
-      }
 
       lb->assertFormula(
           LogicTerm::implies(singleQubitGates[gateToIndex(gate)][q], changes));
@@ -516,11 +509,6 @@ void SATEncoder::assertIndividualGateTwoQubitGateConstraints(
           createIndividualGateTwoQubitGateConstraint(pos, ctrl, trgt);
 
       DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
-      IF_PLOG(plog::verbose) {
-        std::stringstream ss;
-        changes.prettyPrint(ss);
-        TRACE() << "\n" << ss.str();
-      }
 
       lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
     }
@@ -607,11 +595,6 @@ void SATEncoder::assertMultiGateSingleQubitGateConstraints(
                                     LogicTerm(0, N));
 
       DEBUG() << "Asserting " << toString(gate) << " on " << q;
-      IF_PLOG(plog::verbose) {
-        std::stringstream ss;
-        changes.prettyPrint(ss);
-        TRACE() << "\n" << ss.str();
-      }
     }
   }
 }
@@ -646,11 +629,6 @@ void SATEncoder::assertMultiGateTwoQubitGateConstraints(const std::size_t pos,
                                     LogicTerm(0, N));
 
       DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
-      IF_PLOG(plog::verbose) {
-        std::stringstream ss;
-        changes.prettyPrint(ss);
-        TRACE() << "\n" << ss.str();
-      }
     }
   }
 }

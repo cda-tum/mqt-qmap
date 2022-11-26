@@ -8,8 +8,6 @@
 #include "TargetMetric.hpp"
 #include "nlohmann/json.hpp"
 
-#include <optional>
-
 namespace cs {
 struct Configuration {
   Configuration() = default;
@@ -20,9 +18,6 @@ struct Configuration {
 
   bool minimizeGatesAfterDepthOptimization = true;
 
-  std::optional<bool>        useMultiGateEncoding = std::nullopt;
-  std::optional<std::size_t> gateLimit            = std::nullopt;
-
   std::size_t nThreads = 1U;
 
   [[nodiscard]] nlohmann::json json() const {
@@ -31,6 +26,8 @@ struct Configuration {
     j["use_max_sat"]            = useMaxSAT;
     j["target_metric"]          = toString(target);
     j["n_threads"]              = nThreads;
+    j["minimize_gates_after_depth_optimization"] =
+        minimizeGatesAfterDepthOptimization;
 
     return j;
   }
