@@ -8,8 +8,8 @@
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
-#include "cliffordsynthesis/SATEncoder.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -70,7 +70,7 @@ protected:
           determineUpperBound(encoding::SATEncoder::Configuration config);
   void    minimizeGatesFixedDepth(encoding::SATEncoder::Configuration config);
   void    runMaxSAT(const encoding::SATEncoder::Configuration& config);
-  Results mainOptimization(const encoding::SATEncoder::Configuration& config);
+  Results callSolver(const encoding::SATEncoder::Configuration& config);
 
   template <typename T>
   void runBinarySearch(T& value, T lowerBound, T upperBound,
@@ -82,7 +82,7 @@ protected:
       value = (lowerBound + upperBound) / 2;
       INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
              << upperBound << ")";
-      const auto r = mainOptimization(config);
+      const auto r = callSolver(config);
       updateResults(configuration, r, results);
       if (r.sat()) {
         upperBound = value;

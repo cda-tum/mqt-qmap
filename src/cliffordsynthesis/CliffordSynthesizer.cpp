@@ -80,7 +80,7 @@ std::pair<std::size_t, std::size_t> CliffordSynthesizer::determineUpperBound(
 
   config.useMaxSAT = false;
   while (!results.sat()) {
-    results = mainOptimization(config);
+    results = callSolver(config);
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
@@ -127,34 +127,14 @@ void CliffordSynthesizer::runMaxSAT(
     const encoding::SATEncoder::Configuration& config) {
   INFO() << "Running MaxSAT scheme with timestep limit "
          << config.timestepLimit;
-  results = mainOptimization(config);
+  results = callSolver(config);
 }
 
-Results CliffordSynthesizer::mainOptimization(
+Results CliffordSynthesizer::callSolver(
     const encoding::SATEncoder::Configuration& config) {
-  using namespace logicbase;
-
   ++solverCalls;
-  const auto start = std::chrono::high_resolution_clock::now();
-
   auto encoder = encoding::SATEncoder(config);
-  encoder.createFormulation();
-  encoder.produceInstance();
-  const auto solverResult = encoder.solve();
-
-  const auto end     = std::chrono::high_resolution_clock::now();
-  const auto runtime = std::chrono::duration<double>(end - start);
-
-  Results res{};
-  res.setRuntime(runtime.count());
-  res.setSolverResult(solverResult);
-
-  if (solverResult == Result::SAT) {
-    encoder.extractResultsFromModel(res);
-  }
-
-  encoder.cleanup();
-  return res;
+  return encoder.run();
 }
 
 void CliffordSynthesizer::updateResults(const Configuration& config,

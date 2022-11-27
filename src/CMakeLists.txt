@@ -90,13 +90,23 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
   add_library(
     ${lib}
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/SATEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/SATEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/TableauEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/GateEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/SingleGateEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/MultiGateEncoder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/encoding/ObjectiveEncoder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/Tableau.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/SATEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/SATEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/TableauEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/GateEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/SingleGateEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/MultiGateEncoder.hpp
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/encoding/ObjectiveEncoder.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp)
