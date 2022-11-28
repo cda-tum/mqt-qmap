@@ -198,25 +198,11 @@ void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
   config.targetMetric         = TargetMetric::TWO_QUBIT_GATES;
   config.timestepLimit        = gateCount;
   config.useMultiGateEncoding = false;
-  config.useMaxSAT            = configuration.useMaxSAT;
+  config.useMaxSAT            = true;
   config.twoQubitGateLimit    = results.getTwoQubitGates() - 1U;
 
-  if (config.useMaxSAT) {
-    runMaxSAT(config);
-  } else {
-    auto r = callSolver(config);
-    updateResults(configuration, r, results);
-    while (r.sat() && r.getTwoQubitGates() > 0U) {
-      INFO() << "Found a circuit with " << results.getTwoQubitGates()
-             << " two-qubit gates. Trying to find a solution with fewer.";
-      config.twoQubitGateLimit = results.getTwoQubitGates() - 1U;
-      r                        = callSolver(config);
-    }
-    if (!r.sat()) {
-      INFO() << "No solution found with less than "
-             << results.getTwoQubitGates() << " two-qubit gates.";
-    }
-  }
+  runMaxSAT(config);
+
   INFO() << "Found a circuit with " << results.getTwoQubitGates()
          << " two-qubit gate(s) and " << results.getGates()
          << " gate(s) overall.";
