@@ -14,6 +14,7 @@ struct OptimizationTest {
   std::string initialCircuit;
   std::size_t expectedMinimalGates{};
   std::size_t expectedMinimalDepth{};
+  std::size_t expectedMinimalTwoQubitGates{};
 };
 
 inline void from_json(const nlohmann::json& j, OptimizationTest& test) {
@@ -21,6 +22,8 @@ inline void from_json(const nlohmann::json& j, OptimizationTest& test) {
   test.initialCircuit       = j.at("initial_circuit").get<std::string>();
   test.expectedMinimalGates = j.at("expected_minimal_gates").get<std::size_t>();
   test.expectedMinimalDepth = j.at("expected_minimal_depth").get<std::size_t>();
+  test.expectedMinimalTwoQubitGates =
+      j.at("expected_minimal_two_qubit_gates").get<std::size_t>();
 }
 
 static std::vector<OptimizationTest> getTests(const std::string& path) {
@@ -50,8 +53,9 @@ protected:
 
     config = Configuration();
 
-    expectedMinimalGates = test.expectedMinimalGates;
-    expectedMinimalDepth = test.expectedMinimalDepth;
+    expectedMinimalGates         = test.expectedMinimalGates;
+    expectedMinimalDepth         = test.expectedMinimalDepth;
+    expectedMinimalTwoQubitGates = test.expectedMinimalTwoQubitGates;
   }
 
   void TearDown() override {
@@ -79,6 +83,7 @@ protected:
   Tableau                resultTableau;
   std::size_t            expectedMinimalGates{};
   std::size_t            expectedMinimalDepth{};
+  std::size_t            expectedMinimalTwoQubitGates{};
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -97,12 +102,19 @@ TEST_P(CircuitOptimizationTest, Gates) {
 }
 
 TEST_P(CircuitOptimizationTest, Depth) {
-  //  util::init("", plog::info);
   config.target = TargetMetric::DEPTH;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
   EXPECT_EQ(results.getDepth(), expectedMinimalDepth);
+}
+
+TEST_P(CircuitOptimizationTest, TwoQubitGates) {
+  config.target = TargetMetric::TWO_QUBIT_GATES;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getTwoQubitGates(), expectedMinimalTwoQubitGates);
 }
 
 TEST_P(CircuitOptimizationTest, GatesMaxSAT) {
@@ -121,6 +133,15 @@ TEST_P(CircuitOptimizationTest, DepthMaxSAT) {
   results = synthesizer.getResults();
 
   EXPECT_EQ(results.getDepth(), expectedMinimalDepth);
+}
+
+TEST_P(CircuitOptimizationTest, TwoQubitGatesMaxSAT) {
+  config.target    = TargetMetric::TWO_QUBIT_GATES;
+  config.useMaxSAT = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getTwoQubitGates(), expectedMinimalTwoQubitGates);
 }
 
 } // namespace cs

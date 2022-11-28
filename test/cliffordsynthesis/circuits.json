@@ -3,30 +3,35 @@
     "description": "empty_circuit",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[1];\n",
     "expected_minimal_gates": 0,
-    "expected_minimal_depth": 0
+    "expected_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0
   },
   {
     "description": "switched_cnot",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];h q; cx q[1], q[0];h q;\n",
     "expected_minimal_gates": 1,
-    "expected_minimal_depth": 1
+    "expected_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 1
   },
   {
     "description": "h_h_h_h",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[1];h q;h q;h q;h q;\n",
     "expected_minimal_gates": 0,
-    "expected_minimal_depth": 0
+    "expected_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0
   },
   {
     "description": "swap_cx",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];swap q[0], q[1]; cx q[0], q[1];\n",
     "expected_minimal_gates": 2,
-    "expected_minimal_depth": 2
+    "expected_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 2
   },
   {
     "description": "commutation_simplification",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];x q; z q[0];cz q[0], q[1]; z q[0];\n",
     "expected_minimal_gates": 2,
-    "expected_minimal_depth": 1
+    "expected_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 0
   }
 ]
