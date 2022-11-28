@@ -59,12 +59,17 @@ void SATEncoder::createFormulation() {
   objectiveEncoder = std::make_shared<ObjectiveEncoder>(
       N, T, tableauEncoder->getVariables(), gateEncoder->getVariables(), lb);
 
+  if (config.gateLimit.has_value()) {
+    objectiveEncoder->limitGateCount(*config.gateLimit, std::less_equal{});
+  }
+
+  if (config.twoQubitGateLimit.has_value()) {
+    objectiveEncoder->limitGateCount(*config.twoQubitGateLimit,
+                                     std::less_equal{}, false);
+  }
+
   if (config.useMaxSAT) {
     objectiveEncoder->optimizeMetric(config.targetMetric);
-  } else {
-    if (config.gateLimit.has_value()) {
-      objectiveEncoder->limitGateCount(*config.gateLimit, std::less_equal{});
-    }
   }
 
   const auto end = std::chrono::high_resolution_clock::now();

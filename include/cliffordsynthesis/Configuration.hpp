@@ -16,6 +16,10 @@ struct Configuration {
   bool         useMaxSAT            = false;
   TargetMetric target               = TargetMetric::GATES;
 
+  bool   tryHigherGateLimitForTwoQubitGateOptimization = true;
+  double gateLimitFactor                               = 1.1;
+  bool   minimizeGatesAfterTwoQubitGateOptimization    = true;
+
   bool minimizeGatesAfterDepthOptimization = true;
 
   std::size_t nThreads = 1U;

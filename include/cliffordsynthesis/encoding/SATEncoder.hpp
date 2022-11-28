@@ -49,6 +49,9 @@ public:
 
     // an optional limit on the total number of gates
     std::optional<std::size_t> gateLimit = std::nullopt;
+
+    // an optional limit on the total number of two-qubit gates
+    std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
   };
 
   SATEncoder() = default;

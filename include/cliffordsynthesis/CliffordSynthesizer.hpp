@@ -16,7 +16,10 @@
 #include <sstream>
 
 namespace cs {
+
 class CliffordSynthesizer {
+  using EncoderConfig = encoding::SATEncoder::Configuration;
+
 public:
   CliffordSynthesizer() = default;
   CliffordSynthesizer(Tableau initialTableau, Tableau targetTableau)
@@ -64,17 +67,20 @@ protected:
     return metric == TargetMetric::DEPTH;
   }
 
-  static void
-  determineInitialTimestepLimit(encoding::SATEncoder::Configuration& config);
-  std::pair<std::size_t, std::size_t>
-          determineUpperBound(encoding::SATEncoder::Configuration config);
-  void    minimizeGatesFixedDepth(encoding::SATEncoder::Configuration config);
-  void    runMaxSAT(const encoding::SATEncoder::Configuration& config);
-  Results callSolver(const encoding::SATEncoder::Configuration& config);
+  static void determineInitialTimestepLimit(EncoderConfig& config);
+  std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
+  void                                runMaxSAT(const EncoderConfig& config);
+  Results                             callSolver(const EncoderConfig& config);
+
+  void minimizeGatesFixedDepth(EncoderConfig config);
+
+  void minimizeTwoQubitGatesFixedGateCount(std::size_t   gateCount,
+                                           EncoderConfig config);
+  void minimizeGatesFixedTwoQubitGateCount(EncoderConfig config);
 
   template <typename T>
   void runBinarySearch(T& value, T lowerBound, T upperBound,
-                       const encoding::SATEncoder::Configuration& config) {
+                       const EncoderConfig& config) {
     INFO() << "Running binary search in range [" << lowerBound << ", "
            << upperBound << ")";
 

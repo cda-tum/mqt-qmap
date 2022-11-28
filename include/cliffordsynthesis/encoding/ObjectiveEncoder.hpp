@@ -25,21 +25,20 @@ public:
 
   template <class Op>
   void limitGateCount(std::size_t maxGateCount, Op op,
-                      bool includeSingleQubitGates = true,
-                      bool includeTwoQubitGates    = true) const {
-    const auto cost =
-        collectGateCount(includeSingleQubitGates, includeTwoQubitGates);
+                      bool includeSingleQubitGates = true) const {
+    DEBUG() << "Limiting gate count to at most " << maxGateCount
+            << (includeSingleQubitGates ? "" : " two-qubit") << " gate(s)";
+
+    const auto cost = collectGateCount(includeSingleQubitGates);
     lb->assertFormula(
         op(cost, logicbase::LogicTerm(static_cast<int>(maxGateCount))));
   }
 
   void optimizeMetric(TargetMetric targetMetric) const;
 
-  void optimizeGateCount(bool includeSingleQubitGates = true,
-                         bool includeTwoQubitGates    = true) const;
+  void optimizeGateCount(bool includeSingleQubitGates = true) const;
 
-  void optimizeDepth(bool includeSingleQubitGates = true,
-                     bool includeTwoQubitGates    = true) const;
+  void optimizeDepth(bool includeSingleQubitGates = true) const;
 
 protected:
   // number of qubits N
@@ -57,12 +56,10 @@ protected:
   std::shared_ptr<logicbase::LogicBlock> lb;
 
   [[nodiscard]] logicbase::LogicTerm
-  collectGateCount(bool includeSingleQubitGates = true,
-                   bool includeTwoQubitGates    = true) const;
+  collectGateCount(bool includeSingleQubitGates = true) const;
 
   [[nodiscard]] logicbase::LogicTerm
-  collectDepth(bool includeSingleQubitGates = true,
-               bool includeTwoQubitGates    = true) const;
+  collectDepth(bool includeSingleQubitGates = true) const;
 
   template <class Op>
   void collectGateTerms(std::size_t pos, logicbase::LogicTerm& terms,
