@@ -14,10 +14,13 @@ using namespace logicbase;
 
 void GateEncoder::createSingleQubitGateVariables() {
   DEBUG() << "Creating single-qubit gate variables.";
+  vars.gS.reserve(T);
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gS.emplace_back();
+    timeStep.reserve(SINGLE_QUBIT_GATES.size());
     for (const auto gate : SINGLE_QUBIT_GATES) {
       auto& g = timeStep.emplace_back();
+      g.reserve(N);
       for (std::size_t q = 0U; q < N; ++q) {
         const std::string gName = "g_" + std::to_string(t) + "_" +
                                   toString(gate) + "_" + std::to_string(q);
@@ -30,10 +33,13 @@ void GateEncoder::createSingleQubitGateVariables() {
 
 void GateEncoder::createTwoQubitGateVariables() {
   DEBUG() << "Creating two-qubit gate variables.";
+  vars.gC.reserve(T);
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gC.emplace_back();
+    timeStep.reserve(N);
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
       auto& control = timeStep.emplace_back();
+      control.reserve(N);
       for (std::size_t trgt = 0U; trgt < N; ++trgt) {
         const std::string gName = "g_" + std::to_string(t) + "_cx_" +
                                   std::to_string(ctrl) + "_" +

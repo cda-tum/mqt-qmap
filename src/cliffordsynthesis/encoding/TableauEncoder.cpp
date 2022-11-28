@@ -15,9 +15,14 @@ void TableauEncoder::createTableauVariables() {
   const auto n = static_cast<std::int16_t>(N);
 
   DEBUG() << "Creating tableau variables.";
+  vars.x.reserve(T);
+  vars.z.reserve(T);
+  vars.r.reserve(T);
   for (std::size_t t = 0U; t <= T; ++t) {
     auto& x = vars.x.emplace_back();
     auto& z = vars.z.emplace_back();
+    x.reserve(N);
+    z.reserve(N);
     for (std::size_t i = 0U; i < N; ++i) {
       const std::string xName =
           "x_" + std::to_string(t) + "_" + std::to_string(i);
