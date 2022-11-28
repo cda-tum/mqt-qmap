@@ -38,6 +38,7 @@ struct Configuration {
   // lookahead scheme settings
   bool   lookahead            = true;
   bool   admissibleHeuristic  = true;
+  bool   considerFidelity     = true;
   int    nrLookaheads         = 15;
   double firstLookaheadFactor = 0.75;
   double lookaheadFactor      = 0.5;
@@ -86,6 +87,7 @@ struct Configuration {
       if (lookahead) {
         auto& lookaheadSettings                   = heuristic["lookahead"];
         lookaheadSettings["admissible_heuristic"] = admissibleHeuristic;
+        lookaheadSettings["consider_fidelity"]    = considerFidelity;
         lookaheadSettings["lookaheads"]           = nrLookaheads;
         lookaheadSettings["first_factor"]         = firstLookaheadFactor;
         lookaheadSettings["factor"]               = lookaheadFactor;

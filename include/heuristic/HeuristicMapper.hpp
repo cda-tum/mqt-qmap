@@ -158,9 +158,10 @@ public:
      * @param currentLayer a vector of all gates in the current layer
      * @param admissibleHeuristic controls if the heuristic should be calculated such that it is admissible 
      *  (i.e. A*-search should yield the optimal solution using this heuristic)
+     * @param considerFidelity controls if the heuristic should consider fidelity data of the architecture
      */
     void updateHeuristicCost(const Architecture& arch, const std::vector<Gate>& currentLayer,
-                             bool admissibleHeuristic) {
+                             bool admissibleHeuristic, bool considerFidelity) {
       costHeur = 0.;
       done = true;
       for (const auto& gate : currentLayer) {
@@ -168,10 +169,14 @@ public:
           continue;
         
         auto cost = arch.distance(locations.at(gate.control), locations.at(gate.target));
+        auto fidelity_cost = cost;
+        if(considerFidelity){
+          
+        }
         if (admissibleHeuristic) {
-          costHeur = std::max(costHeur, cost);
+          costHeur = std::max(costHeur, fidelity_cost);
         } else {
-          costHeur += cost;
+          costHeur += fidelity_cost;
         }
         if (cost > COST_DIRECTION_REVERSE) {
           done = false;

@@ -385,7 +385,7 @@ HeuristicMapper::Node HeuristicMapper::AstarMap(long layer) {
 
   node.locations = locations;
   node.qubits    = qubits;
-  node.updateHeuristicCost(architecture, layers.at(layer), results.config.admissibleHeuristic);
+  node.updateHeuristicCost(architecture, layers.at(layer), results.config.admissibleHeuristic, results.config.considerFidelity);
 
   nodes.push(node);
 
@@ -498,9 +498,8 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node,
     new_node.costFixed = node.costFixed + COST_TELEPORTATION;
     new_node.applyTeleportation(swap, architecture);
   }
-  new_node.done      = true;
 
-  new_node.updateHeuristicCost(architecture, currentLayer, results.config.admissibleHeuristic);
+  new_node.updateHeuristicCost(architecture, currentLayer, results.config.admissibleHeuristic, results.config.considerFidelity);
 
   // calculate heuristics for the cost of the following layers
   if (config.lookahead) {
