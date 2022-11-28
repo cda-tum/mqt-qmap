@@ -56,8 +56,8 @@ void SATEncoder::createFormulation() {
   gateEncoder->createTwoQubitGateVariables();
   gateEncoder->encodeGates();
 
-  objectiveEncoder = std::make_shared<ObjectiveEncoder>(
-      N, T, tableauEncoder->getVariables(), gateEncoder->getVariables(), lb);
+  objectiveEncoder =
+      std::make_shared<ObjectiveEncoder>(N, T, gateEncoder->getVariables(), lb);
 
   if (config.gateLimit.has_value()) {
     objectiveEncoder->limitGateCount(*config.gateLimit, std::less_equal{});

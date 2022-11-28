@@ -18,10 +18,9 @@ namespace cs::encoding {
 class ObjectiveEncoder {
 public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                   TableauEncoder::Variables*                    tvars,
                    GateEncoder::Variables*                       gvars,
                    const std::shared_ptr<logicbase::LogicBlock>& lb)
-      : N(nQubits), T(timestepLimit), tvars(tvars), gvars(gvars), lb(lb) {}
+      : N(nQubits), T(timestepLimit), gvars(gvars), lb(lb) {}
 
   template <class Op>
   void limitGateCount(std::size_t maxGateCount, Op op,
@@ -45,9 +44,6 @@ protected:
   std::size_t N{};
   // timestep limit T
   std::size_t T{};
-
-  // the tableau variables
-  TableauEncoder::Variables* tvars;
 
   // the gate variables
   GateEncoder::Variables* gvars;
