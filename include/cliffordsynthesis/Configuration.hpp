@@ -12,17 +12,21 @@ namespace cs {
 struct Configuration {
   Configuration() = default;
 
+  /// General configuration for the synthesis algorithm
   std::size_t  initialTimestepLimit = 0U;
   bool         useMaxSAT            = false;
   TargetMetric target               = TargetMetric::GATES;
 
-  bool   tryHigherGateLimitForTwoQubitGateOptimization = true;
-  double gateLimitFactor                               = 1.1;
-  bool   minimizeGatesAfterTwoQubitGateOptimization    = true;
-
-  bool minimizeGatesAfterDepthOptimization = true;
-
+  /// Settings for the SAT solver
   std::size_t nThreads = 1U;
+
+  /// Settings for depth-optimal synthesis
+  bool minimizeGatesAfterDepthOptimization = false;
+
+  /// Settings for two-qubit gate-optimal synthesis
+  bool   tryHigherGateLimitForTwoQubitGateOptimization = false;
+  double gateLimitFactor                               = 1.1;
+  bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
