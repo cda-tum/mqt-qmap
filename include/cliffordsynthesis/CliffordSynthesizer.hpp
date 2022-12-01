@@ -74,6 +74,13 @@ protected:
 
   void minimizeGatesFixedDepth(EncoderConfig config);
 
+  void gateOptimalSynthesis(EncoderConfig config, std::size_t lower,
+                            std::size_t upper);
+  void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
+                             std::size_t upper);
+  void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
+                                    std::size_t upper);
+
   void minimizeTwoQubitGatesFixedGateCount(std::size_t   gateCount,
                                            EncoderConfig config);
   void minimizeGatesFixedTwoQubitGateCount(EncoderConfig config);

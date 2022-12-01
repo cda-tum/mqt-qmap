@@ -47,65 +47,21 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     INFO() << "No gates required.";
     return;
   }
+  // Otherwise, the determined upper bound is used as an initial timestep limit.
+  encoderConfig.timestepLimit = upper;
 
-  encoderConfig.timestepLimit = upper - 1U;
-  if (configuration.target == TargetMetric::TWO_QUBIT_GATES) {
-    encoderConfig.twoQubitGateLimit = results.getTwoQubitGates();
-  }
-
-  // Once a valid upper bound is found, the SAT problem is solved again with the
-  // objective function encoded. For the MaxSAT solver, this involves a single
-  // call to the solver. For the binary search approach, the SAT problem is
-  // solved repeatedly until a solution with a certain timestep limit T is
-  // found, but no solution with timestep limit T-1 could be determined.
-  if (configuration.useMaxSAT) {
-    runMaxSAT(encoderConfig);
-  } else {
-    runBinarySearch(encoderConfig.timestepLimit, lower, upper, encoderConfig);
-  }
-
-  if (configuration.target == TargetMetric::TWO_QUBIT_GATES) {
-    // While the MaxSAT approach is guaranteed to find the optimal solution
-    // within a given timestep limit, the binary search approach is not.
-    // Therefore, we need to check whether the solution found by the binary
-    // search approach is actually optimal. To this end, we iteratively try to
-    // lower the limit on the number of two-qubit gates by one and check whether
-    // a valid solution can be found.
-    if (!configuration.useMaxSAT) {
-      minimizeTwoQubitGatesFixedGateCount(results.getGates(), encoderConfig);
-    }
-
-    // At this point, we have found the optimal solution for the number of
-    // two-qubit gates with respect to the considered gate-count limit. However,
-    // it is possible that there is a solution with fewer two-qubit gates that
-    // uses more gates overall. To find such a solution, we run the solver once
-    // more with an increased gate count limit.
-    if (configuration.tryHigherGateLimitForTwoQubitGateOptimization) {
-      const auto gateLimit =
-          std::max(static_cast<std::size_t>(
-                       std::round(static_cast<double>(results.getGates()) *
-                                  configuration.gateLimitFactor)),
-                   results.getGates() + 1U);
-      minimizeTwoQubitGatesFixedGateCount(gateLimit, encoderConfig);
-    }
-
-    // While the solution at this point is optimal with respect to the number of
-    // two-qubit gates, it is possible that there is a solution with fewer gates
-    // overall. To find such a solution, we run the solver once more with a
-    // fixed limit on the number of two-qubit gates and the goal to minimize the
-    // number of gates overall.
-    if (configuration.minimizeGatesAfterTwoQubitGateOptimization) {
-      minimizeGatesFixedTwoQubitGateCount(encoderConfig);
-    }
-  }
-
-  if (configuration.target == TargetMetric::DEPTH &&
-      configuration.minimizeGatesAfterDepthOptimization) {
-    // While the solution at this point is guaranteed to be depth-optimal, it
-    // might contain more gates than necessary. To find a solution with fewer
-    // gates, we run the solver once more with a fixed depth limit and the goal
-    // to minimize the number of gates.
-    minimizeGatesFixedDepth(encoderConfig);
+  // Once a valid upper bound is found, the SAT problem is solved again with
+  // the objective function encoded.
+  switch (config.target) {
+  case TargetMetric::GATES:
+    gateOptimalSynthesis(encoderConfig, lower, upper);
+    break;
+  case TargetMetric::DEPTH:
+    depthOptimalSynthesis(encoderConfig, lower, upper);
+    break;
+  case TargetMetric::TWO_QUBIT_GATES:
+    twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
+    break;
   }
 
   results.setSolverCalls(solverCalls);
@@ -156,6 +112,57 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
   return {lowerBound, upperBound};
 }
 
+void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig     config,
+                                               const std::size_t lower,
+                                               const std::size_t upper) {
+  // Gate-optimal synthesis is achieved by determining a timestep limit T such
+  // that there exists a solution with T gates, but no solution with T-1 gates.
+  // This procedure uses an encoding where a single gate is allowed per timestep
+  // and guarantees optimality, i.e., there is no solution with fewer gates.
+
+  if (configuration.useMaxSAT) {
+    // The MaxSAT solver can determine the optimal T with a single call by
+    // minimizing over the number of applied gates.
+    runMaxSAT(config);
+  } else {
+    // The binary search approach calls the SAT solver repeatedly with varying
+    // timestep (=gate) limits T until a solution with T gates is found, but no
+    // solution with T-1 gates could be determined.
+    runBinarySearch(config.timestepLimit, lower, upper, config);
+  }
+}
+
+void CliffordSynthesizer::depthOptimalSynthesis(
+    CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
+    const std::size_t upper) {
+  // Depth-optimal synthesis is achieved by determining a timestep limit T such
+  // that there exists a solution with depth T, but no solution with depth T-1.
+  // This procedure uses an encoding where multiple gates are allowed per
+  // timestep (as long as they can be executed in parallel). This procedure is
+  // guaranteed to produce a depth-optimal circuit. However, the number of gates
+  // in the resulting circuit is not necessarily minimal, i.e., there may be a
+  // solution with fewer gates and the same depth. To this end, an optimization
+  // pass is provided that additionally minimizes the number of gates.
+
+  if (configuration.useMaxSAT) {
+    // The MaxSAT solver can determine the optimal T with a single call by
+    // minimizing over the layers of gates (=timesteps) in the resulting
+    // circuit.
+    runMaxSAT(config);
+  } else {
+    // The binary search approach calls the SAT solver repeatedly with varying
+    // timestep (=depth) limits T until a solution with depth T is found, but no
+    // solution with depth T-1 could be determined.
+    runBinarySearch(config.timestepLimit, lower, upper, config);
+  }
+
+  if (configuration.minimizeGatesAfterDepthOptimization) {
+    // To find a solution with fewer gates, we run the solver once more with a
+    // fixed depth limit and the goal to minimize the number of gates.
+    minimizeGatesFixedDepth(config);
+  }
+}
+
 void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
   if (results.getDepth() == 0U) {
     return;
@@ -183,6 +190,55 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
   }
   INFO() << "Found a depth " << results.getDepth() << " circuit with "
          << results.getGates() << " gate(s).";
+}
+
+void CliffordSynthesizer::twoQubitGateOptimalSynthesis(
+    EncoderConfig config, const std::size_t lower, const std::size_t upper) {
+  // Two-qubit gate-optimal synthesis is achieved by minimizing over the number
+  // of two-qubit gates. This procedure uses the same encoding as gate-optimal
+  // synthesis, but with a different objective function. In contrast to the
+  // gate-optimal synthesis, this procedure is only guaranteed to produce a
+  // two-qubit gate-optimal circuit with respect to a given timestep limit T.
+  // There might be a solution with fewer two-qubit gates that requires more
+  // gates overall. To this end, an optimization pass is provided that explores
+  // whether increasing the timestep limit can reduce the number of two-qubit
+  // gates. Furthermore, the number of gates in the resulting circuit is not
+  // necessarily minimal, i.e., there may be a solution with fewer gates and the
+  // same number of two-qubit gates. To this end, a further optimization pass is
+  // provided that additionally minimizes the number of gates.
+
+  if (configuration.useMaxSAT) {
+    // The MaxSAT solver can determine the optimal number of two-qubit gates
+    // with a single call by minimizing over the number of two-qubit gate
+    // variables.
+    runMaxSAT(config);
+  } else {
+    // The binary search approach calls the SAT solver repeatedly with varying
+    // two-qubit gate count limits G until a solution with G two-qubit gates is
+    // found, but no solution with G-1 two-qubit gates could be determined.
+    config.twoQubitGateLimit = upper;
+    runBinarySearch(*config.twoQubitGateLimit, lower, upper, config);
+  }
+
+  // To find a solution with even fewer two-qubit gates but more gates overall,
+  // we run the solver once more with an increased gate count limit.
+  if (configuration.tryHigherGateLimitForTwoQubitGateOptimization) {
+    const auto gateLimit =
+        std::max(static_cast<std::size_t>(
+                     std::round(static_cast<double>(results.getGates()) *
+                                configuration.gateLimitFactor)),
+                 results.getGates() + 1U);
+    minimizeTwoQubitGatesFixedGateCount(gateLimit, config);
+  }
+
+  // While the solution at this point is optimal with respect to the number of
+  // two-qubit gates, it is possible that there is a solution with fewer gates
+  // overall. To find such a solution, we run the solver once more with a
+  // fixed limit on the number of two-qubit gates and the goal to minimize the
+  // number of gates overall.
+  if (configuration.minimizeGatesAfterTwoQubitGateOptimization) {
+    minimizeGatesFixedTwoQubitGateCount(config);
+  }
 }
 
 void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
