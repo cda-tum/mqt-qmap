@@ -5,7 +5,9 @@
     "target_tableau": "0;1;0;",
     "expected_minimal_gates": 0,
     "expected_minimal_depth": 0,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
   },
   {
     "description": "mZ",
@@ -13,7 +15,9 @@
     "target_tableau": "0;1;1;",
     "expected_minimal_gates": 1,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 1
   },
   {
     "description": "X",
@@ -21,7 +25,9 @@
     "target_tableau": "1;0;0;",
     "expected_minimal_gates": 1,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 1
   },
   {
     "description": "mX",
@@ -29,7 +35,9 @@
     "target_tableau": "1;0;1;",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "Y",
@@ -37,7 +45,9 @@
     "target_tableau": "1;1;0;",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "mY",
@@ -45,7 +55,9 @@
     "target_tableau": "1;1;1;",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "Y_to_Y",
@@ -53,7 +65,9 @@
     "target_tableau": "1;1;0;",
     "expected_minimal_gates": 0,
     "expected_minimal_depth": 0,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
   },
 
   {
@@ -62,7 +76,9 @@
     "target_tableau": "0;0;1;0;0\n0;0;0;1;0",
     "expected_minimal_gates": 0,
     "expected_minimal_depth": 0,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
   },
   {
     "description": "ZI_mIZ",
@@ -70,7 +86,9 @@
     "target_tableau": "0;0;1;0;0\n0;0;0;1;1",
     "expected_minimal_gates": 1,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 1
   },
   {
     "description": "mZI_IZ",
@@ -78,7 +96,9 @@
     "target_tableau": "0;0;1;0;1\n0;0;0;1;0",
     "expected_minimal_gates": 1,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 1
   },
   {
     "description": "mZI_mIZ",
@@ -86,7 +106,9 @@
     "target_tableau": "0;0;1;0;1\n0;0;0;1;1",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
 
   {
@@ -95,7 +117,9 @@
     "target_tableau": "1;0;0;0;0\n0;1;0;0;0",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "XI_mIX",
@@ -103,7 +127,9 @@
     "target_tableau": "1;0;0;0;0\n0;1;0;0;1",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "mXI_IX",
@@ -111,7 +137,9 @@
     "target_tableau": "1;0;0;0;1\n0;1;0;0;0",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "mXI_mIX",
@@ -119,7 +147,9 @@
     "target_tableau": "1;0;0;0;1\n0;1;0;0;1",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
 
   {
@@ -128,7 +158,9 @@
     "target_tableau": "1;0;1;0;0\n0;1;0;1;0",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
   {
     "description": "YI_mIY",
@@ -136,7 +168,9 @@
     "target_tableau": "1;0;1;0;0\n0;1;0;1;1",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
   {
     "description": "mYI_IY",
@@ -144,7 +178,9 @@
     "target_tableau": "1;0;1;0;1\n0;1;0;1;0",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
   {
     "description": "mYI_mIY",
@@ -152,7 +188,9 @@
     "target_tableau": "1;0;1;0;1\n0;1;0;1;1",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 0
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
 
   {
@@ -161,7 +199,9 @@
     "target_tableau": "1;1;0;0;0\n0;0;1;1;0",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 1
+    "expected_minimal_gates_at_minimal_depth": 2,
+    "expected_minimal_two_qubit_gates": 1,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "XX_mZZ",
@@ -169,7 +209,9 @@
     "target_tableau": "1;1;0;0;0\n0;0;1;1;1",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 1
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 1,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "mXX_ZZ",
@@ -177,7 +219,9 @@
     "target_tableau": "1;1;0;0;1\n0;0;1;1;0",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 3,
-    "expected_minimal_two_qubit_gates": 1
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 1,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "mXX_mZZ",
@@ -185,7 +229,9 @@
     "target_tableau": "1;1;0;0;1\n0;0;1;1;1",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 3,
-    "expected_minimal_two_qubit_gates": 1
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 1,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "IZ_ZI",
@@ -193,7 +239,9 @@
     "target_tableau": "0;0;0;1;0\n0;0;1;0;0",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 3,
-    "expected_minimal_two_qubit_gates": 2
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   },
   {
     "description": "GHZ_3",
@@ -201,7 +249,9 @@
     "target_tableau": "1;1;1;0;0;0;0\n0;0;0;1;1;0;0\n0;0;0;0;1;1;0",
     "expected_minimal_gates": 3,
     "expected_minimal_depth": 3,
-    "expected_minimal_two_qubit_gates": 2
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
   },
   {
     "description": "GHZ_4",
@@ -209,6 +259,8 @@
     "target_tableau": "1;1;1;1;0;0;0;0;0\n0;0;0;0;1;1;0;0;0\n0;0;0;0;0;1;1;0;0\n0;0;0;0;0;0;1;1;0",
     "expected_minimal_gates": 4,
     "expected_minimal_depth": 3,
-    "expected_minimal_two_qubit_gates": 3
+    "expected_minimal_gates_at_minimal_depth": 5,
+    "expected_minimal_two_qubit_gates": 3,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   }
 ]
