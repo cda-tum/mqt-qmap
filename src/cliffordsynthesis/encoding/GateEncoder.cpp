@@ -87,25 +87,16 @@ void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
 void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   std::size_t nSingleQubitGates = 0U;
   std::size_t nTwoQubitGates    = 0U;
-  std::size_t depth             = 0U;
 
   qc::QuantumComputation qc(N);
   for (std::size_t t = 0; t < T; ++t) {
-    const auto gateCount = nSingleQubitGates + nTwoQubitGates;
-    DEBUG() << "Timestep: " << t << ", gate count: " << gateCount
-            << ", depth: " << depth;
-
     extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates);
     extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates);
-
-    if ((nSingleQubitGates + nTwoQubitGates) > gateCount) {
-      ++depth;
-    }
   }
 
   res.setSingleQubitGates(nSingleQubitGates);
   res.setTwoQubitGates(nTwoQubitGates);
-  res.setDepth(depth);
+  res.setDepth(qc.getDepth());
   res.setResultCircuit(qc);
 }
 
