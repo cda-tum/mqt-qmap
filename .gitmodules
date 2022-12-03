@@ -5,6 +5,6 @@
     shallow = true
 [submodule "extern/LogicBlocks"]
 	path = extern/LogicBlocks
-	url = https://github.com/IsFairy/LogicBlocks.git
+	url = https://github.com/cda-tum/LogicBlocks.git
     branch = main
     shallow = true
