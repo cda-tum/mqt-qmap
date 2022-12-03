@@ -54,7 +54,7 @@ jobs:
 
   build_sdist:
     name: sdist
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -69,7 +69,7 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
       - name: Test sdist
-        run: pip install --verbose dist/*.tar.gz
+        run: pip install -U pip && pip install --verbose dist/*.tar.gz
       - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
