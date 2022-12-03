@@ -58,7 +58,7 @@ class SynthesisTest : public ::testing::TestWithParam<TestConfiguration> {
 protected:
   void SetUp() override {
     if (plog::get() == nullptr) {
-      util::init("", plog::info);
+      util::init();
     }
 
     test = GetParam();
