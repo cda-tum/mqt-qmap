@@ -33,26 +33,19 @@ void ObjectiveEncoder::optimizeGateCount(
   dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
 }
 
-LogicTerm
-ObjectiveEncoder::collectDepth(const bool includeSingleQubitGates) const {
-  auto cost = LogicTerm(0);
+void ObjectiveEncoder::optimizeDepth(bool includeSingleQubitGates) const {
+  DEBUG() << "Optimizing " << (includeSingleQubitGates ? "" : "two-qubit ")
+          << "depth";
+  auto* optimizer = dynamic_cast<LogicBlockOptimizer*>(lb.get());
   for (std::size_t t = 0U; t < T; ++t) {
     auto anyGate = LogicTerm(false);
     if (includeSingleQubitGates) {
       collectSingleQubitGateTerms(t, anyGate, std::logical_or{});
     }
     collectTwoQubitGateTerms(t, anyGate, std::logical_or{});
-
-    cost = cost + LogicTerm::ite(anyGate, LogicTerm(1), LogicTerm(0));
+    optimizer->weightedTerm(anyGate, 1);
   }
-  return cost;
-}
-
-void ObjectiveEncoder::optimizeDepth(bool includeSingleQubitGates) const {
-  DEBUG() << "Optimizing " << (includeSingleQubitGates ? "" : "two-qubit ")
-          << "depth";
-  const auto cost = collectDepth(includeSingleQubitGates);
-  dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
+  optimizer->makeMinimize();
 }
 
 void ObjectiveEncoder::optimizeMetric(TargetMetric targetMetric) const {

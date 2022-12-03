@@ -54,16 +54,6 @@ protected:
   [[nodiscard]] logicbase::LogicTerm
   collectGateCount(bool includeSingleQubitGates = true) const;
 
-  [[nodiscard]] logicbase::LogicTerm
-  collectDepth(bool includeSingleQubitGates = true) const;
-
-  template <class Op>
-  void collectGateTerms(std::size_t pos, logicbase::LogicTerm& terms,
-                        Op op) const {
-    collectSingleQubitGateTerms(pos, terms, op);
-    collectTwoQubitGateTerms(pos, terms, op);
-  }
-
   template <class Op>
   void collectSingleQubitGateTerms(std::size_t pos, logicbase::LogicTerm& terms,
                                    Op op) const {
