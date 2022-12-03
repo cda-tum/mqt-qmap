@@ -78,8 +78,7 @@ void GateEncoder::Variables::collectTwoQubitGateVariables(
 }
 
 void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
-  const auto variableGrouping =
-      encodings::groupVars(variables, variables.size() / 2U);
+  const auto variableGrouping = encodings::groupVars(variables, 3U);
   lb->assertFormula(encodings::exactlyOneCmdr(variableGrouping,
                                               LogicTerm::noneTerm(), lb.get()));
 }
