@@ -60,6 +60,10 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
       - name: Install Z3
         uses: cda-tum/setup-z3@v1
         with:
@@ -69,7 +73,7 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
       - name: Test sdist
-        run: pip install -U pip && pip install --verbose dist/*.tar.gz
+        run: pip install --verbose dist/*.tar.gz
       - uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
