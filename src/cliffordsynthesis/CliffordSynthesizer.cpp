@@ -73,16 +73,43 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
 }
 
 void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
-  if (config.timestepLimit == 0U) {
-    // Infeasibility checks are inexpensive, so we can afford to start with a
-    // timestep limit of 1 and increase geometrically until we find a feasible
-    // solution.
+  if (config.timestepLimit != 0U) {
+    INFO() << "Using configured initial timestep limit: "
+           << config.timestepLimit;
+    return;
+  }
+
+  // in case no circuit was provided as input, the best guess is to start low
+  // and increase the limit geometrically until a solution is found.
+  if (!results.sat()) {
     config.timestepLimit = 1U;
+    INFO()
+        << "No initial circuit specified. Using initial timestep limit of 1.";
+    return;
+  }
+
+  // If an initial circuit is specified, there already is a satisfying result.
+  // We can use its gates or depth as a starting point for the number of
+  // timesteps. Furthermore, no upper bound needs to be determined.
+  if (requiresMultiGateEncoding(config.targetMetric)) {
+    config.timestepLimit = results.getDepth();
+    INFO() << "Using initial circuit's depth as initial timestep limit: "
+           << config.timestepLimit;
+  } else {
+    config.timestepLimit = results.getGates();
+    INFO() << "Using initial circuit's gate count as initial timestep limit: "
+           << config.timestepLimit;
   }
 }
 
 std::pair<std::size_t, std::size_t>
 CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
+  // In case the synthesis was started with a circuit, the upper bound is
+  // inherently given by the circuit and does not need to be computed here.
+  if (results.sat()) {
+    return {0U, config.timestepLimit};
+  }
+
   std::size_t lowerBound = 0U;
   std::size_t upperBound = config.timestepLimit;
 

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "CircuitOptimizer.hpp"
 #include "LogicTerm/Logic.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 
@@ -15,7 +16,20 @@
 namespace cs {
 class Results {
 public:
-  Results()          = default;
+  Results() = default;
+  Results(qc::QuantumComputation& qc, const Tableau& tableau) {
+    // SWAP gates are not natively supported in the encoding, so we need to
+    // decompose them into sequences of three CNOTs.
+    qc::CircuitOptimizer::decomposeSWAP(qc, false);
+
+    setResultCircuit(qc);
+    setResultTableau(tableau);
+    setDepth(qc.getDepth());
+    setSingleQubitGates(qc.getNsingleQubitOps());
+    setTwoQubitGates(qc.getNindividualOps() - singleQubitGates);
+    setSolverResult(logicbase::Result::SAT);
+  }
+
   virtual ~Results() = default;
 
   [[nodiscard]] std::size_t getGates() const {

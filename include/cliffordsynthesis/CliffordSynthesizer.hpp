@@ -28,10 +28,12 @@ public:
   explicit CliffordSynthesizer(Tableau targetTableau)
       : initialTableau(targetTableau.getQubitCount()),
         targetTableau(std::move(targetTableau)) {}
-  CliffordSynthesizer(Tableau initialTableau, const qc::QuantumComputation& qc)
-      : initialTableau(std::move(initialTableau)), targetTableau(qc) {}
-  explicit CliffordSynthesizer(const qc::QuantumComputation& qc)
-      : initialTableau(qc.getNqubits()), targetTableau(qc) {}
+  CliffordSynthesizer(Tableau initialTableau, qc::QuantumComputation& qc)
+      : initialTableau(std::move(initialTableau)), targetTableau(qc),
+        results(qc, targetTableau) {}
+  explicit CliffordSynthesizer(qc::QuantumComputation& qc)
+      : initialTableau(qc.getNqubits()), targetTableau(qc),
+        results(qc, targetTableau) {}
 
   virtual ~CliffordSynthesizer() = default;
 
@@ -67,7 +69,7 @@ protected:
     return metric == TargetMetric::DEPTH;
   }
 
-  static void determineInitialTimestepLimit(EncoderConfig& config);
+  void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
   void                                runMaxSAT(const EncoderConfig& config);
   Results                             callSolver(const EncoderConfig& config);
