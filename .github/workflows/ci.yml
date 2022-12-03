@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: ubuntu-20.04, test-dir: build/test, toolchain: "" }
+          - { os: ubuntu-latest, test-dir: build/test, toolchain: "" }
           - { os: macos-11, test-dir: build/test, toolchain: "" }
           - {
               os: windows-2022,
