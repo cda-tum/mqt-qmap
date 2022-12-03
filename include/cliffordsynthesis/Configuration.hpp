@@ -36,6 +36,11 @@ struct Configuration {
     j["n_threads"]              = nThreads;
     j["minimize_gates_after_depth_optimization"] =
         minimizeGatesAfterDepthOptimization;
+    j["try_higher_gate_limit_for_two_qubit_gate_optimization"] =
+        tryHigherGateLimitForTwoQubitGateOptimization;
+    j["gate_limit_factor"] = gateLimitFactor;
+    j["minimize_gates_after_two_qubit_gate_optimization"] =
+        minimizeGatesAfterTwoQubitGateOptimization;
 
     return j;
   }
