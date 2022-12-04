@@ -56,6 +56,10 @@ void SATEncoder::createFormulation() {
   gateEncoder->createTwoQubitGateVariables();
   gateEncoder->encodeGates();
 
+  if (config.useSymmetryBreaking) {
+    gateEncoder->encodeSymmetryBreakingConstraints();
+  }
+
   objectiveEncoder =
       std::make_shared<ObjectiveEncoder>(N, T, gateEncoder->getVariables(), lb);
 

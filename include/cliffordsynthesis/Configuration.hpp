@@ -16,6 +16,7 @@ struct Configuration {
   std::size_t  initialTimestepLimit = 0U;
   bool         useMaxSAT            = false;
   TargetMetric target               = TargetMetric::GATES;
+  bool         useSymmetryBreaking  = true;
 
   /// Settings for the SAT solver
   std::size_t nThreads = 1U;
@@ -33,6 +34,7 @@ struct Configuration {
     j["initial_timestep_limit"] = initialTimestepLimit;
     j["use_max_sat"]            = useMaxSAT;
     j["target_metric"]          = toString(target);
+    j["use_symmetry_breaking"]  = useSymmetryBreaking;
     j["n_threads"]              = nThreads;
     j["minimize_gates_after_depth_optimization"] =
         minimizeGatesAfterDepthOptimization;

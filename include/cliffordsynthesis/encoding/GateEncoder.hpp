@@ -47,6 +47,8 @@ public:
     assertGateConstraints();
   }
 
+  virtual void encodeSymmetryBreakingConstraints();
+
   // extracting the circuit
   void extractCircuitFromModel(Results& res, logicbase::Model& model);
 
@@ -101,5 +103,18 @@ protected:
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
                                      std::size_t&            nTwoQubitGates);
+
+  virtual void
+  assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);
+  virtual void assertTwoQubitGateSymmetryBreakingConstraints(std::size_t pos);
+
+  virtual void assertSingleQubitGateOrderConstraints(std::size_t pos,
+                                                     std::size_t qubit) = 0;
+  virtual void assertSingleQubitGateCancellationConstraints(std::size_t pos,
+                                                            std::size_t qubit);
+
+  virtual void assertTwoQubitGateOrderConstraints(std::size_t pos,
+                                                  std::size_t ctrl,
+                                                  std::size_t trgt) = 0;
 };
 } // namespace cs::encoding

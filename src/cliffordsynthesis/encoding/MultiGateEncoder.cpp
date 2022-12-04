@@ -109,4 +109,52 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
 
   return changes;
 }
+
+void MultiGateEncoder::assertSingleQubitGateOrderConstraints(
+    const std::size_t pos, const std::size_t qubit) {
+  // nothing to assert at the end
+  if (pos == T - 1U) {
+    return;
+  }
+
+  // gate variables of the current and the next time step
+  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNext = vars.gS[pos + 1];
+
+  // once no gate is applied to the considered qubit, no single qubit gate can
+  // be applied to it in the next time step.
+  auto noSingleQubitGate = LogicTerm(true);
+  for (const auto gate : SINGLE_QUBIT_GATES) {
+    if (gate == qc::OpType::None) {
+      continue;
+    }
+    noSingleQubitGate = noSingleQubitGate && !gSNext[gateToIndex(gate)][qubit];
+  }
+  lb->assertFormula(LogicTerm::implies(
+      gSNow[gateToIndex(qc::OpType::None)][qubit], noSingleQubitGate));
+}
+
+void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
+    const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
+  // nothing to assert at the end
+  if (pos == T - 1U) {
+    return;
+  }
+
+  // gate variables of the current and the next time step
+  const auto& current = vars.gC[pos][ctrl][trgt];
+  const auto& gSNow   = vars.gS[pos];
+  const auto& gCNext  = vars.gC[pos + 1];
+
+  // two identical CNOTs may not be applied in a row because they would cancel.
+  lb->assertFormula(LogicTerm::implies(current, !gCNext[ctrl][trgt]));
+
+  // if no gate is applied to both qubits, no CNOT on them can be applied in the
+  // next time step.
+  const auto noneIndex     = gateToIndex(qc::OpType::None);
+  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
+  lb->assertFormula(LogicTerm::implies(noGate, noFurtherCnot));
+}
+
 } // namespace cs::encoding

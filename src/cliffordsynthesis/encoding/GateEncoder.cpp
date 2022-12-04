@@ -139,4 +139,75 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
   }
 }
 
+void GateEncoder::encodeSymmetryBreakingConstraints() {
+  DEBUG() << "Encoding symmetry breaking constraints.";
+  for (std::size_t t = 0U; t < T; ++t) {
+    assertSingleQubitGateSymmetryBreakingConstraints(t);
+    assertTwoQubitGateSymmetryBreakingConstraints(t);
+  }
+}
+
+void GateEncoder::assertSingleQubitGateCancellationConstraints(
+    const std::size_t pos, const std::size_t qubit) {
+  // nothing to assert for the last timestep
+  if (pos == T - 1U) {
+    return;
+  }
+
+  // gate variables of the current and the next timestep
+  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNext = vars.gS[pos + 1U];
+
+  for (const auto gate : SINGLE_QUBIT_GATES) {
+    if (gate == qc::OpType::None) {
+      continue;
+    }
+    const auto gateIndex = gateToIndex(gate);
+    switch (gate) {
+    case qc::OpType::X:
+    case qc::OpType::Y:
+    case qc::OpType::Z:
+    case qc::OpType::H:
+      // self-inverse gates
+      lb->assertFormula(LogicTerm::implies(gSNow[gateIndex][qubit],
+                                           !gSNext[gateIndex][qubit]));
+      break;
+    case qc::OpType::S:
+    case qc::OpType::Sdag: {
+      // Sdag * S = S * Sdag = I
+      // Sdag * Sdag = S * S = Z
+      auto disallowed = !gSNext[gateToIndex(qc::OpType::S)][qubit] &&
+                        !gSNext[gateToIndex(qc::OpType::Sdag)][qubit];
+      // Z and Sdag commute. Z should always precede S and Sdag
+      disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][qubit];
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit], disallowed));
+      break;
+    }
+    default:
+      break;
+    }
+  }
+}
+
+void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
+    const std::size_t pos) {
+  for (std::size_t q = 0U; q < N; ++q) {
+    assertSingleQubitGateOrderConstraints(pos, q);
+    assertSingleQubitGateCancellationConstraints(pos, q);
+  }
+}
+
+void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
+    const std::size_t pos) {
+  for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
+    for (std::size_t trgt = 0U; trgt < N; ++trgt) {
+      if (ctrl == trgt) {
+        continue;
+      }
+      assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);
+    }
+  }
+}
+
 } // namespace cs::encoding

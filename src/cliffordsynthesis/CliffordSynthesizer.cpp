@@ -20,14 +20,15 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   const auto start = std::chrono::high_resolution_clock::now();
 
   // create the general configuration for the SAT encoder
-  auto encoderConfig           = EncoderConfig();
-  encoderConfig.initialTableau = &initialTableau;
-  encoderConfig.targetTableau  = &targetTableau;
-  encoderConfig.nQubits        = initialTableau.getQubitCount();
-  encoderConfig.timestepLimit  = configuration.initialTimestepLimit;
-  encoderConfig.targetMetric   = configuration.target;
-  encoderConfig.useMaxSAT      = configuration.useMaxSAT;
-  encoderConfig.nThreads       = configuration.nThreads;
+  auto encoderConfig                = EncoderConfig();
+  encoderConfig.initialTableau      = &initialTableau;
+  encoderConfig.targetTableau       = &targetTableau;
+  encoderConfig.nQubits             = initialTableau.getQubitCount();
+  encoderConfig.timestepLimit       = configuration.initialTimestepLimit;
+  encoderConfig.targetMetric        = configuration.target;
+  encoderConfig.useMaxSAT           = configuration.useMaxSAT;
+  encoderConfig.useSymmetryBreaking = configuration.useSymmetryBreaking;
+  encoderConfig.nThreads            = configuration.nThreads;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 

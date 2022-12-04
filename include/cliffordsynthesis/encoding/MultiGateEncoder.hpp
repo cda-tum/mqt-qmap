@@ -29,6 +29,11 @@ protected:
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
+
+  void assertSingleQubitGateOrderConstraints(std::size_t pos,
+                                             std::size_t qubit) override;
+  void assertTwoQubitGateOrderConstraints(std::size_t pos, std::size_t ctrl,
+                                          std::size_t trgt) override;
 };
 
 } // namespace cs::encoding

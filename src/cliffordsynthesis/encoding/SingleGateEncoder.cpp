@@ -119,4 +119,107 @@ LogicTerm SingleGateEncoder::createNoChange(
   return changes;
 }
 
+void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
+    const std::size_t pos, const std::size_t qubit) {
+  // nothing to assert at the end
+  if (pos == T - 1U) {
+    return;
+  }
+
+  // gate variables of the current and the next time step
+  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNext = vars.gS[pos + 1];
+
+  // collect variables of single-qubit gates that could be applied to `qubit`
+  auto singleQubitGate = LogicTerm(false);
+  for (const auto& gate : SINGLE_QUBIT_GATES) {
+    if (gate == qc::OpType::None) {
+      continue;
+    }
+    // any single-qubit gate on qubit q
+    singleQubitGate = singleQubitGate || gSNow[gateToIndex(gate)][qubit];
+  }
+
+  // collect gate variables of the next timestep that should not be applied.
+  auto disallowed = LogicTerm(true);
+
+  // no single-qubit gate on a lower qubit
+  for (std::size_t lower = 0U; lower < qubit; ++lower) {
+    for (const auto& gate : SINGLE_QUBIT_GATES) {
+      if (gate == qc::OpType::None) {
+        continue;
+      }
+      disallowed = disallowed && !gSNext[gateToIndex(gate)][lower];
+    }
+  }
+
+  lb->assertFormula(LogicTerm::implies(singleQubitGate, disallowed));
+
+  // once no gate is applied, no other gate can be applied, i.e., in the next
+  // timestep any of the `None` gate variables must be selected.
+  const auto noneIndex = gateToIndex(qc::OpType::None);
+  auto       noGate    = LogicTerm(false);
+  for (std::size_t q = 0U; q < N; ++q) {
+    noGate = noGate || gSNext[noneIndex][q];
+  }
+  lb->assertFormula(LogicTerm::implies(gSNow[noneIndex][qubit], noGate));
+}
+
+void SingleGateEncoder::assertTwoQubitGateOrderConstraints(
+    const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
+  // nothing to assert at the end
+  if (pos == T - 1U) {
+    return;
+  }
+
+  // gate variables of the current and the next time step
+  const auto& current = vars.gC[pos][ctrl][trgt];
+  const auto& gCNext  = vars.gC[pos + 1];
+  const auto& gSNext  = vars.gS[pos + 1];
+
+  // two identical CNOTs may not be applied in a row because they would cancel.
+  auto disallowed = !gCNext[ctrl][trgt];
+
+  // any single-qubit gate independent of the CNOT should be applied prior.
+  for (std::size_t q = 0U; q < N; ++q) {
+    if (q == ctrl || q == trgt) {
+      continue;
+    }
+    for (const auto& gate : SINGLE_QUBIT_GATES) {
+      if (gate == qc::OpType::None) {
+        continue;
+      }
+      disallowed = disallowed && !gSNext[gateToIndex(gate)][q];
+    }
+  }
+
+  // no X gate may be placed on the target qubit since it would commute.
+  disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::X)][trgt];
+
+  // no diagonal gate may be placed on the control qubit since it would commute.
+  disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][ctrl] &&
+               !gSNext[gateToIndex(qc::OpType::S)][ctrl] &&
+               !gSNext[gateToIndex(qc::OpType::Sdag)][ctrl];
+
+  // no CNOT with the same control and a lower target qubit may be placed.
+  for (std::size_t t = 0U; t < trgt; ++t) {
+    if (t == ctrl) {
+      continue;
+    }
+    disallowed = disallowed && !gCNext[ctrl][t];
+  }
+
+  // no CNOT with a lower control different from trgt may be placed.
+  for (std::size_t c = 0U; c < ctrl; ++c) {
+    for (std::size_t t = 0U; t < N; ++t) {
+      if (c == t || c == trgt) {
+        continue;
+      }
+      disallowed = disallowed && !gCNext[c][t];
+    }
+  }
+
+  lb->assertFormula(LogicTerm::implies(current, disallowed));
+}
+
 } // namespace cs::encoding

@@ -44,6 +44,9 @@ public:
     // whether to allow multiple gates per timestep
     bool useMultiGateEncoding = false;
 
+    // whether to use symmetry breaking
+    bool useSymmetryBreaking = false;
+
     // the number of threads to pass to the SAT solver
     std::size_t nThreads = 1U;
 

@@ -31,6 +31,11 @@ protected:
   [[nodiscard]] logicbase::LogicTerm
   createNoChange(std::size_t pos, std::size_t except,
                  std::optional<std::size_t> except2) const;
+
+  void assertSingleQubitGateOrderConstraints(std::size_t pos,
+                                             std::size_t qubit) override;
+  void assertTwoQubitGateOrderConstraints(std::size_t pos, std::size_t ctrl,
+                                          std::size_t trgt) override;
 };
 
 } // namespace cs::encoding
