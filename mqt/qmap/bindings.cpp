@@ -3,6 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
@@ -369,6 +370,202 @@ PYBIND11_MODULE(pyqmap, m) {
 
   // Main mapping function
   m.def("map", &map, "map a quantum circuit");
+
+  // Target metric for the Clifford synthesizer
+  py::enum_<cs::TargetMetric>(m, "TargetMetric")
+      .value("gates", cs::TargetMetric::GATES, "Optimize gate count.")
+      .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES,
+             "Optimize two-qubit gate count.")
+      .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth.")
+      .export_values()
+      .def(py::init([](const std::string& name) {
+        return cs::targetMetricFromString(name);
+      }));
+  py::implicitly_convertible<py::str, cs::TargetMetric>();
+
+  // Configuration for the synthesis
+  py::class_<cs::Configuration>(
+      m, "SynthesisConfiguration",
+      "Configuration options for the MQT QMAP Clifford synthesis tool.")
+      .def(py::init<>())
+      .def_readwrite("initial_timestep_limit",
+                     &cs::Configuration::initialTimestepLimit,
+                     "Initial timestep limit for the Clifford synthesis. "
+                     "Defaults to `0`, which implies that the initial timestep "
+                     "limit is determined automatically.")
+      .def_readwrite(
+          "use_maxsat", &cs::Configuration::useMaxSAT,
+          "Use MaxSAT to solve the synthesis problem or to really on the "
+          "binary search scheme for finding the optimum. Defaults to `false`.")
+      .def_readwrite(
+          "target_metric", &cs::Configuration::target,
+          "Target metric for the Clifford synthesis. Defaults to `gates`.")
+      .def_readwrite("use_symmetry_breaking",
+                     &cs::Configuration::useSymmetryBreaking,
+                     "Use symmetry breaking clauses to speed up the synthesis "
+                     "process. Defaults to `true`.")
+      .def_readwrite(
+          "n_threads", &cs::Configuration::nThreads,
+          "Number of threads to use for the synthesis. Defaults to `1`.")
+      .def_readwrite(
+          "minimize_gates_after_depth_optimization",
+          &cs::Configuration::minimizeGatesAfterDepthOptimization,
+          "Depth optimization might produce a circuit with more gates than "
+          "necessary. This option enables an additional run of the synthesizer "
+          "to minimize the overall number of gates. Defaults to `false`.")
+      .def_readwrite(
+          "try_higher_gate_limit_for_two_qubit_gate_optimization",
+          &cs::Configuration::tryHigherGateLimitForTwoQubitGateOptimization,
+          "When optimizing two-qubit gates, the synthesizer might fail "
+          "to find an optimal solution for a certain timestep limit, but there "
+          "might be a better solution for some higher timestep limit. This "
+          "option enables an additional run of the synthesizer with a higher "
+          "gate limit. Defaults to `false`.")
+      .def_readwrite("gate_limit_factor", &cs::Configuration::gateLimitFactor,
+                     "Factor by which the gate limit is increased when "
+                     "trying to find a better solution for the two-qubit "
+                     "gate optimization. Defaults to `1.1`.")
+      .def_readwrite(
+          "minimize_gates_after_two_qubit_gate_optimization",
+          &cs::Configuration::minimizeGatesAfterTwoQubitGateOptimization,
+          "Two-qubit gate optimization might produce a circuit "
+          "with more gates than necessary. This option enables "
+          "an additional run of the synthesizer to minimize the "
+          "overall number of gates. Defaults to `false`.")
+      .def("json", &cs::Configuration::json,
+           "Returns a JSON-style dictionary of all the information present in "
+           "the :class:`.Configuration`")
+      .def(
+          "__repr__",
+          [](const cs::Configuration& config) { return config.json().dump(2); },
+          "Prints a JSON-formatted representation of all the information "
+          "present in the :class:`.Configuration`");
+
+  // Results of the synthesis
+  py::class_<cs::Results>(m, "SynthesisResults",
+                          "Results of the MQT QMAP Clifford synthesis tool.")
+      .def(py::init<>())
+      .def_property_readonly("gates", &cs::Results::getGates,
+                             "Returns the number of gates in the circuit.")
+      .def_property_readonly("single_qubit_gates",
+                             &cs::Results::getSingleQubitGates,
+                             "Returns the number of single-qubit gates in the "
+                             "synthesized circuit.")
+      .def_property_readonly("two_qubit_gates", &cs::Results::getTwoQubitGates,
+                             "Returns the number of two-qubit gates in the "
+                             "synthesized circuit.")
+      .def_property_readonly("depth", &cs::Results::getDepth,
+                             "Returns the depth of the synthesized circuit.")
+      .def_property_readonly("runtime", &cs::Results::getRuntime,
+                             "Returns the runtime of the synthesis in seconds.")
+      .def_property_readonly("solver_calls", &cs::Results::getSolverCalls,
+                             "Returns the number of calls to the SAT solver.")
+      .def_property_readonly(
+          "circuit", &cs::Results::getResultCircuit,
+          "Returns the synthesized circuit as a qasm string.")
+      .def_property_readonly("tableau", &cs::Results::getResultTableau,
+                             "Returns a string representation of the "
+                             "synthesized circuit's tableau.")
+      .def("sat", &cs::Results::sat,
+           "Returns `true` if the synthesis was successful.")
+      .def("unsat", &cs::Results::unsat,
+           "Returns `true` if the synthesis was unsuccessful.");
+
+  auto tableau = py::class_<cs::Tableau>(
+      m, "Tableau", "A class for representing stabilizer tableaus.");
+  tableau.def_static(
+      "from_clifford",
+      [](const py::object& clifford) {
+        if (const auto Clifford =
+                py::module::import("qiskit.quantum_info").attr("Clifford");
+            py::isinstance(clifford, Clifford)) {
+          const auto stabilizers =
+              clifford.attr("stabilizer").attr("to_labels")();
+          return cs::Tableau(py::cast<std::string>(stabilizers));
+        } else {
+          throw std::invalid_argument(
+              "The argument must be a qiskit.quantum_info.Clifford.");
+        }
+      },
+      "clifford"_a,
+      "Constructs a tableau from a :class:`qiskit.quantum_info.Clifford`.");
+  tableau.def_static(
+      "from_stabilizer_table",
+      [](const py::object& table) {
+        if (const auto StabilizerTable =
+                py::module::import("qiskit.quantum_info")
+                    .attr("StabilizerTable");
+            py::isinstance(table, StabilizerTable)) {
+          const auto stabilizers = table.attr("to_labels")();
+          return cs::Tableau(py::cast<std::string>(stabilizers));
+        } else {
+          throw std::invalid_argument(
+              "The argument must be a qiskit.quantum_info.StabilizerTable.");
+        }
+      },
+      "table"_a,
+      "Constructs a tableau from a "
+      ":class:`qiskit.quantum_info.StabilizerTable`.");
+  tableau.def_static(
+      "from_string", [](const std::string& s) { return cs::Tableau(s); },
+      "description"_a,
+      "Constructs a tableau from a string description. This can either be a "
+      "semicolon separated binary matrix or a list of Pauli strings.");
+
+  auto quantumComputation = py::class_<qc::QuantumComputation>(
+      m, "QuantumComputation",
+      "A class for the intermediate representation of quantum circuits in the "
+      "Munich Quantum Toolkit.");
+  quantumComputation.def_static(
+      "from_file",
+      [](const std::string& filename) {
+        return qc::QuantumComputation(filename);
+      },
+      "filename"_a, "Reads a quantum circuit from a file.");
+  quantumComputation.def_static(
+      "from_qasm_str",
+      [](const std::string& qasm) {
+        std::stringstream      ss(qasm);
+        qc::QuantumComputation qc{};
+        qc.import(ss, qc::Format::OpenQASM);
+        return qc;
+      },
+      "qasm"_a, "Reads a quantum circuit from a qasm string.");
+  quantumComputation.def_static(
+      "from_qiskit",
+      [](const py::object& circuit) {
+        qc::QuantumComputation qc{};
+        qc::qiskit::QuantumCircuit::import(qc, circuit);
+        return qc;
+      },
+      "circuit"_a,
+      "Reads a quantum circuit from a Qiskit :class:`QuantumCircuit`.");
+
+  auto synthesizer = py::class_<cs::CliffordSynthesizer>(
+      m, "CliffordSynthesizer", "A class for synthesizing Clifford circuits.");
+
+  synthesizer.def(py::init<cs::Tableau, cs::Tableau>(), "initial_tableau"_a,
+                  "target_tableau"_a,
+                  "Constructs a synthesizer for two tableaus representing the "
+                  "initial and target state.");
+  synthesizer.def(py::init<cs::Tableau>(), "target_tableau"_a,
+                  "Constructs a synthesizer for a tableau representing the "
+                  "target state.");
+  synthesizer.def(py::init<qc::QuantumComputation&>(), "qc"_a,
+                  "Constructs a synthesizer for a quantum computation "
+                  "representing the target state.");
+  synthesizer.def(
+      py::init<cs::Tableau, qc::QuantumComputation&>(), "initial_tableau"_a,
+      "qc"_a,
+      "Constructs a synthesizer for a quantum computation representing the "
+      "target state that starts in an initial state represented by a tableau.");
+  synthesizer.def("synthesize", &cs::CliffordSynthesizer::synthesize,
+                  "config"_a = cs::Configuration(),
+                  "Runs the synthesis with the given configuration.");
+  synthesizer.def_property_readonly("results",
+                                    &cs::CliffordSynthesizer::getResults,
+                                    "Returns the results of the synthesis.");
+
 #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
