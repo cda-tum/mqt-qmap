@@ -1,0 +1,132 @@
+#
+# This file is part of MQT QMAP library which is released under the MIT license.
+# See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
+#
+from __future__ import annotations
+
+from typing import Any
+
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Clifford, StabilizerTable
+
+from .compile import extract_initial_layout_from_qasm
+from .pyqmap import (
+    CliffordSynthesizer,
+    QuantumComputation,
+    SynthesisConfiguration,
+    SynthesisResults,
+    Tableau,
+)
+
+
+def _import_circuit(circuit: str | QuantumCircuit | QuantumComputation) -> QuantumComputation:
+    """Import a circuit from a string, a QuantumCircuit, or a QuantumComputation."""
+    if isinstance(circuit, QuantumCircuit):
+        return QuantumComputation.from_qiskit(circuit)
+    elif isinstance(circuit, str):
+        if circuit.endswith(".qasm"):
+            return QuantumComputation.from_file(circuit)
+        else:
+            return QuantumComputation.from_qasm_str(circuit)
+    else:
+        return circuit
+
+
+def _import_tableau(tableau: str | Clifford | StabilizerTable | Tableau) -> Tableau:
+    """Import a tableau from a string, a Clifford, a StabilizerTable, or a Tableau."""
+    if isinstance(tableau, Clifford):
+        return Tableau.from_clifford(tableau)
+    elif isinstance(tableau, StabilizerTable):
+        return Tableau.from_stabilizer_table(tableau)
+    elif isinstance(tableau, str):
+        return Tableau.from_string(tableau)
+    else:
+        return tableau
+
+
+def _config_from_kwargs(kwargs: dict[str, Any]) -> SynthesisConfiguration:
+    """Creates a :class:`SynthesisConfiguration` from keyword arguments."""
+    config = SynthesisConfiguration()
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+        else:
+            raise ValueError(f"Invalid keyword argument: {key}")
+    return config
+
+
+def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
+    """Creates a proper :class:`qiskit.QuantumCircuit` from a QASM string (including layout information)."""
+    circ = QuantumCircuit.from_qasm_str(qasm)
+    layout = extract_initial_layout_from_qasm(qasm, circ.qregs)
+
+    # qiskit-terra 0.22.0 introduced a breaking change in the `_layout` of the `QuantumCircuit` class.
+    # To maintain backwards compatibility, the following `try... except` block is necessary.
+    try:
+        from qiskit.transpiler.layout import TranspileLayout
+
+        circ._layout = TranspileLayout(initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits())
+    except ImportError:
+        circ._layout = layout
+
+    return circ
+
+
+def synthesize_clifford(
+    target_tableau: str | Clifford | StabilizerTable | Tableau,
+    initial_tableau: str | Clifford | StabilizerTable | Tableau = None,
+    **kwargs: Any,
+) -> tuple[QuantumCircuit, SynthesisResults]:
+    """Synthesize a Clifford circuit from a given tableau starting from an (optional) initial tableau.
+
+    target_tableau: str | Clifford | StabilizerTable | Tableau
+        The target tableau to synthesize. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` or a :class:`StabilizerTable` is given, it is converted to a :class:`Tableau`. If a class:`Tableau` is given, it is used directly.
+    initial_tableau: str | Clifford | StabilizerTable | Tableau | None
+        The initial tableau to start from. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` is given, it is converted to a Tableau. If a StabilizerTable is given, it is converted to a Tableau. If a Tableau is given, it is used directly. If no initial tableau is given, the synthesis starts from the identity tableau.
+    kwargs: dict[str, Any]
+        Additional keyword arguments to configure the synthesis. See :class:`SynthesisConfiguration` for a list of available options.
+    """
+    config = _config_from_kwargs(kwargs)
+
+    tableau = _import_tableau(target_tableau)
+    if initial_tableau is not None:
+        synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau), tableau)
+    else:
+        synthesizer = CliffordSynthesizer(tableau)
+
+    synthesizer.synthesize(config)
+
+    results = synthesizer.results
+    circ = _circuit_from_qasm(results.circuit)
+
+    return circ, results
+
+
+def optimize_clifford(
+    circuit: str | QuantumCircuit | QuantumComputation,
+    initial_tableau: str | Clifford | StabilizerTable | Tableau = None,
+    **kwargs: Any,
+) -> tuple[QuantumCircuit, SynthesisResults]:
+    """Optimize a Clifford circuit starting from an (optional) initial tableau.
+
+    circuit: str | QuantumCircuit | QuantumComputation | None
+        The circuit to optimize. If a string is given, it is interpreted as a QASM string. If a :class:`QuantumCircuit` is given, it is converted to a :class:`QuantumComputation`. If a :class:`QuantumComputation` is given, it is used as is.
+    initial_tableau: str | Clifford | StabilizerTable | Tableau | None
+        The initial tableau to start from. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` is given, it is converted to a Tableau. If a StabilizerTable is given, it is converted to a Tableau. If a Tableau is given, it is used directly. If no initial tableau is given, the synthesis starts from the identity tableau.
+    kwargs: dict[str, Any]
+        Additional keyword arguments to configure the synthesis. See :class:`SynthesisConfiguration` for a list of available options.
+    """
+    config = _config_from_kwargs(kwargs)
+
+    qc = _import_circuit(circuit)
+    if initial_tableau is not None:
+        synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau), qc)
+    else:
+        synthesizer = CliffordSynthesizer(qc)
+
+    synthesizer.synthesize(config)
+
+    results = synthesizer.results
+    circ = _circuit_from_qasm(results.circuit)
+
+    return circ, results

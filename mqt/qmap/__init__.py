@@ -15,10 +15,12 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
     if bin_path.exists():
         os.add_dll_directory(str(bin_path))
 
+from mqt.qmap.clifford_synthesis import optimize_clifford, synthesize_clifford
 from mqt.qmap.compile import compile
 from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
+    CliffordSynthesizer,
     CommanderGrouping,
     Configuration,
     Encoding,
@@ -26,7 +28,12 @@ from mqt.qmap.pyqmap import (
     Layering,
     MappingResults,
     Method,
+    QuantumComputation,
     SwapReduction,
+    SynthesisConfiguration,
+    SynthesisResults,
+    Tableau,
+    TargetMetric,
 )
 from mqt.qmap.subarchitectures import SubarchitectureOrder
 
@@ -43,4 +50,12 @@ __all__ = [
     "MappingResults",
     "Architecture",
     "SubarchitectureOrder",
+    "SynthesisConfiguration",
+    "SynthesisResults",
+    "TargetMetric",
+    "QuantumComputation",
+    "Tableau",
+    "CliffordSynthesizer",
+    "synthesize_clifford",
+    "optimize_clifford",
 ]
