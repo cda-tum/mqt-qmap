@@ -151,7 +151,7 @@ void Tableau::fromString(const std::string& str) {
   if (line.empty()) {
     return;
   }
-  const auto  rStabilizer = std::regex("([\\+-])([IYZX]+)");
+  const auto  rStabilizer = std::regex("([\\+-]?)([IYZX]+)");
   std::smatch m;
   if (std::regex_search(line, rStabilizer)) {
     // string is a list of stabilizers
