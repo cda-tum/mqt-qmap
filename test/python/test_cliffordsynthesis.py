@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from mqt import qmap
+from mqt import qcec, qmap
+
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Clifford, PauliList
 
 
 @dataclass
@@ -175,3 +178,64 @@ def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Confi
 
     assert results.gates == test_config.expected_minimal_gates_at_minimal_two_qubit_gates
     print("\n", circ)
+
+
+# The following tests merely check that all kinds of conversions work as expected.
+# They only check for the correctness of the result for a simple circuit.
+
+
+@pytest.fixture
+def bell_circuit() -> QuantumCircuit:
+    """Return a Bell state circuit."""
+    circ = QuantumCircuit(2)
+    circ.h(0)
+    circ.cx(0, 1)
+    return circ
+
+
+def test_optimize_quantum_computation(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can optimize an MQT QuantumComputation."""
+    qc = qmap.QuantumComputation.from_qiskit(bell_circuit)
+    circ, results = qmap.optimize_clifford(circuit=qc)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_optimize_qiskit_circuit(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can optimize a Qiskit QuantumCircuit."""
+    circ, results = qmap.optimize_clifford(circuit=bell_circuit)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can optimize a circuit with an initial tableau."""
+    circ, results = qmap.optimize_clifford(circuit=bell_circuit, initial_tableau=qmap.Tableau(bell_circuit.num_qubits))
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from an MQT Tableau."""
+    cliff = Clifford(bell_circuit)
+    tableau = qmap.Tableau(str(cliff.to_labels(mode="S")))
+    circ, results = qmap.synthesize_clifford(target_tableau=tableau)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_synthesize_from_qiskit_clifford(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from a Qiskit Clifford."""
+    cliff = Clifford(bell_circuit)
+    circ, results = qmap.synthesize_clifford(target_tableau=cliff)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_synthesize_from_qiskit_pauli_list(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from a Qiskit PauliList."""
+    cliff = Clifford(bell_circuit)
+    pauli_list = PauliList(cliff.to_labels(mode="S"))
+    circ, results = qmap.synthesize_clifford(target_tableau=pauli_list)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
+def test_invalid_kwarg_to_synthesis() -> None:
+    """Test that we raise an error if we pass an invalid kwarg to synthesis."""
+    with pytest.raises(ValueError):
+        qmap.synthesize_clifford(target_tableau=qmap.Tableau("Z"), invalid_kwarg=True)
