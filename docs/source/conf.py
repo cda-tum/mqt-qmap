@@ -32,6 +32,7 @@ extensions = [
     "sphinx_copybutton",
     "hoverxref.extension",
     "nbsphinx",
+    "sphinxext.opengraph",
     "sphinx_rtd_dark_mode",
 ]
 

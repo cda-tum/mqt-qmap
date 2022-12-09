@@ -61,6 +61,7 @@ docs = [
     "ipython",
     "ipykernel",
     "nbsphinx",
+    "sphinxext-opengraph",
     "qiskit-terra[visualization]",
 ]
 dev = ["mqt.qmap[coverage, docs]"]
