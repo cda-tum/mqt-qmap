@@ -52,6 +52,7 @@ coverage = ["mqt.qmap[test]", "coverage[toml]>=6.3", "pytest-cov>=3"]
 docs = [
     "sphinx>=5",
     "sphinx-rtd-theme",
+    "sphinx-rtd-dark-mode",
     "sphinxcontrib-bibtex>=2.4.2",
     "sphinx-copybutton",
     "sphinx-hoverxref",
