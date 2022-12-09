@@ -28,9 +28,9 @@ jobs:
       matrix:
         config:
           - { os: ubuntu-latest, test-dir: build/test, toolchain: "" }
-          - { os: macos-11, test-dir: build/test, toolchain: "" }
+          - { os: macos-latest, test-dir: build/test, toolchain: "" }
           - {
-              os: windows-2022,
+              os: windows-latest,
               test-dir: build\test\Release,
               toolchain: "-T ClangCl",
             }
