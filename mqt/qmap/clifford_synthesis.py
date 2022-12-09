@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Clifford, StabilizerTable
+from qiskit.quantum_info import Clifford, PauliList
 
 from .compile import extract_initial_layout_from_qasm
 from .pyqmap import (
@@ -32,14 +32,14 @@ def _import_circuit(circuit: str | QuantumCircuit | QuantumComputation) -> Quant
         return circuit
 
 
-def _import_tableau(tableau: str | Clifford | StabilizerTable | Tableau) -> Tableau:
-    """Import a tableau from a string, a Clifford, a StabilizerTable, or a Tableau."""
+def _import_tableau(tableau: str | Clifford | PauliList | Tableau) -> Tableau:
+    """Import a tableau from a string, a Clifford, a PauliList, or a Tableau."""
     if isinstance(tableau, Clifford):
-        return Tableau.from_clifford(tableau)
-    elif isinstance(tableau, StabilizerTable):
-        return Tableau.from_stabilizer_table(tableau)
+        return Tableau(str(tableau.to_labels(mode="S")))
+    elif isinstance(tableau, PauliList):
+        return Tableau(str(tableau.to_labels()))
     elif isinstance(tableau, str):
-        return Tableau.from_string(tableau)
+        return Tableau(tableau)
     else:
         return tableau
 
@@ -73,18 +73,26 @@ def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
 
 
 def synthesize_clifford(
-    target_tableau: str | Clifford | StabilizerTable | Tableau,
-    initial_tableau: str | Clifford | StabilizerTable | Tableau = None,
+    target_tableau: str | Clifford | PauliList | Tableau,
+    initial_tableau: str | Clifford | PauliList | Tableau = None,
     **kwargs: Any,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Synthesize a Clifford circuit from a given tableau starting from an (optional) initial tableau.
 
-    target_tableau: str | Clifford | StabilizerTable | Tableau
-        The target tableau to synthesize. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` or a :class:`StabilizerTable` is given, it is converted to a :class:`Tableau`. If a class:`Tableau` is given, it is used directly.
-    initial_tableau: str | Clifford | StabilizerTable | Tableau | None
-        The initial tableau to start from. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` is given, it is converted to a Tableau. If a StabilizerTable is given, it is converted to a Tableau. If a Tableau is given, it is used directly. If no initial tableau is given, the synthesis starts from the identity tableau.
+    target_tableau: str | Clifford | PauliList | Tableau
+        The target tableau to synthesize.
+        If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
+        If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
+        If a :class:`Tableau` is given, it is used directly.
+    initial_tableau: str | Clifford | PauliList | Tableau | None
+        The initial tableau to start from.
+        If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
+        If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
+        If a :class:`Tableau` is given, it is used directly.
+        If no initial tableau is given, the synthesis starts from the identity tableau.
     kwargs: dict[str, Any]
-        Additional keyword arguments to configure the synthesis. See :class:`SynthesisConfiguration` for a list of available options.
+        Additional keyword arguments to configure the synthesis.
+        See :class:`SynthesisConfiguration` for a list of available options.
     """
     config = _config_from_kwargs(kwargs)
 
@@ -104,17 +112,25 @@ def synthesize_clifford(
 
 def optimize_clifford(
     circuit: str | QuantumCircuit | QuantumComputation,
-    initial_tableau: str | Clifford | StabilizerTable | Tableau = None,
+    initial_tableau: str | Clifford | PauliList | Tableau = None,
     **kwargs: Any,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Optimize a Clifford circuit starting from an (optional) initial tableau.
 
     circuit: str | QuantumCircuit | QuantumComputation | None
-        The circuit to optimize. If a string is given, it is interpreted as a QASM string. If a :class:`QuantumCircuit` is given, it is converted to a :class:`QuantumComputation`. If a :class:`QuantumComputation` is given, it is used as is.
-    initial_tableau: str | Clifford | StabilizerTable | Tableau | None
-        The initial tableau to start from. If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. If a :class:`Clifford` is given, it is converted to a Tableau. If a StabilizerTable is given, it is converted to a Tableau. If a Tableau is given, it is used directly. If no initial tableau is given, the synthesis starts from the identity tableau.
+        The circuit to optimize.
+        If a string is given, it is interpreted as a QASM string or a filename.
+        If a :class:`QuantumCircuit` is given, it is converted to a :class:`QuantumComputation`.
+        If a :class:`QuantumComputation` is given, it is used as is.
+    initial_tableau: str | Clifford | PauliList | Tableau | None
+        The initial tableau to start from.
+        If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
+        If a :class:`Clifford` is given or a :class:`PauliList` is given, it is converted to a Tableau.
+        If a :class:`Tableau` is given, it is used directly.
+        If no initial tableau is given, the synthesis starts from the identity tableau.
     kwargs: dict[str, Any]
-        Additional keyword arguments to configure the synthesis. See :class:`SynthesisConfiguration` for a list of available options.
+        Additional keyword arguments to configure the synthesis.
+        See :class:`SynthesisConfiguration` for a list of available options.
     """
     config = _config_from_kwargs(kwargs)
 
