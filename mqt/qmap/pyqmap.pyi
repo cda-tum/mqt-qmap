@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, ClassVar, overload
 
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Clifford, StabilizerTable
 
 class Arch:
     __members__: ClassVar[dict[Arch, int]] = ...  # read-only
@@ -336,13 +335,10 @@ class QuantumComputation:
     def from_qiskit(circuit: QuantumCircuit) -> QuantumComputation: ...
 
 class Tableau:
-    def __init__(self) -> None: ...
-    @staticmethod
-    def from_clifford(clifford: Clifford) -> Tableau: ...
-    @staticmethod
-    def from_stabilizer_table(table: StabilizerTable) -> Tableau: ...
-    @staticmethod
-    def from_string(description: str) -> Tableau: ...
+    @overload
+    def __init__(self, n: int) -> None: ...
+    @overload
+    def __init__(self, description: str) -> None: ...
 
 class CliffordSynthesizer:
     @overload

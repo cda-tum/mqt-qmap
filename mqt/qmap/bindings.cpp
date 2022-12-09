@@ -473,42 +473,10 @@ PYBIND11_MODULE(pyqmap, m) {
 
   auto tableau = py::class_<cs::Tableau>(
       m, "Tableau", "A class for representing stabilizer tableaus.");
-  tableau.def_static(
-      "from_clifford",
-      [](const py::object& clifford) {
-        if (const auto Clifford =
-                py::module::import("qiskit.quantum_info").attr("Clifford");
-            py::isinstance(clifford, Clifford)) {
-          const auto stabilizers =
-              clifford.attr("stabilizer").attr("to_labels")();
-          return cs::Tableau(py::cast<std::string>(stabilizers));
-        } else {
-          throw std::invalid_argument(
-              "The argument must be a qiskit.quantum_info.Clifford.");
-        }
-      },
-      "clifford"_a,
-      "Constructs a tableau from a :class:`qiskit.quantum_info.Clifford`.");
-  tableau.def_static(
-      "from_stabilizer_table",
-      [](const py::object& table) {
-        if (const auto StabilizerTable =
-                py::module::import("qiskit.quantum_info")
-                    .attr("StabilizerTable");
-            py::isinstance(table, StabilizerTable)) {
-          const auto stabilizers = table.attr("to_labels")();
-          return cs::Tableau(py::cast<std::string>(stabilizers));
-        } else {
-          throw std::invalid_argument(
-              "The argument must be a qiskit.quantum_info.StabilizerTable.");
-        }
-      },
-      "table"_a,
-      "Constructs a tableau from a "
-      ":class:`qiskit.quantum_info.StabilizerTable`.");
-  tableau.def_static(
-      "from_string", [](const std::string& s) { return cs::Tableau(s); },
-      "description"_a,
+  tableau.def(py::init<std::size_t>(), "n"_a,
+              "Creates a tableau for an n-qubit Clifford.");
+  tableau.def(
+      py::init<const std::string&>(), "tableau"_a,
       "Constructs a tableau from a string description. This can either be a "
       "semicolon separated binary matrix or a list of Pauli strings.");
 
