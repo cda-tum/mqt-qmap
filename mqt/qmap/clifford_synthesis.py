@@ -35,7 +35,10 @@ def _import_circuit(circuit: str | QuantumCircuit | QuantumComputation) -> Quant
 def _import_tableau(tableau: str | Clifford | PauliList | Tableau) -> Tableau:
     """Import a tableau from a string, a Clifford, a PauliList, or a Tableau."""
     if isinstance(tableau, Clifford):
-        return Tableau(str(tableau.to_labels(mode="S")))
+        try:
+            return Tableau(str(tableau.to_labels(mode="S")))
+        except AttributeError:
+            return Tableau(str(tableau.stabilizer.to_labels()))
     elif isinstance(tableau, PauliList):
         return Tableau(str(tableau.to_labels()))
     elif isinstance(tableau, str):

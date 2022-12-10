@@ -214,8 +214,7 @@ def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
 
 def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from an MQT Tableau."""
-    cliff = Clifford(bell_circuit)
-    tableau = qmap.Tableau(str(cliff.to_labels(mode="S")))
+    tableau = qmap.Tableau("['XX', 'ZZ']")
     circ, results = qmap.synthesize_clifford(target_tableau=tableau)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
@@ -229,8 +228,7 @@ def test_synthesize_from_qiskit_clifford(bell_circuit: QuantumCircuit) -> None:
 
 def test_synthesize_from_qiskit_pauli_list(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from a Qiskit PauliList."""
-    cliff = Clifford(bell_circuit)
-    pauli_list = PauliList(cliff.to_labels(mode="S"))
+    pauli_list = PauliList(["XX", "ZZ"])
     circ, results = qmap.synthesize_clifford(target_tableau=pauli_list)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
