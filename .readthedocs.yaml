@@ -8,8 +8,6 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
-  apt_packages:
-    - cmake
   jobs:
     pre_create_environment:
       - pip install "z3-solver>=4.8.15"
