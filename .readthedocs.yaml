@@ -13,6 +13,7 @@ build:
   jobs:
     pre_create_environment:
       - pip install "z3-solver>=4.8.15"
+      - python -c "import z3 as _; print(_.__path__)"
 
 sphinx:
   configuration: docs/source/conf.py
@@ -23,4 +24,3 @@ python:
       path: .
       extra_requirements:
         - docs
-  system_packages: true
