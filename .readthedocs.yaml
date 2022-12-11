@@ -9,8 +9,8 @@ build:
   tools:
     python: "3.10"
   jobs:
-    pre_install:
-      - pip install "z3-solver>=4.8.15"
+    post_install:
+      - python -m pip install "z3-solver>=4.8.15"
       - export Z3_ROOT=$(python -c "import z3 as _; print(_.__path__)") && pip install --upgrade --upgrade-strategy eager --no-cache-dir .[docs] -v
 
 sphinx:
