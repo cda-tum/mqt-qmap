@@ -7,16 +7,11 @@ submodules:
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.9"
-  apt_packages:
-    - cmake
+    python: "3.10"
+  jobs:
+    post_create_environment:
+      - pip install "z3-solver>=4.8.15"
+      - Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])"); export Z3_ROOT; pip install -e .[docs] -v
 
 sphinx:
   configuration: docs/source/conf.py
-
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
