@@ -11,15 +11,13 @@ build:
   jobs:
     pre_create_environment:
       - pip install "z3-solver>=4.8.15"
-      - python -c "import z3 as _; print(_.__path__)"
+      - echo python -c "import z3 as _; print(_.__path__[0])"
     post_create_environment:
       - pip install "z3-solver>=4.8.15"
-      - python -c "import z3 as _; print(_.__path__)"
-      - export Z3_ROOT=$(python -c "import z3 as _; print(_.__path__)") && pip install -e .[docs] -v
-    pre_install:
-      - python -c "import z3 as _; print(_.__path__)"
-    post_install:
-      - python -c "import z3 as _; print(_.__path__)"
+      - python -c "import z3 as _; print(_.__path__[0])"
+      - Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])"); echo $Z3_ROOT
+      - echo $(python -c "import z3 as _; print(_.__path__[0])")
+      - export Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])") && pip install -e .[docs] -v
 
 sphinx:
   configuration: docs/source/conf.py
