@@ -4,7 +4,6 @@ requires = [
     "setuptools_scm[toml]>=7",
     "ninja>=1.10; sys_platform != 'win32'",
     "cmake>=3.19",
-    "z3-solver>=4.8.15,<4.12.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -52,6 +51,7 @@ coverage = ["mqt.qmap[test]", "coverage[toml]>=6.3", "pytest-cov>=3"]
 docs = [
     "sphinx>=5",
     "sphinx-rtd-theme",
+    "sphinx-rtd-dark-mode",
     "sphinxcontrib-bibtex>=2.4.2",
     "sphinx-copybutton",
     "sphinx-hoverxref",
@@ -60,6 +60,7 @@ docs = [
     "ipython",
     "ipykernel",
     "nbsphinx",
+    "sphinxext-opengraph",
     "qiskit-terra[visualization]",
 ]
 dev = ["mqt.qmap[coverage, docs]"]
