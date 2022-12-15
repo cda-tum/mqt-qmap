@@ -8,7 +8,12 @@
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
 # MQT QMAP - A tool for Quantum Circuit Compilation
-
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_light.png" width="60%">
+    <img src="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_dark.png" width="60%">
+  </picture>
+  </p>
 A tool for quantum circuit compilation developed as part of the _Munich Quantum Toolkit_ (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
 It builds upon [our quantum functionality representation (QFR)](https://github.com/cda-tum/qfr).
 .
@@ -96,7 +101,3 @@ S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford C
 _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
-
-```
-
-```

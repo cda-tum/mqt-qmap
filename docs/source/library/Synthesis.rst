@@ -20,17 +20,8 @@ The following classes provide a more explicit way of initializing the respective
     .. autoclass:: TargetMetric
 
 
-    .. currentmodule:: mqt.qmap
-    .. autoclass:: SynthesisConfiguration
-
 The :code:`SynthesisConfiguration` class is used to provide several parameters to the :code:`synthesize_clifford` and the :code:`optimize_clifford` method. The following table lists the parameters and their default values.
 
-    .. autoattribute:: SynthesisConfiguration.initial_timestep_limit
-    .. autoattribute:: SynthesisConfiguration.use_maxsat
-    .. autoattribute:: SynthesisConfiguration.target_metric
-    .. autoattribute:: SynthesisConfiguration.use_symmetry_breaking
-    .. autoattribute:: SynthesisConfiguration.n_threads
-    .. autoattribute:: SynthesisConfiguration.minimize_gates_after_depth_optimization
-    .. autoattribute:: SynthesisConfiguration.try_higher_gate_limit_for_two_qubit_gate_optimization
-    .. autoattribute:: SynthesisConfiguration.gate_limit_factor
-    .. autoattribute:: SynthesisConfiguration.minimize_gates_after_two_qubit_gate_optimization
+    .. currentmodule:: mqt.qmap
+    .. autoclass:: SynthesisConfiguration
+        :members:
