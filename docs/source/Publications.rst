@@ -3,7 +3,7 @@ Publications
 
 *QMAP* is academic software. Thus, many of its built-in algorithms have been published as scientific papers.
 
-If you use *QMAP* in your work, we would appreciate if you cited :cite:labelpar:`zulehnerEfficientMethodologyMapping2019` when using the heuristic mapper and :cite:labelpar:`willeMappingQuantumCircuits2019` when using the exact mapper.
+If you use *QMAP* in your work, we would appreciate if you cited :cite:labelpar:`zulehnerEfficientMethodologyMapping2019` when using the heuristic mapper and :cite:labelpar:`willeMappingQuantumCircuits2019` when using the exact mapper, and if you use the clifford circuit synthesis tool :cite:labelpar:`schneider2023satEncodingOptimalClifford`.
 Furthermore, if you use any of the particular algorithms such as
 
 - the heuristic mapping scheme using teleportation :cite:labelpar:`hillmichExlpoitingQuantumTeleportation2021`
