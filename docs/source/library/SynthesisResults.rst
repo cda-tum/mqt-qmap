@@ -26,7 +26,7 @@ it also includes the tableau of the resulting synthesized circuit
 
     .. autoattribute:: SynthesisResults.tableau
 
-in addition it probides methods to check if the synthesis was successful or unsuccessful
+in addition it provides methods to check if the synthesis was successful or unsuccessful
 
     .. automethod:: SynthesisResults.sat
     .. automethod:: SynthesisResults.unsat
