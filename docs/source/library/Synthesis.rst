@@ -18,4 +18,3 @@ The following classes provide a more explicit way of initializing the respective
 
     .. currentmodule:: mqt.qmap
     .. autoclass:: TargetMetric
-
