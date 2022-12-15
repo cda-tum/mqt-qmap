@@ -7,13 +7,6 @@
 [![Documentation](https://img.shields.io/readthedocs/mqtqmap?logo=readthedocs&style=flat-square)](https://mqtqmap.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_light.png" width="60%">
-    <img src="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_dark.png" width="60%">
-  </picture>
-  </p>
-
 # MQT QMAP - A tool for Quantum Circuit Compilation
 
 A tool for quantum circuit compilation developed as part of the _Munich Quantum Toolkit_ (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
@@ -51,6 +44,21 @@ circ.cx(0, 2)
 circ_mapped, results = qmap.compile(circ, arch=FakeLondon())
 ```
 
+Optimizing a Clifford circuit is as easy as
+
+```python3
+from mqt import qmap
+from qiskit import QuantumCircuit
+
+circ = QuantumCircuit(2)
+circ.h(1)
+circ.cx(0, 1)
+circ.h(0)
+circ.h(1)
+
+circ_opt, results = qmap.optimize_clifford(circ)
+```
+
 **Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqtqmap.readthedocs.io/en/latest/).**
 
 ## System Requirements and Building
@@ -83,4 +91,12 @@ _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
 _arXiv:2210.09321_, 2022.
 
+[[6]](https://arxiv.org/pdf/2208.11713.pdf)
+S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
+_In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
+
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
+
+```
+
+```
