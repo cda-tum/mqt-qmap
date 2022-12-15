@@ -1,7 +1,7 @@
 Quantum Circuit Synthesis
 ===========================
 
-The main functionality for synthesizing quantum circuits is the :func:`~mqt.qmap.synthesize_clifford` and the :func:`~mqt.qmap.optimize_clifford` method.
+The main functionality for synthesizing quantum circuits is provided by the :func:`~mqt.qmap.synthesize_clifford` and the :func:`~mqt.qmap.optimize_clifford` methods.
 
 
 
