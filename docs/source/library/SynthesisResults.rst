@@ -31,6 +31,3 @@ in addition it provides methods to check if the synthesis was successful or unsu
     .. automethod:: SynthesisResults.sat
     .. automethod:: SynthesisResults.unsat
 
-In addition, the class provides methods to export to other formats.
-
-    .. automethod:: SynthesisResults.json
