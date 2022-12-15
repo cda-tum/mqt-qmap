@@ -8,3 +8,5 @@ Library
    Architecture
    MappingResults
    Subarchitectures
+   Synthesis
+   SynthesisResults
