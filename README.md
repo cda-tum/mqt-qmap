@@ -17,7 +17,6 @@
   </p>
 A tool for quantum circuit compilation developed as part of the _Munich Quantum Toolkit_ (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
 It builds upon [our quantum functionality representation (QFR)](https://github.com/cda-tum/qfr).
-.
 
 <p align="center">
   <a href="https://mqtqmap.readthedocs.io/en/latest/">
