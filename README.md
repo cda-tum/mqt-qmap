@@ -7,8 +7,6 @@
 [![Documentation](https://img.shields.io/readthedocs/mqtqmap?logo=readthedocs&style=flat-square)](https://mqtqmap.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/qmap)
 
-# MQT QMAP - A tool for Quantum Circuit Compilation
-
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_light.png" width="60%">
@@ -23,6 +21,8 @@ It builds upon [our quantum functionality representation (QFR)](https://github.c
   <img width=30% src="https://img.shields.io/badge/documentation-blue?style=for-the-badge&logo=read%20the%20docs" alt="Documentation" />
   </a>
 </p>
+
+# MQT QMAP - A tool for Quantum Circuit Compilation
 
 If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de) or by creating an issue on [GitHub](https://github.com/cda-tum/qmap/issues).
 
