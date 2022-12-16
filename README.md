@@ -13,6 +13,9 @@
     <img src="https://raw.githubusercontent.com/cda-tum/qmap/main/docs/source/_static/mqt_dark.png" width="60%">
   </picture>
   </p>
+
+# MQT QMAP - A tool for Quantum Circuit Compilation
+
 A tool for quantum circuit compilation developed as part of the _Munich Quantum Toolkit_ (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
 It builds upon [our quantum functionality representation (QFR)](https://github.com/cda-tum/qfr).
 
@@ -21,8 +24,6 @@ It builds upon [our quantum functionality representation (QFR)](https://github.c
   <img width=30% src="https://img.shields.io/badge/documentation-blue?style=for-the-badge&logo=read%20the%20docs" alt="Documentation" />
   </a>
 </p>
-
-# MQT QMAP - A tool for Quantum Circuit Compilation
 
 If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de](mailto:quantum.cda@xcit.tum.de) or by creating an issue on [GitHub](https://github.com/cda-tum/qmap/issues).
 
