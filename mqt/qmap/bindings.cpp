@@ -184,8 +184,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("lookahead", &Configuration::lookahead)
       .def_readwrite("admissible_heuristic",
                      &Configuration::admissibleHeuristic)
-      .def_readwrite("consider_fidelity",
-                     &Configuration::considerFidelity)
+      .def_readwrite("consider_fidelity", &Configuration::considerFidelity)
       .def_readwrite("lookaheads", &Configuration::nrLookaheads)
       .def_readwrite("first_lookahead_factor",
                      &Configuration::firstLookaheadFactor)

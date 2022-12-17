@@ -149,29 +149,35 @@ public:
 
       swaps.back().emplace_back(source, target, middle_anc, qc::Teleportation);
     }
-    
+
     /**
-     * @brief calculates the heuristic cost of the current mapping in the node for some given layer and writes it to `Node::costHeur`
-     * additional `Node::done` is set to true if all qubits shared by a gate in the layer are mapped next to each other
-     * 
-     * @param arch the architecture for calculating distances between physical qubits
+     * @brief calculates the heuristic cost of the current mapping in the node
+     * for some given layer and writes it to `Node::costHeur` additional
+     * `Node::done` is set to true if all qubits shared by a gate in the layer
+     * are mapped next to each other
+     *
+     * @param arch the architecture for calculating distances between physical
+     * qubits
      * @param currentLayer a vector of all gates in the current layer
-     * @param admissibleHeuristic controls if the heuristic should be calculated such that it is admissible 
-     *  (i.e. A*-search should yield the optimal solution using this heuristic)
-     * @param considerFidelity controls if the heuristic should consider fidelity data of the architecture
+     * @param admissibleHeuristic controls if the heuristic should be calculated
+     * such that it is admissible (i.e. A*-search should yield the optimal
+     * solution using this heuristic)
+     * @param considerFidelity controls if the heuristic should consider
+     * fidelity data of the architecture
      */
-    void updateHeuristicCost(const Architecture& arch, const std::vector<Gate>& currentLayer,
+    void updateHeuristicCost(const Architecture&      arch,
+                             const std::vector<Gate>& currentLayer,
                              bool admissibleHeuristic, bool considerFidelity) {
       costHeur = 0.;
-      done = true;
+      done     = true;
       for (const auto& gate : currentLayer) {
         if (gate.singleQubit())
           continue;
-        
-        auto cost = arch.distance(locations.at(gate.control), locations.at(gate.target));
+
+        auto cost          = arch.distance(locations.at(gate.control),
+                                           locations.at(gate.target));
         auto fidelity_cost = cost;
-        if(considerFidelity){
-          
+        if (considerFidelity) {
         }
         if (admissibleHeuristic) {
           costHeur = std::max(costHeur, fidelity_cost);
@@ -332,10 +338,8 @@ inline bool operator<(const HeuristicMapper::Node& x,
 
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  const auto xcost =
-      static_cast<double>(x.costFixed) + x.lookaheadPenalty;
-  const auto ycost =
-      static_cast<double>(y.costFixed) + y.lookaheadPenalty;
+  const auto xcost = static_cast<double>(x.costFixed) + x.lookaheadPenalty;
+  const auto ycost = static_cast<double>(y.costFixed) + y.lookaheadPenalty;
   if (std::abs(xcost - ycost) > 1e-6) {
     return xcost > ycost;
   }
