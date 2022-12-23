@@ -52,20 +52,20 @@ repos:
 
   # Upgrade old Python syntax
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.3.0"
+    rev: "v3.3.1"
     hooks:
       - id: pyupgrade
         args: ["--py37-plus"]
 
   # Sort includes
   - repo: https://github.com/PyCQA/isort
-    rev: "5.10.1"
+    rev: "v5.11.3"
     hooks:
       - id: isort
 
   # Run code formatting with Black
   - repo: https://github.com/psf/black
-    rev: "22.10.0" # Keep in sync with blacken-docs
+    rev: "22.12.0" # Keep in sync with blacken-docs
     hooks:
       - id: black-jupyter
 
@@ -75,7 +75,7 @@ repos:
     hooks:
       - id: blacken-docs
         additional_dependencies:
-          - black==22.10.0 # keep in sync with black hook
+          - black==22.12.0 # keep in sync with black hook
 
   # Check for common mistakes
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -121,7 +121,7 @@ repos:
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v15.0.4"
+    rev: "v15.0.6"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
