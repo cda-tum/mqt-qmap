@@ -76,6 +76,12 @@ if(TARGET ${PROJECT_NAME}_exact_lib)
 endif()
 
 if(TARGET ${PROJECT_NAME}_cliffordsynthesis_lib)
-  package_add_test(${PROJECT_NAME}_cliffordsynthesis_test cliffordsynthesis
-                   ${CMAKE_CURRENT_SOURCE_DIR}/test_tableau.cpp)
+  configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
+                 ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json COPYONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/circuits.json
+                 ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/circuits.json COPYONLY)
+  package_add_test(
+    ${PROJECT_NAME}_cliffordsynthesis_test cliffordsynthesis
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_tableau.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/test_synthesis.cpp)
 endif()

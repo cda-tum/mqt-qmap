@@ -18,7 +18,6 @@
 
 A tool for quantum circuit compilation developed as part of the _Munich Quantum Toolkit_ (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
 It builds upon [our quantum functionality representation (QFR)](https://github.com/cda-tum/qfr).
-.
 
 <p align="center">
   <a href="https://mqtqmap.readthedocs.io/en/latest/">
@@ -49,6 +48,21 @@ circ.cx(0, 1)
 circ.cx(0, 2)
 
 circ_mapped, results = qmap.compile(circ, arch=FakeLondon())
+```
+
+Optimizing a Clifford circuit is as easy as
+
+```python3
+from mqt import qmap
+from qiskit import QuantumCircuit
+
+circ = QuantumCircuit(2)
+circ.h(1)
+circ.cx(0, 1)
+circ.h(0)
+circ.h(1)
+
+circ_opt, results = qmap.optimize_clifford(circ)
 ```
 
 **Detailed documentation on all available methods, options, and input formats is available at [ReadTheDocs](https://mqtqmap.readthedocs.io/en/latest/).**
@@ -82,5 +96,9 @@ _In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 [[5]](https://arxiv.org/pdf/2210.09321.pdf)
 T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
 _arXiv:2210.09321_, 2022.
+
+[[6]](https://arxiv.org/pdf/2208.11713.pdf)
+S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
+_In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
