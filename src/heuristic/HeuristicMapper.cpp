@@ -353,17 +353,7 @@ void HeuristicMapper::mapUnmappedGates(
     } else if (targetLocation == DEFAULT_POSITION) {
       mapToMinDistance(gate.control, gate.target);
     }
-    // TODO: use HeuristicMapper::Node::updateHeuristicCost instead to have
-    // heuristic function implementation isolated to one place
-    node.costHeur = std::max(
-        node.costHeur,
-        distanceOnArchitectureOfLogicalQubits(gate.control, gate.target));
   }
-
-  // if all considered qubit pairs are mapped next to each other, the mapping is
-  // done (at most separated by 1 edge possibly directed in the wrong direction
-  // requiring 1 reversing gate)
-  node.done = node.costHeur <= COST_DIRECTION_REVERSE;
 }
 
 void HeuristicMapper::mapToMinDistance(unsigned short source,
@@ -395,6 +385,9 @@ HeuristicMapper::Node HeuristicMapper::AstarMap(long layer) {
 
   node.locations = locations;
   node.qubits    = qubits;
+  node.updateHeuristicCost(architecture, layers.at(layer),
+                           results.config.admissibleHeuristic,
+                           results.config.considerFidelity);
 
   nodes.push(node);
 
@@ -507,17 +500,10 @@ void HeuristicMapper::expand_node_add_one_swap(const Edge& swap, Node& node,
     new_node.costFixed = node.costFixed + COST_TELEPORTATION;
     new_node.applyTeleportation(swap, architecture);
   }
-  new_node.costTotal = new_node.costFixed;
-  new_node.done      = true;
 
-  for (const auto& gate : currentLayer) {
-    if (gate.singleQubit())
-      continue;
-
-    new_node.updateHeuristicCost(architecture, gate,
-                                 config.admissibleHeuristic);
-    new_node.checkUnfinished(architecture, gate);
-  }
+  new_node.updateHeuristicCost(architecture, currentLayer,
+                               results.config.admissibleHeuristic,
+                               results.config.considerFidelity);
 
   // calculate heuristics for the cost of the following layers
   if (config.lookahead) {
@@ -555,7 +541,7 @@ void HeuristicMapper::lookahead(long layer, HeuristicMapper::Node& node) {
                                     j, node.locations.at(gate.target)));
           }
         }
-        penalty = heuristicCost(penalty, min);
+        penalty = heuristicAddition(penalty, min);
       } else if (loc2 == DEFAULT_POSITION) {
         auto min = std::numeric_limits<double>::max();
         for (int j = 0; j < architecture.getNqubits(); ++j) {
@@ -565,11 +551,11 @@ void HeuristicMapper::lookahead(long layer, HeuristicMapper::Node& node) {
                                     node.locations.at(gate.control), j));
           }
         }
-        penalty = heuristicCost(penalty, min);
+        penalty = heuristicAddition(penalty, min);
       } else {
         auto cost = architecture.distance(node.locations.at(gate.control),
                                           node.locations.at(gate.target));
-        penalty   = heuristicCost(penalty, cost);
+        penalty   = heuristicAddition(penalty, cost);
       }
     }
 

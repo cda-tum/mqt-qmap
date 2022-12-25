@@ -111,6 +111,7 @@ class CommanderGrouping:
 class Configuration:
     add_measurements_to_mapped_circuit: bool
     admissible_heuristic: bool
+    consider_fidelity: bool
     commander_grouping: CommanderGrouping
     enable_limits: bool
     encoding: Encoding

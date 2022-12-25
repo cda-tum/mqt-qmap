@@ -33,7 +33,6 @@ public:
     /** heuristic cost expected for future swaps needed in later circuit layers
      * (further layers contribute less) */
     double lookaheadPenalty = 0.;
-    double costTotal        = 0.;
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `qubits[physical_qubit] = logical_qubit`
@@ -151,25 +150,42 @@ public:
       swaps.back().emplace_back(source, target, middle_anc, qc::Teleportation);
     }
 
-    void updateHeuristicCost(const Architecture& arch, const Gate& gate,
-                             bool admissibleHeuristic) {
-      auto cost =
-          arch.distance(locations.at(gate.control), locations.at(gate.target));
-      if (admissibleHeuristic) {
-        costHeur = std::max(costHeur, cost);
-      } else {
-        costHeur += cost;
-      }
-    }
-
     /**
-     * @brief checks if the qubits of the given gate are mapped next to each
-     * other. If not, set `done` to false
+     * @brief calculates the heuristic cost of the current mapping in the node
+     * for some given layer and writes it to `Node::costHeur` additional
+     * `Node::done` is set to true if all qubits shared by a gate in the layer
+     * are mapped next to each other
+     *
+     * @param arch the architecture for calculating distances between physical
+     * qubits
+     * @param currentLayer a vector of all gates in the current layer
+     * @param admissibleHeuristic controls if the heuristic should be calculated
+     * such that it is admissible (i.e. A*-search should yield the optimal
+     * solution using this heuristic)
+     * @param considerFidelity controls if the heuristic should consider
+     * fidelity data of the architecture
      */
-    void checkUnfinished(const Architecture& arch, const Gate& gate) {
-      if (arch.distance(locations.at(gate.control), locations.at(gate.target)) >
-          COST_DIRECTION_REVERSE) {
-        done = false;
+    void updateHeuristicCost(const Architecture&      arch,
+                             const std::vector<Gate>& currentLayer,
+                             bool admissibleHeuristic, bool considerFidelity) {
+      costHeur = 0.;
+      done     = true;
+      for (const auto& gate : currentLayer) {
+        if (gate.singleQubit())
+          continue;
+
+        auto cost          = arch.distance(locations.at(gate.control),
+                                           locations.at(gate.target));
+        auto fidelity_cost = cost;
+        if (admissibleHeuristic) {
+          costHeur = std::max(costHeur, fidelity_cost);
+        } else {
+          costHeur += fidelity_cost;
+        }
+        if (cost > COST_DIRECTION_REVERSE) {
+          done = false;
+          return;
+        }
       }
     }
 
@@ -179,7 +195,6 @@ public:
       out << "\t\"cost\": {\n";
       out << "\t\t\"fixed\": " << costFixed << ",\n";
       out << "\t\t\"heuristic\": " << costHeur << ",\n";
-      out << "\t\t\"total\": " << costTotal << ",\n";
       out << "\t\t\"lookahead_penalty\": " << lookaheadPenalty << "\n";
       out << "\t},\n";
       out << "\t\"nswaps\": " << nswaps << "\n}\n";
@@ -243,7 +258,6 @@ protected:
    * Additionally sets the fields `costHeur` (maximum distance between any 2
    * qubits which share a gate) and `done` (all qubit considered pairs are
    * mapped next to each other) in the current search node.
-   *
    * @param layer index of the circuit layer to consider
    * @param node current AStar search node
    * @param consideredQubits vector in which to gather all relevant qubits of
@@ -296,9 +310,7 @@ protected:
    */
   void lookahead(long layer, Node& node);
 
-  // TODO: also use in `HeuristicMapper::mapUnmappedGates` and
-  // `HeuristicMapper::Node::updateHeuristicCost`
-  double heuristicCost(double currentCost, double newCost) {
+  double heuristicAddition(double currentCost, double newCost) {
     if (results.config.admissibleHeuristic) {
       return std::max(currentCost, newCost);
     } else {
@@ -323,10 +335,8 @@ inline bool operator<(const HeuristicMapper::Node& x,
 
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  const auto xcost =
-      x.costTotal + static_cast<double>(x.costFixed) + x.lookaheadPenalty;
-  const auto ycost =
-      y.costTotal + static_cast<double>(y.costFixed) + y.lookaheadPenalty;
+  const auto xcost = static_cast<double>(x.costFixed) + x.lookaheadPenalty;
+  const auto ycost = static_cast<double>(y.costFixed) + y.lookaheadPenalty;
   if (std::abs(xcost - ycost) > 1e-6) {
     return xcost > ycost;
   }
