@@ -177,8 +177,6 @@ public:
         auto cost          = arch.distance(locations.at(gate.control),
                                            locations.at(gate.target));
         auto fidelity_cost = cost;
-        if (considerFidelity) {
-        }
         if (admissibleHeuristic) {
           costHeur = std::max(costHeur, fidelity_cost);
         } else {
@@ -260,7 +258,6 @@ protected:
    * Additionally sets the fields `costHeur` (maximum distance between any 2
    * qubits which share a gate) and `done` (all qubit considered pairs are
    * mapped next to each other) in the current search node.
-   *heuristic specified
    * @param layer index of the circuit layer to consider
    * @param node current AStar search node
    * @param consideredQubits vector in which to gather all relevant qubits of
