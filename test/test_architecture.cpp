@@ -11,8 +11,6 @@ class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
   std::string test_architecture_dir = "./architectures/";
   std::string test_calibration_dir  = "./calibration/";
-
-  void SetUp() override { using namespace dd::literals; }
 };
 
 INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,

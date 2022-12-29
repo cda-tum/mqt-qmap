@@ -58,9 +58,9 @@ void HeuristicMapper::map(const Configuration& ms) {
           } else if (swap.op == qc::Teleportation) {
             qcMapped.emplace_back<qc::StandardOperation>(
                 qcMapped.getNqubits(),
-                qc::Targets{static_cast<dd::Qubit>(swap.first),
-                            static_cast<dd::Qubit>(swap.second),
-                            static_cast<dd::Qubit>(swap.middle_ancilla)},
+                qc::Targets{static_cast<qc::Qubit>(swap.first),
+                            static_cast<qc::Qubit>(swap.second),
+                            static_cast<qc::Qubit>(swap.middle_ancilla)},
                 qc::Teleportation);
             results.output.teleportations++;
           }
@@ -107,7 +107,7 @@ void HeuristicMapper::map(const Configuration& ms) {
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
           qcMapped.x(reverse.second,
-                     dd::Control{static_cast<dd::Qubit>(reverse.first)});
+                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
           qcMapped.h(reverse.second);
           qcMapped.h(reverse.first);
 
@@ -115,7 +115,7 @@ void HeuristicMapper::map(const Configuration& ms) {
           gateidx += 5;
         } else {
           qcMapped.x(cnot.second,
-                     dd::Control{static_cast<dd::Qubit>(cnot.first)});
+                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
           gateidx++;
         }
       }
@@ -127,8 +127,8 @@ void HeuristicMapper::map(const Configuration& ms) {
   std::size_t count = 0U;
   for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
     if (qubits[i] != -1) {
-      qcMapped.outputPermutation[static_cast<dd::Qubit>(i)] =
-          static_cast<dd::Qubit>(qubits[i]);
+      qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
+          static_cast<qc::Qubit>(qubits[i]);
     } else {
       qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
       ++count;
@@ -171,10 +171,10 @@ void HeuristicMapper::map(const Configuration& ms) {
             ++loc;
           }
           locations.at(target) = loc;
-          op->setTargets({static_cast<dd::Qubit>(loc)});
+          op->setTargets({static_cast<qc::Qubit>(loc)});
           qcMapped.initialLayout.at(target) = loc;
         } else {
-          op->setTargets({static_cast<dd::Qubit>(targetLocation)});
+          op->setTargets({static_cast<qc::Qubit>(targetLocation)});
         }
       }
     }

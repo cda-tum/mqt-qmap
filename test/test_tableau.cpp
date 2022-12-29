@@ -228,7 +228,7 @@ TEST_F(TestTableau, BellState) {
 }
 
 TEST_F(TestTableau, CircuitTranslation) {
-  using namespace dd::literals;
+  using namespace qc::literals;
 
   qc::QuantumComputation qc(2U);
   qc.x(0);
@@ -253,7 +253,7 @@ TEST_F(TestTableau, CircuitTranslation) {
 }
 
 TEST_F(TestTableau, UnsupportedOperations) {
-  using namespace dd::literals;
+  using namespace qc::literals;
 
   qc::QuantumComputation qc(3U);
 

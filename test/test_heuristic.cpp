@@ -43,7 +43,7 @@ TEST(Functionality, EmptyDump) {
 }
 
 TEST(Functionality, NoMeasurmentsAdded) {
-  using namespace dd::literals;
+  using namespace qc::literals;
   // construct circuit
   qc::QuantumComputation qc{4U};
   qc.x(1, 0_pc);
@@ -67,8 +67,8 @@ TEST(Functionality, NoMeasurmentsAdded) {
   // get the resulting circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper.dumpResult(qasm, qc::OpenQASM);
-  qcMapped.import(qasm, qc::OpenQASM);
+  mapper.dumpResult(qasm, qc::Format::OpenQASM);
+  qcMapped.import(qasm, qc::Format::OpenQASM);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 3U);
@@ -232,9 +232,9 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
-  settings.initialLayout = InitialLayout::Dynamic;
-  settings.teleportationQubits =
-      std::min((arch.getNqubits() - qc.getNqubits()) & ~1u, 8u);
+  settings.initialLayout       = InitialLayout::Dynamic;
+  settings.teleportationQubits = std::min(
+      (arch.getNqubits() - qc.getNqubits()) & ~1u, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());
   tokyo_mapper->map(settings);
   tokyo_mapper->dumpResult(std::get<1>(GetParam()) +
