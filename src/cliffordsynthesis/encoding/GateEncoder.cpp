@@ -129,7 +129,7 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
         continue;
       }
       const auto control =
-          dd::Control{static_cast<dd::Qubit>(ctrl), dd::Control::Type::pos};
+          qc::Control{static_cast<qc::Qubit>(ctrl), qc::Control::Type::Pos};
       if (model.getBoolValue(twoQubitGates[ctrl][trgt], lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, control, trgt, qc::OpType::X);
         ++nTwoQubitGates;

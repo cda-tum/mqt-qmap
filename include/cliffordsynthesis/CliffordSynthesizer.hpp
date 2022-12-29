@@ -44,7 +44,7 @@ public:
     std::stringstream ss;
     ss << results.getResultCircuit();
     resultCircuit = std::make_unique<qc::QuantumComputation>();
-    resultCircuit->import(ss, qc::OpenQASM);
+    resultCircuit->import(ss, qc::Format::OpenQASM);
     return *resultCircuit;
   };
   [[nodiscard]] Tableau& getResultTableau() {

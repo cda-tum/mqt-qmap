@@ -184,9 +184,9 @@ public:
     std::transform(extension.begin(), extension.end(), extension.begin(),
                    [](unsigned char c) { return ::tolower(c); });
     if (extension == "real") {
-      dumpResult(outputFilename, qc::Real);
+      dumpResult(outputFilename, qc::Format::Real);
     } else if (extension == "qasm") {
-      dumpResult(outputFilename, qc::OpenQASM);
+      dumpResult(outputFilename, qc::Format::OpenQASM);
     } else {
       throw QMAPException("[dump] Extension " + extension +
                           " not recognized/supported for dumping.");

@@ -24,7 +24,7 @@ protected:
   std::unique_ptr<ExactMapper> IBM_QX4_mapper;
 
   void SetUp() override {
-    using namespace dd::literals;
+    using namespace qc::literals;
 
     if (::testing::UnitTest::GetInstance()
             ->current_test_info()
@@ -389,7 +389,7 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
   qc.x(1);
   IBM_QX4_mapper = std::make_unique<ExactMapper>(qc, IBM_QX4);
   IBM_QX4_mapper->map(settings);
-  IBM_QX4_mapper->dumpResult(std::cout, qc::OpenQASM);
+  IBM_QX4_mapper->dumpResult(std::cout, qc::Format::OpenQASM);
   SUCCEED() << "Mapping successful";
 }
 
@@ -403,10 +403,10 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
   mapper.map(settings);
 
   std::ostringstream oss{};
-  mapper.dumpResult(oss, qc::OpenQASM);
+  mapper.dumpResult(oss, qc::Format::OpenQASM);
   auto               qcMapped = qc::QuantumComputation();
   std::istringstream iss{oss.str()};
-  qcMapped.import(iss, qc::OpenQASM);
+  qcMapped.import(iss, qc::Format::OpenQASM);
   std::cout << qcMapped << std::endl;
   EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
   EXPECT_EQ(qcMapped.initialLayout[0], 3);
@@ -424,7 +424,7 @@ TEST_F(ExactTest, WCNF) {
 }
 
 TEST_F(ExactTest, WCNF_not_available) {
-  using namespace dd::literals;
+  using namespace qc::literals;
 
   settings.verbose     = false;
   settings.includeWCNF = true;
@@ -499,8 +499,8 @@ TEST_F(ExactTest, NoMeasurmentsAdded) {
   // get the resulting circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  IBMQ_London_mapper->dumpResult(qasm, qc::OpenQASM);
-  qcMapped.import(qasm, qc::OpenQASM);
+  IBMQ_London_mapper->dumpResult(qasm, qc::Format::OpenQASM);
+  qcMapped.import(qasm, qc::Format::OpenQASM);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 4U);

@@ -42,7 +42,8 @@ MappingResults map(const py::object& circ, Architecture& arch,
 
   if (config.useTeleportation) {
     config.teleportationQubits =
-        std::min((arch.getNqubits() - qc.getNqubits()) & ~1, 8);
+        std::min((arch.getNqubits() - qc.getNqubits()) & ~1,
+                 static_cast<std::size_t>(8));
   }
 
   std::unique_ptr<Mapper> mapper;
@@ -69,7 +70,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
   auto& results = mapper->getResults();
 
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::OpenQASM);
+  mapper->dumpResult(qasm, qc::Format::OpenQASM);
   results.mappedCircuit = qasm.str();
 
   return results;

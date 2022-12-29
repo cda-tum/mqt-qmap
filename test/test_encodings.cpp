@@ -37,7 +37,7 @@ INSTANTIATE_TEST_SUITE_P(
                     std::pair{Encoding::Bimander, CommanderGrouping::Fixed3}));
 
 TEST_P(TestEncodings, ThreeToSevenQubits) {
-  using namespace dd::literals;
+  using namespace qc::literals;
 
   qc = qc::QuantumComputation(3U);
   qc.x(2, 1_pc);
@@ -59,7 +59,7 @@ TEST_P(TestEncodings, ThreeToSevenQubits) {
 }
 
 TEST_P(TestEncodings, FiveToSevenQubits) {
-  using namespace dd::literals;
+  using namespace qc::literals;
 
   qc = qc::QuantumComputation(5U);
   qc.x(1, 0_pc);

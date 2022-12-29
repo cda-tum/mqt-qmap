@@ -66,7 +66,7 @@ protected:
     if (!test.initialCircuit.empty()) {
       std::stringstream      ss(test.initialCircuit);
       qc::QuantumComputation qc{};
-      qc.import(ss, qc::OpenQASM);
+      qc.import(ss, qc::Format::OpenQASM);
       std::cout << "Initial circuit:\n" << qc;
       targetTableau = Tableau(qc);
       if (test.initialTableau.empty()) {

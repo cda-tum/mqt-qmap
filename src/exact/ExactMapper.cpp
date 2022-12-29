@@ -259,10 +259,10 @@ void ExactMapper::map(const Configuration& settings) {
       for (const auto& [physical, logical] : *swapsIterator) {
         locations.at(logical) = static_cast<short>(physical);
         qubits.at(physical)   = static_cast<short>(logical);
-        qcMapped.initialLayout[static_cast<dd::Qubit>(physical)] =
-            static_cast<dd::Qubit>(logical);
-        qcMapped.outputPermutation[static_cast<dd::Qubit>(physical)] =
-            static_cast<dd::Qubit>(logical);
+        qcMapped.initialLayout[static_cast<qc::Qubit>(physical)] =
+            static_cast<qc::Qubit>(logical);
+        qcMapped.outputPermutation[static_cast<qc::Qubit>(physical)] =
+            static_cast<qc::Qubit>(logical);
       }
 
       // place remaining architecture qubits
@@ -317,7 +317,7 @@ void ExactMapper::map(const Configuration& settings) {
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
           qcMapped.x(reverse.second,
-                     dd::Control{static_cast<dd::Qubit>(reverse.first)});
+                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
           qcMapped.h(reverse.second);
           qcMapped.h(reverse.first);
         } else {
@@ -327,7 +327,7 @@ void ExactMapper::map(const Configuration& settings) {
                       << " " << cnot.second << std::endl;
           }
           qcMapped.x(cnot.second,
-                     dd::Control{static_cast<dd::Qubit>(cnot.first)});
+                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
         }
       }
     }
