@@ -12,9 +12,6 @@
 
 #pragma once
 
-#define UNUSED(x)                                                              \
-  { (void)x; }
-
 constexpr int    MAX_QUEUE_SIZE               = 6000000;
 constexpr int    MAX_NODES_MARGIN             = 500000;
 constexpr int    MAX_QUEUE_COPY_LENGTH        = 1000000;
@@ -61,9 +58,8 @@ public:
       CleanObsoleteElement()(*(insertionPair.first));
       membership.erase(insertionPair.first);
 
-      const auto inserted = membership.insert(v);
+      [[maybe_unused]] const auto inserted = membership.insert(v);
       assert(inserted.second);
-      UNUSED(inserted);
 
       queue = OwnPriorityQueue<T, std::vector<T>, CostCompare>();
       for (const auto& element : membership) {
@@ -82,11 +78,9 @@ public:
   void pop() {
     assert(!queue.empty() && queue.size() == membership.size());
 
-    const auto& topElement   = queue.top();
-    const auto  numberErased = membership.erase(topElement);
-
+    const auto&                 topElement   = queue.top();
+    [[maybe_unused]] const auto numberErased = membership.erase(topElement);
     assert(numberErased == 1);
-    UNUSED(numberErased);
 
     queue.pop();
     assert(queue.size() == membership.size());

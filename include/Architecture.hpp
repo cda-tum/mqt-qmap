@@ -208,7 +208,7 @@ public:
   void loadProperties(std::istream& is);
   void loadProperties(std::istream&& is);
   void loadProperties(const std::string& filename);
-  void loadProperties(const Properties& properties);
+  void loadProperties(const Properties& props);
 
   Architecture() = default;
   explicit Architecture(const std::string& cmFilename) {
@@ -221,7 +221,7 @@ public:
 
   Architecture(std::uint16_t nQ, const CouplingMap& couplingMap);
   Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
-               const Properties& properties);
+               const Properties& props);
 
   [[nodiscard]] std::uint16_t getNqubits() const { return nqubits; }
   void                        setNqubits(std::uint16_t nQ) { nqubits = nQ; }
@@ -233,7 +233,8 @@ public:
     return couplingMap;
   }
   [[nodiscard]] CouplingMap& getCouplingMap() { return couplingMap; }
-  void                       setCouplingMap(const CouplingMap& cm) {
+
+  void setCouplingMap(const CouplingMap& cm) {
     couplingMap = cm;
     createDistanceTable();
   }
@@ -246,8 +247,10 @@ public:
   [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
-  [[nodiscard]] Properties&       getProperties() { return properties; }
-  void                            setProperties(const Properties& props) {
+
+  [[nodiscard]] Properties& getProperties() { return properties; }
+
+  void setProperties(const Properties& props) {
     properties = props;
     createFidelityTable();
   }
@@ -323,13 +326,13 @@ public:
   getCouplingLimit(const std::set<std::uint16_t>& qubitChoice) const;
 
   void getHighestFidelityCouplingMap(std::uint16_t subsetSize,
-                                     CouplingMap&  couplingMap) const;
+                                     CouplingMap&  reducedMap) const;
   [[nodiscard]] std::vector<QubitSubset>
        getAllConnectedSubsets(std::uint16_t subsetSize) const;
   void getReducedCouplingMaps(std::uint16_t             subsetSize,
                               std::vector<CouplingMap>& couplingMaps) const;
   void getReducedCouplingMap(const QubitSubset& qubitChoice,
-                             CouplingMap&       couplingMap) const;
+                             CouplingMap&       reducedMap) const;
   [[nodiscard]] static double
   getAverageArchitectureFidelity(const CouplingMap& cm,
                                  const QubitSubset& qubitChoice,

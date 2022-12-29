@@ -162,7 +162,8 @@ protected:
   virtual void postMappingOptimizations(const Configuration& config);
 
 public:
-  Mapper(const qc::QuantumComputation& qc, Architecture& architecture);
+  Mapper(const qc::QuantumComputation& quantumComputation,
+         Architecture&                 architecture);
   virtual ~Mapper() = default;
 
   /**

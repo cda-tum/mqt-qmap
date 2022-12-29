@@ -402,8 +402,8 @@ void ExactMapper::coreMappingRoutine(
   std::unordered_set<std::uint64_t> skippedPi{};
   std::unordered_map<std::uint16_t, std::uint16_t> physicalQubitIndex{};
   std::uint16_t                                    qIdx = 0;
-  for (const auto& Q : qubitChoice) {
-    physicalQubitIndex[Q] = qIdx;
+  for (const auto& qubit : qubitChoice) {
+    physicalQubitIndex[qubit] = qIdx;
     ++qIdx;
   }
 
@@ -435,11 +435,11 @@ void ExactMapper::coreMappingRoutine(
   std::stringstream xName{};
   for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
     x.emplace_back();
-    for (auto Q : qubitChoice) {
+    for (auto qubit : qubitChoice) {
       x.back().emplace_back();
       for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
         xName.str("");
-        xName << "x_" << k << '_' << Q << '_' << q;
+        xName << "x_" << k << '_' << qubit << '_' << q;
         x.back().back().emplace_back(
             lb->makeVariable(xName.str(), CType::BOOL));
       }
@@ -761,7 +761,7 @@ number of variables: (|L|-1) * m!
   lb->produceInstance();
   const auto res = lb->solve();
   if (Result::SAT == res) {
-    const auto m          = lb->getModel();
+    auto* const m         = lb->getModel();
     choiceResults.timeout = results.timeout = false;
 
     // quickly determine cost

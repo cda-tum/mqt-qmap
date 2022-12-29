@@ -183,12 +183,14 @@ void Architecture::loadProperties(const Properties& props) {
   createFidelityTable();
 }
 
-Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap) {
+Architecture::Architecture(const std::uint16_t nQ,
+                           const CouplingMap&  couplingMap) {
   loadCouplingMap(nQ, couplingMap);
 }
 
-Architecture::Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
-                           const Properties& props)
+Architecture::Architecture(const std::uint16_t nQ,
+                           const CouplingMap&  couplingMap,
+                           const Properties&   props)
     : Architecture(nQ, couplingMap) {
   loadProperties(props);
 }

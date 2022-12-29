@@ -54,13 +54,13 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // Once a valid upper bound is found, the SAT problem is solved again with
   // the objective function encoded.
   switch (config.target) {
-  case TargetMetric::GATES:
+  case TargetMetric::Gates:
     gateOptimalSynthesis(encoderConfig, lower, upper);
     break;
-  case TargetMetric::DEPTH:
+  case TargetMetric::Depth:
     depthOptimalSynthesis(encoderConfig, lower, upper);
     break;
-  case TargetMetric::TWO_QUBIT_GATES:
+  case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
     break;
   }
@@ -129,10 +129,10 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     }
   }
 
-  if (config.targetMetric == TargetMetric::GATES ||
-      config.targetMetric == TargetMetric::TWO_QUBIT_GATES) {
+  if (config.targetMetric == TargetMetric::Gates ||
+      config.targetMetric == TargetMetric::TwoQubitGates) {
     upperBound = std::min(upperBound, results.getGates());
-  } else if (config.targetMetric == TargetMetric::DEPTH) {
+  } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
   }
 
@@ -204,7 +204,7 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
          << " and " << results.getGates()
          << " gate(s). Trying to minimize the number of gates.";
 
-  config.targetMetric         = TargetMetric::GATES;
+  config.targetMetric         = TargetMetric::Gates;
   config.timestepLimit        = results.getDepth();
   config.useMultiGateEncoding = true;
   config.useMaxSAT            = configuration.useMaxSAT;
@@ -279,7 +279,7 @@ void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
          << results.getTwoQubitGates() << " two-qubit gates and at most "
          << gateCount << " gates.";
 
-  config.targetMetric         = TargetMetric::TWO_QUBIT_GATES;
+  config.targetMetric         = TargetMetric::TwoQubitGates;
   config.timestepLimit        = gateCount;
   config.useMultiGateEncoding = false;
   config.useMaxSAT            = true;
@@ -307,7 +307,7 @@ void CliffordSynthesizer::minimizeGatesFixedTwoQubitGateCount(
          << results.getGates()
          << " gate(s) overall. Trying to minimize the number of gates.";
 
-  config.targetMetric         = TargetMetric::GATES;
+  config.targetMetric         = TargetMetric::Gates;
   config.timestepLimit        = results.getGates();
   config.useMultiGateEncoding = false;
   config.useMaxSAT            = configuration.useMaxSAT;
@@ -350,21 +350,21 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   }
 
   switch (config.target) {
-  case TargetMetric::GATES:
+  case TargetMetric::Gates:
     if ((newResults.getGates() < currentResults.getGates()) ||
         ((newResults.getGates() == currentResults.getGates()) &&
          (newResults.getTwoQubitGates() < currentResults.getTwoQubitGates()))) {
       currentResults = newResults;
     }
     break;
-  case TargetMetric::TWO_QUBIT_GATES:
+  case TargetMetric::TwoQubitGates:
     if ((newResults.getTwoQubitGates() < currentResults.getTwoQubitGates()) ||
         ((newResults.getTwoQubitGates() == currentResults.getTwoQubitGates()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }
     break;
-  case TargetMetric::DEPTH:
+  case TargetMetric::Depth:
     if ((newResults.getDepth() < currentResults.getDepth()) ||
         ((newResults.getDepth() == currentResults.getDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {

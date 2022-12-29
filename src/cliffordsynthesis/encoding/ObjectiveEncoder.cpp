@@ -50,13 +50,13 @@ void ObjectiveEncoder::optimizeDepth(bool includeSingleQubitGates) const {
 
 void ObjectiveEncoder::optimizeMetric(TargetMetric targetMetric) const {
   switch (targetMetric) {
-  case TargetMetric::GATES:
+  case TargetMetric::Gates:
     optimizeGateCount();
     break;
-  case TargetMetric::TWO_QUBIT_GATES:
+  case TargetMetric::TwoQubitGates:
     optimizeGateCount(false);
     break;
-  case TargetMetric::DEPTH:
+  case TargetMetric::Depth:
     optimizeDepth();
     break;
   default:

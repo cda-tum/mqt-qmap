@@ -18,9 +18,9 @@ namespace cs::encoding {
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-              TableauEncoder::Variables*                    tvars,
-              const std::shared_ptr<logicbase::LogicBlock>& lb)
-      : N(nQubits), T(timestepLimit), tvars(tvars), lb(lb) {}
+              TableauEncoder::Variables*             tvars,
+              std::shared_ptr<logicbase::LogicBlock> lb)
+      : N(nQubits), T(timestepLimit), tvars(tvars), lb(std::move(lb)) {}
   virtual ~GateEncoder() = default;
 
   struct Variables {
@@ -60,7 +60,7 @@ public:
   [[nodiscard]] static constexpr std::size_t
   gateToIndex(const qc::OpType type) {
     for (std::size_t i = 0; i < SINGLE_QUBIT_GATES.size(); ++i) {
-      if (SINGLE_QUBIT_GATES[i] == type) {
+      if (SINGLE_QUBIT_GATES.at(i) == type) {
         return i;
       }
     }
@@ -69,9 +69,9 @@ public:
 
 protected:
   // number of qubits N
-  std::size_t N{};
+  std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
-  std::size_t T{};
+  std::size_t T{}; // NOLINT (readability-identifier-naming)
 
   // the gate variables
   Variables vars{};

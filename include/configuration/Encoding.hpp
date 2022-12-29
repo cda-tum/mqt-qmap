@@ -9,7 +9,7 @@
 
 enum class Encoding { Naive, Commander, Bimander };
 
-static std::string toString(const Encoding encoding) {
+[[maybe_unused]] static inline std::string toString(const Encoding encoding) {
   switch (encoding) {
   case Encoding::Naive:
     return "naive";
@@ -25,11 +25,12 @@ static std::string toString(const Encoding encoding) {
 encodingFromString(const std::string& encoding) {
   if (encoding == "naive" || encoding == "0") {
     return Encoding::Naive;
-  } else if (encoding == "commander" || encoding == "1") {
-    return Encoding::Commander;
-  } else if (encoding == "bimander" || encoding == "2") {
-    return Encoding::Bimander;
-  } else {
-    throw std::invalid_argument("Invalid encoding value: " + encoding);
   }
+  if (encoding == "commander" || encoding == "1") {
+    return Encoding::Commander;
+  }
+  if (encoding == "bimander" || encoding == "2") {
+    return Encoding::Bimander;
+  }
+  throw std::invalid_argument("Invalid encoding value: " + encoding);
 }

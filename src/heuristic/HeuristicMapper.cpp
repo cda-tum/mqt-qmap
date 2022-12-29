@@ -7,8 +7,8 @@
 
 #include <chrono>
 
-void HeuristicMapper::map(const Configuration& ms) {
-  results.config = ms;
+void HeuristicMapper::map(const Configuration& configuration) {
+  results.config = configuration;
   auto& config   = results.config;
   if (config.layering == Layering::OddGates ||
       config.layering == Layering::QubitTriangle) {
@@ -127,9 +127,9 @@ void HeuristicMapper::map(const Configuration& ms) {
   qcMapped.outputPermutation.clear();
   std::size_t count = 0U;
   for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
-    if (qubits[i] != -1) {
+    if (qubits.at(i) != -1) {
       qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
-          static_cast<qc::Qubit>(qubits[i]);
+          static_cast<qc::Qubit>(qubits.at(i));
     } else {
       qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
       ++count;
@@ -258,11 +258,12 @@ void HeuristicMapper::createInitialMapping() {
         auto it = std::begin(architecture.getCouplingMap());
         std::advance(it, dis(mt));
         e = *it;
-      } while (qubits[e.first] != -1 || qubits[e.second] != -1);
-      locations[qc.getNqubits() + i]     = static_cast<std::int16_t>(e.first);
-      locations[qc.getNqubits() + i + 1] = static_cast<std::int16_t>(e.second);
-      qubits[e.first]  = static_cast<std::int16_t>(qc.getNqubits() + i);
-      qubits[e.second] = static_cast<std::int16_t>(qc.getNqubits() + i + 1);
+      } while (qubits.at(e.first) != -1 || qubits.at(e.second) != -1);
+      locations.at(qc.getNqubits() + i) = static_cast<std::int16_t>(e.first);
+      locations.at(qc.getNqubits() + i + 1) =
+          static_cast<std::int16_t>(e.second);
+      qubits.at(e.first)  = static_cast<std::int16_t>(qc.getNqubits() + i);
+      qubits.at(e.second) = static_cast<std::int16_t>(qc.getNqubits() + i + 1);
     }
 
     if (config.teleportationFake) {
@@ -425,35 +426,35 @@ void HeuristicMapper::expandNode(
   architecture.getTeleportationQubits().clear();
   for (std::size_t i = 0; i < results.config.teleportationQubits; i += 2) {
     architecture.getTeleportationQubits().emplace_back(
-        node.locations[qc.getNqubits() + i],
-        node.locations[qc.getNqubits() + i + 1]);
+        node.locations.at(qc.getNqubits() + i),
+        node.locations.at(qc.getNqubits() + i + 1));
     Edge e;
     for (auto const& g : architecture.getCouplingMap()) {
-      if (g.first == node.locations[qc.getNqubits() + i] &&
-          g.second != node.locations[qc.getNqubits() + i + 1]) {
+      if (g.first == node.locations.at(qc.getNqubits() + i) &&
+          g.second != node.locations.at(qc.getNqubits() + i + 1)) {
         e.first  = g.second;
-        e.second = node.locations[qc.getNqubits() + i + 1];
+        e.second = node.locations.at(qc.getNqubits() + i + 1);
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
-      if (g.second == node.locations[qc.getNqubits() + i] &&
-          g.first != node.locations[qc.getNqubits() + i + 1]) {
+      if (g.second == node.locations.at(qc.getNqubits() + i) &&
+          g.first != node.locations.at(qc.getNqubits() + i + 1)) {
         e.first  = g.first;
-        e.second = node.locations[qc.getNqubits() + i + 1];
+        e.second = node.locations.at(qc.getNqubits() + i + 1);
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
-      if (g.first == node.locations[qc.getNqubits() + i + 1] &&
-          g.second != node.locations[qc.getNqubits() + i]) {
+      if (g.first == node.locations.at(qc.getNqubits() + i + 1) &&
+          g.second != node.locations.at(qc.getNqubits() + i)) {
         e.first  = g.second;
-        e.second = node.locations[qc.getNqubits() + i];
+        e.second = node.locations.at(qc.getNqubits() + i);
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
-      if (g.second == node.locations[qc.getNqubits() + i + 1] &&
-          g.first != node.locations[qc.getNqubits() + i]) {
+      if (g.second == node.locations.at(qc.getNqubits() + i + 1) &&
+          g.first != node.locations.at(qc.getNqubits() + i)) {
         e.first  = g.first;
-        e.second = node.locations[qc.getNqubits() + i];
+        e.second = node.locations.at(qc.getNqubits() + i);
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }

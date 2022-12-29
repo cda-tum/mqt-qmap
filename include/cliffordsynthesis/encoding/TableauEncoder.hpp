@@ -18,8 +18,8 @@ class TableauEncoder {
 public:
   TableauEncoder() = default;
   TableauEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                 const std::shared_ptr<logicbase::LogicBlock>& lb)
-      : N(nQubits), T(timestepLimit), lb(lb) {}
+                 std::shared_ptr<logicbase::LogicBlock> lb)
+      : N(nQubits), T(timestepLimit), lb(std::move(lb)) {}
 
   struct Variables {
     // variables for the X parts of the tableaus
@@ -63,9 +63,9 @@ public:
 
 protected:
   // number of qubits N
-  std::size_t N{};
+  std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
-  std::size_t T{};
+  std::size_t T{}; // NOLINT (readability-identifier-naming)
 
   // the tableau variables
   Variables vars{};

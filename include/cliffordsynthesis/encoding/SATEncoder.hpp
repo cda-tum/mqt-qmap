@@ -36,7 +36,7 @@ public:
     std::size_t timestepLimit{};
 
     // the metric to optimize
-    TargetMetric targetMetric = TargetMetric::GATES;
+    TargetMetric targetMetric = TargetMetric::Gates;
 
     // whether to use MaxSAT or Binary Search
     bool useMaxSAT = false;
@@ -81,9 +81,9 @@ protected:
   Configuration config{};
 
   // number of qubits N
-  std::size_t N{};
+  std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
-  std::size_t T{};
+  std::size_t T{}; // NOLINT (readability-identifier-naming)
 };
 
 } // namespace cs::encoding

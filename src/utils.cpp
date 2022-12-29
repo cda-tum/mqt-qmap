@@ -117,22 +117,28 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
   }
 }
 
-std::vector<QubitSubset> subsets(const QubitSubset& input, int length,
+std::vector<QubitSubset> subsets(const QubitSubset&     input,
+                                 const std::size_t      size,
                                  const filter_function& filter) {
   const std::size_t        n = input.size();
   std::vector<QubitSubset> result{};
 
-  if (length == 0) {
+  if (size == 0) {
     throw std::invalid_argument("Length of subset must be greater than 0");
   }
 
-  if (length == 1) {
+  if (size > n) {
+    throw std::invalid_argument("Length of subset must be less than or equal "
+                                "to the size of the input set");
+  }
+
+  if (size == 1) {
     for (const auto& item : input) {
       result.emplace_back();
       result.back().emplace(item);
     }
   } else {
-    std::size_t i = (1U << length) - 1U;
+    std::size_t i = (1U << size) - 1U;
 
     while ((i >> n) == 0U) {
       std::set<std::uint16_t> v{};

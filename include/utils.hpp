@@ -53,7 +53,8 @@ public:
 /// Computes n! recursively
 /// \param n integer to compute factorial of
 /// \return n!
-static constexpr std::uint64_t factorial(const std::uint64_t n) {
+// NOLINTNEXTLINE (clang-diagnostic-unneeded-internal-declaration)
+static inline constexpr std::uint64_t factorial(const std::uint64_t n) {
   if (n == 1) {
     return 1;
   }
@@ -71,7 +72,7 @@ public:
     double cost                = -1.;
   };
 
-  static void buildTable(std::uint16_t n, const CouplingMap& graph,
+  static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix& distanceTable,
                          const std::function<double(const Node&)>& cost);
 
@@ -147,7 +148,7 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
          const CouplingMap& rcm);
 
 using filter_function = std::function<bool(const QubitSubset&)>;
-std::vector<QubitSubset> subsets(const QubitSubset& input, int size,
+std::vector<QubitSubset> subsets(const QubitSubset& input, std::size_t size,
                                  const filter_function& filter = nullptr);
 
 void        parseLine(const std::string& line, char separator,

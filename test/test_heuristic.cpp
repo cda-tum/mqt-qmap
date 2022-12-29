@@ -21,7 +21,7 @@ protected:
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
-    ibmqYorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
+    ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
@@ -51,7 +51,7 @@ TEST(Functionality, NoMeasurmentsAdded) {
 
   // load architecture
   Architecture arch{};
-  arch.loadCouplingMap(AvailableArchitecture::IBMQ_London);
+  arch.loadCouplingMap(AvailableArchitecture::IbmqLondon);
 
   // create heuristic mapper
   HeuristicMapper mapper(qc, arch);
@@ -134,7 +134,7 @@ protected:
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
-    ibmQX5.loadCouplingMap(AvailableArchitecture::IBM_QX5);
+    ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
     ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
   }
 };
@@ -170,7 +170,7 @@ protected:
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
-    arch.loadCouplingMap(AvailableArchitecture::IBMQ_Tokyo);
+    arch.loadCouplingMap(AvailableArchitecture::IbmqTokyo);
     tokyoMapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
 };
@@ -208,7 +208,7 @@ protected:
 
   void SetUp() override {
     qc.import(testExampleDir + std::get<1>(GetParam()) + ".qasm");
-    arch.loadCouplingMap(AvailableArchitecture::IBMQ_Tokyo);
+    arch.loadCouplingMap(AvailableArchitecture::IbmqTokyo);
     tokyoMapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
 };

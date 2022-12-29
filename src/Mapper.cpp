@@ -206,7 +206,7 @@ void Mapper::placeRemainingArchitectureQubits() {
       }
 
       assert(physical.has_value());
-      qubits.at(*physical) = static_cast<short>(logical);
+      qubits.at(*physical) = static_cast<std::int16_t>(logical);
 
       // mark architecture qubit as ancillary and garbage
       qcMapped.initialLayout[*physical] = static_cast<qc::Qubit>(logical);

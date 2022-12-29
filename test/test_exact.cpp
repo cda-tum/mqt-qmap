@@ -36,10 +36,10 @@ protected:
       qc.x(1, 2_pc);
       qc.x(2, 0_pc);
     }
-    ibmqYorktown.loadCouplingMap(AvailableArchitecture::IBMQ_Yorktown);
+    ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
-    ibmQX4.loadCouplingMap(AvailableArchitecture::IBM_QX4);
+    ibmQX4.loadCouplingMap(AvailableArchitecture::IbmQx4);
 
     ibmqYorktownMapper = std::make_unique<ExactMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<ExactMapper>(qc, ibmqLondon);
@@ -416,7 +416,7 @@ TEST_F(ExactTest, WCNF) {
   EXPECT_TRUE(!wcnf.empty());
 }
 
-TEST_F(ExactTest, WCNF_not_available) {
+TEST_F(ExactTest, WCNFNotAvailable) {
   using namespace qc::literals;
 
   settings.verbose     = false;
@@ -468,9 +468,9 @@ TEST_F(ExactTest, MapToSubgraphNotConnected) {
 }
 TEST_F(ExactTest, CommanderEncodingRigettiArch) {
   Architecture aspen;
-  aspen.loadCouplingMap(AvailableArchitecture::Rigetti_Aspen);
+  aspen.loadCouplingMap(AvailableArchitecture::RigettiAspen);
   Architecture agave;
-  agave.loadCouplingMap(AvailableArchitecture::Rigetti_Agave);
+  agave.loadCouplingMap(AvailableArchitecture::RigettiAgave);
 
   auto aspenMapper = ExactMapper(qc, aspen);
   auto agaveMapper = ExactMapper(qc, agave);

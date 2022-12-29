@@ -18,7 +18,7 @@ public:
    * @param config the settings for this mapping run (controls e.g. layering
    * methods, pre- and post-optimizations, etc.)
    */
-  void map(const Configuration& config) override;
+  void map(const Configuration& configuration) override;
 
   /**
    * @brief struct representing one node in the A* search containing info about
@@ -317,8 +317,8 @@ protected:
 
 inline bool operator<(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  auto itx = x.qubits.begin();
-  auto ity = y.qubits.begin();
+  auto itx = x.qubits.begin(); // NOLINT (readability-qualified-auto)
+  auto ity = y.qubits.begin(); // NOLINT (readability-qualified-auto)
   while (itx != x.qubits.end() && ity != y.qubits.end()) {
     if (*itx != *ity) {
       return *itx < *ity;

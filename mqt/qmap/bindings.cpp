@@ -81,23 +81,23 @@ PYBIND11_MODULE(pyqmap, m) {
 
   // Pre-defined architecture available within QMAP
   py::enum_<AvailableArchitecture>(m, "Arch")
-      .value("IBM_QX4", AvailableArchitecture::IBM_QX4,
+      .value("IBM_QX4", AvailableArchitecture::IbmQx4,
              "5 qubit, directed bow tie layout")
-      .value("IBM_QX5", AvailableArchitecture::IBM_QX5,
+      .value("IBM_QX5", AvailableArchitecture::IbmQx5,
              "16 qubit, directed ladder layout")
-      .value("IBMQ_Yorktown", AvailableArchitecture::IBMQ_Yorktown,
+      .value("IBMQ_Yorktown", AvailableArchitecture::IbmqYorktown,
              "5 qubit, undirected bow tie layout")
-      .value("IBMQ_London", AvailableArchitecture::IBMQ_London,
+      .value("IBMQ_London", AvailableArchitecture::IbmqLondon,
              "5 qubit, undirected T-shape layout")
-      .value("IBMQ_Bogota", AvailableArchitecture::IBMQ_Bogota,
+      .value("IBMQ_Bogota", AvailableArchitecture::IbmqBogota,
              "5 qubit, undirected linear chain layout")
-      .value("IBMQ_Casablanca", AvailableArchitecture::IBMQ_Casablanca,
+      .value("IBMQ_Casablanca", AvailableArchitecture::IbmqCasablanca,
              "7 qubit, undirected H-shape layout")
-      .value("IBMQ_Tokyo", AvailableArchitecture::IBMQ_Tokyo,
+      .value("IBMQ_Tokyo", AvailableArchitecture::IbmqTokyo,
              "20 qubit, undirected brick-like layout")
-      .value("Rigetti_Agave", AvailableArchitecture::Rigetti_Agave,
+      .value("Rigetti_Agave", AvailableArchitecture::RigettiAgave,
              "8 qubit, undirected ring layout")
-      .value("Rigetti_Aspen", AvailableArchitecture::Rigetti_Aspen,
+      .value("Rigetti_Aspen", AvailableArchitecture::RigettiAspen,
              "16 qubit, undirected dumbbell layout")
       .export_values()
       // allow construction from string
@@ -375,10 +375,10 @@ PYBIND11_MODULE(pyqmap, m) {
 
   // Target metric for the Clifford synthesizer
   py::enum_<cs::TargetMetric>(m, "TargetMetric")
-      .value("gates", cs::TargetMetric::GATES, "Optimize gate count.")
-      .value("two_qubit_gates", cs::TargetMetric::TWO_QUBIT_GATES,
+      .value("gates", cs::TargetMetric::Gates, "Optimize gate count.")
+      .value("two_qubit_gates", cs::TargetMetric::TwoQubitGates,
              "Optimize two-qubit gate count.")
-      .value("depth", cs::TargetMetric::DEPTH, "Optimize circuit depth.")
+      .value("depth", cs::TargetMetric::Depth, "Optimize circuit depth.")
       .export_values()
       .def(py::init([](const std::string& name) {
         return cs::targetMetricFromString(name);

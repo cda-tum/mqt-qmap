@@ -9,15 +9,15 @@
 #include <string>
 
 namespace cs {
-enum class TargetMetric { GATES, TWO_QUBIT_GATES, DEPTH };
+enum class TargetMetric { Gates, TwoQubitGates, Depth };
 
-static std::string toString(const TargetMetric target) {
+[[maybe_unused]] static inline std::string toString(const TargetMetric target) {
   switch (target) {
-  case TargetMetric::GATES:
+  case TargetMetric::Gates:
     return "gates";
-  case TargetMetric::TWO_QUBIT_GATES:
+  case TargetMetric::TwoQubitGates:
     return "two_qubit_gates";
-  case TargetMetric::DEPTH:
+  case TargetMetric::Depth:
     return "depth";
   }
   return "Error";
@@ -26,14 +26,14 @@ static std::string toString(const TargetMetric target) {
 [[maybe_unused]] static TargetMetric
 targetMetricFromString(const std::string& target) {
   if (target == "gates") {
-    return TargetMetric::GATES;
+    return TargetMetric::Gates;
   }
   if (target == "two_qubit_gates") {
-    return TargetMetric::TWO_QUBIT_GATES;
+    return TargetMetric::TwoQubitGates;
   }
   if (target == "depth") {
-    return TargetMetric::DEPTH;
+    return TargetMetric::Depth;
   }
-  return TargetMetric::GATES;
+  return TargetMetric::Gates;
 }
 } // namespace cs

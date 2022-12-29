@@ -43,7 +43,7 @@ TEST_P(TestEncodings, ThreeToSevenQubits) {
   qc.x(2, 1_pc);
   qc.x(1, 0_pc);
 
-  arch.loadCouplingMap(AvailableArchitecture::IBMQ_Casablanca);
+  arch.loadCouplingMap(AvailableArchitecture::IbmqCasablanca);
 
   mapper = std::make_unique<ExactMapper>(qc, arch);
 
@@ -67,7 +67,7 @@ TEST_P(TestEncodings, FiveToSevenQubits) {
   qc.x(3, 0_pc);
   qc.x(4, 0_pc);
 
-  arch.loadCouplingMap(AvailableArchitecture::IBMQ_Casablanca);
+  arch.loadCouplingMap(AvailableArchitecture::IbmqCasablanca);
 
   mapper = std::make_unique<ExactMapper>(qc, arch);
 
