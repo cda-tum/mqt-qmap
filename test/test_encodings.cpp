@@ -10,9 +10,9 @@
 class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
-  std::string test_example_dir      = "./examples/";
-  std::string test_architecture_dir = "./architectures/";
-  std::string test_calibration_dir  = "./calibration/";
+  std::string testExampleDir      = "./examples/";
+  std::string testArchitectureDir = "./architectures/";
+  std::string testCalibrationDir  = "./calibration/";
 
   qc::QuantumComputation       qc{};
   Configuration                settings{};

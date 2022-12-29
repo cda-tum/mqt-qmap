@@ -43,7 +43,7 @@ TEST(General, LoadCalibrationDataNonexistentFile) {
 }
 
 TEST(General, TestLineParsing) {
-  std::string line = "Entry1;Entry2;\"EscapedEntry1;EscapedEntry2\";Entry3";
+  const std::string line = "Entry1;Entry2;\"EscapedEntry1;EscapedEntry2\";Entry3";
 
   std::vector<std::string> data{};
   parseLine(line, ';', {'\"'}, {'\\'}, data);
