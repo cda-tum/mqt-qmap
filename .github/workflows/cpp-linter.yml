@@ -2,14 +2,13 @@ name: cpp-linter
 
 on:
   pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -17,13 +16,11 @@ env:
 
 jobs:
   cpp-linter:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Installing boost
-        run: sudo apt-get install -y libboost-program-options-dev
       - name: Install Z3
         uses: cda-tum/setup-z3@v1
         with:
