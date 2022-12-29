@@ -27,7 +27,7 @@ struct Configuration {
   bool verbose = false;
 
   // map to particular subgraph of architecture (in exact mapper)
-  std::set<unsigned short> subgraph{};
+  std::set<std::uint16_t> subgraph{};
 
   // how to cluster the gates into layers
   Layering layering = Layering::None;
@@ -36,21 +36,21 @@ struct Configuration {
   InitialLayout initialLayout = InitialLayout::None;
 
   // lookahead scheme settings
-  bool   lookahead            = true;
-  bool   admissibleHeuristic  = true;
-  bool   considerFidelity     = true;
-  int    nrLookaheads         = 15;
-  double firstLookaheadFactor = 0.75;
-  double lookaheadFactor      = 0.5;
+  bool        lookahead            = true;
+  bool        admissibleHeuristic  = true;
+  bool        considerFidelity     = true;
+  std::size_t nrLookaheads         = 15;
+  double      firstLookaheadFactor = 0.75;
+  double      lookaheadFactor      = 0.5;
 
   // teleportation settings
-  bool               useTeleportation    = false;
-  int                teleportationQubits = 0;
-  unsigned long long teleportationSeed   = 0;
-  bool               teleportationFake   = false;
+  bool          useTeleportation    = false;
+  int           teleportationQubits = 0;
+  std::uint64_t teleportationSeed   = 0;
+  bool          teleportationFake   = false;
 
   // timeout merely affects exact mapper
-  unsigned int timeout = 3600000; // 60min timeout
+  std::size_t timeout = 3600000; // 60min timeout
 
   // encoding of at most and exactly one constraints in exact mapper
   Encoding          encoding          = Encoding::Naive;
@@ -65,7 +65,7 @@ struct Configuration {
   // limit the number of considered swaps
   bool          enableSwapLimits = true;
   SwapReduction swapReduction    = SwapReduction::CouplingLimit;
-  int           swapLimit        = 0;
+  std::size_t   swapLimit        = 0;
   bool          useBDD           = false;
 
   [[nodiscard]] nlohmann::json json() const {
@@ -123,5 +123,5 @@ struct Configuration {
   }
   [[nodiscard]] std::string toString() const { return json().dump(2); }
 
-  void setTimeout(unsigned int sec) { timeout = sec; }
+  void setTimeout(const std::size_t sec) { timeout = sec; }
 };

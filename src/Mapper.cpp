@@ -14,7 +14,7 @@ void Mapper::initResults() {
   results.architecture  = architecture.getName();
   results.output.name   = qc.getName() + "_mapped";
   results.output.qubits = architecture.getNqubits();
-  results.output.gates  = std::numeric_limits<unsigned long>::max();
+  results.output.gates  = std::numeric_limits<std::size_t>::max();
   qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
@@ -32,11 +32,11 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
 }
 
 void Mapper::createLayers() {
-  const auto&                          config = results.config;
-  std::array<short, MAX_DEVICE_QUBITS> lastLayer{};
+  const auto&                                config = results.config;
+  std::array<std::size_t, MAX_DEVICE_QUBITS> lastLayer{};
   lastLayer.fill(DEFAULT_POSITION);
 
-  auto qubitsInLayer = std::set<unsigned short>{};
+  auto qubitsInLayer = std::set<std::uint16_t>{};
 
   bool even = true;
   for (auto& gate : qc) {
@@ -57,14 +57,15 @@ void Mapper::createLayers() {
                           "decomposed to the appropriate gate set!");
     }
 
-    bool  singleQubit = gate->getControls().empty();
-    short control     = -1;
+    const bool   singleQubit = gate->getControls().empty();
+    std::int16_t control     = -1;
     if (!singleQubit) {
-      control = static_cast<short>(
+      control = static_cast<std::int16_t>(
           qc.initialLayout.at((*gate->getControls().begin()).qubit));
     }
-    unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
-    size_t         layer  = 0;
+    const auto target = static_cast<std::uint16_t>(
+        qc.initialLayout.at(gate->getTargets().at(0)));
+    std::size_t layer = 0;
 
     // methods of layering described in
     // https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
@@ -141,7 +142,7 @@ std::size_t Mapper::getNextLayer(std::size_t idx) {
     }
     next++;
   }
-  return -1;
+  return std::numeric_limits<std::size_t>::max();
 }
 
 void Mapper::finalizeMappedCircuit() {

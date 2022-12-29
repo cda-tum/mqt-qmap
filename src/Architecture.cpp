@@ -86,16 +86,18 @@ void Architecture::loadProperties(std::istream& is) {
 }
 
 void Architecture::loadProperties(const std::string& filename) {
-  size_t slash = filename.find_last_of('/');
-  size_t dot   = filename.find_last_of('.');
+  const std::size_t slash = filename.find_last_of('/');
+  const std::size_t dot   = filename.find_last_of('.');
   properties.setName(filename.substr(slash + 1, dot - slash - 1));
-  if (!isArchitectureAvailable())
+  if (!isArchitectureAvailable()) {
     name = properties.getName();
+  }
   auto ifs = std::ifstream(filename);
-  if (ifs.good())
+  if (ifs.good()) {
     this->loadProperties(ifs);
-  else
+  } else {
     throw QMAPException("Error opening properties file.");
+  }
 }
 
 void Architecture::loadProperties(std::istream&& is) {
@@ -107,18 +109,16 @@ void Architecture::loadProperties(std::istream&& is) {
   double averageCNOTFidelity = 0.0;
   int    numCNOTFidelities   = 0;
 
-  std::string line;
-  std::string word;
-  std::regex  regexDoubleFidelity = std::regex(
+  std::string      line;
+  const std::regex regexDoubleFidelity = std::regex(
       R"(((\d+).?(\d+):\W*?(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)))");
   std::smatch sMatch;
   std::getline(is, line); // skip first line
   // load edges
   std::uint16_t qubitNumber = 0U;
   while (std::getline(is, line)) {
-    std::stringstream        ss(line);
     std::vector<std::string> data{};
-    parse_line(line, ',', {'\"'}, {'\\'}, data);
+    parseLine(line, ',', {'\"'}, {'\\'}, data);
     properties.t1Time.set(qubitNumber, std::stod(data.at(1U)));
     properties.t2Time.set(qubitNumber, std::stod(data.at(2U)));
     properties.qubitFrequency.set(qubitNumber, std::stod(data.at(3U)));
@@ -207,11 +207,11 @@ void Architecture::createDistanceTable() {
   }
 
   if (isBidirectional) {
-    Dijkstra::build_table(nqubits, couplingMap, distanceTable,
-                          Architecture::cost_heuristic_bidirectional);
+    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
+                         Architecture::costHeuristicBidirectional);
   } else {
-    Dijkstra::build_table(nqubits, couplingMap, distanceTable,
-                          Architecture::cost_heuristic_unidirectional);
+    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
+                         Architecture::costHeuristicUnidirectional);
   }
 }
 
@@ -238,7 +238,7 @@ void Architecture::createFidelityTable() {
 std::uint64_t
 Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
                                    std::int64_t                limit) {
-  bool tryToAbortEarly = (limit != -1);
+  const bool tryToAbortEarly = (limit != -1);
 
   // consolidate used qubits
   QubitSubset qubits{};
@@ -291,7 +291,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
   queue.push(start);
 
   while (!queue.empty()) {
-    Node current = queue.top();
+    const Node current = queue.top();
     queue.pop();
 
     // in case no solution has been found using less than `limit` swaps, search
@@ -386,7 +386,7 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
   queue.push(start);
 
   while (!queue.empty()) {
-    Node current = queue.top();
+    const Node current = queue.top();
     queue.pop();
 
     for (const auto& swap : possibleSwaps) {
@@ -428,7 +428,8 @@ Architecture::getCouplingLimit(const QubitSubset& qubitChoice) const {
   return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
 }
 
-std::uint64_t Architecture::bfs(std::uint16_t start, std::uint16_t goal,
+std::uint64_t Architecture::bfs(const std::uint16_t   start,
+                                const std::uint16_t   goal,
                                 const std::set<Edge>& teleportations) const {
   std::queue<std::vector<int>> queue;
   std::vector<int>             v;
@@ -481,7 +482,7 @@ std::uint64_t Architecture::bfs(std::uint16_t start, std::uint16_t goal,
   // TODO: different weight if this contains a teleportation
   for (const auto& s : solutions) {
     for (std::size_t j = 0; j < s.size() - 1; j++) {
-      Edge e{s[j], s[j + 1]};
+      const Edge e{s[j], s[j + 1]};
       if (getCouplingMap().find(e) != getCouplingMap().end()) {
         return (length - 2) * 7;
       }
@@ -595,10 +596,9 @@ void Architecture::getHighestFidelityCouplingMap(
   auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
   for (const auto& qubitChoice : allConnectedSubsets) {
-    double      currentFidelity{};
     CouplingMap map{};
     getReducedCouplingMap(qubitChoice, map);
-    currentFidelity =
+    const auto currentFidelity =
         getAverageArchitectureFidelity(map, qubitChoice, properties);
     if (currentFidelity > bestFidelity) {
       reducedMap   = map;

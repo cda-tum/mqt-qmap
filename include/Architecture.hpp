@@ -22,15 +22,15 @@ constexpr std::uint8_t GATES_OF_UNIDIRECTIONAL_SWAP = 7U;
 constexpr std::uint8_t GATES_OF_DIRECTION_REVERSE   = 4U;
 constexpr std::uint8_t GATES_OF_TELEPORTATION       = 7U;
 
-constexpr int COST_SINGLE_QUBIT_GATE = 1;
-constexpr int COST_CNOT_GATE         = 10;
-constexpr int COST_MEASUREMENT       = 10;
-constexpr int COST_UNIDIRECTIONAL_SWAP =
+constexpr std::uint32_t COST_SINGLE_QUBIT_GATE = 1;
+constexpr std::uint32_t COST_CNOT_GATE         = 10;
+constexpr std::uint32_t COST_MEASUREMENT       = 10;
+constexpr std::uint32_t COST_UNIDIRECTIONAL_SWAP =
     3 * COST_CNOT_GATE + 4 * COST_SINGLE_QUBIT_GATE;
-constexpr int COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
-constexpr int COST_TELEPORTATION =
+constexpr std::uint32_t COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
+constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
-constexpr int COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
+constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 class Architecture {
   static constexpr bool VERBOSE = false;
@@ -211,13 +211,12 @@ public:
   void loadProperties(const Properties& properties);
 
   Architecture() = default;
-  explicit Architecture(const std::string& cm_filename) {
-    loadCouplingMap(cm_filename);
+  explicit Architecture(const std::string& cmFilename) {
+    loadCouplingMap(cmFilename);
   }
-  Architecture(const std::string& cm_filename,
-               const std::string& props_filename)
-      : Architecture(cm_filename) {
-    loadProperties(props_filename);
+  Architecture(const std::string& cmFilename, const std::string& propsFilename)
+      : Architecture(cmFilename) {
+    loadProperties(propsFilename);
   }
 
   Architecture(std::uint16_t nQ, const CouplingMap& couplingMap);
@@ -239,7 +238,7 @@ public:
     createDistanceTable();
   }
 
-  CouplingMap& getCurrentTeleportations() { return current_teleportations; }
+  CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
   std::vector<std::pair<std::int16_t, std::int16_t>>& getTeleportationQubits() {
     return teleportationQubits;
   }
@@ -281,11 +280,10 @@ public:
 
   [[nodiscard]] double distance(std::uint16_t control,
                                 std::uint16_t target) const {
-    if (current_teleportations.empty()) {
+    if (currentTeleportations.empty()) {
       return distanceTable.at(control).at(target);
-    } else {
-      return static_cast<double>(bfs(control, target, current_teleportations));
     }
+    return static_cast<double>(bfs(control, target, currentTeleportations));
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -350,12 +348,12 @@ public:
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
 protected:
-  std::string   name;
-  std::uint16_t nqubits                = 0;
-  CouplingMap   couplingMap            = {};
-  CouplingMap   current_teleportations = {};
-  bool          isBidirectional        = true;
-  Matrix        distanceTable          = {};
+  std::string                                        name;
+  std::uint16_t                                      nqubits               = 0;
+  CouplingMap                                        couplingMap           = {};
+  CouplingMap                                        currentTeleportations = {};
+  bool                                               isBidirectional = true;
+  Matrix                                             distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties            = {};
   Matrix                                             fidelityTable         = {};
@@ -364,23 +362,21 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double cost_heuristic_bidirectional(const Dijkstra::Node& node) {
+  static double costHeuristicBidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
-    if (node.contains_correct_edge) {
+    if (node.containsCorrectEdge) {
       return length * COST_BIDIRECTIONAL_SWAP;
-    } else {
-      throw QMAPException("In a bidrectional architecture it should not happen "
-                          "that a node does not contain the right edge.");
     }
+    throw QMAPException("In a bidrectional architecture it should not happen "
+                        "that a node does not contain the right edge.");
   }
 
-  static double cost_heuristic_unidirectional(const Dijkstra::Node& node) {
+  static double costHeuristicUnidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
-    if (node.contains_correct_edge) {
+    if (node.containsCorrectEdge) {
       return length * COST_UNIDIRECTIONAL_SWAP;
-    } else {
-      return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
     }
+    return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
   }
 
   // added for teleportation

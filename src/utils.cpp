@@ -5,19 +5,19 @@
 
 #include <utils.hpp>
 
-void Dijkstra::build_table(std::uint16_t n, const CouplingMap& couplingMap,
-                           Matrix& distanceTable,
-                           const std::function<double(const Node&)>& cost) {
+void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
+                          Matrix& distanceTable,
+                          const std::function<double(const Node&)>& cost) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
   for (std::uint16_t i = 0; i < n; ++i) {
     std::vector<Dijkstra::Node> nodes(n);
     for (std::uint16_t j = 0; j < n; ++j) {
-      nodes.at(j).contains_correct_edge = false;
-      nodes.at(j).visited               = false;
-      nodes.at(j).pos                   = j;
-      nodes.at(j).cost                  = -1.;
+      nodes.at(j).containsCorrectEdge = false;
+      nodes.at(j).visited             = false;
+      nodes.at(j).pos                 = j;
+      nodes.at(j).cost                = -1.;
     }
 
     nodes.at(i).cost = 0.;
@@ -31,7 +31,7 @@ void Dijkstra::build_table(std::uint16_t n, const CouplingMap& couplingMap,
       std::cout << std::endl;
     }
 
-    for (int j = 0; j < n; ++j) {
+    for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
         distanceTable.at(i).at(j) = 0;
       } else {
@@ -52,13 +52,13 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
     auto pos = current->pos;
 
     for (const auto& edge : couplingMap) {
-      short to          = -1;
-      bool  correctEdge = false;
+      std::int16_t to          = -1;
+      bool         correctEdge = false;
       if (pos == edge.first) {
-        to          = edge.second;
+        to          = static_cast<std::int16_t>(edge.second);
         correctEdge = true;
       } else if (pos == edge.second) {
-        to = edge.first;
+        to = static_cast<std::int16_t>(edge.first);
       }
       if (to != -1) {
         if (nodes.at(to).visited) {
@@ -66,9 +66,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         }
 
         Node newNode;
-        newNode.cost                  = current->cost + 1.0;
-        newNode.pos                   = to;
-        newNode.contains_correct_edge = correctEdge;
+        newNode.cost                = current->cost + 1.0;
+        newNode.pos                 = to;
+        newNode.containsCorrectEdge = correctEdge;
         if (nodes.at(to).cost < 0 || newNode < nodes.at(to)) {
           nodes.at(to) = newNode;
           queue.push(&nodes.at(to));
@@ -119,7 +119,7 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
 
 std::vector<QubitSubset> subsets(const QubitSubset& input, int length,
                                  const filter_function& filter) {
-  std::size_t              n = input.size();
+  const std::size_t        n = input.size();
   std::vector<QubitSubset> result{};
 
   if (length == 0) {
@@ -164,10 +164,10 @@ std::vector<QubitSubset> subsets(const QubitSubset& input, int length,
   return result;
 }
 
-void parse_line(const std::string& line, char separator,
-                const std::set<char>&     escapeChars,
-                const std::set<char>&     ignoredChars,
-                std::vector<std::string>& result) {
+void parseLine(const std::string& line, char separator,
+               const std::set<char>&     escapeChars,
+               const std::set<char>&     ignoredChars,
+               std::vector<std::string>& result) {
   result.clear();
   std::string word;
   bool        inEscape = false;

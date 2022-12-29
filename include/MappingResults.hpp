@@ -15,17 +15,17 @@
 struct MappingResults {
   struct CircuitInfo {
     // general info
-    std::string    name{};
-    unsigned short qubits           = 0;
-    unsigned long  gates            = 0;
-    unsigned long  singleQubitGates = 0;
-    unsigned long  cnots            = 0;
-    unsigned long  layers           = 0;
+    std::string   name{};
+    std::uint16_t qubits           = 0;
+    std::size_t   gates            = 0;
+    std::size_t   singleQubitGates = 0;
+    std::size_t   cnots            = 0;
+    std::size_t   layers           = 0;
 
     // info in output circuit
-    unsigned long swaps            = 0;
-    unsigned long directionReverse = 0;
-    unsigned long teleportations   = 0;
+    std::size_t swaps            = 0;
+    std::size_t directionReverse = 0;
+    std::size_t teleportations   = 0;
   };
 
   CircuitInfo input{};
@@ -56,21 +56,22 @@ struct MappingResults {
 
   [[nodiscard]] virtual nlohmann::json json() const {
     nlohmann::json resultJSON{};
-    auto&          circuit        = resultJSON["circuit"];
+
+    auto& circuit                 = resultJSON["circuit"];
     circuit["name"]               = input.name;
     circuit["qubits"]             = input.qubits;
     circuit["gates"]              = input.gates;
     circuit["single_qubit_gates"] = input.singleQubitGates;
     circuit["cnots"]              = input.cnots;
 
-    auto& mapped_circuit                 = resultJSON["mapped_circuit"];
-    mapped_circuit["name"]               = output.name;
-    mapped_circuit["qubits"]             = output.qubits;
-    mapped_circuit["gates"]              = output.gates;
-    mapped_circuit["single_qubit_gates"] = output.singleQubitGates;
-    mapped_circuit["cnots"]              = output.cnots;
+    auto& mappedCirc                 = resultJSON["mapped_circuit"];
+    mappedCirc["name"]               = output.name;
+    mappedCirc["qubits"]             = output.qubits;
+    mappedCirc["gates"]              = output.gates;
+    mappedCirc["single_qubit_gates"] = output.singleQubitGates;
+    mappedCirc["cnots"]              = output.cnots;
     if (!mappedCircuit.empty()) {
-      mapped_circuit["qasm"] = mappedCircuit;
+      mappedCirc["qasm"] = mappedCircuit;
     }
 
     resultJSON["config"] = config.json();
@@ -89,7 +90,9 @@ struct MappingResults {
     } else if (config.method == Method::Heuristic) {
       stats["teleportations"] = output.teleportations;
     }
-    stats["additional_gates"] = static_cast<long>(output.gates) - input.gates;
+    stats["additional_gates"] =
+        static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -
+        input.gates;
 
     return resultJSON;
   }

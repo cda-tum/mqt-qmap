@@ -24,17 +24,18 @@ using CouplingMap = std::set<Edge>;
 using QubitSubset = std::set<std::uint16_t>;
 
 struct Exchange {
-  Exchange(unsigned short first, unsigned short second, qc::OpType op)
+  Exchange(const std::uint16_t first, const std::uint16_t second,
+           const qc::OpType op)
       : first(first), second(second),
-        middle_ancilla(std::numeric_limits<decltype(middle_ancilla)>::max()),
+        middleAncilla(std::numeric_limits<decltype(middleAncilla)>::max()),
         op(op) {}
-  Exchange(unsigned short first, unsigned short second,
-           unsigned short middle_anc, qc::OpType op)
-      : first(first), second(second), middle_ancilla(middle_anc), op(op) {}
-  unsigned short first;
-  unsigned short second;
-  unsigned short middle_ancilla;
-  qc::OpType     op;
+  Exchange(const std::uint16_t first, const std::uint16_t second,
+           const std::uint16_t middleAnc, const qc::OpType op)
+      : first(first), second(second), middleAncilla(middleAnc), op(op) {}
+  std::uint16_t first;
+  std::uint16_t second;
+  std::uint16_t middleAncilla;
+  qc::OpType    op;
 };
 
 class QMAPException : public std::runtime_error {
@@ -52,11 +53,11 @@ public:
 /// Computes n! recursively
 /// \param n integer to compute factorial of
 /// \return n!
-static inline unsigned long factorial(unsigned long n) {
-  if (n == 1)
+static constexpr std::uint64_t factorial(const std::uint64_t n) {
+  if (n == 1) {
     return 1;
-  else
-    return n * factorial(n - 1);
+  }
+  return n * factorial(n - 1);
 }
 
 class Dijkstra {
@@ -64,26 +65,26 @@ class Dijkstra {
 
 public:
   struct Node {
-    bool   contains_correct_edge = false;
-    bool   visited               = false;
-    int    pos                   = -1;
-    double cost                  = -1.;
+    bool   containsCorrectEdge = false;
+    bool   visited             = false;
+    int    pos                 = -1;
+    double cost                = -1.;
   };
 
-  static void build_table(unsigned short n, const CouplingMap& graph,
-                          Matrix& distanceTable,
-                          const std::function<double(const Node&)>& cost);
+  static void buildTable(std::uint16_t n, const CouplingMap& graph,
+                         Matrix& distanceTable,
+                         const std::function<double(const Node&)>& cost);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
-                       unsigned short start);
+                       std::uint16_t start);
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
   if (x.cost != y.cost) {
     return x.cost < y.cost;
   }
-  return x.contains_correct_edge && !y.contains_correct_edge;
+  return x.containsCorrectEdge && !y.containsCorrectEdge;
 }
 
 /// Iterating routine through all combinations
@@ -93,15 +94,17 @@ inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
 /// \param last iterator to end
 /// \return true if another combination was found
 template <typename Iterator>
-bool next_combination(Iterator first, Iterator k, Iterator last) {
+bool nextCombination(Iterator first, Iterator k, Iterator last) {
   /* Credits: Thomas Draper */
-  if ((first == last) || (first == k) || (last == k))
+  if ((first == last) || (first == k) || (last == k)) {
     return false;
+  }
   Iterator itr1 = first;
   Iterator itr2 = last;
   ++itr1;
-  if (last == itr1)
+  if (last == itr1) {
     return false;
+  }
   itr1 = last;
   --itr1;
   itr1 = k;
@@ -109,8 +112,9 @@ bool next_combination(Iterator first, Iterator k, Iterator last) {
   while (first != itr1) {
     if (*--itr1 < *itr2) {
       Iterator j = k;
-      while (!(*itr1 < *j))
+      while (!(*itr1 < *j)) {
         ++j;
+      }
       std::iter_swap(itr1, j);
       ++itr1;
       ++j;
@@ -131,7 +135,7 @@ bool next_combination(Iterator first, Iterator k, Iterator last) {
 /// Create a string representation of a given permutation
 /// \param pi permutation
 /// \return string representation of pi
-std::string printPi(std::vector<unsigned short>& pi);
+std::string printPi(std::vector<std::uint16_t>& pi);
 
 /// Simple depth-first-search implementation used to check whether a given
 /// subset of qubits is connected on the given architecture
@@ -139,15 +143,15 @@ std::string printPi(std::vector<unsigned short>& pi);
 /// \param current index of current qubit
 /// \param visited visited qubits
 /// \param cm coupling map of architecture
-void dfs(unsigned short current, std::set<std::uint16_t>& visited,
+void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
          const CouplingMap& rcm);
 
 using filter_function = std::function<bool(const QubitSubset&)>;
 std::vector<QubitSubset> subsets(const QubitSubset& input, int size,
                                  const filter_function& filter = nullptr);
 
-void        parse_line(const std::string& line, char separator,
-                       const std::set<char>&     escape_chars,
-                       const std::set<char>&     ignored_chars,
-                       std::vector<std::string>& result);
+void        parseLine(const std::string& line, char separator,
+                      const std::set<char>&     escapeChars,
+                      const std::set<char>&     ignoredChars,
+                      std::vector<std::string>& result);
 CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
