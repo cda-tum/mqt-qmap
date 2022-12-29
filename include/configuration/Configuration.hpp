@@ -45,7 +45,7 @@ struct Configuration {
 
   // teleportation settings
   bool          useTeleportation    = false;
-  int           teleportationQubits = 0;
+  std::size_t   teleportationQubits = 0;
   std::uint64_t teleportationSeed   = 0;
   bool          teleportationFake   = false;
 

@@ -252,7 +252,7 @@ void HeuristicMapper::createInitialMapping() {
 
     std::uniform_int_distribution<> dis(0, architecture.getNqubits() - 1);
 
-    for (int i = 0; i < config.teleportationQubits; i += 2) {
+    for (std::size_t i = 0; i < config.teleportationQubits; i += 2) {
       Edge e{};
       do {
         auto it = std::begin(architecture.getCouplingMap());
@@ -423,7 +423,7 @@ void HeuristicMapper::expandNode(
   std::set<Edge> perms = architecture.getCouplingMap();
   architecture.getCurrentTeleportations().clear();
   architecture.getTeleportationQubits().clear();
-  for (int i = 0; i < results.config.teleportationQubits; i += 2) {
+  for (std::size_t i = 0; i < results.config.teleportationQubits; i += 2) {
     architecture.getTeleportationQubits().emplace_back(
         node.locations[qc.getNqubits() + i],
         node.locations[qc.getNqubits() + i + 1]);
