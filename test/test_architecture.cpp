@@ -19,7 +19,7 @@ INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,
                                          "ibmq_london.csv"));
 
 TEST_P(TestArchitecture, QubitMap) {
-  const auto&             archName = GetParam();
+  const auto&       archName = GetParam();
   Architecture      arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
@@ -34,7 +34,7 @@ TEST_P(TestArchitecture, QubitMap) {
             arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetAllConnectedSubsets) {
-  const auto&             archName = GetParam();
+  const auto&       archName = GetParam();
   Architecture      arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
@@ -49,7 +49,7 @@ TEST_P(TestArchitecture, GetAllConnectedSubsets) {
   EXPECT_EQ(arch.getAllConnectedSubsets(1).size(), arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetHighestFidelity) {
-  const auto&             archName = GetParam();
+  const auto&       archName = GetParam();
   Architecture      arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
@@ -68,7 +68,7 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
   EXPECT_TRUE(cm.empty());
 }
 TEST_P(TestArchitecture, ReducedMaps) {
-  const auto&             archName = GetParam();
+  const auto&       archName = GetParam();
   Architecture      arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {

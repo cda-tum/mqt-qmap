@@ -65,7 +65,7 @@ TEST_P(ExactTest, IndividualGates) {
   settings.layering = Layering::IndividualGates;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_individual.qasm");
+                                 "_exact_yorktown_individual.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
@@ -77,8 +77,7 @@ TEST_P(ExactTest, IndividualGates) {
 TEST_P(ExactTest, DisjointQubits) {
   settings.layering = Layering::DisjointQubits;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_disjoint.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_disjoint.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
@@ -98,8 +97,7 @@ TEST_P(ExactTest, OddGates) {
 TEST_P(ExactTest, QubitTriangle) {
   settings.layering = Layering::QubitTriangle;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_triangle.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_triangle.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -109,7 +107,7 @@ TEST_P(ExactTest, CommanderEncodingfixed3) {
   settings.commanderGrouping = CommanderGrouping::Fixed3;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_commander_fixed3.qasm");
+                                 "_exact_yorktown_commander_fixed3.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -118,7 +116,7 @@ TEST_P(ExactTest, CommanderEncodingfixed2) {
   settings.commanderGrouping = CommanderGrouping::Fixed2;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_commander_fixed2.qasm");
+                                 "_exact_yorktown_commander_fixed2.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -127,7 +125,7 @@ TEST_P(ExactTest, CommanderEncodinghalves) {
   settings.commanderGrouping = CommanderGrouping::Halves;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_commander_halves.qasm");
+                                 "_exact_yorktown_commander_halves.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -136,7 +134,7 @@ TEST_P(ExactTest, CommanderEncodinglogarithm) {
   settings.commanderGrouping = CommanderGrouping::Logarithm;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_commander_log.qasm");
+                                 "_exact_yorktown_commander_log.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -178,8 +176,7 @@ TEST_P(ExactTest, BimanderEncodingfixed3) {
   settings.encoding          = Encoding::Bimander;
   settings.commanderGrouping = CommanderGrouping::Fixed3;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_bimander.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -187,8 +184,7 @@ TEST_P(ExactTest, BimanderEncodingfixed2) {
   settings.encoding          = Encoding::Bimander;
   settings.commanderGrouping = CommanderGrouping::Fixed2;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_bimander.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -196,8 +192,7 @@ TEST_P(ExactTest, BimanderEncodinghalves) {
   settings.encoding          = Encoding::Bimander;
   settings.commanderGrouping = CommanderGrouping::Halves;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_bimander.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -205,8 +200,7 @@ TEST_P(ExactTest, BimanderEncodinglogaritm) {
   settings.encoding          = Encoding::Bimander;
   settings.commanderGrouping = CommanderGrouping::Logarithm;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_bimander.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_bimander.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -250,7 +244,7 @@ TEST_P(ExactTest, LimitsBidirectional) {
   settings.swapReduction    = SwapReduction::CouplingLimit;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_swapreduct.qasm");
+                                 "_exact_yorktown_swapreduct.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -260,7 +254,7 @@ TEST_P(ExactTest, LimitsBidirectionalSubsetSwaps) {
   settings.swapReduction    = SwapReduction::CouplingLimit;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_swapreduct.qasm");
+                                 "_exact_yorktown_swapreduct.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -270,7 +264,7 @@ TEST_P(ExactTest, LimitsBidirectionalCustomLimit) {
   settings.swapLimit        = 10;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_swapreduct.qasm");
+                                 "_exact_yorktown_swapreduct.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -307,8 +301,7 @@ TEST_P(ExactTest, IncreasingCustomLimitUnidirectional) {
   settings.swapReduction    = SwapReduction::Increasing;
   settings.swapLimit        = 3;
   ibmQX4Mapper->map(settings);
-  ibmQX4Mapper->dumpResult(GetParam() +
-                             "_exact_QX4_swapreduct_inccustom.qasm");
+  ibmQX4Mapper->dumpResult(GetParam() + "_exact_QX4_swapreduct_inccustom.qasm");
   ibmQX4Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -329,7 +322,7 @@ TEST_P(ExactTest, LimitsBidirectionalBDD) {
   settings.swapReduction    = SwapReduction::CouplingLimit;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_swapreduct_bdd.qasm");
+                                 "_exact_yorktown_swapreduct_bdd.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -340,7 +333,7 @@ TEST_P(ExactTest, LimitsBidirectionalSubsetSwapsBDD) {
   settings.swapReduction    = SwapReduction::CouplingLimit;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() +
-                                   "_exact_yorktown_swapreduct_bdd.qasm");
+                                 "_exact_yorktown_swapreduct_bdd.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -394,9 +387,9 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
 }
 
 TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
-  const CouplingMap  cm{{0, 1}, {1, 0}, {1, 2}, {2, 1},
-                  {2, 3}, {3, 2}, {1, 3}, {3, 1}};
-  Architecture arch(4U, cm);
+  const CouplingMap cm{{0, 1}, {1, 0}, {1, 2}, {2, 1},
+                       {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+  Architecture      arch(4U, cm);
 
   auto mapper         = ExactMapper(qc, arch);
   settings.useSubsets = false;

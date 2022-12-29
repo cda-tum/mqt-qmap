@@ -94,8 +94,7 @@ TEST_P(HeuristicTest5Q, Identity) {
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
-  ibmqLondonMapper->dumpResult(GetParam() +
-                                 "_heuristic_london_identity.qasm");
+  ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_identity.qasm");
   ibmqLondonMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -198,8 +197,7 @@ TEST_P(HeuristicTest20Q, Dynamic) {
 }
 
 class HeuristicTest20QTeleport
-    : public testing::TestWithParam<
-          std::tuple<std::uint64_t, std::string>> {
+    : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
 protected:
   std::string testExampleDir      = "../../examples/";
   std::string testArchitectureDir = "../../extern/architectures/";
@@ -237,7 +235,7 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   settings.teleportationSeed = std::get<0>(GetParam());
   tokyoMapper->map(settings);
   tokyoMapper->dumpResult(std::get<1>(GetParam()) +
-                           "_heuristic_tokyo_teleport.qasm");
+                          "_heuristic_tokyo_teleport.qasm");
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
