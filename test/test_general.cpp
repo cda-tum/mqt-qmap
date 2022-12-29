@@ -46,7 +46,7 @@ TEST(General, TestLineParsing) {
   std::string line = "Entry1;Entry2;\"EscapedEntry1;EscapedEntry2\";Entry3";
 
   std::vector<std::string> data{};
-  parse_line(line, ';', {'\"'}, {'\\'}, data);
+  parseLine(line, ';', {'\"'}, {'\\'}, data);
 
   EXPECT_EQ(data[1], "Entry2");
   EXPECT_EQ(data[2], "EscapedEntry1;EscapedEntry2");
