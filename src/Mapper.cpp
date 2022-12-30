@@ -56,7 +56,7 @@ void Mapper::createLayers() {
                           "decomposed to the appropriate gate set!");
     }
 
-    const bool                   singleQubit = gate->isControlled();
+    const bool                   singleQubit = !gate->isControlled();
     std::optional<std::uint16_t> control     = std::nullopt;
     if (!singleQubit) {
       control = static_cast<std::uint16_t>(
@@ -73,7 +73,11 @@ void Mapper::createLayers() {
     case Layering::None:
       // each gate is put in a new layer
       layers.emplace_back();
-      layers.back().emplace_back(*control, target, gate.get());
+      if (control.has_value()) {
+        layers.back().emplace_back(*control, target, gate.get());
+      } else {
+        layers.back().emplace_back(-1, target, gate.get());
+      }
       break;
     case Layering::DisjointQubits:
       // gates are put in the last layer (from the back of the circuit) in which
@@ -105,15 +109,27 @@ void Mapper::createLayers() {
       if (layers.size() <= layer) {
         layers.emplace_back();
       }
-      layers.at(layer).emplace_back(*control, target, gate.get());
+      if (control.has_value()) {
+        layers.back().emplace_back(*control, target, gate.get());
+      } else {
+        layers.back().emplace_back(-1, target, gate.get());
+      }
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
       if (even) {
         layers.emplace_back();
-        layers.back().emplace_back(*control, target, gate.get());
+        if (control.has_value()) {
+          layers.back().emplace_back(*control, target, gate.get());
+        } else {
+          layers.back().emplace_back(-1, target, gate.get());
+        }
       } else {
-        layers.back().emplace_back(*control, target, gate.get());
+        if (control.has_value()) {
+          layers.back().emplace_back(*control, target, gate.get());
+        } else {
+          layers.back().emplace_back(-1, target, gate.get());
+        }
       }
       even = !even;
       break;
@@ -124,7 +140,7 @@ void Mapper::createLayers() {
 
       if (singleQubit) {
         // single qubit gates can be added in any layer
-        layers.back().emplace_back(*control, target, gate.get());
+        layers.back().emplace_back(-1, target, gate.get());
       } else {
         qubitsInLayer.insert(*control);
         qubitsInLayer.insert(target);
