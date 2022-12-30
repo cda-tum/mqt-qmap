@@ -92,7 +92,7 @@ struct MappingResults {
     }
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -
-        input.gates;
+        static_cast<std::make_signed_t<decltype(input.gates)>>(input.gates);
 
     return resultJSON;
   }

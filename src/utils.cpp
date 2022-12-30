@@ -24,13 +24,6 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 
     dijkstra(couplingMap, nodes, i);
 
-    if (VERBOSE) {
-      for (const auto& node : nodes) {
-        std::cout << node.cost << " ";
-      }
-      std::cout << std::endl;
-    }
-
     for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
         distanceTable.at(i).at(j) = 0;
@@ -52,16 +45,16 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
     auto pos = current->pos;
 
     for (const auto& edge : couplingMap) {
-      std::int16_t to          = -1;
-      bool         correctEdge = false;
+      std::optional<std::uint16_t> to          = std::nullopt;
+      bool                         correctEdge = false;
       if (pos == edge.first) {
-        to          = static_cast<std::int16_t>(edge.second);
+        to          = edge.second;
         correctEdge = true;
       } else if (pos == edge.second) {
-        to = static_cast<std::int16_t>(edge.first);
+        to = edge.first;
       }
-      if (to != -1) {
-        if (nodes.at(to).visited) {
+      if (to.has_value()) {
+        if (nodes.at(*to).visited) {
           continue;
         }
 
@@ -69,9 +62,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         newNode.cost                = current->cost + 1.0;
         newNode.pos                 = to;
         newNode.containsCorrectEdge = correctEdge;
-        if (nodes.at(to).cost < 0 || newNode < nodes.at(to)) {
-          nodes.at(to) = newNode;
-          queue.push(&nodes.at(to));
+        if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
+          nodes.at(*to) = newNode;
+          queue.push(&nodes.at(*to));
         }
       }
     }
@@ -138,7 +131,7 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
       result.back().emplace(item);
     }
   } else {
-    std::size_t i = (1U << size) - 1U;
+    std::uint64_t i = (1U << size) - 1U;
 
     while ((i >> n) == 0U) {
       std::set<std::uint16_t> v{};
@@ -153,17 +146,10 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
         result.emplace_back(v);
       }
 
-      // this computes the lexographical next bitset from a set.
-      // the unsigned int t = v | (v - 1); // t gets v's least significant 0
-      // bits set to 1
-      //// Next set to 1 the most significant bit to change,
-      //// set to 0 the least significant ones, and add the necessary 1 bits.
-      // w = (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctz(v) + 1))
-      //  is the original, which involves counting the leading zeros via
-      //  __builtin_ctz, the version below uses division to counteract that
-      //  problem and might be slower on architectures that have a fast variant
-      //  of ctz, but more convenient on others
-      i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
+      // this computes the lexicographical next bitset from a set, see
+      // https://graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
+      const std::uint64_t t = (i | (i - 1)) + 1;
+      i                     = t | ((((t & -t) / (i & -i)) >> 1) - 1);
     }
   }
 
@@ -201,10 +187,10 @@ void parseLine(const std::string& line, char separator,
   result.push_back(word);
 }
 
-CouplingMap getFullyConnectedMap(std::uint16_t nQubits) {
+CouplingMap getFullyConnectedMap(const std::uint16_t nQubits) {
   CouplingMap result{};
-  for (int q = 0; q < nQubits; ++q) {
-    for (int p = q + 1; p < nQubits; ++p) {
+  for (std::uint16_t q = 0; q < nQubits; ++q) {
+    for (std::uint16_t p = q + 1; p < nQubits; ++p) {
       result.emplace(q, p);
       result.emplace(p, q);
     }

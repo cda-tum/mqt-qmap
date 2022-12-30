@@ -78,10 +78,12 @@ public:
       qubits.at(swap.second) = q1;
 
       if (q1 != -1) {
-        locations.at(q1) = static_cast<std::int16_t>(swap.second);
+        locations.at(static_cast<std::size_t>(q1)) =
+            static_cast<std::int16_t>(swap.second);
       }
       if (q2 != -1) {
-        locations.at(q2) = static_cast<std::int16_t>(swap.first);
+        locations.at(static_cast<std::size_t>(q2)) =
+            static_cast<std::int16_t>(swap.first);
       }
 
       if (arch.getCouplingMap().find(swap) != arch.getCouplingMap().end() ||
@@ -105,18 +107,20 @@ public:
       qubits.at(swap.second) = q1;
 
       if (q1 != -1) {
-        locations.at(q1) = static_cast<std::int16_t>(swap.second);
+        locations.at(static_cast<std::size_t>(q1)) =
+            static_cast<std::int16_t>(swap.second);
       }
       if (q2 != -1) {
-        locations.at(q2) = static_cast<std::int16_t>(swap.first);
+        locations.at(static_cast<std::size_t>(q2)) =
+            static_cast<std::int16_t>(swap.first);
       }
 
       std::uint16_t middleAnc = std::numeric_limits<decltype(middleAnc)>::max();
       for (const auto& qpair : arch.getTeleportationQubits()) {
         if (swap.first == qpair.first || swap.second == qpair.first) {
-          middleAnc = qpair.second;
+          middleAnc = static_cast<std::uint16_t>(qpair.second);
         } else if (swap.first == qpair.second || swap.second == qpair.second) {
-          middleAnc = qpair.first;
+          middleAnc = static_cast<std::uint16_t>(qpair.first);
         }
       }
 
@@ -175,8 +179,10 @@ public:
           continue;
         }
 
-        auto cost         = arch.distance(locations.at(gate.control),
-                                          locations.at(gate.target));
+        auto cost = arch.distance(
+            static_cast<std::uint16_t>(
+                locations.at(static_cast<std::uint16_t>(gate.control))),
+            static_cast<std::uint16_t>(locations.at(gate.target)));
         auto fidelityCost = cost;
         if (admissibleHeuristic) {
           costHeur = std::max(costHeur, fidelityCost);
@@ -226,7 +232,9 @@ protected:
    */
   double distanceOnArchitectureOfLogicalQubits(std::uint16_t control,
                                                std::uint16_t target) {
-    return architecture.distance(locations.at(control), locations.at(target));
+    return architecture.distance(
+        static_cast<std::uint16_t>(locations.at(control)),
+        static_cast<std::uint16_t>(locations.at(target)));
   }
 
   /**

@@ -33,8 +33,6 @@ constexpr std::uint32_t COST_TELEPORTATION =
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
 class Architecture {
-  static constexpr bool VERBOSE = false;
-
 public:
   class Properties {
   protected:
@@ -291,7 +289,7 @@ public:
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
     std::set<std::uint16_t> result{};
-    for (int i = 0; i < nqubits; ++i) {
+    for (std::uint16_t i = 0; i < nqubits; ++i) {
       result.insert(result.end(),
                     i); // should be constant with gcc, or at most O(nqubits)
     }
@@ -389,12 +387,13 @@ protected:
   [[nodiscard]] std::uint64_t bfs(std::uint16_t start, std::uint16_t goal,
                                   const std::set<Edge>& teleportations) const;
 
-  static std::size_t findCouplingLimit(const CouplingMap& cm, int nQubits);
+  static std::size_t findCouplingLimit(const CouplingMap& cm,
+                                       std::uint16_t      nQubits);
   static std::size_t
-  findCouplingLimit(const CouplingMap& cm, int nQubits,
+  findCouplingLimit(const CouplingMap& cm, std::uint16_t nQubits,
                     const std::set<std::uint16_t>& qubitChoice);
   static void
-  findCouplingLimit(std::uint16_t node, int curSum,
+  findCouplingLimit(std::uint16_t node, std::uint16_t curSum,
                     const std::vector<std::vector<std::uint16_t>>& connections,
-                    std::vector<int>& d, std::vector<bool>& visited);
+                    std::vector<std::uint16_t>& d, std::vector<bool>& visited);
 };

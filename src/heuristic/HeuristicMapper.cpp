@@ -94,8 +94,9 @@ void HeuristicMapper::map(const Configuration& configuration) {
           gateidx++;
         }
       } else {
-        const Edge cnot = {locations.at(gate.control),
-                           locations.at(gate.target)};
+        const Edge cnot = {
+            locations.at(static_cast<std::uint16_t>(gate.control)),
+            locations.at(gate.target)};
         if (architecture.getCouplingMap().find(cnot) ==
             architecture.getCouplingMap().end()) {
           const Edge reverse = {cnot.second, cnot.first};
@@ -131,7 +132,8 @@ void HeuristicMapper::map(const Configuration& configuration) {
       qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
           static_cast<qc::Qubit>(qubits.at(i));
     } else {
-      qcMapped.setLogicalQubitGarbage(qc.getNqubits() + count);
+      qcMapped.setLogicalQubitGarbage(
+          static_cast<qc::Qubit>(qc.getNqubits() + count));
       ++count;
     }
   }
@@ -153,10 +155,12 @@ void HeuristicMapper::map(const Configuration& configuration) {
         qubits.at(op->getTargets().at(1)) = q0;
 
         if (q0 != DEFAULT_POSITION) {
-          locations.at(q0) = static_cast<std::int16_t>(op->getTargets().at(1));
+          locations.at(static_cast<std::size_t>(q0)) =
+              static_cast<std::int16_t>(op->getTargets().at(1));
         }
         if (q1 != DEFAULT_POSITION) {
-          locations.at(q1) = static_cast<std::int16_t>(op->getTargets().at(0));
+          locations.at(static_cast<std::size_t>(q1)) =
+              static_cast<std::int16_t>(op->getTargets().at(0));
         }
       }
       if (gatesToAdjust.back() == gateidx) {
@@ -167,11 +171,11 @@ void HeuristicMapper::map(const Configuration& configuration) {
         if (targetLocation == -1) {
           // qubit only occurs in single qubit gates, can be mapped to an
           // arbitrary free qubit
-          std::int16_t loc = 0;
+          std::uint16_t loc = 0;
           while (qubits.at(loc) != DEFAULT_POSITION) {
             ++loc;
           }
-          locations.at(target) = loc;
+          locations.at(target) = static_cast<std::int16_t>(loc);
           op->setTargets({static_cast<qc::Qubit>(loc)});
           qcMapped.initialLayout.at(target) = loc;
         } else {
@@ -200,23 +204,25 @@ void HeuristicMapper::staticInitialMapping() {
     for (const auto& [q0, q1] : architecture.getCouplingMap()) {
       if (qubits.at(q0) == DEFAULT_POSITION &&
           qubits.at(q1) == DEFAULT_POSITION) {
-        qubits.at(q0)                 = gate.control;
-        qubits.at(q1)                 = static_cast<std::int16_t>(gate.target);
-        locations.at(gate.control)    = static_cast<std::int16_t>(q0);
+        qubits.at(q0) = gate.control;
+        qubits.at(q1) = static_cast<std::int16_t>(gate.target);
+        locations.at(static_cast<std::uint16_t>(gate.control)) =
+            static_cast<std::int16_t>(q0);
         locations.at(gate.target)     = static_cast<std::int16_t>(q1);
-        qcMapped.initialLayout.at(q0) = gate.control;
-        qcMapped.initialLayout.at(q1) = gate.target;
-        qcMapped.outputPermutation.at(q0) = gate.control;
-        qcMapped.outputPermutation.at(q1) = gate.target;
+        qcMapped.initialLayout.at(q0) = static_cast<qc::Qubit>(gate.control);
+        qcMapped.initialLayout.at(q1) = static_cast<qc::Qubit>(gate.target);
+        qcMapped.outputPermutation.at(q0) =
+            static_cast<qc::Qubit>(gate.control);
+        qcMapped.outputPermutation.at(q1) = static_cast<qc::Qubit>(gate.target);
         break;
       }
     }
   }
 
   // assign remaining logical qubits
-  for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
+  for (qc::Qubit i = 0U; i < architecture.getNqubits(); ++i) {
     if (qc.initialLayout.count(i) > 0 && locations.at(i) == DEFAULT_POSITION) {
-      for (std::size_t j = 0U; j < architecture.getNqubits(); ++j) {
+      for (qc::Qubit j = 0U; j < architecture.getNqubits(); ++j) {
         if (qubits.at(j) == DEFAULT_POSITION) {
           locations.at(i)                  = static_cast<std::int16_t>(j);
           qubits.at(j)                     = static_cast<std::int16_t>(i);
@@ -273,7 +279,7 @@ void HeuristicMapper::createInitialMapping() {
 
   switch (config.initialLayout) {
   case InitialLayout::Identity:
-    for (std::size_t i = 0; i < architecture.getNqubits(); ++i) {
+    for (qc::Qubit i = 0; i < architecture.getNqubits(); ++i) {
       if (qc.initialLayout.count(i) > 0) {
         locations.at(i) = static_cast<std::int16_t>(i);
         qubits.at(i)    = static_cast<std::int16_t>(i);
@@ -300,11 +306,12 @@ void HeuristicMapper::mapUnmappedGates(
       continue;
     }
 
-    consideredQubits.push_back(gate.control);
+    consideredQubits.push_back(static_cast<std::uint16_t>(gate.control));
     consideredQubits.push_back(gate.target);
 
-    auto controlLocation = locations.at(gate.control);
-    auto targetLocation  = locations.at(gate.target);
+    auto controlLocation =
+        locations.at(static_cast<std::uint16_t>(gate.control));
+    auto targetLocation = locations.at(gate.target);
 
     if (controlLocation == DEFAULT_POSITION &&
         targetLocation == DEFAULT_POSITION) {
@@ -322,8 +329,8 @@ void HeuristicMapper::mapUnmappedGates(
         // map to 2 qubits with minimal distance
         double bestScore = std::numeric_limits<int>::max();
 
-        for (int i = 0; i < architecture.getNqubits(); i++) {
-          for (int j = i + 1; j < architecture.getNqubits(); j++) {
+        for (std::uint16_t i = 0; i < architecture.getNqubits(); i++) {
+          for (std::uint16_t j = i + 1; j < architecture.getNqubits(); j++) {
             if (qubits.at(i) == DEFAULT_POSITION &&
                 qubits.at(j) == DEFAULT_POSITION) {
               const double dist = architecture.distance(i, j);
@@ -339,45 +346,51 @@ void HeuristicMapper::mapUnmappedGates(
       }
       // TODO: Consider fidelity here if available. The best available edge
       // should be chosen
-      locations.at(gate.control) = static_cast<std::int16_t>(chosenEdge.first);
-      locations.at(gate.target)  = static_cast<std::int16_t>(chosenEdge.second);
+      locations.at(static_cast<std::size_t>(gate.control)) =
+          static_cast<std::int16_t>(chosenEdge.first);
+      locations.at(gate.target) = static_cast<std::int16_t>(chosenEdge.second);
       qubits.at(chosenEdge.first)  = gate.control;
       qubits.at(chosenEdge.second) = static_cast<std::int16_t>(gate.target);
-      qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first,
+      qc::QuantumComputation::findAndSWAP(static_cast<qc::Qubit>(gate.control),
+                                          chosenEdge.first,
                                           qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second,
+      qc::QuantumComputation::findAndSWAP(static_cast<qc::Qubit>(gate.target),
+                                          chosenEdge.second,
                                           qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(gate.control, chosenEdge.first,
+      qc::QuantumComputation::findAndSWAP(static_cast<qc::Qubit>(gate.control),
+                                          chosenEdge.first,
                                           qcMapped.outputPermutation);
-      qc::QuantumComputation::findAndSWAP(gate.target, chosenEdge.second,
+      qc::QuantumComputation::findAndSWAP(static_cast<qc::Qubit>(gate.target),
+                                          chosenEdge.second,
                                           qcMapped.outputPermutation);
     } else if (controlLocation == DEFAULT_POSITION) {
-      mapToMinDistance(gate.target, gate.control);
+      mapToMinDistance(gate.target, static_cast<std::uint16_t>(gate.control));
     } else if (targetLocation == DEFAULT_POSITION) {
-      mapToMinDistance(gate.control, gate.target);
+      mapToMinDistance(static_cast<std::uint16_t>(gate.control), gate.target);
     }
   }
 }
 
 void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
                                        const std::uint16_t target) {
-  auto         min = std::numeric_limits<double>::max();
-  std::int16_t pos = DEFAULT_POSITION;
-  for (std::size_t i = 0; i < architecture.getNqubits(); ++i) {
+  auto                         min = std::numeric_limits<double>::max();
+  std::optional<std::uint16_t> pos = std::nullopt;
+  for (std::uint16_t i = 0; i < architecture.getNqubits(); ++i) {
     if (qubits.at(i) == DEFAULT_POSITION) {
       // TODO: Consider fidelity here if available
-      auto distance =
-          distanceOnArchitectureOfPhysicalQubits(locations.at(source), i);
+      auto distance = distanceOnArchitectureOfPhysicalQubits(
+          static_cast<std::uint16_t>(locations.at(source)), i);
       if (distance < min) {
         min = distance;
-        pos = static_cast<std::int16_t>(i);
+        pos = i;
       }
     }
   }
-  qubits.at(pos)       = static_cast<std::int16_t>(target);
-  locations.at(target) = pos;
-  qc::QuantumComputation::findAndSWAP(target, pos, qcMapped.initialLayout);
-  qc::QuantumComputation::findAndSWAP(target, pos, qcMapped.outputPermutation);
+  assert(pos.has_value());
+  qubits.at(*pos)      = static_cast<std::int16_t>(target);
+  locations.at(target) = static_cast<std::int16_t>(*pos);
+  qc::QuantumComputation::findAndSWAP(target, *pos, qcMapped.initialLayout);
+  qc::QuantumComputation::findAndSWAP(target, *pos, qcMapped.outputPermutation);
 }
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
@@ -433,28 +446,32 @@ void HeuristicMapper::expandNode(
       if (g.first == node.locations.at(qc.getNqubits() + i) &&
           g.second != node.locations.at(qc.getNqubits() + i + 1)) {
         e.first  = g.second;
-        e.second = node.locations.at(qc.getNqubits() + i + 1);
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i + 1));
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
       if (g.second == node.locations.at(qc.getNqubits() + i) &&
           g.first != node.locations.at(qc.getNqubits() + i + 1)) {
         e.first  = g.first;
-        e.second = node.locations.at(qc.getNqubits() + i + 1);
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i + 1));
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
       if (g.first == node.locations.at(qc.getNqubits() + i + 1) &&
           g.second != node.locations.at(qc.getNqubits() + i)) {
-        e.first  = g.second;
-        e.second = node.locations.at(qc.getNqubits() + i);
+        e.first = g.second;
+        e.second =
+            static_cast<std::uint16_t>(node.locations.at(qc.getNqubits() + i));
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
       if (g.second == node.locations.at(qc.getNqubits() + i + 1) &&
           g.first != node.locations.at(qc.getNqubits() + i)) {
-        e.first  = g.first;
-        e.second = node.locations.at(qc.getNqubits() + i);
+        e.first = g.first;
+        e.second =
+            static_cast<std::uint16_t>(node.locations.at(qc.getNqubits() + i));
         architecture.getCurrentTeleportations().insert(e);
         perms.insert(e);
       }
@@ -469,9 +486,12 @@ void HeuristicMapper::expandNode(
         auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
           expandNodeAddOneSwap(edge, node, layer);
-        } else if (!usedSwaps.at(q1).at(q2)) {
-          usedSwaps.at(q1).at(q2) = true;
-          usedSwaps.at(q2).at(q1) = true;
+        } else if (!usedSwaps.at(static_cast<std::size_t>(q1))
+                        .at(static_cast<std::size_t>(q2))) {
+          usedSwaps.at(static_cast<std::size_t>(q1))
+              .at(static_cast<std::size_t>(q2)) = true;
+          usedSwaps.at(static_cast<std::size_t>(q2))
+              .at(static_cast<std::size_t>(q1)) = true;
           expandNodeAddOneSwap(edge, node, layer);
         }
       }
@@ -533,34 +553,40 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
         continue;
       }
 
-      auto loc1 = node.locations.at(gate.control);
+      auto loc1 = node.locations.at(static_cast<std::uint16_t>(gate.control));
       auto loc2 = node.locations.at(gate.target);
       if (loc1 == DEFAULT_POSITION && loc2 == DEFAULT_POSITION) {
         // no penalty
       } else if (loc1 == DEFAULT_POSITION) {
         auto min = std::numeric_limits<double>::max();
-        for (int j = 0; j < architecture.getNqubits(); ++j) {
+        for (std::uint16_t j = 0; j < architecture.getNqubits(); ++j) {
           if (node.qubits.at(j) == DEFAULT_POSITION) {
             // TODO: Consider fidelity here if available
             min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
-                                    j, node.locations.at(gate.target)));
+                                    j, static_cast<std::uint16_t>(
+                                           node.locations.at(gate.target))));
           }
         }
         penalty = heuristicAddition(penalty, min);
       } else if (loc2 == DEFAULT_POSITION) {
         auto min = std::numeric_limits<double>::max();
-        for (int j = 0; j < architecture.getNqubits(); ++j) {
+        for (std::uint16_t j = 0; j < architecture.getNqubits(); ++j) {
           if (node.qubits.at(j) == DEFAULT_POSITION) {
             // TODO: Consider fidelity here if available
-            min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
-                                    node.locations.at(gate.control), j));
+            min = std::min(min,
+                           distanceOnArchitectureOfPhysicalQubits(
+                               static_cast<std::uint16_t>(node.locations.at(
+                                   static_cast<std::uint16_t>(gate.control))),
+                               j));
           }
         }
         penalty = heuristicAddition(penalty, min);
       } else {
-        auto cost = architecture.distance(node.locations.at(gate.control),
-                                          node.locations.at(gate.target));
-        penalty   = heuristicAddition(penalty, cost);
+        auto cost = architecture.distance(
+            static_cast<std::uint16_t>(
+                node.locations.at(static_cast<std::uint16_t>(gate.control))),
+            static_cast<std::uint16_t>(node.locations.at(gate.target)));
+        penalty = heuristicAddition(penalty, cost);
       }
     }
 

@@ -30,7 +30,7 @@ protected:
   void                     coreMappingRoutine(const QubitChoice& qubitChoice,
                                               const CouplingMap& rcm, MappingResults& choiceResults,
                                               std::vector<Swaps>& swaps, std::size_t limit,
-                                              unsigned int timeout);
+                                              std::size_t timeout);
 
 public:
   void map(const Configuration& settings) override;

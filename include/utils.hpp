@@ -62,14 +62,12 @@ static inline constexpr std::uint64_t factorial(const std::uint64_t n) {
 }
 
 class Dijkstra {
-  static constexpr bool VERBOSE = false;
-
 public:
   struct Node {
-    bool   containsCorrectEdge = false;
-    bool   visited             = false;
-    int    pos                 = -1;
-    double cost                = -1.;
+    bool                         containsCorrectEdge = false;
+    bool                         visited             = false;
+    std::optional<std::uint16_t> pos                 = -1;
+    double                       cost                = -1.;
   };
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,

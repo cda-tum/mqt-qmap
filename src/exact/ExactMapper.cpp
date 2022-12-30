@@ -108,15 +108,15 @@ void ExactMapper::map(const Configuration& settings) {
   }
   std::vector<QubitChoice> allPossibleQubitChoices{};
   if (config.useSubsets) {
-    allPossibleQubitChoices =
-        architecture.getAllConnectedSubsets(qc.getNqubits());
+    allPossibleQubitChoices = architecture.getAllConnectedSubsets(
+        static_cast<std::uint16_t>(qc.getNqubits()));
   } else {
     allPossibleQubitChoices.emplace_back(qubitRange.begin(), qubitRange.end());
   }
   // 3) determine exact mapping for this qubit choice
   std::vector<Swaps> swaps(reducedLayerIndices.size(), Swaps{});
   mappingSwaps.reserve(reducedLayerIndices.size());
-  int runs = 1;
+  std::size_t runs = 1;
   for (auto& choice : allPossibleQubitChoices) {
     std::size_t       limit      = 0U;
     std::size_t       maxLimit   = 0U;
@@ -134,7 +134,7 @@ void ExactMapper::map(const Configuration& settings) {
       limit = upperLimit;
     }
 
-    unsigned int timeout = 0U;
+    std::size_t timeout = 0U;
     do {
       if (config.swapReduction == SwapReduction::Increasing) {
         timeout += static_cast<std::size_t>(
@@ -296,7 +296,7 @@ void ExactMapper::map(const Configuration& settings) {
             op->getParameter().at(0), op->getParameter().at(1),
             op->getParameter().at(2));
       } else {
-        const Edge cnot = {locations.at(gate.control),
+        const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
 
         if (architecture.getCouplingMap().find(cnot) ==
@@ -342,8 +342,9 @@ void ExactMapper::map(const Configuration& settings) {
         std::swap(qcMapped.outputPermutation.at(swap.first),
                   qcMapped.outputPermutation.at(swap.second));
         std::swap(qubits.at(swap.first), qubits.at(swap.second));
-        std::swap(locations.at(qubits.at(swap.first)),
-                  locations.at(qubits.at(swap.second)));
+        std::swap(
+            locations.at(static_cast<std::size_t>(qubits.at(swap.first))),
+            locations.at(static_cast<std::size_t>(qubits.at(swap.second))));
 
         if (settings.verbose) {
           for (auto q = 0U; q < architecture.getNqubits(); ++q) {
@@ -379,13 +380,13 @@ void ExactMapper::coreMappingRoutine(
     const std::set<std::uint16_t>& qubitChoice, const CouplingMap& rcm,
     MappingResults& choiceResults,
     std::vector<std::vector<std::pair<std::uint16_t, std::uint16_t>>>& swaps,
-    std::size_t limit, unsigned int timeout) {
+    const std::size_t limit, const std::size_t timeout) {
   const auto& config = results.config;
   using namespace logicbase;
   // LogicBlock
   bool              success = false;
   logicutil::Params params;
-  params.addParam("timeout", timeout);
+  params.addParam("timeout", static_cast<std::uint32_t>(timeout));
   params.addParam("pb.compile_equality", true);
   params.addParam("pp.wcnf", true);
   params.addParam("maxres.hill_climb", true);
@@ -599,16 +600,19 @@ number of variables: (|L|-1) * m!
       auto coupling = LogicTerm(false);
       if (architecture.bidirectional()) {
         for (const auto& edge : rcm) {
-          auto indexFC = x[k][physicalQubitIndex[edge.first]][gate.control];
+          auto indexFC = x[k][physicalQubitIndex[edge.first]]
+                          [static_cast<std::size_t>(gate.control)];
           auto indexST = x[k][physicalQubitIndex[edge.second]][gate.target];
           coupling     = coupling || (indexFC && indexST);
         }
       } else {
         for (const auto& edge : rcm) {
-          auto indexFC = x[k][physicalQubitIndex[edge.first]][gate.control];
+          auto indexFC = x[k][physicalQubitIndex[edge.first]]
+                          [static_cast<std::size_t>(gate.control)];
           auto indexST = x[k][physicalQubitIndex[edge.second]][gate.target];
           auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-          auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
+          auto indexSC = x[k][physicalQubitIndex[edge.second]]
+                          [static_cast<std::size_t>(gate.control)];
 
           coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
         }
@@ -740,8 +744,9 @@ number of variables: (|L|-1) * m!
         auto reverse = LogicTerm(true);
         for (const auto& edge : rcm) {
           auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-          auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
-          reverse      = reverse && (!indexFT || !indexSC);
+          auto indexSC = x[k][physicalQubitIndex[edge.second]]
+                          [static_cast<std::size_t>(gate.control)];
+          reverse = reverse && (!indexFT || !indexSC);
         }
         cost = cost + LogicTerm::ite(reverse,
                                      LogicTerm(GATES_OF_DIRECTION_REVERSE),
@@ -812,7 +817,8 @@ number of variables: (|L|-1) * m!
           }
           for (const auto& edge : rcm) {
             auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-            auto indexSC = x[k][physicalQubitIndex[edge.second]][gate.control];
+            auto indexSC = x[k][physicalQubitIndex[edge.second]]
+                            [static_cast<std::size_t>(gate.control)];
             if (m->getBoolValue(indexFT, lb.get()) &&
                 m->getBoolValue(indexSC, lb.get())) {
               choiceResults.output.directionReverse++;

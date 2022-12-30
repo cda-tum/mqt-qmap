@@ -61,15 +61,6 @@ void Architecture::loadCouplingMap(std::istream&& is) {
                           line);
     }
   }
-
-  if (VERBOSE) {
-    std::cout << "Coupling Map (" << nqubits << " qubits): ";
-    for (const auto& edge : couplingMap) {
-      std::cout << "(" << edge.first << "-" << edge.second << ") ";
-    }
-    std::cout << std::endl;
-  }
-
   createDistanceTable();
 }
 
@@ -203,11 +194,6 @@ void Architecture::createDistanceTable() {
     }
   }
 
-  if (VERBOSE) {
-    std::cout << "Architecture is bidirectional: "
-              << (bidirectional() ? "yes" : "no") << std::endl;
-  }
-
   if (isBidirectional) {
     Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
                          Architecture::costHeuristicBidirectional);
@@ -300,7 +286,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
     // can be aborted
     if (tryToAbortEarly &&
         current.nswaps >= static_cast<std::uint64_t>(limit)) {
-      return limit + 1U;
+      return static_cast<std::uint64_t>(limit + 1U);
     }
 
     for (const auto& swap : possibleSwaps) {
@@ -500,17 +486,17 @@ std::uint64_t Architecture::bfs(const std::uint16_t   start,
   return (length - 2) * 7 + 4;
 }
 
-std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
-                                            int                nQubits) {
+std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
+                                            const std::uint16_t nQubits) {
   std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<int>                        d;
+  std::vector<std::uint16_t>              d;
   std::vector<bool>                       visited;
   connections.resize(nQubits);
-  int maxSum = -1;
+  std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
     connections.at(edge.first).emplace_back(edge.second);
   }
-  for (int q = 0; q < nQubits; ++q) {
+  for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
     d.resize(nQubits);
     std::fill(d.begin(), d.end(), 0);
@@ -526,20 +512,21 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   return maxSum;
 }
 
-std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits,
-                                            const QubitSubset& qubitChoice) {
+std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
+                                            const std::uint16_t nQubits,
+                                            const QubitSubset&  qubitChoice) {
   std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<int>                        d;
+  std::vector<std::uint16_t>              d;
   std::vector<bool>                       visited;
   connections.resize(nQubits);
-  int maxSum = -1;
+  std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
     if ((qubitChoice.count(edge.first) != 0U) &&
         (qubitChoice.count(edge.second) != 0U)) {
       connections.at(edge.first).emplace_back(edge.second);
     }
   }
-  for (int q = 0; q < nQubits; ++q) {
+  for (std::uint16_t q = 0; q < nQubits; ++q) {
     if (connections.at(q).empty()) {
       continue;
     }
@@ -559,9 +546,9 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm, int nQubits,
 }
 
 void Architecture::findCouplingLimit(
-    std::uint16_t node, int curSum,
+    const std::uint16_t node, const std::uint16_t curSum,
     const std::vector<std::vector<std::uint16_t>>& connections,
-    std::vector<int>& d, std::vector<bool>& visited) {
+    std::vector<std::uint16_t>& d, std::vector<bool>& visited) {
   if (visited.at(node)) {
     return;
   }
@@ -643,7 +630,8 @@ void Architecture::getReducedCouplingMap(const QubitSubset& qubitChoice,
                                          CouplingMap&       reducedMap) const {
   reducedMap.clear();
   if (!isArchitectureAvailable()) {
-    reducedMap = getFullyConnectedMap(qubitChoice.size());
+    reducedMap =
+        getFullyConnectedMap(static_cast<std::uint16_t>(qubitChoice.size()));
   } else {
     for (const auto& [q0, q1] : couplingMap) {
       if (qubitChoice.find(q0) != qubitChoice.end() &&
