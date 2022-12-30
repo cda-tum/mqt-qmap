@@ -42,7 +42,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
 
   if (config.useTeleportation) {
     config.teleportationQubits =
-        std::min((arch.getNqubits() - qc.getNqubits()) & ~1,
+        std::min((arch.getNqubits() - qc.getNqubits()) & ~1U,
                  static_cast<std::size_t>(8));
   }
 
