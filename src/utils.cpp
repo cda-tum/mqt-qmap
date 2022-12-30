@@ -152,7 +152,8 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
       // this computes the lexicographical next bitset from a set, see
       // https://graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
       const std::uint64_t t = (i | (i - 1)) + 1;
-      i                     = t | ((((t & -t) / (i & -i)) >> 1) - 1);
+      // NOLINTNEXTLINE (clang-analyzer-core.DivideZero)
+      i = t | ((((t & -t) / (i & -i)) >> 1) - 1);
     }
   }
 
