@@ -71,6 +71,7 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/configuration/Configuration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp

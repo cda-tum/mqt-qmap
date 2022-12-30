@@ -13,6 +13,8 @@
 #include "SwapReduction.hpp"
 #include "nlohmann/json.hpp"
 
+#include <set>
+
 struct Configuration {
   Configuration() = default;
 
@@ -68,60 +70,8 @@ struct Configuration {
   std::size_t   swapLimit        = 0;
   bool          useBDD           = false;
 
-  [[nodiscard]] nlohmann::json json() const {
-    nlohmann::json config{};
-    config["method"]            = ::toString(method);
-    config["layering_strategy"] = ::toString(layering);
-    if (!subgraph.empty()) {
-      config["subgraph"] = subgraph;
-    }
-    config["pre_mapping_optimizations"]  = preMappingOptimizations;
-    config["post_mapping_optimizations"] = postMappingOptimizations;
-    config["add_measurements_to_mapped_circuit"] =
-        addMeasurementsToMappedCircuit;
-    config["verbose"] = verbose;
-
-    if (method == Method::Heuristic) {
-      auto& heuristic             = config["settings"];
-      heuristic["initial_layout"] = ::toString(initialLayout);
-      if (lookahead) {
-        auto& lookaheadSettings                   = heuristic["lookahead"];
-        lookaheadSettings["admissible_heuristic"] = admissibleHeuristic;
-        lookaheadSettings["consider_fidelity"]    = considerFidelity;
-        lookaheadSettings["lookaheads"]           = nrLookaheads;
-        lookaheadSettings["first_factor"]         = firstLookaheadFactor;
-        lookaheadSettings["factor"]               = lookaheadFactor;
-      }
-      if (useTeleportation) {
-        auto& teleportation     = heuristic["teleportation"];
-        teleportation["qubits"] = teleportationQubits;
-        teleportation["seed"]   = teleportationSeed;
-        teleportation["fake"]   = teleportationFake;
-      }
-    }
-
-    if (method == Method::Exact) {
-      auto& exact       = config["settings"];
-      exact["timeout"]  = timeout;
-      exact["encoding"] = ::toString(encoding);
-      if (encoding == Encoding::Commander || encoding == Encoding::Bimander) {
-        exact["commander_grouping"] = ::toString(commanderGrouping);
-      }
-      exact["include_WCNF"] = includeWCNF;
-      exact["use_subsets"]  = useSubsets;
-      if (enableSwapLimits) {
-        auto& limits             = exact["limits"];
-        limits["swap_reduction"] = ::toString(swapReduction);
-        if (swapLimit > 0) {
-          limits["swap_limit"] = swapLimit;
-        }
-        limits["use_bdd"] = useBDD;
-      }
-    }
-
-    return config;
-  }
-  [[nodiscard]] std::string toString() const { return json().dump(2); }
+  [[nodiscard]] nlohmann::json json() const;
+  [[nodiscard]] std::string    toString() const { return json().dump(2); }
 
   void setTimeout(const std::size_t sec) { timeout = sec; }
 };
