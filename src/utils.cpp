@@ -3,7 +3,9 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include <utils.hpp>
+#include "utils.hpp"
+
+#include <cassert>
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
                           Matrix& distanceTable,
