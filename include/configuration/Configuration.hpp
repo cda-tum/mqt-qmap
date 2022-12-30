@@ -13,6 +13,8 @@
 #include "SwapReduction.hpp"
 #include "nlohmann/json.hpp"
 
+#include <set>
+
 struct Configuration {
   Configuration() = default;
 
@@ -27,7 +29,7 @@ struct Configuration {
   bool verbose = false;
 
   // map to particular subgraph of architecture (in exact mapper)
-  std::set<unsigned short> subgraph{};
+  std::set<std::uint16_t> subgraph{};
 
   // how to cluster the gates into layers
   Layering layering = Layering::None;
@@ -36,21 +38,21 @@ struct Configuration {
   InitialLayout initialLayout = InitialLayout::None;
 
   // lookahead scheme settings
-  bool   lookahead            = true;
-  bool   admissibleHeuristic  = true;
-  bool   considerFidelity     = true;
-  int    nrLookaheads         = 15;
-  double firstLookaheadFactor = 0.75;
-  double lookaheadFactor      = 0.5;
+  bool        lookahead            = true;
+  bool        admissibleHeuristic  = true;
+  bool        considerFidelity     = true;
+  std::size_t nrLookaheads         = 15;
+  double      firstLookaheadFactor = 0.75;
+  double      lookaheadFactor      = 0.5;
 
   // teleportation settings
-  bool               useTeleportation    = false;
-  int                teleportationQubits = 0;
-  unsigned long long teleportationSeed   = 0;
-  bool               teleportationFake   = false;
+  bool          useTeleportation    = false;
+  std::size_t   teleportationQubits = 0;
+  std::uint64_t teleportationSeed   = 0;
+  bool          teleportationFake   = false;
 
   // timeout merely affects exact mapper
-  unsigned int timeout = 3600000; // 60min timeout
+  std::size_t timeout = 3600000; // 60min timeout
 
   // encoding of at most and exactly one constraints in exact mapper
   Encoding          encoding          = Encoding::Naive;
@@ -65,63 +67,11 @@ struct Configuration {
   // limit the number of considered swaps
   bool          enableSwapLimits = true;
   SwapReduction swapReduction    = SwapReduction::CouplingLimit;
-  int           swapLimit        = 0;
+  std::size_t   swapLimit        = 0;
   bool          useBDD           = false;
 
-  [[nodiscard]] nlohmann::json json() const {
-    nlohmann::json config{};
-    config["method"]            = ::toString(method);
-    config["layering_strategy"] = ::toString(layering);
-    if (!subgraph.empty()) {
-      config["subgraph"] = subgraph;
-    }
-    config["pre_mapping_optimizations"]  = preMappingOptimizations;
-    config["post_mapping_optimizations"] = postMappingOptimizations;
-    config["add_measurements_to_mapped_circuit"] =
-        addMeasurementsToMappedCircuit;
-    config["verbose"] = verbose;
+  [[nodiscard]] nlohmann::json json() const;
+  [[nodiscard]] std::string    toString() const { return json().dump(2); }
 
-    if (method == Method::Heuristic) {
-      auto& heuristic             = config["settings"];
-      heuristic["initial_layout"] = ::toString(initialLayout);
-      if (lookahead) {
-        auto& lookaheadSettings                   = heuristic["lookahead"];
-        lookaheadSettings["admissible_heuristic"] = admissibleHeuristic;
-        lookaheadSettings["consider_fidelity"]    = considerFidelity;
-        lookaheadSettings["lookaheads"]           = nrLookaheads;
-        lookaheadSettings["first_factor"]         = firstLookaheadFactor;
-        lookaheadSettings["factor"]               = lookaheadFactor;
-      }
-      if (useTeleportation) {
-        auto& teleportation     = heuristic["teleportation"];
-        teleportation["qubits"] = teleportationQubits;
-        teleportation["seed"]   = teleportationSeed;
-        teleportation["fake"]   = teleportationFake;
-      }
-    }
-
-    if (method == Method::Exact) {
-      auto& exact       = config["settings"];
-      exact["timeout"]  = timeout;
-      exact["encoding"] = ::toString(encoding);
-      if (encoding == Encoding::Commander || encoding == Encoding::Bimander) {
-        exact["commander_grouping"] = ::toString(commanderGrouping);
-      }
-      exact["include_WCNF"] = includeWCNF;
-      exact["use_subsets"]  = useSubsets;
-      if (enableSwapLimits) {
-        auto& limits             = exact["limits"];
-        limits["swap_reduction"] = ::toString(swapReduction);
-        if (swapLimit > 0) {
-          limits["swap_limit"] = swapLimit;
-        }
-        limits["use_bdd"] = useBDD;
-      }
-    }
-
-    return config;
-  }
-  [[nodiscard]] std::string toString() const { return json().dump(2); }
-
-  void setTimeout(unsigned int sec) { timeout = sec; }
+  void setTimeout(const std::size_t sec) { timeout = sec; }
 };

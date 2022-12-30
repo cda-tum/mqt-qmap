@@ -15,7 +15,7 @@ struct Configuration {
   /// General configuration for the synthesis algorithm
   std::size_t  initialTimestepLimit = 0U;
   bool         useMaxSAT            = false;
-  TargetMetric target               = TargetMetric::GATES;
+  TargetMetric target               = TargetMetric::Gates;
   bool         useSymmetryBreaking  = true;
 
   /// Settings for the SAT solver

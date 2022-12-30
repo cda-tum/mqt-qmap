@@ -316,7 +316,7 @@ TEST_F(TestTableau, LargeBV) {
 }
 
 TEST_F(TestTableau, TableauIO) {
-  const auto filename = "tableau.txt";
+  const std::string filename = "tableau.txt";
   tableau.dump(filename);
   auto tableau2 = Tableau{};
   tableau2.import(filename);

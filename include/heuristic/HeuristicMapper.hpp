@@ -4,7 +4,7 @@
 //
 
 #include "Mapper.hpp"
-#include "heuristic/unique_priority_queue.hpp"
+#include "heuristic/UniquePriorityQueue.hpp"
 
 #pragma once
 
@@ -18,7 +18,7 @@ public:
    * @param config the settings for this mapping run (controls e.g. layering
    * methods, pre- and post-optimizations, etc.)
    */
-  void map(const Configuration& config) override;
+  void map(const Configuration& configuration) override;
 
   /**
    * @brief struct representing one node in the A* search containing info about
@@ -26,7 +26,7 @@ public:
    */
   struct Node {
     /** cost of all swaps in the node */
-    unsigned long costFixed = 0;
+    std::uint64_t costFixed = 0;
     /** heuristic cost expected for future swaps needed in current circuit layer
      */
     double costHeur = 0.;
@@ -39,14 +39,14 @@ public:
      *
      * The inverse of `locations`
      */
-    std::array<short, MAX_DEVICE_QUBITS> qubits{};
+    std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits{};
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `locations[logical_qubit] = physical_qubit`
      *
      * The inverse of `qubits`
      */
-    std::array<short, MAX_DEVICE_QUBITS> locations{};
+    std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
     /** true if all qubit pairs are mapped next to each other on the
      * architecture */
     bool done = true;
@@ -55,12 +55,12 @@ public:
     std::vector<std::vector<Exchange>> swaps = {};
     /** number of swaps used to get from mapping after last layer to the current
      * mapping */
-    unsigned long nswaps = 0;
+    std::size_t nswaps = 0;
 
     Node() = default;
-    Node(const std::array<short, MAX_DEVICE_QUBITS>& q,
-         const std::array<short, MAX_DEVICE_QUBITS>& loc,
-         const std::vector<std::vector<Exchange>>&   sw = {}) {
+    Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
+         const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
+         const std::vector<std::vector<Exchange>>&          sw = {}) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -71,17 +71,19 @@ public:
      * of the node
      */
     void applySWAP(const Edge& swap, Architecture& arch) {
-      short q1 = qubits.at(swap.first);
-      short q2 = qubits.at(swap.second);
+      const auto q1 = qubits.at(swap.first);
+      const auto q2 = qubits.at(swap.second);
 
       qubits.at(swap.first)  = q2;
       qubits.at(swap.second) = q1;
 
       if (q1 != -1) {
-        locations.at(q1) = static_cast<short>(swap.second);
+        locations.at(static_cast<std::size_t>(q1)) =
+            static_cast<std::int16_t>(swap.second);
       }
       if (q2 != -1) {
-        locations.at(q2) = static_cast<short>(swap.first);
+        locations.at(static_cast<std::size_t>(q2)) =
+            static_cast<std::int16_t>(swap.first);
       }
 
       if (arch.getCouplingMap().find(swap) != arch.getCouplingMap().end() ||
@@ -98,40 +100,41 @@ public:
      * `locations` of the node
      */
     void applyTeleportation(const Edge& swap, Architecture& arch) {
-      short q1 = qubits.at(swap.first);
-      short q2 = qubits.at(swap.second);
+      const auto q1 = qubits.at(swap.first);
+      const auto q2 = qubits.at(swap.second);
 
       qubits.at(swap.first)  = q2;
       qubits.at(swap.second) = q1;
 
       if (q1 != -1) {
-        locations.at(q1) = static_cast<short>(swap.second);
+        locations.at(static_cast<std::size_t>(q1)) =
+            static_cast<std::int16_t>(swap.second);
       }
       if (q2 != -1) {
-        locations.at(q2) = static_cast<short>(swap.first);
+        locations.at(static_cast<std::size_t>(q2)) =
+            static_cast<std::int16_t>(swap.first);
       }
 
-      unsigned short middle_anc =
-          std::numeric_limits<decltype(middle_anc)>::max();
+      std::uint16_t middleAnc = std::numeric_limits<decltype(middleAnc)>::max();
       for (const auto& qpair : arch.getTeleportationQubits()) {
         if (swap.first == qpair.first || swap.second == qpair.first) {
-          middle_anc = qpair.second;
+          middleAnc = static_cast<std::uint16_t>(qpair.second);
         } else if (swap.first == qpair.second || swap.second == qpair.second) {
-          middle_anc = qpair.first;
+          middleAnc = static_cast<std::uint16_t>(qpair.first);
         }
       }
 
-      if (middle_anc == std::numeric_limits<decltype(middle_anc)>::max()) {
+      if (middleAnc == std::numeric_limits<decltype(middleAnc)>::max()) {
         throw QMAPException("Teleportation between seemingly wrong qubits: " +
                             std::to_string(swap.first) + " <--> " +
                             std::to_string(swap.second));
       }
 
-      unsigned short source = std::numeric_limits<decltype(source)>::max();
-      unsigned short target = std::numeric_limits<decltype(target)>::max();
-      if (arch.getCouplingMap().find({swap.first, middle_anc}) !=
+      std::uint16_t source = std::numeric_limits<decltype(source)>::max();
+      std::uint16_t target = std::numeric_limits<decltype(target)>::max();
+      if (arch.getCouplingMap().find({swap.first, middleAnc}) !=
               arch.getCouplingMap().end() ||
-          arch.getCouplingMap().find({middle_anc, swap.first}) !=
+          arch.getCouplingMap().find({middleAnc, swap.first}) !=
               arch.getCouplingMap().end()) {
         source = swap.first;
         target = swap.second;
@@ -140,14 +143,14 @@ public:
         target = swap.first;
       }
 
-      if (source == middle_anc || target == middle_anc) {
-        std::clog << "FAIL: TELE " << source << " -(" << middle_anc << ")-> "
+      if (source == middleAnc || target == middleAnc) {
+        std::clog << "FAIL: TELE " << source << " -(" << middleAnc << ")-> "
                   << target << "\n";
         throw QMAPException("Overlap between source/target and middle "
                             "ancillary in teleportation.");
       }
 
-      swaps.back().emplace_back(source, target, middle_anc, qc::Teleportation);
+      swaps.back().emplace_back(source, target, middleAnc, qc::Teleportation);
     }
 
     /**
@@ -167,20 +170,24 @@ public:
      */
     void updateHeuristicCost(const Architecture&      arch,
                              const std::vector<Gate>& currentLayer,
-                             bool admissibleHeuristic, bool considerFidelity) {
+                             bool                     admissibleHeuristic,
+                             [[maybe_unused]] bool    considerFidelity) {
       costHeur = 0.;
       done     = true;
       for (const auto& gate : currentLayer) {
-        if (gate.singleQubit())
+        if (gate.singleQubit()) {
           continue;
+        }
 
-        auto cost          = arch.distance(locations.at(gate.control),
-                                           locations.at(gate.target));
-        auto fidelity_cost = cost;
+        auto cost = arch.distance(
+            static_cast<std::uint16_t>(
+                locations.at(static_cast<std::uint16_t>(gate.control))),
+            static_cast<std::uint16_t>(locations.at(gate.target)));
+        auto fidelityCost = cost;
         if (admissibleHeuristic) {
-          costHeur = std::max(costHeur, fidelity_cost);
+          costHeur = std::max(costHeur, fidelityCost);
         } else {
-          costHeur += fidelity_cost;
+          costHeur += fidelityCost;
         }
         if (cost > COST_DIRECTION_REVERSE) {
           done = false;
@@ -203,7 +210,7 @@ public:
   };
 
 protected:
-  unique_priority_queue<Node> nodes{};
+  UniquePriorityQueue<Node> nodes{};
 
   /**
    * @brief creates an initial mapping of logical qubits to physical qubits with
@@ -223,17 +230,19 @@ protected:
    * @brief returns distance of the given logical qubit pair according to the
    * current mapping
    */
-  double distanceOnArchitectureOfLogicalQubits(unsigned short control,
-                                               unsigned short target) {
-    return architecture.distance(locations.at(control), locations.at(target));
+  double distanceOnArchitectureOfLogicalQubits(std::uint16_t control,
+                                               std::uint16_t target) {
+    return architecture.distance(
+        static_cast<std::uint16_t>(locations.at(control)),
+        static_cast<std::uint16_t>(locations.at(target)));
   }
 
   /**
    * @brief returns distance of the given physical qubit pair on the
    * architecture
    */
-  double distanceOnArchitectureOfPhysicalQubits(unsigned short control,
-                                                unsigned short target) {
+  double distanceOnArchitectureOfPhysicalQubits(std::uint16_t control,
+                                                std::uint16_t target) {
     return architecture.distance(control, target);
   }
 
@@ -245,7 +254,7 @@ protected:
    * to `target`
    * @param target an unmapped logical qubit
    */
-  virtual void mapToMinDistance(unsigned short source, unsigned short target);
+  virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target);
 
   /**
    * @brief gathers all qubits that are acted on by a 2-qubit-gate in the given
@@ -255,16 +264,12 @@ protected:
    * All gates are mapped in order of their index in the layer. The qubits are
    * mapped to any 2 qubits with minimal distance on the architecture.
    *
-   * Additionally sets the fields `costHeur` (maximum distance between any 2
-   * qubits which share a gate) and `done` (all qubit considered pairs are
-   * mapped next to each other) in the current search node.
    * @param layer index of the circuit layer to consider
-   * @param node current AStar search node
    * @param consideredQubits vector in which to gather all relevant qubits of
    * this layer
    */
-  virtual void mapUnmappedGates(long layer, Node& node,
-                                std::vector<unsigned short>& consideredQubits);
+  virtual void mapUnmappedGates(std::size_t                 layer,
+                                std::vector<std::uint16_t>& consideredQubits);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -276,7 +281,7 @@ protected:
    *
    * @param layer index of the current circuit layer
    */
-  virtual Node AstarMap(long layer);
+  virtual Node aStarMap(std::size_t layer);
 
   /**
    * @brief expand the given node by calling `expand_node_add_one_swap` for all
@@ -288,8 +293,8 @@ protected:
    * @param node current search node
    * @param layer index of current circuit layer
    */
-  void expandNode(const std::vector<unsigned short>& consideredQubits,
-                  Node& node, long layer);
+  void expandNode(const std::vector<std::uint16_t>& consideredQubits,
+                  Node& node, std::size_t layer);
 
   /**
    * @brief creates a new node with a swap on the given edge and adds it to
@@ -299,7 +304,7 @@ protected:
    * @param node current search node
    * @param layer index of current circuit layer
    */
-  void expand_node_add_one_swap(const Edge& swap, Node& node, long layer);
+  void expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer);
 
   /**
    * @brief calculates the heuristic cost for the following layers and saves it
@@ -308,21 +313,20 @@ protected:
    * @param layer index of current circuit layer
    * @param node search node for which to calculate lookahead penalty
    */
-  void lookahead(long layer, Node& node);
+  void lookahead(std::size_t layer, Node& node);
 
-  double heuristicAddition(double currentCost, double newCost) {
+  double heuristicAddition(const double currentCost, const double newCost) {
     if (results.config.admissibleHeuristic) {
       return std::max(currentCost, newCost);
-    } else {
-      return currentCost + newCost;
     }
+    return currentCost + newCost;
   }
 };
 
 inline bool operator<(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  auto itx = x.qubits.begin();
-  auto ity = y.qubits.begin();
+  auto itx = x.qubits.begin(); // NOLINT (readability-qualified-auto)
+  auto ity = y.qubits.begin(); // NOLINT (readability-qualified-auto)
   while (itx != x.qubits.end() && ity != y.qubits.end()) {
     if (*itx != *ity) {
       return *itx < *ity;
@@ -352,7 +356,6 @@ inline bool operator>(const HeuristicMapper::Node& x,
   const auto yheur = y.costHeur + y.lookaheadPenalty;
   if (std::abs(xheur - yheur) > 1e-6) {
     return xheur > yheur;
-  } else {
-    return x < y;
   }
+  return x < y;
 }

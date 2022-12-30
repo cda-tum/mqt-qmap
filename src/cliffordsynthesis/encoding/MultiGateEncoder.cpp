@@ -71,7 +71,7 @@ LogicTerm encoding::MultiGateEncoder::createSingleQubitGateConstraint(
   rChanges =
       rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
                                 tvars->singleQubitRChange(pos, qubit, gate),
-                                LogicTerm(0, N));
+                                LogicTerm(0, static_cast<std::int16_t>(N)));
 
   return changes;
 }
@@ -103,9 +103,10 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->z[pos + 1][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
 
-  rChanges = rChanges ^ LogicTerm::ite(vars.gC[pos][ctrl][trgt],
-                                       tvars->twoQubitRChange(pos, ctrl, trgt),
-                                       LogicTerm(0, N));
+  rChanges =
+      rChanges ^ LogicTerm::ite(vars.gC[pos][ctrl][trgt],
+                                tvars->twoQubitRChange(pos, ctrl, trgt),
+                                LogicTerm(0, static_cast<std::int16_t>(N)));
 
   return changes;
 }

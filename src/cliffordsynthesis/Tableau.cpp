@@ -38,7 +38,7 @@ void Tableau::import(std::istream& is) {
       delimiter = ';';
     }
     tableau.emplace_back();
-    ::parse_line(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
+    ::parseLine(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
     for (const auto& datum : data) {
       if (datum.empty()) {
         continue;

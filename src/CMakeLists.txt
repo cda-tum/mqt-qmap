@@ -71,6 +71,7 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Architecture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Mapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/configuration/Configuration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/${libname}/${srcfile}.cpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/utils.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/Architecture.hpp
@@ -78,7 +79,7 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
     ${${PROJECT_NAME}_SOURCE_DIR}/include/MappingResults.hpp
     ${${PROJECT_NAME}_SOURCE_DIR}/include/configuration
     ${${PROJECT_NAME}_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/unique_priority_queue.hpp)
+    ${${PROJECT_NAME}_SOURCE_DIR}/include/heuristic/UniquePriorityQueue.hpp)
 
   add_internal_library(${lib} ${srcfile})
 endmacro()

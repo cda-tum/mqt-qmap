@@ -10,11 +10,11 @@
 void Mapper::initResults() {
   countGates(qc, results.input);
   results.input.name    = qc.getName();
-  results.input.qubits  = qc.getNqubits();
+  results.input.qubits  = static_cast<std::uint16_t>(qc.getNqubits());
   results.architecture  = architecture.getName();
   results.output.name   = qc.getName() + "_mapped";
   results.output.qubits = architecture.getNqubits();
-  results.output.gates  = std::numeric_limits<unsigned long>::max();
+  results.output.gates  = std::numeric_limits<std::size_t>::max();
   qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
@@ -31,12 +31,48 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 }
 
-void Mapper::createLayers() {
-  const auto&                          config = results.config;
-  std::array<short, MAX_DEVICE_QUBITS> lastLayer{};
-  lastLayer.fill(DEFAULT_POSITION);
+void Mapper::processDisjointQubitLayer(
+    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    const std::optional<std::uint16_t>& control, const std::uint16_t target,
+    qc::Operation* gate) {
+  std::size_t layer = 0;
+  if (!control.has_value()) {
+    if (!lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else {
+      layer = *lastLayer.at(target) + 1;
+    }
+    lastLayer.at(target) = layer;
+  } else {
+    if (!lastLayer.at(*control).has_value() &&
+        !lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else if (!lastLayer.at(*control).has_value()) {
+      layer = *lastLayer.at(target) + 1;
+    } else if (!lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(*control) + 1;
+    } else {
+      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+    }
+    lastLayer.at(*control) = layer;
+    lastLayer.at(target)   = layer;
+  }
 
-  auto qubitsInLayer = std::set<unsigned short>{};
+  if (layers.size() <= layer) {
+    layers.emplace_back();
+  }
+  if (control.has_value()) {
+    layers.back().emplace_back(*control, target, gate);
+  } else {
+    layers.back().emplace_back(-1, target, gate);
+  }
+}
+
+void Mapper::createLayers() {
+  const auto& config = results.config;
+  std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS> lastLayer{};
+
+  auto qubitsInLayer = std::set<std::uint16_t>{};
 
   bool even = true;
   for (auto& gate : qc) {
@@ -57,14 +93,14 @@ void Mapper::createLayers() {
                           "decomposed to the appropriate gate set!");
     }
 
-    bool  singleQubit = gate->getControls().empty();
-    short control     = -1;
+    const bool                   singleQubit = !gate->isControlled();
+    std::optional<std::uint16_t> control     = std::nullopt;
     if (!singleQubit) {
-      control = static_cast<short>(
+      control = static_cast<std::uint16_t>(
           qc.initialLayout.at((*gate->getControls().begin()).qubit));
     }
-    unsigned short target = qc.initialLayout.at(gate->getTargets().at(0));
-    size_t         layer  = 0;
+    const auto target = static_cast<std::uint16_t>(
+        qc.initialLayout.at(gate->getTargets().at(0)));
 
     // methods of layering described in
     // https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
@@ -73,33 +109,30 @@ void Mapper::createLayers() {
     case Layering::None:
       // each gate is put in a new layer
       layers.emplace_back();
-      layers.back().emplace_back(control, target, gate.get());
+      if (control.has_value()) {
+        layers.back().emplace_back(*control, target, gate.get());
+      } else {
+        layers.back().emplace_back(-1, target, gate.get());
+      }
       break;
     case Layering::DisjointQubits:
-      // gates are put in the last layer (from the back of the circuit) in which
-      // all of its qubits are not yet used by another gate in a circuit diagram
-      // this can be thought of shifting all gates as far left as possible and
-      // defining each column of gates as one layer
-      if (singleQubit) {
-        layer                = lastLayer.at(target) + 1;
-        lastLayer.at(target) = layer;
-      } else {
-        layer = std::max(lastLayer.at(control), lastLayer.at(target)) + 1;
-        lastLayer.at(control) = lastLayer.at(target) = layer;
-      }
-
-      if (layers.size() <= layer) {
-        layers.emplace_back();
-      }
-      layers.at(layer).emplace_back(control, target, gate.get());
+      processDisjointQubitLayer(lastLayer, control, target, gate.get());
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
       if (even) {
         layers.emplace_back();
-        layers.back().emplace_back(control, target, gate.get());
+        if (control.has_value()) {
+          layers.back().emplace_back(*control, target, gate.get());
+        } else {
+          layers.back().emplace_back(-1, target, gate.get());
+        }
       } else {
-        layers.back().emplace_back(control, target, gate.get());
+        if (control.has_value()) {
+          layers.back().emplace_back(*control, target, gate.get());
+        } else {
+          layers.back().emplace_back(-1, target, gate.get());
+        }
       }
       even = !even;
       break;
@@ -110,18 +143,18 @@ void Mapper::createLayers() {
 
       if (singleQubit) {
         // single qubit gates can be added in any layer
-        layers.back().emplace_back(control, target, gate.get());
+        layers.back().emplace_back(-1, target, gate.get());
       } else {
-        qubitsInLayer.insert(control);
+        qubitsInLayer.insert(*control);
         qubitsInLayer.insert(target);
 
         if (qubitsInLayer.size() <= 3) {
-          layers.back().emplace_back(control, target, gate.get());
+          layers.back().emplace_back(*control, target, gate.get());
         } else {
           layers.emplace_back();
-          layers.back().emplace_back(control, target, gate.get());
+          layers.back().emplace_back(*control, target, gate.get());
           qubitsInLayer.clear();
-          qubitsInLayer.insert(control);
+          qubitsInLayer.insert(*control);
           qubitsInLayer.insert(target);
         }
       }
@@ -141,7 +174,7 @@ std::size_t Mapper::getNextLayer(std::size_t idx) {
     }
     next++;
   }
-  return -1;
+  return std::numeric_limits<std::size_t>::max();
 }
 
 void Mapper::finalizeMappedCircuit() {
@@ -205,12 +238,12 @@ void Mapper::placeRemainingArchitectureQubits() {
       }
 
       assert(physical.has_value());
-      qubits.at(*physical) = static_cast<short>(logical);
+      qubits.at(*physical) = static_cast<std::int16_t>(logical);
 
       // mark architecture qubit as ancillary and garbage
       qcMapped.initialLayout[*physical] = static_cast<qc::Qubit>(logical);
-      qcMapped.setLogicalQubitAncillary(logical);
-      qcMapped.setLogicalQubitGarbage(logical);
+      qcMapped.setLogicalQubitAncillary(static_cast<qc::Qubit>(logical));
+      qcMapped.setLogicalQubitGarbage(static_cast<qc::Qubit>(logical));
     }
   }
 }

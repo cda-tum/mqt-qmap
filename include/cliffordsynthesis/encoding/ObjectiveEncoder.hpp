@@ -18,9 +18,9 @@ namespace cs::encoding {
 class ObjectiveEncoder {
 public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                   GateEncoder::Variables*                       gvars,
-                   const std::shared_ptr<logicbase::LogicBlock>& lb)
-      : N(nQubits), T(timestepLimit), gvars(gvars), lb(lb) {}
+                   GateEncoder::Variables*                gvars,
+                   std::shared_ptr<logicbase::LogicBlock> lb)
+      : N(nQubits), T(timestepLimit), gvars(gvars), lb(std::move(lb)) {}
 
   template <class Op>
   void limitGateCount(const std::size_t maxGateCount, Op op,
@@ -41,9 +41,9 @@ public:
 
 protected:
   // number of qubits N
-  std::size_t N{};
+  std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
-  std::size_t T{};
+  std::size_t T{}; // NOLINT (readability-identifier-naming)
 
   // the gate variables
   GateEncoder::Variables* gvars;

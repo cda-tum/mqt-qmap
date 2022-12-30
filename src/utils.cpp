@@ -3,35 +3,30 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include <utils.hpp>
+#include "utils.hpp"
 
-void Dijkstra::build_table(std::uint16_t n, const CouplingMap& couplingMap,
-                           Matrix& distanceTable,
-                           const std::function<double(const Node&)>& cost) {
+#include <cassert>
+
+void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
+                          Matrix& distanceTable,
+                          const std::function<double(const Node&)>& cost) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
   for (std::uint16_t i = 0; i < n; ++i) {
     std::vector<Dijkstra::Node> nodes(n);
     for (std::uint16_t j = 0; j < n; ++j) {
-      nodes.at(j).contains_correct_edge = false;
-      nodes.at(j).visited               = false;
-      nodes.at(j).pos                   = j;
-      nodes.at(j).cost                  = -1.;
+      nodes.at(j).containsCorrectEdge = false;
+      nodes.at(j).visited             = false;
+      nodes.at(j).pos                 = j;
+      nodes.at(j).cost                = -1.;
     }
 
     nodes.at(i).cost = 0.;
 
     dijkstra(couplingMap, nodes, i);
 
-    if (VERBOSE) {
-      for (const auto& node : nodes) {
-        std::cout << node.cost << " ";
-      }
-      std::cout << std::endl;
-    }
-
-    for (int j = 0; j < n; ++j) {
+    for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
         distanceTable.at(i).at(j) = 0;
       } else {
@@ -52,26 +47,26 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
     auto pos = current->pos;
 
     for (const auto& edge : couplingMap) {
-      short to          = -1;
-      bool  correctEdge = false;
+      std::optional<std::uint16_t> to          = std::nullopt;
+      bool                         correctEdge = false;
       if (pos == edge.first) {
         to          = edge.second;
         correctEdge = true;
       } else if (pos == edge.second) {
         to = edge.first;
       }
-      if (to != -1) {
-        if (nodes.at(to).visited) {
+      if (to.has_value()) {
+        if (nodes.at(*to).visited) {
           continue;
         }
 
         Node newNode;
-        newNode.cost                  = current->cost + 1.0;
-        newNode.pos                   = to;
-        newNode.contains_correct_edge = correctEdge;
-        if (nodes.at(to).cost < 0 || newNode < nodes.at(to)) {
-          nodes.at(to) = newNode;
-          queue.push(&nodes.at(to));
+        newNode.cost                = current->cost + 1.0;
+        newNode.pos                 = to;
+        newNode.containsCorrectEdge = correctEdge;
+        if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
+          nodes.at(*to) = newNode;
+          queue.push(&nodes.at(*to));
         }
       }
     }
@@ -117,24 +112,31 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
   }
 }
 
-std::vector<QubitSubset> subsets(const QubitSubset& input, int length,
+std::vector<QubitSubset> subsets(const QubitSubset&     input,
+                                 const std::size_t      size,
                                  const filter_function& filter) {
-  std::size_t              n = input.size();
+  const std::size_t        n = input.size();
   std::vector<QubitSubset> result{};
 
-  if (length == 0) {
+  if (size == 0) {
     throw std::invalid_argument("Length of subset must be greater than 0");
   }
 
-  if (length == 1) {
+  if (size > n) {
+    throw std::invalid_argument("Length of subset must be less than or equal "
+                                "to the size of the input set");
+  }
+
+  if (size == 1) {
     for (const auto& item : input) {
       result.emplace_back();
       result.back().emplace(item);
     }
   } else {
-    std::size_t i = (1U << length) - 1U;
+    std::uint64_t i = (1U << size) - 1U;
 
     while ((i >> n) == 0U) {
+      assert(i != 0U);
       std::set<std::uint16_t> v{};
       auto                    it = input.begin();
 
@@ -147,27 +149,21 @@ std::vector<QubitSubset> subsets(const QubitSubset& input, int length,
         result.emplace_back(v);
       }
 
-      // this computes the lexographical next bitset from a set.
-      // the unsigned int t = v | (v - 1); // t gets v's least significant 0
-      // bits set to 1
-      //// Next set to 1 the most significant bit to change,
-      //// set to 0 the least significant ones, and add the necessary 1 bits.
-      // w = (t + 1) | (((~t & -~t) - 1) >> (__builtin_ctz(v) + 1))
-      //  is the original, which involves counting the leading zeros via
-      //  __builtin_ctz, the version below uses division to counteract that
-      //  problem and might be slower on architectures that have a fast variant
-      //  of ctz, but more convenient on others
-      i = (i + (i & (-i))) | (((i ^ (i + (i & (-i)))) >> 2) / (i & (-i)));
+      // this computes the lexicographical next bitset from a set, see
+      // https://graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
+      const std::uint64_t t = (i | (i - 1)) + 1;
+      // NOLINTNEXTLINE (clang-analyzer-core.DivideZero)
+      i = t | ((((t & -t) / (i & -i)) >> 1) - 1);
     }
   }
 
   return result;
 }
 
-void parse_line(const std::string& line, char separator,
-                const std::set<char>&     escapeChars,
-                const std::set<char>&     ignoredChars,
-                std::vector<std::string>& result) {
+void parseLine(const std::string& line, char separator,
+               const std::set<char>&     escapeChars,
+               const std::set<char>&     ignoredChars,
+               std::vector<std::string>& result) {
   result.clear();
   std::string word;
   bool        inEscape = false;
@@ -195,10 +191,10 @@ void parse_line(const std::string& line, char separator,
   result.push_back(word);
 }
 
-CouplingMap getFullyConnectedMap(std::uint16_t nQubits) {
+CouplingMap getFullyConnectedMap(const std::uint16_t nQubits) {
   CouplingMap result{};
-  for (int q = 0; q < nQubits; ++q) {
-    for (int p = q + 1; p < nQubits; ++p) {
+  for (std::uint16_t q = 0; q < nQubits; ++q) {
+    for (std::uint16_t p = q + 1; p < nQubits; ++p) {
       result.emplace(q, p);
       result.emplace(p, q);
     }

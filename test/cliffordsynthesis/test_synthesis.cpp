@@ -24,6 +24,7 @@ struct TestConfiguration {
   std::size_t expectedMinimalGatesAtMinimalTwoQubitGates{};
 };
 
+// NOLINTNEXTLINE (readability-identifier-naming)
 inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   test.description = j.at("description").get<std::string>();
   if (j.contains("initial_tableau")) {
@@ -137,7 +138,7 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(SynthesisTest, Gates) {
-  config.target = TargetMetric::GATES;
+  config.target = TargetMetric::Gates;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -145,7 +146,7 @@ TEST_P(SynthesisTest, Gates) {
 }
 
 TEST_P(SynthesisTest, GatesMaxSAT) {
-  config.target    = TargetMetric::GATES;
+  config.target    = TargetMetric::Gates;
   config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -154,7 +155,7 @@ TEST_P(SynthesisTest, GatesMaxSAT) {
 }
 
 TEST_P(SynthesisTest, Depth) {
-  config.target = TargetMetric::DEPTH;
+  config.target = TargetMetric::Depth;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -162,7 +163,7 @@ TEST_P(SynthesisTest, Depth) {
 }
 
 TEST_P(SynthesisTest, DepthMaxSAT) {
-  config.target    = TargetMetric::DEPTH;
+  config.target    = TargetMetric::Depth;
   config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -171,7 +172,7 @@ TEST_P(SynthesisTest, DepthMaxSAT) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalGates) {
-  config.target                              = TargetMetric::DEPTH;
+  config.target                              = TargetMetric::Depth;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -181,7 +182,7 @@ TEST_P(SynthesisTest, DepthMinimalGates) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::DEPTH;
+  config.target                              = TargetMetric::Depth;
   config.useMaxSAT                           = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
@@ -192,7 +193,7 @@ TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
 }
 
 TEST_P(SynthesisTest, TwoQubitGates) {
-  config.target = TargetMetric::TWO_QUBIT_GATES;
+  config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -201,7 +202,7 @@ TEST_P(SynthesisTest, TwoQubitGates) {
 }
 
 TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
-  config.target = TargetMetric::TWO_QUBIT_GATES;
+  config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
   config.useMaxSAT                                     = true;
   synthesizer.synthesize(config);
@@ -211,7 +212,7 @@ TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
 }
 
 TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
-  config.target = TargetMetric::TWO_QUBIT_GATES;
+  config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
   config.minimizeGatesAfterTwoQubitGateOptimization    = true;
   synthesizer.synthesize(config);
@@ -223,7 +224,7 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
 }
 
 TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
-  config.target = TargetMetric::TWO_QUBIT_GATES;
+  config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
   config.minimizeGatesAfterTwoQubitGateOptimization    = true;
   config.useMaxSAT                                     = true;

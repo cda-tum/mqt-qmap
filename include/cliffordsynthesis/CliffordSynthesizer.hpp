@@ -66,7 +66,7 @@ protected:
   std::size_t                             solverCalls{};
 
   static bool requiresMultiGateEncoding(const TargetMetric metric) {
-    return metric == TargetMetric::DEPTH;
+    return metric == TargetMetric::Depth;
   }
 
   void determineInitialTimestepLimit(EncoderConfig& config);

@@ -18,9 +18,9 @@
 #include <string>
 #include <unordered_set>
 
-constexpr short          DEFAULT_POSITION  = -1;
-constexpr double         INITIAL_FIDELITY  = 1.0;
-constexpr unsigned short MAX_DEVICE_QUBITS = 128;
+constexpr std::int16_t  DEFAULT_POSITION  = -1;
+constexpr double        INITIAL_FIDELITY  = 1.0;
+constexpr std::uint16_t MAX_DEVICE_QUBITS = 128;
 
 class Mapper {
 protected:
@@ -32,13 +32,13 @@ protected:
    * For a single-qubit operation `control` is set to `-1`
    */
   struct Gate {
-    short          control = -1;
-    unsigned short target  = 0;
+    std::int16_t  control = -1;
+    std::uint16_t target  = 0;
 
     qc::Operation* op = nullptr;
 
-    Gate(short c, unsigned short t) : control(c), target(t){};
-    Gate(short c, unsigned short t, qc::Operation* op)
+    Gate(const std::int16_t c, const std::uint16_t t) : control(c), target(t){};
+    Gate(const std::int16_t c, const std::uint16_t t, qc::Operation* op)
         : control(c), target(t), op(op){};
 
     [[nodiscard]] bool singleQubit() const { return control == -1; }
@@ -71,17 +71,17 @@ protected:
    *
    * The inverse of `locations`
    */
-  std::array<short, MAX_DEVICE_QUBITS> qubits{};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits{};
   /**
    * @brief containing the logical qubit currently mapped to each physical
    * qubit. `locations[logical_qubit] = physical_qubit`
    *
    * The inverse of `qubits`
    */
-  std::array<short, MAX_DEVICE_QUBITS>  locations{};
-  std::array<double, MAX_DEVICE_QUBITS> fidelities{};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
+  std::array<double, MAX_DEVICE_QUBITS>       fidelities{};
 
-  std::unordered_set<unsigned short> usedDeviceQubits{};
+  std::unordered_set<std::uint16_t> usedDeviceQubits{};
 
   MappingResults results{};
 
@@ -107,6 +107,22 @@ protected:
    * distinct qubits
    */
   virtual void createLayers();
+
+  /**
+   * gates are put in the last layer (from the back of the circuit) in which
+   * all of its qubits are not yet used by another gate in a circuit diagram
+   * this can be thought of shifting all gates as far left as possible and
+   * defining each column of gates as one layer.
+   *
+   * @param lastLayer the array storing the last layer each qubit is used in
+   * @param control the (potential) control qubit of the gate
+   * @param target the target qubit of the gate
+   * @param gate the gate to be added to the layerh
+   */
+  void processDisjointQubitLayer(
+      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+      const std::optional<std::uint16_t>& control, std::uint16_t target,
+      qc::Operation* gate);
 
   /**
    * @brief Get the index of the next layer after the given index containing a
@@ -162,7 +178,8 @@ protected:
   virtual void postMappingOptimizations(const Configuration& config);
 
 public:
-  Mapper(const qc::QuantumComputation& qc, Architecture& architecture);
+  Mapper(const qc::QuantumComputation& quantumComputation,
+         Architecture&                 architecture);
   virtual ~Mapper() = default;
 
   /**
@@ -179,8 +196,8 @@ public:
       return;
     }
 
-    size_t      dot       = outputFilename.find_last_of('.');
-    std::string extension = outputFilename.substr(dot + 1);
+    const std::size_t dot       = outputFilename.find_last_of('.');
+    std::string       extension = outputFilename.substr(dot + 1);
     std::transform(extension.begin(), extension.end(), extension.begin(),
                    [](unsigned char c) { return ::tolower(c); });
     if (extension == "real") {
@@ -195,9 +212,9 @@ public:
 
   virtual void dumpResult(const std::string& outputFilename,
                           qc::Format         format) {
-    size_t slash        = outputFilename.find_last_of('/');
-    size_t dot          = outputFilename.find_last_of('.');
-    results.output.name = outputFilename.substr(slash + 1, dot - slash - 1);
+    const std::size_t slash = outputFilename.find_last_of('/');
+    const std::size_t dot   = outputFilename.find_last_of('.');
+    results.output.name     = outputFilename.substr(slash + 1, dot - slash - 1);
     qcMapped.dump(outputFilename, format);
   }
 
@@ -234,7 +251,7 @@ public:
 
   std::ostream& printLocations(std::ostream& out) {
     out << "---------------- Locations -------------------" << std::endl;
-    for (unsigned short i = 0; i < qc.getNqubits(); ++i) {
+    for (std::size_t i = 0; i < qc.getNqubits(); ++i) {
       out << locations.at(i) << " ";
     }
     out << std::endl;
@@ -243,7 +260,7 @@ public:
   }
   std::ostream& printQubits(std::ostream& out) {
     out << "---------------- Qubits -------------------" << std::endl;
-    for (unsigned short i = 0; i < architecture.getNqubits(); ++i) {
+    for (std::size_t i = 0; i < architecture.getNqubits(); ++i) {
       out << qubits.at(i) << " ";
     }
     out << std::endl;

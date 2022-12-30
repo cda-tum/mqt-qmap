@@ -15,7 +15,7 @@ enum class Layering {
   QubitTriangle
 };
 
-static std::string toString(const Layering strategy) {
+[[maybe_unused]] static inline std::string toString(const Layering strategy) {
   switch (strategy) {
   case Layering::IndividualGates:
     return "individual_gates";
@@ -35,15 +35,18 @@ static std::string toString(const Layering strategy) {
 layeringFromString(const std::string& layering) {
   if (layering == "none" || layering == "0") {
     return Layering::None;
-  } else if (layering == "individual_gates" || layering == "1") {
-    return Layering::IndividualGates;
-  } else if (layering == "disjoint_qubits" || layering == "2") {
-    return Layering::DisjointQubits;
-  } else if (layering == "odd_gates" || layering == "3") {
-    return Layering::OddGates;
-  } else if (layering == "qubit_triangle" || layering == "4") {
-    return Layering::QubitTriangle;
-  } else {
-    throw std::invalid_argument("Invalid layering value: " + layering);
   }
+  if (layering == "individual_gates" || layering == "1") {
+    return Layering::IndividualGates;
+  }
+  if (layering == "disjoint_qubits" || layering == "2") {
+    return Layering::DisjointQubits;
+  }
+  if (layering == "odd_gates" || layering == "3") {
+    return Layering::OddGates;
+  }
+  if (layering == "qubit_triangle" || layering == "4") {
+    return Layering::QubitTriangle;
+  }
+  throw std::invalid_argument("Invalid layering value: " + layering);
 }

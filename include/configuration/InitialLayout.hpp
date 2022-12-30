@@ -12,7 +12,8 @@
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
 enum class InitialLayout { None, Identity, Static, Dynamic };
 
-static std::string toString(const InitialLayout strategy) {
+[[maybe_unused]] static inline std::string
+toString(const InitialLayout strategy) {
   switch (strategy) {
   case InitialLayout::Identity:
     return "identity";
@@ -30,14 +31,15 @@ static std::string toString(const InitialLayout strategy) {
 initialLayoutFromString(const std::string& initialLayout) {
   if (initialLayout == "none" || initialLayout == "0") {
     return InitialLayout::None;
-  } else if (initialLayout == "identity" || initialLayout == "1") {
-    return InitialLayout::Identity;
-  } else if (initialLayout == "static" || initialLayout == "2") {
-    return InitialLayout::Static;
-  } else if (initialLayout == "dynamic" || initialLayout == "3") {
-    return InitialLayout::Dynamic;
-  } else {
-    throw std::invalid_argument("Invalid initial layout value: " +
-                                initialLayout);
   }
+  if (initialLayout == "identity" || initialLayout == "1") {
+    return InitialLayout::Identity;
+  }
+  if (initialLayout == "static" || initialLayout == "2") {
+    return InitialLayout::Static;
+  }
+  if (initialLayout == "dynamic" || initialLayout == "3") {
+    return InitialLayout::Dynamic;
+  }
+  throw std::invalid_argument("Invalid initial layout value: " + initialLayout);
 }

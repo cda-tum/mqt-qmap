@@ -9,7 +9,8 @@
 
 enum class CommanderGrouping { Halves, Fixed2, Fixed3, Logarithm };
 
-static std::string toString(const CommanderGrouping grouping) {
+[[maybe_unused]] static inline std::string
+toString(const CommanderGrouping grouping) {
   switch (grouping) {
   case CommanderGrouping::Fixed2:
     return "fixed2";
@@ -27,13 +28,15 @@ static std::string toString(const CommanderGrouping grouping) {
 groupingFromString(const std::string& grouping) {
   if (grouping == "halves" || grouping == "0") {
     return CommanderGrouping::Halves;
-  } else if (grouping == "fixed2" || grouping == "1") {
-    return CommanderGrouping::Fixed2;
-  } else if (grouping == "fixed3" || grouping == "2") {
-    return CommanderGrouping::Fixed3;
-  } else if (grouping == "logarithm" || grouping == "3") {
-    return CommanderGrouping::Logarithm;
-  } else {
-    throw std::invalid_argument("Invalid grouping value: " + grouping);
   }
+  if (grouping == "fixed2" || grouping == "1") {
+    return CommanderGrouping::Fixed2;
+  }
+  if (grouping == "fixed3" || grouping == "2") {
+    return CommanderGrouping::Fixed3;
+  }
+  if (grouping == "logarithm" || grouping == "3") {
+    return CommanderGrouping::Logarithm;
+  }
+  throw std::invalid_argument("Invalid grouping value: " + grouping);
 }
