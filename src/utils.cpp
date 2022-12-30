@@ -134,6 +134,7 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
     std::uint64_t i = (1U << size) - 1U;
 
     while ((i >> n) == 0U) {
+      assert(i != 0U);
       std::set<std::uint16_t> v{};
       auto                    it = input.begin();
 
