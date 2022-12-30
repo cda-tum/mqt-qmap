@@ -31,6 +31,43 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 }
 
+void Mapper::processDisjointQubitLayer(
+    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    const std::optional<std::uint16_t>& control, const std::uint16_t target,
+    qc::Operation* gate) {
+  std::size_t layer = 0;
+  if (!control.has_value()) {
+    if (!lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else {
+      layer = *lastLayer.at(target) + 1;
+    }
+    lastLayer.at(target) = layer;
+  } else {
+    if (!lastLayer.at(*control).has_value() &&
+        !lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else if (!lastLayer.at(*control).has_value()) {
+      layer = *lastLayer.at(target) + 1;
+    } else if (!lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(*control) + 1;
+    } else {
+      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+    }
+    lastLayer.at(*control) = layer;
+    lastLayer.at(target)   = layer;
+  }
+
+  if (layers.size() <= layer) {
+    layers.emplace_back();
+  }
+  if (control.has_value()) {
+    layers.back().emplace_back(*control, target, gate);
+  } else {
+    layers.back().emplace_back(-1, target, gate);
+  }
+}
+
 void Mapper::createLayers() {
   const auto& config = results.config;
   std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS> lastLayer{};
@@ -64,7 +101,6 @@ void Mapper::createLayers() {
     }
     const auto target = static_cast<std::uint16_t>(
         qc.initialLayout.at(gate->getTargets().at(0)));
-    std::size_t layer = 0;
 
     // methods of layering described in
     // https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
@@ -80,40 +116,7 @@ void Mapper::createLayers() {
       }
       break;
     case Layering::DisjointQubits:
-      // gates are put in the last layer (from the back of the circuit) in which
-      // all of its qubits are not yet used by another gate in a circuit diagram
-      // this can be thought of shifting all gates as far left as possible and
-      // defining each column of gates as one layer
-      if (singleQubit) {
-        if (!lastLayer.at(target).has_value()) {
-          layer = 0;
-        } else {
-          layer = *lastLayer.at(target) + 1;
-        }
-        lastLayer.at(target) = layer;
-      } else {
-        if (!lastLayer.at(*control).has_value() &&
-            !lastLayer.at(target).has_value()) {
-          layer = 0;
-        } else if (!lastLayer.at(*control).has_value()) {
-          layer = *lastLayer.at(target) + 1;
-        } else if (!lastLayer.at(target).has_value()) {
-          layer = *lastLayer.at(*control) + 1;
-        } else {
-          layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
-        }
-        lastLayer.at(*control) = layer;
-        lastLayer.at(target)   = layer;
-      }
-
-      if (layers.size() <= layer) {
-        layers.emplace_back();
-      }
-      if (control.has_value()) {
-        layers.back().emplace_back(*control, target, gate.get());
-      } else {
-        layers.back().emplace_back(-1, target, gate.get());
-      }
+      processDisjointQubitLayer(lastLayer, control, target, gate.get());
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
