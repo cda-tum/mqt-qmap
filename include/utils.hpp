@@ -5,10 +5,12 @@
 
 #pragma once
 
+#include "operations/Operation.hpp"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
-#include <operations/Operation.hpp>
+#include <optional>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -66,7 +68,7 @@ public:
   struct Node {
     bool                         containsCorrectEdge = false;
     bool                         visited             = false;
-    std::optional<std::uint16_t> pos                 = -1;
+    std::optional<std::uint16_t> pos                 = std::nullopt;
     double                       cost                = -1.;
   };
 
