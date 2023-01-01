@@ -193,8 +193,8 @@ TEST_P(HeuristicTest20Q, Dynamic) {
 class HeuristicTest20QTeleport
     : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     arch{};
