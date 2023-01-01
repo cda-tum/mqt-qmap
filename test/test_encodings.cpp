@@ -10,10 +10,6 @@
 class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
-  std::string testExampleDir      = "./examples/";
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
-
   qc::QuantumComputation       qc{};
   Configuration                settings{};
   Architecture                 arch{};

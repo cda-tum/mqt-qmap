@@ -9,9 +9,9 @@
 
 class HeuristicTest5Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "./examples/";
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
 
   qc::QuantumComputation           qc{};
   Architecture                     ibmqYorktown{};
@@ -123,8 +123,8 @@ TEST_P(HeuristicTest5Q, Dynamic) {
 
 class HeuristicTest16Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     ibmQX5{};
@@ -157,8 +157,8 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 
 class HeuristicTest20Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     arch{};

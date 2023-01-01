@@ -9,8 +9,8 @@
 
 class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
 };
 
 INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,

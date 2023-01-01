@@ -10,9 +10,9 @@
 
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "./examples/";
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
 
   qc::QuantumComputation       qc{};
   Configuration                settings{};
