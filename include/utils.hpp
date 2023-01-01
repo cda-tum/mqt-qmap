@@ -26,14 +26,13 @@ using CouplingMap = std::set<Edge>;
 using QubitSubset = std::set<std::uint16_t>;
 
 struct Exchange {
-  Exchange(const std::uint16_t first, const std::uint16_t second,
-           const qc::OpType op)
-      : first(first), second(second),
+  Exchange(const std::uint16_t f, const std::uint16_t s, const qc::OpType type)
+      : first(f), second(s),
         middleAncilla(std::numeric_limits<decltype(middleAncilla)>::max()),
-        op(op) {}
-  Exchange(const std::uint16_t first, const std::uint16_t second,
-           const std::uint16_t middleAnc, const qc::OpType op)
-      : first(first), second(second), middleAncilla(middleAnc), op(op) {}
+        op(type) {}
+  Exchange(const std::uint16_t f, const std::uint16_t s,
+           const std::uint16_t middleAnc, const qc::OpType type)
+      : first(f), second(s), middleAncilla(middleAnc), op(type) {}
   std::uint16_t first;
   std::uint16_t second;
   std::uint16_t middleAncilla;
@@ -44,8 +43,8 @@ class QMAPException : public std::runtime_error {
   std::string msg;
 
 public:
-  explicit QMAPException(std::string msg)
-      : std::runtime_error("QMAP Exception"), msg(std::move(msg)) {}
+  explicit QMAPException(std::string m)
+      : std::runtime_error("QMAP Exception"), msg(std::move(m)) {}
 
   [[nodiscard]] const char* what() const noexcept override {
     return msg.c_str();
@@ -56,7 +55,8 @@ public:
 /// \param n integer to compute factorial of
 /// \return n!
 // NOLINTNEXTLINE (clang-diagnostic-unneeded-internal-declaration)
-static inline constexpr std::uint64_t factorial(const std::uint64_t n) {
+[[gnu::const]] static inline constexpr std::uint64_t
+factorial(const std::uint64_t n) {
   if (n == 1) {
     return 1;
   }

@@ -191,18 +191,18 @@ void Tableau::fromString(const std::string& str) {
 
 void Tableau::applyH(const std::size_t target) {
   assert(target < nQubits);
-  for (auto i = 0U; i < nQubits; ++i) {
-    tableau[i][2U * nQubits] ^=
-        (tableau[i][target] & tableau[i][target + nQubits]);
+  for (std::size_t i = 0U; i < nQubits; ++i) {
+    tableau[i][2U * nQubits] ^= static_cast<EntryType>(
+        tableau[i][target] & tableau[i][target + nQubits]);
     std::swap(tableau[i][target], tableau[i][target + nQubits]);
   }
 }
 
 void Tableau::applyS(const std::size_t target) {
   assert(target < nQubits);
-  for (auto i = 0U; i < nQubits; ++i) {
-    tableau[i][2U * nQubits] ^=
-        tableau[i][target] & tableau[i][target + nQubits];
+  for (std::size_t i = 0U; i < nQubits; ++i) {
+    tableau[i][2U * nQubits] ^= static_cast<EntryType>(
+        tableau[i][target] & tableau[i][target + nQubits]);
     tableau[i][target + nQubits] ^= tableau[i][target];
   }
 }

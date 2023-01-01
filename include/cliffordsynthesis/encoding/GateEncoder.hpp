@@ -18,9 +18,10 @@ namespace cs::encoding {
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-              TableauEncoder::Variables*             tvars,
-              std::shared_ptr<logicbase::LogicBlock> lb)
-      : N(nQubits), T(timestepLimit), tvars(tvars), lb(std::move(lb)) {}
+              TableauEncoder::Variables*             tableauVars,
+              std::shared_ptr<logicbase::LogicBlock> logicBlock)
+      : N(nQubits), T(timestepLimit), tvars(tableauVars),
+        lb(std::move(logicBlock)) {}
   virtual ~GateEncoder() = default;
 
   struct Variables {

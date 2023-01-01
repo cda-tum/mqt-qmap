@@ -18,8 +18,8 @@ class TableauEncoder {
 public:
   TableauEncoder() = default;
   TableauEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                 std::shared_ptr<logicbase::LogicBlock> lb)
-      : N(nQubits), T(timestepLimit), lb(std::move(lb)) {}
+                 std::shared_ptr<logicbase::LogicBlock> logicBlock)
+      : N(nQubits), T(timestepLimit), lb(std::move(logicBlock)) {}
 
   struct Variables {
     // variables for the X parts of the tableaus

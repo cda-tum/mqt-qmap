@@ -48,7 +48,7 @@ public:
       void set(const KeyType& key, const ValueType& value) {
         props[key] = value;
       }
-      [[nodiscard]] bool available(const KeyType& key) const {
+      [[nodiscard, gnu::pure]] bool available(const KeyType& key) const {
         return props.find(key) != props.end();
       }
       void               clear() { props.clear(); }
@@ -217,8 +217,8 @@ public:
     loadProperties(propsFilename);
   }
 
-  Architecture(std::uint16_t nQ, const CouplingMap& couplingMap);
-  Architecture(std::uint16_t nQ, const CouplingMap& couplingMap,
+  Architecture(std::uint16_t nQ, const CouplingMap& cm);
+  Architecture(std::uint16_t nQ, const CouplingMap& cm,
                const Properties& props);
 
   [[nodiscard]] std::uint16_t getNqubits() const { return nqubits; }

@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include <iostream>
+#include <stdexcept>
+#include <string>
 
 enum class Encoding { Naive, Commander, Bimander };
 

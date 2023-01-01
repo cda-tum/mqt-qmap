@@ -58,8 +58,9 @@ public:
   };
 
   SATEncoder() = default;
-  explicit SATEncoder(const Configuration& config)
-      : config(config), N(config.nQubits), T(config.timestepLimit) {}
+  explicit SATEncoder(const Configuration& configuration)
+      : config(configuration), N(configuration.nQubits),
+        T(configuration.timestepLimit) {}
   virtual ~SATEncoder() = default;
 
   virtual Results run();

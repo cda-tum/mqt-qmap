@@ -38,8 +38,8 @@ protected:
     qc::Operation* op = nullptr;
 
     Gate(const std::int16_t c, const std::uint16_t t) : control(c), target(t){};
-    Gate(const std::int16_t c, const std::uint16_t t, qc::Operation* op)
-        : control(c), target(t), op(op){};
+    Gate(const std::int16_t c, const std::uint16_t t, qc::Operation* operation)
+        : control(c), target(t), op(operation){};
 
     [[nodiscard]] bool singleQubit() const { return control == -1; }
   };
