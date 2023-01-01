@@ -128,7 +128,7 @@ protected:
    * @brief Get the index of the next layer after the given index containing a
    * gate acting on more than one qubit
    */
-  virtual std::size_t getNextLayer(std::size_t idx);
+  [[gnu::pure]] virtual std::size_t getNextLayer(std::size_t idx);
 
   /**
    * @brief adding additional qubits to the result circuit if architecture has
