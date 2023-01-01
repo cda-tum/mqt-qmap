@@ -51,18 +51,6 @@ public:
   }
 };
 
-/// Computes n! recursively
-/// \param n integer to compute factorial of
-/// \return n!
-// NOLINTNEXTLINE (clang-diagnostic-unneeded-internal-declaration)
-[[gnu::const]] static inline constexpr std::uint64_t
-factorial(const std::uint64_t n) {
-  if (n == 1) {
-    return 1;
-  }
-  return n * factorial(n - 1);
-}
-
 class Dijkstra {
 public:
   struct Node {
