@@ -6,8 +6,7 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "06:00"
-    assignees:
-      - "burgholzer"
+      timezone: "Europe/Vienna"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -15,8 +14,7 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "06:00"
-    assignees:
-      - "burgholzer"
+      timezone: "Europe/Vienna"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -24,5 +22,4 @@ updates:
       interval: "weekly"
       day: "friday"
       time: "06:00"
-    assignees:
-      - "burgholzer"
+      timezone: "Europe/Vienna"
