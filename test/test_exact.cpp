@@ -10,9 +10,9 @@
 
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "./examples/";
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
 
   qc::QuantumComputation       qc{};
   Configuration                settings{};
@@ -53,12 +53,10 @@ protected:
 INSTANTIATE_TEST_SUITE_P(
     Exact, ExactTest,
     testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84"),
-    [](const testing::TestParamInfo<ExactTest::ParamType>& info) {
-      std::string name = info.param;
+    [](const testing::TestParamInfo<ExactTest::ParamType>& inf) {
+      std::string name = inf.param;
       std::replace(name.begin(), name.end(), '-', '_');
-      std::stringstream ss{};
-      ss << name;
-      return ss.str();
+      return name;
     });
 
 TEST_P(ExactTest, IndividualGates) {

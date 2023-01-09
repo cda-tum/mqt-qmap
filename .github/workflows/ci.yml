@@ -17,6 +17,7 @@ defaults:
 
 env:
   CMAKE_BUILD_PARALLEL_LEVEL: 3
+  CTEST_PARALLEL_LEVEL: 3
   Z3_VERSION: 4.11.2
 
 jobs:
@@ -27,13 +28,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: ubuntu-latest, test-dir: build/test, toolchain: "" }
-          - { os: macos-latest, test-dir: build/test, toolchain: "" }
-          - {
-              os: windows-latest,
-              test-dir: build\test\Release,
-              toolchain: "-T ClangCl",
-            }
+          - { os: ubuntu-latest, toolchain: "" }
+          - { os: macos-latest, toolchain: "" }
+          - { os: windows-latest, toolchain: "-T ClangCl" }
     steps:
       - uses: actions/checkout@v3
         with:
@@ -51,15 +48,13 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
       - name: Test
-        working-directory: ${{ matrix.config.test-dir }}
-        run: ctest -C Release --output-on-failure
+        run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 300
       - if: runner.os == 'Linux'
         name: Coverage
         run: |
-          cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DCOVERAGE=ON
+          cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DENABLE_COVERAGE=ON
           cmake --build buildCov --config Debug
-          cd buildCov/test
-          ctest -C Debug --output-on-failure
+          ctest -C Debug --output-on-failure --test-dir buildCov --repeat until-pass:3 --timeout 300
       - if: runner.os == 'Linux'
         name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1

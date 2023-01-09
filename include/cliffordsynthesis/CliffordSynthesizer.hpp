@@ -22,14 +22,13 @@ class CliffordSynthesizer {
 
 public:
   CliffordSynthesizer() = default;
-  CliffordSynthesizer(Tableau initialTableau, Tableau targetTableau)
-      : initialTableau(std::move(initialTableau)),
-        targetTableau(std::move(targetTableau)) {}
-  explicit CliffordSynthesizer(Tableau targetTableau)
-      : initialTableau(targetTableau.getQubitCount()),
-        targetTableau(std::move(targetTableau)) {}
-  CliffordSynthesizer(Tableau initialTableau, qc::QuantumComputation& qc)
-      : initialTableau(std::move(initialTableau)), targetTableau(qc),
+  CliffordSynthesizer(Tableau initial, Tableau target)
+      : initialTableau(std::move(initial)), targetTableau(std::move(target)) {}
+  explicit CliffordSynthesizer(Tableau target)
+      : initialTableau(target.getQubitCount()),
+        targetTableau(std::move(target)) {}
+  CliffordSynthesizer(Tableau initial, qc::QuantumComputation& qc)
+      : initialTableau(std::move(initial)), targetTableau(qc),
         results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc)
       : initialTableau(qc.getNqubits()), targetTableau(qc),

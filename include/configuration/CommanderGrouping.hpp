@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include <iostream>
+#include <stdexcept>
+#include <string>
 
 enum class CommanderGrouping { Halves, Fixed2, Fixed3, Logarithm };
 

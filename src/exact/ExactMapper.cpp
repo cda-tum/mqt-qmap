@@ -56,7 +56,11 @@ void ExactMapper::map(const Configuration& settings) {
     return;
   }
 
-  auto maxIndex = factorial(qc.getNqubits()) * reducedLayerIndices.size();
+  std::uint64_t factorial = 1;
+  for (std::size_t i = 2; i <= qc.getNqubits(); ++i) {
+    factorial *= i;
+  }
+  auto maxIndex = factorial * reducedLayerIndices.size();
   if (maxIndex > std::numeric_limits<int>::max()) {
     std::cerr << "The exact approach can only be used for up to "
               << std::numeric_limits<int>::max()

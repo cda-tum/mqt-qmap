@@ -27,8 +27,8 @@ public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
                    std::size_t end = std::numeric_limits<std::size_t>::max());
-  explicit Tableau(const std::size_t nQubits) : nQubits(nQubits) {
-    createDiagonalTableau(nQubits);
+  explicit Tableau(const std::size_t nq) : nQubits(nq) {
+    createDiagonalTableau(nq);
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
@@ -88,10 +88,10 @@ public:
   void applyCZ(std::size_t control, std::size_t target);
   void applySwap(std::size_t q1, std::size_t q2);
 
-  friend bool operator==(const Tableau& lhs, const Tableau& rhs) {
+  [[gnu::pure]] friend bool operator==(const Tableau& lhs, const Tableau& rhs) {
     return lhs.tableau == rhs.tableau;
   }
-  friend bool operator!=(const Tableau& lhs, const Tableau& rhs) {
+  [[gnu::pure]] friend bool operator!=(const Tableau& lhs, const Tableau& rhs) {
     return !(lhs == rhs);
   }
 

@@ -2,9 +2,7 @@
 	path = extern/qfr
 	url = https://github.com/cda-tum/qfr.git
 	branch = main
-    shallow = true
 [submodule "extern/LogicBlocks"]
 	path = extern/LogicBlocks
 	url = https://github.com/cda-tum/LogicBlocks.git
     branch = main
-    shallow = true

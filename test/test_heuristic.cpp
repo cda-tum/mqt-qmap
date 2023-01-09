@@ -9,9 +9,9 @@
 
 class HeuristicTest5Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "./examples/";
-  std::string testArchitectureDir = "./architectures/";
-  std::string testCalibrationDir  = "./calibration/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
 
   qc::QuantumComputation           qc{};
   Architecture                     ibmqYorktown{};
@@ -78,12 +78,10 @@ INSTANTIATE_TEST_SUITE_P(
     Heuristic, HeuristicTest5Q,
     testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84",
                     "4mod5-v0_20", "mod5d1_63"),
-    [](const testing::TestParamInfo<HeuristicTest5Q::ParamType>& info) {
-      std::string name = info.param;
+    [](const testing::TestParamInfo<HeuristicTest5Q::ParamType>& inf) {
+      std::string name = inf.param;
       std::replace(name.begin(), name.end(), '-', '_');
-      std::stringstream ss{};
-      ss << name;
-      return ss.str();
+      return name;
     });
 
 TEST_P(HeuristicTest5Q, Identity) {
@@ -125,8 +123,8 @@ TEST_P(HeuristicTest5Q, Dynamic) {
 
 class HeuristicTest16Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     ibmQX5{};
@@ -142,12 +140,10 @@ protected:
 INSTANTIATE_TEST_SUITE_P(
     Heuristic, HeuristicTest16Q,
     testing::Values("ising_model_10", "rd73_140", "cnt3-5_179", "qft_16"),
-    [](const testing::TestParamInfo<HeuristicTest16Q::ParamType>& info) {
-      std::string name = info.param;
+    [](const testing::TestParamInfo<HeuristicTest16Q::ParamType>& inf) {
+      std::string name = inf.param;
       std::replace(name.begin(), name.end(), '-', '_');
-      std::stringstream ss{};
-      ss << name;
-      return ss.str();
+      return name;
     });
 
 TEST_P(HeuristicTest16Q, Dynamic) {
@@ -161,8 +157,8 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 
 class HeuristicTest20Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     arch{};
@@ -179,12 +175,10 @@ INSTANTIATE_TEST_SUITE_P(
     Heuristic, HeuristicTest20Q,
     testing::Values("ising_model_10", "rd73_140", "cnt3-5_179", "qft_16",
                     "z4_268"),
-    [](const testing::TestParamInfo<HeuristicTest20Q::ParamType>& info) {
-      std::string name = info.param;
+    [](const testing::TestParamInfo<HeuristicTest20Q::ParamType>& inf) {
+      std::string name = inf.param;
       std::replace(name.begin(), name.end(), '-', '_');
-      std::stringstream ss{};
-      ss << name;
-      return ss.str();
+      return name;
     });
 
 TEST_P(HeuristicTest20Q, Dynamic) {
@@ -199,8 +193,8 @@ TEST_P(HeuristicTest20Q, Dynamic) {
 class HeuristicTest20QTeleport
     : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
 protected:
-  std::string testExampleDir      = "../../examples/";
-  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
 
   qc::QuantumComputation           qc{};
   Architecture                     arch{};
@@ -218,12 +212,11 @@ INSTANTIATE_TEST_SUITE_P(
     testing::Combine(testing::Values(1, 2, 3, 1337, 1338, 3147),
                      testing::Values("ising_model_10", "rd73_140", "cnt3-5_179",
                                      "qft_16", "z4_268")),
-    [](const testing::TestParamInfo<HeuristicTest20QTeleport::ParamType>&
-           info) {
-      std::string name = std::get<1>(info.param);
+    [](const testing::TestParamInfo<HeuristicTest20QTeleport::ParamType>& inf) {
+      std::string name = std::get<1>(inf.param);
       std::replace(name.begin(), name.end(), '-', '_');
       std::stringstream ss{};
-      ss << name << "_seed" << std::get<0>(info.param);
+      ss << name << "_seed" << std::get<0>(inf.param);
       return ss.str();
     });
 
