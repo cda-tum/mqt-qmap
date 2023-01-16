@@ -62,6 +62,7 @@ void Architecture::loadCouplingMap(std::istream&& is) {
     }
   }
   createDistanceTable();
+  createFidelityDistanceTable();
 }
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
@@ -70,6 +71,7 @@ void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
   properties.clear();
   name = "generic_" + std::to_string(nQ);
   createDistanceTable();
+  createFidelityDistanceTable();
 }
 
 void Architecture::loadProperties(std::istream& is) {
@@ -157,6 +159,7 @@ void Architecture::loadProperties(std::istream&& is) {
   }
 
   createFidelityTable();
+  createFidelityDistanceTable();
 }
 
 void Architecture::loadProperties(const Properties& props) {
@@ -172,6 +175,7 @@ void Architecture::loadProperties(const Properties& props) {
   }
   properties = props;
   createFidelityTable();
+  createFidelityDistanceTable();
 }
 
 Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm) {
@@ -185,20 +189,45 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
+  Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, INFINITY));
   for (const auto& edge : couplingMap) {
+    edgeWeights.at(edge.first).at(edge.second) = COST_BIDIRECTIONAL_SWAP;
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
-      isBidirectional = false;
-      break;
+      edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
     }
   }
+  
+  Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
+                         Architecture::dijkstraNodeToCostNonFidelity);
+}
 
-  if (isBidirectional) {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
-                         Architecture::costHeuristicBidirectional);
-  } else {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
-                         Architecture::costHeuristicUnidirectional);
+void Architecture::createFidelityDistanceTable() {
+  for(std::uint16_t i = 0; i < nqubits; ++i) {
+    for(std::uint16_t j = 0; j < nqubits; ++j) {
+      if(!properties.twoQubitErrorRateAvailable(i, j)) {
+        fidelityDistanceTable = std::vector<std::vector<double>> (nqubits, 
+          std::vector<double>(nqubits, 0));
+        return;
+      }
+    }
   }
+  
+  const auto& singleQubitFidelities = getSingleQubitFidelities();
+  const auto& twoQubitFidelities = getFidelityTable();
+  Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, INFINITY));
+  for (const auto& edge : couplingMap) {
+    edgeWeights.at(edge.first).at(edge.second) = 
+      -3*log2(twoQubitFidelities.at(edge.first).at(edge.second));
+    if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
+      edgeWeights.at(edge.second).at(edge.first) = 
+        -3*log2(twoQubitFidelities.at(edge.first).at(edge.second))
+        -2*log2(singleQubitFidelities.at(edge.first))
+        -2*log2(singleQubitFidelities.at(edge.second));
+    }
+  }
+  
+  Dijkstra::buildTable(nqubits, couplingMap, fidelityDistanceTable, edgeWeights,
+                         Architecture::dijkstraNodeToCostFidelity);
 }
 
 void Architecture::createFidelityTable() {

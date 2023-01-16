@@ -20,7 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
-using Matrix      = std::vector<std::vector<double>>;
+template <typename T>
+using Matrix      = std::vector<std::vector<T>>;
 using Edge        = std::pair<std::uint16_t, std::uint16_t>;
 using CouplingMap = std::set<Edge>;
 using QubitSubset = std::set<std::uint16_t>;
@@ -61,7 +62,8 @@ public:
   };
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
-                         Matrix& distanceTable,
+                         Matrix<double>& distanceTable,
+                         const Matrix<double> edgeWeights,
                          const std::function<double(const Node&)>& cost);
 
 protected:

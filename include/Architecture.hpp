@@ -242,7 +242,9 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
+  [[nodiscard]] const Matrix<double>& getDistanceTable() const { return distanceTable; }
+  
+  [[nodiscard]] const Matrix<double>& getFidelityDistanceTable() const { return fidelityDistanceTable; }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -253,7 +255,7 @@ public:
     createFidelityTable();
   }
 
-  [[nodiscard]] const Matrix& getFidelityTable() const { return fidelityTable; }
+  [[nodiscard]] const Matrix<double>& getFidelityTable() const { return fidelityTable; }
 
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelities() const {
     return singleQubitFidelities;
@@ -277,6 +279,7 @@ public:
     properties.clear();
     fidelityTable.clear();
     singleQubitFidelities.clear();
+    fidelityDistanceTable.clear();
   }
 
   [[nodiscard]] double distance(std::uint16_t control,
@@ -285,6 +288,11 @@ public:
       return distanceTable.at(control).at(target);
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t control,
+                                std::uint16_t target) const {
+    return fidelityDistanceTable.at(control).at(target);
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -354,30 +362,26 @@ protected:
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
-  Matrix                                             distanceTable   = {};
+  Matrix<double>                                     distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties            = {};
-  Matrix                                             fidelityTable         = {};
+  Matrix<double>                                     fidelityTable         = {};
   std::vector<double>                                singleQubitFidelities = {};
+  Matrix<double>                                     fidelityDistanceTable   = {};
 
   void createDistanceTable();
+  void createFidelityDistanceTable();
   void createFidelityTable();
-
-  static double costHeuristicBidirectional(const Dijkstra::Node& node) {
-    auto length = node.cost - 1;
-    if (node.containsCorrectEdge) {
-      return length * COST_BIDIRECTIONAL_SWAP;
-    }
-    throw QMAPException("In a bidrectional architecture it should not happen "
-                        "that a node does not contain the right edge.");
+  
+  static double dijkstraNodeToCostFidelity(const Dijkstra::Node& node) {
+    return node.cost;
   }
-
-  static double costHeuristicUnidirectional(const Dijkstra::Node& node) {
-    auto length = node.cost - 1;
-    if (node.containsCorrectEdge) {
-      return length * COST_UNIDIRECTIONAL_SWAP;
-    }
-    return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
+  
+  static double dijkstraNodeToCostNonFidelity(const Dijkstra::Node& node) {
+    // Dijkstra finds the length of the full path, however, the qubits only 
+    // need to be next to each other; therefore the last swap has to be subtracted; 
+    // any potential direction reversals are still relevant for the original CNOT
+    return node.cost - COST_BIDIRECTIONAL_SWAP;
   }
 
   // added for teleportation
