@@ -106,10 +106,12 @@ public:
       if (considerFidelity) {
         // accounting for fidelity difference of single qubit gates (two qubit gates are 
         // handled in the heuristic)
-        costFixed += (-(singleQubitGateMultiplicity.at(q2) - singleQubitGateMultiplicity.at(q1)) * 
-                         log2(singleQubitFidelities.at(swap.first))
-                      -(singleQubitGateMultiplicity.at(q1) - singleQubitGateMultiplicity.at(q2)) * 
-                        log2(singleQubitFidelities.at(swap.second))
+        costFixed += (-(singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2)) - 
+                        singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1))) * 
+                          log2(singleQubitFidelities.at(swap.first))
+                      -(singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1)) - 
+                        singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2))) * 
+                          log2(singleQubitFidelities.at(swap.second))
                       );
         // adding cost oft the swap gate
         if (arch.bidirectional()) {
@@ -231,7 +233,7 @@ public:
         // adding costs of single qubit gates
         for (std::uint16_t i = 0U; i < singleQubitGateMultiplicity.size(); ++i) {
           costFixed += -singleQubitGateMultiplicity.at(i) * 
-            log2(singleQubitFidelities.at(locations.at(i)));
+            log2(singleQubitFidelities.at(static_cast<std::size_t>(locations.at(i))));
         }
         // adding cost oft the swap gates
         for(auto& swapNode : swaps) {
@@ -305,13 +307,14 @@ public:
           }
           double qbitSavings = 0;
           for (std::uint16_t phys_qbit = 0U; phys_qbit < qubits.size(); ++phys_qbit) {
-            if(singleQubitFidelities.at(phys_qbit) <= singleQubitFidelities.at(locations.at(log_qbit))) {
-              continue;
+            if(singleQubitFidelities.at(phys_qbit) <= singleQubitFidelities.at(
+              static_cast<std::size_t>(locations.at(log_qbit)))) {
+                continue;
             }
             double curSavings = -singleQubitGateMultiplicity.at(log_qbit) * (
-                log2(singleQubitFidelities.at(locations.at(log_qbit))) - 
+                log2(singleQubitFidelities.at(static_cast<std::size_t>(locations.at(log_qbit)))) - 
                 log2(singleQubitFidelities.at(phys_qbit))
-              ) - arch.fidelityDistance(locations.at(log_qbit), phys_qbit);
+              ) - arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(log_qbit)), phys_qbit);
             qbitSavings = std::max(qbitSavings, curSavings);
           }
           savingsPotential += qbitSavings;
@@ -325,7 +328,12 @@ public:
         const auto& reverseMultiplicity = edgeMultiplicity.second.second;
         const auto& totalMultiplicity = straightMultiplicity + reverseMultiplicity;
         
-        if (done && arch.getCouplingMap().find(edgeMultiplicity.first) == arch.getCouplingMap().end()) {
+        if (done && arch.getCouplingMap().find({static_cast<std::uint16_t>(locations.at(q1)),
+                                                static_cast<std::uint16_t>(locations.at(q2))
+                                               }) == arch.getCouplingMap().end() && 
+                    arch.getCouplingMap().find({static_cast<std::uint16_t>(locations.at(q2)),
+                                                static_cast<std::uint16_t>(locations.at(q1))
+                                               }) == arch.getCouplingMap().end()) {
           done = false;
         }
         

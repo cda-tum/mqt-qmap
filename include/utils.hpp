@@ -68,7 +68,7 @@ public:
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
-                       std::uint16_t start);
+                       std::uint16_t start, const Matrix<double> edgeWeights);
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {

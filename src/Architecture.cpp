@@ -212,15 +212,13 @@ void Architecture::createFidelityDistanceTable() {
     }
   }
   
-  const auto& singleQubitFidelities = getSingleQubitFidelities();
-  const auto& twoQubitFidelities = getFidelityTable();
   Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, INFINITY));
   for (const auto& edge : couplingMap) {
     edgeWeights.at(edge.first).at(edge.second) = 
-      -3*log2(twoQubitFidelities.at(edge.first).at(edge.second));
+      -3*log2(fidelityTable.at(edge.first).at(edge.second));
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       edgeWeights.at(edge.second).at(edge.first) = 
-        -3*log2(twoQubitFidelities.at(edge.first).at(edge.second))
+        -3*log2(fidelityTable.at(edge.first).at(edge.second))
         -2*log2(singleQubitFidelities.at(edge.first))
         -2*log2(singleQubitFidelities.at(edge.second));
     }

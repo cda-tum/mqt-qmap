@@ -546,7 +546,6 @@ void HeuristicMapper::expandNodeAddOneSwap(const Edge& swap, Node& node,
                                            const EdgeMultiplicity 
                                            twoQubitGateMultiplicity) {
   const auto& config       = results.config;
-  auto&       currentLayer = layers.at(layer);
 
   Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed);
   newNode.nswaps++;
