@@ -552,8 +552,9 @@ void Architecture::findCouplingLimit(
   }
   visited[node] = true;
 
-  if (d.at(node) < curSum) {
-    d[node] = curSum;
+  auto& elem = d[node];
+  if (elem == 0 || elem > curSum) {
+    elem = curSum;
   }
   if (connections.at(node).empty()) {
     visited[node] = false;
