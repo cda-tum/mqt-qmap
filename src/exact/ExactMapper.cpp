@@ -256,15 +256,12 @@ void ExactMapper::map(const Configuration& settings) {
   for (std::size_t i = 0U; i < layers.size(); ++i) {
     if (i == 0U) {
       qcMapped.initialLayout.clear();
-      qcMapped.outputPermutation.clear();
 
       // no swaps but initial permutation
       for (const auto& [physical, logical] : *swapsIterator) {
         locations.at(logical) = static_cast<std::int16_t>(physical);
         qubits.at(physical)   = static_cast<std::int16_t>(logical);
         qcMapped.initialLayout[static_cast<qc::Qubit>(physical)] =
-            static_cast<qc::Qubit>(logical);
-        qcMapped.outputPermutation[static_cast<qc::Qubit>(physical)] =
             static_cast<qc::Qubit>(logical);
       }
 
@@ -371,6 +368,13 @@ void ExactMapper::map(const Configuration& settings) {
       ++swapsIterator;
       ++layerIterator;
     }
+  }
+
+  // set output permutation
+  qcMapped.outputPermutation.clear();
+  for (qc::Qubit logical = 0; logical < qc.getNqubits(); ++logical) {
+    const auto physical = static_cast<qc::Qubit>(locations[logical]);
+    qcMapped.outputPermutation[physical] = logical;
   }
 
   // 9) apply post mapping optimizations
