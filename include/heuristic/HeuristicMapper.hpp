@@ -323,7 +323,7 @@ public:
       
       for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
         const auto& q1 = edgeMultiplicity.first.first;
-        const auto& q2 = edgeMultiplicity.first.first;
+        const auto& q2 = edgeMultiplicity.first.second;
         const auto& straightMultiplicity = edgeMultiplicity.second.first;
         const auto& reverseMultiplicity = edgeMultiplicity.second.second;
         const auto& totalMultiplicity = straightMultiplicity + reverseMultiplicity;

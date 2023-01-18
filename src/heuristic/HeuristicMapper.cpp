@@ -52,7 +52,18 @@ void HeuristicMapper::map(const Configuration& configuration) {
     if (i != 0) {
       for (const auto& swaps : result.swaps) {
         for (const auto& swap : swaps) {
+          if (config.verbose) {
+            std::clog << "SWAP: " << swap.first << " <-> " << swap.second << "\n";
+          }
           if (swap.op == qc::SWAP) {
+            if (architecture.getCouplingMap().find({swap.first, swap.second}) ==
+                architecture.getCouplingMap().end() && 
+                architecture.getCouplingMap().find({swap.second, swap.first}) ==
+                architecture.getCouplingMap().end()) {
+              throw QMAPException(
+                  "Invalid SWAP: " + std::to_string(swap.first) + "<->" +
+                  std::to_string(swap.second));
+            }
             qcMapped.swap(swap.first, swap.second);
             results.output.swaps++;
           } else if (swap.op == qc::Teleportation) {
@@ -306,6 +317,7 @@ void HeuristicMapper::mapUnmappedGates(
     std::size_t layer, std::vector<std::uint16_t>& consideredQubits) {
   for (const auto& gate : layers.at(layer)) {
     if (gate.singleQubit()) {
+      // TODO: if considerFidelity probably necessary to also map single qubits
       continue;
     }
 
@@ -561,7 +573,7 @@ void HeuristicMapper::expandNodeAddOneSwap(const Edge& swap, Node& node,
     newNode.applyTeleportation(swap, architecture, config.considerFidelity);
   }
 
-  node.updateHeuristicCost(architecture, singleQubitGateMultiplicity,
+  newNode.updateHeuristicCost(architecture, singleQubitGateMultiplicity,
                            twoQubitGateMultiplicity,
                            results.config.admissibleHeuristic,
                            results.config.considerFidelity);
