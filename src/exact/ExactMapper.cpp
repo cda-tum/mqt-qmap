@@ -343,14 +343,13 @@ void ExactMapper::map(const Configuration& settings) {
       // apply swaps before layer
       for (auto it = (*swapsIterator).rbegin(); it != (*swapsIterator).rend();
            ++it) {
-        auto& swap = *it;
-        qcMapped.swap(swap.first, swap.second);
-        std::swap(qcMapped.outputPermutation.at(swap.first),
-                  qcMapped.outputPermutation.at(swap.second));
-        std::swap(qubits.at(swap.first), qubits.at(swap.second));
-        std::swap(
-            locations.at(static_cast<std::size_t>(qubits.at(swap.first))),
-            locations.at(static_cast<std::size_t>(qubits.at(swap.second))));
+        const auto& [q0, q1] = *it;
+        const auto logical0  = static_cast<qc::Qubit>(qubits.at(q0));
+        const auto logical1  = static_cast<qc::Qubit>(qubits.at(q1));
+        qcMapped.swap(q0, q1);
+        std::swap(qubits.at(q0), qubits.at(q1));
+        locations[logical0] = static_cast<std::int16_t>(q1);
+        locations[logical1] = static_cast<std::int16_t>(q0);
 
         if (settings.verbose) {
           std::cout << "Qubits: ";
