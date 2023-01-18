@@ -232,3 +232,56 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
+
+
+
+
+class HeuristicTest5QFidelity : public testing::TestWithParam<std::string> {
+protected:
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
+
+  qc::QuantumComputation           qc{};
+  Architecture                     arch{};
+  std::unique_ptr<HeuristicMapper> mapper;
+
+  void SetUp() override {
+    qc.import(testExampleDir + GetParam() + ".qasm");
+    arch.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
+    arch.loadProperties(testCalibrationDir + "ibmq_london.csv");
+    mapper = std::make_unique<HeuristicMapper>(qc, arch);
+  }
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Heuristic, HeuristicTest5QFidelity,
+    testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84",
+                    "4mod5-v0_20", "mod5d1_63"),
+    [](const testing::TestParamInfo<HeuristicTest5QFidelity::ParamType>& inf) {
+      std::string name = inf.param;
+      std::replace(name.begin(), name.end(), '-', '_');
+      return name;
+    });
+
+TEST_P(HeuristicTest5QFidelity, Identity) {
+  Configuration settings{};
+  settings.initialLayout = InitialLayout::Identity;
+  settings.considerFidelity = true;
+  mapper->map(settings);
+  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
+  mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTest5QFidelity, Static) {
+  Configuration settings{};
+  settings.initialLayout = InitialLayout::Static;
+  settings.considerFidelity = true;
+  mapper->map(settings);
+  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
+  mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+// TODO: considerFidelity = true, but no calibration data available
