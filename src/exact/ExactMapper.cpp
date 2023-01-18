@@ -272,8 +272,13 @@ void ExactMapper::map(const Configuration& settings) {
       placeRemainingArchitectureQubits();
 
       if (settings.verbose) {
+        std::cout << "Qubits: ";
         for (auto q = 0U; q < architecture.getNqubits(); ++q) {
           std::cout << qubits.at(q) << " ";
+        }
+        std::cout << " Locations: ";
+        for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+          std::cout << locations.at(q) << " ";
         }
         std::cout << std::endl;
       }
@@ -351,8 +356,13 @@ void ExactMapper::map(const Configuration& settings) {
             locations.at(static_cast<std::size_t>(qubits.at(swap.second))));
 
         if (settings.verbose) {
+          std::cout << "Qubits: ";
           for (auto q = 0U; q < architecture.getNqubits(); ++q) {
             std::cout << qubits.at(q) << " ";
+          }
+          std::cout << " Locations: ";
+          for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+            std::cout << locations.at(q) << " ";
           }
           std::cout << std::endl;
         }
