@@ -152,3 +152,11 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
   EXPECT_THROW(architecture.minimumNumberOfSwaps(permutation, swaps),
                std::runtime_error);
 }
+
+TEST(TestArchitecture, TestCouplingLimitRing) {
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  architecture.loadCouplingMap(5, cm);
+  EXPECT_EQ(architecture.getCouplingLimit(), 2);
+}
