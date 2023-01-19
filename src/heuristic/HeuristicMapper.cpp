@@ -16,6 +16,17 @@ void HeuristicMapper::map(const Configuration& configuration) {
               << " not suitable for heuristic mapper!" << std::endl;
     return;
   }
+  if (config.considerFidelity && architecture.getSingleQubitFidelities().size() == 0) {
+    std::cerr << "No calibration data available for this architecture! " << 
+      "Performing mapping without considering fidelity." << std::endl;
+    config.considerFidelity = false;
+  }
+  if (config.considerFidelity && config.initialLayout == InitialLayout::Dynamic) {
+    std::cerr << "Initial layout strategy " << toString(config.initialLayout)
+              << " not suitable for heuristic mapper using fidelity-aware mapping!" << 
+              std::endl;
+    return;
+  }
   const auto start = std::chrono::steady_clock::now();
   initResults();
 

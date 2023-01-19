@@ -342,7 +342,7 @@ public:
         }
         
         if (considerFidelity) {
-          double swapCost = INFINITY;
+          double swapCost = std::numeric_limits<double>::max();
           for (const auto& edge : arch.getCouplingMap()) {
             swapCost = std::min(swapCost,
               -totalMultiplicity * log2(twoQubitFidelities.at(edge.first).at(edge.second)) + 

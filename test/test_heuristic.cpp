@@ -244,13 +244,17 @@ protected:
 
   qc::QuantumComputation           qc{};
   Architecture                     arch{};
+  Architecture                     nonFidelityArch{};
   std::unique_ptr<HeuristicMapper> mapper;
+  std::unique_ptr<HeuristicMapper> nonFidelityMapper;
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
     arch.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     arch.loadProperties(testCalibrationDir + "ibmq_london.csv");
     mapper = std::make_unique<HeuristicMapper>(qc, arch);
+    nonFidelityArch.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
+    nonFidelityMapper = std::make_unique<HeuristicMapper>(qc, nonFidelityArch);
   }
 };
 
@@ -284,4 +288,12 @@ TEST_P(HeuristicTest5QFidelity, Static) {
   SUCCEED() << "Mapping successful";
 }
 
-// TODO: considerFidelity = true, but no calibration data available
+TEST_P(HeuristicTest5QFidelity, NoFidelity) {
+  Configuration settings{};
+  settings.initialLayout = InitialLayout::Static;
+  settings.considerFidelity = true;
+  nonFidelityMapper->map(settings);
+  nonFidelityMapper->dumpResult(GetParam() + "_heuristic_london_nofidelity.qasm");
+  nonFidelityMapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
