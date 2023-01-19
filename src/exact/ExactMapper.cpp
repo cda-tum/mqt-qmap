@@ -348,8 +348,8 @@ void ExactMapper::map(const Configuration& settings) {
         const auto logical1  = static_cast<qc::Qubit>(qubits.at(q1));
         qcMapped.swap(q0, q1);
         std::swap(qubits.at(q0), qubits.at(q1));
-        locations[logical0] = static_cast<std::int16_t>(q1);
-        locations[logical1] = static_cast<std::int16_t>(q0);
+        locations.at(logical0) = static_cast<std::int16_t>(q1);
+        locations.at(logical1) = static_cast<std::int16_t>(q0);
 
         if (settings.verbose) {
           std::cout << "Qubits: ";
@@ -372,7 +372,7 @@ void ExactMapper::map(const Configuration& settings) {
   // set output permutation
   qcMapped.outputPermutation.clear();
   for (qc::Qubit logical = 0; logical < qc.getNqubits(); ++logical) {
-    const auto physical = static_cast<qc::Qubit>(locations[logical]);
+    const auto physical = static_cast<qc::Qubit>(locations.at(logical));
     qcMapped.outputPermutation[physical] = logical;
   }
 
