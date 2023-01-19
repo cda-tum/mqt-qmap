@@ -42,6 +42,8 @@ class SubarchitectureOrder:
         self.subarch_order: PartialOrder = PartialOrder({})
         self.desirable_subarchitectures: PartialOrder = PartialOrder({})
         self.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
+        self.n_non_isomorphic = 0
+        self.n_isomorphic = 0
 
         self.__compute_subarchs()
         self.__compute_subarch_order()
@@ -190,11 +192,13 @@ class SubarchitectureOrder:
             for sg in (self.arch.subgraph(selected_nodes) for selected_nodes in node_combinations):
                 if rx.is_connected(sg):
                     new_class = True
+                    self.n_non_isomorphic += 1
                     for g in self.sgs[i]:
                         if rx.is_isomorphic(g, sg):
                             new_class = False
                             break
                     if new_class:
+                        self.n_isomorphic += 1
                         self.sgs[i].append(sg)
         # init orders
         for n in range(self.arch.num_nodes() + 1):
