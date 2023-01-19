@@ -796,22 +796,51 @@ number of variables: (|L|-1) * m!
     assert(choiceResults.output.directionReverse == 0U);
     // swaps
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      auto& i = x[k - 1];
-      auto& j = x[k];
-
-      for (const auto qubit : qubitChoice) {
-        for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-          if (m->getBoolValue(i[physicalQubitIndex[qubit]][q], lb.get())) {
-            // logical qubit q was mapped to physical qubit Q
-            for (const auto otherQubit : qubitChoice) {
-              // and has been assigned to physical qubit P going forward
-              if (m->getBoolValue(j[physicalQubitIndex[otherQubit]][q],
-                                  lb.get())) {
-                pi[physicalQubitIndex[qubit]] = otherQubit;
+      if (qubitChoice.size() == qc.getNqubits()) {
+        // When as many qubits of the architecture are being considered
+        // as in the circuit, the assignment of the logical to the physical
+        // qubits is a bijection. Hence, we the assignment matrices X can be
+        // used to directly infer the permutation of the qubits in each layer.
+        auto& oldAssignment = x[k - 1];
+        auto& newAssignment = x[k];
+        for (const auto physicalQubit : qubitChoice) {
+          for (std::size_t logicalQubit = 0; logicalQubit < qc.getNqubits();
+               ++logicalQubit) {
+            if (const auto oldIndex = physicalQubitIndex[physicalQubit];
+                m->getBoolValue(oldAssignment[oldIndex][logicalQubit],
+                                lb.get())) {
+              for (const auto newPhysicalQubit : qubitChoice) {
+                if (const auto newIndex = physicalQubitIndex[newPhysicalQubit];
+                    m->getBoolValue(newAssignment[newIndex][logicalQubit],
+                                    lb.get())) {
+                  pi[oldIndex] = newPhysicalQubit;
+                  break;
+                }
               }
+              break;
             }
           }
         }
+      } else {
+        // When more qubits of the architecture are being considered than are in
+        // the circuit, the assignment of the logical to the physical qubits
+        // cannot be a bijection. Hence, the permutation variables y have to be
+        // used to infer the permutation of the qubits in each layer. This is
+        // mainly because the additional qubits movement cannot be inferred
+        // from the assignment matrices X.
+        piCount         = 0;
+        internalPiCount = 0;
+        // sort the permutation of the qubits to start fresh
+        std::sort(pi.begin(), pi.end());
+        do {
+          if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+            if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
+              break;
+            }
+            ++internalPiCount;
+          }
+          ++piCount;
+        } while (std::next_permutation(pi.begin(), pi.end()));
       }
 
       architecture.minimumNumberOfSwaps(pi, swaps.at(k));
