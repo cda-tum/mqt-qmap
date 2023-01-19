@@ -256,7 +256,6 @@ void ExactMapper::map(const Configuration& settings) {
   for (std::size_t i = 0U; i < layers.size(); ++i) {
     if (i == 0U) {
       qcMapped.initialLayout.clear();
-      qcMapped.outputPermutation.clear();
 
       // no swaps but initial permutation
       for (const auto& [physical, logical] : *swapsIterator) {
@@ -264,16 +263,19 @@ void ExactMapper::map(const Configuration& settings) {
         qubits.at(physical)   = static_cast<std::int16_t>(logical);
         qcMapped.initialLayout[static_cast<qc::Qubit>(physical)] =
             static_cast<qc::Qubit>(logical);
-        qcMapped.outputPermutation[static_cast<qc::Qubit>(physical)] =
-            static_cast<qc::Qubit>(logical);
       }
 
       // place remaining architecture qubits
       placeRemainingArchitectureQubits();
 
       if (settings.verbose) {
+        std::cout << "Qubits: ";
         for (auto q = 0U; q < architecture.getNqubits(); ++q) {
           std::cout << qubits.at(q) << " ";
+        }
+        std::cout << " Locations: ";
+        for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+          std::cout << locations.at(q) << " ";
         }
         std::cout << std::endl;
       }
@@ -341,18 +343,22 @@ void ExactMapper::map(const Configuration& settings) {
       // apply swaps before layer
       for (auto it = (*swapsIterator).rbegin(); it != (*swapsIterator).rend();
            ++it) {
-        auto& swap = *it;
-        qcMapped.swap(swap.first, swap.second);
-        std::swap(qcMapped.outputPermutation.at(swap.first),
-                  qcMapped.outputPermutation.at(swap.second));
-        std::swap(qubits.at(swap.first), qubits.at(swap.second));
-        std::swap(
-            locations.at(static_cast<std::size_t>(qubits.at(swap.first))),
-            locations.at(static_cast<std::size_t>(qubits.at(swap.second))));
+        const auto& [q0, q1] = *it;
+        const auto logical0  = static_cast<qc::Qubit>(qubits.at(q0));
+        const auto logical1  = static_cast<qc::Qubit>(qubits.at(q1));
+        qcMapped.swap(q0, q1);
+        std::swap(qubits.at(q0), qubits.at(q1));
+        locations.at(logical0) = static_cast<std::int16_t>(q1);
+        locations.at(logical1) = static_cast<std::int16_t>(q0);
 
         if (settings.verbose) {
+          std::cout << "Qubits: ";
           for (auto q = 0U; q < architecture.getNqubits(); ++q) {
             std::cout << qubits.at(q) << " ";
+          }
+          std::cout << " Locations: ";
+          for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
+            std::cout << locations.at(q) << " ";
           }
           std::cout << std::endl;
         }
@@ -361,6 +367,13 @@ void ExactMapper::map(const Configuration& settings) {
       ++swapsIterator;
       ++layerIterator;
     }
+  }
+
+  // set output permutation
+  qcMapped.outputPermutation.clear();
+  for (qc::Qubit logical = 0; logical < qc.getNqubits(); ++logical) {
+    const auto physical = static_cast<qc::Qubit>(locations.at(logical));
+    qcMapped.outputPermutation[physical] = logical;
   }
 
   // 9) apply post mapping optimizations
@@ -783,22 +796,51 @@ number of variables: (|L|-1) * m!
     assert(choiceResults.output.directionReverse == 0U);
     // swaps
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      auto& i = x[k - 1];
-      auto& j = x[k];
-
-      for (const auto qubit : qubitChoice) {
-        for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
-          if (m->getBoolValue(i[physicalQubitIndex[qubit]][q], lb.get())) {
-            // logical qubit q was mapped to physical qubit Q
-            for (const auto otherQubit : qubitChoice) {
-              // and has been assigned to physical qubit P going forward
-              if (m->getBoolValue(j[physicalQubitIndex[otherQubit]][q],
-                                  lb.get())) {
-                pi[physicalQubitIndex[qubit]] = otherQubit;
+      if (qubitChoice.size() == qc.getNqubits()) {
+        // When as many qubits of the architecture are being considered
+        // as in the circuit, the assignment of the logical to the physical
+        // qubits is a bijection. Hence, we the assignment matrices X can be
+        // used to directly infer the permutation of the qubits in each layer.
+        auto& oldAssignment = x[k - 1];
+        auto& newAssignment = x[k];
+        for (const auto physicalQubit : qubitChoice) {
+          for (std::size_t logicalQubit = 0; logicalQubit < qc.getNqubits();
+               ++logicalQubit) {
+            if (const auto oldIndex = physicalQubitIndex[physicalQubit];
+                m->getBoolValue(oldAssignment[oldIndex][logicalQubit],
+                                lb.get())) {
+              for (const auto newPhysicalQubit : qubitChoice) {
+                if (const auto newIndex = physicalQubitIndex[newPhysicalQubit];
+                    m->getBoolValue(newAssignment[newIndex][logicalQubit],
+                                    lb.get())) {
+                  pi[oldIndex] = newPhysicalQubit;
+                  break;
+                }
               }
+              break;
             }
           }
         }
+      } else {
+        // When more qubits of the architecture are being considered than are in
+        // the circuit, the assignment of the logical to the physical qubits
+        // cannot be a bijection. Hence, the permutation variables y have to be
+        // used to infer the permutation of the qubits in each layer. This is
+        // mainly because the additional qubits movement cannot be inferred
+        // from the assignment matrices X.
+        piCount         = 0;
+        internalPiCount = 0;
+        // sort the permutation of the qubits to start fresh
+        std::sort(pi.begin(), pi.end());
+        do {
+          if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+            if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
+              break;
+            }
+            ++internalPiCount;
+          }
+          ++piCount;
+        } while (std::next_permutation(pi.begin(), pi.end()));
       }
 
       architecture.minimumNumberOfSwaps(pi, swaps.at(k));

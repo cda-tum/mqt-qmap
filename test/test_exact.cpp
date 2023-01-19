@@ -497,3 +497,26 @@ TEST_F(ExactTest, NoMeasurmentsAdded) {
   EXPECT_EQ(qcMapped.getNops(), 4U);
   EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
 }
+
+TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  arch.loadCouplingMap(5, cm);
+
+  std::stringstream ss{"OPENQASM 2.0;\ninclude \"qelib1.inc\";\n"
+                       "qreg q[4];\n"
+                       "cx q[0],q[1];\n"
+                       "cx q[1],q[2];\n"
+                       "cx q[2],q[3];\n"
+                       "cx q[3],q[0];\n"};
+  qc.import(ss, qc::Format::OpenQASM);
+
+  auto mapper = ExactMapper(qc, arch);
+  // explicitly do not use subsets, but the full architecture
+  settings.useSubsets = false;
+
+  ASSERT_NO_THROW(mapper.map(settings););
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 1);
+}
