@@ -232,6 +232,9 @@ public:
       if(considerFidelity) {
         // adding costs of single qubit gates
         for (std::uint16_t i = 0U; i < singleQubitGateMultiplicity.size(); ++i) {
+          if (singleQubitGateMultiplicity.at(i) == 0) {
+            continue;
+          }
           costFixed += -singleQubitGateMultiplicity.at(i) * 
             log2(singleQubitFidelities.at(static_cast<std::size_t>(locations.at(i))));
         }
@@ -306,15 +309,16 @@ public:
             continue;
           }
           double qbitSavings = 0;
+          double currentFidelity = singleQubitFidelities.at(static_cast<std::size_t>(locations.at(log_qbit)));
           for (std::uint16_t phys_qbit = 0U; phys_qbit < qubits.size(); ++phys_qbit) {
-            if(singleQubitFidelities.at(phys_qbit) <= singleQubitFidelities.at(
-              static_cast<std::size_t>(locations.at(log_qbit)))) {
+            if(singleQubitFidelities.at(phys_qbit) <= currentFidelity) {
                 continue;
             }
-            double curSavings = -singleQubitGateMultiplicity.at(log_qbit) * (
-                log2(singleQubitFidelities.at(static_cast<std::size_t>(locations.at(log_qbit)))) - 
-                log2(singleQubitFidelities.at(phys_qbit))
-              ) - arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(log_qbit)), phys_qbit);
+            double curSavings = -singleQubitGateMultiplicity.at(log_qbit) *
+                                (log2(currentFidelity) - log2(singleQubitFidelities.at(phys_qbit)))
+                                -arch.fidelityDistance(
+                                    static_cast<std::uint16_t>(locations.at(log_qbit)), 
+                                    phys_qbit);
             qbitSavings = std::max(qbitSavings, curSavings);
           }
           savingsPotential += qbitSavings;
