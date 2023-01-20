@@ -347,8 +347,8 @@ public:
           savingsPotential += qbitSavings;
         }
       }
-      
-      // iterating over all virtual qubit pairs, that share a gate on the 
+
+      // iterating over all virtual qubit pairs, that share a gate on the
       // current layer
       for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
         const auto& q1                   = edgeMultiplicity.first.first;
@@ -358,7 +358,7 @@ public:
         const auto& totalMultiplicity =
             straightMultiplicity + reverseMultiplicity;
 
-        // only if all qubit pairs are mapped next to each other the mapping 
+        // only if all qubit pairs are mapped next to each other the mapping
         // is complete
         if (done &&
             arch.getCouplingMap().find(
@@ -374,8 +374,8 @@ public:
 
         if (considerFidelity) {
           // find the optimal edge, to which to remap the given virtual qubit
-          // pair and take the cost of moving it there via swaps plus the 
-          // fidelity cost  of executing all their shared gates on that edge 
+          // pair and take the cost of moving it there via swaps plus the
+          // fidelity cost  of executing all their shared gates on that edge
           // as the qubit pairs cost
           double swapCost = std::numeric_limits<double>::max();
           for (const auto& edge : arch.getCouplingMap()) {
