@@ -21,9 +21,15 @@ void HeuristicMapper::map(const Configuration& configuration) {
       "Performing mapping without considering fidelity." << std::endl;
     config.considerFidelity = false;
   }
+  if (config.considerFidelity && config.lookahead) {
+    std::cerr << 
+      "Lookahead is not yet supported for heuristic mapper using fidelity-aware mapping!" << 
+      std::endl;
+    config.lookahead = false;
+  }
   if (config.considerFidelity && config.initialLayout == InitialLayout::Dynamic) {
     std::cerr << "Initial layout strategy " << toString(config.initialLayout)
-              << " not suitable for heuristic mapper using fidelity-aware mapping!" << 
+              << " not yet supported for heuristic mapper using fidelity-aware mapping!" << 
               std::endl;
     return;
   }
