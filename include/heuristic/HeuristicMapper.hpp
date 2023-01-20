@@ -243,8 +243,7 @@ public:
       costFixed = 0;
       if (considerFidelity) {
         // adding costs of single qubit gates
-        for (std::uint16_t i = 0U; i < singleQubitGateMultiplicity.size();
-             ++i) {
+        for (std::uint16_t i = 0U; i < arch.getNqubits(); ++i) {
           if (singleQubitGateMultiplicity.at(i) == 0) {
             continue;
           }
@@ -323,16 +322,14 @@ public:
       // single qubit gate savings potential
       double savingsPotential = 0.;
       if (considerFidelity) {
-        for (std::uint16_t log_qbit = 0U;
-             log_qbit < singleQubitGateMultiplicity.size(); ++log_qbit) {
+        for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits(); ++log_qbit) {
           if (singleQubitGateMultiplicity.at(log_qbit) == 0) {
             continue;
           }
           double qbitSavings     = 0;
           double currentFidelity = singleQubitFidelities.at(
               static_cast<std::size_t>(locations.at(log_qbit)));
-          for (std::uint16_t phys_qbit = 0U;
-               phys_qbit < singleQubitGateMultiplicity.size(); ++phys_qbit) {
+          for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits(); ++phys_qbit) {
             if (singleQubitFidelities.at(phys_qbit) <= currentFidelity) {
               continue;
             }
