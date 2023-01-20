@@ -347,7 +347,9 @@ public:
           savingsPotential += qbitSavings;
         }
       }
-
+      
+      // iterating over all virtual qubit pairs, that share a gate on the 
+      // current layer
       for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
         const auto& q1                   = edgeMultiplicity.first.first;
         const auto& q2                   = edgeMultiplicity.first.second;
@@ -356,6 +358,8 @@ public:
         const auto& totalMultiplicity =
             straightMultiplicity + reverseMultiplicity;
 
+        // only if all qubit pairs are mapped next to each other the mapping 
+        // is complete
         if (done &&
             arch.getCouplingMap().find(
                 {static_cast<std::uint16_t>(locations.at(q1)),
@@ -369,6 +373,10 @@ public:
         }
 
         if (considerFidelity) {
+          // find the optimal edge, to which to remap the given virtual qubit
+          // pair and take the cost of moving it there via swaps plus the 
+          // fidelity cost  of executing all their shared gates on that edge 
+          // as the qubit pairs cost
           double swapCost = std::numeric_limits<double>::max();
           for (const auto& edge : arch.getCouplingMap()) {
             swapCost = std::min(
@@ -421,8 +429,12 @@ public:
                             static_cast<std::uint16_t>(locations.at(q1)));
 
           if (admissibleHeuristic) {
-            costHeur = std::max(costHeur, swapCost1);
-            costHeur = std::max(costHeur, swapCost2);
+            if (straightMultiplicity > 0) {
+              costHeur = std::max(costHeur, swapCost1);
+            }
+            if (reverseMultiplicity > 0) {
+              costHeur = std::max(costHeur, swapCost2);
+            }
           } else {
             costHeur += swapCost1 * straightMultiplicity +
                         swapCost2 * reverseMultiplicity;
