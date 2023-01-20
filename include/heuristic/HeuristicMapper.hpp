@@ -139,7 +139,6 @@ public:
      */
     void applyTeleportation(const Edge& swap, Architecture& arch,
                             bool considerFidelity) {
-
       const auto q1 = qubits.at(swap.first);
       const auto q2 = qubits.at(swap.second);
 
