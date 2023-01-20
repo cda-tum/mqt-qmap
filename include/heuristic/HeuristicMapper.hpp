@@ -322,14 +322,16 @@ public:
       // single qubit gate savings potential
       double savingsPotential = 0.;
       if (considerFidelity) {
-        for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits(); ++log_qbit) {
+        for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits();
+             ++log_qbit) {
           if (singleQubitGateMultiplicity.at(log_qbit) == 0) {
             continue;
           }
           double qbitSavings     = 0;
           double currentFidelity = singleQubitFidelities.at(
               static_cast<std::size_t>(locations.at(log_qbit)));
-          for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits(); ++phys_qbit) {
+          for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits();
+               ++phys_qbit) {
             if (singleQubitFidelities.at(phys_qbit) <= currentFidelity) {
               continue;
             }
