@@ -233,9 +233,6 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   SUCCEED() << "Mapping successful";
 }
 
-
-
-
 class HeuristicTest5QFidelity : public testing::TestWithParam<std::string> {
 protected:
   std::string testExampleDir      = "../examples/";
@@ -270,7 +267,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTest5QFidelity, Identity) {
   Configuration settings{};
-  settings.initialLayout = InitialLayout::Identity;
+  settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
@@ -280,7 +277,7 @@ TEST_P(HeuristicTest5QFidelity, Identity) {
 
 TEST_P(HeuristicTest5QFidelity, Static) {
   Configuration settings{};
-  settings.initialLayout = InitialLayout::Static;
+  settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
@@ -290,10 +287,11 @@ TEST_P(HeuristicTest5QFidelity, Static) {
 
 TEST_P(HeuristicTest5QFidelity, NoFidelity) {
   Configuration settings{};
-  settings.initialLayout = InitialLayout::Static;
+  settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
   nonFidelityMapper->map(settings);
-  nonFidelityMapper->dumpResult(GetParam() + "_heuristic_london_nofidelity.qasm");
+  nonFidelityMapper->dumpResult(GetParam() +
+                                "_heuristic_london_nofidelity.qasm");
   nonFidelityMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }

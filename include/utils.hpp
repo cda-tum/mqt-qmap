@@ -20,11 +20,10 @@
 #include <unordered_set>
 #include <vector>
 
-template <typename T>
-using Matrix      = std::vector<std::vector<T>>;
-using Edge        = std::pair<std::uint16_t, std::uint16_t>;
-using CouplingMap = std::set<Edge>;
-using QubitSubset = std::set<std::uint16_t>;
+template <typename T> using Matrix = std::vector<std::vector<T>>;
+using Edge                         = std::pair<std::uint16_t, std::uint16_t>;
+using CouplingMap                  = std::set<Edge>;
+using QubitSubset                  = std::set<std::uint16_t>;
 
 struct Exchange {
   Exchange(const std::uint16_t f, const std::uint16_t s, const qc::OpType type)
@@ -62,7 +61,7 @@ public:
   };
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
-                         Matrix<double>& distanceTable,
+                         Matrix<double>&      distanceTable,
                          const Matrix<double> edgeWeights,
                          const std::function<double(const Node&)>& cost);
 

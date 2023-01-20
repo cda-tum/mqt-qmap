@@ -8,7 +8,7 @@
 #include <cassert>
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
-                          Matrix<double>& distanceTable,
+                          Matrix<double>&      distanceTable,
                           const Matrix<double> edgeWeights,
                           const std::function<double(const Node&)>& cost) {
   distanceTable.clear();
@@ -63,8 +63,8 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         }
 
         Node newNode;
-        newNode.cost                = current->cost + edgeWeights.at(*pos).at(*to);
-        newNode.pos                 = to;
+        newNode.cost = current->cost + edgeWeights.at(*pos).at(*to);
+        newNode.pos  = to;
         newNode.containsCorrectEdge = correctEdge;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;

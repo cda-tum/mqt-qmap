@@ -196,36 +196,36 @@ void Architecture::createDistanceTable() {
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
     }
   }
-  
+
   Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                         Architecture::dijkstraNodeToCostNonFidelity);
+                       Architecture::dijkstraNodeToCostNonFidelity);
 }
 
 void Architecture::createFidelityDistanceTable() {
-  for(std::uint16_t i = 0; i < nqubits; ++i) {
-    for(std::uint16_t j = 0; j < nqubits; ++j) {
-      if(!properties.twoQubitErrorRateAvailable(i, j)) {
-        fidelityDistanceTable = std::vector<std::vector<double>> (nqubits, 
-          std::vector<double>(nqubits, 0));
+  for (std::uint16_t i = 0; i < nqubits; ++i) {
+    for (std::uint16_t j = 0; j < nqubits; ++j) {
+      if (!properties.twoQubitErrorRateAvailable(i, j)) {
+        fidelityDistanceTable = std::vector<std::vector<double>>(
+            nqubits, std::vector<double>(nqubits, 0));
         return;
       }
     }
   }
-  
+
   Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, INFINITY));
   for (const auto& edge : couplingMap) {
-    edgeWeights.at(edge.first).at(edge.second) = 
-      -3*log2(fidelityTable.at(edge.first).at(edge.second));
+    edgeWeights.at(edge.first).at(edge.second) =
+        -3 * log2(fidelityTable.at(edge.first).at(edge.second));
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
-      edgeWeights.at(edge.second).at(edge.first) = 
-        -3*log2(fidelityTable.at(edge.first).at(edge.second))
-        -2*log2(singleQubitFidelities.at(edge.first))
-        -2*log2(singleQubitFidelities.at(edge.second));
+      edgeWeights.at(edge.second).at(edge.first) =
+          -3 * log2(fidelityTable.at(edge.first).at(edge.second)) -
+          2 * log2(singleQubitFidelities.at(edge.first)) -
+          2 * log2(singleQubitFidelities.at(edge.second));
     }
   }
-  
+
   Dijkstra::buildTable(nqubits, couplingMap, fidelityDistanceTable, edgeWeights,
-                         Architecture::dijkstraNodeToCostFidelity);
+                       Architecture::dijkstraNodeToCostFidelity);
 }
 
 void Architecture::createFidelityTable() {

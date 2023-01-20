@@ -242,9 +242,13 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix<double>& getDistanceTable() const { return distanceTable; }
-  
-  [[nodiscard]] const Matrix<double>& getFidelityDistanceTable() const { return fidelityDistanceTable; }
+  [[nodiscard]] const Matrix<double>& getDistanceTable() const {
+    return distanceTable;
+  }
+
+  [[nodiscard]] const Matrix<double>& getFidelityDistanceTable() const {
+    return fidelityDistanceTable;
+  }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -255,7 +259,9 @@ public:
     createFidelityTable();
   }
 
-  [[nodiscard]] const Matrix<double>& getFidelityTable() const { return fidelityTable; }
+  [[nodiscard]] const Matrix<double>& getFidelityTable() const {
+    return fidelityTable;
+  }
 
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelities() const {
     return singleQubitFidelities;
@@ -291,7 +297,7 @@ public:
   }
 
   [[nodiscard]] double fidelityDistance(std::uint16_t control,
-                                std::uint16_t target) const {
+                                        std::uint16_t target) const {
     return fidelityDistanceTable.at(control).at(target);
   }
 
@@ -367,20 +373,21 @@ protected:
   Properties                                         properties            = {};
   Matrix<double>                                     fidelityTable         = {};
   std::vector<double>                                singleQubitFidelities = {};
-  Matrix<double>                                     fidelityDistanceTable   = {};
+  Matrix<double>                                     fidelityDistanceTable = {};
 
   void createDistanceTable();
   void createFidelityDistanceTable();
   void createFidelityTable();
-  
+
   static double dijkstraNodeToCostFidelity(const Dijkstra::Node& node) {
     return node.cost;
   }
-  
+
   static double dijkstraNodeToCostNonFidelity(const Dijkstra::Node& node) {
-    // Dijkstra finds the length of the full path, however, the qubits only 
-    // need to be next to each other; therefore the last swap has to be subtracted; 
-    // any potential direction reversals are still relevant for the original CNOT
+    // Dijkstra finds the length of the full path, however, the qubits only
+    // need to be next to each other; therefore the last swap has to be
+    // subtracted; any potential direction reversals are still relevant for the
+    // original CNOT
     return node.cost - COST_BIDIRECTIONAL_SWAP;
   }
 
