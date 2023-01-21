@@ -39,7 +39,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
                         std::vector<Node>& nodes, std::uint16_t start,
-                        Matrix<double>& edgeWeights) {
+                        const Matrix<double>& edgeWeights) {
   std::priority_queue<Node*> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
