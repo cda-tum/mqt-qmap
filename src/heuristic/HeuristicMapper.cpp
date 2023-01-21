@@ -294,7 +294,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
     return;
   }
   if (config.considerFidelity &&
-      architecture.getSingleQubitFidelities().size() == 0) {
+      architecture.getSingleQubitFidelities().empty()) {
     std::cerr << "No calibration data available for this architecture! "
               << "Performing mapping without considering fidelity."
               << std::endl;
@@ -302,7 +302,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
   }
   if (config.considerFidelity && config.lookahead) {
     std::cerr << "Lookahead is not yet supported for heuristic mapper using "
-                 "fidelity-aware mapping!"
+                 "fidelity-aware mapping! Performing mapping without considering lookahead."
               << std::endl;
     config.lookahead = false;
   }
@@ -310,9 +310,15 @@ void HeuristicMapper::map(const Configuration& configuration) {
       config.initialLayout == InitialLayout::Dynamic) {
     std::cerr << "Initial layout strategy " << toString(config.initialLayout)
               << " not yet supported for heuristic mapper using fidelity-aware "
-                 "mapping!"
+                 "mapping! Mapping aborted."
               << std::endl;
     return;
+  }
+  if (config.considerFidelity && config.teleportationQubits > 0) {
+    std::cerr << "Teleportation is not yet supported for heuristic mapper using "
+                 "fidelity-aware mapping! Performing mapping without teleportation."
+              << std::endl;
+    config.teleportationQubits = 0;
   }
   const auto start = std::chrono::steady_clock::now();
   initResults();
@@ -784,48 +790,45 @@ void HeuristicMapper::expandNode(
 
   // set up new teleportation qubits
   std::set<Edge> perms = architecture.getCouplingMap();
-  // for now teleportation is not supported for noise-aware mapping
-  if (!results.config.considerFidelity) {
-    architecture.getCurrentTeleportations().clear();
-    architecture.getTeleportationQubits().clear();
-    for (std::size_t i = 0; i < results.config.teleportationQubits; i += 2) {
-      architecture.getTeleportationQubits().emplace_back(
-          node.locations.at(qc.getNqubits() + i),
-          node.locations.at(qc.getNqubits() + i + 1));
-      Edge e;
-      for (auto const& g : architecture.getCouplingMap()) {
-        if (g.first == node.locations.at(qc.getNqubits() + i) &&
-            g.second != node.locations.at(qc.getNqubits() + i + 1)) {
-          e.first  = g.second;
-          e.second = static_cast<std::uint16_t>(
-              node.locations.at(qc.getNqubits() + i + 1));
-          architecture.getCurrentTeleportations().insert(e);
-          perms.insert(e);
-        }
-        if (g.second == node.locations.at(qc.getNqubits() + i) &&
-            g.first != node.locations.at(qc.getNqubits() + i + 1)) {
-          e.first  = g.first;
-          e.second = static_cast<std::uint16_t>(
-              node.locations.at(qc.getNqubits() + i + 1));
-          architecture.getCurrentTeleportations().insert(e);
-          perms.insert(e);
-        }
-        if (g.first == node.locations.at(qc.getNqubits() + i + 1) &&
-            g.second != node.locations.at(qc.getNqubits() + i)) {
-          e.first  = g.second;
-          e.second = static_cast<std::uint16_t>(
-              node.locations.at(qc.getNqubits() + i));
-          architecture.getCurrentTeleportations().insert(e);
-          perms.insert(e);
-        }
-        if (g.second == node.locations.at(qc.getNqubits() + i + 1) &&
-            g.first != node.locations.at(qc.getNqubits() + i)) {
-          e.first  = g.first;
-          e.second = static_cast<std::uint16_t>(
-              node.locations.at(qc.getNqubits() + i));
-          architecture.getCurrentTeleportations().insert(e);
-          perms.insert(e);
-        }
+  architecture.getCurrentTeleportations().clear();
+  architecture.getTeleportationQubits().clear();
+  for (std::size_t i = 0; i < results.config.teleportationQubits; i += 2) {
+    architecture.getTeleportationQubits().emplace_back(
+        node.locations.at(qc.getNqubits() + i),
+        node.locations.at(qc.getNqubits() + i + 1));
+    Edge e;
+    for (auto const& g : architecture.getCouplingMap()) {
+      if (g.first == node.locations.at(qc.getNqubits() + i) &&
+          g.second != node.locations.at(qc.getNqubits() + i + 1)) {
+        e.first  = g.second;
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i + 1));
+        architecture.getCurrentTeleportations().insert(e);
+        perms.insert(e);
+      }
+      if (g.second == node.locations.at(qc.getNqubits() + i) &&
+          g.first != node.locations.at(qc.getNqubits() + i + 1)) {
+        e.first  = g.first;
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i + 1));
+        architecture.getCurrentTeleportations().insert(e);
+        perms.insert(e);
+      }
+      if (g.first == node.locations.at(qc.getNqubits() + i + 1) &&
+          g.second != node.locations.at(qc.getNqubits() + i)) {
+        e.first  = g.second;
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i));
+        architecture.getCurrentTeleportations().insert(e);
+        perms.insert(e);
+      }
+      if (g.second == node.locations.at(qc.getNqubits() + i + 1) &&
+          g.first != node.locations.at(qc.getNqubits() + i)) {
+        e.first  = g.first;
+        e.second = static_cast<std::uint16_t>(
+            node.locations.at(qc.getNqubits() + i));
+        architecture.getCurrentTeleportations().insert(e);
+        perms.insert(e);
       }
     }
   }

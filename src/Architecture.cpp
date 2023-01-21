@@ -189,7 +189,7 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
-  Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, INFINITY));
+  Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
