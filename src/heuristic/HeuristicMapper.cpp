@@ -161,6 +161,7 @@ void HeuristicMapper::Node::recalculateFixedCost(
         }
       }
     }
+    // two qubit gates other than existing swaps are handled in the heuristic
   } else {
     for (auto& swapNode : swaps) {
       for (auto& swap : swapNode) {
@@ -185,7 +186,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
     bool admissibleHeuristic, bool considerFidelity) {
   costHeur = 0.;
   done     = true;
-  // single qubit gate savings potential by moving it to another physical qubit with higher fidelity
+  // single qubit gate savings potential by moving them to different physical qubits with higher fidelity
   double savingsPotential = 0.;
   if (considerFidelity) {
     for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits();
@@ -260,23 +261,23 @@ void HeuristicMapper::Node::updateHeuristicCost(
         costHeur += swapCost;
       }
     } else {
-      double swapCost1 =
+      double swapCostStraight =
           arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
                         static_cast<std::uint16_t>(locations.at(q2)));
-      double swapCost2 =
+      double swapCostReverse =
           arch.distance(static_cast<std::uint16_t>(locations.at(q2)),
                         static_cast<std::uint16_t>(locations.at(q1)));
 
       if (admissibleHeuristic) {
         if (straightMultiplicity > 0) {
-          costHeur = std::max(costHeur, swapCost1);
+          costHeur = std::max(costHeur, swapCostStraight);
         }
         if (reverseMultiplicity > 0) {
-          costHeur = std::max(costHeur, swapCost2);
+          costHeur = std::max(costHeur, swapCostReverse);
         }
       } else {
-        costHeur += swapCost1 * straightMultiplicity +
-                    swapCost2 * reverseMultiplicity;
+        costHeur += swapCostStraight * straightMultiplicity +
+                    swapCostReverse * reverseMultiplicity;
       }
     }
   }
