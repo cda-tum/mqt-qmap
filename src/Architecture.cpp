@@ -189,7 +189,9 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
-  Matrix<double> edgeWeights(nqubits, std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+  Matrix<double> edgeWeights(
+      nqubits,
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
@@ -214,7 +216,8 @@ void Architecture::createFidelityDistanceTable() {
     }
   }
 
-  Dijkstra::buildTable(nqubits, couplingMap, fidelityDistanceTable, swapFidelityCost,
+  Dijkstra::buildTable(nqubits, couplingMap, fidelityDistanceTable,
+                       swapFidelityCost,
                        Architecture::dijkstraNodeToCostFidelity);
 }
 
@@ -222,9 +225,13 @@ void Architecture::createFidelityTable() {
   fidelityTable.clear();
   fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
   twoQubitFidelityCost.clear();
-  twoQubitFidelityCost.resize(nqubits, std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+  twoQubitFidelityCost.resize(
+      nqubits,
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
   swapFidelityCost.clear();
-  swapFidelityCost.resize(nqubits, std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+  swapFidelityCost.resize(
+      nqubits,
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
 
   singleQubitFidelities.resize(nqubits, 1.0);
   singleQubitFidelityCost.resize(nqubits, 0.0);
@@ -240,25 +247,27 @@ void Architecture::createFidelityTable() {
     if (properties.twoQubitErrorRateAvailable(first, second)) {
       fidelityTable[first][second] =
           1.0 - properties.getTwoQubitErrorRate(first, second);
-      twoQubitFidelityCost[first][second] = -std::log2(fidelityTable[first][second]);
+      twoQubitFidelityCost[first][second] =
+          -std::log2(fidelityTable[first][second]);
       if (couplingMap.find({second, first}) == couplingMap.end()) {
         // CNOT reversal (unidirectional edge q1 -> q2):
         // CX(q2,q1) = H(q1) H(q2) CX(q1,q2) H(q1) H(q2)
-        twoQubitFidelityCost[second][first] = twoQubitFidelityCost[first][second] + 
-          2 * singleQubitFidelityCost[first] + 2 * singleQubitFidelityCost[second];
-        // SWAP decomposition (unidirectional edge q1 -> q2): 
+        twoQubitFidelityCost[second][first] =
+            twoQubitFidelityCost[first][second] +
+            2 * singleQubitFidelityCost[first] +
+            2 * singleQubitFidelityCost[second];
+        // SWAP decomposition (unidirectional edge q1 -> q2):
         // SWAP(q1,q2) = CX(q1,q2) H(q1) H(q2) CX(q1,q2) H(q1) H(q2) CX(q1,q2)
-        swapFidelityCost[first][second] = 
-          3 * twoQubitFidelityCost[first][second] + 
-          2 * singleQubitFidelityCost[first] +
-          2 * singleQubitFidelityCost[second];
-        swapFidelityCost[second][first] = 
-          swapFidelityCost[first][second];
+        swapFidelityCost[first][second] =
+            3 * twoQubitFidelityCost[first][second] +
+            2 * singleQubitFidelityCost[first] +
+            2 * singleQubitFidelityCost[second];
+        swapFidelityCost[second][first] = swapFidelityCost[first][second];
       } else {
-        // SWAP decomposition (bidirectional edge q1 <-> q2): 
+        // SWAP decomposition (bidirectional edge q1 <-> q2):
         // SWAP(q1,q2) = CX(q1,q2) CX(q2,q1) CX(q1,q2)
-        swapFidelityCost[first][second] = 
-          3 * twoQubitFidelityCost[first][second];
+        swapFidelityCost[first][second] =
+            3 * twoQubitFidelityCost[first][second];
       }
     }
   }

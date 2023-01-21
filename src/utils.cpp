@@ -8,7 +8,7 @@
 #include <cassert>
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
-                          Matrix<double>&      distanceTable,
+                          Matrix<double>&       distanceTable,
                           const Matrix<double>& edgeWeights,
                           const std::function<double(const Node&)>& cost) {
   distanceTable.clear();

@@ -75,9 +75,10 @@ public:
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
      * of the node
      */
-    void applySWAP(const Edge& swap, Architecture& arch,
-                   const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
-                   bool                             considerFidelity);
+    void
+    applySWAP(const Edge& swap, Architecture& arch,
+              const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
+              bool                              considerFidelity);
 
     /**
      * @brief applies an in-place teleportation of 2 qubits in `qubits` and

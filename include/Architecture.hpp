@@ -283,40 +283,50 @@ public:
     return twoQubitFidelityCost;
   }
 
-  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1, std::uint16_t q2) const {
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
+                                               std::uint16_t q2) const {
     return twoQubitFidelityCost.at(q1).at(q2);
   }
 
-  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1, std::uint16_t q2) const {
-    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),q2);
+  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t  q1,
+                                               std::uint16_t q2) const {
+    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1), q2);
   }
 
-  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1, std::int16_t q2) const {
-    return getTwoQubitFidelityCost(q1,static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
+                                               std::int16_t  q2) const {
+    return getTwoQubitFidelityCost(q1, static_cast<std::uint16_t>(q2));
   }
 
-  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1, std::int16_t q2) const {
-    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1,
+                                               std::int16_t q2) const {
+    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),
+                                   static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] const Matrix<double>& getSwapFidelityCost() const {
     return swapFidelityCost;
   }
 
-  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1, std::uint16_t q2) const {
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
+                                           std::uint16_t q2) const {
     return swapFidelityCost.at(q1).at(q2);
   }
 
-  [[nodiscard]] double getSwapFidelityCost(std::int16_t q1, std::uint16_t q2) const {
-    return getSwapFidelityCost(static_cast<std::uint16_t>(q1),q2);
+  [[nodiscard]] double getSwapFidelityCost(std::int16_t  q1,
+                                           std::uint16_t q2) const {
+    return getSwapFidelityCost(static_cast<std::uint16_t>(q1), q2);
   }
 
-  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1, std::int16_t q2) const {
-    return getSwapFidelityCost(q1,static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
+                                           std::int16_t  q2) const {
+    return getSwapFidelityCost(q1, static_cast<std::uint16_t>(q2));
   }
 
-  [[nodiscard]] double getSwapFidelityCost(std::int16_t q1, std::int16_t q2) const {
-    return getSwapFidelityCost(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double getSwapFidelityCost(std::int16_t q1,
+                                           std::int16_t q2) const {
+    return getSwapFidelityCost(static_cast<std::uint16_t>(q1),
+                               static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
@@ -356,16 +366,20 @@ public:
     return fidelityDistanceTable.at(q1).at(q2);
   }
 
-  [[nodiscard]] double fidelityDistance(std::int16_t q1, std::uint16_t q2) const {
-    return fidelityDistance(static_cast<std::uint16_t>(q1),q2);
+  [[nodiscard]] double fidelityDistance(std::int16_t  q1,
+                                        std::uint16_t q2) const {
+    return fidelityDistance(static_cast<std::uint16_t>(q1), q2);
   }
 
-  [[nodiscard]] double fidelityDistance(std::uint16_t q1, std::int16_t q2) const {
-    return fidelityDistance(q1,static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
+                                        std::int16_t  q2) const {
+    return fidelityDistance(q1, static_cast<std::uint16_t>(q2));
   }
 
-  [[nodiscard]] double fidelityDistance(std::int16_t q1, std::int16_t q2) const {
-    return fidelityDistance(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
+  [[nodiscard]] double fidelityDistance(std::int16_t q1,
+                                        std::int16_t q2) const {
+    return fidelityDistance(static_cast<std::uint16_t>(q1),
+                            static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -440,10 +454,10 @@ protected:
   Properties                                         properties            = {};
   Matrix<double>                                     fidelityTable         = {};
   std::vector<double>                                singleQubitFidelities = {};
-  std::vector<double>                                singleQubitFidelityCost = {};
-  Matrix<double>                                     twoQubitFidelityCost = {};
-  Matrix<double>                                     swapFidelityCost = {};
-  Matrix<double>                                     fidelityDistanceTable = {};
+  std::vector<double> singleQubitFidelityCost                              = {};
+  Matrix<double>      twoQubitFidelityCost                                 = {};
+  Matrix<double>      swapFidelityCost                                     = {};
+  Matrix<double>      fidelityDistanceTable                                = {};
 
   void createDistanceTable();
   void createFidelityDistanceTable();
