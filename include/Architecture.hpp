@@ -267,6 +267,58 @@ public:
     return singleQubitFidelities;
   }
 
+  [[nodiscard]] const std::vector<double>& getSingleQubitFidelityCost() const {
+    return singleQubitFidelityCost;
+  }
+
+  [[nodiscard]] double getSingleQubitFidelityCost(std::uint16_t qbit) const {
+    return singleQubitFidelityCost.at(qbit);
+  }
+
+  [[nodiscard]] double getSingleQubitFidelityCost(std::int16_t qbit) const {
+    return getSingleQubitFidelityCost(static_cast<std::uint16_t>(qbit));
+  }
+
+  [[nodiscard]] const Matrix<double>& getTwoQubitFidelityCost() const {
+    return twoQubitFidelityCost;
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1, std::uint16_t q2) const {
+    return twoQubitFidelityCost.at(q1).at(q2);
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1, std::uint16_t q2) const {
+    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),q2);
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1, std::int16_t q2) const {
+    return getTwoQubitFidelityCost(q1,static_cast<std::uint16_t>(q2));
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1, std::int16_t q2) const {
+    return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
+  }
+
+  [[nodiscard]] const Matrix<double>& getSwapFidelityCost() const {
+    return swapFidelityCost;
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1, std::uint16_t q2) const {
+    return swapFidelityCost.at(q1).at(q2);
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::int16_t q1, std::uint16_t q2) const {
+    return getSwapFidelityCost(static_cast<std::uint16_t>(q1),q2);
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1, std::int16_t q2) const {
+    return getSwapFidelityCost(q1,static_cast<std::uint16_t>(q2));
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::int16_t q1, std::int16_t q2) const {
+    return getSwapFidelityCost(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
+  }
+
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
 
   [[nodiscard]] bool isArchitectureAvailable() const {
@@ -285,6 +337,9 @@ public:
     properties.clear();
     fidelityTable.clear();
     singleQubitFidelities.clear();
+    singleQubitFidelityCost.clear();
+    twoQubitFidelityCost.clear();
+    swapFidelityCost.clear();
     fidelityDistanceTable.clear();
   }
 
@@ -296,9 +351,21 @@ public:
     return static_cast<double>(bfs(control, target, currentTeleportations));
   }
 
-  [[nodiscard]] double fidelityDistance(std::uint16_t control,
-                                        std::uint16_t target) const {
-    return fidelityDistanceTable.at(control).at(target);
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
+                                        std::uint16_t q2) const {
+    return fidelityDistanceTable.at(q1).at(q2);
+  }
+
+  [[nodiscard]] double fidelityDistance(std::int16_t q1, std::uint16_t q2) const {
+    return fidelityDistance(static_cast<std::uint16_t>(q1),q2);
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1, std::int16_t q2) const {
+    return fidelityDistance(q1,static_cast<std::uint16_t>(q2));
+  }
+
+  [[nodiscard]] double fidelityDistance(std::int16_t q1, std::int16_t q2) const {
+    return fidelityDistance(static_cast<std::uint16_t>(q1),static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -373,6 +440,9 @@ protected:
   Properties                                         properties            = {};
   Matrix<double>                                     fidelityTable         = {};
   std::vector<double>                                singleQubitFidelities = {};
+  std::vector<double>                                singleQubitFidelityCost = {};
+  Matrix<double>                                     twoQubitFidelityCost = {};
+  Matrix<double>                                     swapFidelityCost = {};
   Matrix<double>                                     fidelityDistanceTable = {};
 
   void createDistanceTable();

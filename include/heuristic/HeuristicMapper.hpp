@@ -104,26 +104,15 @@ public:
       if (considerFidelity) {
         // accounting for fidelity difference of single qubit gates (two qubit
         // gates are handled in the heuristic)
-        const auto& singleQubitFidelities = arch.getSingleQubitFidelities();
-        const auto& twoQubitFidelities    = arch.getFidelityTable();
-        
         costFixed +=
-            (-(singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2)) -
+            ((singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2)) -
                singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1))) *
-                 std::log2(singleQubitFidelities.at(swap.first)) -
+                 arch.getSingleQubitFidelityCost(swap.first) +
              (singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1)) -
               singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2))) *
-                 std::log2(singleQubitFidelities.at(swap.second)));
-        // adding cost of the swap gate
-        if (arch.bidirectional()) {
-          costFixed +=
-              -3 * std::log2(twoQubitFidelities.at(swap.first).at(swap.second));
-        } else {
-          costFixed +=
-              (-3 * std::log2(twoQubitFidelities.at(swap.first).at(swap.second)) -
-               2 * std::log2(singleQubitFidelities.at(swap.first)) -
-               2 * std::log2(singleQubitFidelities.at(swap.second)));
-        }
+                 arch.getSingleQubitFidelityCost(swap.second));
+        // adding cost of the swap gate itself
+        costFixed += arch.getSwapFidelityCost(swap.first, swap.second);
       } else {
         if (arch.bidirectional()) {
           costFixed += COST_BIDIRECTIONAL_SWAP;
@@ -234,8 +223,6 @@ public:
         const Architecture&              arch,
         const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
         bool                             considerFidelity) {
-      const auto& singleQubitFidelities = arch.getSingleQubitFidelities();
-      const auto& twoQubitFidelities    = arch.getFidelityTable();
 
       costFixed = 0;
       if (considerFidelity) {
@@ -244,24 +231,14 @@ public:
           if (singleQubitGateMultiplicity.at(i) == 0) {
             continue;
           }
-          costFixed += -singleQubitGateMultiplicity.at(i) *
-                       std::log2(singleQubitFidelities.at(
-                           static_cast<std::size_t>(locations.at(i))));
+          costFixed += singleQubitGateMultiplicity.at(i) *
+                       arch.getSingleQubitFidelityCost(locations.at(i));
         }
         // adding cost of the swap gates
         for (auto& swapNode : swaps) {
           for (auto& swap : swapNode) {
             if (swap.op == qc::SWAP) {
-              if (arch.bidirectional()) {
-                costFixed +=
-                    -3 *
-                    std::log2(twoQubitFidelities.at(swap.first).at(swap.second));
-              } else {
-                costFixed += (-3 * std::log2(twoQubitFidelities.at(swap.first)
-                                            .at(swap.second)) -
-                              2 * std::log2(singleQubitFidelities.at(swap.first)) -
-                              2 * std::log2(singleQubitFidelities.at(swap.second)));
-              }
+              costFixed += arch.getSwapFidelityCost(swap.first, swap.second);
             } else if (swap.op == qc::Teleportation) {
               throw QMAPException("Teleportation currently not supported for "
                                   "noise-aware mapping");
@@ -311,12 +288,10 @@ public:
         const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
         const EdgeMultiplicity&           twoQubitGateMultiplicity,
         bool admissibleHeuristic, bool considerFidelity) {
-      const auto& singleQubitFidelities = arch.getSingleQubitFidelities();
-      const auto& twoQubitFidelities    = arch.getFidelityTable();
 
       costHeur = 0.;
       done     = true;
-      // single qubit gate savings potential
+      // single qubit gate savings potential by moving it to another physical qubit with higher fidelity
       double savingsPotential = 0.;
       if (considerFidelity) {
         for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits();
@@ -325,20 +300,17 @@ public:
             continue;
           }
           double qbitSavings     = 0;
-          double currentFidelity = singleQubitFidelities.at(
-              static_cast<std::size_t>(locations.at(log_qbit)));
+          double currFidelity = arch.getSingleQubitFidelityCost(locations.at(log_qbit));
           for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits();
                ++phys_qbit) {
-            if (singleQubitFidelities.at(phys_qbit) <= currentFidelity) {
+            if (arch.getSingleQubitFidelityCost(phys_qbit) >= currFidelity) {
               continue;
             }
             double curSavings =
-                -singleQubitGateMultiplicity.at(log_qbit) *
-                    (std::log2(currentFidelity) -
-                     std::log2(singleQubitFidelities.at(phys_qbit))) -
-                arch.fidelityDistance(
-                    static_cast<std::uint16_t>(locations.at(log_qbit)),
-                    phys_qbit);
+                singleQubitGateMultiplicity.at(log_qbit) *
+                    (currFidelity -
+                     arch.getSingleQubitFidelityCost(phys_qbit)) -
+                arch.fidelityDistance(locations.at(log_qbit), phys_qbit);
             qbitSavings = std::max(qbitSavings, curSavings);
           }
           savingsPotential += qbitSavings;
@@ -378,38 +350,16 @@ public:
           for (const auto& edge : arch.getCouplingMap()) {
             swapCost = std::min(
                 swapCost,
-                -totalMultiplicity *
-                        std::log2(
-                            twoQubitFidelities.at(edge.first).at(edge.second)) +
-                    (arch.bidirectional()
-                         ? 0
-                         : (-2 * reverseMultiplicity *
-                                std::log2(singleQubitFidelities.at(edge.first)) +
-                            -2 * reverseMultiplicity *
-                                std::log2(singleQubitFidelities.at(edge.second)))) +
-                    arch.fidelityDistance(
-                        static_cast<std::uint16_t>(locations.at(q1)),
-                        edge.first) +
-                    arch.fidelityDistance(
-                        static_cast<std::uint16_t>(locations.at(q2)),
-                        edge.second));
+                straightMultiplicity * arch.getTwoQubitFidelityCost(edge.first, edge.second) +
+                reverseMultiplicity * arch.getTwoQubitFidelityCost(edge.second, edge.first) +
+                arch.fidelityDistance(locations.at(q1), edge.first) +
+                arch.fidelityDistance(locations.at(q2),edge.second));
             swapCost = std::min(
                 swapCost,
-                -totalMultiplicity *
-                        std::log2(
-                            twoQubitFidelities.at(edge.second).at(edge.first)) +
-                    (arch.bidirectional()
-                         ? 0
-                         : (-2 * straightMultiplicity *
-                                std::log2(singleQubitFidelities.at(edge.first)) +
-                            -2 * straightMultiplicity *
-                                std::log2(singleQubitFidelities.at(edge.second)))) +
-                    arch.fidelityDistance(
-                        static_cast<std::uint16_t>(locations.at(q1)),
-                        edge.second) +
-                    arch.fidelityDistance(
-                        static_cast<std::uint16_t>(locations.at(q2)),
-                        edge.first));
+                straightMultiplicity * arch.getTwoQubitFidelityCost(edge.second, edge.first) +
+                reverseMultiplicity * arch.getTwoQubitFidelityCost(edge.first, edge.second) +
+                arch.fidelityDistance(locations.at(q2), edge.first) +
+                arch.fidelityDistance(locations.at(q1),edge.second));
           }
 
           if (admissibleHeuristic) {
