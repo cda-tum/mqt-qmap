@@ -62,12 +62,12 @@ public:
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix<double>&      distanceTable,
-                         const Matrix<double> edgeWeights,
+                         const Matrix<double>& edgeWeights,
                          const std::function<double(const Node&)>& cost);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
-                       std::uint16_t start, const Matrix<double> edgeWeights);
+                       std::uint16_t start, const Matrix<double>& edgeWeights);
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {

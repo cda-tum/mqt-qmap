@@ -497,8 +497,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 void HeuristicMapper::expandNode(
     const std::vector<std::uint16_t>& consideredQubits, Node& node,
     std::size_t                      layer,
-    const std::vector<std::uint16_t> singleQubitGateMultiplicity,
-    const EdgeMultiplicity           twoQubitGateMultiplicity) {
+    const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
+    const EdgeMultiplicity&           twoQubitGateMultiplicity) {
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture.getNqubits());
   for (int p = 0; p < architecture.getNqubits(); ++p) {
@@ -578,8 +578,8 @@ void HeuristicMapper::expandNode(
 
 void HeuristicMapper::expandNodeAddOneSwap(
     const Edge& swap, Node& node, const std::size_t layer,
-    const std::vector<std::uint16_t> singleQubitGateMultiplicity,
-    const EdgeMultiplicity           twoQubitGateMultiplicity) {
+    const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
+    const EdgeMultiplicity&           twoQubitGateMultiplicity) {
   const auto& config = results.config;
 
   Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed);
