@@ -24,6 +24,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
     }
 
     nodes.at(i).cost = 0.;
+    nodes.at(i).prevCost = 0.;
 
     dijkstra(couplingMap, nodes, i, edgeWeights);
 
@@ -64,6 +65,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
 
         Node newNode;
         newNode.cost = current->cost + edgeWeights.at(*pos).at(*to);
+        newNode.prevCost = current->cost;
         newNode.pos  = to;
         newNode.containsCorrectEdge = correctEdge;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {

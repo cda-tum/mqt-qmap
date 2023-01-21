@@ -58,6 +58,7 @@ public:
     bool                         visited             = false;
     std::optional<std::uint16_t> pos                 = std::nullopt;
     double                       cost                = -1.;
+    double                       prevCost            = -1.;
   };
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
