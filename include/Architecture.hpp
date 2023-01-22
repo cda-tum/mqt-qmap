@@ -464,8 +464,8 @@ protected:
   void createFidelityTable();
 
   static double dijkstraNodeToCostFidelity(const Dijkstra::Node& node) {
-    // in the fidelity case distance between 2 physical qubits is defined as the 
-    // cost (i.e. the additional probability of an errenous circuit execution) 
+    // in the fidelity case distance between 2 physical qubits is defined as the
+    // cost (i.e. the additional probability of an errenous circuit execution)
     // when moving a logical qubit from one physical qubit to another via swaps
     // along the cheapest path. This is exactly what dijkstra finds given the
     // swap cost of each individual edge as edge weights.
@@ -473,15 +473,15 @@ protected:
   }
 
   static double dijkstraNodeToCostNonFidelity(const Dijkstra::Node& node) {
-    // Dijkstra finds the cost of moving a logical qubit from one physical qubit 
+    // Dijkstra finds the cost of moving a logical qubit from one physical qubit
     // to another. In the non-fidelity case we are only interested in swapping 2
     // logical qubits next to each other. this is saved by dijkstra in the field
     // `node.prevCost`
     if (node.containsCorrectEdge) {
       return node.prevCost;
     } else {
-      // in case the last edge is a back-edge, we need to reverse the CNOT we plan
-      // to execute on that edge
+      // in case the last edge is a back-edge, we need to reverse the CNOT we
+      // plan to execute on that edge
       return node.prevCost + COST_DIRECTION_REVERSE;
     }
   }
