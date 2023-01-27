@@ -7,7 +7,7 @@ from nox.sessions import Session
 
 nox.options.sessions = ["lint", "tests"]
 
-PYTHON_ALL_VERSIONS = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+PYTHON_ALL_VERSIONS = ["3.8", "3.9", "3.10", "3.11"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
