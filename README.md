@@ -29,7 +29,7 @@ If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de]
 
 ## Getting Started
 
-QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows.
+QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.8 to 3.11.
 
 ```console
 (venv) $ pip install mqt.qmap
@@ -69,7 +69,7 @@ circ_opt, results = qmap.optimize_clifford(circ)
 
 ## System Requirements and Building
 
-The implementation is compatible with any C++17 compiler and a minimum CMake version of 3.19.
+The implementation is compatible with any C++17 compiler, a minimum CMake version of 3.19, and Python 3.8+.
 Please refer to the [documentation](https://mqtqmap.readthedocs.io/en/latest/) on how to build the project.
 
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
