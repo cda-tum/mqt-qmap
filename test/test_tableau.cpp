@@ -440,7 +440,7 @@ TEST_F(TestTableau, CX) {
   expected = "0;0;1;0;1;\n"
              "0;0;1;1;0;\n";
   EXPECT_EQ(tableau, Tableau(expected));
-  EXPECT_EQ(tableau, Tableau("[-ZI, +ZZ]", "[-ZI, +ZZ]"));
+  EXPECT_EQ(tableau, Tableau("[-ZI, +ZZ]"));
 }
 
 TEST_F(TestTableau, FullCX) {
