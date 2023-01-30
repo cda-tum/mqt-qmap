@@ -114,16 +114,29 @@ void Tableau::applyGate(const qc::Operation* const gate) {
   }
 }
 
-void Tableau::createDiagonalTableau(const std::size_t nQ) {
+void Tableau::createDiagonalTableau(const std::size_t nQ, const bool useFullsizeTableau) {
   nQubits = nQ;
   tableau.clear();
-  tableau.resize(nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  if (useFullsizeTableau){
+    tableau.resize(2U * nQubits);
+  } else {
+    tableau.resize(nQubits);
+  }
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i].resize((2U * nQubits) + 1U);
-    for (std::size_t j = nQubits; j < (2U * nQubits); ++j) {
-      tableau[i][j] = 0;
-      if (i == (j - nQubits)) {
-        tableau[i][j] = 1;
+    if (useFullsizeTableau){
+      for (std::size_t j = 0; j < (2U * nQubits); ++j) {
+        tableau[i][j] = 0;
+        if (i == j) {
+          tableau[i][j] = 1;
+        }
+      }
+    } else {
+      for (std::size_t j = nQubits; j < (2U * nQubits); ++j) {
+        tableau[i][j] = 0;
+        if (i == (j - nQubits)) {
+          tableau[i][j] = 1;
+        }
       }
     }
   }
@@ -191,7 +204,7 @@ void Tableau::fromString(const std::string& str) {
 
 void Tableau::applyH(const std::size_t target) {
   assert(target < nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i][2U * nQubits] ^= static_cast<EntryType>(
         tableau[i][target] & tableau[i][target + nQubits]);
     std::swap(tableau[i][target], tableau[i][target + nQubits]);
@@ -200,7 +213,7 @@ void Tableau::applyH(const std::size_t target) {
 
 void Tableau::applyS(const std::size_t target) {
   assert(target < nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i][2U * nQubits] ^= static_cast<EntryType>(
         tableau[i][target] & tableau[i][target + nQubits]);
     tableau[i][target + nQubits] ^= tableau[i][target];
@@ -257,7 +270,7 @@ void Tableau::applyCX(const std::size_t control, const std::size_t target) {
   assert(control < nQubits);
   assert(target < nQubits);
   assert(control != target);
-  for (auto i = 0U; i < nQubits; ++i) {
+  for (auto i = 0U; i < getTableauSize(); ++i) {
     const auto xa = tableau[i][target];
     const auto za = tableau[i][target + nQubits];
     const auto xb = tableau[i][control];
@@ -320,6 +333,75 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
     if (currentG >= end) {
       break;
     }
+  }
+}
+void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers, const std::string& destabilizers) {
+  std::stringstream ssStab(stabilizers);
+  std::stringstream ssDestab(destabilizers);
+  std::string       line;
+  std::getline(ssDestab, line);
+  if (line.empty()) {
+    return;
+  }
+  const auto  rStabilizer = std::regex("([\\+-]?)([IYZX]+)");
+  std::smatch m;
+  // string is a list of stabilizers
+  auto iter = line.cbegin();
+  while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
+    std::string s = m.str(0U);
+    RowType     row;
+
+    for (const auto c : s) {
+      if (c == 'I' || c == 'Z') {
+        row.push_back(0);
+      } else if (c == 'X' || c == 'Y') {
+        row.push_back(1);
+      }
+    }
+    for (const auto c : s) {
+      if (c == 'I' || c == 'X') {
+        row.push_back(0);
+      } else if (c == 'Y' || c == 'Z') {
+        row.push_back(1);
+      }
+    }
+    if (s[0U] == '-') {
+      row.push_back(1);
+    } else {
+      row.push_back(0);
+    }
+    tableau.push_back(row);
+    iter = m[0].second;
+  }
+
+  std::getline(ssStab, line);
+  iter = line.cbegin();
+  //destabilizers
+  while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
+    std::string s = m.str(0U);
+    RowType     row;
+
+    for (const auto c : s) {
+      if (c == 'I' || c == 'Z') {
+        row.push_back(0);
+      } else if (c == 'X' || c == 'Y') {
+        row.push_back(1);
+      }
+    }
+    for (const auto c : s) {
+      if (c == 'I' || c == 'X') {
+        row.push_back(0);
+      } else if (c == 'Y' || c == 'Z') {
+        row.push_back(1);
+      }
+    }
+    if (s[0U] == '-') {
+      row.push_back(1);
+    } else {
+      row.push_back(0);
+    }
+    tableau.push_back(row);
+    iter = m[0].second;
   }
 }
 } // namespace cs

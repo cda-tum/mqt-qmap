@@ -27,12 +27,16 @@ public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
                    std::size_t end = std::numeric_limits<std::size_t>::max());
-  explicit Tableau(const std::size_t nq) : nQubits(nq) {
-    createDiagonalTableau(nq);
+  explicit Tableau(const std::size_t nq, const bool useFullsizeTableau = false) : nQubits(nq) {
+    createDiagonalTableau(nq, useFullsizeTableau);
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
     nQubits = tableau.size();
+  }
+  explicit Tableau(const std::string& stabilizers, const std::string& destabilizers) {
+    fromStabilizersDestabilizers(stabilizers, destabilizers);
+    nQubits = tableau.size()/2U;
   }
 
   [[nodiscard]] RowType operator[](const std::size_t index) {
@@ -47,6 +51,8 @@ public:
   }
 
   [[nodiscard]] auto getQubitCount() const { return nQubits; }
+
+  [[nodiscard]] auto getTableauSize() const { return tableau.size(); }
 
   void dump(const std::string& filename) const;
 
@@ -95,7 +101,7 @@ public:
     return !(lhs == rhs);
   }
 
-  void createDiagonalTableau(std::size_t nQ);
+  void createDiagonalTableau(std::size_t nQ, const bool useFullsizeTableau = false);
 
   friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     os << dt.toString();
@@ -112,6 +118,8 @@ public:
 
   [[nodiscard]] std::string toString() const;
   void                      fromString(const std::string& str);
+
+  void fromStabilizersDestabilizers(const std::string& stabilizers, const std::string& destabilizers);
 
   template <std::size_t N>
   [[nodiscard]] std::bitset<N> getBVFrom(const std::size_t column) const {
