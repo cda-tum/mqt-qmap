@@ -309,8 +309,8 @@ void Tableau::applySwap(const std::size_t q1, const std::size_t q2) {
 }
 
 Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
-                 const std::size_t end)
-    : Tableau(qc.getNqubits()) {
+                 const std::size_t end, const bool useFullsizeTableau)
+    : Tableau(qc.getNqubits(), useFullsizeTableau) {
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
     if (gate->getType() == qc::OpType::Compound) {
