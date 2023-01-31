@@ -475,14 +475,15 @@ PYBIND11_MODULE(pyqmap, m) {
 
   auto tableau = py::class_<cs::Tableau>(
       m, "Tableau", "A class for representing stabilizer tableaus.");
-  tableau.def(py::init<std::size_t, bool>(), "n"_a, "use_fullsize_tableau"_a,
+  tableau.def(py::init<std::size_t, bool>(), "n"_a, "use_fullsize_tableau"_a = false,
               "Creates a tableau for an n-qubit Clifford.");
   tableau.def(
       py::init<const std::string&>(), "tableau"_a,
       "Constructs a tableau from a string description. This can either be a "
       "semicolon separated binary matrix or a list of Pauli strings.");
   tableau.def(
-      py::init<const std::string&, const std::string&>(), "stabilizers"_a, "destabilizers"_a,
+      py::init<const std::string&, const std::string&>(), "stabilizers"_a,
+      "destabilizers"_a,
       "Constructs a tableau from two lists of Pauli strings, the Stabilizers"
       "and Destabilizers.");
 
