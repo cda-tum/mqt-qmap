@@ -262,5 +262,25 @@
     "expected_minimal_gates_at_minimal_depth": 5,
     "expected_minimal_two_qubit_gates": 3,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 4
+  },
+  {
+    "description": "ZI_IZ_XI_IX",
+    "initial_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "target_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "expected_minimal_gates": 0,
+    "expected_minimal_depth": 0,
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
+  },
+  {
+    "description": "ZI_IZ_XI_IX",
+    "initial_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "target_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "expected_minimal_gates": 0,
+    "expected_minimal_depth": 0,
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
   }
 ]
