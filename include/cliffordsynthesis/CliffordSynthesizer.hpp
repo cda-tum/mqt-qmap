@@ -64,19 +64,20 @@ protected:
   Tableau                                 resultTableau{};
   std::size_t                             solverCalls{};
 
-    static bool requiresMultiGateEncoding(const TargetMetric metric) {
-      return metric == TargetMetric::Depth;
-    }
+  static bool requiresMultiGateEncoding(const TargetMetric metric) {
+    return metric == TargetMetric::Depth;
+  }
 
-    static bool requiresFullsizedTableaus(const Tableau& initialTableau, const Tableau& targetTableau) {
-      if (initialTableau.getTableauSize() != targetTableau.getTableauSize() ||
-          targetTableau.getQubitCount() != initialTableau.getQubitCount()) {
-        FATAL() << "Initial and Target Tableaus not of same size" << std::endl;
-        return false;
-      }
-      return initialTableau.getTableauSize() > initialTableau.getQubitCount() &&
-          targetTableau.getTableauSize() > targetTableau.getQubitCount();
+  static bool requiresFullsizedTableaus(const Tableau& initialTableau,
+                                        const Tableau& targetTableau) {
+    if (initialTableau.getTableauSize() != targetTableau.getTableauSize() ||
+        targetTableau.getQubitCount() != initialTableau.getQubitCount()) {
+      FATAL() << "Initial and Target Tableaus not of same size" << std::endl;
+      return false;
     }
+    return initialTableau.getTableauSize() > initialTableau.getQubitCount() &&
+           targetTableau.getTableauSize() > targetTableau.getQubitCount();
+  }
 
   void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);

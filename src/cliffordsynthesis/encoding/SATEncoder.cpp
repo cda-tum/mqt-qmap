@@ -40,7 +40,7 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  const std::size_t S = config.useFullsizedTableaus?2U*N:N;
+  const std::size_t S = config.useFullsizedTableaus ? 2U * N : N;
 
   tableauEncoder = std::make_shared<TableauEncoder>(N, S, T, lb);
   tableauEncoder->createTableauVariables();

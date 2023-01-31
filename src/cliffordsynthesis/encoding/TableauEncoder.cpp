@@ -60,7 +60,7 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
 void TableauEncoder::extractTableauFromModel(Results&          results,
                                              const std::size_t t,
                                              Model&            model) const {
-  Tableau tableau(N, S>N);
+  Tableau tableau(N, S > N);
   for (std::size_t i = 0; i < N; ++i) {
     const auto bvx = model.getBitvectorValue(vars.x[t][i], lb.get());
     tableau.populateTableauFrom(bvx, S, i);

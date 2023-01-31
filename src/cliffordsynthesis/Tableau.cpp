@@ -114,17 +114,18 @@ void Tableau::applyGate(const qc::Operation* const gate) {
   }
 }
 
-void Tableau::createDiagonalTableau(const std::size_t nQ, const bool useFullsizeTableau) {
+void Tableau::createDiagonalTableau(const std::size_t nQ,
+                                    const bool        useFullsizeTableau) {
   nQubits = nQ;
   tableau.clear();
-  if (useFullsizeTableau){
+  if (useFullsizeTableau) {
     tableau.resize(2U * nQubits);
   } else {
     tableau.resize(nQubits);
   }
   for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i].resize((2U * nQubits) + 1U);
-    if (useFullsizeTableau){
+    if (useFullsizeTableau) {
       for (std::size_t j = 0; j < (2U * nQubits); ++j) {
         tableau[i][j] = 0;
         if (i == j) {
@@ -309,7 +310,8 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
     }
   }
 }
-void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers, const std::string& destabilizers) {
+void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers,
+                                           const std::string& destabilizers) {
   loadStabilizerDestabilizerString(destabilizers);
   loadStabilizerDestabilizerString(stabilizers);
 }

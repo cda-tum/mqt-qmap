@@ -86,8 +86,9 @@ TEST_F(TestTableau, InitialTableau) {
   const auto        tFromStabilizers = Tableau(stabilizers);
   EXPECT_EQ(tableau, tFromStabilizers);
 
-  const std::string destabilizers    = "[+XI, +IX]";
-  const auto        fullTFromStabilizersAndDestabilizers = Tableau(stabilizers, destabilizers);
+  const std::string destabilizers = "[+XI, +IX]";
+  const auto        fullTFromStabilizersAndDestabilizers =
+      Tableau(stabilizers, destabilizers);
   EXPECT_EQ(fullTableau, fullTFromStabilizersAndDestabilizers);
 }
 
@@ -518,7 +519,8 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.emplace_back(compOP);
 
   EXPECT_NO_THROW(tableau = cs::Tableau(qc););
-  EXPECT_NO_THROW(fullTableau = cs::Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), true));
+  EXPECT_NO_THROW(fullTableau = cs::Tableau(
+                      qc, 0, std::numeric_limits<std::size_t>::max(), true));
 }
 
 TEST_F(TestTableau, UnsupportedOperations) {

@@ -29,17 +29,20 @@ private:
 public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
-                   std::size_t end = std::numeric_limits<std::size_t>::max(), bool useFullsizeTableau = false);
-  explicit Tableau(const std::size_t nq, const bool useFullsizeTableau = false) : nQubits(nq) {
+                   std::size_t end = std::numeric_limits<std::size_t>::max(),
+                   bool        useFullsizeTableau = false);
+  explicit Tableau(const std::size_t nq, const bool useFullsizeTableau = false)
+      : nQubits(nq) {
     createDiagonalTableau(nq, useFullsizeTableau);
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
-    nQubits = (tableau.back().size() - 1U)/2U;
+    nQubits = (tableau.back().size() - 1U) / 2U;
   }
-  explicit Tableau(const std::string& stabilizers, const std::string& destabilizers) {
+  explicit Tableau(const std::string& stabilizers,
+                   const std::string& destabilizers) {
     fromStabilizersDestabilizers(stabilizers, destabilizers);
-    nQubits = tableau.size()/2U;
+    nQubits = tableau.size() / 2U;
   }
 
   [[nodiscard]] RowType operator[](const std::size_t index) {
@@ -122,7 +125,8 @@ public:
   [[nodiscard]] std::string toString() const;
   void                      fromString(const std::string& str);
 
-  void fromStabilizersDestabilizers(const std::string& stabilizers, const std::string& destabilizers);
+  void fromStabilizersDestabilizers(const std::string& stabilizers,
+                                    const std::string& destabilizers);
 
   template <std::size_t N>
   [[nodiscard]] std::bitset<N> getBVFrom(const std::size_t column) const {
