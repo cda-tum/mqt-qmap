@@ -23,6 +23,9 @@ class Tableau {
   std::size_t nQubits{};
   TableauType tableau;
 
+private:
+  void loadStabilizerDestabilizerString(const std::string& string);
+
 public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,

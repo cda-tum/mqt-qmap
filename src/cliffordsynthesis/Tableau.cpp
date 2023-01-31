@@ -168,33 +168,7 @@ void Tableau::fromString(const std::string& str) {
   std::smatch m;
   if (std::regex_search(line, rStabilizer)) {
     // string is a list of stabilizers
-    auto iter = line.cbegin();
-    while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
-      std::string s = m.str(0U);
-      RowType     row;
-
-      for (const auto c : s) {
-        if (c == 'I' || c == 'Z') {
-          row.push_back(0);
-        } else if (c == 'X' || c == 'Y') {
-          row.push_back(1);
-        }
-      }
-      for (const auto c : s) {
-        if (c == 'I' || c == 'X') {
-          row.push_back(0);
-        } else if (c == 'Y' || c == 'Z') {
-          row.push_back(1);
-        }
-      }
-      if (s[0U] == '-') {
-        row.push_back(1);
-      } else {
-        row.push_back(0);
-      }
-      tableau.push_back(row);
-      iter = m[0].second;
-    }
+    loadStabilizerDestabilizerString(str);
   } else {
     // assume string is a semicolon separated binary matrix
     ss = std::stringstream(str);
@@ -336,10 +310,13 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
   }
 }
 void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers, const std::string& destabilizers) {
-  std::stringstream ssStab(stabilizers);
-  std::stringstream ssDestab(destabilizers);
+  loadStabilizerDestabilizerString(destabilizers);
+  loadStabilizerDestabilizerString(stabilizers);
+}
+void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
+  std::stringstream ss(string);
   std::string       line;
-  std::getline(ssDestab, line);
+  std::getline(ss, line);
   if (line.empty()) {
     return;
   }
@@ -347,36 +324,6 @@ void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers, const
   std::smatch m;
   // string is a list of stabilizers
   auto iter = line.cbegin();
-  while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
-    std::string s = m.str(0U);
-    RowType     row;
-
-    for (const auto c : s) {
-      if (c == 'I' || c == 'Z') {
-        row.push_back(0);
-      } else if (c == 'X' || c == 'Y') {
-        row.push_back(1);
-      }
-    }
-    for (const auto c : s) {
-      if (c == 'I' || c == 'X') {
-        row.push_back(0);
-      } else if (c == 'Y' || c == 'Z') {
-        row.push_back(1);
-      }
-    }
-    if (s[0U] == '-') {
-      row.push_back(1);
-    } else {
-      row.push_back(0);
-    }
-    tableau.push_back(row);
-    iter = m[0].second;
-  }
-
-  std::getline(ssStab, line);
-  iter = line.cbegin();
-  //destabilizers
   while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
     std::string s = m.str(0U);
     RowType     row;
