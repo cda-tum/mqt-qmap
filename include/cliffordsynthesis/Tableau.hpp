@@ -35,7 +35,7 @@ public:
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
-    nQubits = tableau.size();
+    nQubits = (tableau.back().size() - 1U)/2U;
   }
   explicit Tableau(const std::string& stabilizers, const std::string& destabilizers) {
     fromStabilizersDestabilizers(stabilizers, destabilizers);
