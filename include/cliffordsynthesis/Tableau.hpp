@@ -29,7 +29,7 @@ private:
 public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
-                   std::size_t end = std::numeric_limits<std::size_t>::max(), const bool useFullsizeTableau = false);
+                   std::size_t end = std::numeric_limits<std::size_t>::max(), bool useFullsizeTableau = false);
   explicit Tableau(const std::size_t nq, const bool useFullsizeTableau = false) : nQubits(nq) {
     createDiagonalTableau(nq, useFullsizeTableau);
   }
@@ -68,7 +68,7 @@ public:
   void populateTableauFrom(const std::bitset<N> bv, const std::size_t nQ,
                            const std::size_t column) {
     assert(column <= 2 * nQ);
-    assert(nQ <= nQubits);
+    assert(nQ <= getTableauSize());
     assert(nQ <= N);
     for (std::size_t i = 0U; i < nQ; ++i) {
       if (bv[i]) {
@@ -104,7 +104,7 @@ public:
     return !(lhs == rhs);
   }
 
-  void createDiagonalTableau(std::size_t nQ, const bool useFullsizeTableau = false);
+  void createDiagonalTableau(std::size_t nQ, bool useFullsizeTableau = false);
 
   friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     os << dt.toString();
@@ -129,7 +129,7 @@ public:
     assert(column <= 2 * nQubits);
     assert(nQubits <= N);
     std::bitset<N> bv;
-    for (std::size_t i = 0U; i < nQubits; ++i) {
+    for (std::size_t i = 0U; i < getTableauSize(); ++i) {
       if (tableau[i][column] == 1U) {
         bv[i] = 1;
       }

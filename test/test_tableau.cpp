@@ -518,6 +518,7 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.emplace_back(compOP);
 
   EXPECT_NO_THROW(tableau = cs::Tableau(qc););
+  EXPECT_NO_THROW(fullTableau = cs::Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), true));
 }
 
 TEST_F(TestTableau, UnsupportedOperations) {
@@ -569,6 +570,39 @@ TEST_F(TestTableau, BVAccess) {
   EXPECT_EQ(tableau, Tableau(expected));
 }
 
+TEST_F(TestTableau, FullBVAccess) {
+  const auto bv0 = 0b1000;
+  const auto bv1 = 0b0100;
+  const auto bv2 = 0b0010;
+  const auto bv3 = 0b0001;
+  const auto bv4 = 0b0000;
+
+  fullTableau.populateTableauFrom(bv0, 4, 0);
+  fullTableau.populateTableauFrom(bv1, 4, 1);
+  fullTableau.populateTableauFrom(bv2, 4, 2);
+  fullTableau.populateTableauFrom(bv3, 4, 3);
+  fullTableau.populateTableauFrom(bv4, 4, 4);
+
+  const auto col0 = fullTableau.getBVFrom(0);
+  const auto col1 = fullTableau.getBVFrom(1);
+  const auto col2 = fullTableau.getBVFrom(2);
+  const auto col3 = fullTableau.getBVFrom(3);
+  const auto col4 = fullTableau.getBVFrom(4);
+
+  EXPECT_EQ(col0, bv0);
+  EXPECT_EQ(col1, bv1);
+  EXPECT_EQ(col2, bv2);
+  EXPECT_EQ(col3, bv3);
+  EXPECT_EQ(col4, bv4);
+
+  const std::string expected = "0;0;0;1;0;\n"
+                               "0;0;1;0;0;\n"
+                               "0;1;0;0;0;\n"
+                               "1;0;0;0;0;\n";
+
+  EXPECT_EQ(fullTableau, Tableau(expected));
+}
+
 TEST_F(TestTableau, LargeBV) {
   // Assert that a tableau for 128 qubits can be properly created
   tableau = Tableau(128);
@@ -589,6 +623,12 @@ TEST_F(TestTableau, TableauIO) {
   auto tableau2 = Tableau{};
   tableau2.import(filename);
   EXPECT_EQ(tableau, tableau2);
+
+  const std::string filename2 = "fullTableau.txt";
+  fullTableau.dump(filename2);
+  tableau2 = Tableau{};
+  tableau2.import(filename2);
+  EXPECT_EQ(fullTableau, tableau2);
 }
 
 } // namespace cs
