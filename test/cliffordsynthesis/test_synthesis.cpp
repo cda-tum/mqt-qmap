@@ -244,8 +244,8 @@ TEST(SynthesisTest, CompareFullToHalf) {
   Results             results;
   Tableau             resultTableau;
 
-  initialTableau = Tableau(1);
-  targetTableau  = Tableau("[+X, -Y]");
+  initialTableau = Tableau(2);
+  targetTableau  = Tableau("[+IX, +ZI]");
 
   config.target    = TargetMetric::Gates;
   config.useMaxSAT = true;
@@ -254,10 +254,10 @@ TEST(SynthesisTest, CompareFullToHalf) {
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getGates(), 1);
+  EXPECT_EQ(results.getGates(), 3);
 
-  initialTableau = Tableau(1, true);
-  targetTableau  = Tableau("[+X, -Y]", "[+X, -Z]");
+  initialTableau = Tableau(2, true);
+  targetTableau  = Tableau("[+IX, +ZI]", "[+ZZ, -XX]");
 
   config.target    = TargetMetric::Gates;
   config.useMaxSAT = true;
@@ -266,7 +266,7 @@ TEST(SynthesisTest, CompareFullToHalf) {
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getGates(), 0);
+  EXPECT_EQ(results.getGates(), 4);
 }
 
 } // namespace cs
