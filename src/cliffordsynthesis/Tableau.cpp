@@ -115,17 +115,17 @@ void Tableau::applyGate(const qc::Operation* const gate) {
 }
 
 void Tableau::createDiagonalTableau(const std::size_t nQ,
-                                    const bool        useFullsizeTableau) {
+                                    const bool        includeDestabilizers) {
   nQubits = nQ;
   tableau.clear();
-  if (useFullsizeTableau) {
+  if (includeDestabilizers) {
     tableau.resize(2U * nQubits);
   } else {
     tableau.resize(nQubits);
   }
   for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i].resize((2U * nQubits) + 1U);
-    if (useFullsizeTableau) {
+    if (includeDestabilizers) {
       for (std::size_t j = 0; j < (2U * nQubits); ++j) {
         tableau[i][j] = 0;
         if (i == j) {
@@ -284,8 +284,8 @@ void Tableau::applySwap(const std::size_t q1, const std::size_t q2) {
 }
 
 Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
-                 const std::size_t end, const bool useFullsizeTableau)
-    : Tableau(qc.getNqubits(), useFullsizeTableau) {
+                 const std::size_t end, const bool includeDestabilizers)
+    : Tableau(qc.getNqubits(), includeDestabilizers) {
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
     if (gate->getType() == qc::OpType::Compound) {

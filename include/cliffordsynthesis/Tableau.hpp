@@ -30,10 +30,11 @@ public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
                    std::size_t end = std::numeric_limits<std::size_t>::max(),
-                   bool        useFullsizeTableau = false);
-  explicit Tableau(const std::size_t nq, const bool useFullsizeTableau = false)
+                   bool        includeDestabilizers = false);
+  explicit Tableau(const std::size_t nq,
+                   const bool        includeDestabilizers = false)
       : nQubits(nq) {
-    createDiagonalTableau(nq, useFullsizeTableau);
+    createDiagonalTableau(nq, includeDestabilizers);
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
@@ -113,7 +114,7 @@ public:
     return !(lhs == rhs);
   }
 
-  void createDiagonalTableau(std::size_t nQ, bool useFullsizeTableau = false);
+  void createDiagonalTableau(std::size_t nQ, bool includeDestabilizers = false);
 
   friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     os << dt.toString();
