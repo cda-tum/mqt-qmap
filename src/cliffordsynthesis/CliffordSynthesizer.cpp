@@ -31,8 +31,6 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.nThreads            = configuration.nThreads;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
-  encoderConfig.useFullsizedTableaus =
-      requiresFullsizedTableaus(initialTableau, targetTableau);
 
   // First, determine an initial guess for the number of timesteps. This can
   // either be specified as a configuration parameter or starts at 1.

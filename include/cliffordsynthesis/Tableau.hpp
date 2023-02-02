@@ -60,6 +60,12 @@ public:
 
   [[nodiscard]] auto getTableauSize() const { return tableau.size(); }
 
+  [[nodiscard]] auto hasDestabilizer() const {
+    return tableau.size() == 2 * nQubits;
+  }
+
+  [[nodiscard]] auto getTableau() const { return tableau; }
+
   void dump(const std::string& filename) const;
 
   void dump(std::ostream& of) const;

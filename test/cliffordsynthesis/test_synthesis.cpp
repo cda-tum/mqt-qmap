@@ -236,4 +236,37 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
             test.expectedMinimalGatesAtMinimalTwoQubitGates);
 }
 
+TEST(SynthesisTest, CompareFullToHalf) {
+  Tableau             initialTableau;
+  Tableau             targetTableau;
+  Configuration       config;
+  CliffordSynthesizer synthesizer;
+  Results             results;
+  Tableau             resultTableau;
+
+  initialTableau = Tableau(1);
+  targetTableau  = Tableau("[+X, -Y]");
+
+  config.target    = TargetMetric::Gates;
+  config.useMaxSAT = true;
+
+  synthesizer = CliffordSynthesizer(initialTableau, targetTableau);
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getGates(), 1);
+
+  initialTableau = Tableau(1, true);
+  targetTableau  = Tableau("[+X, -Y]", "[+X, -Z]");
+
+  config.target    = TargetMetric::Gates;
+  config.useMaxSAT = true;
+
+  synthesizer = CliffordSynthesizer(initialTableau, targetTableau);
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getGates(), 0);
+}
+
 } // namespace cs

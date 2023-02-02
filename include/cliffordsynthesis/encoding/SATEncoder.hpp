@@ -55,9 +55,6 @@ public:
 
     // an optional limit on the total number of two-qubit gates
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
-
-    // whether to use full sized tableaus
-    bool useFullsizedTableaus = false;
   };
 
   SATEncoder() = default;
