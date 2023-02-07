@@ -277,71 +277,70 @@ TEST(SynthesisTest, DestabilizerSanityCheck) {
   EXPECT_EQ(results.getGates(), 4);
 }
 
-TEST_P(SynthesisTest, TestDestabilizerGates) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+    TEST_P(SynthesisTest, TestDestabilizerGates) {
+        if (!initialTableauWithDestabilizer.getTableau().empty()) {
+            std::cout << "Testing with destabilizer" << std::endl;
+            config.target = TargetMetric::Gates;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+            synthesizer.synthesize(config);
+            synthesizerWithDestabilizer.synthesize(config);
+            results = synthesizer.getResults();
+            resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+            EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
+        } else {
+            std::cout << "Testing without destabilizer" << std::endl;
+            config.target = TargetMetric::Gates;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+            synthesizer.synthesize(config);
+            results = synthesizer.getResults();
+        }
+    }
 
-TEST_P(SynthesisTest, TestDestabilizerDepth) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Depth;
-    config.useMaxSAT = true;
+    TEST_P(SynthesisTest, TestDestabilizerDepth) {
+        if (!initialTableauWithDestabilizer.getTableau().empty()) {
+            std::cout << "Testing with destabilizer" << std::endl;
+            config.target = TargetMetric::Depth;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+            synthesizer.synthesize(config);
+            synthesizerWithDestabilizer.synthesize(config);
+            results = synthesizer.getResults();
+            resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+            EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
+        } else {
+            std::cout << "Testing without destabilizer" << std::endl;
+            config.target = TargetMetric::Gates;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+            synthesizer.synthesize(config);
+            results = synthesizer.getResults();
+        }
+    }
 
-TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::TwoQubitGates;
-    config.useMaxSAT = true;
+    TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
+        if (!initialTableauWithDestabilizer.getTableau().empty()) {
+            std::cout << "Testing with destabilizer" << std::endl;
+            config.target = TargetMetric::TwoQubitGates;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+            synthesizer.synthesize(config);
+            synthesizerWithDestabilizer.synthesize(config);
+            results = synthesizer.getResults();
+            resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
-              results.getTwoQubitGates());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+            EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(), results.getTwoQubitGates());
+        } else {
+            std::cout << "Testing without destabilizer" << std::endl;
+            config.target = TargetMetric::Gates;
+            config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+            synthesizer.synthesize(config);
+            results = synthesizer.getResults();
+        }
+    }
 
 } // namespace cs
