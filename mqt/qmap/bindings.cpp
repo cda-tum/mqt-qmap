@@ -476,7 +476,7 @@ PYBIND11_MODULE(pyqmap, m) {
   auto tableau = py::class_<cs::Tableau>(
       m, "Tableau", "A class for representing stabilizer tableaus.");
   tableau.def(py::init<std::size_t, bool>(), "n"_a,
-              "use_fullsize_tableau"_a = false,
+              "include_destabilizers"_a = false,
               "Creates a tableau for an n-qubit Clifford.");
   tableau.def(
       py::init<const std::string&>(), "tableau"_a,
