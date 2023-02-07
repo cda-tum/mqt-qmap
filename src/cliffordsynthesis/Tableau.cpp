@@ -310,8 +310,8 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
     }
   }
 }
-void Tableau::fromStabilizersDestabilizers(const std::string& stabilizers,
-                                           const std::string& destabilizers) {
+void Tableau::fromString(const std::string& stabilizers,
+                         const std::string& destabilizers) {
   loadStabilizerDestabilizerString(destabilizers);
   loadStabilizerDestabilizerString(stabilizers);
 }

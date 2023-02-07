@@ -38,11 +38,13 @@ public:
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
-    nQubits = (tableau.back().size() - 1U) / 2U;
+    if (tableau.empty())
+      throw std::runtime_error("Tableau is empty");
+    nQubits = tableau.back().size() / 2U;
   }
   explicit Tableau(const std::string& stabilizers,
                    const std::string& destabilizers) {
-    fromStabilizersDestabilizers(stabilizers, destabilizers);
+    fromString(stabilizers, destabilizers);
     nQubits = tableau.size() / 2U;
   }
 
@@ -132,8 +134,8 @@ public:
   [[nodiscard]] std::string toString() const;
   void                      fromString(const std::string& str);
 
-  void fromStabilizersDestabilizers(const std::string& stabilizers,
-                                    const std::string& destabilizers);
+  void fromString(const std::string& stabilizers,
+                  const std::string& destabilizers);
 
   template <std::size_t N>
   [[nodiscard]] std::bitset<N> getBVFrom(const std::size_t column) const {
