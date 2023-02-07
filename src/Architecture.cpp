@@ -206,13 +206,11 @@ void Architecture::createDistanceTable() {
 }
 
 void Architecture::createFidelityDistanceTable() {
-  for (std::uint16_t i = 0; i < nqubits; ++i) {
-    for (std::uint16_t j = 0; j < nqubits; ++j) {
-      if (!properties.twoQubitErrorRateAvailable(i, j)) {
-        fidelityDistanceTable = std::vector<std::vector<double>>(
-            nqubits, std::vector<double>(nqubits, 0));
-        return;
-      }
+  for (const auto& edge : couplingMap) {
+    if (!properties.twoQubitErrorRateAvailable(edge.first, edge.second)) {
+      fidelityDistanceTable = std::vector<std::vector<double>>(
+        nqubits, std::vector<double>(nqubits, 0));
+      return;
     }
   }
 

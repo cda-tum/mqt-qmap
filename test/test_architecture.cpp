@@ -160,3 +160,88 @@ TEST(TestArchitecture, TestCouplingLimitRing) {
   architecture.loadCouplingMap(5, cm);
   EXPECT_EQ(architecture.getCouplingLimit(), 2);
 }
+
+TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
+  Architecture architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {1, 4}, {4, 1}, {2, 5}, {5, 2},
+                          {5, 6}, {6, 5}};
+  architecture.loadCouplingMap(7, cm);
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", 0.97);
+  props.setSingleQubitErrorRate(1, "x", 0.97);
+  props.setSingleQubitErrorRate(2, "x", 0.98);
+  props.setSingleQubitErrorRate(3, "x", 0.97);
+  props.setSingleQubitErrorRate(4, "x", 0.97);
+  props.setSingleQubitErrorRate(5, "x", 0.98);
+  props.setSingleQubitErrorRate(6, "x", 0.97);
+
+  props.setTwoQubitErrorRate(0, 1, 0.9);
+  props.setTwoQubitErrorRate(1, 0, 0.9);
+  props.setTwoQubitErrorRate(1, 2, 0.5);
+  props.setTwoQubitErrorRate(2, 1, 0.5);
+  props.setTwoQubitErrorRate(2, 3, 0.1);
+  props.setTwoQubitErrorRate(3, 2, 0.1);
+  props.setTwoQubitErrorRate(1, 4, 0.1);
+  props.setTwoQubitErrorRate(4, 1, 0.1);
+  props.setTwoQubitErrorRate(2, 5, 0.5);
+  props.setTwoQubitErrorRate(5, 2, 0.5);
+  props.setTwoQubitErrorRate(5, 6, 0.9);
+  props.setTwoQubitErrorRate(6, 5, 0.9);
+
+  architecture.loadProperties(props);
+
+  const Matrix<double> fidDistance = architecture.getFidelityDistanceTable();
+
+  EXPECT_EQ(fidDistance.size(), 7);
+  EXPECT_EQ(fidDistance[0].size(), 7);
+  EXPECT_NEAR(fidDistance[0][1], -3*std::log2(1-0.9), 1e-6);
+  EXPECT_NEAR(fidDistance[0][2], -3*(std::log2(1-0.9)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[0][3], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[0][4], -3*(std::log2(1-0.9)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[0][5], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[0][6], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_EQ(fidDistance[1].size(), 7);
+  EXPECT_NEAR(fidDistance[1][0], -3*std::log2(1-0.9), 1e-6);
+  EXPECT_NEAR(fidDistance[1][2], -3*std::log2(1-0.5), 1e-6);
+  EXPECT_NEAR(fidDistance[1][3], -3*(std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[1][4], -3*std::log2(1-0.1), 1e-6);
+  EXPECT_NEAR(fidDistance[1][5], -3*(std::log2(1-0.5)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[1][6], -3*(std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_EQ(fidDistance[2].size(), 7);
+  EXPECT_NEAR(fidDistance[2][0], -3*(std::log2(1-0.9)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[2][1], -3*std::log2(1-0.5), 1e-6);
+  EXPECT_NEAR(fidDistance[2][3], -3*std::log2(1-0.1), 1e-6);
+  EXPECT_NEAR(fidDistance[2][4], -3*(std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[2][5], -3*std::log2(1-0.5), 1e-6);
+  EXPECT_NEAR(fidDistance[2][6], -3*(std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_EQ(fidDistance[3].size(), 7);
+  EXPECT_NEAR(fidDistance[3][0], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_NEAR(fidDistance[3][1], -3*(std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[3][2], -3*std::log2(1-0.1), 1e-6);
+  EXPECT_NEAR(fidDistance[3][4], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[3][5], -3*(std::log2(1-0.1)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[3][6], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_EQ(fidDistance[4].size(), 7);
+  EXPECT_NEAR(fidDistance[4][0], -3*(std::log2(1-0.1)+std::log2(1-0.9)), 1e-6);
+  EXPECT_NEAR(fidDistance[4][1], -3*std::log2(1-0.1), 1e-6);
+  EXPECT_NEAR(fidDistance[4][2], -3*(std::log2(1-0.1)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[4][3], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[4][5], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[4][6], -3*(std::log2(1-0.1)+std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_EQ(fidDistance[5].size(), 7);
+  EXPECT_NEAR(fidDistance[5][0], -3*(std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_NEAR(fidDistance[5][1], -3*(std::log2(1-0.5)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[5][2], -3*std::log2(1-0.5), 1e-6);
+  EXPECT_NEAR(fidDistance[5][3], -3*(std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[5][4], -3*(std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[5][6], -3*std::log2(1-0.9), 1e-6);
+  EXPECT_EQ(fidDistance[6].size(), 7);
+  EXPECT_NEAR(fidDistance[6][0], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.9)), 1e-6);
+  EXPECT_NEAR(fidDistance[6][1], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[6][2], -3*(std::log2(1-0.9)+std::log2(1-0.5)), 1e-6);
+  EXPECT_NEAR(fidDistance[6][3], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[6][4], -3*(std::log2(1-0.9)+std::log2(1-0.5)+std::log2(1-0.5)+std::log2(1-0.1)), 1e-6);
+  EXPECT_NEAR(fidDistance[6][5], -3*std::log2(1-0.9), 1e-6);
+}
