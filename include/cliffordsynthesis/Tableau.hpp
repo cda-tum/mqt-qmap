@@ -61,7 +61,7 @@ public:
 
   [[nodiscard]] auto getTableauSize() const { return tableau.size(); }
 
-  [[nodiscard]] auto hasDestabilizer() const {
+  [[nodiscard]] auto hasDestabilizers() const {
     return tableau.size() == 2 * nQubits;
   }
 
