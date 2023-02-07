@@ -65,7 +65,7 @@ public:
     return tableau.size() == 2 * nQubits;
   }
 
-  [[nodiscard]] auto getTableau() const { return tableau; }
+  [[nodiscard]] auto& getTableau() const { return tableau; }
 
   void dump(const std::string& filename) const;
 
