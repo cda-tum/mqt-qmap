@@ -283,10 +283,10 @@ TEST_P(SynthesisTest, TestDestabilizerGates) {
     config.target    = TargetMetric::Gates;
     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+  synthesizer.synthesize(config);
+  synthesizerWithDestabilizer.synthesize(config);
+  results                 = synthesizer.getResults();
+  resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
   } else {
@@ -305,10 +305,10 @@ TEST_P(SynthesisTest, TestDestabilizerDepth) {
     config.target    = TargetMetric::Depth;
     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+  synthesizer.synthesize(config);
+  synthesizerWithDestabilizer.synthesize(config);
+  results                 = synthesizer.getResults();
+  resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
   } else {
@@ -327,10 +327,10 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
     config.target    = TargetMetric::TwoQubitGates;
     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+  synthesizer.synthesize(config);
+  synthesizerWithDestabilizer.synthesize(config);
+  results                 = synthesizer.getResults();
+  resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
               results.getTwoQubitGates());
