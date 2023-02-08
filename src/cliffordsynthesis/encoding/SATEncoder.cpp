@@ -40,8 +40,8 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  const std::size_t s = config.targetTableau->hasDestabilizer() &&
-                                config.initialTableau->hasDestabilizer()
+  const std::size_t s = config.targetTableau->hasDestabilizers() &&
+                                config.initialTableau->hasDestabilizers()
                             ? 2U * N
                             : N;
 
