@@ -108,7 +108,6 @@ repos:
         args: []
         additional_dependencies:
           - "importlib_resources"
-          - "numpy"
           - "pytest>=7.0"
           - "types-setuptools"
           - "mqt.qcec"
