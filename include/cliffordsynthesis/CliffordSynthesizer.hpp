@@ -25,12 +25,12 @@ public:
   CliffordSynthesizer(Tableau initial, Tableau target)
       : initialTableau(std::move(initial)), targetTableau(std::move(target)) {}
   explicit CliffordSynthesizer(Tableau target)
-      : initialTableau(target.getQubitCount(), target.hasDestabilizer()),
+      : initialTableau(target.getQubitCount(), target.hasDestabilizers()),
         targetTableau(std::move(target)) {}
   CliffordSynthesizer(Tableau initial, qc::QuantumComputation& qc)
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
-                      initialTableau.hasDestabilizer()),
+                      initialTableau.hasDestabilizers()),
         results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
                                const bool              useDestabilizers = false)
