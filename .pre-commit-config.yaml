@@ -10,6 +10,7 @@
 ci:
   autoupdate_commit_msg: "⬆️🪝 update pre-commit hooks"
   autofix_commit_msg: "🎨 pre-commit fixes"
+  skip: [mypy]
 
 repos:
   # Standard hooks
@@ -103,14 +104,13 @@ repos:
     rev: "v0.991"
     hooks:
       - id: mypy
-        stages: [manual]
         files: ^(mqt/qmap|test/python|setup.py)
         args: []
         additional_dependencies:
           - "importlib_resources"
-          - "numpy"
           - "pytest>=7.0"
           - "types-setuptools"
+          - "mqt.qcec"
 
   # Check for spelling
   - repo: https://github.com/codespell-project/codespell
