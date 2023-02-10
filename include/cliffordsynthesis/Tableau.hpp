@@ -136,7 +136,7 @@ public:
 
   void fromString(const std::string& stabilizers,
                   const std::string& destabilizers);
-  no template <std::size_t N>
+  template <std::size_t N>
   [[nodiscard]] std::bitset<N> getBVFrom(const std::size_t column) const {
     assert(column <= 2 * nQubits);
     assert(nQubits <= N);
