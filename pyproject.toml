@@ -134,7 +134,7 @@ warn_unreachable = true
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-module = ["qiskit.*", "rustworkx.*", "matplotlib.*", "mqt.qcec.*"]
+module = ["qiskit.*", "rustworkx.*", "matplotlib.*"]
 ignore_missing_imports = true
 
 [tool.pylint]
