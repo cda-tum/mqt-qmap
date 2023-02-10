@@ -90,7 +90,7 @@ def mypy(session: Session) -> None:
     Simply execute `nox -rs mypy` to run mypy.
     """
     session.install("pre-commit")
-    session.run("pre-commit", "run", "--all-files", "--hook-stage", "manual", "mypy", *session.posargs)
+    session.run("pre-commit", "run", "mypy", "--all-files", *session.posargs)
 
 
 @nox.session

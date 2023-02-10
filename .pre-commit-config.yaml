@@ -104,7 +104,6 @@ repos:
     rev: "v0.991"
     hooks:
       - id: mypy
-        stages: [manual]
         files: ^(mqt/qmap|test/python|setup.py)
         args: []
         additional_dependencies:
