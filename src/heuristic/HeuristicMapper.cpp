@@ -35,15 +35,19 @@ void HeuristicMapper::Node::applySWAP(
   }
 
   if (considerFidelity) {
+    std::uint16_t q1Mult = 0;
+    std::uint16_t q2Mult = 0;
+    if (q1 != -1) {
+      q1Mult = singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1));
+    }
+    if (q2 != -1) {
+      q2Mult = singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2));
+    }
     // accounting for fidelity difference of single qubit gates (two qubit
     // gates are handled in the heuristic)
     costFixed +=
-        ((singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2)) -
-          singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1))) *
-             arch.getSingleQubitFidelityCost(swap.first) +
-         (singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1)) -
-          singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2))) *
-             arch.getSingleQubitFidelityCost(swap.second));
+        ((q2Mult - q1Mult) * arch.getSingleQubitFidelityCost(swap.first) +
+         (q1Mult - q2Mult) * arch.getSingleQubitFidelityCost(swap.second));
     // adding cost of the swap gate itself
     costFixed += arch.getSwapFidelityCost(swap.first, swap.second);
   } else {
