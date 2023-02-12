@@ -272,10 +272,12 @@ public:
   }
 
   [[nodiscard]] double getSingleQubitFidelityCost(std::uint16_t qbit) const {
+    if(qbit >= singleQubitFidelityCost.size()) return std::numeric_limits<double>::max();
     return singleQubitFidelityCost.at(qbit);
   }
 
   [[nodiscard]] double getSingleQubitFidelityCost(std::int16_t qbit) const {
+    if(static_cast<std::uint16_t>(qbit) >= singleQubitFidelityCost.size()) return std::numeric_limits<double>::max();
     return getSingleQubitFidelityCost(static_cast<std::uint16_t>(qbit));
   }
 
@@ -285,21 +287,29 @@ public:
 
   [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
                                                std::uint16_t q2) const {
+    if(q1 >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(q2 >= twoQubitFidelityCost.at(q1).size()) return std::numeric_limits<double>::max();
     return twoQubitFidelityCost.at(q1).at(q2);
   }
 
   [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t  q1,
                                                std::uint16_t q2) const {
+    if(static_cast<std::uint16_t>(q1) >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(q2 >= twoQubitFidelityCost.at(static_cast<std::uint16_t>(q1)).size()) return std::numeric_limits<double>::max();
     return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1), q2);
   }
 
   [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
                                                std::int16_t  q2) const {
+    if(q1 >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(static_cast<std::uint16_t>(q2) >= twoQubitFidelityCost.at(q1).size()) return std::numeric_limits<double>::max();
     return getTwoQubitFidelityCost(q1, static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] double getTwoQubitFidelityCost(std::int16_t q1,
                                                std::int16_t q2) const {
+    if(static_cast<std::uint16_t>(q1) >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(static_cast<std::uint16_t>(q2) >= twoQubitFidelityCost.at(static_cast<std::uint16_t>(q1)).size()) return std::numeric_limits<double>::max();
     return getTwoQubitFidelityCost(static_cast<std::uint16_t>(q1),
                                    static_cast<std::uint16_t>(q2));
   }
@@ -310,21 +320,29 @@ public:
 
   [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
                                            std::uint16_t q2) const {
+    if(q1 >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(q2 >= twoQubitFidelityCost.at(q1).size()) return std::numeric_limits<double>::max();
     return swapFidelityCost.at(q1).at(q2);
   }
 
   [[nodiscard]] double getSwapFidelityCost(std::int16_t  q1,
                                            std::uint16_t q2) const {
+    if(static_cast<std::uint16_t>(q1) >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(q2 >= twoQubitFidelityCost.at(static_cast<std::uint16_t>(q1)).size()) return std::numeric_limits<double>::max();
     return getSwapFidelityCost(static_cast<std::uint16_t>(q1), q2);
   }
 
   [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
                                            std::int16_t  q2) const {
+    if(q1 >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(static_cast<std::uint16_t>(q2) >= twoQubitFidelityCost.at(q1).size()) return std::numeric_limits<double>::max();
     return getSwapFidelityCost(q1, static_cast<std::uint16_t>(q2));
   }
 
   [[nodiscard]] double getSwapFidelityCost(std::int16_t q1,
                                            std::int16_t q2) const {
+    if(static_cast<std::uint16_t>(q1) >= twoQubitFidelityCost.size()) return std::numeric_limits<double>::max();
+    if(static_cast<std::uint16_t>(q2) >= twoQubitFidelityCost.at(static_cast<std::uint16_t>(q1)).size()) return std::numeric_limits<double>::max();
     return getSwapFidelityCost(static_cast<std::uint16_t>(q1),
                                static_cast<std::uint16_t>(q2));
   }

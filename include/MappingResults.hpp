@@ -21,6 +21,7 @@ struct MappingResults {
     std::size_t   singleQubitGates = 0;
     std::size_t   cnots            = 0;
     std::size_t   layers           = 0;
+    double        totalLogFidelity = 0;
 
     // info in output circuit
     std::size_t swaps            = 0;
@@ -93,6 +94,7 @@ struct MappingResults {
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -
         static_cast<std::make_signed_t<decltype(input.gates)>>(input.gates);
+    stats["total_log_fidelity"] = output.totalLogFidelity;
 
     return resultJSON;
   }
