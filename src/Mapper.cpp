@@ -37,12 +37,8 @@ void Mapper::processDisjointQubitLayer(
     qc::Operation* gate) {
   std::size_t layer = 0;
   if (!control.has_value()) {
-    if (!lastLayer.at(target).has_value()) {
-      layer = 0;
-    } else {
-      layer = *lastLayer.at(target) + 1;
-    }
-    lastLayer.at(target) = layer;
+    // single qubit gates are always disjoint
+    layer = lastLayer.at(target).value_or(0);
   } else {
     if (!lastLayer.at(*control).has_value() &&
         !lastLayer.at(target).has_value()) {
@@ -53,6 +49,14 @@ void Mapper::processDisjointQubitLayer(
       layer = *lastLayer.at(*control) + 1;
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+      for (auto& g : layers.at(layer-1)) {
+        if ((g.control == *control && g.target == target) ||
+            (g.control == target && g.target == *control)) {
+          // if last layer contained equivalent gate, use that layer
+          layer--;
+          break;
+        }
+      }
     }
     lastLayer.at(*control) = layer;
     lastLayer.at(target)   = layer;
@@ -62,9 +66,9 @@ void Mapper::processDisjointQubitLayer(
     layers.emplace_back();
   }
   if (control.has_value()) {
-    layers.back().emplace_back(*control, target, gate);
+    layers.at(layer).emplace_back(*control, target, gate);
   } else {
-    layers.back().emplace_back(-1, target, gate);
+    layers.at(layer).emplace_back(-1, target, gate);
   }
 }
 
