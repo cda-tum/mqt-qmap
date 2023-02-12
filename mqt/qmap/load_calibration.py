@@ -1,18 +1,23 @@
+"""Module for loading calibration data."""
+
 from __future__ import annotations
 
-from mqt.qmap.pyqmap import Architecture
+from typing import TYPE_CHECKING
 
 from qiskit.providers.models import BackendProperties
 from qiskit.transpiler.target import Target
 
+if TYPE_CHECKING:
+    from mqt.qmap.pyqmap import Architecture
+
 
 def load_calibration(architecture: Architecture, calibration: str | BackendProperties | Target | None = None) -> None:
-    """
-    Load a calibration from a string, BackendProperties, or Target.
-    :param architecture: Architecture to load the calibration for
-    :type architecture: Architecture
-    :param calibration: Path to file containing calibration information, `qiskit.providers.models.BackendProperties` object, or `qiskit.transpiler.target.Target` object
-    :type calibration: str | BackendProperties | Target | None
+    """Load a calibration from a string, BackendProperties, or Target.
+
+    Args:
+    ----
+    architecture: The architecture to load the calibration into.
+    calibration: The calibration to load.
     """
     if calibration is None:
         return
@@ -28,4 +33,5 @@ def load_calibration(architecture: Architecture, calibration: str | BackendPrope
 
         architecture.load_properties(import_target(calibration))
     else:
-        raise ValueError("No compatible type for calibration:", type(calibration))
+        msg = f"Calibration type {type(calibration)} not supported."
+        raise TypeError(msg)

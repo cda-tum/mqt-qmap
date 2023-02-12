@@ -1,4 +1,10 @@
+"""Sphinx configuration file."""
+
 import sys
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pybtex.richtext import HRef
 
 if sys.version_info < (3, 10, 0):
     import importlib_metadata as metadata
@@ -16,7 +22,7 @@ author = "Lukas Burgholzer"
 release = metadata.version("mqt.qmap")
 version = ".".join(release.split(".")[:3])
 language = "en"
-copyright = "Chair for Design Automation, Technical University of Munich"
+project_copyright = "Chair for Design Automation, Technical University of Munich"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -65,7 +71,10 @@ exclude_patterns = ["_build", "build", "**.ipynb_checkpoints", "Thumbs.db", ".DS
 
 
 class CDAStyle(UnsrtStyle):
-    def format_url(self, e):
+    """Custom style for including PDF links."""
+
+    def format_url(self, _e: Any) -> HRef:  # noqa: ANN401
+        """Format URL field as a link to the PDF."""
         url = field("url", raw=True)
         return href()[url, "[PDF]"]
 

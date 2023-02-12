@@ -1,7 +1,9 @@
-from mqt import qmap
+"""A simple example of using QMAP."""
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
+
+from mqt import qmap
 
 if __name__ == "__main__":
     qc = QuantumCircuit(3)

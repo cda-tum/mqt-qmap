@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, ClassVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, overload
 
-from qiskit import QuantumCircuit
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
 
 class Arch:
     __members__: ClassVar[dict[Arch, int]] = ...  # read-only
@@ -116,7 +117,7 @@ class Configuration:
     enable_limits: bool
     encoding: Encoding
     first_lookahead_factor: float
-    include_WCNF: bool
+    include_WCNF: bool  # noqa: N815
     initial_layout: InitialLayout
     layering: Layering
     lookahead: bool
@@ -211,7 +212,7 @@ class Layering:
 
 class MappingResults:
     configuration: Configuration
-    input: Any
+    input: Any  # noqa: A003
     mapped_circuit: str
     output: Any
     time: float
@@ -267,7 +268,7 @@ class SwapReduction:
     @property
     def value(self) -> int: ...
 
-def map(arg0: object, arg1: Architecture, arg2: Configuration) -> MappingResults: ...
+def map(circ: str | QuantumCircuit, arch: Architecture, config: Configuration) -> MappingResults: ...  # noqa: A001
 
 class TargetMetric:
     __members__: ClassVar[dict[TargetMetric, int]] = ...  # read-only

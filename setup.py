@@ -1,3 +1,5 @@
+"""Setup script for the MQT QCEC package."""
+
 import os
 import re
 import subprocess
@@ -10,13 +12,30 @@ from setuptools.command.build_ext import build_ext
 
 
 class CMakeExtension(Extension):
+    """Class that wraps a CMake extension."""
+
     def __init__(self, name: str, sourcedir: str = "") -> None:
+        """Initialize the CMake extension.
+
+        Args:
+        ----
+        name: The name of the extension.
+        sourcedir: The path to the source directory.
+        """
         super().__init__(name, sources=[])
         self.sourcedir = str(Path(sourcedir).resolve())
 
 
 class CMakeBuild(build_ext):
+    """Class that builds a CMake extension."""
+
     def build_extension(self, ext: CMakeExtension) -> None:
+        """Build the CMake extension.
+
+        Args:
+        ----
+        ext: The CMake extension to build.
+        """
         from setuptools_scm import get_version  # type: ignore[import]
 
         version = get_version(root=".", relative_to=__file__)
@@ -78,9 +97,9 @@ class CMakeBuild(build_ext):
         with suppress(FileNotFoundError):
             Path(build_dir / "CMakeCache.txt").unlink()
 
-        subprocess.check_call(["cmake", ext.sourcedir] + cmake_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", ext.sourcedir, *cmake_args], cwd=self.build_temp)
         subprocess.check_call(
-            ["cmake", "--build", ".", "--target", ext.name.split(".")[-1]] + build_args,
+            ["cmake", "--build", ".", "--target", ext.name.split(".")[-1], *build_args],
             cwd=self.build_temp,
         )
 

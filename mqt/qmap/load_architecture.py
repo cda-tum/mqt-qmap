@@ -1,18 +1,22 @@
-from __future__ import annotations
+"""Module for loading architectures."""
 
-from mqt.qmap.pyqmap import Arch, Architecture
+from __future__ import annotations
 
 from qiskit.providers import Backend
 
+from mqt.qmap.pyqmap import Arch, Architecture
+
 
 def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -> Architecture:
-    """
-    Load an architecture from a string, Arch, Architecture, or Backend. If None is passed, no architecture is loaded.
-    :param arch: Architecture to map to. Either a path to a file with architecture information, one of the available architectures (:py:mod:`mqt.qmap.Arch`), Architecture, or `qiskit.providers.backend`
-    :type arch: str | Arch | Architecture | Backend | None
+    """Load an architecture from a string, Arch, Architecture, or Backend. If None is passed, no architecture is loaded.
 
-    :return: Architecture
-    :rtype: Architecture
+    Args:
+    ----
+    arch: The architecture to load.
+
+    Returns
+    -------
+    The loaded architecture.
     """
     architecture = Architecture()
 
@@ -31,6 +35,7 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
 
             architecture = import_backend(arch)
         else:
-            raise ValueError("No compatible type for architecture:", type(arch))
+            msg = f"Architecture type {type(arch)} not supported."
+            raise TypeError(msg)
 
     return architecture
