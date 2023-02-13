@@ -209,7 +209,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for n, i in cov]
 
-    def __store_library(self, lib_name: str | Path) -> None:
+    def store_library(self, lib_name: str | Path) -> None:
         """Store ordering.
 
         Args:

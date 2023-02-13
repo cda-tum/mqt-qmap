@@ -184,7 +184,7 @@ def test_ibm_guadalupe_library() -> None:
 
 def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
     """Verify that subarchitecture order can be stored and loaded."""
-    ibm_guadalupe.__store_library("tmp")
+    ibm_guadalupe.store_library("tmp")
 
     p = Path("tmp.pickle")
 
