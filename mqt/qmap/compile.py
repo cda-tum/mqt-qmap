@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.transpiler import Layout
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
