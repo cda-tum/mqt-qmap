@@ -4,7 +4,6 @@ import os
 import re
 import subprocess
 import sys
-from contextlib import suppress
 from pathlib import Path
 
 from setuptools import Extension, setup
@@ -94,8 +93,7 @@ class CMakeBuild(build_ext):
 
         build_dir = Path(self.build_temp)
         build_dir.mkdir(parents=True, exist_ok=True)
-        with suppress(FileNotFoundError):
-            Path(build_dir / "CMakeCache.txt").unlink()
+        Path(build_dir / "CMakeCache.txt").unlink(missing_ok=True)
 
         subprocess.check_call(["cmake", ext.sourcedir, *cmake_args], cwd=self.build_temp)
         subprocess.check_call(
