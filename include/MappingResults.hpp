@@ -100,11 +100,11 @@ struct MappingResults {
   virtual std::string csv() {
     std::stringstream ss{};
     ss << input.name << ";" << input.qubits << ";" << input.gates << ";"
-       << input.singleQubitGates << ";" << input.twoQubitGates << ";" << architecture
-       << ";" << output.name << ";" << output.qubits << ";" << output.gates
-       << ";" << output.singleQubitGates << ";" << output.twoQubitGates << ";"
-       << output.swaps << ";" << output.directionReverse << ";"
-       << output.teleportations << ";";
+       << input.singleQubitGates << ";" << input.twoQubitGates << ";"
+       << architecture << ";" << output.name << ";" << output.qubits << ";"
+       << output.gates << ";" << output.singleQubitGates << ";"
+       << output.twoQubitGates << ";" << output.swaps << ";"
+       << output.directionReverse << ";" << output.teleportations << ";";
     if (timeout) {
       ss << "TO";
     } else {
