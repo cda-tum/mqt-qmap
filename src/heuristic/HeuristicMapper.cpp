@@ -94,17 +94,17 @@ void HeuristicMapper::map(const Configuration& configuration) {
           gateidx++;
         }
       } else {
-        const Edge cnot = {
+        const Edge controlledGate = {
             locations.at(static_cast<std::uint16_t>(gate.control)),
             locations.at(gate.target)};
-        if (architecture.getCouplingMap().find(cnot) ==
+        if (architecture.getCouplingMap().find(controlledGate) ==
             architecture.getCouplingMap().end()) {
-          const Edge reverse = {cnot.second, cnot.first};
+          const Edge reverse = {controlledGate.second, controlledGate.first};
           if (architecture.getCouplingMap().find(reverse) ==
               architecture.getCouplingMap().end()) {
-            throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
-                std::to_string(reverse.second));
+            throw QMAPException("Invalid controlled gate " + op->getName() +
+                                ": " + std::to_string(reverse.first) + "-" +
+                                std::to_string(reverse.second));
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
@@ -121,9 +121,9 @@ void HeuristicMapper::map(const Configuration& configuration) {
         } else {
           qcMapped.emplace_back<qc::StandardOperation>(
               qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(cnot.first)}, cnot.second,
-              op->getType(), op->getParameter().at(0), op->getParameter().at(1),
-              op->getParameter().at(2));
+              qc::Control{static_cast<qc::Qubit>(controlledGate.first)},
+              controlledGate.second, op->getType(), op->getParameter().at(0),
+              op->getParameter().at(1), op->getParameter().at(2));
           gateidx++;
         }
       }

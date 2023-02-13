@@ -275,23 +275,24 @@ void ExactMapper::map(const Configuration& settings) {
             op->getParameter().at(0), op->getParameter().at(1),
             op->getParameter().at(2));
       } else {
-        const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
-                           locations.at(gate.target)};
+        const Edge controlledGate = {
+            locations.at(static_cast<std::size_t>(gate.control)),
+            locations.at(gate.target)};
 
-        if (architecture.getCouplingMap().find(cnot) ==
+        if (architecture.getCouplingMap().find(controlledGate) ==
             architecture.getCouplingMap().end()) {
-          const Edge reverse = {cnot.second, cnot.first};
+          const Edge reverse = {controlledGate.second, controlledGate.first};
           if (architecture.getCouplingMap().find(reverse) ==
               architecture.getCouplingMap().end()) {
-            throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
-                std::to_string(reverse.second));
+            throw QMAPException("Invalid controlled gate " + op->getName() +
+                                ": " + std::to_string(reverse.first) + "-" +
+                                std::to_string(reverse.second));
           }
           if (settings.verbose) {
-            std::cout
-                << i
-                << ": Added (direction-reversed) cnot with control and target: "
-                << cnot.first << " " << cnot.second << std::endl;
+            std::cout << i << ": Added (direction-reversed) controlled gate "
+                      << op->getName()
+                      << " with control and target: " << controlledGate.first
+                      << " " << controlledGate.second << std::endl;
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
@@ -304,15 +305,15 @@ void ExactMapper::map(const Configuration& settings) {
           qcMapped.h(reverse.first);
         } else {
           if (settings.verbose) {
-            std::cout << i
-                      << ": Added cnot with control and target: " << cnot.first
-                      << " " << cnot.second << std::endl;
+            std::cout << i << ": Added controlled gate " << op->getName()
+                      << " with control and target: " << controlledGate.first
+                      << " " << controlledGate.second << std::endl;
           }
           qcMapped.emplace_back<qc::StandardOperation>(
               qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(cnot.first)}, cnot.second,
-              op->getType(), op->getParameter().at(0), op->getParameter().at(1),
-              op->getParameter().at(2));
+              qc::Control{static_cast<qc::Qubit>(controlledGate.first)},
+              controlledGate.second, op->getType(), op->getParameter().at(0),
+              op->getParameter().at(1), op->getParameter().at(2));
         }
       }
     }
