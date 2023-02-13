@@ -295,8 +295,11 @@ void ExactMapper::map(const Configuration& settings) {
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
-          qcMapped.x(reverse.second,
-                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
+          qcMapped.emplace_back<qc::StandardOperation>(
+              qcMapped.getNqubits(),
+              qc::Control{static_cast<qc::Qubit>(reverse.first)},
+              reverse.second, op->getType(), op->getParameter().at(0),
+              op->getParameter().at(1), op->getParameter().at(2));
           qcMapped.h(reverse.second);
           qcMapped.h(reverse.first);
         } else {
@@ -305,8 +308,11 @@ void ExactMapper::map(const Configuration& settings) {
                       << ": Added cnot with control and target: " << cnot.first
                       << " " << cnot.second << std::endl;
           }
-          qcMapped.x(cnot.second,
-                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
+          qcMapped.emplace_back<qc::StandardOperation>(
+              qcMapped.getNqubits(),
+              qc::Control{static_cast<qc::Qubit>(cnot.first)}, cnot.second,
+              op->getType(), op->getParameter().at(0), op->getParameter().at(1),
+              op->getParameter().at(2));
         }
       }
     }
