@@ -1,5 +1,7 @@
 """Module for importing Qiskit backends."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from qiskit.providers import Backend, BackendV1, BackendV2
