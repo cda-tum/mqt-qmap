@@ -267,7 +267,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTest5QFidelity, Identity) {
   Configuration settings{};
-  settings.layering = Layering::DisjointQubits;
+  settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
   mapper->map(settings);
@@ -278,7 +278,7 @@ TEST_P(HeuristicTest5QFidelity, Identity) {
 
 TEST_P(HeuristicTest5QFidelity, Static) {
   Configuration settings{};
-  settings.layering = Layering::DisjointQubits;
+  settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
   mapper->map(settings);
@@ -289,7 +289,7 @@ TEST_P(HeuristicTest5QFidelity, Static) {
 
 TEST_P(HeuristicTest5QFidelity, NoFidelity) {
   Configuration settings{};
-  settings.layering = Layering::DisjointQubits;
+  settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
   nonFidelityMapper->map(settings);
