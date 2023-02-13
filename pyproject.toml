@@ -228,6 +228,5 @@ line-length = 120
 [tool.ruff.per-file-ignores]
 "*.pyi" = [
     "ARG001",  # Unused argument
-    "E704",    # Multiple statements on one line (def)
     "D",       # pydocstyle
 ]
