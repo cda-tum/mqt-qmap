@@ -90,7 +90,7 @@ def synthesize_clifford(
             If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
             If a :class:`Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
-        kwargs:
+        **kwargs:
             Additional keyword arguments to configure the synthesis.
             See :class:`SynthesisConfiguration` for a list of available options.
 
@@ -132,7 +132,7 @@ def optimize_clifford(
             If a :class:`Clifford` is given or a :class:`PauliList` is given, it is converted to a Tableau.
             If a :class:`Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
-        kwargs:
+        **kwargs:
             Additional keyword arguments to configure the synthesis.
             See :class:`SynthesisConfiguration` for a list of available options.
 
