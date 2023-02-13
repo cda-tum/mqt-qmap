@@ -32,7 +32,7 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
             from mqt.qmap.qiskit.backend import import_backend
 
             architecture = import_backend(arch)
-        else:
+        else:  # pragma: no cover
             msg = f"Architecture type {type(arch)} not supported."
             raise TypeError(msg)
 

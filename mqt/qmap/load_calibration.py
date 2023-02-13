@@ -31,6 +31,6 @@ def load_calibration(architecture: Architecture, calibration: str | BackendPrope
         from mqt.qmap.qiskit.backend import import_target
 
         architecture.load_properties(import_target(calibration))
-    else:
+    else:  # pragma: no cover
         msg = f"Calibration type {type(calibration)} not supported."
         raise TypeError(msg)
