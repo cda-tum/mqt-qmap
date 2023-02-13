@@ -361,7 +361,7 @@ void ExactMapper::map(const Configuration& settings) {
 
   // 10) re-count gates
   results.output.singleQubitGates = 0U;
-  results.output.cnots            = 0U;
+  results.output.twoQubitGates    = 0U;
   results.output.gates            = 0U;
   countGates(qcMapped, results.output);
 
@@ -769,9 +769,9 @@ number of variables: (|L|-1) * m!
     // quickly determine cost
     choiceResults.output.singleQubitGates =
         choiceResults.input.singleQubitGates;
-    choiceResults.output.cnots = choiceResults.input.cnots;
-    choiceResults.output.gates =
-        choiceResults.output.singleQubitGates + choiceResults.output.cnots;
+    choiceResults.output.twoQubitGates = choiceResults.input.twoQubitGates;
+    choiceResults.output.gates         = choiceResults.output.singleQubitGates +
+                                 choiceResults.output.twoQubitGates;
     assert(choiceResults.output.swaps == 0U);
     assert(choiceResults.output.directionReverse == 0U);
     // swaps

@@ -280,17 +280,17 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       if (g->getType() == qc::SWAP) {
         if (architecture.bidirectional()) {
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+          info.twoQubitGates += GATES_OF_BIDIRECTIONAL_SWAP;
         } else {
           info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+          info.twoQubitGates += GATES_OF_BIDIRECTIONAL_SWAP;
           info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
         }
       } else if (g->getControls().empty()) {
         ++info.singleQubitGates;
         ++info.gates;
       } else {
-        ++info.cnots;
+        ++info.twoQubitGates;
         ++info.gates;
       }
       continue;

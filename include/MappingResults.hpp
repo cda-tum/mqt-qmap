@@ -19,7 +19,7 @@ struct MappingResults {
     std::uint16_t qubits           = 0;
     std::size_t   gates            = 0;
     std::size_t   singleQubitGates = 0;
-    std::size_t   cnots            = 0;
+    std::size_t   twoQubitGates    = 0;
     std::size_t   layers           = 0;
 
     // info in output circuit
@@ -62,14 +62,14 @@ struct MappingResults {
     circuit["qubits"]             = input.qubits;
     circuit["gates"]              = input.gates;
     circuit["single_qubit_gates"] = input.singleQubitGates;
-    circuit["cnots"]              = input.cnots;
+    circuit["cnots"]              = input.twoQubitGates;
 
     auto& mappedCirc                 = resultJSON["mapped_circuit"];
     mappedCirc["name"]               = output.name;
     mappedCirc["qubits"]             = output.qubits;
     mappedCirc["gates"]              = output.gates;
     mappedCirc["single_qubit_gates"] = output.singleQubitGates;
-    mappedCirc["cnots"]              = output.cnots;
+    mappedCirc["cnots"]              = output.twoQubitGates;
     if (!mappedCircuit.empty()) {
       mappedCirc["qasm"] = mappedCircuit;
     }
@@ -100,9 +100,9 @@ struct MappingResults {
   virtual std::string csv() {
     std::stringstream ss{};
     ss << input.name << ";" << input.qubits << ";" << input.gates << ";"
-       << input.singleQubitGates << ";" << input.cnots << ";" << architecture
+       << input.singleQubitGates << ";" << input.twoQubitGates << ";" << architecture
        << ";" << output.name << ";" << output.qubits << ";" << output.gates
-       << ";" << output.singleQubitGates << ";" << output.cnots << ";"
+       << ";" << output.singleQubitGates << ";" << output.twoQubitGates << ";"
        << output.swaps << ";" << output.directionReverse << ";"
        << output.teleportations << ";";
     if (timeout) {
