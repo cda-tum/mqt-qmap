@@ -371,7 +371,7 @@ PYBIND11_MODULE(pyqmap, m) {
            "properties"_a);
 
   // Main mapping function
-  m.def("map", &map, "map a quantum circuit");
+  m.def("map", &map, "map a quantum circuit", "circ"_a, "arch"_a, "config"_a);
 
   // Target metric for the Clifford synthesizer
   py::enum_<cs::TargetMetric>(m, "TargetMetric")

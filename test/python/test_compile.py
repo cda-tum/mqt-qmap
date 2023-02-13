@@ -1,14 +1,17 @@
+"""Test the compilation of circuits."""
+
 from pathlib import Path
 
 import pytest
+from qiskit import QuantumCircuit
+
 from mqt import qmap
 from mqt.qcec import verify
 
-from qiskit import QuantumCircuit
 
-
-@pytest.fixture
+@pytest.fixture()
 def example_circuit() -> QuantumCircuit:
+    """Return a simple example circuit."""
     qc = QuantumCircuit(3)
     qc.h(0)
     qc.cx(0, 1)
@@ -19,7 +22,7 @@ def example_circuit() -> QuantumCircuit:
 
 def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
     """Test that either arch or calibration must be provided."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Either arch or calibration must be specified"):
         qmap.compile(example_circuit, arch=None, calibration=None)
 
 
@@ -100,7 +103,7 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
         f.write("Header\n")
         f.write('Q0,0,0,0,1e-2,1e-4,"0_1: 1e-2, 0_2: 1e-2"\n')
         f.write('Q1,0,0,0,1e-2,1e-4,"1_2: 1e-2"\n')
-        f.write("Q2,0,0,0,1e-2,1e-4," "\n")
+        f.write("Q2,0,0,0,1e-2,1e-4, \n")
 
     example_circuit_mapped, results = qmap.compile(example_circuit, arch=None, calibration="test_calibration.cal")
     assert results.timeout is False

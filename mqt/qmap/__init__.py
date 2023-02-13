@@ -1,7 +1,8 @@
-#
-# This file is part of MQT QMAP library which is released under the MIT license.
-# See file README.md or go to http://iic.jku.at/eda/research/quantum_verification/ for more information.
-#
+"""MQT QMAP library.
+
+This file is part of the MQT QMAP library released under the MIT license.
+See README.md or go to https://github.com/cda-tum/qmap for more information.
+"""
 
 import os
 import sys
