@@ -17,12 +17,10 @@ def import_backend(backend: Backend) -> Architecture:
     """Import a backend from qiskit.providers.Backend.
 
     Args:
-    ----
-    backend: The backend to import.
+        backend: The backend to import.
 
-    Returns
-    -------
-    The imported backend as an Architecture.
+    Returns:
+        The imported backend as an Architecture.
 
     """
     if isinstance(backend, BackendV1):
@@ -37,12 +35,10 @@ def import_backend_properties(backend_properties: BackendProperties) -> Architec
     """Import backend properties from qiskit.providers.models.BackendProperties.
 
     Args:
-    ----
-    backend_properties: The backend properties to import.
+        backend_properties: The backend properties to import.
 
-    Returns
-    -------
-    The imported backend properties as an Architecture.Properties object.
+    Returns:
+        The imported backend properties as an Architecture.Properties object.
     """
     props = Architecture.Properties()
     props.name = backend_properties.backend_name
@@ -83,12 +79,10 @@ def import_target(target: Target) -> Architecture.Properties:
     """Import a target from qiskit.transpiler.Target.
 
     Args:
-    ----
-    target: The target to import.
+        target: The target to import.
 
-    Returns
-    -------
-    The imported target as an Architecture.Properties object.
+    Returns:
+        The imported target as an Architecture.Properties object.
     """
     props = Architecture.Properties()
     props.num_qubits = len(target.qubit_properties)

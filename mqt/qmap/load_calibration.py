@@ -15,9 +15,8 @@ def load_calibration(architecture: Architecture, calibration: str | BackendPrope
     """Load a calibration from a string, BackendProperties, or Target.
 
     Args:
-    ----
-    architecture: The architecture to load the calibration into.
-    calibration: The calibration to load.
+        architecture: The architecture to load the calibration into.
+        calibration: The calibration to load.
     """
     if calibration is None:
         return

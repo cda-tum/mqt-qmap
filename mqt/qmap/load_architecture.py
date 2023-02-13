@@ -11,12 +11,10 @@ def load_architecture(arch: str | Arch | Architecture | Backend | None = None) -
     """Load an architecture from a string, Arch, Architecture, or Backend. If None is passed, no architecture is loaded.
 
     Args:
-    ----
-    arch: The architecture to load.
+        arch: The architecture to load.
 
-    Returns
-    -------
-    The loaded architecture.
+    Returns:
+        The loaded architecture.
     """
     architecture = Architecture()
 

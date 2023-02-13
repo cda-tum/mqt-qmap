@@ -33,13 +33,11 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) ->
     """Extract the initial layout resulting from compiling a circuit from a QASM file.
 
     Args:
-    ----
-    qasm: The QASM file to extract the initial layout from.
-    qregs: The quantum registers of the circuit.
+        qasm: The QASM file to extract the initial layout from.
+        qregs: The quantum registers of the circuit.
 
-    Returns
-    -------
-    The initial layout.
+    Returns:
+        The initial layout.
     """
     for line in qasm.split("\n"):
         if line.startswith("// i "):
@@ -82,32 +80,30 @@ def compile(  # noqa: A001
     """Interface to the MQT QMAP tool for mapping quantum circuits.
 
     Args:
-    ----
-    circ: The circuit to map.
-    arch: The architecture to map to.
-    calibration: The calibration to use.
-    method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
-    initial_layout: The initial layout to use. Defaults to "dynamic".
-    layering: The layering strategy to use. Defaults to "individual_gates".
-    encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
-    commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
-    use_bdd: Whether to use BDDs to limit the search space. Defaults to False. Use with caution.
-    swap_reduction: The swap reduction strategy to use. Defaults to "coupling_limit".
-    swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer. Defaults to 0.
-    include_WCNF: Include WCNF file in the results. Defaults to False.
-    use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.
-    subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered. Defaults to None.
-    use_teleportation: Use teleportation in addition to swaps. Defaults to False.
-    teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons). Defaults to False.
-    teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar). Defaults to 0.
-    pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
-    post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
-    add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
-    verbose: Print more detailed information during the mapping process. Defaults to False.
+        circ: The circuit to map.
+        arch: The architecture to map to.
+        calibration: The calibration to use.
+        method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
+        initial_layout: The initial layout to use. Defaults to "dynamic".
+        layering: The layering strategy to use. Defaults to "individual_gates".
+        encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
+        commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
+        use_bdd: Whether to use BDDs to limit the search space. Defaults to False. Use with caution.
+        swap_reduction: The swap reduction strategy to use. Defaults to "coupling_limit".
+        swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer. Defaults to 0.
+        include_WCNF: Include WCNF file in the results. Defaults to False.
+        use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.
+        subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered. Defaults to None.
+        use_teleportation: Use teleportation in addition to swaps. Defaults to False.
+        teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons). Defaults to False.
+        teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar). Defaults to 0.
+        pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
+        post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
+        add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
+        verbose: Print more detailed information during the mapping process. Defaults to False.
 
-    Returns
-    -------
-    The mapped circuit and the mapping results.
+    Returns:
+        The mapped circuit and the mapping results.
     """
     if subgraph is None:
         subgraph = set()
@@ -149,10 +145,8 @@ def compile(  # noqa: A001
     try:
         from qiskit.transpiler.layout import TranspileLayout
 
-        circ._layout = TranspileLayout(  # noqa: SLF001
-            initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-        )
+        circ._layout = TranspileLayout(initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits())
     except ImportError:
-        circ._layout = layout  # noqa: SLF001
+        circ._layout = layout
 
     return circ, results

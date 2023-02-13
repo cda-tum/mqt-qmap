@@ -40,6 +40,7 @@ extensions = [
     "nbsphinx",
     "sphinxext.opengraph",
     "sphinx_rtd_dark_mode",
+    "sphinx_autodoc_typehints",
 ]
 
 nbsphinx_execute = "auto"
@@ -68,6 +69,11 @@ hoverxref_role_types = {
     "property": "tooltip",
 }
 exclude_patterns = ["_build", "build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", ".env"]
+
+typehints_use_signature = True
+typehints_use_signature_return = True
+typehints_use_rtype = False
+napoleon_use_rtype = False
 
 
 class CDAStyle(UnsrtStyle):
