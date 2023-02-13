@@ -290,7 +290,6 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         ++info.singleQubitGates;
         ++info.gates;
       } else {
-        assert(g->getType() == qc::X);
         ++info.cnots;
         ++info.gates;
       }
