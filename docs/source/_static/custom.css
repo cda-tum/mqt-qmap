@@ -28,3 +28,23 @@ html[data-theme="dark"].writer-html5
   .sig-name {
   color: #bfbfbf;
 }
+
+html[data-theme="dark"].writer-html4
+  .rst-content
+  dl:not(.docutils)
+  dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(
+    .glossary
+  ):not(.simple)
+  > dt,
+html[data-theme="dark"].writer-html5
+  .rst-content
+  dl[class]:not(.option-list):not(.field-list):not(.footnote):not(
+    .citation
+  ):not(.glossary):not(.simple)
+  dl:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(
+    .glossary
+  ):not(.simple)
+  > dt {
+  background-color: #0b0b0b;
+  border-left: 3px solid #555;
+}
