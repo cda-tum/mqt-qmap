@@ -385,6 +385,21 @@ PYBIND11_MODULE(pyqmap, m) {
       }));
   py::implicitly_convertible<py::str, cs::TargetMetric>();
 
+  py::enum_<plog::Severity>(m, "Verbosity")
+      .value("none", plog::Severity::none, "No output.")
+      .value("fatal", plog::Severity::fatal, "Only show fatal errors.")
+      .value("error", plog::Severity::error, "Show errors.")
+      .value("warning", plog::Severity::warning, "Show warnings.")
+      .value("info", plog::Severity::info, "Show general information.")
+      .value("debug", plog::Severity::debug,
+             "Show additional debug information.")
+      .value("verbose", plog::Severity::verbose, "Show all information.")
+      .export_values()
+      .def(py::init([](const std::string& name) {
+        return plog::severityFromString(name.c_str());
+      }));
+  py::implicitly_convertible<py::str, plog::Severity>();
+
   // Configuration for the synthesis
   py::class_<cs::Configuration>(
       m, "SynthesisConfiguration",
@@ -406,6 +421,9 @@ PYBIND11_MODULE(pyqmap, m) {
                      &cs::Configuration::useSymmetryBreaking,
                      "Use symmetry breaking clauses to speed up the synthesis "
                      "process. Defaults to `true`.")
+      .def_readwrite(
+          "verbosity", &cs::Configuration::verbosity,
+          "Verbosity level for the synthesis process. Defaults to 'warning'.")
       .def_readwrite(
           "n_threads", &cs::Configuration::nThreads,
           "Number of threads to use for the synthesis. Defaults to `1`.")
