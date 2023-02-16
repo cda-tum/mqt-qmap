@@ -18,10 +18,9 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // initialize logging
   if (plog::get() == nullptr) {
     static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
-    plog::init(configuration.verbosity, &consoleAppender);
-  } else {
-    plog::get()->setMaxSeverity(configuration.verbosity);
+    plog::init(plog::none, &consoleAppender);
   }
+  plog::get()->setMaxSeverity(configuration.verbosity);
 
   INFO() << "Optimization target: " << toString(configuration.target);
 
