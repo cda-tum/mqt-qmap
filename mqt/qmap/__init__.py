@@ -35,6 +35,7 @@ from mqt.qmap.pyqmap import (
     SynthesisResults,
     Tableau,
     TargetMetric,
+    Verbosity,
 )
 from mqt.qmap.subarchitectures import SubarchitectureOrder
 
@@ -59,4 +60,5 @@ __all__ = [
     "CliffordSynthesizer",
     "synthesize_clifford",
     "optimize_clifford",
+    "Verbosity",
 ]
