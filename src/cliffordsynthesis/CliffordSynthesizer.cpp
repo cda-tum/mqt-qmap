@@ -15,6 +15,14 @@ namespace cs {
 void CliffordSynthesizer::synthesize(const Configuration& config) {
   configuration = config;
 
+  // initialize logging
+  if (plog::get() == nullptr) {
+    static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
+    plog::init(configuration.verbosity, &consoleAppender);
+  } else {
+    plog::get()->setMaxSeverity(configuration.verbosity);
+  }
+
   INFO() << "Optimization target: " << toString(configuration.target);
 
   const auto start = std::chrono::high_resolution_clock::now();
