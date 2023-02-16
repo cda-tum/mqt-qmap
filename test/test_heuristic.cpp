@@ -155,6 +155,15 @@ TEST_P(HeuristicTest16Q, Dynamic) {
   SUCCEED() << "Mapping successful";
 }
 
+TEST_P(HeuristicTest16Q, Disjoint) {
+  Configuration settings{};
+  settings.layering = Layering::DisjointQubits;
+  ibmQX5Mapper->map(settings);
+  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
+  ibmQX5Mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
 class HeuristicTest20Q : public testing::TestWithParam<std::string> {
 protected:
   std::string testExampleDir      = "../examples/";

@@ -42,7 +42,6 @@ void Mapper::processDisjointQubitLayer(
     } else {
       layer = *lastLayer.at(target) + 1;
     }
-    lastLayer.at(target) = layer;
   } else {
     if (!lastLayer.at(*control).has_value() &&
         !lastLayer.at(target).has_value()) {
@@ -54,17 +53,20 @@ void Mapper::processDisjointQubitLayer(
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
     }
-    lastLayer.at(*control) = layer;
-    lastLayer.at(target)   = layer;
   }
 
   if (layers.size() <= layer) {
     layers.emplace_back();
+  } else {
+    layer = layers.size() - 1;
   }
   if (control.has_value()) {
     layers.back().emplace_back(*control, target, gate);
+    lastLayer.at(*control) = layer;
+    lastLayer.at(target)   = layer;
   } else {
     layers.back().emplace_back(-1, target, gate);
+    lastLayer.at(target) = layer;
   }
 }
 
