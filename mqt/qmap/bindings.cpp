@@ -421,6 +421,15 @@ PYBIND11_MODULE(pyqmap, m) {
                      &cs::Configuration::useSymmetryBreaking,
                      "Use symmetry breaking clauses to speed up the synthesis "
                      "process. Defaults to `true`.")
+      .def_readwrite("dump_intermediate_results",
+                     &cs::Configuration::dumpIntermediateResults,
+                     "Dump intermediate results of the synthesis process. "
+                     "Defaults to `false`.")
+      .def_readwrite("intermediate_results_path",
+                     &cs::Configuration::intermediateResultsPath,
+                     "Path to the directory where intermediate results should "
+                     "be dumped. Defaults to `./`. The path needs to include a "
+                     "path separator at the end.")
       .def_readwrite(
           "verbosity", &cs::Configuration::verbosity,
           "Verbosity level for the synthesis process. Defaults to 'warning'.")

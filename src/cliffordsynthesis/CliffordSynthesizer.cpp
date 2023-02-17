@@ -9,6 +9,7 @@
 #include "utils/logging.hpp"
 
 #include <chrono>
+#include <fstream>
 
 namespace cs {
 
@@ -345,8 +346,18 @@ void CliffordSynthesizer::runMaxSAT(const EncoderConfig& config) {
 
 Results CliffordSynthesizer::callSolver(const EncoderConfig& config) {
   ++solverCalls;
-  auto encoder = encoding::SATEncoder(config);
-  return encoder.run();
+  auto       encoder = encoding::SATEncoder(config);
+  const auto res     = encoder.run();
+  if (configuration.dumpIntermediateResults && res.sat()) {
+    const auto filename = configuration.intermediateResultsPath +
+                          "intermediate_" + std::to_string(solverCalls) +
+                          ".qasm";
+    INFO() << "Dumping circuit to " << filename;
+    std::ofstream file(filename);
+    file << res.getResultCircuit();
+    file.close();
+  }
+  return res;
 }
 
 void CliffordSynthesizer::updateResults(const Configuration& config,
