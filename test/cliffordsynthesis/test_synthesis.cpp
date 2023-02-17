@@ -87,8 +87,9 @@ protected:
     }
     std::cout << "Target tableau:\n" << targetTableau;
 
-    config           = Configuration();
-    config.verbosity = plog::Severity::verbose;
+    config                         = Configuration();
+    config.verbosity               = plog::Severity::verbose;
+    config.dumpIntermediateResults = true;
   }
 
   void TearDown() override {

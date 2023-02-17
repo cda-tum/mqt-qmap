@@ -321,8 +321,10 @@ class Verbosity:
     def value(self) -> int: ...
 
 class SynthesisConfiguration:
+    dump_intermediate_results: bool
     gate_limit_factor: float
     initial_timestep_limit: int
+    intermediate_results_path: str
     minimize_gates_after_depth_optimization: bool
     minimize_gates_after_two_qubit_gate_optimization: bool
     n_threads: int
