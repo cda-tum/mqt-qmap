@@ -310,7 +310,8 @@ std::size_t Mapper::insertGate(const Edge& edge, qc::StandardOperation* op) {
   return 1;
 }
 
-std::size_t Mapper::insertFlippedGate(const Edge& edge, qc::StandardOperation* op) {
+std::size_t Mapper::insertFlippedGate(const Edge&            edge,
+                                      qc::StandardOperation* op) {
   int swapType = -1;
   switch (op->getType()) {
   case qc::X:
@@ -323,11 +324,11 @@ std::size_t Mapper::insertFlippedGate(const Edge& edge, qc::StandardOperation* o
     swapType = -1;
   }
 
-  if(swapType == 0) {
+  if (swapType == 0) {
     // no additional gates required to reverse direction
     return insertGate(edge, op);
   }
-  if(swapType == 1) {
+  if (swapType == 1) {
     // four hadamard gates to reverse direction
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
