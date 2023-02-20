@@ -106,25 +106,10 @@ void HeuristicMapper::map(const Configuration& configuration) {
                                 ": " + std::to_string(reverse.first) + "-" +
                                 std::to_string(reverse.second));
           }
-          qcMapped.h(reverse.first);
-          qcMapped.h(reverse.second);
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(reverse.first)},
-              reverse.second, op->getType(), op->getParameter().at(0),
-              op->getParameter().at(1), op->getParameter().at(2));
-          qcMapped.h(reverse.second);
-          qcMapped.h(reverse.first);
-
+          gateidx += insertFlippedGate(reverse, op);
           results.output.directionReverse++;
-          gateidx += 5;
         } else {
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(controlledGate.first)},
-              controlledGate.second, op->getType(), op->getParameter().at(0),
-              op->getParameter().at(1), op->getParameter().at(2));
-          gateidx++;
+          gateidx += insertGate(controlledGate, op);
         }
       }
     }

@@ -294,26 +294,14 @@ void ExactMapper::map(const Configuration& settings) {
                       << " with control and target: " << controlledGate.first
                       << " " << controlledGate.second << std::endl;
           }
-          qcMapped.h(reverse.first);
-          qcMapped.h(reverse.second);
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(reverse.first)},
-              reverse.second, op->getType(), op->getParameter().at(0),
-              op->getParameter().at(1), op->getParameter().at(2));
-          qcMapped.h(reverse.second);
-          qcMapped.h(reverse.first);
+          insertFlippedGate(reverse, op);
         } else {
           if (settings.verbose) {
             std::cout << i << ": Added controlled gate " << op->getName()
                       << " with control and target: " << controlledGate.first
                       << " " << controlledGate.second << std::endl;
           }
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(),
-              qc::Control{static_cast<qc::Qubit>(controlledGate.first)},
-              controlledGate.second, op->getType(), op->getParameter().at(0),
-              op->getParameter().at(1), op->getParameter().at(2));
+          insertGate(controlledGate, op);
         }
       }
     }
