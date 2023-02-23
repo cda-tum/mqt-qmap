@@ -67,6 +67,15 @@ public:
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
                        std::uint16_t start);
+  
+  struct NodeComparator {
+    bool operator()(const Node* x, const Node* y) {
+      if (x->cost != y->cost) {
+        return x->cost > y->cost;
+      }
+      return !x->containsCorrectEdge && y->containsCorrectEdge;
+    }
+  };
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
