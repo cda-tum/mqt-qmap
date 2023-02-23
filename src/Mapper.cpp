@@ -49,7 +49,7 @@ void Mapper::processDisjointQubitLayer(
       layer = *lastLayer.at(*control) + 1;
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
-      for (auto& g : layers.at(layer-1)) {
+      for (auto& g : layers.at(layer - 1)) {
         if ((g.control == *control && g.target == target) ||
             (g.control == target && g.target == *control)) {
           // if last layer contained equivalent gate, use that layer
@@ -286,9 +286,9 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[1]);
         info.totalLogFidelity += architecture.getSwapFidelityCost(q1, q2);
         if (architecture.getCouplingMap().find({q1, q2}) !=
-            architecture.getCouplingMap().end() &&
-            architecture.getCouplingMap().find({q2,q1}) !=
-            architecture.getCouplingMap().end()) {
+                architecture.getCouplingMap().end() &&
+            architecture.getCouplingMap().find({q2, q1}) !=
+                architecture.getCouplingMap().end()) {
           // bidirectional edge
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
           info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
@@ -307,7 +307,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         assert(g->getType() == qc::X);
         ++info.cnots;
         ++info.gates;
-        auto q1 = static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
+        auto q1 =
+            static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
         info.totalLogFidelity += architecture.getTwoQubitFidelityCost(q1, q2);
       }

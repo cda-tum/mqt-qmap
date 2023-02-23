@@ -209,7 +209,7 @@ void Architecture::createFidelityDistanceTable() {
   for (const auto& edge : couplingMap) {
     if (!properties.twoQubitErrorRateAvailable(edge.first, edge.second)) {
       fidelityDistanceTable = std::vector<std::vector<double>>(
-        nqubits, std::vector<double>(nqubits, 0));
+          nqubits, std::vector<double>(nqubits, 0));
       return;
     }
   }
