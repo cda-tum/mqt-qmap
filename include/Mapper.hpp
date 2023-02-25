@@ -121,7 +121,7 @@ protected:
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
    * @param gate the gate to be added to the layer
-   * @param collect2qBlocks if true, gates are collected in 2Q-blocks, and 
+   * @param collect2qBlocks if true, gates are collected in 2Q-blocks, and
    * layering is performed on these blocks
    */
   void processDisjointQubitLayer(
