@@ -120,31 +120,14 @@ protected:
    * @param lastLayer the array storing the last layer each qubit is used in
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
-   * @param gate the gate to be added to the layerh
+   * @param gate the gate to be added to the layer
+   * @param collect2qBlocks if true, gates are collected in 2Q-blocks, and 
+   * layering is performed on these blocks
    */
   void processDisjointQubitLayer(
       std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
       const std::optional<std::uint16_t>& control, std::uint16_t target,
-      qc::Operation* gate);
-
-  /**
-   * gates are put in the last layer (from the back of the circuit) in which
-   * all of its qubits are not yet used by another gate in a circuit diagram,
-   * except for gates acting on exactly matching qubit sets, which are
-   * collected in the same layer. Additionally also single qubit gates can be
-   * added to a layer already containing gates acting on that qubit.
-   * This approach is equivalent to collecting all gates in 2Q-Blocks and then
-   * applying DisjointQubitLayering.
-   *
-   * @param lastLayer the array storing the last layer each qubit is used in
-   * @param control the (potential) control qubit of the gate
-   * @param target the target qubit of the gate
-   * @param gate the gate to be added to the layerh
-   */
-  void processDisjoint2qBlocksLayer(
-      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-      const std::optional<std::uint16_t>& control, std::uint16_t target,
-      qc::Operation* gate);
+      qc::Operation* gate, bool collect2qBlocks);
 
   /**
    * @brief Get the index of the next layer after the given index containing a
