@@ -87,7 +87,8 @@ TEST_P(ExactTest, DisjointQubits) {
 TEST_P(ExactTest, Disjoint2qBlocks) {
   settings.layering = Layering::Disjoint2qBlocks;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_disjoint_2q.qasm");
+  ibmqYorktownMapper->dumpResult(GetParam() +
+                                 "_exact_yorktown_disjoint_2q.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
