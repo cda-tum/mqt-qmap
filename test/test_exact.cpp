@@ -84,6 +84,18 @@ TEST_P(ExactTest, DisjointQubits) {
   SUCCEED() << "Mapping successful";
 }
 
+TEST_P(ExactTest, Disjoint2qBlocks) {
+  settings.layering = Layering::Disjoint2qBlocks;
+  ibmqYorktownMapper->map(settings);
+  ibmqYorktownMapper->dumpResult(GetParam() + "_exact_yorktown_disjoint_2q.qasm");
+  ibmqYorktownMapper->printResult(std::cout);
+
+  ibmqLondonMapper->map(settings);
+  ibmqLondonMapper->dumpResult(GetParam() + "_exact_london_disjoint_2q.qasm");
+  ibmqLondonMapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
 TEST_P(ExactTest, OddGates) {
   settings.layering = Layering::OddGates;
   ibmqYorktownMapper->map(settings);
@@ -353,6 +365,7 @@ TEST_P(ExactTest, toStringMethods) {
 
   EXPECT_EQ(toString(Layering::IndividualGates), "individual_gates");
   EXPECT_EQ(toString(Layering::DisjointQubits), "disjoint_qubits");
+  EXPECT_EQ(toString(Layering::Disjoint2qBlocks), "disjoint_2q_blocks");
   EXPECT_EQ(toString(Layering::OddGates), "odd_gates");
   EXPECT_EQ(toString(Layering::QubitTriangle), "qubit_triangle");
   EXPECT_EQ(toString(Layering::None), "none");
