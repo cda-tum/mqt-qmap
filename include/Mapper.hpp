@@ -143,7 +143,7 @@ protected:
    */
   void processDisjoint2qBlocksLayer(
       std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-      const std::optional<std::uint16_t>& control, const std::uint16_t target,
+      const std::optional<std::uint16_t>& control, std::uint16_t target,
       qc::Operation* gate);
 
   /**
