@@ -422,7 +422,7 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
   
   Configuration settings{};
   settings.verbose = true;
-  settings.layering = Layering::DisjointQubits;
+  settings.layering = Layering::Disjoint2qBlocks;
   settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
   settings.preMappingOptimizations = false;
@@ -510,7 +510,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   
   Configuration settings{};
-  settings.layering = Layering::DisjointQubits;
+  settings.layering = Layering::Disjoint2qBlocks;
   settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
   settings.preMappingOptimizations = false;
@@ -592,7 +592,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   
   Configuration settings{};
-  settings.layering = Layering::DisjointQubits;
+  settings.layering = Layering::Disjoint2qBlocks;
   settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
   settings.preMappingOptimizations = false;
