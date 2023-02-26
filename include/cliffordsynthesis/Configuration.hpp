@@ -8,15 +8,20 @@
 #include "TargetMetric.hpp"
 #include "nlohmann/json.hpp"
 
+#include <plog/Log.h>
+
 namespace cs {
 struct Configuration {
   Configuration() = default;
 
   /// General configuration for the synthesis algorithm
-  std::size_t  initialTimestepLimit = 0U;
-  bool         useMaxSAT            = false;
-  TargetMetric target               = TargetMetric::Gates;
-  bool         useSymmetryBreaking  = true;
+  std::size_t    initialTimestepLimit    = 0U;
+  bool           useMaxSAT               = false;
+  TargetMetric   target                  = TargetMetric::Gates;
+  bool           useSymmetryBreaking     = true;
+  bool           dumpIntermediateResults = false;
+  std::string    intermediateResultsPath = "./";
+  plog::Severity verbosity               = plog::Severity::warning;
 
   /// Settings for the SAT solver
   std::size_t nThreads = 1U;

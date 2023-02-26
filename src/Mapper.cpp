@@ -34,11 +34,20 @@ Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
 void Mapper::processDisjointQubitLayer(
     std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
     const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate) {
+    qc::Operation* gate, bool collect2qBlocks) {
   std::size_t layer = 0;
   if (!control.has_value()) {
-    // single qubit gates are always disjoint
-    layer = lastLayer.at(target).value_or(0);
+    if (lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(target);
+      // single qubit gates can always be added to the last 2Q block
+      if (!collect2qBlocks) {
+        layer++;
+      }
+    }
+    if (!collect2qBlocks) {
+      lastLayer.at(target) = layer;
+    }
+    lastLayer.at(target) = layer;
   } else {
     if (!lastLayer.at(*control).has_value() &&
         !lastLayer.at(target).has_value()) {
@@ -49,12 +58,17 @@ void Mapper::processDisjointQubitLayer(
       layer = *lastLayer.at(*control) + 1;
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
-      for (auto& g : layers.at(layer - 1)) {
-        if ((g.control == *control && g.target == target) ||
-            (g.control == target && g.target == *control)) {
-          // if last layer contained equivalent gate, use that layer
-          layer--;
-          break;
+
+      if (collect2qBlocks &&
+          (*lastLayer.at(*control) == *lastLayer.at(target))) {
+        for (auto& g : layers.at(layer - 1)) {
+          if ((g.control == *control && g.target == target) ||
+              (g.control == target && g.target == *control)) {
+            // if last layer contained gate with equivalent qubit set, use that
+            // layer
+            layer--;
+            break;
+          }
         }
       }
     }
@@ -120,7 +134,10 @@ void Mapper::createLayers() {
       }
       break;
     case Layering::DisjointQubits:
-      processDisjointQubitLayer(lastLayer, control, target, gate.get());
+      processDisjointQubitLayer(lastLayer, control, target, gate.get(), false);
+      break;
+    case Layering::Disjoint2qBlocks:
+      processDisjointQubitLayer(lastLayer, control, target, gate.get(), true);
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer

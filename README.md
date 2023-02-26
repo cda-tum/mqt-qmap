@@ -29,7 +29,13 @@ If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de]
 
 ## Getting Started
 
-QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows.
+<p align="center">
+  <a href="https://arxiv.org/abs/2301.11935">
+  <img width=30% src="https://img.shields.io/badge/overview paper-blue?style=for-the-badge&logo=arxiv" alt="Overview Paper" />
+  </a>
+</p>
+
+QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.8 to 3.11.
 
 ```console
 (venv) $ pip install mqt.qmap
@@ -69,7 +75,7 @@ circ_opt, results = qmap.optimize_clifford(circ)
 
 ## System Requirements and Building
 
-The implementation is compatible with any C++17 compiler and a minimum CMake version of 3.19.
+The implementation is compatible with any C++17 compiler, a minimum CMake version of 3.19, and Python 3.8+.
 Please refer to the [documentation](https://mqtqmap.readthedocs.io/en/latest/) on how to build the project.
 
 Building (and running) is continuously tested under Linux, macOS, and Windows using the [latest available system versions for GitHub Actions](https://github.com/actions/virtual-environments).
@@ -78,27 +84,32 @@ Building (and running) is continuously tested under Linux, macOS, and Windows us
 
 QMAP has been developed based on methods proposed in the following papers:
 
-[[1]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
+[[1]](https://www.cda.cit.tum.de/files/eda/2023_ispd_mqt_qmap_efficient_quantum_circuit_mapping.pdf)
+R. Wille and L. Burgholzer. MQT QMAP: Efficient Quantum Circuit Mapping.
+In _International Symposium on Physical Design (ISPD)_, 2023.
+
+[[2]](https://www.cda.cit.tum.de/files/eda/2018_tcad_efficient_mapping_of_quantum_circuits_to_ibm_qx_architectures.pdf)
 A. Zulehner, A. Paler, and R. Wille. An Efficient Methodology for Mapping Quantum Circuits to the IBM QX Architectures.
 _IEEE Transactions on Computer Aided Design of Integrated Circuits and Systems (TCAD)_, 2018.
 
-[[2]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
-R. Wille, L. Burgholzer, and A. Zulehner. Mapping Quantum Circuits to IBM QX Architectures Using the Minimal Number of SWAP and H Operations. In _Design Automation Conference (DAC)_, 2019.
+[[3]](https://www.cda.cit.tum.de/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf)
+R. Wille, L. Burgholzer, and A. Zulehner. Mapping Quantum Circuits to IBM QX Architectures Using the Minimal Number of SWAP and H Operations.
+In _Design Automation Conference (DAC)_, 2019.
 
-[[3]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
+[[4]](https://www.cda.cit.tum.de/files/eda/2021_aspdac_exploiting_teleportation_in_quantum_circuit_mappping.pdf)
 S. Hillmich, A. Zulehner, and R. Wille. Exploiting Quantum Teleportation in Quantum Circuit Mapping.
-_In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2021.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2021.
 
-[[4]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
+[[5]](https://www.cda.cit.tum.de/files/eda/2022_aspdac_limiting_search_space_optimal_quantum_circuit_mapping.pdf)
 L. Burgholzer, S. Schneider, and R. Wille. Limiting the Search Space in Optimal Quantum Circuit Mapping.
-_In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 
-[[5]](https://arxiv.org/pdf/2210.09321.pdf)
+[[6]](https://arxiv.org/pdf/2210.09321.pdf)
 T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
 _arXiv:2210.09321_, 2022.
 
-[[6]](https://arxiv.org/pdf/2208.11713.pdf)
+[[7]](https://arxiv.org/pdf/2208.11713.pdf)
 S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
-_In Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
+In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
 
 [^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).

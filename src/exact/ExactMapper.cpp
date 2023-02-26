@@ -56,33 +56,6 @@ void ExactMapper::map(const Configuration& settings) {
     return;
   }
 
-  std::uint64_t factorial = 1;
-  for (std::size_t i = 2; i <= qc.getNqubits(); ++i) {
-    factorial *= i;
-  }
-  auto maxIndex = factorial * reducedLayerIndices.size();
-  if (maxIndex > std::numeric_limits<int>::max()) {
-    std::cerr << "The exact approach can only be used for up to "
-              << std::numeric_limits<int>::max()
-              << " permutation variables, due to 'layers * nq!' overflowing "
-                 "Z3's expr_vector class (uses 'int' index) when trying to "
-                 "instantiate permutation variables y_k_pi. Try reducing the "
-                 "number of layers or the number of qubits."
-              << std::endl;
-    return;
-  }
-
-  maxIndex = qc.getNqubits() * qc.getNqubits() * reducedLayerIndices.size();
-  if (maxIndex > std::numeric_limits<int>::max()) {
-    std::cerr << "The exact approach can only be used for up to "
-              << std::numeric_limits<int>::max()
-              << " X variables, due to nq*nq*nlayers overflowing Z3's "
-                 "expr_vector class (uses 'int' index). Try reducing the "
-                 "number of layers or the number of qubits."
-              << std::endl;
-    return;
-  }
-
   // 2) For all possibilities k (=m over n) to pick n qubits from m physical
   // qubits
   std::vector<std::uint16_t> qubitRange{};

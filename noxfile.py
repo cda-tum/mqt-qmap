@@ -1,13 +1,18 @@
+"""Nox sessions."""
+
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 import nox
-from nox.sessions import Session
+
+if TYPE_CHECKING:
+    from nox.sessions import Session
 
 nox.options.sessions = ["lint", "tests"]
 
-PYTHON_ALL_VERSIONS = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+PYTHON_ALL_VERSIONS = ["3.8", "3.9", "3.10", "3.11"]
 
 if os.environ.get("CI", None):
     nox.options.error_on_missing_interpreters = True
@@ -15,8 +20,8 @@ if os.environ.get("CI", None):
 
 @nox.session(python=PYTHON_ALL_VERSIONS)
 def tests(session: Session) -> None:
-    """
-    Run the test suite.
+    """Run the test suite.
+
     Simply execute `nox -rs tests` to run all tests.
     Run as `nox -rs tests -- skip-install` to skip installing the package and its dependencies.
     """
@@ -31,8 +36,8 @@ def tests(session: Session) -> None:
 
 @nox.session(python=PYTHON_ALL_VERSIONS)
 def coverage(session: Session) -> None:
-    """
-    Run the test suite and generate a coverage report.
+    """Run the test suite and generate a coverage report.
+
     Simply execute `nox -rs coverage -- --cov-report=html` to generate a HTML report.
     Run as `nox -rs coverage -- skip-install` to skip installing the package and its dependencies.
     """
@@ -47,9 +52,7 @@ def coverage(session: Session) -> None:
 
 @nox.session()
 def min_qiskit_version(session: Session) -> None:
-    """
-    Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage.
-    """
+    """Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage."""
     session.install("qiskit-terra~=0.20.2")
     session.install("-e", ".[coverage]")
     session.run("pip", "show", "qiskit-terra")
@@ -58,8 +61,8 @@ def min_qiskit_version(session: Session) -> None:
 
 @nox.session
 def lint(session: Session) -> None:
-    """
-    Lint the Python part of the codebase using pre-commit.
+    """Lint the Python part of the codebase using pre-commit.
+
     Simply execute `nox -rs lint` to run all configured hooks.
     """
     session.install("pre-commit")
@@ -68,8 +71,8 @@ def lint(session: Session) -> None:
 
 @nox.session
 def pylint(session: Session) -> None:
-    """
-    Run pylint.
+    """Run pylint.
+
     Simply execute `nox -rs pylint` to run pylint.
     Run as `nox -rs pylint -- skip-install` to skip installing the package and its dependencies.
     """
@@ -85,18 +88,18 @@ def pylint(session: Session) -> None:
 
 @nox.session
 def mypy(session: Session) -> None:
-    """
-    Run mypy.
+    """Run mypy.
+
     Simply execute `nox -rs mypy` to run mypy.
     """
     session.install("pre-commit")
-    session.run("pre-commit", "run", "--all-files", "--hook-stage", "manual", "mypy", *session.posargs)
+    session.run("pre-commit", "run", "mypy", "--all-files", *session.posargs)
 
 
 @nox.session
 def docs(session: Session) -> None:
-    """
-    Build the documentation.
+    """Build the documentation.
+
     Simply execute `nox -rs docs -- serve` to locally build and serve the docs.
     Run as `nox -rs docs -- skip-install` to skip installing the package and its dependencies.
     """

@@ -1,8 +1,10 @@
-from mqt import qmap
-from mqt.qcec import verify
+"""Test the heuristic mapper."""
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
+
+from mqt import qmap
+from mqt.qcec import verify
 
 
 def test_heuristic_no_swaps_trivial_layout() -> None:
