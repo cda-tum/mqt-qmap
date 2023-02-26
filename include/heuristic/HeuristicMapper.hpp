@@ -339,8 +339,10 @@ inline bool operator<(const HeuristicMapper::Node& x,
 
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  const auto xcost = static_cast<double>(x.costFixed) + x.lookaheadPenalty + x.costHeur;
-  const auto ycost = static_cast<double>(y.costFixed) + y.lookaheadPenalty + y.costHeur;
+  const auto xcost =
+      static_cast<double>(x.costFixed) + x.lookaheadPenalty + x.costHeur;
+  const auto ycost =
+      static_cast<double>(y.costFixed) + y.lookaheadPenalty + y.costHeur;
   if (std::abs(xcost - ycost) > 1e-6) {
     return xcost > ycost;
   }
