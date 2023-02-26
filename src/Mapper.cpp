@@ -47,6 +47,7 @@ void Mapper::processDisjointQubitLayer(
     if (!collect2qBlocks) {
       lastLayer.at(target) = layer;
     }
+    lastLayer.at(target) = layer;
   } else {
     if (!lastLayer.at(*control).has_value() &&
         !lastLayer.at(target).has_value()) {
@@ -69,7 +70,6 @@ void Mapper::processDisjointQubitLayer(
         }
       }
     }
-    
     lastLayer.at(*control) = layer;
     lastLayer.at(target)   = layer;
   }
