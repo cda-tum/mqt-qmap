@@ -58,12 +58,14 @@ void Mapper::processDisjointQubitLayer(
       layer = *lastLayer.at(*control) + 1;
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
-      
-      if (collect2qBlocks && (*lastLayer.at(*control) == *lastLayer.at(target))) {
+
+      if (collect2qBlocks &&
+          (*lastLayer.at(*control) == *lastLayer.at(target))) {
         for (auto& g : layers.at(layer - 1)) {
           if ((g.control == *control && g.target == target) ||
               (g.control == target && g.target == *control)) {
-            // if last layer contained gate with equivalent qubit set, use that layer
+            // if last layer contained gate with equivalent qubit set, use that
+            // layer
             layer--;
             break;
           }
