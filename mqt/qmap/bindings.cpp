@@ -132,6 +132,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("disjoint_qubits", Layering::DisjointQubits)
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
+      .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> Layering {

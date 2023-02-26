@@ -159,7 +159,16 @@ TEST_P(HeuristicTest16Q, Disjoint) {
   Configuration settings{};
   settings.layering = Layering::DisjointQubits;
   ibmQX5Mapper->map(settings);
-  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
+  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
+  ibmQX5Mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
+  Configuration settings{};
+  settings.layering = Layering::Disjoint2qBlocks;
+  ibmQX5Mapper->map(settings);
+  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
