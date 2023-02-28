@@ -42,9 +42,9 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) ->
     for line in qasm.split("\n"):
         if line.startswith("// i "):
             # strip away initial part of line
-            line = line[5:]
+            stripped_line = line[5:]
             # split line into tokens
-            tokens = line.split(" ")
+            tokens = stripped_line.split(" ")
             # convert tokens to integers
             int_tokens = [int(token) for token in tokens]
             # create an empty layout
