@@ -375,7 +375,7 @@ class SubarchitectureOrder:
                 new_des: set[tuple[int, int]] = set()
                 for j, (n_prime, i_prime) in enumerate(reversed(des)):
                     j = len(des) - j - 1
-                    if not any([(n_prime, i_prime) in self.subarch_order[k] for k in des[:j]]):
+                    if not any((n_prime, i_prime) in self.subarch_order[k] for k in des[:j]):
                         new_des.add((n_prime, i_prime))
 
                 self.desirable_subarchitectures[(n, i)] = new_des
