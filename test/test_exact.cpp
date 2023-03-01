@@ -542,7 +542,7 @@ TEST_F(ExactTest, Test) {
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {4, 2}, {3, 2}, {3, 4}};
   arch.loadCouplingMap(5, cm);
 
-  arch.printCouplingMap(cm, std::cout);
+  Architecture::printCouplingMap(cm, std::cout);
 
   qc = qc::QuantumComputation(4);
   qc.x(0, 1_pc);
