@@ -5,7 +5,6 @@
 
 #include "exact/ExactMapper.hpp"
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 class ExactTest : public testing::TestWithParam<std::string> {
@@ -533,4 +532,27 @@ TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
   ASSERT_NO_THROW(mapper.map(settings););
   const auto& results = mapper.getResults();
   EXPECT_EQ(results.output.swaps, 1);
+}
+
+TEST_F(ExactTest, Test) {
+  // Regression test for https://github.com/cda-tum/qmap/issues/251
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {4, 2}, {3, 2}, {3, 4}};
+  arch.loadCouplingMap(5, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(4);
+  qc.x(0, 1_pc);
+  qc.x(1, 0_pc);
+  qc.x(1, 2_pc);
+  qc.x(2, 1_pc);
+  qc.x(2, 3_pc);
+
+  auto mapper = ExactMapper(qc, arch);
+  mapper.map(settings);
+  EXPECT_EQ(mapper.getResults().output.swaps, 0);
+  EXPECT_EQ(mapper.getResults().output.directionReverse, 2);
 }
