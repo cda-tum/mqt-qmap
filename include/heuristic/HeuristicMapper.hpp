@@ -189,7 +189,7 @@ public:
         } else {
           costHeur += fidelityCost;
         }
-        if (cost > COST_DIRECTION_REVERSE) {
+        if (cost > Architecture::computeCostDirectionReverse(gate.op->getType())) {
           done = false;
           return;
         }

@@ -687,3 +687,48 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   }
   os << "}" << std::endl;
 }
+
+GateFlipStrategy Architecture::getGateFlipStrategy(qc::OpType opType) {
+  switch (opType) {
+  case qc::None:
+    return GateFlipStrategy::Unknown;
+  case qc::X:
+  case qc::SX:
+  case qc::SXdag:
+    return GateFlipStrategy::Hadamard;
+  case qc::Z:
+  case qc::S:
+  case qc::Sdag:
+  case qc::T:
+  case qc::Tdag:
+  case qc::Phase:
+  case qc::RZ:
+  case qc::SWAP:
+    return GateFlipStrategy::Identity;
+  default:
+    return GateFlipStrategy::Swap;
+  }
+}
+
+std::uint32_t Architecture::computeCostDirectionReverse(qc::OpType opType) {
+  switch (Architecture::getGateFlipStrategy(opType)) {
+  case GateFlipStrategy::Identity:
+    return 0;
+  case GateFlipStrategy::Hadamard:
+    return 4 * COST_SINGLE_QUBIT_GATE;
+  case GateFlipStrategy::Swap:
+  case GateFlipStrategy::Unknown:
+    return 2 * COST_BIDIRECTIONAL_SWAP;
+  }
+}
+std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
+  switch (Architecture::getGateFlipStrategy(opType)) {
+  case GateFlipStrategy::Identity:
+    return 0;
+  case GateFlipStrategy::Hadamard:
+    return 4;
+  case GateFlipStrategy::Swap:
+  case GateFlipStrategy::Unknown:
+    return 2 * GATES_OF_BIDIRECTIONAL_SWAP;
+  }
+}

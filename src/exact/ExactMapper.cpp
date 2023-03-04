@@ -294,14 +294,14 @@ void ExactMapper::map(const Configuration& settings) {
                       << " with control and target: " << controlledGate.first
                       << " " << controlledGate.second << std::endl;
           }
-          insertFlippedGate(reverse, op);
+          insertFlippedGate(reverse, *op);
         } else {
           if (settings.verbose) {
             std::cout << i << ": Added controlled gate " << op->getName()
                       << " with control and target: " << controlledGate.first
                       << " " << controlledGate.second << std::endl;
           }
-          insertGate(controlledGate, op);
+          insertGate(controlledGate, *op);
         }
       }
     }
@@ -733,9 +733,12 @@ number of variables: (|L|-1) * m!
                           [static_cast<std::size_t>(gate.control)];
           reverse = reverse && (!indexFT || !indexSC);
         }
-        cost = cost + LogicTerm::ite(reverse,
-                                     LogicTerm(GATES_OF_DIRECTION_REVERSE),
-                                     LogicTerm(0));
+        cost = cost +
+               LogicTerm::ite(reverse,
+                              LogicTerm(static_cast<int>(
+                                  Architecture::computeGatesDirectionReverse(
+                                      gate.op->getType()))),
+                              LogicTerm(0));
       }
     }
     lb->minimize(cost);
@@ -836,7 +839,9 @@ number of variables: (|L|-1) * m!
             if (m->getBoolValue(indexFT, lb.get()) &&
                 m->getBoolValue(indexSC, lb.get())) {
               choiceResults.output.directionReverse++;
-              choiceResults.output.gates += GATES_OF_DIRECTION_REVERSE;
+              choiceResults.output.gates +=
+                  Architecture::computeGatesDirectionReverse(
+                      gate.op->getType());
             }
           }
         }

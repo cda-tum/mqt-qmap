@@ -167,7 +167,7 @@ protected:
    * @param op the operation which is inserted
    * @return total number of inserted operations
    */
-  std::size_t insertGate(const Edge& edge, qc::StandardOperation* op);
+  std::size_t insertGate(const Edge& edge, const qc::Operation& op);
 
   /**
    * @brief inserts a two qubit operation op along a direction reversed edge.
@@ -177,7 +177,7 @@ protected:
    * @param op the operation which is inserted
    * @return total number of inserted operations
    */
-  std::size_t insertFlippedGate(const Edge& edge, qc::StandardOperation* op);
+  std::size_t insertFlippedGate(const Edge& edge, const qc::Operation& op);
 
   /**
    * @brief performs optimizations on the circuit before mapping

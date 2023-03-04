@@ -32,6 +32,8 @@ constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
+enum class GateFlipStrategy { Unknown, Identity, Swap, Hadamard };
+
 class Architecture {
 public:
   class Properties {
@@ -348,6 +350,10 @@ public:
 
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
+  static GateFlipStrategy getGateFlipStrategy(qc::OpType opType);
+  static std::uint32_t    computeCostDirectionReverse(qc::OpType opType);
+  static std::uint32_t    computeGatesDirectionReverse(qc::OpType opType);
+
 protected:
   std::string                                        name;
   std::uint16_t                                      nqubits               = 0;
@@ -377,7 +383,8 @@ protected:
     if (node.containsCorrectEdge) {
       return length * COST_UNIDIRECTIONAL_SWAP;
     }
-    return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
+    return length * COST_UNIDIRECTIONAL_SWAP +
+           Architecture::computeCostDirectionReverse(qc::OpType::None);
   }
 
   // added for teleportation

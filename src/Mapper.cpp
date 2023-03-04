@@ -284,7 +284,7 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         } else {
           info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
           info.twoQubitGates += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
+          info.singleQubitGates += Architecture::computeGatesDirectionReverse(g->getType());
         }
       } else if (g->getControls().empty()) {
         ++info.singleQubitGates;
@@ -302,45 +302,35 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
     }
   }
 }
-std::size_t Mapper::insertGate(const Edge& edge, qc::StandardOperation* op) {
-  qcMapped.emplace_back<qc::StandardOperation>(
-      qcMapped.getNqubits(), qc::Control{static_cast<qc::Qubit>(edge.first)},
-      edge.second, op->getType(), op->getParameter().at(0),
-      op->getParameter().at(1), op->getParameter().at(2));
+std::size_t Mapper::insertGate(const Edge& edge, const qc::Operation& op) {
+  auto newOp = op.clone();
+  newOp->setControls({qc::Control{edge.first}});
+  newOp->setTargets({edge.second});
+  qcMapped.emplace_back(newOp);
   return 1;
 }
 
-std::size_t Mapper::insertFlippedGate(const Edge&            edge,
-                                      qc::StandardOperation* op) {
-  int swapType = -1;
-  switch (op->getType()) {
-  case qc::X:
-    swapType = 1;
-    break;
-  case qc::Z:
-    swapType = 0;
-    break;
-  default:
-    swapType = -1;
-  }
-
-  if (swapType == 0) {
+std::size_t Mapper::insertFlippedGate(const Edge&          edge,
+                                      const qc::Operation& op) {
+  std::size_t tmp = 0;
+  switch (Architecture::getGateFlipStrategy(op.getType())) {
+  case GateFlipStrategy::Identity:
     // no additional gates required to reverse direction
     return insertGate(edge, op);
-  }
-  if (swapType == 1) {
+  case GateFlipStrategy::Swap:
+  case GateFlipStrategy::Unknown:
+    // swap gates are used to reverse direction
+    qcMapped.swap(edge.first, edge.second);
+    tmp = insertGate(edge, op);
+    qcMapped.swap(edge.second, edge.first);
+    return 2 + tmp;
+  case GateFlipStrategy::Hadamard:
     // four hadamard gates to reverse direction
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
-    auto tmp = insertGate(edge, op);
+    tmp = insertGate(edge, op);
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
     return tmp + 4;
   }
-
-  // in all other cases, swap gates are used to reverse direction
-  qcMapped.swap(edge.first, edge.second);
-  auto tmp = insertGate(edge, op);
-  qcMapped.swap(edge.second, edge.first);
-  return 2 + tmp;
 }
