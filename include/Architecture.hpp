@@ -383,8 +383,9 @@ protected:
     if (node.containsCorrectEdge) {
       return length * COST_UNIDIRECTIONAL_SWAP;
     }
+    // TODO: distance has no gate context, but gates have different costs
     return length * COST_UNIDIRECTIONAL_SWAP +
-           Architecture::computeCostDirectionReverse(qc::OpType::None);
+           Architecture::computeCostDirectionReverse(qc::OpType::X);
   }
 
   // added for teleportation
