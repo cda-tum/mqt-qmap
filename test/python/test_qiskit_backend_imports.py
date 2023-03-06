@@ -1,6 +1,6 @@
-import pytest
-from mqt import qmap
+"""Test the Qiskit backend imports."""
 
+import pytest
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import (
     FakeAthens,
@@ -9,9 +9,12 @@ from qiskit.providers.fake_provider import (
     FakeLondonV2,
 )
 
+from mqt import qmap
 
-@pytest.fixture
+
+@pytest.fixture()
 def example_circuit() -> QuantumCircuit:
+    """Return a simple circuit."""
     qc = QuantumCircuit(3)
     qc.h(0)
     qc.cx(0, 1)

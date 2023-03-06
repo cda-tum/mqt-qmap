@@ -719,19 +719,20 @@ number of variables: (|L|-1) * m!
 
   // cost for reversed directions
   if (!architecture.bidirectional()) {
-    cost = LogicTerm(0);
-    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
+    cost                 = LogicTerm(0);
+    const auto numLayers = reducedLayerIndices.size();
+    for (std::size_t k = 0; k < numLayers; ++k) {
       for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
         if (gate.singleQubit()) {
           continue;
         }
 
-        auto reverse = LogicTerm(true);
-        for (const auto& edge : rcm) {
-          auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-          auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                          [static_cast<std::size_t>(gate.control)];
-          reverse = reverse && (!indexFT || !indexSC);
+        auto reverse = LogicTerm(false);
+        for (const auto& [q0, q1] : rcm) {
+          const auto indexFT = x[k][physicalQubitIndex[q0]][gate.target];
+          const auto indexSC = x[k][physicalQubitIndex[q1]]
+                                [static_cast<std::size_t>(gate.control)];
+          reverse = reverse || (indexFT && indexSC);
         }
         cost = cost +
                LogicTerm::ite(reverse,

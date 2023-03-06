@@ -3,11 +3,11 @@
 from typing import TYPE_CHECKING, Callable
 
 import pytest
-from mqt import qmap
-from mqt.qcec import verify
-
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
+
+from mqt import qmap
+from mqt.qcec import verify
 
 if TYPE_CHECKING:
     from qiskit.circuit import InstructionSet
