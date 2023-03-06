@@ -1,12 +1,16 @@
-from typing import Callable
+"""Test the exact mapper."""
+
+from typing import TYPE_CHECKING, Callable
 
 import pytest
 from mqt import qmap
 from mqt.qcec import verify
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import InstructionSet
 from qiskit.providers.fake_provider import FakeLondon
+
+if TYPE_CHECKING:
+    from qiskit.circuit import InstructionSet
 
 
 def test_exact_no_swaps_trivial_layout() -> None:
@@ -64,15 +68,15 @@ def test_exact_non_trivial_swaps() -> None:
     assert result.considered_equivalent() is True
 
 
-@pytest.fixture
+@pytest.fixture()
 def one_way_arch() -> qmap.Architecture:
-    arch = qmap.Architecture(
+    """Return a simple one way architecture to test direction reversal."""
+    return qmap.Architecture(
         2,
         {
             (0, 1),
         },
     )
-    return arch
 
 
 @pytest.mark.parametrize(
