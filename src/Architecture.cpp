@@ -719,6 +719,8 @@ std::uint32_t Architecture::computeCostDirectionReverse(qc::OpType opType) {
   case GateFlipStrategy::Swap:
   case GateFlipStrategy::Unknown:
     return 2 * COST_BIDIRECTIONAL_SWAP;
+  default:
+    throw QMAPException("Unexpected GateFlipStrategy!");
   }
 }
 std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
@@ -730,5 +732,7 @@ std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
   case GateFlipStrategy::Swap:
   case GateFlipStrategy::Unknown:
     return 2 * GATES_OF_BIDIRECTIONAL_SWAP;
+  default:
+    throw QMAPException("Unexpected GateFlipStrategy!");
   }
 }

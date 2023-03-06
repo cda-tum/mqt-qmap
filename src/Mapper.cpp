@@ -354,5 +354,7 @@ std::size_t Mapper::insertFlippedGate(const Edge&          edge,
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
     return tmp + 4;
+  default:
+    throw QMAPException("Unexpected GateFlipStrategy!");
   }
 }
