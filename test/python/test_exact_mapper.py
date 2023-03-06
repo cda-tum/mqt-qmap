@@ -83,6 +83,7 @@ def one_way_arch() -> qmap.Architecture:
     ],
 )
 def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target are flipped using four hadamard gates for some gates where this is possible."""
     qc = QuantumCircuit(2)
     gate(qc, 0, 1)
     gate(qc, 1, 0)
@@ -102,6 +103,7 @@ def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: Calla
     ],
 )
 def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target are flipped using two swap gates for some gates where this is possible."""
     qc = QuantumCircuit(2)
     gate(qc, 0, 1)
     gate(qc, 1, 0)
@@ -121,6 +123,7 @@ def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: Callable[
     ],
 )
 def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target are flipped without adding additional for some gates where this is possible."""
     qc = QuantumCircuit(2)
     gate(qc, 0, 1)
     gate(qc, 1, 0)
@@ -145,6 +148,7 @@ def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: Calla
     ],
 )
 def test_direction_reverse_params_0(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target is flipped correctly for all two qubit controlled gates with zero parameters."""
     qc = QuantumCircuit(2)
     gate(qc, 0, 1)
     gate(qc, 1, 0)
@@ -165,6 +169,7 @@ def test_direction_reverse_params_0(one_way_arch: qmap.Architecture, gate: Calla
     ],
 )
 def test_direction_reverse_params_1(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target is flipped correctly for all two qubit controlled gates with one parameter."""
     qc = QuantumCircuit(2)
     gate(qc, 0.25, 0, 1)
     gate(qc, 0.75, 1, 0)
@@ -180,6 +185,7 @@ def test_direction_reverse_params_1(one_way_arch: qmap.Architecture, gate: Calla
     [QuantumCircuit.cu],
 )
 def test_direction_reverse_params_4(one_way_arch: qmap.Architecture, gate: Callable[..., InstructionSet]) -> None:
+    """Verify that control and target is flipped correctly for all two qubit controlled gates with four parameters."""
     qc = QuantumCircuit(2)
     gate(qc, 0.1, 0.2, 0.3, 0.4, 0, 1)
     gate(qc, 0.9, 0.8, 0.7, 0.6, 1, 0)
