@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 import qiskit.circuit.library as qcl
 from qiskit import QuantumCircuit
@@ -96,10 +97,19 @@ def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: Contr
     assert qc_mapped.count_ops()["h"] == 4
     assert "swap" not in qc_mapped.count_ops()
 
+    result = verify(qc, qc_mapped)
+    assert result.considered_equivalent() is True
+
 
 @pytest.mark.parametrize(
     "gate",
-    [qcl.CYGate(), qcl.CRXGate(0.5), qcl.CRYGate(0.5)],
+    [
+        qcl.CYGate(),
+        qcl.CRXGate(0.5),
+        qcl.CRYGate(0.5),
+        qcl.CHGate(),
+        qcl.CU3Gate(0.25, 0.5, 0.75),
+    ],
 )
 def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
     """Verify that control and target are flipped using two swap gates for some gates where this is possible."""
@@ -112,13 +122,25 @@ def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: Controlle
     assert "h" not in qc_mapped.count_ops()
     assert qc_mapped.count_ops()["swap"] == 2
 
+    result = verify(qc, qc_mapped)
+    assert result.considered_equivalent() is True
+
 
 @pytest.mark.parametrize(
     "gate",
-    [qcl.CZGate(), qcl.CPhaseGate(0.5), qcl.CRZGate(0.5)],
+    [
+        qcl.CZGate(),
+        qcl.CPhaseGate(0.5),
+        qcl.CRZGate(0.5),
+        qcl.CPhaseGate(np.pi / 2),
+        qcl.CPhaseGate(-np.pi / 2),
+        qcl.CPhaseGate(np.pi / 4),
+        qcl.CPhaseGate(-np.pi / 4),
+        qcl.CU1Gate(0.25),
+    ],
 )
 def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
-    """Verify that control and target are flipped without adding additional for some gates where this is possible."""
+    """Verify that control and target are flipped without adding gates for some gates where this is possible."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
     qc.append(gate, [1, 0])
@@ -127,34 +149,6 @@ def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: Contr
     qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact")
     assert "h" not in qc_mapped.count_ops()
     assert "swap" not in qc_mapped.count_ops()
-
-
-@pytest.mark.parametrize(
-    "gate",
-    [
-        qcl.CHGate(),
-        qcl.CPhaseGate(0.25),
-        qcl.CSdgGate(),
-        qcl.CRXGate(0.25),
-        qcl.CRYGate(0.25),
-        qcl.CRZGate(0.25),
-        qcl.CSGate(),
-        qcl.CSXGate(),
-        qcl.CU1Gate(0.25),
-        qcl.CU3Gate(0.25, 0.5, 0.75),
-        qcl.CUGate(0.2, 0.4, 0.6, 0.8),
-        qcl.CXGate(),
-        qcl.CYGate(),
-        qcl.CZGate(),
-    ],
-)
-def test_direction_reverse_verify(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
-    """Verify that control and target is flipped correctly for two qubit controlled gates."""
-    qc = QuantumCircuit(2)
-    qc.append(gate, [0, 1])
-    qc.append(gate, [1, 0])
-    qc.measure_all()
-    qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact")
 
     result = verify(qc, qc_mapped)
     assert result.considered_equivalent() is True
