@@ -1,10 +1,6 @@
 """Sphinx configuration file."""
 
 import sys
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from pybtex.richtext import HRef
 
 if sys.version_info < (3, 10, 0):
     import importlib_metadata as metadata
@@ -12,6 +8,8 @@ else:
     from importlib import metadata
 
 import pybtex.plugin
+from pybtex.database import Entry
+from pybtex.richtext import HRef
 from pybtex.style.formatting.unsrt import Style as UnsrtStyle
 from pybtex.style.template import field, href
 
@@ -79,7 +77,7 @@ napoleon_use_rtype = False
 class CDAStyle(UnsrtStyle):
     """Custom style for including PDF links."""
 
-    def format_url(self, _e: Any) -> HRef:  # noqa: ANN401
+    def format_url(self, _e: Entry) -> HRef:
         """Format URL field as a link to the PDF."""
         url = field("url", raw=True)
         return href()[url, "[PDF]"]
