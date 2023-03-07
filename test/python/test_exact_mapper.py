@@ -1,8 +1,15 @@
 """Test the exact mapper."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
-import qiskit
+import qiskit.circuit.library as qcl
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
+
+if TYPE_CHECKING:
+    from qiskit.circuit import ControlledGate
 
 from mqt import qmap
 from mqt.qcec import verify
@@ -76,9 +83,9 @@ def one_way_arch() -> qmap.Architecture:
 
 @pytest.mark.parametrize(
     "gate",
-    [qiskit.circuit.library.CXGate(), qiskit.circuit.library.CSXGate()],
+    [qcl.CXGate(), qcl.CSXGate()],
 )
-def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: qiskit.circuit.ControlledGate) -> None:
+def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
     """Verify that control and target are flipped using four hadamard gates for some gates where this is possible."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
@@ -92,9 +99,9 @@ def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: qiski
 
 @pytest.mark.parametrize(
     "gate",
-    [qiskit.circuit.library.CYGate(), qiskit.circuit.library.CRXGate(0.5), qiskit.circuit.library.CRYGate(0.5)],
+    [qcl.CYGate(), qcl.CRXGate(0.5), qcl.CRYGate(0.5)],
 )
-def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: qiskit.circuit.ControlledGate) -> None:
+def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
     """Verify that control and target are flipped using two swap gates for some gates where this is possible."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
@@ -108,9 +115,9 @@ def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: qiskit.ci
 
 @pytest.mark.parametrize(
     "gate",
-    [qiskit.circuit.library.CZGate(), qiskit.circuit.library.CPhaseGate(0.5), qiskit.circuit.library.CRZGate(0.5)],
+    [qcl.CZGate(), qcl.CPhaseGate(0.5), qcl.CRZGate(0.5)],
 )
-def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: qiskit.circuit.ControlledGate) -> None:
+def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
     """Verify that control and target are flipped without adding additional for some gates where this is possible."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
@@ -125,23 +132,23 @@ def test_direction_reverse_identity(one_way_arch: qmap.Architecture, gate: qiski
 @pytest.mark.parametrize(
     "gate",
     [
-        qiskit.circuit.library.CHGate(),
-        qiskit.circuit.library.CPhaseGate(0.25),
-        qiskit.circuit.library.CSdgGate(),
-        qiskit.circuit.library.CRXGate(0.25),
-        qiskit.circuit.library.CRYGate(0.25),
-        qiskit.circuit.library.CRZGate(0.25),
-        qiskit.circuit.library.CSGate(),
-        qiskit.circuit.library.CSXGate(),
-        qiskit.circuit.library.CU1Gate(0.25),
-        qiskit.circuit.library.CU3Gate(0.25, 0.5, 0.75),
-        qiskit.circuit.library.CUGate(0.2, 0.4, 0.6, 0.8),
-        qiskit.circuit.library.CXGate(),
-        qiskit.circuit.library.CYGate(),
-        qiskit.circuit.library.CZGate(),
+        qcl.CHGate(),
+        qcl.CPhaseGate(0.25),
+        qcl.CSdgGate(),
+        qcl.CRXGate(0.25),
+        qcl.CRYGate(0.25),
+        qcl.CRZGate(0.25),
+        qcl.CSGate(),
+        qcl.CSXGate(),
+        qcl.CU1Gate(0.25),
+        qcl.CU3Gate(0.25, 0.5, 0.75),
+        qcl.CUGate(0.2, 0.4, 0.6, 0.8),
+        qcl.CXGate(),
+        qcl.CYGate(),
+        qcl.CZGate(),
     ],
 )
-def test_direction_reverse_verify(one_way_arch: qmap.Architecture, gate: qiskit.circuit.ControlledGate) -> None:
+def test_direction_reverse_verify(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
     """Verify that control and target is flipped correctly for two qubit controlled gates."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
