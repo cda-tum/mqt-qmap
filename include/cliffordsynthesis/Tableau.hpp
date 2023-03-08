@@ -38,8 +38,9 @@ public:
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
-    if (tableau.empty())
+    if (tableau.empty()) {
       throw std::runtime_error("Tableau is empty");
+    }
     nQubits = tableau.back().size() / 2U;
   }
   explicit Tableau(const std::string& stabilizers,
