@@ -69,8 +69,9 @@ protected:
       qc::QuantumComputation qc{};
       qc.import(ss, qc::Format::OpenQASM);
       std::cout << "Initial circuit:\n" << qc;
-      targetTableau                 = Tableau(qc);
-      targetTableauWithDestabilizer = Tableau(qc, true);
+      targetTableau = Tableau(qc);
+      targetTableauWithDestabilizer =
+          Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), true);
       if (test.initialTableau.empty()) {
         initialTableau                 = Tableau(qc.getNqubits());
         initialTableauWithDestabilizer = Tableau(qc.getNqubits(), true);
