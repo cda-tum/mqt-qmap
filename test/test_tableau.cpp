@@ -519,8 +519,7 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.emplace_back(compOP);
 
   EXPECT_NO_THROW(tableau = cs::Tableau(qc););
-  EXPECT_NO_THROW(fullTableau = cs::Tableau(
-                      qc, 0, std::numeric_limits<std::size_t>::max(), true));
+  EXPECT_NO_THROW(fullTableau = cs::Tableau(qc, true));
 }
 
 TEST_F(TestTableau, UnsupportedOperations) {

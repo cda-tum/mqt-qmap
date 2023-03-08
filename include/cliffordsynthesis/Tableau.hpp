@@ -28,14 +28,15 @@ private:
 
 public:
   Tableau() = default;
-  explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
-                   std::size_t end = std::numeric_limits<std::size_t>::max(),
-                   bool        includeDestabilizers = false);
   explicit Tableau(const std::size_t nq,
                    const bool        includeDestabilizers = false)
       : nQubits(nq) {
     createDiagonalTableau(nq, includeDestabilizers);
   }
+  explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
+                   std::size_t end = std::numeric_limits<std::size_t>::max(),
+                   bool        includeDestabilizers = false);
+
   explicit Tableau(const std::string& description) {
     fromString(description);
     if (tableau.empty())

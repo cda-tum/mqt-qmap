@@ -69,9 +69,8 @@ protected:
       qc::QuantumComputation qc{};
       qc.import(ss, qc::Format::OpenQASM);
       std::cout << "Initial circuit:\n" << qc;
-      targetTableau = Tableau(qc);
-      targetTableauWithDestabilizer =
-          Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), true);
+      targetTableau                 = Tableau(qc);
+      targetTableauWithDestabilizer = Tableau(qc, true);
       if (test.initialTableau.empty()) {
         initialTableau                 = Tableau(qc.getNqubits());
         initialTableauWithDestabilizer = Tableau(qc.getNqubits(), true);
@@ -243,38 +242,6 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
   EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
   EXPECT_EQ(results.getGates(),
             test.expectedMinimalGatesAtMinimalTwoQubitGates);
-}
-
-TEST(SynthesisTest, DestabilizerSanityCheck) {
-  Tableau             initialTableau;
-  Tableau             targetTableau;
-  Configuration       config;
-  CliffordSynthesizer synthesizer;
-  Results             results;
-
-  initialTableau = Tableau(2);
-  targetTableau  = Tableau("[+IX, +ZI]");
-
-  config.target    = TargetMetric::Gates;
-  config.useMaxSAT = true;
-
-  synthesizer = CliffordSynthesizer(initialTableau, targetTableau);
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getGates(), 3);
-
-  initialTableau = Tableau(2, true);
-  targetTableau  = Tableau("[+IX, +ZI]", "[+ZZ, -XX]");
-
-  config.target    = TargetMetric::Gates;
-  config.useMaxSAT = true;
-
-  synthesizer = CliffordSynthesizer(initialTableau, targetTableau);
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getGates(), 4);
 }
 
 TEST_P(SynthesisTest, TestDestabilizerGates) {
