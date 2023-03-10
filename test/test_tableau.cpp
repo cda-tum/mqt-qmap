@@ -641,6 +641,7 @@ TEST_F(TestTableau, InvalidIput) {
   EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
   EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
   EXPECT_THROW(tableau = Tableau("[XY; XY"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("['XY, XY]"), QMAPException);
 }
 
 } // namespace cs

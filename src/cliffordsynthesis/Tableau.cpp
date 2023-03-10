@@ -323,7 +323,7 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
     if (stabCopy[stabCopy.size() - 1] == '\'') {
       stabCopy = stabCopy.substr(1, stabCopy.size() - 2);
     } else {
-      throw QMAPException("Unmatched \"\'\" in stabilizer string");
+      throw QMAPException("Unmatched \"'\" in stabilizer string");
     }
   }
   if (stabCopy[0] == '+' || stabCopy[0] == '-') {
@@ -368,12 +368,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   if (line.empty()) {
     return;
   }
-  const auto& checkChar = [](const char actual, const char expected) {
-    if (actual != expected) {
-      throw QMAPException("Invalid stabilizer format. Stabilizers must be "
-                          "given as a list of stabilizer like [XYZI, ZIXZ]");
-    }
-  };
+
   auto stabilizers = line;
   stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
                     stabilizers.end());
@@ -387,7 +382,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   std::optional<std::size_t> stabLength;
-  const auto&                checkStabLength = [&](RowType row) {
+  const auto&                checkStabLength = [&](const RowType& row) {
     if (!stabLength.has_value()) {
       stabLength = row.size();
     }
