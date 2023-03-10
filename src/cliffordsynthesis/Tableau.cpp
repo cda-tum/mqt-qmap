@@ -318,7 +318,15 @@ void Tableau::fromString(const std::string& stabilizers,
 
 Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
   auto stabCopy = stab;
-  if (stab[0] == '+' || stab[0] == '-') {
+
+  if (stabCopy[0] == '\'') {
+    if (stabCopy[stabCopy.size() - 1] == '\'') {
+      stabCopy = stabCopy.substr(1, stabCopy.size() - 2);
+    } else {
+      throw QMAPException("Unmatched \"\'\" in stabilizer string");
+    }
+  }
+  if (stabCopy[0] == '+' || stabCopy[0] == '-') {
     stabCopy = stabCopy.substr(1);
   }
 
@@ -345,7 +353,7 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
                           "like [XYZI, ZIXZ]");
     }
   }
-  if (stab[0U] == '-') {
+  if (stab[0U] == '-' || (stab[0U] == '\'' && stab[1U] == '-')) {
     row.push_back(1);
   } else {
     row.push_back(0);
@@ -360,7 +368,6 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   if (line.empty()) {
     return;
   }
-
   const auto& checkChar = [](const char actual, const char expected) {
     if (actual != expected) {
       throw QMAPException("Invalid stabilizer format. Stabilizers must be "
@@ -370,8 +377,14 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   auto stabilizers = line;
   stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
                     stabilizers.end());
-  checkChar(stabilizers[0], '[');
-  checkChar(stabilizers[stabilizers.size() - 1], ']');
+
+  if (stabilizers[0] == '[') {
+    if (stabilizers[stabilizers.size() - 1] == ']') {
+      stabilizers = stabilizers.substr(1, stabilizers.size() - 2);
+    } else {
+      throw QMAPException("Unmatched \"[\" in stabilizer string");
+    }
+  }
 
   std::optional<std::size_t> stabLength;
   const auto&                checkStabLength = [&](RowType row) {
@@ -383,7 +396,6 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
     }
   };
 
-  stabilizers           = stabilizers.substr(1, stabilizers.size() - 2);
   const char  delimiter = ',';
   std::string stab;
   for (std::size_t pos = stabilizers.find(delimiter); pos != std::string::npos;
