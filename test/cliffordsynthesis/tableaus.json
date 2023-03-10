@@ -301,5 +301,15 @@
     "expected_minimal_gates_at_minimal_depth": 4,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 4
+  },
+  {
+    "description": "DestabilizerAlternativeIdentity",
+    "initial_tableau": "[+Z_, +_Z, +X_, +_X]",
+    "target_tableau": "[+_X, +Z_, +ZZ, -XX]",
+    "expected_minimal_gates": 4,
+    "expected_minimal_depth": 3,
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   }
 ]

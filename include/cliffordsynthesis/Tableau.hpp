@@ -24,7 +24,8 @@ class Tableau {
   TableauType tableau;
 
 private:
-  void loadStabilizerDestabilizerString(const std::string& string);
+  void           loadStabilizerDestabilizerString(const std::string& string);
+  static RowType parseStabilizer(const std::string& stab);
 
 public:
   Tableau() = default;

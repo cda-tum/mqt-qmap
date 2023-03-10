@@ -5,6 +5,7 @@
 
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "utils.hpp"
 
 #include "gtest/gtest.h"
 
@@ -630,6 +631,16 @@ TEST_F(TestTableau, TableauIO) {
   tableau2 = Tableau{};
   tableau2.import(filename2);
   EXPECT_EQ(fullTableau, tableau2);
+}
+
+TEST_F(TestTableau, InvalidIput) {
+  EXPECT_THROW(tableau = Tableau("[ZZX, aXy]"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[ZZ__I, XXY]"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[ZZI, -XY]"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("XY, XY]"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[XY; XY"), QMAPException);
 }
 
 } // namespace cs

@@ -315,6 +315,44 @@ void Tableau::fromString(const std::string& stabilizers,
   loadStabilizerDestabilizerString(destabilizers);
   loadStabilizerDestabilizerString(stabilizers);
 }
+
+Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
+  auto stabCopy = stab;
+  if (stab[0] == '+' || stab[0] == '-') {
+    stabCopy = stabCopy.substr(1);
+  }
+
+  RowType row;
+  for (const auto c : stabCopy) {
+    if (c == 'I' || c == '_' || c == 'Z') {
+      row.push_back(0);
+    } else if (c == 'X' || c == 'Y') {
+      row.push_back(1);
+    } else {
+      throw QMAPException("Invalid stabilizer " + stab +
+                          ". Stabilizers must be given as a list of stabilizer "
+                          "like [XYZI, ZIXZ]");
+    }
+  }
+  for (const auto c : stabCopy) {
+    if (c == 'I' || c == '_' || c == 'X') {
+      row.push_back(0);
+    } else if (c == 'Y' || c == 'Z') {
+      row.push_back(1);
+    } else {
+      throw QMAPException("Invalid stabilizer" + stab +
+                          ". Stabilizers must be given as a list of stabilizer "
+                          "like [XYZI, ZIXZ]");
+    }
+  }
+  if (stab[0U] == '-') {
+    row.push_back(1);
+  } else {
+    row.push_back(0);
+  }
+  return row;
+}
+
 void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   std::stringstream ss(string);
   std::string       line;
@@ -322,35 +360,42 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   if (line.empty()) {
     return;
   }
-  const auto  rStabilizer = std::regex("([\\+-]?)([IYZX]+)");
-  std::smatch m;
-  // string is a list of stabilizers
-  auto iter = line.cbegin();
-  while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
-    std::string s = m.str(0U);
-    RowType     row;
 
-    for (const auto c : s) {
-      if (c == 'I' || c == 'Z') {
-        row.push_back(0);
-      } else if (c == 'X' || c == 'Y') {
-        row.push_back(1);
-      }
+  const auto& checkChar = [](const char actual, const char expected) {
+    if (actual != expected)
+      throw QMAPException("Invalid stabilizer format. Stabilizers must be "
+                          "given as a list of stabilizer like [XYZI, ZIXZ]");
+  };
+  auto stabilizers = line;
+  stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
+                    stabilizers.end());
+  checkChar(stabilizers[0], '[');
+  checkChar(stabilizers[stabilizers.size() - 1], ']');
+
+  std::optional<std::size_t> stabLength;
+  const auto&                checkStabLength = [&](RowType row) {
+    if (!stabLength.has_value()) {
+      stabLength = row.size();
     }
-    for (const auto c : s) {
-      if (c == 'I' || c == 'X') {
-        row.push_back(0);
-      } else if (c == 'Y' || c == 'Z') {
-        row.push_back(1);
-      }
+    if (stabLength.value() != row.size()) {
+      throw QMAPException("All Stabilizers muts have the same length");
     }
-    if (s[0U] == '-') {
-      row.push_back(1);
-    } else {
-      row.push_back(0);
-    }
+  };
+
+  stabilizers           = stabilizers.substr(1, stabilizers.size() - 2);
+  const char  delimiter = ',';
+  std::string stab;
+  for (std::size_t pos = stabilizers.find(delimiter); pos != std::string::npos;
+       pos             = stabilizers.find(delimiter)) {
+    stab            = stabilizers.substr(0, pos);
+    const auto& row = parseStabilizer(stab);
+    checkStabLength(row);
     tableau.push_back(row);
-    iter = m[0].second;
+    stabilizers = stabilizers.substr(pos + 1);
   }
+  const auto& row =
+      parseStabilizer(stabilizers); // parse stabilizer past last comma
+  checkStabLength(row);
+  tableau.push_back(row);
 }
 } // namespace cs
