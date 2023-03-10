@@ -362,9 +362,10 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   const auto& checkChar = [](const char actual, const char expected) {
-    if (actual != expected)
+    if (actual != expected) {
       throw QMAPException("Invalid stabilizer format. Stabilizers must be "
                           "given as a list of stabilizer like [XYZI, ZIXZ]");
+    }
   };
   auto stabilizers = line;
   stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
