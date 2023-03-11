@@ -583,7 +583,8 @@ number of variables: (|L|-1) * m!
       }
 
       auto coupling = LogicTerm(false);
-      if (architecture.bidirectional()) {
+      if (architecture.bidirectional() ||
+          !Architecture::supportsDirectionReversal(gate.op->getType())) {
         for (const auto& edge : rcm) {
           auto indexFC = x[k][physicalQubitIndex[edge.first]]
                           [static_cast<std::size_t>(gate.control)];
@@ -598,13 +599,7 @@ number of variables: (|L|-1) * m!
           auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
           auto indexSC = x[k][physicalQubitIndex[edge.second]]
                           [static_cast<std::size_t>(gate.control)];
-
-          if (Architecture::supportsDirectionReversal(gate.op->getType())) {
-            coupling =
-                coupling || ((indexFC && indexST) || (indexFT && indexSC));
-          } else {
-            coupling = coupling || (indexFC && indexST);
-          }
+          coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
         }
       }
       allCouplings = allCouplings && coupling;
