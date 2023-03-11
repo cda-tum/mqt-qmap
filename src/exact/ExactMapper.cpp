@@ -836,6 +836,9 @@ number of variables: (|L|-1) * m!
           if (gate.singleQubit()) {
             continue;
           }
+          if (!Architecture::supportsDirectionReversal(gate.op->getType())) {
+            continue;
+          }
           for (const auto& edge : rcm) {
             auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
             auto indexSC = x[k][physicalQubitIndex[edge.second]]
