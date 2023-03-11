@@ -157,7 +157,7 @@ protected:
     countGates(circuit.cbegin(), circuit.cend(), info);
   }
   /**
-   * @brief count number of elementary gates and controlled gates in circuit and
+   * @brief count number of elementary gates and two-qubit gates in circuit and
    * save the results in `info.gates` and `info.twoQubitGates`
    */
   virtual void countGates(decltype(qcMapped.cbegin())      it,
