@@ -556,3 +556,122 @@ TEST_F(ExactTest, Test) {
   EXPECT_EQ(mapper.getResults().output.swaps, 0);
   EXPECT_EQ(mapper.getResults().output.directionReverse, 2);
 }
+
+TEST_F(ExactTest, TestDirectionReverseHadamard) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.sx(0, 1_pc);
+  qc.sx(1, 0_pc);
+
+  auto mapper               = ExactMapper(qc, arch);
+  settings.enableSwapLimits = false;
+  mapper.map(settings);
+
+  EXPECT_EQ(mapper.getResults().output.swaps, 0);
+  EXPECT_EQ(mapper.getResults().output.directionReverse, 1);
+  int hadamard = 0;
+  int sx       = 0;
+  for (auto& gate : mapper.getMappedCircuit()) {
+    switch (gate->getType()) {
+    case qc::H:
+      hadamard++;
+      break;
+    case qc::SX:
+      sx++;
+      break;
+    case qc::Barrier:
+    case qc::Measure:
+      break;
+    default:
+      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
+    }
+  }
+  EXPECT_EQ(hadamard, 4);
+  EXPECT_EQ(sx, 2);
+}
+
+TEST_F(ExactTest, TestDirectionReverseIdentity) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.rz(0, 1_pc, 0.25);
+  qc.rz(1, 0_pc, 0.75);
+
+  auto mapper               = ExactMapper(qc, arch);
+  settings.enableSwapLimits = false;
+  mapper.map(settings);
+
+  mapper.dumpResult(std::cout, qc::Format::OpenQASM);
+
+  EXPECT_EQ(mapper.getResults().output.swaps, 0);
+  EXPECT_EQ(mapper.getResults().output.directionReverse, 1);
+  int rz = 0;
+  for (auto& gate : mapper.getMappedCircuit()) {
+    switch (gate->getType()) {
+    case qc::RZ:
+      rz++;
+      break;
+    case qc::Barrier:
+    case qc::Measure:
+      break;
+    default:
+      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
+    }
+  }
+  EXPECT_EQ(rz, 2);
+}
+
+TEST_F(ExactTest, TestDirectionReverseNotApplicable) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.y(0, 1_pc);
+  qc.y(1, 0_pc);
+
+  auto mapper               = ExactMapper(qc, arch);
+  settings.enableSwapLimits = false;
+  mapper.map(settings);
+
+  mapper.dumpResult(std::cout, qc::Format::OpenQASM);
+
+  EXPECT_EQ(mapper.getResults().output.swaps, 1);
+  EXPECT_EQ(mapper.getResults().output.directionReverse, 0);
+  int swap = 0;
+  int y    = 0;
+  for (auto& gate : mapper.getMappedCircuit()) {
+    switch (gate->getType()) {
+    case qc::SWAP:
+      swap++;
+      break;
+    case qc::Y:
+      y++;
+      break;
+    case qc::Barrier:
+    case qc::Measure:
+      break;
+    default:
+      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
+    }
+  }
+  EXPECT_EQ(swap, 1);
+  EXPECT_EQ(y, 2);
+}

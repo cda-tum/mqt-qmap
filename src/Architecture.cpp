@@ -688,14 +688,13 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   os << "}" << std::endl;
 }
 
-GateFlipStrategy Architecture::getGateFlipStrategy(qc::OpType opType) {
+DirectionReversalStrategy
+Architecture::getDirectionReversalStrategy(qc::OpType opType) {
   switch (opType) {
-  case qc::None:
-    return GateFlipStrategy::Unknown;
   case qc::X:
   case qc::SX:
   case qc::SXdag:
-    return GateFlipStrategy::Hadamard;
+    return DirectionReversalStrategy::Hadamard;
   case qc::Z:
   case qc::S:
   case qc::Sdag:
@@ -704,35 +703,39 @@ GateFlipStrategy Architecture::getGateFlipStrategy(qc::OpType opType) {
   case qc::Phase:
   case qc::RZ:
   case qc::SWAP:
-    return GateFlipStrategy::Identity;
+    return DirectionReversalStrategy::Identity;
   default:
-    return GateFlipStrategy::Swap;
+    return DirectionReversalStrategy::NotApplicable;
   }
 }
 
 std::uint32_t Architecture::computeCostDirectionReverse(qc::OpType opType) {
-  switch (Architecture::getGateFlipStrategy(opType)) {
-  case GateFlipStrategy::Identity:
+  switch (Architecture::getDirectionReversalStrategy(opType)) {
+  case DirectionReversalStrategy::Identity:
     return 0;
-  case GateFlipStrategy::Hadamard:
+  case DirectionReversalStrategy::Hadamard:
     return 4 * COST_SINGLE_QUBIT_GATE;
-  case GateFlipStrategy::Swap:
-  case GateFlipStrategy::Unknown:
-    return 2 * COST_BIDIRECTIONAL_SWAP;
   default:
-    throw QMAPException("Unexpected GateFlipStrategy!");
+    throw QMAPException(
+        "Cannot compute cost for direction reversal, because gate " +
+        toString(opType) + " does not support reversal!");
   }
 }
 std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
-  switch (Architecture::getGateFlipStrategy(opType)) {
-  case GateFlipStrategy::Identity:
+  switch (Architecture::getDirectionReversalStrategy(opType)) {
+  case DirectionReversalStrategy::Identity:
     return 0;
-  case GateFlipStrategy::Hadamard:
+  case DirectionReversalStrategy::Hadamard:
     return 4;
-  case GateFlipStrategy::Swap:
-  case GateFlipStrategy::Unknown:
-    return 2 * GATES_OF_BIDIRECTIONAL_SWAP;
   default:
-    throw QMAPException("Unexpected GateFlipStrategy!");
+    throw QMAPException(
+        "Cannot compute gates for direction reversal, because gate " +
+        toString(opType) + " does not support reversal!");
   }
+}
+
+bool Architecture::supportsDirectionReversal(qc::OpType opType) {
+  const auto strategy = getDirectionReversalStrategy(opType);
+  return strategy == DirectionReversalStrategy::Identity ||
+         strategy == DirectionReversalStrategy::Hadamard;
 }

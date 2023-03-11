@@ -32,7 +32,7 @@ constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
-enum class GateFlipStrategy { Unknown, Identity, Swap, Hadamard };
+enum class DirectionReversalStrategy { Identity, Hadamard, NotApplicable };
 
 class Architecture {
 public:
@@ -350,9 +350,11 @@ public:
 
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
-  static GateFlipStrategy getGateFlipStrategy(qc::OpType opType);
-  static std::uint32_t    computeCostDirectionReverse(qc::OpType opType);
-  static std::uint32_t    computeGatesDirectionReverse(qc::OpType opType);
+  static DirectionReversalStrategy
+                       getDirectionReversalStrategy(qc::OpType opType);
+  static std::uint32_t computeCostDirectionReverse(qc::OpType opType);
+  static std::uint32_t computeGatesDirectionReverse(qc::OpType opType);
+  static bool          supportsDirectionReversal(qc::OpType opType);
 
 protected:
   std::string                                        name;

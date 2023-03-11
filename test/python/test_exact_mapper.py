@@ -112,15 +112,15 @@ def test_direction_reverse_hadamard(one_way_arch: qmap.Architecture, gate: Contr
     ],
 )
 def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: ControlledGate) -> None:
-    """Verify that control and target are flipped using two swap gates for some gates where this is possible."""
+    """Verify that control and target are flipped using a swap permutation."""
     qc = QuantumCircuit(2)
     qc.append(gate, [0, 1])
     qc.append(gate, [1, 0])
     qc.measure_all()
 
-    qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact")
+    qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact", swap_limit=10, swap_reduction="custom")
     assert "h" not in qc_mapped.count_ops()
-    assert qc_mapped.count_ops()["swap"] == 2
+    assert qc_mapped.count_ops()["swap"] == 1
 
     result = verify(qc, qc_mapped)
     assert result.considered_equivalent() is True

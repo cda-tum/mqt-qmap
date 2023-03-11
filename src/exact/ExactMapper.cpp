@@ -599,7 +599,12 @@ number of variables: (|L|-1) * m!
           auto indexSC = x[k][physicalQubitIndex[edge.second]]
                           [static_cast<std::size_t>(gate.control)];
 
-          coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
+          if (Architecture::supportsDirectionReversal(gate.op->getType())) {
+            coupling =
+                coupling || ((indexFC && indexST) || (indexFT && indexSC));
+          } else {
+            coupling = coupling || (indexFC && indexST);
+          }
         }
       }
       allCouplings = allCouplings && coupling;
@@ -724,6 +729,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < numLayers; ++k) {
       for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
         if (gate.singleQubit()) {
+          continue;
+        }
+        if (!Architecture::supportsDirectionReversal(gate.op->getType())) {
           continue;
         }
 
