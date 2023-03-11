@@ -254,7 +254,8 @@ public:
 
   virtual MappingResults& getResults() { return results; }
 
-  qc::QuantumComputation& getMappedCircuit() { return qcMapped; }
+  const qc::QuantumComputation& getMappedCircuit() const { return qcMapped; }
+  qc::QuantumComputation&       getMappedCircuit() { return qcMapped; }
 
   virtual nlohmann::json json() { return results.json(); }
 
