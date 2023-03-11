@@ -118,7 +118,7 @@ def test_direction_reverse_swap(one_way_arch: qmap.Architecture, gate: Controlle
     qc.append(gate, [1, 0])
     qc.measure_all()
 
-    qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact", swap_limit=10, swap_reduction="custom")
+    qc_mapped, results = qmap.compile(qc, arch=one_way_arch, method="exact")
     assert "h" not in qc_mapped.count_ops()
     assert qc_mapped.count_ops()["swap"] == 1
 

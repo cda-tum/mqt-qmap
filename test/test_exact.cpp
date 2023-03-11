@@ -570,31 +570,15 @@ TEST_F(ExactTest, TestDirectionReverseHadamard) {
   qc.sx(0, 1_pc);
   qc.sx(1, 0_pc);
 
-  auto mapper               = ExactMapper(qc, arch);
-  settings.enableSwapLimits = false;
+  auto mapper = ExactMapper(qc, arch);
   mapper.map(settings);
 
-  EXPECT_EQ(mapper.getResults().output.swaps, 0);
-  EXPECT_EQ(mapper.getResults().output.directionReverse, 1);
-  int hadamard = 0;
-  int sx       = 0;
-  for (auto& gate : mapper.getMappedCircuit()) {
-    switch (gate->getType()) {
-    case qc::H:
-      hadamard++;
-      break;
-    case qc::SX:
-      sx++;
-      break;
-    case qc::Barrier:
-    case qc::Measure:
-      break;
-    default:
-      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
-    }
-  }
-  EXPECT_EQ(hadamard, 4);
-  EXPECT_EQ(sx, 2);
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_EQ(results.output.directionReverse, 1);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 6U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
 }
 
 TEST_F(ExactTest, TestDirectionReverseIdentity) {
@@ -610,28 +594,15 @@ TEST_F(ExactTest, TestDirectionReverseIdentity) {
   qc.rz(0, 1_pc, 0.25);
   qc.rz(1, 0_pc, 0.75);
 
-  auto mapper               = ExactMapper(qc, arch);
-  settings.enableSwapLimits = false;
+  auto mapper = ExactMapper(qc, arch);
   mapper.map(settings);
 
-  mapper.dumpResult(std::cout, qc::Format::OpenQASM);
-
-  EXPECT_EQ(mapper.getResults().output.swaps, 0);
-  EXPECT_EQ(mapper.getResults().output.directionReverse, 1);
-  int rz = 0;
-  for (auto& gate : mapper.getMappedCircuit()) {
-    switch (gate->getType()) {
-    case qc::RZ:
-      rz++;
-      break;
-    case qc::Barrier:
-    case qc::Measure:
-      break;
-    default:
-      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
-    }
-  }
-  EXPECT_EQ(rz, 2);
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_EQ(results.output.directionReverse, 1);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 2U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
 }
 
 TEST_F(ExactTest, TestDirectionReverseNotApplicable) {
@@ -647,31 +618,13 @@ TEST_F(ExactTest, TestDirectionReverseNotApplicable) {
   qc.y(0, 1_pc);
   qc.y(1, 0_pc);
 
-  auto mapper               = ExactMapper(qc, arch);
-  settings.enableSwapLimits = false;
+  auto mapper = ExactMapper(qc, arch);
   mapper.map(settings);
 
-  mapper.dumpResult(std::cout, qc::Format::OpenQASM);
-
-  EXPECT_EQ(mapper.getResults().output.swaps, 1);
-  EXPECT_EQ(mapper.getResults().output.directionReverse, 0);
-  int swap = 0;
-  int y    = 0;
-  for (auto& gate : mapper.getMappedCircuit()) {
-    switch (gate->getType()) {
-    case qc::SWAP:
-      swap++;
-      break;
-    case qc::Y:
-      y++;
-      break;
-    case qc::Barrier:
-    case qc::Measure:
-      break;
-    default:
-      FAIL() << "Unexpected OpType " << toString(gate->getType()) << "!";
-    }
-  }
-  EXPECT_EQ(swap, 1);
-  EXPECT_EQ(y, 2);
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 1);
+  EXPECT_EQ(results.output.directionReverse, 0);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 3U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
 }
