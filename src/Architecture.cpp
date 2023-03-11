@@ -689,7 +689,7 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
 }
 
 DirectionReversalStrategy
-Architecture::getDirectionReversalStrategy(qc::OpType opType) {
+Architecture::getDirectionReversalStrategy(const qc::OpType opType) {
   switch (opType) {
   case qc::X:
   case qc::SX:
@@ -709,7 +709,8 @@ Architecture::getDirectionReversalStrategy(qc::OpType opType) {
   }
 }
 
-std::uint32_t Architecture::computeCostDirectionReverse(qc::OpType opType) {
+std::uint32_t
+Architecture::computeCostDirectionReverse(const qc::OpType opType) {
   switch (Architecture::getDirectionReversalStrategy(opType)) {
   case DirectionReversalStrategy::Identity:
     return 0;
@@ -721,7 +722,8 @@ std::uint32_t Architecture::computeCostDirectionReverse(qc::OpType opType) {
         toString(opType) + " does not support reversal!");
   }
 }
-std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
+std::uint32_t
+Architecture::computeGatesDirectionReverse(const qc::OpType opType) {
   switch (Architecture::getDirectionReversalStrategy(opType)) {
   case DirectionReversalStrategy::Identity:
     return 0;
@@ -734,7 +736,7 @@ std::uint32_t Architecture::computeGatesDirectionReverse(qc::OpType opType) {
   }
 }
 
-bool Architecture::supportsDirectionReversal(qc::OpType opType) {
+bool Architecture::supportsDirectionReversal(const qc::OpType opType) {
   const auto strategy = getDirectionReversalStrategy(opType);
   return strategy == DirectionReversalStrategy::Identity ||
          strategy == DirectionReversalStrategy::Hadamard;
