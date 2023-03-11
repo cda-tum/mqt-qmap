@@ -332,21 +332,21 @@ std::size_t Mapper::insertGate(const Edge& edge, const qc::Operation& op) {
   return 1;
 }
 
-std::size_t Mapper::insertFlippedGate(const Edge&          edge,
-                                      const qc::Operation& op) {
-  std::size_t tmp = 0;
+std::size_t Mapper::insertReversedGate(const Edge&          edge,
+                                       const qc::Operation& op) {
   switch (Architecture::getDirectionReversalStrategy(op.getType())) {
   case DirectionReversalStrategy::Identity:
     // no additional gates required to reverse direction
     return insertGate(edge, op);
-  case DirectionReversalStrategy::Hadamard:
+  case DirectionReversalStrategy::Hadamard: {
     // four hadamard gates to reverse direction
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
-    tmp = insertGate(edge, op);
+    const auto nGates = insertGate(edge, op);
     qcMapped.h(edge.first);
     qcMapped.h(edge.second);
-    return tmp + 4;
+    return nGates + 4;
+  }
   default:
     throw QMAPException("Cannot insert reversed gate, because gate " +
                         toString(op.getType()) + " does not support reversal!");

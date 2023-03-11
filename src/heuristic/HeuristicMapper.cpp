@@ -106,7 +106,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
                                 ": " + std::to_string(reverse.first) + "-" +
                                 std::to_string(reverse.second));
           }
-          gateidx += insertFlippedGate(reverse, *op);
+          gateidx += insertReversedGate(reverse, *op);
           results.output.directionReverse++;
         } else {
           gateidx += insertGate(controlledGate, *op);

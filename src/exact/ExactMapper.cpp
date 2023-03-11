@@ -294,7 +294,7 @@ void ExactMapper::map(const Configuration& settings) {
                       << " with control and target: " << controlledGate.first
                       << " " << controlledGate.second << std::endl;
           }
-          insertFlippedGate(reverse, *op);
+          insertReversedGate(reverse, *op);
         } else {
           if (settings.verbose) {
             std::cout << i << ": Added controlled gate " << op->getName()
