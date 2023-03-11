@@ -288,6 +288,12 @@ void ExactMapper::map(const Configuration& settings) {
                                 ": " + std::to_string(reverse.first) + "-" +
                                 std::to_string(reverse.second));
           }
+          if (!Architecture::supportsDirectionReversal(op->getType())) {
+            throw QMAPException("Invalid controlled gate " + op->getName() +
+                                ": " + std::to_string(reverse.first) + "-" +
+                                std::to_string(reverse.second));
+          }
+
           if (settings.verbose) {
             std::cout << i << ": Added (direction-reversed) controlled gate "
                       << op->getName()
