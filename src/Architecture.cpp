@@ -486,13 +486,15 @@ std::uint64_t Architecture::bfs(const std::uint16_t   start,
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
-    connections.at(edge.first).emplace_back(edge.second);
+    connections.at(edge.first).emplace(edge.second);
+    // make sure that the connections are bidirectional
+    connections.at(edge.second).emplace(edge.first);
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
@@ -513,15 +515,17 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits,
                                             const QubitSubset&  qubitChoice) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
     if ((qubitChoice.count(edge.first) != 0U) &&
         (qubitChoice.count(edge.second) != 0U)) {
-      connections.at(edge.first).emplace_back(edge.second);
+      connections.at(edge.first).emplace(edge.second);
+      // make sure that the connections are bidirectional
+      connections.at(edge.second).emplace(edge.first);
     }
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
@@ -545,7 +549,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 
 void Architecture::findCouplingLimit(
     const std::uint16_t node, const std::uint16_t curSum,
-    const std::vector<std::vector<std::uint16_t>>& connections,
+    const std::vector<std::unordered_set<std::uint16_t>>& connections,
     std::vector<std::uint16_t>& d, std::vector<bool>& visited) {
   if (visited.at(node)) {
     return;
