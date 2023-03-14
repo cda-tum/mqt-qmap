@@ -245,7 +245,9 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
+  [[nodiscard]] const DistanceTable& getDistanceTable() const {
+    return distanceTable;
+  }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -282,10 +284,19 @@ public:
     singleQubitFidelities.clear();
   }
 
-  [[nodiscard]] double distance(std::uint16_t control,
-                                std::uint16_t target) const {
+  [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target,
+                                const qc::OpType opType) const {
     if (currentTeleportations.empty()) {
-      return distanceTable.at(control).at(target);
+      const auto& distanceEntry = distanceTable.at(control).at(target);
+      auto        dist          = distanceEntry.first;
+      if (distanceEntry.second && opType != qc::None) {
+        if (supportsDirectionReversal(opType)) {
+          dist += computeCostDirectionReverse(opType);
+        } else {
+          dist += 10000;
+        }
+      }
+      return dist;
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
   }
@@ -363,7 +374,7 @@ protected:
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
-  Matrix                                             distanceTable   = {};
+  DistanceTable                                      distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties            = {};
   Matrix                                             fidelityTable         = {};
@@ -372,23 +383,23 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double costHeuristicBidirectional(const Dijkstra::Node& node) {
+  static std::pair<double, bool>
+  costHeuristicBidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
     if (node.containsCorrectEdge) {
-      return length * COST_BIDIRECTIONAL_SWAP;
+      return {length * COST_BIDIRECTIONAL_SWAP, false};
     }
     throw QMAPException("In a bidrectional architecture it should not happen "
                         "that a node does not contain the right edge.");
   }
 
-  static double costHeuristicUnidirectional(const Dijkstra::Node& node) {
+  static std::pair<double, bool>
+  costHeuristicUnidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
     if (node.containsCorrectEdge) {
-      return length * COST_UNIDIRECTIONAL_SWAP;
+      return {length * COST_UNIDIRECTIONAL_SWAP, false};
     }
-    // TODO: distance has no gate context, but gates have different costs
-    return length * COST_UNIDIRECTIONAL_SWAP +
-           Architecture::computeCostDirectionReverse(qc::OpType::X);
+    return {length * COST_UNIDIRECTIONAL_SWAP, true};
   }
 
   // added for teleportation

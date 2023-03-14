@@ -327,7 +327,8 @@ void HeuristicMapper::mapUnmappedGates(
           for (std::uint16_t j = i + 1; j < architecture.getNqubits(); j++) {
             if (qubits.at(i) == DEFAULT_POSITION &&
                 qubits.at(j) == DEFAULT_POSITION) {
-              const double dist = architecture.distance(i, j);
+              const double dist =
+                  architecture.distance(i, j, gate.op->getType());
               if (dist < bestScore) {
                 bestScore  = dist;
                 chosenEdge = std::make_pair(i, j);
@@ -358,22 +359,25 @@ void HeuristicMapper::mapUnmappedGates(
                                           chosenEdge.second,
                                           qcMapped.outputPermutation);
     } else if (controlLocation == DEFAULT_POSITION) {
-      mapToMinDistance(gate.target, static_cast<std::uint16_t>(gate.control));
+      mapToMinDistance(gate.target, static_cast<std::uint16_t>(gate.control),
+                       gate.op->getType());
     } else if (targetLocation == DEFAULT_POSITION) {
-      mapToMinDistance(static_cast<std::uint16_t>(gate.control), gate.target);
+      mapToMinDistance(static_cast<std::uint16_t>(gate.control), gate.target,
+                       gate.op->getType());
     }
   }
 }
 
 void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
-                                       const std::uint16_t target) {
+                                       const std::uint16_t target,
+                                       const qc::OpType    opType) {
   auto                         min = std::numeric_limits<double>::max();
   std::optional<std::uint16_t> pos = std::nullopt;
   for (std::uint16_t i = 0; i < architecture.getNqubits(); ++i) {
     if (qubits.at(i) == DEFAULT_POSITION) {
       // TODO: Consider fidelity here if available
       auto distance = distanceOnArchitectureOfPhysicalQubits(
-          static_cast<std::uint16_t>(locations.at(source)), i);
+          static_cast<std::uint16_t>(locations.at(source)), i, opType);
       if (distance < min) {
         min = distance;
         pos = i;
@@ -557,8 +561,10 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
           if (node.qubits.at(j) == DEFAULT_POSITION) {
             // TODO: Consider fidelity here if available
             min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
-                                    j, static_cast<std::uint16_t>(
-                                           node.locations.at(gate.target))));
+                                    j,
+                                    static_cast<std::uint16_t>(
+                                        node.locations.at(gate.target)),
+                                    gate.op->getType()));
           }
         }
         penalty = heuristicAddition(penalty, min);
@@ -571,7 +577,7 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
                            distanceOnArchitectureOfPhysicalQubits(
                                static_cast<std::uint16_t>(node.locations.at(
                                    static_cast<std::uint16_t>(gate.control))),
-                               j));
+                               j, gate.op->getType()));
           }
         }
         penalty = heuristicAddition(penalty, min);
@@ -579,7 +585,8 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
         auto cost = architecture.distance(
             static_cast<std::uint16_t>(
                 node.locations.at(static_cast<std::uint16_t>(gate.control))),
-            static_cast<std::uint16_t>(node.locations.at(gate.target)));
+            static_cast<std::uint16_t>(node.locations.at(gate.target)),
+            gate.op->getType());
         penalty = heuristicAddition(penalty, cost);
       }
     }

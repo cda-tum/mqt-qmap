@@ -7,11 +7,13 @@
 
 #include <cassert>
 
-void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
-                          Matrix& distanceTable,
-                          const std::function<double(const Node&)>& cost) {
+void Dijkstra::buildTable(
+    const std::uint16_t n, const CouplingMap& couplingMap,
+    DistanceTable&                                             distanceTable,
+    const std::function<std::pair<double, bool>(const Node&)>& cost) {
   distanceTable.clear();
-  distanceTable.resize(n, std::vector<double>(n, -1.));
+  distanceTable.resize(n, std::vector<std::pair<double, bool>>(
+                              n, std::pair<double, bool>(-1., false)));
 
   for (std::uint16_t i = 0; i < n; ++i) {
     std::vector<Dijkstra::Node> nodes(n);
@@ -28,7 +30,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 
     for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
-        distanceTable.at(i).at(j) = 0;
+        distanceTable.at(i).at(j) = std::pair<double, bool>(0, false);
       } else {
         distanceTable.at(i).at(j) = cost(nodes.at(j));
       }

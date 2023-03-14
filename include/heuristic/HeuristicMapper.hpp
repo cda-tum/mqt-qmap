@@ -179,20 +179,28 @@ public:
           continue;
         }
 
-        auto cost = arch.distance(
-            static_cast<std::uint16_t>(
-                locations.at(static_cast<std::uint16_t>(gate.control))),
-            static_cast<std::uint16_t>(locations.at(gate.target)));
+        auto cost =
+            arch.distance(static_cast<std::uint16_t>(locations.at(
+                              static_cast<std::uint16_t>(gate.control))),
+                          static_cast<std::uint16_t>(locations.at(gate.target)),
+                          gate.op->getType());
         auto fidelityCost = cost;
         if (admissibleHeuristic) {
           costHeur = std::max(costHeur, fidelityCost);
         } else {
           costHeur += fidelityCost;
         }
-        if (cost >
-            Architecture::computeCostDirectionReverse(gate.op->getType())) {
-          done = false;
-          return;
+        if (Architecture::supportsDirectionReversal(gate.op->getType())) {
+          if (cost >
+              Architecture::computeCostDirectionReverse(gate.op->getType())) {
+            done = false;
+            return;
+          }
+        } else {
+          if (cost > COST_UNIDIRECTIONAL_SWAP * 2) {
+            done = false;
+            return;
+          }
         }
       }
     }
@@ -231,20 +239,22 @@ protected:
    * @brief returns distance of the given logical qubit pair according to the
    * current mapping
    */
-  double distanceOnArchitectureOfLogicalQubits(std::uint16_t control,
-                                               std::uint16_t target) {
+  double distanceOnArchitectureOfLogicalQubits(std::uint16_t    control,
+                                               std::uint16_t    target,
+                                               const qc::OpType opType) {
     return architecture.distance(
         static_cast<std::uint16_t>(locations.at(control)),
-        static_cast<std::uint16_t>(locations.at(target)));
+        static_cast<std::uint16_t>(locations.at(target)), opType);
   }
 
   /**
    * @brief returns distance of the given physical qubit pair on the
    * architecture
    */
-  double distanceOnArchitectureOfPhysicalQubits(std::uint16_t control,
-                                                std::uint16_t target) {
-    return architecture.distance(control, target);
+  double distanceOnArchitectureOfPhysicalQubits(std::uint16_t    control,
+                                                std::uint16_t    target,
+                                                const qc::OpType opType) {
+    return architecture.distance(control, target, opType);
   }
 
   /**
@@ -255,7 +265,8 @@ protected:
    * to `target`
    * @param target an unmapped logical qubit
    */
-  virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target);
+  virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target,
+                                const qc::OpType opType);
 
   /**
    * @brief gathers all qubits that are acted on by a 2-qubit-gate in the given
