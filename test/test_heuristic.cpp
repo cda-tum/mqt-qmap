@@ -250,3 +250,87 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
+
+class DirectionReverseTest : public testing::TestWithParam<std::string> {
+protected:
+  qc::QuantumComputation qc{};
+  Configuration          settings{};
+
+  void SetUp() override {
+    using namespace qc::literals;
+    settings.verbose = true;
+    settings.method  = Method::Heuristic;
+  }
+};
+
+TEST_F(DirectionReverseTest, TestDirectionReverseHadamard) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.sx(0, 1_pc);
+  qc.sx(1, 0_pc);
+
+  auto mapper = HeuristicMapper(qc, arch);
+  mapper.map(settings);
+
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_EQ(results.output.directionReverse, 1);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 6U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
+}
+
+TEST_F(DirectionReverseTest, TestDirectionReverseIdentity) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.rz(0, 1_pc, 0.25);
+  qc.rz(1, 0_pc, 0.75);
+
+  auto mapper = HeuristicMapper(qc, arch);
+  mapper.map(settings);
+
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 0);
+  EXPECT_EQ(results.output.directionReverse, 1);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 2U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
+}
+
+TEST_F(DirectionReverseTest, TestDirectionReverseNotApplicable) {
+  using namespace qc::literals;
+
+  Architecture      arch;
+  const CouplingMap cm = {{0, 1}};
+  arch.loadCouplingMap(2, cm);
+
+  Architecture::printCouplingMap(cm, std::cout);
+
+  qc = qc::QuantumComputation(2);
+  qc.y(0, 1_pc);
+  qc.y(1, 0_pc);
+
+  auto mapper = HeuristicMapper(qc, arch);
+  mapper.map(settings);
+
+  const auto& results = mapper.getResults();
+  EXPECT_EQ(results.output.swaps, 1);
+  EXPECT_EQ(results.output.directionReverse, 0);
+  const auto& qcMapped = mapper.getMappedCircuit();
+  EXPECT_EQ(qcMapped.getNops(), 3U + 1U + 2U);
+  std::cout << qcMapped << std::endl;
+}
