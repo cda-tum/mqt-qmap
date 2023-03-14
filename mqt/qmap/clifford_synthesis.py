@@ -33,7 +33,7 @@ def _import_circuit(circuit: str | QuantumCircuit | QuantumComputation) -> Quant
 
 
 def _reverse_paulis(paulis: list[str]) -> list[str]:
-    return [lambda s: s[0] + s[:0:-1] if s[0] in "+-" else s[::-1] for s in paulis]
+    return [s[0] + s[:0:-1] if s[0] in "+-" else s[::-1] for s in paulis]
 
 
 def _import_tableau(tableau: str | Clifford | PauliList | Tableau, include_destabilizers: bool = False) -> Tableau:
