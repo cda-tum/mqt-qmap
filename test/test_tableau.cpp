@@ -323,4 +323,27 @@ TEST_F(TestTableau, TableauIO) {
   EXPECT_EQ(tableau, tableau2);
 }
 
+TEST_F(TestTableau, ApplyCXH) {
+  tableau = Tableau(3);
+  tableau.applyCX(1, 2);
+  std::string expected = "0;0;0;1;0;0;0\n0;0;0;0;1;0;0\n0;0;0;0;1;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(2);
+  expected = "0;0;0;1;0;0;0\n0;0;0;0;1;0;0\n0;0;1;0;1;0;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(1);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;1;0;0;0;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(2);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;0;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyCX(0, 2);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;1;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyCX(0, 1);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;1;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  EXPECT_EQ(tableau, Tableau("[+ZII, +IXI, +ZXZ]"));
+}
+
 } // namespace cs
