@@ -527,7 +527,8 @@ PYBIND11_MODULE(pyqmap, m) {
   synthesizer.def(py::init<cs::Tableau>(), "target_tableau"_a,
                   "Constructs a synthesizer for a tableau representing the "
                   "target state.");
-  synthesizer.def(py::init<qc::QuantumComputation&>(), "qc"_a,
+  synthesizer.def(py::init<qc::QuantumComputation&, bool>(), "qc"_a,
+                  "use_destabilizers"_a
                   "Constructs a synthesizer for a quantum computation "
                   "representing the target state.");
   synthesizer.def(
