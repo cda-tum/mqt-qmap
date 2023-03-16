@@ -583,7 +583,6 @@ TEST_F(ExactTest, Test2) {
   Architecture      arch;
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
   arch.loadCouplingMap(5, cm);
-  arch.printCouplingMap(cm, std::cout);
   qc.import(ss, qc::Format::OpenQASM);
 
   auto mapper            = ExactMapper(qc, arch);
