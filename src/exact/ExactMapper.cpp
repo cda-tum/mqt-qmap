@@ -702,9 +702,8 @@ number of variables: (|L|-1) * m!
         picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
       }
       for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-        cost = cost + LogicTerm::ite(y[k - 1][internalPiCount],
-                                     LogicTerm(static_cast<int>(picost)),
-                                     LogicTerm(0));
+        lb->weightedTerm(y[k - 1][internalPiCount],
+                         static_cast<double>(picost));
         if (config.useBDD) {
           weightedVars[k].emplace(y[k - 1][internalPiCount],
                                   static_cast<int>(picost));
@@ -714,7 +713,6 @@ number of variables: (|L|-1) * m!
     }
     ++piCount;
   } while (std::next_permutation(pi.begin(), pi.end()));
-  lb->minimize(cost);
   if (config.enableSwapLimits && config.useBDD) {
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
       lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1],
@@ -724,7 +722,6 @@ number of variables: (|L|-1) * m!
 
   // cost for reversed directions
   if (!architecture.bidirectional()) {
-    cost                 = LogicTerm(0);
     const auto numLayers = reducedLayerIndices.size();
     for (std::size_t k = 0; k < numLayers; ++k) {
       for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
@@ -739,13 +736,11 @@ number of variables: (|L|-1) * m!
                                 [static_cast<std::size_t>(gate.control)];
           reverse = reverse || (indexFT && indexSC);
         }
-        cost = cost + LogicTerm::ite(reverse,
-                                     LogicTerm(::GATES_OF_DIRECTION_REVERSE),
-                                     LogicTerm(0));
+        lb->weightedTerm(reverse, ::GATES_OF_DIRECTION_REVERSE);
       }
     }
-    lb->minimize(cost);
   }
+  lb->makeMinimize();
 
   if (config.includeWCNF) {
     choiceResults.wcnf = lb->dumpInternalSolver();
