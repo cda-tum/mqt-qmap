@@ -534,7 +534,7 @@ TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
   EXPECT_EQ(results.output.swaps, 1);
 }
 
-TEST_F(ExactTest, Test) {
+TEST_F(ExactTest, RegressionTestDirectionReverseCost) {
   // Regression test for https://github.com/cda-tum/qmap/issues/251
   using namespace qc::literals;
 
@@ -557,7 +557,7 @@ TEST_F(ExactTest, Test) {
   EXPECT_EQ(mapper.getResults().output.directionReverse, 2);
 }
 
-TEST_F(ExactTest, Test2) {
+TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
   // Regression test for https://github.com/cda-tum/qmap/issues/256
   std::stringstream ss{"OPENQASM 2.0;\n"
                        "include \"qelib1.inc\";\n"
@@ -596,4 +596,36 @@ TEST_F(ExactTest, Test2) {
   mapper2.map(settings);
   EXPECT_EQ(mapper2.getResults().output.swaps, 1);
   EXPECT_EQ(mapper2.getResults().output.directionReverse, 4);
+}
+
+TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
+  // Regression test for https://github.com/cda-tum/qmap/issues/256
+  std::stringstream ss{"OPENQASM 2.0;\n"
+                       "include \"qelib1.inc\";\n"
+                       "qreg q[4];\n"
+                       "cx q[0],q[1];\n"
+                       "cx q[3],q[0];\n"
+                       "cx q[1],q[3];\n"
+                       "cx q[1],q[0];\n"
+                       "cx q[3],q[0];\n"
+                       "cx q[1],q[3];\n"
+                       "cx q[0],q[1];\n"
+                       "cx q[1],q[2];\n"};
+
+  Architecture      arch;
+  const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
+  arch.loadCouplingMap(5, cm);
+  qc.import(ss, qc::Format::OpenQASM);
+
+  auto mapper            = ExactMapper(qc, arch);
+  settings.swapReduction = SwapReduction::CouplingLimit;
+  mapper.map(settings);
+  EXPECT_EQ(mapper.getResults().output.swaps, 1);
+  EXPECT_EQ(mapper.getResults().output.directionReverse, 1);
+
+  auto mapper2           = ExactMapper(qc, arch);
+  settings.swapReduction = SwapReduction::None;
+  mapper2.map(settings);
+  EXPECT_EQ(mapper2.getResults().output.swaps, 1);
+  EXPECT_EQ(mapper2.getResults().output.directionReverse, 1);
 }
