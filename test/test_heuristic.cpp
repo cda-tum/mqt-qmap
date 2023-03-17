@@ -404,7 +404,7 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
     qc.x(0, qc::Control{3});
     qc.x(2, qc::Control{9});
   }
-  
+
   for (size_t i = 0; i < 12; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -495,7 +495,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
     qc.x(0, qc::Control{2});
     qc.x(3);
   }
-  
+
   for (size_t i = 0; i < 6; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -576,7 +576,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
     qc.x(0, qc::Control{3});
     qc.x(4, qc::Control{6});
   }
-  
+
   for (size_t i = 0; i < 7; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -637,7 +637,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   qc::QuantumComputation qc{3, 3};
   qc.x(0);
   qc.x(2);
-  
+
   for (size_t i = 0; i < 3; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -660,7 +660,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   EXPECT_EQ(result.input.layers, 1);
   // EXPECT_EQ(result.output.swaps, 4);
 
-  double expectedFidelity = -3 * std::log2(1-0.1) // SWAPs
-                            - std::log2(1-0.8) - std::log2(1-0.1); // Xs
+  double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
+                            - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }

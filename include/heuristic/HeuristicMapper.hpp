@@ -70,20 +70,18 @@ public:
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
       costFixed = initCostFixed;
     }
-    
+
     /**
      * @brief returns costFixed + costHeur + lookaheadPenalty
      */
     double getTotalCost() const {
       return costFixed + costHeur + lookaheadPenalty;
     }
-    
+
     /**
      * @brief returns costFixed + lookaheadPenalty
      */
-    double getTotalFixedCost() const {
-      return costFixed + lookaheadPenalty;
-    }
+    double getTotalFixedCost() const { return costFixed + lookaheadPenalty; }
 
     /**
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
@@ -115,7 +113,7 @@ public:
     void recalculateFixedCost(
         const Architecture&               arch,
         const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
-        const EdgeMultiplicity& twoQubitGateMultiplicity, 
+        const EdgeMultiplicity&           twoQubitGateMultiplicity,
         bool                              considerFidelity);
 
     /**
@@ -206,7 +204,7 @@ protected:
   virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target);
 
   /**
-   * @brief maps any yet unmapped qubits, which are acted on in a given layer, 
+   * @brief maps any yet unmapped qubits, which are acted on in a given layer,
    * to a physical qubit.
    *
    * @param singleQubitGateMultiplicity vector containing the number of gates
@@ -250,8 +248,8 @@ protected:
    * (control, target) in the key, and the second with all gates in reverse to
    * that
    */
-  void expandNode(const std::set<std::uint16_t>& consideredQubits,
-                  Node& node, std::size_t layer,
+  void expandNode(const std::set<std::uint16_t>& consideredQubits, Node& node,
+                  std::size_t                       layer,
                   const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
                   const EdgeMultiplicity&           twoQubitGateMultiplicity);
 
