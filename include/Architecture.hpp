@@ -15,6 +15,7 @@
 #include <map>
 #include <regex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 constexpr std::uint8_t GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
@@ -31,6 +32,8 @@ constexpr std::uint32_t COST_BIDIRECTIONAL_SWAP = 3 * COST_CNOT_GATE;
 constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
+
+enum class DirectionReversalStrategy { Identity, Hadamard, NotApplicable };
 
 class Architecture {
 public:
@@ -242,7 +245,9 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
+  [[nodiscard]] const DistanceTable& getDistanceTable() const {
+    return distanceTable;
+  }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -279,10 +284,19 @@ public:
     singleQubitFidelities.clear();
   }
 
-  [[nodiscard]] double distance(std::uint16_t control,
-                                std::uint16_t target) const {
+  [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target,
+                                const qc::OpType opType) const {
     if (currentTeleportations.empty()) {
-      return distanceTable.at(control).at(target);
+      const auto& distanceEntry = distanceTable.at(control).at(target);
+      auto        dist          = distanceEntry.first;
+      if (distanceEntry.second && opType != qc::None) {
+        if (supportsDirectionReversal(opType)) {
+          dist += computeCostDirectionReverse(opType);
+        } else {
+          dist += 10000;
+        }
+      }
+      return dist;
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
   }
@@ -348,13 +362,19 @@ public:
 
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
+  static DirectionReversalStrategy
+                       getDirectionReversalStrategy(qc::OpType opType);
+  static std::uint32_t computeCostDirectionReverse(qc::OpType opType);
+  static std::uint32_t computeGatesDirectionReverse(qc::OpType opType);
+  static bool          supportsDirectionReversal(qc::OpType opType);
+
 protected:
   std::string                                        name;
   std::uint16_t                                      nqubits               = 0;
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
-  Matrix                                             distanceTable   = {};
+  DistanceTable                                      distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties            = {};
   Matrix                                             fidelityTable         = {};
@@ -363,21 +383,23 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double costHeuristicBidirectional(const Dijkstra::Node& node) {
+  static std::pair<double, bool>
+  costHeuristicBidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
     if (node.containsCorrectEdge) {
-      return length * COST_BIDIRECTIONAL_SWAP;
+      return {length * COST_BIDIRECTIONAL_SWAP, false};
     }
     throw QMAPException("In a bidrectional architecture it should not happen "
                         "that a node does not contain the right edge.");
   }
 
-  static double costHeuristicUnidirectional(const Dijkstra::Node& node) {
+  static std::pair<double, bool>
+  costHeuristicUnidirectional(const Dijkstra::Node& node) {
     auto length = node.cost - 1;
     if (node.containsCorrectEdge) {
-      return length * COST_UNIDIRECTIONAL_SWAP;
+      return {length * COST_UNIDIRECTIONAL_SWAP, false};
     }
-    return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
+    return {length * COST_UNIDIRECTIONAL_SWAP, true};
   }
 
   // added for teleportation
@@ -390,10 +412,10 @@ protected:
   static std::size_t findCouplingLimit(const CouplingMap& cm,
                                        std::uint16_t      nQubits);
   static std::size_t
-  findCouplingLimit(const CouplingMap& cm, std::uint16_t nQubits,
-                    const std::set<std::uint16_t>& qubitChoice);
-  static void
-  findCouplingLimit(std::uint16_t node, std::uint16_t curSum,
-                    const std::vector<std::vector<std::uint16_t>>& connections,
-                    std::vector<std::uint16_t>& d, std::vector<bool>& visited);
+              findCouplingLimit(const CouplingMap& cm, std::uint16_t nQubits,
+                                const std::set<std::uint16_t>& qubitChoice);
+  static void findCouplingLimit(
+      std::uint16_t node, std::uint16_t curSum,
+      const std::vector<std::unordered_set<std::uint16_t>>& connections,
+      std::vector<std::uint16_t>& d, std::vector<bool>& visited);
 };

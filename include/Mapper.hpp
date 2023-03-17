@@ -157,12 +157,32 @@ protected:
     countGates(circuit.cbegin(), circuit.cend(), info);
   }
   /**
-   * @brief count number of elementary gates and cnots in circuit and save the
-   * results in `info.gates` and `info.cnots`
+   * @brief count number of elementary gates and two-qubit gates in circuit and
+   * save the results in `info.gates` and `info.twoQubitGates`
    */
   virtual void countGates(decltype(qcMapped.cbegin())      it,
                           const decltype(qcMapped.cend())& end,
                           MappingResults::CircuitInfo&     info);
+
+  /**
+   * @brief inserts a two qubit operation op along edge.
+   * @param edge the edge in the coupling graph that controls on which physical
+   * qubits the operation will act. The logical and physical direction are the
+   * same.
+   * @param op the operation which is inserted
+   * @return total number of inserted operations
+   */
+  std::size_t insertGate(const Edge& edge, const qc::Operation& op);
+
+  /**
+   * @brief inserts a two qubit operation op along a direction reversed edge.
+   * @param edge the edge in the coupling graph that controls on which physical
+   * qubits the operation will act. The logical direction of the operation is
+   * the reverse of the physical direction.
+   * @param op the operation which is inserted
+   * @return total number of inserted operations
+   */
+  std::size_t insertReversedGate(const Edge& edge, const qc::Operation& op);
 
   /**
    * @brief performs optimizations on the circuit before mapping
@@ -233,6 +253,9 @@ public:
   }
 
   virtual MappingResults& getResults() { return results; }
+
+  const qc::QuantumComputation& getMappedCircuit() const { return qcMapped; }
+  qc::QuantumComputation&       getMappedCircuit() { return qcMapped; }
 
   virtual nlohmann::json json() { return results.json(); }
 

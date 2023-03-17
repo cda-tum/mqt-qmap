@@ -301,18 +301,18 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       if (g->getType() == qc::SWAP) {
         if (architecture.bidirectional()) {
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
+          info.twoQubitGates += GATES_OF_BIDIRECTIONAL_SWAP;
         } else {
           info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
-          info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
-          info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
+          info.twoQubitGates += GATES_OF_BIDIRECTIONAL_SWAP;
+          info.singleQubitGates +=
+              Architecture::computeGatesDirectionReverse(g->getType());
         }
       } else if (g->getControls().empty()) {
         ++info.singleQubitGates;
         ++info.gates;
       } else {
-        assert(g->getType() == qc::X);
-        ++info.cnots;
+        ++info.twoQubitGates;
         ++info.gates;
       }
       continue;
@@ -322,5 +322,33 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
       countGates(cg->cbegin(), cg->cend(), info);
     }
+  }
+}
+std::size_t Mapper::insertGate(const Edge& edge, const qc::Operation& op) {
+  auto newOp = op.clone();
+  newOp->setControls({qc::Control{edge.first}});
+  newOp->setTargets({edge.second});
+  qcMapped.emplace_back(newOp);
+  return 1;
+}
+
+std::size_t Mapper::insertReversedGate(const Edge&          edge,
+                                       const qc::Operation& op) {
+  switch (Architecture::getDirectionReversalStrategy(op.getType())) {
+  case DirectionReversalStrategy::Identity:
+    // no additional gates required to reverse direction
+    return insertGate(edge, op);
+  case DirectionReversalStrategy::Hadamard: {
+    // four hadamard gates to reverse direction
+    qcMapped.h(edge.first);
+    qcMapped.h(edge.second);
+    const auto nGates = insertGate(edge, op);
+    qcMapped.h(edge.first);
+    qcMapped.h(edge.second);
+    return nGates + 4;
+  }
+  default:
+    throw QMAPException("Cannot insert reversed gate, because gate " +
+                        toString(op.getType()) + " does not support reversal!");
   }
 }

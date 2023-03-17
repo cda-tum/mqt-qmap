@@ -20,10 +20,11 @@
 #include <unordered_set>
 #include <vector>
 
-using Matrix      = std::vector<std::vector<double>>;
-using Edge        = std::pair<std::uint16_t, std::uint16_t>;
-using CouplingMap = std::set<Edge>;
-using QubitSubset = std::set<std::uint16_t>;
+using Matrix        = std::vector<std::vector<double>>;
+using DistanceTable = std::vector<std::vector<std::pair<double, bool>>>;
+using Edge          = std::pair<std::uint16_t, std::uint16_t>;
+using CouplingMap   = std::set<Edge>;
+using QubitSubset   = std::set<std::uint16_t>;
 
 struct Exchange {
   Exchange(const std::uint16_t f, const std::uint16_t s, const qc::OpType type)
@@ -60,9 +61,10 @@ public:
     double                       cost                = -1.;
   };
 
-  static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
-                         Matrix& distanceTable,
-                         const std::function<double(const Node&)>& cost);
+  static void
+  buildTable(std::uint16_t n, const CouplingMap& couplingMap,
+             DistanceTable& distanceTable,
+             const std::function<std::pair<double, bool>(const Node&)>& cost);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,

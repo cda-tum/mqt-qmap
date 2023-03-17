@@ -241,7 +241,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("gates", &MappingResults::CircuitInfo::gates)
       .def_readwrite("single_qubit_gates",
                      &MappingResults::CircuitInfo::singleQubitGates)
-      .def_readwrite("cnots", &MappingResults::CircuitInfo::cnots)
+      .def_readwrite("two_qubit_gates",
+                     &MappingResults::CircuitInfo::twoQubitGates)
       .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",

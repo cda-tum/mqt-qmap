@@ -107,8 +107,7 @@ log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = [
     "error",
-    # See https://github.com/Qiskit/rustworkx/pull/728
-    'ignore:RetworkxLoader.exec_module\(\) not found; falling back to load_module\(\):ImportWarning',
+    'ignore:__package__ != __spec__.parent:ImportWarning',
 ]
 [tool.coverage.run]
 source = ["mqt.qmap"]

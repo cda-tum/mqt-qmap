@@ -486,13 +486,15 @@ std::uint64_t Architecture::bfs(const std::uint16_t   start,
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
-    connections.at(edge.first).emplace_back(edge.second);
+    connections.at(edge.first).emplace(edge.second);
+    // make sure that the connections are bidirectional
+    connections.at(edge.second).emplace(edge.first);
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
@@ -513,15 +515,17 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits,
                                             const QubitSubset&  qubitChoice) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
     if ((qubitChoice.count(edge.first) != 0U) &&
         (qubitChoice.count(edge.second) != 0U)) {
-      connections.at(edge.first).emplace_back(edge.second);
+      connections.at(edge.first).emplace(edge.second);
+      // make sure that the connections are bidirectional
+      connections.at(edge.second).emplace(edge.first);
     }
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
@@ -545,7 +549,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 
 void Architecture::findCouplingLimit(
     const std::uint16_t node, const std::uint16_t curSum,
-    const std::vector<std::vector<std::uint16_t>>& connections,
+    const std::vector<std::unordered_set<std::uint16_t>>& connections,
     std::vector<std::uint16_t>& d, std::vector<bool>& visited) {
   if (visited.at(node)) {
     return;
@@ -686,4 +690,58 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
     os << "(" << edge.first << " " << edge.second << ") ";
   }
   os << "}" << std::endl;
+}
+
+DirectionReversalStrategy
+Architecture::getDirectionReversalStrategy(const qc::OpType opType) {
+  switch (opType) {
+  case qc::X:
+  case qc::SX:
+  case qc::SXdag:
+    return DirectionReversalStrategy::Hadamard;
+  case qc::Z:
+  case qc::S:
+  case qc::Sdag:
+  case qc::T:
+  case qc::Tdag:
+  case qc::Phase:
+  case qc::RZ:
+  case qc::SWAP:
+    return DirectionReversalStrategy::Identity;
+  default:
+    return DirectionReversalStrategy::NotApplicable;
+  }
+}
+
+std::uint32_t
+Architecture::computeCostDirectionReverse(const qc::OpType opType) {
+  switch (Architecture::getDirectionReversalStrategy(opType)) {
+  case DirectionReversalStrategy::Identity:
+    return 0;
+  case DirectionReversalStrategy::Hadamard:
+    return 4 * COST_SINGLE_QUBIT_GATE;
+  default:
+    throw QMAPException(
+        "Cannot compute cost for direction reversal, because gate " +
+        toString(opType) + " does not support reversal!");
+  }
+}
+std::uint32_t
+Architecture::computeGatesDirectionReverse(const qc::OpType opType) {
+  switch (Architecture::getDirectionReversalStrategy(opType)) {
+  case DirectionReversalStrategy::Identity:
+    return 0;
+  case DirectionReversalStrategy::Hadamard:
+    return 4;
+  default:
+    throw QMAPException(
+        "Cannot compute gates for direction reversal, because gate " +
+        toString(opType) + " does not support reversal!");
+  }
+}
+
+bool Architecture::supportsDirectionReversal(const qc::OpType opType) {
+  const auto strategy = getDirectionReversalStrategy(opType);
+  return strategy == DirectionReversalStrategy::Identity ||
+         strategy == DirectionReversalStrategy::Hadamard;
 }

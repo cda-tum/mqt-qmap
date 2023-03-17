@@ -103,6 +103,12 @@ void ExactMapper::map(const Configuration& settings) {
     } else {
       maxLimit = architecture.getCouplingLimit() - 1U;
     }
+    if (!architecture.bidirectional()) {
+      // on a directed architecture, one more SWAP might be needed overall
+      // due to the directionality of the edges and direction reversal not
+      // being possible for every gate.
+      maxLimit += 1U;
+    }
     if (config.swapReduction == SwapReduction::CouplingLimit) {
       limit = maxLimit;
     } else if (config.swapReduction == SwapReduction::Increasing) {
@@ -275,38 +281,39 @@ void ExactMapper::map(const Configuration& settings) {
             op->getParameter().at(0), op->getParameter().at(1),
             op->getParameter().at(2));
       } else {
-        const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
-                           locations.at(gate.target)};
+        const Edge controlledGate = {
+            locations.at(static_cast<std::size_t>(gate.control)),
+            locations.at(gate.target)};
 
-        if (architecture.getCouplingMap().find(cnot) ==
+        if (architecture.getCouplingMap().find(controlledGate) ==
             architecture.getCouplingMap().end()) {
-          const Edge reverse = {cnot.second, cnot.first};
+          const Edge reverse = {controlledGate.second, controlledGate.first};
           if (architecture.getCouplingMap().find(reverse) ==
               architecture.getCouplingMap().end()) {
-            throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
-                std::to_string(reverse.second));
+            throw QMAPException("Invalid controlled gate " + op->getName() +
+                                ": " + std::to_string(reverse.first) + "-" +
+                                std::to_string(reverse.second));
           }
+          if (!Architecture::supportsDirectionReversal(op->getType())) {
+            throw QMAPException("Invalid controlled gate " + op->getName() +
+                                ": " + std::to_string(reverse.first) + "-" +
+                                std::to_string(reverse.second));
+          }
+
           if (settings.verbose) {
-            std::cout
-                << i
-                << ": Added (direction-reversed) cnot with control and target: "
-                << cnot.first << " " << cnot.second << std::endl;
+            std::cout << i << ": Added (direction-reversed) controlled gate "
+                      << op->getName()
+                      << " with control and target: " << controlledGate.first
+                      << " " << controlledGate.second << std::endl;
           }
-          qcMapped.h(reverse.first);
-          qcMapped.h(reverse.second);
-          qcMapped.x(reverse.second,
-                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
-          qcMapped.h(reverse.second);
-          qcMapped.h(reverse.first);
+          insertReversedGate(reverse, *op);
         } else {
           if (settings.verbose) {
-            std::cout << i
-                      << ": Added cnot with control and target: " << cnot.first
-                      << " " << cnot.second << std::endl;
+            std::cout << i << ": Added controlled gate " << op->getName()
+                      << " with control and target: " << controlledGate.first
+                      << " " << controlledGate.second << std::endl;
           }
-          qcMapped.x(cnot.second,
-                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
+          insertGate(controlledGate, *op);
         }
       }
     }
@@ -354,7 +361,7 @@ void ExactMapper::map(const Configuration& settings) {
 
   // 10) re-count gates
   results.output.singleQubitGates = 0U;
-  results.output.cnots            = 0U;
+  results.output.twoQubitGates    = 0U;
   results.output.gates            = 0U;
   countGates(qcMapped, results.output);
 
@@ -588,7 +595,8 @@ number of variables: (|L|-1) * m!
       }
 
       auto coupling = LogicTerm(false);
-      if (architecture.bidirectional()) {
+      if (architecture.bidirectional() ||
+          !Architecture::supportsDirectionReversal(gate.op->getType())) {
         for (const auto& edge : rcm) {
           auto indexFC = x[k][physicalQubitIndex[edge.first]]
                           [static_cast<std::size_t>(gate.control)];
@@ -603,7 +611,6 @@ number of variables: (|L|-1) * m!
           auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
           auto indexSC = x[k][physicalQubitIndex[edge.second]]
                           [static_cast<std::size_t>(gate.control)];
-
           coupling = coupling || ((indexFC && indexST) || (indexFT && indexSC));
         }
       }
@@ -731,6 +738,9 @@ number of variables: (|L|-1) * m!
         if (gate.singleQubit()) {
           continue;
         }
+        if (!Architecture::supportsDirectionReversal(gate.op->getType())) {
+          continue;
+        }
 
         auto reverse = LogicTerm(false);
         for (const auto& [q0, q1] : rcm) {
@@ -739,9 +749,12 @@ number of variables: (|L|-1) * m!
                                 [static_cast<std::size_t>(gate.control)];
           reverse = reverse || (indexFT && indexSC);
         }
-        cost = cost + LogicTerm::ite(reverse,
-                                     LogicTerm(::GATES_OF_DIRECTION_REVERSE),
-                                     LogicTerm(0));
+        cost = cost +
+               LogicTerm::ite(reverse,
+                              LogicTerm(static_cast<int>(
+                                  Architecture::computeGatesDirectionReverse(
+                                      gate.op->getType()))),
+                              LogicTerm(0));
       }
     }
     lb->minimize(cost);
@@ -763,9 +776,9 @@ number of variables: (|L|-1) * m!
     // quickly determine cost
     choiceResults.output.singleQubitGates =
         choiceResults.input.singleQubitGates;
-    choiceResults.output.cnots = choiceResults.input.cnots;
-    choiceResults.output.gates =
-        choiceResults.output.singleQubitGates + choiceResults.output.cnots;
+    choiceResults.output.twoQubitGates = choiceResults.input.twoQubitGates;
+    choiceResults.output.gates         = choiceResults.output.singleQubitGates +
+                                 choiceResults.output.twoQubitGates;
     assert(choiceResults.output.swaps == 0U);
     assert(choiceResults.output.directionReverse == 0U);
     // swaps
@@ -835,6 +848,9 @@ number of variables: (|L|-1) * m!
           if (gate.singleQubit()) {
             continue;
           }
+          if (!Architecture::supportsDirectionReversal(gate.op->getType())) {
+            continue;
+          }
           for (const auto& edge : rcm) {
             auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
             auto indexSC = x[k][physicalQubitIndex[edge.second]]
@@ -842,7 +858,9 @@ number of variables: (|L|-1) * m!
             if (m->getBoolValue(indexFT, lb.get()) &&
                 m->getBoolValue(indexSC, lb.get())) {
               choiceResults.output.directionReverse++;
-              choiceResults.output.gates += GATES_OF_DIRECTION_REVERSE;
+              choiceResults.output.gates +=
+                  Architecture::computeGatesDirectionReverse(
+                      gate.op->getType());
             }
           }
         }
