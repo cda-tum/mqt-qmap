@@ -393,7 +393,7 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
 
   architecture.loadProperties(props);
 
-  qc::QuantumComputation qc{12};
+  qc::QuantumComputation qc{12, 12};
 
   for (std::size_t i = 0; i < 50; ++i) {
     qc.x(4);
@@ -404,11 +404,16 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
     qc.x(0, qc::Control{3});
     qc.x(2, qc::Control{9});
   }
+  
+  for (size_t i = 0; i < 12; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
   settings.verbose                  = true;
+  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
   settings.considerFidelity         = true;
@@ -485,20 +490,26 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
 
   architecture.loadProperties(props);
 
-  qc::QuantumComputation qc{12};
+  qc::QuantumComputation qc{6, 6};
   for (std::size_t i = 0; i < 5; ++i) {
     qc.x(0, qc::Control{2});
     qc.x(3);
+  }
+  
+  for (size_t i = 0; i < 6; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
+  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
   settings.considerFidelity         = true;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
   mapper->map(settings);
   mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
@@ -560,20 +571,26 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
 
   architecture.loadProperties(props);
 
-  qc::QuantumComputation qc{12};
+  qc::QuantumComputation qc{7, 7};
   for (std::size_t i = 0; i < 5; ++i) {
     qc.x(0, qc::Control{3});
     qc.x(4, qc::Control{6});
+  }
+  
+  for (size_t i = 0; i < 7; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
+  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
   settings.considerFidelity         = true;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
   mapper->map(settings);
   mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
@@ -597,5 +614,53 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
 
   double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
                             5 * c1 + 5 * c1;                    // CXs
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
+}
+
+TEST(HeuristicTestFidelity, SingleQubitsCompete) {
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};
+  architecture.loadCouplingMap(3, cm);
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", 0.8);
+  props.setSingleQubitErrorRate(1, "x", 0.1);
+  props.setSingleQubitErrorRate(2, "x", 0.8);
+
+  props.setTwoQubitErrorRate(0, 1, 0.1);
+  props.setTwoQubitErrorRate(1, 0, 0.1);
+  props.setTwoQubitErrorRate(1, 2, 0.1);
+  props.setTwoQubitErrorRate(2, 1, 0.1);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{3, 3};
+  qc.x(0);
+  qc.x(2);
+  
+  for (size_t i = 0; i < 3; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
+  mapper->map(settings);
+  mapper->dumpResult("single_qubits_compete.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 1);
+  // EXPECT_EQ(result.output.swaps, 4);
+
+  double expectedFidelity = -3 * std::log2(1-0.1) // SWAPs
+                            - std::log2(1-0.8) - std::log2(1-0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }

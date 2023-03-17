@@ -70,6 +70,20 @@ public:
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
       costFixed = initCostFixed;
     }
+    
+    /**
+     * @brief returns costFixed + costHeur + lookaheadPenalty
+     */
+    double getTotalCost() const {
+      return costFixed + costHeur + lookaheadPenalty;
+    }
+    
+    /**
+     * @brief returns costFixed + lookaheadPenalty
+     */
+    double getTotalFixedCost() const {
+      return costFixed + lookaheadPenalty;
+    }
 
     /**
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
@@ -101,6 +115,7 @@ public:
     void recalculateFixedCost(
         const Architecture&               arch,
         const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
+        const EdgeMultiplicity& twoQubitGateMultiplicity, 
         bool                              considerFidelity);
 
     /**
@@ -191,19 +206,20 @@ protected:
   virtual void mapToMinDistance(std::uint16_t source, std::uint16_t target);
 
   /**
-   * @brief gathers all qubits that are acted on by a 2-qubit-gate in the given
-   * layer in `consideredQubits`, and maps any of them that are not yet mapped
+   * @brief maps any yet unmapped qubits, which are acted on in a given layer, 
    * to a physical qubit.
    *
-   * All gates are mapped in order of their index in the layer. The qubits are
-   * mapped to any 2 qubits with minimal distance on the architecture.
-   *
-   * @param layer index of the circuit layer to consider
-   * @param consideredQubits vector in which to gather all relevant qubits of
-   * this layer
+   * @param singleQubitGateMultiplicity vector containing the number of gates
+   * acting on each logical qubit
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on each
+   * logical qubit edge in the current layer where the first number in the
+   * value pair corresponds to the number of edges having their gates given as
+   * (control, target) in the key, and the second with all gates in reverse to
+   * that
    */
-  virtual void mapUnmappedGates(std::size_t                 layer,
-                                std::vector<std::uint16_t>& consideredQubits);
+  virtual void mapUnmappedGates(
+      const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
+      const EdgeMultiplicity&           twoQubitGateMultiplicity);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -226,8 +242,15 @@ protected:
    * 2-qubit-gate in the respective layer
    * @param node current search node
    * @param layer index of current circuit layer
+   * @param singleQubitGateMultiplicity vector containing the number of gates
+   * acting on each logical qubit
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on each
+   * logical qubit edge in the current layer where the first number in the
+   * value pair corresponds to the number of edges having their gates given as
+   * (control, target) in the key, and the second with all gates in reverse to
+   * that
    */
-  void expandNode(const std::vector<std::uint16_t>& consideredQubits,
+  void expandNode(const std::set<std::uint16_t>& consideredQubits,
                   Node& node, std::size_t layer,
                   const std::vector<std::uint16_t>& singleQubitGateMultiplicity,
                   const EdgeMultiplicity&           twoQubitGateMultiplicity);
@@ -239,6 +262,13 @@ protected:
    * @param swap edge on which to perform a swap
    * @param node current search node
    * @param layer index of current circuit layer
+   * @param singleQubitGateMultiplicity vector containing the number of gates
+   * acting on each logical qubit
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on each
+   * logical qubit edge in the current layer where the first number in the
+   * value pair corresponds to the number of edges having their gates given as
+   * (control, target) in the key, and the second with all gates in reverse to
+   * that
    */
   void expandNodeAddOneSwap(
       const Edge& swap, Node& node, std::size_t layer,
@@ -278,10 +308,8 @@ inline bool operator<(const HeuristicMapper::Node& x,
 
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
-  const auto xcost =
-      static_cast<double>(x.costFixed) + x.lookaheadPenalty + x.costHeur;
-  const auto ycost =
-      static_cast<double>(y.costFixed) + y.lookaheadPenalty + y.costHeur;
+  const auto xcost = x.getTotalCost();
+  const auto ycost = y.getTotalCost();
   if (std::abs(xcost - ycost) > 1e-6) {
     return xcost > ycost;
   }
