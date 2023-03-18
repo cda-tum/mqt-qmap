@@ -103,13 +103,13 @@ void ExactMapper::map(const Configuration& settings) {
     } else {
       maxLimit = architecture.getCouplingLimit() - 1U;
     }
-    if (!architecture.bidirectional()) {
-      // on a directed architecture, one more SWAP might be needed overall
-      // due to the directionality of the edges and direction reversal not
-      // being possible for every gate.
-      maxLimit += 1U;
-    }
     if (config.swapReduction == SwapReduction::CouplingLimit) {
+      if (!architecture.bidirectional()) {
+        // on a directed architecture, one more SWAP might be needed overall
+        // due to the directionality of the edges and direction reversal not
+        // being possible for every gate.
+        maxLimit += 1U;
+      }
       limit = maxLimit;
     } else if (config.swapReduction == SwapReduction::Increasing) {
       limit = 0U;
