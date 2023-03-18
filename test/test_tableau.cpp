@@ -243,6 +243,9 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.y(1, 0_pc);
   qc.z(1, 0_pc);
   qc.swap(0, 1);
+  qc.iswap(0, 1);
+  qc.dcx(0, 1);
+  qc.ecr(0, 1);
 
   auto compOP = std::make_unique<qc::CompoundOperation>(2U);
   compOP->emplace_back<qc::StandardOperation>(2U, 0, qc::H);
