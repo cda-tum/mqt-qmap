@@ -15,6 +15,7 @@
 #include <map>
 #include <regex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 constexpr std::uint8_t GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
@@ -390,10 +391,10 @@ protected:
   static std::size_t findCouplingLimit(const CouplingMap& cm,
                                        std::uint16_t      nQubits);
   static std::size_t
-  findCouplingLimit(const CouplingMap& cm, std::uint16_t nQubits,
-                    const std::set<std::uint16_t>& qubitChoice);
-  static void
-  findCouplingLimit(std::uint16_t node, std::uint16_t curSum,
-                    const std::vector<std::vector<std::uint16_t>>& connections,
-                    std::vector<std::uint16_t>& d, std::vector<bool>& visited);
+              findCouplingLimit(const CouplingMap& cm, std::uint16_t nQubits,
+                                const std::set<std::uint16_t>& qubitChoice);
+  static void findCouplingLimit(
+      std::uint16_t node, std::uint16_t curSum,
+      const std::vector<std::unordered_set<std::uint16_t>>& connections,
+      std::vector<std::uint16_t>& d, std::vector<bool>& visited);
 };
