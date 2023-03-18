@@ -407,7 +407,7 @@ void ExactMapper::coreMappingRoutine(
   //////////////////////////////////////////
   /// 	Check necessary permutations	//
   //////////////////////////////////////////
-  if (config.enableSwapLimits && !config.useBDD) {
+  if (config.swapLimitsEnabled() && !config.useBDD) {
     do {
       auto picost = architecture.minimumNumberOfSwaps(
           pi, static_cast<std::int64_t>(limit));
@@ -455,7 +455,7 @@ number of variables: (|L|-1) * m!
     y.emplace_back();
     piCount = 0;
     do {
-      if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
         yName.str("");
         yName << "y_" << k << '_' << piCount;
         y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
@@ -627,7 +627,7 @@ number of variables: (|L|-1) * m!
     auto& i         = x[k - 1];
     auto& j         = x[k];
     do {
-      if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
@@ -651,7 +651,7 @@ number of variables: (|L|-1) * m!
       piCount         = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
           onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount],
                                              LogicTerm(1), LogicTerm(0));
           ++internalPiCount;
@@ -666,7 +666,7 @@ number of variables: (|L|-1) * m!
       piCount         = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
           varIDs.push_back(y[k - 1][internalPiCount]);
           ++internalPiCount;
         }
@@ -700,7 +700,7 @@ number of variables: (|L|-1) * m!
       reducedLayerIndices.size());
   auto cost = LogicTerm(0);
   do {
-    if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+    if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
       auto picost = architecture.minimumNumberOfSwaps(pi);
       if (architecture.bidirectional()) {
         picost *= GATES_OF_BIDIRECTIONAL_SWAP;
@@ -719,7 +719,7 @@ number of variables: (|L|-1) * m!
     }
     ++piCount;
   } while (std::next_permutation(pi.begin(), pi.end()));
-  if (config.enableSwapLimits && config.useBDD) {
+  if (config.swapLimitsEnabled() && config.useBDD) {
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
       lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1],
                                  static_cast<int>(limit), lb.get()));
@@ -808,7 +808,7 @@ number of variables: (|L|-1) * m!
         // sort the permutation of the qubits to start fresh
         std::sort(pi.begin(), pi.end());
         do {
-          if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+          if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
             if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
               break;
             }

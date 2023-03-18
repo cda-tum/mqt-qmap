@@ -74,4 +74,7 @@ struct Configuration {
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
 
   void setTimeout(const std::size_t sec) { timeout = sec; }
+  bool swapLimitsEnabled() const {
+    return (swapReduction != SwapReduction::None) && enableSwapLimits;
+  }
 };
