@@ -61,8 +61,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "python-${{matrix.python-version}}-tests-${{matrix.runs-on}}"
-          variant: ccache
-          max-size: 10G
       - name: Setup nox
         run: pipx install nox
       - name: Test on 🐍 ${{ matrix.python-version }}
@@ -88,8 +86,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "min-qiskit-version"
-          variant: ccache
-          max-size: 10G
       - name: Setup nox
         run: pipx install nox
       - name: Run session
@@ -129,8 +125,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "python-${{matrix.python-version}}-coverage"
-          variant: ccache
-          max-size: 10G
       - name: Setup nox
         run: pipx install nox
       - name: Run session

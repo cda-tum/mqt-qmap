@@ -46,8 +46,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "CodeQL-${{matrix.language}}"
-          variant: ccache
-          max-size: 10G
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL

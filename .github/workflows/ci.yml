@@ -46,8 +46,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "c++-tests-${{matrix.config.os}}"
-          variant: ccache
-          max-size: 10G
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
@@ -72,8 +70,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "c++-coverage"
-          variant: ccache
-          max-size: 10G
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build

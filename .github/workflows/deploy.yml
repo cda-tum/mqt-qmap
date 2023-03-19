@@ -46,12 +46,11 @@ jobs:
       - if: ${{ matrix.config.arch == 'arm64' }}
         name: Set Architecture to arm64 if necessary
         run: echo "CIBW_ARCHS_MACOS=arm64" >> $GITHUB_ENV
-      - name: Setup ccache
+      - if: runner.os != 'Linux'
+        name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: "python-${{matrix.python-version}}-wheels-${{matrix.runs-on}}-${{matrix.arch}}"
-          variant: ccache
-          max-size: 10G
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.1
         env:
