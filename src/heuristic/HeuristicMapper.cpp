@@ -318,7 +318,6 @@ void HeuristicMapper::createInitialMapping() {
 
 void HeuristicMapper::mapUnmappedGates(
     const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
-  
   for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
     auto q1 = edgeMultiplicity.first.first;
     auto q2 = edgeMultiplicity.first.second;
@@ -404,7 +403,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   std::set<std::uint16_t> consideredQubits{};
   Node                    node{};
   TwoQubitMultiplicity    twoQubitGateMultiplicity{};
-  
+
   for (const auto& gate : layers.at(layer)) {
     if (!gate.singleQubit()) {
       const bool  reverse = gate.control >= gate.target;
@@ -432,9 +431,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   node.locations = locations;
   node.qubits    = qubits;
   node.recalculateFixedCost(architecture);
-  node.updateHeuristicCost(
-      architecture, twoQubitGateMultiplicity,
-      results.config.admissibleHeuristic);
+  node.updateHeuristicCost(architecture, twoQubitGateMultiplicity,
+                           results.config.admissibleHeuristic);
 
   nodes.push(node);
 
@@ -457,8 +455,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
 void HeuristicMapper::expandNode(
     const std::set<std::uint16_t>& consideredQubits, Node& node,
-    std::size_t layer,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
+    std::size_t layer, const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture.getNqubits());
   for (int p = 0; p < architecture.getNqubits(); ++p) {
@@ -533,11 +530,11 @@ void HeuristicMapper::expandNode(
 
 void HeuristicMapper::expandNodeAddOneSwap(
     const Edge& swap, Node& node, const std::size_t layer,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
-  const auto& config       = results.config;
+    const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
+  const auto& config = results.config;
 
   Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed);
-  
+
   if (architecture.getCouplingMap().find(swap) !=
           architecture.getCouplingMap().end() ||
       architecture.getCouplingMap().find(Edge{swap.second, swap.first}) !=
@@ -547,8 +544,7 @@ void HeuristicMapper::expandNodeAddOneSwap(
     newNode.applyTeleportation(swap, architecture);
   }
 
-  newNode.updateHeuristicCost(architecture,
-                              twoQubitGateMultiplicity,
+  newNode.updateHeuristicCost(architecture, twoQubitGateMultiplicity,
                               results.config.admissibleHeuristic);
 
   // calculate heuristics for the cost of the following layers
@@ -620,9 +616,7 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
   }
 }
 
-
-void HeuristicMapper::Node::applySWAP(
-    const Edge& swap, Architecture& arch) {
+void HeuristicMapper::Node::applySWAP(const Edge& swap, Architecture& arch) {
   nswaps++;
   swaps.emplace_back();
   const auto q1 = qubits.at(swap.first);
@@ -732,8 +726,8 @@ void HeuristicMapper::Node::recalculateFixedCost(const Architecture& arch) {
 }
 
 void HeuristicMapper::Node::updateHeuristicCost(
-    const Architecture&         arch, 
-    const TwoQubitMultiplicity& twoQubitGateMultiplicity, 
+    const Architecture&         arch,
+    const TwoQubitMultiplicity& twoQubitGateMultiplicity,
     bool                        admissibleHeuristic) {
   costHeur = 0.;
   done     = true;
@@ -759,7 +753,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
     if (!edgeDone) {
       done = false;
     }
-    
+
     double swapCostStraight =
         arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
                       static_cast<std::uint16_t>(locations.at(q2)));

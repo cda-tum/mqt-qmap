@@ -9,13 +9,13 @@
 #pragma once
 
 /**
- * number of two qubit gates acting on pairs of logical qubits in some layer 
+ * number of two qubit gates acting on pairs of logical qubits in some layer
  * where the key entry corresponds to logical qubits pairs ({q1, q2}) and
- * the value entry to the number of gates acting on the pair in each direction 
+ * the value entry to the number of gates acting on the pair in each direction
  * (the first number with conrol=q1, target=q2 and the second the reverse)
- * 
- * e.g. with multiplicity {{0,1},{2,3}} there are 2 gates with logical 
- * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control 
+ *
+ * e.g. with multiplicity {{0,1},{2,3}} there are 2 gates with logical
+ * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
  * and 0 as target
  */
 using TwoQubitMultiplicity =
@@ -38,7 +38,8 @@ public:
    * swaps, mappings and costs
    */
   struct Node {
-    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps already added) */
+    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps
+     * already added) */
     double costFixed = 0;
     /** heuristic cost expected for future swaps needed in current circuit layer
      */
@@ -73,14 +74,14 @@ public:
     Node() = default;
     Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
-         const std::vector<std::vector<Exchange>>&          sw = {},
+         const std::vector<std::vector<Exchange>>&          sw            = {},
          const double                                       initCostFixed = 0) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
       costFixed = initCostFixed;
     }
-    
+
     /**
      * @brief returns costFixed + costHeur + lookaheadPenalty
      */
@@ -91,9 +92,7 @@ public:
     /**
      * @brief returns costFixed + lookaheadPenalty
      */
-    double getTotalFixedCost() const {
-      return costFixed + lookaheadPenalty;
-    }
+    double getTotalFixedCost() const { return costFixed + lookaheadPenalty; }
 
     /**
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
@@ -106,7 +105,7 @@ public:
      * `locations` of the node
      */
     void applyTeleportation(const Edge& swap, Architecture& arch);
-    
+
     /**
      * @brief recalculates the fixed cost of the node from current mapping and
      * swaps
@@ -124,16 +123,16 @@ public:
      *
      * @param arch the architecture for calculating distances between physical
      * qubits and supplying qubit information such as fidelity
-     * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs 
+     * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
      * of logical qubits in the current layer
      * @param admissibleHeuristic controls if the heuristic should be calculated
      * such that it is admissible (i.e. A*-search should yield the optimal
      * solution using this heuristic)
      */
-    void updateHeuristicCost(
-        const Architecture&               arch,
-        const TwoQubitMultiplicity& twoQubitGateMultiplicity,
-        bool admissibleHeuristic);
+    void
+    updateHeuristicCost(const Architecture&         arch,
+                        const TwoQubitMultiplicity& twoQubitGateMultiplicity,
+                        bool                        admissibleHeuristic);
 
     std::ostream& print(std::ostream& out) const {
       out << "{\n";
@@ -199,11 +198,11 @@ protected:
    * @brief maps any yet unmapped qubits, which are acted on in a given layer,
    * to a physical qubit.
    *
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs 
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  virtual void mapUnmappedGates(
-    const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+  virtual void
+  mapUnmappedGates(const TwoQubitMultiplicity& twoQubitGateMultiplicity);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -226,12 +225,12 @@ protected:
    * 2-qubit-gate in the respective layer
    * @param node current search node
    * @param layer index of current circuit layer
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs 
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
   void expandNode(const std::set<std::uint16_t>& consideredQubits, Node& node,
-                  std::size_t                    layer,
-                  const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
+                  std::size_t                 layer,
+                  const TwoQubitMultiplicity& twoQubitGateMultiplicity);
 
   /**
    * @brief creates a new node with a swap on the given edge and adds it to
@@ -240,12 +239,12 @@ protected:
    * @param swap edge on which to perform a swap
    * @param node current search node
    * @param layer index of current circuit layer
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs 
+   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  void expandNodeAddOneSwap(
-      const Edge& swap, Node& node, std::size_t layer,
-      const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+  void
+  expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer,
+                       const TwoQubitMultiplicity& twoQubitGateMultiplicity);
 
   /**
    * @brief calculates the heuristic cost for the following layers and saves it
