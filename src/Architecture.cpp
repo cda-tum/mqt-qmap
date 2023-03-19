@@ -186,12 +186,11 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 
 void Architecture::createDistanceTable() {
   isBidirectional = true;
-  Matrix edgeWeights(
-      nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+  Matrix edgeWeights(nqubits, std::vector<double>(
+                                  nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
-      isBidirectional = false;
+      isBidirectional                            = false;
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
       edgeWeights.at(edge.first).at(edge.second) = COST_UNIDIRECTIONAL_SWAP;
     } else {
@@ -200,7 +199,7 @@ void Architecture::createDistanceTable() {
   }
 
   Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                      Architecture::dijkstraNodeToCostNonFidelity);
+                       Architecture::dijkstraNodeToCostNonFidelity);
 }
 
 void Architecture::createFidelityTable() {

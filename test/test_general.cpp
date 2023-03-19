@@ -62,17 +62,12 @@ TEST(General, Dijkstra) {
   0 <-> 1 --> 2 <-> 3
     (1)   (2)   (3)
   */
-  CouplingMap cm = {{0,1},{1,0},{1,2},{2,3},{3,2},{1,3},{3,1}};
-  Matrix edgeWeights = {
-    {0,1,0,0},
-    {1,0,2,6},
-    {0,15,0,3},
-    {0,6,3,0}
-  };
+  CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+  Matrix      edgeWeights = {
+      {0, 1, 0, 0}, {1, 0, 2, 6}, {0, 15, 0, 3}, {0, 6, 3, 0}};
   Matrix distanceTable{};
-  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights, [](const Dijkstra::Node& n) {
-    return n.cost;
-  });
+  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights,
+                       [](const Dijkstra::Node& n) { return n.cost; });
   EXPECT_EQ(distanceTable.size(), 4);
   EXPECT_EQ(distanceTable[0].size(), 4);
   EXPECT_EQ(distanceTable[0][0], 0);
@@ -94,11 +89,10 @@ TEST(General, Dijkstra) {
   EXPECT_EQ(distanceTable[3][1], 6);
   EXPECT_EQ(distanceTable[3][2], 3);
   EXPECT_EQ(distanceTable[3][3], 0);
-  
+
   distanceTable = {};
-  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights, [](const Dijkstra::Node& n) {
-    return n.prevCost;
-  });
+  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights,
+                       [](const Dijkstra::Node& n) { return n.prevCost; });
   EXPECT_EQ(distanceTable.size(), 4);
   EXPECT_EQ(distanceTable[0].size(), 4);
   EXPECT_EQ(distanceTable[0][0], 0);
