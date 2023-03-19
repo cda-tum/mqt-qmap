@@ -364,7 +364,7 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double dijkstraNodeToCostNonFidelity(const Dijkstra::Node& node) {
+  static double dijkstraNodeToCost(const Dijkstra::Node& node) {
     // Dijkstra determines the minimal path cost from one physical qubit to
     // another.  In the non-fidelity case we are only interested in swapping 2
     // logical qubits next to each other. Therefore the last swap cost has to

@@ -62,56 +62,20 @@ TEST(General, Dijkstra) {
   0 <-> 1 --> 2 <-> 3
     (1)   (2)   (3)
   */
-  CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 3}, {3, 2}, {1, 3}, {3, 1}};
-  Matrix      edgeWeights = {
-      {0, 1, 0, 0}, {1, 0, 2, 6}, {0, 15, 0, 3}, {0, 6, 3, 0}};
+ 
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 3}, {3, 2}, {1, 3}, {3, 1}};
+  
+  const Matrix edgeWeights = {{0, 1, 0, 0}, {1, 0, 2, 6}, {0, 15, 0, 3}, {0, 6, 3, 0}};
+  
+  const Matrix targetTable1 = {{0, 1, 3, 6}, {1, 0, 2, 5}, {10, 9, 0, 3}, {7, 6, 3, 0}};
   Matrix distanceTable{};
   Dijkstra::buildTable(4, cm, distanceTable, edgeWeights,
                        [](const Dijkstra::Node& n) { return n.cost; });
-  EXPECT_EQ(distanceTable.size(), 4);
-  EXPECT_EQ(distanceTable[0].size(), 4);
-  EXPECT_EQ(distanceTable[0][0], 0);
-  EXPECT_EQ(distanceTable[0][1], 1);
-  EXPECT_EQ(distanceTable[0][2], 3);
-  EXPECT_EQ(distanceTable[0][3], 6);
-  EXPECT_EQ(distanceTable[1].size(), 4);
-  EXPECT_EQ(distanceTable[1][0], 1);
-  EXPECT_EQ(distanceTable[1][1], 0);
-  EXPECT_EQ(distanceTable[1][2], 2);
-  EXPECT_EQ(distanceTable[1][3], 5);
-  EXPECT_EQ(distanceTable[2].size(), 4);
-  EXPECT_EQ(distanceTable[2][0], 10);
-  EXPECT_EQ(distanceTable[2][1], 9);
-  EXPECT_EQ(distanceTable[2][2], 0);
-  EXPECT_EQ(distanceTable[2][3], 3);
-  EXPECT_EQ(distanceTable[3].size(), 4);
-  EXPECT_EQ(distanceTable[3][0], 7);
-  EXPECT_EQ(distanceTable[3][1], 6);
-  EXPECT_EQ(distanceTable[3][2], 3);
-  EXPECT_EQ(distanceTable[3][3], 0);
-
+  EXPECT_EQ(distanceTable, targetTable1);
+  
+  const Matrix targetTable2 = {{0, 0, 1, 3}, {0, 0, 0, 2}, {9, 3, 0, 0}, {6, 0, 0, 0}};
   distanceTable = {};
   Dijkstra::buildTable(4, cm, distanceTable, edgeWeights,
                        [](const Dijkstra::Node& n) { return n.prevCost; });
-  EXPECT_EQ(distanceTable.size(), 4);
-  EXPECT_EQ(distanceTable[0].size(), 4);
-  EXPECT_EQ(distanceTable[0][0], 0);
-  EXPECT_EQ(distanceTable[0][1], 0);
-  EXPECT_EQ(distanceTable[0][2], 1);
-  EXPECT_EQ(distanceTable[0][3], 3);
-  EXPECT_EQ(distanceTable[1].size(), 4);
-  EXPECT_EQ(distanceTable[1][0], 0);
-  EXPECT_EQ(distanceTable[1][1], 0);
-  EXPECT_EQ(distanceTable[1][2], 0);
-  EXPECT_EQ(distanceTable[1][3], 2);
-  EXPECT_EQ(distanceTable[2].size(), 4);
-  EXPECT_EQ(distanceTable[2][0], 9);
-  EXPECT_EQ(distanceTable[2][1], 3);
-  EXPECT_EQ(distanceTable[2][2], 0);
-  EXPECT_EQ(distanceTable[2][3], 0);
-  EXPECT_EQ(distanceTable[3].size(), 4);
-  EXPECT_EQ(distanceTable[3][0], 6);
-  EXPECT_EQ(distanceTable[3][1], 0);
-  EXPECT_EQ(distanceTable[3][2], 0);
-  EXPECT_EQ(distanceTable[3][3], 0);
+  EXPECT_EQ(distanceTable, targetTable2);
 }
