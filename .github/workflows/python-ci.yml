@@ -68,7 +68,7 @@ jobs:
       - name: Test on 🐍 ${{ matrix.python-version }}
         run: nox -s tests-${{ matrix.python-version }}
         env:
-          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ENABLE_CCACHE: ON
 
   min-qiskit-version:
     name: ⚛️ Min. Qiskit Test
@@ -95,7 +95,7 @@ jobs:
       - name: Run session
         run: nox -s min_qiskit_version -- --cov-report=xml
         env:
-          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ENABLE_CCACHE: ON
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
@@ -136,7 +136,7 @@ jobs:
       - name: Run session
         run: nox -s coverage-${{ matrix.python-version }} -- --cov-report=xml
         env:
-          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          ENABLE_CCACHE: ON
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:

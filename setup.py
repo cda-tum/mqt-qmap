@@ -53,6 +53,9 @@ class CMakeBuild(build_ext):
         ]
         build_args = []
 
+        if os.environ.get("ENABLE_CCACHE", "OFF") == "ON":
+            cmake_args += ["-DCMAKE_C_COMPILER_LAUNCHER=ccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"]
+
         if self.compiler.compiler_type != "msvc":
             if not cmake_generator:
                 cmake_args += ["-GNinja"]
