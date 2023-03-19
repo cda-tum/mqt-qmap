@@ -372,11 +372,10 @@ protected:
     // node.
     if (node.containsCorrectEdge) {
       return node.prevCost;
-    } else {
-      // in case the last edge is a back-edge, we will need to reverse the CNOT,
-      // executed on that edge
-      return node.prevCost + COST_DIRECTION_REVERSE;
     }
+    // in case the last edge is a back-edge, we will need to reverse the CNOT,
+    // executed on that edge
+    return node.prevCost + COST_DIRECTION_REVERSE;
   }
 
   // added for teleportation
