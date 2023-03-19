@@ -45,7 +45,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: "c++-tests-${{matrix.os}}"
+          key: "c++-tests-${{matrix.config.os}}"
           variant: ccache
           max-size: 10G
       - name: Configure CMake
