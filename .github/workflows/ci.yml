@@ -47,7 +47,11 @@ jobs:
         with:
           key: "c++-tests-${{matrix.config.os}}"
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        if: matrix.config.os != 'windows-latest'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      - name: Configure CMake
+        if: matrix.config.os == 'windows-latest'
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build --config Release
       - name: Test
