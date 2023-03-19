@@ -75,24 +75,24 @@ public:
     Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<std::vector<Exchange>>&          sw            = {},
-         const double                                       initCostFixed = 0) {
+         const double                                       initCostFixed = 0
+        ) : costFixed(initCostFixed) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
-      costFixed = initCostFixed;
     }
 
     /**
      * @brief returns costFixed + costHeur + lookaheadPenalty
      */
-    double getTotalCost() const {
+    [[nodiscard]] double getTotalCost() const {
       return costFixed + costHeur + lookaheadPenalty;
     }
 
     /**
      * @brief returns costFixed + lookaheadPenalty
      */
-    double getTotalFixedCost() const { return costFixed + lookaheadPenalty; }
+    [[nodiscard]] double getTotalFixedCost() const { return costFixed + lookaheadPenalty; }
 
     /**
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
