@@ -199,13 +199,8 @@ void Architecture::createDistanceTable() {
     }
   }
 
-  if (isBidirectional) {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                         Architecture::dijkstraNodeToCostNonFidelityBidirectional);
-  } else {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                         Architecture::dijkstraNodeToCostNonFidelityUnidirectional);
-  }
+  Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
+                      Architecture::dijkstraNodeToCostNonFidelity);
 }
 
 void Architecture::createFidelityTable() {
