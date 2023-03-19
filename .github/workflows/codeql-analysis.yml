@@ -42,25 +42,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: "CodeQL-${{matrix.language}}"
-          variant: ccache
-          max-size: 10G
-
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
           languages: ${{ matrix.language }}
           config-file: .github/codeql-config.yml
-        env:
-          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
       - if: matrix.language == 'cpp'
         name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DBINDINGS=ON
 
       - if: matrix.language == 'cpp'
         name: Build
