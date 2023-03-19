@@ -197,7 +197,6 @@ ignore = [
     "PLR2004", # Magic values
     "PLR0913", # Too many arguments
 ]
-target-version = "py38"
 
 # Exclude a variety of commonly ignored directories.
 exclude = [

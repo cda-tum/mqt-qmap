@@ -48,7 +48,6 @@ class SubarchitectureOrder:
         self.__compute_subarchs()
         self.__compute_subarch_order()
         self.__compute_desirable_subarchitectures()
-        return
 
     @classmethod
     def from_retworkx_graph(cls, graph: rx.PyGraph) -> SubarchitectureOrder:
