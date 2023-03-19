@@ -12,7 +12,7 @@
  * number of two qubit gates acting on pairs of logical qubits in some layer
  * where the key entry corresponds to logical qubits pairs ({q1, q2}) and
  * the value entry to the number of gates acting on the pair in each direction
- * (the first number with conrol=q1, target=q2 and the second the reverse)
+ * (the first number with control=q1, target=q2 and the second the reverse)
  *
  * e.g. with multiplicity {{0,1},{2,3}} there are 2 gates with logical
  * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
