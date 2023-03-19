@@ -364,21 +364,18 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double costHeuristicBidirectional(const Dijkstra::Node& node) {
-    auto length = node.cost - 1;
+  static double dijkstraNodeToCost(const Dijkstra::Node& node) {
+    // Dijkstra determines the minimal path cost from one physical qubit to
+    // another.  In the non-fidelity case we are only interested in swapping 2
+    // logical qubits next to each other. Therefore the last swap cost has to
+    // be ignored. That cost is stored in the field `node.prevCost` of each
+    // node.
     if (node.containsCorrectEdge) {
-      return length * COST_BIDIRECTIONAL_SWAP;
+      return node.prevCost;
     }
-    throw QMAPException("In a bidrectional architecture it should not happen "
-                        "that a node does not contain the right edge.");
-  }
-
-  static double costHeuristicUnidirectional(const Dijkstra::Node& node) {
-    auto length = node.cost - 1;
-    if (node.containsCorrectEdge) {
-      return length * COST_UNIDIRECTIONAL_SWAP;
-    }
-    return length * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE;
+    // in case the last edge is a back-edge, we will need to reverse the CNOT,
+    // executed on that edge
+    return node.prevCost + COST_DIRECTION_REVERSE;
   }
 
   // added for teleportation
