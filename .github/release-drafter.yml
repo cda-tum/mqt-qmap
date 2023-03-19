@@ -17,6 +17,9 @@ categories:
   - title: "📦 Packaging"
     labels:
       - "packaging"
+  - title: "🧹 Code Quality"
+    labels:
+      - "code quality"
   - title: "⬆️ Dependencies"
     collapse-after: 5
     labels:
