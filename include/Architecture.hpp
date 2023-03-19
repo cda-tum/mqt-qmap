@@ -83,13 +83,14 @@ public:
     void setSingleQubitErrorRate(std::uint16_t      qubit,
                                  const std::string& operation,
                                  double             errorRate) {
-      singleQubitErrorRate.get(qubit).set(opTypeFromString(operation),
+      singleQubitErrorRate.get(qubit).set(qc::opTypeFromString(operation),
                                           errorRate);
     }
     [[nodiscard]] double
     getSingleQubitErrorRate(std::uint16_t      qubit,
                             const std::string& operation) const {
-      return singleQubitErrorRate.get(qubit).get(opTypeFromString(operation));
+      return singleQubitErrorRate.get(qubit).get(
+          qc::opTypeFromString(operation));
     }
     [[nodiscard]] double
     getAverageSingleQubitErrorRate(const std::uint16_t qubit) const {
@@ -105,14 +106,14 @@ public:
     void setTwoQubitErrorRate(std::uint16_t qubit1, std::uint16_t qubit2,
                               double             errorRate,
                               const std::string& operation = "cx") {
-      twoQubitErrorRate.get(qubit1).get(qubit2).set(opTypeFromString(operation),
-                                                    errorRate);
+      twoQubitErrorRate.get(qubit1).get(qubit2).set(
+          qc::opTypeFromString(operation), errorRate);
     }
     [[nodiscard]] double
     getTwoQubitErrorRate(std::uint16_t qubit1, std::uint16_t qubit2,
                          const std::string& operation = "cx") const {
       return twoQubitErrorRate.get(qubit1).get(qubit2).get(
-          opTypeFromString(operation));
+          qc::opTypeFromString(operation));
     }
     [[nodiscard]] bool
     twoQubitErrorRateAvailable(std::uint16_t qubit1, std::uint16_t qubit2,
@@ -120,7 +121,7 @@ public:
       return twoQubitErrorRate.available(qubit1) &&
              twoQubitErrorRate.get(qubit1).available(qubit2) &&
              twoQubitErrorRate.get(qubit1).get(qubit2).available(
-                 opTypeFromString(operation));
+                 qc::opTypeFromString(operation));
     }
 
     void clear() {
@@ -396,7 +397,4 @@ protected:
       std::uint16_t node, std::uint16_t curSum,
       const std::vector<std::unordered_set<std::uint16_t>>& connections,
       std::vector<std::uint16_t>& d, std::vector<bool>& visited);
-
-  [[nodiscard]] static qc::OpType
-  opTypeFromString(const std::string& operation);
 };
