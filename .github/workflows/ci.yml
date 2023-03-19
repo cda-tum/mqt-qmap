@@ -42,22 +42,45 @@ jobs:
           version: ${{ env.Z3_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "c++-tests-${{matrix.os}}"
+          variant: ccache
+          max-size: 10G
       - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }}
-        env:
-          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
       - name: Build
         run: cmake --build build --config Release
       - name: Test
         run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 300
-      - if: runner.os == 'Linux'
-        name: Coverage
-        run: |
-          cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DENABLE_COVERAGE=ON
-          cmake --build buildCov --config Debug
-          ctest -C Debug --output-on-failure --test-dir buildCov --repeat until-pass:3 --timeout 300
-      - if: runner.os == 'Linux'
-        name: Upload coverage to Codecov
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Install Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: ${{ env.Z3_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "c++-coverage"
+          variant: ccache
+          max-size: 10G
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DENABLE_COVERAGE=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      - name: Build
+        run: cmake --build build --config Debug
+      - name: Test
+        run: ctest -C Debug --output-on-failure --test-dir build --repeat until-pass:3 --timeout 300
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
           fail_ci_if_error: true
