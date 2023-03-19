@@ -17,7 +17,7 @@ def test_exact_no_swaps_trivial_layout() -> None:
 
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon(), method="exact")
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -36,7 +36,7 @@ def test_exact_no_swaps_non_trivial_layout() -> None:
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon(), method="exact")
 
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -55,7 +55,7 @@ def test_exact_non_trivial_swaps() -> None:
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon(), method="exact")
 
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     assert results.output.swaps == 1
 
     result = verify(qc, qc_mapped)
