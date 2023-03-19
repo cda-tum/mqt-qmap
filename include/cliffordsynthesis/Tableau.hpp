@@ -87,6 +87,9 @@ public:
   void applyCY(std::size_t control, std::size_t target);
   void applyCZ(std::size_t control, std::size_t target);
   void applySwap(std::size_t q1, std::size_t q2);
+  void applyISwap(std::size_t q1, std::size_t q2);
+  void applyDCX(std::size_t q1, std::size_t q2);
+  void applyECR(std::size_t q1, std::size_t q2);
 
   [[gnu::pure]] friend bool operator==(const Tableau& lhs, const Tableau& rhs) {
     return lhs.tableau == rhs.tableau;

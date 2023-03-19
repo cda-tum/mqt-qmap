@@ -82,15 +82,13 @@ void HeuristicMapper::map(const Configuration& configuration) {
         if (locations.at(gate.target) == DEFAULT_POSITION) {
           qcMapped.emplace_back<qc::StandardOperation>(
               qcMapped.getNqubits(), gate.target, op->getType(),
-              op->getParameter().at(0), op->getParameter().at(1),
-              op->getParameter().at(2));
+              op->getParameter());
           gatesToAdjust.push_back(gateidx);
           gateidx++;
         } else {
           qcMapped.emplace_back<qc::StandardOperation>(
               qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-              op->getParameter().at(0), op->getParameter().at(1),
-              op->getParameter().at(2));
+              op->getParameter());
           gateidx++;
         }
       } else {

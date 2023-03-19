@@ -278,8 +278,7 @@ void ExactMapper::map(const Configuration& settings) {
 
         qcMapped.emplace_back<qc::StandardOperation>(
             qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-            op->getParameter().at(0), op->getParameter().at(1),
-            op->getParameter().at(2));
+            op->getParameter());
       } else {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
