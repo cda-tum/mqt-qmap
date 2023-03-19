@@ -59,8 +59,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Setup nox
         run: pipx install nox
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "python-${{matrix.python-version}}-tests-${{matrix.runs-on}}"
+          variant: ccache
+          max-size: 10G
       - name: Test on 🐍 ${{ matrix.python-version }}
         run: nox -s tests-${{ matrix.python-version }}
+        env:
+          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
   min-qiskit-version:
     name: ⚛️ Min. Qiskit Test
@@ -78,8 +86,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
         run: pipx install nox
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "min-qiskit-version"
+          variant: ccache
+          max-size: 10G
       - name: Run session
         run: nox -s min_qiskit_version -- --cov-report=xml
+        env:
+          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
@@ -111,8 +127,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Setup nox
         run: pipx install nox
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: "python-${{matrix.python-version}}-coverage"
+          variant: ccache
+          max-size: 10G
       - name: Run session
         run: nox -s coverage-${{ matrix.python-version }} -- --cov-report=xml
+        env:
+          PATH: "/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.1
         with:
