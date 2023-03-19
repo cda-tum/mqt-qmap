@@ -38,7 +38,7 @@ public:
    * swaps, mappings and costs
    */
   struct Node {
-    /** current fixed cost (for non-fidelity-aware mapping all cost of all swaps already added) */
+    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps already added) */
     double costFixed = 0;
     /** heuristic cost expected for future swaps needed in current circuit layer
      */
