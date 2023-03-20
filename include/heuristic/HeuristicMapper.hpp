@@ -8,10 +8,23 @@
 
 #pragma once
 
+struct pair_hash {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1,T2> &p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+
+        if constexpr (sizeof(size_t) >= 8) {
+          return h1 ^ (h2 + 0x517cc1b727220a95 + (h2 << 6) + (h2 >> 2));
+        }
+        return h1 ^ (h2 + 0x9e3779b9 + (h2 << 6) + (h2 >> 2));
+    }
+};
+
 /**
  * number of two-qubit gates acting on pairs of logical qubits in some layer
- * where the keys correspond to logical qubit pairs ({q1, q2}) and
- * the values to the number of gates acting on a pair in each direction
+ * where the keys correspond to logical qubit pairs ({q1, q2}, with q1<=q2)
+ * and the values to the number of gates acting on a pair in each direction
  * (the first number with control=q1, target=q2 and the second the reverse).
  *
  * e.g., with multiplicity {{0,1},{2,3}} there are 2 gates with logical
@@ -19,7 +32,7 @@
  * and 0 as target.
  */
 using TwoQubitMultiplicity =
-    std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+    std::unordered_map<Edge, std::pair<std::uint16_t, std::uint16_t>, pair_hash>;
 
 class HeuristicMapper : public Mapper {
 public:
@@ -230,8 +243,8 @@ protected:
    * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  void expandNode(const std::set<std::uint16_t>& consideredQubits, Node& node,
-                  std::size_t                 layer,
+  void expandNode(const std::unordered_set<std::uint16_t>& consideredQubits, 
+                  Node& node, std::size_t layer,
                   const TwoQubitMultiplicity& twoQubitGateMultiplicity);
 
   /**

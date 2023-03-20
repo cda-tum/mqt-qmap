@@ -318,9 +318,8 @@ void HeuristicMapper::createInitialMapping() {
 
 void HeuristicMapper::mapUnmappedGates(
     const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
-  for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
-    auto q1 = edgeMultiplicity.first.first;
-    auto q2 = edgeMultiplicity.first.second;
+  for (const auto& [logEdge, _] : twoQubitGateMultiplicity) {
+    const auto& [q1, q2] = logEdge;
 
     auto q1Location = locations.at(q1);
     auto q2Location = locations.at(q2);
@@ -400,27 +399,27 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 }
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
-  std::set<std::uint16_t> consideredQubits{};
+  std::unordered_set<std::uint16_t> consideredQubits{};
   Node                    node{};
   TwoQubitMultiplicity    twoQubitGateMultiplicity{};
 
   for (const auto& gate : layers.at(layer)) {
     if (!gate.singleQubit()) {
-      const bool  reverse = gate.control >= gate.target;
-      const auto& q1 =
-          reverse ? gate.target : static_cast<std::uint16_t>(gate.control);
-      const auto& q2 =
-          reverse ? static_cast<std::uint16_t>(gate.control) : gate.target;
-      consideredQubits.emplace(q1);
-      consideredQubits.emplace(q2);
-      if (twoQubitGateMultiplicity.find({q1, q2}) ==
-          twoQubitGateMultiplicity.end()) {
-        twoQubitGateMultiplicity[{q1, q2}] = {!reverse, reverse};
-      } else {
-        if (reverse) {
-          twoQubitGateMultiplicity[{q1, q2}].second++;
+      consideredQubits.emplace(gate.control);
+      consideredQubits.emplace(gate.target);
+      if(gate.control >= gate.target) {
+        const auto edge = std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
+        if (twoQubitGateMultiplicity.find(edge) == twoQubitGateMultiplicity.end()) {
+          twoQubitGateMultiplicity[edge] = {0, 1};
         } else {
-          twoQubitGateMultiplicity[{q1, q2}].first++;
+          twoQubitGateMultiplicity[edge].second++;
+        }
+      } else {
+        const auto edge = std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
+        if (twoQubitGateMultiplicity.find(edge) == twoQubitGateMultiplicity.end()) {
+          twoQubitGateMultiplicity[edge] = {1, 0};
+        } else {
+          twoQubitGateMultiplicity[edge].first++;
         }
       }
     }
@@ -454,7 +453,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 }
 
 void HeuristicMapper::expandNode(
-    const std::set<std::uint16_t>& consideredQubits, Node& node,
+    const std::unordered_set<std::uint16_t>& consideredQubits, Node& node,
     std::size_t layer, const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture.getNqubits());
@@ -617,7 +616,7 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
 }
 
 void HeuristicMapper::Node::applySWAP(const Edge& swap, Architecture& arch) {
-  nswaps++;
+  ++nswaps;
   swaps.emplace_back();
   const auto q1 = qubits.at(swap.first);
   const auto q2 = qubits.at(swap.second);
@@ -728,36 +727,34 @@ void HeuristicMapper::Node::recalculateFixedCost(const Architecture& arch) {
 void HeuristicMapper::Node::updateHeuristicCost(
     const Architecture&         arch,
     const TwoQubitMultiplicity& twoQubitGateMultiplicity,
-    bool                        admissibleHeuristic) {
+    const bool                  admissibleHeuristic) {
   costHeur = 0.;
   done     = true;
 
   // iterating over all virtual qubit pairs, that share a gate on the
   // current layer
-  for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
-    const auto& q1                   = edgeMultiplicity.first.first;
-    const auto& q2                   = edgeMultiplicity.first.second;
-    const auto& straightMultiplicity = edgeMultiplicity.second.first;
-    const auto& reverseMultiplicity  = edgeMultiplicity.second.second;
+  for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
+    const auto& [q1, q2] = edge;
+    
+    const auto& [straightMultiplicity, reverseMultiplicity] = multiplicity;
 
-    bool edgeDone = (arch.getCouplingMap().find(
-                         {static_cast<std::uint16_t>(locations.at(q1)),
-                          static_cast<std::uint16_t>(locations.at(q2))}) !=
-                         arch.getCouplingMap().end() ||
-                     arch.getCouplingMap().find(
-                         {static_cast<std::uint16_t>(locations.at(q2)),
-                          static_cast<std::uint16_t>(locations.at(q1))}) !=
-                         arch.getCouplingMap().end());
     // only if all qubit pairs are mapped next to each other the mapping
     // is complete
-    if (!edgeDone) {
+    if (arch.getCouplingMap().find(
+            {static_cast<std::uint16_t>(locations.at(q1)),
+            static_cast<std::uint16_t>(locations.at(q2))}) ==
+            arch.getCouplingMap().end() &&
+        arch.getCouplingMap().find(
+            {static_cast<std::uint16_t>(locations.at(q2)),
+            static_cast<std::uint16_t>(locations.at(q1))}) ==
+            arch.getCouplingMap().end()) {
       done = false;
     }
 
-    double swapCostStraight =
+    const double swapCostStraight =
         arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
                       static_cast<std::uint16_t>(locations.at(q2)));
-    double swapCostReverse =
+    const double swapCostReverse =
         arch.distance(static_cast<std::uint16_t>(locations.at(q2)),
                       static_cast<std::uint16_t>(locations.at(q1)));
 
