@@ -8,7 +8,7 @@
 
 #pragma once
 
-struct pair_hash {
+struct pairHash {
   template <class T1, class T2>
   std::size_t operator()(const std::pair<T1, T2>& p) const {
     auto h1 = std::hash<T1>{}(p.first);
@@ -33,7 +33,7 @@ struct pair_hash {
  */
 using TwoQubitMultiplicity =
     std::unordered_map<Edge, std::pair<std::uint16_t, std::uint16_t>,
-                       pair_hash>;
+                       pairHash>;
 
 class HeuristicMapper : public Mapper {
 public:
