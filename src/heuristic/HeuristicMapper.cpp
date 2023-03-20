@@ -400,23 +400,27 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   std::unordered_set<std::uint16_t> consideredQubits{};
-  Node                    node{};
-  TwoQubitMultiplicity    twoQubitGateMultiplicity{};
+  Node                              node{};
+  TwoQubitMultiplicity              twoQubitGateMultiplicity{};
 
   for (const auto& gate : layers.at(layer)) {
     if (!gate.singleQubit()) {
       consideredQubits.emplace(gate.control);
       consideredQubits.emplace(gate.target);
-      if(gate.control >= gate.target) {
-        const auto edge = std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
-        if (twoQubitGateMultiplicity.find(edge) == twoQubitGateMultiplicity.end()) {
+      if (gate.control >= gate.target) {
+        const auto edge =
+            std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
+        if (twoQubitGateMultiplicity.find(edge) ==
+            twoQubitGateMultiplicity.end()) {
           twoQubitGateMultiplicity[edge] = {0, 1};
         } else {
           twoQubitGateMultiplicity[edge].second++;
         }
       } else {
-        const auto edge = std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
-        if (twoQubitGateMultiplicity.find(edge) == twoQubitGateMultiplicity.end()) {
+        const auto edge =
+            std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
+        if (twoQubitGateMultiplicity.find(edge) ==
+            twoQubitGateMultiplicity.end()) {
           twoQubitGateMultiplicity[edge] = {1, 0};
         } else {
           twoQubitGateMultiplicity[edge].first++;
@@ -735,18 +739,18 @@ void HeuristicMapper::Node::updateHeuristicCost(
   // current layer
   for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
     const auto& [q1, q2] = edge;
-    
+
     const auto& [straightMultiplicity, reverseMultiplicity] = multiplicity;
 
     // only if all qubit pairs are mapped next to each other the mapping
     // is complete
     if (arch.getCouplingMap().find(
             {static_cast<std::uint16_t>(locations.at(q1)),
-            static_cast<std::uint16_t>(locations.at(q2))}) ==
+             static_cast<std::uint16_t>(locations.at(q2))}) ==
             arch.getCouplingMap().end() &&
         arch.getCouplingMap().find(
             {static_cast<std::uint16_t>(locations.at(q2)),
-            static_cast<std::uint16_t>(locations.at(q1))}) ==
+             static_cast<std::uint16_t>(locations.at(q1))}) ==
             arch.getCouplingMap().end()) {
       done = false;
     }
