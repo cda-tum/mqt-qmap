@@ -36,7 +36,7 @@ TEST(Functionality, NodeCostCalculation) {
   std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
   std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
   std::vector<std::vector<Exchange>>          swaps     = {
-      {Exchange(0, 1, qc::OpType::Teleportation)}, 
+      {Exchange(0, 1, qc::OpType::Teleportation)},
       {Exchange(1, 2, qc::OpType::SWAP)}};
   HeuristicMapper::Node node(qubits, locations, swaps, 5.);
   EXPECT_NEAR(node.costFixed, 5., 1e-6);
@@ -60,11 +60,16 @@ TEST(Functionality, NodeCostCalculation) {
               7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, 1e-6);
   EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP, 1e-6);
   node.recalculateFixedCost(arch);
-  EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2, 1e-6);
+  EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
+              1e-6);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
               1e-6);
-  EXPECT_NEAR(node.getTotalCost(), 2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 3 + COST_DIRECTION_REVERSE, 1e-6);
-  EXPECT_NEAR(node.getTotalFixedCost(), 2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2, 1e-6);
+  EXPECT_NEAR(node.getTotalCost(),
+              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 3 +
+                  COST_DIRECTION_REVERSE,
+              1e-6);
+  EXPECT_NEAR(node.getTotalFixedCost(),
+              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2, 1e-6);
 }
 
 TEST(Functionality, EmptyDump) {

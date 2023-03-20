@@ -32,8 +32,7 @@ struct pairHash {
  * and 0 as target.
  */
 using TwoQubitMultiplicity =
-    std::unordered_map<Edge, std::pair<std::uint16_t, std::uint16_t>,
-                       pairHash>;
+    std::unordered_map<Edge, std::pair<std::uint16_t, std::uint16_t>, pairHash>;
 
 class HeuristicMapper : public Mapper {
 public:
