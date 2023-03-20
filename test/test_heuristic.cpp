@@ -29,6 +29,36 @@ protected:
   }
 };
 
+TEST(Functionality, NodeCostCalculation) {
+  const CouplingMap cm = {{0,1},{1,2},{3,1},{4,3}};
+  Architecture arch{5, cm};
+  TwoQubitMultiplicity multiplicity = {{{0,1},{5,2}},{{2,3},{0,1}}};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
+  std::vector<std::vector<Exchange>>          swaps     = {{Exchange(0,1,qc::OpType::SWAP)}, {Exchange(1,2,qc::OpType::SWAP)}};
+  HeuristicMapper::Node node(qubits, locations, swaps, 5.);
+  EXPECT_NEAR(node.costFixed, 5., 1e-6);
+  node.updateHeuristicCost(arch, multiplicity, true);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP*2+COST_DIRECTION_REVERSE, 1e-6);
+  node.updateHeuristicCost(arch, multiplicity, false);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP*14+COST_DIRECTION_REVERSE*3, 1e-6);
+  node.applySWAP({3,4}, arch);
+  node.updateHeuristicCost(arch, multiplicity, true);
+  EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, 1e-6);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE, 1e-6);
+  node.lookaheadPenalty = 0.;
+  EXPECT_NEAR(node.getTotalCost(), 5. + COST_UNIDIRECTIONAL_SWAP*2 + COST_DIRECTION_REVERSE, 1e-6);
+  EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP, 1e-6);
+  node.lookaheadPenalty = 2.;
+  EXPECT_NEAR(node.getTotalCost(), 7. + COST_UNIDIRECTIONAL_SWAP*2 + COST_DIRECTION_REVERSE, 1e-6);
+  EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP, 1e-6);
+  node.recalculateFixedCost(arch);
+  EXPECT_NEAR(node.costFixed, COST_UNIDIRECTIONAL_SWAP*3, 1e-6);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE, 1e-6);
+  EXPECT_NEAR(node.getTotalCost(), 2. + COST_UNIDIRECTIONAL_SWAP*4 + COST_DIRECTION_REVERSE, 1e-6);
+  EXPECT_NEAR(node.getTotalFixedCost(), 2. + COST_UNIDIRECTIONAL_SWAP*3, 1e-6);
+}
+
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
   qc.x(0);
