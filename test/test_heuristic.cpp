@@ -30,8 +30,8 @@ protected:
 };
 
 TEST(Functionality, NodeCostCalculation) {
-  const double tolerance = 1e-6;
-  const CouplingMap    cm = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
+  const double         tolerance = 1e-6;
+  const CouplingMap    cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
   Architecture         arch{5, cm};
   TwoQubitMultiplicity multiplicity = {{{0, 1}, {5, 2}}, {{2, 3}, {0, 1}}};
   std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
@@ -48,7 +48,8 @@ TEST(Functionality, NodeCostCalculation) {
               COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
   node.updateHeuristicCost(arch, multiplicity, false);
   EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3, tolerance);
+              COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
+              tolerance);
   node.applySWAP({3, 4}, arch);
   node.updateHeuristicCost(arch, multiplicity, true);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
@@ -56,12 +57,16 @@ TEST(Functionality, NodeCostCalculation) {
               tolerance);
   node.lookaheadPenalty = 0.;
   EXPECT_NEAR(node.getTotalCost(),
-              5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
+              5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP,
+              tolerance);
   node.lookaheadPenalty = 2.;
   EXPECT_NEAR(node.getTotalCost(),
-              7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP, tolerance);
+              7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
+              tolerance);
   node.recalculateFixedCost(arch);
   EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
@@ -72,7 +77,8 @@ TEST(Functionality, NodeCostCalculation) {
                   COST_DIRECTION_REVERSE,
               tolerance);
   EXPECT_NEAR(node.getTotalFixedCost(),
-              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2, tolerance);
+              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
+              tolerance);
 }
 
 TEST(Functionality, EmptyDump) {
