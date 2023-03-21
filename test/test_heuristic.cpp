@@ -35,11 +35,11 @@ TEST(Functionality, NodeCostCalculation) {
   TwoQubitMultiplicity multiplicity = {{{0, 1}, {5, 2}}, {{2, 3}, {0, 1}}};
   std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
   std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
-  
+
   std::vector<std::vector<Exchange>> swaps = {
       {Exchange(0, 1, qc::OpType::Teleportation)},
       {Exchange(1, 2, qc::OpType::SWAP)}};
-  
+
   HeuristicMapper::Node node(qubits, locations, swaps, 5.);
   EXPECT_NEAR(node.costFixed, 5., 1e-6);
   node.updateHeuristicCost(arch, multiplicity, true);
