@@ -5,6 +5,7 @@
 
 #include "Mapper.hpp"
 #include "heuristic/UniquePriorityQueue.hpp"
+#include <cmath>
 
 #pragma once
 
@@ -20,6 +21,8 @@
  */
 using TwoQubitMultiplicity =
     std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+
+constexpr double EFFECTIVE_BRANCH_RATE_TOLERANCE = 1e-10;
 
 class HeuristicMapper : public Mapper {
 public:
@@ -70,13 +73,16 @@ public:
     /** number of swaps used to get from mapping after last layer to the current
      * mapping */
     std::size_t nswaps = 0;
+    /** depth in search tree (starting with 0 at the root) */
+    std::size_t depth = 0;
 
     Node() = default;
     Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<std::vector<Exchange>>&          sw            = {},
-         const double                                       initCostFixed = 0)
-        : costFixed(initCostFixed) {
+         const double                                       initCostFixed = 0,
+         const std::size_t                                  searchDepth   = 0)
+        : costFixed(initCostFixed), depth(searchDepth) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -262,6 +268,29 @@ protected:
       return std::max(currentCost, newCost);
     }
     return currentCost + newCost;
+  }
+  
+  static double computeEffectiveBranchingRate(const std::size_t nodesProcessed, const std::size_t solutionDepth) {
+    // N = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b*
+    // no closed-form solution for b*, so we use approximation via binary search
+    if (solutionDepth == 0) {
+      return 0.;
+    }
+    double lower = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth))/static_cast<double>(solutionDepth);
+    double upper = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth));
+    while (upper - lower > 2*EFFECTIVE_BRANCH_RATE_TOLERANCE) {
+      const double mid = (lower + upper) / 2.0;
+      double sum = 0.0;
+      for(std::size_t i = 1; i <= solutionDepth; ++i) {
+        sum += std::pow(mid, i);
+      }
+      if(sum < static_cast<double>(nodesProcessed)) {
+        lower = mid;
+      } else {
+        upper = mid;
+      }
+    }
+    return (lower + upper) / 2.0;
   }
 };
 
