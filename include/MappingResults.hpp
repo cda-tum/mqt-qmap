@@ -109,17 +109,6 @@ struct MappingResults {
       benchmark["time_per_node"] = heuristicBenchmark.timePerNode;
       benchmark["average_branching_factor"] = heuristicBenchmark.averageBranchingFactor;
       benchmark["effective_branching_factor"] = heuristicBenchmark.effectiveBranchingFactor;
-      /*benchmark["layers"] = nlohmann::json::array();
-      auto& layerBenchmark = benchmark["layers"];
-      for (const auto& layer : layerHeuristicBenchmark) {
-        auto& layerStats = layerBenchmark.emplace_back();
-        layerStats["expanded_nodes"] = layer.expandedNodes;
-        layerStats["generated_nodes"] = layer.generatedNodes;
-        layerStats["solution_depth"] = layer.solutionDepth;
-        layerStats["time_per_node"] = layer.timePerNode;
-        layerStats["average_branching_factor"] = layer.averageBranchingFactor;
-        layerStats["effective_branching_factor"] = layer.effectiveBranchingFactor;
-      }*/
     }
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -

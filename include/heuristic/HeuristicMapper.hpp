@@ -270,12 +270,13 @@ protected:
     return currentCost + newCost;
   }
   
-  static double computeEffectiveBranchingRate(const std::size_t nodesProcessed, const std::size_t solutionDepth) {
-    // N = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b*
+  static double computeEffectiveBranchingRate(std::size_t nodesProcessed, const std::size_t solutionDepth) {
+    // N = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b* + 1
     // no closed-form solution for b*, so we use approximation via binary search
     if (solutionDepth == 0) {
       return 0.;
     }
+    --nodesProcessed; // N - 1 = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b*
     double lower = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth))/static_cast<double>(solutionDepth);
     double upper = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth));
     while (upper - lower > 2*EFFECTIVE_BRANCH_RATE_TOLERANCE) {
