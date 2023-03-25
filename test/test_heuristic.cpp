@@ -133,19 +133,20 @@ TEST(Functionality, HeuristicAdmissibility) {
   architecture.loadCouplingMap(6, cm);
   const std::vector<Edge> perms{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
-  TwoQubitMultiplicity multiplicity = {{{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
-  
+  TwoQubitMultiplicity multiplicity = {
+      {{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
+
   // perform depth-limited depth first search
-  const std::size_t depthLimit = 11;
+  const std::size_t                  depthLimit = 11;
   std::vector<HeuristicMapper::Node> stack{};
-  std::vector<std::size_t> currentPerm{};
-  
+  std::vector<std::size_t>           currentPerm{};
+
   auto initNode = HeuristicMapper::Node({0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5});
   initNode.recalculateFixedCost(architecture);
   initNode.updateHeuristicCost(architecture, multiplicity, true);
   stack.push_back(initNode);
   currentPerm.push_back(perms.size());
-  
+
   while (!stack.empty()) {
     auto& node = stack.back();
     if (node.done) {
@@ -160,8 +161,9 @@ TEST(Functionality, HeuristicAdmissibility) {
       continue;
     }
     --currentPerm.back();
-    auto perm = perms[currentPerm.back()];
-    auto newNode = HeuristicMapper::Node(node.qubits, node.locations, node.swaps, node.costFixed);
+    auto perm    = perms[currentPerm.back()];
+    auto newNode = HeuristicMapper::Node(node.qubits, node.locations,
+                                         node.swaps, node.costFixed);
     newNode.applySWAP(perm, architecture);
     newNode.updateHeuristicCost(architecture, multiplicity, true);
     stack.push_back(newNode);
