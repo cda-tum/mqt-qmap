@@ -161,9 +161,9 @@ TEST(Functionality, HeuristicAdmissibility) {
       continue;
     }
     --currentPerm.back();
-    const auto perm = perms[currentPerm.back()];
-    auto newNode = HeuristicMapper::Node(node.qubits, node.locations,
-                                         node.swaps, node.costFixed);
+    const auto perm    = perms[currentPerm.back()];
+    auto       newNode = HeuristicMapper::Node(node.qubits, node.locations,
+                                               node.swaps, node.costFixed);
     newNode.applySWAP(perm, architecture);
     newNode.updateHeuristicCost(architecture, multiplicity, true);
     stack.push_back(newNode);
