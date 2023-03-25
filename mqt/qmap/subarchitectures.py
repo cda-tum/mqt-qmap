@@ -1,5 +1,4 @@
-"""
-Functionality for computing good subarchitectures for quantum circuit mapping.
+"""Functionality for computing good subarchitectures for quantum circuit mapping.
 
 This file implements the methods presented in https://arxiv.org/abs/2210.09321.
 """
@@ -16,13 +15,16 @@ else:
 import pickle
 from itertools import combinations
 from pathlib import Path
-from typing import Dict, NewType, Set, Tuple
+from typing import TYPE_CHECKING, Dict, NewType, Set, Tuple
+
+if TYPE_CHECKING:  # pragma: no cover
+    from matplotlib import figure
+    from qiskit.providers import Backend
+
+    from mqt.qmap import Architecture
+
 
 import rustworkx as rx
-from matplotlib import figure
-from mqt.qmap import Architecture
-
-from qiskit.providers import Backend
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
@@ -31,26 +33,32 @@ precomputed_backends = ["rigetti_16", "ibm_guadalupe_16"]
 
 
 class SubarchitectureOrder:
-    """Class representing partial order of Subarchitectures."""
+    """Class representing the partial order of (sub)architectures."""
 
-    __inactive_color: str = "#1f78b4"
-    __active_color: str = "#faf18e"
+    inactive_color: str = "#1f78b4"
+    active_color: str = "#faf18e"
 
     def __init__(self) -> None:
-        """Construct SubarchitectureOrder with default fields."""
+        """Initialize a partial order."""
         self.arch: rx.PyGraph = rx.PyGraph()
         self.subarch_order: PartialOrder = PartialOrder({})
         self.desirable_subarchitectures: PartialOrder = PartialOrder({})
-        self.__isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
+        self.isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
 
         self.__compute_subarchs()
         self.__compute_subarch_order()
         self.__compute_desirable_subarchitectures()
-        return
 
     @classmethod
     def from_retworkx_graph(cls, graph: rx.PyGraph) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from retworkx graph."""
+        """Construct the partial order from retworkx graph.
+
+        Args:
+            graph: retworkx graph representing the architecture.
+
+        Returns:
+            The resulting partial order.
+        """
         so = SubarchitectureOrder()
         so.arch = graph
 
@@ -61,7 +69,14 @@ class SubarchitectureOrder:
 
     @classmethod
     def from_coupling_map(cls, coupling_map: set[tuple[int, int]] | list[tuple[int, int]]) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from coupling map defined as set of tuples of connected qubits."""
+        """Construct partial order from coupling map defined as set of tuples of connected qubits.
+
+        Args:
+            coupling_map: Set or list of tuples of connected qubits.
+
+        Returns:
+            The resulting partial order.
+        """
         num_nodes = max(max(int(u), int(v)) for u, v in coupling_map)
         graph = rx.PyGraph()
         graph.add_nodes_from(list(range(num_nodes + 1)))
@@ -71,18 +86,39 @@ class SubarchitectureOrder:
 
     @classmethod
     def from_backend(cls, backend: Backend) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from coupling map defined by qiskit backend."""
+        """Construct the partial order from a coupling map defined as a Qiskit backend.
+
+        Args:
+            backend: Qiskit backend.
+
+        Returns:
+            The resulting partial order.
+        """
         coupling_map = {(a, b) for a, b in backend.configuration().coupling_map}
         return cls.from_coupling_map(coupling_map)
 
     @classmethod
     def from_qmap_architecture(cls, arch: Architecture) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from qmap Architecture object."""
+        """Construct the partial order from a QMAP :class:`~mqt.qmap.Architecture` object.
+
+        Args:
+            arch: QMAP architecture.
+
+        Returns:
+            The resulting partial order.
+        """
         return cls.from_coupling_map(arch.coupling_map)
 
     @classmethod
     def from_library(cls, lib_name: str | Path) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from stored library."""
+        """Construct the partial order from a stored library.
+
+        Args:
+            lib_name: Path to the library.
+
+        Returns:
+            The resulting partial order.
+        """
         path = Path(lib_name).with_suffix(".pickle")
         with path.open("rb") as f:
             temp = pickle.load(f)
@@ -93,10 +129,17 @@ class SubarchitectureOrder:
         return so
 
     @classmethod
-    def from_string(cls, path: str) -> SubarchitectureOrder:
-        """Construct SubarchitectureOrder from library name."""
-        if path in precomputed_backends:
-            ref = resources.files("mqt.qmap") / "libs" / (path + ".pickle")
+    def from_string(cls, name: str) -> SubarchitectureOrder:
+        """Construct the partial order from a library name.
+
+        Args:
+            name: Name of the library.
+
+        Returns:
+            The resulting partial order.
+        """
+        if name in precomputed_backends:
+            ref = resources.files("mqt.qmap") / "libs" / (name + ".pickle")
             with resources.as_file(ref) as lib_path:
                 return cls.from_library(lib_path)
         return SubarchitectureOrder()
@@ -104,13 +147,16 @@ class SubarchitectureOrder:
     def optimal_candidates(self, nqubits: int) -> list[rx.PyGraph]:
         """Return optimal subarchitecture candidate.
 
-        nqubits : int
-            size of circuit for which the optimal candidate should be given.
+        Args:
+            nqubits:
+                size of circuit for which the optimal candidate should be given.
+
+        Returns:
+            List of optimal subarchitecture candidates for circuits of the given size.
         """
         if nqubits <= 0 or nqubits > self.arch.num_nodes():
-            raise ValueError(
-                "Number of qubits must not be smaller or equal 0 or larger then number of physical qubits of architecture."
-            )
+            msg = "Number of qubits must not be smaller or equal 0 or larger then number of physical qubits of architecture."
+            raise ValueError(msg)
 
         if nqubits == self.arch.num_nodes():
             return [self.arch]
@@ -131,11 +177,19 @@ class SubarchitectureOrder:
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
     def covering(self, nqubits: int, size: int) -> list[rx.PyGraph]:
-        """
-        Return covering for nqubit circuits.
+        """Return covering for nqubit circuits.
 
-        The size of the covering is limited by size.
-        Note that a smaller covering might be found.
+        Args:
+            nqubits:
+                size of circuit for which the covering should be given.
+            size:
+                limit for the size of the covering.
+
+        Returns:
+            Subarchitecture covering for circuits of the given size.
+
+        Note:
+            A smaller covering might be found.
         """
         cov = self.__cand(nqubits)
         po_trans = self.__transitive_closure(self.subarch_order)
@@ -155,34 +209,51 @@ class SubarchitectureOrder:
         return [self.sgs[n][i] for n, i in cov]
 
     def store_library(self, lib_name: str | Path) -> None:
-        """Store ordering."""
+        """Store ordering.
+
+        Args:
+            lib_name: Path to the library.
+        """
         path = Path(lib_name).with_suffix(".pickle")
         with path.open("wb") as f:
             pickle.dump(self, f)
 
     def draw_subarchitecture(self, subarchitecture: rx.PyGraph | tuple[int, int]) -> figure.Figure:
-        """Return matplotlib figure showing subarchitecture within the entire architecture.
+        """Create a matplotlib figure showing subarchitecture within the entire architecture.
 
         Nodes that are part of the subarchitecture are drawn yellow.
         Nodes that are not part of the subarchitecture are drawn blue.
+
+        Args:
+            subarchitecture: Subarchitecture to be drawn.
+
+        Returns:
+            Matplotlib figure.
         """
         if isinstance(subarchitecture, tuple):
             subarchitecture = self.sgs[subarchitecture[0]][subarchitecture[1]]
-        colors = [SubarchitectureOrder.__inactive_color for node in range(self.arch.num_nodes())]
+        colors = [SubarchitectureOrder.inactive_color for _ in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
-            colors[node] = SubarchitectureOrder.__active_color
+            colors[node] = SubarchitectureOrder.active_color
         return rx.visualization.mpl_draw(subarchitecture, node_color=colors)
 
     def draw_subarchitectures(self, subarchitectures: list[rx.PyGraph] | list[tuple[int, int]]) -> list[figure.Figure]:
-        """Return matplotlib figures showing subarchitectures within the entire architecture.
+        """Create matplotlib figures showing subarchitectures within the entire architecture.
 
         For each subarchitecture one figure is drawn.
         Nodes that are part of the subarchitecture are drawn yellow.
         Nodes that are not part of the subarchitecture are drawn blue.
+
+        Args:
+            subarchitectures: Subarchitectures to be drawn.
+
+        Returns:
+            List of matplotlib figures.
         """
         return [self.draw_subarchitecture(subarchitecture) for subarchitecture in subarchitectures]
 
     def __compute_subarchs(self) -> None:
+        """Compute all subarchitectures of the architecture."""
         self.sgs: list[list[rx.PyGraph]] = [[] for i in range(self.arch.num_nodes() + 1)]
 
         for i in range(1, self.arch.num_nodes() + 1):
@@ -201,9 +272,10 @@ class SubarchitectureOrder:
             for i in range(len(self.sgs[n])):
                 self.subarch_order[(n, i)] = set()
                 self.desirable_subarchitectures[(n, i)] = set()
-                self.__isomorphisms[(n, i)] = {}
+                self.isomorphisms[(n, i)] = {}
 
     def __compute_subarch_order(self) -> None:
+        """Compute subarchitecture order."""
         for n, sgs_n in enumerate(self.sgs[:-1]):
             for i, sg in enumerate(sgs_n):
                 for j, parent_sg in enumerate(self.sgs[n + 1]):
@@ -213,10 +285,11 @@ class SubarchitectureOrder:
                         iso_rev = {}
                         for key, val in iso.items():
                             iso_rev[val] = key
-                        self.__isomorphisms[(n, i)][(n + 1, j)] = iso_rev
+                        self.isomorphisms[(n, i)][(n + 1, j)] = iso_rev
                         break  # One isomorphism suffices
 
     def __complete_isos(self) -> None:
+        """Complete isomorphisms."""
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
                 for _, i_prime in self.subarch_order[(n, i)]:
@@ -224,18 +297,20 @@ class SubarchitectureOrder:
 
     def __combine_iso_with_parent(self, n: int, i: int, j: int) -> None:
         """Combine all isomorphisms from sgs[n][i] with those from sgs[n+1][j]."""
-        first = self.__isomorphisms[(n, i)][(n + 1, j)]
-        for (row, k), second in self.__isomorphisms[(n + 1, j)].items():
-            self.__isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
+        first = self.isomorphisms[(n, i)][(n + 1, j)]
+        for (row, k), second in self.isomorphisms[(n + 1, j)].items():
+            self.isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
 
     @staticmethod
     def __combine_isos(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
+        """Combine two isomorphisms."""
         combined = {}
         for src, img in first.items():
             combined[src] = second[img]
         return combined
 
     def __transitive_closure(self, po: PartialOrder) -> PartialOrder:
+        """Compute transitive closure of partial order."""
         po_trans: PartialOrder = PartialOrder({})
         po_trans[self.arch.num_nodes(), 0] = set()
 
@@ -250,6 +325,7 @@ class SubarchitectureOrder:
         return po_trans
 
     def __reflexive_closure(self, po: PartialOrder) -> PartialOrder:
+        """Compute reflexive closure of partial order."""
         po_ref = PartialOrder({})
         for k, v in po.items():
             v_copy = v.copy()
@@ -258,6 +334,7 @@ class SubarchitectureOrder:
         return po_ref
 
     def __inverse_relation(self, po: PartialOrder) -> PartialOrder:
+        """Compute inverse relation of partial order."""
         po_inv = PartialOrder({})
         for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
@@ -268,34 +345,36 @@ class SubarchitectureOrder:
         return po_inv
 
     def __path_order_less(self, n: int, i: int, n_prime: int, i_prime: int) -> bool:
+        """Check if sgs[n][i] is less than sgs[n_prime][i_prime] in the path order."""
         lhs = self.sgs[n][i]
         rhs = self.sgs[n_prime][i_prime]
-        iso = self.__isomorphisms[(n, i)][(n_prime, i_prime)]
+        iso = self.isomorphisms[(n, i)][(n_prime, i_prime)]
         for v in range(lhs.num_nodes()):
             for w in range(lhs.num_nodes()):
                 if v is w:
                     continue
                 if (
-                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda x: 1, goal=w)[w]
-                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda x: 1, goal=iso[w])[iso[w]]
+                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda _x: 1, goal=w)[w]
+                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda _x: 1, goal=iso[w])[iso[w]]
                 ):
                     return True
         return False
 
     def __compute_desirable_subarchitectures(self) -> None:
+        """Compute desirable subarchitectures."""
         self.__complete_isos()
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
-                val = self.__isomorphisms[(n, i)]
-                for n_prime, i_prime in val.keys():
+                val = self.isomorphisms[(n, i)]
+                for n_prime, i_prime in val:
                     if self.__path_order_less(n, i, n_prime, i_prime):
                         self.desirable_subarchitectures[(n, i)].add((n_prime, i_prime))
                 des = list(self.desirable_subarchitectures[(n, i)])
                 des.sort()
                 new_des: set[tuple[int, int]] = set()
                 for j, (n_prime, i_prime) in enumerate(reversed(des)):
-                    j = len(des) - j - 1
-                    if not any([(n_prime, i_prime) in self.subarch_order[k] for k in des[:j]]):
+                    idx = len(des) - j - 1
+                    if not any((n_prime, i_prime) in self.subarch_order[k] for k in des[:idx]):
                         new_des.add((n_prime, i_prime))
 
                 self.desirable_subarchitectures[(n, i)] = new_des
@@ -310,14 +389,22 @@ class SubarchitectureOrder:
 
 
 def ibm_guadalupe_subarchitectures() -> SubarchitectureOrder:
-    """Load the precomputed ibm guadalupe subarchitectures."""
+    """Load the precomputed ibm guadalupe subarchitectures.
+
+    Returns:
+        The subarchitecture order for the ibm_guadalupe architecture.
+    """
     ref = resources.files("mqt.qmap") / "libs" / "ibm_guadalupe_16.pickle"
     with resources.as_file(ref) as path:
         return SubarchitectureOrder.from_library(path)
 
 
 def rigetti_16_subarchitectures() -> SubarchitectureOrder:
-    """Load the precomputed rigetti subarchitectures."""
+    """Load the precomputed rigetti subarchitectures.
+
+    Returns:
+        The subarchitecture order for the 16-qubit Rigetti architecture.
+    """
     ref = resources.files("mqt.qmap") / "libs" / "rigetti_16.pickle"
     with resources.as_file(ref) as path:
         return SubarchitectureOrder.from_library(path)

@@ -10,7 +10,7 @@
 
 enum class Encoding { Naive, Commander, Bimander };
 
-[[maybe_unused]] static inline std::string toString(const Encoding encoding) {
+static inline std::string toString(const Encoding encoding) {
   switch (encoding) {
   case Encoding::Naive:
     return "naive";
@@ -22,8 +22,7 @@ enum class Encoding { Naive, Commander, Bimander };
   return " ";
 }
 
-[[maybe_unused]] static Encoding
-encodingFromString(const std::string& encoding) {
+static Encoding encodingFromString(const std::string& encoding) {
   if (encoding == "naive" || encoding == "0") {
     return Encoding::Naive;
   }
@@ -34,4 +33,18 @@ encodingFromString(const std::string& encoding) {
     return Encoding::Bimander;
   }
   throw std::invalid_argument("Invalid encoding value: " + encoding);
+}
+
+[[maybe_unused]] static inline std::ostream&
+operator<<(std::ostream& os, const Encoding& encoding) {
+  os << toString(encoding);
+  return os;
+}
+
+[[maybe_unused]] static inline std::istream& operator>>(std::istream& is,
+                                                        Encoding& encoding) {
+  std::string s;
+  is >> s;
+  encoding = encodingFromString(s);
+  return is;
 }

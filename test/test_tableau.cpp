@@ -243,6 +243,9 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.y(1, 0_pc);
   qc.z(1, 0_pc);
   qc.swap(0, 1);
+  qc.iswap(0, 1);
+  qc.dcx(0, 1);
+  qc.ecr(0, 1);
 
   auto compOP = std::make_unique<qc::CompoundOperation>(2U);
   compOP->emplace_back<qc::StandardOperation>(2U, 0, qc::H);
@@ -321,6 +324,29 @@ TEST_F(TestTableau, TableauIO) {
   auto tableau2 = Tableau{};
   tableau2.import(filename);
   EXPECT_EQ(tableau, tableau2);
+}
+
+TEST_F(TestTableau, ApplyCXH) {
+  tableau = Tableau(3);
+  tableau.applyCX(1, 2);
+  std::string expected = "0;0;0;1;0;0;0\n0;0;0;0;1;0;0\n0;0;0;0;1;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(2);
+  expected = "0;0;0;1;0;0;0\n0;0;0;0;1;0;0\n0;0;1;0;1;0;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(1);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;1;0;0;0;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyH(2);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;0;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyCX(0, 2);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;1;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  tableau.applyCX(0, 1);
+  expected = "0;0;0;1;0;0;0\n0;1;0;0;0;0;0\n0;1;0;1;0;1;0";
+  EXPECT_EQ(tableau, Tableau(expected));
+  EXPECT_EQ(tableau, Tableau("[+ZII, +IXI, +ZXZ]"));
 }
 
 } // namespace cs

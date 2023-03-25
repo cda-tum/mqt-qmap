@@ -12,7 +12,8 @@ enum class Layering {
   IndividualGates,
   DisjointQubits,
   OddGates,
-  QubitTriangle
+  QubitTriangle,
+  Disjoint2qBlocks
 };
 
 [[maybe_unused]] static inline std::string toString(const Layering strategy) {
@@ -25,6 +26,8 @@ enum class Layering {
     return "odd_gates";
   case Layering::QubitTriangle:
     return "qubit_triangle";
+  case Layering::Disjoint2qBlocks:
+    return "disjoint_2q_blocks";
   case Layering::None:
     return "none";
   }
@@ -47,6 +50,9 @@ layeringFromString(const std::string& layering) {
   }
   if (layering == "qubit_triangle" || layering == "4") {
     return Layering::QubitTriangle;
+  }
+  if (layering == "disjoint_2q_blocks" || layering == "5") {
+    return Layering::Disjoint2qBlocks;
   }
   throw std::invalid_argument("Invalid layering value: " + layering);
 }

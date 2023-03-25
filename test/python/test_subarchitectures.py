@@ -1,7 +1,11 @@
+"""Test subarchitecture generation."""
+
 from pathlib import Path
 
 import pytest
 import rustworkx as rx
+from qiskit.providers.fake_provider import FakeLondon
+
 from mqt.qmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,
@@ -9,11 +13,10 @@ from mqt.qmap.subarchitectures import (
     rigetti_16_subarchitectures,
 )
 
-from qiskit.providers.fake_provider import FakeLondon
 
-
-@pytest.fixture
+@pytest.fixture()
 def ibm_guadalupe() -> SubarchitectureOrder:
+    """Return the SubarchitectureOrder for the IBM Guadalupe architecture."""
     return SubarchitectureOrder.from_coupling_map(
         [
             (0, 1),
@@ -36,8 +39,9 @@ def ibm_guadalupe() -> SubarchitectureOrder:
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def rigetti16() -> SubarchitectureOrder:
+    """Return the SubarchitectureOrder for the Rigetti 16Q architecture."""
     return SubarchitectureOrder.from_coupling_map(
         [
             (0, 1),
@@ -62,8 +66,9 @@ def rigetti16() -> SubarchitectureOrder:
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def rigetti16_opt() -> rx.PyGraph:
+    """Return the optimal subarchitecture candidate for the Rigetti 16Q architecture."""
     cm = [
         [0, 1],
         [1, 2],
@@ -89,8 +94,9 @@ def rigetti16_opt() -> rx.PyGraph:
     return graph
 
 
-@pytest.fixture
+@pytest.fixture()
 def singleton_graph() -> rx.PyGraph:
+    """Return a graph with a single node."""
     g = rx.PyGraph()
     g.add_node(0)
     return g
@@ -98,7 +104,6 @@ def singleton_graph() -> rx.PyGraph:
 
 def test_singleton_graph(singleton_graph: rx.PyGraph) -> None:
     """Verify that singleton graph has trivial ordering."""
-
     order = SubarchitectureOrder.from_retworkx_graph(singleton_graph)
 
     assert len(order.sgs) == 2
@@ -109,7 +114,6 @@ def test_singleton_graph(singleton_graph: rx.PyGraph) -> None:
 
 def test_two_node_graph(singleton_graph: rx.PyGraph) -> None:
     """Verify ordering for graph with two nodes and one edge."""
-
     order = SubarchitectureOrder.from_coupling_map([(0, 1)])
     assert len(order.sgs) == 3
     assert len(order.sgs[0]) == 0
@@ -120,6 +124,7 @@ def test_two_node_graph(singleton_graph: rx.PyGraph) -> None:
 
 
 def test_ibm_guadalupe_opt(ibm_guadalupe: SubarchitectureOrder) -> None:
+    """Verify optimal candidates for IBM Guadalupe architecture."""
     opt_cand_9 = ibm_guadalupe.optimal_candidates(9)
     assert len(opt_cand_9) == 2
     assert opt_cand_9[0].num_nodes() == 15
@@ -128,6 +133,7 @@ def test_ibm_guadalupe_opt(ibm_guadalupe: SubarchitectureOrder) -> None:
 
 
 def test_ibm_guadalupe_cov(ibm_guadalupe: SubarchitectureOrder) -> None:
+    """Verify covering for IBM Guadalupe architecture."""
     cov = ibm_guadalupe.covering(9, 2)
     assert 1 <= len(cov) <= 2
 
@@ -141,6 +147,7 @@ def test_ibm_guadalupe_cov(ibm_guadalupe: SubarchitectureOrder) -> None:
 
 
 def test_rigetti16_opt(rigetti16: SubarchitectureOrder, rigetti16_opt: rx.PyGraph) -> None:
+    """Verify optimal candidates for Rigetti 16Q architecture."""
     opt = rigetti16.optimal_candidates(10)
     assert len(opt) == 1
 
@@ -149,6 +156,7 @@ def test_rigetti16_opt(rigetti16: SubarchitectureOrder, rigetti16_opt: rx.PyGrap
 
 
 def test_rigetti16_opt_library(rigetti16_opt: rx.PyGraph) -> None:
+    """Verify optimal candidates for Rigetti 16Q architecture from library."""
     opt = rigetti_16_subarchitectures().optimal_candidates(10)
     assert len(opt) == 1
 
@@ -157,6 +165,7 @@ def test_rigetti16_opt_library(rigetti16_opt: rx.PyGraph) -> None:
 
 
 def test_rigetti16_opt_library_from_str(rigetti16_opt: rx.PyGraph) -> None:
+    """Verify optimal candidates for Rigetti 16Q architecture from string."""
     opt = SubarchitectureOrder.from_string("rigetti_16").optimal_candidates(10)
     assert len(opt) == 1
 
@@ -165,6 +174,7 @@ def test_rigetti16_opt_library_from_str(rigetti16_opt: rx.PyGraph) -> None:
 
 
 def test_ibm_guadalupe_library() -> None:
+    """Verify optimal candidates for IBM Guadalupe architecture from library."""
     opt_cand_9 = ibm_guadalupe_subarchitectures().optimal_candidates(9)
     assert len(opt_cand_9) == 2
     assert opt_cand_9[0].num_nodes() == 15
@@ -173,6 +183,7 @@ def test_ibm_guadalupe_library() -> None:
 
 
 def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
+    """Verify that subarchitecture order can be stored and loaded."""
     ibm_guadalupe.store_library("tmp")
 
     p = Path("tmp.pickle")
@@ -191,6 +202,7 @@ def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
 
 
 def test_subarchitecture_from_qmap_arch() -> None:
+    """Verify that subarchitecture order can be created from QMAP architectures."""
     cm = {(0, 1), (1, 0), (1, 2), (2, 1)}
     arch = Architecture(3, cm)
     so_arch = SubarchitectureOrder.from_qmap_architecture(arch)
@@ -200,6 +212,7 @@ def test_subarchitecture_from_qmap_arch() -> None:
 
 
 def test_subarchitecture_from_qiskit_backend() -> None:
+    """Verify that subarchitecture order can be created from Qiskit backends."""
     arch = FakeLondon()
     so_arch = SubarchitectureOrder.from_backend(arch)
     so_cm = SubarchitectureOrder.from_coupling_map(arch.configuration().coupling_map)
@@ -208,5 +221,9 @@ def test_subarchitecture_from_qiskit_backend() -> None:
 
 
 def test_invalid_opt_cand_arg(ibm_guadalupe: SubarchitectureOrder) -> None:
-    with pytest.raises(ValueError):
+    """Verify that invalid arguments for optimal candidates raise an error."""
+    with pytest.raises(
+        ValueError,
+        match="Number of qubits must not be smaller or equal 0 or larger then number of physical qubits of architecture.",
+    ):
         ibm_guadalupe.optimal_candidates(100)

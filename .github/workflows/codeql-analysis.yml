@@ -3,6 +3,7 @@ name: "CodeQL"
 on:
   push:
   pull_request:
+  merge_group:
   schedule:
     - cron: "15 21 * * 6"
   workflow_dispatch:

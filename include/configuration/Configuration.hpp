@@ -73,5 +73,8 @@ struct Configuration {
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
 
-  void setTimeout(const std::size_t sec) { timeout = sec; }
+  void               setTimeout(const std::size_t sec) { timeout = sec; }
+  [[nodiscard]] bool swapLimitsEnabled() const {
+    return (swapReduction != SwapReduction::None) && enableSwapLimits;
+  }
 };

@@ -29,6 +29,58 @@ protected:
   }
 };
 
+TEST(Functionality, NodeCostCalculation) {
+  const double         tolerance = 1e-6;
+  const CouplingMap    cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
+  Architecture         arch{5, cm};
+  TwoQubitMultiplicity multiplicity = {{{0, 1}, {5, 2}}, {{2, 3}, {0, 1}}};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
+  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
+
+  std::vector<std::vector<Exchange>> swaps = {
+      {Exchange(0, 1, qc::OpType::Teleportation)},
+      {Exchange(1, 2, qc::OpType::SWAP)}};
+
+  HeuristicMapper::Node node(qubits, locations, swaps, 5.);
+  EXPECT_NEAR(node.costFixed, 5., tolerance);
+  node.updateHeuristicCost(arch, multiplicity, true);
+  EXPECT_NEAR(node.costHeur,
+              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
+  node.updateHeuristicCost(arch, multiplicity, false);
+  EXPECT_NEAR(node.costHeur,
+              COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
+              tolerance);
+  node.applySWAP({3, 4}, arch);
+  node.updateHeuristicCost(arch, multiplicity, true);
+  EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
+              tolerance);
+  node.lookaheadPenalty = 0.;
+  EXPECT_NEAR(node.getTotalCost(),
+              5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP,
+              tolerance);
+  node.lookaheadPenalty = 2.;
+  EXPECT_NEAR(node.getTotalCost(),
+              7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
+              tolerance);
+  node.recalculateFixedCost(arch);
+  EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
+              tolerance);
+  EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalCost(),
+              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 3 +
+                  COST_DIRECTION_REVERSE,
+              tolerance);
+  EXPECT_NEAR(node.getTotalFixedCost(),
+              2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
+              tolerance);
+}
+
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
   qc.x(0);
@@ -151,6 +203,24 @@ TEST_P(HeuristicTest16Q, Dynamic) {
   settings.initialLayout = InitialLayout::Dynamic;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
+  ibmQX5Mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTest16Q, Disjoint) {
+  Configuration settings{};
+  settings.layering = Layering::DisjointQubits;
+  ibmQX5Mapper->map(settings);
+  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
+  ibmQX5Mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
+  Configuration settings{};
+  settings.layering = Layering::Disjoint2qBlocks;
+  ibmQX5Mapper->map(settings);
+  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }

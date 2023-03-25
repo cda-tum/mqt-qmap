@@ -8,7 +8,7 @@
 #include <cassert>
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
-                          Matrix& distanceTable,
+                          Matrix& distanceTable, const Matrix& edgeWeights,
                           const std::function<double(const Node&)>& cost) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
@@ -20,11 +20,13 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
       nodes.at(j).visited             = false;
       nodes.at(j).pos                 = j;
       nodes.at(j).cost                = -1.;
+      nodes.at(j).prevCost            = -1.;
     }
 
-    nodes.at(i).cost = 0.;
+    nodes.at(i).cost     = 0.;
+    nodes.at(i).prevCost = 0.;
 
-    dijkstra(couplingMap, nodes, i);
+    dijkstra(couplingMap, nodes, i, edgeWeights);
 
     for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
@@ -37,8 +39,9 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 }
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
-                        std::vector<Node>& nodes, std::uint16_t start) {
-  std::priority_queue<Node*> queue{};
+                        std::vector<Node>& nodes, std::uint16_t start,
+                        const Matrix& edgeWeights) {
+  std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
     auto* current    = queue.top();
@@ -61,8 +64,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         }
 
         Node newNode;
-        newNode.cost                = current->cost + 1.0;
-        newNode.pos                 = to;
+        newNode.cost     = current->cost + edgeWeights.at(*pos).at(*to);
+        newNode.prevCost = current->cost;
+        newNode.pos      = to;
         newNode.containsCorrectEdge = correctEdge;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;
