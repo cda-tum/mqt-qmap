@@ -81,6 +81,78 @@ TEST(Functionality, NodeCostCalculation) {
               tolerance);
 }
 
+TEST(Functionality, HeuristicBenchmark) {
+  const double tolerance = 1e-10;
+  /*
+      3
+     / \
+    4   2
+    |   |
+    0---1
+  */
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  architecture.loadCouplingMap(5, cm);
+  
+  qc::QuantumComputation qc{5, 5};
+  qc.x(2, qc::Control{4});
+  qc.x(1, qc::Control{3});
+  qc.x(1, qc::Control{4});
+  
+  qc.barrier({0, 1, 2, 3, 4});
+  for (size_t i = 0; i < 5; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+  
+  const auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::DisjointQubits;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.lookahead                = false;
+  mapper->map(settings);
+  auto& result = mapper->getResults();
+  
+  /* 
+  generated nodes (unit of costs: COST_BIDIRECTIONAL_SWAP):
+  layer 1:
+    0: {swaps: {}, cost: 0, heur: 1, total: 1}
+  --- priority queue: [0] -> expand: 0
+    1: {swaps: {{0, 1}}, cost: 1, heur: 1, total: 2}
+    2: {swaps: {{1, 2}}, cost: 1, heur: 1, total: 2}
+    3: {swaps: {{2, 3}}, cost: 1, heur: 0, total: 1}
+    4: {swaps: {{3, 4}}, cost: 1, heur: 1, total: 2}
+    5: {swaps: {{4, 0}}, cost: 1, heur: 1, total: 2}
+  --- priority queue: [3,1,2,4,5] -> done: 3
+  layer 2:
+    0: {swaps: {}, cost: 0, heur: 1, total: 1}
+  --- priority queue: [0] -> expand: 0
+    1: {swaps: {{0, 1}}, cost: 1, heur: 0, total: 1}
+    2: {swaps: {{1, 2}}, cost: 1, heur: 1, total: 2}
+    3: {swaps: {{3, 4}}, cost: 1, heur: 1, total: 2}
+    4: {swaps: {{4, 0}}, cost: 1, heur: 0, total: 1}
+  --- priority queue: [1,4,2,3] -> done: 1
+  */
+  
+  EXPECT_EQ(result.layerHeuristicBenchmark.size(), 2);
+  EXPECT_EQ(result.layerHeuristicBenchmark[0].solutionDepth, 1);
+  EXPECT_EQ(result.layerHeuristicBenchmark[0].generatedNodes, 6);
+  EXPECT_EQ(result.layerHeuristicBenchmark[0].expandedNodes, 1);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[0].averageBranchingFactor, 5., tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[0].effectiveBranchingFactor, 1., tolerance);
+  EXPECT_EQ(result.layerHeuristicBenchmark[1].solutionDepth, 1);
+  EXPECT_EQ(result.layerHeuristicBenchmark[1].generatedNodes, 5);
+  EXPECT_EQ(result.layerHeuristicBenchmark[1].expandedNodes, 1);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[1].averageBranchingFactor, 4., tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[1].effectiveBranchingFactor, 1., tolerance);
+  EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
+  EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
+  EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5, tolerance);
+  EXPECT_NEAR(result.heuristicBenchmark.effectiveBranchingFactor, 1., tolerance);
+}
+
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
   qc.x(0);
