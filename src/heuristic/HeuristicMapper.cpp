@@ -458,33 +458,27 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   nodes.push(node);
 
   const auto start = std::chrono::steady_clock::now();
-
+  auto& layerResults = results.layerHeuristicBenchmark.back();
+  auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
+  auto& layerExpandedNodes = layerResults.expandedNodes;
+  
   while (!nodes.top().done) {
     Node current = nodes.top();
     nodes.pop();
     expandNode(consideredQubits, current, layer, twoQubitGateMultiplicity);
 
-    ++results.heuristicBenchmark.expandedNodes;
-    ++results.layerHeuristicBenchmark.back().expandedNodes;
+    ++totalExpandedNodes;
+    ++layerExpandedNodes;
   }
 
   const auto                          end  = std::chrono::steady_clock::now();
   const std::chrono::duration<double> diff = end - start;
   results.heuristicBenchmark.timePerNode += diff.count();
-  results.layerHeuristicBenchmark.back().generatedNodes =
-      results.layerHeuristicBenchmark.back().expandedNodes + nodes.size();
-  results.heuristicBenchmark.generatedNodes +=
-      results.layerHeuristicBenchmark.back().generatedNodes;
-  if (results.layerHeuristicBenchmark.back().expandedNodes > 0) {
-    results.layerHeuristicBenchmark.back().timePerNode =
-        diff.count() /
-        static_cast<double>(
-            results.layerHeuristicBenchmark.back().expandedNodes);
-    results.layerHeuristicBenchmark.back().averageBranchingFactor =
-        static_cast<double>(
-            results.layerHeuristicBenchmark.back().generatedNodes - 1) /
-        static_cast<double>(
-            results.layerHeuristicBenchmark.back().expandedNodes);
+  layerResults.generatedNodes = layerResults.expandedNodes + nodes.size();
+  results.heuristicBenchmark.generatedNodes += layerResults.generatedNodes;
+  if (layerResults.expandedNodes > 0) {
+    layerResults.timePerNode = diff.count() / static_cast<double>(layerResults.expandedNodes);
+    layerResults.averageBranchingFactor = static_cast<double>(layerResults.generatedNodes - 1) / static_cast<double>(layerResults.expandedNodes);
   }
 
   Node result = nodes.top();
@@ -495,11 +489,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     nodes.pop();
   }
 
-  results.layerHeuristicBenchmark.back().solutionDepth = result.depth;
-  results.layerHeuristicBenchmark.back().effectiveBranchingFactor =
-      computeEffectiveBranchingRate(
-          results.layerHeuristicBenchmark.back().expandedNodes + 1,
-          result.depth);
+  layerResults.solutionDepth = result.depth;
+  layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(layerResults.expandedNodes + 1, result.depth);
 
   return result;
 }

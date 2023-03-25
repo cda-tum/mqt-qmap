@@ -105,7 +105,7 @@ TEST(Functionality, HeuristicBenchmark) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  auto mapper = HeuristicMapper(qc, architecture);
   Configuration settings{};
   settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::DisjointQubits;
@@ -113,8 +113,8 @@ TEST(Functionality, HeuristicBenchmark) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.lookahead                = false;
-  mapper->map(settings);
-  auto& result = mapper->getResults();
+  mapper.map(settings);
+  auto& result = mapper.getResults();
 
   /*
   generated nodes (unit of costs: COST_BIDIRECTIONAL_SWAP):
@@ -138,19 +138,21 @@ TEST(Functionality, HeuristicBenchmark) {
   */
 
   EXPECT_EQ(result.layerHeuristicBenchmark.size(), 2);
-  EXPECT_EQ(result.layerHeuristicBenchmark[0].solutionDepth, 1);
-  EXPECT_EQ(result.layerHeuristicBenchmark[0].generatedNodes, 6);
-  EXPECT_EQ(result.layerHeuristicBenchmark[0].expandedNodes, 1);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[0].averageBranchingFactor, 5.,
+  const auto& layerResults0 = result.layerHeuristicBenchmark[0];
+  EXPECT_EQ(layerResults0.solutionDepth, 1);
+  EXPECT_EQ(layerResults0.generatedNodes, 6);
+  EXPECT_EQ(layerResults0.expandedNodes, 1);
+  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5.,
               tolerance);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[0].effectiveBranchingFactor, 1.,
+  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1.,
               tolerance);
-  EXPECT_EQ(result.layerHeuristicBenchmark[1].solutionDepth, 1);
-  EXPECT_EQ(result.layerHeuristicBenchmark[1].generatedNodes, 5);
-  EXPECT_EQ(result.layerHeuristicBenchmark[1].expandedNodes, 1);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[1].averageBranchingFactor, 4.,
+  const auto& layerResults1 = result.layerHeuristicBenchmark[1];
+  EXPECT_EQ(layerResults1.solutionDepth, 1);
+  EXPECT_EQ(layerResults1.generatedNodes, 5);
+  EXPECT_EQ(layerResults1.expandedNodes, 1);
+  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4.,
               tolerance);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[1].effectiveBranchingFactor, 1.,
+  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1.,
               tolerance);
   EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
   EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
