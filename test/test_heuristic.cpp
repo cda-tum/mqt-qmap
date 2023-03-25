@@ -148,10 +148,10 @@ TEST(Functionality, HeuristicAdmissibility) {
   currentPerm.push_back(perms.size());
 
   while (!stack.empty()) {
-    auto& node = stack.back();
+    const auto& node = stack.back();
     if (node.done) {
       // check if all nodes in stack have lower or equal cost
-      for (auto& prevNode : stack) {
+      for (const auto& prevNode : stack) {
         EXPECT_LE(prevNode.getTotalCost(), node.getTotalCost());
       }
     }
@@ -161,7 +161,7 @@ TEST(Functionality, HeuristicAdmissibility) {
       continue;
     }
     --currentPerm.back();
-    auto perm    = perms[currentPerm.back()];
+    const auto perm = perms[currentPerm.back()];
     auto newNode = HeuristicMapper::Node(node.qubits, node.locations,
                                          node.swaps, node.costFixed);
     newNode.applySWAP(perm, architecture);
