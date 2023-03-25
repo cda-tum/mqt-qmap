@@ -24,6 +24,14 @@ If specified in the call to the :code:`compile` method, the `weighted MaxSAT for
 
     .. autoattribute:: MappingResults.wcnf
 
+If :code:`Method::Heuristic` is used, some benchmark information is provided for the whole circuit
+
+    .. autoattribute:: MappingResults.heuristic_benchmark
+
+and for each layer separately.
+
+    .. autoattribute:: MappingResults.layer_heuristic_benchmark
+
 In addition, the class provides methods to export to other formats.
 
     .. automethod:: MappingResults.json
