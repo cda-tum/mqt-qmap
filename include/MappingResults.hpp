@@ -27,7 +27,7 @@ struct MappingResults {
     std::size_t directionReverse = 0;
     std::size_t teleportations   = 0;
   };
-  
+
   struct HeuristicBenchmarkInfo {
     std::size_t expandedNodes            = 0;
     std::size_t generatedNodes           = 0;
@@ -49,8 +49,8 @@ struct MappingResults {
   std::string mappedCircuit{};
 
   std::string wcnf{};
-  
-  HeuristicBenchmarkInfo heuristicBenchmark{};
+
+  HeuristicBenchmarkInfo              heuristicBenchmark{};
   std::vector<HeuristicBenchmarkInfo> layerHeuristicBenchmark{};
 
   MappingResults()          = default;
@@ -102,13 +102,15 @@ struct MappingResults {
         stats["WCNF"] = wcnf;
       }
     } else if (config.method == Method::Heuristic) {
-      stats["teleportations"] = output.teleportations;
-      auto& benchmark = stats["benchmark"];
-      benchmark["expanded_nodes"] = heuristicBenchmark.expandedNodes;
+      stats["teleportations"]      = output.teleportations;
+      auto& benchmark              = stats["benchmark"];
+      benchmark["expanded_nodes"]  = heuristicBenchmark.expandedNodes;
       benchmark["generated_nodes"] = heuristicBenchmark.generatedNodes;
-      benchmark["time_per_node"] = heuristicBenchmark.timePerNode;
-      benchmark["average_branching_factor"] = heuristicBenchmark.averageBranchingFactor;
-      benchmark["effective_branching_factor"] = heuristicBenchmark.effectiveBranchingFactor;
+      benchmark["time_per_node"]   = heuristicBenchmark.timePerNode;
+      benchmark["average_branching_factor"] =
+          heuristicBenchmark.averageBranchingFactor;
+      benchmark["effective_branching_factor"] =
+          heuristicBenchmark.effectiveBranchingFactor;
     }
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -

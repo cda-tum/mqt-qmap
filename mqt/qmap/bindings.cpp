@@ -228,7 +228,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("timeout", &MappingResults::timeout)
       .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
       .def_readwrite("heuristic_benchmark", &MappingResults::heuristicBenchmark)
-      .def_readwrite("layer_heuristic_benchmark", &MappingResults::layerHeuristicBenchmark)
+      .def_readwrite("layer_heuristic_benchmark",
+                     &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
       .def("csv", &MappingResults::csv)
@@ -252,16 +253,24 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::teleportations);
 
   // Heuristic benchmark information
-  py::class_<MappingResults::HeuristicBenchmarkInfo>(m, "HeuristicBenchmarkInfo",
-                                          "Heuristic benchmark information")
+  py::class_<MappingResults::HeuristicBenchmarkInfo>(
+      m, "HeuristicBenchmarkInfo", "Heuristic benchmark information")
       .def(py::init<>())
-      .def_readwrite("expanded_nodes", &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
-      .def_readwrite("generated_nodes", &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
-      .def_readwrite("solution_depth", &MappingResults::HeuristicBenchmarkInfo::solutionDepth)
-      .def_readwrite("time_per_node", &MappingResults::HeuristicBenchmarkInfo::timePerNode)
-      .def_readwrite("average_branching_factor", &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
-      .def_readwrite("effective_branching_factor", &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor);
-  
+      .def_readwrite("expanded_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
+      .def_readwrite("generated_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite("solution_depth",
+                     &MappingResults::HeuristicBenchmarkInfo::solutionDepth)
+      .def_readwrite("time_per_node",
+                     &MappingResults::HeuristicBenchmarkInfo::timePerNode)
+      .def_readwrite(
+          "average_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
+      .def_readwrite(
+          "effective_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor);
+
   auto arch = py::class_<Architecture>(
       m, "Architecture", "Class representing device/backend information");
   auto properties = py::class_<Architecture::Properties>(

@@ -5,6 +5,7 @@
 
 #include "Mapper.hpp"
 #include "heuristic/UniquePriorityQueue.hpp"
+
 #include <cmath>
 
 #pragma once
@@ -79,9 +80,8 @@ public:
     Node() = default;
     Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
-         const std::vector<std::vector<Exchange>>&          sw            = {},
-         const double                                       initCostFixed = 0,
-         const std::size_t                                  searchDepth   = 0)
+         const std::vector<std::vector<Exchange>>&          sw = {},
+         const double initCostFixed = 0, const std::size_t searchDepth = 0)
         : costFixed(initCostFixed), depth(searchDepth) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
@@ -269,23 +269,27 @@ protected:
     }
     return currentCost + newCost;
   }
-  
-  static double computeEffectiveBranchingRate(std::size_t nodesProcessed, const std::size_t solutionDepth) {
+
+  static double computeEffectiveBranchingRate(std::size_t       nodesProcessed,
+                                              const std::size_t solutionDepth) {
     // N = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b* + 1
     // no closed-form solution for b*, so we use approximation via binary search
     if (solutionDepth == 0) {
       return 0.;
     }
     --nodesProcessed; // N - 1 = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b*
-    double lower = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth))/static_cast<double>(solutionDepth);
-    double upper = std::pow(static_cast<double>(nodesProcessed), 1.0 / static_cast<double>(solutionDepth));
-    while (upper - lower > 2*EFFECTIVE_BRANCH_RATE_TOLERANCE) {
+    double lower = std::pow(static_cast<double>(nodesProcessed),
+                            1.0 / static_cast<double>(solutionDepth)) /
+                   static_cast<double>(solutionDepth);
+    double upper = std::pow(static_cast<double>(nodesProcessed),
+                            1.0 / static_cast<double>(solutionDepth));
+    while (upper - lower > 2 * EFFECTIVE_BRANCH_RATE_TOLERANCE) {
       const double mid = (lower + upper) / 2.0;
-      double sum = 0.0;
-      for(std::size_t i = 1; i <= solutionDepth; ++i) {
+      double       sum = 0.0;
+      for (std::size_t i = 1; i <= solutionDepth; ++i) {
         sum += std::pow(mid, i);
       }
-      if(sum < static_cast<double>(nodesProcessed)) {
+      if (sum < static_cast<double>(nodesProcessed)) {
         lower = mid;
       } else {
         upper = mid;

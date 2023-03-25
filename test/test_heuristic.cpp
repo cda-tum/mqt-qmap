@@ -91,20 +91,21 @@ TEST(Functionality, HeuristicBenchmark) {
     0---1
   */
   Architecture      architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
   architecture.loadCouplingMap(5, cm);
-  
+
   qc::QuantumComputation qc{5, 5};
   qc.x(2, qc::Control{4});
   qc.x(1, qc::Control{3});
   qc.x(1, qc::Control{4});
-  
+
   qc.barrier({0, 1, 2, 3, 4});
   for (size_t i = 0; i < 5; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
-  
-  const auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
   settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::DisjointQubits;
@@ -114,8 +115,8 @@ TEST(Functionality, HeuristicBenchmark) {
   settings.lookahead                = false;
   mapper->map(settings);
   auto& result = mapper->getResults();
-  
-  /* 
+
+  /*
   generated nodes (unit of costs: COST_BIDIRECTIONAL_SWAP):
   layer 1:
     0: {swaps: {}, cost: 0, heur: 1, total: 1}
@@ -135,22 +136,27 @@ TEST(Functionality, HeuristicBenchmark) {
     4: {swaps: {{4, 0}}, cost: 1, heur: 0, total: 1}
   --- priority queue: [1,4,2,3] -> done: 1
   */
-  
+
   EXPECT_EQ(result.layerHeuristicBenchmark.size(), 2);
   EXPECT_EQ(result.layerHeuristicBenchmark[0].solutionDepth, 1);
   EXPECT_EQ(result.layerHeuristicBenchmark[0].generatedNodes, 6);
   EXPECT_EQ(result.layerHeuristicBenchmark[0].expandedNodes, 1);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[0].averageBranchingFactor, 5., tolerance);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[0].effectiveBranchingFactor, 1., tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[0].averageBranchingFactor, 5.,
+              tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[0].effectiveBranchingFactor, 1.,
+              tolerance);
   EXPECT_EQ(result.layerHeuristicBenchmark[1].solutionDepth, 1);
   EXPECT_EQ(result.layerHeuristicBenchmark[1].generatedNodes, 5);
   EXPECT_EQ(result.layerHeuristicBenchmark[1].expandedNodes, 1);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[1].averageBranchingFactor, 4., tolerance);
-  EXPECT_NEAR(result.layerHeuristicBenchmark[1].effectiveBranchingFactor, 1., tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[1].averageBranchingFactor, 4.,
+              tolerance);
+  EXPECT_NEAR(result.layerHeuristicBenchmark[1].effectiveBranchingFactor, 1.,
+              tolerance);
   EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
   EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
   EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5, tolerance);
-  EXPECT_NEAR(result.heuristicBenchmark.effectiveBranchingFactor, 1., tolerance);
+  EXPECT_NEAR(result.heuristicBenchmark.effectiveBranchingFactor, 1.,
+              tolerance);
 }
 
 TEST(Functionality, EmptyDump) {
@@ -215,13 +221,15 @@ TEST_P(HeuristicTest5Q, Identity) {
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
   ibmqYorktownMapper->printResult(std::cout);
   auto& result = ibmqYorktownMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
 
   ibmqLondonMapper->map(settings);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_identity.qasm");
   ibmqLondonMapper->printResult(std::cout);
   result = ibmqLondonMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -233,11 +241,13 @@ TEST_P(HeuristicTest5Q, Static) {
   ibmqYorktownMapper->printResult(std::cout);
   ibmqLondonMapper->map(settings);
   auto& result = ibmqYorktownMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_static.qasm");
   ibmqLondonMapper->printResult(std::cout);
   result = ibmqLondonMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -249,11 +259,13 @@ TEST_P(HeuristicTest5Q, Dynamic) {
   ibmqYorktownMapper->printResult(std::cout);
   ibmqLondonMapper->map(settings);
   auto& result = ibmqYorktownMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
   ibmqLondonMapper->printResult(std::cout);
   result = ibmqLondonMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -289,7 +301,8 @@ TEST_P(HeuristicTest16Q, Dynamic) {
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
   ibmQX5Mapper->printResult(std::cout);
   auto& result = ibmQX5Mapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -300,7 +313,8 @@ TEST_P(HeuristicTest16Q, Disjoint) {
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
   ibmQX5Mapper->printResult(std::cout);
   auto& result = ibmQX5Mapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -311,7 +325,8 @@ TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
   auto& result = ibmQX5Mapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -348,7 +363,8 @@ TEST_P(HeuristicTest20Q, Dynamic) {
   tokyoMapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
   tokyoMapper->printResult(std::cout);
   auto& result = tokyoMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
 
@@ -393,6 +409,7 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
                           "_heuristic_tokyo_teleport.qasm");
   tokyoMapper->printResult(std::cout);
   auto& result = tokyoMapper->getResults();
-  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor, result.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_LE(result.heuristicBenchmark.effectiveBranchingFactor,
+            result.heuristicBenchmark.averageBranchingFactor);
   SUCCEED() << "Mapping successful";
 }
