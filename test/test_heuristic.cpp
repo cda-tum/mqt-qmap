@@ -18,6 +18,7 @@ protected:
   Architecture                     ibmqLondon{};
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
+  Configuration                    settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
@@ -26,6 +27,7 @@ protected:
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
+    settings.debug     = true;
   }
 };
 
@@ -218,9 +220,7 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(HeuristicTest5Q, Identity) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Identity;
-  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -232,9 +232,7 @@ TEST_P(HeuristicTest5Q, Identity) {
 }
 
 TEST_P(HeuristicTest5Q, Static) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Static;
-  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -246,9 +244,7 @@ TEST_P(HeuristicTest5Q, Static) {
 }
 
 TEST_P(HeuristicTest5Q, Dynamic) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
-  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -267,11 +263,13 @@ protected:
   qc::QuantumComputation           qc{};
   Architecture                     ibmQX5{};
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
+  Configuration                    settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
     ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
-    ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    ibmQX5Mapper   = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    settings.debug = true;
   }
 };
 
@@ -285,9 +283,7 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(HeuristicTest16Q, Dynamic) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
-  settings.debug         = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -295,9 +291,7 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 }
 
 TEST_P(HeuristicTest16Q, Disjoint) {
-  Configuration settings{};
   settings.layering = Layering::DisjointQubits;
-  settings.debug    = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -305,9 +299,7 @@ TEST_P(HeuristicTest16Q, Disjoint) {
 }
 
 TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
-  Configuration settings{};
   settings.layering = Layering::Disjoint2qBlocks;
-  settings.debug    = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
