@@ -140,17 +140,21 @@ void HeuristicMapper::map(const Configuration& configuration) {
   }
 
   if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
-    results.heuristicBenchmark.timePerNode /=
-        static_cast<double>(results.heuristicBenchmark.expandedNodes);
-    results.heuristicBenchmark.averageBranchingFactor =
-        static_cast<double>(results.heuristicBenchmark.generatedNodes -
+    auto& benchmark = results.heuristicBenchmark;
+    benchmark.timePerNode /=
+        static_cast<double>(benchmark.expandedNodes);
+    benchmark.averageBranchingFactor =
+        static_cast<double>(benchmark.generatedNodes -
                             layers.size()) /
-        static_cast<double>(results.heuristicBenchmark.expandedNodes);
+        static_cast<double>(benchmark.expandedNodes);
     for (const auto& layer : results.layerHeuristicBenchmark) {
-      results.heuristicBenchmark.effectiveBranchingFactor +=
+      benchmark.effectiveBranchingFactor +=
           layer.effectiveBranchingFactor *
           (static_cast<double>(layer.expandedNodes) /
-           static_cast<double>(results.heuristicBenchmark.expandedNodes));
+           static_cast<double>(benchmark.expandedNodes));
+    }
+    if (benchmark.effectiveBranchingFactor > benchmark.averageBranchingFactor) {
+      throw QMAPException("Effective branching factor (" + std::to_string(benchmark.effectiveBranchingFactor) + ") is larger than average branching factor (" + std::to_string(benchmark.averageBranchingFactor) + ").");
     }
   }
 
@@ -499,6 +503,9 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   if (debug) {
     layerResults.solutionDepth = result.depth;
     layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(layerResults.expandedNodes + 1, result.depth);
+    if (layerResults.effectiveBranchingFactor > layerResults.averageBranchingFactor) {
+      throw QMAPException("Effective branching factor (" + std::to_string(layerResults.effectiveBranchingFactor) + ") is larger than average branching factor (" + std::to_string(layerResults.averageBranchingFactor) + ") on layer " + std::to_string(layer) + ".");
+    }
   }
 
   return result;
