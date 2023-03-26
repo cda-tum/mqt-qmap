@@ -24,7 +24,7 @@ If specified in the call to the :code:`compile` method, the `weighted MaxSAT for
 
     .. autoattribute:: MappingResults.wcnf
 
-If :code:`Method::Heuristic` is used, some benchmark information is provided for the whole circuit
+If heuristic mapping is used and :code:`debug` is set to :code:`true`, some benchmark information is provided for the whole circuit
 
     .. autoattribute:: MappingResults.heuristic_benchmark
 

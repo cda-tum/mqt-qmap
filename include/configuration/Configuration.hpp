@@ -27,6 +27,7 @@ struct Configuration {
   bool addMeasurementsToMappedCircuit = true;
 
   bool verbose = false;
+  bool debug   = false;
 
   // map to particular subgraph of architecture (in exact mapper)
   std::set<std::uint16_t> subgraph{};

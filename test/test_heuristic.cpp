@@ -105,7 +105,7 @@ TEST(Functionality, HeuristicBenchmark) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  auto mapper = HeuristicMapper(qc, architecture);
+  const auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
   settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::DisjointQubits;
@@ -113,8 +113,9 @@ TEST(Functionality, HeuristicBenchmark) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.lookahead                = false;
-  mapper.map(settings);
-  auto& result = mapper.getResults();
+  settings.debug                    = true;
+  mapper->map(settings);
+  auto& result = mapper->getResults();
 
   /*
   generated nodes (unit of costs: COST_BIDIRECTIONAL_SWAP):
@@ -219,6 +220,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest5Q, Identity) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Identity;
+  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -238,6 +240,7 @@ TEST_P(HeuristicTest5Q, Identity) {
 TEST_P(HeuristicTest5Q, Static) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Static;
+  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -256,6 +259,7 @@ TEST_P(HeuristicTest5Q, Static) {
 TEST_P(HeuristicTest5Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
+  settings.debug         = true;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
   ibmqYorktownMapper->printResult(std::cout);
@@ -299,6 +303,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest16Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
+  settings.debug         = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -311,6 +316,7 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 TEST_P(HeuristicTest16Q, Disjoint) {
   Configuration settings{};
   settings.layering = Layering::DisjointQubits;
+  settings.debug         = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -323,6 +329,7 @@ TEST_P(HeuristicTest16Q, Disjoint) {
 TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
   Configuration settings{};
   settings.layering = Layering::Disjoint2qBlocks;
+  settings.debug         = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -361,6 +368,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest20Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
+  settings.debug         = true;
   tokyoMapper->map(settings);
   tokyoMapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
   tokyoMapper->printResult(std::cout);
@@ -403,6 +411,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
   settings.initialLayout       = InitialLayout::Dynamic;
+  settings.debug               = true;
   settings.teleportationQubits = std::min(
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());

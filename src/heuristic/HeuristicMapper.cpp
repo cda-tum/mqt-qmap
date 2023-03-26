@@ -139,7 +139,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
     }
   }
 
-  if (results.heuristicBenchmark.expandedNodes > 0) {
+  if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
     results.heuristicBenchmark.timePerNode /=
         static_cast<double>(results.heuristicBenchmark.expandedNodes);
     results.heuristicBenchmark.averageBranchingFactor =
@@ -418,8 +418,11 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   std::unordered_set<std::uint16_t> consideredQubits{};
   Node                              node{};
   TwoQubitMultiplicity              twoQubitGateMultiplicity{};
-
-  results.layerHeuristicBenchmark.emplace_back();
+  const auto&                       debug = results.config.debug;
+  
+  if (debug) {
+    results.layerHeuristicBenchmark.emplace_back();
+  }
 
   for (const auto& gate : layers.at(layer)) {
     if (!gate.singleQubit()) {
@@ -456,7 +459,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
                            results.config.admissibleHeuristic);
 
   nodes.push(node);
-
+  
   const auto start = std::chrono::steady_clock::now();
   auto& layerResults = results.layerHeuristicBenchmark.back();
   auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
@@ -466,19 +469,23 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     Node current = nodes.top();
     nodes.pop();
     expandNode(consideredQubits, current, layer, twoQubitGateMultiplicity);
-
-    ++totalExpandedNodes;
-    ++layerExpandedNodes;
+    
+    if (debug) {
+      ++totalExpandedNodes;
+      ++layerExpandedNodes;
+    }
   }
-
-  const auto                          end  = std::chrono::steady_clock::now();
-  const std::chrono::duration<double> diff = end - start;
-  results.heuristicBenchmark.timePerNode += diff.count();
-  layerResults.generatedNodes = layerResults.expandedNodes + nodes.size();
-  results.heuristicBenchmark.generatedNodes += layerResults.generatedNodes;
-  if (layerResults.expandedNodes > 0) {
-    layerResults.timePerNode = diff.count() / static_cast<double>(layerResults.expandedNodes);
-    layerResults.averageBranchingFactor = static_cast<double>(layerResults.generatedNodes - 1) / static_cast<double>(layerResults.expandedNodes);
+  
+  if (debug) {
+    const auto                          end  = std::chrono::steady_clock::now();
+    const std::chrono::duration<double> diff = end - start;
+    results.heuristicBenchmark.timePerNode += diff.count();
+    layerResults.generatedNodes = layerResults.expandedNodes + nodes.size();
+    results.heuristicBenchmark.generatedNodes += layerResults.generatedNodes;
+    if (layerResults.expandedNodes > 0) {
+      layerResults.timePerNode = diff.count() / static_cast<double>(layerResults.expandedNodes);
+      layerResults.averageBranchingFactor = static_cast<double>(layerResults.generatedNodes - 1) / static_cast<double>(layerResults.expandedNodes);
+    }
   }
 
   Node result = nodes.top();
@@ -488,9 +495,11 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   while (!nodes.empty()) {
     nodes.pop();
   }
-
-  layerResults.solutionDepth = result.depth;
-  layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(layerResults.expandedNodes + 1, result.depth);
+  
+  if (debug) {
+    layerResults.solutionDepth = result.depth;
+    layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(layerResults.expandedNodes + 1, result.depth);
+  }
 
   return result;
 }
