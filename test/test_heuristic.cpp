@@ -82,7 +82,6 @@ TEST(Functionality, NodeCostCalculation) {
 }
 
 TEST(Functionality, HeuristicBenchmark) {
-  const double tolerance = 1e-10;
   /*
       3
      / \
@@ -143,19 +142,24 @@ TEST(Functionality, HeuristicBenchmark) {
   EXPECT_EQ(layerResults0.solutionDepth, 1);
   EXPECT_EQ(layerResults0.generatedNodes, 6);
   EXPECT_EQ(layerResults0.expandedNodes, 1);
-  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5., tolerance);
-  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1., tolerance);
+  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
   const auto& layerResults1 = result.layerHeuristicBenchmark[1];
   EXPECT_EQ(layerResults1.solutionDepth, 1);
   EXPECT_EQ(layerResults1.generatedNodes, 5);
   EXPECT_EQ(layerResults1.expandedNodes, 1);
-  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4., tolerance);
-  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1., tolerance);
+  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
   EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
   EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
-  EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5, tolerance);
+  EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
   EXPECT_NEAR(result.heuristicBenchmark.effectiveBranchingFactor, 1.,
-              tolerance);
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
 }
 
 TEST(Functionality, EmptyDump) {

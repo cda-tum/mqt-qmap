@@ -23,11 +23,11 @@
 using TwoQubitMultiplicity =
     std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
 
-constexpr double EFFECTIVE_BRANCH_RATE_TOLERANCE = 1e-10;
-
 class HeuristicMapper : public Mapper {
 public:
   using Mapper::Mapper; // import constructors from parent class
+
+  static constexpr double EFFECTIVE_BRANCH_RATE_TOLERANCE = 1e-10;
 
   /**
    * @brief map the circuit passed at initialization to the architecture
