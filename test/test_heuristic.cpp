@@ -32,14 +32,15 @@ protected:
 };
 
 TEST(Functionality, NodeCostCalculation) {
-  const double         tolerance = 1e-6;
-  const CouplingMap    cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
-  Architecture         arch{5, cm};
-  TwoQubitMultiplicity multiplicity = {{{0, 1}, {5, 2}}, {{2, 3}, {0, 1}}};
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
+  const double               tolerance = 1e-6;
+  const CouplingMap          cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
+  Architecture               arch{5, cm};
+  const TwoQubitMultiplicity multiplicity                  = {{{0, 1}, {5, 2}},
+                                                              {{2, 3}, {0, 1}}};
+  const std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits = {4, 3, 1, 2, 0};
+  const std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
 
-  std::vector<std::vector<Exchange>> swaps = {
+  const std::vector<std::vector<Exchange>> swaps = {
       {Exchange(0, 1, qc::OpType::Teleportation)},
       {Exchange(1, 2, qc::OpType::SWAP)}};
 
