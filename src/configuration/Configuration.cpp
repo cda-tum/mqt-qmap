@@ -16,6 +16,7 @@ nlohmann::json Configuration::json() const {
   config["post_mapping_optimizations"]         = postMappingOptimizations;
   config["add_measurements_to_mapped_circuit"] = addMeasurementsToMappedCircuit;
   config["verbose"]                            = verbose;
+  config["debug"]                              = debug;
 
   if (method == Method::Heuristic) {
     auto& heuristic             = config["settings"];
