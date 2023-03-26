@@ -105,7 +105,7 @@ TEST(Functionality, HeuristicBenchmark) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  const auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
   settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::DisjointQubits;
@@ -143,18 +143,14 @@ TEST(Functionality, HeuristicBenchmark) {
   EXPECT_EQ(layerResults0.solutionDepth, 1);
   EXPECT_EQ(layerResults0.generatedNodes, 6);
   EXPECT_EQ(layerResults0.expandedNodes, 1);
-  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5.,
-              tolerance);
-  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1.,
-              tolerance);
+  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5., tolerance);
+  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1., tolerance);
   const auto& layerResults1 = result.layerHeuristicBenchmark[1];
   EXPECT_EQ(layerResults1.solutionDepth, 1);
   EXPECT_EQ(layerResults1.generatedNodes, 5);
   EXPECT_EQ(layerResults1.expandedNodes, 1);
-  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4.,
-              tolerance);
-  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1.,
-              tolerance);
+  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4., tolerance);
+  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1., tolerance);
   EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
   EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
   EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5, tolerance);
@@ -238,7 +234,7 @@ TEST_P(HeuristicTest5Q, Static) {
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
   ibmqYorktownMapper->printResult(std::cout);
-  
+
   ibmqLondonMapper->map(settings);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_static.qasm");
   ibmqLondonMapper->printResult(std::cout);
@@ -252,7 +248,7 @@ TEST_P(HeuristicTest5Q, Dynamic) {
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
   ibmqYorktownMapper->printResult(std::cout);
-  
+
   ibmqLondonMapper->map(settings);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
   ibmqLondonMapper->printResult(std::cout);
@@ -297,7 +293,7 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 TEST_P(HeuristicTest16Q, Disjoint) {
   Configuration settings{};
   settings.layering = Layering::DisjointQubits;
-  settings.debug         = true;
+  settings.debug    = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
   ibmQX5Mapper->printResult(std::cout);
@@ -307,7 +303,7 @@ TEST_P(HeuristicTest16Q, Disjoint) {
 TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
   Configuration settings{};
   settings.layering = Layering::Disjoint2qBlocks;
-  settings.debug         = true;
+  settings.debug    = true;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);

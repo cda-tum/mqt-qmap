@@ -141,11 +141,9 @@ void HeuristicMapper::map(const Configuration& configuration) {
 
   if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
     auto& benchmark = results.heuristicBenchmark;
-    benchmark.timePerNode /=
-        static_cast<double>(benchmark.expandedNodes);
+    benchmark.timePerNode /= static_cast<double>(benchmark.expandedNodes);
     benchmark.averageBranchingFactor =
-        static_cast<double>(benchmark.generatedNodes -
-                            layers.size()) /
+        static_cast<double>(benchmark.generatedNodes - layers.size()) /
         static_cast<double>(benchmark.expandedNodes);
     for (const auto& layer : results.layerHeuristicBenchmark) {
       benchmark.effectiveBranchingFactor +=
@@ -154,7 +152,11 @@ void HeuristicMapper::map(const Configuration& configuration) {
            static_cast<double>(benchmark.expandedNodes));
     }
     if (benchmark.effectiveBranchingFactor > benchmark.averageBranchingFactor) {
-      throw QMAPException("Effective branching factor (" + std::to_string(benchmark.effectiveBranchingFactor) + ") is larger than average branching factor (" + std::to_string(benchmark.averageBranchingFactor) + ").");
+      throw QMAPException("Effective branching factor (" +
+                          std::to_string(benchmark.effectiveBranchingFactor) +
+                          ") is larger than average branching factor (" +
+                          std::to_string(benchmark.averageBranchingFactor) +
+                          ").");
     }
   }
 
@@ -423,7 +425,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   Node                              node{};
   TwoQubitMultiplicity              twoQubitGateMultiplicity{};
   const auto&                       debug = results.config.debug;
-  
+
   if (debug) {
     results.layerHeuristicBenchmark.emplace_back();
   }
@@ -463,23 +465,23 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
                            results.config.admissibleHeuristic);
 
   nodes.push(node);
-  
-  const auto start = std::chrono::steady_clock::now();
-  auto& layerResults = results.layerHeuristicBenchmark.back();
-  auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
-  auto& layerExpandedNodes = layerResults.expandedNodes;
-  
+
+  const auto start              = std::chrono::steady_clock::now();
+  auto&      layerResults       = results.layerHeuristicBenchmark.back();
+  auto&      totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
+  auto&      layerExpandedNodes = layerResults.expandedNodes;
+
   while (!nodes.top().done) {
     Node current = nodes.top();
     nodes.pop();
     expandNode(consideredQubits, current, layer, twoQubitGateMultiplicity);
-    
+
     if (debug) {
       ++totalExpandedNodes;
       ++layerExpandedNodes;
     }
   }
-  
+
   if (debug) {
     const auto                          end  = std::chrono::steady_clock::now();
     const std::chrono::duration<double> diff = end - start;
@@ -487,8 +489,11 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     layerResults.generatedNodes = layerResults.expandedNodes + nodes.size();
     results.heuristicBenchmark.generatedNodes += layerResults.generatedNodes;
     if (layerResults.expandedNodes > 0) {
-      layerResults.timePerNode = diff.count() / static_cast<double>(layerResults.expandedNodes);
-      layerResults.averageBranchingFactor = static_cast<double>(layerResults.generatedNodes - 1) / static_cast<double>(layerResults.expandedNodes);
+      layerResults.timePerNode =
+          diff.count() / static_cast<double>(layerResults.expandedNodes);
+      layerResults.averageBranchingFactor =
+          static_cast<double>(layerResults.generatedNodes - 1) /
+          static_cast<double>(layerResults.expandedNodes);
     }
   }
 
@@ -499,12 +504,19 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   while (!nodes.empty()) {
     nodes.pop();
   }
-  
+
   if (debug) {
-    layerResults.solutionDepth = result.depth;
-    layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(layerResults.expandedNodes + 1, result.depth);
-    if (layerResults.effectiveBranchingFactor > layerResults.averageBranchingFactor) {
-      throw QMAPException("Effective branching factor (" + std::to_string(layerResults.effectiveBranchingFactor) + ") is larger than average branching factor (" + std::to_string(layerResults.averageBranchingFactor) + ") on layer " + std::to_string(layer) + ".");
+    layerResults.solutionDepth            = result.depth;
+    layerResults.effectiveBranchingFactor = computeEffectiveBranchingRate(
+        layerResults.expandedNodes + 1, result.depth);
+    if (layerResults.effectiveBranchingFactor >
+        layerResults.averageBranchingFactor) {
+      throw QMAPException(
+          "Effective branching factor (" +
+          std::to_string(layerResults.effectiveBranchingFactor) +
+          ") is larger than average branching factor (" +
+          std::to_string(layerResults.averageBranchingFactor) + ") on layer " +
+          std::to_string(layer) + ".");
     }
   }
 
