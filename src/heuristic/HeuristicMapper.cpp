@@ -152,11 +152,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
            static_cast<double>(benchmark.expandedNodes));
     }
     if (benchmark.effectiveBranchingFactor > benchmark.averageBranchingFactor) {
-      throw QMAPException("Effective branching factor (" +
-                          std::to_string(benchmark.effectiveBranchingFactor) +
-                          ") is larger than average branching factor (" +
-                          std::to_string(benchmark.averageBranchingFactor) +
-                          ").");
+      throw QMAPException("Something wrong in benchmark tracking: effectiveBranchingFactor > averageBranchingFactor");
     }
   }
 
@@ -511,12 +507,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
         layerResults.expandedNodes + 1, result.depth);
     if (layerResults.effectiveBranchingFactor >
         layerResults.averageBranchingFactor) {
-      throw QMAPException(
-          "Effective branching factor (" +
-          std::to_string(layerResults.effectiveBranchingFactor) +
-          ") is larger than average branching factor (" +
-          std::to_string(layerResults.averageBranchingFactor) + ") on layer " +
-          std::to_string(layer) + ".");
+      throw QMAPException("Something wrong in benchmark tracking on layer " + std::to_string(layer) + ": effectiveBranchingFactor > averageBranchingFactor");
     }
   }
 
