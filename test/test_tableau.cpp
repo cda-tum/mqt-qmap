@@ -633,7 +633,7 @@ TEST_F(TestTableau, TableauIO) {
   EXPECT_EQ(fullTableau, tableau2);
 }
 
-TEST_F(TestTableau, InvalidIput) {
+TEST_F(TestTableau, InvalidInput) {
   EXPECT_THROW(tableau = Tableau("[ZZX, aXy]"), QMAPException);
   EXPECT_THROW(tableau = Tableau("[ZZ__I, XXY]"), QMAPException);
   EXPECT_THROW(tableau = Tableau("[ZZI, -XY]"), QMAPException);
