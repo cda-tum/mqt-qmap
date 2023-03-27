@@ -76,6 +76,7 @@ def compile(  # noqa: A001
     post_mapping_optimizations: bool = True,
     add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
+    debug: bool = False,
 ) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits.
 
@@ -101,6 +102,7 @@ def compile(  # noqa: A001
         post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
         verbose: Print more detailed information during the mapping process. Defaults to False.
+        debug: Gather additional information during the mapping process (e.g. number of generated nodes, branching factors, ...). Defaults to False.
 
     Returns:
         The mapped circuit and the mapping results.
@@ -134,6 +136,7 @@ def compile(  # noqa: A001
     config.post_mapping_optimizations = post_mapping_optimizations
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
+    config.debug = debug
 
     results = map(circ, architecture, config)
 

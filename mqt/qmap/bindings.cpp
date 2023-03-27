@@ -182,6 +182,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(py::init<>())
       .def_readwrite("method", &Configuration::method)
       .def_readwrite("verbose", &Configuration::verbose)
+      .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("layering", &Configuration::layering)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("lookahead", &Configuration::lookahead)
@@ -227,6 +228,9 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("time", &MappingResults::time)
       .def_readwrite("timeout", &MappingResults::timeout)
       .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
+      .def_readwrite("heuristic_benchmark", &MappingResults::heuristicBenchmark)
+      .def_readwrite("layer_heuristic_benchmark",
+                     &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
       .def("csv", &MappingResults::csv)
@@ -248,6 +252,25 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::directionReverse)
       .def_readwrite("teleportations",
                      &MappingResults::CircuitInfo::teleportations);
+
+  // Heuristic benchmark information
+  py::class_<MappingResults::HeuristicBenchmarkInfo>(
+      m, "HeuristicBenchmarkInfo", "Heuristic benchmark information")
+      .def(py::init<>())
+      .def_readwrite("expanded_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
+      .def_readwrite("generated_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite("solution_depth",
+                     &MappingResults::HeuristicBenchmarkInfo::solutionDepth)
+      .def_readwrite("time_per_node",
+                     &MappingResults::HeuristicBenchmarkInfo::timePerNode)
+      .def_readwrite(
+          "average_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
+      .def_readwrite(
+          "effective_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor);
 
   auto arch = py::class_<Architecture>(
       m, "Architecture", "Class representing device/backend information");

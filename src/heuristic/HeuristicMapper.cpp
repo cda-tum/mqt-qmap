@@ -8,6 +8,7 @@
 #include <chrono>
 
 void HeuristicMapper::map(const Configuration& configuration) {
+  results        = MappingResults{};
   results.config = configuration;
   auto& config   = results.config;
   if (config.layering == Layering::OddGates ||
@@ -135,6 +136,24 @@ void HeuristicMapper::map(const Configuration& configuration) {
           gateidx++;
         }
       }
+    }
+  }
+
+  if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
+    auto& benchmark = results.heuristicBenchmark;
+    benchmark.timePerNode /= static_cast<double>(benchmark.expandedNodes);
+    benchmark.averageBranchingFactor =
+        static_cast<double>(benchmark.generatedNodes - layers.size()) /
+        static_cast<double>(benchmark.expandedNodes);
+    for (const auto& layer : results.layerHeuristicBenchmark) {
+      benchmark.effectiveBranchingFactor +=
+          layer.effectiveBranchingFactor *
+          (static_cast<double>(layer.expandedNodes) /
+           static_cast<double>(benchmark.expandedNodes));
+    }
+    if (benchmark.effectiveBranchingFactor > benchmark.averageBranchingFactor) {
+      throw QMAPException("Something wrong in benchmark tracking: "
+                          "effectiveBranchingFactor > averageBranchingFactor");
     }
   }
 
@@ -439,14 +458,57 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
   nodes.push(node);
 
+  const auto& debug = results.config.debug;
+  const auto  start = std::chrono::steady_clock::now();
+  if (debug) {
+    results.layerHeuristicBenchmark.emplace_back();
+  }
+  auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
+  auto  layerResultsIt     = results.layerHeuristicBenchmark.rbegin();
+
   while (!nodes.top().done) {
     Node current = nodes.top();
     nodes.pop();
     expandNode(consideredQubits, current, layer, twoQubitGateMultiplicity);
+
+    if (debug) {
+      ++totalExpandedNodes;
+      ++layerResultsIt->expandedNodes;
+    }
   }
 
   Node result = nodes.top();
-  nodes.pop();
+  if (debug) {
+    const auto end = std::chrono::steady_clock::now();
+
+    layerResultsIt->solutionDepth = result.depth;
+
+    const std::chrono::duration<double> diff = end - start;
+    results.heuristicBenchmark.timePerNode += diff.count();
+
+    layerResultsIt->generatedNodes =
+        layerResultsIt->expandedNodes + nodes.size();
+    results.heuristicBenchmark.generatedNodes += layerResultsIt->generatedNodes;
+
+    if (layerResultsIt->expandedNodes > 0) {
+      layerResultsIt->timePerNode =
+          diff.count() / static_cast<double>(layerResultsIt->expandedNodes);
+      layerResultsIt->averageBranchingFactor =
+          static_cast<double>(layerResultsIt->generatedNodes - 1) /
+          static_cast<double>(layerResultsIt->expandedNodes);
+    }
+
+    layerResultsIt->effectiveBranchingFactor = computeEffectiveBranchingRate(
+        layerResultsIt->expandedNodes + 1, result.depth);
+
+    if (layerResultsIt->effectiveBranchingFactor >
+        layerResultsIt->averageBranchingFactor) {
+      throw QMAPException(
+          "Something wrong in benchmark tracking on layer " +
+          std::to_string(layer) +
+          ": effectiveBranchingFactor > averageBranchingFactor");
+    }
+  }
 
   // clear nodes
   while (!nodes.empty()) {
@@ -536,7 +598,8 @@ void HeuristicMapper::expandNodeAddOneSwap(
     const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
   const auto& config = results.config;
 
-  Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed);
+  Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed,
+                      node.depth + 1);
 
   if (architecture.getCouplingMap().find(swap) !=
           architecture.getCouplingMap().end() ||

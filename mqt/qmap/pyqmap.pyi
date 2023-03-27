@@ -137,6 +137,7 @@ class Configuration:
     use_subsets: bool
     use_teleportation: bool
     verbose: bool
+    debug: bool
     def __init__(self) -> None: ...
     def json(self) -> dict[str, Any]: ...
 

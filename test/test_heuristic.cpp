@@ -18,6 +18,7 @@ protected:
   Architecture                     ibmqLondon{};
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
+  Configuration                    settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
@@ -26,18 +27,20 @@ protected:
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
+    settings.debug     = true;
   }
 };
 
 TEST(Functionality, NodeCostCalculation) {
-  const double         tolerance = 1e-6;
-  const CouplingMap    cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
-  Architecture         arch{5, cm};
-  TwoQubitMultiplicity multiplicity = {{{0, 1}, {5, 2}}, {{2, 3}, {0, 1}}};
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits    = {4, 3, 1, 2, 0};
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
+  const double               tolerance = 1e-6;
+  const CouplingMap          cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
+  Architecture               arch{5, cm};
+  const TwoQubitMultiplicity multiplicity                  = {{{0, 1}, {5, 2}},
+                                                              {{2, 3}, {0, 1}}};
+  const std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits = {4, 3, 1, 2, 0};
+  const std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
 
-  std::vector<std::vector<Exchange>> swaps = {
+  const std::vector<std::vector<Exchange>> swaps = {
       {Exchange(0, 1, qc::OpType::Teleportation)},
       {Exchange(1, 2, qc::OpType::SWAP)}};
 
@@ -79,6 +82,87 @@ TEST(Functionality, NodeCostCalculation) {
   EXPECT_NEAR(node.getTotalFixedCost(),
               2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
+}
+
+TEST(Functionality, HeuristicBenchmark) {
+  /*
+      3
+     / \
+    4   2
+    |   |
+    0---1
+  */
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
+  architecture.loadCouplingMap(5, cm);
+
+  qc::QuantumComputation qc{5, 5};
+  qc.x(2, qc::Control{4});
+  qc.x(1, qc::Control{3});
+  qc.x(1, qc::Control{4});
+
+  qc.barrier({0, 1, 2, 3, 4});
+  for (size_t i = 0; i < 5; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::DisjointQubits;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.lookahead                = false;
+  settings.debug                    = true;
+  mapper->map(settings);
+  auto& result = mapper->getResults();
+
+  /*
+  generated nodes (unit of costs: COST_BIDIRECTIONAL_SWAP):
+  layer 1:
+    0: {swaps: {}, cost: 0, heur: 1, total: 1}
+  --- priority queue: [0] -> expand: 0
+    1: {swaps: {{0, 1}}, cost: 1, heur: 1, total: 2}
+    2: {swaps: {{1, 2}}, cost: 1, heur: 1, total: 2}
+    3: {swaps: {{2, 3}}, cost: 1, heur: 0, total: 1}
+    4: {swaps: {{3, 4}}, cost: 1, heur: 1, total: 2}
+    5: {swaps: {{4, 0}}, cost: 1, heur: 1, total: 2}
+  --- priority queue: [3,1,2,4,5] -> done: 3
+  layer 2:
+    0: {swaps: {}, cost: 0, heur: 1, total: 1}
+  --- priority queue: [0] -> expand: 0
+    1: {swaps: {{0, 1}}, cost: 1, heur: 0, total: 1}
+    2: {swaps: {{1, 2}}, cost: 1, heur: 1, total: 2}
+    3: {swaps: {{3, 4}}, cost: 1, heur: 1, total: 2}
+    4: {swaps: {{4, 0}}, cost: 1, heur: 0, total: 1}
+  --- priority queue: [1,4,2,3] -> done: 1
+  */
+
+  EXPECT_EQ(result.layerHeuristicBenchmark.size(), 2);
+  const auto& layerResults0 = result.layerHeuristicBenchmark[0];
+  EXPECT_EQ(layerResults0.solutionDepth, 1);
+  EXPECT_EQ(layerResults0.generatedNodes, 6);
+  EXPECT_EQ(layerResults0.expandedNodes, 1);
+  EXPECT_NEAR(layerResults0.averageBranchingFactor, 5.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_NEAR(layerResults0.effectiveBranchingFactor, 1.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  const auto& layerResults1 = result.layerHeuristicBenchmark[1];
+  EXPECT_EQ(layerResults1.solutionDepth, 1);
+  EXPECT_EQ(layerResults1.generatedNodes, 5);
+  EXPECT_EQ(layerResults1.expandedNodes, 1);
+  EXPECT_NEAR(layerResults1.averageBranchingFactor, 4.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_NEAR(layerResults1.effectiveBranchingFactor, 1.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_EQ(result.heuristicBenchmark.generatedNodes, 11);
+  EXPECT_EQ(result.heuristicBenchmark.expandedNodes, 2);
+  EXPECT_NEAR(result.heuristicBenchmark.averageBranchingFactor, 4.5,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
+  EXPECT_NEAR(result.heuristicBenchmark.effectiveBranchingFactor, 1.,
+              HeuristicMapper::EFFECTIVE_BRANCH_RATE_TOLERANCE);
 }
 
 TEST(Functionality, EmptyDump) {
@@ -126,6 +210,51 @@ TEST(Functionality, NoMeasurmentsAdded) {
   EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
 }
 
+TEST(Functionality, HeuristicAdmissibility) {
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+                          {3, 2}, {3, 4}, {4, 3}, {4, 5}, {5, 4}};
+  architecture.loadCouplingMap(6, cm);
+  const std::vector<Edge> perms{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
+
+  TwoQubitMultiplicity multiplicity = {
+      {{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
+
+  // perform depth-limited depth first search
+  const std::size_t                  depthLimit = 11;
+  std::vector<HeuristicMapper::Node> stack{};
+  std::vector<std::size_t>           currentPerm{};
+
+  auto initNode = HeuristicMapper::Node({0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5});
+  initNode.recalculateFixedCost(architecture);
+  initNode.updateHeuristicCost(architecture, multiplicity, true);
+  stack.push_back(initNode);
+  currentPerm.push_back(perms.size());
+
+  while (!stack.empty()) {
+    const auto& node = stack.back();
+    if (node.done) {
+      // check if all nodes in stack have lower or equal cost
+      for (const auto& prevNode : stack) {
+        EXPECT_LE(prevNode.getTotalCost(), node.getTotalCost());
+      }
+    }
+    if (node.done || stack.size() >= depthLimit || currentPerm.back() == 0) {
+      stack.pop_back();
+      currentPerm.pop_back();
+      continue;
+    }
+    --currentPerm.back();
+    const auto perm    = perms[currentPerm.back()];
+    auto       newNode = HeuristicMapper::Node(node.qubits, node.locations,
+                                               node.swaps, node.costFixed);
+    newNode.applySWAP(perm, architecture);
+    newNode.updateHeuristicCost(architecture, multiplicity, true);
+    stack.push_back(newNode);
+    currentPerm.push_back(perms.size());
+  }
+}
+
 INSTANTIATE_TEST_SUITE_P(
     Heuristic, HeuristicTest5Q,
     testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84",
@@ -137,7 +266,6 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(HeuristicTest5Q, Identity) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Identity;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
@@ -150,11 +278,11 @@ TEST_P(HeuristicTest5Q, Identity) {
 }
 
 TEST_P(HeuristicTest5Q, Static) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Static;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
   ibmqYorktownMapper->printResult(std::cout);
+
   ibmqLondonMapper->map(settings);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_static.qasm");
   ibmqLondonMapper->printResult(std::cout);
@@ -162,11 +290,11 @@ TEST_P(HeuristicTest5Q, Static) {
 }
 
 TEST_P(HeuristicTest5Q, Dynamic) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
   ibmqYorktownMapper->map(settings);
   ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
   ibmqYorktownMapper->printResult(std::cout);
+
   ibmqLondonMapper->map(settings);
   ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
   ibmqLondonMapper->printResult(std::cout);
@@ -181,11 +309,13 @@ protected:
   qc::QuantumComputation           qc{};
   Architecture                     ibmQX5{};
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
+  Configuration                    settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
     ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
-    ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    ibmQX5Mapper   = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    settings.debug = true;
   }
 };
 
@@ -199,7 +329,6 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST_P(HeuristicTest16Q, Dynamic) {
-  Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
@@ -208,7 +337,6 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 }
 
 TEST_P(HeuristicTest16Q, Disjoint) {
-  Configuration settings{};
   settings.layering = Layering::DisjointQubits;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
@@ -217,7 +345,6 @@ TEST_P(HeuristicTest16Q, Disjoint) {
 }
 
 TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
-  Configuration settings{};
   settings.layering = Layering::Disjoint2qBlocks;
   ibmQX5Mapper->map(settings);
   ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
@@ -254,6 +381,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest20Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
+  settings.debug         = true;
   tokyoMapper->map(settings);
   tokyoMapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
   tokyoMapper->printResult(std::cout);
@@ -293,6 +421,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
   settings.initialLayout       = InitialLayout::Dynamic;
+  settings.debug               = true;
   settings.teleportationQubits = std::min(
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());
