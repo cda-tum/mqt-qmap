@@ -1,8 +1,10 @@
-from mqt import qmap
-from mqt.qcec import verify
+"""Test the heuristic mapper."""
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon
+
+from mqt import qmap
+from mqt.qcec import verify
 
 
 def test_heuristic_no_swaps_trivial_layout() -> None:
@@ -15,7 +17,7 @@ def test_heuristic_no_swaps_trivial_layout() -> None:
 
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon())
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     # assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -34,7 +36,7 @@ def test_heuristic_no_swaps_non_trivial_layout() -> None:
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon())
 
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     # assert results.output.swaps == 0
 
     result = verify(qc, qc_mapped)
@@ -53,7 +55,7 @@ def test_heuristic_non_trivial_swaps() -> None:
     qc_mapped, results = qmap.compile(qc, arch=FakeLondon())
 
     assert results.timeout is False
-    assert results.mapped_circuit != ""
+    assert results.mapped_circuit
     assert results.output.swaps == 1
 
     print("\n")

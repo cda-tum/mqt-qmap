@@ -88,6 +88,21 @@ void Tableau::applyGate(const qc::Operation* const gate) {
       applySwap(target, target2);
       break;
     }
+    case qc::OpType::iSWAP: {
+      const auto target2 = static_cast<std::size_t>(gate->getTargets().at(1U));
+      applyISwap(target, target2);
+      break;
+    }
+    case qc::OpType::DCX: {
+      const auto target2 = static_cast<std::size_t>(gate->getTargets().at(1U));
+      applyDCX(target, target2);
+      break;
+    }
+    case qc::OpType::ECR: {
+      const auto target2 = static_cast<std::size_t>(gate->getTargets().at(1U));
+      applyECR(target, target2);
+      break;
+    }
     default:
       // unsupported non-controlled gate type
       util::fatal("Tableau::applyGate: Unsupported non-controlled gate type " +
@@ -281,6 +296,35 @@ void Tableau::applySwap(const std::size_t q1, const std::size_t q2) {
   applyCX(q1, q2);
   applyCX(q2, q1);
   applyCX(q1, q2);
+}
+
+void Tableau::applyISwap(const std::size_t q1, const std::size_t q2) {
+  assert(q1 < nQubits);
+  assert(q2 < nQubits);
+  assert(q1 != q2);
+  applyS(q2);
+  applyS(q1);
+  applyH(q1);
+  applyDCX(q1, q2);
+  applyH(q2);
+}
+
+void Tableau::applyDCX(const std::size_t q1, const std::size_t q2) {
+  assert(q1 < nQubits);
+  assert(q2 < nQubits);
+  assert(q1 != q2);
+  applyCX(q1, q2);
+  applyCX(q2, q1);
+}
+
+void Tableau::applyECR(const std::size_t q1, const std::size_t q2) {
+  assert(q1 < nQubits);
+  assert(q2 < nQubits);
+  assert(q1 != q2);
+  applyS(q1);
+  applySx(q2);
+  applyCX(q1, q2);
+  applyX(q1);
 }
 
 Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,

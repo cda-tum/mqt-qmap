@@ -104,6 +104,12 @@ void ExactMapper::map(const Configuration& settings) {
       maxLimit = architecture.getCouplingLimit() - 1U;
     }
     if (config.swapReduction == SwapReduction::CouplingLimit) {
+      if (!architecture.bidirectional()) {
+        // on a directed architecture, one more SWAP might be needed overall
+        // due to the directionality of the edges and direction reversal not
+        // being possible for every gate.
+        maxLimit += 1U;
+      }
       limit = maxLimit;
     } else if (config.swapReduction == SwapReduction::Increasing) {
       limit = 0U;
@@ -272,8 +278,7 @@ void ExactMapper::map(const Configuration& settings) {
 
         qcMapped.emplace_back<qc::StandardOperation>(
             qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-            op->getParameter().at(0), op->getParameter().at(1),
-            op->getParameter().at(2));
+            op->getParameter());
       } else {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
@@ -401,7 +406,7 @@ void ExactMapper::coreMappingRoutine(
   //////////////////////////////////////////
   /// 	Check necessary permutations	//
   //////////////////////////////////////////
-  if (config.enableSwapLimits && !config.useBDD) {
+  if (config.swapLimitsEnabled() && !config.useBDD) {
     do {
       auto picost = architecture.minimumNumberOfSwaps(
           pi, static_cast<std::int64_t>(limit));
@@ -449,7 +454,7 @@ number of variables: (|L|-1) * m!
     y.emplace_back();
     piCount = 0;
     do {
-      if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
         yName.str("");
         yName << "y_" << k << '_' << piCount;
         y.back().emplace_back(lb->makeVariable(yName.str(), CType::BOOL));
@@ -621,7 +626,7 @@ number of variables: (|L|-1) * m!
     auto& i         = x[k - 1];
     auto& j         = x[k];
     do {
-      if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+      if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
         for (const auto qubit : qubitChoice) {
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
@@ -645,7 +650,7 @@ number of variables: (|L|-1) * m!
       piCount         = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
           onlyOne = onlyOne + LogicTerm::ite(y[k - 1][internalPiCount],
                                              LogicTerm(1), LogicTerm(0));
           ++internalPiCount;
@@ -660,7 +665,7 @@ number of variables: (|L|-1) * m!
       piCount         = 0;
       internalPiCount = 0;
       do {
-        if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+        if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
           varIDs.push_back(y[k - 1][internalPiCount]);
           ++internalPiCount;
         }
@@ -694,7 +699,7 @@ number of variables: (|L|-1) * m!
       reducedLayerIndices.size());
   auto cost = LogicTerm(0);
   do {
-    if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+    if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
       auto picost = architecture.minimumNumberOfSwaps(pi);
       if (architecture.bidirectional()) {
         picost *= GATES_OF_BIDIRECTIONAL_SWAP;
@@ -702,9 +707,8 @@ number of variables: (|L|-1) * m!
         picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
       }
       for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-        cost = cost + LogicTerm::ite(y[k - 1][internalPiCount],
-                                     LogicTerm(static_cast<int>(picost)),
-                                     LogicTerm(0));
+        lb->weightedTerm(y[k - 1][internalPiCount],
+                         static_cast<double>(picost));
         if (config.useBDD) {
           weightedVars[k].emplace(y[k - 1][internalPiCount],
                                   static_cast<int>(picost));
@@ -714,8 +718,7 @@ number of variables: (|L|-1) * m!
     }
     ++piCount;
   } while (std::next_permutation(pi.begin(), pi.end()));
-  lb->minimize(cost);
-  if (config.enableSwapLimits && config.useBDD) {
+  if (config.swapLimitsEnabled() && config.useBDD) {
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
       lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1],
                                  static_cast<int>(limit), lb.get()));
@@ -724,27 +727,25 @@ number of variables: (|L|-1) * m!
 
   // cost for reversed directions
   if (!architecture.bidirectional()) {
-    cost = LogicTerm(0);
-    for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
+    const auto numLayers = reducedLayerIndices.size();
+    for (std::size_t k = 0; k < numLayers; ++k) {
       for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
         if (gate.singleQubit()) {
           continue;
         }
 
-        auto reverse = LogicTerm(true);
-        for (const auto& edge : rcm) {
-          auto indexFT = x[k][physicalQubitIndex[edge.first]][gate.target];
-          auto indexSC = x[k][physicalQubitIndex[edge.second]]
-                          [static_cast<std::size_t>(gate.control)];
-          reverse = reverse && (!indexFT || !indexSC);
+        auto reverse = LogicTerm(false);
+        for (const auto& [q0, q1] : rcm) {
+          const auto indexFT = x[k][physicalQubitIndex[q0]][gate.target];
+          const auto indexSC = x[k][physicalQubitIndex[q1]]
+                                [static_cast<std::size_t>(gate.control)];
+          reverse = reverse || (indexFT && indexSC);
         }
-        cost = cost + LogicTerm::ite(reverse,
-                                     LogicTerm(GATES_OF_DIRECTION_REVERSE),
-                                     LogicTerm(0));
+        lb->weightedTerm(reverse, ::GATES_OF_DIRECTION_REVERSE);
       }
     }
-    lb->minimize(cost);
   }
+  lb->makeMinimize();
 
   if (config.includeWCNF) {
     choiceResults.wcnf = lb->dumpInternalSolver();
@@ -806,7 +807,7 @@ number of variables: (|L|-1) * m!
         // sort the permutation of the qubits to start fresh
         std::sort(pi.begin(), pi.end());
         do {
-          if (skippedPi.count(piCount) == 0 || !config.enableSwapLimits) {
+          if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
             if (m->getBoolValue(y[k - 1][internalPiCount], lb.get())) {
               break;
             }

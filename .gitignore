@@ -7,6 +7,7 @@
 __pycache__/
 *.so
 *.py[cod]
+.ipynb_checkpoints/
 
 bin/
 build/

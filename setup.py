@@ -1,8 +1,9 @@
+"""Setup script for the MQT QCEC package."""
+
 import os
 import re
 import subprocess
 import sys
-from contextlib import suppress
 from pathlib import Path
 
 from setuptools import Extension, setup
@@ -10,18 +11,35 @@ from setuptools.command.build_ext import build_ext
 
 
 class CMakeExtension(Extension):
+    """Class that wraps a CMake extension."""
+
     def __init__(self, name: str, sourcedir: str = "") -> None:
+        """Initialize the CMake extension.
+
+        Args:
+        ----
+        name: The name of the extension.
+        sourcedir: The path to the source directory.
+        """
         super().__init__(name, sources=[])
         self.sourcedir = str(Path(sourcedir).resolve())
 
 
 class CMakeBuild(build_ext):
+    """Class that builds a CMake extension."""
+
     def build_extension(self, ext: CMakeExtension) -> None:
+        """Build the CMake extension.
+
+        Args:
+        ----
+        ext: The CMake extension to build.
+        """
         from setuptools_scm import get_version  # type: ignore[import]
 
         version = get_version(root=".", relative_to=__file__)
 
-        extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.resolve())  # type: ignore[no-untyped-call]
+        extdir = Path(self.get_ext_fullpath(ext.name)).parent.resolve()
 
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
         cfg = "Debug" if self.debug else "Release"
@@ -75,12 +93,11 @@ class CMakeBuild(build_ext):
 
         build_dir = Path(self.build_temp)
         build_dir.mkdir(parents=True, exist_ok=True)
-        with suppress(FileNotFoundError):
-            Path(build_dir / "CMakeCache.txt").unlink()
+        Path(build_dir / "CMakeCache.txt").unlink(missing_ok=True)
 
-        subprocess.check_call(["cmake", ext.sourcedir] + cmake_args, cwd=self.build_temp)
+        subprocess.check_call(["cmake", ext.sourcedir, *cmake_args], cwd=self.build_temp)
         subprocess.check_call(
-            ["cmake", "--build", ".", "--target", ext.name.split(".")[-1]] + build_args,
+            ["cmake", "--build", ".", "--target", ext.name.split(".")[-1], *build_args],
             cwd=self.build_temp,
         )
 

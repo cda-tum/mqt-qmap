@@ -58,10 +58,6 @@ static std::vector<TestConfiguration> getTests(const std::string& path) {
 class SynthesisTest : public ::testing::TestWithParam<TestConfiguration> {
 protected:
   void SetUp() override {
-    if (plog::get() == nullptr) {
-      util::init();
-    }
-
     test = GetParam();
 
     if (!test.initialCircuit.empty()) {
@@ -95,7 +91,9 @@ protected:
     }
     std::cout << "Target tableau:\n" << targetTableau;
 
-    config = Configuration();
+    config                         = Configuration();
+    config.verbosity               = plog::Severity::verbose;
+    config.dumpIntermediateResults = true;
   }
 
   void TearDown() override {

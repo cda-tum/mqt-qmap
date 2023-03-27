@@ -1,3 +1,5 @@
+"""Sphinx configuration file."""
+
 import sys
 
 if sys.version_info < (3, 10, 0):
@@ -6,6 +8,8 @@ else:
     from importlib import metadata
 
 import pybtex.plugin
+from pybtex.database import Entry
+from pybtex.richtext import HRef
 from pybtex.style.formatting.unsrt import Style as UnsrtStyle
 from pybtex.style.template import field, href
 
@@ -16,7 +20,7 @@ author = "Lukas Burgholzer"
 release = metadata.version("mqt.qmap")
 version = ".".join(release.split(".")[:3])
 language = "en"
-copyright = "Chair for Design Automation, Technical University of Munich"
+project_copyright = "Chair for Design Automation, Technical University of Munich"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -34,6 +38,7 @@ extensions = [
     "nbsphinx",
     "sphinxext.opengraph",
     "sphinx_rtd_dark_mode",
+    "sphinx_autodoc_typehints",
 ]
 
 nbsphinx_execute = "auto"
@@ -63,9 +68,17 @@ hoverxref_role_types = {
 }
 exclude_patterns = ["_build", "build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store", ".env"]
 
+typehints_use_signature = True
+typehints_use_signature_return = True
+typehints_use_rtype = False
+napoleon_use_rtype = False
+
 
 class CDAStyle(UnsrtStyle):
-    def format_url(self, e):
+    """Custom style for including PDF links."""
+
+    def format_url(self, _e: Entry) -> HRef:
+        """Format URL field as a link to the PDF."""
         url = field("url", raw=True)
         return href()[url, "[PDF]"]
 

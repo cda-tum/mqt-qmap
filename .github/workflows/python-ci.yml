@@ -2,6 +2,7 @@ name: Python
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -21,10 +22,12 @@ jobs:
     name: Run my[py] linter
     steps:
       - uses: actions/checkout@v3
-      - name: Setup nox
-        run: pipx install nox
-      - name: Run mypy via nox
-        run: nox -s mypy
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: mypy --all-files
 
   python-tests:
     name: 🐍 ${{ matrix.python-version }} Tests on ${{ matrix.runs-on }}

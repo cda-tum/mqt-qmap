@@ -132,6 +132,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("disjoint_qubits", Layering::DisjointQubits)
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
+      .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> Layering {
@@ -181,6 +182,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(py::init<>())
       .def_readwrite("method", &Configuration::method)
       .def_readwrite("verbose", &Configuration::verbose)
+      .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("layering", &Configuration::layering)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("lookahead", &Configuration::lookahead)
@@ -226,6 +228,9 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("time", &MappingResults::time)
       .def_readwrite("timeout", &MappingResults::timeout)
       .def_readwrite("mapped_circuit", &MappingResults::mappedCircuit)
+      .def_readwrite("heuristic_benchmark", &MappingResults::heuristicBenchmark)
+      .def_readwrite("layer_heuristic_benchmark",
+                     &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
       .def("csv", &MappingResults::csv)
@@ -247,6 +252,25 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::directionReverse)
       .def_readwrite("teleportations",
                      &MappingResults::CircuitInfo::teleportations);
+
+  // Heuristic benchmark information
+  py::class_<MappingResults::HeuristicBenchmarkInfo>(
+      m, "HeuristicBenchmarkInfo", "Heuristic benchmark information")
+      .def(py::init<>())
+      .def_readwrite("expanded_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
+      .def_readwrite("generated_nodes",
+                     &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite("solution_depth",
+                     &MappingResults::HeuristicBenchmarkInfo::solutionDepth)
+      .def_readwrite("time_per_node",
+                     &MappingResults::HeuristicBenchmarkInfo::timePerNode)
+      .def_readwrite(
+          "average_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
+      .def_readwrite(
+          "effective_branching_factor",
+          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor);
 
   auto arch = py::class_<Architecture>(
       m, "Architecture", "Class representing device/backend information");
@@ -371,7 +395,7 @@ PYBIND11_MODULE(pyqmap, m) {
            "properties"_a);
 
   // Main mapping function
-  m.def("map", &map, "map a quantum circuit");
+  m.def("map", &map, "map a quantum circuit", "circ"_a, "arch"_a, "config"_a);
 
   // Target metric for the Clifford synthesizer
   py::enum_<cs::TargetMetric>(m, "TargetMetric")
@@ -384,6 +408,21 @@ PYBIND11_MODULE(pyqmap, m) {
         return cs::targetMetricFromString(name);
       }));
   py::implicitly_convertible<py::str, cs::TargetMetric>();
+
+  py::enum_<plog::Severity>(m, "Verbosity")
+      .value("none", plog::Severity::none, "No output.")
+      .value("fatal", plog::Severity::fatal, "Only show fatal errors.")
+      .value("error", plog::Severity::error, "Show errors.")
+      .value("warning", plog::Severity::warning, "Show warnings.")
+      .value("info", plog::Severity::info, "Show general information.")
+      .value("debug", plog::Severity::debug,
+             "Show additional debug information.")
+      .value("verbose", plog::Severity::verbose, "Show all information.")
+      .export_values()
+      .def(py::init([](const std::string& name) {
+        return plog::severityFromString(name.c_str());
+      }));
+  py::implicitly_convertible<py::str, plog::Severity>();
 
   // Configuration for the synthesis
   py::class_<cs::Configuration>(
@@ -406,6 +445,18 @@ PYBIND11_MODULE(pyqmap, m) {
                      &cs::Configuration::useSymmetryBreaking,
                      "Use symmetry breaking clauses to speed up the synthesis "
                      "process. Defaults to `true`.")
+      .def_readwrite("dump_intermediate_results",
+                     &cs::Configuration::dumpIntermediateResults,
+                     "Dump intermediate results of the synthesis process. "
+                     "Defaults to `false`.")
+      .def_readwrite("intermediate_results_path",
+                     &cs::Configuration::intermediateResultsPath,
+                     "Path to the directory where intermediate results should "
+                     "be dumped. Defaults to `./`. The path needs to include a "
+                     "path separator at the end.")
+      .def_readwrite(
+          "verbosity", &cs::Configuration::verbosity,
+          "Verbosity level for the synthesis process. Defaults to 'warning'.")
       .def_readwrite(
           "n_threads", &cs::Configuration::nThreads,
           "Number of threads to use for the synthesis. Defaults to `1`.")

@@ -185,20 +185,21 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
+  isBidirectional = true;
+  Matrix edgeWeights(nqubits, std::vector<double>(
+                                  nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
-      isBidirectional = false;
-      break;
+      isBidirectional                            = false;
+      edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
+      edgeWeights.at(edge.first).at(edge.second) = COST_UNIDIRECTIONAL_SWAP;
+    } else {
+      edgeWeights.at(edge.first).at(edge.second) = COST_BIDIRECTIONAL_SWAP;
     }
   }
 
-  if (isBidirectional) {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
-                         Architecture::costHeuristicBidirectional);
-  } else {
-    Dijkstra::buildTable(nqubits, couplingMap, distanceTable,
-                         Architecture::costHeuristicUnidirectional);
-  }
+  Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
+                       Architecture::dijkstraNodeToCost);
 }
 
 void Architecture::createFidelityTable() {
@@ -486,13 +487,15 @@ std::uint64_t Architecture::bfs(const std::uint16_t   start,
 
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
-    connections.at(edge.first).emplace_back(edge.second);
+    connections.at(edge.first).emplace(edge.second);
+    // make sure that the connections are bidirectional
+    connections.at(edge.second).emplace(edge.first);
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
@@ -513,15 +516,17 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
                                             const std::uint16_t nQubits,
                                             const QubitSubset&  qubitChoice) {
-  std::vector<std::vector<std::uint16_t>> connections;
-  std::vector<std::uint16_t>              d;
-  std::vector<bool>                       visited;
+  std::vector<std::unordered_set<std::uint16_t>> connections;
+  std::vector<std::uint16_t>                     d;
+  std::vector<bool>                              visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
     if ((qubitChoice.count(edge.first) != 0U) &&
         (qubitChoice.count(edge.second) != 0U)) {
-      connections.at(edge.first).emplace_back(edge.second);
+      connections.at(edge.first).emplace(edge.second);
+      // make sure that the connections are bidirectional
+      connections.at(edge.second).emplace(edge.first);
     }
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
@@ -545,7 +550,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
 
 void Architecture::findCouplingLimit(
     const std::uint16_t node, const std::uint16_t curSum,
-    const std::vector<std::vector<std::uint16_t>>& connections,
+    const std::vector<std::unordered_set<std::uint16_t>>& connections,
     std::vector<std::uint16_t>& d, std::vector<bool>& visited) {
   if (visited.at(node)) {
     return;

@@ -66,11 +66,6 @@ An architecture can be imported from a file. Assuming :code:`path` is a string v
 
 The first line of an architecture file is the number of qubits of the architecture. The remaining lines are tuples defining the connections of the coupling map. More explicitly, the file format is defined by the following Backus-Naur-Form.
 
-    .. currentmodule:: mqt.qmap
-
-    .. automethod:: Architecture.__init__
-
-
     .. code-block:: console
 
         <coupling_map> ::= <integer>"\n"(<qubit>" "<qubit>"\n")*
@@ -80,8 +75,9 @@ Here the first integer defines the number of qubits of the architecture.
 
 Full API of the Architecture class
 ##################################
-
+    .. currentmodule:: mqt.qmap
     .. autoclass:: Architecture
+        :special-members: __init__
         :undoc-members:
         :members:
 
