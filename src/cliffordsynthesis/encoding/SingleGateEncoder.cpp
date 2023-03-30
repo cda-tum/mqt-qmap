@@ -13,9 +13,9 @@ using namespace logicbase;
 
 void SingleGateEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
+  LogicVector gateVariables{};
+  gateVariables.reserve(N * (1 + SINGLE_QUBIT_GATES.size()));
   for (std::size_t t = 0U; t < T; ++t) {
-    LogicVector gateVariables{};
-
     for (std::size_t q = 0U; q < N; ++q) {
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
       vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
@@ -27,6 +27,7 @@ void SingleGateEncoder::assertConsistency() const {
       }
     }
     assertExactlyOne(gateVariables);
+    gateVariables.clear();
   }
 }
 
@@ -167,7 +168,7 @@ LogicTerm SingleGateEncoder::createNoGateOnQubit(const std::size_t pos,
                                                  const std::size_t q) {
   const auto& singleQubitGates = vars.gS[pos];
   auto        noGate           = LogicTerm(true);
-  for (std::size_t i = 1; i < SINGLE_QUBIT_GATES.size(); ++i) {
+  for (std::size_t i = 0; i < SINGLE_QUBIT_GATES.size(); ++i) {
     noGate = noGate && !singleQubitGates[i][q];
   }
   const auto& twoQubitGates = vars.gC[pos];
