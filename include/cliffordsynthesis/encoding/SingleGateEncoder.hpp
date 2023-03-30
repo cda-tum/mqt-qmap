@@ -36,12 +36,8 @@ protected:
   [[nodiscard]] logicbase::LogicTerm createNoChangeOnQubit(std::size_t pos,
                                                            std::size_t q);
 
-  [[nodiscard]] logicbase::LogicTerm
-  createNoSingleQubitGateOnQubit(std::size_t pos, std::size_t q);
-
-  [[nodiscard]] logicbase::LogicTerm
-  createNoTwoQubitGateOnQubits(std::size_t pos, std::size_t ctrl,
-                               std::size_t tar);
+  [[nodiscard]] logicbase::LogicTerm createNoGateOnQubit(std::size_t pos,
+                                                         std::size_t q);
 
   void assertSingleQubitGateOrderConstraints(std::size_t pos,
                                              std::size_t qubit) override;
