@@ -35,9 +35,6 @@ protected:
   void assertGatesImplyTransform(
       std::size_t pos, std::size_t qubit,
       const std::vector<TransformationFamily>& transformations);
-  //  [[nodiscard]] logicbase::LogicTerm
-  //       createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
-  //                                       qc::OpType gate) override;
   void assertTwoQubitGateConstraints(std::size_t pos) override;
   void assertNoGateNoChangeConstraint(std::size_t pos);
   [[nodiscard]] logicbase::LogicTerm

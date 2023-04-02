@@ -129,21 +129,6 @@ void SingleGateEncoder::assertRConstraints(std::size_t pos, std::size_t qubit) {
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
 
-// LogicTerm SingleGateEncoder::createSingleQubitGateConstraint(
-//     const std::size_t pos, const std::size_t qubit, const qc::OpType gate) {
-//   auto changes = LogicTerm(true);
-//
-//   changes = changes && (tvars->x[pos + 1][qubit] ==
-//                         tvars->singleQubitXChange(pos, qubit, gate));
-//   changes = changes && (tvars->z[pos + 1][qubit] ==
-//                         tvars->singleQubitZChange(pos, qubit, gate));
-//   changes = changes &&
-//             (tvars->r[pos + 1] ==
-//              (tvars->r[pos] ^ tvars->singleQubitRChange(pos, qubit, gate)));
-//
-//   return changes;
-// }
-
 void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
