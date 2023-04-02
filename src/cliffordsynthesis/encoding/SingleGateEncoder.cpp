@@ -7,6 +7,9 @@
 
 #include "utils/logging.hpp"
 
+#include <functional>
+using namespace std::placeholders;
+
 namespace cs::encoding {
 
 using namespace logicbase;
@@ -50,60 +53,96 @@ void SingleGateEncoder::assertNoGateNoChangeConstraint(std::size_t pos) {
 }
 
 void SingleGateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
-  const auto& singleQubitGates = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
     DEBUG() << "Asserting gates on " << q;
-
-    // Gates that leave qubit constant
-    lb->assertFormula(LogicTerm::implies(
-        singleQubitGates[gateToIndex(qc::OpType::None)][q] ||
-            singleQubitGates[gateToIndex(qc::OpType::X)][q] ||
-            singleQubitGates[gateToIndex(qc::OpType::Y)][q] ||
-            singleQubitGates[gateToIndex(qc::OpType::Z)][q],
-        (tvars->x[pos + 1][q] == tvars->x[pos][q]) &&
-            (tvars->z[pos + 1][q] == tvars->z[pos][q])));
-
-    // Hadamard changes both
-    lb->assertFormula(
-        LogicTerm::implies(singleQubitGates[gateToIndex((qc::OpType::H))][q],
-                           ((tvars->x[pos + 1][q] == tvars->z[pos][q]) &&
-                            (tvars->z[pos + 1][q] == tvars->x[pos][q]))));
-
-    // S and Sdag
-    lb->assertFormula(LogicTerm::implies(
-        (singleQubitGates[gateToIndex((qc::OpType::S))][q] ||
-         singleQubitGates[gateToIndex((qc::OpType::Sdag))][q]),
-        (tvars->z[pos + 1][q] == (tvars->z[pos][q] ^ tvars->x[pos][q]) &&
-         tvars->x[pos + 1][q] == tvars->x[pos][q])));
-
-    // R changes are different for almost any gate so we go through all single
-    // qubit gates
-    for (const auto gate : SINGLE_QUBIT_GATES) {
-      auto changes = LogicTerm(true);
-      changes      = changes &&
-                (tvars->r[pos + 1] ==
-                 (tvars->r[pos] ^ tvars->singleQubitRChange(pos, q, gate)));
-
-      lb->assertFormula(
-          LogicTerm::implies(singleQubitGates[gateToIndex(gate)][q], changes));
-    }
+    assertZConstraints(pos, q);
+    assertXConstraints(pos, q);
+    assertRConstraints(pos, q);
   }
 }
 
-LogicTerm SingleGateEncoder::createSingleQubitGateConstraint(
-    const std::size_t pos, const std::size_t qubit, const qc::OpType gate) {
-  auto changes = LogicTerm(true);
+std::vector<SingleGateEncoder::TransformationFamily>
+SingleGateEncoder::collectGateTransformations(
+    std::size_t pos, std::size_t qubit,
+    const GateToTransformation& gateToTransformation) {
+  std::vector<TransformationFamily> transformations;
 
-  changes = changes && (tvars->x[pos + 1][qubit] ==
-                        tvars->singleQubitXChange(pos, qubit, gate));
-  changes = changes && (tvars->z[pos + 1][qubit] ==
-                        tvars->singleQubitZChange(pos, qubit, gate));
-  changes = changes &&
-            (tvars->r[pos + 1] ==
-             (tvars->r[pos] ^ tvars->singleQubitRChange(pos, qubit, gate)));
-
-  return changes;
+  for (const auto& gate : SINGLE_QUBIT_GATES) {
+    const auto& transformation = gateToTransformation(pos, qubit, gate);
+    const auto& it             = std::find_if(
+        transformations.begin(), transformations.end(), [&](const auto& entry) {
+          return entry.first.deepEquals(transformation);
+        });
+    if (it != transformations.end()) {
+      it->second.emplace_back(gate);
+    } else {
+      transformations.emplace_back(transformation,
+                                   std::vector<qc::OpType>{gate});
+    }
+  }
+  return transformations;
 }
+
+void SingleGateEncoder::assertGatesImplyTransform(
+    std::size_t pos, std::size_t qubit,
+    const std::vector<TransformationFamily>& transformations) {
+  const auto& singleQubitGates = vars.gS[pos];
+  for (const auto& [transformation, gates] : transformations) {
+    auto gateOr = LogicTerm(false);
+    for (const auto& gate : gates) {
+      gateOr = gateOr || singleQubitGates[gateToIndex(gate)][qubit];
+    }
+    lb->assertFormula(LogicTerm::implies(gateOr, transformation));
+  }
+}
+
+void SingleGateEncoder::assertZConstraints(std::size_t pos, std::size_t qubit) {
+  const auto& gatesToZTransformations = std::bind(
+      &TableauEncoder::Variables::singleQubitZChange, tvars, _1, _2, _3);
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToZTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->z[pos + 1][qubit] == transformation;
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
+void SingleGateEncoder::assertXConstraints(std::size_t pos, std::size_t qubit) {
+  const auto& gatesToXTransformations = std::bind(
+      &TableauEncoder::Variables::singleQubitXChange, tvars, _1, _2, _3);
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToXTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->x[pos + 1][qubit] == transformation;
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
+void SingleGateEncoder::assertRConstraints(std::size_t pos, std::size_t qubit) {
+  const auto& gatesToZTransformations = std::bind(
+      &TableauEncoder::Variables::singleQubitRChange, tvars, _1, _2, _3);
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToZTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->r[pos + 1] == (tvars->r[pos] ^ transformation);
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
+// LogicTerm SingleGateEncoder::createSingleQubitGateConstraint(
+//     const std::size_t pos, const std::size_t qubit, const qc::OpType gate) {
+//   auto changes = LogicTerm(true);
+//
+//   changes = changes && (tvars->x[pos + 1][qubit] ==
+//                         tvars->singleQubitXChange(pos, qubit, gate));
+//   changes = changes && (tvars->z[pos + 1][qubit] ==
+//                         tvars->singleQubitZChange(pos, qubit, gate));
+//   changes = changes &&
+//             (tvars->r[pos + 1] ==
+//              (tvars->r[pos] ^ tvars->singleQubitRChange(pos, qubit, gate)));
+//
+//   return changes;
+// }
 
 void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
   const auto& twoQubitGates = vars.gC[pos];
@@ -135,24 +174,6 @@ LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
       changes && (tvars->r[pos + 1] ==
                   (tvars->r[pos] ^ tvars->twoQubitRChange(pos, ctrl, trgt)));
 
-  return changes && createNoChange(pos, ctrl, trgt);
-}
-
-LogicTerm SingleGateEncoder::createNoChange(
-    const std::size_t pos, const std::size_t except,
-    const std::optional<std::size_t> except2) const {
-  auto changes = LogicTerm(true);
-  for (std::size_t q = 0U; q < N; ++q) {
-    if (q == except) {
-      continue;
-    }
-    if (except2.has_value() && q == except2.value()) {
-      continue;
-    }
-
-    changes = changes && (tvars->x[pos + 1][q] == tvars->x[pos][q]);
-    changes = changes && (tvars->z[pos + 1][q] == tvars->z[pos][q]);
-  }
   return changes;
 }
 

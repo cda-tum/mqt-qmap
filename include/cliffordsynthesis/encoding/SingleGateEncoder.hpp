@@ -8,6 +8,7 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 
 namespace cs::encoding {
@@ -17,21 +18,31 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
+  using TransformationFamily =
+      std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
+  using GateToTransformation =
+      std::function<logicbase::LogicTerm(std::size_t, std::size_t, qc::OpType)>;
+
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertSingleQubitGateConstraints(std::size_t pos) override;
-  [[nodiscard]] logicbase::LogicTerm
-       createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
-                                       qc::OpType gate) override;
+  [[nodiscard]] std::vector<TransformationFamily>
+       collectGateTransformations(std::size_t pos, std::size_t qubit,
+                                  const GateToTransformation& gateToTransformation);
+  void assertZConstraints(std::size_t pos, std::size_t qubit);
+  void assertXConstraints(std::size_t pos, std::size_t qubit);
+  void assertRConstraints(std::size_t pos, std::size_t qubit);
+  void assertGatesImplyTransform(
+      std::size_t pos, std::size_t qubit,
+      const std::vector<TransformationFamily>& transformations);
+  //  [[nodiscard]] logicbase::LogicTerm
+  //       createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
+  //                                       qc::OpType gate) override;
   void assertTwoQubitGateConstraints(std::size_t pos) override;
   void assertNoGateNoChangeConstraint(std::size_t pos);
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
-
-  [[nodiscard]] logicbase::LogicTerm
-  createNoChange(std::size_t pos, std::size_t except,
-                 std::optional<std::size_t> except2) const;
 
   [[nodiscard]] logicbase::LogicTerm createNoChangeOnQubit(std::size_t pos,
                                                            std::size_t q);
