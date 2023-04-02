@@ -26,7 +26,7 @@ protected:
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertSingleQubitGateConstraints(std::size_t pos) override;
-  [[nodiscard]] std::vector<TransformationFamily>
+  [[nodiscard]] static std::vector<TransformationFamily>
        collectGateTransformations(std::size_t pos, std::size_t qubit,
                                   const GateToTransformation& gateToTransformation);
   void assertZConstraints(std::size_t pos, std::size_t qubit);
