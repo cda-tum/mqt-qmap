@@ -174,8 +174,11 @@ LogicTerm SingleGateEncoder::createNoGateOnQubit(const std::size_t pos,
                                                  const std::size_t q) {
   const auto& singleQubitGates = vars.gS[pos];
   auto        noGate           = LogicTerm(true);
-  for (std::size_t i = 0; i < SINGLE_QUBIT_GATES.size(); ++i) {
-    noGate = noGate && !singleQubitGates[i][q];
+  for (const auto& gate : SINGLE_QUBIT_GATES) {
+    if (gate == qc::OpType::None) {
+      continue;
+    }
+    noGate = noGate && !singleQubitGates[gateToIndex(gate)][q];
   }
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t i = 0; i < N; ++i) {
