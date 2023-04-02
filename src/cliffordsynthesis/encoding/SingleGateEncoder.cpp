@@ -97,8 +97,10 @@ void SingleGateEncoder::assertGatesImplyTransform(
 }
 
 void SingleGateEncoder::assertZConstraints(std::size_t pos, std::size_t qubit) {
-  const auto& gatesToZTransformations = std::bind(
-      &TableauEncoder::Variables::singleQubitZChange, tvars, _1, _2, _3);
+  const auto& gatesToZTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitZChange(p1, p2, p3);
+  };
   auto gateTransformations =
       collectGateTransformations(pos, qubit, gatesToZTransformations);
   for (auto& [transformation, _] : gateTransformations) {
@@ -108,8 +110,10 @@ void SingleGateEncoder::assertZConstraints(std::size_t pos, std::size_t qubit) {
 }
 
 void SingleGateEncoder::assertXConstraints(std::size_t pos, std::size_t qubit) {
-  const auto& gatesToXTransformations = std::bind(
-      &TableauEncoder::Variables::singleQubitXChange, tvars, _1, _2, _3);
+  const auto& gatesToXTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitXChange(p1, p2, p3);
+  };
   auto gateTransformations =
       collectGateTransformations(pos, qubit, gatesToXTransformations);
   for (auto& [transformation, _] : gateTransformations) {
@@ -119,10 +123,12 @@ void SingleGateEncoder::assertXConstraints(std::size_t pos, std::size_t qubit) {
 }
 
 void SingleGateEncoder::assertRConstraints(std::size_t pos, std::size_t qubit) {
-  const auto& gatesToZTransformations = std::bind(
-      &TableauEncoder::Variables::singleQubitRChange, tvars, _1, _2, _3);
+  const auto& gatesToRTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitRChange(p1, p2, p3);
+  };
   auto gateTransformations =
-      collectGateTransformations(pos, qubit, gatesToZTransformations);
+      collectGateTransformations(pos, qubit, gatesToRTransformations);
   for (auto& [transformation, _] : gateTransformations) {
     transformation = tvars->r[pos + 1] == (tvars->r[pos] ^ transformation);
   }
