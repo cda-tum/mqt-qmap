@@ -92,10 +92,7 @@ protected:
 
   virtual void assertGateConstraints()                           = 0;
   virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
-  [[nodiscard]] virtual logicbase::LogicTerm
-  createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
-                                  qc::OpType gate)            = 0;
-  virtual void assertTwoQubitGateConstraints(std::size_t pos) = 0;
+  virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
   [[nodiscard]] virtual logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) = 0;

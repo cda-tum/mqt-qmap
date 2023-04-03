@@ -24,7 +24,7 @@ protected:
   void assertSingleQubitGateConstraints(std::size_t pos) override;
   [[nodiscard]] logicbase::LogicTerm
        createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
-                                       qc::OpType gate) override;
+                                       qc::OpType gate);
   void assertTwoQubitGateConstraints(std::size_t pos) override;
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
