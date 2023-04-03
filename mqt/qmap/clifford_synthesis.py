@@ -92,7 +92,7 @@ def synthesize_clifford(
     Args:
         target_tableau:
             The target tableau to synthesize.
-            If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
+            If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. The Pauli strings follow the same format as in `Stim <https://github.com/quantumlib/Stim>`_.
             If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
             If a :class:`Tableau` is given, it is used directly.
         initial_tableau:
