@@ -48,8 +48,11 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // SAT problem repeatedly with increasing timestep limits until a satisfying
   // assignment is found. This uses the general SAT encoding without any
   // objective function regardless of the configuration.
-  const auto [lower, upper] = determineUpperBound(encoderConfig);
+  auto [lower, upper] = determineUpperBound(encoderConfig);
 
+  if (lower == 0) {
+    lower = config.minimalTimeSteps;
+  }
   // if the upper bound is 0, the solution does not require any gates and the
   // synthesis is done.
   if (upper == 0U) {
@@ -66,7 +69,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     gateOptimalSynthesis(encoderConfig, lower, upper);
     break;
   case TargetMetric::Depth:
-    depthOptimalSynthesis(encoderConfig, lower, upper);
+    depthOptimalSynthesis(encoderConfig, config.minimalTimeSteps, upper);
     break;
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());

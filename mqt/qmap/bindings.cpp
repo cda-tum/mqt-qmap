@@ -434,6 +434,10 @@ PYBIND11_MODULE(pyqmap, m) {
                      "Initial timestep limit for the Clifford synthesis. "
                      "Defaults to `0`, which implies that the initial timestep "
                      "limit is determined automatically.")
+      .def_readwrite("minimal_timesteps", &cs::Configuration::minimalTimeSteps,
+                     "Minimal timestep considered for the Clifford synthesis. "
+                     "Defaults to `0`, which implies that the initial timestep "
+                     "limit is determined automatically.")
       .def_readwrite(
           "use_maxsat", &cs::Configuration::useMaxSAT,
           "Use MaxSAT to solve the synthesis problem or to really on the "
