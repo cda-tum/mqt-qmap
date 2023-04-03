@@ -18,23 +18,9 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
-  using TransformationFamily =
-      std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
-  using GateToTransformation =
-      std::function<logicbase::LogicTerm(std::size_t, std::size_t, qc::OpType)>;
-
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertSingleQubitGateConstraints(std::size_t pos) override;
-  [[nodiscard]] static std::vector<TransformationFamily>
-       collectGateTransformations(std::size_t pos, std::size_t qubit,
-                                  const GateToTransformation& gateToTransformation);
-  void assertZConstraints(std::size_t pos, std::size_t qubit);
-  void assertXConstraints(std::size_t pos, std::size_t qubit);
-  void assertRConstraints(std::size_t pos, std::size_t qubit);
-  void assertGatesImplyTransform(
-      std::size_t pos, std::size_t qubit,
-      const std::vector<TransformationFamily>& transformations);
   void assertTwoQubitGateConstraints(std::size_t pos) override;
   void assertNoGateNoChangeConstraint(std::size_t pos);
   [[nodiscard]] logicbase::LogicTerm

@@ -83,6 +83,83 @@ void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
                                               LogicTerm::noneTerm(), lb.get()));
 }
 
+std::vector<GateEncoder::TransformationFamily>
+GateEncoder::collectGateTransformations(
+    const std::size_t pos, const std::size_t qubit,
+    const GateToTransformation& gateToTransformation) {
+  std::vector<TransformationFamily> transformations;
+
+  for (const auto& gate : SINGLE_QUBIT_GATES) {
+    const auto& transformation = gateToTransformation(pos, qubit, gate);
+    const auto& it             = std::find_if(
+        transformations.begin(), transformations.end(), [&](const auto& entry) {
+          return entry.first.deepEquals(transformation);
+        });
+    if (it != transformations.end()) {
+      it->second.emplace_back(gate);
+    } else {
+      transformations.emplace_back(transformation,
+                                   std::vector<qc::OpType>{gate});
+    }
+  }
+  return transformations;
+}
+
+void GateEncoder::assertGatesImplyTransform(
+    const std::size_t pos, const std::size_t qubit,
+    const std::vector<TransformationFamily>& transformations) {
+  const auto& singleQubitGates = vars.gS[pos];
+  for (const auto& [transformation, gates] : transformations) {
+    auto gateOr = LogicTerm(false);
+    for (const auto& gate : gates) {
+      gateOr = gateOr || singleQubitGates[gateToIndex(gate)][qubit];
+    }
+    lb->assertFormula(LogicTerm::implies(gateOr, transformation));
+  }
+}
+
+void GateEncoder::assertZConstraints(const std::size_t pos,
+                                     const std::size_t qubit) {
+  const auto& gatesToZTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitZChange(p1, p2, p3);
+  };
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToZTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->z[pos + 1][qubit] == transformation;
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
+void GateEncoder::assertXConstraints(const std::size_t pos,
+                                     const std::size_t qubit) {
+  const auto& gatesToXTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitXChange(p1, p2, p3);
+  };
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToXTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->x[pos + 1][qubit] == transformation;
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
+void GateEncoder::assertRConstraints(const std::size_t pos,
+                                     const std::size_t qubit) {
+  const auto& gatesToRTransformations = [&](const auto& p1, const auto& p2,
+                                            const auto& p3) {
+    return tvars->singleQubitRChange(p1, p2, p3);
+  };
+  auto gateTransformations =
+      collectGateTransformations(pos, qubit, gatesToRTransformations);
+  for (auto& [transformation, _] : gateTransformations) {
+    transformation = tvars->r[pos + 1] == (tvars->r[pos] ^ transformation);
+  }
+  assertGatesImplyTransform(pos, qubit, gateTransformations);
+}
+
 void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   std::size_t nSingleQubitGates = 0U;
   std::size_t nTwoQubitGates    = 0U;

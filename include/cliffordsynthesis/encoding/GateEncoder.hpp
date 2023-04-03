@@ -86,6 +86,11 @@ protected:
   // the logic block to use
   std::shared_ptr<logicbase::LogicBlock> lb{};
 
+  using TransformationFamily =
+      std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
+  using GateToTransformation =
+      std::function<logicbase::LogicTerm(std::size_t, std::size_t, qc::OpType)>;
+
   void assertExactlyOne(const logicbase::LogicVector& variables) const;
 
   virtual void assertConsistency() const = 0;
@@ -93,6 +98,15 @@ protected:
   virtual void assertGateConstraints()                           = 0;
   virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
   virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
+  [[nodiscard]] static std::vector<TransformationFamily>
+       collectGateTransformations(std::size_t pos, std::size_t qubit,
+                                  const GateToTransformation& gateToTransformation);
+  void assertGatesImplyTransform(
+      std::size_t pos, std::size_t qubit,
+      const std::vector<TransformationFamily>& transformations);
+  virtual void assertZConstraints(std::size_t pos, std::size_t qubit);
+  virtual void assertXConstraints(std::size_t pos, std::size_t qubit);
+  virtual void assertRConstraints(std::size_t pos, std::size_t qubit);
   [[nodiscard]] virtual logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) = 0;
