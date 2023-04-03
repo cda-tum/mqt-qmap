@@ -28,16 +28,26 @@ def _import_circuit(circuit: str | QuantumCircuit | QuantumComputation) -> Quant
     return circuit
 
 
-def _import_tableau(tableau: str | Clifford | PauliList | Tableau) -> Tableau:
+def _reverse_paulis(paulis: list[str]) -> list[str]:
+    return [s[0] + s[:0:-1] if s[0] in "+-" else s[::-1] for s in paulis]
+
+
+def _import_tableau(tableau: str | Clifford | PauliList | Tableau, include_destabilizers: bool = False) -> Tableau:
     """Import a tableau from a string, a Clifford, a PauliList, or a Tableau."""
     if isinstance(tableau, Clifford):
+        mode = "B" if include_destabilizers else "S"
         try:
-            return Tableau(str(tableau.to_labels(mode="S")))
+            return Tableau(str(_reverse_paulis(tableau.to_labels(mode=mode))))
         except AttributeError:
-            return Tableau(str(tableau.stabilizer.to_labels()))
-    if isinstance(tableau, PauliList):
-        return Tableau(str(tableau.to_labels()))
-    if isinstance(tableau, str):
+            if include_destabilizers:
+                return Tableau(
+                    str(_reverse_paulis(tableau.stabilizer.to_labels())),
+                    str(_reverse_paulis(tableau.destabilizer.to_labels())),
+                )
+            return Tableau(str(_reverse_paulis(tableau.stabilizer.to_labels())))
+    elif isinstance(tableau, PauliList):
+        return Tableau(str(_reverse_paulis(tableau.to_labels())))
+    elif isinstance(tableau, str):
         return Tableau(tableau)
     return tableau
 
@@ -74,14 +84,15 @@ def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
 def synthesize_clifford(
     target_tableau: str | Clifford | PauliList | Tableau,
     initial_tableau: str | Clifford | PauliList | Tableau = None,
-    **kwargs: Any,  # noqa: ANN401
+    include_destabilizers: bool = False,
+    **kwargs: Any | None,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Synthesize a Clifford circuit from a given tableau starting from an (optional) initial tableau.
 
     Args:
         target_tableau:
             The target tableau to synthesize.
-            If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings.
+            If a string is given, it is interpreted as a semicolon separated binary matrix or a list of Pauli strings. The Pauli strings follow the same format as in `Stim <https://github.com/quantumlib/Stim>`_.
             If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
             If a :class:`Tableau` is given, it is used directly.
         initial_tableau:
@@ -90,6 +101,8 @@ def synthesize_clifford(
             If a :class:`Clifford` or a :class:`PauliList` is given, it is converted to a :class:`Tableau`.
             If a :class:`Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
+        include_destabilizers:
+            Flag to set whether destabilizers should be considered in the synthesis
         **kwargs:
             Additional keyword arguments to configure the synthesis.
             See :class:`SynthesisConfiguration` for a list of available options.
@@ -99,7 +112,7 @@ def synthesize_clifford(
     """
     config = _config_from_kwargs(kwargs)
 
-    tableau = _import_tableau(target_tableau)
+    tableau = _import_tableau(target_tableau, include_destabilizers)
     if initial_tableau is not None:
         synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau), tableau)
     else:
@@ -116,7 +129,8 @@ def synthesize_clifford(
 def optimize_clifford(
     circuit: str | QuantumCircuit | QuantumComputation,
     initial_tableau: str | Clifford | PauliList | Tableau = None,
-    **kwargs: Any,  # noqa: ANN401
+    include_destabilizers: bool = False,
+    **kwargs: Any | None,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Optimize a Clifford circuit starting from an (optional) initial tableau.
 
@@ -132,6 +146,8 @@ def optimize_clifford(
             If a :class:`Clifford` is given or a :class:`PauliList` is given, it is converted to a Tableau.
             If a :class:`Tableau` is given, it is used directly.
             If no initial tableau is given, the synthesis starts from the identity tableau.
+        include_destabilizers:
+            Flag to set whether destabilizers should be considered in the synthesis
         **kwargs:
             Additional keyword arguments to configure the synthesis.
             See :class:`SynthesisConfiguration` for a list of available options.
@@ -143,9 +159,9 @@ def optimize_clifford(
 
     qc = _import_circuit(circuit)
     if initial_tableau is not None:
-        synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau), qc)
+        synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau, include_destabilizers), qc)
     else:
-        synthesizer = CliffordSynthesizer(qc)
+        synthesizer = CliffordSynthesizer(qc, include_destabilizers)
 
     synthesizer.synthesize(config)
 

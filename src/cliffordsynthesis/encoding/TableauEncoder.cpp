@@ -12,7 +12,7 @@ namespace cs::encoding {
 using namespace logicbase;
 
 void TableauEncoder::createTableauVariables() {
-  const auto n = static_cast<std::int16_t>(N);
+  const auto n = static_cast<std::int16_t>(S);
 
   DEBUG() << "Creating tableau variables.";
   vars.x.reserve(T);
@@ -41,7 +41,7 @@ void TableauEncoder::createTableauVariables() {
 
 void TableauEncoder::assertTableau(const Tableau&    tableau,
                                    const std::size_t t) {
-  const auto n = static_cast<std::int16_t>(N);
+  const auto n = static_cast<std::int16_t>(S);
 
   DEBUG() << "Asserting tableau at time step " << t;
   TRACE() << "Tableau:\n" << tableau;
@@ -60,15 +60,15 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
 void TableauEncoder::extractTableauFromModel(Results&          results,
                                              const std::size_t t,
                                              Model&            model) const {
-  Tableau tableau(N);
+  Tableau tableau(N, S > N);
   for (std::size_t i = 0; i < N; ++i) {
     const auto bvx = model.getBitvectorValue(vars.x[t][i], lb.get());
-    tableau.populateTableauFrom(bvx, N, i);
+    tableau.populateTableauFrom(bvx, S, i);
     const auto bvz = model.getBitvectorValue(vars.z[t][i], lb.get());
-    tableau.populateTableauFrom(bvz, N, i + N);
+    tableau.populateTableauFrom(bvz, S, i + N);
   }
   const auto bvr = model.getBitvectorValue(vars.r[t], lb.get());
-  tableau.populateTableauFrom(bvr, N, 2 * N);
+  tableau.populateTableauFrom(bvr, S, 2 * N);
 
   results.setResultTableau(tableau);
 }

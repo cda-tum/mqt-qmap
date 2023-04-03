@@ -23,16 +23,31 @@ class Tableau {
   std::size_t nQubits{};
   TableauType tableau;
 
+private:
+  void           loadStabilizerDestabilizerString(const std::string& string);
+  static RowType parseStabilizer(const std::string& stab);
+
 public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
-                   std::size_t end = std::numeric_limits<std::size_t>::max());
-  explicit Tableau(const std::size_t nq) : nQubits(nq) {
-    createDiagonalTableau(nq);
+                   std::size_t end = std::numeric_limits<std::size_t>::max(),
+                   bool        includeDestabilizers = false);
+  explicit Tableau(const std::size_t nq,
+                   const bool        includeDestabilizers = false)
+      : nQubits(nq) {
+    createDiagonalTableau(nq, includeDestabilizers);
   }
   explicit Tableau(const std::string& description) {
     fromString(description);
-    nQubits = tableau.size();
+    if (tableau.empty()) {
+      throw std::runtime_error("Tableau is empty");
+    }
+    nQubits = tableau.back().size() / 2U;
+  }
+  explicit Tableau(const std::string& stabilizers,
+                   const std::string& destabilizers) {
+    fromString(stabilizers, destabilizers);
+    nQubits = tableau.size() / 2U;
   }
 
   [[nodiscard]] RowType operator[](const std::size_t index) {
@@ -48,6 +63,14 @@ public:
 
   [[nodiscard]] auto getQubitCount() const { return nQubits; }
 
+  [[nodiscard]] auto getTableauSize() const { return tableau.size(); }
+
+  [[nodiscard]] auto hasDestabilizers() const {
+    return tableau.size() == 2 * nQubits;
+  }
+
+  [[nodiscard]] auto& getTableau() const { return tableau; }
+
   void dump(const std::string& filename) const;
 
   void dump(std::ostream& of) const;
@@ -59,7 +82,7 @@ public:
   void populateTableauFrom(const std::bitset<N> bv, const std::size_t nQ,
                            const std::size_t column) {
     assert(column <= 2 * nQ);
-    assert(nQ <= nQubits);
+    assert(nQ <= getTableauSize());
     assert(nQ <= N);
     for (std::size_t i = 0U; i < nQ; ++i) {
       if (bv[i]) {
@@ -98,7 +121,7 @@ public:
     return !(lhs == rhs);
   }
 
-  void createDiagonalTableau(std::size_t nQ);
+  void createDiagonalTableau(std::size_t nQ, bool includeDestabilizers = false);
 
   friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
     os << dt.toString();
@@ -116,12 +139,14 @@ public:
   [[nodiscard]] std::string toString() const;
   void                      fromString(const std::string& str);
 
+  void fromString(const std::string& stabilizers,
+                  const std::string& destabilizers);
   template <std::size_t N>
   [[nodiscard]] std::bitset<N> getBVFrom(const std::size_t column) const {
     assert(column <= 2 * nQubits);
     assert(nQubits <= N);
     std::bitset<N> bv;
-    for (std::size_t i = 0U; i < nQubits; ++i) {
+    for (std::size_t i = 0U; i < getTableauSize(); ++i) {
       if (tableau[i][column] == 1U) {
         bv[i] = 1;
       }
