@@ -36,15 +36,6 @@ void SingleGateEncoder::assertGateConstraints() {
     TRACE() << "Asserting gate constraints at time " << t;
     assertSingleQubitGateConstraints(t);
     assertTwoQubitGateConstraints(t);
-    assertNoGateNoChangeConstraint(t);
-  }
-}
-
-void SingleGateEncoder::assertNoGateNoChangeConstraint(std::size_t pos) {
-  for (std::size_t q = 0U; q < N; ++q) {
-    const auto noChange = createNoChangeOnQubit(pos, q);
-    const auto noGate   = createNoSingleQubitGateOnQubit(pos, q);
-    lb->assertFormula(LogicTerm::implies(noGate, noChange));
   }
 }
 
@@ -74,7 +65,7 @@ LogicTerm SingleGateEncoder::createSingleQubitGateConstraint(
             (tvars->r[pos + 1] ==
              (tvars->r[pos] ^ tvars->singleQubitRChange(pos, qubit, gate)));
 
-  return changes; // && createNoChange(pos, qubit, std::nullopt);
+  return changes && createNoChange(pos, qubit, std::nullopt);
 }
 
 void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
@@ -126,42 +117,6 @@ LogicTerm SingleGateEncoder::createNoChange(
     changes = changes && (tvars->z[pos + 1][q] == tvars->z[pos][q]);
   }
   return changes;
-}
-
-LogicTerm SingleGateEncoder::createNoChangeOnQubit(const std::size_t pos,
-                                                   const std::size_t q) {
-  auto noChange = LogicTerm(true);
-  noChange      = noChange && (tvars->x[pos + 1][q] == tvars->x[pos][q]);
-  noChange      = noChange && (tvars->z[pos + 1][q] == tvars->z[pos][q]);
-  return noChange;
-}
-
-LogicTerm
-SingleGateEncoder::createNoSingleQubitGateOnQubit(const std::size_t pos,
-                                                  const std::size_t q) {
-  const auto& singleQubitGates = vars.gS[pos];
-  auto        noGate           = LogicTerm(true);
-  for (std::size_t i = 1; i < SINGLE_QUBIT_GATES.size(); ++i) {
-    noGate = noGate && !singleQubitGates[i][q];
-  }
-  const auto& twoQubitGates = vars.gC[pos];
-  for (std::size_t i = 0; i < N; ++i) {
-    if (i == q) {
-      continue;
-    }
-    noGate = noGate && !twoQubitGates[i][q];
-    noGate = noGate && !twoQubitGates[q][i];
-  }
-
-  return noGate;
-}
-
-logicbase::LogicTerm SingleGateEncoder::createNoTwoQubitGateOnQubits(
-    std::size_t pos, std::size_t ctrl, std::size_t tar) {
-  const auto& twoQubitGates = vars.gC[pos];
-  auto        noGate        = LogicTerm(true);
-  noGate                    = noGate && twoQubitGates[ctrl][tar];
-  return noGate;
 }
 
 void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
