@@ -21,6 +21,7 @@ protected:
 
   void assertConsistency() const override;
   void assertGateConstraints() override;
+  void assertRConstraints(std::size_t pos, std::size_t qubit) override;
   void assertSingleQubitGateConstraints(std::size_t pos) override;
   [[nodiscard]] logicbase::LogicTerm
        createSingleQubitGateConstraint(std::size_t pos, std::size_t qubit,
