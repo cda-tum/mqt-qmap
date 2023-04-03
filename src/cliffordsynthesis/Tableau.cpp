@@ -129,16 +129,30 @@ void Tableau::applyGate(const qc::Operation* const gate) {
   }
 }
 
-void Tableau::createDiagonalTableau(const std::size_t nQ) {
+void Tableau::createDiagonalTableau(const std::size_t nQ,
+                                    const bool        includeDestabilizers) {
   nQubits = nQ;
   tableau.clear();
-  tableau.resize(nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  if (includeDestabilizers) {
+    tableau.resize(2U * nQubits);
+  } else {
+    tableau.resize(nQubits);
+  }
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i].resize((2U * nQubits) + 1U);
-    for (std::size_t j = nQubits; j < (2U * nQubits); ++j) {
-      tableau[i][j] = 0;
-      if (i == (j - nQubits)) {
-        tableau[i][j] = 1;
+    if (includeDestabilizers) {
+      for (std::size_t j = 0; j < (2U * nQubits); ++j) {
+        tableau[i][j] = 0;
+        if (i == j) {
+          tableau[i][j] = 1;
+        }
+      }
+    } else {
+      for (std::size_t j = nQubits; j < (2U * nQubits); ++j) {
+        tableau[i][j] = 0;
+        if (i == (j - nQubits)) {
+          tableau[i][j] = 1;
+        }
       }
     }
   }
@@ -170,33 +184,7 @@ void Tableau::fromString(const std::string& str) {
   std::smatch m;
   if (std::regex_search(line, rStabilizer)) {
     // string is a list of stabilizers
-    auto iter = line.cbegin();
-    while (std::regex_search(iter, line.cend(), m, rStabilizer)) {
-      std::string s = m.str(0U);
-      RowType     row;
-
-      for (const auto c : s) {
-        if (c == 'I' || c == 'Z') {
-          row.push_back(0);
-        } else if (c == 'X' || c == 'Y') {
-          row.push_back(1);
-        }
-      }
-      for (const auto c : s) {
-        if (c == 'I' || c == 'X') {
-          row.push_back(0);
-        } else if (c == 'Y' || c == 'Z') {
-          row.push_back(1);
-        }
-      }
-      if (s[0U] == '-') {
-        row.push_back(1);
-      } else {
-        row.push_back(0);
-      }
-      tableau.push_back(row);
-      iter = m[0].second;
-    }
+    loadStabilizerDestabilizerString(str);
   } else {
     // assume string is a semicolon separated binary matrix
     ss = std::stringstream(str);
@@ -206,7 +194,7 @@ void Tableau::fromString(const std::string& str) {
 
 void Tableau::applyH(const std::size_t target) {
   assert(target < nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i][2U * nQubits] ^= static_cast<EntryType>(
         tableau[i][target] & tableau[i][target + nQubits]);
     std::swap(tableau[i][target], tableau[i][target + nQubits]);
@@ -215,7 +203,7 @@ void Tableau::applyH(const std::size_t target) {
 
 void Tableau::applyS(const std::size_t target) {
   assert(target < nQubits);
-  for (std::size_t i = 0U; i < nQubits; ++i) {
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
     tableau[i][2U * nQubits] ^= static_cast<EntryType>(
         tableau[i][target] & tableau[i][target + nQubits]);
     tableau[i][target + nQubits] ^= tableau[i][target];
@@ -272,7 +260,7 @@ void Tableau::applyCX(const std::size_t control, const std::size_t target) {
   assert(control < nQubits);
   assert(target < nQubits);
   assert(control != target);
-  for (auto i = 0U; i < nQubits; ++i) {
+  for (auto i = 0U; i < getTableauSize(); ++i) {
     const auto xa = tableau[i][control];
     const auto za = tableau[i][control + nQubits];
     const auto xb = tableau[i][target];
@@ -340,8 +328,8 @@ void Tableau::applyECR(const std::size_t q1, const std::size_t q2) {
 }
 
 Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
-                 const std::size_t end)
-    : Tableau(qc.getNqubits()) {
+                 const std::size_t end, const bool includeDestabilizers)
+    : Tableau(qc.getNqubits(), includeDestabilizers) {
   std::size_t currentG = 0;
   for (const auto& gate : qc) {
     if (gate->getType() == qc::OpType::Compound) {
@@ -365,5 +353,101 @@ Tableau::Tableau(const qc::QuantumComputation& qc, const std::size_t begin,
       break;
     }
   }
+}
+void Tableau::fromString(const std::string& stabilizers,
+                         const std::string& destabilizers) {
+  loadStabilizerDestabilizerString(destabilizers);
+  loadStabilizerDestabilizerString(stabilizers);
+}
+
+Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
+  auto stabCopy = stab;
+
+  if (stabCopy[0] == '\'') {
+    if (stabCopy[stabCopy.size() - 1] == '\'') {
+      stabCopy = stabCopy.substr(1, stabCopy.size() - 2);
+    } else {
+      throw QMAPException("Unmatched \"'\" in stabilizer string");
+    }
+  }
+  if (stabCopy[0] == '+' || stabCopy[0] == '-') {
+    stabCopy = stabCopy.substr(1);
+  }
+
+  RowType row;
+  for (const auto c : stabCopy) {
+    if (c == 'I' || c == '_' || c == 'Z') {
+      row.push_back(0);
+    } else if (c == 'X' || c == 'Y') {
+      row.push_back(1);
+    } else {
+      throw QMAPException("Invalid stabilizer " + stab +
+                          ". Stabilizers must be given as a list of stabilizer "
+                          "like [XYZI, ZIXZ]");
+    }
+  }
+  for (const auto c : stabCopy) {
+    if (c == 'I' || c == '_' || c == 'X') {
+      row.push_back(0);
+    } else if (c == 'Y' || c == 'Z') {
+      row.push_back(1);
+    } else {
+      throw QMAPException("Invalid stabilizer" + stab +
+                          ". Stabilizers must be given as a list of stabilizer "
+                          "like [XYZI, ZIXZ]");
+    }
+  }
+  if (stab[0U] == '-' || (stab[0U] == '\'' && stab[1U] == '-')) {
+    row.push_back(1);
+  } else {
+    row.push_back(0);
+  }
+  return row;
+}
+
+void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
+  std::stringstream ss(string);
+  std::string       line;
+  std::getline(ss, line);
+  if (line.empty()) {
+    return;
+  }
+
+  auto stabilizers = line;
+  stabilizers.erase(remove_if(stabilizers.begin(), stabilizers.end(), isspace),
+                    stabilizers.end());
+
+  if (stabilizers[0] == '[') {
+    if (stabilizers[stabilizers.size() - 1] == ']') {
+      stabilizers = stabilizers.substr(1, stabilizers.size() - 2);
+    } else {
+      throw QMAPException("Unmatched \"[\" in stabilizer string");
+    }
+  }
+
+  std::optional<std::size_t> stabLength;
+  const auto&                checkStabLength = [&](const RowType& row) {
+    if (!stabLength.has_value()) {
+      stabLength = row.size();
+    }
+    if (stabLength.value() != row.size()) {
+      throw QMAPException("All Stabilizers muts have the same length");
+    }
+  };
+
+  const char  delimiter = ',';
+  std::string stab;
+  for (std::size_t pos = stabilizers.find(delimiter); pos != std::string::npos;
+       pos             = stabilizers.find(delimiter)) {
+    stab            = stabilizers.substr(0, pos);
+    const auto& row = parseStabilizer(stab);
+    checkStabLength(row);
+    tableau.push_back(row);
+    stabilizers = stabilizers.substr(pos + 1);
+  }
+  const auto& row =
+      parseStabilizer(stabilizers); // parse stabilizer past last comma
+  checkStabLength(row);
+  tableau.push_back(row);
 }
 } // namespace cs

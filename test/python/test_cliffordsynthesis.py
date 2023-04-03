@@ -255,6 +255,13 @@ def test_synthesize_from_qiskit_pauli_list(bell_circuit: QuantumCircuit) -> None
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
 
+def test_synthesize_from_string(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from a String."""
+    pauli_str = "[XX,ZZ]"
+    circ, results = qmap.synthesize_clifford(target_tableau=pauli_str)
+    assert qcec.verify(circ, bell_circuit).considered_equivalent()
+
+
 def test_invalid_kwarg_to_synthesis() -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
     with pytest.raises(ValueError, match="Invalid keyword argument"):

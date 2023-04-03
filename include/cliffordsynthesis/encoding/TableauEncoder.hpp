@@ -17,9 +17,11 @@ namespace cs::encoding {
 class TableauEncoder {
 public:
   TableauEncoder() = default;
-  TableauEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
+  TableauEncoder(const std::size_t nQubits, const std::size_t tableauSize,
+                 const std::size_t                      timestepLimit,
                  std::shared_ptr<logicbase::LogicBlock> logicBlock)
-      : N(nQubits), T(timestepLimit), lb(std::move(logicBlock)) {}
+      : N(nQubits), S(tableauSize), T(timestepLimit),
+        lb(std::move(logicBlock)) {}
 
   struct Variables {
     // variables for the X parts of the tableaus
@@ -64,6 +66,8 @@ public:
 protected:
   // number of qubits N
   std::size_t N{}; // NOLINT (readability-identifier-naming)
+  // number of rows in the tableau S
+  std::size_t S{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
 

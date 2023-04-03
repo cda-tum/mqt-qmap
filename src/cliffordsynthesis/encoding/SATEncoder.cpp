@@ -40,17 +40,22 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  tableauEncoder = std::make_shared<TableauEncoder>(N, T, lb);
+  const std::size_t s = config.targetTableau->hasDestabilizers() &&
+                                config.initialTableau->hasDestabilizers()
+                            ? 2U * N
+                            : N;
+
+  tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
   tableauEncoder->createTableauVariables();
   tableauEncoder->assertTableau(*config.initialTableau, 0U);
   tableauEncoder->assertTableau(*config.targetTableau, T);
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
-        N, T, tableauEncoder->getVariables(), lb);
+        N, s, T, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
-        N, T, tableauEncoder->getVariables(), lb);
+        N, s, T, tableauEncoder->getVariables(), lb);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();

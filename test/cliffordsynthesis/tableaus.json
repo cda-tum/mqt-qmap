@@ -262,5 +262,54 @@
     "expected_minimal_gates_at_minimal_depth": 5,
     "expected_minimal_two_qubit_gates": 3,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 4
+  },
+  {
+    "description": "ZI_IZ_XI_IX",
+    "initial_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "target_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "expected_minimal_gates": 0,
+    "expected_minimal_depth": 0,
+    "expected_minimal_gates_at_minimal_depth": 0,
+    "expected_minimal_two_qubit_gates": 0,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 0
+  },
+  {
+    "description": "ZI_IZ_IX_XI",
+    "initial_tableau": "1;0;0;0;0;\n0;1;0;0;0;\n0;0;1;0;0\n0;0;0;1;0",
+    "target_tableau": "0;1;0;0;0;\n1;0;0;0;0;\n0;0;0;1;0\n0;0;1;0;0",
+    "expected_minimal_gates": 3,
+    "expected_minimal_depth": 3,
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 3,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
+  },
+  {
+    "description": "StabilizerSanityCheck",
+    "target_tableau": "[+IX, +ZI]",
+    "expected_minimal_gates": 3,
+    "expected_minimal_depth": 3,
+    "expected_minimal_gates_at_minimal_depth": 3,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 3
+  },
+  {
+    "description": "DestabilizerSanityCheck",
+    "initial_tableau": "[+ZI, +IZ, +XI, +IX]",
+    "target_tableau": "[+IX, +ZI, +ZZ, -XX]",
+    "expected_minimal_gates": 4,
+    "expected_minimal_depth": 3,
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
+  },
+  {
+    "description": "DestabilizerAlternativeIdentity",
+    "initial_tableau": "[+Z_, +_Z, +X_, +_X]",
+    "target_tableau": "[+_X, +Z_, +ZZ, -XX]",
+    "expected_minimal_gates": 4,
+    "expected_minimal_depth": 3,
+    "expected_minimal_gates_at_minimal_depth": 4,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 4
   }
 ]

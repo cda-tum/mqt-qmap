@@ -526,12 +526,18 @@ PYBIND11_MODULE(pyqmap, m) {
 
   auto tableau = py::class_<cs::Tableau>(
       m, "Tableau", "A class for representing stabilizer tableaus.");
-  tableau.def(py::init<std::size_t>(), "n"_a,
+  tableau.def(py::init<std::size_t, bool>(), "n"_a,
+              "include_destabilizers"_a = false,
               "Creates a tableau for an n-qubit Clifford.");
   tableau.def(
       py::init<const std::string&>(), "tableau"_a,
       "Constructs a tableau from a string description. This can either be a "
       "semicolon separated binary matrix or a list of Pauli strings.");
+  tableau.def(
+      py::init<const std::string&, const std::string&>(), "stabilizers"_a,
+      "destabilizers"_a,
+      "Constructs a tableau from two lists of Pauli strings, the Stabilizers"
+      "and Destabilizers.");
 
   auto quantumComputation = py::class_<qc::QuantumComputation>(
       m, "QuantumComputation",
@@ -572,7 +578,8 @@ PYBIND11_MODULE(pyqmap, m) {
   synthesizer.def(py::init<cs::Tableau>(), "target_tableau"_a,
                   "Constructs a synthesizer for a tableau representing the "
                   "target state.");
-  synthesizer.def(py::init<qc::QuantumComputation&>(), "qc"_a,
+  synthesizer.def(py::init<qc::QuantumComputation&, bool>(), "qc"_a,
+                  "use_destabilizers"_a
                   "Constructs a synthesizer for a quantum computation "
                   "representing the target state.");
   synthesizer.def(
