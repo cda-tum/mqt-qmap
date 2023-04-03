@@ -120,8 +120,8 @@ void GateEncoder::assertGatesImplyTransform(
 
 void GateEncoder::assertZConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
-  const auto& gatesToZTransformations = [&](const auto& p1, const auto& p2,
-                                            const auto& p3) {
+  const auto& gatesToZTransformations = [this](const auto& p1, const auto& p2,
+                                               const auto& p3) {
     return tvars->singleQubitZChange(p1, p2, p3);
   };
   auto gateTransformations =
@@ -134,8 +134,8 @@ void GateEncoder::assertZConstraints(const std::size_t pos,
 
 void GateEncoder::assertXConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
-  const auto& gatesToXTransformations = [&](const auto& p1, const auto& p2,
-                                            const auto& p3) {
+  const auto& gatesToXTransformations = [this](const auto& p1, const auto& p2,
+                                               const auto& p3) {
     return tvars->singleQubitXChange(p1, p2, p3);
   };
   auto gateTransformations =
@@ -148,8 +148,8 @@ void GateEncoder::assertXConstraints(const std::size_t pos,
 
 void GateEncoder::assertRConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
-  const auto& gatesToRTransformations = [&](const auto& p1, const auto& p2,
-                                            const auto& p3) {
+  const auto& gatesToRTransformations = [this](const auto& p1, const auto& p2,
+                                               const auto& p3) {
     return tvars->singleQubitRChange(p1, p2, p3);
   };
   auto gateTransformations =

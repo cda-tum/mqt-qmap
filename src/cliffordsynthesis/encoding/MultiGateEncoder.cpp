@@ -48,18 +48,10 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
 
 void encoding::MultiGateEncoder::assertSingleQubitGateConstraints(
     const std::size_t pos) {
-  const auto& singleQubitGates = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
-    // assertRConstraints(pos, q);
-    for (const auto gate : SINGLE_QUBIT_GATES) {
-      const auto changes = createSingleQubitGateConstraint(pos, q, gate);
-      lb->assertFormula(
-          LogicTerm::implies(singleQubitGates[gateToIndex(gate)][q], changes));
-
-      DEBUG() << "Asserting " << toString(gate) << " on " << q;
-    }
+    assertRConstraints(pos, q);
   }
 }
 
