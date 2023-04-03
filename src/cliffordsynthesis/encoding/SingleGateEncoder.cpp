@@ -7,9 +7,6 @@
 
 #include "utils/logging.hpp"
 
-#include <functional>
-using namespace std::placeholders;
-
 namespace cs::encoding {
 
 using namespace logicbase;
@@ -44,7 +41,7 @@ void SingleGateEncoder::assertGateConstraints() {
   }
 }
 
-void SingleGateEncoder::assertNoGateNoChangeConstraint(std::size_t pos) {
+void SingleGateEncoder::assertNoGateNoChangeConstraint(const std::size_t pos) {
   for (std::size_t q = 0U; q < N; ++q) {
     const auto noChange = createNoChangeOnQubit(pos, q);
     const auto noGate   = createNoGateOnQubit(pos, q);
@@ -63,7 +60,7 @@ void SingleGateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
 
 std::vector<SingleGateEncoder::TransformationFamily>
 SingleGateEncoder::collectGateTransformations(
-    std::size_t pos, std::size_t qubit,
+    const std::size_t pos, const std::size_t qubit,
     const GateToTransformation& gateToTransformation) {
   std::vector<TransformationFamily> transformations;
 
@@ -84,7 +81,7 @@ SingleGateEncoder::collectGateTransformations(
 }
 
 void SingleGateEncoder::assertGatesImplyTransform(
-    std::size_t pos, std::size_t qubit,
+    const std::size_t pos, const std::size_t qubit,
     const std::vector<TransformationFamily>& transformations) {
   const auto& singleQubitGates = vars.gS[pos];
   for (const auto& [transformation, gates] : transformations) {
@@ -96,7 +93,7 @@ void SingleGateEncoder::assertGatesImplyTransform(
   }
 }
 
-void SingleGateEncoder::assertZConstraints(std::size_t pos, std::size_t qubit) {
+void SingleGateEncoder::assertZConstraints(const std::size_t pos, const std::size_t qubit) {
   const auto& gatesToZTransformations = [&](const auto& p1, const auto& p2,
                                             const auto& p3) {
     return tvars->singleQubitZChange(p1, p2, p3);
@@ -109,7 +106,7 @@ void SingleGateEncoder::assertZConstraints(std::size_t pos, std::size_t qubit) {
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
 
-void SingleGateEncoder::assertXConstraints(std::size_t pos, std::size_t qubit) {
+void SingleGateEncoder::assertXConstraints(const std::size_t pos, const std::size_t qubit) {
   const auto& gatesToXTransformations = [&](const auto& p1, const auto& p2,
                                             const auto& p3) {
     return tvars->singleQubitXChange(p1, p2, p3);
@@ -122,7 +119,7 @@ void SingleGateEncoder::assertXConstraints(std::size_t pos, std::size_t qubit) {
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
 
-void SingleGateEncoder::assertRConstraints(std::size_t pos, std::size_t qubit) {
+void SingleGateEncoder::assertRConstraints(const std::size_t pos, const std::size_t qubit) {
   const auto& gatesToRTransformations = [&](const auto& p1, const auto& p2,
                                             const auto& p3) {
     return tvars->singleQubitRChange(p1, p2, p3);
