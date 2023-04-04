@@ -434,10 +434,14 @@ PYBIND11_MODULE(pyqmap, m) {
                      "Initial timestep limit for the Clifford synthesis. "
                      "Defaults to `0`, which implies that the initial timestep "
                      "limit is determined automatically.")
-      .def_readwrite("minimal_timesteps", &cs::Configuration::minimalTimeSteps,
-                     "Minimal timestep considered for the Clifford synthesis. "
-                     "Defaults to `0`, which implies that the initial timestep "
-                     "limit is determined automatically.")
+      .def_readwrite(
+          "minimal_timesteps", &cs::Configuration::minimalTimeSteps,
+          "Minimal timestep considered for the Clifford synthesis. "
+          "This option limits the lower bound of the interval in "
+          "which the binary search method looks for solutions. "
+          "Set this if you know a lower bound for the circuit depth. "
+          "Defaults to `0`, which implies that no lower bound for depth "
+          "is known.")
       .def_readwrite(
           "use_maxsat", &cs::Configuration::useMaxSAT,
           "Use MaxSAT to solve the synthesis problem or to really on the "
