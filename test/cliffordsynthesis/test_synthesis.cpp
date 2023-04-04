@@ -188,6 +188,15 @@ TEST_P(SynthesisTest, DepthMinimalGates) {
   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
 }
 
+TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
+  config.target           = TargetMetric::Depth;
+  config.minimalTimeSteps = test.expectedMinimalDepth;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+}
+
 TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
   config.target                              = TargetMetric::Depth;
   config.useMaxSAT                           = true;
