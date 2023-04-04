@@ -485,6 +485,12 @@ PYBIND11_MODULE(pyqmap, m) {
           "with more gates than necessary. This option enables "
           "an additional run of the synthesizer to minimize the "
           "overall number of gates. Defaults to `false`.")
+      .def_readwrite(
+          "heuristic",
+          &cs::Configuration::minimizeGatesAfterTwoQubitGateOptimization,
+          "Use heuristic to synthesize the circuit. "
+          "This method synthesizes shallow intermediate circuits "
+          "and combines them. Defaults to `false`.")
       .def("json", &cs::Configuration::json,
            "Returns a JSON-style dictionary of all the information present in "
            "the :class:`.Configuration`")
