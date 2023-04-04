@@ -50,7 +50,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // SAT problem repeatedly with increasing timestep limits until a satisfying
   // assignment is found. This uses the general SAT encoding without any
   // objective function regardless of the configuration.
-  auto [lower, upper] = determineUpperBound(encoderConfig);
+  const auto [lower, upper] = determineUpperBound(encoderConfig);
 
   // if the upper bound is 0, the solution does not require any gates and the
   // synthesis is done.
@@ -117,12 +117,14 @@ std::pair<std::size_t, std::size_t>
 CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
   // In case the synthesis was started with a circuit, the upper bound is
   // inherently given by the circuit and does not need to be computed here.
-  if (results.sat()) {
-    return {0U, config.timestepLimit};
-  }
-
+  config.timestepLimit =
+      std::max(config.timestepLimit, config.minimalTimesteps);
   std::size_t lowerBound = config.minimalTimesteps;
   std::size_t upperBound = config.timestepLimit;
+
+  if (results.sat()) {
+    return {lowerBound, upperBound};
+  }
 
   INFO() << "Searching for upper bound for the number of timesteps starting "
          << "with " << upperBound;
