@@ -435,7 +435,7 @@ PYBIND11_MODULE(pyqmap, m) {
                      "Defaults to `0`, which implies that the initial timestep "
                      "limit is determined automatically.")
       .def_readwrite(
-          "minimal_timesteps", &cs::Configuration::minimalTimeSteps,
+          "minimal_timesteps", &cs::Configuration::minimalTimesteps,
           "Minimal timestep considered for the Clifford synthesis. "
           "This option limits the lower bound of the interval in "
           "which the binary search method looks for solutions. "

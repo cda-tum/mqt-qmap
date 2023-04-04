@@ -44,15 +44,14 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // either be specified as a configuration parameter or starts at 1.
   determineInitialTimestepLimit(encoderConfig);
 
+  encoderConfig.minimalTimesteps = config.minimalTimesteps;
+
   // Then, determine an upper bound for the number of timesteps by solving the
   // SAT problem repeatedly with increasing timestep limits until a satisfying
   // assignment is found. This uses the general SAT encoding without any
   // objective function regardless of the configuration.
   auto [lower, upper] = determineUpperBound(encoderConfig);
 
-  if (lower == 0) {
-    lower = config.minimalTimeSteps;
-  }
   // if the upper bound is 0, the solution does not require any gates and the
   // synthesis is done.
   if (upper == 0U) {
@@ -69,7 +68,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     gateOptimalSynthesis(encoderConfig, lower, upper);
     break;
   case TargetMetric::Depth:
-    depthOptimalSynthesis(encoderConfig, config.minimalTimeSteps, upper);
+    depthOptimalSynthesis(encoderConfig, lower, upper);
     break;
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
@@ -122,7 +121,7 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     return {0U, config.timestepLimit};
   }
 
-  std::size_t lowerBound = 0U;
+  std::size_t lowerBound = config.minimalTimesteps;
   std::size_t upperBound = config.timestepLimit;
 
   INFO() << "Searching for upper bound for the number of timesteps starting "

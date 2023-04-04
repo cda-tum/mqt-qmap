@@ -190,7 +190,7 @@ TEST_P(SynthesisTest, DepthMinimalGates) {
 
 TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
   config.target           = TargetMetric::Depth;
-  config.minimalTimeSteps = test.expectedMinimalDepth;
+  config.minimalTimesteps = test.expectedMinimalDepth;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
