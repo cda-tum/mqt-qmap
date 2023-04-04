@@ -403,24 +403,31 @@ void CliffordSynthesizer::depthHeuristicSynthesis(
   optimalConfig.target               = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.split_size;
 
-  qc::CircuitOptimizer optimizer;
-  optimizer.reorderOperations(initialCircuit.value());
+  qc::CircuitOptimizer::reorderOperations(initialCircuit.value());
   qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
 
   std::size_t nPartitions = initialCircuit->size() / configuration.split_size;
 
-  for (std::size_t i = 0; i < nPartitions - 1; ++i) {
-    const Tableau subTargetTableau{*initialCircuit, 0,
-                                   i + 1 * configuration.split_size, true};
+  for (std::size_t i = 0; i < nPartitions; ++i) {
+    std::optional<Tableau> subTargetTableauOpt{};
+    if (i == nPartitions - 1) {
+      subTargetTableauOpt = Tableau{
+          *initialCircuit, 0, std::numeric_limits<std::size_t>::max(), true};
+    } else {
+      subTargetTableauOpt =
+          Tableau{*initialCircuit, 0, i + 1 * configuration.split_size, true};
+    }
+
     const Tableau subInitTableau{*initialCircuit, 0,
                                  i * configuration.split_size, true};
 
-    CliffordSynthesizer synth(subInitTableau, subTargetTableau);
+    CliffordSynthesizer synth(subInitTableau, *subTargetTableauOpt);
     synth.synthesize(optimalConfig);
     const auto& subCircuit = synth.getResultCircuit();
     for (const auto& op : subCircuit) {
       optCircuit.emplace_back(op->clone());
     }
+    results.setRuntime(results.getRuntime() + synth.results.getRuntime());
   }
 }
 } // namespace cs
