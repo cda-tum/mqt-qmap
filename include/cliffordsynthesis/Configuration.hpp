@@ -34,6 +34,8 @@ struct Configuration {
   double gateLimitFactor                               = 1.1;
   bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
+  bool heuristic = false;
+
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
@@ -48,7 +50,7 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-
+    j["heuristic"] = heuristic;
     return j;
   }
 
