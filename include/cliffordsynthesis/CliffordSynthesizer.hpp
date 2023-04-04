@@ -31,13 +31,13 @@ public:
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       initialTableau.hasDestabilizers()),
-        results(qc, targetTableau) {}
+        initialCircuit(qc.clone()), results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
                                const bool              useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
-        results(qc, targetTableau) {}
+        initialCircuit(qc.clone()), results(qc, targetTableau) {}
 
   virtual ~CliffordSynthesizer() = default;
 
@@ -59,8 +59,9 @@ public:
   }
 
 protected:
-  Tableau initialTableau{};
-  Tableau targetTableau{};
+  Tableau                               initialTableau{};
+  Tableau                               targetTableau{};
+  std::optional<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};
 
@@ -84,6 +85,7 @@ protected:
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
+  void depthHeuristicSynthesis(EncoderConfig config);
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
 

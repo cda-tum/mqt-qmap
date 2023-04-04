@@ -66,7 +66,11 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     gateOptimalSynthesis(encoderConfig, lower, upper);
     break;
   case TargetMetric::Depth:
-    depthOptimalSynthesis(encoderConfig, lower, upper);
+    if (configuration.heuristic) {
+      depthHeuristicSynthesis(encoderConfig);
+    } else {
+      depthOptimalSynthesis(encoderConfig, lower, upper);
+    }
     break;
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
@@ -389,6 +393,34 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
       currentResults = newResults;
     }
     break;
+  }
+}
+
+void CliffordSynthesizer::depthHeuristicSynthesis(
+    CliffordSynthesizer::EncoderConfig config) {
+  auto optimalConfig                 = configuration;
+  optimalConfig.heuristic            = false;
+  optimalConfig.target               = TargetMetric::Depth;
+  optimalConfig.initialTimestepLimit = configuration.split_size;
+
+  qc::CircuitOptimizer optimizer;
+  optimizer.reorderOperations(initialCircuit.value());
+  qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
+
+  std::size_t nPartitions = initialCircuit->size() / configuration.split_size;
+
+  for (std::size_t i = 0; i < nPartitions - 1; ++i) {
+    const Tableau subTargetTableau{*initialCircuit, 0,
+                                   i + 1 * configuration.split_size, true};
+    const Tableau subInitTableau{*initialCircuit, 0,
+                                 i * configuration.split_size, true};
+
+    CliffordSynthesizer synth(subInitTableau, subTargetTableau);
+    synth.synthesize(optimalConfig);
+    const auto& subCircuit = synth.getResultCircuit();
+    for (const auto& op : subCircuit) {
+      optCircuit.emplace_back(op->clone());
+    }
   }
 }
 } // namespace cs

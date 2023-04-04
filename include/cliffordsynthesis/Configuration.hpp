@@ -34,7 +34,8 @@ struct Configuration {
   double gateLimitFactor                               = 1.1;
   bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
-  bool heuristic = false;
+  bool        heuristic  = false;
+  std::size_t split_size = 5U;
 
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
@@ -50,7 +51,8 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-    j["heuristic"] = heuristic;
+    j["heuristic"]  = heuristic;
+    j["split_size"] = split_size;
     return j;
   }
 
