@@ -65,22 +65,6 @@ void MultiGateEncoder::assertRConstraints(const std::size_t pos,
   }
 }
 
-LogicTerm encoding::MultiGateEncoder::createSingleQubitGateConstraint(
-    const std::size_t pos, const std::size_t qubit, const qc::OpType gate) {
-  auto changes = LogicTerm(true);
-
-  changes = changes && (tvars->x[pos + 1][qubit] ==
-                        tvars->singleQubitXChange(pos, qubit, gate));
-  changes = changes && (tvars->z[pos + 1][qubit] ==
-                        tvars->singleQubitZChange(pos, qubit, gate));
-  rChanges =
-      rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
-                                tvars->singleQubitRChange(pos, qubit, gate),
-                                LogicTerm(0, static_cast<std::int16_t>(S)));
-
-  return changes;
-}
-
 void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
     const std::size_t pos) {
   const auto& twoQubitGates = vars.gC[pos];
