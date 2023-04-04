@@ -35,6 +35,9 @@ public:
     // the number of timesteps to encode
     std::size_t timestepLimit{};
 
+    // minimal time steps of circuit
+    std::size_t minimalTimesteps{};
+
     // the metric to optimize
     TargetMetric targetMetric = TargetMetric::Gates;
 
