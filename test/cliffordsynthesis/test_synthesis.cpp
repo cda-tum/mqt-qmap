@@ -327,6 +327,7 @@ TEST(HeuristicTest, basic) {
   qc.h(1);
   config.heuristic = true;
   config.splitSize = 3;
+  config.target    = TargetMetric::Depth;
   auto synth       = CliffordSynthesizer(qc);
   synth.synthesize(config);
 }

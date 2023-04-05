@@ -31,13 +31,15 @@ public:
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       initialTableau.hasDestabilizers()),
-        initialCircuit(qc.clone()), results(qc, targetTableau) {}
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc.clone())),
+        results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
                                const bool              useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
-        initialCircuit(qc.clone()), results(qc, targetTableau) {}
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc.clone())),
+        results(qc, targetTableau) {}
 
   virtual ~CliffordSynthesizer() = default;
 
@@ -59,9 +61,9 @@ public:
   }
 
 protected:
-  Tableau                               initialTableau{};
-  Tableau                               targetTableau{};
-  std::optional<qc::QuantumComputation> initialCircuit{};
+  Tableau                                 initialTableau{};
+  Tableau                                 targetTableau{};
+  std::shared_ptr<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};
 

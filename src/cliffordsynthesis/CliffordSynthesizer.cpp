@@ -40,7 +40,8 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 
-  std::optional<std::size_t> lowerOpt, upperOpt;
+  std::optional<std::size_t> lowerOpt;
+  std::optional<std::size_t> upperOpt;
   if (!configuration.heuristic) {
     // First, determine an initial guess for the number of timesteps. This can
     // either be specified as a configuration parameter or starts at 1.
@@ -402,11 +403,17 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
 
 // assume canonical sorting of gates
 std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
-  std::vector<std::size_t> layerNum{qc.getNqubits(), 0U};
+  std::vector<std::size_t> layerNum{};
+  layerNum.resize(qc.size());
   std::vector<std::size_t> layers{};
   std::size_t              layer = 0U;
   for (std::size_t i = 0; i < qc.size(); ++i) {
     const auto& gate = *(qc.begin() + i);
+    std::cout << "Adding gate " << gate->getName() << std::endl;
+    std::cout << "gate has " << gate->getUsedQubits().size() << " qubits "
+              << std::endl;
+    std::cout << layerNum.size() << std::endl;
+
     for (const auto& qubit : gate->getUsedQubits()) {
       if (layerNum[qubit] >= layer) {
         ++layer;
@@ -417,6 +424,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
     for (const auto& qubit : gate->getUsedQubits()) {
       layerNum[qubit] = layer;
     }
+    std::cout << "Blah" << std::endl;
   }
   if (layers.back() < qc.size()) {
     layers.emplace_back(qc.size());
@@ -433,25 +441,19 @@ void CliffordSynthesizer::depthHeuristicSynthesis(
   optimalConfig.initialTimestepLimit = configuration.splitSize;
 
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
-  qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
-
-  std::size_t const nPartitions =
-      initialCircuit->size() / configuration.splitSize;
-
+  qc::QuantumComputation   optCircuit{initialCircuit->getNqubits()};
   std::vector<std::size_t> layers = getLayers(*initialCircuit);
-  for (std::size_t i = 0; i < initialCircuit->size();
-       i += configuration.splitSize) {
+  for (std::size_t i = 0; i < layers.size(); i += configuration.splitSize) {
     std::size_t const          startIdx = layers[i];
     std::optional<std::size_t> endIdx;
 
     std::cout << "Index range: " << layers[i] << " to "
               << layers[i + configuration.splitSize] << std::endl;
-    if (i + configuration.splitSize >= initialCircuit->size()) {
+    if (i + configuration.splitSize >= layers.size()) {
       endIdx = layers.back();
     } else {
       endIdx = layers[i + configuration.splitSize];
     }
-
     const Tableau subTargetTableau{*initialCircuit, startIdx, endIdx.value(),
                                    true};
     CliffordSynthesizer synth(subTargetTableau);
@@ -461,6 +463,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis(
     for (const auto& op : subCircuit) {
       optCircuit.emplace_back(op->clone());
     }
+    std::cout << "test" << std::endl;
     results.setRuntime(results.getRuntime() + synth.results.getRuntime());
   }
   results.setResultCircuit(optCircuit);
