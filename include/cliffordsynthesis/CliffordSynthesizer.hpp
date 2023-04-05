@@ -87,7 +87,7 @@ protected:
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
-  void depthHeuristicSynthesis(EncoderConfig config);
+  void depthHeuristicSynthesis();
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
 
@@ -118,6 +118,10 @@ protected:
     INFO() << "Found optimum: " << lowerBound;
   }
 
+  static std::shared_ptr<qc::QuantumComputation>
+  synthesizeSubcircuit(const std::shared_ptr<qc::QuantumComputation>& qc,
+                       std::size_t begin, std::size_t end,
+                       const Configuration& config);
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);
 };
