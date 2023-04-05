@@ -310,4 +310,24 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   }
 }
 
+TEST(HeuristicTest, basic) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.s(1);
+  qc.s(0);
+  qc.h(1);
+  qc.h(0);
+  qc.s(1);
+  qc.s(0);
+  qc.h(1);
+  qc.h(0);
+  qc.s(1);
+  qc.s(0);
+  qc.h(1);
+  config.heuristic = true;
+  config.splitSize = 3;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+}
 } // namespace cs

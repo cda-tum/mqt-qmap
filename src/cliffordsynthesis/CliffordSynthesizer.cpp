@@ -40,36 +40,40 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 
-  // First, determine an initial guess for the number of timesteps. This can
-  // either be specified as a configuration parameter or starts at 1.
-  determineInitialTimestepLimit(encoderConfig);
+  std::optional<std::size_t> lowerOpt, upperOpt;
+  if (!configuration.heuristic) {
+    // First, determine an initial guess for the number of timesteps. This can
+    // either be specified as a configuration parameter or starts at 1.
+    determineInitialTimestepLimit(encoderConfig);
 
-  // Then, determine an upper bound for the number of timesteps by solving the
-  // SAT problem repeatedly with increasing timestep limits until a satisfying
-  // assignment is found. This uses the general SAT encoding without any
-  // objective function regardless of the configuration.
-  const auto [lower, upper] = determineUpperBound(encoderConfig);
-
-  // if the upper bound is 0, the solution does not require any gates and the
-  // synthesis is done.
-  if (upper == 0U) {
-    INFO() << "No gates required.";
-    return;
+    // Then, determine an upper bound for the number of timesteps by solving the
+    // SAT problem repeatedly with increasing timestep limits until a satisfying
+    // assignment is found. This uses the general SAT encoding without any
+    // objective function regardless of the configuration.
+    const auto [lower, upper] = determineUpperBound(encoderConfig);
+    lowerOpt                  = lower;
+    upperOpt                  = upper;
+    // if the upper bound is 0, the solution does not require any gates and the
+    // synthesis is done.
+    if (upper == 0U) {
+      INFO() << "No gates required.";
+      return;
+    }
+    // Otherwise, the determined upper bound is used as an initial timestep
+    // limit.
+    encoderConfig.timestepLimit = upper;
   }
-  // Otherwise, the determined upper bound is used as an initial timestep limit.
-  encoderConfig.timestepLimit = upper;
-
   // Once a valid upper bound is found, the SAT problem is solved again with
   // the objective function encoded.
   switch (config.target) {
   case TargetMetric::Gates:
-    gateOptimalSynthesis(encoderConfig, lower, upper);
+    gateOptimalSynthesis(encoderConfig, lowerOpt.value(), upperOpt.value());
     break;
   case TargetMetric::Depth:
     if (configuration.heuristic) {
       depthHeuristicSynthesis(encoderConfig);
     } else {
-      depthOptimalSynthesis(encoderConfig, lower, upper);
+      depthOptimalSynthesis(encoderConfig, lowerOpt.value(), upperOpt.value());
     }
     break;
   case TargetMetric::TwoQubitGates:
@@ -396,38 +400,69 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   }
 }
 
+// assume canonical sorting of gates
+std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
+  std::vector<std::size_t> layerNum{qc.getNqubits(), 0U};
+  std::vector<std::size_t> layers{};
+  std::size_t              layer = 0U;
+  for (std::size_t i = 0; i < qc.size(); ++i) {
+    const auto& gate = *(qc.begin() + i);
+    for (const auto& qubit : gate->getUsedQubits()) {
+      if (layerNum[qubit] >= layer) {
+        ++layer;
+        layers.emplace_back(i);
+        break;
+      }
+    }
+    for (const auto& qubit : gate->getUsedQubits()) {
+      layerNum[qubit] = layer;
+    }
+  }
+  if (layers.back() < qc.size()) {
+    layers.emplace_back(qc.size());
+  }
+  return layers;
+}
+
 void CliffordSynthesizer::depthHeuristicSynthesis(
     CliffordSynthesizer::EncoderConfig config) {
+  INFO() << "Optimizing Circuit with Heuristic" << std::endl;
   auto optimalConfig                 = configuration;
   optimalConfig.heuristic            = false;
   optimalConfig.target               = TargetMetric::Depth;
-  optimalConfig.initialTimestepLimit = configuration.split_size;
+  optimalConfig.initialTimestepLimit = configuration.splitSize;
 
-  qc::CircuitOptimizer::reorderOperations(initialCircuit.value());
+  qc::CircuitOptimizer::reorderOperations(*initialCircuit);
   qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
 
-  std::size_t nPartitions = initialCircuit->size() / configuration.split_size;
+  std::size_t const nPartitions =
+      initialCircuit->size() / configuration.splitSize;
 
-  for (std::size_t i = 0; i < nPartitions; ++i) {
-    std::optional<Tableau> subTargetTableauOpt{};
-    if (i == nPartitions - 1) {
-      subTargetTableauOpt = Tableau{
-          *initialCircuit, 0, std::numeric_limits<std::size_t>::max(), true};
+  std::vector<std::size_t> layers = getLayers(*initialCircuit);
+  for (std::size_t i = 0; i < initialCircuit->size();
+       i += configuration.splitSize) {
+    std::size_t const          startIdx = layers[i];
+    std::optional<std::size_t> endIdx;
+
+    std::cout << "Index range: " << layers[i] << " to "
+              << layers[i + configuration.splitSize] << std::endl;
+    if (i + configuration.splitSize >= initialCircuit->size()) {
+      endIdx = layers.back();
     } else {
-      subTargetTableauOpt =
-          Tableau{*initialCircuit, 0, i + 1 * configuration.split_size, true};
+      endIdx = layers[i + configuration.splitSize];
     }
 
-    const Tableau subInitTableau{*initialCircuit, 0,
-                                 i * configuration.split_size, true};
-
-    CliffordSynthesizer synth(subInitTableau, *subTargetTableauOpt);
+    const Tableau subTargetTableau{*initialCircuit, startIdx, endIdx.value(),
+                                   true};
+    CliffordSynthesizer synth(subTargetTableau);
     synth.synthesize(optimalConfig);
-    const auto& subCircuit = synth.getResultCircuit();
+    auto& subCircuit = synth.getResultCircuit();
+    std::cout << synth.getResults().getResultCircuit() << std::endl;
     for (const auto& op : subCircuit) {
       optCircuit.emplace_back(op->clone());
     }
     results.setRuntime(results.getRuntime() + synth.results.getRuntime());
   }
+  results.setResultCircuit(optCircuit);
 }
 } // namespace cs

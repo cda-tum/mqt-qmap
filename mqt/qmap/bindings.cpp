@@ -489,7 +489,7 @@ PYBIND11_MODULE(pyqmap, m) {
                      "Use heuristic to synthesize the circuit. "
                      "This method synthesizes shallow intermediate circuits "
                      "and combines them. Defaults to `false`.")
-      .def_readwrite("heuristic", &cs::Configuration::split_size,
+      .def_readwrite("split_size", &cs::Configuration::splitSize,
                      "Size of subcircuits used in heuristic. "
                      "Defaults to `5`.")
       .def("json", &cs::Configuration::json,
