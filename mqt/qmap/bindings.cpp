@@ -492,6 +492,10 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("split_size", &cs::Configuration::splitSize,
                      "Size of subcircuits used in heuristic. "
                      "Defaults to `5`.")
+      .def_readwrite(
+          "n_threads_heuristic", &cs::Configuration::nThreadsHeuristic,
+          "Maximum number of threads used for the heuristic optimizer. "
+          "Defaults to the number of available threads on the system.")
       .def("json", &cs::Configuration::json,
            "Returns a JSON-style dictionary of all the information present in "
            "the :class:`.Configuration`")

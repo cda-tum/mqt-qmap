@@ -9,6 +9,7 @@
 #include "nlohmann/json.hpp"
 
 #include <plog/Log.h>
+#include <thread>
 
 namespace cs {
 struct Configuration {
@@ -34,8 +35,10 @@ struct Configuration {
   double gateLimitFactor                               = 1.1;
   bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
-  bool        heuristic  = false;
-  std::size_t split_size = 5U;
+  // Settings for the heuristic solver
+  bool        heuristic         = false;
+  std::size_t splitSize         = 5U;
+  std::size_t nThreadsHeuristic = std::thread::hardware_concurrency();
 
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
@@ -51,8 +54,9 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-    j["heuristic"]  = heuristic;
-    j["split_size"] = split_size;
+    j["heuristic"]           = heuristic;
+    j["split_size"]          = splitSize;
+    j["n_threads_heuristic"] = nThreadsHeuristic;
     return j;
   }
 
