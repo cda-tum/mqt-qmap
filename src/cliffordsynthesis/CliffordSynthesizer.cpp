@@ -74,7 +74,6 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // Otherwise, the determined upper bound is used as an initial timestep
   // limit.
   encoderConfig.timestepLimit = upper;
-
   // Once a valid upper bound is found, the SAT problem is solved again with
   // the objective function encoded.
   switch (config.target) {
