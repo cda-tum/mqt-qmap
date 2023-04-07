@@ -9,6 +9,7 @@
 #include "nlohmann/json.hpp"
 
 #include <plog/Log.h>
+#include <thread>
 
 namespace cs {
 struct Configuration {
@@ -18,6 +19,7 @@ struct Configuration {
   std::size_t    initialTimestepLimit    = 0U;
   std::size_t    minimalTimesteps        = 0U;
   bool           useMaxSAT               = false;
+  bool           linearSearch            = false;
   TargetMetric   target                  = TargetMetric::Gates;
   bool           useSymmetryBreaking     = true;
   bool           dumpIntermediateResults = false;
@@ -35,11 +37,17 @@ struct Configuration {
   double gateLimitFactor                               = 1.1;
   bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
+  // Settings for the heuristic solver
+  bool        heuristic         = false;
+  std::size_t splitSize         = 5U;
+  std::size_t nThreadsHeuristic = std::thread::hardware_concurrency();
+
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
     j["minimal_timesteps"]      = minimalTimesteps;
     j["use_max_sat"]            = useMaxSAT;
+    j["linear_search"]          = linearSearch;
     j["target_metric"]          = toString(target);
     j["use_symmetry_breaking"]  = useSymmetryBreaking;
     j["n_threads"]              = nThreads;
@@ -50,7 +58,9 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-
+    j["heuristic"]           = heuristic;
+    j["split_size"]          = splitSize;
+    j["n_threads_heuristic"] = nThreadsHeuristic;
     return j;
   }
 

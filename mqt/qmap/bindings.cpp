@@ -446,6 +446,9 @@ PYBIND11_MODULE(pyqmap, m) {
           "use_maxsat", &cs::Configuration::useMaxSAT,
           "Use MaxSAT to solve the synthesis problem or to really on the "
           "binary search scheme for finding the optimum. Defaults to `false`.")
+      .def_readwrite("linear_search", &cs::Configuration::linearSearch,
+                     "Use liner search instead of binary search "
+                     "scheme for finding the optimum. Defaults to `false`.")
       .def_readwrite(
           "target_metric", &cs::Configuration::target,
           "Target metric for the Clifford synthesis. Defaults to `gates`.")
@@ -493,6 +496,17 @@ PYBIND11_MODULE(pyqmap, m) {
           "with more gates than necessary. This option enables "
           "an additional run of the synthesizer to minimize the "
           "overall number of gates. Defaults to `false`.")
+      .def_readwrite("heuristic", &cs::Configuration::heuristic,
+                     "Use heuristic to synthesize the circuit. "
+                     "This method synthesizes shallow intermediate circuits "
+                     "and combines them. Defaults to `false`.")
+      .def_readwrite("split_size", &cs::Configuration::splitSize,
+                     "Size of subcircuits used in heuristic. "
+                     "Defaults to `5`.")
+      .def_readwrite(
+          "n_threads_heuristic", &cs::Configuration::nThreadsHeuristic,
+          "Maximum number of threads used for the heuristic optimizer. "
+          "Defaults to the number of available threads on the system.")
       .def("json", &cs::Configuration::json,
            "Returns a JSON-style dictionary of all the information present in "
            "the :class:`.Configuration`")
