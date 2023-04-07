@@ -19,6 +19,7 @@ struct Configuration {
   std::size_t    initialTimestepLimit    = 0U;
   std::size_t    minimalTimesteps        = 0U;
   bool           useMaxSAT               = false;
+  bool           linearSearch            = false;
   TargetMetric   target                  = TargetMetric::Gates;
   bool           useSymmetryBreaking     = true;
   bool           dumpIntermediateResults = false;
@@ -46,6 +47,7 @@ struct Configuration {
     j["initial_timestep_limit"] = initialTimestepLimit;
     j["minimal_timesteps"]      = minimalTimesteps;
     j["use_max_sat"]            = useMaxSAT;
+    j["linear_search"]          = linearSearch;
     j["target_metric"]          = toString(target);
     j["use_symmetry_breaking"]  = useSymmetryBreaking;
     j["n_threads"]              = nThreads;

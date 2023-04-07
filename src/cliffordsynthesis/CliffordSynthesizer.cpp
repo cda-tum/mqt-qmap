@@ -56,12 +56,20 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // SAT problem repeatedly with increasing timestep limits until a satisfying
   // assignment is found. This uses the general SAT encoding without any
   // objective function regardless of the configuration.
-  const auto [lower, upper] = determineUpperBound(encoderConfig);
-  // if the upper bound is 0, the solution does not require any gates and the
-  // synthesis is done.
-  if (upper == 0U) {
-    INFO() << "No gates required.";
-    return;
+  std::size_t lower = configuration.minimalTimesteps;
+  std::size_t upper = configuration.initialTimestepLimit;
+
+  if (!configuration.linearSearch) {
+    const auto [lowerBin, upperBin] = determineUpperBound(encoderConfig);
+    lower                           = lowerBin;
+    upper                           = upperBin;
+
+    // if the upper bound is 0, the solution does not require any gates and the
+    // synthesis is done.
+    if (upper == 0U) {
+      INFO() << "No gates required.";
+      return;
+    }
   }
   // Otherwise, the determined upper bound is used as an initial timestep
   // limit.
@@ -174,6 +182,8 @@ void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig     config,
     // The MaxSAT solver can determine the optimal T with a single call by
     // minimizing over the number of applied gates.
     runMaxSAT(config);
+  } else if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
     // timestep (=gate) limits T until a solution with T gates is found, but no
@@ -199,10 +209,12 @@ void CliffordSynthesizer::depthOptimalSynthesis(
     // minimizing over the layers of gates (=timesteps) in the resulting
     // circuit.
     runMaxSAT(config);
+  } else if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
-    // timestep (=depth) limits T until a solution with depth T is found, but no
-    // solution with depth T-1 could be determined.
+    // timestep (=gate) limits T until a solution with T gates is found, but no
+    // solution with T-1 gates could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 

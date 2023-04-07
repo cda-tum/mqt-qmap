@@ -446,6 +446,9 @@ PYBIND11_MODULE(pyqmap, m) {
           "use_maxsat", &cs::Configuration::useMaxSAT,
           "Use MaxSAT to solve the synthesis problem or to really on the "
           "binary search scheme for finding the optimum. Defaults to `false`.")
+      .def_readwrite("linear_search", &cs::Configuration::linearSearch,
+                     "Use liner search instead of binary search "
+                     "scheme for finding the optimum. Defaults to `false`.")
       .def_readwrite(
           "target_metric", &cs::Configuration::target,
           "Target metric for the Clifford synthesis. Defaults to `gates`.")
