@@ -36,13 +36,15 @@ void encoding::MultiGateEncoder::assertConsistency() const {
 
 void encoding::MultiGateEncoder::assertGateConstraints() {
   DEBUG() << "Asserting gate constraints";
+  xorHelpers = logicbase::LogicMatrix{T};
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
     rChanges = tvars->r[t];
+    splitXorR(tvars->r[t], t);
     assertSingleQubitGateConstraints(t);
     assertTwoQubitGateConstraints(t);
     TRACE() << "Asserting r changes at time " << t;
-    lb->assertFormula(tvars->r[t + 1] == rChanges);
+    lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
   }
 }
 
@@ -58,10 +60,16 @@ void encoding::MultiGateEncoder::assertSingleQubitGateConstraints(
 void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                                           const std::size_t qubit) {
   for (const auto gate : SINGLE_QUBIT_GATES) {
-    rChanges =
-        rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
-                                  tvars->singleQubitRChange(pos, qubit, gate),
-                                  LogicTerm(0, static_cast<std::int16_t>(S)));
+    const auto& change =
+        LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
+                       tvars->singleQubitRChange(pos, qubit, gate),
+                       LogicTerm(0, static_cast<std::int16_t>(S)));
+    splitXorR(change, pos);
+    //    rChanges =
+    //        rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
+    //                                  tvars->singleQubitRChange(pos, qubit,
+    //                                  gate), LogicTerm(0,
+    //                                  static_cast<std::int16_t>(S)));
   }
 }
 
@@ -92,11 +100,15 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->z[pos + 1][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
 
-  rChanges =
-      rChanges ^ LogicTerm::ite(vars.gC[pos][ctrl][trgt],
-                                tvars->twoQubitRChange(pos, ctrl, trgt),
-                                LogicTerm(0, static_cast<std::int16_t>(S)));
-
+  const auto& newRChanges = LogicTerm::ite(
+      vars.gC[pos][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
+      LogicTerm(0, static_cast<std::int16_t>(S)));
+  splitXorR(newRChanges, pos);
+  //  rChanges =
+  //      rChanges ^ LogicTerm::ite(vars.gC[pos][ctrl][trgt],
+  //                                tvars->twoQubitRChange(pos, ctrl, trgt),
+  //                                LogicTerm(0, static_cast<std::int16_t>(S)));
+  //
   return changes;
 }
 
@@ -145,6 +157,21 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
   lb->assertFormula(LogicTerm::implies(noGate, noFurtherCnot));
+}
+
+void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
+                                 std::size_t                 pos) {
+  const std::string hName =
+      "h_" + std::to_string(pos) + "_" + std::to_string(xorHelpers[pos].size());
+  INFO() << "Creating helper variable for RChange XOR " << hName;
+  const auto n = static_cast<std::int16_t>(S);
+  xorHelpers[pos].emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
+  if (xorHelpers[pos].size() == 1) {
+    lb->assertFormula(xorHelpers[pos][0] == changes);
+  } else {
+    lb->assertFormula(xorHelpers[pos].back() ==
+                      (xorHelpers[pos][xorHelpers[pos].size() - 2] ^ changes));
+  }
 }
 
 } // namespace cs::encoding
