@@ -163,7 +163,7 @@ void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
                                  std::size_t                 pos) {
   const std::string hName =
       "h_" + std::to_string(pos) + "_" + std::to_string(xorHelpers[pos].size());
-  INFO() << "Creating helper variable for RChange XOR " << hName;
+  DEBUG() << "Creating helper variable for RChange XOR " << hName;
   const auto n = static_cast<std::int16_t>(S);
   xorHelpers[pos].emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
   if (xorHelpers[pos].size() == 1) {
