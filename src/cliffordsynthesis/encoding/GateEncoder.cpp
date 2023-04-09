@@ -329,11 +329,8 @@ void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
 
 void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
     const std::size_t pos) {
-  for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-    for (std::size_t trgt = ctrl; trgt < ctrl; ++trgt) {
-      //      if (ctrl == trgt) {
-      //        continue;
-      //      }
+  for (std::size_t ctrl = 1U; ctrl < N; ++ctrl) {
+    for (std::size_t trgt = 0U; trgt < ctrl; ++trgt) {
       assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);
     }
   }

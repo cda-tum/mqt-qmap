@@ -144,12 +144,14 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& current = vars.gC[pos][ctrl][trgt];
-  const auto& gSNow   = vars.gS[pos];
-  const auto& gCNext  = vars.gC[pos + 1];
+  const auto& gSNow  = vars.gS[pos];
+  const auto& gCNext = vars.gC[pos + 1];
 
   // two identical CNOTs may not be applied in a row because they would cancel.
-  lb->assertFormula(LogicTerm::implies(current, !gCNext[ctrl][trgt]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gCNext[ctrl][trgt]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gCNext[trgt][ctrl]));
 
   // if no gate is applied to both qubits, no CNOT on them can be applied in the
   // next time step.
