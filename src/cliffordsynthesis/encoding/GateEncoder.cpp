@@ -243,11 +243,16 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
     switch (gate) {
     case qc::OpType::X:
     case qc::OpType::Y:
-    case qc::OpType::Z:
     case qc::OpType::H:
       // self-inverse gates
       lb->assertFormula(LogicTerm::implies(gSNow[gateIndex][qubit],
                                            !gSNext[gateIndex][qubit]));
+      break;
+    case qc::OpType::Z:
+      lb->assertFormula(LogicTerm::implies(gSNow[gateIndex][qubit],
+                                           !gSNext[gateIndex][qubit]));
+      lb->assertFormula(LogicTerm::implies(
+          gSNow[gateIndex][qubit], !gSNext[gateToIndex(qc::OpType::X)][qubit]));
       break;
     case qc::OpType::S:
     case qc::OpType::Sdag: {
@@ -265,6 +270,53 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       break;
     }
   }
+
+  if (pos >= T - 2U) {
+    return;
+  }
+  const auto& gSNextNext = vars.gS[pos + 2U];
+
+  for (const auto gate : SINGLE_QUBIT_GATES) {
+    if (gate == qc::OpType::None) {
+      continue;
+    }
+    const auto gateIndex = gateToIndex(gate);
+    switch (gate) {
+    case qc::OpType::X:
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::Y)][qubit])));
+      break;
+    case qc::OpType::Y:
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::X)][qubit])));
+      break;
+    case qc::OpType::Z:
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::Y)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::X)][qubit])));
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::S)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::S)][qubit])));
+      break;
+    case qc::OpType::H:
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::X)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::H)][qubit])));
+      lb->assertFormula(
+          LogicTerm::implies(gSNow[gateIndex][qubit],
+                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
+                               gSNextNext[gateToIndex(qc::OpType::H)][qubit])));
+    default:
+      break;
+    }
+  }
 }
 
 void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
@@ -278,10 +330,10 @@ void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
 void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
     const std::size_t pos) {
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-    for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      if (ctrl == trgt) {
-        continue;
-      }
+    for (std::size_t trgt = ctrl; trgt < ctrl; ++trgt) {
+      //      if (ctrl == trgt) {
+      //        continue;
+      //      }
       assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);
     }
   }
