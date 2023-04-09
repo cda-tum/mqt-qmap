@@ -37,7 +37,7 @@ public:
 
   void optimizeGateCount(bool includeSingleQubitGates = true) const;
 
-  void optimizeDepth(bool includeSingleQubitGates = true) const;
+  void optimizeDepth() const;
 
 protected:
   // number of qubits N
