@@ -235,39 +235,72 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
   const auto& gSNow  = vars.gS[pos];
   const auto& gSNext = vars.gS[pos + 1U];
 
-  for (const auto gate : SINGLE_QUBIT_GATES) {
-    if (gate == qc::OpType::None) {
-      continue;
+  // Any Pauli must not be followed by another Pauli since -iXYZ = I.
+  std::vector<qc::OpType> paulis{};
+  if constexpr (containsX()) {
+    paulis.emplace_back(qc::OpType::X);
+  }
+  if constexpr (containsY()) {
+    paulis.emplace_back(qc::OpType::Y);
+  }
+  if constexpr (containsZ()) {
+    paulis.emplace_back(qc::OpType::Z);
+  }
+  constexpr bool containsPaulis = containsX() || containsY() || containsZ();
+  if constexpr (containsPaulis) {
+    auto gates      = gSNow[gateToIndex(paulis[0])][qubit];
+    auto disallowed = !gSNext[gateToIndex(paulis[0])][qubit];
+    for (std::size_t i = 1U; i < paulis.size(); ++i) {
+      gates      = gates || gSNow[gateToIndex(paulis[i])][qubit];
+      disallowed = disallowed && !gSNext[gateToIndex(paulis[i])][qubit];
     }
-    const auto gateIndex = gateToIndex(gate);
-    switch (gate) {
-    case qc::OpType::X:
-    case qc::OpType::Y:
-    case qc::OpType::H:
-      // self-inverse gates
-      lb->assertFormula(LogicTerm::implies(gSNow[gateIndex][qubit],
-                                           !gSNext[gateIndex][qubit]));
-      break;
-    case qc::OpType::Z:
-      lb->assertFormula(LogicTerm::implies(gSNow[gateIndex][qubit],
-                                           !gSNext[gateIndex][qubit]));
-      lb->assertFormula(LogicTerm::implies(
-          gSNow[gateIndex][qubit], !gSNext[gateToIndex(qc::OpType::X)][qubit]));
-      break;
-    case qc::OpType::S:
-    case qc::OpType::Sdag: {
-      // Sdag * S = S * Sdag = I
-      // Sdag * Sdag = S * S = Z
-      auto disallowed = !gSNext[gateToIndex(qc::OpType::S)][qubit] &&
-                        !gSNext[gateToIndex(qc::OpType::Sdag)][qubit];
-      // Z and Sdag commute. Z should always precede S and Sdag
-      disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][qubit];
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit], disallowed));
-      break;
-    }
-    default:
-      break;
+    lb->assertFormula(LogicTerm::implies(gates, disallowed));
+  }
+
+  // H is self-inverse
+  if constexpr (containsH()) {
+    constexpr auto gateIndex = gateToIndex(qc::OpType::H);
+    lb->assertFormula(
+        LogicTerm::implies(gSNow[gateIndex][qubit], !gSNext[gateIndex][qubit]));
+  }
+
+  if constexpr (containsS()) {
+    constexpr auto gateIndexS = gateToIndex(qc::OpType::S);
+
+    if constexpr (containsZ()) {
+      constexpr auto gateIndexZ = gateToIndex(qc::OpType::Z);
+
+      // -S-S- = -Z-
+      // -S-Z- = -Z-S-
+      auto gates = gSNow[gateIndexS][qubit];
+      auto disallowed =
+          !gSNext[gateIndexS][qubit] && !gSNext[gateIndexZ][qubit];
+
+      if constexpr (containsSdag()) {
+        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
+
+        // -Sdag-Sdag- = -Z-
+        // -S-Sdag- = -I-
+        // -Sdag-S- = -I-
+        // -Sdag-Z- = -Z-Sdag- = -S-
+        // -S-Z- = -Z-S- = -Sdag-
+        gates =
+            gates || gSNow[gateIndexSdag][qubit] || gSNow[gateIndexZ][qubit];
+        disallowed = disallowed && !gSNext[gateIndexSdag][qubit];
+      }
+
+      lb->assertFormula(LogicTerm::implies(gates, disallowed));
+    } else {
+      if constexpr (containsSdag()) {
+        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
+
+        // -S-Sdag- = -I-
+        // -Sdag-S- = -I-
+        lb->assertFormula(LogicTerm::implies(gSNow[gateIndexS][qubit],
+                                             !gSNext[gateIndexSdag][qubit]));
+        lb->assertFormula(LogicTerm::implies(gSNow[gateIndexSdag][qubit],
+                                             !gSNext[gateIndexS][qubit]));
+      }
     }
   }
 
@@ -276,46 +309,18 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
   }
   const auto& gSNextNext = vars.gS[pos + 2U];
 
-  for (const auto gate : SINGLE_QUBIT_GATES) {
-    if (gate == qc::OpType::None) {
-      continue;
+  // -H-X-H- = -Z-
+  // -H-Z-H- = -X-
+  // -H-Y-H- ~= -Y-
+  if constexpr (containsH() && containsPaulis) {
+    constexpr auto gateIndexH = gateToIndex(qc::OpType::H);
+    auto           disallowed = gSNext[gateToIndex(paulis[0])][qubit];
+    for (std::size_t i = 1U; i < paulis.size(); ++i) {
+      disallowed = disallowed || gSNext[gateToIndex(paulis[i])][qubit];
     }
-    const auto gateIndex = gateToIndex(gate);
-    switch (gate) {
-    case qc::OpType::X:
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::Y)][qubit])));
-      break;
-    case qc::OpType::Y:
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::X)][qubit])));
-      break;
-    case qc::OpType::Z:
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::Y)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::X)][qubit])));
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::S)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::S)][qubit])));
-      break;
-    case qc::OpType::H:
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::X)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::H)][qubit])));
-      lb->assertFormula(
-          LogicTerm::implies(gSNow[gateIndex][qubit],
-                             !(gSNext[gateToIndex(qc::OpType::Z)][qubit] &&
-                               gSNextNext[gateToIndex(qc::OpType::H)][qubit])));
-    default:
-      break;
-    }
+    lb->assertFormula(
+        LogicTerm::implies(gSNow[gateIndexH][qubit],
+                           !(disallowed && gSNextNext[gateIndexH][qubit])));
   }
 }
 
