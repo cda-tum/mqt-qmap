@@ -163,16 +163,17 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
                                  std::size_t                 pos) {
+  auto&             xorHelper = xorHelpers[pos];
   const std::string hName =
-      "h_" + std::to_string(pos) + "_" + std::to_string(xorHelpers[pos].size());
+      "h_" + std::to_string(pos) + "_" + std::to_string(xorHelper.size());
   DEBUG() << "Creating helper variable for RChange XOR " << hName;
   const auto n = static_cast<std::int16_t>(S);
-  xorHelpers[pos].emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
-  if (xorHelpers[pos].size() == 1) {
-    lb->assertFormula(xorHelpers[pos][0] == changes);
+  xorHelper.emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
+  if (xorHelper.size() == 1) {
+    lb->assertFormula(xorHelper.back() == changes);
   } else {
-    lb->assertFormula(xorHelpers[pos].back() ==
-                      (xorHelpers[pos][xorHelpers[pos].size() - 2] ^ changes));
+    lb->assertFormula(xorHelper.back() ==
+                      (xorHelper[xorHelpers[pos].size() - 2] ^ changes));
   }
 }
 
