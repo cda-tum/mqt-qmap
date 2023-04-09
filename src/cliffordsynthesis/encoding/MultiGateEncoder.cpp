@@ -155,10 +155,19 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 
   // if no gate is applied to both qubits, no CNOT on them can be applied in the
   // next time step.
-  const auto noneIndex     = gateToIndex(qc::OpType::None);
-  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  // no gate on both qubits => no CNOT on them in the next time step.
+  constexpr auto noneIndex = gateToIndex(qc::OpType::None);
+  const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  // similarly,
+  // H - X   c - H
+  //     | = |
+  // H - c   X - H
+  // i.e., Hadamards on both qubits => no CNOT on them in the next time step.
+  constexpr auto hIndex = gateToIndex(qc::OpType::H);
+  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(noGate, noFurtherCnot));
+  lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,

@@ -254,6 +254,24 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       gates      = gates || gSNow[gateToIndex(paulis[i])][qubit];
       disallowed = disallowed && !gSNext[gateToIndex(paulis[i])][qubit];
     }
+
+    if constexpr (containsH()) {
+      // -(X|Y|Z)-H- ~= -H-(Z|Y|X)-
+      constexpr auto gateIndex = gateToIndex(qc::OpType::H);
+      disallowed               = disallowed && !gSNext[gateIndex][qubit];
+    }
+
+    if constexpr (containsS() && containsSdag()) {
+      const auto gateIndexS   = gateToIndex(qc::OpType::S);
+      const auto gateIndexSdg = gateToIndex(qc::OpType::Sdag);
+
+      // -X-(S|Sd)- ~= -(Sd|S)-X-
+      // -Y-(S|Sd)- ~= -(Sd|S)-Y-
+      // -Z-(S|Sd)-  = -(S|Sd)-Z-
+      disallowed = disallowed && !gSNext[gateIndexS][qubit] &&
+                   !gSNext[gateIndexSdg][qubit];
+    }
+
     lb->assertFormula(LogicTerm::implies(gates, disallowed));
   }
 
@@ -271,22 +289,20 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       constexpr auto gateIndexZ = gateToIndex(qc::OpType::Z);
 
       // -S-S- = -Z-
-      // -S-Z- = -Z-S-
-      auto gates = gSNow[gateIndexS][qubit];
-      auto disallowed =
-          !gSNext[gateIndexS][qubit] && !gSNext[gateIndexZ][qubit];
+      auto gates      = gSNow[gateIndexS][qubit];
+      auto disallowed = !gSNext[gateIndexS][qubit];
 
       if constexpr (containsSdag()) {
         constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
 
-        // -Sdag-Sdag- = -Z-
-        // -S-Sdag- = -I-
-        // -Sdag-S- = -I-
-        // -Sdag-Z- = -Z-Sdag- = -S-
-        // -S-Z- = -Z-S- = -Sdag-
-        gates =
-            gates || gSNow[gateIndexSdag][qubit] || gSNow[gateIndexZ][qubit];
-        disallowed = disallowed && !gSNext[gateIndexSdag][qubit];
+        // -Sd-Sd- = -Z-
+        // -Sd-S-  = -I-
+        // -Sd-Z-  = -S-
+        // -S-Sd-  = -I-
+        // -S-Z-   = -Sd-
+        gates      = gates || gSNow[gateIndexSdag][qubit];
+        disallowed = disallowed && !gSNext[gateIndexSdag][qubit] &&
+                     !gSNext[gateIndexZ][qubit];
       }
 
       lb->assertFormula(LogicTerm::implies(gates, disallowed));
@@ -294,33 +310,14 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       if constexpr (containsSdag()) {
         constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
 
-        // -S-Sdag- = -I-
-        // -Sdag-S- = -I-
+        // -S-Sd- = -I-
+        // -Sd-S- = -I-
         lb->assertFormula(LogicTerm::implies(gSNow[gateIndexS][qubit],
                                              !gSNext[gateIndexSdag][qubit]));
         lb->assertFormula(LogicTerm::implies(gSNow[gateIndexSdag][qubit],
                                              !gSNext[gateIndexS][qubit]));
       }
     }
-  }
-
-  if (pos >= T - 2U) {
-    return;
-  }
-  const auto& gSNextNext = vars.gS[pos + 2U];
-
-  // -H-X-H- = -Z-
-  // -H-Z-H- = -X-
-  // -H-Y-H- ~= -Y-
-  if constexpr (containsH() && containsPaulis) {
-    constexpr auto gateIndexH = gateToIndex(qc::OpType::H);
-    auto           disallowed = gSNext[gateToIndex(paulis[0])][qubit];
-    for (std::size_t i = 1U; i < paulis.size(); ++i) {
-      disallowed = disallowed || gSNext[gateToIndex(paulis[i])][qubit];
-    }
-    lb->assertFormula(
-        LogicTerm::implies(gSNow[gateIndexH][qubit],
-                           !(disallowed && gSNextNext[gateIndexH][qubit])));
   }
 }
 
