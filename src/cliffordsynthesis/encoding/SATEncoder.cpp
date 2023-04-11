@@ -34,14 +34,14 @@ void SATEncoder::initializeSolver() {
 
     //    params.addParam("phase", "always_false);
     //    params.addParam("restart", "luby");
-    params.addParam("bca", true);
-    params.addParam("restart.emafastglue", 0.05);
-    params.addParam("restart.emaslowglue", 1e-06);
-    params.addParam("restart.margin", 1.07);
-    params.addParam("rephase.base", 3000U);
+    //    params.addParam("bca", true);
+    //    params.addParam("restart.emafastglue", 0.05);
+    //    params.addParam("restart.emaslowglue", 1e-06);
+    //    params.addParam("restart.margin", 1.07);
+    //    params.addParam("rephase.base", 3000U);
 
     //    params.addParam("cut",true);
-    params.addParam("search.sat.conflicts", 100U);
+    //    params.addParam("search.sat.conflicts", 100U);
     //    params.addParam("threads", static_cast<std::uint32_t>(config.nThreads
     //    / 2));
     lb = logicutil::getZ3LogicBlock(success, true, params);
