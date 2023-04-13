@@ -145,6 +145,7 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 
   // gate variables of the current and the next time step
   const auto& gSNow  = vars.gS[pos];
+  const auto& gSNext = vars.gS[pos + 1];
   const auto& gCNext = vars.gC[pos + 1];
 
   // two identical CNOTs may not be applied in a row because they would cancel.
@@ -168,6 +169,32 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
   lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
+
+  // No Xs on both qubits after CNOT
+  constexpr auto xIndex = gateToIndex(qc::OpType::X);
+  const auto     xx     = gSNext[xIndex][ctrl] && gSNext[xIndex][trgt];
+  const auto cnotBefore = vars.gC[pos][ctrl][trgt] || vars.gC[pos][trgt][ctrl];
+  lb->assertFormula(LogicTerm::implies(cnotBefore, !xx));
+
+  constexpr auto zIndex = gateToIndex(qc::OpType::Z);
+  const auto     zz     = gSNext[zIndex][ctrl] && gSNext[zIndex][trgt];
+  lb->assertFormula(LogicTerm::implies(cnotBefore, !zz));
+
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[xIndex][trgt]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[xIndex][ctrl]));
+
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[zIndex][ctrl]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[zIndex][trgt]));
+
+  constexpr auto sIndex = gateToIndex(qc::OpType::S);
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[sIndex][ctrl]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[sIndex][trgt]));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
