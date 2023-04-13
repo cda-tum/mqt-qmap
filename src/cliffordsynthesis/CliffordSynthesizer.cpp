@@ -492,6 +492,6 @@ CliffordSynthesizer::synthesizeSubcircuit(
   synth.synthesize(config);
 
   [[maybe_unused]] const auto& h = synth.getResultCircuit();
-  return std::make_shared<qc::QuantumComputation>(synth.resultCircuit->clone());
+  return synth.resultCircuit;
 }
 } // namespace cs
