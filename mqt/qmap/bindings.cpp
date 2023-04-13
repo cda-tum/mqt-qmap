@@ -468,9 +468,9 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite(
           "verbosity", &cs::Configuration::verbosity,
           "Verbosity level for the synthesis process. Defaults to 'warning'.")
-      .def_readwrite(
-          "n_threads", &cs::Configuration::nThreads,
-          "Number of threads to use for the synthesis. Defaults to `1`.")
+      .def_readwrite("solver_parameters", &cs::Configuration::solverParameters,
+                     "Parameters to be passed to Z3 as dict[str, bool | int | "
+                     "float | str]")
       .def_readwrite(
           "minimize_gates_after_depth_optimization",
           &cs::Configuration::minimizeGatesAfterDepthOptimization,

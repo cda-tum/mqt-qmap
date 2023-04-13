@@ -38,7 +38,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.targetMetric        = configuration.target;
   encoderConfig.useMaxSAT           = configuration.useMaxSAT;
   encoderConfig.useSymmetryBreaking = configuration.useSymmetryBreaking;
-  encoderConfig.nThreads            = configuration.nThreads;
+  encoderConfig.solverParameters    = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 

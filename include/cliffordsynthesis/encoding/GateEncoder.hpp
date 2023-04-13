@@ -75,6 +75,34 @@ public:
     }
     return 0;
   }
+  template <qc::OpType Gate>
+  [[nodiscard]] static constexpr bool containsGate() {
+    for (const auto& g : SINGLE_QUBIT_GATES) {
+      if (g == Gate) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] static constexpr bool containsX() {
+    return containsGate<qc::OpType::X>();
+  }
+  [[nodiscard]] static constexpr bool containsY() {
+    return containsGate<qc::OpType::Y>();
+  }
+  [[nodiscard]] static constexpr bool containsZ() {
+    return containsGate<qc::OpType::Z>();
+  }
+  [[nodiscard]] static constexpr bool containsH() {
+    return containsGate<qc::OpType::H>();
+  }
+  [[nodiscard]] static constexpr bool containsS() {
+    return containsGate<qc::OpType::S>();
+  }
+  [[nodiscard]] static constexpr bool containsSdag() {
+    return containsGate<qc::OpType::Sdag>();
+  }
 
 protected:
   // number of qubits N

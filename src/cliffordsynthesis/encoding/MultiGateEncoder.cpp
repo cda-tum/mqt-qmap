@@ -144,33 +144,45 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& current = vars.gC[pos][ctrl][trgt];
-  const auto& gSNow   = vars.gS[pos];
-  const auto& gCNext  = vars.gC[pos + 1];
+  const auto& gSNow  = vars.gS[pos];
+  const auto& gCNext = vars.gC[pos + 1];
 
   // two identical CNOTs may not be applied in a row because they would cancel.
-  lb->assertFormula(LogicTerm::implies(current, !gCNext[ctrl][trgt]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gCNext[ctrl][trgt]));
+  lb->assertFormula(
+      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gCNext[trgt][ctrl]));
 
   // if no gate is applied to both qubits, no CNOT on them can be applied in the
   // next time step.
-  const auto noneIndex     = gateToIndex(qc::OpType::None);
-  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  // no gate on both qubits => no CNOT on them in the next time step.
+  constexpr auto noneIndex = gateToIndex(qc::OpType::None);
+  const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  // similarly,
+  // H - X   c - H
+  //     | = |
+  // H - c   X - H
+  // i.e., Hadamards on both qubits => no CNOT on them in the next time step.
+  constexpr auto hIndex = gateToIndex(qc::OpType::H);
+  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(noGate, noFurtherCnot));
+  lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
                                  std::size_t                 pos) {
+  auto&             xorHelper = xorHelpers[pos];
   const std::string hName =
-      "h_" + std::to_string(pos) + "_" + std::to_string(xorHelpers[pos].size());
+      "h_" + std::to_string(pos) + "_" + std::to_string(xorHelper.size());
   DEBUG() << "Creating helper variable for RChange XOR " << hName;
   const auto n = static_cast<std::int16_t>(S);
-  xorHelpers[pos].emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
-  if (xorHelpers[pos].size() == 1) {
-    lb->assertFormula(xorHelpers[pos][0] == changes);
+  xorHelper.emplace_back(lb->makeVariable(hName, CType::BITVECTOR, n));
+  if (xorHelper.size() == 1) {
+    lb->assertFormula(xorHelper.back() == changes);
   } else {
-    lb->assertFormula(xorHelpers[pos].back() ==
-                      (xorHelpers[pos][xorHelpers[pos].size() - 2] ^ changes));
+    lb->assertFormula(xorHelper.back() ==
+                      (xorHelper[xorHelpers[pos].size() - 2] ^ changes));
   }
 }
 
