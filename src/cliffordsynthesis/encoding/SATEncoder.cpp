@@ -115,6 +115,7 @@ void SATEncoder::produceInstance() const {
 
 Result SATEncoder::solve() const {
   INFO() << "Solving the SAT instance.";
+
   const auto start  = std::chrono::high_resolution_clock::now();
   const auto result = lb->solve();
   const auto end    = std::chrono::high_resolution_clock::now();
@@ -140,7 +141,7 @@ Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 
   createFormulation();
-  produceInstance();
+  // produceInstance();
   const auto solverResult = solve();
 
   const auto end     = std::chrono::high_resolution_clock::now();
