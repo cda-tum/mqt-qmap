@@ -10,14 +10,8 @@
 
 #include <plog/Log.h>
 #include <thread>
-#include <unordered_map>
-#include <variant>
 
 namespace cs {
-
-using SolverParameter = std::variant<bool, std::uint32_t, double, std::string>;
-using SolverParameterMap = std::unordered_map<std::string, SolverParameter>;
-
 struct Configuration {
   Configuration() = default;
 
@@ -33,7 +27,7 @@ struct Configuration {
   plog::Severity verbosity               = plog::Severity::warning;
 
   /// Settings for the SAT solver
-  SolverParameterMap solverParameters = {};
+  std::size_t nThreads = 1U;
 
   /// Settings for depth-optimal synthesis
   bool minimizeGatesAfterDepthOptimization = false;
@@ -56,6 +50,7 @@ struct Configuration {
     j["linear_search"]          = linearSearch;
     j["target_metric"]          = toString(target);
     j["use_symmetry_breaking"]  = useSymmetryBreaking;
+    j["n_threads"]              = nThreads;
     j["minimize_gates_after_depth_optimization"] =
         minimizeGatesAfterDepthOptimization;
     j["try_higher_gate_limit_for_two_qubit_gate_optimization"] =
@@ -66,17 +61,6 @@ struct Configuration {
     j["heuristic"]           = heuristic;
     j["split_size"]          = splitSize;
     j["n_threads_heuristic"] = nThreadsHeuristic;
-    if (!solverParameters.empty()) {
-      nlohmann::json solverParametersJson;
-      for (const auto& entry : solverParameters) {
-        std::visit(
-            [&solverParametersJson, &entry](const auto& v) {
-              solverParametersJson[entry.first] = v;
-            },
-            entry.second);
-      }
-      j["solver_parameters"] = solverParametersJson;
-    }
     return j;
   }
 
