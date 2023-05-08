@@ -6,3 +6,6 @@
 	path = extern/LogicBlocks
 	url = https://github.com/cda-tum/LogicBlocks.git
     branch = main
+[submodule "extern/smt-switch"]
+	path = extern/smt-switch
+	url = https://github.com/stanford-centaur/smt-switch.git
