@@ -141,7 +141,6 @@ Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 
   createFormulation();
-  // produceInstance();
   const auto solverResult = solve();
 
   const auto end     = std::chrono::high_resolution_clock::now();
