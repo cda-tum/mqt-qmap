@@ -2,8 +2,6 @@
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
 # add MQT::qfr target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr" EXCLUDE_FROM_ALL)
-# add smt-switch target
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/smt-switch" "extern/smt-switch" EXCLUDE_FROM_ALL)
 
 # macro to add core libraries
 macro(ADD_INTERNAL_LIBRARY libname)

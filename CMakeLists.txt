@@ -25,8 +25,6 @@ check_submodule_present(qfr)
 
 check_submodule_present(LogicBlocks)
 
-check_submodule_present(smt-switch)
-
 # Add path for custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
