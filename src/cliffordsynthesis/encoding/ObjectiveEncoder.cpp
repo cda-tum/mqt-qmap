@@ -33,18 +33,17 @@ void ObjectiveEncoder::optimizeGateCount(
   dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
 }
 
-void ObjectiveEncoder::optimizeDepth() const {
-  DEBUG() << "Optimizing depth";
+void ObjectiveEncoder::optimizeDepth(bool includeSingleQubitGates) const {
+  DEBUG() << "Optimizing " << (includeSingleQubitGates ? "" : "two-qubit ")
+          << "depth";
   auto* optimizer = dynamic_cast<LogicBlockOptimizer*>(lb.get());
-
-  constexpr auto noGateIndex = GateEncoder::gateToIndex(qc::OpType::None);
   for (std::size_t t = 0U; t < T; ++t) {
-    const auto& gS     = gvars->gS[t];
-    auto        noGate = LogicTerm(true);
-    for (std::size_t q = 0U; q < N; ++q) {
-      noGate = noGate && gS[noGateIndex][q];
+    auto anyGate = LogicTerm(false);
+    if (includeSingleQubitGates) {
+      collectSingleQubitGateTerms(t, anyGate, std::logical_or{});
     }
-    optimizer->weightedTerm(!noGate, 1);
+    collectTwoQubitGateTerms(t, anyGate, std::logical_or{});
+    optimizer->weightedTerm(anyGate, 1);
   }
   optimizer->makeMinimize();
 }
