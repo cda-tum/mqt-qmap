@@ -45,12 +45,17 @@ public:
 
   void synthesize(const Configuration& config = {});
 
-  [[nodiscard]] Results&                getResults() { return results; };
-  [[nodiscard]] qc::QuantumComputation& getResultCircuit() {
+  [[nodiscard]] Results& getResults() { return results; };
+
+  void initResultCircuitFromResults() {
     std::stringstream ss;
     ss << results.getResultCircuit();
     resultCircuit = std::make_unique<qc::QuantumComputation>();
     resultCircuit->import(ss, qc::Format::OpenQASM);
+  }
+
+  [[nodiscard]] qc::QuantumComputation& getResultCircuit() {
+    initResultCircuitFromResults();
     return *resultCircuit;
   };
   [[nodiscard]] Tableau& getResultTableau() {

@@ -491,7 +491,7 @@ CliffordSynthesizer::synthesizeSubcircuit(
   CliffordSynthesizer synth(subTargetTableau);
   synth.synthesize(config);
 
-  [[maybe_unused]] const auto& h = synth.getResultCircuit();
+  synth.initResultCircuitFromResults();
   return synth.resultCircuit;
 }
 } // namespace cs
