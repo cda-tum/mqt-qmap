@@ -47,7 +47,7 @@ jobs:
         name: Set Architecture to arm64 if necessary
         run: echo "CIBW_ARCHS_MACOS=arm64" >> $GITHUB_ENV
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_BEFORE_ALL_LINUX: /opt/python/cp39-cp39/bin/pip install z3-solver==${{ env.Z3_VERSION }}
       - uses: actions/upload-artifact@v3
