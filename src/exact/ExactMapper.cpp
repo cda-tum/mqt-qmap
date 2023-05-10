@@ -56,9 +56,7 @@ void ExactMapper::map(const Configuration& settings) {
     return;
   }
 
-  // 2) For all possibilities k (=m over n) to pick n qubits from m physical
-  // qubits
-  std::vector<std::uint16_t> qubitRange{};
+  // 2a) If only a subgraph should be considered, reduce the architecture.
   if (!config.subgraph.empty()) {
     const auto subgraphQubits = config.subgraph.size();
     if (subgraphQubits < qc.getNqubits()) {
@@ -76,13 +74,15 @@ void ExactMapper::map(const Configuration& settings) {
       std::cerr << "The subgraph is not connected." << std::endl;
       return;
     }
-    qubitRange = Architecture::getQubitList(reducedCouplingMap);
-  } else {
-    qubitRange.clear();
-    auto qubitSet = architecture.getQubitSet();
-    qubitRange.reserve(qubitSet.size());
-    std::copy(qubitSet.begin(), qubitSet.end(), std::back_inserter(qubitRange));
+
+    architecture.setCouplingMap(reducedCouplingMap);
   }
+
+  // 2b) If configured to use subsets, collect all k (=m over n) possibilities
+  // to pick n qubits from m device qubits. Otherwise, consider all qubits.
+  std::vector<std::uint16_t> qubitRange =
+      Architecture::getQubitList(architecture.getCouplingMap());
+
   std::vector<QubitChoice> allPossibleQubitChoices{};
   if (config.useSubsets) {
     allPossibleQubitChoices = architecture.getAllConnectedSubsets(
@@ -90,6 +90,7 @@ void ExactMapper::map(const Configuration& settings) {
   } else {
     allPossibleQubitChoices.emplace_back(qubitRange.begin(), qubitRange.end());
   }
+
   // 3) determine exact mapping for this qubit choice
   std::vector<Swaps> swaps(reducedLayerIndices.size(), Swaps{});
   mappingSwaps.reserve(reducedLayerIndices.size());
