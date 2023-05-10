@@ -55,7 +55,7 @@ public:
   void extractCircuitFromModel(Results& res, logicbase::Model& model);
 
   [[nodiscard]] auto* getVariables() { return &vars; }
- 
+
   static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y,   qc::OpType::Z,
       qc::OpType::H,    qc::OpType::S, qc::OpType::Sdag};
