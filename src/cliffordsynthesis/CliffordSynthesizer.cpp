@@ -212,8 +212,8 @@ void CliffordSynthesizer::depthOptimalSynthesis(
     runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
-    // timestep (=gate) limits T until a solution with T gates is found, but no
-    // solution with T-1 gates could be determined.
+    // timestep (=depth) limits T until a solution with depth T is found, but no
+    // solution with depth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 
@@ -424,7 +424,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   std::vector<std::size_t> layers{};
   std::size_t              layer = 0U;
   for (std::size_t i = 0; i < qc.size(); ++i) {
-    const auto& gate = *(qc.begin() + i);
+    const auto& gate = qc.at(i);
 
     for (const auto& qubit : gate->getUsedQubits()) {
       if (layerNum[qubit] >= layer) {
@@ -451,13 +451,13 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   optimalConfig.initialTimestepLimit = configuration.splitSize;
 
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
-  qc::QuantumComputation   optCircuit{initialCircuit->getNqubits()};
-  std::vector<std::size_t> layers = getLayers(*initialCircuit);
+  qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
+  const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
 
   std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
   for (std::size_t i = 0; i < layers.size() - 1; i += configuration.splitSize) {
-    std::size_t const          startIdx = layers[i];
-    std::optional<std::size_t> endIdx;
+    std::size_t const startIdx = layers[i];
+    std::size_t       endIdx;
 
     if (i + configuration.splitSize >= layers.size()) {
       endIdx = layers.back();
@@ -466,18 +466,18 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
     }
 
     // launch threads
-    subCircuits.emplace_back(std::async(
-        std::launch::async | std::launch::deferred,
-        [this, startIdx, endIdx, &optimalConfig]() {
-          return cs::CliffordSynthesizer::synthesizeSubcircuit(
-              initialCircuit, startIdx, endIdx.value(), optimalConfig);
-        }));
+    subCircuits.emplace_back(
+        std::async(std::launch::async | std::launch::deferred,
+                   [this, startIdx, endIdx, &optimalConfig]() {
+                     return cs::CliffordSynthesizer::synthesizeSubcircuit(
+                         initialCircuit, startIdx, endIdx, optimalConfig);
+                   }));
   }
 
   for (auto& subCircuit : subCircuits) {
     const auto& circ = subCircuit.get();
-    for (const auto& op : *circ) {
-      optCircuit.emplace_back(op->clone());
+    for (auto it = circ->begin(); it != circ->end(); ++it) {
+      optCircuit.emplace_back(std::move(*it));
     }
   }
 

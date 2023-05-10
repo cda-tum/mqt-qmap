@@ -65,11 +65,6 @@ void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
-    //    rChanges =
-    //        rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
-    //                                  tvars->singleQubitRChange(pos, qubit,
-    //                                  gate), LogicTerm(0,
-    //                                  static_cast<std::int16_t>(S)));
   }
 }
 
@@ -104,11 +99,6 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
       vars.gC[pos][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
       LogicTerm(0, static_cast<std::int16_t>(S)));
   splitXorR(newRChanges, pos);
-  //  rChanges =
-  //      rChanges ^ LogicTerm::ite(vars.gC[pos][ctrl][trgt],
-  //                                tvars->twoQubitRChange(pos, ctrl, trgt),
-  //                                LogicTerm(0, static_cast<std::int16_t>(S)));
-  //
   return changes;
 }
 
@@ -170,31 +160,20 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
   lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
 
-  // No Xs on both qubits after CNOT
-  constexpr auto xIndex = gateToIndex(qc::OpType::X);
-  const auto     xx     = gSNext[xIndex][ctrl] && gSNext[xIndex][trgt];
-  const auto cnotBefore = vars.gC[pos][ctrl][trgt] || vars.gC[pos][trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(cnotBefore, !xx));
+  // No Zs or Xs on both qubits after CNOT
+  constexpr auto xIndex  = gateToIndex(qc::OpType::X);
+  const auto     xxAfter = gSNext[xIndex][ctrl] && gSNext[xIndex][trgt];
+  constexpr auto zIndex  = gateToIndex(qc::OpType::Z);
+  const auto     zzAfter = gSNext[zIndex][ctrl] && gSNext[zIndex][trgt];
+  const auto cnotBefore  = vars.gC[pos][ctrl][trgt] || vars.gC[pos][trgt][ctrl];
+  lb->assertFormula(LogicTerm::implies(cnotBefore, !zzAfter && !xxAfter));
 
-  constexpr auto zIndex = gateToIndex(qc::OpType::Z);
-  const auto     zz     = gSNext[zIndex][ctrl] && gSNext[zIndex][trgt];
-  lb->assertFormula(LogicTerm::implies(cnotBefore, !zz));
-
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[xIndex][trgt]));
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[xIndex][ctrl]));
-
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[zIndex][ctrl]));
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[zIndex][trgt]));
-
-  constexpr auto sIndex = gateToIndex(qc::OpType::S);
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][ctrl][trgt], !gSNext[sIndex][ctrl]));
-  lb->assertFormula(
-      LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gSNext[sIndex][trgt]));
+  // No Zs or Xs on both qubits before CNOT
+  const auto xxBefore = gSNow[xIndex][ctrl] && gSNow[xIndex][trgt];
+  const auto zzBefore = gSNow[zIndex][ctrl] && gSNow[zIndex][trgt];
+  const auto cnotAfter =
+      vars.gC[pos + 1][ctrl][trgt] || vars.gC[pos + 1][trgt][ctrl];
+  lb->assertFormula(LogicTerm::implies(cnotAfter, !zzBefore && !xxBefore));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
