@@ -431,6 +431,7 @@ TEST_F(ExactTest, WCNFNotAvailable) {
   using namespace qc::literals;
 
   settings.verbose     = false;
+  settings.encoding    = Encoding::Naive;
   settings.includeWCNF = true;
 
   auto circ = qc::QuantumComputation(5U);
