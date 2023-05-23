@@ -21,10 +21,10 @@ nlohmann::json Configuration::json() const {
   if (method == Method::Heuristic) {
     auto& heuristic             = config["settings"];
     heuristic["initial_layout"] = ::toString(initialLayout);
+    heuristic["admissible_heuristic"] = admissibleHeuristic;
+    heuristic["consider_fidelity"]    = considerFidelity;
     if (lookahead) {
       auto& lookaheadSettings                   = heuristic["lookahead"];
-      lookaheadSettings["admissible_heuristic"] = admissibleHeuristic;
-      lookaheadSettings["consider_fidelity"]    = considerFidelity;
       lookaheadSettings["lookaheads"]           = nrLookaheads;
       lookaheadSettings["first_factor"]         = firstLookaheadFactor;
       lookaheadSettings["factor"]               = lookaheadFactor;
