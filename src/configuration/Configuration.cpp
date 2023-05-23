@@ -19,15 +19,15 @@ nlohmann::json Configuration::json() const {
   config["debug"]                              = debug;
 
   if (method == Method::Heuristic) {
-    auto& heuristic             = config["settings"];
-    heuristic["initial_layout"] = ::toString(initialLayout);
+    auto& heuristic                   = config["settings"];
+    heuristic["initial_layout"]       = ::toString(initialLayout);
     heuristic["admissible_heuristic"] = admissibleHeuristic;
     heuristic["consider_fidelity"]    = considerFidelity;
     if (lookahead) {
-      auto& lookaheadSettings                   = heuristic["lookahead"];
-      lookaheadSettings["lookaheads"]           = nrLookaheads;
-      lookaheadSettings["first_factor"]         = firstLookaheadFactor;
-      lookaheadSettings["factor"]               = lookaheadFactor;
+      auto& lookaheadSettings           = heuristic["lookahead"];
+      lookaheadSettings["lookaheads"]   = nrLookaheads;
+      lookaheadSettings["first_factor"] = firstLookaheadFactor;
+      lookaheadSettings["factor"]       = lookaheadFactor;
     }
     if (useTeleportation) {
       auto& teleportation     = heuristic["teleportation"];
