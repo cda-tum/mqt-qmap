@@ -364,20 +364,6 @@ protected:
   void createDistanceTable();
   void createFidelityTable();
 
-  static double dijkstraNodeToCost(const Dijkstra::Node& node) {
-    // Dijkstra determines the minimal path cost from one physical qubit to
-    // another.  In the non-fidelity case we are only interested in swapping 2
-    // logical qubits next to each other. Therefore the last swap cost has to
-    // be ignored. That cost is stored in the field `node.prevCost` of each
-    // node.
-    if (node.containsCorrectEdge) {
-      return node.prevCost;
-    }
-    // in case the last edge is a back-edge, we will need to reverse the CNOT,
-    // executed on that edge
-    return node.prevCost + COST_DIRECTION_REVERSE;
-  }
-
   // added for teleportation
   static bool contains(const std::vector<int>& v, const int e) {
     return std::find(v.begin(), v.end(), e) != v.end();

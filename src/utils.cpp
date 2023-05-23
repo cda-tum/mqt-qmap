@@ -9,7 +9,7 @@
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
                           Matrix& distanceTable, const Matrix& edgeWeights,
-                          const std::function<double(const Node&)>& cost) {
+                          const double reversalCost, const bool removeLastEdge) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
@@ -23,16 +23,20 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
       nodes.at(j).prevCost            = -1.;
     }
 
-    nodes.at(i).cost     = 0.;
-    nodes.at(i).prevCost = 0.;
+    nodes.at(i).cost     = reversalCost;
+    nodes.at(i).prevCost = reversalCost;
 
-    dijkstra(couplingMap, nodes, i, edgeWeights);
+    dijkstra(couplingMap, nodes, i, edgeWeights, reversalCost);
 
     for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
         distanceTable.at(i).at(j) = 0;
       } else {
-        distanceTable.at(i).at(j) = cost(nodes.at(j));
+        if (removeLastEdge) {
+          distanceTable.at(i).at(j) = nodes.at(j).prevCost;
+        } else {
+          distanceTable.at(i).at(j) = nodes.at(j).cost;
+        }
       }
     }
   }
@@ -40,7 +44,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
                         std::vector<Node>& nodes, std::uint16_t start,
-                        const Matrix& edgeWeights) {
+                        const Matrix& edgeWeights, const double reversalCost) {
   std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
@@ -51,7 +55,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
 
     for (const auto& edge : couplingMap) {
       std::optional<std::uint16_t> to          = std::nullopt;
-      bool                         correctEdge = false;
+      bool                         correctEdge = current->containsCorrectEdge;
       if (pos == edge.first) {
         to          = edge.second;
         correctEdge = true;
@@ -68,6 +72,10 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         newNode.prevCost = current->cost;
         newNode.pos      = to;
         newNode.containsCorrectEdge = correctEdge;
+        if (newNode.containsCorrectEdge && !current->containsCorrectEdge) {
+          newNode.cost -= reversalCost;
+          newNode.prevCost -= reversalCost;
+        }
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;
           queue.push(&nodes.at(*to));
