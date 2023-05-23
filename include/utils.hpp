@@ -63,7 +63,7 @@ public:
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix& distanceTable, const Matrix& edgeWeights,
-                          const double reversalCost, const bool removeLastEdge);
+                         const double reversalCost, const bool removeLastEdge);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,

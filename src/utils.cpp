@@ -9,7 +9,8 @@
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
                           Matrix& distanceTable, const Matrix& edgeWeights,
-                          const double reversalCost, const bool removeLastEdge) {
+                          const double reversalCost,
+                          const bool   removeLastEdge) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
