@@ -63,12 +63,12 @@ public:
 
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix& distanceTable, const Matrix& edgeWeights,
-                         const double reversalCost, const bool removeLastEdge);
+                         double reversalCost, bool removeLastEdge);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
                        std::uint16_t start, const Matrix& edgeWeights,
-                       const double reversalCost);
+                       double reversalCost);
 
   struct NodeComparator {
     bool operator()(const Node* x, const Node* y) {
