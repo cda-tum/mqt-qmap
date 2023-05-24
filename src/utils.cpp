@@ -23,7 +23,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
       nodes.at(j).cost                = -1.;
       nodes.at(j).prevCost            = -1.;
     }
-    
+
     // initially all paths assume that a CNOT reversal will be necessary,
     // as soon as a forward edge is encountered along the path, the cost
     // for the reversal is removed
@@ -58,7 +58,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
     auto pos = current->pos;
 
     for (const auto& edge : couplingMap) {
-      std::optional<std::uint16_t> to          = std::nullopt;
+      std::optional<std::uint16_t> to = std::nullopt;
       // if the path up to here already contains a forward edge, we do not care
       // about the directionality of other edges anymore; the value of the last
       // node is therefore kept and only overwritten with true if the current
@@ -81,7 +81,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         newNode.pos      = to;
         newNode.containsCorrectEdge = correctEdge;
         if (newNode.containsCorrectEdge && !current->containsCorrectEdge) {
-          // when encountering the first forward edge along the path, the 
+          // when encountering the first forward edge along the path, the
           // reversal costs need to be removed
           newNode.cost -= reversalCost;
           newNode.prevCost -= reversalCost;
