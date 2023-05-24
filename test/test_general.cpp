@@ -89,30 +89,27 @@ TEST(General, DijkstraCNOTReversal) {
 
   const CouplingMap cm = {{0, 1}, {2, 1}, {2, 3}, {3, 4}};
 
-  const Matrix edgeWeights = {
-      {0, 3, 0, 0, 0}, 
-      {3, 0, 3, 0, 0}, 
-      {0, 3, 0, 3, 0}, 
-      {0, 0, 3, 0, 3},
-      {0, 0, 0, 3, 0}};
+  const Matrix edgeWeights = {{0, 3, 0, 0, 0},
+                              {3, 0, 3, 0, 0},
+                              {0, 3, 0, 3, 0},
+                              {0, 0, 3, 0, 3},
+                              {0, 0, 0, 3, 0}};
 
-  const Matrix targetTable1 = {
-      { 0, 3, 6, 9, 12}, 
-      { 4, 0, 4, 6, 9}, 
-      { 6, 3, 0, 3, 6}, 
-      { 9, 6, 4, 0, 3},
-      {12, 9, 7, 4, 0}};
-  Matrix distanceTable{};
+  const Matrix targetTable1 = {{0, 3, 6, 9, 12},
+                               {4, 0, 4, 6, 9},
+                               {6, 3, 0, 3, 6},
+                               {9, 6, 4, 0, 3},
+                               {12, 9, 7, 4, 0}};
+  Matrix       distanceTable{};
   Dijkstra::buildTable(5, cm, distanceTable, edgeWeights, 1, false);
   EXPECT_EQ(distanceTable, targetTable1);
 
-  const Matrix targetTable2 = {
-      {0, 0, 3, 6, 9}, 
-      {1, 0, 1, 3, 6}, 
-      {3, 0, 0, 0, 3}, 
-      {6, 3, 1, 0, 0},
-      {9, 6, 4, 1, 0}};
-  distanceTable = {};
+  const Matrix targetTable2 = {{0, 0, 3, 6, 9},
+                               {1, 0, 1, 3, 6},
+                               {3, 0, 0, 0, 3},
+                               {6, 3, 1, 0, 0},
+                               {9, 6, 4, 1, 0}};
+  distanceTable             = {};
   Dijkstra::buildTable(5, cm, distanceTable, edgeWeights, 1, true);
   EXPECT_EQ(distanceTable, targetTable2);
 }
