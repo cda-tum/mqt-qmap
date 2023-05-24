@@ -54,36 +54,36 @@ public:
 class Dijkstra {
 public:
   struct Node {
-    /** true if the path contains any forward edge 
-        (i.e. an edge on which a CNOT with directionality q1->q2 
+    /** true if the path contains any forward edge
+        (i.e. an edge on which a CNOT with directionality q1->q2
         can be applied without the need of a CNOT reversal) */
-    bool                         containsCorrectEdge = false;
+    bool containsCorrectEdge = false;
     /** true if the node has already been expanded */
-    bool                         visited             = false;
+    bool visited = false;
     /** current qubit */
-    std::optional<std::uint16_t> pos                 = std::nullopt;
+    std::optional<std::uint16_t> pos = std::nullopt;
     /** current cost of the path */
-    double                       cost                = -1.;
+    double cost = -1.;
     /** current cost of the path with the last swap removed */
-    double                       prevCost            = -1.;
+    double prevCost = -1.;
   };
 
   /**
-   * @brief builds a distance table containing the minimal costs for moving 
-   * logical qubits from one physical qubit to/next to another (along the 
+   * @brief builds a distance table containing the minimal costs for moving
+   * logical qubits from one physical qubit to/next to another (along the
    * cheapest path)
-   * 
+   *
    * @param n size of the distance table (i.e. number of qubits)
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param distanceTable target table
-   * @param edgeWeights matrix containing costs for swapping any two, connected 
-   * qubits (this might be uniform for all edges or different for each edge, as 
-   * e.g. in the case of fidelity-aware distances or distances on 
+   * @param edgeWeights matrix containing costs for swapping any two, connected
+   * qubits (this might be uniform for all edges or different for each edge, as
+   * e.g. in the case of fidelity-aware distances or distances on
    * mixed bi/unidirectional architectures)
-   * @param reversalCost cost added if path consists only of back edges, i.e. 
-   * the 2-qubit gate to be mapped would need to be reversed in any case 
+   * @param reversalCost cost added if path consists only of back edges, i.e.
+   * the 2-qubit gate to be mapped would need to be reversed in any case
    * (if reversal costs are handled elsewhere this should be set to 0)
-   * @param removeLastEdge if set to true, the cost for the last swap on any 
+   * @param removeLastEdge if set to true, the cost for the last swap on any
    * path is removed (i.e. distance is given for moving "next to" qubit)
    */
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
