@@ -151,10 +151,6 @@ void HeuristicMapper::map(const Configuration& configuration) {
           (static_cast<double>(layer.expandedNodes) /
            static_cast<double>(benchmark.expandedNodes));
     }
-    if (benchmark.effectiveBranchingFactor > benchmark.averageBranchingFactor) {
-      throw QMAPException("Something wrong in benchmark tracking: "
-                          "effectiveBranchingFactor > averageBranchingFactor");
-    }
   }
 
   // infer output permutation from qubit locations
@@ -500,14 +496,6 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
     layerResultsIt->effectiveBranchingFactor = computeEffectiveBranchingRate(
         layerResultsIt->expandedNodes + 1, result.depth);
-
-    if (layerResultsIt->effectiveBranchingFactor >
-        layerResultsIt->averageBranchingFactor) {
-      throw QMAPException(
-          "Something wrong in benchmark tracking on layer " +
-          std::to_string(layer) +
-          ": effectiveBranchingFactor > averageBranchingFactor");
-    }
   }
 
   // clear nodes

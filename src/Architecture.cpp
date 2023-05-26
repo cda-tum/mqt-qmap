@@ -199,7 +199,7 @@ void Architecture::createDistanceTable() {
   }
 
   Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                       Architecture::dijkstraNodeToCost);
+                       COST_DIRECTION_REVERSE, true);
 }
 
 void Architecture::createFidelityTable() {
