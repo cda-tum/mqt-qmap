@@ -89,6 +89,10 @@ public:
   static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix& distanceTable, const Matrix& edgeWeights,
                          double reversalCost, bool removeLastEdge);
+  
+  static void buildEdgeSkipTable(const Matrix& distanceTable, 
+                                 const CouplingMap& couplingMap,
+                                 std::vector<Matrix>& edgeSkipDistanceTable);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
