@@ -325,13 +325,61 @@ TEST(HeuristicTest, basic) {
   auto qc     = qc::QuantumComputation(2);
   qc.h(0);
   qc.s(1);
-  qc.y(0);
-  qc.x(1);
+  qc.h(0);
+  qc.s(1);
   config.heuristic = true;
   config.splitSize = 1;
   config.target    = TargetMetric::Depth;
   auto synth       = CliffordSynthesizer(qc);
   synth.synthesize(config);
-  EXPECT_LE(synth.getResults().getDepth(), 2);
+  EXPECT_EQ(synth.getResults().getDepth(), 2);
+}
+
+TEST(HeuristicTest, identity) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.s(1);
+  qc.h(0);
+  qc.sdag(1);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 0);
+}
+
+using namespace qc::literals;
+TEST(HeuristicTest, three_layers) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.h(1);
+  qc.x(1, 0_pc);
+  qc.h(0);
+  qc.h(1);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 3);
+}
+
+using namespace qc::literals;
+TEST(HeuristicTest, four_layers) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(1);
+  qc.s(0);
+  qc.s(0);
+  qc.s(0);
+  qc.s(0);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
 } // namespace cs
