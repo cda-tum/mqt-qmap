@@ -162,6 +162,15 @@ TEST_P(SynthesisTest, GatesMaxSAT) {
   EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
 }
 
+TEST_P(SynthesisTest, GatesLinearSearch) {
+  config.target       = TargetMetric::Gates;
+  config.linearSearch = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
+}
+
 TEST_P(SynthesisTest, Depth) {
   config.target = TargetMetric::Depth;
   synthesizer.synthesize(config);
@@ -173,6 +182,15 @@ TEST_P(SynthesisTest, Depth) {
 TEST_P(SynthesisTest, DepthMaxSAT) {
   config.target    = TargetMetric::Depth;
   config.useMaxSAT = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+}
+
+TEST_P(SynthesisTest, DepthLinearSearch) {
+  config.target       = TargetMetric::Depth;
+  config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -201,6 +219,17 @@ TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
 TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
   config.target                              = TargetMetric::Depth;
   config.useMaxSAT                           = true;
+  config.minimizeGatesAfterDepthOptimization = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+}
+
+TEST_P(SynthesisTest, DepthMinimalGatesLinearSearch) {
+  config.target                              = TargetMetric::Depth;
+  config.linearSearch                        = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
