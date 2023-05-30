@@ -56,8 +56,8 @@ struct Configuration {
   std::size_t timeout = 3600000; // 60min timeout
 
   // encoding of at most and exactly one constraints in exact mapper
-  Encoding          encoding          = Encoding::Naive;
-  CommanderGrouping commanderGrouping = CommanderGrouping::Halves;
+  Encoding          encoding          = Encoding::Commander;
+  CommanderGrouping commanderGrouping = CommanderGrouping::Fixed3;
 
   // use qubit subsets in exact mapper
   bool useSubsets = true;

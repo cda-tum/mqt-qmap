@@ -81,7 +81,7 @@ jobs:
       - name: Run session
         run: nox -s min_qiskit_version -- --cov-report=xml
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3.1.3
+        uses: codecov/codecov-action@v3.1.4
         with:
           fail_ci_if_error: true
           flags: python
@@ -114,7 +114,7 @@ jobs:
       - name: Run session
         run: nox -s coverage-${{ matrix.python-version }} -- --cov-report=xml
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3.1.3
+        uses: codecov/codecov-action@v3.1.4
         with:
           fail_ci_if_error: true
           flags: python
