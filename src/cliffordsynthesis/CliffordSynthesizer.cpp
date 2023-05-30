@@ -455,9 +455,6 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   if (layers.back() < qc.getNindividualOps()) {
     layers.emplace_back(qc.getNindividualOps());
   }
-  for (const auto& l : layers) {
-    std::cout << l << std::endl;
-  }
   return layers;
 }
 
