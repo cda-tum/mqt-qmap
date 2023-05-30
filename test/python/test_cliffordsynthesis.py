@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -113,6 +114,24 @@ def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configu
 
     assert results.gates == test_config.expected_minimal_gates_at_minimal_two_qubit_gates
     print("\n", circ)
+
+
+@pytest.mark.parametrize("test_config", create_circuit_tests())
+def test_heuristic(test_config: Configuration) -> None:
+    """Test heuristic synthesis method."""
+    print(test_config.initial_circuit)
+    sys.stdout.flush()
+    circ, results = qmap.optimize_clifford(
+        circuit=test_config.initial_circuit, heuristic=True, split_size=20, target_metric="depth"
+    )
+
+    circ_opt, results_opt = qmap.optimize_clifford(
+        circuit=test_config.initial_circuit, heuristic=False, target_metric="depth"
+    )
+
+    # assert circ.depth() >= circ_opt.depth()
+    # assert Clifford(circ) == Clifford(circ_opt)
+    # print("\n", circ)
 
 
 @pytest.mark.parametrize("test_config", create_tableau_tests())
