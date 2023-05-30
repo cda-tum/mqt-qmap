@@ -481,6 +481,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
       optCircuit.emplace_back(std::move(it));
     }
   }
+  results.setDepth(optCircuit.getDepth());
 
   results.setResultCircuit(optCircuit);
 }
