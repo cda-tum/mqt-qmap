@@ -335,6 +335,9 @@ class SynthesisConfiguration:
     use_maxsat: bool
     use_symmetry_breaking: bool
     verbosity: Verbosity
+    heuristic: bool
+    split_size: int
+    linear_search: bool
     def __init__(self) -> None: ...
     def json(self) -> dict[str, Any]: ...
 
