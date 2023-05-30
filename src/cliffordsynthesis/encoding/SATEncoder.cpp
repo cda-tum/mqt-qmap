@@ -98,21 +98,6 @@ void SATEncoder::createFormulation() {
   INFO() << "Formulation created in " << duration << " ms.";
 }
 
-void SATEncoder::produceInstance() const {
-  INFO() << "Generating the SAT instance.";
-  const auto start = std::chrono::high_resolution_clock::now();
-  lb->produceInstance();
-  const auto end = std::chrono::high_resolution_clock::now();
-  const auto runtime =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-          .count();
-  INFO() << "Instance generated in " << runtime << " ms.";
-
-  DEBUG() << "Instance statistics:";
-  DEBUG() << "\tClauses: " << TermImpl::getNextId(lb.get());
-  DEBUG() << "\tNone terms: " << TermImpl::getNextId();
-}
-
 Result SATEncoder::solve() const {
   INFO() << "Solving the SAT instance.";
 

@@ -70,7 +70,6 @@ public:
 protected:
   void                            initializeSolver();
   void                            createFormulation();
-  void                            produceInstance() const;
   [[nodiscard]] logicbase::Result solve() const;
   void                            extractResultsFromModel(Results& res) const;
   void                            cleanup() const;
