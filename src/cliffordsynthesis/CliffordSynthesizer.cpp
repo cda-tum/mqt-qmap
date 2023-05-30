@@ -446,7 +446,9 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
   INFO() << "Optimizing Circuit with Heuristic" << std::endl;
-  auto optimalConfig                 = configuration;
+  auto optimalConfig = configuration;
+  if (initialCircuit->getDepth() == 0)
+    return;
   optimalConfig.heuristic            = false;
   optimalConfig.target               = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;
