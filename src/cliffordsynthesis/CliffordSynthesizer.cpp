@@ -44,6 +44,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
 
   if (configuration.heuristic) {
     depthHeuristicSynthesis();
+    return;
   }
 
   // First, determine an initial guess for the number of timesteps. This can
@@ -457,7 +458,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
   for (std::size_t i = 0; i < layers.size() - 1; i += configuration.splitSize) {
     std::size_t const startIdx = layers[i];
-    std::size_t       endIdx;
+    std::size_t       endIdx   = 0;
 
     if (i + configuration.splitSize >= layers.size()) {
       endIdx = layers.back();
@@ -476,8 +477,8 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
 
   for (auto& subCircuit : subCircuits) {
     const auto& circ = subCircuit.get();
-    for (auto it = circ->begin(); it != circ->end(); ++it) {
-      optCircuit.emplace_back(std::move(*it));
+    for (auto& it : *circ) {
+      optCircuit.emplace_back(std::move(it));
     }
   }
 

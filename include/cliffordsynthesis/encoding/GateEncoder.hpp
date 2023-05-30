@@ -69,6 +69,8 @@ public:
     }
     return 0;
   }
+
+  // NOLINT(readability-use-anyofallof)
   template <qc::OpType Gate>
   [[nodiscard]] static constexpr bool containsGate() {
     for (const auto& g : SINGLE_QUBIT_GATES) {
