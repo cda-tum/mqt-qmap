@@ -122,16 +122,22 @@ def test_heuristic(test_config: Configuration) -> None:
     print(test_config.initial_circuit)
     sys.stdout.flush()
     circ, results = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, heuristic=True, split_size=20, target_metric="depth"
+        circuit=test_config.initial_circuit,
+        heuristic=True,
+        split_size=10,
+        target_metric="depth",
+        include_destabilizers=True,
     )
 
     circ_opt, results_opt = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, heuristic=False, target_metric="depth"
+        circuit=test_config.initial_circuit, heuristic=False, target_metric="depth", include_destabilizers=True
     )
 
-    # assert circ.depth() >= circ_opt.depth()
-    # assert Clifford(circ) == Clifford(circ_opt)
-    # print("\n", circ)
+    print("\n", circ)
+    print("\n", circ_opt)
+    sys.stdout.flush()
+    assert circ.depth() >= circ_opt.depth()
+    assert Clifford(circ) == Clifford(circ_opt)
 
 
 @pytest.mark.parametrize("test_config", create_tableau_tests())

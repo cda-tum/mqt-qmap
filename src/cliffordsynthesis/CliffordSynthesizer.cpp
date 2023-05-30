@@ -418,28 +418,45 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   }
 }
 
+void gateToLayer(const qc::Operation& gate, std::size_t& i,
+                 std::vector<std::size_t>& layers,
+                 std::vector<std::size_t>& layerNum, std::size_t& layer) {
+  for (const auto& qubit : gate.getUsedQubits()) {
+    if (layerNum[qubit] >= layer) {
+      ++layer;
+      layers.emplace_back(i);
+      break;
+    }
+  }
+  for (const auto& qubit : gate.getUsedQubits()) {
+    layerNum[qubit] = layer;
+  }
+  ++i;
+}
+
 // assume canonical sorting of gates
 std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   std::vector<std::size_t> layerNum{};
   layerNum.resize(qc.size());
   std::vector<std::size_t> layers{};
   std::size_t              layer = 0U;
-  for (std::size_t i = 0; i < qc.size(); ++i) {
-    const auto& gate = qc.at(i);
-
-    for (const auto& qubit : gate->getUsedQubits()) {
-      if (layerNum[qubit] >= layer) {
-        ++layer;
-        layers.emplace_back(i);
-        break;
+  std::size_t              i     = 0;
+  for (const auto& gate : qc) {
+    if (gate->isCompoundOperation()) {
+      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+      for (const auto& subGate : *compOp) {
+        gateToLayer(*subGate, i, layers, layerNum, layer);
       }
-    }
-    for (const auto& qubit : gate->getUsedQubits()) {
-      layerNum[qubit] = layer;
+    } else {
+      gateToLayer(*gate, i, layers, layerNum, layer);
     }
   }
-  if (layers.back() < qc.size()) {
-    layers.emplace_back(qc.size());
+
+  if (layers.back() < qc.getNindividualOps()) {
+    layers.emplace_back(qc.getNindividualOps());
+  }
+  for (const auto& l : layers) {
+    std::cout << l << std::endl;
   }
   return layers;
 }
@@ -447,8 +464,9 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
 void CliffordSynthesizer::depthHeuristicSynthesis() {
   INFO() << "Optimizing Circuit with Heuristic" << std::endl;
   auto optimalConfig = configuration;
-  if (initialCircuit->getDepth() == 0)
+  if (initialCircuit->getDepth() == 0) {
     return;
+  }
   optimalConfig.heuristic            = false;
   optimalConfig.target               = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;
@@ -456,7 +474,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
   qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
   const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
-
+  std::cout << layers.size() << std::endl;
   std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
   for (std::size_t i = 0; i < layers.size() - 1; i += configuration.splitSize) {
     std::size_t const startIdx = layers[i];

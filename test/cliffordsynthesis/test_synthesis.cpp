@@ -351,7 +351,7 @@ TEST(HeuristicTest, identity) {
 }
 
 using namespace qc::literals;
-TEST(HeuristicTest, three_layers) {
+TEST(HeuristicTest, threeLayers) {
   auto config = Configuration();
   auto qc     = qc::QuantumComputation(2);
   qc.h(0);
@@ -368,7 +368,7 @@ TEST(HeuristicTest, three_layers) {
 }
 
 using namespace qc::literals;
-TEST(HeuristicTest, four_layers) {
+TEST(HeuristicTest, fourLayers) {
   auto config = Configuration();
   auto qc     = qc::QuantumComputation(1);
   qc.s(0);
