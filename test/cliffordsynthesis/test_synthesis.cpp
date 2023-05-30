@@ -94,6 +94,7 @@ protected:
     config                         = Configuration();
     config.verbosity               = plog::Severity::verbose;
     config.dumpIntermediateResults = true;
+    config.useSymmetryBreaking     = true;
   }
 
   void TearDown() override {
