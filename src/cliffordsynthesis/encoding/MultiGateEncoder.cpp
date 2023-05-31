@@ -77,8 +77,7 @@ void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
         continue;
       }
       const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->asserfftFormula(
-          LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
+      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
 
       DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
     }
@@ -136,7 +135,6 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 
   // gate variables of the current and the next time step
   const auto& gSNow  = vars.gS[pos];
-  const auto& gSNext = vars.gS[pos + 1];
   const auto& gCNext = vars.gC[pos + 1];
 
   // two identical CNOTs may not be applied in a row because they would cancel.
@@ -159,20 +157,22 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
   lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
 
-  // No Zs or Xs on both qubits after CNOT
-  constexpr auto xIndex  = gateToIndex(qc::OpType::X);
-  const auto     xxAfter = gSNext[xIndex][ctrl] && gSNext[xIndex][trgt];
-  constexpr auto zIndex  = gateToIndex(qc::OpType::Z);
-  const auto     zzAfter = gSNext[zIndex][ctrl] && gSNext[zIndex][trgt];
-  const auto cnotBefore  = vars.gC[pos][ctrl][trgt] || vars.gC[pos][trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(cnotBefore, !zzAfter && !xxAfter));
+  // No Combination of Paulis or Hadamards on both Qubits before a CNOT
+  // These gates can be just pushed through to the other side
 
-  // No Zs or Xs on both qubits before CNOT
-  const auto xxBefore = gSNow[xIndex][ctrl] && gSNow[xIndex][trgt];
-  const auto zzBefore = gSNow[zIndex][ctrl] && gSNow[zIndex][trgt];
-  const auto cnotAfter =
-      vars.gC[pos + 1][ctrl][trgt] || vars.gC[pos + 1][trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(cnotAfter, !zzBefore && !xxBefore));
+  if (pos == 0) { // In the beginning parallel gates are allowed
+    return;
+  }
+
+  constexpr auto xIndex         = gateToIndex(qc::OpType::X);
+  constexpr auto zIndex         = gateToIndex(qc::OpType::Z);
+  constexpr auto yIndex         = gateToIndex(qc::OpType::Y);
+  const auto     gateBeforeCtrl = gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] ||
+                              gSNow[yIndex][ctrl] || gSNow[hIndex][ctrl];
+  const auto gateBeforeTarget = gSNow[zIndex][trgt] || gSNow[xIndex][trgt] ||
+                                gSNow[yIndex][ctrl] || gSNow[hIndex][trgt];
+  lb->assertFormula(
+      LogicTerm::implies(gateBeforeCtrl && gateBeforeTarget, noFurtherCnot));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
