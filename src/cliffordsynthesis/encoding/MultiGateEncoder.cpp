@@ -77,7 +77,8 @@ void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
         continue;
       }
       const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
+      lb->asserfftFormula(
+          LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
 
       DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
     }
@@ -144,8 +145,6 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   lb->assertFormula(
       LogicTerm::implies(vars.gC[pos][trgt][ctrl], !gCNext[trgt][ctrl]));
 
-  // if no gate is applied to both qubits, no CNOT on them can be applied in the
-  // next time step.
   // no gate on both qubits => no CNOT on them in the next time step.
   constexpr auto noneIndex = gateToIndex(qc::OpType::None);
   const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];

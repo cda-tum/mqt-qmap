@@ -43,6 +43,9 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 
   if (configuration.heuristic) {
+    if (initialCircuit->empty()) {
+      throw std::invalid_argument("Heuristic Synthesis requires Circuit.");
+    }
     depthHeuristicSynthesis();
     return;
   }
@@ -421,14 +424,15 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
 void gateToLayer(const qc::Operation& gate, std::size_t& i,
                  std::vector<std::size_t>& layers,
                  std::vector<std::size_t>& layerNum, std::size_t& layer) {
-  for (const auto& qubit : gate.getUsedQubits()) {
+  const auto& usedQubits = gate.getUsedQubits();
+  for (const auto& qubit : usedQubits) {
     if (layerNum[qubit] >= layer) {
       ++layer;
       layers.emplace_back(i);
       break;
     }
   }
-  for (const auto& qubit : gate.getUsedQubits()) {
+  for (const auto& qubit : usedQubits) {
     layerNum[qubit] = layer;
   }
   ++i;
@@ -452,18 +456,19 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
     }
   }
 
-  if (layers.back() < qc.getNindividualOps()) {
-    layers.emplace_back(qc.getNindividualOps());
+  const auto& nOps = qc.getNindividualOps();
+  if (layers.back() < nOps) {
+    layers.emplace_back(nOps);
   }
   return layers;
 }
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
-  INFO() << "Optimizing Circuit with Heuristic" << std::endl;
-  auto optimalConfig = configuration;
+  INFO() << "Optimizing Circuit with Heuristic";
   if (initialCircuit->getDepth() == 0) {
     return;
   }
+  auto optimalConfig                 = configuration;
   optimalConfig.heuristic            = false;
   optimalConfig.target               = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;

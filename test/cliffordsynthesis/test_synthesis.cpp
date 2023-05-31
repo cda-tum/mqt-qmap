@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+using namespace qc::literals;
+
 namespace cs {
 
 struct TestConfiguration {
@@ -379,7 +381,6 @@ TEST(HeuristicTest, identity) {
   EXPECT_EQ(synth.getResults().getDepth(), 0);
 }
 
-using namespace qc::literals;
 TEST(HeuristicTest, threeLayers) {
   auto config = Configuration();
   auto qc     = qc::QuantumComputation(2);
@@ -396,7 +397,6 @@ TEST(HeuristicTest, threeLayers) {
   EXPECT_EQ(synth.getResults().getDepth(), 3);
 }
 
-using namespace qc::literals;
 TEST(HeuristicTest, fourLayers) {
   auto config = Configuration();
   auto qc     = qc::QuantumComputation(1);
