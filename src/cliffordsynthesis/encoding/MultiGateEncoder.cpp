@@ -146,33 +146,34 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   // no gate on both qubits => no CNOT on them in the next time step.
   constexpr auto noneIndex = gateToIndex(qc::OpType::None);
   const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
-  // similarly,
-  // H - X   c - H
-  //     | = |
-  // H - c   X - H
-  // i.e., Hadamards on both qubits => no CNOT on them in the next time step.
-  constexpr auto hIndex = gateToIndex(qc::OpType::H);
-  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
 
   const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(noGate || hh, noFurtherCnot));
-
+  // Also:
   // No Combination of Paulis or Hadamards on both Qubits before a CNOT
   // These gates can be just pushed through to the other side
 
-  if (pos == 0) { // In the beginning parallel gates are allowed
+  constexpr auto hIndex = gateToIndex(qc::OpType::H);
+  constexpr auto xIndex = gateToIndex(qc::OpType::X);
+  constexpr auto zIndex = gateToIndex(qc::OpType::Z);
+  constexpr auto yIndex = gateToIndex(qc::OpType::Y);
+  if (pos ==
+      0) { // In the beginning parallel Pauli and Hadamard gates are allowed
+    const auto& hh = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+    const auto  gateBeforeCtrl =
+        gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] || gSNow[yIndex][ctrl];
+    const auto gateBeforeTarget =
+        gSNow[zIndex][trgt] || gSNow[xIndex][trgt] || gSNow[yIndex][ctrl];
+    LogicTerm::implies(noGate || hh || (gateBeforeCtrl && gateBeforeTarget),
+                       noFurtherCnot);
     return;
   }
 
-  constexpr auto xIndex         = gateToIndex(qc::OpType::X);
-  constexpr auto zIndex         = gateToIndex(qc::OpType::Z);
-  constexpr auto yIndex         = gateToIndex(qc::OpType::Y);
-  const auto     gateBeforeCtrl = gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] ||
+  const auto gateBeforeCtrl = gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] ||
                               gSNow[yIndex][ctrl] || gSNow[hIndex][ctrl];
   const auto gateBeforeTarget = gSNow[zIndex][trgt] || gSNow[xIndex][trgt] ||
                                 gSNow[yIndex][ctrl] || gSNow[hIndex][trgt];
-  lb->assertFormula(
-      LogicTerm::implies(gateBeforeCtrl && gateBeforeTarget, noFurtherCnot));
+  lb->assertFormula(LogicTerm::implies(
+      noGate || (gateBeforeCtrl && gateBeforeTarget), noFurtherCnot));
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
