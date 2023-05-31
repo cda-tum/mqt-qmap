@@ -43,7 +43,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 
   if (configuration.heuristic) {
-    if (initialCircuit->empty()) {
+    if (initialCircuit->empty() && !targetTableau.isIdentityTableau()) {
       throw std::invalid_argument("Heuristic Synthesis requires Circuit.");
     }
     depthHeuristicSynthesis();
