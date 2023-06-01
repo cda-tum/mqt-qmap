@@ -31,24 +31,31 @@ public:
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       initialTableau.hasDestabilizers()),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc.clone())),
         results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
                                const bool              useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc.clone())),
         results(qc, targetTableau) {}
 
   virtual ~CliffordSynthesizer() = default;
 
   void synthesize(const Configuration& config = {});
 
-  [[nodiscard]] Results&                getResults() { return results; };
-  [[nodiscard]] qc::QuantumComputation& getResultCircuit() {
+  [[nodiscard]] Results& getResults() { return results; };
+
+  void initResultCircuitFromResults() {
     std::stringstream ss;
     ss << results.getResultCircuit();
     resultCircuit = std::make_unique<qc::QuantumComputation>();
     resultCircuit->import(ss, qc::Format::OpenQASM);
+  }
+
+  [[nodiscard]] qc::QuantumComputation& getResultCircuit() {
+    initResultCircuitFromResults();
     return *resultCircuit;
   };
   [[nodiscard]] Tableau& getResultTableau() {
@@ -59,8 +66,9 @@ public:
   }
 
 protected:
-  Tableau initialTableau{};
-  Tableau targetTableau{};
+  Tableau                                 initialTableau{};
+  Tableau                                 targetTableau{};
+  std::shared_ptr<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};
 
@@ -84,6 +92,7 @@ protected:
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
+  void depthHeuristicSynthesis();
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
 
@@ -114,6 +123,33 @@ protected:
     INFO() << "Found optimum: " << lowerBound;
   }
 
+  template <typename T>
+  void runLinearSearch(T& value, T lowerBound, T upperBound,
+                       const EncoderConfig& config) {
+    INFO() << "Running linear search in range [" << lowerBound << ", "
+           << upperBound << ")";
+
+    if (upperBound == 0U) {
+      upperBound = std::numeric_limits<std::size_t>::max();
+    }
+    for (value = lowerBound; value < upperBound; ++value) {
+      INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
+             << upperBound << ")";
+      const auto r = callSolver(config);
+      updateResults(configuration, r, results);
+      if (r.sat()) {
+        INFO() << "Found optimum " << value;
+        return;
+      }
+      INFO() << "No solution found. Trying next value.";
+    }
+    INFO() << "No solution found in given interval.";
+  }
+
+  static std::shared_ptr<qc::QuantumComputation>
+  synthesizeSubcircuit(const std::shared_ptr<qc::QuantumComputation>& qc,
+                       std::size_t begin, std::size_t end,
+                       const Configuration& config);
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);
 };

@@ -10,6 +10,8 @@
 
 #include <chrono>
 #include <fstream>
+#include <future>
+#include <thread>
 
 namespace cs {
 
@@ -36,9 +38,17 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.targetMetric        = configuration.target;
   encoderConfig.useMaxSAT           = configuration.useMaxSAT;
   encoderConfig.useSymmetryBreaking = configuration.useSymmetryBreaking;
-  encoderConfig.nThreads            = configuration.nThreads;
+  encoderConfig.solverParameters    = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
+
+  if (configuration.heuristic) {
+    if (initialCircuit->empty() && !targetTableau.isIdentityTableau()) {
+      throw std::invalid_argument("Heuristic Synthesis requires Circuit.");
+    }
+    depthHeuristicSynthesis();
+    return;
+  }
 
   // First, determine an initial guess for the number of timesteps. This can
   // either be specified as a configuration parameter or starts at 1.
@@ -50,17 +60,24 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   // SAT problem repeatedly with increasing timestep limits until a satisfying
   // assignment is found. This uses the general SAT encoding without any
   // objective function regardless of the configuration.
-  const auto [lower, upper] = determineUpperBound(encoderConfig);
+  std::size_t lower = configuration.minimalTimesteps;
+  std::size_t upper = configuration.initialTimestepLimit;
 
-  // if the upper bound is 0, the solution does not require any gates and the
-  // synthesis is done.
-  if (upper == 0U) {
-    INFO() << "No gates required.";
-    return;
+  if (!configuration.linearSearch) {
+    const auto [lowerBin, upperBin] = determineUpperBound(encoderConfig);
+    lower                           = lowerBin;
+    upper                           = upperBin;
+
+    // if the upper bound is 0, the solution does not require any gates and the
+    // synthesis is done.
+    if (upper == 0U) {
+      INFO() << "No gates required.";
+      return;
+    }
   }
-  // Otherwise, the determined upper bound is used as an initial timestep limit.
+  // Otherwise, the determined upper bound is used as an initial timestep
+  // limit.
   encoderConfig.timestepLimit = upper;
-
   // Once a valid upper bound is found, the SAT problem is solved again with
   // the objective function encoded.
   switch (config.target) {
@@ -68,7 +85,11 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     gateOptimalSynthesis(encoderConfig, lower, upper);
     break;
   case TargetMetric::Depth:
-    depthOptimalSynthesis(encoderConfig, lower, upper);
+    if (configuration.heuristic) {
+      depthHeuristicSynthesis();
+    } else {
+      depthOptimalSynthesis(encoderConfig, lower, upper);
+    }
     break;
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
@@ -164,6 +185,8 @@ void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig     config,
     // The MaxSAT solver can determine the optimal T with a single call by
     // minimizing over the number of applied gates.
     runMaxSAT(config);
+  } else if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
     // timestep (=gate) limits T until a solution with T gates is found, but no
@@ -189,6 +212,8 @@ void CliffordSynthesizer::depthOptimalSynthesis(
     // minimizing over the layers of gates (=timesteps) in the resulting
     // circuit.
     runMaxSAT(config);
+  } else if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
     // timestep (=depth) limits T until a solution with depth T is found, but no
@@ -394,5 +419,103 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
     }
     break;
   }
+}
+
+void gateToLayer(const qc::Operation& gate, std::size_t& i,
+                 std::vector<std::size_t>& layers,
+                 std::vector<std::size_t>& layerNum, std::size_t& layer) {
+  const auto& usedQubits = gate.getUsedQubits();
+  for (const auto& qubit : usedQubits) {
+    if (layerNum[qubit] >= layer) {
+      ++layer;
+      layers.emplace_back(i);
+      break;
+    }
+  }
+  for (const auto& qubit : usedQubits) {
+    layerNum[qubit] = layer;
+  }
+  ++i;
+}
+
+// assume canonical sorting of gates
+std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
+  std::vector<std::size_t> layerNum{};
+  layerNum.resize(qc.size());
+  std::vector<std::size_t> layers{};
+  std::size_t              layer = 0U;
+  std::size_t              i     = 0;
+  for (const auto& gate : qc) {
+    if (gate->isCompoundOperation()) {
+      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+      for (const auto& subGate : *compOp) {
+        gateToLayer(*subGate, i, layers, layerNum, layer);
+      }
+    } else {
+      gateToLayer(*gate, i, layers, layerNum, layer);
+    }
+  }
+
+  const auto& nOps = qc.getNindividualOps();
+  if (layers.back() < nOps) {
+    layers.emplace_back(nOps);
+  }
+  return layers;
+}
+
+void CliffordSynthesizer::depthHeuristicSynthesis() {
+  INFO() << "Optimizing Circuit with Heuristic";
+  if (initialCircuit->getDepth() == 0) {
+    return;
+  }
+  auto optimalConfig                 = configuration;
+  optimalConfig.heuristic            = false;
+  optimalConfig.target               = TargetMetric::Depth;
+  optimalConfig.initialTimestepLimit = configuration.splitSize;
+
+  qc::CircuitOptimizer::reorderOperations(*initialCircuit);
+  qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
+  const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
+
+  std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
+  for (std::size_t i = 0; i < layers.size() - 1; i += configuration.splitSize) {
+    std::size_t const startIdx = layers[i];
+    std::size_t       endIdx   = 0;
+
+    if (i + configuration.splitSize >= layers.size()) {
+      endIdx = layers.back();
+    } else {
+      endIdx = layers[i + configuration.splitSize];
+    }
+
+    // launch threads
+    subCircuits.emplace_back(
+        std::async(std::launch::async | std::launch::deferred,
+                   [this, startIdx, endIdx, &optimalConfig]() {
+                     return cs::CliffordSynthesizer::synthesizeSubcircuit(
+                         initialCircuit, startIdx, endIdx, optimalConfig);
+                   }));
+  }
+
+  for (auto& subCircuit : subCircuits) {
+    const auto& circ = subCircuit.get();
+    for (auto& it : *circ) {
+      optCircuit.emplace_back(std::move(it));
+    }
+  }
+  results.setDepth(optCircuit.getDepth());
+
+  results.setResultCircuit(optCircuit);
+}
+std::shared_ptr<qc::QuantumComputation>
+CliffordSynthesizer::synthesizeSubcircuit(
+    const std::shared_ptr<qc::QuantumComputation>& qc, std::size_t begin,
+    std::size_t end, const Configuration& config) {
+  const Tableau       subTargetTableau{*qc, begin, end, true};
+  CliffordSynthesizer synth(subTargetTableau);
+  synth.synthesize(config);
+
+  synth.initResultCircuitFromResults();
+  return synth.resultCircuit;
 }
 } // namespace cs

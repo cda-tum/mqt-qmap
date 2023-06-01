@@ -21,13 +21,23 @@ void SATEncoder::initializeSolver() {
   bool success        = false;
   LogicTerm::termType = TermType::BASE;
   logicutil::Params params;
+  for (const auto& [key, value] : config.solverParameters) {
+    if (std::holds_alternative<bool>(value)) {
+      params.addParam(key, std::get<bool>(value));
+    } else if (std::holds_alternative<std::uint32_t>(value)) {
+      params.addParam(key, std::get<std::uint32_t>(value));
+    } else if (std::holds_alternative<std::string>(value)) {
+      params.addParam(key, std::get<std::string>(value));
+    } else if (std::holds_alternative<double>(value)) {
+      params.addParam(key, std::get<double>(value));
+    } else {
+      FATAL() << "Unknown parameter type.";
+    }
+  }
+
   if (config.useMaxSAT) {
-    params.addParam("pb.compile_equality", true);
-    params.addParam("maxres.hill_climb", true);
-    params.addParam("maxres.pivot_on_correction_set", false);
     lb = logicutil::getZ3LogicOptimizer(success, true, params);
   } else {
-    params.addParam("threads", static_cast<std::uint32_t>(config.nThreads / 2));
     lb = logicutil::getZ3LogicBlock(success, true, params);
   }
   if (!success) {
@@ -88,23 +98,9 @@ void SATEncoder::createFormulation() {
   INFO() << "Formulation created in " << duration << " ms.";
 }
 
-void SATEncoder::produceInstance() const {
-  INFO() << "Generating the SAT instance.";
-  const auto start = std::chrono::high_resolution_clock::now();
-  lb->produceInstance();
-  const auto end = std::chrono::high_resolution_clock::now();
-  const auto runtime =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-          .count();
-  INFO() << "Instance generated in " << runtime << " ms.";
-
-  DEBUG() << "Instance statistics:";
-  DEBUG() << "\tClauses: " << TermImpl::getNextId(lb.get());
-  DEBUG() << "\tNone terms: " << TermImpl::getNextId();
-}
-
 Result SATEncoder::solve() const {
   INFO() << "Solving the SAT instance.";
+
   const auto start  = std::chrono::high_resolution_clock::now();
   const auto result = lb->solve();
   const auto end    = std::chrono::high_resolution_clock::now();
@@ -130,7 +126,6 @@ Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 
   createFormulation();
-  produceInstance();
   const auto solverResult = solve();
 
   const auto end     = std::chrono::high_resolution_clock::now();

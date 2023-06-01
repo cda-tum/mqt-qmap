@@ -59,6 +59,7 @@ public:
   static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y,   qc::OpType::Z,
       qc::OpType::H,    qc::OpType::S, qc::OpType::Sdag};
+
   [[nodiscard]] static constexpr std::size_t
   gateToIndex(const qc::OpType type) {
     for (std::size_t i = 0; i < SINGLE_QUBIT_GATES.size(); ++i) {
@@ -67,6 +68,36 @@ public:
       }
     }
     return 0;
+  }
+
+  template <qc::OpType Gate>
+  [[nodiscard]] static constexpr bool containsGate() {
+    for (const auto& g : // NOLINT(readability-use-anyofallof)
+         SINGLE_QUBIT_GATES) {
+      if (g == Gate) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  [[nodiscard]] static constexpr bool containsX() {
+    return containsGate<qc::OpType::X>();
+  }
+  [[nodiscard]] static constexpr bool containsY() {
+    return containsGate<qc::OpType::Y>();
+  }
+  [[nodiscard]] static constexpr bool containsZ() {
+    return containsGate<qc::OpType::Z>();
+  }
+  [[nodiscard]] static constexpr bool containsH() {
+    return containsGate<qc::OpType::H>();
+  }
+  [[nodiscard]] static constexpr bool containsS() {
+    return containsGate<qc::OpType::S>();
+  }
+  [[nodiscard]] static constexpr bool containsSdag() {
+    return containsGate<qc::OpType::Sdag>();
   }
 
 protected:

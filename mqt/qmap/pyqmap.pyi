@@ -329,12 +329,15 @@ class SynthesisConfiguration:
     intermediate_results_path: str
     minimize_gates_after_depth_optimization: bool
     minimize_gates_after_two_qubit_gate_optimization: bool
-    n_threads: int
+    solver_parameters: dict[str, bool | int | float | str]
     target_metric: TargetMetric
     try_higher_gate_limit_for_two_qubit_gate_optimization: bool
     use_maxsat: bool
     use_symmetry_breaking: bool
     verbosity: Verbosity
+    heuristic: bool
+    split_size: int
+    linear_search: bool
     def __init__(self) -> None: ...
     def json(self) -> dict[str, Any]: ...
 

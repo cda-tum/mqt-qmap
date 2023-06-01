@@ -50,14 +50,13 @@ public:
     // whether to use symmetry breaking
     bool useSymmetryBreaking = false;
 
-    // the number of threads to pass to the SAT solver
-    std::size_t nThreads = 1U;
-
     // an optional limit on the total number of gates
     std::optional<std::size_t> gateLimit = std::nullopt;
 
     // an optional limit on the total number of two-qubit gates
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
+
+    SolverParameterMap solverParameters = {};
   };
 
   SATEncoder() = default;
@@ -71,7 +70,6 @@ public:
 protected:
   void                            initializeSolver();
   void                            createFormulation();
-  void                            produceInstance() const;
   [[nodiscard]] logicbase::Result solve() const;
   void                            extractResultsFromModel(Results& res) const;
   void                            cleanup() const;

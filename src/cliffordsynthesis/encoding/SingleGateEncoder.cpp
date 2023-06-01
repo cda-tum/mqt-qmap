@@ -175,53 +175,58 @@ void SingleGateEncoder::assertTwoQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& current = vars.gC[pos][ctrl][trgt];
-  const auto& gCNext  = vars.gC[pos + 1];
-  const auto& gSNext  = vars.gS[pos + 1];
+  const auto& gCNext = vars.gC[pos + 1];
+  const auto& gSNext = vars.gS[pos + 1];
+  for (const auto& [control, target] :
+       {std::pair{ctrl, trgt}, std::pair{trgt, ctrl}}) {
+    const auto& current = vars.gC[pos][control][target];
 
-  // two identical CNOTs may not be applied in a row because they would cancel.
-  auto disallowed = !gCNext[ctrl][trgt];
+    // two identical CNOTs may not be applied in a row because they would
+    // cancel.
+    auto disallowed = !gCNext[control][target];
 
-  // any single-qubit gate independent of the CNOT should be applied prior.
-  for (std::size_t q = 0U; q < N; ++q) {
-    if (q == ctrl || q == trgt) {
-      continue;
-    }
-    for (const auto& gate : SINGLE_QUBIT_GATES) {
-      if (gate == qc::OpType::None) {
+    // any single-qubit gate independent of the CNOT should be applied prior.
+    for (std::size_t q = 0U; q < N; ++q) {
+      if (q == control || q == target) {
         continue;
       }
-      disallowed = disallowed && !gSNext[gateToIndex(gate)][q];
+      for (const auto& gate : SINGLE_QUBIT_GATES) {
+        if (gate == qc::OpType::None) {
+          continue;
+        }
+        disallowed = disallowed && !gSNext[gateToIndex(gate)][q];
+      }
     }
-  }
 
-  // no X gate may be placed on the target qubit since it would commute.
-  disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::X)][trgt];
+    // no X gate may be placed on the target qubit since it would commute.
+    disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::X)][target];
 
-  // no diagonal gate may be placed on the control qubit since it would commute.
-  disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][ctrl] &&
-               !gSNext[gateToIndex(qc::OpType::S)][ctrl] &&
-               !gSNext[gateToIndex(qc::OpType::Sdag)][ctrl];
+    // no diagonal gate may be placed on the control qubit since it would
+    // commute.
+    disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][control] &&
+                 !gSNext[gateToIndex(qc::OpType::S)][control] &&
+                 !gSNext[gateToIndex(qc::OpType::Sdag)][control];
 
-  // no CNOT with the same control and a lower target qubit may be placed.
-  for (std::size_t t = 0U; t < trgt; ++t) {
-    if (t == ctrl) {
-      continue;
-    }
-    disallowed = disallowed && !gCNext[ctrl][t];
-  }
-
-  // no CNOT with a lower control different from trgt may be placed.
-  for (std::size_t c = 0U; c < ctrl; ++c) {
-    for (std::size_t t = 0U; t < N; ++t) {
-      if (c == t || c == trgt) {
+    // no CNOT with the same control and a lower target qubit may be placed.
+    for (std::size_t t = 0U; t < target; ++t) {
+      if (t == control) {
         continue;
       }
-      disallowed = disallowed && !gCNext[c][t];
+      disallowed = disallowed && !gCNext[control][t];
     }
-  }
 
-  lb->assertFormula(LogicTerm::implies(current, disallowed));
+    // no CNOT with a lower control different from target may be placed.
+    for (std::size_t c = 0U; c < control; ++c) {
+      for (std::size_t t = 0U; t < N; ++t) {
+        if (c == t || c == target) {
+          continue;
+        }
+        disallowed = disallowed && !gCNext[c][t];
+      }
+    }
+
+    lb->assertFormula(LogicTerm::implies(current, disallowed));
+  }
 }
 
 } // namespace cs::encoding
