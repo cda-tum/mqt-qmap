@@ -245,6 +245,21 @@ public:
 
   [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
 
+  [[nodiscard]] const std::vector<Matrix>& getFidelityDistanceTables() const {
+    return fidelityDistanceTables;
+  }
+  
+  [[nodiscard]] const Matrix& getFidelityDistanceTable(std::uint16_t skipEdges) const {
+    if (skipEdges >= fidelityDistanceTables.size()) {
+      return zeroMatrix;
+    }
+    return fidelityDistanceTables.at(skipEdges);
+  }
+  
+  [[nodiscard]] const Matrix& getFidelityDistanceTable() const {
+    return getFidelityDistanceTable(0);
+  }
+
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
   [[nodiscard]] Properties& getProperties() { return properties; }
@@ -259,6 +274,47 @@ public:
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelities() const {
     return singleQubitFidelities;
   }
+  
+  [[nodiscard]] const std::vector<double>& getSingleQubitFidelityCosts() const {
+    return singleQubitFidelityCosts;
+  }
+
+  [[nodiscard]] double getSingleQubitFidelityCost(std::uint16_t qbit) const {
+    if (qbit >= singleQubitFidelityCosts.size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    return singleQubitFidelityCosts.at(qbit);
+  }
+  
+  [[nodiscard]] const Matrix& getTwoQubitFidelityCosts() const {
+    return twoQubitFidelityCosts;
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
+                                               std::uint16_t q2) const {
+    if (q1 >= twoQubitFidelityCosts.size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    if (q2 >= twoQubitFidelityCosts.at(q1).size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    return twoQubitFidelityCosts.at(q1).at(q2);
+  }
+  
+  [[nodiscard]] const Matrix& getSwapFidelityCosts() const {
+    return swapFidelityCosts;
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
+                                           std::uint16_t q2) const {
+    if (q1 >= twoQubitFidelityCosts.size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    if (q2 >= twoQubitFidelityCosts.at(q1).size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    return swapFidelityCosts.at(q1).at(q2);
+  }
 
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
 
@@ -272,12 +328,17 @@ public:
   void reset() {
     name    = "";
     nqubits = 0;
+    zeroMatrix.clear();
     couplingMap.clear();
     distanceTable.clear();
     isBidirectional = true;
     properties.clear();
     fidelityTable.clear();
     singleQubitFidelities.clear();
+    singleQubitFidelityCosts.clear();
+    twoQubitFidelityCosts.clear();
+    swapFidelityCosts.clear();
+    fidelityDistanceTables.clear();
   }
 
   [[nodiscard]] double distance(std::uint16_t control,
@@ -286,6 +347,26 @@ public:
       return distanceTable.at(control).at(target);
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
+                                        std::uint16_t q2, 
+                                        std::uint16_t skipEdges) const {
+    if (skipEdges >= fidelityDistanceTables.size()) {
+      return 0.;
+    }
+    if (q1 >= fidelityDistanceTables.at(skipEdges).size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    if (q2 >= fidelityDistanceTables.at(skipEdges).at(q1).size()) {
+      throw QMAPException("Qubit out of range or no fidelity data available.");
+    }
+    return fidelityDistanceTables.at(skipEdges).at(q1).at(q2);
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
+                                        std::uint16_t q2) const {
+    return fidelityDistance(q1, q2, 0);
   }
 
   [[nodiscard]] std::set<std::uint16_t> getQubitSet() const {
@@ -352,6 +433,7 @@ public:
 protected:
   std::string                                        name;
   std::uint16_t                                      nqubits               = 0;
+  Matrix                                             zeroMatrix            = {};
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
@@ -360,9 +442,14 @@ protected:
   Properties                                         properties            = {};
   Matrix                                             fidelityTable         = {};
   std::vector<double>                                singleQubitFidelities = {};
+  std::vector<double> singleQubitFidelityCosts = {};
+  Matrix twoQubitFidelityCosts= {};
+  Matrix swapFidelityCosts = {};
+  std::vector<Matrix> fidelityDistanceTables = {};
 
   void createDistanceTable();
   void createFidelityTable();
+  void createFidelityDistanceTable();
 
   // added for teleportation
   static bool contains(const std::vector<int>& v, const int e) {
