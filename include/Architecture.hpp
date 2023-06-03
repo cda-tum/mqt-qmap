@@ -307,10 +307,10 @@ public:
 
   [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
                                            std::uint16_t q2) const {
-    if (q1 >= twoQubitFidelityCosts.size()) {
+    if (q1 >= swapFidelityCosts.size()) {
       throw QMAPException("Qubit out of range or no fidelity data available.");
     }
-    if (q2 >= twoQubitFidelityCosts.at(q1).size()) {
+    if (q2 >= swapFidelityCosts.at(q1).size()) {
       throw QMAPException("Qubit out of range or no fidelity data available.");
     }
     return swapFidelityCosts.at(q1).at(q2);

@@ -299,10 +299,18 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
 
     if (g->isStandardOperation()) {
       if (g->getType() == qc::SWAP) {
-        if (architecture.bidirectional()) {
+        auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
+        auto q2 = static_cast<std::uint16_t>(g->getTargets()[1]);
+        info.totalFidelity *= std::pow(2., -architecture.getSwapFidelityCost(q1, q2));
+        if (architecture.getCouplingMap().find({q1, q2}) !=
+                architecture.getCouplingMap().end() &&
+            architecture.getCouplingMap().find({q2, q1}) !=
+                architecture.getCouplingMap().end()) {
+          // bidirectional edge
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
           info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
         } else {
+          // unidirectional edge
           info.gates += GATES_OF_UNIDIRECTIONAL_SWAP;
           info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
           info.singleQubitGates += GATES_OF_DIRECTION_REVERSE;
@@ -310,10 +318,16 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       } else if (g->getControls().empty()) {
         ++info.singleQubitGates;
         ++info.gates;
+        auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
+        info.totalFidelity *= std::pow(2., -architecture.getSingleQubitFidelityCost(q1));
       } else {
         assert(g->getType() == qc::X);
         ++info.cnots;
         ++info.gates;
+        auto q1 =
+            static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
+        auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
+        info.totalFidelity *= std::pow(2., -architecture.getTwoQubitFidelityCost(q1, q2));
       }
       continue;
     }

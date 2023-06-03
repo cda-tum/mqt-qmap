@@ -21,6 +21,7 @@ struct MappingResults {
     std::size_t   singleQubitGates = 0;
     std::size_t   cnots            = 0;
     std::size_t   layers           = 0;
+    std::size_t   totalFidelity    = 1.;
 
     // info in output circuit
     std::size_t swaps            = 0;
@@ -96,6 +97,7 @@ struct MappingResults {
     stats["arch"]         = architecture;
     stats["layers"]       = input.layers;
     stats["swaps"]        = output.swaps;
+    stats["total_fidelity"] = output.totalFidelity;
     if (config.method == Method::Exact) {
       stats["direction_reverse"] = output.directionReverse;
       if (config.includeWCNF && !wcnf.empty()) {
