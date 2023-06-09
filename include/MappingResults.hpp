@@ -21,7 +21,7 @@ struct MappingResults {
     std::size_t   singleQubitGates = 0;
     std::size_t   cnots            = 0;
     std::size_t   layers           = 0;
-    std::size_t   totalFidelity    = 1.;
+    double        totalFidelity    = 1.;
 
     // info in output circuit
     std::size_t swaps            = 0;

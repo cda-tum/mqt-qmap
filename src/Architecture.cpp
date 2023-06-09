@@ -64,7 +64,6 @@ void Architecture::loadCouplingMap(std::istream&& is) {
     }
   }
   createDistanceTable();
-  createFidelityDistanceTable();
 }
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
@@ -75,7 +74,6 @@ void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
   properties.clear();
   name = "generic_" + std::to_string(nQ);
   createDistanceTable();
-  createFidelityDistanceTable();
 }
 
 void Architecture::loadProperties(std::istream& is) {
@@ -165,7 +163,6 @@ void Architecture::loadProperties(std::istream&& is) {
   }
 
   createFidelityTable();
-  createFidelityDistanceTable();
 }
 
 void Architecture::loadProperties(const Properties& props) {
@@ -183,7 +180,6 @@ void Architecture::loadProperties(const Properties& props) {
   }
   properties = props;
   createFidelityTable();
-  createFidelityDistanceTable();
 }
 
 Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm) {
@@ -199,7 +195,7 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 void Architecture::createDistanceTable() {
   isBidirectional = true;
   Matrix edgeWeights(nqubits, std::vector<double>(
-                                  nqubits, std::numeric_limits<double>::max()));
+                                  nqubits, std::numeric_limits<double>::infinity()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       isBidirectional                            = false;
@@ -214,30 +210,18 @@ void Architecture::createDistanceTable() {
                        COST_DIRECTION_REVERSE, true);
 }
 
-void Architecture::createFidelityDistanceTable() {
-  for (const auto& edge : couplingMap) {
-    if (!properties.twoQubitErrorRateAvailable(edge.first, edge.second)) {
-      fidelityDistanceTables.clear();
-      return;
-    }
-  }
-  
-  Matrix distances = {};
-  Dijkstra::buildTable(nqubits, couplingMap, distances, swapFidelityCosts, 0., false);
-  Dijkstra::buildEdgeSkipTable(distances, couplingMap, fidelityDistanceTables);
-}
-
 void Architecture::createFidelityTable() {
+  fidelityAvailable = true;
   fidelityTable.clear();
   fidelityTable.resize(nqubits, std::vector<double>(nqubits, 0.0));
   twoQubitFidelityCosts.clear();
   twoQubitFidelityCosts.resize(
       nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+      std::vector<double>(nqubits, std::numeric_limits<double>::infinity()));
   swapFidelityCosts.clear();
   swapFidelityCosts.resize(
       nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+      std::vector<double>(nqubits, std::numeric_limits<double>::infinity()));
 
   singleQubitFidelities.resize(nqubits, 1.0);
   singleQubitFidelityCosts.resize(nqubits, 0.0);
@@ -275,7 +259,21 @@ void Architecture::createFidelityTable() {
         swapFidelityCosts[first][second] =
             3 * twoQubitFidelityCosts[first][second];
       }
+    } else {
+      fidelityAvailable = false;
+      fidelityTable.clear();
+      singleQubitFidelities.clear();
+      twoQubitFidelityCosts.clear();
+      swapFidelityCosts.clear();
+      return;
     }
+  }
+  
+  fidelityDistanceTables.clear();
+  if (fidelityAvailable) {
+    Matrix distances = {};
+    Dijkstra::buildTable(nqubits, couplingMap, distances, swapFidelityCosts, 0., false);
+    Dijkstra::buildEdgeSkipTable(distances, couplingMap, fidelityDistanceTables);
   }
 }
 
