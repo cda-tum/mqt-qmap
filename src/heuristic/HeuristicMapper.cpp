@@ -17,6 +17,34 @@ void HeuristicMapper::map(const Configuration& configuration) {
               << " not suitable for heuristic mapper!" << std::endl;
     return;
   }
+  if (config.considerFidelity && !architecture.isFidelityAvailable()) {
+    std::cerr << "No calibration data available for this architecture! "
+              << "Performing mapping without considering fidelity."
+              << std::endl;
+    config.considerFidelity = false;
+  }
+  if (config.considerFidelity && config.lookahead) {
+    std::cerr << "Lookahead is not yet supported for heuristic mapper using "
+                 "fidelity-aware mapping! Performing mapping without "
+                 "using lookahead."
+              << std::endl;
+    config.lookahead = false;
+  }
+  if (config.considerFidelity &&
+      config.initialLayout == InitialLayout::Dynamic) {
+    std::cerr << "Initial layout strategy " << toString(config.initialLayout)
+              << " not yet supported for heuristic mapper using fidelity-aware "
+                 "mapping! Mapping aborted."
+              << std::endl;
+    return;
+  }
+  if (config.considerFidelity && config.teleportationQubits > 0) {
+    std::cerr
+        << "Teleportation is not yet supported for heuristic mapper using "
+           "fidelity-aware mapping! Performing mapping without teleportation."
+        << std::endl;
+    config.teleportationQubits = 0;
+  }
   const auto start = std::chrono::steady_clock::now();
   initResults();
 
@@ -344,7 +372,28 @@ void HeuristicMapper::createInitialMapping() {
 }
 
 void HeuristicMapper::mapUnmappedGates(
+    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
     const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
+  if (results.config.considerFidelity) {
+    for (std::uint16_t q = 0; q < singleQubitGateMultiplicity.size(); ++q) {
+      if (singleQubitGateMultiplicity.at(q) == 0) {
+        continue;
+      }
+      if (locations.at(q) == DEFAULT_POSITION) {
+        // TODO: consider fidelity
+        // map to first free physical qubit
+        for (std::uint16_t phys_q = 0; phys_q < architecture.getNqubits();
+             ++phys_q) {
+          if (qubits.at(phys_q) == -1) {
+            locations.at(q)   = static_cast<std::int16_t>(phys_q);
+            qubits.at(phys_q) = static_cast<std::int16_t>(q);
+            break;
+          }
+        }
+      }
+    }
+  }
+  
   for (const auto& [logEdge, _] : twoQubitGateMultiplicity) {
     const auto& [q1, q2] = logEdge;
 
@@ -428,10 +477,25 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   std::unordered_set<std::uint16_t> consideredQubits{};
   Node                              node{};
-  TwoQubitMultiplicity              twoQubitGateMultiplicity{};
+  // number of single qubit gates acting on each logical qubit in the current
+  // layer
+  SingleQubitMultiplicity singleQubitGateMultiplicity(architecture.getNqubits(), 0);
+  // number of two qubit gates acting on each logical qubit edge in the current
+  // layer where the first number in the value pair corresponds to the number of
+  // edges having their gates given as (control, target) in the key, and the
+  // second with all gates in reverse to that
+  TwoQubitMultiplicity twoQubitGateMultiplicity{};
+  Node                 bestDoneNode{};
+  bool                 done = false;
+  bool                 considerFidelity = results.config.considerFidelity;
 
   for (const auto& gate : layers.at(layer)) {
-    if (!gate.singleQubit()) {
+    if (gate.singleQubit()) {
+      singleQubitGateMultiplicity.at(gate.target)++;
+      if (considerFidelity) {
+        consideredQubits.emplace(gate.target);
+      }
+    } else {
       consideredQubits.emplace(gate.control);
       consideredQubits.emplace(gate.target);
       if (gate.control >= gate.target) {
@@ -456,13 +520,16 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     }
   }
 
-  mapUnmappedGates(twoQubitGateMultiplicity);
+  mapUnmappedGates(singleQubitGateMultiplicity, twoQubitGateMultiplicity);
 
   node.locations = locations;
   node.qubits    = qubits;
-  node.recalculateFixedCost(architecture);
-  node.updateHeuristicCost(architecture, twoQubitGateMultiplicity,
-                           results.config.admissibleHeuristic);
+  node.recalculateFixedCost(architecture, singleQubitGateMultiplicity,
+                            twoQubitGateMultiplicity, results.config.considerFidelity);
+  node.updateHeuristicCost(architecture, singleQubitGateMultiplicity, 
+                           twoQubitGateMultiplicity, consideredQubits,
+                           results.config.admissibleHeuristic,
+                           results.config.considerFidelity);
 
   nodes.push(node);
 
@@ -473,11 +540,29 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   }
   auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
   auto  layerResultsIt     = results.layerHeuristicBenchmark.rbegin();
+  double bestCost = std::numeric_limits<double>::max();
 
-  while (!nodes.top().done) {
+  while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
+                                         bestDoneNode.getTotalFixedCost())) {
     Node current = nodes.top();
+    if (current.getTotalCost() < bestCost) {
+      bestCost = current.getTotalCost();
+      std::cout << bestCost << std::endl;
+    }
+    if (current.done) {
+      if (!done ||
+          current.getTotalFixedCost() < bestDoneNode.getTotalFixedCost()) {
+        std::cout << std::setprecision(20) << "done => new best: " << current.getTotalFixedCost() << ", old best: " << bestDoneNode.getTotalFixedCost() << std::endl;
+        bestDoneNode = current;
+      }
+      done = true;
+      if (!considerFidelity) {
+        break;
+      }
+      // std::cout << "done" << std::endl;
+    }
     nodes.pop();
-    expandNode(consideredQubits, current, layer, twoQubitGateMultiplicity);
+    expandNode(consideredQubits, current, layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity);
 
     if (debug) {
       ++totalExpandedNodes;
@@ -485,7 +570,11 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     }
   }
 
-  Node result = nodes.top();
+  if (!done) {
+    throw QMAPException("No viable mapping found.");
+  }
+
+  Node result = bestDoneNode;
   if (debug) {
     const auto end = std::chrono::steady_clock::now();
 
@@ -520,7 +609,9 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
 void HeuristicMapper::expandNode(
     const std::unordered_set<std::uint16_t>& consideredQubits, Node& node,
-    std::size_t layer, const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
+    std::size_t layer,
+    const SingleQubitMultiplicity& singleQubitGateMultiplicity, 
+    const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture.getNqubits());
   for (int p = 0; p < architecture.getNqubits(); ++p) {
@@ -579,14 +670,14 @@ void HeuristicMapper::expandNode(
         auto q1 = node.qubits.at(edge.first);
         auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
-          expandNodeAddOneSwap(edge, node, layer, twoQubitGateMultiplicity);
+          expandNodeAddOneSwap(edge, node, layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity, consideredQubits);
         } else if (!usedSwaps.at(static_cast<std::size_t>(q1))
                         .at(static_cast<std::size_t>(q2))) {
           usedSwaps.at(static_cast<std::size_t>(q1))
               .at(static_cast<std::size_t>(q2)) = true;
           usedSwaps.at(static_cast<std::size_t>(q2))
               .at(static_cast<std::size_t>(q1)) = true;
-          expandNodeAddOneSwap(edge, node, layer, twoQubitGateMultiplicity);
+          expandNodeAddOneSwap(edge, node, layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity, consideredQubits);
         }
       }
     }
@@ -595,7 +686,9 @@ void HeuristicMapper::expandNode(
 
 void HeuristicMapper::expandNodeAddOneSwap(
     const Edge& swap, Node& node, const std::size_t layer,
-    const TwoQubitMultiplicity& twoQubitGateMultiplicity) {
+    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+    const TwoQubitMultiplicity& twoQubitGateMultiplicity,
+    const std::unordered_set<std::uint16_t>& consideredQubits) {
   const auto& config = results.config;
 
   Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed,
@@ -605,13 +698,15 @@ void HeuristicMapper::expandNodeAddOneSwap(
           architecture.getCouplingMap().end() ||
       architecture.getCouplingMap().find(Edge{swap.second, swap.first}) !=
           architecture.getCouplingMap().end()) {
-    newNode.applySWAP(swap, architecture);
+    newNode.applySWAP(swap, architecture, singleQubitGateMultiplicity, config.considerFidelity);
   } else {
     newNode.applyTeleportation(swap, architecture);
   }
 
-  newNode.updateHeuristicCost(architecture, twoQubitGateMultiplicity,
-                              results.config.admissibleHeuristic);
+  newNode.updateHeuristicCost(architecture, singleQubitGateMultiplicity, 
+                              twoQubitGateMultiplicity, consideredQubits,
+                              results.config.admissibleHeuristic,
+                              results.config.considerFidelity);
 
   // calculate heuristics for the cost of the following layers
   if (config.lookahead) {
@@ -682,7 +777,9 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
   }
 }
 
-void HeuristicMapper::Node::applySWAP(const Edge& swap, Architecture& arch) {
+void HeuristicMapper::Node::applySWAP(const Edge& swap, Architecture& arch,
+                                      const SingleQubitMultiplicity& singleQubitGateMultiplicity, 
+                                      bool considerFidelity) {
   ++nswaps;
   swaps.emplace_back();
   const auto q1 = qubits.at(swap.first);
@@ -708,10 +805,28 @@ void HeuristicMapper::Node::applySWAP(const Edge& swap, Architecture& arch) {
     throw QMAPException("Something wrong in applySWAP.");
   }
 
-  if (arch.bidirectional()) {
-    costFixed += COST_BIDIRECTIONAL_SWAP;
+  if (considerFidelity) {
+    std::uint16_t q1Mult = 0;
+    std::uint16_t q2Mult = 0;
+    if (q1 != -1) {
+      q1Mult = singleQubitGateMultiplicity.at(static_cast<std::size_t>(q1));
+    }
+    if (q2 != -1) {
+      q2Mult = singleQubitGateMultiplicity.at(static_cast<std::size_t>(q2));
+    }
+    // accounting for fidelity difference of single qubit gates (two qubit
+    // gates are handled in the heuristic)
+    costFixed +=
+        ((q2Mult - q1Mult) * arch.getSingleQubitFidelityCost(swap.first) +
+         (q1Mult - q2Mult) * arch.getSingleQubitFidelityCost(swap.second));
+    // adding cost of the swap gate itself
+    costFixed += arch.getSwapFidelityCost(swap.first, swap.second);
   } else {
-    costFixed += COST_UNIDIRECTIONAL_SWAP;
+    if (arch.bidirectional()) {
+      costFixed += COST_BIDIRECTIONAL_SWAP;
+    } else {
+      costFixed += COST_UNIDIRECTIONAL_SWAP;
+    }
   }
 }
 
@@ -774,29 +889,108 @@ void HeuristicMapper::Node::applyTeleportation(const Edge&   swap,
   costFixed += COST_TELEPORTATION;
 }
 
-void HeuristicMapper::Node::recalculateFixedCost(const Architecture& arch) {
+void HeuristicMapper::Node::recalculateFixedCost(const Architecture& arch,
+    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+    const TwoQubitMultiplicity& twoQubitGateMultiplicity, bool considerFidelity) {
   costFixed = 0;
-  for (auto& swapNode : swaps) {
-    for (auto& swap : swapNode) {
-      if (swap.op == qc::SWAP) {
-        if (arch.bidirectional()) {
-          costFixed += COST_BIDIRECTIONAL_SWAP;
-        } else {
-          costFixed += COST_UNIDIRECTIONAL_SWAP;
+  if (considerFidelity) {
+    // adding costs of single qubit gates
+    for (std::uint16_t i = 0U; i < arch.getNqubits(); ++i) {
+      if (singleQubitGateMultiplicity.at(i) == 0) {
+        continue;
+      }
+      costFixed += singleQubitGateMultiplicity.at(i) *
+                   arch.getSingleQubitFidelityCost(static_cast<std::uint16_t>(locations.at(i)));
+    }
+    // adding cost of the swap gates
+    for (auto& swapNode : swaps) {
+      for (auto& swap : swapNode) {
+        if (swap.op == qc::SWAP) {
+          costFixed += arch.getSwapFidelityCost(swap.first, swap.second);
+        } else if (swap.op == qc::Teleportation) {
+          throw QMAPException("Teleportation currently not supported for "
+                              "noise-aware mapping");
         }
-      } else if (swap.op == qc::Teleportation) {
-        costFixed += COST_TELEPORTATION;
+      }
+    }
+    // adding cost of two qubit gates that are already mapped next to each other
+    for (const auto& edgeMultiplicity : twoQubitGateMultiplicity) {
+      const auto& q1                   = edgeMultiplicity.first.first;
+      const auto& q2                   = edgeMultiplicity.first.second;
+      const auto& straightMultiplicity = edgeMultiplicity.second.first;
+      const auto& reverseMultiplicity  = edgeMultiplicity.second.second;
+
+      if (arch.getCouplingMap().find(
+              {static_cast<std::uint16_t>(locations.at(q1)),
+               static_cast<std::uint16_t>(locations.at(q2))}) !=
+              arch.getCouplingMap().end() ||
+          arch.getCouplingMap().find(
+              {static_cast<std::uint16_t>(locations.at(q2)),
+               static_cast<std::uint16_t>(locations.at(q1))}) !=
+              arch.getCouplingMap().end()) {
+        costFixed +=
+            (straightMultiplicity * arch.getTwoQubitFidelityCost(
+                static_cast<std::uint16_t>(locations.at(q1)), 
+                static_cast<std::uint16_t>(locations.at(q2))) +
+             reverseMultiplicity * arch.getTwoQubitFidelityCost(
+                static_cast<std::uint16_t>(locations.at(q2)), 
+                static_cast<std::uint16_t>(locations.at(q1))));
+      }
+    }
+    // two qubit gates other than existing swaps are handled in the heuristic
+  } else {
+    for (auto& swapNode : swaps) {
+      for (auto& swap : swapNode) {
+        if (swap.op == qc::SWAP) {
+          if (arch.bidirectional()) {
+            costFixed += COST_BIDIRECTIONAL_SWAP;
+          } else {
+            costFixed += COST_UNIDIRECTIONAL_SWAP;
+          }
+        } else if (swap.op == qc::Teleportation) {
+          costFixed += COST_TELEPORTATION;
+        }
       }
     }
   }
 }
 
 void HeuristicMapper::Node::updateHeuristicCost(
-    const Architecture&         arch,
-    const TwoQubitMultiplicity& twoQubitGateMultiplicity,
-    const bool                  admissibleHeuristic) {
+    const Architecture&                      arch,
+    const SingleQubitMultiplicity&        singleQubitGateMultiplicity,
+    const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
+    const std::unordered_set<std::uint16_t>& consideredQubits,
+    bool                                     admissibleHeuristic,
+    bool                                     considerFidelity) {
   costHeur = 0.;
   done     = true;
+  
+  // single qubit gate savings potential by moving them to different physical
+  // qubits with higher fidelity
+  double savingsPotential = 0.;
+  if (considerFidelity) {
+    for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits();
+         ++log_qbit) {
+      if (singleQubitGateMultiplicity.at(log_qbit) == 0) {
+        continue;
+      }
+      double qbitSavings = 0;
+      double currFidelity =
+          arch.getSingleQubitFidelityCost(static_cast<std::uint16_t>(locations.at(log_qbit)));
+      for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits();
+           ++phys_qbit) {
+        if (arch.getSingleQubitFidelityCost(phys_qbit) >= currFidelity) {
+          continue;
+        }
+        double curSavings =
+            singleQubitGateMultiplicity.at(log_qbit) *
+                (currFidelity - arch.getSingleQubitFidelityCost(phys_qbit)) -
+            arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(log_qbit)), phys_qbit, consideredQubits.size());
+        qbitSavings = std::max(qbitSavings, curSavings);
+      }
+      savingsPotential += qbitSavings;
+    }
+  }
 
   // iterating over all virtual qubit pairs, that share a gate on the
   // current layer
@@ -805,36 +999,73 @@ void HeuristicMapper::Node::updateHeuristicCost(
 
     const auto& [straightMultiplicity, reverseMultiplicity] = multiplicity;
 
+    bool edgeDone = (arch.getCouplingMap().find(
+                         {static_cast<std::uint16_t>(locations.at(q1)),
+                          static_cast<std::uint16_t>(locations.at(q2))}) !=
+                         arch.getCouplingMap().end() ||
+                     arch.getCouplingMap().find(
+                         {static_cast<std::uint16_t>(locations.at(q2)),
+                          static_cast<std::uint16_t>(locations.at(q1))}) !=
+                         arch.getCouplingMap().end());
     // only if all qubit pairs are mapped next to each other the mapping
     // is complete
-    if (arch.getCouplingMap().find(
-            {static_cast<std::uint16_t>(locations.at(q1)),
-             static_cast<std::uint16_t>(locations.at(q2))}) ==
-            arch.getCouplingMap().end() &&
-        arch.getCouplingMap().find(
-            {static_cast<std::uint16_t>(locations.at(q2)),
-             static_cast<std::uint16_t>(locations.at(q1))}) ==
-            arch.getCouplingMap().end()) {
+    if (!edgeDone) {
       done = false;
     }
 
-    const double swapCostStraight =
-        arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
-                      static_cast<std::uint16_t>(locations.at(q2)));
-    const double swapCostReverse =
-        arch.distance(static_cast<std::uint16_t>(locations.at(q2)),
-                      static_cast<std::uint16_t>(locations.at(q1)));
-
-    if (admissibleHeuristic) {
-      if (straightMultiplicity > 0) {
-        costHeur = std::max(costHeur, swapCostStraight);
+    if (considerFidelity) {
+      // find the optimal edge, to which to remap the given virtual qubit
+      // pair and take the cost of moving it there via swaps plus the
+      // fidelity cost  of executing all their shared gates on that edge
+      // as the qubit pairs cost
+      double swapCost = std::numeric_limits<double>::max();
+      for (const auto& [q3, q4] : arch.getCouplingMap()) {
+        swapCost = std::min(
+            swapCost, straightMultiplicity * arch.getTwoQubitFidelityCost(q3, q4) +
+                          reverseMultiplicity * arch.getTwoQubitFidelityCost(q4, q3) +
+                          arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(q1)), q3, consideredQubits.size()) +
+                          arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(q2)), q4, consideredQubits.size()));
+        swapCost = std::min(
+            swapCost, straightMultiplicity * arch.getTwoQubitFidelityCost(q4, q3) +
+                          reverseMultiplicity * arch.getTwoQubitFidelityCost(q3, q4) +
+                          arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(q2)), q3, consideredQubits.size()) +
+                          arch.fidelityDistance(static_cast<std::uint16_t>(locations.at(q1)), q4, consideredQubits.size()));
       }
-      if (reverseMultiplicity > 0) {
-        costHeur = std::max(costHeur, swapCostReverse);
+
+      if (edgeDone) {
+        double currEdgeCost =
+            (straightMultiplicity * arch.getTwoQubitFidelityCost(
+                                        static_cast<std::uint16_t>(locations.at(q1)), static_cast<std::uint16_t>(locations.at(q2))) +
+             reverseMultiplicity * arch.getTwoQubitFidelityCost(
+                                       static_cast<std::uint16_t>(locations.at(q2)), static_cast<std::uint16_t>(locations.at(q1))));
+        savingsPotential += (currEdgeCost - swapCost);
+      } else {
+        if (admissibleHeuristic) {
+          costHeur = std::max(costHeur, swapCost);
+        } else {
+          costHeur += swapCost;
+        }
       }
     } else {
-      costHeur += swapCostStraight * straightMultiplicity +
-                  swapCostReverse * reverseMultiplicity;
+      const double swapCostStraight =
+          arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
+                        static_cast<std::uint16_t>(locations.at(q2)));
+      const double swapCostReverse =
+          arch.distance(static_cast<std::uint16_t>(locations.at(q2)),
+                        static_cast<std::uint16_t>(locations.at(q1)));
+
+      if (admissibleHeuristic) {
+        if (straightMultiplicity > 0) {
+          costHeur = std::max(costHeur, swapCostStraight);
+        }
+        if (reverseMultiplicity > 0) {
+          costHeur = std::max(costHeur, swapCostReverse);
+        }
+      } else {
+        costHeur += swapCostStraight * straightMultiplicity +
+                    swapCostReverse * reverseMultiplicity;
+      }
     }
   }
+  costHeur -= savingsPotential;
 }

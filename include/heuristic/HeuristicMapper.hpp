@@ -22,6 +22,7 @@
  */
 using TwoQubitMultiplicity =
     std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+using SingleQubitMultiplicity = std::vector<std::uint16_t>;
 
 class HeuristicMapper : public Mapper {
 public:
@@ -106,7 +107,9 @@ public:
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
      * of the node
      */
-    void applySWAP(const Edge& swap, Architecture& arch);
+    void applySWAP(const Edge& swap, Architecture& arch, 
+                   const SingleQubitMultiplicity& singleQubitGateMultiplicity, 
+                   bool considerFidelity);
 
     /**
      * @brief applies an in-place teleportation of 2 qubits in `qubits` and
@@ -121,7 +124,7 @@ public:
      * @param arch the architecture for calculating distances between physical
      * qubits and supplying qubit information such as fidelity
      */
-    void recalculateFixedCost(const Architecture& arch);
+    void recalculateFixedCost(const Architecture& arch, const SingleQubitMultiplicity& singleQubitGateMultiplicity, const TwoQubitMultiplicity& twoQubitGateMultiplicity, bool considerFidelity);
 
     /**
      * @brief calculates the heuristic cost of the current mapping in the node
@@ -138,9 +141,13 @@ public:
      * solution using this heuristic)
      */
     void
-    updateHeuristicCost(const Architecture&         arch,
-                        const TwoQubitMultiplicity& twoQubitGateMultiplicity,
-                        bool                        admissibleHeuristic);
+    updateHeuristicCost(
+      const Architecture&                      arch,
+      const SingleQubitMultiplicity&           singleQubitGateMultiplicity,
+      const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
+      const std::unordered_set<std::uint16_t>& consideredQubits,
+      bool                                     admissibleHeuristic,
+      bool                                     considerFidelity);
 
     std::ostream& print(std::ostream& out) const {
       out << "{\n";
@@ -210,7 +217,9 @@ protected:
    * of logical qubits in the current layer
    */
   virtual void
-  mapUnmappedGates(const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+  mapUnmappedGates(
+    const SingleQubitMultiplicity& singleQubitGateMultiplicity, 
+    const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -238,6 +247,7 @@ protected:
    */
   void expandNode(const std::unordered_set<std::uint16_t>& consideredQubits,
                   Node& node, std::size_t layer,
+                  const SingleQubitMultiplicity& singleQubitGateMultiplicity,
                   const TwoQubitMultiplicity& twoQubitGateMultiplicity);
 
   /**
@@ -252,7 +262,9 @@ protected:
    */
   void
   expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer,
-                       const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+                       const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+                       const TwoQubitMultiplicity& twoQubitGateMultiplicity,
+                       const std::unordered_set<std::uint16_t>& consideredQubits);
 
   /**
    * @brief calculates the heuristic cost for the following layers and saves it

@@ -263,7 +263,7 @@ public:
     return fidelityDistanceTables;
   }
   
-  [[nodiscard]] const Matrix& getFidelityDistanceTable(std::uint16_t skipEdges) const {
+  [[nodiscard]] const Matrix& getFidelityDistanceTable(std::size_t skipEdges) const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
     }
@@ -279,7 +279,7 @@ public:
 
   [[nodiscard]] double fidelityDistance(std::uint16_t q1,
                                         std::uint16_t q2, 
-                                        std::uint16_t skipEdges) const {
+                                        std::size_t skipEdges) const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
     }

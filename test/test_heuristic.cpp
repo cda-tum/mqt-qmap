@@ -36,6 +36,8 @@ TEST(Functionality, NodeCostCalculation) {
   const double               tolerance = 1e-6;
   const CouplingMap          cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
   Architecture               arch{5, cm};
+  const SingleQubitMultiplicity empty1Mult = {};
+  const std::unordered_set<std::uint16_t>& consideredQubits = {0, 1, 2, 3, 5};
   const TwoQubitMultiplicity multiplicity                  = {{{0, 1}, {5, 2}},
                                                               {{2, 3}, {0, 1}}};
   const std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits = {4, 3, 1, 2, 0};
@@ -47,15 +49,15 @@ TEST(Functionality, NodeCostCalculation) {
 
   HeuristicMapper::Node node(qubits, locations, swaps, 5.);
   EXPECT_NEAR(node.costFixed, 5., tolerance);
-  node.updateHeuristicCost(arch, multiplicity, true);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits, true, false);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  node.updateHeuristicCost(arch, multiplicity, false);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits, false, false);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
               tolerance);
-  node.applySWAP({3, 4}, arch);
-  node.updateHeuristicCost(arch, multiplicity, true);
+  node.applySWAP({3, 4}, arch, empty1Mult, false);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits, true, false);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
               tolerance);
@@ -71,7 +73,7 @@ TEST(Functionality, NodeCostCalculation) {
               tolerance);
   EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
               tolerance);
-  node.recalculateFixedCost(arch);
+  node.recalculateFixedCost(arch, empty1Mult, multiplicity, false);
   EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
@@ -218,6 +220,8 @@ TEST(Functionality, HeuristicAdmissibility) {
   architecture.loadCouplingMap(6, cm);
   const std::vector<Edge> perms{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
+  const SingleQubitMultiplicity empty1Mult = {};
+  const std::unordered_set<std::uint16_t>& consideredQubits = {0, 1, 2, 3, 4, 5};
   const TwoQubitMultiplicity multiplicity = {
       {{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
 
@@ -228,8 +232,8 @@ TEST(Functionality, HeuristicAdmissibility) {
   std::stack<std::size_t> permStack{};
 
   auto initNode = HeuristicMapper::Node({0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5});
-  initNode.recalculateFixedCost(architecture);
-  initNode.updateHeuristicCost(architecture, multiplicity, true);
+  initNode.recalculateFixedCost(architecture, empty1Mult, multiplicity, false);
+  initNode.updateHeuristicCost(architecture, empty1Mult, multiplicity, consideredQubits, true, false);
   nodeStack.emplace_back(initNode);
   permStack.emplace(perms.size());
 
@@ -250,8 +254,8 @@ TEST(Functionality, HeuristicAdmissibility) {
     const auto perm    = perms[permStack.top()];
     auto       newNode = HeuristicMapper::Node(node.qubits, node.locations,
                                                node.swaps, node.costFixed);
-    newNode.applySWAP(perm, architecture);
-    newNode.updateHeuristicCost(architecture, multiplicity, true);
+    newNode.applySWAP(perm, architecture, empty1Mult, false);
+    newNode.updateHeuristicCost(architecture, empty1Mult, multiplicity, consideredQubits, true, false);
     nodeStack.emplace_back(newNode);
     permStack.emplace(perms.size());
   }
@@ -432,4 +436,418 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
                           "_heuristic_tokyo_teleport.qasm");
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
+}
+
+class HeuristicTestFidelity : public testing::TestWithParam<std::string> {
+protected:
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
+
+  qc::QuantumComputation           qc{};
+  Architecture                     arch{};
+  Architecture                     nonFidelityArch{};
+  std::unique_ptr<HeuristicMapper> mapper;
+  std::unique_ptr<HeuristicMapper> nonFidelityMapper;
+
+  void SetUp() override {
+    qc.import(testExampleDir + GetParam() + ".qasm");
+    arch.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
+    arch.loadProperties(testCalibrationDir + "ibmq_london.csv");
+    mapper = std::make_unique<HeuristicMapper>(qc, arch);
+    nonFidelityArch.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
+    nonFidelityMapper = std::make_unique<HeuristicMapper>(qc, nonFidelityArch);
+  }
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Heuristic, HeuristicTestFidelity,
+    testing::Values("3_17_13", "ex-1_166", "ham3_102", "miller_11", "4gt11_84",
+                    "4mod5-v0_20", "mod5d1_63"),
+    [](const testing::TestParamInfo<HeuristicTestFidelity::ParamType>& inf) {
+      std::string name = inf.param;
+      std::replace(name.begin(), name.end(), '-', '_');
+      return name;
+    });
+
+TEST_P(HeuristicTestFidelity, Identity) {
+  Configuration settings{};
+  settings.layering         = Layering::DisjointQubits;
+  settings.initialLayout    = InitialLayout::Identity;
+  settings.considerFidelity = true;
+  mapper->map(settings);
+  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
+  mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTestFidelity, Static) {
+  Configuration settings{};
+  settings.layering         = Layering::DisjointQubits;
+  settings.initialLayout    = InitialLayout::Static;
+  settings.considerFidelity = true;
+  mapper->map(settings);
+  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
+  mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTestFidelity, NoFidelity) {
+  Configuration settings{};
+  settings.layering         = Layering::DisjointQubits;
+  settings.initialLayout    = InitialLayout::Static;
+  settings.considerFidelity = true;
+  nonFidelityMapper->map(settings);
+  nonFidelityMapper->dumpResult(GetParam() +
+                                "_heuristic_london_nofidelity.qasm");
+  nonFidelityMapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST(HeuristicTestFidelity, SimpleGrid) {
+  Architecture      architecture{};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2},  {2, 1},  {2, 3},   {3, 2},
+
+      {0, 4}, {4, 0}, {1, 5},  {5, 1},  {2, 6},   {6, 2},  {3, 7},  {7, 3},
+
+      {4, 5}, {5, 4}, {5, 6},  {6, 5},  {6, 7},   {7, 6},
+
+      {4, 8}, {8, 4}, {5, 9},  {9, 5},  {6, 10},  {10, 6}, {7, 11}, {11, 7},
+
+      {8, 9}, {9, 8}, {9, 10}, {10, 9}, {10, 11}, {11, 10}};
+  architecture.loadCouplingMap(12, cm);
+
+  double e5 = 0.99;
+  double e4 = 0.9;
+  double e3 = 0.5;
+  double e2 = 0.4;
+  double e1 = 0.1;
+  double e0 = 0.01;
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", e5);
+  props.setSingleQubitErrorRate(1, "x", e5);
+  props.setSingleQubitErrorRate(2, "x", e5);
+  props.setSingleQubitErrorRate(3, "x", e5);
+  props.setSingleQubitErrorRate(4, "x", e3);
+  props.setSingleQubitErrorRate(5, "x", e3);
+  props.setSingleQubitErrorRate(6, "x", e5);
+  props.setSingleQubitErrorRate(7, "x", e3);
+  props.setSingleQubitErrorRate(8, "x", e2);
+  props.setSingleQubitErrorRate(9, "x", e1);
+  props.setSingleQubitErrorRate(10, "x", e5);
+  props.setSingleQubitErrorRate(11, "x", e2);
+
+  props.setTwoQubitErrorRate(0, 1, e4);
+  props.setTwoQubitErrorRate(1, 0, e4);
+  props.setTwoQubitErrorRate(1, 2, e4);
+  props.setTwoQubitErrorRate(2, 1, e4);
+  props.setTwoQubitErrorRate(2, 3, e1);
+  props.setTwoQubitErrorRate(3, 2, e1);
+
+  props.setTwoQubitErrorRate(0, 4, e5);
+  props.setTwoQubitErrorRate(4, 0, e5);
+  props.setTwoQubitErrorRate(1, 5, e5);
+  props.setTwoQubitErrorRate(5, 1, e5);
+  props.setTwoQubitErrorRate(2, 6, e4);
+  props.setTwoQubitErrorRate(6, 2, e4);
+  props.setTwoQubitErrorRate(3, 7, e5);
+  props.setTwoQubitErrorRate(7, 3, e5);
+
+  props.setTwoQubitErrorRate(4, 5, e3);
+  props.setTwoQubitErrorRate(5, 4, e3);
+  props.setTwoQubitErrorRate(5, 6, e5);
+  props.setTwoQubitErrorRate(6, 5, e5);
+  props.setTwoQubitErrorRate(6, 7, e5);
+  props.setTwoQubitErrorRate(7, 6, e5);
+
+  props.setTwoQubitErrorRate(4, 8, e0);
+  props.setTwoQubitErrorRate(8, 4, e0);
+  props.setTwoQubitErrorRate(5, 9, e3);
+  props.setTwoQubitErrorRate(9, 5, e3);
+  props.setTwoQubitErrorRate(6, 10, e1);
+  props.setTwoQubitErrorRate(10, 6, e1);
+  props.setTwoQubitErrorRate(7, 11, e3);
+  props.setTwoQubitErrorRate(11, 7, e3);
+
+  props.setTwoQubitErrorRate(8, 9, e5);
+  props.setTwoQubitErrorRate(9, 8, e5);
+  props.setTwoQubitErrorRate(9, 10, e4);
+  props.setTwoQubitErrorRate(10, 9, e4);
+  props.setTwoQubitErrorRate(10, 11, e5);
+  props.setTwoQubitErrorRate(11, 10, e5);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{12, 12};
+
+  for (std::size_t i = 0; i < 50; ++i) {
+    qc.x(4);
+  }
+  qc.x(5);
+  qc.x(7);
+  for (std::size_t i = 0; i < 5; ++i) {
+    qc.x(0, qc::Control{3});
+    qc.x(2, qc::Control{9});
+  }
+
+  for (size_t i = 0; i < 12; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.verbose                  = true;
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  mapper->map(settings);
+  mapper->dumpResult("simple_grid_mapped.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 1);
+  /*
+  expected output (order of gates may vary):
+  SWAP(2,6)
+  SWAP(9,10)
+  SWAP(0,1)
+  SWAP(1,2)
+  SWAP(4,5)
+  SWAP(5,9)
+  SWAP(4,8)
+  X(8)
+  X(7)
+  X(9) [x50]
+  CX(2,3) [x5]
+  CX(6,10) [x5]
+  */
+  EXPECT_EQ(result.output.swaps, 7);
+
+  double c4 = -std::log2(1 - e4);
+  double c3 = -std::log2(1 - e3);
+  double c2 = -std::log2(1 - e2);
+  double c1 = -std::log2(1 - e1);
+  double c0 = -std::log2(1 - e0);
+
+  double expectedFidelity = 3 * c4 + 3 * c4 + 3 * c4 + 3 * c4 + 3 * c3 +
+                            3 * c3 + 3 * c0 +   // SWAPs
+                            c2 + c3 + 50 * c1 + // Xs
+                            5 * c1 + 5 * c1;    // CXs
+  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+}
+
+TEST(HeuristicTestFidelity, RemapSingleQubit) {
+  Architecture      architecture{};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
+      {3, 2}, {3, 4}, {4, 3}, {4, 5}, {5, 4},
+  };
+  architecture.loadCouplingMap(6, cm);
+
+  double e5 = 0.99;
+  double e4 = 0.9;
+  double e3 = 0.5;
+  double e1 = 0.1;
+  double e0 = 0.01;
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", e5);
+  props.setSingleQubitErrorRate(1, "x", e5);
+  props.setSingleQubitErrorRate(2, "x", e5);
+  props.setSingleQubitErrorRate(3, "x", e4);
+  props.setSingleQubitErrorRate(4, "x", e4);
+  props.setSingleQubitErrorRate(5, "x", e1);
+
+  props.setTwoQubitErrorRate(0, 1, e1);
+  props.setTwoQubitErrorRate(1, 0, e1);
+  props.setTwoQubitErrorRate(1, 2, e3);
+  props.setTwoQubitErrorRate(2, 1, e3);
+  props.setTwoQubitErrorRate(2, 3, e5);
+  props.setTwoQubitErrorRate(3, 2, e5);
+  props.setTwoQubitErrorRate(3, 4, e0);
+  props.setTwoQubitErrorRate(4, 3, e0);
+  props.setTwoQubitErrorRate(4, 5, e0);
+  props.setTwoQubitErrorRate(5, 4, e0);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{6, 6};
+  for (std::size_t i = 0; i < 5; ++i) {
+    qc.x(0, qc::Control{2});
+    qc.x(3);
+  }
+
+  for (size_t i = 0; i < 6; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
+  mapper->map(settings);
+  mapper->dumpResult("remap_single_qubit_mapped.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 1);
+  /*
+  expected output (order of gates may vary):
+  SWAP(1,2)
+  SWAP(3,4)
+  SWAP(4,5)
+  CX(0,1) [x5]
+  X(5) [x5]
+  */
+  EXPECT_EQ(result.output.swaps, 4);
+
+  double c3 = -std::log2(1 - e3);
+  double c1 = -std::log2(1 - e1);
+  double c0 = -std::log2(1 - e0);
+
+  double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
+                            5 * c1 +                   // Xs
+                            5 * c1;                    // CXs
+  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+}
+
+TEST(HeuristicTestFidelity, QubitRideAlong) {
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+                          {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
+  architecture.loadCouplingMap(7, cm);
+
+  double e5 = 0.99;
+  double e4 = 0.9;
+  double e3 = 0.5;
+  double e1 = 0.1;
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", e5);
+  props.setSingleQubitErrorRate(1, "x", e5);
+  props.setSingleQubitErrorRate(2, "x", e5);
+  props.setSingleQubitErrorRate(3, "x", e5);
+  props.setSingleQubitErrorRate(4, "x", e5);
+  props.setSingleQubitErrorRate(5, "x", e5);
+  props.setSingleQubitErrorRate(6, "x", e5);
+
+  props.setTwoQubitErrorRate(0, 1, e4);
+  props.setTwoQubitErrorRate(1, 0, e4);
+  props.setTwoQubitErrorRate(1, 2, e3);
+  props.setTwoQubitErrorRate(2, 1, e3);
+  props.setTwoQubitErrorRate(2, 3, e1);
+  props.setTwoQubitErrorRate(3, 2, e1);
+  props.setTwoQubitErrorRate(1, 4, e1);
+  props.setTwoQubitErrorRate(4, 1, e1);
+  props.setTwoQubitErrorRate(2, 5, e3);
+  props.setTwoQubitErrorRate(5, 2, e3);
+  props.setTwoQubitErrorRate(5, 6, e4);
+  props.setTwoQubitErrorRate(6, 5, e4);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{7, 7};
+  for (std::size_t i = 0; i < 5; ++i) {
+    qc.x(0, qc::Control{3});
+    qc.x(4, qc::Control{6});
+  }
+
+  for (size_t i = 0; i < 7; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
+  mapper->map(settings);
+  mapper->dumpResult("qubit_ride_along_mapped.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 1);
+  /*
+  expected output (order of gates may vary):
+  SWAP(5,6)
+  SWAP(2,5)
+  SWAP(0,1)
+  SWAP(1,2)
+  CX(2,3) [x5]
+  CX(4,1) [x5]
+  */
+  // EXPECT_EQ(result.output.swaps, 4);
+
+  double c4 = -std::log2(1 - e4);
+  double c3 = -std::log2(1 - e3);
+  double c1 = -std::log2(1 - e1);
+
+  double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
+                            5 * c1 + 5 * c1;                    // CXs
+  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+}
+
+TEST(HeuristicTestFidelity, SingleQubitsCompete) {
+  Architecture      architecture{};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};
+  architecture.loadCouplingMap(3, cm);
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", 0.8);
+  props.setSingleQubitErrorRate(1, "x", 0.1);
+  props.setSingleQubitErrorRate(2, "x", 0.8);
+
+  props.setTwoQubitErrorRate(0, 1, 0.1);
+  props.setTwoQubitErrorRate(1, 0, 0.1);
+  props.setTwoQubitErrorRate(1, 2, 0.1);
+  props.setTwoQubitErrorRate(2, 1, 0.1);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{3, 3};
+  qc.x(0);
+  qc.x(2);
+
+  for (size_t i = 0; i < 3; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.verbose                  = true;
+  mapper->map(settings);
+  mapper->dumpResult("single_qubits_compete.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 1);
+  // EXPECT_EQ(result.output.swaps, 4);
+
+  double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
+                            - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
+  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
 }
