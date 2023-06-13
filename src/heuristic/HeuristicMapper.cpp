@@ -540,18 +540,28 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   }
   auto& totalExpandedNodes = results.heuristicBenchmark.expandedNodes;
   auto  layerResultsIt     = results.layerHeuristicBenchmark.rbegin();
-  double bestCost = std::numeric_limits<double>::max();
+  std::size_t expandedAfterDone = 0;
+  double maxCost = 0;
+  double lastDiff = 0;
 
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
     Node current = nodes.top();
-    if (current.getTotalCost() < bestCost) {
-      bestCost = current.getTotalCost();
-      std::cout << bestCost << std::endl;
+    if (done) {
+      maxCost = std::max(maxCost, current.getTotalCost());
+      ++expandedAfterDone;
+      if (expandedAfterDone >= 250000) break;
+      if (expandedAfterDone % 1000 == 0) {
+        double diff = bestDoneNode.getTotalFixedCost() - maxCost;
+        std::cout << "expanded after done: " << expandedAfterDone << ", diff: " << diff << ", diff/dt: " << (lastDiff - diff) << std::endl;
+        lastDiff = diff;
+      }
     }
     if (current.done) {
       if (!done ||
           current.getTotalFixedCost() < bestDoneNode.getTotalFixedCost()) {
+        maxCost = current.getTotalCost();
+        // TODO: remove
         std::cout << std::setprecision(20) << "done => new best: " << current.getTotalFixedCost() << ", old best: " << bestDoneNode.getTotalFixedCost() << std::endl;
         bestDoneNode = current;
       }
@@ -559,7 +569,6 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
       if (!considerFidelity) {
         break;
       }
-      // std::cout << "done" << std::endl;
     }
     nodes.pop();
     expandNode(consideredQubits, current, layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity);

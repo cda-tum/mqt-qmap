@@ -302,7 +302,7 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[1]);
         if (architecture.isFidelityAvailable()) {
-          info.totalFidelity *= std::pow(2., -architecture.getSwapFidelityCost(q1, q2));
+          info.totalLogFidelity += architecture.getSwapFidelityCost(q1, q2);
         }
         if (architecture.getCouplingMap().find({q1, q2}) !=
                 architecture.getCouplingMap().end() &&
@@ -322,7 +322,7 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         ++info.gates;
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
         if (architecture.isFidelityAvailable()) {
-          info.totalFidelity *= std::pow(2., -architecture.getSingleQubitFidelityCost(q1));
+          info.totalLogFidelity += architecture.getSingleQubitFidelityCost(q1);
         }
       } else {
         assert(g->getType() == qc::X);
@@ -332,7 +332,7 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
             static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
         if (architecture.isFidelityAvailable()) {
-          info.totalFidelity *= std::pow(2., -architecture.getTwoQubitFidelityCost(q1, q2));
+          info.totalLogFidelity += architecture.getTwoQubitFidelityCost(q1, q2);
         }
       }
       continue;
@@ -343,4 +343,5 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       countGates(cg->cbegin(), cg->cend(), info);
     }
   }
+  info.totalFidelity = std::pow(2, -info.totalLogFidelity);
 }

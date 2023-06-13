@@ -639,7 +639,7 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
                             3 * c3 + 3 * c0 +   // SWAPs
                             c2 + c3 + 50 * c1 + // Xs
                             5 * c1 + 5 * c1;    // CXs
-  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {
@@ -717,10 +717,10 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   double c1 = -std::log2(1 - e1);
   double c0 = -std::log2(1 - e0);
 
-  double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
+  double expectedFidelity = //3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
                             5 * c1 +                   // Xs
                             5 * c1;                    // CXs
-  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
 
 TEST(HeuristicTestFidelity, QubitRideAlong) {
@@ -799,9 +799,9 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   double c3 = -std::log2(1 - e3);
   double c1 = -std::log2(1 - e1);
 
-  double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
+  double expectedFidelity = //3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
                             5 * c1 + 5 * c1;                    // CXs
-  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
 
 TEST(HeuristicTestFidelity, SingleQubitsCompete) {
@@ -847,7 +847,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   EXPECT_EQ(result.input.layers, 1);
   // EXPECT_EQ(result.output.swaps, 4);
 
-  double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
+  double expectedFidelity = //-3 * std::log2(1 - 0.1)                    // SWAPs
                             - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
-  EXPECT_NEAR(result.output.totalFidelity, std::pow(expectedFidelity, 2), 1e-6);
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }

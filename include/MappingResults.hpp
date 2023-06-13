@@ -22,6 +22,7 @@ struct MappingResults {
     std::size_t   cnots            = 0;
     std::size_t   layers           = 0;
     double        totalFidelity    = 1.;
+    double        totalLogFidelity = 0.;
 
     // info in output circuit
     std::size_t swaps            = 0;
