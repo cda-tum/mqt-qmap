@@ -36,12 +36,14 @@ macro(ADD_QMAP_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
     ${PROJECT_SOURCE_DIR}/include/Architecture.hpp
     ${PROJECT_SOURCE_DIR}/include/configuration
+    ${PROJECT_SOURCE_DIR}/include/DataLogger.hpp
     ${PROJECT_SOURCE_DIR}/include/heuristic/UniquePriorityQueue.hpp
     ${PROJECT_SOURCE_DIR}/include/Mapper.hpp
     ${PROJECT_SOURCE_DIR}/include/MappingResults.hpp
     ${PROJECT_SOURCE_DIR}/include/utils.hpp
     Architecture.cpp
     configuration/Configuration.cpp
+    DataLogger.cpp
     Mapper.cpp
     utils.cpp)
 

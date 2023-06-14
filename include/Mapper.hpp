@@ -20,7 +20,6 @@
 
 constexpr std::int16_t  DEFAULT_POSITION  = -1;
 constexpr double        INITIAL_FIDELITY  = 1.0;
-constexpr std::uint16_t MAX_DEVICE_QUBITS = 128;
 
 class Mapper {
 protected:

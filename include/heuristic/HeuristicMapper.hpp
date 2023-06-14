@@ -4,6 +4,7 @@
 //
 
 #include "Mapper.hpp"
+#include "DataLogger.hpp"
 #include "heuristic/UniquePriorityQueue.hpp"
 
 #include <cmath>
@@ -77,13 +78,16 @@ public:
     std::size_t nswaps = 0;
     /** depth in search tree (starting with 0 at the root) */
     std::size_t depth = 0;
+    std::size_t parent = 0;
+    std::size_t id;
 
-    Node() = default;
-    Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
+    Node(std::size_t nodeId) : id(nodeId) {};
+    Node(std::size_t nodeId, std::size_t parentId,
+         const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<std::vector<Exchange>>&          sw = {},
          const double initCostFixed = 0, const std::size_t searchDepth = 0)
-        : costFixed(initCostFixed), depth(searchDepth) {
+        : costFixed(initCostFixed), depth(searchDepth), parent(parentId), id(nodeId) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -164,6 +168,8 @@ public:
 
 protected:
   UniquePriorityQueue<Node> nodes{};
+  DataLogger* dataLogger;
+  std::size_t nextNodeId = 0;
 
   /**
    * @brief creates an initial mapping of logical qubits to physical qubits with

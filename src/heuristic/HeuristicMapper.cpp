@@ -8,6 +8,9 @@
 #include <chrono>
 
 void HeuristicMapper::map(const Configuration& configuration) {
+  if (configuration.dataLoggingEnabled()) {
+    dataLogger = new DataLogger(configuration.dataLoggingPath, architecture, qc);
+  }
   results        = MappingResults{};
   results.config = configuration;
   auto& config   = results.config;
@@ -264,6 +267,11 @@ void HeuristicMapper::map(const Configuration& configuration) {
   const std::chrono::duration<double> diff = end - start;
   results.time                             = diff.count();
   results.timeout                          = false;
+  
+  if (config.dataLoggingEnabled()) {
+    dataLogger->logOutputCircuit(qcMapped);
+    dataLogger->logMappingResult(results);
+  }
 }
 
 void HeuristicMapper::staticInitialMapping() {
@@ -475,8 +483,10 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 }
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
+  nextNodeId = 0;
+  
   std::unordered_set<std::uint16_t> consideredQubits{};
-  Node                              node{};
+  Node                              node(nextNodeId++);
   // number of single qubit gates acting on each logical qubit in the current
   // layer
   SingleQubitMultiplicity singleQubitGateMultiplicity(architecture.getNqubits(), 0);
@@ -485,7 +495,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   // edges having their gates given as (control, target) in the key, and the
   // second with all gates in reverse to that
   TwoQubitMultiplicity twoQubitGateMultiplicity{};
-  Node                 bestDoneNode{};
+  Node                 bestDoneNode(0);
   bool                 done = false;
   bool                 considerFidelity = results.config.considerFidelity;
 
@@ -547,7 +557,15 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
     Node current = nodes.top();
+  
+    if (results.config.dataLoggingEnabled()) {
+      dataLogger->logSearchNode(layer, current.id, current.parent, 
+                                current.costFixed, current.costHeur, 
+                                current.lookaheadPenalty, current.qubits, 
+                                current.done, current.swaps, current.depth);
+    }
     if (done) {
+      // TODO: remove
       maxCost = std::max(maxCost, current.getTotalCost());
       ++expandedAfterDone;
       if (expandedAfterDone >= 250000) break;
@@ -606,6 +624,20 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
     layerResultsIt->effectiveBranchingFactor = computeEffectiveBranchingRate(
         layerResultsIt->expandedNodes + 1, result.depth);
+  }
+  
+  if (results.config.dataLoggingEnabled()) {
+    qc::CompoundOperation compOp(architecture.getNqubits());
+    for (const auto& gate : layers.at(layer)) {
+      std::unique_ptr<qc::Operation> op = gate.op->clone();
+      compOp.emplace_back(op);
+    }
+    
+    dataLogger->logFinalizeLayer(layer, compOp, singleQubitGateMultiplicity, 
+                                 twoQubitGateMultiplicity, qubits, result.id, 
+                                 result.costFixed, result.costHeur, 
+                                 result.lookaheadPenalty, result.qubits, 
+                                 result.swaps, result.depth);
   }
 
   // clear nodes
@@ -700,8 +732,8 @@ void HeuristicMapper::expandNodeAddOneSwap(
     const std::unordered_set<std::uint16_t>& consideredQubits) {
   const auto& config = results.config;
 
-  Node newNode = Node(node.qubits, node.locations, node.swaps, node.costFixed,
-                      node.depth + 1);
+  Node newNode = Node(nextNodeId++, node.id, node.qubits, node.locations, 
+                      node.swaps, node.costFixed, node.depth + 1);
 
   if (architecture.getCouplingMap().find(swap) !=
           architecture.getCouplingMap().end() ||
