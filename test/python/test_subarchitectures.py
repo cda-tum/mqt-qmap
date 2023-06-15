@@ -1,6 +1,10 @@
 """Test subarchitecture generation."""
 
+from __future__ import annotations
+
+import contextlib
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 import rustworkx as rx
@@ -8,11 +12,16 @@ from qiskit.providers.fake_provider import FakeLondon
 
 from mqt.qmap import Architecture
 from mqt.qmap.subarchitectures import (
-    Graph,
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
 )
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+with contextlib.suppress(TypeError):
+    Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
 
 
 @pytest.fixture()
