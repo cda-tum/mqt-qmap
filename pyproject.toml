@@ -41,6 +41,7 @@ dependencies = [
     "qiskit-terra>=0.20.2",
     "rustworkx[all]>=0.13.0",
     "importlib_resources>=5.0; python_version < '3.10'",
+    "typing_extensions>=4.0",
 ]
 dynamic = ["version"]
 
