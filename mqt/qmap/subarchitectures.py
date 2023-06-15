@@ -27,10 +27,14 @@ if TYPE_CHECKING:  # pragma: no cover
     from mqt.qmap import Architecture
 
 
+import contextlib
+
 import rustworkx as rx
 import rustworkx.visualization as rxviz
 
-Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
+with contextlib.suppress(TypeError):
+    Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
+
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
