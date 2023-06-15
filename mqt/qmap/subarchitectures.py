@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, NewType, Optional, Set, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+
     from matplotlib import figure
     from qiskit.providers import BackendV1
     from typing_extensions import TypeAlias
@@ -72,11 +74,11 @@ class SubarchitectureOrder:
         return so
 
     @classmethod
-    def from_coupling_map(cls, coupling_map: set[tuple[int, int]] | list[tuple[int, int]]) -> SubarchitectureOrder:
+    def from_coupling_map(cls, coupling_map: Iterable[tuple[int, int]]) -> SubarchitectureOrder:
         """Construct partial order from coupling map defined as set of tuples of connected qubits.
 
         Args:
-            coupling_map: Set or list of tuples of connected qubits.
+            coupling_map: Iterable of tuples of connected qubits.
 
         Returns:
             The resulting partial order.
