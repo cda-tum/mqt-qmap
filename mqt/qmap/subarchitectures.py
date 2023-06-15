@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Dict, NewType, Optional, Set, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover
     from matplotlib import figure
-    from qiskit.providers import Backend
+    from qiskit.providers import BackendV1
     from typing_extensions import TypeAlias
 
     from mqt.qmap import Architecture
@@ -89,7 +89,7 @@ class SubarchitectureOrder:
         return cls.from_retworkx_graph(graph)
 
     @classmethod
-    def from_backend(cls, backend: Backend) -> SubarchitectureOrder:
+    def from_backend(cls, backend: BackendV1) -> SubarchitectureOrder:
         """Construct the partial order from a coupling map defined as a Qiskit backend.
 
         Args:
