@@ -16,7 +16,7 @@
 namespace cs::encoding {
 
 using namespace logicbase;
-//TODO: params?
+// TODO: params?
 void SATEncoder::initializeSolver() {
   DEBUG() << "Initializing solver engine.";
   bool success        = false;
@@ -51,11 +51,10 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-
   std::size_t s = config.targetTableau->hasDestabilizers() &&
-                                config.initialTableau->hasDestabilizers()
-                            ? 2U * N
-                            : N;
+                          config.initialTableau->hasDestabilizers()
+                      ? 2U * N
+                      : N;
 
   if (config.useSTEncoding) {
     T *= 2U;
@@ -131,7 +130,7 @@ void SATEncoder::cleanup() const {
     lb->reset();
   }
 }
-//TODO: add ST-Sat-encoding
+// TODO: add ST-Sat-encoding
 Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 

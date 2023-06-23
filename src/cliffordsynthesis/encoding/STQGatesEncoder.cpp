@@ -56,7 +56,7 @@ void encoding::STQGatesEncoder::assertSingleQubitGateConstraints(
 }
 
 void STQGatesEncoder::assertRConstraints(const std::size_t pos,
-                                          const std::size_t qubit) {
+                                         const std::size_t qubit) {
   for (const auto gate : SINGLE_QUBIT_GATES) {
     rChanges =
         rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],

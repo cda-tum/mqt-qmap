@@ -42,7 +42,7 @@ struct Configuration {
   bool minimizeGatesAfterSTDepthOptimization = false;
 
   /// Settings for STDepth-optimal synthesis
-  bool useSTEncoding                       = false;
+  bool useSTEncoding = false;
 
   /// Settings for two-qubit gate-optimal synthesis
   bool   tryHigherGateLimitForTwoQubitGateOptimization = false;
@@ -71,7 +71,7 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-    j["use_st_encoding"]        = useSTEncoding;
+    j["use_st_encoding"]     = useSTEncoding;
     j["heuristic"]           = heuristic;
     j["split_size"]          = splitSize;
     j["n_threads_heuristic"] = nThreadsHeuristic;

@@ -101,8 +101,8 @@ protected:
   std::size_t       depth            = std::numeric_limits<std::size_t>::max();
   std::size_t       sTDepth          = std::numeric_limits<std::size_t>::max();
 
-  double            runtime          = 0.0;
-  std::size_t       solverCalls      = 0U;
+  double      runtime     = 0.0;
+  std::size_t solverCalls = 0U;
 
   std::string resultTableau{};
   std::string resultCircuit{};

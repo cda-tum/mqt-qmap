@@ -99,7 +99,7 @@ protected:
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
   void sTDepthOptimalSynthesis(EncoderConfig config, std::size_t lower,
-                             std::size_t upper);
+                               std::size_t upper);
   void depthHeuristicSynthesis();
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);

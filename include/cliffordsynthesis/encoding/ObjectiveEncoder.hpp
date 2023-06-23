@@ -63,7 +63,8 @@ protected:
         if (gate == qc::OpType::None) {
           continue;
         }
-        //TODO what does the function op() and what is terms, how it will be used later
+        // TODO what does the function op() and what is terms, how it will be
+        // used later
         terms = op(terms, singleQubitGates[GateEncoder::gateToIndex(gate)][q]);
       }
     }
