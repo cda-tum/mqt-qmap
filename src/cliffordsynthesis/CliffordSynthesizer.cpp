@@ -39,6 +39,9 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.nThreads            = configuration.nThreads;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
+  encoderConfig.useSTEncoding        =
+      requiresSTGateEncoding(encoderConfig.targetMetric);
+
 
   // First, determine an initial guess for the number of timesteps. This can
   // either be specified as a configuration parameter or starts at 1.
@@ -73,6 +76,9 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
     break;
+  case TargetMetric::STDepth:
+    sTDepthOptimalSynthesis(encoderConfig, lower, upper);
+    break;
   }
 
   results.setSolverCalls(solverCalls);
@@ -105,6 +111,10 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
   if (requiresMultiGateEncoding(config.targetMetric)) {
     config.timestepLimit = results.getDepth();
     INFO() << "Using initial circuit's depth as initial timestep limit: "
+           << config.timestepLimit;
+  } else if (requiresSTGateEncoding(config.targetMetric)) {
+    config.timestepLimit = results.getSTDepth();
+    INFO() << "Using initial circuit's sTDepth as initial timestep limit: "
            << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
@@ -146,6 +156,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     upperBound = std::min(upperBound, results.getGates());
   } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
+  } else if (config.targetMetric == TargetMetric::STDepth) {
+    upperBound = std::min(upperBound, results.getSTDepth());
   }
 
   INFO() << "Found upper bound for the number of timesteps: " << upperBound;
@@ -203,6 +215,39 @@ void CliffordSynthesizer::depthOptimalSynthesis(
   }
 }
 
+void CliffordSynthesizer::sTDepthOptimalSynthesis(
+    CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
+    const std::size_t upper) {
+  // STDepth-optimal synthesis is achieved by determining a timestep limit T such
+  // that there exists a solution with sTDepth T, but no solution with sTDepth T-1.
+  // This procedure uses an encoding (SQG - TQG) where in single and two qubit
+  // gates are allowed just one gate per timestep. This procedure is
+  // guaranteed to produce a depth-optimal circuit. However, the number of gates
+  // in the resulting circuit is not necessarily minimal, i.e., there may be a
+  // solution with fewer gates and the same depth. To this end, an optimization
+  // pass is provided that additionally minimizes the number of gates.
+
+  //TODO: to remove maxSat and add lineary search instead binary
+  if (configuration.useMaxSAT) {
+    // The MaxSAT solver can determine the optimal T with a single call by
+    // minimizing over the layers of gates (=timesteps) in the resulting
+    // circuit.
+    runMaxSAT(config);
+  } else {
+    // The binary search approach calls the SAT solver repeatedly with varying
+    // timestep (=sTDepth) limits T until a solution with sTDepth T is found, but no
+    // solution with sTDepth T-1 could be determined.
+    runBinarySearch(config.timestepLimit, lower, upper, config);
+  }
+
+  //TODO: to remove
+  if (configuration.minimizeGatesAfterSTDepthOptimization) {
+    // To find a solution with fewer gates, we run the solver once more with a
+    // fixed depth limit and the goal to minimize the number of gates.
+    minimizeGatesFixedSTDepth(config);
+  }
+}
+
 void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
   if (results.getDepth() == 0U) {
     return;
@@ -229,6 +274,35 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
                     config);
   }
   INFO() << "Found a depth " << results.getDepth() << " circuit with "
+         << results.getGates() << " gate(s).";
+}
+
+void CliffordSynthesizer::minimizeGatesFixedSTDepth(EncoderConfig config) {
+  if (results.getSTDepth() == 0U) {
+    return;
+  }
+
+  if (results.getSTDepth() * 2U == results.getGates()) {
+    return;
+  }
+
+  INFO() << "Found a sTDepth-optimal circuit with sTDepth " << results.getSTDepth()
+         << " and " << results.getGates()
+         << " gate(s). Trying to minimize the number of gates.";
+
+  config.targetMetric         = TargetMetric::STDepth;
+  config.timestepLimit        = results.getSTDepth();
+  config.useMaxSAT            = configuration.useMaxSAT;
+  config.useSTEncoding        = true;
+
+  if (config.useMaxSAT) {
+    runMaxSAT(config);
+  } else {
+    config.gateLimit = results.getGates();
+    runBinarySearch(*config.gateLimit, results.getSTDepth(), results.getGates(),
+                    config);
+  }
+  INFO() << "Found a sTDepth " << results.getSTDepth() << " circuit with "
          << results.getGates() << " gate(s).";
 }
 
@@ -389,6 +463,13 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   case TargetMetric::Depth:
     if ((newResults.getDepth() < currentResults.getDepth()) ||
         ((newResults.getDepth() == currentResults.getDepth()) &&
+         (newResults.getGates() < currentResults.getGates()))) {
+      currentResults = newResults;
+    }
+    break;
+  case TargetMetric::STDepth:
+    if ((newResults.getSTDepth() < currentResults.getSTDepth()) ||
+        ((newResults.getSTDepth() == currentResults.getSTDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }

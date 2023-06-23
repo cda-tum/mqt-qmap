@@ -22,6 +22,7 @@ struct TestConfiguration {
   std::size_t expectedMinimalGatesAtMinimalDepth{};
   std::size_t expectedMinimalTwoQubitGates{};
   std::size_t expectedMinimalGatesAtMinimalTwoQubitGates{};
+  std::size_t expectedMinimalSTDepth{};
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
@@ -35,6 +36,9 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   }
   if (j.contains("initial_circuit")) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
+  }
+  if (j.contains("expectedMinimalSTDepth")) {
+    test.expectedMinimalSTDepth = j.at("expected_minimal_st_depth").get<std::size_t>();
   }
 
   test.expectedMinimalGates = j.at("expected_minimal_gates").get<std::size_t>();
@@ -319,4 +323,50 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   }
 }
 
+TEST_P(SynthesisTest, STDepth) {
+  config.target = TargetMetric::STDepth;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+}
+
+TEST_P(SynthesisTest, STDepthMaxSAT) {
+  config.target    = TargetMetric::STDepth;
+  config.useMaxSAT = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+}
+
+TEST_P(SynthesisTest, STDepthMinimalGates) {
+  config.target                              = TargetMetric::STDepth;
+  config.minimizeGatesAfterDepthOptimization = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+}
+
+TEST_P(SynthesisTest, STDepthMinimalTimeSteps) {
+  config.target           = TargetMetric::STDepth;
+  config.minimalTimesteps = test.expectedMinimalDepth;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+}
+
+TEST_P(SynthesisTest, STDepthMinimalGatesMaxSAT) {
+  config.target                              = TargetMetric::STDepth;
+  config.useMaxSAT                           = true;
+  config.minimizeGatesAfterDepthOptimization = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+}
 } // namespace cs

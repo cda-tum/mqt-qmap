@@ -73,6 +73,10 @@ protected:
     return metric == TargetMetric::Depth;
   }
 
+  static bool requiresSTGateEncoding(const TargetMetric metric) {
+    return metric == TargetMetric::STDepth;
+  }
+
   void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
   void                                runMaxSAT(const EncoderConfig& config);
@@ -80,9 +84,13 @@ protected:
 
   void minimizeGatesFixedDepth(EncoderConfig config);
 
+  void minimizeGatesFixedSTDepth(EncoderConfig config);
+
   void gateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
+                             std::size_t upper);
+  void sTDepthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);

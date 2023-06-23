@@ -40,6 +40,7 @@ public:
     return singleQubitGates;
   }
   [[nodiscard]] std::size_t       getDepth() const { return depth; }
+  [[nodiscard]] std::size_t       getSTDepth() const { return sTDepth; }
   [[nodiscard]] double            getRuntime() const { return runtime; }
   [[nodiscard]] logicbase::Result getSolverResult() const {
     return solverResult;
@@ -52,6 +53,7 @@ public:
   void setSingleQubitGates(const std::size_t g) { singleQubitGates = g; }
   void setTwoQubitGates(const std::size_t g) { twoQubitGates = g; }
   void setDepth(const std::size_t d) { depth = d; }
+  void setSTDepth(const std::size_t d) { sTDepth = d; }
   void setRuntime(const double t) { runtime = t; }
   void setSolverResult(const logicbase::Result r) { solverResult = r; }
   void setSolverCalls(const std::size_t c) { solverCalls = c; }
@@ -80,6 +82,7 @@ public:
     resultJSON["single_qubit_gates"] = singleQubitGates;
     resultJSON["two_qubit_gates"]    = twoQubitGates;
     resultJSON["depth"]              = depth;
+    resultJSON["sTDepth"]            = sTDepth;
     resultJSON["runtime"]            = runtime;
     resultJSON["solver_calls"]       = solverCalls;
 
@@ -96,6 +99,8 @@ protected:
   std::size_t       singleQubitGates = std::numeric_limits<std::size_t>::max();
   std::size_t       twoQubitGates    = std::numeric_limits<std::size_t>::max();
   std::size_t       depth            = std::numeric_limits<std::size_t>::max();
+  std::size_t       sTDepth          = std::numeric_limits<std::size_t>::max();
+
   double            runtime          = 0.0;
   std::size_t       solverCalls      = 0U;
 

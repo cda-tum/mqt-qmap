@@ -30,6 +30,12 @@ struct Configuration {
   /// Settings for depth-optimal synthesis
   bool minimizeGatesAfterDepthOptimization = false;
 
+  /// Settings for sTDepth-optimal synthesis
+  bool minimizeGatesAfterSTDepthOptimization = false;
+
+  /// Settings for STDepth-optimal synthesis
+  bool useSTEncoding                       = false;
+
   /// Settings for two-qubit gate-optimal synthesis
   bool   tryHigherGateLimitForTwoQubitGateOptimization = false;
   double gateLimitFactor                               = 1.1;
@@ -45,11 +51,14 @@ struct Configuration {
     j["n_threads"]              = nThreads;
     j["minimize_gates_after_depth_optimization"] =
         minimizeGatesAfterDepthOptimization;
+    j["minimize_gates_after_st_depth_optimization"] =
+        minimizeGatesAfterSTDepthOptimization;
     j["try_higher_gate_limit_for_two_qubit_gate_optimization"] =
         tryHigherGateLimitForTwoQubitGateOptimization;
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
+    j["use_st_encoding"]        = useSTEncoding;
 
     return j;
   }

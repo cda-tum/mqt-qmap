@@ -7,6 +7,7 @@
 
 #include "LogicUtil/util_logicblock.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/STQGatesEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 #include "utils/logging.hpp"
 
@@ -15,7 +16,7 @@
 namespace cs::encoding {
 
 using namespace logicbase;
-
+//TODO: params?
 void SATEncoder::initializeSolver() {
   DEBUG() << "Initializing solver engine.";
   bool success        = false;
@@ -40,10 +41,15 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  const std::size_t s = config.targetTableau->hasDestabilizers() &&
+
+  std::size_t s = config.targetTableau->hasDestabilizers() &&
                                 config.initialTableau->hasDestabilizers()
                             ? 2U * N
                             : N;
+
+  if (config.useSTEncoding) {
+    T *= 2U;
+  }
 
   tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
   tableauEncoder->createTableauVariables();
@@ -52,6 +58,9 @@ void SATEncoder::createFormulation() {
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
+        N, s, T, tableauEncoder->getVariables(), lb);
+  } else if (config.useSTEncoding) {
+    gateEncoder = std::make_shared<STQGatesEncoder>(
         N, s, T, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
@@ -126,6 +135,7 @@ void SATEncoder::cleanup() const {
     lb->reset();
   }
 }
+//TODO: add ST-Sat-encoding
 Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 
