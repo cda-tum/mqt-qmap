@@ -61,6 +61,21 @@ def _config_from_kwargs(kwargs: dict[str, Any]) -> SynthesisConfiguration:
         else:
             msg = f"Invalid keyword argument: {key}"
             raise ValueError(msg)
+
+    if not config.solver_parameters:
+        config.solver_parameters = {}
+        if config.use_maxsat:
+            config.solver_parameters["pb.compile_equality"] = True
+            config.solver_parameters["maxres.hill_climb"] = True
+            config.solver_parameters["maxres.pivot_on_correction_set"] = False
+        else:
+            config.solver_parameters["bca"] = True
+            config.solver_parameters["restart.emafastglue"] = 0.05
+            config.solver_parameters["restart.emaslowglue"] = 1e-6
+            config.solver_parameters["restart.margin"] = 1.07
+            config.solver_parameters["rephase.base"] = 3000
+            config.solver_parameters["search.sat.conflicts"] = 100
+
     return config
 
 

@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+using namespace qc::literals;
+
 namespace cs {
 
 struct TestConfiguration {
@@ -98,6 +100,7 @@ protected:
     config                         = Configuration();
     config.verbosity               = plog::Severity::verbose;
     config.dumpIntermediateResults = true;
+    config.useSymmetryBreaking     = true;
   }
 
   void TearDown() override {
@@ -165,6 +168,15 @@ TEST_P(SynthesisTest, GatesMaxSAT) {
   EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
 }
 
+TEST_P(SynthesisTest, GatesLinearSearch) {
+  config.target       = TargetMetric::Gates;
+  config.linearSearch = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
+}
+
 TEST_P(SynthesisTest, Depth) {
   config.target = TargetMetric::Depth;
   synthesizer.synthesize(config);
@@ -176,6 +188,15 @@ TEST_P(SynthesisTest, Depth) {
 TEST_P(SynthesisTest, DepthMaxSAT) {
   config.target    = TargetMetric::Depth;
   config.useMaxSAT = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+}
+
+TEST_P(SynthesisTest, DepthLinearSearch) {
+  config.target       = TargetMetric::Depth;
+  config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -204,6 +225,17 @@ TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
 TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
   config.target                              = TargetMetric::Depth;
   config.useMaxSAT                           = true;
+  config.minimizeGatesAfterDepthOptimization = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+}
+
+TEST_P(SynthesisTest, DepthMinimalGatesLinearSearch) {
+  config.target                              = TargetMetric::Depth;
+  config.linearSearch                        = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -368,5 +400,65 @@ TEST_P(SynthesisTest, STDepthMinimalGatesMaxSAT) {
 
   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+
+ TEST(HeuristicTest, basic) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.s(1);
+  qc.h(0);
+  qc.s(1);
+  config.heuristic = true;
+  config.splitSize = 1;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 2);
+}
+
+TEST(HeuristicTest, identity) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.s(1);
+  qc.h(0);
+  qc.sdag(1);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 0);
+}
+
+TEST(HeuristicTest, threeLayers) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(2);
+  qc.h(0);
+  qc.h(1);
+  qc.x(1, 0_pc);
+  qc.h(0);
+  qc.h(1);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 3);
+}
+
+TEST(HeuristicTest, fourLayers) {
+  auto config = Configuration();
+  auto qc     = qc::QuantumComputation(1);
+  qc.s(0);
+  qc.s(0);
+  qc.s(0);
+  qc.s(0);
+  config.heuristic = true;
+  config.splitSize = 2;
+  config.target    = TargetMetric::Depth;
+  auto synth       = CliffordSynthesizer(qc);
+  synth.synthesize(config);
+  EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
 } // namespace cs

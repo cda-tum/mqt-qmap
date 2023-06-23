@@ -17,7 +17,8 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
-  logicbase::LogicTerm rChanges{};
+  logicbase::LogicTerm   rChanges{};
+  logicbase::LogicMatrix xorHelpers{};
 
   void assertConsistency() const override;
   void assertGateConstraints() override;
@@ -32,6 +33,7 @@ protected:
                                              std::size_t qubit) override;
   void assertTwoQubitGateOrderConstraints(std::size_t pos, std::size_t ctrl,
                                           std::size_t trgt) override;
+  void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
 };
 
 } // namespace cs::encoding

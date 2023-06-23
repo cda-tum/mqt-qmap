@@ -450,4 +450,14 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   checkStabLength(row);
   tableau.push_back(row);
 }
+bool Tableau::isIdentityTableau() const {
+  for (std::size_t i = 0U; i < getTableauSize(); ++i) {
+    for (std::size_t j = 0U; j < tableau[i].size(); ++j) {
+      if ((j == i && tableau[i][j] == 0U) || (j != i && tableau[i][j] == 1U)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 } // namespace cs

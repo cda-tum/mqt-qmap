@@ -15,16 +15,26 @@ else:
 import pickle
 from itertools import combinations
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, NewType, Set, Tuple
+from typing import TYPE_CHECKING, Dict, NewType, Optional, Set, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable
+
     from matplotlib import figure
-    from qiskit.providers import Backend
+    from qiskit.providers import BackendV1
+    from typing_extensions import TypeAlias
 
     from mqt.qmap import Architecture
 
 
+import contextlib
+
 import rustworkx as rx
+import rustworkx.visualization as rxviz
+
+with contextlib.suppress(TypeError):
+    Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
+
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
@@ -40,7 +50,7 @@ class SubarchitectureOrder:
 
     def __init__(self) -> None:
         """Initialize a partial order."""
-        self.arch: rx.PyGraph = rx.PyGraph()
+        self.arch: Graph = rx.PyGraph()
         self.subarch_order: PartialOrder = PartialOrder({})
         self.desirable_subarchitectures: PartialOrder = PartialOrder({})
         self.isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
@@ -50,7 +60,7 @@ class SubarchitectureOrder:
         self.__compute_desirable_subarchitectures()
 
     @classmethod
-    def from_retworkx_graph(cls, graph: rx.PyGraph) -> SubarchitectureOrder:
+    def from_retworkx_graph(cls, graph: Graph) -> SubarchitectureOrder:
         """Construct the partial order from retworkx graph.
 
         Args:
@@ -68,24 +78,24 @@ class SubarchitectureOrder:
         return so
 
     @classmethod
-    def from_coupling_map(cls, coupling_map: set[tuple[int, int]] | list[tuple[int, int]]) -> SubarchitectureOrder:
+    def from_coupling_map(cls, coupling_map: Iterable[tuple[int, int]]) -> SubarchitectureOrder:
         """Construct partial order from coupling map defined as set of tuples of connected qubits.
 
         Args:
-            coupling_map: Set or list of tuples of connected qubits.
+            coupling_map: Iterable of tuples of connected qubits.
 
         Returns:
             The resulting partial order.
         """
         num_nodes = max(max(int(u), int(v)) for u, v in coupling_map)
-        graph = rx.PyGraph()
+        graph: Graph = rx.PyGraph()
         graph.add_nodes_from(list(range(num_nodes + 1)))
-        graph.add_edges_from_no_data([tuple(edge) for edge in coupling_map])
+        graph.add_edges_from_no_data(list(coupling_map))
 
         return cls.from_retworkx_graph(graph)
 
     @classmethod
-    def from_backend(cls, backend: Backend) -> SubarchitectureOrder:
+    def from_backend(cls, backend: BackendV1) -> SubarchitectureOrder:
         """Construct the partial order from a coupling map defined as a Qiskit backend.
 
         Args:
@@ -144,7 +154,7 @@ class SubarchitectureOrder:
                 return cls.from_library(lib_path)
         return SubarchitectureOrder()
 
-    def optimal_candidates(self, nqubits: int) -> list[rx.PyGraph]:
+    def optimal_candidates(self, nqubits: int) -> list[Graph]:
         """Return optimal subarchitecture candidate.
 
         Args:
@@ -176,7 +186,7 @@ class SubarchitectureOrder:
 
         return [self.sgs[n][i] for (n, i) in opt_cands]
 
-    def covering(self, nqubits: int, size: int) -> list[rx.PyGraph]:
+    def covering(self, nqubits: int, size: int) -> list[Graph]:
         """Return covering for nqubit circuits.
 
         Args:
@@ -218,7 +228,7 @@ class SubarchitectureOrder:
         with path.open("wb") as f:
             pickle.dump(self, f)
 
-    def draw_subarchitecture(self, subarchitecture: rx.PyGraph | tuple[int, int]) -> figure.Figure:
+    def draw_subarchitecture(self, subarchitecture: Graph | tuple[int, int]) -> figure.Figure:
         """Create a matplotlib figure showing subarchitecture within the entire architecture.
 
         Nodes that are part of the subarchitecture are drawn yellow.
@@ -235,9 +245,9 @@ class SubarchitectureOrder:
         colors = [SubarchitectureOrder.inactive_color for _ in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
             colors[node] = SubarchitectureOrder.active_color
-        return rx.visualization.mpl_draw(subarchitecture, node_color=colors)
+        return rxviz.mpl_draw(self.arch, node_color=colors)  # type: ignore[no-untyped-call]
 
-    def draw_subarchitectures(self, subarchitectures: list[rx.PyGraph] | list[tuple[int, int]]) -> list[figure.Figure]:
+    def draw_subarchitectures(self, subarchitectures: list[Graph] | list[tuple[int, int]]) -> list[figure.Figure]:
         """Create matplotlib figures showing subarchitectures within the entire architecture.
 
         For each subarchitecture one figure is drawn.
@@ -254,15 +264,15 @@ class SubarchitectureOrder:
 
     def __compute_subarchs(self) -> None:
         """Compute all subarchitectures of the architecture."""
-        self.sgs: list[list[rx.PyGraph]] = [[] for i in range(self.arch.num_nodes() + 1)]
+        self.sgs: list[list[Graph]] = [[] for i in range(self.arch.num_nodes() + 1)]
 
         for i in range(1, self.arch.num_nodes() + 1):
             node_combinations = combinations(range(self.arch.num_nodes()), i)
             for sg in (self.arch.subgraph(selected_nodes) for selected_nodes in node_combinations):
-                if rx.is_connected(sg):
+                if rx.is_connected(sg):  # type: ignore[attr-defined]
                     new_class = True
                     for g in self.sgs[i]:
-                        if rx.is_isomorphic(g, sg):
+                        if rx.is_isomorphic(g, sg):  # type: ignore[attr-defined]
                             new_class = False
                             break
                     if new_class:
@@ -279,7 +289,7 @@ class SubarchitectureOrder:
         for n, sgs_n in enumerate(self.sgs[:-1]):
             for i, sg in enumerate(sgs_n):
                 for j, parent_sg in enumerate(self.sgs[n + 1]):
-                    matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)
+                    matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)  # type: ignore[attr-defined]
                     for iso in matcher:
                         self.subarch_order[(n, i)].add((n + 1, j))
                         iso_rev = {}
@@ -354,8 +364,8 @@ class SubarchitectureOrder:
                 if v is w:
                     continue
                 if (
-                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda _x: 1, goal=w)[w]
-                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda _x: 1, goal=iso[w])[iso[w]]
+                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda _x: 1, goal=w)[w]  # type: ignore[attr-defined]
+                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda _x: 1, goal=iso[w])[iso[w]]  # type: ignore[attr-defined]
                 ):
                     return True
         return False

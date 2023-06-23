@@ -115,6 +115,26 @@ def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configu
     print("\n", circ)
 
 
+@pytest.mark.parametrize("test_config", create_circuit_tests())
+def test_heuristic(test_config: Configuration) -> None:
+    """Test heuristic synthesis method."""
+    circ, _ = qmap.optimize_clifford(
+        circuit=test_config.initial_circuit,
+        heuristic=True,
+        split_size=10,
+        target_metric="depth",
+        include_destabilizers=True,
+    )
+
+    circ_opt, _ = qmap.optimize_clifford(
+        circuit=test_config.initial_circuit, heuristic=False, target_metric="depth", include_destabilizers=True
+    )
+
+    assert circ.depth() >= circ_opt.depth()
+    assert Clifford(circ) == Clifford(circ_opt)
+    print("\n", circ)
+
+
 @pytest.mark.parametrize("test_config", create_tableau_tests())
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:

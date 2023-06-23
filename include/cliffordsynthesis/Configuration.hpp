@@ -9,8 +9,15 @@
 #include "nlohmann/json.hpp"
 
 #include <plog/Log.h>
+#include <thread>
+#include <unordered_map>
+#include <variant>
 
 namespace cs {
+
+using SolverParameter = std::variant<bool, std::uint32_t, double, std::string>;
+using SolverParameterMap = std::unordered_map<std::string, SolverParameter>;
+
 struct Configuration {
   Configuration() = default;
 
@@ -18,6 +25,7 @@ struct Configuration {
   std::size_t    initialTimestepLimit    = 0U;
   std::size_t    minimalTimesteps        = 0U;
   bool           useMaxSAT               = false;
+  bool           linearSearch            = false;
   TargetMetric   target                  = TargetMetric::Gates;
   bool           useSymmetryBreaking     = true;
   bool           dumpIntermediateResults = false;
@@ -25,7 +33,7 @@ struct Configuration {
   plog::Severity verbosity               = plog::Severity::warning;
 
   /// Settings for the SAT solver
-  std::size_t nThreads = 1U;
+  SolverParameterMap solverParameters = {};
 
   /// Settings for depth-optimal synthesis
   bool minimizeGatesAfterDepthOptimization = false;
@@ -41,14 +49,19 @@ struct Configuration {
   double gateLimitFactor                               = 1.1;
   bool   minimizeGatesAfterTwoQubitGateOptimization    = false;
 
+  // Settings for the heuristic solver
+  bool        heuristic         = false;
+  std::size_t splitSize         = 5U;
+  std::size_t nThreadsHeuristic = std::thread::hardware_concurrency();
+
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
     j["minimal_timesteps"]      = minimalTimesteps;
     j["use_max_sat"]            = useMaxSAT;
+    j["linear_search"]          = linearSearch;
     j["target_metric"]          = toString(target);
     j["use_symmetry_breaking"]  = useSymmetryBreaking;
-    j["n_threads"]              = nThreads;
     j["minimize_gates_after_depth_optimization"] =
         minimizeGatesAfterDepthOptimization;
     j["minimize_gates_after_st_depth_optimization"] =
@@ -59,6 +72,20 @@ struct Configuration {
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
     j["use_st_encoding"]        = useSTEncoding;
+    j["heuristic"]           = heuristic;
+    j["split_size"]          = splitSize;
+    j["n_threads_heuristic"] = nThreadsHeuristic;
+    if (!solverParameters.empty()) {
+      nlohmann::json solverParametersJson;
+      for (const auto& entry : solverParameters) {
+        std::visit(
+            [&solverParametersJson, &entry](const auto& v) {
+              solverParametersJson[entry.first] = v;
+            },
+            entry.second);
+      }
+      j["solver_parameters"] = solverParametersJson;
+    }
 
     return j;
   }

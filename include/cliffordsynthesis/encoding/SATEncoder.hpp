@@ -61,6 +61,8 @@ public:
 
     // an optional limit on the total number of two-qubit gates
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
+
+    SolverParameterMap solverParameters = {};
   };
 
   SATEncoder() = default;
@@ -74,7 +76,6 @@ public:
 protected:
   void                            initializeSolver();
   void                            createFormulation();
-  void                            produceInstance() const;
   [[nodiscard]] logicbase::Result solve() const;
   void                            extractResultsFromModel(Results& res) const;
   void                            cleanup() const;

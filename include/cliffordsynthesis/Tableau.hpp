@@ -121,6 +121,8 @@ public:
     return !(lhs == rhs);
   }
 
+  [[nodiscard]] bool isIdentityTableau() const;
+
   void createDiagonalTableau(std::size_t nQ, bool includeDestabilizers = false);
 
   friend std::ostream& operator<<(std::ostream& os, const Tableau& dt) {
