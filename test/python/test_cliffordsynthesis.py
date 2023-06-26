@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import Clifford, Pauli, PauliList
+from qiskit.quantum_info import Clifford, PauliList
 
 from mqt import qcec, qmap
 
@@ -270,7 +270,7 @@ def test_synthesize_from_qiskit_clifford(bell_circuit: QuantumCircuit) -> None:
 
 def test_synthesize_from_qiskit_pauli_list(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from a Qiskit PauliList."""
-    pauli_list = PauliList([Pauli("XX"), Pauli("ZZ")])
+    pauli_list = PauliList(["XX", "ZZ"])
     circ, results = qmap.synthesize_clifford(target_tableau=pauli_list)
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 
