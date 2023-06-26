@@ -106,7 +106,7 @@ testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
 xfail_strict = true
-filterwarnings = ["error", 'ignore:Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.):DeprecationWarning']
+filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:DeprecationWarning:qiskit:']
 
 [tool.coverage.run]
 source = ["mqt.qmap"]
