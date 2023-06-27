@@ -98,7 +98,7 @@ def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
 
 def synthesize_clifford(
     target_tableau: str | Clifford | PauliList | Tableau,
-    initial_tableau: str | Clifford | PauliList | Tableau = None,
+    initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
     **kwargs: Any | None,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
@@ -143,7 +143,7 @@ def synthesize_clifford(
 
 def optimize_clifford(
     circuit: str | QuantumCircuit | QuantumComputation,
-    initial_tableau: str | Clifford | PauliList | Tableau = None,
+    initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
     **kwargs: Any | None,
 ) -> tuple[QuantumCircuit, SynthesisResults]:
