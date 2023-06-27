@@ -48,8 +48,7 @@ def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) ->
             # convert tokens to integers
             int_tokens = [int(token) for token in tokens]
             # create an empty layout
-            layout = Layout().from_intlist(int_tokens, *qregs)
-            return layout
+            return Layout().from_intlist(int_tokens, *qregs)
     msg = "No initial layout found in QASM file."
     raise ValueError(msg)
 

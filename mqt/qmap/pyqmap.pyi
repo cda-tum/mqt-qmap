@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 if TYPE_CHECKING:  # pragma: no cover
