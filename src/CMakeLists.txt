@@ -1,7 +1,7 @@
 # add LogicBlocks target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
 # add MQT::qfr target
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr" EXCLUDE_FROM_ALL)
+add_subdirectory("${PROJECT_SOURCE_DIR}/extern/mqt-core" "extern/mqt-core" EXCLUDE_FROM_ALL)
 
 # macro to add core libraries
 macro(ADD_INTERNAL_LIBRARY libname)
@@ -88,3 +88,7 @@ target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
+
+if(BINDINGS)
+  add_subdirectory(python)
+endif()

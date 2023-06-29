@@ -21,7 +21,7 @@ macro(CHECK_SUBMODULE_PRESENT modulename)
   endif()
 endmacro()
 
-check_submodule_present(qfr)
+check_submodule_present(mqt-core)
 
 check_submodule_present(LogicBlocks)
 
@@ -45,8 +45,5 @@ if(BUILD_QMAP_TESTS)
   add_subdirectory(test)
 endif()
 
-# add Python binding code
-option(BINDINGS "Configure for building Python bindings")
-if(BINDINGS)
-  add_subdirectory(mqt/qmap)
-endif()
+# add Python binding code option(BINDINGS "Configure for building Python bindings") if(BINDINGS)
+# add_subdirectory(mqt/qmap) endif()
