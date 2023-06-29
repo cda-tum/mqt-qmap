@@ -1,8 +1,7 @@
-[submodule "extern/mqt-core"]
-	path = extern/mqt-core
-	url = https://github.com/cda-tum/mqt-core.git
-	branch = main
 [submodule "extern/LogicBlocks"]
 	path = extern/LogicBlocks
 	url = https://github.com/cda-tum/LogicBlocks.git
     branch = main
+[submodule "extern/mqt-core"]
+	path = extern/mqt-core
+	url = https://github.com/cda-tum/mqt-core
