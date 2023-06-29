@@ -55,7 +55,6 @@ nanobind_add_module(
   ${PROJECT_SOURCE_DIR}/include/python/nanobind.hpp
   module.cpp)
 
-target_link_libraries(pyqmap PRIVATE MQT::QMAP)
 target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_heuristic_lib MQT::Core
                                                pybind11_json)
 target_compile_definitions(py${PROJECT_NAME} PUBLIC Z3_FOUND)

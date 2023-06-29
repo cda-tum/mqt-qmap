@@ -76,6 +76,11 @@ Research = "https://www.cda.cit.tum.de/research/ibm_qx_mapping/"
 [tool.setuptools.packages.find]
 include = ["mqt.*"]
 
+[tool.scikit-build.cmake.define]
+BUILD_QMAP_BINDINGS = "ON"
+BUILD_QMAP_TESTS = "OFF"
+ENABLE_IPO = "ON"
+
 [tool.setuptools_scm]
 
 [tool.cibuildwheel]

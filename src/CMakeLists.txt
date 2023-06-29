@@ -89,6 +89,6 @@ target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
 
-if(BINDINGS)
+if(BUILD_QMAP_BINDINGS)
   add_subdirectory(python)
 endif()
