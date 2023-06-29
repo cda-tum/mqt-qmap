@@ -77,4 +77,4 @@ set_target_properties(
                              $<TARGET_PROPERTY:${NANOBIND_LIB},INTERFACE_INCLUDE_DIRECTORIES>)
 
 # Install directive for scikit-build-core
-install(TARGETS pyqmap LIBRARY DESTINATION mqt/qmap)
+install(TARGETS py${PROJECT_NAME} LIBRARY DESTINATION mqt/qmap)
