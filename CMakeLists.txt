@@ -21,7 +21,7 @@ macro(CHECK_SUBMODULE_PRESENT modulename)
   endif()
 endmacro()
 
-check_submodule_present(qfr)
+check_submodule_present(mqt-core)
 
 check_submodule_present(LogicBlocks)
 
