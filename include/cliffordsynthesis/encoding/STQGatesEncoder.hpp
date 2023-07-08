@@ -5,6 +5,7 @@
 #pragma once
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+
 #include <cstddef>
 #include <optional>
 
@@ -18,8 +19,8 @@ protected:
   logicbase::LogicTerm rChanges{};
 
   static constexpr std::array<qc::OpType, 4>
-      SINGLE_QUBIT_GATES_FOR_STQ_ENCODING = {
-      qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
+      SINGLE_QUBIT_GATES_FOR_STQ_ENCODING = {qc::OpType::None, qc::OpType::H,
+                                             qc::OpType::S, qc::OpType::SX};
 
   void assertConsistency() const override;
   void assertGateConstraints() override;
@@ -43,16 +44,15 @@ protected:
                                     bool                    target,
                                     logicbase::LogicVector& variables) const;
 
-  //TODO: remove later
-  [[nodiscard]] std::vector<TransformationFamily>
-  collectGateTransformations(std::size_t pos, std::size_t qubit,
-                             const GateToTransformation& gateToTransformation) override;
+  // TODO: remove later
+  [[nodiscard]] std::vector<TransformationFamily> collectGateTransformations(
+      std::size_t pos, std::size_t qubit,
+      const GateToTransformation& gateToTransformation) override;
 
-  void extractSingleQubitGatesFromModel(std::size_t             pos,
-                                        logicbase::Model&       model,
-                                        qc::QuantumComputation& qc,
-                                        std::size_t& nSingleQubitGates) override;
-
+  void
+  extractSingleQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
+                                   qc::QuantumComputation& qc,
+                                   std::size_t& nSingleQubitGates) override;
 };
 
 } // namespace cs::encoding

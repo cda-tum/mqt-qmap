@@ -3,14 +3,13 @@
 //
 
 #include "cliffordsynthesis/encoding/STQGatesEncoder.hpp"
+
 #include "LogicTerm/LogicTerm.hpp"
 #include "utils/logging.hpp"
 
 namespace cs::encoding {
 
 using namespace logicbase;
-
-
 
 void encoding::STQGatesEncoder::createSingleQubitGateVariables() {
   DEBUG() << "Creating single-qubit gate variables for the STQEncoding.";
@@ -50,7 +49,8 @@ void encoding::STQGatesEncoder::createTwoQubitGateVariables() {
 
       // Add I to the two qubit gates
       const std::string gName = "g_" + std::to_string(t) + "_" +
-                                toString(qc::OpType::None) + "_" + std::to_string(ctrl);
+                                toString(qc::OpType::None) + "_" +
+                                std::to_string(ctrl);
       TRACE() << "Creating variable " << gName;
       control.emplace_back(lb->makeVariable(gName));
     }
@@ -79,23 +79,25 @@ void encoding::STQGatesEncoder::collectTwoQubitGateVariables(
 
 void encoding::STQGatesEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
-  for (std::size_t t = 0U; t < T/2U; ++t) {
+  for (std::size_t t = 0U; t < T / 2U; ++t) {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector singleQubitGateVariables{};
       LogicVector twoQubitGateVariables{};
       vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
-      //TODO: may need to return the vars back
+      // TODO: may need to return the vars back
       collectTwoQubitGateVariables(t, q, true, twoQubitGateVariables);
       collectTwoQubitGateVariables(t, q, false, twoQubitGateVariables);
 
       IF_PLOG(plog::verbose) {
-        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit " << q;
+        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
+                << q;
         for (const auto& var : singleQubitGateVariables) {
           TRACE() << var.getName();
         }
 
-        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit " << q;
+        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit "
+                << q;
         for (const auto& var : twoQubitGateVariables) {
           TRACE() << var.getName();
         }
@@ -113,9 +115,8 @@ void encoding::STQGatesEncoder::assertGateConstraints() {
     TRACE() << "Asserting gate constraints at time " << t;
 
     const std::size_t pos = t < T / 2 ? t : t % (T / 2);
-    t % 2U == 0
-        ? assertSingleQubitGateConstraints(pos)
-        : assertTwoQubitGateConstraints(pos);
+    t % 2U == 0 ? assertSingleQubitGateConstraints(pos)
+                : assertTwoQubitGateConstraints(pos);
 
     TRACE() << "Asserting r changes at time " << t;
     lb->assertFormula(tvars->r[t + 1] == rChanges);
@@ -176,7 +177,7 @@ LogicTerm encoding::STQGatesEncoder::createTwoQubitGateConstraint(
   return changes;
 }
 
-//TODO: to remove after update of sqg_vector
+// TODO: to remove after update of sqg_vector
 /*---------------------------------------------------------------------*/
 std::vector<STQGatesEncoder::TransformationFamily>
 STQGatesEncoder::collectGateTransformations(

@@ -56,7 +56,7 @@ public:
 
   [[nodiscard]] auto* getVariables() { return &vars; }
 
-  //TODO: set back
+  // TODO: set back
   static constexpr std::array<qc::OpType, 4> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
 
@@ -143,9 +143,9 @@ protected:
                                std::size_t trgt) = 0;
 
   virtual void extractSingleQubitGatesFromModel(std::size_t             pos,
-                                        logicbase::Model&       model,
-                                        qc::QuantumComputation& qc,
-                                        std::size_t& nSingleQubitGates);
+                                                logicbase::Model&       model,
+                                                qc::QuantumComputation& qc,
+                                                std::size_t& nSingleQubitGates);
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
                                      std::size_t&            nTwoQubitGates);
