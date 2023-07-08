@@ -130,7 +130,7 @@ void SATEncoder::cleanup() const {
     lb->reset();
   }
 }
-// TODO: add ST-Sat-encoding
+
 Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 

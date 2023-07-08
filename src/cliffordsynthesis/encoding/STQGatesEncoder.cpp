@@ -3,7 +3,6 @@
 //
 
 #include "cliffordsynthesis/encoding/STQGatesEncoder.hpp"
-
 #include "LogicTerm/LogicTerm.hpp"
 #include "utils/logging.hpp"
 
@@ -11,25 +10,99 @@ namespace cs::encoding {
 
 using namespace logicbase;
 
+
+
+void encoding::STQGatesEncoder::createSingleQubitGateVariables() {
+  DEBUG() << "Creating single-qubit gate variables for the STQEncoding.";
+  vars.gS.reserve(T);
+  for (std::size_t t = 0U; t < T; ++t) {
+    auto& timeStep = vars.gS.emplace_back();
+    timeStep.reserve(SINGLE_QUBIT_GATES_FOR_STQ_ENCODING.size());
+    for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
+      auto& g = timeStep.emplace_back();
+      g.reserve(N);
+      for (std::size_t q = 0U; q < N; ++q) {
+        const std::string gName = "g_" + std::to_string(t) + "_" +
+                                  toString(gate) + "_" + std::to_string(q);
+        TRACE() << "Creating variable " << gName;
+        g.emplace_back(lb->makeVariable(gName));
+      }
+    }
+  }
+}
+
+void encoding::STQGatesEncoder::createTwoQubitGateVariables() {
+  DEBUG() << "Creating two-qubit gate variables for the STQEncoding.";
+  vars.gC.reserve(T);
+  for (std::size_t t = 0U; t < T; ++t) {
+    auto& timeStep = vars.gC.emplace_back();
+    timeStep.reserve(N);
+    for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
+      auto& control = timeStep.emplace_back();
+      control.reserve(N + 1U);
+      for (std::size_t trgt = 0U; trgt < N; ++trgt) {
+        const std::string gName = "g_" + std::to_string(t) + "_cx_" +
+                                  std::to_string(ctrl) + "_" +
+                                  std::to_string(trgt);
+        TRACE() << "Creating variable " << gName;
+        control.emplace_back(lb->makeVariable(gName));
+      }
+
+      // Add I to the two qubit gates
+      const std::string gName = "g_" + std::to_string(t) + "_" +
+                                toString(qc::OpType::None) + "_" + std::to_string(ctrl);
+      TRACE() << "Creating variable " << gName;
+      control.emplace_back(lb->makeVariable(gName));
+    }
+  }
+}
+
+void encoding::STQGatesEncoder::collectTwoQubitGateVariables(
+    const std::size_t pos, const std::size_t qubit, const bool target,
+    LogicVector& variables) const {
+  const auto& twoQubitGates = vars.gC[pos];
+  const auto  n             = twoQubitGates.size();
+  for (std::size_t q = 0; q < n; ++q) {
+    if (q == qubit) {
+      if (N > variables.size()) {
+        variables.emplace_back(twoQubitGates[qubit].back());
+      }
+      continue;
+    }
+    if (target) {
+      variables.emplace_back(twoQubitGates[q][qubit]);
+    } else {
+      variables.emplace_back(twoQubitGates[qubit][q]);
+    }
+  }
+}
+
 void encoding::STQGatesEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
-  // T/2
-  for (std::size_t t = 0U; t < T; ++t) {
+  for (std::size_t t = 0U; t < T/2U; ++t) {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
-      LogicVector gateVariables{};
-      vars.collectSingleQubitGateVariables(t, q, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, false, gateVariables);
+      LogicVector singleQubitGateVariables{};
+      LogicVector twoQubitGateVariables{};
+      vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
+      //TODO: may need to return the vars back
+      collectTwoQubitGateVariables(t, q, true, twoQubitGateVariables);
+      collectTwoQubitGateVariables(t, q, false, twoQubitGateVariables);
 
       IF_PLOG(plog::verbose) {
-        TRACE() << "Gate variables at time " << t << " and qubit " << q;
-        for (const auto& var : gateVariables) {
+        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit " << q;
+        for (const auto& var : singleQubitGateVariables) {
+          TRACE() << var.getName();
+        }
+
+        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit " << q;
+        for (const auto& var : twoQubitGateVariables) {
           TRACE() << var.getName();
         }
       }
 
-      assertExactlyOne(gateVariables);
+      assertExactlyOne(singleQubitGateVariables);
+      assertExactlyOne(twoQubitGateVariables);
     }
   }
 }
@@ -38,9 +111,12 @@ void encoding::STQGatesEncoder::assertGateConstraints() {
   DEBUG() << "Asserting gate constraints";
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
-    rChanges = tvars->r[t];
-    assertSingleQubitGateConstraints(t);
-    assertTwoQubitGateConstraints(t);
+
+    const std::size_t pos = t < T / 2 ? t : t % (T / 2);
+    t % 2U == 0
+        ? assertSingleQubitGateConstraints(pos)
+        : assertTwoQubitGateConstraints(pos);
+
     TRACE() << "Asserting r changes at time " << t;
     lb->assertFormula(tvars->r[t + 1] == rChanges);
   }
@@ -57,7 +133,7 @@ void encoding::STQGatesEncoder::assertSingleQubitGateConstraints(
 
 void STQGatesEncoder::assertRConstraints(const std::size_t pos,
                                          const std::size_t qubit) {
-  for (const auto gate : SINGLE_QUBIT_GATES) {
+  for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
     rChanges =
         rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
                                   tvars->singleQubitRChange(pos, qubit, gate),
@@ -100,51 +176,60 @@ LogicTerm encoding::STQGatesEncoder::createTwoQubitGateConstraint(
   return changes;
 }
 
+//TODO: to remove after update of sqg_vector
+/*---------------------------------------------------------------------*/
+std::vector<STQGatesEncoder::TransformationFamily>
+STQGatesEncoder::collectGateTransformations(
+    const std::size_t pos, const std::size_t qubit,
+    const GateToTransformation& gateToTransformation) {
+  std::vector<TransformationFamily> transformations;
+
+  for (const auto& gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
+    const auto& transformation = gateToTransformation(pos, qubit, gate);
+    const auto& it             = std::find_if(
+        transformations.begin(), transformations.end(), [&](const auto& entry) {
+          return entry.first.deepEquals(transformation);
+        });
+    if (it != transformations.end()) {
+      it->second.emplace_back(gate);
+    } else {
+      transformations.emplace_back(transformation,
+                                   std::vector<qc::OpType>{gate});
+    }
+  }
+  return transformations;
+}
+
+void STQGatesEncoder::extractSingleQubitGatesFromModel(
+    const std::size_t pos, Model& model, qc::QuantumComputation& qc,
+    std::size_t& nSingleQubitGates) {
+  const auto& singleQubitGates = vars.gS[pos];
+  for (std::size_t q = 0U; q < N; ++q) {
+    for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
+      if (gate == qc::OpType::None) {
+        continue;
+      }
+      if (model.getBoolValue(singleQubitGates[gateToIndex(gate)][q],
+                             lb.get())) {
+        qc.emplace_back<qc::StandardOperation>(N, q, gate);
+        ++nSingleQubitGates;
+        DEBUG() << toString(gate) << "(" << q << ")";
+      }
+    }
+  }
+}
+
+/*---------------------------------------------------------------------*/
+
+// mock-functions
 void STQGatesEncoder::assertSingleQubitGateOrderConstraints(
     const std::size_t pos, const std::size_t qubit) {
-  // nothing to assert at the end
-  if (pos == T - 1U) {
-    return;
-  }
-
-  // gate variables of the current and the next time step
-  const auto& gSNow  = vars.gS[pos];
-  const auto& gSNext = vars.gS[pos + 1];
-
-  // once no gate is applied to the considered qubit, no single qubit gate can
-  // be applied to it in the next time step.
-  auto noSingleQubitGate = LogicTerm(true);
-  for (const auto gate : SINGLE_QUBIT_GATES) {
-    if (gate == qc::OpType::None) {
-      continue;
-    }
-    noSingleQubitGate = noSingleQubitGate && !gSNext[gateToIndex(gate)][qubit];
-  }
-  lb->assertFormula(LogicTerm::implies(
-      gSNow[gateToIndex(qc::OpType::None)][qubit], noSingleQubitGate));
+  return;
 }
 
+// mock-functions
 void STQGatesEncoder::assertTwoQubitGateOrderConstraints(
     const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
-  // nothing to assert at the end
-  if (pos == T - 1U) {
-    return;
-  }
-
-  // gate variables of the current and the next time step
-  const auto& current = vars.gC[pos][ctrl][trgt];
-  const auto& gSNow   = vars.gS[pos];
-  const auto& gCNext  = vars.gC[pos + 1];
-
-  // two identical CNOTs may not be applied in a row because they would cancel.
-  lb->assertFormula(LogicTerm::implies(current, !gCNext[ctrl][trgt]));
-
-  // if no gate is applied to both qubits, no CNOT on them can be applied in the
-  // next time step.
-  const auto noneIndex     = gateToIndex(qc::OpType::None);
-  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
-  const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
-  lb->assertFormula(LogicTerm::implies(noGate, noFurtherCnot));
+  return;
 }
-
 } // namespace cs::encoding

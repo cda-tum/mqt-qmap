@@ -92,8 +92,6 @@ protected:
 
   void minimizeGatesFixedDepth(EncoderConfig config);
 
-  void minimizeGatesFixedSTDepth(EncoderConfig config);
-
   void gateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,

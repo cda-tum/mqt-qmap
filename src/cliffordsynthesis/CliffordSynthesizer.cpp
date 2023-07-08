@@ -252,12 +252,8 @@ void CliffordSynthesizer::sTDepthOptimalSynthesis(
   // optimization pass is provided that additionally minimizes the number of
   // gates.
 
-  // TODO: to remove maxSat and add lineary search instead binary
-  if (configuration.useMaxSAT) {
-    // The MaxSAT solver can determine the optimal T with a single call by
-    // minimizing over the layers of gates (=timesteps) in the resulting
-    // circuit.
-    runMaxSAT(config);
+  if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
     // timestep (=sTDepth) limits T until a solution with sTDepth T is found,
@@ -265,12 +261,7 @@ void CliffordSynthesizer::sTDepthOptimalSynthesis(
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 
-  // TODO: to remove
-  if (configuration.minimizeGatesAfterSTDepthOptimization) {
-    // To find a solution with fewer gates, we run the solver once more with a
-    // fixed depth limit and the goal to minimize the number of gates.
-    minimizeGatesFixedSTDepth(config);
-  }
+  // TODO: to add minimizeGatesAfterDepthOptimization
 }
 
 void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
@@ -299,35 +290,6 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
                     config);
   }
   INFO() << "Found a depth " << results.getDepth() << " circuit with "
-         << results.getGates() << " gate(s).";
-}
-
-void CliffordSynthesizer::minimizeGatesFixedSTDepth(EncoderConfig config) {
-  if (results.getSTDepth() == 0U) {
-    return;
-  }
-
-  if (results.getSTDepth() * 2U == results.getGates()) {
-    return;
-  }
-
-  INFO() << "Found a sTDepth-optimal circuit with sTDepth "
-         << results.getSTDepth() << " and " << results.getGates()
-         << " gate(s). Trying to minimize the number of gates.";
-
-  config.targetMetric  = TargetMetric::STDepth;
-  config.timestepLimit = results.getSTDepth();
-  config.useMaxSAT     = configuration.useMaxSAT;
-  config.useSTEncoding = true;
-
-  if (config.useMaxSAT) {
-    runMaxSAT(config);
-  } else {
-    config.gateLimit = results.getGates();
-    runBinarySearch(*config.gateLimit, results.getSTDepth(), results.getGates(),
-                    config);
-  }
-  INFO() << "Found a sTDepth " << results.getSTDepth() << " circuit with "
          << results.getGates() << " gate(s).";
 }
 

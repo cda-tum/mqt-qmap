@@ -52,7 +52,6 @@
     "expected_minimal_gates_at_minimal_depth": 1,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 1,
-    "expected_minimal_st_depth": 1,
-    "use_st_encoding": true
+    "expected_minimal_st_depth": 1
   }
 ]
