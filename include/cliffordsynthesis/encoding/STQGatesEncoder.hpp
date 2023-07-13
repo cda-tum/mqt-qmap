@@ -17,10 +17,6 @@ public:
 protected:
   logicbase::LogicTerm rChanges{};
 
-  static constexpr std::array<qc::OpType, 4>
-      SINGLE_QUBIT_GATES_FOR_STQ_ENCODING = {
-      qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
-
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertRConstraints(std::size_t pos, std::size_t qubit) override;
@@ -29,30 +25,23 @@ protected:
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
+  [[nodiscard]] logicbase::LogicTerm
+  createIdentityConstraintOnTQG(std::size_t pos, std::size_t ctrl,
+                               std::size_t trgt);
 
-  // variable creation
-  void createSingleQubitGateVariables() override;
-  void createTwoQubitGateVariables() override;
-
+  // assert constrains
   void assertSingleQubitGateOrderConstraints(std::size_t pos,
                                              std::size_t qubit) override;
   void assertTwoQubitGateOrderConstraints(std::size_t pos, std::size_t ctrl,
                                           std::size_t trgt) override;
 
+  // collect TQG variables
   void collectTwoQubitGateVariables(std::size_t pos, std::size_t qubit,
                                     bool                    target,
                                     logicbase::LogicVector& variables) const;
-
-  //TODO: remove later
-  [[nodiscard]] std::vector<TransformationFamily>
-  collectGateTransformations(std::size_t pos, std::size_t qubit,
-                             const GateToTransformation& gateToTransformation) override;
-
-  void extractSingleQubitGatesFromModel(std::size_t             pos,
-                                        logicbase::Model&       model,
-                                        qc::QuantumComputation& qc,
-                                        std::size_t& nSingleQubitGates) override;
-
+  // extracting the circuit
+  virtual void extractCircuitFromModel(Results& res,
+                                       logicbase::Model& model) override;
 };
 
 } // namespace cs::encoding

@@ -10,53 +10,6 @@ namespace cs::encoding {
 
 using namespace logicbase;
 
-
-
-void encoding::STQGatesEncoder::createSingleQubitGateVariables() {
-  DEBUG() << "Creating single-qubit gate variables for the STQEncoding.";
-  vars.gS.reserve(T);
-  for (std::size_t t = 0U; t < T; ++t) {
-    auto& timeStep = vars.gS.emplace_back();
-    timeStep.reserve(SINGLE_QUBIT_GATES_FOR_STQ_ENCODING.size());
-    for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
-      auto& g = timeStep.emplace_back();
-      g.reserve(N);
-      for (std::size_t q = 0U; q < N; ++q) {
-        const std::string gName = "g_" + std::to_string(t) + "_" +
-                                  toString(gate) + "_" + std::to_string(q);
-        TRACE() << "Creating variable " << gName;
-        g.emplace_back(lb->makeVariable(gName));
-      }
-    }
-  }
-}
-
-void encoding::STQGatesEncoder::createTwoQubitGateVariables() {
-  DEBUG() << "Creating two-qubit gate variables for the STQEncoding.";
-  vars.gC.reserve(T);
-  for (std::size_t t = 0U; t < T; ++t) {
-    auto& timeStep = vars.gC.emplace_back();
-    timeStep.reserve(N);
-    for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-      auto& control = timeStep.emplace_back();
-      control.reserve(N + 1U);
-      for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-        const std::string gName = "g_" + std::to_string(t) + "_cx_" +
-                                  std::to_string(ctrl) + "_" +
-                                  std::to_string(trgt);
-        TRACE() << "Creating variable " << gName;
-        control.emplace_back(lb->makeVariable(gName));
-      }
-
-      // Add I to the two qubit gates
-      const std::string gName = "g_" + std::to_string(t) + "_" +
-                                toString(qc::OpType::None) + "_" + std::to_string(ctrl);
-      TRACE() << "Creating variable " << gName;
-      control.emplace_back(lb->makeVariable(gName));
-    }
-  }
-}
-
 void encoding::STQGatesEncoder::collectTwoQubitGateVariables(
     const std::size_t pos, const std::size_t qubit, const bool target,
     LogicVector& variables) const {
@@ -64,7 +17,7 @@ void encoding::STQGatesEncoder::collectTwoQubitGateVariables(
   const auto  n             = twoQubitGates.size();
   for (std::size_t q = 0; q < n; ++q) {
     if (q == qubit) {
-      if (N > variables.size()) {
+      if (!target) {
         variables.emplace_back(twoQubitGates[qubit].back());
       }
       continue;
@@ -112,7 +65,7 @@ void encoding::STQGatesEncoder::assertGateConstraints() {
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
 
-    const std::size_t pos = t < T / 2 ? t : t % (T / 2);
+    const std::size_t pos = t < L  ? t : t - L;
     t % 2U == 0
         ? assertSingleQubitGateConstraints(pos)
         : assertTwoQubitGateConstraints(pos);
@@ -133,7 +86,7 @@ void encoding::STQGatesEncoder::assertSingleQubitGateConstraints(
 
 void STQGatesEncoder::assertRConstraints(const std::size_t pos,
                                          const std::size_t qubit) {
-  for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
+  for (const auto gate : SINGLE_QUBIT_GATES) {
     rChanges =
         rChanges ^ LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
                                   tvars->singleQubitRChange(pos, qubit, gate),
@@ -147,14 +100,23 @@ void encoding::STQGatesEncoder::assertTwoQubitGateConstraints(
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {
       if (ctrl == trgt) {
-        continue;
+        const auto changes = createIdentityConstraintOnTQG(pos, ctrl, trgt);
+        lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl].back(), changes));
+        DEBUG() << "Asserting Identity gate on " << ctrl << " and " << trgt;
+      } else {
+        const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
+        lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
+        DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
       }
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
-
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
     }
   }
+}
+//TODO: to implement
+LogicTerm encoding::STQGatesEncoder::createIdentityConstraintOnTQG(
+    std::size_t pos, std::size_t ctrl, std::size_t trgt) {
+  auto changes              = LogicTerm(true);
+
+  return changes;
 }
 
 LogicTerm encoding::STQGatesEncoder::createTwoQubitGateConstraint(
@@ -176,60 +138,52 @@ LogicTerm encoding::STQGatesEncoder::createTwoQubitGateConstraint(
   return changes;
 }
 
-//TODO: to remove after update of sqg_vector
-/*---------------------------------------------------------------------*/
-std::vector<STQGatesEncoder::TransformationFamily>
-STQGatesEncoder::collectGateTransformations(
-    const std::size_t pos, const std::size_t qubit,
-    const GateToTransformation& gateToTransformation) {
-  std::vector<TransformationFamily> transformations;
+void STQGatesEncoder::extractCircuitFromModel(Results& res, Model& model) {
+  std::size_t nSingleQubitGates = 0U;
+  std::size_t nTwoQubitGates    = 0U;
 
-  for (const auto& gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
-    const auto& transformation = gateToTransformation(pos, qubit, gate);
-    const auto& it             = std::find_if(
-        transformations.begin(), transformations.end(), [&](const auto& entry) {
-          return entry.first.deepEquals(transformation);
-        });
-    if (it != transformations.end()) {
-      it->second.emplace_back(gate);
-    } else {
-      transformations.emplace_back(transformation,
-                                   std::vector<qc::OpType>{gate});
-    }
+  qc::QuantumComputation qc(N);
+  for (std::size_t t = 0; t < T; ++t) {
+    const std::size_t pos = t < L  ? t : t - L;
+    t % 2U == 0
+        ? extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates)
+        : extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates);
   }
-  return transformations;
-}
 
-void STQGatesEncoder::extractSingleQubitGatesFromModel(
-    const std::size_t pos, Model& model, qc::QuantumComputation& qc,
-    std::size_t& nSingleQubitGates) {
-  const auto& singleQubitGates = vars.gS[pos];
-  for (std::size_t q = 0U; q < N; ++q) {
-    for (const auto gate : SINGLE_QUBIT_GATES_FOR_STQ_ENCODING) {
-      if (gate == qc::OpType::None) {
-        continue;
-      }
-      if (model.getBoolValue(singleQubitGates[gateToIndex(gate)][q],
-                             lb.get())) {
-        qc.emplace_back<qc::StandardOperation>(N, q, gate);
-        ++nSingleQubitGates;
-        DEBUG() << toString(gate) << "(" << q << ")";
-      }
-    }
-  }
+  res.setSingleQubitGates(nSingleQubitGates);
+  res.setTwoQubitGates(nTwoQubitGates);
+  res.setDepth(qc.getDepth());
+  res.setResultCircuit(qc);
 }
-
-/*---------------------------------------------------------------------*/
 
 // mock-functions
 void STQGatesEncoder::assertSingleQubitGateOrderConstraints(
     const std::size_t pos, const std::size_t qubit) {
-  return;
+  std::ostringstream posToStr;
+  std::ostringstream qubitToStr;
+
+  posToStr << pos;
+  qubitToStr << qubit;
+  throw std::runtime_error("Function assertSingleQubitGateOrderConstraints"
+                           "with pos: " + posToStr.str() + " and qubit: " +
+                           qubitToStr.str() + " is not provided for the STQGatesEncoder");
 }
 
 // mock-functions
 void STQGatesEncoder::assertTwoQubitGateOrderConstraints(
     const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
-  return;
+  std::ostringstream posToStr;
+  std::ostringstream ctrlToStr;
+  std::ostringstream trgtToStr;
+
+
+  posToStr << pos;
+  ctrlToStr << ctrl;
+  trgtToStr << trgt;
+
+  throw std::runtime_error("Function assertTwoQubitGateOrderConstraints"
+                           "with pos: " + posToStr.str() + " , ctrl: " +
+                           ctrlToStr.str() + " and target: " + trgtToStr.str() +
+                            "is not provided for the STQGatesEncoder");
 }
 } // namespace cs::encoding

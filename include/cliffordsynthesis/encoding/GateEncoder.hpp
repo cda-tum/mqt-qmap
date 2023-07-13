@@ -19,10 +19,11 @@ class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
               const std::size_t                      timestepLimit,
+              const std::size_t                      numberOfLayers,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock)
-      : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
-        lb(std::move(logicBlock)) {}
+      : N(nQubits), S(tableauSize), T(timestepLimit), L(numberOfLayers),
+        tvars(tableauVars), lb(std::move(logicBlock)) {}
   virtual ~GateEncoder() = default;
 
   struct Variables {
@@ -42,6 +43,8 @@ public:
   // variable creation
   virtual void createSingleQubitGateVariables();
   virtual void createTwoQubitGateVariables();
+  void addIdentityGateToTQGVariables();
+
 
   // encode the relation between the tableaus and the gates
   virtual void encodeGates() {
@@ -52,7 +55,7 @@ public:
   virtual void encodeSymmetryBreakingConstraints();
 
   // extracting the circuit
-  void extractCircuitFromModel(Results& res, logicbase::Model& model);
+  virtual void extractCircuitFromModel(Results& res, logicbase::Model& model);
 
   [[nodiscard]] auto* getVariables() { return &vars; }
 
@@ -107,6 +110,8 @@ protected:
   std::size_t S{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
+  // number of layers L, which is equal to T / 2
+  std::size_t L{}; // NOLINT (readability-identifier-naming)
 
   // the gate variables
   Variables vars{};
@@ -129,7 +134,7 @@ protected:
   virtual void assertGateConstraints()                           = 0;
   virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
   virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
-  [[nodiscard]] virtual std::vector<TransformationFamily>
+  [[nodiscard]] static std::vector<TransformationFamily>
        collectGateTransformations(std::size_t pos, std::size_t qubit,
                                   const GateToTransformation& gateToTransformation);
   void assertGatesImplyTransform(

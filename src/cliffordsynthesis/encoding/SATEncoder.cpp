@@ -51,7 +51,7 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  std::size_t s = config.targetTableau->hasDestabilizers() &&
+  const std::size_t s = config.targetTableau->hasDestabilizers() &&
                           config.initialTableau->hasDestabilizers()
                       ? 2U * N
                       : N;
@@ -67,16 +67,20 @@ void SATEncoder::createFormulation() {
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
-        N, s, T, tableauEncoder->getVariables(), lb);
+        N, s, T, T/2, tableauEncoder->getVariables(), lb);
   } else if (config.useSTEncoding) {
     gateEncoder = std::make_shared<STQGatesEncoder>(
-        N, s, T, tableauEncoder->getVariables(), lb);
+        N, s, T, T/2, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
-        N, s, T, tableauEncoder->getVariables(), lb);
+        N, s, T, T/2, tableauEncoder->getVariables(), lb);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
+  if (config.useSTEncoding) {
+    gateEncoder->addIdentityGateToTQGVariables();
+  }
+
   gateEncoder->encodeGates();
 
   if (config.useSymmetryBreaking) {
