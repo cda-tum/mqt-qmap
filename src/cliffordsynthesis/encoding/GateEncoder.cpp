@@ -52,7 +52,8 @@ void GateEncoder::createTwoQubitGateVariables() {
 }
 
 void encoding::GateEncoder::addIdentityGateToTQGVariables() {
-  DEBUG() << "Creating identity gate variables for TQG variables in the STQEncoding.";
+  DEBUG() << "Creating identity gate variables for TQG variables in the "
+             "STQEncoding.";
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gC[t];
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
@@ -61,7 +62,8 @@ void encoding::GateEncoder::addIdentityGateToTQGVariables() {
 
       // Add I to the two qubit gates
       const std::string gName = "g_" + std::to_string(t) + "_" +
-                                toString(qc::OpType::None) + "_" + std::to_string(ctrl);
+                                toString(qc::OpType::None) + "_" +
+                                std::to_string(ctrl);
       TRACE() << "Creating variable " << gName;
       control.emplace_back(lb->makeVariable(gName));
     }

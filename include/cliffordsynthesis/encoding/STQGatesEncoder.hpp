@@ -5,6 +5,7 @@
 #pragma once
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+
 #include <cstddef>
 #include <optional>
 
@@ -27,7 +28,7 @@ protected:
                                std::size_t trgt) override;
   [[nodiscard]] logicbase::LogicTerm
   createIdentityConstraintOnTQG(std::size_t pos, std::size_t ctrl,
-                               std::size_t trgt);
+                                std::size_t trgt);
 
   // assert constrains
   void assertSingleQubitGateOrderConstraints(std::size_t pos,
@@ -40,7 +41,7 @@ protected:
                                     bool                    target,
                                     logicbase::LogicVector& variables) const;
   // extracting the circuit
-  virtual void extractCircuitFromModel(Results& res,
+  virtual void extractCircuitFromModel(Results&          res,
                                        logicbase::Model& model) override;
 };
 

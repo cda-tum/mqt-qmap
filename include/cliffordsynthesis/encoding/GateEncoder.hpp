@@ -18,8 +18,7 @@ namespace cs::encoding {
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-              const std::size_t                      timestepLimit,
-              const std::size_t                      numberOfLayers,
+              const std::size_t timestepLimit, const std::size_t numberOfLayers,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), S(tableauSize), T(timestepLimit), L(numberOfLayers),
@@ -43,8 +42,7 @@ public:
   // variable creation
   virtual void createSingleQubitGateVariables();
   virtual void createTwoQubitGateVariables();
-  void addIdentityGateToTQGVariables();
-
+  void         addIdentityGateToTQGVariables();
 
   // encode the relation between the tableaus and the gates
   virtual void encodeGates() {
