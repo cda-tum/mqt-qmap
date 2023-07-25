@@ -100,7 +100,7 @@ def synthesize_clifford(
     target_tableau: str | Clifford | PauliList | Tableau,
     initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
-    **kwargs: Any | None,
+    **kwargs: Any | None,  # noqa: ANN401
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Synthesize a Clifford circuit from a given tableau starting from an (optional) initial tableau.
 
@@ -145,7 +145,7 @@ def optimize_clifford(
     circuit: str | QuantumCircuit | QuantumComputation,
     initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
-    **kwargs: Any | None,
+    **kwargs: Any | None,  # noqa: ANN401
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Optimize a Clifford circuit starting from an (optional) initial tableau.
 
