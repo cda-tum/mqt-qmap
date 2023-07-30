@@ -260,8 +260,6 @@ void CliffordSynthesizer::sTDepthOptimalSynthesis(
     // but no solution with sTDepth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
-
-  // TODO: to add minimizeGatesAfterDepthOptimization
 }
 
 void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {

@@ -57,7 +57,6 @@ void encoding::GateEncoder::addIdentityGateToTQGVariables() {
     auto& timeStep = vars.gC[t];
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
       auto& control = timeStep[ctrl];
-      control.reserve(1U);
 
       // Add I to the two qubit gates
       const std::string gName = "g_" + std::to_string(t) + "_" +

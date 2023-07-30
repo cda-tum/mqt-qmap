@@ -10,12 +10,13 @@
 
 namespace cs::encoding {
 
-class STQGatesEncoder : public GateEncoder {
+class TwoQubitEncoder : public GateEncoder {
 public:
   using GateEncoder::GateEncoder;
 
 protected:
   logicbase::LogicTerm rChanges{};
+  logicbase::LogicMatrix xorHelpers{};
 
   void assertConsistency() const override;
   void assertGateConstraints() override;
@@ -26,8 +27,7 @@ protected:
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
   [[nodiscard]] logicbase::LogicTerm
-  createIdentityConstraintOnTQG(std::size_t pos, std::size_t ctrl,
-                               std::size_t trgt);
+  createIdentityConstraintOnTQG(std::size_t pos, std::size_t ctrl);
 
   // assert constrains
   void assertSingleQubitGateOrderConstraints(std::size_t pos,
@@ -42,6 +42,8 @@ protected:
   // extracting the circuit
   virtual void extractCircuitFromModel(Results& res,
                                        logicbase::Model& model) override;
+
+  void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
 };
 
 } // namespace cs::encoding

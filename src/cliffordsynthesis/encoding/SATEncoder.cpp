@@ -7,8 +7,8 @@
 
 #include "LogicUtil/util_logicblock.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
-#include "cliffordsynthesis/encoding/STQGatesEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/TwoQubitEncoder.hpp"
 #include "utils/logging.hpp"
 
 #include <chrono>
@@ -16,7 +16,6 @@
 namespace cs::encoding {
 
 using namespace logicbase;
-// TODO: params?
 void SATEncoder::initializeSolver() {
   DEBUG() << "Initializing solver engine.";
   bool success        = false;
@@ -69,7 +68,7 @@ void SATEncoder::createFormulation() {
     gateEncoder = std::make_shared<MultiGateEncoder>(
         N, s, T, T/2, tableauEncoder->getVariables(), lb);
   } else if (config.useSTEncoding) {
-    gateEncoder = std::make_shared<STQGatesEncoder>(
+    gateEncoder = std::make_shared<TwoQubitEncoder>(
         N, s, T, T/2, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
@@ -77,13 +76,14 @@ void SATEncoder::createFormulation() {
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
+
   if (config.useSTEncoding) {
     gateEncoder->addIdentityGateToTQGVariables();
   }
 
   gateEncoder->encodeGates();
 
-  if (config.useSymmetryBreaking) {
+  if (config.useSymmetryBreaking && !config.useSTEncoding) {
     gateEncoder->encodeSymmetryBreakingConstraints();
   }
 
