@@ -106,7 +106,7 @@ testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
 xfail_strict = true
-filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:DeprecationWarning:qiskit:']
+filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:DeprecationWarning:qiskit:', 'ignore:.*qiskit.__qiskit_version__.*:DeprecationWarning:qiskit:']
 
 [tool.coverage.run]
 source = ["mqt.qmap"]
