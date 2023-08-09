@@ -39,7 +39,7 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   if (j.contains("initial_circuit")) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
   }
-  if (j.contains("expectedMinimalSTDepth")) {
+  if (j.contains("expected_minimal_st_depth")) {
     test.expectedMinimalSTDepth =
         j.at("expected_minimal_st_depth").get<std::size_t>();
   }
