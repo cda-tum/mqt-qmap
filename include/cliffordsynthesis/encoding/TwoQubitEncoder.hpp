@@ -5,6 +5,7 @@
 #pragma once
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+
 #include <cstddef>
 #include <optional>
 
@@ -15,7 +16,7 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
-  logicbase::LogicTerm rChanges{};
+  logicbase::LogicTerm   rChanges{};
   logicbase::LogicMatrix xorHelpers{};
 
   void assertConsistency() const override;
@@ -40,7 +41,7 @@ protected:
                                     bool                    target,
                                     logicbase::LogicVector& variables) const;
   // extracting the circuit
-  virtual void extractCircuitFromModel(Results& res,
+  virtual void extractCircuitFromModel(Results&          res,
                                        logicbase::Model& model) override;
 
   void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);

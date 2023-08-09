@@ -54,7 +54,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/GateEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/MultiGateEncoder.hpp
-          ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/TwoQubitEncoder.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/TwoQubitEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/ObjectiveEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SATEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SingleGateEncoder.hpp
@@ -65,7 +65,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/utils.hpp
     cliffordsynthesis/encoding/GateEncoder.cpp
     cliffordsynthesis/encoding/MultiGateEncoder.cpp
-          cliffordsynthesis/encoding/TwoQubitEncoder.cpp
+    cliffordsynthesis/encoding/TwoQubitEncoder.cpp
     cliffordsynthesis/encoding/ObjectiveEncoder.cpp
     cliffordsynthesis/encoding/SATEncoder.cpp
     cliffordsynthesis/encoding/SingleGateEncoder.cpp
