@@ -33,29 +33,32 @@ void encoding::TwoQubitEncoder::collectTwoQubitGateVariables(
 
 void encoding::TwoQubitEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
-  for (std::size_t t = 0U; t < T/2U; ++t) {
+  for (std::size_t t = 0U; t < T / 2U; ++t) {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector singleQubitGateVariables{};
       LogicVector twoQubitGateVariables{};
       vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
-      //TODO: may need to return the vars back
+      // TODO: may need to return the vars back
       collectTwoQubitGateVariables(t, q, true, twoQubitGateVariables);
       collectTwoQubitGateVariables(t, q, false, twoQubitGateVariables);
 
       IF_PLOG(plog::verbose) {
-        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit " << q;
+        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
+                << q;
         for (const auto& var : singleQubitGateVariables) {
           TRACE() << var.getName();
         }
 
-        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit " << q;
+        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit "
+                << q;
         for (const auto& var : twoQubitGateVariables) {
           TRACE() << var.getName();
         }
       }
 
-      assertExactlyOne(singleQubitGateVariables); // (a and not b) oder (not a and b)
+      assertExactlyOne(
+          singleQubitGateVariables); // (a and not b) oder (not a and b)
       assertExactlyOne(twoQubitGateVariables);
     }
   }
@@ -72,7 +75,7 @@ void encoding::TwoQubitEncoder::assertGateConstraints() {
                 : assertTwoQubitGateConstraints(pos);
     splitXorR(tvars->r[pos], pos);
     TRACE() << "Asserting r changes at time " << t;
-    //lb->assertFormula(tvars->r[pos + 1] == xorHelpers[pos].back());
+    // lb->assertFormula(tvars->r[pos + 1] == xorHelpers[pos].back());
   }
 }
 
@@ -82,7 +85,7 @@ void encoding::TwoQubitEncoder::assertSingleQubitGateConstraints(
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
     if (q != pos) {
-      //assertRConstraints(pos, q);
+      // assertRConstraints(pos, q);
     }
   }
 }
@@ -99,7 +102,7 @@ void TwoQubitEncoder::assertRConstraints(const std::size_t pos,
 }
 
 void TwoQubitEncoder::splitXorR(const logicbase::LogicTerm& changes,
-                                 std::size_t                 pos) {
+                                std::size_t                 pos) {
   auto&             xorHelper = xorHelpers[pos];
   const std::string hName =
       "h_" + std::to_string(pos) + "_" + std::to_string(xorHelper.size());
@@ -126,11 +129,12 @@ void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
   }
 }
 
-LogicTerm encoding::TwoQubitEncoder::createIdentityConstraintOnTQG(
-    std::size_t pos, std::size_t ctrl) {
-
+LogicTerm
+encoding::TwoQubitEncoder::createIdentityConstraintOnTQG(std::size_t pos,
+                                                         std::size_t ctrl) {
   auto changes = tvars->x[pos + 1][ctrl] = tvars->x[pos][ctrl];
-  changes = changes && (tvars->z[pos + 1][ctrl]   = tvars->z[pos][ctrl]); // && here is overloaded
+  changes                                = changes && (tvars->z[pos + 1][ctrl] =
+                            tvars->z[pos][ctrl]); // && here is overloaded
 
   return changes;
 }
@@ -160,7 +164,7 @@ void TwoQubitEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
   qc::QuantumComputation qc(N);
   for (std::size_t t = 0; t < T; ++t) {
-    const std::size_t pos = t < L  ? t : t - L;
+    const std::size_t pos = t < L ? t : t - L;
     t % 2U == 0
         ? extractSingleQubitGatesFromModel(pos, model, qc, nSingleQubitGates)
         : extractTwoQubitGatesFromModel(pos, model, qc, nTwoQubitGates);
@@ -188,7 +192,6 @@ void TwoQubitEncoder::assertTwoQubitGateOrderConstraints(
   std::ostringstream posToStr;
   std::ostringstream ctrlToStr;
   std::ostringstream trgtToStr;
-
 
   posToStr << pos;
   ctrlToStr << ctrl;
