@@ -5,6 +5,7 @@
 
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
+#include "LogicTerm/Logic.hpp"
 #include "LogicUtil/util_logicblock.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
@@ -77,9 +78,9 @@ void SATEncoder::createFormulation() {
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
 
-  if (config.useSTEncoding) {
-    gateEncoder->addIdentityGateToTQGVariables();
-  }
+  // if (config.useSTEncoding) {
+  //   gateEncoder->addIdentityGateToTQGVariables();
+  // }
 
   gateEncoder->encodeGates();
 

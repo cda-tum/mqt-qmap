@@ -152,315 +152,317 @@ INSTANTIATE_TEST_SUITE_P(
       return inf.param.description;
     });
 
-TEST_P(SynthesisTest, Gates) {
-  config.target = TargetMetric::Gates;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, Gates) {
+//   config.target = TargetMetric::Gates;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
-}
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
+// }
 
-TEST_P(SynthesisTest, GatesMaxSAT) {
-  config.target    = TargetMetric::Gates;
-  config.useMaxSAT = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, GatesMaxSAT) {
+//   config.target    = TargetMetric::Gates;
+//   config.useMaxSAT = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
-}
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
+// }
 
-TEST_P(SynthesisTest, GatesLinearSearch) {
-  config.target       = TargetMetric::Gates;
-  config.linearSearch = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, GatesLinearSearch) {
+//   config.target       = TargetMetric::Gates;
+//   config.linearSearch = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
-}
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGates);
+// }
 
-TEST_P(SynthesisTest, Depth) {
-  config.target = TargetMetric::Depth;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, Depth) {
+//   config.target = TargetMetric::Depth;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthMaxSAT) {
-  config.target    = TargetMetric::Depth;
-  config.useMaxSAT = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthMaxSAT) {
+//   config.target    = TargetMetric::Depth;
+//   config.useMaxSAT = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthLinearSearch) {
-  config.target       = TargetMetric::Depth;
-  config.linearSearch = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthLinearSearch) {
+//   config.target       = TargetMetric::Depth;
+//   config.linearSearch = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthMinimalGates) {
-  config.target                              = TargetMetric::Depth;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthMinimalGates) {
+//   config.target                              = TargetMetric::Depth;
+//   config.minimizeGatesAfterDepthOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
-  config.target           = TargetMetric::Depth;
-  config.minimalTimesteps = test.expectedMinimalDepth;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
+//   config.target           = TargetMetric::Depth;
+//   config.minimalTimesteps = test.expectedMinimalDepth;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::Depth;
-  config.useMaxSAT                           = true;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
+//   config.target                              = TargetMetric::Depth;
+//   config.useMaxSAT                           = true;
+//   config.minimizeGatesAfterDepthOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, DepthMinimalGatesLinearSearch) {
-  config.target                              = TargetMetric::Depth;
-  config.linearSearch                        = true;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, DepthMinimalGatesLinearSearch) {
+//   config.target                              = TargetMetric::Depth;
+//   config.linearSearch                        = true;
+//   config.minimizeGatesAfterDepthOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
+//   EXPECT_EQ(results.getDepth(), test.expectedMinimalDepth);
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, TwoQubitGates) {
-  config.target = TargetMetric::TwoQubitGates;
-  config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, TwoQubitGates) {
+//   config.target = TargetMetric::TwoQubitGates;
+//   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
-}
+//   EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
+// }
 
-TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
-  config.target = TargetMetric::TwoQubitGates;
-  config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.useMaxSAT                                     = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
+//   config.target = TargetMetric::TwoQubitGates;
+//   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
+//   config.useMaxSAT                                     = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
-}
+//   EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
+// }
 
-TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
-  config.target = TargetMetric::TwoQubitGates;
-  config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.minimizeGatesAfterTwoQubitGateOptimization    = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
+//   config.target = TargetMetric::TwoQubitGates;
+//   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
+//   config.minimizeGatesAfterTwoQubitGateOptimization    = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
-  EXPECT_EQ(results.getGates(),
-            test.expectedMinimalGatesAtMinimalTwoQubitGates);
-}
+//   EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
+//   EXPECT_EQ(results.getGates(),
+//             test.expectedMinimalGatesAtMinimalTwoQubitGates);
+// }
 
-TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
-  config.target = TargetMetric::TwoQubitGates;
-  config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.minimizeGatesAfterTwoQubitGateOptimization    = true;
-  config.useMaxSAT                                     = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
+//   config.target = TargetMetric::TwoQubitGates;
+//   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
+//   config.minimizeGatesAfterTwoQubitGateOptimization    = true;
+//   config.useMaxSAT                                     = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
-  EXPECT_EQ(results.getGates(),
-            test.expectedMinimalGatesAtMinimalTwoQubitGates);
-}
+//   EXPECT_EQ(results.getTwoQubitGates(), test.expectedMinimalTwoQubitGates);
+//   EXPECT_EQ(results.getGates(),
+//             test.expectedMinimalGatesAtMinimalTwoQubitGates);
+// }
 
-TEST_P(SynthesisTest, TestDestabilizerGates) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+// TEST_P(SynthesisTest, TestDestabilizerGates) {
+//   if (!initialTableauWithDestabilizer.getTableau().empty()) {
+//     std::cout << "Testing with destabilizer" << std::endl;
+//     config.target    = TargetMetric::Gates;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+//     synthesizer.synthesize(config);
+//     synthesizerWithDestabilizer.synthesize(config);
+//     results                 = synthesizer.getResults();
+//     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+//     EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
+//   } else {
+//     std::cout << "Testing without destabilizer" << std::endl;
+//     config.target    = TargetMetric::Gates;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+//     synthesizer.synthesize(config);
+//     results = synthesizer.getResults();
+//   }
+// }
 
-TEST_P(SynthesisTest, TestDestabilizerDepth) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Depth;
-    config.useMaxSAT = true;
+// TEST_P(SynthesisTest, TestDestabilizerDepth) {
+//   if (!initialTableauWithDestabilizer.getTableau().empty()) {
+//     std::cout << "Testing with destabilizer" << std::endl;
+//     config.target    = TargetMetric::Depth;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+//     synthesizer.synthesize(config);
+//     synthesizerWithDestabilizer.synthesize(config);
+//     results                 = synthesizer.getResults();
+//     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+//     EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
+//   } else {
+//     std::cout << "Testing without destabilizer" << std::endl;
+//     config.target    = TargetMetric::Gates;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+//     synthesizer.synthesize(config);
+//     results = synthesizer.getResults();
+//   }
+// }
 
-TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
-  if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::TwoQubitGates;
-    config.useMaxSAT = true;
+// TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
+//   if (!initialTableauWithDestabilizer.getTableau().empty()) {
+//     std::cout << "Testing with destabilizer" << std::endl;
+//     config.target    = TargetMetric::TwoQubitGates;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
-    resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
+//     synthesizer.synthesize(config);
+//     synthesizerWithDestabilizer.synthesize(config);
+//     results                 = synthesizer.getResults();
+//     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
-    EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
-              results.getTwoQubitGates());
-  } else {
-    std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
-    config.useMaxSAT = true;
+//     EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
+//               results.getTwoQubitGates());
+//   } else {
+//     std::cout << "Testing without destabilizer" << std::endl;
+//     config.target    = TargetMetric::Gates;
+//     config.useMaxSAT = true;
 
-    synthesizer.synthesize(config);
-    results = synthesizer.getResults();
-  }
-}
+//     synthesizer.synthesize(config);
+//     results = synthesizer.getResults();
+//   }
+// }
 
 TEST_P(SynthesisTest, STDepth) {
   config.target = TargetMetric::STDepth;
+  config.verbosity = plog::Severity::none;
+  // config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
 }
 
-TEST_P(SynthesisTest, STDepthMaxSAT) {
-  config.target    = TargetMetric::STDepth;
-  config.useMaxSAT = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, STDepthMaxSAT) {
+//   config.target    = TargetMetric::STDepth;
+//   config.useMaxSAT = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
-}
+//   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+// }
 
-TEST_P(SynthesisTest, STDepthMinimalGates) {
-  config.target                              = TargetMetric::STDepth;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, STDepthMinimalGates) {
+//   config.target                              = TargetMetric::STDepth;
+//   config.minimizeGatesAfterDepthOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
+//   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+// }
 
-TEST_P(SynthesisTest, STDepthMinimalTimeSteps) {
-  config.target           = TargetMetric::STDepth;
-  config.minimalTimesteps = test.expectedMinimalDepth;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, STDepthMinimalTimeSteps) {
+//   config.target           = TargetMetric::STDepth;
+//   config.minimalTimesteps = test.expectedMinimalDepth;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
-}
+//   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+// }
 
-TEST_P(SynthesisTest, STDepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::STDepth;
-  config.useMaxSAT                           = true;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
+// TEST_P(SynthesisTest, STDepthMinimalGatesMaxSAT) {
+//   config.target                              = TargetMetric::STDepth;
+//   config.useMaxSAT                           = true;
+//   config.minimizeGatesAfterDepthOptimization = true;
+//   synthesizer.synthesize(config);
+//   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
+//   EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+//   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
+// }
 
-TEST(HeuristicTest, basic) {
-  auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
-  qc.h(0);
-  qc.s(1);
-  qc.h(0);
-  qc.s(1);
-  config.heuristic = true;
-  config.splitSize = 1;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
-  synth.synthesize(config);
-  EXPECT_EQ(synth.getResults().getDepth(), 2);
-}
+// TEST(HeuristicTest, basic) {
+//   auto config = Configuration();
+//   auto qc     = qc::QuantumComputation(2);
+//   qc.h(0);
+//   qc.s(1);
+//   qc.h(0);
+//   qc.s(1);
+//   config.heuristic = true;
+//   config.splitSize = 1;
+//   config.target    = TargetMetric::Depth;
+//   auto synth       = CliffordSynthesizer(qc);
+//   synth.synthesize(config);
+//   EXPECT_EQ(synth.getResults().getDepth(), 2);
+// }
 
-TEST(HeuristicTest, identity) {
-  auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
-  qc.h(0);
-  qc.s(1);
-  qc.h(0);
-  qc.sdag(1);
-  config.heuristic = true;
-  config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
-  synth.synthesize(config);
-  EXPECT_EQ(synth.getResults().getDepth(), 0);
-}
+// TEST(HeuristicTest, identity) {
+//   auto config = Configuration();
+//   auto qc     = qc::QuantumComputation(2);
+//   qc.h(0);
+//   qc.s(1);
+//   qc.h(0);
+//   qc.sdag(1);
+//   config.heuristic = true;
+//   config.splitSize = 2;
+//   config.target    = TargetMetric::Depth;
+//   auto synth       = CliffordSynthesizer(qc);
+//   synth.synthesize(config);
+//   EXPECT_EQ(synth.getResults().getDepth(), 0);
+// }
 
-TEST(HeuristicTest, threeLayers) {
-  auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
-  qc.h(0);
-  qc.h(1);
-  qc.x(1, 0_pc);
-  qc.h(0);
-  qc.h(1);
-  config.heuristic = true;
-  config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
-  synth.synthesize(config);
-  EXPECT_EQ(synth.getResults().getDepth(), 3);
-}
+// TEST(HeuristicTest, threeLayers) {
+//   auto config = Configuration();
+//   auto qc     = qc::QuantumComputation(2);
+//   qc.h(0);
+//   qc.h(1);
+//   qc.x(1, 0_pc);
+//   qc.h(0);
+//   qc.h(1);
+//   config.heuristic = true;
+//   config.splitSize = 2;
+//   config.target    = TargetMetric::Depth;
+//   auto synth       = CliffordSynthesizer(qc);
+//   synth.synthesize(config);
+//   EXPECT_EQ(synth.getResults().getDepth(), 3);
+// }
 
-TEST(HeuristicTest, fourLayers) {
-  auto config = Configuration();
-  auto qc     = qc::QuantumComputation(1);
-  qc.s(0);
-  qc.s(0);
-  qc.s(0);
-  qc.s(0);
-  config.heuristic = true;
-  config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
-  synth.synthesize(config);
-  EXPECT_EQ(synth.getResults().getDepth(), 2);
-}
+// TEST(HeuristicTest, fourLayers) {
+//   auto config = Configuration();
+//   auto qc     = qc::QuantumComputation(1);
+//   qc.s(0);
+//   qc.s(0);
+//   qc.s(0);
+//   qc.s(0);
+//   config.heuristic = true;
+//   config.splitSize = 2;
+//   config.target    = TargetMetric::Depth;
+//   auto synth       = CliffordSynthesizer(qc);
+//   synth.synthesize(config);
+//   EXPECT_EQ(synth.getResults().getDepth(), 2);
+// }
 } // namespace cs

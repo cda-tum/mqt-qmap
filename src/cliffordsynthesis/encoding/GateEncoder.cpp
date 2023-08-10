@@ -6,6 +6,7 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include "Encodings/Encodings.hpp"
+#include "operations/OpType.hpp"
 #include "utils/logging.hpp"
 
 namespace cs::encoding {
@@ -99,6 +100,7 @@ void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
   const auto variableGrouping = encodings::groupVars(variables, 3U);
   lb->assertFormula(encodings::exactlyOneCmdr(variableGrouping,
                                               LogicTerm::noneTerm(), lb.get()));
+  
 }
 
 std::vector<GateEncoder::TransformationFamily>
