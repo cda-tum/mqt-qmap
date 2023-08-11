@@ -27,6 +27,7 @@ classifiers=[
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: C++",
     "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
@@ -82,7 +83,7 @@ include = ["mqt.*"]
 build = "cp3*"
 archs = "auto64"
 skip = "*-musllinux*"
-test-skip = "*-macosx_arm64"
+test-skip = "*-macosx_arm64 cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"

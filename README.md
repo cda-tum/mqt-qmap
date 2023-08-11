@@ -35,7 +35,7 @@ If you have any questions, feel free to contact us via [quantum.cda@xcit.tum.de]
   </a>
 </p>
 
-QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.8 to 3.11.
+QMAP is available via [PyPI](https://pypi.org/project/mqt.qmap/) for Linux, macOS, and Windows and supports Python 3.8 to 3.12.
 
 ```console
 (venv) $ pip install mqt.qmap
