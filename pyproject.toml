@@ -12,7 +12,7 @@ name = "mqt.qmap"
 description = "A tool for Quantum Circuit Mapping"
 readme = "README.md"
 authors = [
-    { name = "Lukas Burgholzer", email = "lukas.burgholzer@jku.at" },
+    { name = "Lukas Burgholzer", email = "lukas.burgholzer@tum.de" },
     { name = "Sarah Schneider", email = "sarah.schneider@jku.at" },
     { name = "Stefan Hillmich", email = "stefan.hillmich@jku.at" },
     { name = "Tom Peham", email = "tom.peham@tum.de" }
@@ -68,10 +68,10 @@ docs = [
 dev = ["mqt.qmap[coverage, docs]"]
 
 [project.urls]
-Homepage = "https://github.com/cda-tum/qmap"
-Documentation = "https://mqtqmap.readthedocs.io"
-"Bug Tracker" = "https://github.com/cda-tum/qmap/issues"
-Discussions = "https://github.com/cda-tum/qmap/discussions"
+Homepage = "https://github.com/cda-tum/mqt-qmap"
+Documentation = "https://mqt.readthedocs.io/projects/qmap"
+"Bug Tracker" = "https://github.com/cda-tum/mqt-qmap/issues"
+Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
 Research = "https://www.cda.cit.tum.de/research/ibm_qx_mapping/"
 
 [tool.setuptools.packages.find]

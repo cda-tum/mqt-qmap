@@ -6,13 +6,13 @@ Ready to contribute to the project? Here is how to set up a local development en
 Initial Setup
 #############
 
-1. Fork the `cda-tum/qmap <https://github.com/cda-tum/qmap>`_ repository on GitHub (see https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+1. Fork the `cda-tum/mqt-qmap <https://github.com/cda-tum/mqt-qmap>`_ repository on GitHub (see https://docs.github.com/en/get-started/quickstart/fork-a-repo).
 
 2. Clone your fork locally
 
     .. code-block:: console
 
-        $ git clone git@github.com:your_name_here/qmap --recursive
+        $ git clone git@github.com:your_name_here/mqt-qmap --recursive
 
     .. warning::
 
@@ -23,7 +23,7 @@ Initial Setup
 
     .. code-block:: console
 
-        $ cd qmap
+        $ cd mqt-qmap
 
 4. Create a branch for local development
 
