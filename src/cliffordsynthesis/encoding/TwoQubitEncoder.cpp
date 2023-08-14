@@ -5,8 +5,8 @@
 #include "cliffordsynthesis/encoding/TwoQubitEncoder.hpp"
 
 #include "LogicTerm/LogicTerm.hpp"
-#include "utils/logging.hpp"
 #include "operations/OpType.hpp"
+#include "utils/logging.hpp"
 
 namespace cs::encoding {
 
@@ -43,8 +43,8 @@ void encoding::TwoQubitEncoder::assertConsistency() const {
         vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
         assertExactlyOne(singleQubitGateVariables);
         IF_PLOG(plog::verbose) {
-          TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
-                  << q;
+          TRACE() << "Single Qubit Gate variables at time " << t
+                  << " and qubit " << q;
           for (const auto& var : singleQubitGateVariables) {
             TRACE() << var.getName();
           }
@@ -126,7 +126,8 @@ void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {
       if (ctrl == trgt) {
         const auto changes = createIdentityConstraintOnTQG(pos, ctrl);
-        lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][ctrl], changes));
+        lb->assertFormula(
+            LogicTerm::implies(twoQubitGates[ctrl][ctrl], changes));
         splitXorR(tvars->singleQubitRChange(pos, ctrl, qc::OpType::None), pos);
       } else {
         const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
@@ -142,7 +143,7 @@ LogicTerm
 encoding::TwoQubitEncoder::createIdentityConstraintOnTQG(std::size_t pos,
                                                          std::size_t ctrl) {
   auto changes = tvars->x[pos + 1][ctrl] == tvars->x[pos][ctrl];
-  changes                                = changes && (tvars->z[pos + 1][ctrl] ==
+  changes      = changes && (tvars->z[pos + 1][ctrl] ==
                         tvars->z[pos][ctrl]); // && here is overloaded
 
   return changes;

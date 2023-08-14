@@ -6,8 +6,8 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include "Encodings/Encodings.hpp"
-#include "utils/logging.hpp"
 #include "operations/OpType.hpp"
+#include "utils/logging.hpp"
 
 namespace cs::encoding {
 

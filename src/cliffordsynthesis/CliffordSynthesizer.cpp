@@ -137,7 +137,7 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
   } else if (requiresTwoQubitEncoding(config.targetMetric)) {
-    //TODO: to replace with getTQDepth
+    // TODO: to replace with getTQDepth
     config.timestepLimit = results.getDepth();
     INFO() << "Using initial circuit's tQDepth as initial timestep limit: "
            << config.timestepLimit;
@@ -170,8 +170,9 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
-      std::cout<< "No solution found for " << config.timestepLimit
-                << " timestep(s). Doubling timestep limit to " << upperBound << std::endl;
+      std::cout << "No solution found for " << config.timestepLimit
+                << " timestep(s). Doubling timestep limit to " << upperBound
+                << std::endl;
       INFO() << "No solution found for " << config.timestepLimit
              << " timestep(s). Doubling timestep limit to " << upperBound;
       config.timestepLimit = upperBound;
