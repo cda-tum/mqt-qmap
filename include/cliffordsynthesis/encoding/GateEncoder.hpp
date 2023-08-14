@@ -42,7 +42,6 @@ public:
   // variable creation
   virtual void createSingleQubitGateVariables();
   virtual void createTwoQubitGateVariables();
-  void         addIdentityGateToTQGVariables();
 
   // encode the relation between the tableaus and the gates
   virtual void encodeGates() {
