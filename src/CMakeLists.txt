@@ -1,7 +1,7 @@
 # add LogicBlocks target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
 # add MQT::qfr target
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/qfr" "extern/qfr" EXCLUDE_FROM_ALL)
+add_subdirectory("${PROJECT_SOURCE_DIR}/extern/mqt-core" "extern/mqt-core" EXCLUDE_FROM_ALL)
 
 # macro to add core libraries
 macro(ADD_INTERNAL_LIBRARY libname)
@@ -12,7 +12,7 @@ macro(ADD_INTERNAL_LIBRARY libname)
                                            ${PROJECT_BINARY_DIR}/include)
 
   # add MQT::qfr library
-  target_link_libraries(${lib} PUBLIC MQT::qfr)
+  target_link_libraries(${lib} PUBLIC MQT::Core)
 
   # add MQT alias
   add_library(MQT::${lib} ALIAS ${lib})

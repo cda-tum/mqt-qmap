@@ -10,7 +10,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11_json/pybind11_json.hpp"
-#include "qiskit/QuantumCircuit.hpp"
+#include "python/qiskit/QuantumCircuit.hpp"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)

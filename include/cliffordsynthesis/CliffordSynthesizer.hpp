@@ -158,6 +158,7 @@ protected:
                        const Configuration& config);
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);
+  void        removeRedundantGates();
 };
 
 } // namespace cs

@@ -12,7 +12,7 @@ name = "mqt.qmap"
 description = "A tool for Quantum Circuit Mapping"
 readme = "README.md"
 authors = [
-    { name = "Lukas Burgholzer", email = "lukas.burgholzer@jku.at" },
+    { name = "Lukas Burgholzer", email = "lukas.burgholzer@tum.de" },
     { name = "Sarah Schneider", email = "sarah.schneider@jku.at" },
     { name = "Stefan Hillmich", email = "stefan.hillmich@jku.at" },
     { name = "Tom Peham", email = "tom.peham@tum.de" }
@@ -27,6 +27,7 @@ classifiers=[
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: C++",
     "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
@@ -67,10 +68,10 @@ docs = [
 dev = ["mqt.qmap[coverage, docs]"]
 
 [project.urls]
-Homepage = "https://github.com/cda-tum/qmap"
-Documentation = "https://mqtqmap.readthedocs.io"
-"Bug Tracker" = "https://github.com/cda-tum/qmap/issues"
-Discussions = "https://github.com/cda-tum/qmap/discussions"
+Homepage = "https://github.com/cda-tum/mqt-qmap"
+Documentation = "https://mqt.readthedocs.io/projects/qmap"
+"Bug Tracker" = "https://github.com/cda-tum/mqt-qmap/issues"
+Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
 Research = "https://www.cda.cit.tum.de/research/ibm_qx_mapping/"
 
 [tool.setuptools.packages.find]
@@ -82,7 +83,7 @@ include = ["mqt.*"]
 build = "cp3*"
 archs = "auto64"
 skip = "*-musllinux*"
-test-skip = "*-macosx_arm64"
+test-skip = "*-macosx_arm64 cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
@@ -106,7 +107,7 @@ testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
 xfail_strict = true
-filterwarnings = ["error"]
+filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:DeprecationWarning:qiskit:', 'ignore:.*qiskit.__qiskit_version__.*:DeprecationWarning:qiskit:']
 
 [tool.coverage.run]
 source = ["mqt.qmap"]

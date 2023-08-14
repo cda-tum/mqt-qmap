@@ -6,12 +6,15 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "LogicTerm/Logic.hpp"
+#include "QuantumComputation.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "utils/logging.hpp"
 
 #include <chrono>
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <memory>
 #include <thread>
 
 namespace cs {
@@ -240,6 +243,12 @@ void CliffordSynthesizer::depthOptimalSynthesis(
     // To find a solution with fewer gates, we run the solver once more with a
     // fixed depth limit and the goal to minimize the number of gates.
     minimizeGatesFixedDepth(config);
+  }
+
+  if (!initialTableau.hasDestabilizers()) {
+    // If destabilizers aren't considered, the synthesis might include gates
+    // that have no impact on the final tableau, so we can remove them
+    removeRedundantGates();
   }
 }
 
@@ -562,5 +571,23 @@ CliffordSynthesizer::synthesizeSubcircuit(
 
   synth.initResultCircuitFromResults();
   return synth.resultCircuit;
+}
+
+void CliffordSynthesizer::removeRedundantGates() {
+  Tableau prev = initialTableau;
+  Tableau curr = initialTableau;
+  initResultCircuitFromResults();
+  qc::QuantumComputation reducedResult(resultCircuit->getNqubits());
+
+  for (auto& gate : *resultCircuit) {
+    curr.applyGate(gate.get());
+    if (prev != curr) {
+      prev.applyGate(gate.get());
+      reducedResult.emplace_back(std::move(gate));
+    }
+  }
+
+  results.setResultCircuit(reducedResult);
+  results.setSingleQubitGates(reducedResult.getNsingleQubitOps());
 }
 } // namespace cs

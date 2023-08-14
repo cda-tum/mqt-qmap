@@ -1,7 +1,7 @@
 Installation
 ============
 
-QMAP is mainly developed as a C++ library that builds upon `our quantum functionality representation (QFR) <https://github.com/cda-tum/qfr>`_.
+QMAP is mainly developed as a C++ library that builds upon `MQT Core <https://github.com/cda-tum/mqt-core>`_, which forms the backbone of the `MQT <https://mqt.readthedocs.io>`_.
 In order to make the tool as accessible as possible, it comes with an easy-to-use Python interface.
 
 We encourage installing QMAP via pip (preferably in a `virtual environment <https://docs.python.org/3/library/venv.html>`_):
@@ -118,7 +118,7 @@ This requires a `C++ compiler <https://en.wikipedia.org/wiki/List_of_compilers#C
 - Build Z3 from source and install it to the system
 
 The library is continuously tested under Linux, MacOS, and Windows using the `latest available system versions for GitHub Actions <https://github.com/actions/virtual-environments>`_.
-In order to access the latest build logs, visit `qmap/actions/workflows/ci.yml <https://github.com/cda-tum/qmap/actions/workflows/ci.yml>`_.
+In order to access the latest build logs, visit `mqt-qmap/actions/workflows/ci.yml <https://github.com/cda-tum/mqt-qmap/actions/workflows/ci.yml>`_.
 
 .. note::
     We noticed some issues when compiling with Microsoft's *MSCV* compiler toolchain. If you want to start development on this project under Windows, consider using the *clang* compiler toolchain. A detailed description of how to set this up can be found `here <https://docs.microsoft.com/en-us/cpp/build/clang-support-msbuild?view=msvc-160>`_.
