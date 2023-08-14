@@ -11,6 +11,7 @@
 #include <chrono>
 #include <fstream>
 #include <future>
+#include <iostream>
 #include <thread>
 
 namespace cs {
@@ -133,7 +134,7 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
   } else if (requiresSTGateEncoding(config.targetMetric)) {
-    config.timestepLimit = results.getSTDepth();
+    config.timestepLimit = results.getDepth();
     INFO() << "Using initial circuit's sTDepth as initial timestep limit: "
            << config.timestepLimit;
   } else {
@@ -165,6 +166,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
+      std::cout<< "No solution found for " << config.timestepLimit
+                << " timestep(s). Doubling timestep limit to " << upperBound << std::endl;
       INFO() << "No solution found for " << config.timestepLimit
              << " timestep(s). Doubling timestep limit to " << upperBound;
       config.timestepLimit = upperBound;

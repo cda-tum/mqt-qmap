@@ -6,6 +6,7 @@
 
 #include "LogicTerm/LogicTerm.hpp"
 #include "utils/logging.hpp"
+#include "operations/OpType.hpp"
 
 namespace cs::encoding {
 
@@ -19,7 +20,7 @@ void encoding::TwoQubitEncoder::collectTwoQubitGateVariables(
   for (std::size_t q = 0; q < n; ++q) {
     if (q == qubit) {
       if (!target) {
-        variables.emplace_back(twoQubitGates[qubit].back());
+        variables.emplace_back(twoQubitGates[qubit][qubit]);
       }
       continue;
     }
@@ -33,33 +34,35 @@ void encoding::TwoQubitEncoder::collectTwoQubitGateVariables(
 
 void encoding::TwoQubitEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
-  for (std::size_t t = 0U; t < T / 2U; ++t) {
+  for (std::size_t t = 0U; t < T; ++t) {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector singleQubitGateVariables{};
       LogicVector twoQubitGateVariables{};
-      vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
-      // TODO: may need to return the vars back
-      collectTwoQubitGateVariables(t, q, true, twoQubitGateVariables);
-      collectTwoQubitGateVariables(t, q, false, twoQubitGateVariables);
-
-      IF_PLOG(plog::verbose) {
-        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
-                << q;
-        for (const auto& var : singleQubitGateVariables) {
-          TRACE() << var.getName();
+      if (t % 2 == 0) {
+        vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
+        assertExactlyOne(singleQubitGateVariables);
+        IF_PLOG(plog::verbose) {
+          TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
+                  << q;
+          for (const auto& var : singleQubitGateVariables) {
+            TRACE() << var.getName();
+          }
         }
+      } else {
+        collectTwoQubitGateVariables(t, q, true, twoQubitGateVariables);
+        collectTwoQubitGateVariables(t, q, false, twoQubitGateVariables);
+        assertExactlyOne(twoQubitGateVariables);
+        IF_PLOG(plog::verbose) {
+          std::cout << twoQubitGateVariables.size() << std::endl;
 
-        TRACE() << "Two Qubit Gate variables at time " << t << " and qubit "
-                << q;
-        for (const auto& var : twoQubitGateVariables) {
-          TRACE() << var.getName();
+          TRACE() << "Two Qubit Gate variables at time " << t << " and qubit "
+                  << q;
+          for (const auto& var : twoQubitGateVariables) {
+            TRACE() << var.getName();
+          }
         }
       }
-
-      assertExactlyOne(
-          singleQubitGateVariables); // (a and not b) oder (not a and b)
-      assertExactlyOne(twoQubitGateVariables);
     }
   }
 }
@@ -69,13 +72,14 @@ void encoding::TwoQubitEncoder::assertGateConstraints() {
   xorHelpers = logicbase::LogicMatrix{T};
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
-    const std::size_t pos = t < L ? t : t - L;
-
-    t % 2U == 0 ? assertSingleQubitGateConstraints(pos)
-                : assertTwoQubitGateConstraints(pos);
-    splitXorR(tvars->r[pos], pos);
+    splitXorR(tvars->r[t], t);
+    if (t % 2 == 0) {
+      assertSingleQubitGateConstraints(t);
+    } else {
+      assertTwoQubitGateConstraints(t);
+    }
     TRACE() << "Asserting r changes at time " << t;
-    // lb->assertFormula(tvars->r[pos + 1] == xorHelpers[pos].back());
+    lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
   }
 }
 
@@ -84,9 +88,7 @@ void encoding::TwoQubitEncoder::assertSingleQubitGateConstraints(
   for (std::size_t q = 0U; q < N; ++q) {
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
-    if (q != pos) {
-      // assertRConstraints(pos, q);
-    }
+    assertRConstraints(pos, q);
   }
 }
 
@@ -122,9 +124,16 @@ void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
+      if (ctrl == trgt) {
+        const auto changes = createIdentityConstraintOnTQG(pos, ctrl);
+        lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][ctrl], changes));
+        splitXorR(tvars->singleQubitRChange(pos, ctrl, qc::OpType::None), pos);
+      } else {
+        const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
+        lb->assertFormula(
+            LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
+        DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
+      }
     }
   }
 }
@@ -132,9 +141,9 @@ void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
 LogicTerm
 encoding::TwoQubitEncoder::createIdentityConstraintOnTQG(std::size_t pos,
                                                          std::size_t ctrl) {
-  auto changes = tvars->x[pos + 1][ctrl] = tvars->x[pos][ctrl];
-  changes                                = changes && (tvars->z[pos + 1][ctrl] =
-                            tvars->z[pos][ctrl]); // && here is overloaded
+  auto changes = tvars->x[pos + 1][ctrl] == tvars->x[pos][ctrl];
+  changes                                = changes && (tvars->z[pos + 1][ctrl] ==
+                        tvars->z[pos][ctrl]); // && here is overloaded
 
   return changes;
 }
@@ -164,10 +173,9 @@ void TwoQubitEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
   qc::QuantumComputation qc(N);
   for (std::size_t t = 0; t < T; ++t) {
-    const std::size_t pos = t < L ? t : t - L;
     t % 2U == 0
-        ? extractSingleQubitGatesFromModel(pos, model, qc, nSingleQubitGates)
-        : extractTwoQubitGatesFromModel(pos, model, qc, nTwoQubitGates);
+        ? extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates)
+        : extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates);
   }
 
   res.setSingleQubitGates(nSingleQubitGates);

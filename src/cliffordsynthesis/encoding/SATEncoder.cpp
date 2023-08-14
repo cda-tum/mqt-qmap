@@ -77,9 +77,9 @@ void SATEncoder::createFormulation() {
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
 
-  if (config.useSTEncoding) {
-    gateEncoder->addIdentityGateToTQGVariables();
-  }
+  //if (config.useSTEncoding) {
+    //gateEncoder->addIdentityGateToTQGVariables();
+  //}
 
   gateEncoder->encodeGates();
 

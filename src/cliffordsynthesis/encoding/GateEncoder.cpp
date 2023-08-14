@@ -7,6 +7,7 @@
 
 #include "Encodings/Encodings.hpp"
 #include "utils/logging.hpp"
+#include "operations/OpType.hpp"
 
 namespace cs::encoding {
 
