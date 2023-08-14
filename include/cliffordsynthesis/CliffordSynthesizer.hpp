@@ -81,8 +81,8 @@ protected:
     return metric == TargetMetric::Depth;
   }
 
-  static bool requiresSTGateEncoding(const TargetMetric metric) {
-    return metric == TargetMetric::STDepth;
+  static bool requiresTwoQubitEncoding(const TargetMetric metric) {
+    return metric == TargetMetric::TQDepth;
   }
 
   void determineInitialTimestepLimit(EncoderConfig& config);
@@ -96,7 +96,7 @@ protected:
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
-  void sTDepthOptimalSynthesis(EncoderConfig config, std::size_t lower,
+  void twoQubitDepthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                std::size_t upper);
   void depthHeuristicSynthesis();
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,

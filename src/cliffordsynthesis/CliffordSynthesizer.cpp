@@ -42,8 +42,8 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.solverParameters    = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
-  encoderConfig.useSTEncoding =
-      requiresSTGateEncoding(encoderConfig.targetMetric);
+  encoderConfig.useTwoQubitEncoding =
+      requiresTwoQubitEncoding(encoderConfig.targetMetric);
 
   if (configuration.heuristic) {
     if (initialCircuit->empty() && !targetTableau.isIdentityTableau()) {
@@ -97,8 +97,8 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
     break;
-  case TargetMetric::STDepth:
-    sTDepthOptimalSynthesis(encoderConfig, lower, upper);
+  case TargetMetric::TQDepth:
+    twoQubitDepthOptimalSynthesis(encoderConfig, lower, upper);
     break;
   }
 
@@ -133,9 +133,10 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     config.timestepLimit = results.getDepth();
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
-  } else if (requiresSTGateEncoding(config.targetMetric)) {
+  } else if (requiresTwoQubitEncoding(config.targetMetric)) {
+    //TODO: to replace with getTQDepth
     config.timestepLimit = results.getDepth();
-    INFO() << "Using initial circuit's sTDepth as initial timestep limit: "
+    INFO() << "Using initial circuit's tQDepth as initial timestep limit: "
            << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
@@ -179,8 +180,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     upperBound = std::min(upperBound, results.getGates());
   } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
-  } else if (config.targetMetric == TargetMetric::STDepth) {
-    upperBound = std::min(upperBound, results.getSTDepth());
+  } else if (config.targetMetric == TargetMetric::TQDepth) {
+    upperBound = std::min(upperBound, results.getTQDepth());
   }
 
   INFO() << "Found upper bound for the number of timesteps: " << upperBound;
@@ -242,12 +243,12 @@ void CliffordSynthesizer::depthOptimalSynthesis(
   }
 }
 
-void CliffordSynthesizer::sTDepthOptimalSynthesis(
+void CliffordSynthesizer::twoQubitDepthOptimalSynthesis(
     CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
     const std::size_t upper) {
-  // STDepth-optimal synthesis is achieved by determining a timestep limit T
-  // such that there exists a solution with sTDepth T, but no solution with
-  // sTDepth T-1. This procedure uses an encoding (SQG - TQG) where in single
+  // tQDepth-optimal synthesis is achieved by determining a timestep limit T
+  // such that there exists a solution with tQDepth T, but no solution with
+  // tQDepth T-1. This procedure uses an encoding (SQG - TQG) where in single
   // and two qubit gates are allowed just one gate per timestep. This procedure
   // is guaranteed to produce a depth-optimal circuit. However, the number of
   // gates in the resulting circuit is not necessarily minimal, i.e., there may
@@ -259,8 +260,8 @@ void CliffordSynthesizer::sTDepthOptimalSynthesis(
     runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
-    // timestep (=sTDepth) limits T until a solution with sTDepth T is found,
-    // but no solution with sTDepth T-1 could be determined.
+    // timestep (=tQDepth) limits T until a solution with tQDepth T is found,
+    // but no solution with tQDepth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 }
@@ -455,9 +456,9 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
       currentResults = newResults;
     }
     break;
-  case TargetMetric::STDepth:
-    if ((newResults.getSTDepth() < currentResults.getSTDepth()) ||
-        ((newResults.getSTDepth() == currentResults.getSTDepth()) &&
+  case TargetMetric::TQDepth:
+    if ((newResults.getTQDepth() < currentResults.getTQDepth()) ||
+        ((newResults.getTQDepth() == currentResults.getTQDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }

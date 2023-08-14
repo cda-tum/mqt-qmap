@@ -18,10 +18,10 @@ namespace cs::encoding {
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-              const std::size_t timestepLimit, const std::size_t numberOfLayers,
+              const std::size_t timestepLimit,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock)
-      : N(nQubits), S(tableauSize), T(timestepLimit), L(numberOfLayers),
+      : N(nQubits), S(tableauSize), T(timestepLimit),
         tvars(tableauVars), lb(std::move(logicBlock)) {}
   virtual ~GateEncoder() = default;
 
@@ -108,8 +108,6 @@ protected:
   std::size_t S{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
-  // number of layers L, which is equal to T / 2
-  std::size_t L{}; // NOLINT (readability-identifier-naming)
 
   // the gate variables
   Variables vars{};

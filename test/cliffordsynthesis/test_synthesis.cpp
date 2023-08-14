@@ -24,7 +24,7 @@ struct TestConfiguration {
   std::size_t expectedMinimalGatesAtMinimalDepth{};
   std::size_t expectedMinimalTwoQubitGates{};
   std::size_t expectedMinimalGatesAtMinimalTwoQubitGates{};
-  std::size_t expectedMinimalSTDepth{};
+  std::size_t expectedMinimalTQDepth{};
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
@@ -40,8 +40,8 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
   }
   if (j.contains("expected_minimal_st_depth")) {
-    test.expectedMinimalSTDepth =
-        j.at("expected_minimal_st_depth").get<std::size_t>();
+    test.expectedMinimalTQDepth =
+        j.at("expected_minimal_two_qubit_depth").get<std::size_t>();
   }
 
   test.expectedMinimalGates = j.at("expected_minimal_gates").get<std::size_t>();
@@ -356,52 +356,52 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   }
 }
 
-TEST_P(SynthesisTest, STDepth) {
-  config.target = TargetMetric::STDepth;
+TEST_P(SynthesisTest, TQDepth) {
+  config.target = TargetMetric::TQDepth;
   config.verbosity = plog::Severity::none;
   // config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
 }
 
-TEST_P(SynthesisTest, STDepthMaxSAT) {
-  config.target    = TargetMetric::STDepth;
+TEST_P(SynthesisTest, TQDepthMaxSAT) {
+  config.target    = TargetMetric::TQDepth;
   config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
 }
 
-TEST_P(SynthesisTest, STDepthMinimalGates) {
-  config.target                              = TargetMetric::STDepth;
+TEST_P(SynthesisTest, TQDepthMinimalGates) {
+  config.target                              = TargetMetric::TQDepth;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
 }
 
-TEST_P(SynthesisTest, STDepthMinimalTimeSteps) {
-  config.target           = TargetMetric::STDepth;
+TEST_P(SynthesisTest, TQDepthMinimalTimeSteps) {
+  config.target           = TargetMetric::TQDepth;
   config.minimalTimesteps = test.expectedMinimalDepth;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
 }
 
-TEST_P(SynthesisTest, STDepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::STDepth;
+TEST_P(SynthesisTest, TQDepthMinimalGatesMaxSAT) {
+  config.target                              = TargetMetric::TQDepth;
   config.useMaxSAT                           = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
-  EXPECT_EQ(results.getSTDepth(), test.expectedMinimalSTDepth);
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
   EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
 }
 

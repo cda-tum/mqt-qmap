@@ -55,7 +55,7 @@ void SATEncoder::createFormulation() {
                             ? 2U * N
                             : N;
 
-  if (config.useSTEncoding) {
+  if (config.useTwoQubitEncoding) {
     T *= 2U;
   }
 
@@ -66,13 +66,13 @@ void SATEncoder::createFormulation() {
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
-        N, s, T, T / 2, tableauEncoder->getVariables(), lb);
-  } else if (config.useSTEncoding) {
+        N, s, T, tableauEncoder->getVariables(), lb);
+  } else if (config.useTwoQubitEncoding) {
     gateEncoder = std::make_shared<TwoQubitEncoder>(
-        N, s, T, T / 2, tableauEncoder->getVariables(), lb);
+        N, s, T, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
-        N, s, T, T / 2, tableauEncoder->getVariables(), lb);
+        N, s, T, tableauEncoder->getVariables(), lb);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
@@ -83,7 +83,7 @@ void SATEncoder::createFormulation() {
 
   gateEncoder->encodeGates();
 
-  if (config.useSymmetryBreaking && !config.useSTEncoding) {
+  if (config.useSymmetryBreaking && !config.useTwoQubitEncoding) {
     gateEncoder->encodeSymmetryBreakingConstraints();
   }
 

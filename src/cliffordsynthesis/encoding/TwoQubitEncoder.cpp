@@ -180,7 +180,7 @@ void TwoQubitEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
   res.setSingleQubitGates(nSingleQubitGates);
   res.setTwoQubitGates(nTwoQubitGates);
-  res.setSTDepth(qc.getDepth());
+  res.setTQDepth(qc.getDepth());
   res.setResultCircuit(qc);
 }
 
