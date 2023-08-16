@@ -41,8 +41,7 @@ protected:
                                     bool                    target,
                                     logicbase::LogicVector& variables) const;
   // extracting the circuit
-  void extractCircuitFromModel(Results&          res,
-                                       logicbase::Model& model) override;
+  void extractCircuitFromModel(Results& res, logicbase::Model& model) override;
 
   void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
 };

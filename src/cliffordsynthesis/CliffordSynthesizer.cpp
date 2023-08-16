@@ -169,8 +169,9 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
-      std::cout<< "No solution found for " << config.timestepLimit
-                << " timestep(s). Doubling timestep limit to " << upperBound << std::endl;
+      std::cout << "No solution found for " << config.timestepLimit
+                << " timestep(s). Doubling timestep limit to " << upperBound
+                << std::endl;
       INFO() << "No solution found for " << config.timestepLimit
              << " timestep(s). Doubling timestep limit to " << upperBound;
       config.timestepLimit = upperBound;
