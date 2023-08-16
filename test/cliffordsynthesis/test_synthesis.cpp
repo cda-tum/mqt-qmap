@@ -39,7 +39,7 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   if (j.contains("initial_circuit")) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
   }
-  if (j.contains("expected_minimal_st_depth")) {
+  if (j.contains("expected_minimal_two_qubit_depth")) {
     test.expectedMinimalTQDepth =
         j.at("expected_minimal_two_qubit_depth").get<std::size_t>();
   }
@@ -359,7 +359,7 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
 TEST_P(SynthesisTest, TQDepth) {
   config.target = TargetMetric::TQDepth;
   config.verbosity = plog::Severity::none;
-  // config.linearSearch = true;
+   config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 

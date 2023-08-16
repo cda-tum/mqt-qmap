@@ -137,8 +137,7 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
   } else if (requiresTwoQubitEncoding(config.targetMetric)) {
-    //TODO: to replace with getTQDepth
-    config.timestepLimit = results.getDepth();
+    config.timestepLimit = results.getTQDepth();
     INFO() << "Using initial circuit's tQDepth as initial timestep limit: "
            << config.timestepLimit;
   } else {

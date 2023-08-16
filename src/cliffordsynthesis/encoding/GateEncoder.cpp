@@ -180,6 +180,7 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
 void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
     std::size_t& nSingleQubitGates) {
+  DEBUG() << "Extract single qubit gates from model";
   const auto& singleQubitGates = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
     for (const auto gate : SINGLE_QUBIT_GATES) {
@@ -200,6 +201,7 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
                                                 Model&                  model,
                                                 qc::QuantumComputation& qc,
                                                 size_t& nTwoQubitGates) {
+  DEBUG() << "Extract two qubit gates from model";
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {

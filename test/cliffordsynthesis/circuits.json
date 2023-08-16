@@ -24,7 +24,7 @@
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[1];h q;h q;h q;h q;\n",
     "expected_minimal_gates": 0,
     "expected_minimal_depth": 0,
-    "expected_minimal_two_qubit_depth": 3,
+    "expected_minimal_two_qubit_depth": 0,
     "expected_minimal_gates_at_minimal_depth": 0,
     "expected_minimal_two_qubit_gates": 0,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 0
@@ -34,7 +34,7 @@
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];swap q[0], q[1]; cx q[0], q[1];\n",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 2,
-    "expected_minimal_two_qubit_depth": 4,
+    "expected_minimal_two_qubit_depth": 2,
     "expected_minimal_gates_at_minimal_depth": 2,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 2
@@ -44,19 +44,19 @@
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];x q; z q[0];cz q[0], q[1]; z q[0];\n",
     "expected_minimal_gates": 2,
     "expected_minimal_depth": 1,
-    "expected_minimal_two_qubit_depth": 5,
+    "expected_minimal_two_qubit_depth": 0,
     "expected_minimal_gates_at_minimal_depth": 2,
     "expected_minimal_two_qubit_gates": 0,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
     "description": "TwoQubitEncoding",
-    "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];z q[0]; s q[0]; cx q[0], q[1]; s q[0]; cx q[0], q[1];\n",
+    "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];z q[0]; s q[0]; cx q[0], q[1]; s q[0];\n",
     "expected_minimal_gates": 1,
     "expected_minimal_depth": 1,
     "expected_minimal_gates_at_minimal_depth": 1,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 1,
-    "expected_minimal_two_qubit_depth": 6
+    "expected_minimal_two_qubit_depth": 1
   }
 ]
