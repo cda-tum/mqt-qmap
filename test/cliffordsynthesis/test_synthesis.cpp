@@ -357,7 +357,7 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
 }
 
 TEST_P(SynthesisTest, TQDepth) {
-  config.target = TargetMetric::TQDepth;
+  config.target    = TargetMetric::TQDepth;
   config.verbosity = plog::Severity::none;
    config.linearSearch = true;
   synthesizer.synthesize(config);
