@@ -56,7 +56,7 @@ void SATEncoder::createFormulation() {
                             : N;
 
   if (config.useTwoQubitEncoding) {
-    T *= 2U;
+    T = T * 2U + 1U;
   }
 
   tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
@@ -68,6 +68,7 @@ void SATEncoder::createFormulation() {
     gateEncoder = std::make_shared<MultiGateEncoder>(
         N, s, T, tableauEncoder->getVariables(), lb);
   } else if (config.useTwoQubitEncoding) {
+    T -= 1;
     gateEncoder = std::make_shared<TwoQubitEncoder>(
         N, s, T, tableauEncoder->getVariables(), lb);
   } else {
@@ -76,6 +77,10 @@ void SATEncoder::createFormulation() {
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
+
+  if (config.useTwoQubitEncoding) {
+    gateEncoder->createPauliQubitGateVariables();
+  }
 
   gateEncoder->encodeGates();
 

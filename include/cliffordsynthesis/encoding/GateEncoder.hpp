@@ -30,6 +30,8 @@ public:
     logicbase::LogicMatrix3D gS{};
     // variables for the two-qubit gates
     logicbase::LogicMatrix3D gC{};
+    // variables for the pauli-qubit gates
+    logicbase::LogicMatrix   gP{};
 
     void
          collectSingleQubitGateVariables(std::size_t pos, std::size_t qubit,
@@ -37,11 +39,15 @@ public:
     void collectTwoQubitGateVariables(std::size_t pos, std::size_t qubit,
                                       bool                    target,
                                       logicbase::LogicVector& variables) const;
+    void
+    collectPauliQubitGateVariables(std::size_t qubit,
+                                    logicbase::LogicVector& variables) const;
   };
 
   // variable creation
   virtual void createSingleQubitGateVariables();
   virtual void createTwoQubitGateVariables();
+  virtual void createPauliQubitGateVariables();
 
   // encode the relation between the tableaus and the gates
   virtual void encodeGates() {
@@ -59,6 +65,9 @@ public:
   // TODO: set back
   static constexpr std::array<qc::OpType, 4> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
+
+  static constexpr std::array<qc::OpType, 4> PAULI_QUBIT_GATES = {
+      qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z};
 
   [[nodiscard]] static constexpr std::size_t
   gateToIndex(const qc::OpType type) {

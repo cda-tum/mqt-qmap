@@ -5,7 +5,6 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "LogicTerm/Logic.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "utils/logging.hpp"

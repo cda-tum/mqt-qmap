@@ -34,12 +34,23 @@ void encoding::TwoQubitEncoder::collectTwoQubitGateVariables(
 
 void encoding::TwoQubitEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
-  for (std::size_t t = 0U; t < T; ++t) {
+  for (std::size_t t = 0U; t <= T; ++t) {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector singleQubitGateVariables{};
       LogicVector twoQubitGateVariables{};
-      if (t % 2 == 0) {
+      LogicVector pauliGateVariables{};
+      if (t == T) {
+        vars.collectPauliQubitGateVariables(q, pauliGateVariables);
+        assertExactlyOne(pauliGateVariables);
+        IF_PLOG(plog::verbose) {
+          TRACE() << "Pauli Qubit Gate variables at time " << t
+                  << " and qubit " << q;
+          for (const auto& var : pauliGateVariables) {
+            TRACE() << var.getName();
+          }
+        }
+      } else if (t % 2 == 0) {
         vars.collectSingleQubitGateVariables(t, q, singleQubitGateVariables);
         assertExactlyOne(singleQubitGateVariables);
         IF_PLOG(plog::verbose) {
@@ -69,11 +80,14 @@ void encoding::TwoQubitEncoder::assertConsistency() const {
 
 void encoding::TwoQubitEncoder::assertGateConstraints() {
   DEBUG() << "Asserting gate constraints";
-  xorHelpers = logicbase::LogicMatrix{T};
-  for (std::size_t t = 0U; t < T; ++t) {
+  xorHelpers = logicbase::LogicMatrix{T + 1};
+  for (std::size_t t = 0U; t <= T; ++t) {
+
     TRACE() << "Asserting gate constraints at time " << t;
     splitXorR(tvars->r[t], t);
-    if (t % 2 == 0) {
+    if (t == T) {
+      assertPauliGateConstraints(t);
+    } else if (t % 2 == 0) {
       assertSingleQubitGateConstraints(t);
     } else {
       assertTwoQubitGateConstraints(t);
@@ -100,6 +114,22 @@ void TwoQubitEncoder::assertRConstraints(const std::size_t pos,
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
+  }
+}
+
+void encoding::TwoQubitEncoder::assertPauliGateConstraints(
+    const std::size_t pos) {
+  for (std::size_t q = 0U; q < N; ++q) {
+    for (const auto gate : PAULI_QUBIT_GATES) {
+      const auto& change =
+          LogicTerm::ite(vars.gP[gateToIndex(gate)][q],
+                         tvars->singleQubitRChange(pos, q, gate),
+                         LogicTerm(0, static_cast<std::int16_t>(S)));
+
+      splitXorR(change, pos);
+    }
+    lb->assertFormula(tvars->x[pos][q] == tvars->x[pos+1][q]);
+    lb->assertFormula(tvars->z[pos][q] == tvars->z[pos+1][q]);
   }
 }
 

@@ -58,5 +58,15 @@
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 1,
     "expected_minimal_two_qubit_depth": 1
+  },
+  {
+    "description": "TwoQubitEncodingWithPaulis",
+    "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];z q[0]; s q[0]; cx q[0], q[1]; s q[0]; x q[0];\n",
+    "expected_minimal_gates": 1,
+    "expected_minimal_depth": 1,
+    "expected_minimal_gates_at_minimal_depth": 1,
+    "expected_minimal_two_qubit_gates": 2,
+    "expected_minimal_gates_at_minimal_two_qubit_gates": 1,
+    "expected_minimal_two_qubit_depth": 1
   }
 ]

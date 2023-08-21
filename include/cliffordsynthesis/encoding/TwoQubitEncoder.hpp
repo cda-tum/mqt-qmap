@@ -23,6 +23,7 @@ protected:
   void assertGateConstraints() override;
   void assertRConstraints(std::size_t pos, std::size_t qubit) override;
   void assertSingleQubitGateConstraints(std::size_t pos) override;
+  void assertPauliGateConstraints(std::size_t pos);
   void assertTwoQubitGateConstraints(std::size_t pos) override;
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,

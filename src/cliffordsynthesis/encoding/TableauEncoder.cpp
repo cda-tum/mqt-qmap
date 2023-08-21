@@ -88,7 +88,7 @@ TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
   case qc::OpType::H:
     return z[pos][qubit];
   case qc::OpType::SX:
-    return (z[pos][qubit] ^ x[pos][qubit]);
+    return z[pos][qubit] ^ x[pos][qubit];
   default:
     FATAL() << "Unsupported single-qubit gate: " << toString(gate);
     return LogicTerm::noneTerm();
@@ -110,7 +110,7 @@ TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
     return x[pos][qubit];
   case qc::OpType::S:
   case qc::OpType::Sdag:
-    return (z[pos][qubit] ^ x[pos][qubit]);
+    return z[pos][qubit] ^ x[pos][qubit];
   default:
     FATAL() << "Unsupported single-qubit gate: " << toString(gate);
     return LogicTerm::noneTerm();
@@ -138,7 +138,7 @@ TableauEncoder::Variables::singleQubitRChange(const std::size_t pos,
   case qc::OpType::Z:
     return x[pos][qubit];
   case qc::OpType::SX:
-    return x[pos][qubit] & z[pos][qubit];
+    return z[pos][qubit] & (x[pos][qubit] ^ z[pos][qubit]);
   default:
     FATAL() << "Unsupported single-qubit gate: " << toString(gate);
     return LogicTerm::noneTerm();
