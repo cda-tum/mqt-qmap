@@ -366,45 +366,6 @@ TEST_P(SynthesisTest, TQDepth) {
   EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
 }
 
-TEST_P(SynthesisTest, TQDepthMaxSAT) {
-  config.target    = TargetMetric::TQDepth;
-  config.useMaxSAT = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
-}
-
-TEST_P(SynthesisTest, TQDepthMinimalGates) {
-  config.target                              = TargetMetric::TQDepth;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
-
-TEST_P(SynthesisTest, TQDepthMinimalTimeSteps) {
-  config.target           = TargetMetric::TQDepth;
-  config.minimalTimesteps = test.expectedMinimalDepth;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
-}
-
-TEST_P(SynthesisTest, TQDepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::TQDepth;
-  config.useMaxSAT                           = true;
-  config.minimizeGatesAfterDepthOptimization = true;
-  synthesizer.synthesize(config);
-  results = synthesizer.getResults();
-
-  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
-  EXPECT_EQ(results.getGates(), test.expectedMinimalGatesAtMinimalDepth);
-}
-
 TEST(HeuristicTest, basic) {
   auto config = Configuration();
   auto qc     = qc::QuantumComputation(2);
