@@ -44,7 +44,7 @@ def tests(session: nox.Session) -> None:
     if "--cov" in posargs:
         posargs.append("--cov-config=pyproject.toml")
 
-    session.install("setuptools", "setuptools_scm")
+    session.install("setuptools", "setuptools_scm", "ninja")
     session.install("--no-build-isolation", install_arg)
     session.run("pytest", *posargs, env=env)
 
@@ -60,7 +60,7 @@ def docs(session: nox.Session) -> None:
     if args.builder != "html" and args.serve:
         session.error("Must not specify non-HTML builder with --serve")
 
-    build_requirements = ["setuptools", "setuptools_scm"]
+    build_requirements = ["setuptools", "setuptools_scm", "ninja"]
     extra_installs = ["sphinx-autobuild"] if args.serve else []
     session.install(*build_requirements, *extra_installs)
     session.install("--no-build-isolation", "-ve.[docs]")
@@ -89,7 +89,7 @@ def docs(session: nox.Session) -> None:
 def min_qiskit_version(session: nox.Session) -> None:
     """Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage."""
     session.install("qiskit-terra~=0.20.2")
-    session.install("setuptools", "setuptools_scm")
+    session.install("setuptools", "setuptools_scm", "ninja")
     session.install("--no-build-isolation", "-ve.[coverage]")
     session.run("pip", "show", "qiskit-terra")
     session.run("pytest", "--cov", *session.posargs)
