@@ -1,11 +1,11 @@
 name: Python
 
 on:
-  pull_request:
-  merge_group:
   push:
     branches:
       - main
+  pull_request:
+  merge_group:
   workflow_dispatch:
 
 concurrency:
@@ -14,53 +14,15 @@ concurrency:
 
 env:
   Z3_VERSION: 4.11.2
-  FORCE_COLOR: 3
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    name: Run my[py] linter
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - uses: pre-commit/action@v3.0.0
-        with:
-          extra_args: mypy --all-files
-
-  python-tests:
-    name: 🐍 ${{ matrix.python-version }} Tests on ${{ matrix.runs-on }}
-    runs-on: ${{ matrix.runs-on }}
-    strategy:
-      fail-fast: false
-      matrix:
-        runs-on: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.8", "3.11"]
-        include:
-          - runs-on: ubuntu-latest
-            python-version: "3.9"
-          - runs-on: ubuntu-latest
-            python-version: "3.10"
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Setup nox
-        run: pipx install nox
-      - name: Test on 🐍 ${{ matrix.python-version }}
-        run: nox -s tests-${{ matrix.python-version }}
+  python-ci:
+    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@make-reusable-workflows-more-generic
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      setup-z3: true
+      z3-version: ${{ env.Z3_VERSION }}
 
   min-qiskit-version:
     name: ⚛️ Min. Qiskit Test
@@ -80,39 +42,6 @@ jobs:
         run: pipx install nox
       - name: Run session
         run: nox -s min_qiskit_version -- --cov-report=xml
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3.1.4
-        with:
-          fail_ci_if_error: true
-          flags: python
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  coverage:
-    name: 🐍 ${{ matrix.python-version }} Coverage
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.8", "3.11"]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Setup nox
-        run: pipx install nox
-      - name: Run session
-        run: nox -s coverage-${{ matrix.python-version }} -- --cov-report=xml
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3.1.4
         with:
