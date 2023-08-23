@@ -13,14 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  python-ci:
-    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@make-reusable-workflows-more-generic
-    secrets:
-      token: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      setup-z3: true
-      z3-version: 4.11.2
-
   min-qiskit-version:
     name: ⚛️ Min. Qiskit Test
     runs-on: ubuntu-latest

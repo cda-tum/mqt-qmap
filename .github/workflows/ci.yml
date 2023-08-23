@@ -1,5 +1,4 @@
-name: C++
-
+name: CI
 on:
   push:
     branches:
@@ -13,7 +12,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  change-detection:
+    name: 🔍 Change
+    uses: cda-tum/mqt-core/.github/workflows/reusable-change-detection.yml@make-reusable-workflows-more-generic
+
   cpp-tests:
+    name: 🇨‌ Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
     uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-ci.yml@make-reusable-workflows-more-generic
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
@@ -24,3 +30,66 @@ jobs:
       cmake-args-windows: -T ClangCL
       setup-z3: true
       z3-version: 4.11.2
+
+  cpp-linter:
+    name: 🇨‌ Lint
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@make-reusable-workflows-more-generic
+    with:
+      cmake-args: -DBUILD_QMAP_TESTS=ON
+      setup-z3: true
+      z3-version: 4.11.2
+
+  python-tests:
+    name: 🐍 Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-python-tests)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@make-reusable-workflows-more-generic
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      setup-z3: true
+      z3-version: 4.11.2
+
+  code-ql:
+    name: 📝 CodeQL
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-code-ql)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-code-ql.yml@make-reusable-workflows-more-generic
+    with:
+      cmake-args: -DBUILD_QMAP_TESTS=ON
+      build-time-dependencies: "scikit-build-core[pyproject] setuptools-scm pybind11"
+
+  required-checks-pass: # This job does nothing and is only used for branch protection
+    name: 🚦 Check
+    if: always()
+    needs:
+      - change-detection
+      - cpp-tests
+      - cpp-linter
+      - python-tests
+      - code-ql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          allowed-skips: >-
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-tests)
+              && '' || 'cpp-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-linter)
+              && '' || 'cpp-linter,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-python-tests)
+              && '' || 'python-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-code-ql)
+              && '' || 'code-ql,'
+            }}
+          jobs: ${{ toJSON(needs) }}
