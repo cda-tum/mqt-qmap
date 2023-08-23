@@ -12,9 +12,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  Z3_VERSION: 4.11.2
-
 jobs:
   python-ci:
     uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@make-reusable-workflows-more-generic
@@ -22,7 +19,7 @@ jobs:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
       setup-z3: true
-      z3-version: ${{ env.Z3_VERSION }}
+      z3-version: 4.11.2
 
   min-qiskit-version:
     name: ⚛️ Min. Qiskit Test
@@ -35,7 +32,7 @@ jobs:
       - name: Install Z3
         uses: cda-tum/setup-z3@v1
         with:
-          version: ${{ env.Z3_VERSION }}
+          version: 4.11.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup nox
@@ -43,7 +40,7 @@ jobs:
       - name: Run session
         run: nox -s min_qiskit_version -- --cov-report=xml
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3.1.4
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           flags: python
