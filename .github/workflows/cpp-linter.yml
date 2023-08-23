@@ -12,41 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  Z3_VERSION: 4.11.2
-
 jobs:
   cpp-linter:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Generate compilation database
-        run: |
-          CC=clang-14 CXX=clang++-14 \
-          cmake -S . -B build \
-          -DBINDINGS=ON \
-          -DBUILD_QMAP_TESTS=ON
-      - name: Run cpp-linter
-        id: linter
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pipx run cpp-linter \
-          --version=14 \
-          --style="" \
-          --tidy-checks="" \
-          --thread-comments=true \
-          --files-changed-only=true \
-          --ignore="build" \
-          --database=build
-      - name: Fail if linter found errors
-        if: steps.linter.outputs.checks-failed > 0
-        run: echo "Linter found errors" && exit 1
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@make-reusable-workflows-more-generic
+    with:
+      cmake-args: -DBUILD_QMAP_TESTS=ON
+      setup-z3: true
+      z3-version: 4.11.2
