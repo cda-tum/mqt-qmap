@@ -87,7 +87,6 @@ test-skip = "*-macosx_arm64 cp312-*"  # Qiskit Terra does not support Python 3.1
 test-command = "python -c \"from mqt import qmap\""
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
-build-verbosity = 3
 manylinux-x86_64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
