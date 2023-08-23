@@ -89,9 +89,11 @@ def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
     try:
         from qiskit.transpiler.layout import TranspileLayout
 
-        circ._layout = TranspileLayout(initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits())
+        circ._layout = TranspileLayout(  # noqa: SLF001
+            initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
+        )
     except ImportError:
-        circ._layout = layout
+        circ._layout = layout  # noqa: SLF001
 
     return circ
 

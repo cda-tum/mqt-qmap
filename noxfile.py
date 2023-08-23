@@ -25,8 +25,12 @@ def lint(session: nox.Session) -> None:
 
 @nox.session(reuse_venv=True)
 def pylint(session: nox.Session) -> None:
-    """Run PyLint."""
-    session.install(".", "pylint")
+    """Run PyLint.
+
+    Simply execute `nox -rs pylint` to run PyLint.
+    """
+    session.install("scikit-build-core[pyproject]", "setuptools_scm", "pybind11")
+    session.install("--no-build-isolation", "-ve.[dev]", "pylint")
     session.run("pylint", "mqt.qmap", *session.posargs)
 
 
@@ -44,7 +48,7 @@ def tests(session: nox.Session) -> None:
     if "--cov" in posargs:
         posargs.append("--cov-config=pyproject.toml")
 
-    session.install("setuptools", "setuptools_scm", "ninja")
+    session.install("scikit-build-core[pyproject]", "setuptools_scm", "pybind11")
     session.install("--no-build-isolation", install_arg)
     session.run("pytest", *posargs, env=env)
 
@@ -60,21 +64,21 @@ def docs(session: nox.Session) -> None:
     if args.builder != "html" and args.serve:
         session.error("Must not specify non-HTML builder with --serve")
 
-    build_requirements = ["setuptools", "setuptools_scm", "ninja"]
+    build_requirements = ["scikit-build-core[pyproject]", "setuptools_scm", "pybind11"]
     extra_installs = ["sphinx-autobuild"] if args.serve else []
     session.install(*build_requirements, *extra_installs)
     session.install("--no-build-isolation", "-ve.[docs]")
     session.chdir("docs")
 
     if args.builder == "linkcheck":
-        session.run("sphinx-build", "-b", "linkcheck", ".", "_build/linkcheck", *posargs)
+        session.run("sphinx-build", "-b", "linkcheck", "source", "_build/linkcheck", *posargs)
         return
 
     shared_args = (
         "-n",  # nitpicky mode
         "-T",  # full tracebacks
         f"-b={args.builder}",
-        ".",
+        "source",
         f"_build/{args.builder}",
         *posargs,
     )
@@ -89,7 +93,7 @@ def docs(session: nox.Session) -> None:
 def min_qiskit_version(session: nox.Session) -> None:
     """Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage."""
     session.install("qiskit-terra~=0.20.2")
-    session.install("setuptools", "setuptools_scm", "ninja")
+    session.install("scikit-build-core[pyproject]", "setuptools_scm", "pybind11")
     session.install("--no-build-isolation", "-ve.[coverage]")
     session.run("pip", "show", "qiskit-terra")
     session.run("pytest", "--cov", *session.posargs)

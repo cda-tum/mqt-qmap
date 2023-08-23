@@ -12,9 +12,6 @@
 #include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 
-#define STRINGIFY(x) #x
-#define MACRO_STRINGIFY(x) STRINGIFY(x)
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -615,10 +612,4 @@ PYBIND11_MODULE(pyqmap, m) {
   synthesizer.def_property_readonly("results",
                                     &cs::CliffordSynthesizer::getResults,
                                     "Returns the results of the synthesis.");
-
-#ifdef VERSION_INFO
-  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-  m.attr("__version__") = "dev";
-#endif
 }

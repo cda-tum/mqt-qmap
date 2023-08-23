@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from qiskit.providers import Backend, BackendV1, BackendV2
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler import Target
 
