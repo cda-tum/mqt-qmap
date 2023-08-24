@@ -157,9 +157,15 @@ void HeuristicMapper::map(const Configuration& configuration) {
   qcMapped.outputPermutation.clear();
   std::size_t count = 0U;
   for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
-    if (qubits.at(i) != -1) {
-      qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
-          static_cast<qc::Qubit>(qubits.at(i));
+    if (const auto lq = qubits.at(i); lq != -1) {
+      const auto logicalQubit = static_cast<qc::Qubit>(lq);
+      // check whether this is a qubit from the original circuit
+      if (logicalQubit < qc.getNqubits()) {
+        qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
+            static_cast<qc::Qubit>(qubits.at(i));
+      } else {
+        qcMapped.setLogicalQubitGarbage(logicalQubit);
+      }
     } else {
       qcMapped.setLogicalQubitGarbage(
           static_cast<qc::Qubit>(qc.getNqubits() + count));
