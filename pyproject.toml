@@ -229,16 +229,17 @@ convention = "google"
 
 [tool.cibuildwheel]
 build = "cp3*"
-archs = "auto64"
 skip = "*-musllinux*"
-test-skip = "*-macosx_arm64 cp312-*"  # Qiskit Terra does not support Python 3.12 yet
+archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
+test-skip = "cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 environment = { DEPLOY = "ON" }
 build-frontend = "build"
 manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
-environment = { Z3_ROOT="/opt/python/cp39-cp39/lib/python3.9/site-packages/z3", DEPLOY = "ON"}
+environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY = "ON"}
 
 [tool.cibuildwheel.macos]
 archs = "x86_64"
