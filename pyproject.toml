@@ -111,7 +111,6 @@ sdist.exclude = [
 
 [tool.scikit-build.cmake.define]
 BUILD_MQT_QMAP_BINDINGS = "ON"
-BUILD_MQT_CORE_TESTS = "OFF"
 ENABLE_IPO = "ON"
 
 

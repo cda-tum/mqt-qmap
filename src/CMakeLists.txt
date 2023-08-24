@@ -1,6 +1,9 @@
 # add LogicBlocks target
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
-# add MQT::qfr target
+# add MQT::Core target
+set(BUILD_MQT_CORE_TESTS
+    OFF
+    CACHE BOOL "Build MQT Core tests")
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/mqt-core" "extern/mqt-core" EXCLUDE_FROM_ALL)
 
 # macro to add core libraries
