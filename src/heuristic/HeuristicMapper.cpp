@@ -192,7 +192,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
               static_cast<std::int16_t>(op->getTargets().at(0));
         }
       }
-      if (gatesToAdjust.back() == gateidx) {
+      if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
         gatesToAdjust.pop_back();
         auto target         = op->getTargets().at(0);
         auto targetLocation = locations.at(target);
