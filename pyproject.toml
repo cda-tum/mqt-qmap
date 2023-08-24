@@ -138,10 +138,9 @@ filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:Depre
 
 [tool.coverage]
 run.source = ["mqt.qmap"]
-report.exclude_lines = [
-    'pragma: no cover',
+report.exclude_also = [
     '\.\.\.',
-    'if typing.TYPE_CHECKING:',
+    'if TYPE_CHECKING',
 ]
 
 [tool.black]
