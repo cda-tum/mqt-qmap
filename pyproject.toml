@@ -11,7 +11,7 @@ authors = [
     { name = "Stefan Hillmich", email = "stefan.hillmich@jku.at" },
     { name = "Tom Peham", email = "tom.peham@tum.de" }
 ]
-keywords = ["MQT", "quantum computing", "design automation", "mapping", "compilation", "qubit routing"]
+keywords = ["MQT", "quantum-computing", "design-automation", "compiler", "clifford-synthesis"]
 license = { file = "LICENSE.md" }
 
 classifiers = [
