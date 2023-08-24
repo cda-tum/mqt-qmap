@@ -24,7 +24,6 @@ jobs:
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
-      cmake-args: -DBUILD_QMAP_TESTS=ON -G Ninja
       setup-z3: true
 
   cpp-linter:
@@ -33,7 +32,6 @@ jobs:
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
     uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@make-reusable-workflows-more-generic
     with:
-      cmake-args: -DBUILD_QMAP_TESTS=ON
       setup-z3: true
 
   python-tests:
@@ -52,8 +50,7 @@ jobs:
     if: fromJSON(needs.change-detection.outputs.run-code-ql)
     uses: cda-tum/mqt-core/.github/workflows/reusable-code-ql.yml@make-reusable-workflows-more-generic
     with:
-      cmake-args: -DBUILD_QMAP_TESTS=ON
-      build-time-dependencies: "scikit-build-core[pyproject] setuptools-scm pybind11"
+      setup-z3: true
 
   required-checks-pass: # This job does nothing and is only used for branch protection
     name: 🚦 Check
