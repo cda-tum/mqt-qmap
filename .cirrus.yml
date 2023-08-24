@@ -38,7 +38,7 @@ macos_arm64_test_task:
     export PATH=/opt/homebrew/opt/nox/libexec:$PATH
     echo "PATH=$PATH" >> $CIRRUS_ENV
     echo "CCACHE_DIR=$PWD/.ccache" >> $CIRRUS_ENV
-    echo "Z3_ROOT=/opt/homebrew/opt/z3/libexec" >> $CIRRUS_ENV
+    echo "Z3_ROOT=/opt/homebrew/opt/z3" >> $CIRRUS_ENV
   run_nox_script:
     - nox -s tests-3.10 --verbose
   statistics_script: *statistics
@@ -93,7 +93,7 @@ macos_arm64_wheels_task:
     export PATH=/opt/homebrew/opt/nox/libexec:$PATH
     echo "PATH=$PATH" >> $CIRRUS_ENV
     echo "CCACHE_DIR=$PWD/.ccache" >> $CIRRUS_ENV
-    echo "Z3_ROOT=/opt/homebrew/opt/z3/libexec" >> $CIRRUS_ENV
+    echo "Z3_ROOT=/opt/homebrew/opt/z3" >> $CIRRUS_ENV
   <<: *BUILD_AND_STORE_WHEELS
   statistics_script: *statistics
 
