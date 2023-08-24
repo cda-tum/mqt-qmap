@@ -141,7 +141,7 @@ filterwarnings = ["error", 'ignore:Conversion.*to a scalar is deprecated.*:Depre
 run.source = ["mqt.qmap"]
 report.exclude_also = [
     '\.\.\.',
-    'if TYPE_CHECKING',
+    'if TYPE_CHECKING:',
 ]
 
 [tool.black]
