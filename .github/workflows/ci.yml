@@ -24,10 +24,7 @@ jobs:
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
-      cmake-args: -DBUILD_QMAP_TESTS=ON
-      cmake-args-ubuntu: -G Ninja
-      cmake-args-macos: -G Ninja
-      cmake-args-windows: -T ClangCL
+      cmake-args: -DBUILD_QMAP_TESTS=ON -G Ninja
       setup-z3: true
 
   cpp-linter:
