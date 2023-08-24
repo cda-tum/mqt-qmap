@@ -34,7 +34,7 @@ def pylint(session: nox.Session) -> None:
     Simply execute `nox -rs pylint` to run PyLint.
     """
     session.install("scikit-build-core[pyproject]", "setuptools_scm", "pybind11")
-    session.install("--no-build-isolation", "-ve.[dev]", "pylint")
+    session.install("--no-build-isolation", "-ve.", "pylint")
     session.run("pylint", "mqt.qmap", *session.posargs)
 
 
