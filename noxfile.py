@@ -48,11 +48,8 @@ def _run_tests(
     posargs = list(session.posargs)
     env = {"PIP_DISABLE_PIP_VERSION_CHECK": "1"}
 
-    if os.environ.get("CI", None):
-        # disable `-march=native` for CI builds
-        env["SKBUILD_CMAKE_DEFINES"] = "DEPLOY=ON"
-        if sys.platform == "win32":
-            env["SKBUILD_CMAKE_ARGS"] = "-T ClangCL"
+    if os.environ.get("CI", None) and sys.platform == "win32":
+        env["SKBUILD_CMAKE_ARGS"] = "-T ClangCL"
 
     _extras = ["test", *extras]
     if "--cov" in posargs:
