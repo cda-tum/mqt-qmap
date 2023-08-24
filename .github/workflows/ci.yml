@@ -29,7 +29,6 @@ jobs:
       cmake-args-macos: -G Ninja
       cmake-args-windows: -T ClangCL
       setup-z3: true
-      z3-version: 4.11.2
 
   cpp-linter:
     name: 🇨‌ Lint
@@ -39,7 +38,6 @@ jobs:
     with:
       cmake-args: -DBUILD_QMAP_TESTS=ON
       setup-z3: true
-      z3-version: 4.11.2
 
   python-tests:
     name: 🐍 Test
@@ -50,7 +48,6 @@ jobs:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
       setup-z3: true
-      z3-version: 4.11.2
 
   code-ql:
     name: 📝 CodeQL
