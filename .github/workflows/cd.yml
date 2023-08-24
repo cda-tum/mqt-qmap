@@ -11,3 +11,4 @@ jobs:
     uses: cda-tum/mqt-core/.github/workflows/reusable-python-packaging.yml@make-reusable-workflows-more-generic
     with:
       package-name: mqt.qmap
+      setup-z3: true
