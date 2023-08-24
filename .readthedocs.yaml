@@ -9,6 +9,15 @@ build:
   tools:
     python: "3.11"
   jobs:
+    post_checkout:
+      # Skip docs build if the commit message contains "skip ci"
+      - (git --no-pager log --pretty="tformat:%s -- %b" -1 | grep -viq "skip ci") || exit 183
+      # Skip docs build if there are no changes related to docs
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ .readthedocs.yaml src/mqt/ src/python include/python .github/contributing* .github/workflows/support*;
+        then
+          exit 183;
+        fi
     post_create_environment:
       - pip install "z3-solver>=4.8.15"
       - Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])"); export Z3_ROOT; pip install -e .[docs] -v
