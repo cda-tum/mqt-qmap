@@ -4,25 +4,41 @@ include(FindPackageHandleStandardArgs)
 
 # Function to check Z3's version
 function(check_z3_version z3_include z3_lib)
-  if(z3_include AND EXISTS "${z3_include}/z3_version.h")
-    file(STRINGS "${z3_include}/z3_version.h" z3_version_str
-         REGEX "^#define[\t ]+Z3_MAJOR_VERSION[\t ]+.*")
-    string(REGEX REPLACE "^.*Z3_MAJOR_VERSION[\t ]+([0-9]*).*$" "\\1" Z3_MAJOR "${z3_version_str}")
+  try_run(
+    Z3_RUN_RESULT Z3_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/try_z3.cpp
+    CMAKE_FLAGS -DINCLUDE_DIRECTORIES:STRING=${z3_include} LINK_LIBRARIES ${z3_lib}
+    COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT
+    RUN_OUTPUT_VARIABLE RUN_OUTPUT)
 
-    file(STRINGS "${z3_include}/z3_version.h" z3_version_str
-         REGEX "^#define[\t ]+Z3_MINOR_VERSION[\t ]+.*")
-    string(REGEX REPLACE "^.*Z3_MINOR_VERSION[\t ]+([0-9]*).*$" "\\1" Z3_MINOR "${z3_version_str}")
+  if(NOT Z3_COMPILE_RESULT)
+    message(STATUS "Could not compile test program for Z3 version check. Output: "
+                   ${COMPILE_OUTPUT})
+    if(z3_include AND EXISTS "${z3_include}/z3_version.h")
+      file(STRINGS "${z3_include}/z3_version.h" z3_version_str
+           REGEX "^#define[\t ]+Z3_MAJOR_VERSION[\t ]+.*")
+      string(REGEX REPLACE "^.*Z3_MAJOR_VERSION[\t ]+([0-9]*).*$" "\\1" Z3_MAJOR
+                           "${z3_version_str}")
 
-    file(STRINGS "${z3_include}/z3_version.h" z3_version_str
-         REGEX "^#define[\t ]+Z3_BUILD_NUMBER[\t ]+.*")
-    string(REGEX REPLACE "^.*Z3_BUILD_NUMBER[\t ]+([0-9]*).*$" "\\1" Z3_BUILD "${z3_version_str}")
+      file(STRINGS "${z3_include}/z3_version.h" z3_version_str
+           REGEX "^#define[\t ]+Z3_MINOR_VERSION[\t ]+.*")
+      string(REGEX REPLACE "^.*Z3_MINOR_VERSION[\t ]+([0-9]*).*$" "\\1" Z3_MINOR
+                           "${z3_version_str}")
 
-    set(z3_version_string ${Z3_MAJOR}.${Z3_MINOR}.${Z3_BUILD})
-  endif()
+      file(STRINGS "${z3_include}/z3_version.h" z3_version_str
+           REGEX "^#define[\t ]+Z3_BUILD_NUMBER[\t ]+.*")
+      string(REGEX REPLACE "^.*Z3_BUILD_NUMBER[\t ]+([0-9]*).*$" "\\1" Z3_BUILD "${z3_version_str}")
 
-  if(NOT z3_version_string)
-    message(STATUS "Could not determine Z3 version")
-    return()
+      set(z3_version_string ${Z3_MAJOR}.${Z3_MINOR}.${Z3_BUILD})
+    endif()
+
+    if(NOT z3_version_string)
+      message(STATUS "Could not determine Z3 version from z3_version.h")
+      return()
+    endif()
+  else()
+    string(REGEX MATCH "(Z3 )?([0-9]+.[0-9]+.[0-9]+.[0-9]+)" Z3_VERSION_STRING ${RUN_OUTPUT})
+    set(z3_version_string ${CMAKE_MATCH_2})
   endif()
 
   find_package_check_version(${z3_version_string} suitable_version RESULT_MESSAGE_VARIABLE reason)
