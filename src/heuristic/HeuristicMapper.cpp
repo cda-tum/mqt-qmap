@@ -298,7 +298,7 @@ void HeuristicMapper::createInitialMapping() {
 
     for (std::size_t i = 0; i < config.teleportationQubits; i += 2) {
       Edge e{};
-      do {
+      do { // NOLINT(cppcoreguidelines-avoid-do-while)
         auto it = std::begin(architecture.getCouplingMap());
         std::advance(it, dis(mt));
         e = *it;
