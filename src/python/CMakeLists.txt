@@ -37,11 +37,11 @@ find_package(pybind11 CONFIG REQUIRED)
 
 # We are now ready to compile the actual extension module
 pybind11_add_module(py${PROJECT_NAME} bindings.cpp)
-target_compile_definitions(py${PROJECT_NAME} PUBLIC Z3_FOUND)
-target_link_libraries(py${PROJECT_NAME} PUBLIC MQT::CorePython)
-target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_exact_lib)
-target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_heuristic_lib)
-target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_cliffordsynthesis_lib)
+target_compile_definitions(py${PROJECT_NAME} PRIVATE Z3_FOUND)
+target_link_libraries(py${PROJECT_NAME} PRIVATE MQT::CorePython)
+target_link_libraries(py${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_exact_lib)
+target_link_libraries(py${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_heuristic_lib)
+target_link_libraries(py${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_cliffordsynthesis_lib)
 
 # Install directive for scikit-build-core
 install(TARGETS py${PROJECT_NAME} LIBRARY DESTINATION mqt/qmap)

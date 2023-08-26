@@ -233,11 +233,14 @@ archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
 test-skip = "cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 build-frontend = "build"
-manylinux-x86_64-image = "manylinux_2_28"
-manylinux-aarch64-image = "manylinux_2_28"
 
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3" }
+before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.11.2"
+repair-wheel-command = [
+    "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
+    "auditwheel repair -w {dest_dir} {wheel}",
+]
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }
