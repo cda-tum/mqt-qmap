@@ -63,7 +63,6 @@ linux_aarch64_wheels_task:
     platform: linux
     cpu: 8
   env:
-    CIBW_SKIP: "*-musllinux_*"
     CIBW_BEFORE_ALL_LINUX: /opt/python/cp311-cp311/bin/pip install z3-solver==4.11.2
   setup_pyhton_script:
     - apt-get install -y python3-venv python-is-python3
