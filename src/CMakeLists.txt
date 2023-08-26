@@ -1,4 +1,7 @@
 # add LogicBlocks target
+set(BUILD_LB_TESTS
+    OFF
+    CACHE BOOL "Build LogicBlocks tests")
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
 # add MQT::Core target
 set(BUILD_MQT_CORE_TESTS
