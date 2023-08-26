@@ -15,7 +15,7 @@ ci:
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.4.0"
+    rev: v4.4.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -30,20 +30,20 @@ repos:
 
   # Clean jupyter notebooks
   - repo: https://github.com/srstevenson/nb-clean
-    rev: "2.4.0"
+    rev: 2.4.0
     hooks:
       - id: nb-clean
 
   # Handling unwanted unicode characters
   - repo: https://github.com/sirosen/texthooks
-    rev: "0.5.0"
+    rev: 0.5.0
     hooks:
       - id: fix-ligatures
       - id: fix-smartquotes
 
   # Check for common mistakes
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: "v1.10.0"
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
       - id: rst-directive-colons
@@ -58,13 +58,13 @@ repos:
 
   # Run code formatting with Black
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: "23.7.0" # Keep in sync with blacken-docs
+    rev: 23.7.0 # Keep in sync with blacken-docs
     hooks:
       - id: black-jupyter
 
   # Also run Black on examples in the documentation
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: "1.16.0"
+    rev: 1.16.0
     hooks:
       - id: blacken-docs
         additional_dependencies:
@@ -72,27 +72,27 @@ repos:
 
   # Check static types with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.5.1"
+    rev: v1.5.1
     hooks:
       - id: mypy
-        files: ^(mqt/qmap|test/python|setup.py)
+        files: ^(src/mqt|test/python)
         args: []
         additional_dependencies:
-          - "importlib_resources"
-          - "pytest>=7.0"
-          - "types-setuptools"
-          - "mqt.qcec"
+          - importlib_resources
+          - numpy
+          - pytest
+          - mqt.qcec
 
   # Check for spelling
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.5"
+    rev: v2.2.5
     hooks:
       - id: codespell
         args: ["-L", "wille,linz,applys", "--skip", "*.ipynb"]
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v16.0.6"
+    rev: v16.0.6
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
@@ -108,7 +108,7 @@ repos:
 
   # Format configuration files with prettier
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.0.2"
+    rev: v3.0.2
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
