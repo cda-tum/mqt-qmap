@@ -19,8 +19,11 @@ build:
           exit 183;
         fi
     post_create_environment:
-      - pip install "z3-solver>=4.8.15"
-      - Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])"); export Z3_ROOT; pip install -e .[docs] -v
+      - pip install --upgrade pip wheel setuptools
+      - pip install z3-solver>=4.8.15
+      - export Z3_ROOT=$(python -c "import z3 as _; print(_.__path__[0])")
+      - pip install scikit-build-core[pyproject] setuptools_scm pybind11
+      - pip install --no-build-isolation -ve.[docs]
 
 sphinx:
   configuration: docs/source/conf.py
