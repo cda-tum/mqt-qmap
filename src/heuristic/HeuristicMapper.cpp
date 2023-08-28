@@ -155,7 +155,6 @@ void HeuristicMapper::map(const Configuration& configuration) {
 
   // infer output permutation from qubit locations
   qcMapped.outputPermutation.clear();
-  std::size_t count = 0U;
   for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
     if (const auto lq = qubits.at(i); lq != -1) {
       const auto logicalQubit = static_cast<qc::Qubit>(lq);
@@ -166,10 +165,6 @@ void HeuristicMapper::map(const Configuration& configuration) {
       } else {
         qcMapped.setLogicalQubitGarbage(logicalQubit);
       }
-    } else {
-      qcMapped.setLogicalQubitGarbage(
-          static_cast<qc::Qubit>(qc.getNqubits() + count));
-      ++count;
     }
   }
 
@@ -220,6 +215,16 @@ void HeuristicMapper::map(const Configuration& configuration) {
           op->setTargets({static_cast<qc::Qubit>(targetLocation)});
         }
       }
+    }
+  }
+
+  // mark every qubit that is not mapped to a logical qubit as garbage
+  std::size_t count = 0U;
+  for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
+    if (const auto lq = qubits.at(i); lq == -1) {
+      qcMapped.setLogicalQubitGarbage(
+          static_cast<qc::Qubit>(qc.getNqubits() + count));
+      ++count;
     }
   }
 
