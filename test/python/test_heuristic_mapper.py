@@ -1,4 +1,5 @@
 """Test the heuristic mapper."""
+from __future__ import annotations
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeLondon

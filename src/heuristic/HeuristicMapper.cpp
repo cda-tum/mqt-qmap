@@ -155,15 +155,16 @@ void HeuristicMapper::map(const Configuration& configuration) {
 
   // infer output permutation from qubit locations
   qcMapped.outputPermutation.clear();
-  std::size_t count = 0U;
   for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
-    if (qubits.at(i) != -1) {
-      qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
-          static_cast<qc::Qubit>(qubits.at(i));
-    } else {
-      qcMapped.setLogicalQubitGarbage(
-          static_cast<qc::Qubit>(qc.getNqubits() + count));
-      ++count;
+    if (const auto lq = qubits.at(i); lq != -1) {
+      const auto logicalQubit = static_cast<qc::Qubit>(lq);
+      // check whether this is a qubit from the original circuit
+      if (logicalQubit < qc.getNqubits()) {
+        qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
+            static_cast<qc::Qubit>(qubits.at(i));
+      } else {
+        qcMapped.setLogicalQubitGarbage(logicalQubit);
+      }
     }
   }
 
@@ -192,7 +193,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
               static_cast<std::int16_t>(op->getTargets().at(0));
         }
       }
-      if (gatesToAdjust.back() == gateidx) {
+      if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
         gatesToAdjust.pop_back();
         auto target         = op->getTargets().at(0);
         auto targetLocation = locations.at(target);
@@ -214,6 +215,16 @@ void HeuristicMapper::map(const Configuration& configuration) {
           op->setTargets({static_cast<qc::Qubit>(targetLocation)});
         }
       }
+    }
+  }
+
+  // mark every qubit that is not mapped to a logical qubit as garbage
+  std::size_t count = 0U;
+  for (std::size_t i = 0U; i < architecture.getNqubits(); ++i) {
+    if (const auto lq = qubits.at(i); lq == -1) {
+      qcMapped.setLogicalQubitGarbage(
+          static_cast<qc::Qubit>(qc.getNqubits() + count));
+      ++count;
     }
   }
 
@@ -292,16 +303,17 @@ void HeuristicMapper::createInitialMapping() {
 
     for (std::size_t i = 0; i < config.teleportationQubits; i += 2) {
       Edge e{};
-      do {
+      do { // NOLINT(cppcoreguidelines-avoid-do-while)
         auto it = std::begin(architecture.getCouplingMap());
         std::advance(it, dis(mt));
         e = *it;
       } while (qubits.at(e.first) != -1 || qubits.at(e.second) != -1);
-      locations.at(qc.getNqubits() + i) = static_cast<std::int16_t>(e.first);
-      locations.at(qc.getNqubits() + i + 1) =
+      const auto teleportationQubit    = qc.getNqubits() + i;
+      locations.at(teleportationQubit) = static_cast<std::int16_t>(e.first);
+      locations.at(teleportationQubit + 1) =
           static_cast<std::int16_t>(e.second);
-      qubits.at(e.first)  = static_cast<std::int16_t>(qc.getNqubits() + i);
-      qubits.at(e.second) = static_cast<std::int16_t>(qc.getNqubits() + i + 1);
+      qubits.at(e.first)  = static_cast<std::int16_t>(teleportationQubit);
+      qubits.at(e.second) = static_cast<std::int16_t>(teleportationQubit + 1);
     }
 
     if (config.teleportationFake) {

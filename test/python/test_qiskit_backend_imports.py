@@ -1,4 +1,5 @@
 """Test the Qiskit backend imports."""
+from __future__ import annotations
 
 import pytest
 from qiskit import QuantumCircuit

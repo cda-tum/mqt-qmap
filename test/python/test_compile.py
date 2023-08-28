@@ -1,4 +1,5 @@
 """Test the compilation of circuits."""
+from __future__ import annotations
 
 from pathlib import Path
 

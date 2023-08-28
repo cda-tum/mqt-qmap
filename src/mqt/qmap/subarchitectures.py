@@ -5,26 +5,25 @@ This file implements the methods presented in https://arxiv.org/abs/2210.09321.
 
 from __future__ import annotations
 
-import sys
-
-if sys.version_info < (3, 10, 0):
-    import importlib_resources as resources
-else:
-    from importlib import resources  # type: ignore[no-redef]
-
 import pickle
+import sys
 from itertools import combinations
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, NewType, Optional, Set, Tuple
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING or sys.version_info < (3, 10, 0):
+    import importlib_resources as resources
+else:
+    from importlib import resources
+
+if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from matplotlib import figure
     from qiskit.providers import BackendV1
     from typing_extensions import TypeAlias
 
-    from mqt.qmap import Architecture
+    from . import Architecture
 
 
 import contextlib
@@ -72,9 +71,9 @@ class SubarchitectureOrder:
         so = SubarchitectureOrder()
         so.arch = graph
 
-        so.__compute_subarchs()
-        so.__compute_subarch_order()
-        so.__compute_desirable_subarchitectures()
+        so.__compute_subarchs()  # noqa: SLF001
+        so.__compute_subarch_order()  # noqa: SLF001
+        so.__compute_desirable_subarchitectures()  # noqa: SLF001
         return so
 
     @classmethod

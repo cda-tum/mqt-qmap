@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from qiskit.providers.models import BackendProperties
 from qiskit.transpiler.target import Target
 
-if TYPE_CHECKING:  # pragma: no cover
-    from mqt.qmap.pyqmap import Architecture
+if TYPE_CHECKING:
+    from .pyqmap import Architecture
 
 
 def load_calibration(architecture: Architecture, calibration: str | BackendProperties | Target | None = None) -> None:

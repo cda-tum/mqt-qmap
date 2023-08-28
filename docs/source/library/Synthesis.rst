@@ -6,8 +6,8 @@ The main functionality for synthesizing quantum circuits is provided by the :fun
 
 
     .. currentmodule:: mqt.qmap
-    .. autofunction:: mqt.qmap::synthesize_clifford
-    .. autofunction:: mqt.qmap::optimize_clifford
+    .. autofunction:: synthesize_clifford
+    .. autofunction:: optimize_clifford
 
 
 

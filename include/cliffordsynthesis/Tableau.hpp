@@ -61,11 +61,11 @@ public:
     return tableau.at(index);
   }
 
-  [[nodiscard]] auto getQubitCount() const { return nQubits; }
+  [[nodiscard]] std::size_t getQubitCount() const { return nQubits; }
 
-  [[nodiscard]] auto getTableauSize() const { return tableau.size(); }
+  [[nodiscard]] std::size_t getTableauSize() const { return tableau.size(); }
 
-  [[nodiscard]] auto hasDestabilizers() const {
+  [[nodiscard]] bool hasDestabilizers() const {
     return tableau.size() == 2 * nQubits;
   }
 

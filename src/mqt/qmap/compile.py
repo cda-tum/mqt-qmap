@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.transpiler import Layout
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
-from mqt.qmap.pyqmap import (
+from .load_architecture import load_architecture
+from .load_calibration import load_calibration
+from .pyqmap import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -24,9 +26,6 @@ from mqt.qmap.pyqmap import (
     SwapReduction,
     map,
 )
-
-from .load_architecture import load_architecture
-from .load_calibration import load_calibration
 
 
 def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) -> Layout:
@@ -147,8 +146,10 @@ def compile(  # noqa: A001
     try:
         from qiskit.transpiler.layout import TranspileLayout
 
-        circ._layout = TranspileLayout(initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits())
+        circ._layout = TranspileLayout(  # noqa: SLF001
+            initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
+        )
     except ImportError:
-        circ._layout = layout
+        circ._layout = layout  # noqa: SLF001
 
     return circ, results
