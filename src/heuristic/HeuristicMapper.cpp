@@ -303,11 +303,12 @@ void HeuristicMapper::createInitialMapping() {
         std::advance(it, dis(mt));
         e = *it;
       } while (qubits.at(e.first) != -1 || qubits.at(e.second) != -1);
-      locations.at(qc.getNqubits() + i) = static_cast<std::int16_t>(e.first);
-      locations.at(qc.getNqubits() + i + 1) =
+      const auto teleportationQubit    = qc.getNqubits() + i;
+      locations.at(teleportationQubit) = static_cast<std::int16_t>(e.first);
+      locations.at(teleportationQubit + 1) =
           static_cast<std::int16_t>(e.second);
-      qubits.at(e.first)  = static_cast<std::int16_t>(qc.getNqubits() + i);
-      qubits.at(e.second) = static_cast<std::int16_t>(qc.getNqubits() + i + 1);
+      qubits.at(e.first)  = static_cast<std::int16_t>(teleportationQubit);
+      qubits.at(e.second) = static_cast<std::int16_t>(teleportationQubit + 1);
     }
 
     if (config.teleportationFake) {
