@@ -14,13 +14,13 @@ concurrency:
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: cda-tum/mqt-core/.github/workflows/reusable-change-detection.yml@make-reusable-workflows-more-generic
+    uses: cda-tum/mqt-core/.github/workflows/reusable-change-detection.yml@main
 
   cpp-tests:
     name: 🇨‌ Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-ci.yml@make-reusable-workflows-more-generic
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-ci.yml@main
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -30,7 +30,7 @@ jobs:
     name: 🇨‌ Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@make-reusable-workflows-more-generic
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@main
     with:
       setup-z3: true
 
@@ -38,7 +38,7 @@ jobs:
     name: 🐍 Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@make-reusable-workflows-more-generic
+    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@main
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -48,7 +48,7 @@ jobs:
     name: 📝 CodeQL
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-code-ql)
-    uses: cda-tum/mqt-core/.github/workflows/reusable-code-ql.yml@make-reusable-workflows-more-generic
+    uses: cda-tum/mqt-core/.github/workflows/reusable-code-ql.yml@main
     with:
       setup-z3: true
 
