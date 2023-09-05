@@ -356,10 +356,19 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   }
 }
 
-TEST_P(SynthesisTest, TQDepth) {
+TEST_P(SynthesisTest, TQDepthLinearSearch) {
   config.target       = TargetMetric::TQDepth;
   config.verbosity    = plog::Severity::none;
   config.linearSearch = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getTQDepth(), test.expectedMinimalTQDepth);
+}
+
+TEST_P(SynthesisTest, TQDepthBinarySearch) {
+  config.target       = TargetMetric::TQDepth;
+  config.verbosity    = plog::Severity::none;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 

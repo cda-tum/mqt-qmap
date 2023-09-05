@@ -183,7 +183,7 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
   } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
   } else if (config.targetMetric == TargetMetric::TQDepth) {
-    upperBound = std::min(upperBound, results.getTQDepth());
+    upperBound = std::max(upperBound, results.getTQDepth());
   }
 
   INFO() << "Found upper bound for the number of timesteps: " << upperBound;

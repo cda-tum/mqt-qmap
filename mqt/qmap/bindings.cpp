@@ -403,6 +403,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("two_qubit_gates", cs::TargetMetric::TwoQubitGates,
              "Optimize two-qubit gate count.")
       .value("depth", cs::TargetMetric::Depth, "Optimize circuit depth.")
+      .value("tQDepth", cs::TargetMetric::TQDepth, "Optimize circuit tQDepth.")
       .export_values()
       .def(py::init([](const std::string& name) {
         return cs::targetMetricFromString(name);
@@ -531,6 +532,8 @@ PYBIND11_MODULE(pyqmap, m) {
                              "synthesized circuit.")
       .def_property_readonly("depth", &cs::Results::getDepth,
                              "Returns the depth of the synthesized circuit.")
+      .def_property_readonly("tQDepth", &cs::Results::getTQDepth,
+                             "Returns the TQDepth of the synthesized circuit.")
       .def_property_readonly("runtime", &cs::Results::getRuntime,
                              "Returns the runtime of the synthesis in seconds.")
       .def_property_readonly("solver_calls", &cs::Results::getSolverCalls,
