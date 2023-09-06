@@ -45,6 +45,10 @@ protected:
   void extractCircuitFromModel(Results& res, logicbase::Model& model) override;
 
   void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
+
+  virtual void assertGatesImplyTransform(
+      std::size_t pos, std::size_t qubit,
+      const std::vector<TransformationFamily>& transformations) override;
 };
 
 } // namespace cs::encoding

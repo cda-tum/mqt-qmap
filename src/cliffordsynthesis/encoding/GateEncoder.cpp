@@ -13,10 +13,10 @@ namespace cs::encoding {
 
 using namespace logicbase;
 
-void GateEncoder::createSingleQubitGateVariables() {
+void GateEncoder::createSingleQubitGateVariables(const std::size_t tqEncoding) {
   DEBUG() << "Creating single-qubit gate variables.";
-  vars.gS.reserve(T);
-  for (std::size_t t = 0U; t < T; ++t) {
+  tqEncoding == 1U ? vars.gS.reserve(T/2) : vars.gS.reserve(T);
+  for (std::size_t t = 0U; t < T; t += tqEncoding + 1U) {
     auto& timeStep = vars.gS.emplace_back();
     timeStep.reserve(SINGLE_QUBIT_GATES.size());
     for (const auto gate : SINGLE_QUBIT_GATES) {
@@ -32,10 +32,10 @@ void GateEncoder::createSingleQubitGateVariables() {
   }
 }
 
-void GateEncoder::createTwoQubitGateVariables() {
+void GateEncoder::createTwoQubitGateVariables(const std::size_t tqEncoding) {
   DEBUG() << "Creating two-qubit gate variables.";
-  vars.gC.reserve(T);
-  for (std::size_t t = 0U; t < T; ++t) {
+  tqEncoding == 1U ? vars.gC.reserve(T/2) : vars.gC.reserve(T);
+  for (std::size_t t = tqEncoding; t < T; t += tqEncoding + 1U) {
     auto& timeStep = vars.gC.emplace_back();
     timeStep.reserve(N);
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
