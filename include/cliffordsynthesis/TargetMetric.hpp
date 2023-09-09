@@ -36,7 +36,7 @@ targetMetricFromString(const std::string& target) {
   if (target == "depth") {
     return TargetMetric::Depth;
   }
-  if (target == "tQDepth") {
+  if (target == "two_qubit_depth") {
     return TargetMetric::TQDepth;
   }
   return TargetMetric::Gates;
