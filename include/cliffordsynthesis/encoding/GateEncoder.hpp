@@ -31,7 +31,7 @@ public:
     // variables for the two-qubit gates
     logicbase::LogicMatrix3D gC{};
     // variables for the pauli-qubit gates
-    logicbase::LogicMatrix   gP{};
+    logicbase::LogicMatrix gP{};
 
     void
          collectSingleQubitGateVariables(std::size_t pos, std::size_t qubit,
@@ -40,8 +40,8 @@ public:
                                       bool                    target,
                                       logicbase::LogicVector& variables) const;
     void
-    collectPauliQubitGateVariables(std::size_t qubit,
-                                    logicbase::LogicVector& variables) const;
+    collectPauliQubitGateVariables(std::size_t             qubit,
+                                   logicbase::LogicVector& variables) const;
   };
 
   // variable creation
@@ -66,9 +66,9 @@ public:
   static constexpr std::array<qc::OpType, 4> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
 
-  //static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
-      //qc::OpType::None, qc::OpType::X, qc::OpType::Y,   qc::OpType::Z,
-      //qc::OpType::H,    qc::OpType::S, qc::OpType::Sdag};
+  // static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
+  // qc::OpType::None, qc::OpType::X, qc::OpType::Y,   qc::OpType::Z,
+  // qc::OpType::H,    qc::OpType::S, qc::OpType::Sdag};
 
   static constexpr std::array<qc::OpType, 4> PAULI_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z};
@@ -143,8 +143,8 @@ protected:
   virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
   virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
   [[nodiscard]] static std::vector<TransformationFamily>
-       collectGateTransformations(std::size_t pos, std::size_t qubit,
-                                  const GateToTransformation& gateToTransformation);
+               collectGateTransformations(std::size_t pos, std::size_t qubit,
+                                          const GateToTransformation& gateToTransformation);
   virtual void assertGatesImplyTransform(
       std::size_t pos, std::size_t qubit,
       const std::vector<TransformationFamily>& transformations);

@@ -367,8 +367,8 @@ TEST_P(SynthesisTest, TQDepthLinearSearch) {
 }
 
 TEST_P(SynthesisTest, TQDepthBinarySearch) {
-  config.target       = TargetMetric::TQDepth;
-  config.verbosity    = plog::Severity::none;
+  config.target    = TargetMetric::TQDepth;
+  config.verbosity = plog::Severity::none;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
