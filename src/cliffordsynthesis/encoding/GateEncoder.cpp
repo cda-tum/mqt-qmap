@@ -15,7 +15,7 @@ using namespace logicbase;
 
 void GateEncoder::createSingleQubitGateVariables(const std::size_t tqEncoding) {
   DEBUG() << "Creating single-qubit gate variables.";
-  tqEncoding == 1U ? vars.gS.reserve(T/2) : vars.gS.reserve(T);
+  tqEncoding == 1U ? vars.gS.reserve(T / 2) : vars.gS.reserve(T);
   for (std::size_t t = 0U; t < T; t += tqEncoding + 1U) {
     auto& timeStep = vars.gS.emplace_back();
     timeStep.reserve(SINGLE_QUBIT_GATES.size());
@@ -34,7 +34,7 @@ void GateEncoder::createSingleQubitGateVariables(const std::size_t tqEncoding) {
 
 void GateEncoder::createTwoQubitGateVariables(const std::size_t tqEncoding) {
   DEBUG() << "Creating two-qubit gate variables.";
-  tqEncoding == 1U ? vars.gC.reserve(T/2) : vars.gC.reserve(T);
+  tqEncoding == 1U ? vars.gC.reserve(T / 2) : vars.gC.reserve(T);
   for (std::size_t t = tqEncoding; t < T; t += tqEncoding + 1U) {
     auto& timeStep = vars.gC.emplace_back();
     timeStep.reserve(N);

@@ -7,10 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Clifford, PauliList
 
-from mqt import qcec, qmap
+from mqt import qmap
 
 
 @dataclass
