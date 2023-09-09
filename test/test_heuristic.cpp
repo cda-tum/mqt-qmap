@@ -6,6 +6,7 @@
 #include "heuristic/HeuristicMapper.hpp"
 
 #include "gtest/gtest.h"
+#include <stack>
 
 class HeuristicTest5Q : public testing::TestWithParam<std::string> {
 protected:
@@ -217,41 +218,42 @@ TEST(Functionality, HeuristicAdmissibility) {
   architecture.loadCouplingMap(6, cm);
   const std::vector<Edge> perms{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
-  TwoQubitMultiplicity multiplicity = {
+  const TwoQubitMultiplicity multiplicity = {
       {{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
 
   // perform depth-limited depth first search
-  const std::size_t                  depthLimit = 11;
-  std::vector<HeuristicMapper::Node> stack{};
-  std::vector<std::size_t>           currentPerm{};
+  const std::size_t                  depthLimit = 6;
+  std::vector<HeuristicMapper::Node> nodeStack{};
+  nodeStack.reserve(depthLimit);
+  std::stack<std::size_t> permStack{};
 
   auto initNode = HeuristicMapper::Node({0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5});
   initNode.recalculateFixedCost(architecture);
   initNode.updateHeuristicCost(architecture, multiplicity, true);
-  stack.push_back(initNode);
-  currentPerm.push_back(perms.size());
+  nodeStack.emplace_back(initNode);
+  permStack.emplace(perms.size());
 
-  while (!stack.empty()) {
-    const auto& node = stack.back();
+  while (!nodeStack.empty()) {
+    const auto& node = nodeStack.back();
     if (node.done) {
       // check if all nodes in stack have lower or equal cost
-      for (const auto& prevNode : stack) {
+      for (const auto& prevNode : nodeStack) {
         EXPECT_LE(prevNode.getTotalCost(), node.getTotalCost());
       }
     }
-    if (node.done || stack.size() >= depthLimit || currentPerm.back() == 0) {
-      stack.pop_back();
-      currentPerm.pop_back();
+    if (node.done || nodeStack.size() >= depthLimit || permStack.top() == 0) {
+      nodeStack.pop_back();
+      permStack.pop();
       continue;
     }
-    --currentPerm.back();
-    const auto perm    = perms[currentPerm.back()];
+    --permStack.top();
+    const auto perm    = perms[permStack.top()];
     auto       newNode = HeuristicMapper::Node(node.qubits, node.locations,
                                                node.swaps, node.costFixed);
     newNode.applySWAP(perm, architecture);
     newNode.updateHeuristicCost(architecture, multiplicity, true);
-    stack.push_back(newNode);
-    currentPerm.push_back(perms.size());
+    nodeStack.emplace_back(newNode);
+    permStack.emplace(perms.size());
   }
 }
 

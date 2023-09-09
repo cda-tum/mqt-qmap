@@ -1,67 +1,86 @@
-name: C++
-
+name: CI
 on:
-  pull_request:
-  merge_group:
   push:
     branches:
       - main
+  pull_request:
+  merge_group:
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
-env:
-  CMAKE_BUILD_PARALLEL_LEVEL: 3
-  CTEST_PARALLEL_LEVEL: 3
-  Z3_VERSION: 4.11.2
-
 jobs:
+  change-detection:
+    name: 🔍 Change
+    uses: cda-tum/mqt-core/.github/workflows/reusable-change-detection.yml@main
+
   cpp-tests:
-    name: Tests ${{ matrix.config.os }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - { os: ubuntu-latest, toolchain: "" }
-          - { os: macos-latest, toolchain: "" }
-          - { os: windows-latest, toolchain: "-T ClangCl" }
+    name: 🇨‌ Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-ci.yml@main
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      setup-z3: true
+
+  cpp-linter:
+    name: 🇨‌ Lint
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-cpp-linter.yml@main
+    with:
+      setup-z3: true
+
+  python-tests:
+    name: 🐍 Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-python-tests)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-python-ci.yml@main
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      setup-z3: true
+
+  code-ql:
+    name: 📝 CodeQL
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-code-ql)
+    uses: cda-tum/mqt-core/.github/workflows/reusable-code-ql.yml@main
+    with:
+      setup-z3: true
+
+  required-checks-pass: # This job does nothing and is only used for branch protection
+    name: 🚦 Check
+    if: always()
+    needs:
+      - change-detection
+      - cpp-tests
+      - cpp-linter
+      - python-tests
+      - code-ql
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
         with:
-          submodules: recursive
-      - name: Install Z3
-        uses: cda-tum/setup-z3@v1
-        with:
-          version: ${{ env.Z3_VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_QMAP_TESTS=ON ${{ matrix.config.toolchain }}
-        env:
-          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
-      - name: Build
-        run: cmake --build build --config Release
-      - name: Test
-        run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 300
-      - if: runner.os == 'Linux'
-        name: Coverage
-        run: |
-          cmake -S . -B buildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_QMAP_TESTS=ON -DENABLE_COVERAGE=ON
-          cmake --build buildCov --config Debug
-          ctest -C Debug --output-on-failure --test-dir buildCov --repeat until-pass:3 --timeout 300
-      - if: runner.os == 'Linux'
-        name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3.1.4
-        with:
-          fail_ci_if_error: true
-          flags: cpp
-          gcov: true
-          gcov_ignore: "extern/**/*"
-          token: ${{ secrets.CODECOV_TOKEN }}
+          allowed-skips: >-
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-tests)
+              && '' || 'cpp-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-linter)
+              && '' || 'cpp-linter,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-python-tests)
+              && '' || 'python-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-code-ql)
+              && '' || 'code-ql,'
+            }}
+          jobs: ${{ toJSON(needs) }}

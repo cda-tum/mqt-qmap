@@ -3,6 +3,7 @@
 This file is part of the MQT QMAP library released under the MIT license.
 See README.md or go to https://github.com/cda-tum/qmap for more information.
 """
+from __future__ import annotations
 
 import os
 import sys
@@ -16,9 +17,10 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
     if bin_path.exists():
         os.add_dll_directory(str(bin_path))
 
-from mqt.qmap.clifford_synthesis import optimize_clifford, synthesize_clifford
-from mqt.qmap.compile import compile
-from mqt.qmap.pyqmap import (
+from ._version import version as __version__
+from .clifford_synthesis import optimize_clifford, synthesize_clifford
+from .compile import compile
+from .pyqmap import (
     Arch,
     Architecture,
     CliffordSynthesizer,
@@ -37,7 +39,7 @@ from mqt.qmap.pyqmap import (
     TargetMetric,
     Verbosity,
 )
-from mqt.qmap.subarchitectures import SubarchitectureOrder
+from .subarchitectures import SubarchitectureOrder
 
 __all__ = [
     "compile",
@@ -61,4 +63,5 @@ __all__ = [
     "synthesize_clifford",
     "optimize_clifford",
     "Verbosity",
+    "__version__",
 ]

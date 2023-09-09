@@ -12,9 +12,6 @@
 #include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 
-#define STRINGIFY(x) #x
-#define MACRO_STRINGIFY(x) STRINGIFY(x)
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -403,7 +400,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("two_qubit_gates", cs::TargetMetric::TwoQubitGates,
              "Optimize two-qubit gate count.")
       .value("depth", cs::TargetMetric::Depth, "Optimize circuit depth.")
-      .value("tQDepth", cs::TargetMetric::TQDepth, "Optimize circuit tQDepth.")
+      .value("two_qubit_depth", cs::TargetMetric::TQDepth,
+             "Optimize circuit tQDepth.")
       .export_values()
       .def(py::init([](const std::string& name) {
         return cs::targetMetricFromString(name);
@@ -532,7 +530,7 @@ PYBIND11_MODULE(pyqmap, m) {
                              "synthesized circuit.")
       .def_property_readonly("depth", &cs::Results::getDepth,
                              "Returns the depth of the synthesized circuit.")
-      .def_property_readonly("tQDepth", &cs::Results::getTQDepth,
+      .def_property_readonly("two_qubit_depth", &cs::Results::getTQDepth,
                              "Returns the TQDepth of the synthesized circuit.")
       .def_property_readonly("runtime", &cs::Results::getRuntime,
                              "Returns the runtime of the synthesis in seconds.")
@@ -618,10 +616,4 @@ PYBIND11_MODULE(pyqmap, m) {
   synthesizer.def_property_readonly("results",
                                     &cs::CliffordSynthesizer::getResults,
                                     "Returns the results of the synthesis.");
-
-#ifdef VERSION_INFO
-  m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
-#else
-  m.attr("__version__") = "dev";
-#endif
 }

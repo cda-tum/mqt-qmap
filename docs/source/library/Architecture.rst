@@ -81,12 +81,7 @@ Full API of the Architecture class
         :undoc-members:
         :members:
 
-
-mqt.qmap.Arch
-#############
-
 For convenience, this module provides several pre-defined architectures.
 
-    .. automodule:: mqt.qmap.Arch
-        :undoc-members:
+    .. autoclass:: Arch
         :members:

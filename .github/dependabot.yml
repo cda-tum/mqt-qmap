@@ -2,14 +2,21 @@ version: 2
 updates:
   - package-ecosystem: "gitsubmodule"
     directory: "/"
+    groups:
+      submodules:
+        patterns:
+          - "*"
     schedule:
-      interval: "weekly"
-      day: "friday"
+      interval: "monthly"
       time: "06:00"
       timezone: "Europe/Vienna"
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     schedule:
       interval: "weekly"
       day: "friday"
@@ -18,6 +25,10 @@ updates:
 
   - package-ecosystem: "pip"
     directory: "/"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
     schedule:
       interval: "weekly"
       day: "friday"
