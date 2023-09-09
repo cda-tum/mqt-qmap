@@ -45,8 +45,8 @@ public:
   };
 
   // variable creation
-  virtual void createSingleQubitGateVariables();
-  virtual void createTwoQubitGateVariables();
+  virtual void createSingleQubitGateVariables(std::size_t tqEncoding);
+  virtual void createTwoQubitGateVariables(std::size_t tqEncoding);
   virtual void createPauliQubitGateVariables();
 
   // encode the relation between the tableaus and the gates
@@ -65,6 +65,10 @@ public:
   // TODO: set back
   static constexpr std::array<qc::OpType, 4> SINGLE_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::H, qc::OpType::S, qc::OpType::SX};
+
+  //static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
+      //qc::OpType::None, qc::OpType::X, qc::OpType::Y,   qc::OpType::Z,
+      //qc::OpType::H,    qc::OpType::S, qc::OpType::Sdag};
 
   static constexpr std::array<qc::OpType, 4> PAULI_QUBIT_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z};
@@ -141,7 +145,7 @@ protected:
   [[nodiscard]] static std::vector<TransformationFamily>
        collectGateTransformations(std::size_t pos, std::size_t qubit,
                                   const GateToTransformation& gateToTransformation);
-  void assertGatesImplyTransform(
+  virtual void assertGatesImplyTransform(
       std::size_t pos, std::size_t qubit,
       const std::vector<TransformationFamily>& transformations);
   virtual void assertZConstraints(std::size_t pos, std::size_t qubit);
