@@ -99,7 +99,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
     break;
-  case TargetMetric::TQDepth:
+  case TargetMetric::TwoQubitDepth:
     twoQubitDepthOptimalSynthesis(encoderConfig, lower, upper);
     break;
   }
@@ -136,8 +136,8 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
   } else if (requiresTwoQubitEncoding(config.targetMetric)) {
-    config.timestepLimit = results.getTQDepth();
-    INFO() << "Using initial circuit's tQDepth as initial timestep limit: "
+    config.timestepLimit = results.getTwoQubitDepth();
+    INFO() << "Using initial circuit's two qubit depth as initial timestep limit: "
            << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
@@ -168,9 +168,6 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
-      std::cout << "No solution found for " << config.timestepLimit
-                << " timestep(s). Doubling timestep limit to " << upperBound
-                << std::endl;
       INFO() << "No solution found for " << config.timestepLimit
              << " timestep(s). Doubling timestep limit to " << upperBound;
       config.timestepLimit = upperBound;
@@ -182,8 +179,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     upperBound = std::min(upperBound, results.getGates());
   } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
-  } else if (config.targetMetric == TargetMetric::TQDepth) {
-    upperBound = std::max(upperBound, results.getTQDepth());
+  } else if (config.targetMetric == TargetMetric::TwoQubitDepth) {
+    upperBound = std::min(upperBound, results.getTwoQubitDepth());
   }
 
   INFO() << "Found upper bound for the number of timesteps: " << upperBound;
@@ -254,22 +251,21 @@ void CliffordSynthesizer::depthOptimalSynthesis(
 void CliffordSynthesizer::twoQubitDepthOptimalSynthesis(
     CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
     const std::size_t upper) {
-  // tQDepth-optimal synthesis is achieved by determining a timestep limit T
-  // such that there exists a solution with tQDepth T, but no solution with
-  // tQDepth T-1. This procedure uses an encoding (SQG - TQG) where in single
-  // and two qubit gates are allowed just one gate per timestep. This procedure
-  // is guaranteed to produce a depth-optimal circuit. However, the number of
+  // TwoQubitDepth-optimal synthesis is achieved by determining a timestep limit T
+  // such that there exists a solution with twoQubitDepth T, but no solution with
+  // twoQubitDepth T-1. This procedure uses an TwoQubitEncoding (SQG - TQG) where
+  // SQG layer consists only of single qubit gates in the time step t and TQG can
+  // consist only of two qubit gates in the time step t+1. This procedure is
+  // guaranteed to produce a TwoQubitdepth-optimal circuit. However, the number of
   // gates in the resulting circuit is not necessarily minimal, i.e., there may
-  // be a solution with fewer gates and the same depth. To this end, an
-  // optimization pass is provided that additionally minimizes the number of
-  // gates.
+  // be a solution with fewer gates and the same depth.
 
   if (configuration.linearSearch) {
     runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
-    // timestep (=tQDepth) limits T until a solution with tQDepth T is found,
-    // but no solution with tQDepth T-1 could be determined.
+    // timestep (=TwoQubitDepth) limits T until a solution with twoQubitDepth T is found,
+    // but no solution with twoQubitDepth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 }
@@ -464,9 +460,9 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
       currentResults = newResults;
     }
     break;
-  case TargetMetric::TQDepth:
-    if ((newResults.getTQDepth() < currentResults.getTQDepth()) ||
-        ((newResults.getTQDepth() == currentResults.getTQDepth()) &&
+  case TargetMetric::TwoQubitDepth:
+    if ((newResults.getTwoQubitDepth() < currentResults.getTwoQubitDepth()) ||
+        ((newResults.getTwoQubitDepth() == currentResults.getTwoQubitDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }

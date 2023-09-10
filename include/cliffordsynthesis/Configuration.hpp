@@ -38,7 +38,7 @@ struct Configuration {
   /// Settings for depth-optimal synthesis
   bool minimizeGatesAfterDepthOptimization = false;
 
-  /// Settings for STDepth-optimal synthesis
+  /// Settings for TwoQubitDepth-optimal synthesis
   bool useTwoQubitEncoding = false;
 
   /// Settings for two-qubit gate-optimal synthesis

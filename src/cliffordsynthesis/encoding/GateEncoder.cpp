@@ -13,10 +13,10 @@ namespace cs::encoding {
 
 using namespace logicbase;
 
-void GateEncoder::createSingleQubitGateVariables(const std::size_t tqEncoding) {
+void GateEncoder::createSingleQubitGateVariables() {
   DEBUG() << "Creating single-qubit gate variables.";
-  tqEncoding == 1U ? vars.gS.reserve(T/2) : vars.gS.reserve(T);
-  for (std::size_t t = 0U; t < T; t += tqEncoding + 1U) {
+  vars.gS.reserve(T);
+  for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gS.emplace_back();
     timeStep.reserve(SINGLE_QUBIT_GATES.size());
     for (const auto gate : SINGLE_QUBIT_GATES) {
@@ -32,10 +32,10 @@ void GateEncoder::createSingleQubitGateVariables(const std::size_t tqEncoding) {
   }
 }
 
-void GateEncoder::createTwoQubitGateVariables(const std::size_t tqEncoding) {
+void GateEncoder::createTwoQubitGateVariables() {
   DEBUG() << "Creating two-qubit gate variables.";
-  tqEncoding == 1U ? vars.gC.reserve(T/2) : vars.gC.reserve(T);
-  for (std::size_t t = tqEncoding; t < T; t += tqEncoding + 1U) {
+  vars.gC.reserve(T);
+  for (std::size_t t = 0; t < T; ++t) {
     auto& timeStep = vars.gC.emplace_back();
     timeStep.reserve(N);
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
@@ -48,21 +48,6 @@ void GateEncoder::createTwoQubitGateVariables(const std::size_t tqEncoding) {
         TRACE() << "Creating variable " << gName;
         control.emplace_back(lb->makeVariable(gName));
       }
-    }
-  }
-}
-
-void GateEncoder::createPauliQubitGateVariables() {
-  DEBUG() << "Creating pauli-qubit gate variables.";
-  vars.gP.reserve(PAULI_QUBIT_GATES.size());
-  for (const auto gate : PAULI_QUBIT_GATES) {
-    auto& g = vars.gP.emplace_back();
-    g.reserve(N);
-    for (std::size_t q = 0U; q < N; ++q) {
-      const std::string gName = "g_" + std::to_string(T) + "_" +
-                                toString(gate) + "_" + std::to_string(q);
-      TRACE() << "Creating variable " << gName;
-      g.emplace_back(lb->makeVariable(gName));
     }
   }
 }
@@ -90,13 +75,6 @@ void GateEncoder::Variables::collectTwoQubitGateVariables(
     } else {
       variables.emplace_back(twoQubitGates[qubit][q]);
     }
-  }
-}
-
-void GateEncoder::Variables::collectPauliQubitGateVariables(
-    const std::size_t qubit, LogicVector& variables) const {
-  for (const auto& gate : gP) {
-    variables.emplace_back(gate[qubit]);
   }
 }
 
@@ -196,6 +174,7 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   res.setSingleQubitGates(nSingleQubitGates);
   res.setTwoQubitGates(nTwoQubitGates);
   res.setDepth(qc.getDepth());
+  res.setTwoQubitDepth(qc.getTwoQubitDepth());
   res.setResultCircuit(qc);
 }
 

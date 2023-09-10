@@ -25,6 +25,7 @@ public:
     setResultCircuit(qc);
     setResultTableau(tableau);
     setDepth(qc.getDepth());
+    setTwoQubitDepth(qc.getTwoQubitDepth());
     setSingleQubitGates(qc.getNsingleQubitOps());
     setTwoQubitGates(qc.getNindividualOps() - singleQubitGates);
     setSolverResult(logicbase::Result::SAT);
@@ -40,7 +41,7 @@ public:
     return singleQubitGates;
   }
   [[nodiscard]] std::size_t       getDepth() const { return depth; }
-  [[nodiscard]] std::size_t       getTQDepth() const { return tQDepth; }
+  [[nodiscard]] std::size_t       getTwoQubitDepth() const { return twoQubitDepth; }
   [[nodiscard]] double            getRuntime() const { return runtime; }
   [[nodiscard]] logicbase::Result getSolverResult() const {
     return solverResult;
@@ -53,7 +54,7 @@ public:
   void setSingleQubitGates(const std::size_t g) { singleQubitGates = g; }
   void setTwoQubitGates(const std::size_t g) { twoQubitGates = g; }
   void setDepth(const std::size_t d) { depth = d; }
-  void setTQDepth(const std::size_t d) { tQDepth = d; }
+  void setTwoQubitDepth(const std::size_t d) { twoQubitDepth = d; }
   void setRuntime(const double t) { runtime = t; }
   void setSolverResult(const logicbase::Result r) { solverResult = r; }
   void setSolverCalls(const std::size_t c) { solverCalls = c; }
@@ -82,7 +83,7 @@ public:
     resultJSON["single_qubit_gates"] = singleQubitGates;
     resultJSON["two_qubit_gates"]    = twoQubitGates;
     resultJSON["depth"]              = depth;
-    resultJSON["tQDepth"]            = tQDepth;
+    resultJSON["twoQubitDepth"]      = twoQubitDepth;
     resultJSON["runtime"]            = runtime;
     resultJSON["solver_calls"]       = solverCalls;
 
@@ -99,7 +100,7 @@ protected:
   std::size_t       singleQubitGates = std::numeric_limits<std::size_t>::max();
   std::size_t       twoQubitGates    = std::numeric_limits<std::size_t>::max();
   std::size_t       depth            = std::numeric_limits<std::size_t>::max();
-  std::size_t       tQDepth          = std::numeric_limits<std::size_t>::max();
+  std::size_t       twoQubitDepth          = std::numeric_limits<std::size_t>::max();
 
   double      runtime     = 0.0;
   std::size_t solverCalls = 0U;

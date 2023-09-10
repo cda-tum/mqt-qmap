@@ -82,7 +82,7 @@ protected:
   }
 
   static bool requiresTwoQubitEncoding(const TargetMetric metric) {
-    return metric == TargetMetric::TQDepth;
+    return metric == TargetMetric::TwoQubitDepth;
   }
 
   void determineInitialTimestepLimit(EncoderConfig& config);

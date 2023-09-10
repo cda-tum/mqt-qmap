@@ -50,7 +50,7 @@ public:
     // whether to use symmetry breaking
     bool useSymmetryBreaking = false;
 
-    // whether to use SQG-TQG encoding
+    // whether to use two qubit encoding
     bool useTwoQubitEncoding = false;
 
     // the number of threads to pass to the SAT solver
