@@ -137,8 +137,9 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
            << config.timestepLimit;
   } else if (requiresTwoQubitEncoding(config.targetMetric)) {
     config.timestepLimit = results.getTwoQubitDepth();
-    INFO() << "Using initial circuit's two qubit depth as initial timestep limit: "
-           << config.timestepLimit;
+    INFO()
+        << "Using initial circuit's two qubit depth as initial timestep limit: "
+        << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
     INFO() << "Using initial circuit's gate count as initial timestep limit: "
@@ -251,21 +252,21 @@ void CliffordSynthesizer::depthOptimalSynthesis(
 void CliffordSynthesizer::twoQubitDepthOptimalSynthesis(
     CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
     const std::size_t upper) {
-  // TwoQubitDepth-optimal synthesis is achieved by determining a timestep limit T
-  // such that there exists a solution with twoQubitDepth T, but no solution with
-  // twoQubitDepth T-1. This procedure uses an TwoQubitEncoding (SQG - TQG) where
-  // SQG layer consists only of single qubit gates in the time step t and TQG can
-  // consist only of two qubit gates in the time step t+1. This procedure is
-  // guaranteed to produce a TwoQubitdepth-optimal circuit. However, the number of
-  // gates in the resulting circuit is not necessarily minimal, i.e., there may
-  // be a solution with fewer gates and the same depth.
+  // TwoQubitDepth-optimal synthesis is achieved by determining a timestep limit
+  // T such that there exists a solution with twoQubitDepth T, but no solution
+  // with twoQubitDepth T-1. This procedure uses an TwoQubitEncoding (SQG - TQG)
+  // where SQG layer consists only of single qubit gates in the time step t and
+  // TQG can consist only of two qubit gates in the time step t+1. This
+  // procedure is guaranteed to produce a TwoQubitdepth-optimal circuit.
+  // However, the number of gates in the resulting circuit is not necessarily
+  // minimal, i.e., there may be a solution with fewer gates and the same depth.
 
   if (configuration.linearSearch) {
     runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
     // The binary search approach calls the SAT solver repeatedly with varying
-    // timestep (=TwoQubitDepth) limits T until a solution with twoQubitDepth T is found,
-    // but no solution with twoQubitDepth T-1 could be determined.
+    // timestep (=TwoQubitDepth) limits T until a solution with twoQubitDepth T
+    // is found, but no solution with twoQubitDepth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 }

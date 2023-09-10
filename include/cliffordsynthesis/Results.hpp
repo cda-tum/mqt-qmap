@@ -40,9 +40,9 @@ public:
   [[nodiscard]] std::size_t getSingleQubitGates() const {
     return singleQubitGates;
   }
-  [[nodiscard]] std::size_t       getDepth() const { return depth; }
-  [[nodiscard]] std::size_t       getTwoQubitDepth() const { return twoQubitDepth; }
-  [[nodiscard]] double            getRuntime() const { return runtime; }
+  [[nodiscard]] std::size_t getDepth() const { return depth; }
+  [[nodiscard]] std::size_t getTwoQubitDepth() const { return twoQubitDepth; }
+  [[nodiscard]] double      getRuntime() const { return runtime; }
   [[nodiscard]] logicbase::Result getSolverResult() const {
     return solverResult;
   }
@@ -100,7 +100,7 @@ protected:
   std::size_t       singleQubitGates = std::numeric_limits<std::size_t>::max();
   std::size_t       twoQubitGates    = std::numeric_limits<std::size_t>::max();
   std::size_t       depth            = std::numeric_limits<std::size_t>::max();
-  std::size_t       twoQubitDepth          = std::numeric_limits<std::size_t>::max();
+  std::size_t       twoQubitDepth    = std::numeric_limits<std::size_t>::max();
 
   double      runtime     = 0.0;
   std::size_t solverCalls = 0U;

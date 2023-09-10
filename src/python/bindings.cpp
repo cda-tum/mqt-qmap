@@ -530,8 +530,9 @@ PYBIND11_MODULE(pyqmap, m) {
                              "synthesized circuit.")
       .def_property_readonly("depth", &cs::Results::getDepth,
                              "Returns the depth of the synthesized circuit.")
-      .def_property_readonly("two_qubit_depth", &cs::Results::getTwoQubitDepth,
-                             "Returns the TwoQubitDepth of the synthesized circuit.")
+      .def_property_readonly(
+          "two_qubit_depth", &cs::Results::getTwoQubitDepth,
+          "Returns the TwoQubitDepth of the synthesized circuit.")
       .def_property_readonly("runtime", &cs::Results::getRuntime,
                              "Returns the runtime of the synthesis in seconds.")
       .def_property_readonly("solver_calls", &cs::Results::getSolverCalls,

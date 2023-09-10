@@ -14,7 +14,7 @@ using namespace logicbase;
 
 void TwoQubitEncoder::createSingleQubitGateVariables() {
   DEBUG() << "Creating single-qubit gate variables.";
-  vars.gS.reserve(T/2);
+  vars.gS.reserve(T / 2);
   for (std::size_t t = 0U; t < T; t += 2U) {
     auto& timeStep = vars.gS.emplace_back();
     timeStep.reserve(SINGLE_QUBIT_GATES.size());
@@ -34,7 +34,7 @@ void TwoQubitEncoder::createSingleQubitGateVariables() {
 
 void TwoQubitEncoder::createTwoQubitGateVariables() {
   DEBUG() << "Creating two-qubit gate variables.";
-  vars.gC.reserve(T/2);
+  vars.gC.reserve(T / 2);
   for (std::size_t t = 1U; t < T; t += 2U) {
     auto& timeStep = vars.gC.emplace_back();
     timeStep.reserve(N);
@@ -75,21 +75,21 @@ void encoding::TwoQubitEncoder::assertConsistency() const {
       LogicVector singleQubitGateVariables{};
       LogicVector twoQubitGateVariables{};
 
-      vars.collectSingleQubitGateVariables(t/2, q, singleQubitGateVariables);
+      vars.collectSingleQubitGateVariables(t / 2, q, singleQubitGateVariables);
       assertExactlyOne(singleQubitGateVariables);
       IF_PLOG(plog::verbose) {
-        TRACE() << "Single Qubit Gate variables at time " << t
-                << " and qubit " << q;
+        TRACE() << "Single Qubit Gate variables at time " << t << " and qubit "
+                << q;
         for (const auto& var : singleQubitGateVariables) {
           TRACE() << var.getName();
         }
       }
 
-      vars.collectTwoQubitGateVariables(t/2, q, true, twoQubitGateVariables);
-      vars.collectTwoQubitGateVariables(t/2, q, false, twoQubitGateVariables);
+      vars.collectTwoQubitGateVariables(t / 2, q, true, twoQubitGateVariables);
+      vars.collectTwoQubitGateVariables(t / 2, q, false, twoQubitGateVariables);
 
       // add a variable that will be treated as identity
-      twoQubitGateVariables.emplace_back(vars.gC[t/2][q][q]);
+      twoQubitGateVariables.emplace_back(vars.gC[t / 2][q][q]);
 
       assertExactlyOne(twoQubitGateVariables);
       IF_PLOG(plog::verbose) {
@@ -109,8 +109,8 @@ void encoding::TwoQubitEncoder::assertConsistency() const {
     collectPauliGateVariables(q, pauliGateVariables);
     assertExactlyOne(pauliGateVariables);
     IF_PLOG(plog::verbose) {
-      TRACE() << "Pauli Qubit Gate variables at time " << T
-              << " and qubit " << q;
+      TRACE() << "Pauli Qubit Gate variables at time " << T << " and qubit "
+              << q;
       for (const auto& var : pauliGateVariables) {
         TRACE() << var.getName();
       }
@@ -155,7 +155,7 @@ void TwoQubitEncoder::assertRConstraints(const std::size_t pos,
                                          const std::size_t qubit) {
   for (const auto gate : SINGLE_QUBIT_GATES) {
     const auto& change =
-        LogicTerm::ite(vars.gS[pos/2][gateToIndex(gate)][qubit],
+        LogicTerm::ite(vars.gS[pos / 2][gateToIndex(gate)][qubit],
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
@@ -164,7 +164,7 @@ void TwoQubitEncoder::assertRConstraints(const std::size_t pos,
 
 void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
     const std::size_t pos) {
-  const auto& twoQubitGates = vars.gC[pos/2];
+  const auto& twoQubitGates = vars.gC[pos / 2];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {
       if (ctrl == trgt) {
@@ -190,22 +190,21 @@ void encoding::TwoQubitEncoder::assertPauliGateConstraints(
     const std::size_t pos) {
   for (std::size_t q = 0U; q < N; ++q) {
     for (const auto gate : PAULI_GATES) {
-      const auto& change =
-          LogicTerm::ite(gP[gateToIndex(gate)][q],
-                         tvars->singleQubitRChange(pos, q, gate),
-                         LogicTerm(0, static_cast<std::int16_t>(S)));
+      const auto& change = LogicTerm::ite(
+          gP[gateToIndex(gate)][q], tvars->singleQubitRChange(pos, q, gate),
+          LogicTerm(0, static_cast<std::int16_t>(S)));
 
       splitXorR(change, pos);
     }
-    lb->assertFormula(tvars->x[pos][q] == tvars->x[pos+1][q]);
-    lb->assertFormula(tvars->z[pos][q] == tvars->z[pos+1][q]);
+    lb->assertFormula(tvars->x[pos][q] == tvars->x[pos + 1][q]);
+    lb->assertFormula(tvars->z[pos][q] == tvars->z[pos + 1][q]);
   }
 }
 
 void TwoQubitEncoder::assertGatesImplyTransform(
     const std::size_t pos, const std::size_t qubit,
     const std::vector<TransformationFamily>& transformations) {
-  const auto& singleQubitGates = vars.gS[pos/2];
+  const auto& singleQubitGates = vars.gS[pos / 2];
   for (const auto& [transformation, gates] : transformations) {
     auto gateOr = LogicTerm(false);
     for (const auto& gate : gates) {
@@ -214,8 +213,6 @@ void TwoQubitEncoder::assertGatesImplyTransform(
     lb->assertFormula(LogicTerm::implies(gateOr, transformation));
   }
 }
-
-
 
 void TwoQubitEncoder::splitXorR(const logicbase::LogicTerm& changes,
                                 std::size_t                 pos) {
@@ -252,7 +249,7 @@ LogicTerm encoding::TwoQubitEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
 
   const auto& newRChanges = LogicTerm::ite(
-      vars.gC[pos/2][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
+      vars.gC[pos / 2][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
       LogicTerm(0, static_cast<std::int16_t>(S)));
   splitXorR(newRChanges, pos);
 
@@ -264,7 +261,7 @@ void TwoQubitEncoder::extractCircuitFromModel(Results& res, Model& model) {
   std::size_t nTwoQubitGates    = 0U;
 
   qc::QuantumComputation qc(N);
-  for (std::size_t t = 0; t < T/2; ++t) {
+  for (std::size_t t = 0; t < T / 2; ++t) {
     extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates);
     extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates);
   }
@@ -278,7 +275,8 @@ void TwoQubitEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
 // mock-functions
 void TwoQubitEncoder::encodeSymmetryBreakingConstraints() {
-  DEBUG() << "Encoding symmetry breaking constraints IS NOT supported for the two qubit encoding.";
+  DEBUG() << "Encoding symmetry breaking constraints IS NOT supported for the "
+             "two qubit encoding.";
 }
 
 void TwoQubitEncoder::assertSingleQubitGateOrderConstraints(

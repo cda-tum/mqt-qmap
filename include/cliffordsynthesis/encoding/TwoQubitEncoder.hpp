@@ -19,7 +19,7 @@ protected:
   // define variables
   logicbase::LogicTerm   rChanges{};
   logicbase::LogicMatrix xorHelpers{};
-  logicbase::LogicMatrix   gP{};
+  logicbase::LogicMatrix gP{};
 
   static constexpr std::array<qc::OpType, 4> PAULI_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z};
@@ -27,7 +27,7 @@ protected:
   // variable creation
   virtual void createSingleQubitGateVariables() override;
   virtual void createTwoQubitGateVariables() override;
-  void createPauliGateVariables();
+  void         createPauliGateVariables();
 
   // create constrains
   [[nodiscard]] logicbase::LogicTerm
@@ -47,15 +47,14 @@ protected:
                                           std::size_t trgt) override;
 
   // collect TQG variables
-  void
-  collectPauliGateVariables(std::size_t qubit,
+  void collectPauliGateVariables(std::size_t             qubit,
                                  logicbase::LogicVector& variables) const;
 
   // extracting the circuit
   void extractCircuitFromModel(Results& res, logicbase::Model& model) override;
 
   // helpers
-  void splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
+  void         splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
   virtual void assertGatesImplyTransform(
       std::size_t pos, std::size_t qubit,
       const std::vector<TransformationFamily>& transformations) override;
