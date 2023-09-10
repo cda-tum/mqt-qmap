@@ -66,10 +66,10 @@ struct Configuration {
     j["gate_limit_factor"] = gateLimitFactor;
     j["minimize_gates_after_two_qubit_gate_optimization"] =
         minimizeGatesAfterTwoQubitGateOptimization;
-    j["use_two_qubit_encoding"]     = useTwoQubitEncoding;
-    j["heuristic"]           = heuristic;
-    j["split_size"]          = splitSize;
-    j["n_threads_heuristic"] = nThreadsHeuristic;
+    j["use_two_qubit_encoding"] = useTwoQubitEncoding;
+    j["heuristic"]              = heuristic;
+    j["split_size"]             = splitSize;
+    j["n_threads_heuristic"]    = nThreadsHeuristic;
     if (!solverParameters.empty()) {
       nlohmann::json solverParametersJson;
       for (const auto& entry : solverParameters) {
