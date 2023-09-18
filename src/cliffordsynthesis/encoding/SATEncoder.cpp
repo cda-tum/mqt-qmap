@@ -56,7 +56,7 @@ void SATEncoder::createFormulation() {
                             : N;
 
   if (config.useTwoQubitEncoding) {
-    T = T * 2U + 1U;
+    T = T * 2U + 2U;
   }
 
   tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
