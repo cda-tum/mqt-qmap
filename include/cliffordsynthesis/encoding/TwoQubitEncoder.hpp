@@ -53,8 +53,8 @@ protected:
   // extracting
   void extractCircuitFromModel(Results& res, logicbase::Model& model) override;
   void extractPauliGatesFromModel(logicbase::Model&       model,
-                                          qc::QuantumComputation& qc,
-                                          std::size_t& nSingleQubitGates);
+                                  qc::QuantumComputation& qc,
+                                  std::size_t&            nSingleQubitGates);
 
   // helpers
   void         splitXorR(const logicbase::LogicTerm& changes, std::size_t pos);
