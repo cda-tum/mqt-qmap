@@ -103,7 +103,7 @@ class SubarchitectureOrder:
         Returns:
             The resulting partial order.
         """
-        coupling_map = {(a, b) for a, b in backend.configuration().coupling_map}
+        coupling_map = set(backend.configuration().coupling_map)
         return cls.from_coupling_map(coupling_map)
 
     @classmethod

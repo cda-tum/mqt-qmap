@@ -69,7 +69,7 @@ def import_backend_v1(backend: BackendV1) -> Architecture:
     arch = Architecture()
     arch.name = backend.name()
     arch.num_qubits = backend.configuration().n_qubits
-    arch.coupling_map = {(a, b) for a, b in backend.configuration().coupling_map}
+    arch.coupling_map = set(backend.configuration().coupling_map)
     arch.properties = import_backend_properties(backend.properties())
 
     return arch
