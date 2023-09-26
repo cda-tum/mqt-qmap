@@ -225,7 +225,7 @@ def test_subarchitecture_from_qiskit_backend() -> None:
     """Verify that subarchitecture order can be created from Qiskit backends."""
     arch = FakeLondon()
     so_arch = SubarchitectureOrder.from_backend(arch)
-    cm = list(arch.configuration().coupling_map)
+    cm = [(c[0], c[1]) for c in arch.configuration().coupling_map]
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
 
     assert so_arch.subarch_order == so_cm.subarch_order
