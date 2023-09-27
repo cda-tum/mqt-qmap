@@ -113,13 +113,3 @@ def docs(session: nox.Session) -> None:
         session.run("sphinx-autobuild", *shared_args)
     else:
         session.run("sphinx-build", "--keep-going", *shared_args)
-
-
-@nox.session(reuse_venv=True)
-def min_qiskit_version(session: nox.Session) -> None:
-    """Installs the minimum supported version of Qiskit, runs the test suite and collects the coverage."""
-    session.install("qiskit-terra~=0.20.2")
-    session.install("scikit-build-core[pyproject]", "setuptools_scm", "pybind11")
-    session.install("--no-build-isolation", "-ve.[coverage]")
-    session.run("pip", "show", "qiskit-terra")
-    session.run("pytest", "--cov", *session.posargs)
