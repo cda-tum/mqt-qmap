@@ -20,10 +20,10 @@ build:
         fi
       - wget https://github.com/Z3Prover/z3/releases/download/z3-4.12.2/z3-4.12.2-x64-glibc-2.35.zip
       - unzip z3-4.12.2-x64-glibc-2.35.zip
-      - sudo mkdir -p /usr/local/bin/z3
-      - sudo mv z3-4.12.2-x64-glibc-2.35/bin/* /usr/local/bin/z3
-      - sudo mkdir -p /usr/local/include/z3
-      - sudo mv z3-4.12.2-x64-glibc-2.35/include/* /usr/local/include/z3
+      - mkdir -p /usr/local/bin/z3
+      - mv z3-4.12.2-x64-glibc-2.35/bin/* /usr/local/bin/z3
+      - mkdir -p /usr/local/include/z3
+      - mv z3-4.12.2-x64-glibc-2.35/include/* /usr/local/include/z3
 
 sphinx:
   configuration: docs/source/conf.py
