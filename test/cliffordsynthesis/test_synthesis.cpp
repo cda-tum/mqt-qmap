@@ -24,6 +24,7 @@ struct TestConfiguration {
   std::size_t expectedMinimalGatesAtMinimalDepth{};
   std::size_t expectedMinimalTwoQubitGates{};
   std::size_t expectedMinimalGatesAtMinimalTwoQubitGates{};
+  std::size_t expectedMinimalTQDepth{};
 };
 
 // NOLINTNEXTLINE (readability-identifier-naming)
@@ -37,6 +38,10 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   }
   if (j.contains("initial_circuit")) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
+  }
+  if (j.contains("expected_minimal_two_qubit_depth")) {
+    test.expectedMinimalTQDepth =
+        j.at("expected_minimal_two_qubit_depth").get<std::size_t>();
   }
 
   test.expectedMinimalGates = j.at("expected_minimal_gates").get<std::size_t>();
@@ -349,6 +354,25 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
     synthesizer.synthesize(config);
     results = synthesizer.getResults();
   }
+}
+
+TEST_P(SynthesisTest, TwoQubitDepthLinearSearch) {
+  config.target       = TargetMetric::TwoQubitDepth;
+  config.verbosity    = plog::Severity::none;
+  config.linearSearch = true;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getTwoQubitDepth(), test.expectedMinimalTQDepth);
+}
+
+TEST_P(SynthesisTest, TwoQubitDepthBinarySearch) {
+  config.target    = TargetMetric::TwoQubitDepth;
+  config.verbosity = plog::Severity::none;
+  synthesizer.synthesize(config);
+  results = synthesizer.getResults();
+
+  EXPECT_EQ(results.getTwoQubitDepth(), test.expectedMinimalTQDepth);
 }
 
 TEST(HeuristicTest, basic) {

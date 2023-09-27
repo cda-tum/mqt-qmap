@@ -8,6 +8,7 @@
 #include "LogicUtil/util_logicblock.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/TwoQubitEncoder.hpp"
 #include "utils/logging.hpp"
 
 #include <chrono>
@@ -15,7 +16,6 @@
 namespace cs::encoding {
 
 using namespace logicbase;
-
 void SATEncoder::initializeSolver() {
   DEBUG() << "Initializing solver engine.";
   bool success        = false;
@@ -55,6 +55,10 @@ void SATEncoder::createFormulation() {
                             ? 2U * N
                             : N;
 
+  if (config.useTwoQubitEncoding) {
+    T = T * 2U + 2U;
+  }
+
   tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
   tableauEncoder->createTableauVariables();
   tableauEncoder->assertTableau(*config.initialTableau, 0U);
@@ -63,12 +67,18 @@ void SATEncoder::createFormulation() {
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
         N, s, T, tableauEncoder->getVariables(), lb);
+  } else if (config.useTwoQubitEncoding) {
+    T -= 1;
+    gateEncoder = std::make_shared<TwoQubitEncoder>(
+        N, s, T, tableauEncoder->getVariables(), lb);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
         N, s, T, tableauEncoder->getVariables(), lb);
   }
+
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
+
   gateEncoder->encodeGates();
 
   if (config.useSymmetryBreaking) {
@@ -122,6 +132,7 @@ void SATEncoder::cleanup() const {
     lb->reset();
   }
 }
+
 Results SATEncoder::run() {
   const auto start = std::chrono::high_resolution_clock::now();
 

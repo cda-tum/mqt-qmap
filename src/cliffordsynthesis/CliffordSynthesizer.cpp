@@ -5,7 +5,6 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "LogicTerm/Logic.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "utils/logging.hpp"
@@ -13,6 +12,7 @@
 #include <chrono>
 #include <fstream>
 #include <future>
+#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -44,6 +44,8 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.solverParameters    = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
+  encoderConfig.useTwoQubitEncoding =
+      requiresTwoQubitEncoding(encoderConfig.targetMetric);
 
   if (configuration.heuristic) {
     if (initialCircuit->empty() && !targetTableau.isIdentityTableau()) {
@@ -97,6 +99,9 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   case TargetMetric::TwoQubitGates:
     twoQubitGateOptimalSynthesis(encoderConfig, 0U, results.getTwoQubitGates());
     break;
+  case TargetMetric::TwoQubitDepth:
+    twoQubitDepthOptimalSynthesis(encoderConfig, lower, upper);
+    break;
   }
 
   results.setSolverCalls(solverCalls);
@@ -130,6 +135,11 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
     config.timestepLimit = results.getDepth();
     INFO() << "Using initial circuit's depth as initial timestep limit: "
            << config.timestepLimit;
+  } else if (requiresTwoQubitEncoding(config.targetMetric)) {
+    config.timestepLimit = results.getTwoQubitDepth();
+    INFO()
+        << "Using initial circuit's two qubit depth as initial timestep limit: "
+        << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
     INFO() << "Using initial circuit's gate count as initial timestep limit: "
@@ -170,6 +180,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     upperBound = std::min(upperBound, results.getGates());
   } else if (config.targetMetric == TargetMetric::Depth) {
     upperBound = std::min(upperBound, results.getDepth());
+  } else if (config.targetMetric == TargetMetric::TwoQubitDepth) {
+    upperBound = std::min(upperBound, results.getTwoQubitDepth());
   }
 
   INFO() << "Found upper bound for the number of timesteps: " << upperBound;
@@ -234,6 +246,28 @@ void CliffordSynthesizer::depthOptimalSynthesis(
     // If destabilizers aren't considered, the synthesis might include gates
     // that have no impact on the final tableau, so we can remove them
     removeRedundantGates();
+  }
+}
+
+void CliffordSynthesizer::twoQubitDepthOptimalSynthesis(
+    CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
+    const std::size_t upper) {
+  // TwoQubitDepth-optimal synthesis is achieved by determining a timestep limit
+  // T such that there exists a solution with twoQubitDepth T, but no solution
+  // with twoQubitDepth T-1. This procedure uses an TwoQubitEncoding (SQG - TQG)
+  // where SQG layer consists only of single qubit gates in the time step t and
+  // TQG can consist only of two qubit gates in the time step t+1. This
+  // procedure is guaranteed to produce a TwoQubitdepth-optimal circuit.
+  // However, the number of gates in the resulting circuit is not necessarily
+  // minimal, i.e., there may be a solution with fewer gates and the same depth.
+
+  if (configuration.linearSearch) {
+    runLinearSearch(config.timestepLimit, lower, upper, config);
+  } else {
+    // The binary search approach calls the SAT solver repeatedly with varying
+    // timestep (=TwoQubitDepth) limits T until a solution with twoQubitDepth T
+    // is found, but no solution with twoQubitDepth T-1 could be determined.
+    runBinarySearch(config.timestepLimit, lower, upper, config);
   }
 }
 
@@ -423,6 +457,13 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   case TargetMetric::Depth:
     if ((newResults.getDepth() < currentResults.getDepth()) ||
         ((newResults.getDepth() == currentResults.getDepth()) &&
+         (newResults.getGates() < currentResults.getGates()))) {
+      currentResults = newResults;
+    }
+    break;
+  case TargetMetric::TwoQubitDepth:
+    if ((newResults.getTwoQubitDepth() < currentResults.getTwoQubitDepth()) ||
+        ((newResults.getTwoQubitDepth() == currentResults.getTwoQubitDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }

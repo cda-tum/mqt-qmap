@@ -50,6 +50,12 @@ public:
     // whether to use symmetry breaking
     bool useSymmetryBreaking = false;
 
+    // whether to use two qubit encoding
+    bool useTwoQubitEncoding = false;
+
+    // the number of threads to pass to the SAT solver
+    std::size_t nThreads = 1U;
+
     // an optional limit on the total number of gates
     std::optional<std::size_t> gateLimit = std::nullopt;
 

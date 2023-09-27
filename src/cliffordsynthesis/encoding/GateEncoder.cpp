@@ -6,6 +6,7 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include "Encodings/Encodings.hpp"
+#include "operations/OpType.hpp"
 #include "utils/logging.hpp"
 
 namespace cs::encoding {
@@ -34,7 +35,7 @@ void GateEncoder::createSingleQubitGateVariables() {
 void GateEncoder::createTwoQubitGateVariables() {
   DEBUG() << "Creating two-qubit gate variables.";
   vars.gC.reserve(T);
-  for (std::size_t t = 0U; t < T; ++t) {
+  for (std::size_t t = 0; t < T; ++t) {
     auto& timeStep = vars.gC.emplace_back();
     timeStep.reserve(N);
     for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
@@ -173,12 +174,14 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   res.setSingleQubitGates(nSingleQubitGates);
   res.setTwoQubitGates(nTwoQubitGates);
   res.setDepth(qc.getDepth());
+  res.setTwoQubitDepth(qc.getTwoQubitDepth());
   res.setResultCircuit(qc);
 }
 
 void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
     std::size_t& nSingleQubitGates) {
+  DEBUG() << "Extract single qubit gates from model";
   const auto& singleQubitGates = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
     for (const auto gate : SINGLE_QUBIT_GATES) {
@@ -199,6 +202,7 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
                                                 Model&                  model,
                                                 qc::QuantumComputation& qc,
                                                 size_t& nTwoQubitGates) {
+  DEBUG() << "Extract two qubit gates from model";
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {

@@ -81,6 +81,10 @@ protected:
     return metric == TargetMetric::Depth;
   }
 
+  static bool requiresTwoQubitEncoding(const TargetMetric metric) {
+    return metric == TargetMetric::TwoQubitDepth;
+  }
+
   void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
   void                                runMaxSAT(const EncoderConfig& config);
@@ -92,6 +96,8 @@ protected:
                             std::size_t upper);
   void depthOptimalSynthesis(EncoderConfig config, std::size_t lower,
                              std::size_t upper);
+  void twoQubitDepthOptimalSynthesis(EncoderConfig config, std::size_t lower,
+                                     std::size_t upper);
   void depthHeuristicSynthesis();
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
