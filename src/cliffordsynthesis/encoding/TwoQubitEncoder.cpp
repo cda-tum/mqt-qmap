@@ -146,9 +146,7 @@ void encoding::TwoQubitEncoder::assertGateConstraints() {
 
   TRACE() << "Asserting pauli gate constraints at time " << T;
   splitXorR(tvars->r[T], T);
-
   assertPauliGateConstraints(T);
-
   TRACE() << "Asserting r changes at time " << T;
   lb->assertFormula(tvars->r[T + 1] == xorHelpers[T].back());
 }
@@ -200,16 +198,16 @@ void encoding::TwoQubitEncoder::assertTwoQubitGateConstraints(
 void encoding::TwoQubitEncoder::assertPauliGateConstraints(
     const std::size_t pos) {
   for (std::size_t q = 0U; q < N; ++q) {
+    lb->assertFormula(tvars->x[pos][q] == tvars->x[pos+1][q]);
+    lb->assertFormula(tvars->z[pos][q] == tvars->z[pos+1][q]);
     for (const auto gate : PAULI_GATES) {
       const auto& change =
-          LogicTerm::ite(gP[gateToIndex(gate)][q],
+          LogicTerm::ite(gP[paulieGateToIndex(gate)][q],
                          tvars->singleQubitRChange(pos, q, gate),
                          LogicTerm(0, static_cast<std::int16_t>(S)));
 
       splitXorR(change, pos);
     }
-    lb->assertFormula(tvars->x[pos][q] == tvars->x[pos+1][q]);
-    lb->assertFormula(tvars->z[pos][q] == tvars->z[pos+1][q]);
   }
 }
 
@@ -297,7 +295,7 @@ void TwoQubitEncoder::extractPauliGatesFromModel(
       if (gate == qc::OpType::None) {
         continue;
       }
-      if (model.getBoolValue(gP[gateToIndex(gate)][q],
+      if (model.getBoolValue(gP[paulieGateToIndex(gate)][q],
                              lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, q, gate);
         ++nSingleQubitGates;

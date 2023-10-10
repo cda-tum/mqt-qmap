@@ -24,6 +24,16 @@ protected:
   static constexpr std::array<qc::OpType, 4> PAULI_GATES = {
       qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z};
 
+  [[nodiscard]] constexpr std::size_t
+  paulieGateToIndex(const qc::OpType type) {
+    for (std::size_t i = 0; i < PAULI_GATES.size(); ++i) {
+      if (PAULI_GATES.at(i) == type) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
   // variable creation
   virtual void createSingleQubitGateVariables() override;
   virtual void createTwoQubitGateVariables() override;
