@@ -37,7 +37,7 @@ TEST(Functionality, NodeCostCalculation) {
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
               tolerance);
-  node.applySWAP({3, 4}, arch, empty1Mult, false);
+  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity, false);
   node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits, true, false);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
@@ -236,7 +236,7 @@ TEST(Functionality, HeuristicAdmissibility) {
     auto       newNode = HeuristicMapper::Node(1, 0, node.qubits, 
                                                node.locations, node.swaps, 
                                                node.costFixed);
-    newNode.applySWAP(perm, architecture, empty1Mult, false);
+    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity, false);
     newNode.updateHeuristicCost(architecture, empty1Mult, multiplicity, consideredQubits, true, false);
     nodeStack.emplace_back(newNode);
     permStack.emplace(perms.size());
@@ -539,6 +539,7 @@ protected:
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
     settings.debug     = true;
+    settings.dataLoggingPath          = "./test_log/";
   }
 };
 
@@ -887,6 +888,8 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
   settings.considerFidelity         = true;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
+  settings.dataLoggingPath         = "./test_log";
+  settings.swapOnFirstLayer         = true;
   mapper->map(settings);
   mapper->dumpResult("simple_grid_mapped.qasm");
   mapper->printResult(std::cout);
@@ -924,6 +927,7 @@ TEST(HeuristicTestFidelity, SimpleGrid) {
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {
+  
   Architecture      architecture{};
   const CouplingMap cm = {
       {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
@@ -978,9 +982,14 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
+  settings.dataLoggingPath         = "./test_log";
+  settings.swapOnFirstLayer         = true;
   mapper->map(settings);
   mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
+  
+  // 0 --e1-- 1 --e3-- 2 --e5-- 3 --e0-- 4 --e0-- 5
+  // e5       e5       e5       e4       e4       e1
 
   auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
@@ -992,13 +1001,13 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   CX(0,1) [x5]
   X(5) [x5]
   */
-  EXPECT_EQ(result.output.swaps, 4);
+  EXPECT_EQ(result.output.swaps, 3);
 
   double c3 = -std::log2(1 - e3);
   double c1 = -std::log2(1 - e1);
   double c0 = -std::log2(1 - e0);
 
-  double expectedFidelity = //3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
+  double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
                             5 * c1 +                   // Xs
                             5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
@@ -1059,6 +1068,8 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
+  settings.dataLoggingPath         = "./test_log";
+  settings.swapOnFirstLayer         = true;
   mapper->map(settings);
   mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1074,13 +1085,13 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   CX(2,3) [x5]
   CX(4,1) [x5]
   */
-  // EXPECT_EQ(result.output.swaps, 4);
+  EXPECT_EQ(result.output.swaps, 4);
 
   double c4 = -std::log2(1 - e4);
   double c3 = -std::log2(1 - e3);
   double c1 = -std::log2(1 - e1);
 
-  double expectedFidelity = //3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
+  double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
                             5 * c1 + 5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
@@ -1120,16 +1131,17 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
-  settings.dataLoggingPath         = "./test_log";
+  settings.dataLoggingPath          = "./test_log";
+  settings.swapOnFirstLayer         = true;
   mapper->map(settings);
   mapper->dumpResult("single_qubits_compete.qasm");
   mapper->printResult(std::cout);
 
   auto& result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 1);
-  // EXPECT_EQ(result.output.swaps, 4);
+  EXPECT_EQ(result.output.swaps, 1);
 
-  double expectedFidelity = //-3 * std::log2(1 - 0.1)                    // SWAPs
+  double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
                             - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
