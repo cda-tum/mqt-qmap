@@ -25,6 +25,7 @@ struct Configuration {
   bool postMappingOptimizations = true;
 
   bool addMeasurementsToMappedCircuit = true;
+  bool swapOnFirstLayer = false;
 
   bool verbose = false;
   bool debug   = false;

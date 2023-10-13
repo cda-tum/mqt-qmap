@@ -180,6 +180,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("method", &Configuration::method)
       .def_readwrite("verbose", &Configuration::verbose)
       .def_readwrite("debug", &Configuration::debug)
+      .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("lookahead", &Configuration::lookahead)

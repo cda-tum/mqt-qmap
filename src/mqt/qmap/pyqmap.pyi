@@ -135,6 +135,7 @@ class Configuration:
     use_teleportation: bool
     verbose: bool
     debug: bool
+    data_logging_path: str
     def __init__(self) -> None: ...
     def json(self) -> dict[str, Any]: ...
 

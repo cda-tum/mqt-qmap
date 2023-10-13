@@ -78,6 +78,8 @@ public:
     std::size_t nswaps = 0;
     /** depth in search tree (starting with 0 at the root) */
     std::size_t depth = 0;
+    /** gates (pair of logical qubits) currently mapped next to each other */
+    std::set<Edge> validMappedTwoQubitGates = {};
     std::size_t parent = 0;
     std::size_t id;
 
@@ -112,7 +114,8 @@ public:
      * of the node
      */
     void applySWAP(const Edge& swap, Architecture& arch, 
-                   const SingleQubitMultiplicity& singleQubitGateMultiplicity, 
+                   const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+                   const TwoQubitMultiplicity& twoQubitGateMultiplicity,
                    bool considerFidelity);
 
     /**

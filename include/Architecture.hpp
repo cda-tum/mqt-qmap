@@ -239,6 +239,10 @@ public:
     couplingMap = cm;
     createDistanceTable();
   }
+  
+  bool isEdgeConnected(const Edge& edge) const {
+    return couplingMap.find(edge) != couplingMap.end();
+  }
 
   CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
   std::vector<std::pair<std::int16_t, std::int16_t>>& getTeleportationQubits() {
