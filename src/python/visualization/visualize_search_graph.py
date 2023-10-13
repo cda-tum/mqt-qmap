@@ -432,7 +432,11 @@ def _parse_arch_graph(file_path: str) -> nx.Graph:
         if fidelity is not None:
             edge += (fidelity['swap_fidelity_costs'][q0][q1],)
         else:
-            edge += (float(30),) # TODO: remove static value, replace by something more sensible
+            edge += (float(30),) 
+            # TODO: this is the cost of 1 swap for the non-noise-aware heuristic 
+            # mapper; depending on directionality this might be different; once
+            # more dynamic swap cost system in Architecture.cpp is implemented
+            # replace wiht dynamic cost lookup
         edges.add(edge)
         nqbits = max(nqbits, q0, q1)
     nqbits += 1
