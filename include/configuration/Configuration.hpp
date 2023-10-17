@@ -43,7 +43,7 @@ struct Configuration {
   // lookahead scheme settings
   bool        lookahead            = true;
   bool        admissibleHeuristic  = true;
-  bool        considerFidelity     = true;
+  bool        considerFidelity     = false;
   std::size_t nrLookaheads         = 15;
   double      firstLookaheadFactor = 0.75;
   double      lookaheadFactor      = 0.5;

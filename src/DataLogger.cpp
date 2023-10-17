@@ -3,12 +3,17 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include <filesystem>
 #include "DataLogger.hpp"
 #include "nlohmann/json.hpp"
 
 void DataLogger::initLog() {
   if (dataLoggingPath.back() != '/') {
     dataLoggingPath += '/';
+  }
+  std::filesystem::path dirPath(dataLoggingPath);
+  if (!std::filesystem::exists(dirPath)) {
+      std::filesystem::create_directory(dirPath);
   }
   clearLog();
 };
