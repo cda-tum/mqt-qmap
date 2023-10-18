@@ -2,9 +2,8 @@
 treedraw.py
 ===========
 
+Adapted from:
 https://github.com/cvzi/py_treedraw
-
-Tested with Python 2.6, 3.4, 3.5, 3.6
 
 This module implements a layout algorithm for a tree.
 Each node in the tree has a layout property that contains an x and y
