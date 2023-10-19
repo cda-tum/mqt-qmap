@@ -245,7 +245,7 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::singleQubitGates)
       .def_readwrite("cnots", &MappingResults::CircuitInfo::cnots)
       .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
-      .def_readwrite("total_fidelity", 
+      .def_readwrite("total_fidelity",
                      &MappingResults::CircuitInfo::totalFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",

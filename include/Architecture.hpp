@@ -239,7 +239,7 @@ public:
     couplingMap = cm;
     createDistanceTable();
   }
-  
+
   bool isEdgeConnected(const Edge& edge) const {
     return couplingMap.find(edge) != couplingMap.end();
   }
@@ -259,7 +259,7 @@ public:
     properties = props;
     createFidelityTable();
   }
-  
+
   [[nodiscard]] bool isFidelityAvailable() const { return fidelityAvailable; }
 
   [[nodiscard]] const std::vector<Matrix>& getFidelityDistanceTables() const {
@@ -268,8 +268,9 @@ public:
     }
     return fidelityDistanceTables;
   }
-  
-  [[nodiscard]] const Matrix& getFidelityDistanceTable(std::size_t skipEdges) const {
+
+  [[nodiscard]] const Matrix&
+  getFidelityDistanceTable(std::size_t skipEdges) const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
     }
@@ -278,13 +279,12 @@ public:
     }
     return fidelityDistanceTables.at(skipEdges);
   }
-  
+
   [[nodiscard]] const Matrix& getFidelityDistanceTable() const {
     return getFidelityDistanceTable(0);
   }
 
-  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
-                                        std::uint16_t q2, 
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1, std::uint16_t q2,
                                         std::size_t skipEdges) const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
@@ -310,7 +310,7 @@ public:
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
     }
-    return fidelityTable; 
+    return fidelityTable;
   }
 
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelities() const {
@@ -319,7 +319,7 @@ public:
     }
     return singleQubitFidelities;
   }
-  
+
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelityCosts() const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
@@ -336,7 +336,7 @@ public:
     }
     return singleQubitFidelityCosts.at(qbit);
   }
-  
+
   [[nodiscard]] const Matrix& getTwoQubitFidelityCosts() const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
@@ -357,7 +357,7 @@ public:
     }
     return twoQubitFidelityCosts.at(q1).at(q2);
   }
-  
+
   [[nodiscard]] const Matrix& getSwapFidelityCosts() const {
     if (!fidelityAvailable) {
       throw QMAPException("No fidelity data available.");
@@ -483,14 +483,14 @@ protected:
   bool                                               isBidirectional = true;
   Matrix                                             distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
-  Properties                                         properties            = {};
-  bool                                               fidelityAvailable     = false;
-  Matrix                                             fidelityTable         = {};
+  Properties                                         properties        = {};
+  bool                                               fidelityAvailable = false;
+  Matrix                                             fidelityTable     = {};
   std::vector<double>                                singleQubitFidelities = {};
-  std::vector<double> singleQubitFidelityCosts = {};
-  Matrix twoQubitFidelityCosts= {};
-  Matrix swapFidelityCosts = {};
-  std::vector<Matrix> fidelityDistanceTables = {};
+  std::vector<double> singleQubitFidelityCosts                             = {};
+  Matrix              twoQubitFidelityCosts                                = {};
+  Matrix              swapFidelityCosts                                    = {};
+  std::vector<Matrix> fidelityDistanceTables                               = {};
 
   void createDistanceTable();
   void createFidelityTable();

@@ -1,6 +1,5 @@
-"""
-treedraw.py
-===========
+"""treedraw.py
+===========.
 
 Adapted from:
 https://github.com/cvzi/py_treedraw
@@ -17,6 +16,7 @@ The algoithm is a python implemenation of this publication
 Walker's Algorithm to Run in Linear Time"</a> by Christoph Buchheim, Michael
 Junger, Sebastian Leipert"
 """
+from __future__ import annotations
 
 __all__ = ["Tree", "Node"]
 
@@ -32,8 +32,7 @@ except NameError:
 
 
 class Tree:
-
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         # Start a tree with a root node
         self.root = Node(data)
         self.root.tree = self
@@ -69,8 +68,7 @@ class Tree:
                 self._firstWalk(w, distance)
                 self._apportion(w, defaultAncestor, distance)
             self._executeShifts(v)
-            midpoint = 0.5 * \
-                (v.children[0].layout.prelim + v.children[-1].layout.prelim)
+            midpoint = 0.5 * (v.children[0].layout.prelim + v.children[-1].layout.prelim)
             w = self._leftSibling(v)
             if w is not None:
                 v.layout.prelim = w.layout.prelim + distance
@@ -104,12 +102,9 @@ class Tree:
                 v_m_o = v_m_o.nextLeft()
                 v_p_o = v_p_o.nextRight()
                 v_p_o.layout.ancestor = v
-                shift = v_m_i.layout.prelim + s_m_i - \
-                    (v_p_i.layout.prelim + s_p_i) + distance
+                shift = v_m_i.layout.prelim + s_m_i - (v_p_i.layout.prelim + s_p_i) + distance
                 if shift > 0:
-                    self._moveSubtree(
-                        self._ancestor(
-                            v_m_i, v, defaultAncestor), v, shift)
+                    self._moveSubtree(self._ancestor(v_m_i, v, defaultAncestor), v, shift)
                     s_p_i = s_p_i + shift
                     s_p_o = s_p_o + shift
                 s_m_i = s_m_i + v_m_i.layout.mod
@@ -172,9 +167,8 @@ class Tree:
 
 
 class Node:
-
     class Layout:
-        def __init__(self, v):
+        def __init__(self, v) -> None:
             self.node = v
             self.mod = 0
             self.thread = None
@@ -188,18 +182,20 @@ class Node:
         def x(self, value=None):
             if value is not None:
                 self.pos[0] = value
+                return None
             else:
                 return self.pos[0]
 
         def y(self, value=None):
             if value is not None:
                 self.pos[1] = value
+                return None
             else:
                 if self.pos[1] is None:
                     self.pos[1] = self.node.level()
                 return self.pos[1]
 
-    def __init__(self, data):
+    def __init__(self, data) -> None:
         self.tree = None
         self.data = data
         self.leftSibling = -1  # undefined, outdated
@@ -295,36 +291,39 @@ class Node:
         return i
 
     def position(self, origin=(0, 0), scalex=1.0, scaley=None):
-        """ Return position as integer
-         Examples:
-         position(origin)
-         position(origin, 10)
-         position(origin, 10, 15)
-         position(origin, (10, 15))"""
+        """Return position as integer
+        Examples:
+        position(origin)
+        position(origin, 10)
+        position(origin, 10, 15)
+        position(origin, (10, 15)).
+        """
         if scaley is None:
             if hasattr(scalex, "__getitem__"):
                 scaley = scalex[1]
                 scalex = scalex[0]
             else:
                 scaley = scalex
-        return (origin[0] + int(math.ceil(self.layout.x() * scalex)),
-                origin[1] + int(math.ceil(self.layout.y() * scaley)))
+        return (
+            origin[0] + int(math.ceil(self.layout.x() * scalex)),
+            origin[1] + int(math.ceil(self.layout.y() * scaley)),
+        )
 
     def positionf(self, origin=(0.0, 0.0), scalex=1.0, scaley=None):
-        """ Return position as floating point
-         Examples:
-         position(origin)
-         position(origin, 10)
-         position(origin, 10, 15)
-         position(origin, (10, 15))"""
+        """Return position as floating point
+        Examples:
+        position(origin)
+        position(origin, 10)
+        position(origin, 10, 15)
+        position(origin, (10, 15)).
+        """
         if scaley is None:
             if hasattr(scalex, "__getitem__"):
                 scaley = scalex[1]
                 scalex = scalex[0]
             else:
                 scaley = scalex
-        return (origin[0] + (self.layout.x() * scalex),
-                origin[1] + (self.layout.y() * scaley))
+        return (origin[0] + (self.layout.x() * scalex), origin[1] + (self.layout.y() * scaley))
 
     def number(self):
         if self.layout.number != -1:
@@ -338,4 +337,5 @@ class Node:
                     if node == self:
                         return i
                     i += 1
-            raise Exception("Error in number(self)!")
+            msg = "Error in number(self)!"
+            raise Exception(msg)

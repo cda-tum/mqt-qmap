@@ -25,10 +25,10 @@ struct Configuration {
   bool postMappingOptimizations = true;
 
   bool addMeasurementsToMappedCircuit = true;
-  bool swapOnFirstLayer = false;
+  bool swapOnFirstLayer               = false;
 
-  bool verbose = false;
-  bool debug   = false;
+  bool        verbose         = false;
+  bool        debug           = false;
   std::string dataLoggingPath = "";
 
   // map to particular subgraph of architecture (in exact mapper)
@@ -75,7 +75,7 @@ struct Configuration {
 
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
-  
+
   bool dataLoggingEnabled() const { return !dataLoggingPath.empty(); }
 
   void               setTimeout(const std::size_t sec) { timeout = sec; }

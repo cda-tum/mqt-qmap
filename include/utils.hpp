@@ -72,8 +72,8 @@ public:
    * @brief builds a distance table containing the minimal costs for moving
    * logical qubits from one physical qubit to/next to another (along the
    * cheapest path)
-   * 
-   * e.g. cost of moving qubit q1 onto q2: 
+   *
+   * e.g. cost of moving qubit q1 onto q2:
    * distanceTable[q1][q2]
    *
    * @param n size of the distance table (i.e. number of qubits)
@@ -93,25 +93,25 @@ public:
                          Matrix& distanceTable, const Matrix& edgeWeights,
                          double reversalCost, bool removeLastEdge);
   /**
-   * @brief builds a 3d matrix containing the distance tables giving the minimal 
+   * @brief builds a 3d matrix containing the distance tables giving the minimal
    * distances between 2 qubit when upto k edges can be skipped.
-   * 
-   * e.g. cost of moving qubit q1 onto q2 skipping upto 3 edges: 
+   *
+   * e.g. cost of moving qubit q1 onto q2 skipping upto 3 edges:
    * edgeSkipDistanceTable[3][q1][q2]
-   * 
+   *
    * if k > edgeSkipDistanceTable.size() a cost of 0 can be assumed
-   * 
-   * this implementation does not work with distance tables containing CNOT 
-   * reversal costs or the last edge removed 
+   *
+   * this implementation does not work with distance tables containing CNOT
+   * reversal costs or the last edge removed
    * (only pure distances between 2 qubits)
-   * 
-   * @param distanceTable 2d matrix containing pure distances between any 2 
+   *
+   * @param distanceTable 2d matrix containing pure distances between any 2
    * qubits: distanceTable[source][target]
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param edgeSkipDistanceTable 3d target table
    */
-  static void buildEdgeSkipTable(const Matrix& distanceTable, 
-                                 const CouplingMap& couplingMap,
+  static void buildEdgeSkipTable(const Matrix&        distanceTable,
+                                 const CouplingMap&   couplingMap,
                                  std::vector<Matrix>& edgeSkipDistanceTable);
 
 protected:

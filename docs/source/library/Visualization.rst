@@ -1,7 +1,7 @@
 Visualization
 ===========================
 
-All visualization functionality is bundled in the sub-module :code:`mqt.qmap.visualization`. 
+All visualization functionality is bundled in the sub-module :code:`mqt.qmap.visualization`.
 
 Search graph visualization
 ############################
@@ -11,6 +11,6 @@ Closing the :code:`SearchVisualizer` object will cleanup the data logged during 
 
     .. note::
         :code:`visualize_search_graph` returns an IPython display object and therefore requires to be executed in a jupyter notebook or jupyter lab environment.
-        
+
     .. currentmodule:: mqt.qmap.visualization
     .. autoclass:: SearchVisualizer

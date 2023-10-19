@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.transpiler import Layout
 
-from src.mqt.qmap.visualization.search_visualizer import SearchVisualizer
-
 if TYPE_CHECKING:
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
+    from src.mqt.qmap.visualization.search_visualizer import SearchVisualizer
 
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration

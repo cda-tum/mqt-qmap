@@ -18,8 +18,8 @@
 #include <string>
 #include <unordered_set>
 
-constexpr std::int16_t  DEFAULT_POSITION  = -1;
-constexpr double        INITIAL_FIDELITY  = 1.0;
+constexpr std::int16_t DEFAULT_POSITION = -1;
+constexpr double       INITIAL_FIDELITY = 1.0;
 
 class Mapper {
 protected:

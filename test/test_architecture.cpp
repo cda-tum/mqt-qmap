@@ -8,22 +8,24 @@
 #include "gtest/gtest.h"
 #include <random>
 
-::testing::AssertionResult MatrixNear(const Matrix& a, const Matrix& b, double delta) {
+::testing::AssertionResult MatrixNear(const Matrix& a, const Matrix& b,
+                                      double delta) {
   if (a.size() != b.size()) {
-    return ::testing::AssertionFailure() << "Matrices differ in size: " << 
-      a.size() << " != " << b.size();
+    return ::testing::AssertionFailure()
+           << "Matrices differ in size: " << a.size() << " != " << b.size();
   }
   for (std::size_t i = 0; i < a.size(); ++i) {
     if (a.at(i).size() != b.at(i).size()) {
-      return ::testing::AssertionFailure() << 
-        "Matrices differ in size in row " << i << ": " << a.at(i).size() << 
-        " != " << b.at(i).size();
+      return ::testing::AssertionFailure()
+             << "Matrices differ in size in row " << i << ": " << a.at(i).size()
+             << " != " << b.at(i).size();
     }
     for (std::size_t j = 0; j < a.at(i).size(); ++j) {
       if (std::abs(a.at(i).at(j) - b.at(i).at(j)) > delta) {
-        return ::testing::AssertionFailure() << "Matrix entries in [" << i << 
-          "," << j << "] differ by more than " << delta << ": " << 
-          a.at(i).at(j) << " !~ " << b.at(i).at(j);
+        return ::testing::AssertionFailure()
+               << "Matrix entries in [" << i << "," << j
+               << "] differ by more than " << delta << ": " << a.at(i).at(j)
+               << " !~ " << b.at(i).at(j);
       }
     }
   }
@@ -261,9 +263,9 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
             [0.1]       [0.5]
               |           |
   0  -[0.9]-  1  -[0.5]-  2  -[0.1]-  3
-  
+
 [0.03]      [0.03]      [0.02]      [0.03]
-  
+
   -[]- ... 2-qubit error rates
   []   ... 1-qubit error rates
   */
@@ -295,232 +297,209 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
   props.setTwoQubitErrorRate(6, 5, 0.9);
 
   architecture.loadProperties(props);
-  
+
   const Matrix targetTable = {
-    { // distance from 0 to i
-      0.,
-      -3 * std::log2(1 - 0.9),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-                  std::log2(1 - 0.5) + std::log2(1 - 0.9))
-    }, { // distance from 1 to i
-      -3 * std::log2(1 - 0.9),
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))
-    }, { // distance from 2 to i
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      0.,
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-    }, { // distance from 3 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-    }, { // distance from 4 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)),
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) +
-                  std::log2(1 - 0.5) + std::log2(1 - 0.9))
-    }, { // distance from 5 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      0.,
-      -3 * std::log2(1 - 0.9)
-    }, { // distance from 6 to i
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-                  std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-                  std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.9),
-      0.,
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(), targetTable, 1e-6));
-  
+      {// distance from 0 to i
+       0., -3 * std::log2(1 - 0.9),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.9))},
+      {// distance from 1 to i
+       -3 * std::log2(1 - 0.9), 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))},
+      {
+          // distance from 2 to i
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          0.,
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+      },
+      {
+          // distance from 3 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+      },
+      {// distance from 4 to i
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)), -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.9))},
+      {// distance from 5 to i
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0.,
+       -3 * std::log2(1 - 0.9)},
+      {
+          // distance from 6 to i
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+                std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.9),
+          0.,
+      }};
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
+
   const Matrix targetTableSkip1Edge = {
-    { // distance from 0 to i
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))
-    }, { // distance from 1 to i
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))
-    }, { // distance from 2 to i
-      -3 * std::log2(1 - 0.5),
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * std::log2(1 - 0.5),
-    }, { // distance from 3 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.1),
-      0.,
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-    }, { // distance from 4 to i
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5))
-    }, { // distance from 5 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      0.,
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      0.,
-      0.
-    }, { // distance from 6 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      0.,
-      0.,
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(1), targetTableSkip1Edge, 1e-6));
-  
+      {// distance from 0 to i
+       0., 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9))},
+      {// distance from 1 to i
+       0., 0., 0., -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))},
+      {
+          // distance from 2 to i
+          -3 * std::log2(1 - 0.5),
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1),
+          0.,
+          -3 * std::log2(1 - 0.5),
+      },
+      {
+          // distance from 3 to i
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.1),
+          0.,
+          0.,
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)),
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+      },
+      {// distance from 4 to i
+       -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)), 0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5))},
+      {// distance from 5 to i
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
+       0., -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), 0., 0.},
+      {
+          // distance from 6 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          0.,
+          0.,
+      }};
+  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(1),
+                         targetTableSkip1Edge, 1e-6));
+
   const Matrix targetTableSkip3Edges = {
-    { // distance from 0 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.5)
-    }, { // distance from 1 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 2 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 3 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 4 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1)
-    }, { // distance from 5 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 6 to i
-      -3 * std::log2(1 - 0.5),
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1),
-      0.,
-      0.,
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(3), targetTableSkip3Edges, 1e-6));
-  
+      {// distance from 0 to i
+       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.5)},
+      {
+          // distance from 1 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 2 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 3 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {// distance from 4 to i
+       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.1)},
+      {
+          // distance from 5 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 6 to i
+          -3 * std::log2(1 - 0.5),
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1),
+          0.,
+          0.,
+      }};
+  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(3),
+                         targetTableSkip3Edges, 1e-6));
+
   const Matrix zeroMatrix = {
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.}
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}};
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
 }
 
 TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
-    /*
-                          6 [0.03]
-                          |
-                        [0.9]
-                          |
-       [0.03] 4           5 [0.02]
-              |           ||
-            [0.1]       [0.5]
-              |           ||
-  0  =[0.9]=  1  =[0.5]=  2  =[0.1]=  3
-  
+  /*
+                        6 [0.03]
+                        |
+                      [0.9]
+                        |
+     [0.03] 4           5 [0.02]
+            |           ||
+          [0.1]       [0.5]
+            |           ||
+0  =[0.9]=  1  =[0.5]=  2  =[0.1]=  3
+
 [0.03]      [0.03]      [0.02]      [0.03]
-  
-  -[]- ... 2-qubit error rates of unidirectional edge
-  =[]= ... 2-qubit error rates of bidirectional edge
-  []   ... 1-qubit error rates
-  */
+
+-[]- ... 2-qubit error rates of unidirectional edge
+=[]= ... 2-qubit error rates of bidirectional edge
+[]   ... 1-qubit error rates
+*/
   Architecture      architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
                           {3, 2}, {1, 4}, {2, 5}, {5, 2}, {6, 5}};
@@ -547,243 +526,219 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
   props.setTwoQubitErrorRate(6, 5, 0.9);
 
   architecture.loadProperties(props);
-  
+
   const Matrix targetTable = {
-    { // distance from 0 to i
-      0.,
-      -3 * std::log2(1 - 0.9),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-            std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))
-    }, { // distance from 1 to i
-      -3 * std::log2(1 - 0.9),
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))
-    }, { // distance from 2 to i
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      0.,
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))
-    }, { // distance from 3 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))
-    }, { // distance from 4 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * std::log2(1 - 0.1) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) +
-            std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03) +
-               std::log2(1 - 0.02) + std::log2(1 - 0.03))
-    }, { // distance from 5 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      -3 * std::log2(1 - 0.9) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-    }, { // distance from 6 to i
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-            std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) +
-            std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03) +
-               std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * std::log2(1 - 0.9) -
-          2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
-      0.
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(), targetTable, 1e-6));
-  
+      {// distance from 0 to i
+       0., -3 * std::log2(1 - 0.9),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {// distance from 1 to i
+       -3 * std::log2(1 - 0.9), 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {// distance from 2 to i
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
+       0., -3 * std::log2(1 - 0.1),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {// distance from 3 to i
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)), -3 * std::log2(1 - 0.1),
+       0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {// distance from 4 to i
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03) +
+                std::log2(1 - 0.02) + std::log2(1 - 0.03))},
+      {
+          // distance from 5 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          -3 * std::log2(1 - 0.9) -
+              2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+      },
+      {// distance from 6 to i
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.9)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5) +
+             std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03) +
+                std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * std::log2(1 - 0.9) -
+           2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
+       0.}};
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
+
   const Matrix targetTableSkip1Edge = {
-    { // distance from 0 to i
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5))
-    }, { // distance from 1 to i
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1),
-      0.,
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))
-    }, { // distance from 2 to i
-      -3 * std::log2(1 - 0.5),
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      -3 * std::log2(1 - 0.5)
-    }, { // distance from 3 to i
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.1),
-      0.,
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5))
-    }, { // distance from 4 to i
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) +
-            std::log2(1 - 0.5)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))
-    }, { // distance from 5 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      0.,
-      -3 * std::log2(1 - 0.1),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      0.,
-    }, { // distance from 6 to i
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
-      -3 * std::log2(1 - 0.5),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
-      -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
-          2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      0.
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(1), targetTableSkip1Edge, 1e-6));
-  
+      {// distance from 0 to i
+       0., 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+       -3 * (std::log2(1 - 0.9) + std::log2(1 - 0.5) + std::log2(1 - 0.5))},
+      {// distance from 1 to i
+       0., 0., 0., -3 * std::log2(1 - 0.1), 0., -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5))},
+      {// distance from 2 to i
+       -3 * std::log2(1 - 0.5), 0., 0., 0.,
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       0., -3 * std::log2(1 - 0.5)},
+      {// distance from 3 to i
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.1),
+       0., 0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * std::log2(1 - 0.1), -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5))},
+      {// distance from 4 to i
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       0.,
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       0.,
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       -3 * (std::log2(1 - 0.1) + std::log2(1 - 0.5) + std::log2(1 - 0.5)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))},
+      {
+          // distance from 5 to i
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)),
+          -3 * std::log2(1 - 0.5),
+          0.,
+          -3 * std::log2(1 - 0.1),
+          -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          0.,
+      },
+      {// distance from 6 to i
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.9)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5)), -3 * std::log2(1 - 0.5),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.1)),
+       -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+       0., 0.}};
+  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(1),
+                         targetTableSkip1Edge, 1e-6));
+
   const Matrix targetTableSkip3Edges = {
-    { // distance from 0 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.5)
-    }, { // distance from 1 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 2 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 3 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 4 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))
-    }, { // distance from 5 to i
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-      0.,
-    }, { // distance from 6 to i
-      -3 * std::log2(1 - 0.5),
-      0.,
-      0.,
-      0.,
-      -3 * std::log2(1 - 0.1) - 2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
-      0.,
-      0.,
-    }
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(3), targetTableSkip3Edges, 1e-6));
-  
+      {// distance from 0 to i
+       0., 0., 0., 0., 0., 0., -3 * std::log2(1 - 0.5)},
+      {
+          // distance from 1 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 2 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 3 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {// distance from 4 to i
+       0., 0., 0., 0., 0., 0.,
+       -3 * std::log2(1 - 0.1) -
+           2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03))},
+      {
+          // distance from 5 to i
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+          0.,
+      },
+      {
+          // distance from 6 to i
+          -3 * std::log2(1 - 0.5),
+          0.,
+          0.,
+          0.,
+          -3 * std::log2(1 - 0.1) -
+              2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
+          0.,
+          0.,
+      }};
+  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(3),
+                         targetTableSkip3Edges, 1e-6));
+
   const Matrix zeroMatrix = {
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.},
-    {0.,0.,0.,0.,0.,0.,0.}
-  };
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
-  EXPECT_TRUE(MatrixNear(
-    architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
+      {0., 0., 0., 0., 0., 0., 0.}};
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
+  EXPECT_TRUE(
+      MatrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
 }
 
 TEST(TestArchitecture, FidelitySwapCostTest) {
@@ -851,7 +806,7 @@ TEST(TestArchitecture, FidelitySwapCostTest) {
 }
 
 TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
-  // tests if the distance measure actually finds the cheapest path and 
+  // tests if the distance measure actually finds the cheapest path and
   // not just the shortest
   Architecture      architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {2, 1}, {2, 6}, {6, 2},
@@ -895,7 +850,7 @@ TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
 }
 
 TEST(TestArchitecture, DistanceCheapestPathTest) {
-  // tests if the distance measure actually finds the cheapest path and 
+  // tests if the distance measure actually finds the cheapest path and
   // not just the shortest
   Architecture architecture{};
 
