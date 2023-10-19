@@ -10,3 +10,4 @@ Library
    Subarchitectures
    Synthesis
    SynthesisResults
+   Visualization
