@@ -428,7 +428,7 @@ TEST(Functionality, DataLogger) {
                 results.layerHeuristicBenchmark.at(i).timePerNode);
     }
   }
-  
+
   auto inputQasmFile = std::ifstream(settings.dataLoggingPath + "input.qasm");
   if (!inputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
