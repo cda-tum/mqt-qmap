@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
+    from src.mqt.qmap.visualization.search_visualizer import SearchVisualizer
 
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
@@ -59,6 +60,8 @@ def compile(  # noqa: A001
     method: str | Method = "heuristic",
     initial_layout: str | InitialLayout = "dynamic",
     layering: str | Layering = "individual_gates",
+    lookaheads: int | None = None,
+    lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
     teleportation_fake: bool = False,
     teleportation_seed: int = 0,
@@ -75,6 +78,7 @@ def compile(  # noqa: A001
     add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
     debug: bool = False,
+    visualizer: SearchVisualizer | None = None,
 ) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits.
 
@@ -135,6 +139,15 @@ def compile(  # noqa: A001
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
     config.debug = debug
+    if visualizer is not None:
+        config.data_logging_path = visualizer.data_logging_path
+    if lookaheads is None:
+        config.lookaheads = 0
+        config.lookahead = False
+    else:
+        config.lookaheads = lookaheads
+        config.lookahead = True
+    config.lookahead_factor = lookahead_factor
 
     results = map(circ, architecture, config)
 

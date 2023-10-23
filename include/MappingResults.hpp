@@ -21,6 +21,8 @@ struct MappingResults {
     std::size_t   singleQubitGates = 0;
     std::size_t   cnots            = 0;
     std::size_t   layers           = 0;
+    double        totalFidelity    = 1.;
+    double        totalLogFidelity = 0.;
 
     // info in output circuit
     std::size_t swaps            = 0;
@@ -90,12 +92,13 @@ struct MappingResults {
 
     resultJSON["config"] = config.json();
 
-    auto& stats           = resultJSON["statistics"];
-    stats["timeout"]      = timeout;
-    stats["mapping_time"] = time;
-    stats["arch"]         = architecture;
-    stats["layers"]       = input.layers;
-    stats["swaps"]        = output.swaps;
+    auto& stats             = resultJSON["statistics"];
+    stats["timeout"]        = timeout;
+    stats["mapping_time"]   = time;
+    stats["arch"]           = architecture;
+    stats["layers"]         = input.layers;
+    stats["swaps"]          = output.swaps;
+    stats["total_fidelity"] = output.totalFidelity;
     if (config.method == Method::Exact) {
       stats["direction_reverse"] = output.directionReverse;
       if (config.includeWCNF && !wcnf.empty()) {

@@ -25,9 +25,11 @@ struct Configuration {
   bool postMappingOptimizations = true;
 
   bool addMeasurementsToMappedCircuit = true;
+  bool swapOnFirstLayer               = false;
 
-  bool verbose = false;
-  bool debug   = false;
+  bool        verbose         = false;
+  bool        debug           = false;
+  std::string dataLoggingPath = "";
 
   // map to particular subgraph of architecture (in exact mapper)
   std::set<std::uint16_t> subgraph{};
@@ -41,7 +43,7 @@ struct Configuration {
   // lookahead scheme settings
   bool        lookahead            = true;
   bool        admissibleHeuristic  = true;
-  bool        considerFidelity     = true;
+  bool        considerFidelity     = false;
   std::size_t nrLookaheads         = 15;
   double      firstLookaheadFactor = 0.75;
   double      lookaheadFactor      = 0.5;
@@ -73,6 +75,8 @@ struct Configuration {
 
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
+
+  bool dataLoggingEnabled() const { return !dataLoggingPath.empty(); }
 
   void               setTimeout(const std::size_t sec) { timeout = sec; }
   [[nodiscard]] bool swapLimitsEnabled() const {

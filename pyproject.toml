@@ -40,6 +40,10 @@ dependencies = [
     "rustworkx[all]>=0.13.0",
     "importlib_resources>=5.0; python_version < '3.10'",
     "typing_extensions>=4.0",
+    "distinctipy>=1.2.2",
+    "plotly>=5.15.0",
+    "networkx==2.5",
+    "ipywidgets>=7.6.5",
 ]
 dynamic = ["version"]
 

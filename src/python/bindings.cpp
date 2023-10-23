@@ -180,6 +180,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("method", &Configuration::method)
       .def_readwrite("verbose", &Configuration::verbose)
       .def_readwrite("debug", &Configuration::debug)
+      .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("lookahead", &Configuration::lookahead)
@@ -244,6 +245,8 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::singleQubitGates)
       .def_readwrite("cnots", &MappingResults::CircuitInfo::cnots)
       .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
+      .def_readwrite("total_fidelity",
+                     &MappingResults::CircuitInfo::totalFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",
                      &MappingResults::CircuitInfo::directionReverse)
