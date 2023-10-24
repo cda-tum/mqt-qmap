@@ -9,8 +9,7 @@
 
 void HeuristicMapper::map(const Configuration& configuration) {
   if (configuration.dataLoggingEnabled()) {
-    dataLogger =
-        new DataLogger(configuration.dataLoggingPath, architecture, qc);
+    dataLogger = std::make_unique<DataLogger>(configuration.dataLoggingPath, architecture, qc);
   }
   results        = MappingResults{};
   results.config = configuration;
@@ -380,7 +379,7 @@ void HeuristicMapper::mapUnmappedGates(
     const SingleQubitMultiplicity& singleQubitGateMultiplicity,
     const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
   if (results.config.considerFidelity) {
-    for (std::uint16_t q = 0; q < singleQubitGateMultiplicity.size(); ++q) {
+    for (std::size_t q = 0; q < singleQubitGateMultiplicity.size(); ++q) {
       if (singleQubitGateMultiplicity.at(q) == 0) {
         continue;
       }

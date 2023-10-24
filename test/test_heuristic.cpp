@@ -249,6 +249,7 @@ TEST(Functionality, HeuristicAdmissibility) {
 }
 
 TEST(Functionality, DataLogger) {
+  // setting up example architecture and circuit
   Architecture      architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {1, 3}, {3, 1}};
   architecture.loadCouplingMap(4, cm);
@@ -287,13 +288,15 @@ TEST(Functionality, DataLogger) {
   settings.debug                    = true;
   settings.considerFidelity         = false;
   settings.useTeleportation         = false;
+  // setting data logging path to enable data logging
   settings.dataLoggingPath          = "test_log/";
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   mapper->map(settings);
   mapper->printResult(std::cout);
   MappingResults& results = mapper->getResults();
-
+  
+  // comparing logged architecture information with original architecture object
   auto archFile = std::ifstream(settings.dataLoggingPath + "architecture.json");
   if (!archFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
@@ -311,6 +314,8 @@ TEST(Functionality, DataLogger) {
               architecture.getSingleQubitFidelities());
     EXPECT_EQ(fidelityJson["two_qubit_fidelities"],
               architecture.getFidelityTable());
+    // json does not support inf values, instead nlohmann::json replaces inf
+    // with null
     auto& singleQubitFidelityCosts = architecture.getSingleQubitFidelityCosts();
     for (std::size_t i = 0; i < singleQubitFidelityCosts.size(); ++i) {
       if (std::isinf(singleQubitFidelityCosts[i])) {
@@ -343,7 +348,8 @@ TEST(Functionality, DataLogger) {
       }
     }
   }
-
+  
+  // comparing logged mapping result with mapping result object
   auto resultFile =
       std::ifstream(settings.dataLoggingPath + "mapping_result.json");
   if (!resultFile.is_open()) {
@@ -428,7 +434,9 @@ TEST(Functionality, DataLogger) {
                 results.layerHeuristicBenchmark.at(i).timePerNode);
     }
   }
-
+  
+  // comparing logged input and output circuits with input circuit object and
+  // mapped circuit object
   auto inputQasmFile = std::ifstream(settings.dataLoggingPath + "input.qasm");
   if (!inputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
@@ -452,7 +460,9 @@ TEST(Functionality, DataLogger) {
     mapper->dumpResult(qasmBuffer, qc::Format::OpenQASM);
     EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
   }
-
+  
+  // checking logged search graph info against known values (correct qubit
+  // number, valid layouts, correct data types in all csv fields, etc.)
   for (std::size_t i = 0; i < results.input.layers; ++i) {
     auto layerFile = std::ifstream(settings.dataLoggingPath + "layer_" +
                                    std::to_string(i) + ".json");
@@ -580,7 +590,8 @@ TEST(Functionality, DataLogger) {
       }
     }
   }
-
+  
+  // checking if files for non-existing layers are not created
   auto afterLastLayerFile =
       std::ifstream(settings.dataLoggingPath + "layer_" +
                     std::to_string(results.input.layers) + ".json");

@@ -173,9 +173,9 @@ public:
   };
 
 protected:
-  UniquePriorityQueue<Node> nodes{};
-  DataLogger*               dataLogger;
-  std::size_t               nextNodeId = 0;
+  UniquePriorityQueue<Node>   nodes{};
+  std::unique_ptr<DataLogger> dataLogger;
+  std::size_t                 nextNodeId = 0;
 
   /**
    * @brief creates an initial mapping of logical qubits to physical qubits with
