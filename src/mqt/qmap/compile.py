@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
+
     from mqt.qmap.visualization.search_visualizer import SearchVisualizer
 
 from .load_architecture import load_architecture
