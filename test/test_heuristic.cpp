@@ -289,13 +289,13 @@ TEST(Functionality, DataLogger) {
   settings.considerFidelity         = false;
   settings.useTeleportation         = false;
   // setting data logging path to enable data logging
-  settings.dataLoggingPath          = "test_log/";
+  settings.dataLoggingPath = "test_log/";
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   mapper->map(settings);
   mapper->printResult(std::cout);
   MappingResults& results = mapper->getResults();
-  
+
   // comparing logged architecture information with original architecture object
   auto archFile = std::ifstream(settings.dataLoggingPath + "architecture.json");
   if (!archFile.is_open()) {
@@ -348,7 +348,7 @@ TEST(Functionality, DataLogger) {
       }
     }
   }
-  
+
   // comparing logged mapping result with mapping result object
   auto resultFile =
       std::ifstream(settings.dataLoggingPath + "mapping_result.json");
@@ -434,7 +434,7 @@ TEST(Functionality, DataLogger) {
                 results.layerHeuristicBenchmark.at(i).timePerNode);
     }
   }
-  
+
   // comparing logged input and output circuits with input circuit object and
   // mapped circuit object
   auto inputQasmFile = std::ifstream(settings.dataLoggingPath + "input.qasm");
@@ -460,7 +460,7 @@ TEST(Functionality, DataLogger) {
     mapper->dumpResult(qasmBuffer, qc::Format::OpenQASM);
     EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
   }
-  
+
   // checking logged search graph info against known values (correct qubit
   // number, valid layouts, correct data types in all csv fields, etc.)
   for (std::size_t i = 0; i < results.input.layers; ++i) {
@@ -590,7 +590,7 @@ TEST(Functionality, DataLogger) {
       }
     }
   }
-  
+
   // checking if files for non-existing layers are not created
   auto afterLastLayerFile =
       std::ifstream(settings.dataLoggingPath + "layer_" +

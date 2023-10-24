@@ -207,7 +207,7 @@ void DataLogger::logMappingResult(MappingResults& result) {
   if (deactivated) {
     return;
   }
-  
+
   // load output file
   auto of = std::ofstream(dataLoggingPath + "mapping_result.json");
   if (!of.good()) { // if loading failed, output warning and deactivate logging
@@ -216,7 +216,7 @@ void DataLogger::logMappingResult(MappingResults& result) {
               << "mapping_result.json" << std::endl;
     return;
   }
-  
+
   // prepare json data
   nlohmann::json json;
   auto&          circuit        = json["input_circuit"];
@@ -308,7 +308,7 @@ void DataLogger::logMappingResult(MappingResults& result) {
           layerBenchmark.effectiveBranchingFactor;
     }
   }
-  
+
   // write json data to file
   of << json.dump(2);
   of.close();

@@ -9,7 +9,8 @@
 
 void HeuristicMapper::map(const Configuration& configuration) {
   if (configuration.dataLoggingEnabled()) {
-    dataLogger = std::make_unique<DataLogger>(configuration.dataLoggingPath, architecture, qc);
+    dataLogger = std::make_unique<DataLogger>(configuration.dataLoggingPath,
+                                              architecture, qc);
   }
   results        = MappingResults{};
   results.config = configuration;
