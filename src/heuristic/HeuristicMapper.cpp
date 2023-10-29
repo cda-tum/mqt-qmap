@@ -1009,7 +1009,7 @@ void HeuristicMapper::Node::recalculateFixedCost(
         validMappedTwoQubitGates.emplace(q1, q2);
       }
     }
-    // 2-qubit-gates not yet mapped next to eachother are handled in the
+    // 2-qubit-gates not yet mapped next to each other are handled in the
     // heuristic
   } else {
     for (auto& swapNode : swaps) {

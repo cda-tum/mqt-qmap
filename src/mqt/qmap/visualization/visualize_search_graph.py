@@ -15,8 +15,7 @@ from distinctipy import distinctipy
 from ipywidgets import HBox, IntSlider, Layout, Play, VBox, Widget, interactive, jslink
 from networkx.drawing.nx_pydot import graphviz_layout
 from plotly.subplots import make_subplots
-
-from mqt.qmap.visualization.treedraw import Tree
+from walkerlayout import WalkerLayouting
 
 
 @dataclass
@@ -133,19 +132,10 @@ def _layout_search_graph(
     search_graph: nx.Graph,
     root: int,
     method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
-    walker_factor: float,  # 0-1
     tapered_layer_heights: bool,
 ) -> dict[int, Position]:
     if method == "walker":
-        tree = Tree(root)
-        nodes = {root: tree.root}
-        for node in search_graph.nodes:
-            if node != root:
-                nodes[node] = nodes[search_graph.nodes[node]["data"].parent].addChild(node)
-        tree.walker(walker_factor)
-        pos = {}
-        for node in tree.nodes:
-            pos[node.data] = node.position(origin=(0, 0), scalex=100, scaley=-1)
+        pos = WalkerLayouting.layout_networkx(search_graph, root, origin=(0, 0), scalex=60, scaley=-1)
     else:
         pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])
 
@@ -481,7 +471,7 @@ def _parse_arch_graph(file_path: str) -> nx.Graph:
             # TODO: this is the cost of 1 swap for the non-noise-aware heuristic
             # mapper; depending on directionality this might be different; once
             # more dynamic swap cost system in Architecture.cpp is implemented
-            # replace wiht dynamic cost lookup
+            # replace with dynamic cost lookup
         edges.add(edge)
         nqbits = max(nqbits, q0, q1)
     nqbits += 1
@@ -731,7 +721,6 @@ def _load_layer_data(
     data_logging_path: str,
     layer: int,
     layout_method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
-    layout_walker_factor: float,  # 0-1
     tapered_layer_heights: bool,
     number_of_node_traces: int,
     use3d: bool,
@@ -790,7 +779,7 @@ def _load_layer_data(
 
     graph, graph_root = _parse_search_graph(f"{data_logging_path}nodes_layer_{layer}.csv", final_node_id)
 
-    pos = _layout_search_graph(graph, graph_root, layout_method, layout_walker_factor, tapered_layer_heights)
+    pos = _layout_search_graph(graph, graph_root, layout_method, tapered_layer_heights)
 
     (
         edge_x,
@@ -971,7 +960,6 @@ def _visualize_search_graph_check_parameters(
     architecture_node_positions: dict[int, Position] | None,
     architecture_layout_method: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
     search_node_layout_method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
-    search_node_layout_walker_factor: float,
     search_graph_border: float,
     architecture_border: float,
     swap_arrow_spacing: float,
@@ -1065,12 +1053,6 @@ def _visualize_search_graph_check_parameters(
         "patchwork",
     ]:
         msg = 'search_node_layout_method must be one of "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
-        raise ValueError(msg)
-
-    if search_node_layout_method == "walker" and (
-        not _is_number(search_node_layout_walker_factor) or search_node_layout_walker_factor < 0
-    ):
-        msg = "search_node_layout_walker_factor must be a non-negative float"
         raise ValueError(msg)
 
     if not _is_number(search_graph_border) or search_graph_border < 0:
@@ -1417,7 +1399,7 @@ def _visualize_search_graph_check_parameters(
                 if isinstance(c, str):
                     l = _cost_string_to_lambda(c)
                     if l is None:
-                        msg = f"Unkown cost function preset search_node_height[{i}]: {c}"
+                        msg = f"Unknown cost function preset search_node_height[{i}]: {c}"
                         raise ValueError(msg)
                     elif l in lambdas:
                         msg = f"search_node_height must not contain the same cost function multiple times: {c}"
@@ -1435,7 +1417,7 @@ def _visualize_search_graph_check_parameters(
             if l is not None:
                 search_node_height = [l]
             else:
-                msg = f"Unkown cost function preset search_node_height: {search_node_height}"
+                msg = f"Unknown cost function preset search_node_height: {search_node_height}"
                 raise ValueError(msg)
         else:
             msg = "search_node_height must be a list of cost functions or a single cost function."
@@ -1466,7 +1448,6 @@ def visualize_search_graph(
     search_node_layout_method: Literal[
         "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"
     ] = "walker",
-    search_node_layout_walker_factor: float = 0.6,
     search_graph_border: float = 0.05,
     architecture_border: float = 0.05,
     swap_arrow_spacing: float = 0.05,
@@ -1563,7 +1544,6 @@ def visualize_search_graph(
         architecture_node_positions,
         architecture_layout_method,
         search_node_layout_method,
-        search_node_layout_walker_factor,
         search_graph_border,
         architecture_border,
         swap_arrow_spacing,
@@ -1901,7 +1881,6 @@ def visualize_search_graph(
                 data_logging_path,
                 current_layer,
                 search_node_layout_method,
-                search_node_layout_walker_factor,
                 tapered_search_layer_heights,
                 number_of_node_traces,
                 use3d,
