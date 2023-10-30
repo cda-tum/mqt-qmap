@@ -61,7 +61,7 @@ def compile(  # noqa: A001
     method: str | Method = "heuristic",
     initial_layout: str | InitialLayout = "dynamic",
     layering: str | Layering = "individual_gates",
-    lookaheads: int | None = None,
+    lookaheads: int | None = 15,
     lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
     teleportation_fake: bool = False,
@@ -90,6 +90,8 @@ def compile(  # noqa: A001
         method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
         initial_layout: The initial layout to use. Defaults to "dynamic".
         layering: The layering strategy to use. Defaults to "individual_gates".
+        lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
+        lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
         commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
         use_bdd: Whether to use BDDs to limit the search space. Defaults to False. Use with caution.
@@ -106,6 +108,7 @@ def compile(  # noqa: A001
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
         verbose: Print more detailed information during the mapping process. Defaults to False.
         debug: Gather additional information during the mapping process (e.g. number of generated nodes, branching factors, ...). Defaults to False.
+        visualizer: A SearchVisualizer object to log the search process to. Defaults to None.
 
     Returns:
         The mapped circuit and the mapping results.
@@ -140,7 +143,7 @@ def compile(  # noqa: A001
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
     config.debug = debug
-    if visualizer is not None:
+    if visualizer is not None and visualizer.data_logging_path is not None:
         config.data_logging_path = visualizer.data_logging_path
     if lookaheads is None:
         config.lookaheads = 0

@@ -1,7 +1,13 @@
+"""A class handling data logging for a search process and providing methods to visualize that data."""
 from __future__ import annotations
 
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Callable, Literal, MutableMapping
+
+if TYPE_CHECKING:
+    import types
+
+    from typing_extensions import Self
 
 from mqt.qmap.visualization.visualize_search_graph import Position, SearchNode, visualize_search_graph
 
@@ -10,15 +16,37 @@ if TYPE_CHECKING:
 
 
 class SearchVisualizer:
+    """Handling data logging for a search process and providing methods to visualize that data."""
+
     def __init__(self, data_logging_path: str | None = None) -> None:
+        """Handling data logging for a search process and providing methods to visualize that data.
+
+        Args:
+            data_logging_path: Path to an empty directory, in which the search process should log all data.
+                Defaults to None, in which case a temporary folder will be created.
+        """
         if data_logging_path is not None:
-            self.data_logging_path = data_logging_path
-            self.data_logging_tmp_dir = None
+            self.data_logging_path: str | None = data_logging_path
+            self.data_logging_tmp_dir: TemporaryDirectory[str] | None = None
         else:
             self.data_logging_tmp_dir = TemporaryDirectory()
             self.data_logging_path = self.data_logging_tmp_dir.name
 
-    def close(self):
+    def __enter__(self) -> Self:
+        """Just enables the use of SearchVisualizer in a with statement."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
+        """Closes the SearchVisualizer after a with statement."""
+        self.close()
+
+    def close(self) -> None:
+        """Cleans up the data logging directory, if it is was temporarily created."""
         if self.data_logging_tmp_dir is not None:
             self.data_logging_tmp_dir.cleanup()
             self.data_logging_path = None
@@ -26,14 +54,11 @@ class SearchVisualizer:
     def visualize_search_graph(
         self,
         layer: int | Literal["interactive"] = "interactive",  # 'interactive' (slider menu) | index
-        architecture_node_positions: dict[int, Position] | None = None,
-        architecture_layout_method: Literal[
-            "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"
-        ] = "sfdp",
-        search_node_layout_method: Literal[
+        architecture_node_positions: MutableMapping[int, Position] | None = None,
+        architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
+        search_node_layout: Literal[
             "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"
         ] = "walker",
-        search_node_layout_walker_factor: float = 0.6,
         search_graph_border: float = 0.05,
         architecture_border: float = 0.05,
         swap_arrow_spacing: float = 0.05,
@@ -57,7 +82,7 @@ class SearchVisualizer:
         # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
         # function that takes a SearchNode and returns a float (e.g. lambda n: n.fixed_cost + n.heuristic_cost)
         # node fields: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-        #                       "final": bool, "depth": int, "layout": Tuple[int, ...], "swaps": Tuple[Tuple[int, int], ...]}
+        #                       "final": bool, "depth": int, "layout": tuple[int, ...], "swaps": tuple[tuple[int, int], ...]}
         # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
         # if in that case no is list is provided all points per node will be the same color
         prioritize_search_node_color: bool
@@ -91,7 +116,7 @@ class SearchVisualizer:
         show_search_progression: bool = True,
         search_progression_step: int = 10,
         search_progression_speed: float = 2,  # steps per second
-        plotly_settings: dict[str, dict[str, Any]] | None = None,
+        plotly_settings: MutableMapping[str, MutableMapping[str, object]] | None = None,
         # {
         #   'layout': settings for plotly.graph_objects.Layout (of subplots figure)
         #   'arrows': settings for plotly.graph_objects.layout.Annotation
@@ -108,6 +133,70 @@ class SearchVisualizer:
         #   'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis
         # }
     ) -> Widget:
+        """Creates a widget to visualize the search graph.
+
+        Args:
+            layer (int | Literal[&quot;interactive&quot;]): Index of the circuit layer, of which the mapping should be visualized. Defaults to "interactive", in which case a slider menu will be created.
+            architecture_node_positions (MutableMapping[int, tuple[float, float]] | None): Mapping from physical qubits to (x, y) coordinates. Defaults to None, in which case architecture_layout will be used to generate a layout.
+            architecture_layout (Literal[ &quot;dot&quot;, &quot;neato&quot;, &quot;fdp&quot;, &quot;sfdp&quot;, &quot;circo&quot;, &quot;twopi&quot;, &quot;osage&quot;, &quot;patchwork&quot; ]): The method to use when layouting the qubit connectivity graph. Defaults to "sfdp".
+            search_node_layout (Literal[ &quot;walker&quot;, &quot;dot&quot;, &quot;neato&quot;, &quot;fdp&quot;, &quot;sfdp&quot;, &quot;circo&quot;, &quot;twopi&quot;, &quot;osage&quot;, &quot;patchwork&quot; ]): The method to use when layouting the search graph. Defaults to "walker".
+            search_graph_border (float): Size of the border around the search graph. Defaults to 0.05.
+            architecture_border (float): Size of the border around the qubit connectivity graph. Defaults to 0.05.
+            swap_arrow_spacing (float): Lateral spacing between arrows indicating swaps on the qubit connectivity graph. Defaults to 0.05.
+            swap_arrow_offset (float): Offset of heads and shaft of swap arrows from qubits they are pointing to/from. Defaults to 0.05.
+            use3d (bool): If a 3D graph should be used for the search graph using the z-axis to plot data features. Defaults to True.
+            projection (Literal[&quot;orthographic&quot;, &quot;perspective&quot;]): Projection type to use in 3D graphs. Defaults to "perspective".
+            width (int): Pixel width of the widget. Defaults to 1400.
+            height (int): Pixel height of the widget. Defaults to 700.
+            draw_search_edges (bool): If edges between search nodes should be drawn. Defaults to True.
+            search_edges_width (float): Width of edges between search nodes. Defaults to 0.5.
+            search_edges_color (str): Color of edges between search nodes (in CSS format, i.e. &quot;#rrggbb&quot;, &quot;#rgb&quot;, &quot;colorname&quot;, etc.). Defaults to "#888".
+            search_edges_dash (str): Dashing of search edges (in CSS format, i.e. &quot;solid&quot;, &quot;dot&quot;, &quot;dash&quot;, &quot;longdash&quot;, etc.). Defaults to "solid".
+            tapered_search_layer_heights (bool): If search graph tree should progressively reduce the height of each layer. Defaults to True.
+            show_layout (Literal[&quot;hover&quot;, &quot;click&quot;] | None): If the current qubit layout should be shown on the qubit connectivity graph, when clicking or hovering on a search node or not at all. Defaults to "hover".
+            show_swaps (bool): Showing swaps on the connectivity graph. Defaults to True.
+            show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
+            color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
+            color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
+            search_node_color (str | Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature (&quot;total_cost&quot; | &quot;fixed_cost&quot; | &quot;heuristic_cost&quot; | &quot;lookahead_penalty&quot;). In case a 3D search graph is used with multiple point per search node, each point&quot;s color can be controlled individually via a list. Defaults to "total_cost".
+            prioritize_search_node_color (bool | list[ bool ]): If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
+            search_node_color_scale (str | list[str]): Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
+            search_node_invert_color_scale (bool | list[bool]): If the color scale should be inverted. Defaults to True.
+            search_node_colorbar_title (str | list[str  |  None] | None): Title(s) to be shown next to the colorbar(s). Defaults to None.
+            search_node_colorbar_spacing (float): Spacing between multiple colorbars. Defaults to 0.06.
+            search_node_height (str | Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]): Function mapping a mqt.qmap.visualization.SearchNode to a float value to be used as z-value in 3D search graphs or a preset data feature (&quot;total_cost&quot; | &quot;fixed_cost&quot; | &quot;heuristic_cost&quot; | &quot;lookahead_penalty&quot;). Or a list any of such functions/data features, to draw multiple points per search node. Defaults to "total_cost".
+            draw_stems (bool): If a vertical stem should be drawn in 3D search graphs to each search node. Defaults to False.
+            stems_width (float): Width of stems in 3D search graphs. Defaults to 0.7.
+            stems_color (str): Color of stems in 3D search graphs (in CSS format). Defaults to "#444".
+            stems_dash (str): Dashing of stems in 3D search graphs (in CSS format). Defaults to "solid".
+            show_search_progression (bool): If the search progression should be animated. Defaults to True.
+            search_progression_step (int): Step size (in number of nodes added) of search progression animation. Defaults to 10.
+            search_progression_speed (float): Speed of the search progression animation. Defaults to 2.
+            plotly_settings (MutableMapping[str, MutableMapping[str, any]] | None): Direct plotly configuration dictionaries to be passed through. Defaults to None.
+            ```
+            {
+                "layout": settings for plotly.graph_objects.Layout (of subplots figure)
+                "arrows": settings for plotly.graph_objects.layout.Annotation
+                "stats_legend": settings for plotly.graph_objects.layout.Annotation
+                "search_nodes": settings for plotly.graph_objects.Scatter resp. ...Scatter3d
+                "search_edges": settings for plotly.graph_objects.Scatter resp. ...Scatter3d
+                "architecture_nodes": settings for plotly.graph_objects.Scatter
+                "architecture_edges": settings for plotly.graph_objects.Scatter
+                "architecture_edge_labels": settings for plotly.graph_objects.Scatter
+                "search_xaxis": settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis
+                "search_yaxis": settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis
+                "search_zaxis": settings for plotly.graph_objects.layout.scene.ZAxis
+                "architecture_xaxis": settings for plotly.graph_objects.layout.XAxis
+                "architecture_yaxis": settings for plotly.graph_objects.layout.YAxis
+            }
+            ```
+
+        Raises:
+            TypeError: If any of the arguments are invalid.
+
+        Returns:
+            Widget: An interactive IPython widget to visualize the search graph.
+        """
         if plotly_settings is None:
             plotly_settings = {}
         if self.data_logging_path is None:
@@ -117,9 +206,8 @@ class SearchVisualizer:
             data_logging_path=self.data_logging_path,
             layer=layer,
             architecture_node_positions=architecture_node_positions,
-            architecture_layout_method=architecture_layout_method,
-            search_node_layout_method=search_node_layout_method,
-            search_node_layout_walker_factor=search_node_layout_walker_factor,
+            architecture_layout=architecture_layout,
+            search_node_layout=search_node_layout,
             search_graph_border=search_graph_border,
             architecture_border=architecture_border,
             swap_arrow_spacing=swap_arrow_spacing,

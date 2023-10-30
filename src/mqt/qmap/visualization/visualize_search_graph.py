@@ -1,14 +1,52 @@
+"""Function for visualization of search graphs."""
 from __future__ import annotations
 
 import json
-import os
 import re
 from copy import deepcopy
 from dataclasses import dataclass
+from pathlib import Path
 from random import shuffle
-from typing import Any, Callable, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Callable, Iterable, Literal, MutableMapping, Sequence, Tuple, TypedDict, Union
+
+if TYPE_CHECKING:
+    Position = Tuple[float, float]
+    Colorscale = Union[str, Sequence[str], Sequence[Tuple[float, str]]]
+
+    class _ActiveTraceIndices(TypedDict):
+        search_edges: list[int]
+        search_nodes: list[int]
+        search_node_stems: int
+        arch_edges: int
+        arch_edge_labels: int
+        arch_nodes: int
+
+    _PlotlySubsettings = MutableMapping[str, object]
+
+    class _PlotlySettings(TypedDict):
+        layout: _PlotlySubsettings
+        arrows: _PlotlySubsettings
+        stats_legend: _PlotlySubsettings
+        search_nodes: _PlotlySubsettings
+        search_node_stems: _PlotlySubsettings
+        search_edges: _PlotlySubsettings
+        architecture_nodes: _PlotlySubsettings
+        architecture_edges: _PlotlySubsettings
+        architecture_edge_labels: _PlotlySubsettings
+        search_xaxis: _PlotlySubsettings
+        search_yaxis: _PlotlySubsettings
+        search_zaxis: _PlotlySubsettings
+        architecture_xaxis: _PlotlySubsettings
+        architecture_yaxis: _PlotlySubsettings
+
+    class _SwapArrowProps(TypedDict):
+        color: str
+        straight: bool
+        color2: str | None
+
 
 import networkx as nx
+import plotly
 import plotly.graph_objects as go
 from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator
 from distinctipy import distinctipy
@@ -17,9 +55,11 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from plotly.subplots import make_subplots
 from walkerlayout import WalkerLayouting
 
+# TODO: show_swaps not working!
+
 
 @dataclass
-class TwoQbitMultiplicity:
+class _TwoQbitMultiplicity:
     q0: int
     q1: int
     forward: int
@@ -28,7 +68,9 @@ class TwoQbitMultiplicity:
 
 @dataclass
 class SearchNode:
-    id: int
+    """Represents a node in the search graph."""
+
+    nodeid: int
     parent: int | None
     fixed_cost: float
     heuristic_cost: float
@@ -36,74 +78,65 @@ class SearchNode:
     is_valid_mapping: bool
     final: bool
     depth: int
-    layout: tuple[int, ...]
-    swaps: tuple[tuple[int, int], ...]
+    layout: Sequence[int]
+    swaps: Sequence[tuple[int, int]]
 
-    def total_cost(self):
+    def total_cost(self) -> float:
+        """Returns the total cost of the node, i.e. fixed cost + heuristic cost + lookahead penalty."""
         return self.fixed_cost + self.heuristic_cost + self.lookahead_penalty
 
-    def total_fixed_cost(self):
+    def total_fixed_cost(self) -> float:
+        """Returns the total fixed cost of the node, i.e. fixed cost + lookahead penalty."""
         return self.fixed_cost + self.lookahead_penalty
 
 
-Position = Tuple[float, float]
-Colorscale = Union[str, List[str], List[Tuple[float, str]]]
-
-
-def _is_len_iterable(obj) -> bool:
-    if isinstance(obj, str):
-        return False
-    # this is actually the safest way to do this:
-    # https://stackoverflow.com/questions/1952464/in-python-how-do-i-determine-if-an-object-is-iterable
-    try:
-        iter(obj)
-        len(obj)
-        return True
-    except TypeError:
-        return False
-
-
-def _is_number(x):
-    return type(x) is float or type(x) is int
+def _is_number(x: object) -> bool:
+    return isinstance(x, (float, int))
 
 
 def _remove_first_lines(string: str, n: int) -> str:
     return string.split("\n", n)[n]
 
 
-def _get_avg_min_distance(seq):
+def _get_avg_min_distance(seq: Iterable[float | int]) -> float:
     arr = sorted(seq)
-    sum_dist = 0
+    sum_dist = 0.0
     for i in range(1, len(arr)):
-        sum_dist += arr[i] - arr[i - 1]
+        sum_dist += float(arr[i] - arr[i - 1])
     return sum_dist / (len(arr) - 1)
 
 
-def _reverse_layout(seq):
+def _reverse_layout(seq: Sequence[int]) -> Sequence[int]:
     r = [-1] * len(seq)
     for i, v in enumerate(seq):
         r[v] = i
     return r
 
 
-def _copy_to_dict(target: dict[Any, Any], source: dict[Any, Any], recursive: bool = True):
+def _copy_to_dict(
+    target: MutableMapping[str, object], source: MutableMapping[str, object], recursive: bool = True
+) -> MutableMapping[str, object]:
     for key, value in source.items():
         if recursive and isinstance(value, dict):
             if key not in target or not isinstance(target[key], dict):
                 target[key] = value
             else:
-                _copy_to_dict(target[key], value)
+                _copy_to_dict(target[key], value)  # type: ignore[arg-type]
         else:
             target[key] = value
     return target
 
 
+class RootNodeNotFoundError(Exception):
+    """Raised when the root node of a search graph could not be found."""
+
+
 def _parse_search_graph(file_path: str, final_node_id: int) -> tuple[nx.Graph, int]:
     graph = nx.Graph()
     root = None
-    with open(file_path) as file:
-        for line in file:
-            line = line.strip().split(";")
+    with Path(file_path).open() as file:
+        for linestr in file:
+            line = linestr.strip().split(";")
             node = int(line[0])
             parent = int(line[1])
             data = SearchNode(
@@ -118,13 +151,15 @@ def _parse_search_graph(file_path: str, final_node_id: int) -> tuple[nx.Graph, i
                 tuple(int(q) for q in line[7].strip().split(",")),
                 ()
                 if len(line[8].strip()) == 0
-                else tuple(tuple(int(q) for q in swap.split(" ")) for swap in line[8].strip().split(",")),
+                else tuple((int(swap.split(" ")[0]), int(swap.split(" ")[1])) for swap in line[8].strip().split(",")),
             )
             graph.add_node(node, data=data)
             if parent == node:
                 root = node
             else:
                 graph.add_edge(node, parent)
+    if root is None:
+        raise RootNodeNotFoundError
     return graph, root
 
 
@@ -133,11 +168,13 @@ def _layout_search_graph(
     root: int,
     method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
     tapered_layer_heights: bool,
-) -> dict[int, Position]:
+) -> MutableMapping[int, Position]:
     if method == "walker":
-        pos = WalkerLayouting.layout_networkx(search_graph, root, origin=(0, 0), scalex=60, scaley=-1)
+        pos: MutableMapping[int, Position] = WalkerLayouting.layout_networkx(
+            search_graph, root, origin=(0, 0), scalex=60, scaley=-1
+        )
     else:
-        pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])
+        pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])  # t
 
     if not tapered_layer_heights:
         return pos
@@ -152,7 +189,7 @@ def _layout_search_graph(
     if len(layers_x) <= len(search_graph.nodes):
         return pos
 
-    avg_spacing = 0
+    avg_spacing = 0.0
     for y in layers_x:
         layer_spacings[y] = _get_avg_min_distance(layers_x[y])
         avg_spacing += layer_spacings[y]
@@ -168,7 +205,7 @@ def _layout_search_graph(
             layer_spacings[y] = (before + after) / 2
             if layer_spacings[y] == 0:
                 layer_spacings[y] = avg_spacing
-    current_y = 0
+    current_y = 0.0
     layers_new_y = {}
     for old_y in sorted(layers_x.keys()):
         layers_new_y[old_y] = current_y
@@ -182,16 +219,16 @@ def _layout_search_graph(
 
 def _prepare_search_graph_scatters(
     number_of_scatters: int,
-    color_scale: list[Colorscale],
-    invert_color_scale: list[bool],
-    search_node_colorbar_title: list[str | None],
+    color_scale: Sequence[Colorscale],
+    invert_color_scale: Sequence[bool],
+    search_node_colorbar_title: Sequence[str | None],
     search_node_colorbar_spacing: float,
     use3d: bool,
     draw_stems: bool,
     draw_edges: bool,
-    plotly_settings: dict[str, dict[str, Any]],
+    plotly_settings: _PlotlySettings,
 ) -> tuple[
-    list[go.Scatter | go.Scatter3d], list[go.Scatter | go.Scatter3d], go.Scatter3d | None
+    Sequence[go.Scatter | go.Scatter3d], Sequence[go.Scatter | go.Scatter3d], go.Scatter3d | None
 ]:  # nodes, edges, stems
     if not use3d:
         _copy_to_dict(
@@ -209,7 +246,7 @@ def _prepare_search_graph_scatters(
         ps = plotly_settings["search_nodes"]
         if search_node_colorbar_title[0] is None:
             ps = deepcopy(ps)
-            del ps["marker"]["colorbar"]
+            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
         node_scatter = go.Scatter(**ps)
         node_scatter.x = []
         node_scatter.y = []
@@ -221,82 +258,81 @@ def _prepare_search_graph_scatters(
         else:
             edge_scatters = []
         return [node_scatter], edge_scatters, None
-    else:
-        node_scatters = []
-        n_colorbars = 0
-        for i in range(number_of_scatters):
-            _copy_to_dict(
-                plotly_settings["search_nodes"],
-                {
-                    "marker": {
-                        "colorscale": color_scale[i],
-                        "reversescale": invert_color_scale[i],
-                        "colorbar": {
-                            "y": 1 - search_node_colorbar_spacing * n_colorbars,
-                            "title": search_node_colorbar_title[i],
-                        },
-                    }
-                },
-            )
-            ps = plotly_settings["search_nodes"]
-            if search_node_colorbar_title[i] is None:
-                ps = deepcopy(ps)
-                del ps["marker"]["colorbar"]
-            else:
-                n_colorbars += 1
-            scatter = go.Scatter3d(**ps)
+    node_scatters = []
+    n_colorbars = 0
+    for i in range(number_of_scatters):
+        _copy_to_dict(
+            plotly_settings["search_nodes"],
+            {
+                "marker": {
+                    "colorscale": color_scale[i],
+                    "reversescale": invert_color_scale[i],
+                    "colorbar": {
+                        "y": 1 - search_node_colorbar_spacing * n_colorbars,
+                        "title": search_node_colorbar_title[i],
+                    },
+                }
+            },
+        )
+        ps = plotly_settings["search_nodes"]
+        if search_node_colorbar_title[i] is None:
+            ps = deepcopy(ps)
+            del ps["marker"]["colorbar"]  # type: ignore[attr-defined]
+        else:
+            n_colorbars += 1
+        scatter = go.Scatter3d(**ps)
+        scatter.x = []
+        scatter.y = []
+        scatter.z = []
+        node_scatters.append(scatter)
+    if draw_edges:
+        edge_scatters = []
+        for _ in range(number_of_scatters):
+            scatter = go.Scatter3d(**plotly_settings["search_edges"])
             scatter.x = []
             scatter.y = []
             scatter.z = []
-            node_scatters.append(scatter)
-        if draw_edges:
-            edge_scatters = []
-            for _ in range(number_of_scatters):
-                scatter = go.Scatter3d(**plotly_settings["search_edges"])
-                scatter.x = []
-                scatter.y = []
-                scatter.z = []
-                edge_scatters.append(scatter)
-        else:
-            edge_scatters = []
-        stem_scatter = None
-        if draw_stems:
-            stem_scatter = go.Scatter3d(**plotly_settings["search_node_stems"])
-            stem_scatter.x = []
-            stem_scatter.y = []
-            stem_scatter.z = []
-        return node_scatters, edge_scatters, stem_scatter
+            edge_scatters.append(scatter)
+    else:
+        edge_scatters = []
+    stem_scatter = None
+    if draw_stems:
+        stem_scatter = go.Scatter3d(**plotly_settings["search_node_stems"])
+        stem_scatter.x = []
+        stem_scatter.y = []
+        stem_scatter.z = []
+    return node_scatters, edge_scatters, stem_scatter
 
 
 def _prepare_search_graph_scatter_data(
     number_of_scatters: int,
     search_graph: nx.Graph,
-    search_pos: dict[int, Position],
+    search_pos: MutableMapping[int, Position],
     use3d: bool,
-    search_node_color: list[str | Callable[[SearchNode], float]],
+    search_node_color: Sequence[str | Callable[[SearchNode], float]],
     # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
     # function that takes a node parameter dict and returns a float (e.g. lambda node: node['total_cost'] + node['fixed_cost'])
     # node parameter dict: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-    #                       "final": bool, "depth": int, "layout": Tuple[int, ...], "swaps": Tuple[Tuple[int, int], ...]}
+    #                       "final": bool, "depth": int, "layout": Sequence[int], "swaps": Sequence[tuple[int, int]]}
     # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
     # if in that case no is list is provided all points per node will be the same color
-    prioritize_search_node_color: list[bool],
-    search_node_height: list[Callable[[SearchNode], float]],
+    prioritize_search_node_color: Sequence[bool],
+    search_node_height: Sequence[Callable[[SearchNode], float]],
     color_valid_mapping: str | None,  # static HTML color (e.g. 'blue' or '#0000FF')
     color_final_node: str | None,  # static HTML color (e.g. 'blue' or '#0000FF')
     draw_stems: bool,  # only applicable for 3D plots
     draw_edges: bool,
 ) -> tuple[
-    list[float | None],
-    list[float | None],
-    tuple[list[float | None], ...],
-    list[float],
-    list[float],
-    tuple[list[float], ...],
-    list[float | str],
-    list[float | None],
-    list[float | None],
-    list[float | None],
+    Sequence[float | None],
+    Sequence[float | None],
+    Sequence[Sequence[float | None]],
+    Sequence[float],
+    Sequence[float],
+    Sequence[Sequence[float]],
+    Sequence[Sequence[float | str]],
+    Sequence[float | None],
+    Sequence[float | None],
+    Sequence[float | None],
     float,
     float,
     float,
@@ -304,28 +340,28 @@ def _prepare_search_graph_scatter_data(
     float,
     float,
 ]:  # edge_x, edge_y, edge_z, node_x, node_y, node_z, node_color, stem_x, stem_y, stem_z, min_x, max_x, min_y, max_y, min_z, max_z
-    edge_x = []
-    edge_y = []
-    edge_z = tuple([] for _ in range(number_of_scatters))
-    node_x = []
-    node_y = []
-    node_z = tuple([] for _ in range(number_of_scatters))
-    node_color = tuple([] for _ in range(number_of_scatters))
-    stem_x = []
-    stem_y = []
-    stem_z = []
-    min_x = None
-    max_x = None
-    min_y = None
-    max_y = None
-    min_z = None
-    max_z = None
+    edge_x: list[float | None] = []
+    edge_y: list[float | None] = []
+    edge_z: tuple[list[float | None], ...] = tuple([] for _ in range(number_of_scatters))
+    node_x: list[float] = []
+    node_y: list[float] = []
+    node_z: tuple[list[float], ...] = tuple([] for _ in range(number_of_scatters))
+    node_color: tuple[list[float | str], ...] = tuple([] for _ in range(number_of_scatters))
+    stem_x: list[float | None] = []
+    stem_y: list[float | None] = []
+    stem_z: list[float | None] = []
+    min_x: float | None = None
+    max_x: float | None = None
+    min_y: float | None = None
+    max_y: float | None = None
+    min_z: float | None = None
+    max_z: float | None = None
 
     for node in search_graph.nodes():
         node_params = search_graph.nodes[node]["data"]
         nx, ny = search_pos[node]
-        min_nz = 0
-        max_nz = 0
+        min_nz = 0.0
+        max_nz = 0.0
 
         node_x.append(nx)
         node_y.append(ny)
@@ -345,7 +381,7 @@ def _prepare_search_graph_scatter_data(
                 stem_x.append(None)
                 stem_y.append(None)
                 stem_z.append(None)
-        if min_x is None:
+        if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
             min_x = nx
             max_x = nx
             min_y = ny
@@ -361,10 +397,11 @@ def _prepare_search_graph_scatter_data(
                 min_z = min(min_z, min_nz)
                 max_z = max(max_z, max_nz)
 
-        ncolor = None
+        ncolor: float | str | None = None
         if len(search_node_color) == 1:
             ncolor = search_node_color[0](node_params) if callable(search_node_color[0]) else search_node_color[0]
         for i in range(number_of_scatters):
+            curr_color = search_node_color[i]
             prio_color = (
                 prioritize_search_node_color[i]
                 if len(prioritize_search_node_color) > 1
@@ -376,10 +413,14 @@ def _prepare_search_graph_scatter_data(
                 node_color[i].append(color_valid_mapping)
             elif ncolor is not None:
                 node_color[i].append(ncolor)
-            elif callable(search_node_color[i]):
-                node_color[i].append(search_node_color[i](node_params))
+            elif callable(curr_color):
+                node_color[i].append(curr_color(node_params))
             else:
-                node_color[i].append(search_node_color[i])
+                node_color[i].append(curr_color)
+
+    if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
+        msg = "No nodes in search graph."
+        raise ValueError(msg)
 
     if draw_edges:
         nodes_indices = {}
@@ -421,13 +462,13 @@ def _prepare_search_graph_scatter_data(
 
 
 def _draw_search_graph_nodes(
-    scatters: list[go.Scatter | go.Scatter3d],
-    x: list[float],
-    y: list[float],
-    z: tuple[list[float], ...],
-    color: list[float | str],
+    scatters: Sequence[go.Scatter | go.Scatter3d],
+    x: Sequence[float],
+    y: Sequence[float],
+    z: Sequence[Sequence[float]],
+    color: Sequence[Sequence[float | str]],
     use3d: bool,
-):
+) -> None:
     for i in range(len(scatters)):
         scatters[i].x = x
         scatters[i].y = y
@@ -436,15 +477,19 @@ def _draw_search_graph_nodes(
         scatters[i].marker.color = color[i] if len(color) > 1 else color[0]
 
 
-def _draw_search_graph_stems(scatter: go.Scatter3d, x: list[float], y: list[float], z: list[float]):
+def _draw_search_graph_stems(scatter: go.Scatter3d, x: Sequence[float], y: Sequence[float], z: Sequence[float]) -> None:
     scatter.x = x
     scatter.y = y
     scatter.z = z
 
 
 def _draw_search_graph_edges(
-    scatters: list[go.Scatter | go.Scatter3d], x: list[float], y: list[float], z: tuple[list[float], ...], use3d: bool
-):
+    scatters: Sequence[go.Scatter | go.Scatter3d],
+    x: Sequence[float],
+    y: Sequence[float],
+    z: Sequence[Sequence[float]],
+    use3d: bool,
+) -> None:
     for i in range(len(scatters)):
         scatters[i].x = x
         scatters[i].y = y
@@ -454,25 +499,25 @@ def _draw_search_graph_edges(
 
 def _parse_arch_graph(file_path: str) -> nx.Graph:
     arch = None
-    with open(file_path) as file:
+    with Path(file_path).open() as file:
         arch = json.load(file)
     fidelity = None
     if "fidelity" in arch:
         fidelity = arch["fidelity"]
 
-    edges = set()
-    nqbits = 0
+    edges: set[tuple[int, int, float]] = set()
+    nqbits: int = 0
     for q0, q1 in arch["coupling_map"]:
-        edge = (q0, q1) if q0 < q1 else (q1, q0)
+        edge: tuple[int, int] = (q0, q1) if q0 < q1 else (q1, q0)
         if fidelity is not None:
-            edge += (fidelity["swap_fidelity_costs"][q0][q1],)
+            cost_edge: tuple[int, int, float] = (*edge, fidelity["swap_fidelity_costs"][q0][q1])
         else:
-            edge += (float(30),)
+            cost_edge = (*edge, float(30))
             # TODO: this is the cost of 1 swap for the non-noise-aware heuristic
             # mapper; depending on directionality this might be different; once
             # more dynamic swap cost system in Architecture.cpp is implemented
             # replace with dynamic cost lookup
-        edges.add(edge)
+        edges.add(cost_edge)
         nqbits = max(nqbits, q0, q1)
     nqbits += 1
 
@@ -483,13 +528,13 @@ def _parse_arch_graph(file_path: str) -> nx.Graph:
 
 
 def _draw_architecture_edges(
-    arch_graph: nx.Graph, arch_pos: dict[int, Position], plotly_settings: dict[str, dict[str, Any]]
+    arch_graph: nx.Graph, arch_pos: MutableMapping[int, Position], plotly_settings: _PlotlySettings
 ) -> tuple[go.Scatter, go.Scatter]:
-    edge_x = []
-    edge_y = []
-    edge_label_x = []
-    edge_label_y = []
-    edge_label_text = []
+    edge_x: list[float | None] = []
+    edge_y: list[float | None] = []
+    edge_label_x: list[float] = []
+    edge_label_y: list[float] = []
+    edge_label_text: list[str] = []
     for n1, n2 in arch_graph.edges():
         x0, y0 = arch_pos[n1]
         x1, y1 = arch_pos[n2]
@@ -517,12 +562,12 @@ def _draw_architecture_edges(
 
 def _draw_architecture_nodes(
     scatter: go.Scatter,
-    arch_pos: dict[int, Position],
-    considered_qubit_colors: dict[int, str],
-    initial_qubit_position: list[int],
-    single_qubit_multiplicity: list[int],
-    two_qubit_individual_multiplicity: list[int],
-):
+    arch_pos: MutableMapping[int, Position],
+    considered_qubit_colors: MutableMapping[int, str],
+    initial_qubit_position: Sequence[int],
+    single_qubit_multiplicity: Sequence[int],
+    two_qubit_individual_multiplicity: Sequence[int],
+) -> None:
     x = []
     y = []
     color = []
@@ -547,21 +592,21 @@ def _draw_architecture_nodes(
 
 
 def _draw_swap_arrows(
-    arch_pos: dict[int, Position],
+    arch_pos: MutableMapping[int, Position],
     initial_layout: list[int],
-    swaps: tuple[tuple[int, int], ...],
-    considered_qubit_colors: dict[int, str],
+    swaps: Sequence[tuple[int, int]],
+    considered_qubit_colors: MutableMapping[int, str],
     arrow_offset: float,
     arrow_spacing_x: float,
     arrow_spacing_y: float,
     shared_swaps: bool,
-    plotly_settings: dict[str, dict[str, Any]],
+    plotly_settings: _PlotlySettings,
 ) -> list[go.layout.Annotation]:
     layout = initial_layout.copy()
 
-    swap_arrow_props = (
-        {}
-    )  # (q0, q1) -> [{color: str, straight: bool, color2: Optional[str]}, ...]    \\ q0 < q1, color2 is color at shaft side of arrow for a shared swap
+    swap_arrow_props: dict[tuple[int, int], list[_SwapArrowProps]] = {}
+    # (q0, q1) -> [{color: str, straight: bool, color2: Optional[str]}, ...]
+    #   q0 < q1, color2 is color at shaft side of arrow for a shared swap
     for sw in swaps:
         edge = (sw[0], sw[1]) if sw[0] < sw[1] else (sw[1], sw[0])
         if edge not in swap_arrow_props:
@@ -657,31 +702,31 @@ def _visualize_layout(
     fig: go.Figure,
     search_node: SearchNode,
     arch_node_trace: go.Scatter,
-    arch_node_positions: dict[int, Position],
+    arch_node_positions: MutableMapping[int, Position],
     initial_layout: list[int],
-    considered_qubit_colors: dict[int, str],
+    considered_qubit_colors: MutableMapping[int, str],
     swap_arrow_offset: float,
     arch_x_arrow_spacing: float,
     arch_y_arrow_spacing: float,
     show_shared_swaps: bool,
     layout_node_trace_index: int,  # current_node_layout_visualized
     search_node_trace: go.Scatter | None,
-    plotly_settings: dict[str, dict[str, Any]],
-):
+    plotly_settings: _PlotlySettings,
+) -> None:
     layout = search_node.layout
     swaps = search_node.swaps
     _copy_to_dict(
         plotly_settings["stats_legend"],
         {
-            "text": f"Node:   <b>{search_node.id}</b><br>"
-            + f"Cost:     <b>{search_node.total_cost():.3f}</b> = {search_node.fixed_cost:.3f} + "
-            + f"{search_node.heuristic_cost:.3f} + {search_node.lookahead_penalty:.3f} (fixed + heuristic + lookahead)<br>"
-            + f"Depth:  {search_node.depth}<br>"
-            + f'Valid / Final:  {"yes" if search_node.is_valid_mapping else "no"} / {"yes" if search_node.final else "no"}',
+            "text": f"Node:   <b>{search_node.nodeid}</b><br>"
+            f"Cost:     <b>{search_node.total_cost():.3f}</b> = {search_node.fixed_cost:.3f} + "
+            f"{search_node.heuristic_cost:.3f} + {search_node.lookahead_penalty:.3f} (fixed + heuristic + lookahead)<br>"
+            f"Depth:  {search_node.depth}<br>"
+            f'Valid / Final:  {"yes" if search_node.is_valid_mapping else "no"} / {"yes" if search_node.final else "no"}',
         },
     )
     stats = go.layout.Annotation(**plotly_settings["stats_legend"])
-    annotations = []
+    annotations: list[go.layout.Annotation] = []
     if len(swaps) > 0:
         annotations = _draw_swap_arrows(
             arch_node_positions,
@@ -720,13 +765,13 @@ def _visualize_layout(
 def _load_layer_data(
     data_logging_path: str,
     layer: int,
-    layout_method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
+    layout: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
     tapered_layer_heights: bool,
     number_of_node_traces: int,
     use3d: bool,
-    node_color: list[str | Callable[[SearchNode], float]],
-    prioritize_node_color: list[bool],
-    node_height: list[Callable[[SearchNode], float]],
+    node_color: Sequence[str | Callable[[SearchNode], float]],
+    prioritize_node_color: Sequence[bool],
+    node_height: Sequence[Callable[[SearchNode], float]],
     color_valid_mapping: str | None,
     color_final_node: str | None,
     draw_stems: bool,
@@ -735,21 +780,21 @@ def _load_layer_data(
     nx.Graph,  # search_graph
     list[int],  # initial_layout
     list[int],  # initial_qbit_positions
-    dict[int, str],  # considered_qubit_colors
-    list[int],  # single_qbit_multiplicities
-    list[TwoQbitMultiplicity],  # two_qbit_multiplicities
-    list[int],  # individual_two_qbit_multiplicities
+    MutableMapping[int, str],  # considered_qubit_colors
+    Sequence[int],  # single_qbit_multiplicities
+    Sequence[_TwoQbitMultiplicity],  # two_qbit_multiplicities
+    Sequence[int],  # individual_two_qbit_multiplicities
     int,  # final_node_id
-    list[float],  # search_node_scatter_data_x
-    list[float],  # search_node_scatter_data_y
-    list[list[float]],  # search_node_scatter_data_z
-    list[list[float | str]],  # search_node_scatter_data_color
-    list[float],  # search_node_stem_scatter_data_x
-    list[float],  # search_node_stem_scatter_data_y
-    list[float],  # search_node_stem_scatter_data_z
-    list[float],  # search_edge_scatter_data_x
-    list[float],  # search_edge_scatter_data_y
-    list[list[float]],  # search_edge_scatter_data_z
+    Sequence[float],  # search_node_scatter_data_x
+    Sequence[float],  # search_node_scatter_data_y
+    Sequence[Sequence[float]],  # search_node_scatter_data_z
+    Sequence[Sequence[float | str]],  # search_node_scatter_data_color
+    Sequence[float],  # search_node_stem_scatter_data_x
+    Sequence[float],  # search_node_stem_scatter_data_y
+    Sequence[float],  # search_node_stem_scatter_data_z
+    Sequence[float],  # search_edge_scatter_data_x
+    Sequence[float],  # search_edge_scatter_data_y
+    Sequence[Sequence[float]],  # search_edge_scatter_data_z
     float,  # search_min_x
     float,  # search_max_x
     float,  # search_min_y
@@ -757,29 +802,29 @@ def _load_layer_data(
     float,  # search_min_z
     float,  # search_max_z
 ]:
-    if not os.path.exists(f"{data_logging_path}layer_{layer}.json"):
+    if not Path(f"{data_logging_path}layer_{layer}.json").exists():
         msg = f"No data at {data_logging_path}layer_{layer}.json"
         raise FileNotFoundError(msg)
-    if not os.path.exists(f"{data_logging_path}nodes_layer_{layer}.csv"):
+    if not Path(f"{data_logging_path}nodes_layer_{layer}.csv").exists():
         msg = f"No data at {data_logging_path}nodes_layer_{layer}.csv"
         raise FileNotFoundError(msg)
 
     circuit_layer = None
-    with open(f"{data_logging_path}layer_{layer}.json") as circuit_layer_file:
+    with Path(f"{data_logging_path}layer_{layer}.json").open() as circuit_layer_file:
         circuit_layer = json.load(circuit_layer_file)
 
     single_q_mult = circuit_layer["single_qubit_multiplicity"]
     two_q_mult_raw = circuit_layer["two_qubit_multiplicity"]
-    two_q_mult: list[TwoQbitMultiplicity] = []
-    for mult in two_q_mult_raw:
-        two_q_mult.append(TwoQbitMultiplicity(mult["q1"], mult["q2"], mult["backward"], mult["forward"]))
+    two_q_mult = [
+        _TwoQbitMultiplicity(mult["q1"], mult["q2"], mult["backward"], mult["forward"]) for mult in two_q_mult_raw
+    ]
     initial_layout = circuit_layer["initial_layout"]
     initial_positions = _reverse_layout(initial_layout)
     final_node_id = circuit_layer["final_node_id"]
 
     graph, graph_root = _parse_search_graph(f"{data_logging_path}nodes_layer_{layer}.csv", final_node_id)
 
-    pos = _layout_search_graph(graph, graph_root, layout_method, tapered_layer_heights)
+    pos = _layout_search_graph(graph, graph_root, layout, tapered_layer_heights)
 
     (
         edge_x,
@@ -812,27 +857,28 @@ def _load_layer_data(
         draw_edges,
     )
 
-    considered_qubit_colors = {}
+    considered_qubit_color_groups: dict[int, int] = {}
     considered_qubit_ngroups = 0
     two_q_mult_individual = [0] * len(single_q_mult)
     for mult in two_q_mult:
         two_q_mult_individual[mult.q0] += mult.backward + mult.forward
         two_q_mult_individual[mult.q1] += mult.backward + mult.forward
-        considered_qubit_colors[mult.q0] = considered_qubit_ngroups
-        considered_qubit_colors[mult.q1] = considered_qubit_ngroups
+        considered_qubit_color_groups[mult.q0] = considered_qubit_ngroups
+        considered_qubit_color_groups[mult.q1] = considered_qubit_ngroups
         considered_qubit_ngroups += 1
     for i, q in enumerate(single_q_mult):
-        if q != 0 and i not in considered_qubit_colors:
-            considered_qubit_colors[i] = considered_qubit_ngroups
+        if q != 0 and i not in considered_qubit_color_groups:
+            considered_qubit_color_groups[i] = considered_qubit_ngroups
             considered_qubit_ngroups += 1
     considered_qubits_color_codes = [
         distinctipy.get_hex(c) for c in distinctipy.get_colors(max(10, considered_qubit_ngroups))
     ]
     shuffle(considered_qubits_color_codes)
+    considered_qubit_colors: dict[int, str] = {}
     for q in considered_qubit_colors:
-        considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_colors[q]]
+        considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_color_groups[q]]
 
-    return (
+    return (  # type: ignore[return-value]
         graph,
         initial_layout,
         initial_positions,
@@ -880,22 +926,20 @@ def _lookahead_penalty_lambda(n: SearchNode) -> float:
     return n.lookahead_penalty
 
 
+_cost_string_lambdas = {
+    "total_cost": _total_cost_lambda,
+    "total_fixed_cost": _total_fixed_cost_lambda,
+    "fixed_cost": _fixed_cost_lambda,
+    "heuristic_cost": _heuristic_cost_lambda,
+    "lookahead_penalty": _lookahead_penalty_lambda,
+}
+
+
 def _cost_string_to_lambda(cost_string: str) -> Callable[[SearchNode], float] | None:
-    if cost_string == "total_cost":
-        return _total_cost_lambda
-    elif cost_string == "total_fixed_cost":
-        return _total_fixed_cost_lambda
-    elif cost_string == "fixed_cost":
-        return _fixed_cost_lambda
-    elif cost_string == "heuristic_cost":
-        return _heuristic_cost_lambda
-    elif cost_string == "lookahead_penalty":
-        return _lookahead_penalty_lambda
-    else:
-        return None
+    return _cost_string_lambdas.get(cost_string, None)
 
 
-default_plotly_settings = {
+default_plotly_settings: _PlotlySettings = {
     "layout": {
         "autosize": False,
         "showlegend": False,
@@ -957,9 +1001,9 @@ default_plotly_settings = {
 def _visualize_search_graph_check_parameters(
     data_logging_path: str,
     layer: int | Literal["interactive"],
-    architecture_node_positions: dict[int, Position] | None,
-    architecture_layout_method: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
-    search_node_layout_method: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
+    architecture_node_positions: MutableMapping[int, Position] | None,
+    architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
+    search_node_layout: Literal["walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"],
     search_graph_border: float,
     architecture_border: float,
     swap_arrow_spacing: float,
@@ -978,13 +1022,13 @@ def _visualize_search_graph_check_parameters(
     show_shared_swaps: bool,
     color_valid_mapping: str | None,
     color_final_node: str | None,
-    search_node_color: str | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]),
-    prioritize_search_node_color: bool | list[bool],
-    search_node_color_scale: Colorscale | list[Colorscale],
-    search_node_invert_color_scale: bool | list[bool],
-    search_node_colorbar_title: str | list[str | None] | None,
+    search_node_color: str | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]),
+    prioritize_search_node_color: bool | Sequence[bool],
+    search_node_color_scale: Colorscale | Sequence[Colorscale],
+    search_node_invert_color_scale: bool | Sequence[bool],
+    search_node_colorbar_title: str | Sequence[str | None] | None,
     search_node_colorbar_spacing: float,
-    search_node_height: str | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]),
+    search_node_height: str | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]),
     draw_stems: bool,
     stems_width: float,
     stems_color: str,
@@ -992,56 +1036,56 @@ def _visualize_search_graph_check_parameters(
     show_search_progression: bool,
     search_progression_step: int,
     search_progression_speed: float,
-    plotly_settings: dict[str, dict[str, Any]],
+    plotly_settings: MutableMapping[str, MutableMapping[str, object]],
 ) -> tuple[
     str,  # data_logging_path
     bool,  # hide_layout
     bool,  # draw_stems
     int,  # number_of_node_traces
-    list[Callable[[SearchNode], float]],  # search_node_height
-    list[str | Callable[[SearchNode], float]],  # search_node_color
-    list[Colorscale],  # search_node_color_scale
-    list[bool],  # search_node_invert_color_scale
-    list[bool],  # prioritize_search_node_color
-    list[str],  # search_node_colorbar_title
-    dict[str, dict[str, Any]],  # plotly_settings
+    Sequence[Callable[[SearchNode], float]],  # search_node_height
+    Sequence[str | Callable[[SearchNode], float]],  # search_node_color
+    Sequence[Colorscale],  # search_node_color_scale
+    Sequence[bool],  # search_node_invert_color_scale
+    Sequence[bool],  # prioritize_search_node_color
+    Sequence[str],  # search_node_colorbar_title
+    _PlotlySettings,  # plotly_settings
 ]:
-    if type(data_logging_path) is not str:
-        msg = "data_logging_path must be a string"
-        raise ValueError(msg)
+    if not isinstance(data_logging_path, str):
+        msg = "data_logging_path must be a string"  # type: ignore[unreachable]
+        raise TypeError(msg)
     if data_logging_path[-1] != "/":
         data_logging_path += "/"
-    if not os.path.exists(data_logging_path):
+    if not Path(data_logging_path).exists():
         msg = f"Path {data_logging_path} does not exist."
         raise FileNotFoundError(msg)
 
-    if type(layer) is not int and layer != "interactive":
-        msg = 'layer must be an integer or string literal "interactive"'
-        raise ValueError(msg)
+    if not isinstance(layer, int) and layer != "interactive":
+        msg = 'layer must be an integer or string literal "interactive"'  # type: ignore[unreachable]
+        raise TypeError(msg)
 
     if architecture_node_positions is not None:
-        if type(architecture_node_positions) is not dict:
+        if not isinstance(architecture_node_positions, dict):
             msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
-            raise ValueError(msg)
+            raise TypeError(msg)
         for i in architecture_node_positions:
-            if type(i) is not int:
+            if not isinstance(i, int):
                 msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
-                raise ValueError(msg)
-            if type(architecture_node_positions[i]) is not tuple:
+                raise TypeError(msg)
+            if not isinstance(architecture_node_positions[i], tuple):
                 msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
-                raise ValueError(msg)
+                raise TypeError(msg)
             if len(architecture_node_positions[i]) != 2:
                 msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
-                raise ValueError(msg)
+                raise TypeError(msg)
             if not _is_number(architecture_node_positions[i][0]) or not _is_number(architecture_node_positions[i][1]):
                 msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
-                raise ValueError(msg)
+                raise TypeError(msg)
 
-    if architecture_layout_method not in ["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"]:
-        msg = 'architecture_layout_method must be one of "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
-        raise ValueError(msg)
+    if architecture_layout not in ["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"]:
+        msg = 'architecture_layout must be one of "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
+        raise TypeError(msg)
 
-    if search_node_layout_method not in [
+    if search_node_layout not in [
         "walker",
         "dot",
         "neato",
@@ -1052,82 +1096,83 @@ def _visualize_search_graph_check_parameters(
         "osage",
         "patchwork",
     ]:
-        msg = 'search_node_layout_method must be one of "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
-        raise ValueError(msg)
+        msg = 'search_node_layout must be one of "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
+        raise TypeError(msg)
 
     if not _is_number(search_graph_border) or search_graph_border < 0:
         msg = "search_graph_border must be a non-negative float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if not _is_number(architecture_border) or architecture_border < 0:
         msg = "architecture_border must be a non-negative float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if not _is_number(swap_arrow_spacing) or swap_arrow_spacing < 0:
         msg = "swap_arrow_spacing must be a non-negative float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if not _is_number(swap_arrow_offset) or swap_arrow_offset < 0 or swap_arrow_offset >= 0.5:
         msg = "swap_arrow_offset must be a float between 0 and 0.5"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    if type(use3d) is not bool:
-        msg = "use3d must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(use3d, bool):
+        msg = "use3d must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
     if projection != "orthographic" and projection != "perspective":
-        msg = 'projection must be either "orthographic" or "perspective"'
-        raise ValueError(msg)
+        msg = 'projection must be either "orthographic" or "perspective"'  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if type(width) is not int or width < 1:
+    if not isinstance(width, int) or width < 1:  # type: ignore[redundant-expr]
         msg = "width must be a positive integer"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    if type(height) is not int or height < 1:
+    if not isinstance(height, int) or height < 1:  # type: ignore[redundant-expr]
         msg = "height must be a positive integer"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    if type(draw_search_edges) is not bool:
-        msg = "draw_search_edges must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(draw_search_edges, bool):
+        msg = "draw_search_edges must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if type(search_edges_width) is not float or search_edges_width <= 0:
+    if not isinstance(search_edges_width, float) or search_edges_width <= 0:  # type: ignore[redundant-expr]
         msg = "search_edges_width must be a positive float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if ColorValidator.perform_validate_coerce(search_edges_color, allow_number=False) is None:
-        raise ValueError(ColorValidator("search_edges_color", "visualize_search_graph").description())
+        raise TypeError(ColorValidator("search_edges_color", "visualize_search_graph").description())
 
     if search_edges_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not re.match(
         r"^(\d+(px|%)?(\s*\d+(px|%)?)*)$", search_edges_dash
     ):
-        raise ValueError(
+        msg = (
             'search_edges_dash must be one of "solid", "dot", "dash", "longdash", "dashdot", "longdashdot" or a string containing a dash length list in '
-            + r'pixels or percentages (e.g. "5px 10px 2px 2px", "5, 10, 2, 2", "10\% 20\% 40\%")'
+            r'pixels or percentages (e.g. "5px 10px 2px 2px", "5, 10, 2, 2", "10\% 20\% 40\%")'
         )
+        raise TypeError(msg)
 
-    if type(tapered_search_layer_heights) is not bool:
-        msg = "tapered_search_layer_heights must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(tapered_search_layer_heights, bool):
+        msg = "tapered_search_layer_heights must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
     if show_layout not in ["hover", "click"] and show_layout is not None:
         msg = 'show_layout must be one of "hover", "click" or None'
-        raise ValueError(msg)
+        raise TypeError(msg)
     hide_layout = show_layout is None
 
-    if type(show_swaps) is not bool:
-        msg = "show_swaps must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(show_swaps, bool):
+        msg = "show_swaps must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if type(show_shared_swaps) is not bool:
-        msg = "show_shared_swaps must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(show_shared_swaps, bool):
+        msg = "show_shared_swaps must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
     if (
         color_valid_mapping is not None
         and ColorValidator.perform_validate_coerce(color_valid_mapping, allow_number=False) is None
     ):
-        raise ValueError(
+        raise TypeError(
             "color_valid_mapping must be None or a color specified as:\n"
             + _remove_first_lines(ColorValidator("color_valid_mapping", "visualize_search_graph").description(), 1)
         )
@@ -1136,45 +1181,46 @@ def _visualize_search_graph_check_parameters(
         color_final_node is not None
         and ColorValidator.perform_validate_coerce(color_final_node, allow_number=False) is None
     ):
-        raise ValueError(
+        raise TypeError(
             "color_final_node must be None or a color specified as:\n"
             + _remove_first_lines(ColorValidator("color_final_node", "visualize_search_graph").description(), 1)
         )
 
-    if type(draw_stems) is not bool:
-        msg = "draw_stems must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(draw_stems, bool):
+        msg = "draw_stems must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if type(stems_width) is not float or stems_width <= 0:
+    if not isinstance(stems_width, float) or stems_width <= 0:  # type: ignore[redundant-expr]
         msg = "stems_width must be a positive float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if ColorValidator.perform_validate_coerce(stems_color, allow_number=False) is None:
-        raise ValueError(ColorValidator("stems_color", "visualize_search_graph").description())
+        raise TypeError(ColorValidator("stems_color", "visualize_search_graph").description())
 
     if stems_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not re.match(
         r"^(\d+(px|%)?(\s*\d+(px|%)?)*)$", stems_dash
     ):
-        raise ValueError(
+        msg = (
             'stems_dash must be one of "solid", "dot", "dash", "longdash", "dashdot", "longdashdot" or a string containing a dash length list in '
-            + r'pixels or percentages (e.g. "5px 10px 2px 2px", "5, 10, 2, 2", "10\% 20\% 40\%")'
+            r'pixels or percentages (e.g. "5px 10px 2px 2px", "5, 10, 2, 2", "10\% 20\% 40\%")'
         )
+        raise TypeError(msg)
 
-    if type(show_search_progression) is not bool:
-        msg = "show_search_progression must be a boolean"
-        raise ValueError(msg)
+    if not isinstance(show_search_progression, bool):
+        msg = "show_search_progression must be a boolean"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if type(search_progression_step) is not int or search_progression_step < 1:
+    if not isinstance(search_progression_step, int) or search_progression_step < 1:  # type: ignore[redundant-expr]
         msg = "search_porgression_step must be a positive integer"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if not _is_number(search_progression_speed) or search_progression_speed <= 0:
         msg = "search_progression_speed must be a positive float"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    if type(plotly_settings) is not dict and any(
+    if not isinstance(plotly_settings, dict) or any(
         (
-            type(plotly_settings[key]) is not dict
+            not isinstance(plotly_settings[key], dict)
             or key
             not in [
                 "layout",
@@ -1194,24 +1240,25 @@ def _visualize_search_graph_check_parameters(
         )
         for key in plotly_settings
     ):
-        raise ValueError(
+        msg = (
             "plotly_settings must be a dict with any of these entries:"
-            + "{\n"
-            + "    'layout': settings for plotly.graph_objects.Layout (of subplots figure)\n"
-            + "    'arrows': settings for plotly.graph_objects.layout.Annotation\n"
-            + "    'stats_legend': settings for plotly.graph_objects.layout.Annotation\n"
-            + "    'search_nodes': settings for plotly.graph_objects.Scatter resp. ...Scatter3d\n"
-            + "    'search_edges': settings for plotly.graph_objects.Scatter resp. ...Scatter3d\n"
-            + "    'architecture_nodes': settings for plotly.graph_objects.Scatter\n"
-            + "    'architecture_edges': settings for plotly.graph_objects.Scatter\n"
-            + "    'architecture_edge_labels': settings for plotly.graph_objects.Scatter\n"
-            + "    'search_xaxis': settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis\n"
-            + "    'search_yaxis': settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis\n"
-            + "    'search_zaxis': settings for plotly.graph_objects.layout.scene.ZAxis\n"
-            + "    'architecture_xaxis': settings for plotly.graph_objects.layout.XAxis\n"
-            + "    'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis\n"
-            + "}"
+            "{\n"
+            "    'layout': settings for plotly.graph_objects.Layout (of subplots figure)\n"
+            "    'arrows': settings for plotly.graph_objects.layout.Annotation\n"
+            "    'stats_legend': settings for plotly.graph_objects.layout.Annotation\n"
+            "    'search_nodes': settings for plotly.graph_objects.Scatter resp. ...Scatter3d\n"
+            "    'search_edges': settings for plotly.graph_objects.Scatter resp. ...Scatter3d\n"
+            "    'architecture_nodes': settings for plotly.graph_objects.Scatter\n"
+            "    'architecture_edges': settings for plotly.graph_objects.Scatter\n"
+            "    'architecture_edge_labels': settings for plotly.graph_objects.Scatter\n"
+            "    'search_xaxis': settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis\n"
+            "    'search_yaxis': settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis\n"
+            "    'search_zaxis': settings for plotly.graph_objects.layout.scene.ZAxis\n"
+            "    'architecture_xaxis': settings for plotly.graph_objects.layout.XAxis\n"
+            "    'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis\n"
+            "}"
         )
+        raise TypeError(msg)
 
     plotly_set = deepcopy(default_plotly_settings)
     plotly_set["layout"]["width"] = width
@@ -1234,9 +1281,13 @@ def _visualize_search_graph_check_parameters(
         plotly_set["arrows"]["yref"] = "y2"
         plotly_set["arrows"]["axref"] = "x2"
         plotly_set["arrows"]["ayref"] = "y2"
-    _copy_to_dict(plotly_set, plotly_settings)
+    _copy_to_dict(plotly_set, plotly_settings)  # type: ignore[arg-type]
 
-    number_of_node_traces = len(search_node_height) if use3d and _is_len_iterable(search_node_height) else 1
+    number_of_node_traces = (
+        len(search_node_height)
+        if use3d and isinstance(search_node_height, Sequence) and not isinstance(search_node_height, str)
+        else 1
+    )
 
     if (
         not _is_number(search_node_colorbar_spacing)
@@ -1244,29 +1295,30 @@ def _visualize_search_graph_check_parameters(
         or search_node_colorbar_spacing >= 1
     ):
         msg = "search_node_colorbar_spacing must be a float between 0 and 1"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if search_node_colorbar_title is None:
         search_node_colorbar_title = [None] * number_of_node_traces
-    if _is_len_iterable(search_node_colorbar_title):
+    if isinstance(search_node_colorbar_title, Sequence) and not isinstance(search_node_colorbar_title, str):  # type: ignore[redundant-expr]
+        search_node_colorbar_title = list(search_node_colorbar_title)
         if len(search_node_colorbar_title) > 1 and not use3d:
             msg = "search_node_colorbar_title can only be a list in a 3D plot."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if len(search_node_colorbar_title) != number_of_node_traces:
             msg = f"Length of search_node_colorbar_title ({len(search_node_colorbar_title)}) does not match length of search_node_height ({number_of_node_traces})."
-            raise ValueError(msg)
+            raise TypeError(msg)
         untitled = 1
         for i, title in enumerate(search_node_colorbar_title):
             if title is None:
                 color = None
-                if _is_len_iterable(search_node_color):
+                if isinstance(search_node_color, Sequence) and not isinstance(search_node_color, str):
                     if len(search_node_color) == len(search_node_colorbar_title):
                         color = search_node_color[i]
                     else:
                         color = search_node_color[0]
                 else:
                     color = search_node_color
-                if type(color) is not str:
+                if not isinstance(color, str):
                     search_node_colorbar_title[i] = f"Untitled{untitled}"
                     untitled += 1
                 elif color == "total_cost":
@@ -1281,151 +1333,158 @@ def _visualize_search_graph_check_parameters(
                     search_node_colorbar_title[i] = "Lookahead penalty"
                 else:
                     search_node_colorbar_title[i] = color
-            elif type(title) is not str:
-                msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
-                raise ValueError(msg)
-    elif type(search_node_colorbar_title) is str:
+            elif not isinstance(title, str):
+                msg = "search_node_colorbar_title must be None, a string, or list of strings and None."  # type: ignore[unreachable]
+                raise TypeError(msg)
+    elif isinstance(search_node_colorbar_title, str):
         search_node_colorbar_title = [search_node_colorbar_title] * number_of_node_traces
     else:
-        msg = "search_node_colorbar_title must be None, a string, or list of strings and None."
-        raise ValueError(msg)
+        msg = "search_node_colorbar_title must be None, a string, or list of strings and None."  # type: ignore[unreachable]
+        raise TypeError(msg)
 
-    if _is_len_iterable(search_node_color_scale):
+    if isinstance(search_node_color_scale, Sequence) and not isinstance(search_node_color_scale, str):  # type: ignore[redundant-expr]
         if len(search_node_color_scale) > 1 and not use3d:
             msg = "search_node_color_scale can only be a list in a 3D plot."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if len(search_node_color_scale) != number_of_node_traces:
             msg = f"Length of search_node_color_scale ({len(search_node_color_scale)}) does not match length of search_node_height ({number_of_node_traces})."
-            raise ValueError(msg)
+            raise TypeError(msg)
         cs_validator = ColorscaleValidator("search_node_color_scale", "visualize_search_graph")
-        for cs in search_node_color_scale:
-            try:
+        try:
+            for cs in search_node_color_scale:
                 cs_validator.validate_coerce(cs)
-            except:
-                raise ValueError(
-                    "search_node_color_scale must be a list of colorscales or a colorscale, specified as:\n"
-                    + _remove_first_lines(cs_validator.description(), 1)
-                )
+        except ValueError as err:
+            msg = (
+                "search_node_color_scale must be a list of colorscales or a colorscale, specified as:\n"
+                + _remove_first_lines(cs_validator.description(), 1)
+            )
+            raise TypeError(msg) from err
     else:
         cs_validator = ColorscaleValidator("search_node_color_scale", "visualize_search_graph")
         try:
             cs_validator.validate_coerce(search_node_color_scale)
-        except:
-            raise ValueError(
+        except ValueError as err:
+            msg = (
                 "search_node_color_scale must be a list of colorscales or a colorscale, specified as:\n"
                 + _remove_first_lines(cs_validator.description(), 1)
             )
+            raise TypeError(msg) from err
         search_node_color_scale = [search_node_color_scale] * number_of_node_traces
 
-    if _is_len_iterable(search_node_invert_color_scale):
+    if isinstance(search_node_invert_color_scale, Sequence) and not isinstance(search_node_invert_color_scale, str):  # type: ignore[unreachable]
         if len(search_node_invert_color_scale) > 1 and not use3d:
             msg = "search_node_invert_color_scale can only be a list in a 3D plot."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if len(search_node_invert_color_scale) != number_of_node_traces:
             msg = f"Length of search_node_invert_color_scale ({len(search_node_invert_color_scale)}) does not match length of search_node_height ({number_of_node_traces})."
-            raise ValueError(msg)
-        for i, invert in enumerate(search_node_invert_color_scale):
-            if type(invert) is not bool:
-                msg = "search_node_invert_color_scale must be a boolean or list of booleans."
-                raise ValueError(msg)
-    elif type(search_node_invert_color_scale) is not bool:
-        msg = "search_node_invert_color_scale must be a boolean or list of booleans."
-        raise ValueError(msg)
+            raise TypeError(msg)
+        for invert in search_node_invert_color_scale:
+            if not isinstance(invert, bool):
+                msg = "search_node_invert_color_scale must be a boolean or list of booleans."  # type: ignore[unreachable]
+                raise TypeError(msg)
+    elif not isinstance(search_node_invert_color_scale, bool):
+        msg = "search_node_invert_color_scale must be a boolean or list of booleans."  # type: ignore[unreachable]
+        raise TypeError(msg)
     else:
         search_node_invert_color_scale = [search_node_invert_color_scale] * number_of_node_traces
 
-    if _is_len_iterable(prioritize_search_node_color):
+    if isinstance(prioritize_search_node_color, Sequence) and not isinstance(prioritize_search_node_color, str):  # type: ignore[unreachable]
         if len(prioritize_search_node_color) > 1 and not use3d:
             msg = "prioritize_search_node_color can only be a list in a 3D plot."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if len(prioritize_search_node_color) != number_of_node_traces:
             msg = f"Length of prioritize_search_node_color ({len(prioritize_search_node_color)}) does not match length of search_node_height ({number_of_node_traces})."
-            raise ValueError(msg)
-        for i, invert in enumerate(prioritize_search_node_color):
-            if type(invert) is not bool:
-                msg = "prioritize_search_node_color must be a boolean or list of booleans."
-                raise ValueError(msg)
-    elif type(prioritize_search_node_color) is not bool:
-        msg = "prioritize_search_node_color must be a boolean or list of booleans."
-        raise ValueError(msg)
+            raise TypeError(msg)
+        for prioritize in prioritize_search_node_color:
+            if not isinstance(prioritize, bool):
+                msg = "prioritize_search_node_color must be a boolean or list of booleans."  # type: ignore[unreachable]
+                raise TypeError(msg)
+    elif not isinstance(prioritize_search_node_color, bool):
+        msg = "prioritize_search_node_color must be a boolean or list of booleans."  # type: ignore[unreachable]
+        raise TypeError(msg)
     else:
         prioritize_search_node_color = [prioritize_search_node_color] * number_of_node_traces
 
-    if _is_len_iterable(search_node_color):
+    if isinstance(search_node_color, Sequence) and not isinstance(search_node_color, str):
+        search_node_color = list(search_node_color)
         if len(search_node_color) > 1 and not use3d:
             msg = "search_node_color can only be a list in a 3D plot."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if len(search_node_color) != number_of_node_traces:
             msg = f"Length of search_node_color ({len(search_node_color)}) does not match length of search_node_height ({number_of_node_traces})."
-            raise ValueError(msg)
+            raise TypeError(msg)
         for i, c in enumerate(search_node_color):
             if isinstance(c, str):
-                l = _cost_string_to_lambda(c)
-                if l is not None:
-                    search_node_color[i] = l
+                cost_lambda = _cost_string_to_lambda(c)
+                if cost_lambda is not None:
+                    search_node_color[i] = cost_lambda
                 elif ColorValidator.perform_validate_coerce(c, allow_number=False) is None:
-                    raise ValueError(
+                    msg = (
                         f'search_node_color[{i}] is neither a valid cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", '
-                        + '"heuristic_cost", "lookahead_penalty") nor a respective callable, nor a valid color string specified as:\n'
+                        '"heuristic_cost", "lookahead_penalty") nor a respective callable, nor a valid color string specified as:\n'
                         + _remove_first_lines(
                             ColorValidator("search_node_color", "visualize_search_graph").description(), 1
                         )
                     )
+                    raise TypeError(msg)
                 else:  # static color
                     search_node_colorbar_title[i] = None
     elif isinstance(search_node_color, str):
-        l = _cost_string_to_lambda(search_node_color)
-        if l is not None:
-            search_node_color = [l]
+        cost_lambda = _cost_string_to_lambda(search_node_color)
+        if cost_lambda is not None:
+            search_node_color = [cost_lambda]
         elif ColorValidator.perform_validate_coerce(search_node_color, allow_number=False) is None:
-            raise ValueError(
+            msg = (
                 'search_node_color is neither a list nor a valid cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", '
-                + '"heuristic_cost", "lookahead_penalty") nor a respective callable, nor a valid color string specified as:\n'
+                '"heuristic_cost", "lookahead_penalty") nor a respective callable, nor a valid color string specified as:\n'
                 + _remove_first_lines(ColorValidator("search_node_color", "visualize_search_graph").description(), 1)
             )
+            raise TypeError(msg)
         else:  # static color
             search_node_color = [search_node_color]
             search_node_colorbar_title = [None] * number_of_node_traces
     else:
-        raise ValueError(
+        msg = (
             'search_node_color must be a cost function preset ("total_cost", "total_fixed_cost", "fixed_cost", "heuristic_cost", '
-            + '"lookahead_penalty") or a respective callable, or a valid color string, or a list of the above.'
+            '"lookahead_penalty") or a respective callable, or a valid color string, or a list of the above.'
         )
+        raise TypeError(msg)
 
     if use3d:
-        if _is_len_iterable(search_node_height):
+        if isinstance(search_node_height, Sequence) and not isinstance(search_node_height, str):
+            search_node_height = list(search_node_height)
             lambdas = set()
             for i, c in enumerate(search_node_height):
                 if isinstance(c, str):
-                    l = _cost_string_to_lambda(c)
-                    if l is None:
+                    cost_lambda = _cost_string_to_lambda(c)
+                    if cost_lambda is None:
                         msg = f"Unknown cost function preset search_node_height[{i}]: {c}"
-                        raise ValueError(msg)
-                    elif l in lambdas:
+                        raise TypeError(msg)
+                    if cost_lambda in lambdas:
                         msg = f"search_node_height must not contain the same cost function multiple times: {c}"
-                        raise ValueError(msg)
-                    else:
-                        search_node_height[i] = l
-                        lambdas.add(l)
+                        raise TypeError(msg)
+                    search_node_height[i] = cost_lambda
+                    lambdas.add(cost_lambda)
                 elif not callable(c):
-                    raise ValueError(
+                    msg = (  # type: ignore[unreachable]
                         "search_node_height must be a cost function preset ('total_cost', 'total_fixed_cost', 'fixed_cost', 'heuristic_cost', "
-                        + "'lookahead_penalty') or a respective callable, or a list of the above."
+                        "'lookahead_penalty') or a respective callable, or a list of the above."
                     )
+                    raise TypeError(msg)
         elif isinstance(search_node_height, str):
-            l = _cost_string_to_lambda(search_node_height)
-            if l is not None:
-                search_node_height = [l]
+            cost_lambda = _cost_string_to_lambda(search_node_height)
+            if cost_lambda is not None:
+                search_node_height = [cost_lambda]
             else:
                 msg = f"Unknown cost function preset search_node_height: {search_node_height}"
-                raise ValueError(msg)
+                raise TypeError(msg)
         else:
             msg = "search_node_height must be a list of cost functions or a single cost function."
-            raise ValueError(msg)
+            raise TypeError(msg)
     else:
         search_node_height = []
 
-    return (
+    return (  # type: ignore[return-value]
         data_logging_path,
         hide_layout,
         draw_stems,
@@ -1443,9 +1502,9 @@ def _visualize_search_graph_check_parameters(
 def visualize_search_graph(
     data_logging_path: str,
     layer: int | Literal["interactive"] = "interactive",  # 'interactive' (slider menu) | index
-    architecture_node_positions: dict[int, Position] | None = None,
-    architecture_layout_method: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
-    search_node_layout_method: Literal[
+    architecture_node_positions: MutableMapping[int, Position] | None = None,
+    architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
+    search_node_layout: Literal[
         "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"
     ] = "walker",
     search_graph_border: float = 0.05,
@@ -1466,18 +1525,20 @@ def visualize_search_graph(
     show_shared_swaps: bool = True,  # if one swap moves 2 considered qubits -> combine into one two-colored and two-headed arrow
     color_valid_mapping: str | None = "green",  # static HTML color (e.g. 'blue' or '#0000FF')
     color_final_node: str | None = "red",  # static HTML color (e.g. 'blue' or '#0000FF')
-    search_node_color: str | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]) = "total_cost",
+    search_node_color: str
+    | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
     # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
     # function that takes a SearchNode and returns a float (e.g. lambda n: n.fixed_cost + n.heuristic_cost)
     # node fields: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-    #                       "final": bool, "depth": int, "layout": Tuple[int, ...], "swaps": Tuple[Tuple[int, int], ...]}
+    #                       "final": bool, "depth": int, "layout": Sequence[int], "swaps": Sequence[tuple[int, int]]}
     # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
     # if in that case no is list is provided all points per node will be the same color
     prioritize_search_node_color: bool
-    | list[
+    | Sequence[
         bool
     ] = False,  # if True, search_node_color will be prioritized over color_valid_mapping and color_final_node
-    search_node_color_scale: str | list[str] = "YlGnBu",  # https://plotly.com/python/builtin-colorscales/
+    search_node_color_scale: Colorscale
+    | Sequence[Colorscale] = "YlGnBu",  # https://plotly.com/python/builtin-colorscales/
     # aggrnyl     agsunset    blackbody   bluered     blues       blugrn      bluyl       brwnyl
     # bugn        bupu        burg        burgyl      cividis     darkmint    electric    emrld
     # gnbu        greens      greys       hot         inferno     jet         magenta     magma
@@ -1490,11 +1551,11 @@ def visualize_search_graph(
     # piyg        picnic      portland    puor        rdgy        rdylbu      rdylgn      spectral
     # tealrose    temps       tropic      balance     curl        delta       oxy         edge
     # hsv         icefire     phase       twilight    mrybm       mygbm       armylg      falllg
-    search_node_invert_color_scale: bool | list[bool] = True,
-    search_node_colorbar_title: str | list[str | None] | None = None,
+    search_node_invert_color_scale: bool | Sequence[bool] = True,
+    search_node_colorbar_title: str | Sequence[str | None] | None = None,
     search_node_colorbar_spacing: float = 0.06,
     search_node_height: str
-    | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]) = "total_cost",
+    | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
     # just as with search_node_color (without color strings), but possible to specify a list to draw multiple point per node on different heights
     # only applicable if use3d is True
     draw_stems: bool = False,
@@ -1504,7 +1565,7 @@ def visualize_search_graph(
     show_search_progression: bool = True,
     search_progression_step: int = 10,
     search_progression_speed: float = 2,  # steps per second
-    plotly_settings: dict[str, dict[str, Any]] | None = None,
+    plotly_settings: MutableMapping[str, MutableMapping[str, object]] | None = None,
     # {
     #   'layout': settings for plotly.graph_objects.Layout (of subplots figure)
     #   'arrows': settings for plotly.graph_objects.layout.Annotation
@@ -1523,6 +1584,71 @@ def visualize_search_graph(
     # TODO: show archticture edge labels (and control text?)
     # TODO: control hover text of search (especially for multiple points per node!) and architecture nodes?
 ) -> Widget:
+    """Creates a widget to visualize a search graph.
+
+    Args:
+        data_logging_path (str): Path to the data logging directory of the search process to be visualized.
+        layer (int | Literal[&quot;interactive&quot;]): Index of the circuit layer, of which the mapping should be visualized. Defaults to "interactive", in which case a slider menu will be created.
+        architecture_node_positions (MutableMapping[int, tuple[float, float]] | None): MutableMapping from physical qubits to (x, y) coordinates. Defaults to None, in which case architecture_layout will be used to generate a layout.
+        architecture_layout (Literal[ &quot;dot&quot;, &quot;neato&quot;, &quot;fdp&quot;, &quot;sfdp&quot;, &quot;circo&quot;, &quot;twopi&quot;, &quot;osage&quot;, &quot;patchwork&quot; ]): The method to use when layouting the qubit connectivity graph. Defaults to "sfdp".
+        search_node_layout (Literal[ &quot;walker&quot;, &quot;dot&quot;, &quot;neato&quot;, &quot;fdp&quot;, &quot;sfdp&quot;, &quot;circo&quot;, &quot;twopi&quot;, &quot;osage&quot;, &quot;patchwork&quot; ]): The method to use when layouting the search graph. Defaults to "walker".
+        search_graph_border (float): Size of the border around the search graph. Defaults to 0.05.
+        architecture_border (float): Size of the border around the qubit connectivity graph. Defaults to 0.05.
+        swap_arrow_spacing (float): Lateral spacing between arrows indicating swaps on the qubit connectivity graph. Defaults to 0.05.
+        swap_arrow_offset (float): Offset of heads and shaft of swap arrows from qubits they are pointing to/from. Defaults to 0.05.
+        use3d (bool): If a 3D graph should be used for the search graph using the z-axis to plot data features. Defaults to True.
+        projection (Literal[&quot;orthographic&quot;, &quot;perspective&quot;]): Projection type to use in 3D graphs. Defaults to "perspective".
+        width (int): Pixel width of the widget. Defaults to 1400.
+        height (int): Pixel height of the widget. Defaults to 700.
+        draw_search_edges (bool): If edges between search nodes should be drawn. Defaults to True.
+        search_edges_width (float): Width of edges between search nodes. Defaults to 0.5.
+        search_edges_color (str): Color of edges between search nodes (in CSS format, i.e. &quot;#rrggbb&quot;, &quot;#rgb&quot;, &quot;colorname&quot;, etc.). Defaults to "#888".
+        search_edges_dash (str): Dashing of search edges (in CSS format, i.e. &quot;solid&quot;, &quot;dot&quot;, &quot;dash&quot;, &quot;longdash&quot;, etc.). Defaults to "solid".
+        tapered_search_layer_heights (bool): If search graph tree should progressively reduce the height of each layer. Defaults to True.
+        show_layout (Literal[&quot;hover&quot;, &quot;click&quot;] | None): If the current qubit layout should be shown on the qubit connectivity graph, when clicking or hovering on a search node or not at all. Defaults to "hover".
+        show_swaps (bool): Showing swaps on the connectivity graph. Defaults to True.
+        show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
+        color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
+        color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
+        search_node_color (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature (&quot;total_cost&quot; | &quot;fixed_cost&quot; | &quot;heuristic_cost&quot; | &quot;lookahead_penalty&quot;). In case a 3D search graph is used with multiple point per search node, each point&quot;s color can be controlled individually via a list. Defaults to "total_cost".
+        prioritize_search_node_color (bool | Sequence[ bool ]): If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
+        search_node_color_scale (str | Sequence[str]): Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
+        search_node_invert_color_scale (bool | Sequence[bool]): If the color scale should be inverted. Defaults to True.
+        search_node_colorbar_title (str | Sequence[str  |  None] | None): Title(s) to be shown next to the colorbar(s). Defaults to None.
+        search_node_colorbar_spacing (float): Spacing between multiple colorbars. Defaults to 0.06.
+        search_node_height (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Function mapping a mqt.qmap.visualization.SearchNode to a float value to be used as z-value in 3D search graphs or a preset data feature (&quot;total_cost&quot; | &quot;fixed_cost&quot; | &quot;heuristic_cost&quot; | &quot;lookahead_penalty&quot;). Or a list any of such functions/data features, to draw multiple points per search node. Defaults to "total_cost".
+        draw_stems (bool): If a vertical stem should be drawn in 3D search graphs to each search node. Defaults to False.
+        stems_width (float): Width of stems in 3D search graphs. Defaults to 0.7.
+        stems_color (str): Color of stems in 3D search graphs (in CSS format). Defaults to "#444".
+        stems_dash (str): Dashing of stems in 3D search graphs (in CSS format). Defaults to "solid".
+        show_search_progression (bool): If the search progression should be animated. Defaults to True.
+        search_progression_step (int): Step size (in number of nodes added) of search progression animation. Defaults to 10.
+        search_progression_speed (float): Speed of the search progression animation. Defaults to 2.
+        plotly_settings (MutableMapping[str, MutableMapping[str, any]] | None): Direct plotly configuration dictionaries to be passed through. Defaults to None.
+        ```
+        {
+            "layout": settings for plotly.graph_objects.Layout (of subplots figure)
+            "arrows": settings for plotly.graph_objects.layout.Annotation
+            "stats_legend": settings for plotly.graph_objects.layout.Annotation
+            "search_nodes": settings for plotly.graph_objects.Scatter resp. ...Scatter3d
+            "search_edges": settings for plotly.graph_objects.Scatter resp. ...Scatter3d
+            "architecture_nodes": settings for plotly.graph_objects.Scatter
+            "architecture_edges": settings for plotly.graph_objects.Scatter
+            "architecture_edge_labels": settings for plotly.graph_objects.Scatter
+            "search_xaxis": settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis
+            "search_yaxis": settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis
+            "search_zaxis": settings for plotly.graph_objects.layout.scene.ZAxis
+            "architecture_xaxis": settings for plotly.graph_objects.layout.XAxis
+            "architecture_yaxis": settings for plotly.graph_objects.layout.YAxis
+        }
+        ```
+
+    Raises:
+        TypeError: If any of the arguments are invalid.
+
+    Returns:
+        Widget: An interactive IPython widget to visualize the search graph.
+    """
     # check and process all parameters
     if plotly_settings is None:
         plotly_settings = {}
@@ -1537,13 +1663,13 @@ def visualize_search_graph(
         search_node_invert_color_scale,
         prioritize_search_node_color,
         search_node_colorbar_title,
-        plotly_settings,
+        full_plotly_settings,
     ) = _visualize_search_graph_check_parameters(
         data_logging_path,
         layer,
         architecture_node_positions,
-        architecture_layout_method,
-        search_node_layout_method,
+        architecture_layout,
+        search_node_layout,
         search_graph_border,
         architecture_border,
         swap_arrow_spacing,
@@ -1583,7 +1709,7 @@ def visualize_search_graph(
     search_graph: nx.Graph | None = None
     arch_graph: nx.Graph | None = None
     initial_layout: list[int] = []
-    considered_qubit_colors: dict[int, str] = {}
+    considered_qubit_colors: MutableMapping[int, str] = {}
     current_node_layout_visualized: int | None = None
     current_layer: int | None = None
 
@@ -1596,48 +1722,48 @@ def visualize_search_graph(
     arch_y_min: float | None = None
     arch_y_max: float | None = None
 
-    search_node_traces: list[go.Scatter | go.Scatter3d] = []
-    search_edge_traces: list[go.Scatter | go.Scatter3d] = []
+    search_node_traces: Sequence[go.Scatter | go.Scatter3d] = []
+    search_edge_traces: Sequence[go.Scatter | go.Scatter3d] = []
     search_node_stem_trace: go.Scatter3d | None = None
     arch_node_trace: go.Scatter | None = None
     arch_edge_trace: go.Scatter | None = None
     arch_edge_label_trace: go.Scatter | None = None
 
     # one possible entry per layer (if not present, layer was not loaded yet)
-    search_graphs: dict[int, nx.Graph] = {}
-    initial_layouts: dict[int, list[int]] = {}
-    initial_qbit_positions: dict[int, list[int]] = {}  # reverses of initial_layouts
-    layers_considered_qubit_colors: dict[int, dict[int, str]] = {}
-    single_qbit_multiplicities: dict[int, list[int]] = {}
-    individual_two_qbit_multiplicities: dict[int, list[int]] = {}
-    two_qbit_multiplicities: dict[int, list[TwoQbitMultiplicity]] = {}
-    final_node_ids: dict[int, int] = {}
-    search_node_scatter_data_x: dict[int, list[float]] = {}
-    search_node_scatter_data_y: dict[int, list[float]] = {}
-    search_node_scatter_data_z: dict[int, list[list[float]]] = {}
-    search_node_scatter_data_color: dict[int, list[list[float | str]]] = {}
-    search_node_stem_scatter_data_x: dict[int, list[float]] = {}
-    search_node_stem_scatter_data_y: dict[int, list[float]] = {}
-    search_node_stem_scatter_data_z: dict[int, list[float]] = {}
-    search_edge_scatter_data_x: dict[int, list[float]] = {}
-    search_edge_scatter_data_y: dict[int, list[float]] = {}
-    search_edge_scatter_data_z: dict[int, list[list[float]]] = {}
-    search_min_x: dict[int, float] = {}
-    search_max_x: dict[int, float] = {}
-    search_min_y: dict[int, float] = {}
-    search_max_y: dict[int, float] = {}
-    search_min_z: dict[int, float] = {}
-    search_max_z: dict[int, float] = {}
+    search_graphs: MutableMapping[int, nx.Graph] = {}
+    initial_layouts: MutableMapping[int, list[int]] = {}
+    initial_qbit_positions: MutableMapping[int, list[int]] = {}  # reverses of initial_layouts
+    layers_considered_qubit_colors: MutableMapping[int, MutableMapping[int, str]] = {}
+    single_qbit_multiplicities: MutableMapping[int, Sequence[int]] = {}
+    individual_two_qbit_multiplicities: MutableMapping[int, Sequence[int]] = {}
+    two_qbit_multiplicities: MutableMapping[int, Sequence[_TwoQbitMultiplicity]] = {}
+    final_node_ids: MutableMapping[int, int] = {}
+    search_node_scatter_data_x: MutableMapping[int, Sequence[float]] = {}
+    search_node_scatter_data_y: MutableMapping[int, Sequence[float]] = {}
+    search_node_scatter_data_z: MutableMapping[int, Sequence[Sequence[float]]] = {}
+    search_node_scatter_data_color: MutableMapping[int, Sequence[Sequence[float | str]]] = {}
+    search_node_stem_scatter_data_x: MutableMapping[int, Sequence[float]] = {}
+    search_node_stem_scatter_data_y: MutableMapping[int, Sequence[float]] = {}
+    search_node_stem_scatter_data_z: MutableMapping[int, Sequence[float]] = {}
+    search_edge_scatter_data_x: MutableMapping[int, Sequence[float]] = {}
+    search_edge_scatter_data_y: MutableMapping[int, Sequence[float]] = {}
+    search_edge_scatter_data_z: MutableMapping[int, Sequence[Sequence[float]]] = {}
+    search_min_x: MutableMapping[int, float] = {}
+    search_max_x: MutableMapping[int, float] = {}
+    search_min_y: MutableMapping[int, float] = {}
+    search_max_y: MutableMapping[int, float] = {}
+    search_min_z: MutableMapping[int, float] = {}
+    search_max_z: MutableMapping[int, float] = {}
 
     sub_plots: go.Figure | None = None
 
     number_of_layers = 0
 
     # parse general mapping info
-    with open(f"{data_logging_path}mapping_result.json") as result_file:
+    with Path(f"{data_logging_path}mapping_result.json").open() as result_file:
         number_of_layers = json.load(result_file)["statistics"]["layers"]
 
-    if type(layer) is int and layer >= number_of_layers:
+    if isinstance(layer, int) and layer >= number_of_layers:
         msg = f"Invalid layer {layer}. There are only {number_of_layers} layers in the data log."
         raise ValueError(msg)
 
@@ -1651,7 +1777,7 @@ def visualize_search_graph(
         use3d,
         draw_stems,
         draw_search_edges,
-        plotly_settings,
+        full_plotly_settings,
     )
 
     # parse architecture info and prepare respective traces
@@ -1663,7 +1789,7 @@ def visualize_search_graph(
                 print(node, arch_graph.nodes[node])
             for edge in arch_graph.edges:
                 print(edge, arch_graph.edges[edge])
-            architecture_node_positions = graphviz_layout(arch_graph, prog=architecture_layout_method)
+            architecture_node_positions = graphviz_layout(arch_graph, prog=architecture_layout)
         elif len(architecture_node_positions) != len(arch_graph.nodes):
             msg = f"architecture_node_positions must contain positions for all {len(arch_graph.nodes)} architecture nodes."
             raise ValueError(msg)
@@ -1678,10 +1804,10 @@ def visualize_search_graph(
         arch_y_max = max(architecture_node_positions.values(), key=lambda p: p[1])[1]
 
         arch_edge_trace, arch_edge_label_trace = _draw_architecture_edges(
-            arch_graph, architecture_node_positions, plotly_settings
+            arch_graph, architecture_node_positions, full_plotly_settings
         )
 
-        arch_node_trace = go.Scatter(**plotly_settings["architecture_nodes"])
+        arch_node_trace = go.Scatter(**full_plotly_settings["architecture_nodes"])
         arch_node_trace.x = []
         arch_node_trace.y = []
 
@@ -1690,9 +1816,16 @@ def visualize_search_graph(
         sub_plots = make_subplots(rows=1, cols=2, specs=[[{"is_3d": use3d}, {"is_3d": False}]])
     else:
         sub_plots = go.Figure()
-    sub_plots.update_layout(plotly_settings["layout"])
+    sub_plots.update_layout(full_plotly_settings["layout"])
 
-    active_trace_indices = {}
+    active_trace_indices: _ActiveTraceIndices = {
+        "search_nodes": [],
+        "search_edges": [],
+        "search_node_stems": 0,
+        "arch_nodes": 0,
+        "arch_edges": 0,
+        "arch_edge_labels": 0,
+    }
 
     active_trace_indices["search_edges"] = []
     for trace in search_edge_traces:
@@ -1716,10 +1849,10 @@ def visualize_search_graph(
     yaxis1 = (
         sub_plots.layout.scene.yaxis if use3d else (sub_plots.layout.yaxis if hide_layout else sub_plots.layout.yaxis1)
     )
-    xaxis1.update(**plotly_settings["search_xaxis"])
-    yaxis1.update(**plotly_settings["search_yaxis"])
+    xaxis1.update(**full_plotly_settings["search_xaxis"])
+    yaxis1.update(**full_plotly_settings["search_yaxis"])
     if use3d:
-        sub_plots.layout.scene.zaxis.update(**plotly_settings["search_zaxis"])
+        sub_plots.layout.scene.zaxis.update(**full_plotly_settings["search_zaxis"])
 
     if not hide_layout:
         active_trace_indices["arch_edges"] = len(sub_plots.data)
@@ -1733,25 +1866,25 @@ def visualize_search_graph(
         xaxis2 = sub_plots["layout"]["xaxis"] if use3d else sub_plots["layout"]["xaxis2"]
         yaxis2 = sub_plots["layout"]["yaxis"] if use3d else sub_plots["layout"]["yaxis2"]
 
-        plotly_settings["architecture_xaxis"]["range"] = [
-            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,
-            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,
+        full_plotly_settings["architecture_xaxis"]["range"] = [
+            arch_x_min - abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
+            arch_x_max + abs(arch_x_max - arch_x_min) * architecture_border,  # type: ignore[operator]
         ]
-        plotly_settings["architecture_yaxis"]["range"] = [
-            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,
-            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,
+        full_plotly_settings["architecture_yaxis"]["range"] = [
+            arch_y_min - abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
+            arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
         ]
-        x_diff = plotly_settings["architecture_xaxis"]["range"][1] - plotly_settings["architecture_xaxis"]["range"][0]
-        y_diff = plotly_settings["architecture_yaxis"]["range"][1] - plotly_settings["architecture_yaxis"]["range"][0]
+        x_diff = full_plotly_settings["architecture_xaxis"]["range"][1] - full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+        y_diff = full_plotly_settings["architecture_yaxis"]["range"][1] - full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
         if x_diff == 0:
-            mid = plotly_settings["architecture_xaxis"]["range"][0]
-            plotly_settings["architecture_xaxis"]["range"] = [mid - y_diff / 2, mid + y_diff / 2]
+            mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_xaxis"]["range"] = [mid - y_diff / 2, mid + y_diff / 2]
         if y_diff == 0:
-            mid = plotly_settings["architecture_yaxis"]["range"][0]
-            plotly_settings["architecture_yaxis"]["range"] = [mid - x_diff / 2, mid + x_diff / 2]
+            mid = full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
+            full_plotly_settings["architecture_yaxis"]["range"] = [mid - x_diff / 2, mid + x_diff / 2]
 
-        xaxis2.update(**plotly_settings["architecture_xaxis"])
-        yaxis2.update(**plotly_settings["architecture_yaxis"])
+        xaxis2.update(**full_plotly_settings["architecture_xaxis"])
+        yaxis2.update(**full_plotly_settings["architecture_yaxis"])
 
     fig = go.FigureWidget(sub_plots)
 
@@ -1771,7 +1904,11 @@ def visualize_search_graph(
         arch_edge_label_trace = fig.data[active_trace_indices["arch_edge_labels"]]
 
     # define interactive callbacks
-    def visualize_search_node_layout(trace, points, selector):
+    def visualize_search_node_layout(
+        trace: plotly.basedatatypes.BaseTraceType,  # noqa: ARG001
+        points: plotly.callbacks.Points,
+        selector: plotly.callbacks.InputDeviceState,  # noqa: ARG001
+    ) -> None:
         nonlocal current_node_layout_visualized
 
         if current_layer is None:
@@ -1779,29 +1916,31 @@ def visualize_search_graph(
         point_inds = []
         try:
             point_inds = points.point_inds
-        except:
+        except AttributeError:
             point_inds = points
         if len(point_inds) == 0:
             return
         if current_node_layout_visualized == point_inds[0]:
             return
         current_node_layout_visualized = point_inds[0]
-        node_index = list(search_graph.nodes())[current_node_layout_visualized]
+        node_index = list(search_graph.nodes())[current_node_layout_visualized]  # type: ignore[index, union-attr]
 
+        # this function is only called if hide_layout==False, therefore all variables are defined
+        # since mypy's type inference fails in this regard, we need to use "type: ignore[arg-type]" here
         _visualize_layout(
             fig,
-            search_graph.nodes[node_index]["data"],
+            search_graph.nodes[node_index]["data"],  # type: ignore[union-attr]
             arch_node_trace,
-            architecture_node_positions,
+            architecture_node_positions,  # type: ignore[arg-type]
             initial_layout,
             considered_qubit_colors,
             swap_arrow_offset,
-            arch_x_arrow_spacing,
-            arch_y_arrow_spacing,
+            arch_x_arrow_spacing,  # type: ignore[arg-type]
+            arch_y_arrow_spacing,  # type: ignore[arg-type]
             show_shared_swaps,
-            current_node_layout_visualized,
+            current_node_layout_visualized,  # type: ignore[arg-type]
             search_node_traces[0] if not use3d else None,
-            plotly_settings,
+            full_plotly_settings,
         )
 
     if not hide_layout:
@@ -1811,8 +1950,8 @@ def visualize_search_graph(
             elif show_layout == "click":
                 trace.on_click(visualize_search_node_layout)
 
-    def update_timestep(timestep):
-        timestep = timestep["new"]
+    def update_timestep(change: MutableMapping[str, int]) -> None:
+        timestep = change["new"]
         if current_layer is None:
             return
         with fig.batch_update():
@@ -1844,7 +1983,7 @@ def visualize_search_graph(
     timestep_play.observe(update_timestep, names="value")
     timestep = HBox([timestep_play, timestep_slider])
 
-    def update_layer(new_layer: int):
+    def update_layer(new_layer: int) -> None:
         nonlocal current_layer, search_graph, initial_layout, considered_qubit_colors, current_node_layout_visualized
 
         if current_layer == new_layer:
@@ -1880,7 +2019,7 @@ def visualize_search_graph(
             ) = _load_layer_data(
                 data_logging_path,
                 current_layer,
-                search_node_layout_method,
+                search_node_layout,
                 tapered_search_layer_heights,
                 number_of_node_traces,
                 use3d,
@@ -1945,7 +2084,7 @@ def visualize_search_graph(
             if not hide_layout:
                 _draw_architecture_nodes(
                     arch_node_trace,
-                    architecture_node_positions,
+                    architecture_node_positions,  # type: ignore[arg-type]
                     considered_qubit_colors,
                     initial_qbit_positions[current_layer],
                     single_qbit_multiplicities[current_layer],
@@ -1962,7 +2101,7 @@ def visualize_search_graph(
         timestep_slider.value = len(search_graph.nodes)
         current_layer = cl
 
-    if type(layer) is int:
+    if isinstance(layer, int):
         update_layer(layer)
     else:
         update_layer(0)
