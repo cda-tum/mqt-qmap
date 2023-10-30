@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
     from . import Architecture
 
-
 import contextlib
 
 import rustworkx as rx
@@ -33,7 +32,6 @@ import rustworkx.visualization as rxviz
 
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
-
 
 PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
 
@@ -291,9 +289,7 @@ class SubarchitectureOrder:
                     matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)  # type: ignore[attr-defined]
                     for iso in matcher:
                         self.subarch_order[(n, i)].add((n + 1, j))
-                        iso_rev = {}
-                        for key, val in iso.items():
-                            iso_rev[val] = key
+                        iso_rev = {val: key for key, val in iso.items()}
                         self.isomorphisms[(n, i)][(n + 1, j)] = iso_rev
                         break  # One isomorphism suffices
 
