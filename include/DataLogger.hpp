@@ -15,9 +15,9 @@
 
 class DataLogger {
 public:
-  DataLogger(std::string path, Architecture& arch,
-             qc::QuantumComputation& qc)
-      : dataLoggingPath(path), architecture(arch), nqubits(arch.getNqubits()), inputCircuit(qc) {
+  DataLogger(std::string path, Architecture& arch, qc::QuantumComputation& qc)
+      : dataLoggingPath(path), architecture(arch), nqubits(arch.getNqubits()),
+        inputCircuit(qc) {
     initLog();
     logArchitecture(architecture);
     logInputCircuit(inputCircuit);
