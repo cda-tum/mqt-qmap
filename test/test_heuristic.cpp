@@ -440,22 +440,22 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "input.qasm";
   }
-  std::stringstream fileBuffer;
-  fileBuffer << inputQasmFile.rdbuf();
-  std::stringstream qasmBuffer;
-  qc.dumpOpenQASM(qasmBuffer);
-  EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
+  std::stringstream inputFileBuffer;
+  inputFileBuffer << inputQasmFile.rdbuf();
+  std::stringstream inputQasmBuffer;
+  qc.dumpOpenQASM(inputQasmBuffer);
+  EXPECT_EQ(inputFileBuffer.str(), inputQasmBuffer.str());
 
   auto outputQasmFile = std::ifstream(settings.dataLoggingPath + "output.qasm");
   if (!outputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "output.qasm";
   }
-  std::stringstream fileBuffer;
-  fileBuffer << outputQasmFile.rdbuf();
-  std::stringstream qasmBuffer;
-  mapper->dumpResult(qasmBuffer, qc::Format::OpenQASM);
-  EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
+  std::stringstream outputFileBuffer;
+  outputFileBuffer << outputQasmFile.rdbuf();
+  std::stringstream outputQasmBuffer;
+  mapper->dumpResult(outputQasmBuffer, qc::Format::OpenQASM);
+  EXPECT_EQ(outputFileBuffer.str(), outputQasmBuffer.str());
 
   // checking logged search graph info against known values (correct qubit
   // number, valid layouts, correct data types in all csv fields, etc.)
