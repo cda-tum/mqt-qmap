@@ -1875,12 +1875,12 @@ def visualize_search_graph(
             arch_y_max + abs(arch_y_max - arch_y_min) * architecture_border,  # type: ignore[operator]
         ]
         x_diff = (
-            full_plotly_settings["architecture_xaxis"]["range"][1] # type: ignore[index]
-            - full_plotly_settings["architecture_xaxis"]["range"][0] # type: ignore[index]
+            full_plotly_settings["architecture_xaxis"]["range"][1]  # type: ignore[index]
+            - full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]
         )
         y_diff = (
-            full_plotly_settings["architecture_yaxis"]["range"][1] # type: ignore[index]
-            - full_plotly_settings["architecture_yaxis"]["range"][0] # type: ignore[index]
+            full_plotly_settings["architecture_yaxis"]["range"][1]  # type: ignore[index]
+            - full_plotly_settings["architecture_yaxis"]["range"][0]  # type: ignore[index]
         )
         if x_diff == 0:
             mid = full_plotly_settings["architecture_xaxis"]["range"][0]  # type: ignore[index]

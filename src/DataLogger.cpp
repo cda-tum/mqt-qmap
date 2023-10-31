@@ -64,7 +64,8 @@ void DataLogger::openNewLayer(std::size_t layer) {
   }
 
   for (std::size_t i = searchNodesLogFiles.size(); i <= layer; ++i) {
-    searchNodesLogFiles.emplace_back(dataLoggingPath + "nodes_layer_" + std::to_string(i) + ".csv");
+    searchNodesLogFiles.emplace_back(dataLoggingPath + "nodes_layer_" +
+                                     std::to_string(i) + ".csv");
     if (!searchNodesLogFiles.at(i).good()) {
       deactivated = true;
       std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
@@ -77,7 +78,9 @@ void DataLogger::openNewLayer(std::size_t layer) {
 void DataLogger::logFinalizeLayer(
     std::size_t layer, const qc::CompoundOperation& ops,
     const std::vector<std::uint16_t>& singleQubitMultiplicity,
-    const std::map<std::pair<std::uint16_t, std::uint16_t>, std::pair<std::uint16_t, std::uint16_t>>& twoQubitMultiplicity,
+    const std::map<std::pair<std::uint16_t, std::uint16_t>,
+                   std::pair<std::uint16_t, std::uint16_t>>&
+                                                       twoQubitMultiplicity,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
     std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
     double                                             finalLookaheadPenalty,
