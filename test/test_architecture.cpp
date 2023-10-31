@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include <random>
 
-::testing::AssertionResult MatrixNear(const Matrix& a, const Matrix& b,
+::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,
                                       double delta) {
   if (a.size() != b.size()) {
     return ::testing::AssertionFailure()
@@ -358,7 +358,7 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           0.,
       }};
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
 
   const Matrix targetTableSkip1Edge = {
       {// distance from 0 to i
@@ -408,7 +408,7 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           0.,
           0.,
       }};
-  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(1),
+  EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(1),
                          targetTableSkip1Edge, 1e-6));
 
   const Matrix targetTableSkip3Edges = {
@@ -466,7 +466,7 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
           0.,
           0.,
       }};
-  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(3),
+  EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(3),
                          targetTableSkip3Edges, 1e-6));
 
   const Matrix zeroMatrix = {
@@ -475,11 +475,11 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}};
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
 }
 
 TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
@@ -609,7 +609,7 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
            2 * (std::log2(1 - 0.02) + std::log2(1 - 0.03)),
        0.}};
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(), targetTable, 1e-6));
 
   const Matrix targetTableSkip1Edge = {
       {// distance from 0 to i
@@ -664,7 +664,7 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
        -3 * (std::log2(1 - 0.5) + std::log2(1 - 0.5) + std::log2(1 - 0.1)) -
            2 * (std::log2(1 - 0.03) + std::log2(1 - 0.03)),
        0., 0.}};
-  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(1),
+  EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(1),
                          targetTableSkip1Edge, 1e-6));
 
   const Matrix targetTableSkip3Edges = {
@@ -725,7 +725,7 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
           0.,
           0.,
       }};
-  EXPECT_TRUE(MatrixNear(architecture.getFidelityDistanceTable(3),
+  EXPECT_TRUE(matrixNear(architecture.getFidelityDistanceTable(3),
                          targetTableSkip3Edges, 1e-6));
 
   const Matrix zeroMatrix = {
@@ -734,11 +734,11 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
       {0., 0., 0., 0., 0., 0., 0.}, {0., 0., 0., 0., 0., 0., 0.},
       {0., 0., 0., 0., 0., 0., 0.}};
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(4), zeroMatrix, 1e-6));
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
   EXPECT_TRUE(
-      MatrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
+      matrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
 }
 
 TEST(TestArchitecture, FidelitySwapCostTest) {
@@ -856,7 +856,7 @@ TEST(TestArchitecture, DistanceCheapestPathTest) {
 
   // minimum number of unidirectional edges on a path where the same path with
   // bidirectional edges can afford at least 1 more edge and still be cheaper
-  std::uint8_t nrEdges =
+  const std::uint8_t nrEdges =
       1 + static_cast<std::uint8_t>(
               std::ceil(static_cast<double>(COST_BIDIRECTIONAL_SWAP) /
                         (static_cast<double>(COST_UNIDIRECTIONAL_SWAP) -

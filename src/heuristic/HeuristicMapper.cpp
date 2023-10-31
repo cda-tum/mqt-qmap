@@ -387,11 +387,11 @@ void HeuristicMapper::mapUnmappedGates(
       if (locations.at(q) == DEFAULT_POSITION) {
         // TODO: consider fidelity
         // map to first free physical qubit
-        for (std::uint16_t phys_q = 0; phys_q < architecture.getNqubits();
-             ++phys_q) {
-          if (qubits.at(phys_q) == -1) {
-            locations.at(q)   = static_cast<std::int16_t>(phys_q);
-            qubits.at(phys_q) = static_cast<std::int16_t>(q);
+        for (std::uint16_t physQbit = 0; physQbit < architecture.getNqubits();
+             ++physQbit) {
+          if (qubits.at(physQbit) == -1) {
+            locations.at(q)   = static_cast<std::int16_t>(physQbit);
+            qubits.at(physQbit) = static_cast<std::int16_t>(q);
             break;
           }
         }
@@ -495,7 +495,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   TwoQubitMultiplicity twoQubitGateMultiplicity{};
   Node                 bestDoneNode(0);
   bool                 done             = false;
-  bool                 considerFidelity = results.config.considerFidelity;
+  const bool           considerFidelity = results.config.considerFidelity;
 
   for (const auto& gate : layers.at(layer)) {
     if (gate.singleQubit()) {
@@ -1041,24 +1041,24 @@ void HeuristicMapper::Node::updateHeuristicCost(
   // qubits with higher fidelity
   double savingsPotential = 0.;
   if (considerFidelity) {
-    for (std::uint16_t log_qbit = 0U; log_qbit < arch.getNqubits();
-         ++log_qbit) {
-      if (singleQubitGateMultiplicity.at(log_qbit) == 0) {
+    for (std::uint16_t logQbit = 0U; logQbit < arch.getNqubits();
+         ++logQbit) {
+      if (singleQubitGateMultiplicity.at(logQbit) == 0) {
         continue;
       }
       double qbitSavings  = 0;
-      double currFidelity = arch.getSingleQubitFidelityCost(
-          static_cast<std::uint16_t>(locations.at(log_qbit)));
-      for (std::uint16_t phys_qbit = 0U; phys_qbit < arch.getNqubits();
-           ++phys_qbit) {
-        if (arch.getSingleQubitFidelityCost(phys_qbit) >= currFidelity) {
+      const double currFidelity = arch.getSingleQubitFidelityCost(
+          static_cast<std::uint16_t>(locations.at(logQbit)));
+      for (std::uint16_t physQbit = 0U; physQbit < arch.getNqubits();
+           ++physQbit) {
+        if (arch.getSingleQubitFidelityCost(physQbit) >= currFidelity) {
           continue;
         }
-        double curSavings =
-            singleQubitGateMultiplicity.at(log_qbit) *
-                (currFidelity - arch.getSingleQubitFidelityCost(phys_qbit)) -
+        const double curSavings =
+            singleQubitGateMultiplicity.at(logQbit) *
+                (currFidelity - arch.getSingleQubitFidelityCost(physQbit)) -
             arch.fidelityDistance(
-                static_cast<std::uint16_t>(locations.at(log_qbit)), phys_qbit,
+                static_cast<std::uint16_t>(locations.at(logQbit)), physQbit,
                 consideredQubits.size());
         qbitSavings = std::max(qbitSavings, curSavings);
       }
@@ -1073,7 +1073,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
 
     const auto& [straightMultiplicity, reverseMultiplicity] = multiplicity;
 
-    bool edgeDone =
+    const bool edgeDone =
         (arch.isEdgeConnected({static_cast<std::uint16_t>(locations.at(q1)),
                                static_cast<std::uint16_t>(locations.at(q2))}) ||
          arch.isEdgeConnected({static_cast<std::uint16_t>(locations.at(q2)),
@@ -1114,7 +1114,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
       }
 
       if (edgeDone) {
-        double currEdgeCost =
+        const double currEdgeCost =
             (straightMultiplicity *
                  arch.getTwoQubitFidelityCost(
                      static_cast<std::uint16_t>(locations.at(q1)),

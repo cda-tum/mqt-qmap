@@ -83,7 +83,7 @@ public:
     std::size_t    parent                   = 0;
     std::size_t    id;
 
-    Node(std::size_t nodeId) : id(nodeId){};
+    explicit Node(std::size_t nodeId) : id(nodeId){};
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,

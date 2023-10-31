@@ -240,7 +240,7 @@ public:
     createDistanceTable();
   }
 
-  bool isEdgeConnected(const Edge& edge) const {
+  [[nodiscard]] bool isEdgeConnected(const Edge& edge) const {
     return couplingMap.find(edge) != couplingMap.end();
   }
 

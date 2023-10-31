@@ -301,50 +301,49 @@ TEST(Functionality, DataLogger) {
   if (!archFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "architecture.json";
-  } else {
-    const auto archJson = nlohmann::json::parse(archFile);
-    EXPECT_EQ(archJson["name"], architecture.getName());
-    EXPECT_EQ(archJson["nqubits"], architecture.getNqubits());
-    EXPECT_EQ(archJson["distances"], architecture.getDistanceTable());
-    EXPECT_EQ(archJson["coupling_map"], architecture.getCouplingMap());
-    const auto fidelityJson = archJson["fidelity"];
-    EXPECT_EQ(fidelityJson["fidelity_distances"],
-              architecture.getFidelityDistanceTables());
-    EXPECT_EQ(fidelityJson["single_qubit_fidelities"],
-              architecture.getSingleQubitFidelities());
-    EXPECT_EQ(fidelityJson["two_qubit_fidelities"],
-              architecture.getFidelityTable());
-    // json does not support inf values, instead nlohmann::json replaces inf
-    // with null
-    auto& singleQubitFidelityCosts = architecture.getSingleQubitFidelityCosts();
-    for (std::size_t i = 0; i < singleQubitFidelityCosts.size(); ++i) {
-      if (std::isinf(singleQubitFidelityCosts[i])) {
-        EXPECT_TRUE(fidelityJson["single_qubit_fidelity_costs"][i].is_null());
+  }
+  const auto archJson = nlohmann::json::parse(archFile);
+  EXPECT_EQ(archJson["name"], architecture.getName());
+  EXPECT_EQ(archJson["nqubits"], architecture.getNqubits());
+  EXPECT_EQ(archJson["distances"], architecture.getDistanceTable());
+  EXPECT_EQ(archJson["coupling_map"], architecture.getCouplingMap());
+  const auto& fidelityJson = archJson["fidelity"];
+  EXPECT_EQ(fidelityJson["fidelity_distances"],
+            architecture.getFidelityDistanceTables());
+  EXPECT_EQ(fidelityJson["single_qubit_fidelities"],
+            architecture.getSingleQubitFidelities());
+  EXPECT_EQ(fidelityJson["two_qubit_fidelities"],
+            architecture.getFidelityTable());
+  // json does not support inf values, instead nlohmann::json replaces inf
+  // with null
+  const auto& singleQubitFidelityCosts = architecture.getSingleQubitFidelityCosts();
+  for (std::size_t i = 0; i < singleQubitFidelityCosts.size(); ++i) {
+    if (std::isinf(singleQubitFidelityCosts[i])) {
+      EXPECT_TRUE(fidelityJson["single_qubit_fidelity_costs"][i].is_null());
+    } else {
+      EXPECT_EQ(fidelityJson["single_qubit_fidelity_costs"][i],
+                singleQubitFidelityCosts[i]);
+    }
+  }
+  const auto& twoQubitFidelityCosts = architecture.getTwoQubitFidelityCosts();
+  for (std::size_t i = 0; i < twoQubitFidelityCosts.size(); ++i) {
+    for (std::size_t j = 0; j < twoQubitFidelityCosts[i].size(); ++j) {
+      if (std::isinf(twoQubitFidelityCosts[i][j])) {
+        EXPECT_TRUE(fidelityJson["two_qubit_fidelity_costs"][i][j].is_null());
       } else {
-        EXPECT_EQ(fidelityJson["single_qubit_fidelity_costs"][i],
-                  singleQubitFidelityCosts[i]);
+        EXPECT_EQ(fidelityJson["two_qubit_fidelity_costs"][i][j],
+                  twoQubitFidelityCosts[i][j]);
       }
     }
-    auto& twoQubitFidelityCosts = architecture.getTwoQubitFidelityCosts();
-    for (std::size_t i = 0; i < twoQubitFidelityCosts.size(); ++i) {
-      for (std::size_t j = 0; j < twoQubitFidelityCosts[i].size(); ++j) {
-        if (std::isinf(twoQubitFidelityCosts[i][j])) {
-          EXPECT_TRUE(fidelityJson["two_qubit_fidelity_costs"][i][j].is_null());
-        } else {
-          EXPECT_EQ(fidelityJson["two_qubit_fidelity_costs"][i][j],
-                    twoQubitFidelityCosts[i][j]);
-        }
-      }
-    }
-    auto& swapFidelityCosts = architecture.getSwapFidelityCosts();
-    for (std::size_t i = 0; i < swapFidelityCosts.size(); ++i) {
-      for (std::size_t j = 0; j < swapFidelityCosts[i].size(); ++j) {
-        if (std::isinf(swapFidelityCosts[i][j])) {
-          EXPECT_TRUE(fidelityJson["swap_fidelity_costs"][i][j].is_null());
-        } else {
-          EXPECT_EQ(fidelityJson["swap_fidelity_costs"][i][j],
-                    swapFidelityCosts[i][j]);
-        }
+  }
+  const auto& swapFidelityCosts = architecture.getSwapFidelityCosts();
+  for (std::size_t i = 0; i < swapFidelityCosts.size(); ++i) {
+    for (std::size_t j = 0; j < swapFidelityCosts[i].size(); ++j) {
+      if (std::isinf(swapFidelityCosts[i][j])) {
+        EXPECT_TRUE(fidelityJson["swap_fidelity_costs"][i][j].is_null());
+      } else {
+        EXPECT_EQ(fidelityJson["swap_fidelity_costs"][i][j],
+                  swapFidelityCosts[i][j]);
       }
     }
   }
@@ -355,84 +354,83 @@ TEST(Functionality, DataLogger) {
   if (!resultFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "mapping_result.json";
-  } else {
-    const auto resultJson = nlohmann::json::parse(resultFile);
-    const auto configJson = resultJson["config"];
-    EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
-              settings.addMeasurementsToMappedCircuit);
-    EXPECT_EQ(configJson["admissible_heuristic"], settings.admissibleHeuristic);
-    EXPECT_EQ(configJson["consider_fidelity"], settings.considerFidelity);
-    EXPECT_EQ(configJson["initial_layout"], toString(settings.initialLayout));
-    EXPECT_EQ(configJson["layering"], toString(settings.layering));
-    EXPECT_EQ(configJson["method"], toString(settings.method));
-    EXPECT_EQ(configJson["post_mapping_optimizations"],
-              settings.postMappingOptimizations);
-    EXPECT_EQ(configJson["pre_mapping_optimizations"],
-              settings.preMappingOptimizations);
-    EXPECT_EQ(configJson["teleportation"], settings.useTeleportation);
-    EXPECT_EQ(configJson["timeout"], settings.timeout);
-    const auto lookaheadJson = configJson["lookahead"];
-    EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
-    EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
-    EXPECT_EQ(lookaheadJson["nr_lookaheads"], settings.nrLookaheads);
+  }
+  const auto resultJson = nlohmann::json::parse(resultFile);
+  const auto& configJson = resultJson["config"];
+  EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
+            settings.addMeasurementsToMappedCircuit);
+  EXPECT_EQ(configJson["admissible_heuristic"], settings.admissibleHeuristic);
+  EXPECT_EQ(configJson["consider_fidelity"], settings.considerFidelity);
+  EXPECT_EQ(configJson["initial_layout"], toString(settings.initialLayout));
+  EXPECT_EQ(configJson["layering"], toString(settings.layering));
+  EXPECT_EQ(configJson["method"], toString(settings.method));
+  EXPECT_EQ(configJson["post_mapping_optimizations"],
+            settings.postMappingOptimizations);
+  EXPECT_EQ(configJson["pre_mapping_optimizations"],
+            settings.preMappingOptimizations);
+  EXPECT_EQ(configJson["teleportation"], settings.useTeleportation);
+  EXPECT_EQ(configJson["timeout"], settings.timeout);
+  const auto& lookaheadJson = configJson["lookahead"];
+  EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
+  EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
+  EXPECT_EQ(lookaheadJson["nr_lookaheads"], settings.nrLookaheads);
 
-    const auto inCircJson = resultJson["input_circuit"];
-    EXPECT_EQ(inCircJson["cnots"], results.input.cnots);
-    EXPECT_EQ(inCircJson["gates"], results.input.gates);
-    EXPECT_EQ(inCircJson["name"], results.input.name);
-    EXPECT_EQ(inCircJson["qubits"], results.input.qubits);
-    EXPECT_EQ(inCircJson["single_qubit_gates"], results.input.singleQubitGates);
+  const auto& inCircJson = resultJson["input_circuit"];
+  EXPECT_EQ(inCircJson["cnots"], results.input.cnots);
+  EXPECT_EQ(inCircJson["gates"], results.input.gates);
+  EXPECT_EQ(inCircJson["name"], results.input.name);
+  EXPECT_EQ(inCircJson["qubits"], results.input.qubits);
+  EXPECT_EQ(inCircJson["single_qubit_gates"], results.input.singleQubitGates);
 
-    const auto outCircJson = resultJson["output_circuit"];
-    EXPECT_EQ(outCircJson["cnots"], results.output.cnots);
-    EXPECT_EQ(outCircJson["gates"], results.output.gates);
-    EXPECT_EQ(outCircJson["name"], results.output.name);
-    EXPECT_EQ(outCircJson["qubits"], results.output.qubits);
-    EXPECT_EQ(outCircJson["single_qubit_gates"],
-              results.output.singleQubitGates);
+  const auto& outCircJson = resultJson["output_circuit"];
+  EXPECT_EQ(outCircJson["cnots"], results.output.cnots);
+  EXPECT_EQ(outCircJson["gates"], results.output.gates);
+  EXPECT_EQ(outCircJson["name"], results.output.name);
+  EXPECT_EQ(outCircJson["qubits"], results.output.qubits);
+  EXPECT_EQ(outCircJson["single_qubit_gates"],
+            results.output.singleQubitGates);
 
-    const auto statJson = resultJson["statistics"];
-    EXPECT_EQ(statJson["additional_gates"],
-              (static_cast<std::make_signed_t<decltype(results.output.gates)>>(
-                   results.output.gates) -
-               static_cast<std::make_signed_t<decltype(results.input.gates)>>(
-                   results.input.gates)));
-    EXPECT_EQ(statJson["layers"], results.input.layers);
-    EXPECT_EQ(statJson["mapping_time"], results.time);
-    EXPECT_EQ(statJson["swaps"], results.output.swaps);
-    EXPECT_EQ(statJson["teleportations"], results.output.teleportations);
-    EXPECT_EQ(statJson["timeout"], results.timeout);
-    EXPECT_EQ(statJson["total_fidelity"], results.output.totalFidelity);
-    EXPECT_EQ(statJson["total_log_fidelity"], results.output.totalLogFidelity);
+  const auto& statJson = resultJson["statistics"];
+  EXPECT_EQ(statJson["additional_gates"],
+            (static_cast<std::make_signed_t<decltype(results.output.gates)>>(
+                  results.output.gates) -
+              static_cast<std::make_signed_t<decltype(results.input.gates)>>(
+                  results.input.gates)));
+  EXPECT_EQ(statJson["layers"], results.input.layers);
+  EXPECT_EQ(statJson["mapping_time"], results.time);
+  EXPECT_EQ(statJson["swaps"], results.output.swaps);
+  EXPECT_EQ(statJson["teleportations"], results.output.teleportations);
+  EXPECT_EQ(statJson["timeout"], results.timeout);
+  EXPECT_EQ(statJson["total_fidelity"], results.output.totalFidelity);
+  EXPECT_EQ(statJson["total_log_fidelity"], results.output.totalLogFidelity);
 
-    const auto benchmarkJson = statJson["benchmark"];
-    EXPECT_EQ(benchmarkJson["average_branching_factor"],
-              results.heuristicBenchmark.averageBranchingFactor);
-    EXPECT_EQ(benchmarkJson["effective_branching_factor"],
-              results.heuristicBenchmark.effectiveBranchingFactor);
-    EXPECT_EQ(benchmarkJson["expanded_nodes"],
-              results.heuristicBenchmark.expandedNodes);
-    EXPECT_EQ(benchmarkJson["generated_nodes"],
-              results.heuristicBenchmark.generatedNodes);
-    EXPECT_EQ(benchmarkJson["time_per_node"],
-              results.heuristicBenchmark.timePerNode);
-    const auto benchmarkLayersJson = benchmarkJson["layers"];
-    EXPECT_EQ(benchmarkLayersJson.size(),
-              results.layerHeuristicBenchmark.size());
-    for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
-      EXPECT_EQ(benchmarkLayersJson[i]["average_branching_factor"],
-                results.layerHeuristicBenchmark.at(i).averageBranchingFactor);
-      EXPECT_EQ(benchmarkLayersJson[i]["effective_branching_factor"],
-                results.layerHeuristicBenchmark.at(i).effectiveBranchingFactor);
-      EXPECT_EQ(benchmarkLayersJson[i]["expanded_nodes"],
-                results.layerHeuristicBenchmark.at(i).expandedNodes);
-      EXPECT_EQ(benchmarkLayersJson[i]["generated_nodes"],
-                results.layerHeuristicBenchmark.at(i).generatedNodes);
-      EXPECT_EQ(benchmarkLayersJson[i]["solution_depth"],
-                results.layerHeuristicBenchmark.at(i).solutionDepth);
-      EXPECT_EQ(benchmarkLayersJson[i]["time_per_node"],
-                results.layerHeuristicBenchmark.at(i).timePerNode);
-    }
+  const auto& benchmarkJson = statJson["benchmark"];
+  EXPECT_EQ(benchmarkJson["average_branching_factor"],
+            results.heuristicBenchmark.averageBranchingFactor);
+  EXPECT_EQ(benchmarkJson["effective_branching_factor"],
+            results.heuristicBenchmark.effectiveBranchingFactor);
+  EXPECT_EQ(benchmarkJson["expanded_nodes"],
+            results.heuristicBenchmark.expandedNodes);
+  EXPECT_EQ(benchmarkJson["generated_nodes"],
+            results.heuristicBenchmark.generatedNodes);
+  EXPECT_EQ(benchmarkJson["time_per_node"],
+            results.heuristicBenchmark.timePerNode);
+  const auto& benchmarkLayersJson = benchmarkJson["layers"];
+  EXPECT_EQ(benchmarkLayersJson.size(),
+            results.layerHeuristicBenchmark.size());
+  for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
+    EXPECT_EQ(benchmarkLayersJson[i]["average_branching_factor"],
+              results.layerHeuristicBenchmark.at(i).averageBranchingFactor);
+    EXPECT_EQ(benchmarkLayersJson[i]["effective_branching_factor"],
+              results.layerHeuristicBenchmark.at(i).effectiveBranchingFactor);
+    EXPECT_EQ(benchmarkLayersJson[i]["expanded_nodes"],
+              results.layerHeuristicBenchmark.at(i).expandedNodes);
+    EXPECT_EQ(benchmarkLayersJson[i]["generated_nodes"],
+              results.layerHeuristicBenchmark.at(i).generatedNodes);
+    EXPECT_EQ(benchmarkLayersJson[i]["solution_depth"],
+              results.layerHeuristicBenchmark.at(i).solutionDepth);
+    EXPECT_EQ(benchmarkLayersJson[i]["time_per_node"],
+              results.layerHeuristicBenchmark.at(i).timePerNode);
   }
 
   // comparing logged input and output circuits with input circuit object and
@@ -441,25 +439,23 @@ TEST(Functionality, DataLogger) {
   if (!inputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "input.qasm";
-  } else {
-    std::stringstream fileBuffer;
-    fileBuffer << inputQasmFile.rdbuf();
-    std::stringstream qasmBuffer;
-    qc.dumpOpenQASM(qasmBuffer);
-    EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
   }
+  std::stringstream fileBuffer;
+  fileBuffer << inputQasmFile.rdbuf();
+  std::stringstream qasmBuffer;
+  qc.dumpOpenQASM(qasmBuffer);
+  EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
 
   auto outputQasmFile = std::ifstream(settings.dataLoggingPath + "output.qasm");
   if (!outputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "output.qasm";
-  } else {
-    std::stringstream fileBuffer;
-    fileBuffer << outputQasmFile.rdbuf();
-    std::stringstream qasmBuffer;
-    mapper->dumpResult(qasmBuffer, qc::Format::OpenQASM);
-    EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
   }
+  std::stringstream fileBuffer;
+  fileBuffer << outputQasmFile.rdbuf();
+  std::stringstream qasmBuffer;
+  mapper->dumpResult(qasmBuffer, qc::Format::OpenQASM);
+  EXPECT_EQ(fileBuffer.str(), qasmBuffer.str());
 
   // checking logged search graph info against known values (correct qubit
   // number, valid layouts, correct data types in all csv fields, etc.)
@@ -469,125 +465,129 @@ TEST(Functionality, DataLogger) {
     if (!layerFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << "layer_"
              << i << ".json";
-    } else {
-      const auto  layerJson   = nlohmann::json::parse(layerFile);
-      std::size_t finalNodeId = layerJson["final_node_id"];
-      EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
-      EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
-                architecture.getNqubits());
+    }
+    const auto  layerJson   = nlohmann::json::parse(layerFile);
+    const std::size_t finalNodeId = layerJson["final_node_id"];
+    EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
+    EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
+              architecture.getNqubits());
 
-      auto layerNodeFile =
-          std::ifstream(settings.dataLoggingPath + "nodes_layer_" +
-                        std::to_string(i) + ".csv");
-      if (!layerNodeFile.is_open()) {
-        FAIL() << "Could not open file " << settings.dataLoggingPath
-               << "nodes_layer_" << i << ".csv";
+    auto layerNodeFile =
+        std::ifstream(settings.dataLoggingPath + "nodes_layer_" +
+                      std::to_string(i) + ".csv");
+    if (!layerNodeFile.is_open()) {
+      FAIL() << "Could not open file " << settings.dataLoggingPath
+              << "nodes_layer_" << i << ".csv";
+    }
+    std::string           line;
+    bool                  foundFinalNode = false;
+    std::set<std::size_t> nodeIds;
+    while (std::getline(layerNodeFile, line)) {
+      if (line.empty()) {
+        continue;
+      }
+      std::string               col = 0;
+      std::size_t               nodeId = 0;
+      std::size_t               parentId = 0;
+      std::size_t               depth = 0;
+      std::size_t               isValidMapping = 0;
+      double                    costFixed = 0.;
+      double                    costHeur = 0.;
+      double                    lookaheadPenalty = 0.;
+      std::vector<std::int32_t> layout{};
+      std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
+      std::stringstream                                  lineStream(line);
+      if (std::getline(lineStream, col, ';')) {
+        nodeId = std::stoull(col);
+        nodeIds.insert(nodeId);
       } else {
-        std::string           line;
-        bool                  foundFinalNode = false;
-        std::set<std::size_t> nodeIds;
-        while (std::getline(layerNodeFile, line)) {
-          if (line.empty()) {
-            continue;
-          }
-          std::string               col;
-          std::size_t               nodeId, parentId, depth, isValidMapping;
-          double                    costFixed, costHeur, lookaheadPenalty;
-          std::vector<std::int32_t> layout{};
-          std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
-          std::stringstream                                  lineStream(line);
-          if (std::getline(lineStream, col, ';')) {
-            nodeId = std::stoull(col);
-            nodeIds.insert(nodeId);
-          } else {
-            FAIL() << "Missing value for node id in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            parentId = std::stoull(col);
-            if (nodeId != 0) {
-              EXPECT_TRUE(nodeIds.count(parentId) > 0);
-            }
-          } else {
-            FAIL() << "Missing value for parent node id in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            costFixed = std::stod(col);
-          } else {
-            FAIL() << "Missing value for fixed cost in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            costHeur = std::stod(col);
-          } else {
-            FAIL() << "Missing value for heuristic cost in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            lookaheadPenalty = std::stod(col);
-          } else {
-            FAIL() << "Missing value for lookahead penalty in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            isValidMapping = std::stoull(col);
-            if (isValidMapping > 1) {
-              FAIL() << "Non-boolean value " << isValidMapping
-                     << " for isValidMapping in " << settings.dataLoggingPath
-                     << "nodes_layer_" << i << ".csv";
-            }
-          } else {
-            FAIL() << "Missing value for isValidMapping in "
-                   << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            depth = std::stoull(col);
-          } else {
-            FAIL() << "Missing value for depth in " << settings.dataLoggingPath
-                   << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            std::stringstream qubitMapBuffer(col);
-            std::string       entry;
-            while (std::getline(qubitMapBuffer, entry, ',')) {
-              std::int32_t qubit = std::stoi(entry);
-              layout.push_back(qubit);
-              EXPECT_TRUE(-1 <= qubit && qubit < architecture.getNqubits());
-            }
-            EXPECT_EQ(layout.size(), architecture.getNqubits());
-          } else {
-            FAIL() << "Missing value for layout in " << settings.dataLoggingPath
-                   << "nodes_layer_" << i << ".csv";
-          }
-          if (std::getline(lineStream, col, ';')) {
-            std::stringstream swapBuffer(col);
-            std::string       entry;
-            while (std::getline(swapBuffer, entry, ',')) {
-              std::int32_t q1, q2;
-              std::stringstream(entry) >> q1 >> q2;
-              EXPECT_TRUE(0 <= q1 && q1 < architecture.getNqubits());
-              EXPECT_TRUE(0 <= q2 && q2 < architecture.getNqubits());
-              swaps.push_back(std::make_pair(q1, q2));
-            }
-          }
-
-          if (nodeId == finalNodeId) {
-            foundFinalNode = true;
-            EXPECT_EQ(layerJson["final_cost_fixed"], costFixed);
-            EXPECT_EQ(layerJson["final_cost_heur"], costHeur);
-            EXPECT_EQ(layerJson["final_layout"], layout);
-            EXPECT_EQ(layerJson["final_lookahead_penalty"], lookaheadPenalty);
-            EXPECT_EQ(layerJson["final_search_depth"], depth);
-            EXPECT_EQ(layerJson["final_swaps"], swaps);
-            EXPECT_EQ(isValidMapping, 1);
-          }
+        FAIL() << "Missing value for node id in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        parentId = std::stoull(col);
+        if (nodeId != 0) {
+          EXPECT_TRUE(nodeIds.count(parentId) > 0);
         }
-        if (!foundFinalNode) {
-          FAIL() << "Could not find final node in " << settings.dataLoggingPath
-                 << "nodes_layer_" << i << ".csv";
+      } else {
+        FAIL() << "Missing value for parent node id in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        costFixed = std::stod(col);
+      } else {
+        FAIL() << "Missing value for fixed cost in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        costHeur = std::stod(col);
+      } else {
+        FAIL() << "Missing value for heuristic cost in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        lookaheadPenalty = std::stod(col);
+      } else {
+        FAIL() << "Missing value for lookahead penalty in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        isValidMapping = std::stoull(col);
+        if (isValidMapping > 1) {
+          FAIL() << "Non-boolean value " << isValidMapping
+                  << " for isValidMapping in " << settings.dataLoggingPath
+                  << "nodes_layer_" << i << ".csv";
+        }
+      } else {
+        FAIL() << "Missing value for isValidMapping in "
+                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        depth = std::stoull(col);
+      } else {
+        FAIL() << "Missing value for depth in " << settings.dataLoggingPath
+                << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        std::stringstream qubitMapBuffer(col);
+        std::string       entry;
+        while (std::getline(qubitMapBuffer, entry, ',')) {
+          const std::int32_t qubit = std::stoi(entry);
+          layout.push_back(qubit);
+          EXPECT_TRUE(-1 <= qubit && qubit < architecture.getNqubits());
+        }
+        EXPECT_EQ(layout.size(), architecture.getNqubits());
+      } else {
+        FAIL() << "Missing value for layout in " << settings.dataLoggingPath
+                << "nodes_layer_" << i << ".csv";
+      }
+      if (std::getline(lineStream, col, ';')) {
+        std::stringstream swapBuffer(col);
+        std::string       entry;
+        while (std::getline(swapBuffer, entry, ',')) {
+          std::int32_t q1 = 0;
+          std::int32_t q2 = 0;
+          std::stringstream(entry) >> q1 >> q2;
+          EXPECT_TRUE(0 <= q1 && q1 < architecture.getNqubits());
+          EXPECT_TRUE(0 <= q2 && q2 < architecture.getNqubits());
+          swaps.emplace_back(q1, q2);
         }
       }
+
+      if (nodeId == finalNodeId) {
+        foundFinalNode = true;
+        EXPECT_EQ(layerJson["final_cost_fixed"], costFixed);
+        EXPECT_EQ(layerJson["final_cost_heur"], costHeur);
+        EXPECT_EQ(layerJson["final_layout"], layout);
+        EXPECT_EQ(layerJson["final_lookahead_penalty"], lookaheadPenalty);
+        EXPECT_EQ(layerJson["final_search_depth"], depth);
+        EXPECT_EQ(layerJson["final_swaps"], swaps);
+        EXPECT_EQ(isValidMapping, 1);
+      }
+    }
+    if (!foundFinalNode) {
+      FAIL() << "Could not find final node in " << settings.dataLoggingPath
+              << "nodes_layer_" << i << ".csv";
     }
   }
 
@@ -885,11 +885,11 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   };
   architecture.loadCouplingMap(6, cm);
 
-  double e5 = 0.99;
-  double e4 = 0.9;
-  double e3 = 0.5;
-  double e1 = 0.1;
-  double e0 = 0.01;
+  const double e5 = 0.99;
+  const double e4 = 0.9;
+  const double e3 = 0.5;
+  const double e1 = 0.1;
+  const double e0 = 0.01;
 
   auto props = Architecture::Properties();
   props.setSingleQubitErrorRate(0, "x", e5);
@@ -952,11 +952,11 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   */
   EXPECT_EQ(result.output.swaps, 3);
 
-  double c3 = -std::log2(1 - e3);
-  double c1 = -std::log2(1 - e1);
-  double c0 = -std::log2(1 - e0);
+  const double c3 = -std::log2(1 - e3);
+  const double c1 = -std::log2(1 - e1);
+  const double c0 = -std::log2(1 - e0);
 
-  double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
+  const double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
                             5 * c1 +                   // Xs
                             5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
@@ -968,10 +968,10 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
                           {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
   architecture.loadCouplingMap(7, cm);
 
-  double e5 = 0.99;
-  double e4 = 0.9;
-  double e3 = 0.5;
-  double e1 = 0.1;
+  const double e5 = 0.99;
+  const double e4 = 0.9;
+  const double e3 = 0.5;
+  const double e1 = 0.1;
 
   auto props = Architecture::Properties();
   props.setSingleQubitErrorRate(0, "x", e5);
@@ -1035,11 +1035,11 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   */
   EXPECT_EQ(result.output.swaps, 4);
 
-  double c4 = -std::log2(1 - e4);
-  double c3 = -std::log2(1 - e3);
-  double c1 = -std::log2(1 - e1);
+  const double c4 = -std::log2(1 - e4);
+  const double c3 = -std::log2(1 - e3);
+  const double c1 = -std::log2(1 - e1);
 
-  double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
+  const double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
                             5 * c1 + 5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
@@ -1088,7 +1088,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   EXPECT_EQ(result.input.layers, 1);
   EXPECT_EQ(result.output.swaps, 1);
 
-  double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
+  const double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
                             - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }

@@ -15,18 +15,17 @@
 
 class DataLogger {
 public:
-  DataLogger(const std::string& path, Architecture& arch,
+  DataLogger(std::string path, Architecture& arch,
              qc::QuantumComputation& qc)
-      : dataLoggingPath(path), architecture(arch), inputCircuit(qc) {
-    nqubits = architecture.getNqubits();
+      : dataLoggingPath(std::move(path)), architecture(std::move(arch)), inputCircuit(qc), nqubits(arch.getNqubits()) {
     initLog();
     logArchitecture(architecture);
     logInputCircuit(inputCircuit);
     for (std::size_t i = 0; i < qc.getNqubits(); ++i) {
-      qregs.push_back(std::make_pair("q", "q[" + std::to_string(i) + "]"));
+      qregs.emplace_back("q", "q[" + std::to_string(i) + "]");
     }
     for (std::size_t i = 0; i < qc.getNcbits(); ++i) {
-      cregs.push_back(std::make_pair("c", "c[" + std::to_string(i) + "]"));
+      cregs.emplace_back("c", "c[" + std::to_string(i) + "]");
     }
   }
 
@@ -42,10 +41,8 @@ public:
                      std::size_t                               depth);
   void logFinalizeLayer(
       std::size_t layer, const qc::CompoundOperation& ops,
-      std::vector<std::uint16_t> singleQubitMultiplicity,
-      std::map<std::pair<std::uint16_t, std::uint16_t>,
-               std::pair<std::uint16_t, std::uint16_t>>
-                                                         twoQubitMultiplicity,
+      const std::vector<std::uint16_t>& singleQubitMultiplicity,
+      const std::map<std::pair<std::uint16_t, std::uint16_t>, std::pair<std::uint16_t, std::uint16_t>>& twoQubitMultiplicity,
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
       std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
       double                                             finalLookaheadPenalty,
@@ -63,7 +60,7 @@ public:
   void close();
 
 protected:
-  std::string                dataLoggingPath;
+  std::string&               dataLoggingPath;
   Architecture&              architecture;
   std::uint16_t              nqubits;
   qc::QuantumComputation&    inputCircuit;

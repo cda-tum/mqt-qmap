@@ -13,7 +13,7 @@ void DataLogger::initLog() {
   if (dataLoggingPath.back() != '/') {
     dataLoggingPath += '/';
   }
-  std::filesystem::path dirPath(dataLoggingPath);
+  const std::filesystem::path dirPath(dataLoggingPath);
   if (!std::filesystem::exists(dirPath)) {
     std::filesystem::create_directory(dirPath);
   }
@@ -64,8 +64,7 @@ void DataLogger::openNewLayer(std::size_t layer) {
   }
 
   for (std::size_t i = searchNodesLogFiles.size(); i <= layer; ++i) {
-    searchNodesLogFiles.push_back(std::ofstream(
-        dataLoggingPath + "nodes_layer_" + std::to_string(i) + ".csv"));
+    searchNodesLogFiles.emplace_back(dataLoggingPath + "nodes_layer_" + std::to_string(i) + ".csv");
     if (!searchNodesLogFiles.at(i).good()) {
       deactivated = true;
       std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
@@ -77,10 +76,8 @@ void DataLogger::openNewLayer(std::size_t layer) {
 
 void DataLogger::logFinalizeLayer(
     std::size_t layer, const qc::CompoundOperation& ops,
-    std::vector<std::uint16_t> singleQubitMultiplicity,
-    std::map<std::pair<std::uint16_t, std::uint16_t>,
-             std::pair<std::uint16_t, std::uint16_t>>
-                                                       twoQubitMultiplicity,
+    const std::vector<std::uint16_t>& singleQubitMultiplicity,
+    const std::map<std::pair<std::uint16_t, std::uint16_t>, std::pair<std::uint16_t, std::uint16_t>>& twoQubitMultiplicity,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
     std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
     double                                             finalLookaheadPenalty,
@@ -181,7 +178,7 @@ void DataLogger::logSearchNode(
     of << qubits.at(i) << ",";
   }
   if (nqubits > 0) {
-    of.seekp(-1, of.cur); // remove last comma
+    of.seekp(-1, std::ios_base::cur); // remove last comma
   }
   of << ";";
   for (const auto& sw : swaps) {
@@ -197,8 +194,8 @@ void DataLogger::logSearchNode(
       of << ",";
     }
   }
-  if (swaps.size() > 0) {
-    of.seekp(-1, of.cur); // remove last comma
+  if (!swaps.empty()) {
+    of.seekp(-1, std::ios_base::cur); // remove last comma
   }
   of << std::endl;
 };

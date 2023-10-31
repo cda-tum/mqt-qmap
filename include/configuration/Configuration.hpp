@@ -29,7 +29,7 @@ struct Configuration {
 
   bool        verbose         = false;
   bool        debug           = false;
-  std::string dataLoggingPath = "";
+  std::string dataLoggingPath;
 
   // map to particular subgraph of architecture (in exact mapper)
   std::set<std::uint16_t> subgraph{};
@@ -76,7 +76,7 @@ struct Configuration {
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
 
-  bool dataLoggingEnabled() const { return !dataLoggingPath.empty(); }
+  [[nodiscard]] bool dataLoggingEnabled() const { return !dataLoggingPath.empty(); }
 
   void               setTimeout(const std::size_t sec) { timeout = sec; }
   [[nodiscard]] bool swapLimitsEnabled() const {
