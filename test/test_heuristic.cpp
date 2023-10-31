@@ -484,7 +484,7 @@ TEST(Functionality, DataLogger) {
       if (line.empty()) {
         continue;
       }
-      std::string                                        col              = 0;
+      std::string                                        col;
       std::size_t                                        nodeId           = 0;
       std::size_t                                        parentId         = 0;
       std::size_t                                        depth            = 0;
