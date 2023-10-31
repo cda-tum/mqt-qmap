@@ -42,7 +42,9 @@ public:
   void logFinalizeLayer(
       std::size_t layer, const qc::CompoundOperation& ops,
       const std::vector<std::uint16_t>& singleQubitMultiplicity,
-      const std::map<std::pair<std::uint16_t, std::uint16_t>, std::pair<std::uint16_t, std::uint16_t>>& twoQubitMultiplicity,
+      const std::map<std::pair<std::uint16_t, std::uint16_t>,
+                     std::pair<std::uint16_t, std::uint16_t>>&
+                                                         twoQubitMultiplicity,
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
       std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
       double                                             finalLookaheadPenalty,

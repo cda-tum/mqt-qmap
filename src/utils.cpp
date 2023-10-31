@@ -112,7 +112,8 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
   const std::size_t n = distanceTable.size();
   for (std::size_t k = 1; k <= n; ++k) {
     // k...number of edges to be skipped along each path
-    edgeSkipDistanceTable.emplace_back(n, std::vector<double>(n, std::numeric_limits<double>::max()));
+    edgeSkipDistanceTable.emplace_back(
+        n, std::vector<double>(n, std::numeric_limits<double>::max()));
     Matrix* currentTable = &edgeSkipDistanceTable.back();
     for (std::size_t q = 0; q < n; ++q) {
       currentTable->at(q).at(q) = 0.;

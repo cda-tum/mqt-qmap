@@ -390,7 +390,7 @@ void HeuristicMapper::mapUnmappedGates(
         for (std::uint16_t physQbit = 0; physQbit < architecture.getNqubits();
              ++physQbit) {
           if (qubits.at(physQbit) == -1) {
-            locations.at(q)   = static_cast<std::int16_t>(physQbit);
+            locations.at(q)     = static_cast<std::int16_t>(physQbit);
             qubits.at(physQbit) = static_cast<std::int16_t>(q);
             break;
           }
@@ -1041,12 +1041,11 @@ void HeuristicMapper::Node::updateHeuristicCost(
   // qubits with higher fidelity
   double savingsPotential = 0.;
   if (considerFidelity) {
-    for (std::uint16_t logQbit = 0U; logQbit < arch.getNqubits();
-         ++logQbit) {
+    for (std::uint16_t logQbit = 0U; logQbit < arch.getNqubits(); ++logQbit) {
       if (singleQubitGateMultiplicity.at(logQbit) == 0) {
         continue;
       }
-      double qbitSavings  = 0;
+      double       qbitSavings  = 0;
       const double currFidelity = arch.getSingleQubitFidelityCost(
           static_cast<std::uint16_t>(locations.at(logQbit)));
       for (std::uint16_t physQbit = 0U; physQbit < arch.getNqubits();

@@ -316,7 +316,8 @@ TEST(Functionality, DataLogger) {
             architecture.getFidelityTable());
   // json does not support inf values, instead nlohmann::json replaces inf
   // with null
-  const auto& singleQubitFidelityCosts = architecture.getSingleQubitFidelityCosts();
+  const auto& singleQubitFidelityCosts =
+      architecture.getSingleQubitFidelityCosts();
   for (std::size_t i = 0; i < singleQubitFidelityCosts.size(); ++i) {
     if (std::isinf(singleQubitFidelityCosts[i])) {
       EXPECT_TRUE(fidelityJson["single_qubit_fidelity_costs"][i].is_null());
@@ -355,7 +356,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "mapping_result.json";
   }
-  const auto resultJson = nlohmann::json::parse(resultFile);
+  const auto  resultJson = nlohmann::json::parse(resultFile);
   const auto& configJson = resultJson["config"];
   EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
             settings.addMeasurementsToMappedCircuit);
@@ -387,15 +388,14 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(outCircJson["gates"], results.output.gates);
   EXPECT_EQ(outCircJson["name"], results.output.name);
   EXPECT_EQ(outCircJson["qubits"], results.output.qubits);
-  EXPECT_EQ(outCircJson["single_qubit_gates"],
-            results.output.singleQubitGates);
+  EXPECT_EQ(outCircJson["single_qubit_gates"], results.output.singleQubitGates);
 
   const auto& statJson = resultJson["statistics"];
   EXPECT_EQ(statJson["additional_gates"],
             (static_cast<std::make_signed_t<decltype(results.output.gates)>>(
-                  results.output.gates) -
-              static_cast<std::make_signed_t<decltype(results.input.gates)>>(
-                  results.input.gates)));
+                 results.output.gates) -
+             static_cast<std::make_signed_t<decltype(results.input.gates)>>(
+                 results.input.gates)));
   EXPECT_EQ(statJson["layers"], results.input.layers);
   EXPECT_EQ(statJson["mapping_time"], results.time);
   EXPECT_EQ(statJson["swaps"], results.output.swaps);
@@ -416,8 +416,7 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(benchmarkJson["time_per_node"],
             results.heuristicBenchmark.timePerNode);
   const auto& benchmarkLayersJson = benchmarkJson["layers"];
-  EXPECT_EQ(benchmarkLayersJson.size(),
-            results.layerHeuristicBenchmark.size());
+  EXPECT_EQ(benchmarkLayersJson.size(), results.layerHeuristicBenchmark.size());
   for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
     EXPECT_EQ(benchmarkLayersJson[i]["average_branching_factor"],
               results.layerHeuristicBenchmark.at(i).averageBranchingFactor);
@@ -466,18 +465,17 @@ TEST(Functionality, DataLogger) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << "layer_"
              << i << ".json";
     }
-    const auto  layerJson   = nlohmann::json::parse(layerFile);
+    const auto        layerJson   = nlohmann::json::parse(layerFile);
     const std::size_t finalNodeId = layerJson["final_node_id"];
     EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
               architecture.getNqubits());
 
-    auto layerNodeFile =
-        std::ifstream(settings.dataLoggingPath + "nodes_layer_" +
-                      std::to_string(i) + ".csv");
+    auto layerNodeFile = std::ifstream(
+        settings.dataLoggingPath + "nodes_layer_" + std::to_string(i) + ".csv");
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath
-              << "nodes_layer_" << i << ".csv";
+             << "nodes_layer_" << i << ".csv";
     }
     std::string           line;
     bool                  foundFinalNode = false;
@@ -486,23 +484,23 @@ TEST(Functionality, DataLogger) {
       if (line.empty()) {
         continue;
       }
-      std::string               col = 0;
-      std::size_t               nodeId = 0;
-      std::size_t               parentId = 0;
-      std::size_t               depth = 0;
-      std::size_t               isValidMapping = 0;
-      double                    costFixed = 0.;
-      double                    costHeur = 0.;
-      double                    lookaheadPenalty = 0.;
-      std::vector<std::int32_t> layout{};
+      std::string                                        col              = 0;
+      std::size_t                                        nodeId           = 0;
+      std::size_t                                        parentId         = 0;
+      std::size_t                                        depth            = 0;
+      std::size_t                                        isValidMapping   = 0;
+      double                                             costFixed        = 0.;
+      double                                             costHeur         = 0.;
+      double                                             lookaheadPenalty = 0.;
+      std::vector<std::int32_t>                          layout{};
       std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
       std::stringstream                                  lineStream(line);
       if (std::getline(lineStream, col, ';')) {
         nodeId = std::stoull(col);
         nodeIds.insert(nodeId);
       } else {
-        FAIL() << "Missing value for node id in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+        FAIL() << "Missing value for node id in " << settings.dataLoggingPath
+               << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         parentId = std::stoull(col);
@@ -511,42 +509,42 @@ TEST(Functionality, DataLogger) {
         }
       } else {
         FAIL() << "Missing value for parent node id in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         costFixed = std::stod(col);
       } else {
-        FAIL() << "Missing value for fixed cost in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+        FAIL() << "Missing value for fixed cost in " << settings.dataLoggingPath
+               << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         costHeur = std::stod(col);
       } else {
         FAIL() << "Missing value for heuristic cost in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         lookaheadPenalty = std::stod(col);
       } else {
         FAIL() << "Missing value for lookahead penalty in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         isValidMapping = std::stoull(col);
         if (isValidMapping > 1) {
           FAIL() << "Non-boolean value " << isValidMapping
-                  << " for isValidMapping in " << settings.dataLoggingPath
-                  << "nodes_layer_" << i << ".csv";
+                 << " for isValidMapping in " << settings.dataLoggingPath
+                 << "nodes_layer_" << i << ".csv";
         }
       } else {
         FAIL() << "Missing value for isValidMapping in "
-                << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         depth = std::stoull(col);
       } else {
         FAIL() << "Missing value for depth in " << settings.dataLoggingPath
-                << "nodes_layer_" << i << ".csv";
+               << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         std::stringstream qubitMapBuffer(col);
@@ -559,7 +557,7 @@ TEST(Functionality, DataLogger) {
         EXPECT_EQ(layout.size(), architecture.getNqubits());
       } else {
         FAIL() << "Missing value for layout in " << settings.dataLoggingPath
-                << "nodes_layer_" << i << ".csv";
+               << "nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         std::stringstream swapBuffer(col);
@@ -587,7 +585,7 @@ TEST(Functionality, DataLogger) {
     }
     if (!foundFinalNode) {
       FAIL() << "Could not find final node in " << settings.dataLoggingPath
-              << "nodes_layer_" << i << ".csv";
+             << "nodes_layer_" << i << ".csv";
     }
   }
 
@@ -957,8 +955,8 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   const double c0 = -std::log2(1 - e0);
 
   const double expectedFidelity = 3 * c3 + 3 * c0 + 3 * c0 + // SWAPs
-                            5 * c1 +                   // Xs
-                            5 * c1;                    // CXs
+                                  5 * c1 +                   // Xs
+                                  5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
 
@@ -1040,7 +1038,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   const double c1 = -std::log2(1 - e1);
 
   const double expectedFidelity = 3 * c4 + 3 * c3 + 3 * c4 + 3 * c3 + // SWAPs
-                            5 * c1 + 5 * c1;                    // CXs
+                                  5 * c1 + 5 * c1;                    // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
 
@@ -1088,7 +1086,8 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   EXPECT_EQ(result.input.layers, 1);
   EXPECT_EQ(result.output.swaps, 1);
 
-  const double expectedFidelity = -3 * std::log2(1 - 0.1)                    // SWAPs
-                            - std::log2(1 - 0.8) - std::log2(1 - 0.1); // Xs
+  const double expectedFidelity = -3 * std::log2(1 - 0.1) // SWAPs
+                                  - std::log2(1 - 0.8) -
+                                  std::log2(1 - 0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 }
