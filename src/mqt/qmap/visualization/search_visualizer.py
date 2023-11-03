@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-from mqt.qmap.visualization.visualize_search_graph import Position, SearchNode, visualize_search_graph
+from mqt.qmap.visualization.visualize_search_graph import SearchNode, visualize_search_graph
 
 if TYPE_CHECKING:
     from ipywidgets import Widget
@@ -54,7 +54,7 @@ class SearchVisualizer:
     def visualize_search_graph(
         self,
         layer: int | Literal["interactive"] = "interactive",  # 'interactive' (slider menu) | index
-        architecture_node_positions: MutableMapping[int, Position] | None = None,
+        architecture_node_positions: MutableMapping[int, tuple[float, float]] | None = None,
         architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
         search_node_layout: Literal[
             "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"

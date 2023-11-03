@@ -59,6 +59,7 @@ def compile(  # noqa: A001
     arch: str | Arch | Architecture | Backend | None,
     calibration: str | BackendProperties | Target | None = None,
     method: str | Method = "heuristic",
+    consider_fidelity: bool = False,
     initial_layout: str | InitialLayout = "dynamic",
     layering: str | Layering = "individual_gates",
     lookaheads: int | None = 15,

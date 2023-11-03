@@ -55,8 +55,6 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from plotly.subplots import make_subplots
 from walkerlayout import WalkerLayouting
 
-# TODO: show_swaps not working!
-
 
 @dataclass
 class _TwoQbitMultiplicity:
@@ -705,6 +703,7 @@ def _visualize_layout(
     arch_node_positions: MutableMapping[int, Position],
     initial_layout: list[int],
     considered_qubit_colors: MutableMapping[int, str],
+    show_swaps: bool,
     swap_arrow_offset: float,
     arch_x_arrow_spacing: float,
     arch_y_arrow_spacing: float,
@@ -727,7 +726,7 @@ def _visualize_layout(
     )
     stats = go.layout.Annotation(**plotly_settings["stats_legend"])
     annotations: list[go.layout.Annotation] = []
-    if len(swaps) > 0:
+    if show_swaps and len(swaps) > 0:
         annotations = _draw_swap_arrows(
             arch_node_positions,
             initial_layout,
@@ -875,7 +874,7 @@ def _load_layer_data(
     ]
     shuffle(considered_qubits_color_codes)
     considered_qubit_colors: dict[int, str] = {}
-    for q in considered_qubit_colors:
+    for q in considered_qubit_color_groups:
         considered_qubit_colors[q] = considered_qubits_color_codes[considered_qubit_color_groups[q]]
 
     return (  # type: ignore[return-value]
@@ -1591,8 +1590,8 @@ def visualize_search_graph(
     #   'architecture_xaxis': settings for plotly.graph_objects.layout.XAxis
     #   'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis
     # }
-    # TODO: show archticture edge labels (and control text?)
-    # TODO: control hover text of search (especially for multiple points per node!) and architecture nodes?
+    # TODO: show archticture edge labels (and make text adjustable)
+    # TODO: make hover text of search (especially for multiple points per node!) and architecture nodes adjustable
 ) -> Widget:
     """Creates a widget to visualize a search graph.
 
@@ -1950,6 +1949,7 @@ def visualize_search_graph(
             architecture_node_positions,  # type: ignore[arg-type]
             initial_layout,
             considered_qubit_colors,
+            show_swaps,
             swap_arrow_offset,
             arch_x_arrow_spacing,  # type: ignore[arg-type]
             arch_y_arrow_spacing,  # type: ignore[arg-type]
@@ -2125,7 +2125,7 @@ def visualize_search_graph(
     layer_slider = interactive(
         update_layer,
         new_layer=IntSlider(
-            min=0, max=number_of_layers, step=1, value=0, description="Layer:", layout=Layout(width=f"{width-80}px")
+            min=0, max=number_of_layers-1, step=1, value=0, description="Layer:", layout=Layout(width=f"{width-80}px")
         ),
     )
 
