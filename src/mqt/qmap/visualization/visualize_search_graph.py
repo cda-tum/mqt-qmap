@@ -1141,13 +1141,10 @@ def _visualize_search_graph_check_parameters(
     if ColorValidator.perform_validate_coerce(search_edges_color, allow_number=False) is None:
         raise TypeError(ColorValidator("search_edges_color", "visualize_search_graph").description())
 
-    if (
-        search_edges_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and 
-        not (
-            re.match(r"^(\d+(\s*\d+)*)$", search_edges_dash) or
-            re.match(r"^(\d+px(\s*\d+px)*)$", search_edges_dash) or
-            re.match(r"^(\d+%(\s*\d+%)*)$", search_edges_dash)
-        )
+    if search_edges_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not (
+        re.match(r"^(\d+(\s*\d+)*)$", search_edges_dash)
+        or re.match(r"^(\d+px(\s*\d+px)*)$", search_edges_dash)
+        or re.match(r"^(\d+%(\s*\d+%)*)$", search_edges_dash)
     ):
         msg = (
             'search_edges_dash must be one of "solid", "dot", "dash", "longdash", "dashdot", "longdashdot" or a string containing a dash length list in '
@@ -1201,13 +1198,10 @@ def _visualize_search_graph_check_parameters(
     if ColorValidator.perform_validate_coerce(stems_color, allow_number=False) is None:
         raise TypeError(ColorValidator("stems_color", "visualize_search_graph").description())
 
-    if (
-        stems_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and 
-        not (
-            re.match(r"^(\d+(\s*\d+)*)$", stems_dash) or
-            re.match(r"^(\d+px(\s*\d+px)*)$", stems_dash) or
-            re.match(r"^(\d+%(\s*\d+%)*)$", stems_dash)
-        )
+    if stems_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not (
+        re.match(r"^(\d+(\s*\d+)*)$", stems_dash)
+        or re.match(r"^(\d+px(\s*\d+px)*)$", stems_dash)
+        or re.match(r"^(\d+%(\s*\d+%)*)$", stems_dash)
     ):
         msg = (
             'stems_dash must be one of "solid", "dot", "dash", "longdash", "dashdot", "longdashdot" or a string containing a dash length list in '
@@ -2125,7 +2119,7 @@ def visualize_search_graph(
     layer_slider = interactive(
         update_layer,
         new_layer=IntSlider(
-            min=0, max=number_of_layers-1, step=1, value=0, description="Layer:", layout=Layout(width=f"{width-80}px")
+            min=0, max=number_of_layers - 1, step=1, value=0, description="Layer:", layout=Layout(width=f"{width-80}px")
         ),
     )
 
