@@ -58,7 +58,6 @@ public:
   void logOutputCircuit(qc::QuantumComputation& qc) {
     qc.dump(dataLoggingPath + "/output.qasm", qc::Format::OpenQASM);
   }
-  // TODO: layering, initial layout
   void close();
 
 protected:
