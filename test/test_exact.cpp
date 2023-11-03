@@ -31,9 +31,9 @@ protected:
       qc.import(testExampleDir + GetParam() + ".qasm");
     } else {
       qc.addQubitRegister(3U);
-      qc.x(0, 1_pc);
-      qc.x(1, 2_pc);
-      qc.x(2, 0_pc);
+      qc.cx(1_pc, 0);
+      qc.cx(2_pc, 1);
+      qc.cx(0_pc, 2);
     }
     ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
@@ -436,10 +436,10 @@ TEST_F(ExactTest, WCNFNotAvailable) {
 
   auto circ = qc::QuantumComputation(5U);
   circ.h(0);
-  circ.x(1, 0_pc);
-  circ.x(2, 0_pc);
-  circ.x(3, 0_pc);
-  circ.x(4, 0_pc);
+  circ.cx(0_pc, 1);
+  circ.cx(0_pc, 2);
+  circ.cx(0_pc, 3);
+  circ.cx(0_pc, 4);
 
   auto mapper = ExactMapper(circ, ibmqLondon);
 
@@ -546,11 +546,11 @@ TEST_F(ExactTest, RegressionTestDirectionReverseCost) {
   Architecture::printCouplingMap(cm, std::cout);
 
   qc = qc::QuantumComputation(4);
-  qc.x(0, 1_pc);
-  qc.x(1, 0_pc);
-  qc.x(1, 2_pc);
-  qc.x(2, 1_pc);
-  qc.x(2, 3_pc);
+  qc.cx(1_pc, 0);
+  qc.cx(0_pc, 1);
+  qc.cx(2_pc, 1);
+  qc.cx(1_pc, 2);
+  qc.cx(3_pc, 2);
 
   auto mapper = ExactMapper(qc, arch);
   mapper.map(settings);

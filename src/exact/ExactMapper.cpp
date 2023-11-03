@@ -42,7 +42,7 @@ void ExactMapper::map(const Configuration& settings) {
 
   // quickly terminate if the circuit only contains single-qubit gates
   if (reducedLayerIndices.empty()) {
-    qcMapped = qc.clone();
+    qcMapped = qc;
     postMappingOptimizations(config);
     results.output.gates = 0U;
     countGates(qcMapped, results.output);
@@ -301,8 +301,8 @@ void ExactMapper::map(const Configuration& settings) {
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
-          qcMapped.x(reverse.second,
-                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reverse.first)},
+                      reverse.second);
           qcMapped.h(reverse.second);
           qcMapped.h(reverse.first);
         } else {
@@ -311,8 +311,8 @@ void ExactMapper::map(const Configuration& settings) {
                       << ": Added cnot with control and target: " << cnot.first
                       << " " << cnot.second << std::endl;
           }
-          qcMapped.x(cnot.second,
-                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
+                      cnot.second);
         }
       }
     }

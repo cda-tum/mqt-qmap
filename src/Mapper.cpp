@@ -20,7 +20,7 @@ void Mapper::initResults() {
 
 Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
                Architecture&                 arch)
-    : qc(quantumComputation.clone()), architecture(arch) {
+    : qc(quantumComputation), architecture(arch) {
   qubits.fill(DEFAULT_POSITION);
   locations.fill(DEFAULT_POSITION);
   fidelities.fill(INITIAL_FIDELITY);

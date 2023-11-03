@@ -123,16 +123,16 @@ void HeuristicMapper::map(const Configuration& configuration) {
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
-          qcMapped.x(reverse.second,
-                     qc::Control{static_cast<qc::Qubit>(reverse.first)});
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reverse.first)},
+                      reverse.second);
           qcMapped.h(reverse.second);
           qcMapped.h(reverse.first);
 
           results.output.directionReverse++;
           gateidx += 5;
         } else {
-          qcMapped.x(cnot.second,
-                     qc::Control{static_cast<qc::Qubit>(cnot.first)});
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
+                      cnot.second);
           gateidx++;
         }
       }

@@ -65,13 +65,13 @@ void Tableau::applyGate(const qc::Operation* const gate) {
     case qc::OpType::S:
       applyS(target);
       break;
-    case qc::OpType::Sdag:
+    case qc::OpType::Sdg:
       applySdag(target);
       break;
     case qc::OpType::SX:
       applySx(target);
       break;
-    case qc::OpType::SXdag:
+    case qc::OpType::SXdg:
       applySxdag(target);
       break;
     case qc::OpType::X:
