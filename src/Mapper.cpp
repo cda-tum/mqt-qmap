@@ -183,7 +183,72 @@ void Mapper::createLayers() {
     }
   }
   results.input.layers = layers.size();
-}
+} 
+
+void Mapper::splitLayer(std::size_t index, SingleQubitMultiplicity& singleQubitMultiplicity, TwoQubitMultiplicity& twoQubitMultiplicity, Architecture& arch) {
+    std::vector<Gate> layer0 = {};
+    std::vector<Gate> layer1 = {};
+    SingleQubitMultiplicity singleQubitMultiplicity0(arch.getNqubits(), 0);
+    SingleQubitMultiplicity singleQubitMultiplicity1(arch.getNqubits(), 0);
+    TwoQubitMultiplicity twoQubitMultiplicity0 = {};
+    TwoQubitMultiplicity twoQubitMultiplicity1 = {};
+    
+    bool even = true;
+    for (std::size_t q = 0; q < singleQubitMultiplicity.size(); ++q) {
+      if (singleQubitMultiplicity[q] == 0) {
+        continue;
+      }
+      if (even) {
+        singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
+      } else {
+        singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
+      }
+      even = !even;
+    }
+    even = false;
+    for (auto edge : twoQubitMultiplicity) {
+      if (even) {
+        twoQubitMultiplicity0.insert(edge);
+      } else {
+        twoQubitMultiplicity1.insert(edge);
+      }
+      even = !even;
+    }
+    
+    for (auto& gate : layers[index]) {
+      if (gate.singleQubit()) {
+        if (singleQubitMultiplicity0[gate.target] > 0) {
+          layer0.push_back(gate);
+        } else {
+          layer1.push_back(gate);
+        }
+      } else {
+        Edge edge;
+        if (gate.control < gate.target) {
+          edge = {gate.control, gate.target};
+        } else {
+          edge = {gate.target, gate.control};
+        }
+        if (twoQubitMultiplicity0.find(edge) != twoQubitMultiplicity0.end()) {
+          layer0.push_back(gate);
+        } else {
+          layer1.push_back(gate);
+        }
+      }
+    }
+    
+    singleQubitMultiplicity.clear();
+    twoQubitMultiplicity.clear();
+    for (auto q : singleQubitMultiplicity0) {
+      singleQubitMultiplicity.push_back(q);
+    }
+    for (auto edge : twoQubitMultiplicity0) {
+      twoQubitMultiplicity.insert(edge);
+    }
+    layers[index] = layer0;
+    layers.insert(layers.begin() + index + 1, layer1);
+    results.input.layers = layers.size();
+  }
 
 std::size_t Mapper::getNextLayer(std::size_t idx) {
   auto next = idx + 1;

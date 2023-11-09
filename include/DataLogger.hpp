@@ -51,6 +51,7 @@ public:
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
       const std::vector<std::vector<Exchange>>&          finalSwaps,
       std::size_t                                        finalSearchDepth);
+  void splitLayer();
   void logMappingResult(MappingResults& result);
   void logInputCircuit(qc::QuantumComputation& qc) {
     qc.dump(dataLoggingPath + "/input.qasm", qc::Format::OpenQASM);

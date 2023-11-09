@@ -58,12 +58,12 @@ void DataLogger::logArchitecture(Architecture& arch) {
   of.close();
 };
 
-void DataLogger::openNewLayer(std::size_t layer) {
+void DataLogger::openNewLayer(std::size_t layerIndex) {
   if (deactivated) {
     return;
   }
 
-  for (std::size_t i = searchNodesLogFiles.size(); i <= layer; ++i) {
+  for (std::size_t i = searchNodesLogFiles.size(); i <= layerIndex; ++i) {
     searchNodesLogFiles.emplace_back(dataLoggingPath + "nodes_layer_" +
                                      std::to_string(i) + ".csv");
     if (!searchNodesLogFiles.at(i).good()) {
@@ -76,7 +76,7 @@ void DataLogger::openNewLayer(std::size_t layer) {
 };
 
 void DataLogger::logFinalizeLayer(
-    std::size_t layer, const qc::CompoundOperation& ops,
+    std::size_t layerIndex, const qc::CompoundOperation& ops,
     const std::vector<std::uint16_t>& singleQubitMultiplicity,
     const std::map<std::pair<std::uint16_t, std::uint16_t>,
                    std::pair<std::uint16_t, std::uint16_t>>&
@@ -91,19 +91,19 @@ void DataLogger::logFinalizeLayer(
     return;
   }
 
-  if (!searchNodesLogFiles.at(layer).is_open()) {
-    std::cerr << "[data-logging] Error: layer " << layer
+  if (!searchNodesLogFiles.at(layerIndex).is_open()) {
+    std::cerr << "[data-logging] Error: layer " << layerIndex
               << " has already been finalized" << std::endl;
     return;
   }
-  searchNodesLogFiles.at(layer).close();
+  searchNodesLogFiles.at(layerIndex).close();
 
-  auto of = std::ofstream(dataLoggingPath + "layer_" + std::to_string(layer) +
+  auto of = std::ofstream(dataLoggingPath + "layer_" + std::to_string(layerIndex) +
                           ".json");
   if (!of.good()) {
     deactivated = true;
     std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
-              << "layer_" << layer << ".json" << std::endl;
+              << "layer_" << layerIndex << ".json" << std::endl;
     return;
   }
   nlohmann::json    json;
@@ -154,8 +154,32 @@ void DataLogger::logFinalizeLayer(
   of.close();
 };
 
+void DataLogger::splitLayer() {
+  std::size_t layerIndex = searchNodesLogFiles.size() - 1;
+  if (searchNodesLogFiles.at(layerIndex).is_open()) {
+    std::cerr << "[data-logging] Error: layer " << layerIndex
+              << " has not been finalized before splitting" << std::endl;
+    return;
+  }
+  searchNodesLogFiles.pop_back();
+  std::size_t splitIndex = 0;
+  while (std::filesystem::exists(dataLoggingPath + "nodes_layer_" +
+                                 std::to_string(layerIndex) + ".presplit-" +
+                                 std::to_string(splitIndex) + ".csv")) {
+    ++splitIndex;
+  }
+  std::filesystem::rename(
+    dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) + ".csv", 
+    dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) + ".presplit-" + std::to_string(splitIndex) + ".csv"
+  );
+  std::filesystem::rename(
+    dataLoggingPath + "layer_" + std::to_string(layerIndex) +".json", 
+    dataLoggingPath + "layer_" + std::to_string(layerIndex) + ".presplit-" + std::to_string(splitIndex) + ".json"
+  );
+}
+
 void DataLogger::logSearchNode(
-    std::size_t layer, std::size_t nodeId, std::size_t parentId,
+    std::size_t layerIndex, std::size_t nodeId, std::size_t parentId,
     double costFixed, double costHeur, double lookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
     bool validMapping, const std::vector<std::vector<Exchange>>& swaps,
@@ -164,14 +188,14 @@ void DataLogger::logSearchNode(
     return;
   }
 
-  if (layer >= searchNodesLogFiles.size()) {
-    openNewLayer(layer);
+  if (layerIndex >= searchNodesLogFiles.size()) {
+    openNewLayer(layerIndex);
   }
 
-  auto& of = searchNodesLogFiles.at(layer);
+  auto& of = searchNodesLogFiles.at(layerIndex);
   if (!of.is_open()) {
     deactivated = true;
-    std::cerr << "[data-logging] Error: layer " << layer
+    std::cerr << "[data-logging] Error: layer " << layerIndex
               << " has already been finalized" << std::endl;
     return;
   }

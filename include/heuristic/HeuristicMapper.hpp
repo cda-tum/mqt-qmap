@@ -11,20 +11,6 @@
 
 #pragma once
 
-/**
- * number of two-qubit gates acting on pairs of logical qubits in some layer
- * where the keys correspond to logical qubit pairs ({q1, q2}, with q1<=q2)
- * and the values to the number of gates acting on a pair in each direction
- * (the first number with control=q1, target=q2 and the second the reverse).
- *
- * e.g., with multiplicity {{0,1},{2,3}} there are 2 gates with logical
- * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
- * and 0 as target.
- */
-using TwoQubitMultiplicity =
-    std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
-using SingleQubitMultiplicity = std::vector<std::uint16_t>;
-
 class HeuristicMapper : public Mapper {
 public:
   using Mapper::Mapper; // import constructors from parent class
