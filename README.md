@@ -15,7 +15,7 @@
 
 # MQT QMAP - A tool for Quantum Circuit Compilation
 
-A tool for quantum circuit compilation developed as part of the [_Munich Quantum Toolkit_](https://mqt.readthedocs.io) (_MQT_)[^1] by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
+A tool for quantum circuit compilation developed as part of the [_Munich Quantum Toolkit_](https://mqt.readthedocs.io) (_MQT_) by the [Chair for Design Automation](https://www.cda.cit.tum.de/) at the [Technical University of Munich](https://www.tum.de/).
 It builds upon [MQT Core](https://github.com/cda-tum/mqt-core), which forms the backbone of the MQT.
 
 <p align="center">
@@ -110,8 +110,6 @@ _arXiv:2210.09321_, 2022.
 [[7]](https://arxiv.org/pdf/2208.11713.pdf)
 S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
 In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
-
-[^1]: The Munich Quantum Toolkit was formerly known under the acronym _JKQ_ and developed by the [Institute for Integrated Circuits](https://iic.jku.at/eda/) at the [Johannes Kepler University Linz](https://jku.at)).
 
 ---
 
