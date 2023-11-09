@@ -67,25 +67,25 @@ void ExactMapper::map(const Configuration& settings) {
     }
 
     CouplingMap reducedCouplingMap{};
-    architecture.getReducedCouplingMap(config.subgraph, reducedCouplingMap);
+    architecture->getReducedCouplingMap(config.subgraph, reducedCouplingMap);
 
     // check if the subgraph is connected
     if (!Architecture::isConnected(config.subgraph, reducedCouplingMap)) {
-      std::cerr << "The subgraph is not connected." << std::endl;
+      std::cerr << "The subgraph is not connected.\n";
       return;
     }
 
-    architecture.setCouplingMap(reducedCouplingMap);
+    architecture->setCouplingMap(reducedCouplingMap);
   }
 
   // 2b) If configured to use subsets, collect all k (=m over n) possibilities
   // to pick n qubits from m device qubits. Otherwise, consider all qubits.
   std::vector<std::uint16_t> qubitRange =
-      Architecture::getQubitList(architecture.getCouplingMap());
+      Architecture::getQubitList(architecture->getCouplingMap());
 
   std::vector<QubitChoice> allPossibleQubitChoices{};
   if (config.useSubsets) {
-    allPossibleQubitChoices = architecture.getAllConnectedSubsets(
+    allPossibleQubitChoices = architecture->getAllConnectedSubsets(
         static_cast<std::uint16_t>(qc.getNqubits()));
   } else {
     allPossibleQubitChoices.emplace_back(qubitRange.begin(), qubitRange.end());
@@ -100,12 +100,12 @@ void ExactMapper::map(const Configuration& settings) {
     std::size_t       maxLimit   = 0U;
     const std::size_t upperLimit = config.swapLimit;
     if (config.useSubsets) {
-      maxLimit = architecture.getCouplingLimit(choice) - 1U;
+      maxLimit = architecture->getCouplingLimit(choice) - 1U;
     } else {
-      maxLimit = architecture.getCouplingLimit() - 1U;
+      maxLimit = architecture->getCouplingLimit() - 1U;
     }
     if (config.swapReduction == SwapReduction::CouplingLimit) {
-      if (!architecture.bidirectional()) {
+      if (!architecture->bidirectional()) {
         // on a directed architecture, one more SWAP might be needed overall
         // due to the directionality of the edges and direction reversal not
         // being possible for every gate.
@@ -150,7 +150,7 @@ void ExactMapper::map(const Configuration& settings) {
 
       // 4) reduce coupling map
       CouplingMap reducedCouplingMap = {};
-      architecture.getReducedCouplingMap(choice, reducedCouplingMap);
+      architecture->getReducedCouplingMap(choice, reducedCouplingMap);
 
       if (reducedCouplingMap.empty()) {
         break;
@@ -165,7 +165,7 @@ void ExactMapper::map(const Configuration& settings) {
         if (config.swapReduction != SwapReduction::None) {
           std::cout << "SWAP limit: " << limit;
         }
-        std::cout << std::endl;
+        std::cout << "\n";
       }
 
       // 6) call actual mapping routine
@@ -175,13 +175,13 @@ void ExactMapper::map(const Configuration& settings) {
       if (config.verbose) {
         if (!choiceResults.timeout) {
           std::cout << "Costs: " << choiceResults.output.swaps << " SWAP(s)";
-          if (!architecture.bidirectional()) {
+          if (!architecture->bidirectional()) {
             std::cout << ", " << choiceResults.output.directionReverse
                       << " direction reverses";
           }
-          std::cout << std::endl;
+          std::cout << "\n";
         } else {
-          std::cout << "Did not yield a result" << std::endl;
+          std::cout << "Did not yield a result\n";
         }
       }
 
@@ -199,7 +199,7 @@ void ExactMapper::map(const Configuration& settings) {
       }
     } while (config.swapReduction == SwapReduction::Increasing &&
              (limit <= upperLimit || config.swapLimit == 0) &&
-             limit < architecture.getCouplingLimit());
+             limit < architecture->getCouplingLimit());
 
     // stop if a perfect result has been found
     if (!results.timeout && results.output.swaps == 0U &&
@@ -250,14 +250,14 @@ void ExactMapper::map(const Configuration& settings) {
 
       if (settings.verbose) {
         std::cout << "Qubits: ";
-        for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+        for (auto q = 0U; q < architecture->getNqubits(); ++q) {
           std::cout << qubits.at(q) << " ";
         }
         std::cout << " Locations: ";
         for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
           std::cout << locations.at(q) << " ";
         }
-        std::cout << std::endl;
+        std::cout << "\n";
       }
       ++swapsIterator;
     }
@@ -274,7 +274,7 @@ void ExactMapper::map(const Configuration& settings) {
       if (gate.singleQubit()) {
         if (settings.verbose) {
           std::cout << i << ": Added single qubit gate with target: "
-                    << locations.at(gate.target) << std::endl;
+                    << locations.at(gate.target) << "\n";
         }
 
         qcMapped.emplace_back<qc::StandardOperation>(
@@ -284,11 +284,11 @@ void ExactMapper::map(const Configuration& settings) {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
 
-        if (architecture.getCouplingMap().find(cnot) ==
-            architecture.getCouplingMap().end()) {
+        if (architecture->getCouplingMap().find(cnot) ==
+            architecture->getCouplingMap().end()) {
           const Edge reverse = {cnot.second, cnot.first};
-          if (architecture.getCouplingMap().find(reverse) ==
-              architecture.getCouplingMap().end()) {
+          if (architecture->getCouplingMap().find(reverse) ==
+              architecture->getCouplingMap().end()) {
             throw QMAPException(
                 "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
                 std::to_string(reverse.second));
@@ -297,7 +297,7 @@ void ExactMapper::map(const Configuration& settings) {
             std::cout
                 << i
                 << ": Added (direction-reversed) cnot with control and target: "
-                << cnot.first << " " << cnot.second << std::endl;
+                << cnot.first << " " << cnot.second << "\n";
           }
           qcMapped.h(reverse.first);
           qcMapped.h(reverse.second);
@@ -309,7 +309,7 @@ void ExactMapper::map(const Configuration& settings) {
           if (settings.verbose) {
             std::cout << i
                       << ": Added cnot with control and target: " << cnot.first
-                      << " " << cnot.second << std::endl;
+                      << " " << cnot.second << "\n";
           }
           qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
                       cnot.second);
@@ -332,14 +332,14 @@ void ExactMapper::map(const Configuration& settings) {
 
         if (settings.verbose) {
           std::cout << "Qubits: ";
-          for (auto q = 0U; q < architecture.getNqubits(); ++q) {
+          for (auto q = 0U; q < architecture->getNqubits(); ++q) {
             std::cout << qubits.at(q) << " ";
           }
           std::cout << " Locations: ";
           for (std::size_t q = 0; q < qc.getNqubits(); ++q) {
             std::cout << locations.at(q) << " ";
           }
-          std::cout << std::endl;
+          std::cout << "\n";
         }
       }
 
@@ -409,7 +409,7 @@ void ExactMapper::coreMappingRoutine(
   //////////////////////////////////////////
   if (config.swapLimitsEnabled() && !config.useBDD) {
     do {
-      auto picost = architecture.minimumNumberOfSwaps(
+      auto picost = architecture->minimumNumberOfSwaps(
           pi, static_cast<std::int64_t>(limit));
       if (picost > limit) {
         skippedPi.insert(piCount);
@@ -594,7 +594,7 @@ number of variables: (|L|-1) * m!
       }
 
       auto coupling = LogicTerm(false);
-      if (architecture.bidirectional()) {
+      if (architecture->bidirectional()) {
         for (const auto& edge : rcm) {
           auto indexFC = x[k][physicalQubitIndex[edge.first]]
                           [static_cast<std::size_t>(gate.control)];
@@ -701,8 +701,8 @@ number of variables: (|L|-1) * m!
   auto cost = LogicTerm(0);
   do {
     if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
-      auto picost = architecture.minimumNumberOfSwaps(pi);
-      if (architecture.bidirectional()) {
+      auto picost = architecture->minimumNumberOfSwaps(pi);
+      if (architecture->bidirectional()) {
         picost *= GATES_OF_BIDIRECTIONAL_SWAP;
       } else {
         picost *= GATES_OF_UNIDIRECTIONAL_SWAP;
@@ -727,7 +727,7 @@ number of variables: (|L|-1) * m!
   }
 
   // cost for reversed directions
-  if (!architecture.bidirectional()) {
+  if (!architecture->bidirectional()) {
     const auto numLayers = reducedLayerIndices.size();
     for (std::size_t k = 0; k < numLayers; ++k) {
       for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
@@ -818,9 +818,9 @@ number of variables: (|L|-1) * m!
         } while (std::next_permutation(pi.begin(), pi.end()));
       }
 
-      architecture.minimumNumberOfSwaps(pi, swaps.at(k));
+      architecture->minimumNumberOfSwaps(pi, swaps.at(k));
       choiceResults.output.swaps += swaps.at(k).size();
-      if (architecture.bidirectional()) {
+      if (architecture->bidirectional()) {
         choiceResults.output.gates +=
             GATES_OF_BIDIRECTIONAL_SWAP * swaps.at(k).size();
       } else {
@@ -830,7 +830,7 @@ number of variables: (|L|-1) * m!
     }
 
     // direction reverse
-    if (!architecture.bidirectional()) {
+    if (!architecture->bidirectional()) {
       for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
         for (const auto& gate : layers.at(reducedLayerIndices.at(k))) {
           if (gate.singleQubit()) {
