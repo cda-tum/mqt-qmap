@@ -205,7 +205,7 @@ void SingleGateEncoder::assertTwoQubitGateOrderConstraints(
     // commute.
     disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][control] &&
                  !gSNext[gateToIndex(qc::OpType::S)][control] &&
-                 !gSNext[gateToIndex(qc::OpType::Sdag)][control];
+                 !gSNext[gateToIndex(qc::OpType::Sdg)][control];
 
     // no CNOT with the same control and a lower target qubit may be placed.
     for (std::size_t t = 0U; t < target; ++t) {

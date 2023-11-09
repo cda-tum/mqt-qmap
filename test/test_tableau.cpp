@@ -506,12 +506,12 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.z(0);
   qc.h(0);
   qc.s(0);
-  qc.sdag(0);
+  qc.sdg(0);
   qc.sx(0);
-  qc.sxdag(0);
-  qc.x(1, 0_pc);
-  qc.y(1, 0_pc);
-  qc.z(1, 0_pc);
+  qc.sxdg(0);
+  qc.cx(0_pc, 1);
+  qc.cy(0_pc, 1);
+  qc.cz(0_pc, 1);
   qc.swap(0, 1);
   qc.iswap(0, 1);
   qc.dcx(0, 1);
@@ -532,7 +532,7 @@ TEST_F(TestTableau, UnsupportedOperations) {
   qc::QuantumComputation qc(3U);
 
   // three-qubit operation not supported
-  qc.x(0, {1_pc, 2_pc});
+  qc.mcx({1_pc, 2_pc}, 0);
   EXPECT_THROW(tableau = cs::Tableau(qc), std::runtime_error);
 
   // single-qubit gate not supported
@@ -542,7 +542,7 @@ TEST_F(TestTableau, UnsupportedOperations) {
 
   // controlled two-qubit gate not supported
   qc.clear();
-  qc.s(0, 1_pc);
+  qc.cs(1_pc, 0);
   EXPECT_THROW(tableau = cs::Tableau(qc), std::runtime_error);
 }
 

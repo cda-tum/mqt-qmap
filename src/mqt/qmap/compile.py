@@ -1,4 +1,5 @@
 """Main entry point for the compilation module."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -89,6 +90,7 @@ def compile(  # noqa: A001
         arch: The architecture to map to.
         calibration: The calibration to use.
         method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
+        consider_fidelity: Whether to consider the fidelity of the gates. Defaults to False.
         initial_layout: The initial layout to use. Defaults to "dynamic".
         layering: The layering strategy to use. Defaults to "individual_gates".
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
@@ -126,6 +128,7 @@ def compile(  # noqa: A001
 
     config = Configuration()
     config.method = Method(method)
+    config.consider_fidelity = consider_fidelity
     config.initial_layout = InitialLayout(initial_layout)
     config.layering = Layering(layering)
     config.encoding = Encoding(encoding)

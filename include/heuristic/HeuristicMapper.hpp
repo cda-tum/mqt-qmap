@@ -183,7 +183,7 @@ protected:
    */
   double distanceOnArchitectureOfLogicalQubits(std::uint16_t control,
                                                std::uint16_t target) {
-    return architecture.distance(
+    return architecture->distance(
         static_cast<std::uint16_t>(locations.at(control)),
         static_cast<std::uint16_t>(locations.at(target)));
   }
@@ -194,7 +194,7 @@ protected:
    */
   double distanceOnArchitectureOfPhysicalQubits(std::uint16_t control,
                                                 std::uint16_t target) {
-    return architecture.distance(control, target);
+    return architecture->distance(control, target);
   }
 
   /**

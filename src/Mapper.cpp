@@ -7,20 +7,21 @@
 
 #include "CircuitOptimizer.hpp"
 
+#include <utility>
+
 void Mapper::initResults() {
   countGates(qc, results.input);
   results.input.name    = qc.getName();
   results.input.qubits  = static_cast<std::uint16_t>(qc.getNqubits());
-  results.architecture  = architecture.getName();
+  results.architecture  = architecture->getName();
   results.output.name   = qc.getName() + "_mapped";
-  results.output.qubits = architecture.getNqubits();
+  results.output.qubits = architecture->getNqubits();
   results.output.gates  = std::numeric_limits<std::size_t>::max();
-  qcMapped.addQubitRegister(architecture.getNqubits());
+  qcMapped.addQubitRegister(architecture->getNqubits());
 }
 
-Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
-               Architecture&                 arch)
-    : qc(quantumComputation.clone()), architecture(arch) {
+Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
+    : qc(std::move(quantumComputation)), architecture(&arch) {
   qubits.fill(DEFAULT_POSITION);
   locations.fill(DEFAULT_POSITION);
   fidelities.fill(INITIAL_FIDELITY);
@@ -266,16 +267,16 @@ std::size_t Mapper::getNextLayer(std::size_t idx) {
 void Mapper::finalizeMappedCircuit() {
   // add additional qubits if the architecture contains more qubits than the
   // circuit
-  if (architecture.getNqubits() > qcMapped.getNqubits()) {
+  if (architecture->getNqubits() > qcMapped.getNqubits()) {
     for (auto logicalQubit = qcMapped.getNqubits();
-         logicalQubit < architecture.getNqubits(); ++logicalQubit) {
+         logicalQubit < architecture->getNqubits(); ++logicalQubit) {
       std::optional<qc::Qubit> physicalQubit = std::nullopt;
 
       // check if the corresponding physical qubit is already in use
       if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logicalQubit)) !=
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
-        for (physicalQubit = 0; *physicalQubit < architecture.getNqubits();
+        for (physicalQubit = 0; *physicalQubit < architecture->getNqubits();
              ++(*physicalQubit)) {
           if (qcMapped.initialLayout.find(*physicalQubit) ==
               qcMapped.initialLayout.end()) {
@@ -303,8 +304,8 @@ void Mapper::finalizeMappedCircuit() {
 }
 
 void Mapper::placeRemainingArchitectureQubits() {
-  if (qc.getNqubits() < architecture.getNqubits()) {
-    for (auto logical = qc.getNqubits(); logical < architecture.getNqubits();
+  if (qc.getNqubits() < architecture->getNqubits()) {
+    for (auto logical = qc.getNqubits(); logical < architecture->getNqubits();
          ++logical) {
       std::optional<qc::Qubit> physical = std::nullopt;
 
@@ -312,7 +313,7 @@ void Mapper::placeRemainingArchitectureQubits() {
       if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logical)) !=
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
-        for (physical = 0; *physical < architecture.getNqubits();
+        for (physical = 0; *physical < architecture->getNqubits();
              ++(*physical)) {
           if (qcMapped.initialLayout.find(*physical) ==
               qcMapped.initialLayout.end()) {
@@ -366,13 +367,13 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
       if (g->getType() == qc::SWAP) {
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[1]);
-        if (architecture.isFidelityAvailable()) {
-          info.totalLogFidelity += architecture.getSwapFidelityCost(q1, q2);
+        if (architecture->isFidelityAvailable()) {
+          info.totalLogFidelity += architecture->getSwapFidelityCost(q1, q2);
         }
-        if (architecture.getCouplingMap().find({q1, q2}) !=
-                architecture.getCouplingMap().end() &&
-            architecture.getCouplingMap().find({q2, q1}) !=
-                architecture.getCouplingMap().end()) {
+        if (architecture->getCouplingMap().find({q1, q2}) !=
+                architecture->getCouplingMap().end() &&
+            architecture->getCouplingMap().find({q2, q1}) !=
+                architecture->getCouplingMap().end()) {
           // bidirectional edge
           info.gates += GATES_OF_BIDIRECTIONAL_SWAP;
           info.cnots += GATES_OF_BIDIRECTIONAL_SWAP;
@@ -386,8 +387,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         ++info.singleQubitGates;
         ++info.gates;
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture.isFidelityAvailable()) {
-          info.totalLogFidelity += architecture.getSingleQubitFidelityCost(q1);
+        if (architecture->isFidelityAvailable()) {
+          info.totalLogFidelity += architecture->getSingleQubitFidelityCost(q1);
         }
       } else {
         assert(g->getType() == qc::X);
@@ -396,8 +397,9 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         auto q1 =
             static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture.isFidelityAvailable()) {
-          info.totalLogFidelity += architecture.getTwoQubitFidelityCost(q1, q2);
+        if (architecture->isFidelityAvailable()) {
+          info.totalLogFidelity +=
+              architecture->getTwoQubitFidelityCost(q1, q2);
         }
       }
       continue;

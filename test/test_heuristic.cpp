@@ -84,9 +84,9 @@ TEST(Functionality, HeuristicBenchmark) {
   architecture.loadCouplingMap(5, cm);
 
   qc::QuantumComputation qc{5, 5};
-  qc.x(2, qc::Control{4});
-  qc.x(1, qc::Control{3});
-  qc.x(1, qc::Control{4});
+  qc.cx(qc::Control{4}, 2);
+  qc.cx(qc::Control{3}, 1);
+  qc.cx(qc::Control{4}, 1);
 
   qc.barrier({0, 1, 2, 3, 4});
   for (size_t i = 0; i < 5; ++i) {
@@ -167,9 +167,9 @@ TEST(Functionality, NoMeasurmentsAdded) {
   using namespace qc::literals;
   // construct circuit
   qc::QuantumComputation qc{4U};
-  qc.x(1, 0_pc);
-  qc.x(1, 2_pc);
-  qc.x(1, 3_pc);
+  qc.cx(0_pc, 1);
+  qc.cx(2_pc, 1);
+  qc.cx(3_pc, 1);
 
   // load architecture
   Architecture arch{};
@@ -271,8 +271,8 @@ TEST(Functionality, DataLogger) {
   architecture.setName("test_architecture");
 
   qc::QuantumComputation qc{4, 4};
-  qc.x(0, qc::Control{1});
-  qc.x(2, qc::Control{3});
+  qc.cx(1, 0);
+  qc.cx(3, 2);
   qc.setName("test_circ");
 
   Configuration settings{};
@@ -912,7 +912,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
 
   qc::QuantumComputation qc{6, 6};
   for (std::size_t i = 0; i < 5; ++i) {
-    qc.x(0, qc::Control{2});
+    qc.cx(2, 0);
     qc.x(3);
   }
 
@@ -997,8 +997,8 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
 
   qc::QuantumComputation qc{7, 7};
   for (std::size_t i = 0; i < 5; ++i) {
-    qc.x(0, qc::Control{3});
-    qc.x(4, qc::Control{6});
+    qc.cx(3, 0);
+    qc.cx(6, 4);
   }
 
   for (size_t i = 0; i < 7; ++i) {
