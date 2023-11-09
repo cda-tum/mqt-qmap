@@ -371,16 +371,10 @@ def _prepare_search_graph_scatter_data(
                 min_nz = min(min_nz, nz)
                 max_nz = max(max_nz, nz)
             if draw_stems:
-                stem_x.append(nx)
-                stem_y.append(ny)
-                stem_z.append(min_nz)
-                stem_x.append(nx)
-                stem_y.append(ny)
-                stem_z.append(max_nz)
-                stem_x.append(None)
-                stem_y.append(None)
-                stem_z.append(None)
-        if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
+                stem_x.extend((nx, nx, None))
+                stem_y.extend((ny, ny, None))
+                stem_z.extend((min_nz, max_nz, None))
+        if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:  # noqa: PLR0916
             min_x = nx
             max_x = nx
             min_y = ny
@@ -417,14 +411,12 @@ def _prepare_search_graph_scatter_data(
             else:
                 node_color[i].append(curr_color)
 
-    if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
+    if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:  # noqa: PLR0916
         msg = "No nodes in search graph."
         raise ValueError(msg)
 
     if draw_edges:
-        nodes_indices = {}
-        for i, n in enumerate(list(search_graph.nodes())):
-            nodes_indices[n] = i
+        nodes_indices = {n: i for i, n in enumerate(search_graph.nodes())}
         for n0, n1 in search_graph.edges():
             n0_i = nodes_indices[n0]
             n1_i = nodes_indices[n1]
@@ -1112,7 +1104,7 @@ def _visualize_search_graph_check_parameters(
         raise TypeError(msg)
 
     if projection not in {"orthographic", "perspective"}:
-        msg = 'projection must be either "orthographic" or "perspective"'  # type: ignore[unreachable]
+        msg = 'projection must be either "orthographic" or "perspective"'
         raise TypeError(msg)
 
     if not isinstance(width, int) or width < 1:  # type: ignore[redundant-expr]
@@ -1782,9 +1774,9 @@ def visualize_search_graph(
 
         if architecture_node_positions is None:
             for node in arch_graph.nodes:
-                print(node, arch_graph.nodes[node])
+                print(node, arch_graph.nodes[node])  # noqa: T201
             for edge in arch_graph.edges:
-                print(edge, arch_graph.edges[edge])
+                print(edge, arch_graph.edges[edge])  # noqa: T201
             architecture_node_positions = graphviz_layout(arch_graph, prog=architecture_layout)
         elif len(architecture_node_positions) != len(arch_graph.nodes):
             msg = f"architecture_node_positions must contain positions for all {len(arch_graph.nodes)} architecture nodes."
