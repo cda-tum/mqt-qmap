@@ -322,8 +322,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         ++info.singleQubitGates;
         ++info.gates;
         auto q1 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture.isFidelityAvailable()) {
-          info.totalLogFidelity += architecture.getSingleQubitFidelityCost(q1);
+        if (architecture->isFidelityAvailable()) {
+          info.totalLogFidelity += architecture->getSingleQubitFidelityCost(q1);
         }
       } else {
         assert(g->getType() == qc::X);
@@ -332,8 +332,9 @@ void Mapper::countGates(decltype(qcMapped.cbegin())      it,
         auto q1 =
             static_cast<std::uint16_t>((*(g->getControls().begin())).qubit);
         auto q2 = static_cast<std::uint16_t>(g->getTargets()[0]);
-        if (architecture.isFidelityAvailable()) {
-          info.totalLogFidelity += architecture.getTwoQubitFidelityCost(q1, q2);
+        if (architecture->isFidelityAvailable()) {
+          info.totalLogFidelity +=
+              architecture->getTwoQubitFidelityCost(q1, q2);
         }
       }
       continue;

@@ -10,7 +10,7 @@
 void HeuristicMapper::map(const Configuration& configuration) {
   if (configuration.dataLoggingEnabled()) {
     dataLogger = std::make_unique<DataLogger>(configuration.dataLoggingPath,
-                                              architecture, qc);
+                                              *architecture, qc);
   }
   results        = MappingResults{};
   results.config = configuration;
@@ -21,7 +21,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
               << " not suitable for heuristic mapper!" << std::endl;
     return;
   }
-  if (config.considerFidelity && !architecture.isFidelityAvailable()) {
+  if (config.considerFidelity && !architecture->isFidelityAvailable()) {
     std::cerr << "No calibration data available for this architecture! "
               << "Performing mapping without considering fidelity."
               << std::endl;
@@ -387,7 +387,7 @@ void HeuristicMapper::mapUnmappedGates(
       if (locations.at(q) == DEFAULT_POSITION) {
         // TODO: consider fidelity
         // map to first free physical qubit
-        for (std::uint16_t physQbit = 0; physQbit < architecture.getNqubits();
+        for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits();
              ++physQbit) {
           if (qubits.at(physQbit) == -1) {
             locations.at(q)     = static_cast<std::int16_t>(physQbit);
@@ -486,8 +486,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   Node                              node(nextNodeId++);
   // number of single qubit gates acting on each logical qubit in the current
   // layer
-  SingleQubitMultiplicity singleQubitGateMultiplicity(architecture.getNqubits(),
-                                                      0);
+  SingleQubitMultiplicity singleQubitGateMultiplicity(
+      architecture->getNqubits(), 0);
   // number of two qubit gates acting on each logical qubit edge in the current
   // layer where the first number in the value pair corresponds to the number of
   // edges having their gates given as (control, target) in the key, and the
@@ -608,7 +608,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   }
 
   if (results.config.dataLoggingEnabled()) {
-    qc::CompoundOperation compOp(architecture.getNqubits());
+    qc::CompoundOperation compOp(architecture->getNqubits());
     for (const auto& gate : layers.at(layer)) {
       std::unique_ptr<qc::Operation> op = gate.op->clone();
       compOp.emplace_back(op);
