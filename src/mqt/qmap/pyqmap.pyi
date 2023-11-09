@@ -117,6 +117,7 @@ class Configuration:
     include_WCNF: bool  # noqa: N815
     initial_layout: InitialLayout
     layering: Layering
+    split_layer_after_expanded_nodes: int
     lookahead: bool
     lookahead_factor: float
     lookaheads: int

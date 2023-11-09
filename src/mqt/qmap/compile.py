@@ -63,6 +63,7 @@ def compile(  # noqa: A001
     consider_fidelity: bool = False,
     initial_layout: str | InitialLayout = "dynamic",
     layering: str | Layering = "individual_gates",
+    split_layer_after_expanded_nodes: int = 5000,
     lookaheads: int | None = 15,
     lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
@@ -93,6 +94,7 @@ def compile(  # noqa: A001
         consider_fidelity: Whether to consider the fidelity of the gates. Defaults to False.
         initial_layout: The initial layout to use. Defaults to "dynamic".
         layering: The layering strategy to use. Defaults to "individual_gates".
+        split_layer_after_expanded_nodes: The number of expanded nodes after which to split a layer (set to 0 to turn off layer splitting). Defaults to 5000.
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
         lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
@@ -131,6 +133,7 @@ def compile(  # noqa: A001
     config.consider_fidelity = consider_fidelity
     config.initial_layout = InitialLayout(initial_layout)
     config.layering = Layering(layering)
+    config.split_layer_after_expanded_nodes = split_layer_after_expanded_nodes
     config.encoding = Encoding(encoding)
     config.commander_grouping = CommanderGrouping(commander_grouping)
     config.swap_reduction = SwapReduction(swap_reduction)
