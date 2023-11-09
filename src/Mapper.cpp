@@ -7,6 +7,8 @@
 
 #include "CircuitOptimizer.hpp"
 
+#include <utility>
+
 void Mapper::initResults() {
   countGates(qc, results.input);
   results.input.name    = qc.getName();
@@ -18,9 +20,8 @@ void Mapper::initResults() {
   qcMapped.addQubitRegister(architecture.getNqubits());
 }
 
-Mapper::Mapper(const qc::QuantumComputation& quantumComputation,
-               Architecture&                 arch)
-    : qc(quantumComputation), architecture(arch) {
+Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
+    : qc(std::move(quantumComputation)), architecture(arch) {
   qubits.fill(DEFAULT_POSITION);
   locations.fill(DEFAULT_POSITION);
   fidelities.fill(INITIAL_FIDELITY);
