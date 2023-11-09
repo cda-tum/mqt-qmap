@@ -1,4 +1,5 @@
 """A class handling data logging for a search process and providing methods to visualize that data."""
+
 from __future__ import annotations
 
 from tempfile import TemporaryDirectory

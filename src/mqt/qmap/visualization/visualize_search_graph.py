@@ -1,4 +1,5 @@
 """Function for visualization of search graphs."""
+
 from __future__ import annotations
 
 import json
@@ -427,12 +428,8 @@ def _prepare_search_graph_scatter_data(
         for n0, n1 in search_graph.edges():
             n0_i = nodes_indices[n0]
             n1_i = nodes_indices[n1]
-            edge_x.append(node_x[n0_i])
-            edge_x.append(node_x[n1_i])
-            edge_x.append(None)
-            edge_y.append(node_y[n0_i])
-            edge_y.append(node_y[n1_i])
-            edge_y.append(None)
+            edge_x.extend((node_x[n0_i], node_x[n1_i], None))
+            edge_y.extend((node_y[n0_i], node_y[n1_i], None))
             if use3d:
                 for i in range(len(node_z)):
                     edge_z[i].append(node_z[i][n0_i])
@@ -537,12 +534,8 @@ def _draw_architecture_edges(
         x0, y0 = arch_pos[n1]
         x1, y1 = arch_pos[n2]
         mid_point = ((x0 + x1) / 2, (y0 + y1) / 2)
-        edge_x.append(x0)
-        edge_x.append(x1)
-        edge_x.append(None)
-        edge_y.append(y0)
-        edge_y.append(y1)
-        edge_y.append(None)
+        edge_x.extend((x0, x1, None))
+        edge_y.extend((y0, y1, None))
         edge_label_x.append(mid_point[0])
         edge_label_y.append(mid_point[1])
         edge_label_text.append("{:.3f}".format(arch_graph[n1][n2]["weight"]))
@@ -1080,11 +1073,11 @@ def _visualize_search_graph_check_parameters(
                 msg = "architecture_node_positions must be a dict of the form {qubit_index: (x: float, y: float)}"
                 raise TypeError(msg)
 
-    if architecture_layout not in ["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"]:
+    if architecture_layout not in {"dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"}:
         msg = 'architecture_layout must be one of "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
         raise TypeError(msg)
 
-    if search_node_layout not in [
+    if search_node_layout not in {
         "walker",
         "dot",
         "neato",
@@ -1094,7 +1087,7 @@ def _visualize_search_graph_check_parameters(
         "twopi",
         "osage",
         "patchwork",
-    ]:
+    }:
         msg = 'search_node_layout must be one of "walker", "dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"'
         raise TypeError(msg)
 
@@ -1118,7 +1111,7 @@ def _visualize_search_graph_check_parameters(
         msg = "use3d must be a boolean"  # type: ignore[unreachable]
         raise TypeError(msg)
 
-    if projection != "orthographic" and projection != "perspective":
+    if projection not in {"orthographic", "perspective"}:
         msg = 'projection must be either "orthographic" or "perspective"'  # type: ignore[unreachable]
         raise TypeError(msg)
 
@@ -1141,7 +1134,7 @@ def _visualize_search_graph_check_parameters(
     if ColorValidator.perform_validate_coerce(search_edges_color, allow_number=False) is None:
         raise TypeError(ColorValidator("search_edges_color", "visualize_search_graph").description())
 
-    if search_edges_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not (
+    if search_edges_dash not in {"solid", "dot", "dash", "longdash", "dashdot", "longdashdot"} and not (
         re.match(r"^(\d+(\s*\d+)*)$", search_edges_dash)
         or re.match(r"^(\d+px(\s*\d+px)*)$", search_edges_dash)
         or re.match(r"^(\d+%(\s*\d+%)*)$", search_edges_dash)
@@ -1156,7 +1149,7 @@ def _visualize_search_graph_check_parameters(
         msg = "tapered_search_layer_heights must be a boolean"  # type: ignore[unreachable]
         raise TypeError(msg)
 
-    if show_layout not in ["hover", "click"] and show_layout is not None:
+    if show_layout not in {"hover", "click"} and show_layout is not None:
         msg = 'show_layout must be one of "hover", "click" or None'
         raise TypeError(msg)
     hide_layout = show_layout is None
@@ -1198,7 +1191,7 @@ def _visualize_search_graph_check_parameters(
     if ColorValidator.perform_validate_coerce(stems_color, allow_number=False) is None:
         raise TypeError(ColorValidator("stems_color", "visualize_search_graph").description())
 
-    if stems_dash not in ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"] and not (
+    if stems_dash not in {"solid", "dot", "dash", "longdash", "dashdot", "longdashdot"} and not (
         re.match(r"^(\d+(\s*\d+)*)$", stems_dash)
         or re.match(r"^(\d+px(\s*\d+px)*)$", stems_dash)
         or re.match(r"^(\d+%(\s*\d+%)*)$", stems_dash)
@@ -1225,7 +1218,7 @@ def _visualize_search_graph_check_parameters(
         (
             not isinstance(plotly_settings[key], dict)
             or key
-            not in [
+            not in {
                 "layout",
                 "arrows",
                 "stats_legend",
@@ -1239,7 +1232,7 @@ def _visualize_search_graph_check_parameters(
                 "search_zaxis",
                 "architecture_xaxis",
                 "architecture_yaxis",
-            ]
+            }
         )
         for key in plotly_settings
     ):
