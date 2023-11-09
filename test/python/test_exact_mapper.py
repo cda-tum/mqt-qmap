@@ -1,4 +1,5 @@
 """Test the exact mapper."""
+
 from __future__ import annotations
 
 from qiskit import QuantumCircuit
