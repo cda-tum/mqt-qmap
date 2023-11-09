@@ -263,7 +263,7 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
 
     if constexpr (containsS() && containsSdag()) {
       const auto gateIndexS   = gateToIndex(qc::OpType::S);
-      const auto gateIndexSdg = gateToIndex(qc::OpType::Sdag);
+      const auto gateIndexSdg = gateToIndex(qc::OpType::Sdg);
 
       // -X-(S|Sd)- ~= -(Sd|S)-X-
       // -Y-(S|Sd)- ~= -(Sd|S)-Y-
@@ -293,7 +293,7 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       auto disallowed = !gSNext[gateIndexS][qubit];
 
       if constexpr (containsSdag()) {
-        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
+        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdg);
 
         // -Sd-Sd- = -Z-
         // -Sd-S-  = -I-
@@ -308,7 +308,7 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
       lb->assertFormula(LogicTerm::implies(gates, disallowed));
     } else {
       if constexpr (containsSdag()) {
-        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdag);
+        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdg);
 
         // -S-Sd- = -I-
         // -Sd-S- = -I-
