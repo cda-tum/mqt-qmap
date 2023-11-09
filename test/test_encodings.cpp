@@ -36,8 +36,8 @@ TEST_P(TestEncodings, ThreeToSevenQubits) {
   using namespace qc::literals;
 
   qc = qc::QuantumComputation(3U);
-  qc.x(2, 1_pc);
-  qc.x(1, 0_pc);
+  qc.cx(1_pc, 2);
+  qc.cx(0_pc, 1);
 
   arch.loadCouplingMap(AvailableArchitecture::IbmqCasablanca);
 
@@ -58,10 +58,10 @@ TEST_P(TestEncodings, FiveToSevenQubits) {
   using namespace qc::literals;
 
   qc = qc::QuantumComputation(5U);
-  qc.x(1, 0_pc);
-  qc.x(2, 0_pc);
-  qc.x(3, 0_pc);
-  qc.x(4, 0_pc);
+  qc.cx(0_pc, 1);
+  qc.cx(0_pc, 2);
+  qc.cx(0_pc, 3);
+  qc.cx(0_pc, 4);
 
   arch.loadCouplingMap(AvailableArchitecture::IbmqCasablanca);
 

@@ -50,7 +50,7 @@ protected:
   /**
    * @brief The quantum architecture on which to map the circuit
    */
-  Architecture& architecture;
+  Architecture* architecture;
 
   /**
    * @brief The resulting quantum circuit after mapping
@@ -182,8 +182,7 @@ protected:
   virtual void postMappingOptimizations(const Configuration& config);
 
 public:
-  Mapper(const qc::QuantumComputation& quantumComputation,
-         Architecture&                 architecture);
+  Mapper(qc::QuantumComputation quantumComputation, Architecture& architecture);
   virtual ~Mapper() = default;
 
   /**
@@ -238,7 +237,7 @@ public:
   virtual std::string csv() { return results.csv(); }
 
   std::ostream& printLayering(std::ostream& out) {
-    out << "---------------- Layering -------------------" << std::endl;
+    out << "---------------- Layering -------------------\n";
     for (auto& layer : layers) {
       for (auto& gate : layer) {
         if (gate.singleQubit()) {
@@ -247,33 +246,31 @@ public:
           out << "(" << gate.control << " " << gate.target << ") ";
         }
       }
-      out << std::endl;
+      out << "\n";
     }
-    out << "---------------------------------------------" << std::endl;
+    out << "---------------------------------------------\n";
     return out;
   }
 
   std::ostream& printLocations(std::ostream& out) {
-    out << "---------------- Locations -------------------" << std::endl;
+    out << "---------------- Locations -------------------\n";
     for (std::size_t i = 0; i < qc.getNqubits(); ++i) {
       out << locations.at(i) << " ";
     }
-    out << std::endl;
-    out << "---------------------------------------------" << std::endl;
+    out << "\n---------------------------------------------\n";
     return out;
   }
   std::ostream& printQubits(std::ostream& out) {
-    out << "---------------- Qubits -------------------" << std::endl;
-    for (std::size_t i = 0; i < architecture.getNqubits(); ++i) {
+    out << "---------------- Qubits -------------------\n";
+    for (std::size_t i = 0; i < architecture->getNqubits(); ++i) {
       out << qubits.at(i) << " ";
     }
-    out << std::endl;
-    out << "---------------------------------------------" << std::endl;
+    out << "\n---------------------------------------------\n";
     return out;
   }
 
   virtual void reset() {
-    architecture.reset();
+    architecture->reset();
     qc.reset();
     layers.clear();
     qubits.fill(DEFAULT_POSITION);

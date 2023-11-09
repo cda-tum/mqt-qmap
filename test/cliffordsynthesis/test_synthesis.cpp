@@ -50,12 +50,14 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
           .get<std::size_t>();
 }
 
-static std::vector<TestConfiguration> getTests(const std::string& path) {
+namespace {
+std::vector<TestConfiguration> getTests(const std::string& path) {
   std::ifstream  input(path);
   nlohmann::json j;
   input >> j;
   return j;
 }
+} // namespace
 
 class SynthesisTest : public ::testing::TestWithParam<TestConfiguration> {
 protected:
@@ -372,7 +374,7 @@ TEST(HeuristicTest, identity) {
   qc.h(0);
   qc.s(1);
   qc.h(0);
-  qc.sdag(1);
+  qc.sdg(1);
   config.heuristic = true;
   config.splitSize = 2;
   config.target    = TargetMetric::Depth;
@@ -386,7 +388,7 @@ TEST(HeuristicTest, threeLayers) {
   auto qc     = qc::QuantumComputation(2);
   qc.h(0);
   qc.h(1);
-  qc.x(1, 0_pc);
+  qc.cx(0_pc, 1);
   qc.h(0);
   qc.h(1);
   config.heuristic = true;

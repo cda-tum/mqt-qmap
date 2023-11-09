@@ -84,9 +84,9 @@ TEST(Functionality, HeuristicBenchmark) {
   architecture.loadCouplingMap(5, cm);
 
   qc::QuantumComputation qc{5, 5};
-  qc.x(2, qc::Control{4});
-  qc.x(1, qc::Control{3});
-  qc.x(1, qc::Control{4});
+  qc.cx(qc::Control{4}, 2);
+  qc.cx(qc::Control{3}, 1);
+  qc.cx(qc::Control{4}, 1);
 
   qc.barrier({0, 1, 2, 3, 4});
   for (size_t i = 0; i < 5; ++i) {
@@ -167,9 +167,9 @@ TEST(Functionality, NoMeasurmentsAdded) {
   using namespace qc::literals;
   // construct circuit
   qc::QuantumComputation qc{4U};
-  qc.x(1, 0_pc);
-  qc.x(1, 2_pc);
-  qc.x(1, 3_pc);
+  qc.cx(0_pc, 1);
+  qc.cx(2_pc, 1);
+  qc.cx(3_pc, 1);
 
   // load architecture
   Architecture arch{};
