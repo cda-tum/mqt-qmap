@@ -128,7 +128,7 @@ class SubarchitectureOrder:
         """
         path = Path(lib_name).with_suffix(".pickle")
         with path.open("rb") as f:
-            temp = pickle.load(f)
+            temp = pickle.load(f)  # noqa: S301
 
         so = SubarchitectureOrder()
         so.__dict__.update(temp.__dict__)
@@ -329,7 +329,8 @@ class SubarchitectureOrder:
 
         return po_trans
 
-    def __reflexive_closure(self, po: PartialOrder) -> PartialOrder:
+    @classmethod
+    def __reflexive_closure(cls, po: PartialOrder) -> PartialOrder:
         """Compute reflexive closure of partial order."""
         po_ref = PartialOrder({})
         for k, v in po.items():
