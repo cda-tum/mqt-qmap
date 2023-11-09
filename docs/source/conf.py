@@ -11,6 +11,10 @@ import pybtex.plugin
 from pybtex.style.formatting.unsrt import Style as UnsrtStyle
 from pybtex.style.template import field, href
 
+if TYPE_CHECKING:
+    from pybtex.database import Entry
+    from pybtex.richtext import HRef
+
 ROOT = Path(__file__).parent.parent.resolve()
 
 
@@ -33,17 +37,16 @@ except ModuleNotFoundError:
 # Filter git details from version
 release = version.split("+")[0]
 
-if TYPE_CHECKING:
-    from pybtex.database import Entry
-    from pybtex.richtext import HRef
-
-# -- Project information -----------------------------------------------------
 project = "QMAP"
 author = "Lukas Burgholzer"
 language = "en"
 project_copyright = "Chair for Design Automation, Technical University of Munich"
 
-# -- General configuration ---------------------------------------------------
+master_doc = "index"
+
+templates_path = ["_templates"]
+html_css_files = ["custom.css"]
+
 extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
