@@ -66,6 +66,22 @@ public:
                        g) != SINGLE_QUBIT_CLIFFORDS.end();
     });
   }
+
+  // Any single-qubit Clifford gate can be obtained from a product of PI/2 rotations around different axes.
+  [[nodiscard]] bool isComplete() const {
+    if(containsS() || containsSdg()) {
+      if(containsSX() || containsSXdg() || containsH()) {
+        return true;
+      }
+    }
+
+    if(containsSX() || containsSXdg()) {
+      if(containsH()) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 class GateEncoder {
 public:
@@ -81,6 +97,9 @@ public:
         lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)) {
     if (!singleQGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
+    }
+    if (!singleQGates.isComplete()) {
+      std::cerr << "Warning: The gate set is not complete. The synthesis might fail." << std::endl;
     }
   }
   virtual ~GateEncoder() = default;
