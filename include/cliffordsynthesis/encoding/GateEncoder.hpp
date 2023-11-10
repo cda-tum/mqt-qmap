@@ -35,10 +35,9 @@ public:
     if (!singleQGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
     }
-    if (!singleQGates.isComplete()) {
-      std::cerr
-          << "Warning: The gate set is not complete. The synthesis might fail."
-          << std::endl;
+    if (!singleQubitGates.isComplete()) {
+      std::cerr << "Warning: The gate set " << singleQGates.toString()
+                << "is not complete. The synthesis might fail." << std::endl;
     }
   }
   virtual ~GateEncoder() = default;

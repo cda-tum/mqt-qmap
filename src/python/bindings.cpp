@@ -4,16 +4,35 @@
 //
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "cliffordsynthesis/GateSet.hpp"
 #include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
+#include "operations/OpType.hpp"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 #include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 
+#include <vector>
+
 namespace py = pybind11;
 using namespace pybind11::literals;
+
+cs::GateSet loadGateSet(const py::object& circ) {
+  cs::GateSet gs;
+  if (py::isinstance<py::list>(circ)) {
+    auto l = circ.cast<py::list>();
+    if (l.size() > 0) {
+      for (auto& gate : l) {
+        if (py::isinstance<py::str>(gate)) {
+          gs.emplace_back(qc::opTypeFromString(gate.cast<std::string>()));
+        }
+      }
+    }
+  }
+  return gs;
+}
 
 void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
   try {
@@ -504,6 +523,9 @@ PYBIND11_MODULE(pyqmap, m) {
           "n_threads_heuristic", &cs::Configuration::nThreadsHeuristic,
           "Maximum number of threads used for the heuristic optimizer. "
           "Defaults to the number of available threads on the system.")
+      .def_readwrite("gate_set", &cs::Configuration::gateSet,
+                     "Gate Set to be used for the Synthesis. "
+                     "Defaults to {H, S, Sdg, X, Y, Z, CX}.")
       .def("json", &cs::Configuration::json,
            "Returns a JSON-style dictionary of all the information present in "
            "the :class:`.Configuration`")
@@ -542,6 +564,11 @@ PYBIND11_MODULE(pyqmap, m) {
            "Returns `true` if the synthesis was successful.")
       .def("unsat", &cs::Results::unsat,
            "Returns `true` if the synthesis was unsuccessful.");
+
+  py::class_<cs::GateSet>(m, "GateSet")
+      .def(py::init<>())
+      .def(py::init(&loadGateSet));
+  py::implicitly_convertible<py::list, cs::GateSet>();
 
   auto tableau = py::class_<cs::Tableau>(
       m, "Tableau", "A class for representing stabilizer tableaus.");
