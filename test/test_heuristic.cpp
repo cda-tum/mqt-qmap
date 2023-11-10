@@ -1268,7 +1268,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   const std::array<std::string, 4> layerNodeFilePaths = {
       "nodes_layer_0.presplit-0.csv", "nodes_layer_0.presplit-1.csv",
       "nodes_layer_1.presplit-0.csv", "nodes_layer_3.presplit-0.csv"};
-  for (auto& path : layerNodeFilePaths) {
+  for (const auto& path : layerNodeFilePaths) {
     auto layerNodeFile = std::ifstream(settings.dataLoggingPath + path);
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << path;
