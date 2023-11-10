@@ -8,6 +8,7 @@
 
 #include "gtest/gtest.h"
 #include <fstream>
+#include <filesystem>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -1090,4 +1091,226 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
                                   - std::log2(1 - 0.8) -
                                   std::log2(1 - 0.1); // Xs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
+}
+
+TEST(HeuristicTestFidelity, LayerSplitting) {
+  Architecture      architecture{};
+  const CouplingMap cm = {
+      {0, 1}, {1, 0}, {1, 2},  {2, 1},  {2, 3},   {3, 2},
+
+      {0, 4}, {4, 0}, {1, 5},  {5, 1},  {2, 6},   {6, 2},  {3, 7},  {7, 3},
+
+      {4, 5}, {5, 4}, {5, 6},  {6, 5},  {6, 7},   {7, 6},
+
+      {4, 8}, {8, 4}, {5, 9},  {9, 5},  {6, 10},  {10, 6}, {7, 11}, {11, 7},
+
+      {8, 9}, {9, 8}, {9, 10}, {10, 9}, {10, 11}, {11, 10}};
+  architecture.loadCouplingMap(12, cm);
+
+  double e5 = 0.99;
+  double e4 = 0.9;
+  double e3 = 0.5;
+  double e2 = 0.4;
+  double e1 = 0.1;
+  double e0 = 0.01;
+
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", e5);
+  props.setSingleQubitErrorRate(1, "x", e5);
+  props.setSingleQubitErrorRate(2, "x", e5);
+  props.setSingleQubitErrorRate(3, "x", e5);
+  props.setSingleQubitErrorRate(4, "x", e3);
+  props.setSingleQubitErrorRate(5, "x", e3);
+  props.setSingleQubitErrorRate(6, "x", e5);
+  props.setSingleQubitErrorRate(7, "x", e3);
+  props.setSingleQubitErrorRate(8, "x", e2);
+  props.setSingleQubitErrorRate(9, "x", e1);
+  props.setSingleQubitErrorRate(10, "x", e5);
+  props.setSingleQubitErrorRate(11, "x", e2);
+
+  props.setTwoQubitErrorRate(0, 1, e4);
+  props.setTwoQubitErrorRate(1, 0, e4);
+  props.setTwoQubitErrorRate(1, 2, e4);
+  props.setTwoQubitErrorRate(2, 1, e4);
+  props.setTwoQubitErrorRate(2, 3, e1);
+  props.setTwoQubitErrorRate(3, 2, e1);
+
+  props.setTwoQubitErrorRate(0, 4, e5);
+  props.setTwoQubitErrorRate(4, 0, e5);
+  props.setTwoQubitErrorRate(1, 5, e5);
+  props.setTwoQubitErrorRate(5, 1, e5);
+  props.setTwoQubitErrorRate(2, 6, e4);
+  props.setTwoQubitErrorRate(6, 2, e4);
+  props.setTwoQubitErrorRate(3, 7, e5);
+  props.setTwoQubitErrorRate(7, 3, e5);
+
+  props.setTwoQubitErrorRate(4, 5, e3);
+  props.setTwoQubitErrorRate(5, 4, e3);
+  props.setTwoQubitErrorRate(5, 6, e5);
+  props.setTwoQubitErrorRate(6, 5, e5);
+  props.setTwoQubitErrorRate(6, 7, e5);
+  props.setTwoQubitErrorRate(7, 6, e5);
+
+  props.setTwoQubitErrorRate(4, 8, e0);
+  props.setTwoQubitErrorRate(8, 4, e0);
+  props.setTwoQubitErrorRate(5, 9, e3);
+  props.setTwoQubitErrorRate(9, 5, e3);
+  props.setTwoQubitErrorRate(6, 10, e1);
+  props.setTwoQubitErrorRate(10, 6, e1);
+  props.setTwoQubitErrorRate(7, 11, e3);
+  props.setTwoQubitErrorRate(11, 7, e3);
+
+  props.setTwoQubitErrorRate(8, 9, e5);
+  props.setTwoQubitErrorRate(9, 8, e5);
+  props.setTwoQubitErrorRate(9, 10, e4);
+  props.setTwoQubitErrorRate(10, 9, e4);
+  props.setTwoQubitErrorRate(10, 11, e5);
+  props.setTwoQubitErrorRate(11, 10, e5);
+
+  architecture.loadProperties(props);
+
+  qc::QuantumComputation qc{12, 12};
+
+  for (std::size_t i = 0; i < 50; ++i) {
+    qc.x(4);
+  }
+  qc.x(5);
+  qc.x(7);
+  for (std::size_t i = 0; i < 5; ++i) {
+    qc.cx(qc::Control{3}, 0);
+    qc.cx(qc::Control{9}, 2);
+  }
+
+  for (size_t i = 0; i < 12; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+  settings.verbose                      = true;
+  settings.admissibleHeuristic          = true;
+  settings.layering                     = Layering::Disjoint2qBlocks;
+  settings.initialLayout                = InitialLayout::Identity;
+  settings.considerFidelity             = true;
+  settings.preMappingOptimizations      = false;
+  settings.postMappingOptimizations     = false;
+  settings.swapOnFirstLayer             = true;
+  settings.splitLayerAfterExpandedNodes = 1; // force splittings after 1st expanded node until layers are unsplittable
+  settings.dataLoggingPath              = "test_log/";
+  mapper->map(settings);
+  mapper->dumpResult("simple_grid_mapped.qasm");
+  mapper->printResult(std::cout);
+
+  auto& result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 5); // originally 1 but split into 5 during A*
+  /*
+  expected output:
+  === layout (placing of logical qubits in physical grid): 
+       0  1  2  3 
+       4  5  6  7 
+       8  9 10 11
+  SWAP (4,5)
+  SWAP (5,9)
+  === layout: 
+       0  1  2  3 
+       5  9  6  7 
+       8  4 10 11
+  X(9) [x50]   (originally X(4))
+  
+  === layout:
+       0  1  2  3 
+       5  9  6  7 
+       8  4 10 11
+  X(7)   (originally X(7))
+  
+  SWAP (5,9)
+  SWAP (9,10)
+  SWAP (2,6)
+  === layout:
+       0  1  6  3 
+       5  4  2  7 
+       8 10  9 11
+  CX(6,10) [x5]   (originally CX(2,9))
+  
+  SWAP (4,8)
+  === layout:
+       0  1  6  3 
+       8  4  2  7 
+       5 10  9 11
+  X(8)   (originally X(5))
+  
+  SWAP (0,1)
+  SWAP (1,2)
+  === layout:
+       1  6  0  3 
+       8  4  2  7 
+       5 10  9 11
+  CX(2,3) [x5]   (originally CX(0,3))
+  */
+  EXPECT_EQ(result.output.swaps, 8);
+
+  double c4 = -std::log2(1 - e4);
+  double c3 = -std::log2(1 - e3);
+  double c2 = -std::log2(1 - e2);
+  double c1 = -std::log2(1 - e1);
+  double c0 = -std::log2(1 - e0);
+
+  double expectedFidelity = 3 * (c3 + c3 + c3 + c4 + c4 + c0 + c4 + c4) + // SWAPs
+                            50 * c1 + c3 + c2 + // Xs
+                            5 * c1 + 5 * c1; // CXs
+  EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
+  
+  // check data log
+  const char* layerNodeFilePaths[4] = {
+    "nodes_layer_0.presplit-0.csv",
+    "nodes_layer_0.presplit-1.csv",
+    "nodes_layer_1.presplit-0.csv",
+    "nodes_layer_3.presplit-0.csv"
+  };
+  for (std::size_t i = 0; i < 4; ++i) {
+    auto layerNodeFile = std::ifstream(settings.dataLoggingPath + layerNodeFilePaths[i]);
+    if (!layerNodeFile.is_open()) {
+      FAIL() << "Could not open file " << settings.dataLoggingPath
+              << layerNodeFilePaths[i];
+    }
+    std::string           line;
+    while (std::getline(layerNodeFile, line)) {
+      if (line.empty()) {
+        continue;
+      }
+      std::string       col;
+      std::stringstream lineStream(line);
+      if (!std::getline(lineStream, col, ';')) {
+        FAIL() << "Missing value for node id in " << settings.dataLoggingPath
+               << layerNodeFilePaths[i];
+      }
+      if (std::getline(lineStream, col, ';')) {
+        if(std::stoull(col) != 0) { 
+          // should only contain root node and its direct children
+          FAIL() << "Unexpected value for parent node id in "
+                 << settings.dataLoggingPath << layerNodeFilePaths[i];
+        }
+      } else {
+        FAIL() << "Missing value for parent node id in "
+                << settings.dataLoggingPath << layerNodeFilePaths[i];
+      }
+    }
+  }
+  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_0.presplit-0.json")) {
+    FAIL() << "File " << settings.dataLoggingPath << "layer_0.presplit-0.json"
+           << " does not exist";
+  }
+  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_0.presplit-1.json")) {
+    FAIL() << "File " << settings.dataLoggingPath << "layer_0.presplit-1.json"
+           << " does not exist";
+  }
+  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_1.presplit-0.json")) {
+    FAIL() << "File " << settings.dataLoggingPath << "layer_1.presplit-0.json"
+           << " does not exist";
+  }
+  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_3.presplit-0.json")) {
+    FAIL() << "File " << settings.dataLoggingPath << "layer_3.presplit-0.json"
+           << " does not exist";
+  }
 }

@@ -554,7 +554,6 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   std::size_t expandedNodes = 0;
   
   bool splittable = (twoQubitGateMultiplicity.size() > 1 || consideredQubitsSingleGates > 1 || (twoQubitGateMultiplicity.size() > 0 && consideredQubitsSingleGates > 0));
-  std::clog << "splittable: " << splittable << " (" << consideredQubitsSingleGates << ", " << twoQubitGateMultiplicity.size() << ")" << std::endl;
   
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
