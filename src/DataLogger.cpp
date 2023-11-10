@@ -45,14 +45,16 @@ void DataLogger::logArchitecture() {
   json["coupling_map"] = architecture->getCouplingMap();
   json["distances"]    = architecture->getDistanceTable();
   if (architecture->isFidelityAvailable()) {
-    auto& fidelity                      = json["fidelity"];
-    fidelity["single_qubit_fidelities"] = architecture->getSingleQubitFidelities();
-    fidelity["two_qubit_fidelities"]    = architecture->getFidelityTable();
+    auto& fidelity = json["fidelity"];
+    fidelity["single_qubit_fidelities"] =
+        architecture->getSingleQubitFidelities();
+    fidelity["two_qubit_fidelities"] = architecture->getFidelityTable();
     fidelity["single_qubit_fidelity_costs"] =
         architecture->getSingleQubitFidelityCosts();
-    fidelity["two_qubit_fidelity_costs"] = architecture->getTwoQubitFidelityCosts();
-    fidelity["swap_fidelity_costs"]      = architecture->getSwapFidelityCosts();
-    fidelity["fidelity_distances"]       = architecture->getFidelityDistanceTables();
+    fidelity["two_qubit_fidelity_costs"] =
+        architecture->getTwoQubitFidelityCosts();
+    fidelity["swap_fidelity_costs"] = architecture->getSwapFidelityCosts();
+    fidelity["fidelity_distances"]  = architecture->getFidelityDistanceTables();
   }
   of << json.dump(2);
   of.close();
