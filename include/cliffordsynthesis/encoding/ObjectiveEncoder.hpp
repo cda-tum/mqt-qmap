@@ -8,10 +8,12 @@
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <utility>
 
 namespace cs::encoding {
 
@@ -19,8 +21,14 @@ class ObjectiveEncoder {
 public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
                    GateEncoder::Variables*                vars,
-                   std::shared_ptr<logicbase::LogicBlock> logicBlock)
-      : N(nQubits), T(timestepLimit), gvars(vars), lb(std::move(logicBlock)) {}
+                   std::shared_ptr<logicbase::LogicBlock> logicBlock,
+                   const GateSet& singleQGates = {qc::OpType::None,
+                                                  qc::OpType::S,
+                                                  qc::OpType::Sdg,
+                                                  qc::OpType::H, qc::OpType::X,
+                                                  qc::OpType::Y, qc::OpType::Z})
+      : N(nQubits), T(timestepLimit), gvars(vars), lb(std::move(logicBlock)),
+        singleQubitGates(std::move(singleQGates)) {}
 
   template <class Op>
   void limitGateCount(const std::size_t maxGateCount, Op op,
@@ -51,19 +59,23 @@ protected:
   // the logic block
   std::shared_ptr<logicbase::LogicBlock> lb;
 
+  // the set of single-qubit gates
+  GateSet singleQubitGates;
+
   [[nodiscard]] logicbase::LogicTerm
   collectGateCount(bool includeSingleQubitGates = true) const;
 
   template <class Op>
   void collectSingleQubitGateTerms(std::size_t pos, logicbase::LogicTerm& terms,
                                    Op op) const {
-    const auto& singleQubitGates = gvars->gS[pos];
+    const auto& singleQubitGateVars = gvars->gS[pos];
     for (std::size_t q = 0U; q < N; ++q) {
-      for (const auto gate : GateEncoder::SINGLE_QUBIT_GATES) {
+      for (const auto gate : singleQubitGates) {
         if (gate == qc::OpType::None) {
           continue;
         }
-        terms = op(terms, singleQubitGates[GateEncoder::gateToIndex(gate)][q]);
+        terms = op(terms,
+                   singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q]);
       }
     }
   }

@@ -37,7 +37,7 @@ void ObjectiveEncoder::optimizeDepth() const {
   DEBUG() << "Optimizing depth";
   auto* optimizer = dynamic_cast<LogicBlockOptimizer*>(lb.get());
 
-  constexpr auto noGateIndex = GateEncoder::gateToIndex(qc::OpType::None);
+  auto noGateIndex = singleQubitGates.gateToIndex(qc::OpType::None);
   for (std::size_t t = 0U; t < T; ++t) {
     const auto& gS     = gvars->gS[t];
     auto        noGate = LogicTerm(true);

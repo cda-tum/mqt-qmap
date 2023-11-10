@@ -17,8 +17,8 @@ void GateEncoder::createSingleQubitGateVariables() {
   vars.gS.reserve(T);
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gS.emplace_back();
-    timeStep.reserve(SINGLE_QUBIT_GATES.size());
-    for (const auto gate : SINGLE_QUBIT_GATES) {
+    timeStep.reserve(singleQubitGates.size());
+    for (const auto gate : singleQubitGates) {
       auto& g = timeStep.emplace_back();
       g.reserve(N);
       for (std::size_t q = 0U; q < N; ++q) {
@@ -89,7 +89,7 @@ GateEncoder::collectGateTransformations(
     const GateToTransformation& gateToTransformation) {
   std::vector<TransformationFamily> transformations;
 
-  for (const auto& gate : SINGLE_QUBIT_GATES) {
+  for (const auto& gate : singleQubitGates) {
     const auto& transformation = gateToTransformation(pos, qubit, gate);
     const auto& it             = std::find_if(
         transformations.begin(), transformations.end(), [&](const auto& entry) {
@@ -108,11 +108,12 @@ GateEncoder::collectGateTransformations(
 void GateEncoder::assertGatesImplyTransform(
     const std::size_t pos, const std::size_t qubit,
     const std::vector<TransformationFamily>& transformations) {
-  const auto& singleQubitGates = vars.gS[pos];
+  const auto& singleQubitGateVars = vars.gS[pos];
   for (const auto& [transformation, gates] : transformations) {
     auto gateOr = LogicTerm(false);
     for (const auto& gate : gates) {
-      gateOr = gateOr || singleQubitGates[gateToIndex(gate)][qubit];
+      gateOr = gateOr ||
+               singleQubitGateVars[singleQubitGates.gateToIndex(gate)][qubit];
     }
     lb->assertFormula(LogicTerm::implies(gateOr, transformation));
   }
@@ -179,14 +180,15 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
 void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
     std::size_t& nSingleQubitGates) {
-  const auto& singleQubitGates = vars.gS[pos];
+  const auto& singleQubitGateVars = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
-    for (const auto gate : SINGLE_QUBIT_GATES) {
+    for (const auto gate : singleQubitGates) {
       if (gate == qc::OpType::None) {
         continue;
       }
-      if (model.getBoolValue(singleQubitGates[gateToIndex(gate)][q],
-                             lb.get())) {
+      if (model.getBoolValue(
+              singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q],
+              lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, q, gate);
         ++nSingleQubitGates;
         DEBUG() << toString(gate) << "(" << q << ")";
@@ -237,33 +239,36 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
 
   // Any Pauli must not be followed by another Pauli since -iXYZ = I.
   std::vector<qc::OpType> paulis{};
-  if constexpr (containsX()) {
+  if (singleQubitGates.containsX()) {
     paulis.emplace_back(qc::OpType::X);
   }
-  if constexpr (containsY()) {
+  if (singleQubitGates.containsY()) {
     paulis.emplace_back(qc::OpType::Y);
   }
-  if constexpr (containsZ()) {
+  if (singleQubitGates.containsZ()) {
     paulis.emplace_back(qc::OpType::Z);
   }
-  constexpr bool containsPaulis = containsX() || containsY() || containsZ();
-  if constexpr (containsPaulis) {
-    auto gates      = gSNow[gateToIndex(paulis[0])][qubit];
-    auto disallowed = !gSNext[gateToIndex(paulis[0])][qubit];
+  bool containsPaulis = singleQubitGates.containsX() ||
+                        singleQubitGates.containsY() ||
+                        singleQubitGates.containsZ();
+  if (containsPaulis) {
+    auto gates      = gSNow[singleQubitGates.gateToIndex(paulis[0])][qubit];
+    auto disallowed = !gSNext[singleQubitGates.gateToIndex(paulis[0])][qubit];
     for (std::size_t i = 1U; i < paulis.size(); ++i) {
-      gates      = gates || gSNow[gateToIndex(paulis[i])][qubit];
-      disallowed = disallowed && !gSNext[gateToIndex(paulis[i])][qubit];
+      gates = gates || gSNow[singleQubitGates.gateToIndex(paulis[i])][qubit];
+      disallowed =
+          disallowed && !gSNext[singleQubitGates.gateToIndex(paulis[i])][qubit];
     }
 
-    if constexpr (containsH()) {
+    if (singleQubitGates.containsH()) {
       // -(X|Y|Z)-H- ~= -H-(Z|Y|X)-
-      constexpr auto gateIndex = gateToIndex(qc::OpType::H);
-      disallowed               = disallowed && !gSNext[gateIndex][qubit];
+      auto gateIndex = singleQubitGates.gateToIndex(qc::OpType::H);
+      disallowed     = disallowed && !gSNext[gateIndex][qubit];
     }
 
-    if constexpr (containsS() && containsSdag()) {
-      const auto gateIndexS   = gateToIndex(qc::OpType::S);
-      const auto gateIndexSdg = gateToIndex(qc::OpType::Sdg);
+    if (singleQubitGates.containsS() && singleQubitGates.containsSdag()) {
+      const auto gateIndexS   = singleQubitGates.gateToIndex(qc::OpType::S);
+      const auto gateIndexSdg = singleQubitGates.gateToIndex(qc::OpType::Sdg);
 
       // -X-(S|Sd)- ~= -(Sd|S)-X-
       // -Y-(S|Sd)- ~= -(Sd|S)-Y-
@@ -276,24 +281,24 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
   }
 
   // H is self-inverse
-  if constexpr (containsH()) {
-    constexpr auto gateIndex = gateToIndex(qc::OpType::H);
+  if (singleQubitGates.containsH()) {
+    auto gateIndex = singleQubitGates.gateToIndex(qc::OpType::H);
     lb->assertFormula(
         LogicTerm::implies(gSNow[gateIndex][qubit], !gSNext[gateIndex][qubit]));
   }
 
-  if constexpr (containsS()) {
-    constexpr auto gateIndexS = gateToIndex(qc::OpType::S);
+  if (singleQubitGates.containsS()) {
+    auto gateIndexS = singleQubitGates.gateToIndex(qc::OpType::S);
 
-    if constexpr (containsZ()) {
-      constexpr auto gateIndexZ = gateToIndex(qc::OpType::Z);
+    if (singleQubitGates.containsZ()) {
+      auto gateIndexZ = singleQubitGates.gateToIndex(qc::OpType::Z);
 
       // -S-S- = -Z-
       auto gates      = gSNow[gateIndexS][qubit];
       auto disallowed = !gSNext[gateIndexS][qubit];
 
-      if constexpr (containsSdag()) {
-        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdg);
+      if (singleQubitGates.containsSdag()) {
+        auto gateIndexSdag = singleQubitGates.gateToIndex(qc::OpType::Sdg);
 
         // -Sd-Sd- = -Z-
         // -Sd-S-  = -I-
@@ -307,8 +312,8 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
 
       lb->assertFormula(LogicTerm::implies(gates, disallowed));
     } else {
-      if constexpr (containsSdag()) {
-        constexpr auto gateIndexSdag = gateToIndex(qc::OpType::Sdg);
+      if (singleQubitGates.containsSdag()) {
+        auto gateIndexSdag = singleQubitGates.gateToIndex(qc::OpType::Sdg);
 
         // -S-Sd- = -I-
         // -Sd-S- = -I-

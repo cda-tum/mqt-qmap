@@ -59,9 +59,9 @@ void encoding::MultiGateEncoder::assertSingleQubitGateConstraints(
 
 void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                                           const std::size_t qubit) {
-  for (const auto gate : SINGLE_QUBIT_GATES) {
+  for (const auto gate : singleQubitGates) {
     const auto& change =
-        LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
+        LogicTerm::ite(vars.gS[pos][singleQubitGates.gateToIndex(gate)][qubit],
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
@@ -116,14 +116,16 @@ void MultiGateEncoder::assertSingleQubitGateOrderConstraints(
   // once no gate is applied to the considered qubit, no single qubit gate can
   // be applied to it in the next time step.
   auto noSingleQubitGate = LogicTerm(true);
-  for (const auto gate : SINGLE_QUBIT_GATES) {
+  for (const auto gate : singleQubitGates) {
     if (gate == qc::OpType::None) {
       continue;
     }
-    noSingleQubitGate = noSingleQubitGate && !gSNext[gateToIndex(gate)][qubit];
+    noSingleQubitGate =
+        noSingleQubitGate && !gSNext[singleQubitGates.gateToIndex(gate)][qubit];
   }
   lb->assertFormula(LogicTerm::implies(
-      gSNow[gateToIndex(qc::OpType::None)][qubit], noSingleQubitGate));
+      gSNow[singleQubitGates.gateToIndex(qc::OpType::None)][qubit],
+      noSingleQubitGate));
 }
 
 void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
@@ -147,16 +149,16 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   // hadamards on both qubits => no CNOT on them in the next time step (CNOT can
   // be conjugated with Hadamards) No Combination of Paulis on both Qubits
   // before a CNOT These gates can be just pushed through to the other side
-  constexpr auto noneIndex = gateToIndex(qc::OpType::None);
-  const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
-  const auto     noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
+  auto       noneIndex     = singleQubitGates.gateToIndex(qc::OpType::None);
+  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
 
-  constexpr auto hIndex = gateToIndex(qc::OpType::H);
-  constexpr auto xIndex = gateToIndex(qc::OpType::X);
-  constexpr auto zIndex = gateToIndex(qc::OpType::Z);
-  constexpr auto yIndex = gateToIndex(qc::OpType::Y);
-  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
-  const auto     gateBeforeCtrl =
+  auto       hIndex = singleQubitGates.gateToIndex(qc::OpType::H);
+  auto       xIndex = singleQubitGates.gateToIndex(qc::OpType::X);
+  auto       zIndex = singleQubitGates.gateToIndex(qc::OpType::Z);
+  auto       yIndex = singleQubitGates.gateToIndex(qc::OpType::Y);
+  const auto hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+  const auto gateBeforeCtrl =
       gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] || gSNow[yIndex][ctrl];
   const auto gateBeforeTarget =
       gSNow[zIndex][trgt] || gSNow[xIndex][trgt] || gSNow[yIndex][ctrl];

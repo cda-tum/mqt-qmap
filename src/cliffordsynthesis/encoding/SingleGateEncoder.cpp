@@ -14,7 +14,7 @@ using namespace logicbase;
 void SingleGateEncoder::assertConsistency() const {
   DEBUG() << "Asserting gate consistency";
   LogicVector gateVariables{};
-  gateVariables.reserve(N * (1 + SINGLE_QUBIT_GATES.size()));
+  gateVariables.reserve(N * (1 + singleQubitGates.size()));
   for (std::size_t t = 0U; t < T; ++t) {
     for (std::size_t q = 0U; q < N; ++q) {
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
@@ -101,13 +101,14 @@ LogicTerm SingleGateEncoder::createNoChangeOnQubit(const std::size_t pos,
 
 LogicTerm SingleGateEncoder::createNoGateOnQubit(const std::size_t pos,
                                                  const std::size_t q) {
-  const auto& singleQubitGates = vars.gS[pos];
-  auto        noGate           = LogicTerm(true);
-  for (const auto& gate : SINGLE_QUBIT_GATES) {
+  const auto& singleQubitGateVars = vars.gS[pos];
+  auto        noGate              = LogicTerm(true);
+  for (const auto& gate : singleQubitGates) {
     if (gate == qc::OpType::None) {
       continue;
     }
-    noGate = noGate && !singleQubitGates[gateToIndex(gate)][q];
+    noGate =
+        noGate && !singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q];
   }
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t i = 0; i < N; ++i) {
@@ -134,12 +135,13 @@ void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
 
   // collect variables of single-qubit gates that could be applied to `qubit`
   auto singleQubitGate = LogicTerm(false);
-  for (const auto& gate : SINGLE_QUBIT_GATES) {
+  for (const auto& gate : singleQubitGates) {
     if (gate == qc::OpType::None) {
       continue;
     }
     // any single-qubit gate on qubit q
-    singleQubitGate = singleQubitGate || gSNow[gateToIndex(gate)][qubit];
+    singleQubitGate =
+        singleQubitGate || gSNow[singleQubitGates.gateToIndex(gate)][qubit];
   }
 
   // collect gate variables of the next timestep that should not be applied.
@@ -147,11 +149,12 @@ void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
 
   // no single-qubit gate on a lower qubit
   for (std::size_t lower = 0U; lower < qubit; ++lower) {
-    for (const auto& gate : SINGLE_QUBIT_GATES) {
+    for (const auto& gate : singleQubitGates) {
       if (gate == qc::OpType::None) {
         continue;
       }
-      disallowed = disallowed && !gSNext[gateToIndex(gate)][lower];
+      disallowed =
+          disallowed && !gSNext[singleQubitGates.gateToIndex(gate)][lower];
     }
   }
 
@@ -159,7 +162,7 @@ void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
 
   // once no gate is applied, no other gate can be applied, i.e., in the next
   // timestep any of the `None` gate variables must be selected.
-  const auto noneIndex = gateToIndex(qc::OpType::None);
+  const auto noneIndex = singleQubitGates.gateToIndex(qc::OpType::None);
   auto       noGate    = LogicTerm(false);
   for (std::size_t q = 0U; q < N; ++q) {
     noGate = noGate || gSNext[noneIndex][q];
@@ -190,22 +193,26 @@ void SingleGateEncoder::assertTwoQubitGateOrderConstraints(
       if (q == control || q == target) {
         continue;
       }
-      for (const auto& gate : SINGLE_QUBIT_GATES) {
+      for (const auto& gate : singleQubitGates) {
         if (gate == qc::OpType::None) {
           continue;
         }
-        disallowed = disallowed && !gSNext[gateToIndex(gate)][q];
+        disallowed =
+            disallowed && !gSNext[singleQubitGates.gateToIndex(gate)][q];
       }
     }
 
     // no X gate may be placed on the target qubit since it would commute.
-    disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::X)][target];
+    disallowed = disallowed &&
+                 !gSNext[singleQubitGates.gateToIndex(qc::OpType::X)][target];
 
     // no diagonal gate may be placed on the control qubit since it would
     // commute.
-    disallowed = disallowed && !gSNext[gateToIndex(qc::OpType::Z)][control] &&
-                 !gSNext[gateToIndex(qc::OpType::S)][control] &&
-                 !gSNext[gateToIndex(qc::OpType::Sdg)][control];
+    disallowed =
+        disallowed &&
+        !gSNext[singleQubitGates.gateToIndex(qc::OpType::Z)][control] &&
+        !gSNext[singleQubitGates.gateToIndex(qc::OpType::S)][control] &&
+        !gSNext[singleQubitGates.gateToIndex(qc::OpType::Sdg)][control];
 
     // no CNOT with the same control and a lower target qubit may be placed.
     for (std::size_t t = 0U; t < target; ++t) {
