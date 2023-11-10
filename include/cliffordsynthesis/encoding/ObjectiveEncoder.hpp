@@ -22,11 +22,10 @@ public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
                    GateEncoder::Variables*                vars,
                    std::shared_ptr<logicbase::LogicBlock> logicBlock,
-                   const GateSet& singleQGates = {qc::OpType::None,
-                                                  qc::OpType::S,
-                                                  qc::OpType::Sdg,
-                                                  qc::OpType::H, qc::OpType::X,
-                                                  qc::OpType::Y, qc::OpType::Z})
+                   GateSet singleQGates = {qc::OpType::None, qc::OpType::S,
+                                           qc::OpType::Sdg, qc::OpType::H,
+                                           qc::OpType::X, qc::OpType::Y,
+                                           qc::OpType::Z})
       : N(nQubits), T(timestepLimit), gvars(vars), lb(std::move(logicBlock)),
         singleQubitGates(std::move(singleQGates)) {}
 

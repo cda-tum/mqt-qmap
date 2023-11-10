@@ -68,6 +68,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
     ${PROJECT_SOURCE_DIR}/include/utils.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/GateSet.hpp
     cliffordsynthesis/encoding/GateEncoder.cpp
     cliffordsynthesis/encoding/MultiGateEncoder.cpp
     cliffordsynthesis/encoding/ObjectiveEncoder.cpp

@@ -57,6 +57,8 @@ public:
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
 
     SolverParameterMap solverParameters = {};
+
+    GateSet gateSet = {};
   };
 
   SATEncoder() = default;
