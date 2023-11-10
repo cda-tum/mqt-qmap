@@ -5,11 +5,13 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "LogicBlock/LogicBlock.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "operations/OpType.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <utility>
@@ -17,6 +19,11 @@
 
 namespace cs::encoding {
 class GateSet : public std::vector<qc::OpType> {
+  static constexpr std::array<qc::OpType, 9> SINGLE_QUBIT_CLIFFORDS = {
+      qc::OpType::I,   qc::OpType::H,  qc::OpType::X,
+      qc::OpType::Y,   qc::OpType::Z,  qc::OpType::S,
+      qc::OpType::Sdg, qc::OpType::SX, qc::OpType::SXdg};
+
 public:
   using std::vector<qc::OpType>::vector;
 
@@ -34,8 +41,14 @@ public:
   [[nodiscard]] bool containsZ() const { return containsGate<qc::OpType::Z>(); }
   [[nodiscard]] bool containsH() const { return containsGate<qc::OpType::H>(); }
   [[nodiscard]] bool containsS() const { return containsGate<qc::OpType::S>(); }
-  [[nodiscard]] bool containsSdag() const {
+  [[nodiscard]] bool containsSdg() const {
     return containsGate<qc::OpType::Sdg>();
+  }
+  [[nodiscard]] bool containsSX() const {
+    return containsGate<qc::OpType::SX>();
+  }
+  [[nodiscard]] bool containsSXdg() const {
+    return containsGate<qc::OpType::SXdg>();
   }
   [[nodiscard]] std::size_t gateToIndex(const qc::OpType type) const {
     for (std::size_t i = 0; i < this->size(); ++i) {
@@ -44,6 +57,14 @@ public:
       }
     }
     return 0;
+  }
+
+  [[nodiscard]] bool isValidGateSet() const {
+    return std::all_of(this->begin(), this->end(), [](const auto& g) {
+      return std::find(SINGLE_QUBIT_CLIFFORDS.begin(),
+                       SINGLE_QUBIT_CLIFFORDS.end(),
+                       g) != SINGLE_QUBIT_CLIFFORDS.end();
+    });
   }
 };
 class GateEncoder {
@@ -57,7 +78,11 @@ public:
                                       qc::OpType::X, qc::OpType::Y,
                                       qc::OpType::Z})
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
-        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)) {}
+        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)) {
+    if (!singleQGates.isValidGateSet()) {
+      throw qc::QFRException("Invalid gate set");
+    }
+  }
   virtual ~GateEncoder() = default;
 
   struct Variables {
