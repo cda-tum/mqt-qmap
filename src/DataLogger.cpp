@@ -98,8 +98,8 @@ void DataLogger::logFinalizeLayer(
   }
   searchNodesLogFiles.at(layerIndex).close();
 
-  auto of = std::ofstream(dataLoggingPath + "layer_" + std::to_string(layerIndex) +
-                          ".json");
+  auto of = std::ofstream(dataLoggingPath + "layer_" +
+                          std::to_string(layerIndex) + ".json");
   if (!of.good()) {
     deactivated = true;
     std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
@@ -169,13 +169,13 @@ void DataLogger::splitLayer() {
     ++splitIndex;
   }
   std::filesystem::rename(
-    dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) + ".csv", 
-    dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) + ".presplit-" + std::to_string(splitIndex) + ".csv"
-  );
+      dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) + ".csv",
+      dataLoggingPath + "nodes_layer_" + std::to_string(layerIndex) +
+          ".presplit-" + std::to_string(splitIndex) + ".csv");
   std::filesystem::rename(
-    dataLoggingPath + "layer_" + std::to_string(layerIndex) +".json", 
-    dataLoggingPath + "layer_" + std::to_string(layerIndex) + ".presplit-" + std::to_string(splitIndex) + ".json"
-  );
+      dataLoggingPath + "layer_" + std::to_string(layerIndex) + ".json",
+      dataLoggingPath + "layer_" + std::to_string(layerIndex) + ".presplit-" +
+          std::to_string(splitIndex) + ".json");
 }
 
 void DataLogger::logSearchNode(

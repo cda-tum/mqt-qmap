@@ -123,16 +123,21 @@ protected:
    * a disjoint set of qubits
    */
   virtual void createLayers();
-  
+
   /**
-   * @brief Splits the layer at the given index into two layers with half as many qubits acted on by gates in each layer
-   * 
+   * @brief Splits the layer at the given index into two layers with half as
+   * many qubits acted on by gates in each layer
+   *
    * @param index the index of the layer to be split
-   * @param singleQubitMultiplicity single qubit multiplicity of the layer to be split
+   * @param singleQubitMultiplicity single qubit multiplicity of the layer to be
+   * split
    * @param twoQubitMultiplicity two qubit multiplicity of the layer to be split
    * @param arch architecture on which the circuit is mapped
    */
-  virtual void splitLayer(std::size_t index, SingleQubitMultiplicity& singleQubitMultiplicity, TwoQubitMultiplicity& twoQubitMultiplicity, Architecture& arch);
+  virtual void splitLayer(std::size_t              index,
+                          SingleQubitMultiplicity& singleQubitMultiplicity,
+                          TwoQubitMultiplicity&    twoQubitMultiplicity,
+                          Architecture&            arch);
 
   /**
    * gates are put in the last layer (from the back of the circuit) in which

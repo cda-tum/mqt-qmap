@@ -7,8 +7,8 @@
 #include "nlohmann/json.hpp"
 
 #include "gtest/gtest.h"
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -1188,16 +1188,18 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.verbose                      = true;
-  settings.admissibleHeuristic          = true;
-  settings.layering                     = Layering::Disjoint2qBlocks;
-  settings.initialLayout                = InitialLayout::Identity;
-  settings.considerFidelity             = true;
-  settings.preMappingOptimizations      = false;
-  settings.postMappingOptimizations     = false;
-  settings.swapOnFirstLayer             = true;
-  settings.splitLayerAfterExpandedNodes = 1; // force splittings after 1st expanded node until layers are unsplittable
-  settings.dataLoggingPath              = "test_log/";
+  settings.verbose                  = true;
+  settings.admissibleHeuristic      = true;
+  settings.layering                 = Layering::Disjoint2qBlocks;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.considerFidelity         = true;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
+  settings.swapOnFirstLayer         = true;
+  settings.splitLayerAfterExpandedNodes =
+      1; // force splittings after 1st expanded node until layers are
+         // unsplittable
+  settings.dataLoggingPath = "test_log/";
   mapper->map(settings);
   mapper->dumpResult("simple_grid_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1206,45 +1208,45 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   EXPECT_EQ(result.input.layers, 5); // originally 1 but split into 5 during A*
   /*
   expected output:
-  === layout (placing of logical qubits in physical grid): 
-       0  1  2  3 
-       4  5  6  7 
+  === layout (placing of logical qubits in physical grid):
+       0  1  2  3
+       4  5  6  7
        8  9 10 11
   SWAP (4,5)
   SWAP (5,9)
-  === layout: 
-       0  1  2  3 
-       5  9  6  7 
+  === layout:
+       0  1  2  3
+       5  9  6  7
        8  4 10 11
   X(9) [x50]   (originally X(4))
-  
+
   === layout:
-       0  1  2  3 
-       5  9  6  7 
+       0  1  2  3
+       5  9  6  7
        8  4 10 11
   X(7)   (originally X(7))
-  
+
   SWAP (5,9)
   SWAP (9,10)
   SWAP (2,6)
   === layout:
-       0  1  6  3 
-       5  4  2  7 
+       0  1  6  3
+       5  4  2  7
        8 10  9 11
   CX(6,10) [x5]   (originally CX(2,9))
-  
+
   SWAP (4,8)
   === layout:
-       0  1  6  3 
-       8  4  2  7 
+       0  1  6  3
+       8  4  2  7
        5 10  9 11
   X(8)   (originally X(5))
-  
+
   SWAP (0,1)
   SWAP (1,2)
   === layout:
-       1  6  0  3 
-       8  4  2  7 
+       1  6  0  3
+       8  4  2  7
        5 10  9 11
   CX(2,3) [x5]   (originally CX(0,3))
   */
@@ -1256,25 +1258,24 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   double c1 = -std::log2(1 - e1);
   double c0 = -std::log2(1 - e0);
 
-  double expectedFidelity = 3 * (c3 + c3 + c3 + c4 + c4 + c0 + c4 + c4) + // SWAPs
-                            50 * c1 + c3 + c2 + // Xs
-                            5 * c1 + 5 * c1; // CXs
+  double expectedFidelity =
+      3 * (c3 + c3 + c3 + c4 + c4 + c0 + c4 + c4) + // SWAPs
+      50 * c1 + c3 + c2 +                           // Xs
+      5 * c1 + 5 * c1;                              // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
-  
+
   // check data log
   const char* layerNodeFilePaths[4] = {
-    "nodes_layer_0.presplit-0.csv",
-    "nodes_layer_0.presplit-1.csv",
-    "nodes_layer_1.presplit-0.csv",
-    "nodes_layer_3.presplit-0.csv"
-  };
+      "nodes_layer_0.presplit-0.csv", "nodes_layer_0.presplit-1.csv",
+      "nodes_layer_1.presplit-0.csv", "nodes_layer_3.presplit-0.csv"};
   for (std::size_t i = 0; i < 4; ++i) {
-    auto layerNodeFile = std::ifstream(settings.dataLoggingPath + layerNodeFilePaths[i]);
+    auto layerNodeFile =
+        std::ifstream(settings.dataLoggingPath + layerNodeFilePaths[i]);
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath
-              << layerNodeFilePaths[i];
+             << layerNodeFilePaths[i];
     }
-    std::string           line;
+    std::string line;
     while (std::getline(layerNodeFile, line)) {
       if (line.empty()) {
         continue;
@@ -1286,30 +1287,34 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
                << layerNodeFilePaths[i];
       }
       if (std::getline(lineStream, col, ';')) {
-        if(std::stoull(col) != 0) { 
+        if (std::stoull(col) != 0) {
           // should only contain root node and its direct children
           FAIL() << "Unexpected value for parent node id in "
                  << settings.dataLoggingPath << layerNodeFilePaths[i];
         }
       } else {
         FAIL() << "Missing value for parent node id in "
-                << settings.dataLoggingPath << layerNodeFilePaths[i];
+               << settings.dataLoggingPath << layerNodeFilePaths[i];
       }
     }
   }
-  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_0.presplit-0.json")) {
+  if (!std::filesystem::exists(settings.dataLoggingPath +
+                               "layer_0.presplit-0.json")) {
     FAIL() << "File " << settings.dataLoggingPath << "layer_0.presplit-0.json"
            << " does not exist";
   }
-  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_0.presplit-1.json")) {
+  if (!std::filesystem::exists(settings.dataLoggingPath +
+                               "layer_0.presplit-1.json")) {
     FAIL() << "File " << settings.dataLoggingPath << "layer_0.presplit-1.json"
            << " does not exist";
   }
-  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_1.presplit-0.json")) {
+  if (!std::filesystem::exists(settings.dataLoggingPath +
+                               "layer_1.presplit-0.json")) {
     FAIL() << "File " << settings.dataLoggingPath << "layer_1.presplit-0.json"
            << " does not exist";
   }
-  if (!std::filesystem::exists(settings.dataLoggingPath + "layer_3.presplit-0.json")) {
+  if (!std::filesystem::exists(settings.dataLoggingPath +
+                               "layer_3.presplit-0.json")) {
     FAIL() << "File " << settings.dataLoggingPath << "layer_3.presplit-0.json"
            << " does not exist";
   }

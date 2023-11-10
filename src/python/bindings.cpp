@@ -182,7 +182,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
-      .def_readwrite("split_layer_after_expanded_nodes", &Configuration::splitLayerAfterExpandedNodes)
+      .def_readwrite("split_layer_after_expanded_nodes",
+                     &Configuration::splitLayerAfterExpandedNodes)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("lookahead", &Configuration::lookahead)
       .def_readwrite("admissible_heuristic",

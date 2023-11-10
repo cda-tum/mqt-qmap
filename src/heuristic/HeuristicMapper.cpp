@@ -481,10 +481,10 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   auto& config = results.config;
-  nextNodeId = 0;
+  nextNodeId   = 0;
 
   std::unordered_set<std::uint16_t> consideredQubits{};
-  std::size_t consideredQubitsSingleGates = 0;
+  std::size_t                       consideredQubitsSingleGates = 0;
   Node                              node(nextNodeId++);
   // number of single qubit gates acting on each logical qubit in the current
   // layer
@@ -498,10 +498,10 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   Node                 bestDoneNode(0);
   bool                 done             = false;
   const bool           considerFidelity = config.considerFidelity;
-  
+
   for (const auto& gate : layers.at(layer)) {
     if (gate.singleQubit()) {
-      if(singleQubitGateMultiplicity.at(gate.target) == 0) {
+      if (singleQubitGateMultiplicity.at(gate.target) == 0) {
         ++consideredQubitsSingleGates;
       }
       ++singleQubitGateMultiplicity.at(gate.target);
@@ -550,14 +550,18 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   }
   nodes.push(node);
 
-  const auto  start = std::chrono::steady_clock::now();
+  const auto  start         = std::chrono::steady_clock::now();
   std::size_t expandedNodes = 0;
-  
-  bool splittable = (twoQubitGateMultiplicity.size() > 1 || consideredQubitsSingleGates > 1 || (twoQubitGateMultiplicity.size() > 0 && consideredQubitsSingleGates > 0));
-  
+
+  bool splittable =
+      (twoQubitGateMultiplicity.size() > 1 || consideredQubitsSingleGates > 1 ||
+       (twoQubitGateMultiplicity.size() > 0 &&
+        consideredQubitsSingleGates > 0));
+
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
-    if (splittable && config.splitLayerAfterExpandedNodes > 0 && expandedNodes >= config.splitLayerAfterExpandedNodes) {
+    if (splittable && config.splitLayerAfterExpandedNodes > 0 &&
+        expandedNodes >= config.splitLayerAfterExpandedNodes) {
       if (config.dataLoggingEnabled()) {
         qc::CompoundOperation compOp(architecture->getNqubits());
         for (const auto& gate : layers.at(layer)) {
@@ -565,10 +569,13 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
           compOp.emplace_back(op);
         }
 
-        dataLogger->logFinalizeLayer(layer, compOp, singleQubitGateMultiplicity, twoQubitGateMultiplicity, qubits, 0, 0, 0, 0, {}, {}, 0);
+        dataLogger->logFinalizeLayer(layer, compOp, singleQubitGateMultiplicity,
+                                     twoQubitGateMultiplicity, qubits, 0, 0, 0,
+                                     0, {}, {}, 0);
         dataLogger->splitLayer();
       }
-      splitLayer(layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity, *architecture);
+      splitLayer(layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity,
+                 *architecture);
       if (config.verbose) {
         std::clog << "Split layer" << std::endl;
       }
@@ -600,7 +607,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   if (config.debug) {
     const auto end = std::chrono::steady_clock::now();
     results.layerHeuristicBenchmark.emplace_back();
-    auto  layerResultsIt     = results.layerHeuristicBenchmark.rbegin();
+    auto layerResultsIt           = results.layerHeuristicBenchmark.rbegin();
     layerResultsIt->expandedNodes = expandedNodes;
     results.heuristicBenchmark.expandedNodes += expandedNodes;
 

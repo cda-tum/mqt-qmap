@@ -19,9 +19,9 @@ struct Configuration {
   Configuration() = default;
 
   // which method to use
-  Method method = Method::Heuristic;
-  bool   admissibleHeuristic  = true;
-  bool   considerFidelity     = false;
+  Method method              = Method::Heuristic;
+  bool   admissibleHeuristic = true;
+  bool   considerFidelity    = false;
 
   bool preMappingOptimizations  = true;
   bool postMappingOptimizations = true;
@@ -56,8 +56,9 @@ struct Configuration {
 
   // timeout merely affects exact mapper
   std::size_t timeout = 3600000; // 60min timeout
-  
-  // after how many expanded nodes to split layer in heuristic mapper, 0 to disable
+
+  // after how many expanded nodes to split layer in heuristic mapper, 0 to
+  // disable
   std::size_t splitLayerAfterExpandedNodes = 0;
 
   // encoding of at most and exactly one constraints in exact mapper
