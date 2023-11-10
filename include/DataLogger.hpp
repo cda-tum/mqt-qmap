@@ -21,10 +21,10 @@ public:
     initLog();
     logArchitecture();
     logInputCircuit(inputCircuit);
-    for (std::size_t i = 0; i < qc.getNqubits(); ++i) {
+    for (std::size_t i = 0; i < inputCircuit.getNqubits(); ++i) {
       qregs.emplace_back("q", "q[" + std::to_string(i) + "]");
     }
-    for (std::size_t i = 0; i < qc.getNcbits(); ++i) {
+    for (std::size_t i = 0; i < inputCircuit.getNcbits(); ++i) {
       cregs.emplace_back("c", "c[" + std::to_string(i) + "]");
     }
   }

@@ -1265,7 +1265,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 
   // check data log
-  std::array<std::string, 4> layerNodeFilePaths = {
+  const std::array<std::string, 4> layerNodeFilePaths = {
       "nodes_layer_0.presplit-0.csv", "nodes_layer_0.presplit-1.csv",
       "nodes_layer_1.presplit-0.csv", "nodes_layer_3.presplit-0.csv"};
   for (auto& path : layerNodeFilePaths) {
