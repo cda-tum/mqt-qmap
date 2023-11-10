@@ -27,7 +27,7 @@ void DataLogger::clearLog() {
   }
 };
 
-void DataLogger::logArchitecture(Architecture& arch) {
+void DataLogger::logArchitecture() {
   if (deactivated) {
     return;
   }
@@ -40,19 +40,19 @@ void DataLogger::logArchitecture(Architecture& arch) {
     return;
   }
   nlohmann::json json;
-  json["name"]         = arch.getName();
-  json["nqubits"]      = arch.getNqubits();
-  json["coupling_map"] = arch.getCouplingMap();
-  json["distances"]    = arch.getDistanceTable();
-  if (arch.isFidelityAvailable()) {
+  json["name"]         = architecture->getName();
+  json["nqubits"]      = architecture->getNqubits();
+  json["coupling_map"] = architecture->getCouplingMap();
+  json["distances"]    = architecture->getDistanceTable();
+  if (architecture->isFidelityAvailable()) {
     auto& fidelity                      = json["fidelity"];
-    fidelity["single_qubit_fidelities"] = arch.getSingleQubitFidelities();
-    fidelity["two_qubit_fidelities"]    = arch.getFidelityTable();
+    fidelity["single_qubit_fidelities"] = architecture->getSingleQubitFidelities();
+    fidelity["two_qubit_fidelities"]    = architecture->getFidelityTable();
     fidelity["single_qubit_fidelity_costs"] =
-        arch.getSingleQubitFidelityCosts();
-    fidelity["two_qubit_fidelity_costs"] = arch.getTwoQubitFidelityCosts();
-    fidelity["swap_fidelity_costs"]      = arch.getSwapFidelityCosts();
-    fidelity["fidelity_distances"]       = arch.getFidelityDistanceTables();
+        architecture->getSingleQubitFidelityCosts();
+    fidelity["two_qubit_fidelity_costs"] = architecture->getTwoQubitFidelityCosts();
+    fidelity["swap_fidelity_costs"]      = architecture->getSwapFidelityCosts();
+    fidelity["fidelity_distances"]       = architecture->getFidelityDistanceTables();
   }
   of << json.dump(2);
   of.close();
@@ -155,7 +155,7 @@ void DataLogger::logFinalizeLayer(
 };
 
 void DataLogger::splitLayer() {
-  std::size_t layerIndex = searchNodesLogFiles.size() - 1;
+  const std::size_t layerIndex = searchNodesLogFiles.size() - 1;
   if (searchNodesLogFiles.at(layerIndex).is_open()) {
     std::cerr << "[data-logging] Error: layer " << layerIndex
               << " has not been finalized before splitting" << std::endl;

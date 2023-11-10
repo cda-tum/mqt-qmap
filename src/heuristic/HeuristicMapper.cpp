@@ -268,6 +268,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
   if (config.dataLoggingEnabled()) {
     dataLogger->logOutputCircuit(qcMapped);
     dataLogger->logMappingResult(results);
+    dataLogger->close();
   }
 }
 
@@ -553,10 +554,9 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   const auto  start         = std::chrono::steady_clock::now();
   std::size_t expandedNodes = 0;
 
-  bool splittable =
+  const bool splittable =
       (twoQubitGateMultiplicity.size() > 1 || consideredQubitsSingleGates > 1 ||
-       (twoQubitGateMultiplicity.size() > 0 &&
-        consideredQubitsSingleGates > 0));
+       (!twoQubitGateMultiplicity.empty() && consideredQubitsSingleGates > 0));
 
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {

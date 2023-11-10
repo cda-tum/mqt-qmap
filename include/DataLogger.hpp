@@ -15,11 +15,11 @@
 
 class DataLogger {
 public:
-  DataLogger(std::string path, Architecture& arch, qc::QuantumComputation& qc)
-      : dataLoggingPath(path), architecture(arch), nqubits(arch.getNqubits()),
-        inputCircuit(qc) {
+  DataLogger(std::string path, Architecture& arch, qc::QuantumComputation qc)
+      : dataLoggingPath(std::move(path)), architecture(&arch), nqubits(arch.getNqubits()),
+        inputCircuit(std::move(qc)) {
     initLog();
-    logArchitecture(architecture);
+    logArchitecture();
     logInputCircuit(inputCircuit);
     for (std::size_t i = 0; i < qc.getNqubits(); ++i) {
       qregs.emplace_back("q", "q[" + std::to_string(i) + "]");
@@ -31,7 +31,7 @@ public:
 
   void initLog();
   void clearLog();
-  void logArchitecture(Architecture& arch);
+  void logArchitecture();
   void logSearchNode(std::size_t layer, std::size_t nodeId,
                      std::size_t parentId, double costFixed, double costHeur,
                      double lookaheadPenalty,
@@ -63,9 +63,9 @@ public:
 
 protected:
   std::string                dataLoggingPath;
-  Architecture&              architecture;
+  Architecture*              architecture;
   std::uint16_t              nqubits;
-  qc::QuantumComputation&    inputCircuit;
+  qc::QuantumComputation     inputCircuit;
   qc::RegisterNames          qregs{};
   qc::RegisterNames          cregs{};
   std::vector<std::ofstream> searchNodesLogFiles; // 1 per layer

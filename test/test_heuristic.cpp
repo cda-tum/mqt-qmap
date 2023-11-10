@@ -1107,12 +1107,12 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
       {8, 9}, {9, 8}, {9, 10}, {10, 9}, {10, 11}, {11, 10}};
   architecture.loadCouplingMap(12, cm);
 
-  double e5 = 0.99;
-  double e4 = 0.9;
-  double e3 = 0.5;
-  double e2 = 0.4;
-  double e1 = 0.1;
-  double e0 = 0.01;
+  const double e5 = 0.99;
+  const double e4 = 0.9;
+  const double e3 = 0.5;
+  const double e2 = 0.4;
+  const double e1 = 0.1;
+  const double e0 = 0.01;
 
   auto props = Architecture::Properties();
   props.setSingleQubitErrorRate(0, "x", e5);
@@ -1252,28 +1252,28 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   */
   EXPECT_EQ(result.output.swaps, 8);
 
-  double c4 = -std::log2(1 - e4);
-  double c3 = -std::log2(1 - e3);
-  double c2 = -std::log2(1 - e2);
-  double c1 = -std::log2(1 - e1);
-  double c0 = -std::log2(1 - e0);
+  const double c4 = -std::log2(1 - e4);
+  const double c3 = -std::log2(1 - e3);
+  const double c2 = -std::log2(1 - e2);
+  const double c1 = -std::log2(1 - e1);
+  const double c0 = -std::log2(1 - e0);
 
-  double expectedFidelity =
+  const double expectedFidelity =
       3 * (c3 + c3 + c3 + c4 + c4 + c0 + c4 + c4) + // SWAPs
       50 * c1 + c3 + c2 +                           // Xs
       5 * c1 + 5 * c1;                              // CXs
   EXPECT_NEAR(result.output.totalLogFidelity, expectedFidelity, 1e-6);
 
   // check data log
-  const char* layerNodeFilePaths[4] = {
+  std::array<std::string, 4> layerNodeFilePaths = {
       "nodes_layer_0.presplit-0.csv", "nodes_layer_0.presplit-1.csv",
       "nodes_layer_1.presplit-0.csv", "nodes_layer_3.presplit-0.csv"};
-  for (std::size_t i = 0; i < 4; ++i) {
+  for (auto& path : layerNodeFilePaths) {
     auto layerNodeFile =
-        std::ifstream(settings.dataLoggingPath + layerNodeFilePaths[i]);
+        std::ifstream(settings.dataLoggingPath + path);
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath
-             << layerNodeFilePaths[i];
+             << path;
     }
     std::string line;
     while (std::getline(layerNodeFile, line)) {
@@ -1284,17 +1284,17 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
       std::stringstream lineStream(line);
       if (!std::getline(lineStream, col, ';')) {
         FAIL() << "Missing value for node id in " << settings.dataLoggingPath
-               << layerNodeFilePaths[i];
+               << path;
       }
       if (std::getline(lineStream, col, ';')) {
         if (std::stoull(col) != 0) {
           // should only contain root node and its direct children
           FAIL() << "Unexpected value for parent node id in "
-                 << settings.dataLoggingPath << layerNodeFilePaths[i];
+                 << settings.dataLoggingPath << path;
         }
       } else {
         FAIL() << "Missing value for parent node id in "
-               << settings.dataLoggingPath << layerNodeFilePaths[i];
+               << settings.dataLoggingPath << path;
       }
     }
   }

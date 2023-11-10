@@ -250,7 +250,7 @@ void Mapper::splitLayer(std::size_t              index,
     twoQubitMultiplicity.insert(edge);
   }
   layers[index] = layer0;
-  layers.insert(layers.begin() + index + 1, layer1);
+  layers.insert(layers.begin() + static_cast<std::vector<std::vector<Mapper::Gate>>::difference_type>(index) + 1, layer1);
   results.input.layers = layers.size();
 }
 
