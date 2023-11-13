@@ -49,6 +49,14 @@ void HeuristicMapper::map(const Configuration& configuration) {
         << std::endl;
     config.teleportationQubits = 0;
   }
+  if (config.splitLayerAfterExpandedNodes > 0 && (config.layering == Layering::OddGates || config.layering == Layering::QubitTriangle)) {
+    std::cerr << "Layer splitting cannot be used with odd gates or qubit "
+                 "triangle layering, as it might not conserve gate order for "
+                 "non-disjoint gate sets! Performing mapping without layer "
+                 "splitting."
+              << std::endl;
+    config.splitLayerAfterExpandedNodes = 0;
+  }
   const auto start = std::chrono::steady_clock::now();
   initResults();
 
@@ -67,194 +75,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
     printQubits(std::clog);
   }
 
-  std::size_t              gateidx = 0;
-  std::vector<std::size_t> gatesToAdjust{};
-  results.output.gates = 0U;
-  for (std::size_t i = 0; i < layers.size(); ++i) {
-    const Node result = aStarMap(i);
-
-    qubits    = result.qubits;
-    locations = result.locations;
-
-    if (config.verbose) {
-      printLocations(std::clog);
-      printQubits(std::clog);
-    }
-
-    // initial layer needs no swaps
-    if (i != 0 || config.swapOnFirstLayer) {
-      for (const auto& swaps : result.swaps) {
-        for (const auto& swap : swaps) {
-          if (swap.op == qc::SWAP) {
-            if (config.verbose) {
-              std::clog << "SWAP: " << swap.first << " <-> " << swap.second
-                        << "\n";
-            }
-            if (!architecture->isEdgeConnected({swap.first, swap.second}) &&
-                !architecture->isEdgeConnected({swap.second, swap.first})) {
-              throw QMAPException(
-                  "Invalid SWAP: " + std::to_string(swap.first) + "<->" +
-                  std::to_string(swap.second));
-            }
-            qcMapped.swap(swap.first, swap.second);
-            results.output.swaps++;
-          } else if (swap.op == qc::Teleportation) {
-            if (config.verbose) {
-              std::clog << "TELE: " << swap.first << " <-> " << swap.second
-                        << "\n";
-            }
-            qcMapped.emplace_back<qc::StandardOperation>(
-                qcMapped.getNqubits(),
-                qc::Targets{static_cast<qc::Qubit>(swap.first),
-                            static_cast<qc::Qubit>(swap.second),
-                            static_cast<qc::Qubit>(swap.middleAncilla)},
-                qc::Teleportation);
-            results.output.teleportations++;
-          }
-          gateidx++;
-        }
-      }
-    }
-
-    // add gates of the layer to circuit
-    for (const auto& gate : layers.at(i)) {
-      auto* op = dynamic_cast<qc::StandardOperation*>(gate.op);
-      if (op == nullptr) {
-        throw QMAPException(
-            "Cast to StandardOperation not possible during mapping. Check that "
-            "circuit contains only StandardOperations");
-      }
-
-      if (gate.singleQubit()) {
-        if (locations.at(gate.target) == DEFAULT_POSITION) {
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(), gate.target, op->getType(),
-              op->getParameter());
-          gatesToAdjust.push_back(gateidx);
-          gateidx++;
-        } else {
-          qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-              op->getParameter());
-          gateidx++;
-        }
-      } else {
-        const Edge cnot = {
-            locations.at(static_cast<std::uint16_t>(gate.control)),
-            locations.at(gate.target)};
-        if (!architecture->isEdgeConnected(cnot)) {
-          const Edge reverse = {cnot.second, cnot.first};
-          if (!architecture->isEdgeConnected(reverse)) {
-            throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
-                std::to_string(reverse.second));
-          }
-          qcMapped.h(reverse.first);
-          qcMapped.h(reverse.second);
-          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reverse.first)},
-                      reverse.second);
-          qcMapped.h(reverse.second);
-          qcMapped.h(reverse.first);
-
-          results.output.directionReverse++;
-          gateidx += 5;
-        } else {
-          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
-                      cnot.second);
-          gateidx++;
-        }
-      }
-    }
-  }
-
-  if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
-    auto& benchmark = results.heuristicBenchmark;
-    benchmark.timePerNode /= static_cast<double>(benchmark.expandedNodes);
-    benchmark.averageBranchingFactor =
-        static_cast<double>(benchmark.generatedNodes - layers.size()) /
-        static_cast<double>(benchmark.expandedNodes);
-    for (const auto& layer : results.layerHeuristicBenchmark) {
-      benchmark.effectiveBranchingFactor +=
-          layer.effectiveBranchingFactor *
-          (static_cast<double>(layer.expandedNodes) /
-           static_cast<double>(benchmark.expandedNodes));
-    }
-  }
-
-  // infer output permutation from qubit locations
-  qcMapped.outputPermutation.clear();
-  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
-    if (const auto lq = qubits.at(i); lq != -1) {
-      const auto logicalQubit = static_cast<qc::Qubit>(lq);
-      // check whether this is a qubit from the original circuit
-      if (logicalQubit < qc.getNqubits()) {
-        qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
-            static_cast<qc::Qubit>(qubits.at(i));
-      } else {
-        qcMapped.setLogicalQubitGarbage(logicalQubit);
-      }
-    }
-  }
-
-  // fix single qubit gates
-  if (!gatesToAdjust.empty()) {
-    gateidx--; // index of last operation
-    for (auto it = qcMapped.rbegin(); it != qcMapped.rend(); ++it, --gateidx) {
-      auto* op = dynamic_cast<qc::StandardOperation*>(it->get());
-      if (op == nullptr) {
-        throw QMAPException(
-            "Cast to StandardOperation not possible during mapping. Check that "
-            "circuit contains only StandardOperations");
-      }
-      if (op->getType() == qc::SWAP) {
-        const auto q0                     = qubits.at(op->getTargets().at(0));
-        const auto q1                     = qubits.at(op->getTargets().at(1));
-        qubits.at(op->getTargets().at(0)) = q1;
-        qubits.at(op->getTargets().at(1)) = q0;
-
-        if (q0 != DEFAULT_POSITION) {
-          locations.at(static_cast<std::size_t>(q0)) =
-              static_cast<std::int16_t>(op->getTargets().at(1));
-        }
-        if (q1 != DEFAULT_POSITION) {
-          locations.at(static_cast<std::size_t>(q1)) =
-              static_cast<std::int16_t>(op->getTargets().at(0));
-        }
-      }
-      if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
-        gatesToAdjust.pop_back();
-        auto target         = op->getTargets().at(0);
-        auto targetLocation = locations.at(target);
-
-        if (targetLocation == -1) {
-          // qubit only occurs in single qubit gates, can be mapped to an
-          // arbitrary free qubit
-          std::uint16_t loc = 0;
-          while (qubits.at(loc) != DEFAULT_POSITION) {
-            ++loc;
-          }
-          locations.at(target) = static_cast<std::int16_t>(loc);
-          qubits.at(loc)       = static_cast<std::int16_t>(target);
-          op->setTargets({static_cast<qc::Qubit>(loc)});
-          qcMapped.initialLayout.at(target)                       = loc;
-          qcMapped.outputPermutation[static_cast<qc::Qubit>(loc)] = target;
-          qcMapped.garbage.at(loc)                                = false;
-        } else {
-          op->setTargets({static_cast<qc::Qubit>(targetLocation)});
-        }
-      }
-    }
-  }
-
-  // mark every qubit that is not mapped to a logical qubit as garbage
-  std::size_t count = 0U;
-  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
-    if (const auto lq = qubits.at(i); lq == -1) {
-      qcMapped.setLogicalQubitGarbage(
-          static_cast<qc::Qubit>(qc.getNqubits() + count));
-      ++count;
-    }
-  }
+  routeCircuit();
 
   postMappingOptimizations(config);
   countGates(qcMapped, results.output);
@@ -377,12 +198,10 @@ void HeuristicMapper::createInitialMapping() {
   }
 }
 
-void HeuristicMapper::mapUnmappedGates(
-    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
+void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
   if (results.config.considerFidelity) {
-    for (std::size_t q = 0; q < singleQubitGateMultiplicity.size(); ++q) {
-      if (singleQubitGateMultiplicity.at(q) == 0) {
+    for (std::size_t q = 0; q < singleQubitMultiplicities.at(layer).size(); ++q) {
+      if (singleQubitMultiplicities.at(layer).at(q) == 0) {
         continue;
       }
       if (locations.at(q) == DEFAULT_POSITION) {
@@ -400,7 +219,7 @@ void HeuristicMapper::mapUnmappedGates(
     }
   }
 
-  for (const auto& [logEdge, _] : twoQubitGateMultiplicity) {
+  for (const auto& [logEdge, _] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = logEdge;
 
     auto q1Location = locations.at(q1);
@@ -480,68 +299,254 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
   qc::QuantumComputation::findAndSWAP(target, *pos, qcMapped.outputPermutation);
 }
 
-HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
+void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
+  // save original global data for restoring it later if pseudo routing is used
+  const auto originalResults = results;
+  const auto originalLayers = layers;
+  const auto originalSingleQubitMultiplicities = singleQubitMultiplicities;
+  const auto originalTwoQubitMultiplicities = twoQubitMultiplicities;
+  const auto originalActiveQubits = activeQubits;
+  const auto originalActiveQubits1QGates = activeQubits1QGates;
+  const auto originalActiveQubits2QGates = activeQubits2QGates;
+  
   auto& config = results.config;
-  nextNodeId   = 0;
+  if (pseudoRouting) {
+    config.dataLoggingPath = ""; // disable data logging for pseudo routing
+    config.debug = false;
+    
+    if (config.verbose) {
+      std::clog << std::endl << std::endl << "Pseudo routing (" << (reverse ? "backward" : "forward") << " pass):" << std::endl;
+    }
+  }
+  
+  std::size_t              gateidx = 0;
+  std::vector<std::size_t> gatesToAdjust{};
+  results.output.gates = 0U;
+  for (std::size_t i = 0; i < layers.size(); ++i) {
+    auto layerIndex = (reverse ? layers.size() - i - 1 : i);
+    const Node result = aStarMap(layerIndex);
 
-  std::unordered_set<std::uint16_t> consideredQubits{};
-  std::size_t                       consideredQubitsSingleGates = 0;
-  Node                              node(nextNodeId++);
-  // number of single qubit gates acting on each logical qubit in the current
-  // layer
-  SingleQubitMultiplicity singleQubitGateMultiplicity(
-      architecture->getNqubits(), 0);
-  // number of two qubit gates acting on each logical qubit edge in the current
-  // layer where the first number in the value pair corresponds to the number of
-  // edges having their gates given as (control, target) in the key, and the
-  // second with all gates in reverse to that
-  TwoQubitMultiplicity twoQubitGateMultiplicity{};
-  Node                 bestDoneNode(0);
-  bool                 done             = false;
-  const bool           considerFidelity = config.considerFidelity;
+    qubits    = result.qubits;
+    locations = result.locations;
 
-  for (const auto& gate : layers.at(layer)) {
-    if (gate.singleQubit()) {
-      if (singleQubitGateMultiplicity.at(gate.target) == 0) {
-        ++consideredQubitsSingleGates;
+    if (config.verbose) {
+      printLocations(std::clog);
+      printQubits(std::clog);
+    }
+    
+    if (pseudoRouting) {
+      continue;
+    }
+
+    // initial layer needs no swaps
+    if (layerIndex != 0 || config.swapOnFirstLayer) {
+      for (const auto& swaps : result.swaps) {
+        for (const auto& swap : swaps) {
+          if (swap.op == qc::SWAP) {
+            if (config.verbose) {
+              std::clog << "SWAP: " << swap.first << " <-> " << swap.second
+                        << "\n";
+            }
+            if (!architecture->isEdgeConnected({swap.first, swap.second}) &&
+                !architecture->isEdgeConnected({swap.second, swap.first})) {
+              throw QMAPException(
+                  "Invalid SWAP: " + std::to_string(swap.first) + "<->" +
+                  std::to_string(swap.second));
+            }
+            qcMapped.swap(swap.first, swap.second);
+            results.output.swaps++;
+          } else if (swap.op == qc::Teleportation) {
+            if (config.verbose) {
+              std::clog << "TELE: " << swap.first << " <-> " << swap.second
+                        << "\n";
+            }
+            qcMapped.emplace_back<qc::StandardOperation>(
+                qcMapped.getNqubits(),
+                qc::Targets{static_cast<qc::Qubit>(swap.first),
+                            static_cast<qc::Qubit>(swap.second),
+                            static_cast<qc::Qubit>(swap.middleAncilla)},
+                qc::Teleportation);
+            results.output.teleportations++;
+          }
+          gateidx++;
+        }
       }
-      ++singleQubitGateMultiplicity.at(gate.target);
-      if (considerFidelity) {
-        consideredQubits.emplace(gate.target);
+    }
+
+    // add gates of the layer to circuit
+    for (const auto& gate : layers.at(layerIndex)) {
+      auto* op = dynamic_cast<qc::StandardOperation*>(gate.op);
+      if (op == nullptr) {
+        throw QMAPException(
+            "Cast to StandardOperation not possible during mapping. Check that "
+            "circuit contains only StandardOperations");
       }
-    } else {
-      consideredQubits.emplace(gate.control);
-      consideredQubits.emplace(gate.target);
-      if (gate.control >= gate.target) {
-        const auto edge =
-            std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
-        if (twoQubitGateMultiplicity.find(edge) ==
-            twoQubitGateMultiplicity.end()) {
-          twoQubitGateMultiplicity[edge] = {0, 1};
+
+      if (gate.singleQubit()) {
+        if (locations.at(gate.target) == DEFAULT_POSITION) {
+          qcMapped.emplace_back<qc::StandardOperation>(
+              qcMapped.getNqubits(), gate.target, op->getType(),
+              op->getParameter());
+          gatesToAdjust.push_back(gateidx);
+          gateidx++;
         } else {
-          twoQubitGateMultiplicity[edge].second++;
+          qcMapped.emplace_back<qc::StandardOperation>(
+              qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
+              op->getParameter());
+          gateidx++;
         }
       } else {
-        const auto edge =
-            std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
-        if (twoQubitGateMultiplicity.find(edge) ==
-            twoQubitGateMultiplicity.end()) {
-          twoQubitGateMultiplicity[edge] = {1, 0};
+        const Edge cnot = {
+            locations.at(static_cast<std::uint16_t>(gate.control)),
+            locations.at(gate.target)};
+        if (!architecture->isEdgeConnected(cnot)) {
+          const Edge reverse = {cnot.second, cnot.first};
+          if (!architecture->isEdgeConnected(reverse)) {
+            throw QMAPException(
+                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
+                std::to_string(reverse.second));
+          }
+          qcMapped.h(reverse.first);
+          qcMapped.h(reverse.second);
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reverse.first)},
+                      reverse.second);
+          qcMapped.h(reverse.second);
+          qcMapped.h(reverse.first);
+
+          results.output.directionReverse++;
+          gateidx += 5;
         } else {
-          twoQubitGateMultiplicity[edge].first++;
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(cnot.first)},
+                      cnot.second);
+          gateidx++;
         }
       }
     }
   }
 
-  mapUnmappedGates(singleQubitGateMultiplicity, twoQubitGateMultiplicity);
+  if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
+    auto& benchmark = results.heuristicBenchmark;
+    benchmark.timePerNode /= static_cast<double>(benchmark.expandedNodes);
+    benchmark.averageBranchingFactor =
+        static_cast<double>(benchmark.generatedNodes - layers.size()) /
+        static_cast<double>(benchmark.expandedNodes);
+    for (const auto& layer : results.layerHeuristicBenchmark) {
+      benchmark.effectiveBranchingFactor +=
+          layer.effectiveBranchingFactor *
+          (static_cast<double>(layer.expandedNodes) /
+           static_cast<double>(benchmark.expandedNodes));
+    }
+  }
+  
+  
+  if (pseudoRouting) {
+    // restore original global data
+    results = originalResults;
+    layers = originalLayers;
+    singleQubitMultiplicities = originalSingleQubitMultiplicities;
+    twoQubitMultiplicities = originalTwoQubitMultiplicities;
+    activeQubits = originalActiveQubits;
+    activeQubits1QGates = originalActiveQubits1QGates;
+    activeQubits2QGates = originalActiveQubits2QGates;
+    return;
+  }
+  
+  // infer output permutation from qubit locations
+  qcMapped.outputPermutation.clear();
+  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
+    if (const auto lq = qubits.at(i); lq != -1) {
+      const auto logicalQubit = static_cast<qc::Qubit>(lq);
+      // check whether this is a qubit from the original circuit
+      if (logicalQubit < qc.getNqubits()) {
+        qcMapped.outputPermutation[static_cast<qc::Qubit>(i)] =
+            static_cast<qc::Qubit>(qubits.at(i));
+      } else {
+        qcMapped.setLogicalQubitGarbage(logicalQubit);
+      }
+    }
+  }
+
+  // fix single qubit gates
+  if (!gatesToAdjust.empty()) {
+    gateidx--; // index of last operation
+    for (auto it = qcMapped.rbegin(); it != qcMapped.rend(); ++it, --gateidx) {
+      auto* op = dynamic_cast<qc::StandardOperation*>(it->get());
+      if (op == nullptr) {
+        throw QMAPException(
+            "Cast to StandardOperation not possible during mapping. Check that "
+            "circuit contains only StandardOperations");
+      }
+      if (op->getType() == qc::SWAP) {
+        const auto q0                     = qubits.at(op->getTargets().at(0));
+        const auto q1                     = qubits.at(op->getTargets().at(1));
+        qubits.at(op->getTargets().at(0)) = q1;
+        qubits.at(op->getTargets().at(1)) = q0;
+
+        if (q0 != DEFAULT_POSITION) {
+          locations.at(static_cast<std::size_t>(q0)) =
+              static_cast<std::int16_t>(op->getTargets().at(1));
+        }
+        if (q1 != DEFAULT_POSITION) {
+          locations.at(static_cast<std::size_t>(q1)) =
+              static_cast<std::int16_t>(op->getTargets().at(0));
+        }
+      }
+      if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
+        gatesToAdjust.pop_back();
+        auto target         = op->getTargets().at(0);
+        auto targetLocation = locations.at(target);
+
+        if (targetLocation == -1) {
+          // qubit only occurs in single qubit gates, can be mapped to an
+          // arbitrary free qubit
+          std::uint16_t loc = 0;
+          while (qubits.at(loc) != DEFAULT_POSITION) {
+            ++loc;
+          }
+          locations.at(target) = static_cast<std::int16_t>(loc);
+          qubits.at(loc)       = static_cast<std::int16_t>(target);
+          op->setTargets({static_cast<qc::Qubit>(loc)});
+          qcMapped.initialLayout.at(target)                       = loc;
+          qcMapped.outputPermutation[static_cast<qc::Qubit>(loc)] = target;
+          qcMapped.garbage.at(loc)                                = false;
+        } else {
+          op->setTargets({static_cast<qc::Qubit>(targetLocation)});
+        }
+      }
+    }
+  }
+
+  // mark every qubit that is not mapped to a logical qubit as garbage
+  std::size_t count = 0U;
+  for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
+    if (const auto lq = qubits.at(i); lq == -1) {
+      qcMapped.setLogicalQubitGarbage(
+          static_cast<qc::Qubit>(qc.getNqubits() + count));
+      ++count;
+    }
+  }
+}
+
+HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
+  auto& config = results.config;
+  const bool considerFidelity = config.considerFidelity;
+  nextNodeId   = 0;
+
+  const std::unordered_set<std::uint16_t>& consideredQubits = (considerFidelity ? activeQubits[layer] : activeQubits2QGates[layer]);
+  const SingleQubitMultiplicity& singleQubitMultiplicity = singleQubitMultiplicities.at(layer);
+  const TwoQubitMultiplicity& twoQubitMultiplicity = twoQubitMultiplicities.at(layer);
+  Node                               node(nextNodeId++);
+  Node                               bestDoneNode(0);
+  bool                               done = false;
+
+  mapUnmappedGates(layer);
 
   node.locations = locations;
   node.qubits    = qubits;
-  node.recalculateFixedCost(*architecture, singleQubitGateMultiplicity,
-                            twoQubitGateMultiplicity, config.considerFidelity);
-  node.updateHeuristicCost(*architecture, singleQubitGateMultiplicity,
-                           twoQubitGateMultiplicity, consideredQubits,
+  node.recalculateFixedCost(*architecture, singleQubitMultiplicity,
+                            twoQubitMultiplicity, config.considerFidelity);
+  node.updateHeuristicCost(*architecture, singleQubitMultiplicity,
+                           twoQubitMultiplicity, consideredQubits,
                            config.admissibleHeuristic, config.considerFidelity);
 
   if (config.dataLoggingEnabled()) {
@@ -554,9 +559,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
   const auto  start         = std::chrono::steady_clock::now();
   std::size_t expandedNodes = 0;
 
-  const bool splittable =
-      (twoQubitGateMultiplicity.size() > 1 || consideredQubitsSingleGates > 1 ||
-       (!twoQubitGateMultiplicity.empty() && consideredQubitsSingleGates > 0));
+  const bool splittable = isLayerSplittable(layer);
 
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
@@ -569,13 +572,12 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
           compOp.emplace_back(op);
         }
 
-        dataLogger->logFinalizeLayer(layer, compOp, singleQubitGateMultiplicity,
-                                     twoQubitGateMultiplicity, qubits, 0, 0, 0,
+        dataLogger->logFinalizeLayer(layer, compOp, singleQubitMultiplicity,
+                                     twoQubitMultiplicity, qubits, 0, 0, 0,
                                      0, {}, {}, 0);
         dataLogger->splitLayer();
       }
-      splitLayer(layer, singleQubitGateMultiplicity, twoQubitGateMultiplicity,
-                 *architecture);
+      splitLayer(layer, *architecture);
       if (config.verbose) {
         std::clog << "Split layer" << std::endl;
       }
@@ -594,8 +596,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
       }
     }
     nodes.pop();
-    expandNode(consideredQubits, current, layer, singleQubitGateMultiplicity,
-               twoQubitGateMultiplicity);
+    expandNode(consideredQubits, current, layer);
     ++expandedNodes;
   }
 
@@ -640,7 +641,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
     }
 
     dataLogger->logFinalizeLayer(
-        layer, compOp, singleQubitGateMultiplicity, twoQubitGateMultiplicity,
+        layer, compOp, singleQubitMultiplicities.at(layer), twoQubitMultiplicities.at(layer),
         qubits, result.id, result.costFixed, result.costHeur,
         result.lookaheadPenalty, result.qubits, result.swaps, result.depth);
   }
@@ -655,9 +656,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
 
 void HeuristicMapper::expandNode(
     const std::unordered_set<std::uint16_t>& consideredQubits, Node& node,
-    std::size_t                    layer,
-    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
+    std::size_t layer) {
   std::vector<std::vector<bool>> usedSwaps;
   usedSwaps.reserve(architecture->getNqubits());
   for (int p = 0; p < architecture->getNqubits(); ++p) {
@@ -716,16 +715,14 @@ void HeuristicMapper::expandNode(
         auto q1 = node.qubits.at(edge.first);
         auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
-          expandNodeAddOneSwap(edge, node, layer, singleQubitGateMultiplicity,
-                               twoQubitGateMultiplicity, consideredQubits);
+          expandNodeAddOneSwap(edge, node, layer, consideredQubits);
         } else if (!usedSwaps.at(static_cast<std::size_t>(q1))
                         .at(static_cast<std::size_t>(q2))) {
           usedSwaps.at(static_cast<std::size_t>(q1))
               .at(static_cast<std::size_t>(q2)) = true;
           usedSwaps.at(static_cast<std::size_t>(q2))
               .at(static_cast<std::size_t>(q1)) = true;
-          expandNodeAddOneSwap(edge, node, layer, singleQubitGateMultiplicity,
-                               twoQubitGateMultiplicity, consideredQubits);
+          expandNodeAddOneSwap(edge, node, layer, consideredQubits);
         }
       }
     }
@@ -734,8 +731,6 @@ void HeuristicMapper::expandNode(
 
 void HeuristicMapper::expandNodeAddOneSwap(
     const Edge& swap, Node& node, const std::size_t layer,
-    const SingleQubitMultiplicity&           singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
     const std::unordered_set<std::uint16_t>& consideredQubits) {
   const auto& config = results.config;
 
@@ -744,14 +739,14 @@ void HeuristicMapper::expandNodeAddOneSwap(
 
   if (architecture->isEdgeConnected(swap) ||
       architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
-    newNode.applySWAP(swap, *architecture, singleQubitGateMultiplicity,
-                      twoQubitGateMultiplicity, config.considerFidelity);
+    newNode.applySWAP(swap, *architecture, singleQubitMultiplicities.at(layer),
+                      twoQubitMultiplicities.at(layer), config.considerFidelity);
   } else {
     newNode.applyTeleportation(swap, *architecture);
   }
 
-  newNode.updateHeuristicCost(*architecture, singleQubitGateMultiplicity,
-                              twoQubitGateMultiplicity, consideredQubits,
+  newNode.updateHeuristicCost(*architecture, singleQubitMultiplicities.at(layer),
+                              twoQubitMultiplicities.at(layer), consideredQubits,
                               results.config.admissibleHeuristic,
                               results.config.considerFidelity);
 

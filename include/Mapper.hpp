@@ -30,6 +30,14 @@
  */
 using TwoQubitMultiplicity =
     std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+
+/**
+ * number of single-qubit gates acting on each logical qubit in some 
+ * layer.
+ * 
+ * e.g. with multiplicity {1,0,2} there is 1 1Q-gate acting on q0, no 1Q-gates 
+ * acting on q1, and 2 1Q-gates acting on q2
+ */
 using SingleQubitMultiplicity = std::vector<std::uint16_t>;
 
 constexpr std::int16_t DEFAULT_POSITION = -1;
@@ -77,6 +85,32 @@ protected:
    * gates in an inner vector
    */
   std::vector<std::vector<Gate>> layers{};
+  
+  /**
+   * @brief The number of 1Q-gates acting on each logical qubit in each layer
+   */
+  std::vector<SingleQubitMultiplicity> singleQubitMultiplicities{};
+  
+  /**
+   * @brief The number of 2Q-gates acting on each pair of logical qubits in each
+   * layer
+   */
+  std::vector<TwoQubitMultiplicity> twoQubitMultiplicities{};
+  
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by a gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits{};
+  
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by a 1Q-gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits1QGates{};
+  
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by a 2Q-gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits2QGates{};
 
   /**
    * @brief containing the logical qubit currently mapped to each physical
@@ -123,21 +157,25 @@ protected:
    * a disjoint set of qubits
    */
   virtual void createLayers();
+  
+  /**
+   * @brief Returns true if the layer at the given index can be split into two
+   * without resulting in an empty layer (assuming the original layer only has disjoint 2Q-gate-blocks)
+   * 
+   * @param index the index of the layer to be split
+   * @return true if the layer is splittable
+   * @return false if splitting the layer will result in an empty layer
+   */
+  virtual bool isLayerSplittable(std::size_t index);
 
   /**
    * @brief Splits the layer at the given index into two layers with half as
    * many qubits acted on by gates in each layer
    *
    * @param index the index of the layer to be split
-   * @param singleQubitMultiplicity single qubit multiplicity of the layer to be
-   * split
-   * @param twoQubitMultiplicity two qubit multiplicity of the layer to be split
    * @param arch architecture on which the circuit is mapped
    */
-  virtual void splitLayer(std::size_t              index,
-                          SingleQubitMultiplicity& singleQubitMultiplicity,
-                          TwoQubitMultiplicity&    twoQubitMultiplicity,
-                          Architecture&            arch);
+  virtual void splitLayer(std::size_t index, Architecture& arch);
 
   /**
    * gates are put in the last layer (from the back of the circuit) in which

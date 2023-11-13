@@ -184,37 +184,127 @@ void Mapper::createLayers() {
     }
   }
   results.input.layers = layers.size();
+  
+  // compute qubit gate multiplicities
+  singleQubitMultiplicities = std::vector<SingleQubitMultiplicity>(layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
+  twoQubitMultiplicities = std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
+  activeQubits = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
+  activeQubits1QGates = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
+  activeQubits2QGates = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
+  
+  for (std::size_t i = 0; i < layers.size(); ++i) {
+    for (const auto& gate : layers[i]) {
+      if (gate.singleQubit()) {
+        activeQubits[i].emplace(gate.target);
+        activeQubits1QGates[i].emplace(gate.target);
+        ++singleQubitMultiplicities[i][gate.target];
+      } else {
+        activeQubits[i].emplace(gate.control);
+        activeQubits[i].emplace(gate.target);
+        activeQubits2QGates[i].emplace(gate.control);
+        activeQubits2QGates[i].emplace(gate.target);
+        if (gate.control >= gate.target) {
+          const auto edge =
+              std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
+          if (twoQubitMultiplicities[i].find(edge) ==
+              twoQubitMultiplicities[i].end()) {
+            twoQubitMultiplicities[i][edge] = {0, 1};
+          } else {
+            twoQubitMultiplicities[i][edge].second++;
+          }
+        } else {
+          const auto edge =
+              std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
+          if (twoQubitMultiplicities[i].find(edge) ==
+              twoQubitMultiplicities[i].end()) {
+            twoQubitMultiplicities[i][edge] = {1, 0};
+          } else {
+            twoQubitMultiplicities[i][edge].first++;
+          }
+        }
+      }
+    }
+  }
 }
 
-void Mapper::splitLayer(std::size_t              index,
-                        SingleQubitMultiplicity& singleQubitMultiplicity,
-                        TwoQubitMultiplicity&    twoQubitMultiplicity,
-                        Architecture&            arch) {
-  std::vector<Gate>       layer0 = {};
-  std::vector<Gate>       layer1 = {};
+bool Mapper::isLayerSplittable(std::size_t index) {
+  if (twoQubitMultiplicities.at(index).size() > 1) {
+    return true;
+  }
+  if (activeQubits1QGates.at(index).size() > 2) {
+    return true;
+  }
+  if (twoQubitMultiplicities.at(index).size() == 0) {
+    return false;
+  }
+  // check if there is a 1Q gate on a qubit that is not part of the 2Q gate
+  for (auto q : activeQubits1QGates.at(index)) {
+    if(activeQubits2QGates.at(index).find(q) == activeQubits2QGates.at(index).end()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void Mapper::splitLayer(std::size_t index, Architecture& arch) {
+  const SingleQubitMultiplicity& singleQubitMultiplicity = singleQubitMultiplicities.at(index);
+  const TwoQubitMultiplicity& twoQubitMultiplicity = twoQubitMultiplicities.at(index);
+  std::vector<Gate>       layer0{};
+  std::vector<Gate>       layer1{};
   SingleQubitMultiplicity singleQubitMultiplicity0(arch.getNqubits(), 0);
   SingleQubitMultiplicity singleQubitMultiplicity1(arch.getNqubits(), 0);
-  TwoQubitMultiplicity    twoQubitMultiplicity0 = {};
-  TwoQubitMultiplicity    twoQubitMultiplicity1 = {};
+  TwoQubitMultiplicity    twoQubitMultiplicity0{};
+  TwoQubitMultiplicity    twoQubitMultiplicity1{};
+  std::unordered_set<std::uint16_t> activeQubits0{};
+  std::unordered_set<std::uint16_t> activeQubits1QGates0{};
+  std::unordered_set<std::uint16_t> activeQubits2QGates0{};
+  std::unordered_set<std::uint16_t> activeQubits1{};
+  std::unordered_set<std::uint16_t> activeQubits1QGates1{};
+  std::unordered_set<std::uint16_t> activeQubits2QGates1{};
+  
+  bool even = false;
+  for (auto edge : twoQubitMultiplicity) {
+    if (even) {
+      twoQubitMultiplicity0.insert(edge);
+      activeQubits0.emplace(edge.first.first);
+      activeQubits0.emplace(edge.first.second);
+      activeQubits2QGates0.emplace(edge.first.first);
+      activeQubits2QGates0.emplace(edge.first.second);
+    } else {
+      twoQubitMultiplicity1.insert(edge);
+      activeQubits1.emplace(edge.first.first);
+      activeQubits1.emplace(edge.first.second);
+      activeQubits2QGates1.emplace(edge.first.first);
+      activeQubits2QGates1.emplace(edge.first.second);
+    }
+    even = !even;
+  }
 
-  bool even = true;
+  even = true;
   for (std::size_t q = 0; q < singleQubitMultiplicity.size(); ++q) {
     if (singleQubitMultiplicity[q] == 0) {
       continue;
     }
+    if (activeQubits2QGates0.find(q) != activeQubits2QGates0.end()) {
+      singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
+      activeQubits0.emplace(q);
+      activeQubits1QGates0.emplace(q);
+      continue;
+    } 
+    if (activeQubits2QGates1.find(q) != activeQubits2QGates1.end()) {
+      singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
+      activeQubits1.emplace(q);
+      activeQubits1QGates1.emplace(q);
+      continue;
+    }
     if (even) {
       singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
+      activeQubits0.emplace(q);
+      activeQubits1QGates0.emplace(q);
     } else {
       singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
-    }
-    even = !even;
-  }
-  even = false;
-  for (auto edge : twoQubitMultiplicity) {
-    if (even) {
-      twoQubitMultiplicity0.insert(edge);
-    } else {
-      twoQubitMultiplicity1.insert(edge);
+      activeQubits1.emplace(q);
+      activeQubits1QGates1.emplace(q);
     }
     even = !even;
   }
@@ -227,28 +317,14 @@ void Mapper::splitLayer(std::size_t              index,
         layer1.push_back(gate);
       }
     } else {
-      Edge edge;
-      if (gate.control < gate.target) {
-        edge = {gate.control, gate.target};
-      } else {
-        edge = {gate.target, gate.control};
-      }
-      if (twoQubitMultiplicity0.find(edge) != twoQubitMultiplicity0.end()) {
+      if (activeQubits2QGates0.find(gate.target) != activeQubits2QGates0.end()) {
         layer0.push_back(gate);
       } else {
         layer1.push_back(gate);
       }
     }
   }
-
-  singleQubitMultiplicity.clear();
-  twoQubitMultiplicity.clear();
-  for (auto q : singleQubitMultiplicity0) {
-    singleQubitMultiplicity.push_back(q);
-  }
-  for (auto edge : twoQubitMultiplicity0) {
-    twoQubitMultiplicity.insert(edge);
-  }
+  
   layers[index] = layer0;
   layers.insert(
       layers.begin() +
@@ -256,6 +332,41 @@ void Mapper::splitLayer(std::size_t              index,
               index) +
           1,
       layer1);
+  singleQubitMultiplicities[index] = singleQubitMultiplicity0;
+  singleQubitMultiplicities.insert(
+      singleQubitMultiplicities.begin() +
+          static_cast<std::vector<SingleQubitMultiplicity>::difference_type>(
+              index) +
+          1,
+      singleQubitMultiplicity1);
+  twoQubitMultiplicities[index] = twoQubitMultiplicity0;
+  twoQubitMultiplicities.insert(
+      twoQubitMultiplicities.begin() +
+          static_cast<std::vector<TwoQubitMultiplicity>::difference_type>(
+              index) +
+          1,
+      twoQubitMultiplicity1);
+  activeQubits[index] = activeQubits0;
+  activeQubits.insert(
+      activeQubits.begin() +
+          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+              index) +
+          1,
+      activeQubits1);
+  activeQubits1QGates[index] = activeQubits1QGates0;
+  activeQubits1QGates.insert(
+      activeQubits1QGates.begin() +
+          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+              index) +
+          1,
+      activeQubits1QGates1);
+  activeQubits2QGates[index] = activeQubits2QGates0;
+  activeQubits2QGates.insert(
+      activeQubits2QGates.begin() +
+          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+              index) +
+          1,
+      activeQubits2QGates1);
   results.input.layers = layers.size();
 }
 

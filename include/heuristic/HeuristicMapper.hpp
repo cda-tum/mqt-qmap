@@ -215,8 +215,15 @@ protected:
    * of logical qubits in the current layer
    */
   virtual void
-  mapUnmappedGates(const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-                   const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
+  mapUnmappedGates(std::size_t layer);
+  
+  /**
+   * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology constraints and optimize fidelity if activated
+   * 
+   * @param reverse if true, the circuit is routed from the end to the beginning (used in iterative bidirectional routing)
+   * @param pseudoRouting if true, routing will only be simulated without altering the circuit or modifying any other global data except for `qubits` and `locations`, which will hold the final qubit layout afterwards
+   */
+  virtual void routeCircuit(bool reverse = false, bool pseudoRouting = false);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -243,9 +250,7 @@ protected:
    * of logical qubits in the current layer
    */
   void expandNode(const std::unordered_set<std::uint16_t>& consideredQubits,
-                  Node& node, std::size_t layer,
-                  const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-                  const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
+                  Node& node, std::size_t layer);
 
   /**
    * @brief creates a new node with a swap on the given edge and adds it to
@@ -259,8 +264,6 @@ protected:
    */
   void expandNodeAddOneSwap(
       const Edge& swap, Node& node, std::size_t layer,
-      const SingleQubitMultiplicity&           singleQubitGateMultiplicity,
-      const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
       const std::unordered_set<std::uint16_t>& consideredQubits);
 
   /**
