@@ -166,7 +166,7 @@ public:
   }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  template <class T> void push_back(const T& gate) { gates.push_back(gate); }
+  void push_back(const qc::OpType& gate) { gates.push_back(gate); }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
   template <class T, class... Args> void emplace_back(Args&&... args) {
@@ -174,17 +174,13 @@ public:
   }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  template <class T> void emplace_back(qc::OpType& gate) {
-    gates.emplace_back(gate);
-  }
+  void emplace_back(qc::OpType& gate) { gates.emplace_back(gate); }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  template <class T> void emplace_back(qc::OpType&& gate) {
-    gates.emplace_back(gate);
-  }
+  void emplace_back(qc::OpType&& gate) { gates.emplace_back(gate); }
 
-  template <class T> iterator insert(const_iterator pos, T&& gate) {
-    return gates.insert(pos, std::forward<T>(gate));
+  iterator insert(const_iterator pos, qc::OpType&& gate) {
+    return gates.insert(pos, gate);
   }
 
   [[nodiscard]] const auto& at(const std::size_t i) const {
