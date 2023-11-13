@@ -27,10 +27,10 @@ private:
       gates.push_back(qc::OpType::None);
     }
   }
-
-public:
   std::vector<qc::OpType> gates{};
+public:
 
+  
   GateSet() { appendNone(); };
 
   explicit GateSet(std::vector<qc::OpType> gateSet)
@@ -96,6 +96,16 @@ public:
     return 0;
   }
 
+  [[nodiscard]] GateSet paulis() const {
+    std::vector<qc::OpType> result;
+    for (const auto& g : gates) {
+      if (g == qc::OpType::X || g == qc::OpType::Y || g == qc::OpType::Z || g == qc::OpType::I) {
+        result.push_back(g);
+      }
+    }
+    return GateSet(result);
+  }
+  
   [[nodiscard]] bool isValidGateSet() const {
     return std::all_of(gates.begin(), gates.end(), [](const auto& g) {
       return std::find(SINGLE_QUBIT_CLIFFORDS.begin(),
@@ -206,5 +216,6 @@ public:
   [[nodiscard]] const auto& front() const { return gates.front(); }
   [[nodiscard]] const auto& back() const { return gates.back(); }
 };
+
 
 } // namespace cs

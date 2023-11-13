@@ -28,11 +28,17 @@ void encoding::MultiGateEncoder::assertConsistency() const {
           TRACE() << var.getName();
         }
       }
+      if(singleQubitGates.paulis().size() > 1) { //if no Paulis are present we can relax the exactlyone constraint
+        assertExactlyOne(gateVariables);
+
+      } else {
       auto atLeastOne = LogicTerm(false);
       for (const auto& var : gateVariables) {
         atLeastOne = atLeastOne || var;
       }
       lb->assertFormula(atLeastOne);
+      }
+      
     }
   }
 }

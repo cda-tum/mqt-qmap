@@ -7,7 +7,10 @@
 
 #include "Definitions.hpp"
 #include "Encodings/Encodings.hpp"
+#include "cliffordsynthesis/GateSet.hpp"
+#include "operations/OpType.hpp"
 #include "utils/logging.hpp"
+#include "cliffordsynthesis/Utils.hpp"
 
 #include <vector>
 
@@ -185,6 +188,7 @@ void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
     std::size_t& nSingleQubitGates, std::vector<bool>& hasGate) {
   const auto& singleQubitGateVars = vars.gS[pos];
+  auto validPaulis = singleQubitGates.paulis();
   for (std::size_t q = 0U; q < N; ++q) {
     if (hasGate[q]) {
       continue;
@@ -193,6 +197,7 @@ void GateEncoder::extractSingleQubitGatesFromModel(
       if (gate == qc::OpType::None) {
         continue;
       }
+      
       if (model.getBoolValue(
               singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q],
               lb.get())) {

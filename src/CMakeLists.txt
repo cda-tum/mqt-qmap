@@ -69,6 +69,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
     ${PROJECT_SOURCE_DIR}/include/utils.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/GateSet.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Utils.hpp
     cliffordsynthesis/encoding/GateEncoder.cpp
     cliffordsynthesis/encoding/MultiGateEncoder.cpp
     cliffordsynthesis/encoding/ObjectiveEncoder.cpp
@@ -76,6 +77,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     cliffordsynthesis/encoding/SingleGateEncoder.cpp
     cliffordsynthesis/encoding/TableauEncoder.cpp
     cliffordsynthesis/Tableau.cpp
+    cliffordsynthesis/Utils.cpp
     utils.cpp)
 
   add_internal_library(${lib} ${srcfile})
