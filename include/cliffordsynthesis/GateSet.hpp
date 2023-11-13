@@ -66,6 +66,15 @@ public:
     return *this;
   }
 
+  void removePaulis() {
+    gates.erase(std::remove_if(gates.begin(), gates.end(),
+                               [](qc::OpType gate) {
+                                 return gate == qc::OpType::X ||
+                                        gate == qc::OpType::Y ||
+                                        gate == qc::OpType::Z;
+                               }),
+                gates.end());
+  }
   [[nodiscard]] bool containsGate(qc::OpType gate) const {
     for (const auto& g : // NOLINT(readability-use-anyofallof)
          gates) {

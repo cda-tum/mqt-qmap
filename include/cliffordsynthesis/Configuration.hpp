@@ -55,6 +55,8 @@ struct Configuration {
                      qc::OpType::H,    qc::OpType::X, qc::OpType::Y,
                      qc::OpType::Z};
 
+  bool delayPaulis = false;
+
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
@@ -74,6 +76,7 @@ struct Configuration {
     j["split_size"]          = splitSize;
     j["n_threads_heuristic"] = nThreadsHeuristic;
     j["gate_set"]            = gateSet.toString();
+    j["delay_paulis"]        = delayPaulis;
     if (!solverParameters.empty()) {
       nlohmann::json solverParametersJson;
       for (const auto& entry : solverParameters) {
