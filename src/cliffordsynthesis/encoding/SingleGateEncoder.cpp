@@ -49,31 +49,6 @@ void SingleGateEncoder::assertNoGateNoChangeConstraint(const std::size_t pos) {
   }
 }
 
-void SingleGateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
-  for (std::size_t q = 0U; q < N; ++q) {
-    DEBUG() << "Asserting gates on " << q;
-    assertZConstraints(pos, q);
-    assertXConstraints(pos, q);
-    assertRConstraints(pos, q);
-  }
-}
-
-void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
-  const auto& twoQubitGates = vars.gC[pos];
-  for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-    for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      if (ctrl == trgt) {
-        continue;
-      }
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
-
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
-    }
-  }
-}
-
 LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
     const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
   auto changes              = LogicTerm(true);
@@ -84,11 +59,15 @@ LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->x[pos + 1][trgt] == xTrgt);
   changes = changes && (tvars->z[pos + 1][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
-  changes =
-      changes && (tvars->r[pos + 1] ==
-                  (tvars->r[pos] ^ tvars->twoQubitRChange(pos, ctrl, trgt)));
 
   return changes;
+}
+
+[[nodiscard]] logicbase::LogicTerm
+SingleGateEncoder::createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                                             std::size_t trgt) {
+  return (tvars->r[pos + 1] ==
+          (tvars->r[pos] ^ tvars->twoQubitRChange(pos, ctrl, trgt)));
 }
 
 LogicTerm SingleGateEncoder::createNoChangeOnQubit(const std::size_t pos,

@@ -28,17 +28,18 @@ void encoding::MultiGateEncoder::assertConsistency() const {
           TRACE() << var.getName();
         }
       }
-      if(singleQubitGates.paulis().size() > 1) { //if no Paulis are present we can relax the exactlyone constraint
+      if (singleQubitGates.paulis().size() >
+          1) { // if no Paulis are present we can relax the exactlyone
+               // constraint
         assertExactlyOne(gateVariables);
 
       } else {
-      auto atLeastOne = LogicTerm(false);
-      for (const auto& var : gateVariables) {
-        atLeastOne = atLeastOne || var;
+        auto atLeastOne = LogicTerm(false);
+        for (const auto& var : gateVariables) {
+          atLeastOne = atLeastOne || var;
+        }
+        lb->assertFormula(atLeastOne);
       }
-      lb->assertFormula(atLeastOne);
-      }
-      
     }
   }
 }
@@ -57,15 +58,6 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
   }
 }
 
-void encoding::MultiGateEncoder::assertSingleQubitGateConstraints(
-    const std::size_t pos) {
-  for (std::size_t q = 0U; q < N; ++q) {
-    assertZConstraints(pos, q);
-    assertXConstraints(pos, q);
-    assertRConstraints(pos, q);
-  }
-}
-
 void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                                           const std::size_t qubit) {
   for (const auto gate : singleQubitGates) {
@@ -74,22 +66,6 @@ void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
-  }
-}
-
-void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
-    const std::size_t pos) {
-  const auto& twoQubitGates = vars.gC[pos];
-  for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-    for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      if (ctrl == trgt) {
-        continue;
-      }
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
-
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
-    }
   }
 }
 
@@ -109,6 +85,16 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
       LogicTerm(0, static_cast<std::int16_t>(S)));
   splitXorR(newRChanges, pos);
   return changes;
+}
+
+[[nodiscard]] logicbase::LogicTerm
+MultiGateEncoder::createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                                            std::size_t trgt) {
+  const auto& newRChanges = LogicTerm::ite(
+      vars.gC[pos][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
+      LogicTerm(0, static_cast<std::int16_t>(S)));
+  splitXorR(newRChanges, pos);
+  return logicbase::LogicTerm(true);
 }
 
 void MultiGateEncoder::assertSingleQubitGateOrderConstraints(

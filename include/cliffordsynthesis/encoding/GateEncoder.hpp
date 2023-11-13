@@ -90,6 +90,8 @@ protected:
   // the gates that are used
   GateSet singleQubitGates;
 
+  bool 
+
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
   using GateToTransformation =
@@ -99,9 +101,9 @@ protected:
 
   virtual void assertConsistency() const = 0;
 
-  virtual void assertGateConstraints()                           = 0;
-  virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
-  virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
+  virtual void assertGateConstraints() = 0;
+  void         assertSingleQubitGateConstraints(std::size_t pos);
+  void         assertTwoQubitGateConstraints(std::size_t pos);
   [[nodiscard]] std::vector<TransformationFamily>
        collectGateTransformations(std::size_t pos, std::size_t qubit,
                                   const GateToTransformation& gateToTransformation);
@@ -114,6 +116,9 @@ protected:
   [[nodiscard]] virtual logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) = 0;
+  [[nodiscard]] virtual logicbase::LogicTerm
+  createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                            std::size_t trgt) = 0;
 
   void extractSingleQubitGatesFromModel(std::size_t             pos,
                                         logicbase::Model&       model,

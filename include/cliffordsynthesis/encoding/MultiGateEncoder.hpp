@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "LogicTerm/LogicTerm.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include <cstddef>
@@ -23,11 +24,12 @@ protected:
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertRConstraints(std::size_t pos, std::size_t qubit) override;
-  void assertSingleQubitGateConstraints(std::size_t pos) override;
-  void assertTwoQubitGateConstraints(std::size_t pos) override;
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
+  [[nodiscard]] logicbase::LogicTerm
+  createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                            std::size_t trgt) override;
 
   void assertSingleQubitGateOrderConstraints(std::size_t pos,
                                              std::size_t qubit) override;
