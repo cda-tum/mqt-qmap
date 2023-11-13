@@ -75,8 +75,8 @@ void SATEncoder::createFormulation() {
     gateEncoder->encodeSymmetryBreakingConstraints();
   }
 
-  objectiveEncoder =
-      std::make_shared<ObjectiveEncoder>(N, T, gateEncoder->getVariables(), lb);
+  objectiveEncoder = std::make_shared<ObjectiveEncoder>(
+      N, T, gateEncoder->getVariables(), lb, config.gateSet);
 
   if (config.gateLimit.has_value()) {
     objectiveEncoder->limitGateCount(*config.gateLimit, std::less_equal{});

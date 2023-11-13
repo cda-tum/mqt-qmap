@@ -20,7 +20,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 cs::GateSet loadGateSet(const py::object& circ) {
-  cs::GateSet gs;
+  cs::GateSet gs{};
   if (py::isinstance<py::list>(circ)) {
     auto l = circ.cast<py::list>();
     if (l.size() > 0) {

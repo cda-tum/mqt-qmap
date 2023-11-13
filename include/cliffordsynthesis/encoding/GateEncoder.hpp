@@ -26,10 +26,7 @@ public:
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock,
-              GateSet singleQGates = {qc::OpType::None, qc::OpType::S,
-                                      qc::OpType::Sdg, qc::OpType::H,
-                                      qc::OpType::X, qc::OpType::Y,
-                                      qc::OpType::Z})
+              GateSet                                singleQGates)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
         lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)) {
     if (!singleQGates.isValidGateSet()) {

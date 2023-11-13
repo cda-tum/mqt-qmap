@@ -23,13 +23,13 @@ class GateSet {
 private:
   // Check if None is already contained and if not, append it
   void appendNone() {
-    if (!containsGate<qc::OpType::None>()) {
+    if (!containsGate(qc::OpType::None)) {
       gates.push_back(qc::OpType::None);
     }
   }
 
 public:
-  std::vector<qc::OpType> gates;
+  std::vector<qc::OpType> gates{};
 
   GateSet() { appendNone(); };
 
@@ -38,7 +38,11 @@ public:
     appendNone();
   };
 
-  GateSet(GateSet const& gateSet) : gates(gateSet.gates) { appendNone(); };
+  GateSet(const GateSet& gateSet) : gates(gateSet.gates) { appendNone(); };
+
+  GateSet(GateSet&& gateSet) noexcept : gates(std::move(gateSet.gates)) {
+    appendNone();
+  };
 
   GateSet(std::initializer_list<qc::OpType> gateSet) : gates(gateSet) {
     appendNone();
@@ -50,34 +54,38 @@ public:
     return *this;
   }
 
+  GateSet& operator=(GateSet&& other) noexcept {
+    gates = std::move(other.gates);
+    appendNone();
+    return *this;
+  }
+
   GateSet& operator=(std::initializer_list<qc::OpType> other) {
     gates = other;
     appendNone();
     return *this;
   }
 
-  template <qc::OpType Gate> [[nodiscard]] bool containsGate() const {
+  [[nodiscard]] bool containsGate(qc::OpType gate) const {
     for (const auto& g : // NOLINT(readability-use-anyofallof)
          gates) {
-      if (g == Gate) {
+      if (g == gate) {
         return true;
       }
     }
     return false;
   }
-  [[nodiscard]] bool containsX() const { return containsGate<qc::OpType::X>(); }
-  [[nodiscard]] bool containsY() const { return containsGate<qc::OpType::Y>(); }
-  [[nodiscard]] bool containsZ() const { return containsGate<qc::OpType::Z>(); }
-  [[nodiscard]] bool containsH() const { return containsGate<qc::OpType::H>(); }
-  [[nodiscard]] bool containsS() const { return containsGate<qc::OpType::S>(); }
+  [[nodiscard]] bool containsX() const { return containsGate(qc::OpType::X); }
+  [[nodiscard]] bool containsY() const { return containsGate(qc::OpType::Y); }
+  [[nodiscard]] bool containsZ() const { return containsGate(qc::OpType::Z); }
+  [[nodiscard]] bool containsH() const { return containsGate(qc::OpType::H); }
+  [[nodiscard]] bool containsS() const { return containsGate(qc::OpType::S); }
   [[nodiscard]] bool containsSdg() const {
-    return containsGate<qc::OpType::Sdg>();
+    return containsGate(qc::OpType::Sdg);
   }
-  [[nodiscard]] bool containsSX() const {
-    return containsGate<qc::OpType::SX>();
-  }
+  [[nodiscard]] bool containsSX() const { return containsGate(qc::OpType::SX); }
   [[nodiscard]] bool containsSXdg() const {
-    return containsGate<qc::OpType::SXdg>();
+    return containsGate(qc::OpType::SXdg);
   }
   [[nodiscard]] std::size_t gateToIndex(const qc::OpType type) const {
     for (std::size_t i = 0; i < gates.size(); ++i) {
@@ -166,7 +174,11 @@ public:
   }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  void push_back(const qc::OpType& gate) { gates.push_back(gate); }
+  void push_back(const qc::OpType& gate) {
+    if (!containsGate(gate)) {
+      gates.push_back(gate);
+    }
+  }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
   template <class T, class... Args> void emplace_back(Args&&... args) {
@@ -174,13 +186,17 @@ public:
   }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  void emplace_back(qc::OpType& gate) { gates.emplace_back(gate); }
+  void emplace_back(qc::OpType& gate) {
+    if (!containsGate(gate)) {
+      gates.emplace_back(gate);
+    }
+  }
 
   // NOLINTNEXTLINE(readability-identifier-naming)
-  void emplace_back(qc::OpType&& gate) { gates.emplace_back(gate); }
-
-  iterator insert(const_iterator pos, qc::OpType&& gate) {
-    return gates.insert(pos, gate);
+  void emplace_back(qc::OpType&& gate) {
+    if (!containsGate(gate)) {
+      gates.emplace_back(gate);
+    }
   }
 
   [[nodiscard]] const auto& at(const std::size_t i) const {
