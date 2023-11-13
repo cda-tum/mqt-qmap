@@ -9,6 +9,8 @@
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "utils/logging.hpp"
 
+#include <cstddef>
+
 namespace cs::encoding {
 
 using namespace logicbase;
@@ -43,7 +45,14 @@ void ObjectiveEncoder::optimizeDepth() const {
     auto        noGate = LogicTerm(true);
     for (std::size_t q = 0U; q < N; ++q) {
       noGate = noGate && gS[noGateIndex][q];
+      for (std::size_t tar = 0U; tar < N; ++tar) {
+        if (tar == q) {
+          continue;
+        }
+        noGate = noGate && !gvars->gC[t][q][tar];
+      }
     }
+
     optimizer->weightedTerm(!noGate, 1);
   }
   optimizer->makeMinimize();

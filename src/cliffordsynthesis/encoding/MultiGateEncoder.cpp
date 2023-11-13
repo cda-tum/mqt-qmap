@@ -28,8 +28,11 @@ void encoding::MultiGateEncoder::assertConsistency() const {
           TRACE() << var.getName();
         }
       }
-
-      assertExactlyOne(gateVariables);
+      auto atLeastOne = LogicTerm(false);
+      for (const auto& var : gateVariables) {
+        atLeastOne = atLeastOne || var;
+      }
+      lb->assertFormula(atLeastOne);
     }
   }
 }

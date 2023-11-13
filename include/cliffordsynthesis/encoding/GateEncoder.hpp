@@ -121,10 +121,12 @@ protected:
   void extractSingleQubitGatesFromModel(std::size_t             pos,
                                         logicbase::Model&       model,
                                         qc::QuantumComputation& qc,
-                                        std::size_t& nSingleQubitGates);
+                                        std::size_t&       nSingleQubitGates,
+                                        std::vector<bool>& hasGate);
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
-                                     std::size_t&            nTwoQubitGates);
+                                     std::size_t&            nTwoQubitGates,
+                                     std::vector<bool>&      hasGate);
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);

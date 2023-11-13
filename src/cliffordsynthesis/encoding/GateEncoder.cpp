@@ -5,8 +5,11 @@
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
+#include "Definitions.hpp"
 #include "Encodings/Encodings.hpp"
 #include "utils/logging.hpp"
+
+#include <vector>
 
 namespace cs::encoding {
 
@@ -167,8 +170,9 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
   qc::QuantumComputation qc(N);
   for (std::size_t t = 0; t < T; ++t) {
-    extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates);
-    extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates);
+    std::vector<bool> hasGate(N, false);
+    extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates, hasGate);
+    extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates, hasGate);
   }
 
   res.setSingleQubitGates(nSingleQubitGates);
@@ -179,9 +183,12 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
 
 void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
-    std::size_t& nSingleQubitGates) {
+    std::size_t& nSingleQubitGates, std::vector<bool>& hasGate) {
   const auto& singleQubitGateVars = vars.gS[pos];
   for (std::size_t q = 0U; q < N; ++q) {
+    if (hasGate[q]) {
+      continue;
+    }
     for (const auto gate : singleQubitGates) {
       if (gate == qc::OpType::None) {
         continue;
@@ -190,6 +197,7 @@ void GateEncoder::extractSingleQubitGatesFromModel(
               singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q],
               lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, q, gate);
+        hasGate[q] = true;
         ++nSingleQubitGates;
         DEBUG() << toString(gate) << "(" << q << ")";
       }
@@ -200,17 +208,23 @@ void GateEncoder::extractSingleQubitGatesFromModel(
 void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
                                                 Model&                  model,
                                                 qc::QuantumComputation& qc,
-                                                size_t& nTwoQubitGates) {
+                                                size_t& nTwoQubitGates,
+                                                std::vector<bool>& hasGate) {
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
+    if (hasGate[ctrl]) {
+      continue;
+    }
     for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      if (ctrl == trgt) {
+      if (hasGate[trgt] || ctrl == trgt) {
         continue;
       }
       const auto control =
           qc::Control{static_cast<qc::Qubit>(ctrl), qc::Control::Type::Pos};
       if (model.getBoolValue(twoQubitGates[ctrl][trgt], lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, control, trgt, qc::OpType::X);
+        hasGate[ctrl] = true;
+        hasGate[trgt] = true;
         ++nTwoQubitGates;
         DEBUG() << "CX(" << ctrl << ", " << trgt << ")";
       }
