@@ -77,7 +77,7 @@ protected:
   [[nodiscard]] logicbase::Result solve() const;
   void                            extractResultsFromModel(Results& res) const;
   void                            cleanup() const;
-
+  
   std::shared_ptr<logicbase::LogicBlock> lb;
   std::shared_ptr<TableauEncoder>        tableauEncoder;
   std::shared_ptr<GateEncoder>           gateEncoder;
@@ -90,6 +90,8 @@ protected:
   std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
+    // number of rows in the tableau S
+    std::size_t S{}; // NOLINT (readability-identifier-naming)
 };
 
 } // namespace cs::encoding

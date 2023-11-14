@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "Encodings/Encodings.hpp"
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/GateSet.hpp"
 #include "cliffordsynthesis/Utils.hpp"
 #include "operations/OpType.hpp"
@@ -167,7 +168,7 @@ void GateEncoder::assertRConstraints(const std::size_t pos,
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
 
-void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
+qc::QuantumComputation GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   std::size_t nSingleQubitGates = 0U;
   std::size_t nTwoQubitGates    = 0U;
 
@@ -182,6 +183,7 @@ void GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
   res.setTwoQubitGates(nTwoQubitGates);
   res.setDepth(qc.getDepth());
   res.setResultCircuit(qc);
+  return qc;
 }
 
 void GateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {

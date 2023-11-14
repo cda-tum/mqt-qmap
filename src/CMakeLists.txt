@@ -64,6 +64,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SATEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SingleGateEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/TableauEncoder.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/PhaseCorrectionEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
@@ -76,6 +77,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     cliffordsynthesis/encoding/SATEncoder.cpp
     cliffordsynthesis/encoding/SingleGateEncoder.cpp
     cliffordsynthesis/encoding/TableauEncoder.cpp
+    cliffordsynthesis/encoding/PhaseCorrectionEncoder.cpp
     cliffordsynthesis/Tableau.cpp
     cliffordsynthesis/Utils.cpp
     utils.cpp)

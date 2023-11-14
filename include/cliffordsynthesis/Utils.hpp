@@ -9,9 +9,13 @@
 #include "operations/OpType.hpp"
 
 namespace cs {
+
+  const GateSet PAULIS {
+  qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z,
+  };
+  
     inline bool isPauli(const qc::OpType& gate) {
-    return gate == qc::OpType::X || gate == qc::OpType::Y ||
-           gate == qc::OpType::Z || gate == qc::OpType::I;
+    return PAULIS.containsGate(gate);
   }
 
   qc::OpType multiplyPaulis(const GateSet& paulis);

@@ -6,11 +6,16 @@
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
 #include "LogicUtil/util_logicblock.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
+#include "operations/OpType.hpp"
 #include "utils/logging.hpp"
+#include "cliffordsynthesis/encoding/PhaseCorrectionEncoder.hpp"
 
 #include <chrono>
+#include <cstddef>
+#include <string>
 
 namespace cs::encoding {
 
@@ -50,22 +55,22 @@ void SATEncoder::createFormulation() {
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
-  const std::size_t s = config.targetTableau->hasDestabilizers() &&
+  S = config.targetTableau->hasDestabilizers() &&
                                 config.initialTableau->hasDestabilizers()
                             ? 2U * N
                             : N;
 
-  tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb, config.ignoreRChanges);
+  tableauEncoder = std::make_shared<TableauEncoder>(N, S, T, lb, config.ignoreRChanges);
   tableauEncoder->createTableauVariables();
   tableauEncoder->assertTableau(*config.initialTableau, 0U);
   tableauEncoder->assertTableau(*config.targetTableau, T);
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
-                                                     N, s, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
+                                                     N, S, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
-                                                      N, s, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
+                                                      N, S, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
@@ -114,7 +119,37 @@ Result SATEncoder::solve() const {
 void SATEncoder::extractResultsFromModel(Results& res) const {
   auto* const model = lb->getModel();
   tableauEncoder->extractTableauFromModel(res, T, *model);
-  gateEncoder->extractCircuitFromModel(res, *model);
+  auto qc = gateEncoder->extractCircuitFromModel(res, *model);
+  if (config.ignoreRChanges) {
+      const auto start  = std::chrono::high_resolution_clock::now();
+      auto tab = *config.targetTableau;
+      auto qcTab = Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), config.targetTableau->hasDestabilizers());
+      for(std::size_t row = 0U; row < S; ++row) {
+        DEBUG() << "Row " << std::to_string(row);
+        tab[row][2*N] = qcTab.at(row)[2*N];
+      }
+    PhaseCorrectionEncoder phaseCorrectionEncoder(N, S, tab,
+                                                  *config.targetTableau);
+    auto paulis = phaseCorrectionEncoder.phaseCorrection();
+    
+    for(std::size_t row = 0U; row < S; ++row) {
+      tab[row][2*N] = config.targetTableau->at(row)[2*N];
+    }
+    
+    for (std::size_t q = 0U; q < N; ++q) {
+      if (paulis[q] != qc::OpType::None) {
+        DEBUG() << "Phase correction for qubit " << q << ": "
+                << qc::toString(paulis[q]);
+      qc.emplace_back<qc::StandardOperation>(N, q, paulis[q]);
+      } 
+    }
+      const auto end    = std::chrono::high_resolution_clock::now();
+      const auto runtime = std::chrono::duration<double>(end - start);
+      res.setRuntime(res.getRuntime() + runtime.count());
+    res.setResultCircuit(qc);
+    res.setResultTableau(tab);
+    res.setDepth(qc.getDepth());
+  }
 }
 
 void SATEncoder::cleanup() const {

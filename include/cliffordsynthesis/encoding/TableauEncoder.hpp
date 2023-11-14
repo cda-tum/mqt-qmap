@@ -59,7 +59,7 @@ public:
   void assertTableau(const Tableau& tableau, std::size_t t);
 
   // extracting the tableau
-  void extractTableauFromModel(Results& results, std::size_t t,
+Tableau extractTableauFromModel(Results& results, std::size_t t,
                                logicbase::Model& model) const;
 
   [[nodiscard]] auto* getVariables() { return &vars; }

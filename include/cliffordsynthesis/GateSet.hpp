@@ -71,7 +71,8 @@ public:
                                [](qc::OpType gate) {
                                  return gate == qc::OpType::X ||
                                         gate == qc::OpType::Y ||
-                                        gate == qc::OpType::Z;
+                                        gate == qc::OpType::Z ||
+                                   gate == qc::OpType::None;
                                }),
                 gates.end());
   }
@@ -149,6 +150,7 @@ public:
     return result;
   }
 
+  const qc::OpType& operator[](std::size_t index) const { return gates[index]; }
   /**
    * Pass-Through
    */
@@ -225,6 +227,5 @@ public:
   [[nodiscard]] const auto& front() const { return gates.front(); }
   [[nodiscard]] const auto& back() const { return gates.back(); }
 };
-
 
 } // namespace cs

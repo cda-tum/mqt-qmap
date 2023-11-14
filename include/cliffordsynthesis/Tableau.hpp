@@ -50,7 +50,7 @@ public:
     nQubits = tableau.size() / 2U;
   }
 
-  [[nodiscard]] RowType operator[](const std::size_t index) {
+  [[nodiscard]] RowType& operator[](const std::size_t index) {
     return tableau[index];
   }
   [[nodiscard]] RowType operator[](const std::size_t index) const {

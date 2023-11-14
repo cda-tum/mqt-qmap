@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "LogicBlock/LogicBlock.hpp"
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/GateSet.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
@@ -67,7 +68,7 @@ public:
   virtual void encodeSymmetryBreakingConstraints();
 
   // extracting the circuit
-  void extractCircuitFromModel(Results& res, logicbase::Model& model);
+  qc::QuantumComputation extractCircuitFromModel(Results& res, logicbase::Model& model);
 
   [[nodiscard]] auto* getVariables() { return &vars; }
 

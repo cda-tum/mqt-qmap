@@ -5,6 +5,7 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
+#include "cliffordsynthesis/Tableau.hpp"
 #include "utils/logging.hpp"
 
 namespace cs::encoding {
@@ -63,7 +64,7 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
   }
 }
 
-void TableauEncoder::extractTableauFromModel(Results&          results,
+Tableau TableauEncoder::extractTableauFromModel(Results&          results,
                                              const std::size_t t,
                                              Model&            model) const {
   Tableau tableau(N, S > N);
@@ -78,6 +79,7 @@ void TableauEncoder::extractTableauFromModel(Results&          results,
     tableau.populateTableauFrom(bvr, S, 2 * N);
   } 
   results.setResultTableau(tableau);
+  return tableau;
 }
 
 LogicTerm
