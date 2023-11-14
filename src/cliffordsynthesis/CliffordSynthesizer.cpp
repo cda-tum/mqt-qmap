@@ -44,7 +44,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.solverParameters    = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
-  encoderConfig.gateSet = configuration.gateSet;
+  encoderConfig.gateSet        = configuration.gateSet;
   encoderConfig.ignoreRChanges = config.delayPaulis;
 
   if (configuration.heuristic) {

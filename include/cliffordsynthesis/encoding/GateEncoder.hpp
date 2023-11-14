@@ -27,10 +27,10 @@ public:
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock,
-              GateSet                                singleQGates,
-              bool                                  ignorePhase = false)
+              GateSet singleQGates, bool ignorePhase = false)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
-        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)), ignoreRChanges(ignorePhase) {
+        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)),
+        ignoreRChanges(ignorePhase) {
     if (!singleQGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
     }
@@ -68,7 +68,8 @@ public:
   virtual void encodeSymmetryBreakingConstraints();
 
   // extracting the circuit
-  qc::QuantumComputation extractCircuitFromModel(Results& res, logicbase::Model& model);
+  qc::QuantumComputation extractCircuitFromModel(Results&          res,
+                                                 logicbase::Model& model);
 
   [[nodiscard]] auto* getVariables() { return &vars; }
 

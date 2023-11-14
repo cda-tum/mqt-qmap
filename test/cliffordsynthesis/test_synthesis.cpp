@@ -354,14 +354,14 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
 }
 
 TEST_P(SynthesisTest, DepthDelayedPhase) {
-  config.target    = TargetMetric::Depth;
+  config.target       = TargetMetric::Depth;
   config.linearSearch = true;
-  config.delayPaulis = true;
+  config.delayPaulis  = true;
   synthesizer.synthesize(config);
-  
+
   results = synthesizer.getResults();
 
-  EXPECT_LE(results.getDepth(), test.expectedMinimalDepth+1);
+  EXPECT_LE(results.getDepth(), test.expectedMinimalDepth + 1);
 }
 
 TEST(HeuristicTest, basic) {

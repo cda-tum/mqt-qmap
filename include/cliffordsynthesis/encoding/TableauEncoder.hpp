@@ -20,9 +20,9 @@ public:
   TableauEncoder(const std::size_t nQubits, const std::size_t tableauSize,
                  const std::size_t                      timestepLimit,
                  std::shared_ptr<logicbase::LogicBlock> logicBlock,
-                 bool ignorePhase=false)
-      : N(nQubits), S(tableauSize), T(timestepLimit),
-        lb(std::move(logicBlock)), ignoreR(ignorePhase) {}
+                 bool                                   ignorePhase = false)
+      : N(nQubits), S(tableauSize), T(timestepLimit), lb(std::move(logicBlock)),
+        ignoreR(ignorePhase) {}
 
   struct Variables {
     // variables for the X parts of the tableaus
@@ -59,8 +59,8 @@ public:
   void assertTableau(const Tableau& tableau, std::size_t t);
 
   // extracting the tableau
-Tableau extractTableauFromModel(Results& results, std::size_t t,
-                               logicbase::Model& model) const;
+  Tableau extractTableauFromModel(Results& results, std::size_t t,
+                                  logicbase::Model& model) const;
 
   [[nodiscard]] auto* getVariables() { return &vars; }
 

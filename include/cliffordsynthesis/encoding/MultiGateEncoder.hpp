@@ -20,7 +20,7 @@ public:
 protected:
   logicbase::LogicTerm   rChanges{};
   logicbase::LogicMatrix xorHelpers{};
-  
+
   void assertConsistency() const override;
   void assertGateConstraints() override;
   void assertRConstraints(std::size_t pos, std::size_t qubit) override;
