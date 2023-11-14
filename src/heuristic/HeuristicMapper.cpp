@@ -413,18 +413,18 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
             locations.at(static_cast<std::uint16_t>(gate.control)),
             locations.at(gate.target)};
         if (!architecture->isEdgeConnected(cnot)) {
-          const Edge reverse = {cnot.second, cnot.first};
-          if (!architecture->isEdgeConnected(reverse)) {
+          const Edge reversed = {cnot.second, cnot.first};
+          if (!architecture->isEdgeConnected(reversed)) {
             throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reverse.first) + "-" +
-                std::to_string(reverse.second));
+                "Invalid CNOT: " + std::to_string(reversed.first) + "-" +
+                std::to_string(reversed.second));
           }
-          qcMapped.h(reverse.first);
-          qcMapped.h(reverse.second);
-          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reverse.first)},
-                      reverse.second);
-          qcMapped.h(reverse.second);
-          qcMapped.h(reverse.first);
+          qcMapped.h(reversed.first);
+          qcMapped.h(reversed.second);
+          qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reversed.first)},
+                      reversed.second);
+          qcMapped.h(reversed.second);
+          qcMapped.h(reversed.first);
 
           results.output.directionReverse++;
           gateidx += 5;
@@ -595,6 +595,9 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
         std::clog << "Split layer" << std::endl;
       }
       // recursively restart search with newly split layer
+      // (step to the end of the circuit, if reverse mapping is active, since 
+      // the split layer is inserted in this direction, otherwise 1 layer would 
+      // be skipped)
       return aStarMap(reverse ? layer + 1 : layer, reverse);
     }
     Node current = nodes.top();

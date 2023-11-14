@@ -234,15 +234,13 @@ bool Mapper::isLayerSplittable(std::size_t index) {
   if (activeQubits1QGates.at(index).size() > 2) {
     return true;
   }
-  if (twoQubitMultiplicities.at(index).size() == 0) {
+  if (twoQubitMultiplicities.at(index).empty()) {
     return false;
   }
   // check if there is a 1Q gate on a qubit that is not part of the 2Q gate
-  for (auto q : activeQubits1QGates.at(index)) {
-    if(activeQubits2QGates.at(index).find(q) == activeQubits2QGates.at(index).end()) {
-      return true;
-    }
-  }
+  return std::any_of(activeQubits1QGates.at(index).begin(), activeQubits1QGates.at(index).end(), [this, index](auto q) {
+    return activeQubits2QGates.at(index).find(q) == activeQubits2QGates.at(index).end();
+  });
   return false;
 }
 
@@ -262,6 +260,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   std::unordered_set<std::uint16_t> activeQubits1QGates1{};
   std::unordered_set<std::uint16_t> activeQubits2QGates1{};
   
+  // 2Q-gates
   bool even = false;
   for (auto edge : twoQubitMultiplicity) {
     if (even) {
@@ -279,24 +278,28 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
     }
     even = !even;
   }
-
+  
+  // 1Q-gates
   even = true;
   for (std::size_t q = 0; q < singleQubitMultiplicity.size(); ++q) {
     if (singleQubitMultiplicity[q] == 0) {
       continue;
     }
-    if (activeQubits2QGates0.find(q) != activeQubits2QGates0.end()) {
+    // if a qubit is also acted on by a 2Q-gate, put it on the same layer as 
+    // the 2Q-gate
+    if (activeQubits2QGates0.find(static_cast<std::uint16_t>(q)) != activeQubits2QGates0.end()) {
       singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
-      activeQubits0.emplace(q);
-      activeQubits1QGates0.emplace(q);
+      activeQubits0.emplace(static_cast<std::uint16_t>(q));
+      activeQubits1QGates0.emplace(static_cast<std::uint16_t>(q));
       continue;
     } 
-    if (activeQubits2QGates1.find(q) != activeQubits2QGates1.end()) {
+    if (activeQubits2QGates1.find(static_cast<std::uint16_t>(q)) != activeQubits2QGates1.end()) {
       singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
-      activeQubits1.emplace(q);
-      activeQubits1QGates1.emplace(q);
+      activeQubits1.emplace(static_cast<std::uint16_t>(q));
+      activeQubits1QGates1.emplace(static_cast<std::uint16_t>(q));
       continue;
     }
+    
     if (even) {
       singleQubitMultiplicity0[q] = singleQubitMultiplicity[q];
       activeQubits0.emplace(q);
@@ -325,6 +328,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
     }
   }
   
+  // insert new layers
   layers[index] = layer0;
   layers.insert(
       layers.begin() +

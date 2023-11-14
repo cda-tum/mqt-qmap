@@ -223,7 +223,7 @@ protected:
    * @param reverse if true, the circuit is routed from the end to the beginning (this will not produce a valid mapping, use only with pseudo routing!)
    * @param pseudoRouting if true, routing will only be simulated without altering the circuit or modifying any other global data except for `qubits` and `locations`, which will hold the final qubit layout afterwards
    */
-  virtual void routeCircuit(bool reverse = false, bool pseudoRouting = false);
+  void routeCircuit(bool reverse = false, bool pseudoRouting = false);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
