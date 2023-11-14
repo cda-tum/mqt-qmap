@@ -527,8 +527,8 @@ PYBIND11_MODULE(pyqmap, m) {
                      "Gate Set to be used for the Synthesis. "
                      "Defaults to {H, S, Sdg, X, Y, Z, CX}.")
       .def_readwrite("delay_paulis", &cs::Configuration::delayPaulis,
-                      "Delay Pauli gates to the end of the circuit. "
-                      "Defaults to `false`.")
+                     "Delay Pauli gates to the end of the circuit. "
+                     "Defaults to `false`.")
       .def("json", &cs::Configuration::json,
            "Returns a JSON-style dictionary of all the information present in "
            "the :class:`.Configuration`")

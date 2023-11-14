@@ -10,14 +10,17 @@
 
 namespace cs {
 
-  const GateSet PAULIS {
-  qc::OpType::None, qc::OpType::X, qc::OpType::Y, qc::OpType::Z,
-  };
-  
-    inline bool isPauli(const qc::OpType& gate) {
-    return PAULIS.containsGate(gate);
-  }
+const GateSet PAULIS{
+    qc::OpType::None,
+    qc::OpType::X,
+    qc::OpType::Y,
+    qc::OpType::Z,
+};
 
-  qc::OpType multiplyPaulis(const GateSet& paulis);
+inline bool isPauli(const qc::OpType& gate) {
+  return PAULIS.containsGate(gate);
+}
 
-} // namespace cs;
+qc::OpType multiplyPaulis(const GateSet& paulis);
+
+} // namespace cs
