@@ -49,12 +49,18 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
   xorHelpers = logicbase::LogicMatrix{T};
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
-    rChanges = tvars->r[t];
-    splitXorR(tvars->r[t], t);
+    if(!ignoreRChanges){
+      rChanges = tvars->r[t];
+      splitXorR(tvars->r[t], t);
+    }
     assertSingleQubitGateConstraints(t);
     assertTwoQubitGateConstraints(t);
     TRACE() << "Asserting r changes at time " << t;
-    lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
+
+    if(!ignoreRChanges){
+      lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
+    }
+
   }
 }
 

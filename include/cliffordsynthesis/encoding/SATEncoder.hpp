@@ -59,6 +59,8 @@ public:
     SolverParameterMap solverParameters = {};
 
     GateSet gateSet = {};
+
+    bool ignoreRChanges = false;
   };
 
   SATEncoder() = default;

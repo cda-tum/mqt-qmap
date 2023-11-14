@@ -19,9 +19,10 @@ public:
   TableauEncoder() = default;
   TableauEncoder(const std::size_t nQubits, const std::size_t tableauSize,
                  const std::size_t                      timestepLimit,
-                 std::shared_ptr<logicbase::LogicBlock> logicBlock)
+                 std::shared_ptr<logicbase::LogicBlock> logicBlock,
+                 bool ignorePhase=false)
       : N(nQubits), S(tableauSize), T(timestepLimit),
-        lb(std::move(logicBlock)) {}
+        lb(std::move(logicBlock)), ignoreR(ignorePhase) {}
 
   struct Variables {
     // variables for the X parts of the tableaus
@@ -76,5 +77,7 @@ protected:
 
   // the logic block to use
   std::shared_ptr<logicbase::LogicBlock> lb{};
+
+  bool ignoreR = false;
 };
 } // namespace cs::encoding

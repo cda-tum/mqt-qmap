@@ -55,17 +55,17 @@ void SATEncoder::createFormulation() {
                             ? 2U * N
                             : N;
 
-  tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb);
+  tableauEncoder = std::make_shared<TableauEncoder>(N, s, T, lb, config.ignoreRChanges);
   tableauEncoder->createTableauVariables();
   tableauEncoder->assertTableau(*config.initialTableau, 0U);
   tableauEncoder->assertTableau(*config.targetTableau, T);
 
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
-        N, s, T, tableauEncoder->getVariables(), lb, config.gateSet);
+                                                     N, s, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
-        N, s, T, tableauEncoder->getVariables(), lb, config.gateSet);
+                                                      N, s, T, tableauEncoder->getVariables(), lb, config.gateSet, config.ignoreRChanges);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
@@ -76,7 +76,7 @@ void SATEncoder::createFormulation() {
   }
 
   objectiveEncoder = std::make_shared<ObjectiveEncoder>(
-      N, T, gateEncoder->getVariables(), lb, config.gateSet);
+                                                        N, T, gateEncoder->getVariables(), lb, config.gateSet);
 
   if (config.gateLimit.has_value()) {
     objectiveEncoder->limitGateCount(*config.gateLimit, std::less_equal{});

@@ -26,9 +26,10 @@ public:
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock,
-              GateSet                                singleQGates)
+              GateSet                                singleQGates,
+              bool                                  ignorePhase = false)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
-        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)) {
+        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)), ignoreRChanges(ignorePhase) {
     if (!singleQGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
     }
@@ -90,7 +91,7 @@ protected:
   // the gates that are used
   GateSet singleQubitGates;
 
-  bool 
+  bool ignoreRChanges{false};
 
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;

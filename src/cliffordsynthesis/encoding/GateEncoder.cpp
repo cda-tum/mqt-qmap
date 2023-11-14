@@ -189,7 +189,9 @@ void GateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
     DEBUG() << "Asserting gates on " << q;
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
+    if (! ignoreRChanges){
     assertRConstraints(pos, q);
+    }
   }
 }
 
@@ -200,8 +202,10 @@ void GateEncoder::assertTwoQubitGateConstraints(std::size_t pos) {
       if (ctrl == trgt) {
         continue;
       }
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt) &&
-                           createTwoQubitRConstraint(pos, ctrl, trgt);
+      auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
+      if(!ignoreRChanges){
+        changes = changes && createTwoQubitRConstraint(pos, ctrl, trgt);
+      }
       lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
       DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
     }
