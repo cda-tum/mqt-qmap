@@ -184,14 +184,19 @@ void Mapper::createLayers() {
     }
   }
   results.input.layers = layers.size();
-  
+
   // compute qubit gate multiplicities
-  singleQubitMultiplicities = std::vector<SingleQubitMultiplicity>(layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
-  twoQubitMultiplicities = std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
-  activeQubits = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
-  activeQubits1QGates = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
-  activeQubits2QGates = std::vector<std::unordered_set<std::uint16_t>>(layers.size(), std::unordered_set<std::uint16_t>{});
-  
+  singleQubitMultiplicities = std::vector<SingleQubitMultiplicity>(
+      layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
+  twoQubitMultiplicities =
+      std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
+  activeQubits = std::vector<std::unordered_set<std::uint16_t>>(
+      layers.size(), std::unordered_set<std::uint16_t>{});
+  activeQubits1QGates = std::vector<std::unordered_set<std::uint16_t>>(
+      layers.size(), std::unordered_set<std::uint16_t>{});
+  activeQubits2QGates = std::vector<std::unordered_set<std::uint16_t>>(
+      layers.size(), std::unordered_set<std::uint16_t>{});
+
   for (std::size_t i = 0; i < layers.size(); ++i) {
     for (const auto& gate : layers[i]) {
       if (gate.singleQubit()) {
@@ -239,7 +244,8 @@ bool Mapper::isLayerSplittable(std::size_t index) {
   }
   // check if there is a 1Q gate on a qubit that is not part of the 2Q gate
   for (auto q : activeQubits1QGates.at(index)) {
-    if(activeQubits2QGates.at(index).find(q) == activeQubits2QGates.at(index).end()) {
+    if (activeQubits2QGates.at(index).find(q) ==
+        activeQubits2QGates.at(index).end()) {
       return true;
     }
   }
@@ -247,8 +253,10 @@ bool Mapper::isLayerSplittable(std::size_t index) {
 }
 
 void Mapper::splitLayer(std::size_t index, Architecture& arch) {
-  const SingleQubitMultiplicity& singleQubitMultiplicity = singleQubitMultiplicities.at(index);
-  const TwoQubitMultiplicity& twoQubitMultiplicity = twoQubitMultiplicities.at(index);
+  const SingleQubitMultiplicity& singleQubitMultiplicity =
+      singleQubitMultiplicities.at(index);
+  const TwoQubitMultiplicity& twoQubitMultiplicity =
+      twoQubitMultiplicities.at(index);
   std::vector<Gate>       layer0{};
   std::vector<Gate>       layer1{};
   SingleQubitMultiplicity singleQubitMultiplicity0(arch.getNqubits(), 0);
@@ -261,7 +269,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   std::unordered_set<std::uint16_t> activeQubits1{};
   std::unordered_set<std::uint16_t> activeQubits1QGates1{};
   std::unordered_set<std::uint16_t> activeQubits2QGates1{};
-  
+
   bool even = false;
   for (auto edge : twoQubitMultiplicity) {
     if (even) {
@@ -290,7 +298,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
       activeQubits0.emplace(q);
       activeQubits1QGates0.emplace(q);
       continue;
-    } 
+    }
     if (activeQubits2QGates1.find(q) != activeQubits2QGates1.end()) {
       singleQubitMultiplicity1[q] = singleQubitMultiplicity[q];
       activeQubits1.emplace(q);
@@ -317,14 +325,15 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
         layer1.push_back(gate);
       }
     } else {
-      if (activeQubits2QGates0.find(gate.target) != activeQubits2QGates0.end()) {
+      if (activeQubits2QGates0.find(gate.target) !=
+          activeQubits2QGates0.end()) {
         layer0.push_back(gate);
       } else {
         layer1.push_back(gate);
       }
     }
   }
-  
+
   layers[index] = layer0;
   layers.insert(
       layers.begin() +
@@ -349,21 +358,24 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   activeQubits[index] = activeQubits0;
   activeQubits.insert(
       activeQubits.begin() +
-          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<
+              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits1);
   activeQubits1QGates[index] = activeQubits1QGates0;
   activeQubits1QGates.insert(
       activeQubits1QGates.begin() +
-          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<
+              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits1QGates1);
   activeQubits2QGates[index] = activeQubits2QGates0;
   activeQubits2QGates.insert(
       activeQubits2QGates.begin() +
-          static_cast<std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<
+              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits2QGates1);

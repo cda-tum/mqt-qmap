@@ -214,14 +214,17 @@ protected:
    * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  virtual void
-  mapUnmappedGates(std::size_t layer);
-  
+  virtual void mapUnmappedGates(std::size_t layer);
+
   /**
-   * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology constraints and optimize fidelity if activated
-   * 
-   * @param reverse if true, the circuit is routed from the end to the beginning (this will not produce a valid mapping, use only with pseudo routing!)
-   * @param pseudoRouting if true, routing will only be simulated without altering the circuit or modifying any other global data except for `qubits` and `locations`, which will hold the final qubit layout afterwards
+   * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology
+   * constraints and optimize fidelity if activated
+   *
+   * @param reverse if true, the circuit is routed from the end to the beginning
+   * (this will not produce a valid mapping, use only with pseudo routing!)
+   * @param pseudoRouting if true, routing will only be simulated without
+   * altering the circuit or modifying any other global data except for `qubits`
+   * and `locations`, which will hold the final qubit layout afterwards
    */
   virtual void routeCircuit(bool reverse = false, bool pseudoRouting = false);
 

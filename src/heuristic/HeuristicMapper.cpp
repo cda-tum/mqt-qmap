@@ -49,7 +49,9 @@ void HeuristicMapper::map(const Configuration& configuration) {
         << std::endl;
     config.teleportationQubits = 0;
   }
-  if (config.splitLayerAfterExpandedNodes > 0 && (config.layering == Layering::OddGates || config.layering == Layering::QubitTriangle)) {
+  if (config.splitLayerAfterExpandedNodes > 0 &&
+      (config.layering == Layering::OddGates ||
+       config.layering == Layering::QubitTriangle)) {
     std::cerr << "Layer splitting cannot be used with odd gates or qubit "
                  "triangle layering, as it might not conserve gate order for "
                  "non-disjoint gate sets! Performing mapping without layer "
@@ -74,17 +76,21 @@ void HeuristicMapper::map(const Configuration& configuration) {
     printLocations(std::clog);
     printQubits(std::clog);
   }
-  
+
   for (std::size_t i = 0; i < config.iterativeBidirectionalRouting; ++i) {
     if (config.verbose) {
-      std::clog << std::endl << "Iterative bidirectional routing (forward pass " << i << "):" << std::endl;
+      std::clog << std::endl
+                << "Iterative bidirectional routing (forward pass " << i
+                << "):" << std::endl;
     }
     routeCircuit(false, true);
     if (config.verbose) {
-      std::clog << std::endl << "Iterative bidirectional routing (backward pass " << i << "):" << std::endl;
+      std::clog << std::endl
+                << "Iterative bidirectional routing (backward pass " << i
+                << "):" << std::endl;
     }
     routeCircuit(true, true);
-    
+
     if (config.verbose) {
       std::clog << std::endl << "Main routing:" << std::endl;
     }
@@ -215,7 +221,8 @@ void HeuristicMapper::createInitialMapping() {
 
 void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
   if (results.config.considerFidelity) {
-    for (std::size_t q = 0; q < singleQubitMultiplicities.at(layer).size(); ++q) {
+    for (std::size_t q = 0; q < singleQubitMultiplicities.at(layer).size();
+         ++q) {
       if (singleQubitMultiplicities.at(layer).at(q) == 0) {
         continue;
       }
@@ -315,29 +322,30 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 }
 
 void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
-  assert (!reverse || pseudoRouting); // reverse routing is only supported for pseudo routing
-  
+  assert(!reverse ||
+         pseudoRouting); // reverse routing is only supported for pseudo routing
+
   // save original global data for restoring it later if pseudo routing is used
-  const auto originalResults = results;
-  const auto originalLayers = layers;
+  const auto originalResults                   = results;
+  const auto originalLayers                    = layers;
   const auto originalSingleQubitMultiplicities = singleQubitMultiplicities;
-  const auto originalTwoQubitMultiplicities = twoQubitMultiplicities;
-  const auto originalActiveQubits = activeQubits;
-  const auto originalActiveQubits1QGates = activeQubits1QGates;
-  const auto originalActiveQubits2QGates = activeQubits2QGates;
-  
+  const auto originalTwoQubitMultiplicities    = twoQubitMultiplicities;
+  const auto originalActiveQubits              = activeQubits;
+  const auto originalActiveQubits1QGates       = activeQubits1QGates;
+  const auto originalActiveQubits2QGates       = activeQubits2QGates;
+
   auto& config = results.config;
   if (pseudoRouting) {
     config.dataLoggingPath = ""; // disable data logging for pseudo routing
-    config.debug = false;
+    config.debug           = false;
   }
-  
+
   std::size_t              gateidx = 0;
   std::vector<std::size_t> gatesToAdjust{};
   results.output.gates = 0U;
   for (std::size_t i = 0; i < layers.size(); ++i) {
-    auto layerIndex = (reverse ? layers.size() - i - 1 : i);
-    const Node result = aStarMap(layerIndex, reverse);
+    auto       layerIndex = (reverse ? layers.size() - i - 1 : i);
+    const Node result     = aStarMap(layerIndex, reverse);
 
     qubits    = result.qubits;
     locations = result.locations;
@@ -346,7 +354,7 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
       printLocations(std::clog);
       printQubits(std::clog);
     }
-    
+
     if (pseudoRouting) {
       continue;
     }
@@ -450,20 +458,19 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
            static_cast<double>(benchmark.expandedNodes));
     }
   }
-  
-  
+
   if (pseudoRouting) {
     // restore original global data
-    results = originalResults;
-    layers = originalLayers;
+    results                   = originalResults;
+    layers                    = originalLayers;
     singleQubitMultiplicities = originalSingleQubitMultiplicities;
-    twoQubitMultiplicities = originalTwoQubitMultiplicities;
-    activeQubits = originalActiveQubits;
-    activeQubits1QGates = originalActiveQubits1QGates;
-    activeQubits2QGates = originalActiveQubits2QGates;
+    twoQubitMultiplicities    = originalTwoQubitMultiplicities;
+    activeQubits              = originalActiveQubits;
+    activeQubits1QGates       = originalActiveQubits1QGates;
+    activeQubits2QGates       = originalActiveQubits2QGates;
     return;
   }
-  
+
   // infer output permutation from qubit locations
   qcMapped.outputPermutation.clear();
   for (std::size_t i = 0U; i < architecture->getNqubits(); ++i) {
@@ -541,16 +548,19 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
 }
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
-  auto& config = results.config;
+  auto&      config           = results.config;
   const bool considerFidelity = config.considerFidelity;
-  nextNodeId   = 0;
+  nextNodeId                  = 0;
 
-  const std::unordered_set<std::uint16_t>& consideredQubits = (considerFidelity ? activeQubits[layer] : activeQubits2QGates[layer]);
-  const SingleQubitMultiplicity& singleQubitMultiplicity = singleQubitMultiplicities.at(layer);
-  const TwoQubitMultiplicity& twoQubitMultiplicity = twoQubitMultiplicities.at(layer);
-  Node                               node(nextNodeId++);
-  Node                               bestDoneNode(0);
-  bool                               done = false;
+  const std::unordered_set<std::uint16_t>& consideredQubits =
+      (considerFidelity ? activeQubits[layer] : activeQubits2QGates[layer]);
+  const SingleQubitMultiplicity& singleQubitMultiplicity =
+      singleQubitMultiplicities.at(layer);
+  const TwoQubitMultiplicity& twoQubitMultiplicity =
+      twoQubitMultiplicities.at(layer);
+  Node node(nextNodeId++);
+  Node bestDoneNode(0);
+  bool done = false;
 
   mapUnmappedGates(layer);
 
@@ -586,8 +596,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
         }
 
         dataLogger->logFinalizeLayer(layer, compOp, singleQubitMultiplicity,
-                                     twoQubitMultiplicity, qubits, 0, 0, 0,
-                                     0, {}, {}, 0);
+                                     twoQubitMultiplicity, qubits, 0, 0, 0, 0,
+                                     {}, {}, 0);
         dataLogger->splitLayer();
       }
       splitLayer(layer, *architecture);
@@ -654,9 +664,10 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     }
 
     dataLogger->logFinalizeLayer(
-        layer, compOp, singleQubitMultiplicities.at(layer), twoQubitMultiplicities.at(layer),
-        qubits, result.id, result.costFixed, result.costHeur,
-        result.lookaheadPenalty, result.qubits, result.swaps, result.depth);
+        layer, compOp, singleQubitMultiplicities.at(layer),
+        twoQubitMultiplicities.at(layer), qubits, result.id, result.costFixed,
+        result.costHeur, result.lookaheadPenalty, result.qubits, result.swaps,
+        result.depth);
   }
 
   // clear nodes
@@ -753,15 +764,16 @@ void HeuristicMapper::expandNodeAddOneSwap(
   if (architecture->isEdgeConnected(swap) ||
       architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
     newNode.applySWAP(swap, *architecture, singleQubitMultiplicities.at(layer),
-                      twoQubitMultiplicities.at(layer), config.considerFidelity);
+                      twoQubitMultiplicities.at(layer),
+                      config.considerFidelity);
   } else {
     newNode.applyTeleportation(swap, *architecture);
   }
 
-  newNode.updateHeuristicCost(*architecture, singleQubitMultiplicities.at(layer),
-                              twoQubitMultiplicities.at(layer), consideredQubits,
-                              results.config.admissibleHeuristic,
-                              results.config.considerFidelity);
+  newNode.updateHeuristicCost(
+      *architecture, singleQubitMultiplicities.at(layer),
+      twoQubitMultiplicities.at(layer), consideredQubits,
+      results.config.admissibleHeuristic, results.config.considerFidelity);
 
   // calculate heuristics for the cost of the following layers
   if (config.lookahead) {
