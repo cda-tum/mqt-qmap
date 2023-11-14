@@ -122,8 +122,7 @@ public:
 
   [[nodiscard]] bool isValidGateSet() const {
     return std::all_of(gates.begin(), gates.end(), [](const auto& g) {
-      return std::find(singleQubitCliffords.begin(),
-                       singleQubitCliffords.end(),
+      return std::find(singleQubitCliffords.begin(), singleQubitCliffords.end(),
                        g) != singleQubitCliffords.end();
     });
   }
