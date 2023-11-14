@@ -168,7 +168,8 @@ void GateEncoder::assertRConstraints(const std::size_t pos,
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
 
-qc::QuantumComputation GateEncoder::extractCircuitFromModel(Results& res, Model& model) {
+qc::QuantumComputation GateEncoder::extractCircuitFromModel(Results& res,
+                                                            Model&   model) {
   std::size_t nSingleQubitGates = 0U;
   std::size_t nTwoQubitGates    = 0U;
 
@@ -191,8 +192,8 @@ void GateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
     DEBUG() << "Asserting gates on " << q;
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
-    if (! ignoreRChanges){
-    assertRConstraints(pos, q);
+    if (!ignoreRChanges) {
+      assertRConstraints(pos, q);
     }
   }
 }
@@ -205,7 +206,7 @@ void GateEncoder::assertTwoQubitGateConstraints(std::size_t pos) {
         continue;
       }
       auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      if(!ignoreRChanges){
+      if (!ignoreRChanges) {
         changes = changes && createTwoQubitRConstraint(pos, ctrl, trgt);
       }
       lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));

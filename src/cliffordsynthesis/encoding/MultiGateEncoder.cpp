@@ -49,7 +49,7 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
   xorHelpers = logicbase::LogicMatrix{T};
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
-    if(!ignoreRChanges){
+    if (!ignoreRChanges) {
       rChanges = tvars->r[t];
       splitXorR(tvars->r[t], t);
     }
@@ -57,10 +57,9 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
     assertTwoQubitGateConstraints(t);
     TRACE() << "Asserting r changes at time " << t;
 
-    if(!ignoreRChanges){
+    if (!ignoreRChanges) {
       lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
     }
-
   }
 }
 
@@ -86,10 +85,6 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->z[pos + 1][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
 
-  const auto& newRChanges = LogicTerm::ite(
-      vars.gC[pos][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
-      LogicTerm(0, static_cast<std::int16_t>(S)));
-  splitXorR(newRChanges, pos);
   return changes;
 }
 
