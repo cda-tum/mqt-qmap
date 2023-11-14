@@ -605,8 +605,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
         std::clog << "Split layer" << std::endl;
       }
       // recursively restart search with newly split layer
-      // (step to the end of the circuit, if reverse mapping is active, since 
-      // the split layer is inserted in this direction, otherwise 1 layer would 
+      // (step to the end of the circuit, if reverse mapping is active, since
+      // the split layer is inserted in this direction, otherwise 1 layer would
       // be skipped)
       return aStarMap(reverse ? layer + 1 : layer, reverse);
     }
