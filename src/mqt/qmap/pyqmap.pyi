@@ -116,6 +116,7 @@ class Configuration:
     first_lookahead_factor: float
     include_WCNF: bool  # noqa: N815
     initial_layout: InitialLayout
+    iterative_bidirectional_routing: int
     layering: Layering
     split_layer_after_expanded_nodes: int
     lookahead: bool

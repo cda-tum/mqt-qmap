@@ -220,7 +220,7 @@ protected:
   /**
    * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology constraints and optimize fidelity if activated
    * 
-   * @param reverse if true, the circuit is routed from the end to the beginning (used in iterative bidirectional routing)
+   * @param reverse if true, the circuit is routed from the end to the beginning (this will not produce a valid mapping, use only with pseudo routing!)
    * @param pseudoRouting if true, routing will only be simulated without altering the circuit or modifying any other global data except for `qubits` and `locations`, which will hold the final qubit layout afterwards
    */
   virtual void routeCircuit(bool reverse = false, bool pseudoRouting = false);
@@ -234,8 +234,9 @@ protected:
    * current layer in their fields `costHeur` and `done`)
    *
    * @param layer index of the current circuit layer
+   * @param reverse if true, the circuit is mapped from the end to the beginning
    */
-  virtual Node aStarMap(std::size_t layer);
+  virtual Node aStarMap(std::size_t layer, bool reverse);
 
   /**
    * @brief expand the given node by calling `expand_node_add_one_swap` for all

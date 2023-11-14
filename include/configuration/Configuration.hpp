@@ -41,6 +41,8 @@ struct Configuration {
 
   // initial layout to use for heuristic approach
   InitialLayout initialLayout = InitialLayout::None;
+  
+  std::size_t iterativeBidirectionalRouting = 0;
 
   // lookahead scheme settings
   bool        lookahead            = true;

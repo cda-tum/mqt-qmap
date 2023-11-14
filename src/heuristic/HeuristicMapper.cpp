@@ -74,6 +74,21 @@ void HeuristicMapper::map(const Configuration& configuration) {
     printLocations(std::clog);
     printQubits(std::clog);
   }
+  
+  for (std::size_t i = 0; i < config.iterativeBidirectionalRouting; ++i) {
+    if (config.verbose) {
+      std::clog << std::endl << "Iterative bidirectional routing (forward pass " << i << "):" << std::endl;
+    }
+    routeCircuit(false, true);
+    if (config.verbose) {
+      std::clog << std::endl << "Iterative bidirectional routing (backward pass " << i << "):" << std::endl;
+    }
+    routeCircuit(true, true);
+    
+    if (config.verbose) {
+      std::clog << std::endl << "Main routing:" << std::endl;
+    }
+  }
 
   routeCircuit();
 
@@ -300,6 +315,8 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
 }
 
 void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
+  assert (!reverse || pseudoRouting); // reverse routing is only supported for pseudo routing
+  
   // save original global data for restoring it later if pseudo routing is used
   const auto originalResults = results;
   const auto originalLayers = layers;
@@ -313,10 +330,6 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
   if (pseudoRouting) {
     config.dataLoggingPath = ""; // disable data logging for pseudo routing
     config.debug = false;
-    
-    if (config.verbose) {
-      std::clog << std::endl << std::endl << "Pseudo routing (" << (reverse ? "backward" : "forward") << " pass):" << std::endl;
-    }
   }
   
   std::size_t              gateidx = 0;
@@ -324,7 +337,7 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
   results.output.gates = 0U;
   for (std::size_t i = 0; i < layers.size(); ++i) {
     auto layerIndex = (reverse ? layers.size() - i - 1 : i);
-    const Node result = aStarMap(layerIndex);
+    const Node result = aStarMap(layerIndex, reverse);
 
     qubits    = result.qubits;
     locations = result.locations;
@@ -527,7 +540,7 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
   }
 }
 
-HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
+HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   auto& config = results.config;
   const bool considerFidelity = config.considerFidelity;
   nextNodeId   = 0;
@@ -582,7 +595,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer) {
         std::clog << "Split layer" << std::endl;
       }
       // recursively restart search with newly split layer
-      return aStarMap(layer);
+      return aStarMap(reverse ? layer + 1 : layer, reverse);
     }
     Node current = nodes.top();
     if (current.done) {

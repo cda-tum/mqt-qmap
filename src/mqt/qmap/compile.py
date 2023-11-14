@@ -62,6 +62,7 @@ def compile(  # noqa: A001
     method: str | Method = "heuristic",
     consider_fidelity: bool = False,
     initial_layout: str | InitialLayout = "dynamic",
+    iterative_bidirectional_routing: int = 0,
     layering: str | Layering = "individual_gates",
     split_layer_after_expanded_nodes: int = 5000,
     lookaheads: int | None = 15,
@@ -93,6 +94,7 @@ def compile(  # noqa: A001
         method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
         consider_fidelity: Whether to consider the fidelity of the gates. Defaults to False.
         initial_layout: The initial layout to use. Defaults to "dynamic".
+        iterative_bidirectional_routing: Number of iterative bidirectional routing passes to perform. Defaults to 0.
         layering: The layering strategy to use. Defaults to "individual_gates".
         split_layer_after_expanded_nodes: The number of expanded nodes after which to split a layer (set to 0 to turn off layer splitting). Defaults to 5000.
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
@@ -132,6 +134,7 @@ def compile(  # noqa: A001
     config.method = Method(method)
     config.consider_fidelity = consider_fidelity
     config.initial_layout = InitialLayout(initial_layout)
+    config.iterative_bidirectional_routing = iterative_bidirectional_routing
     config.layering = Layering(layering)
     config.split_layer_after_expanded_nodes = split_layer_after_expanded_nodes
     config.encoding = Encoding(encoding)

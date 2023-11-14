@@ -185,6 +185,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("split_layer_after_expanded_nodes",
                      &Configuration::splitLayerAfterExpandedNodes)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
+      .def_readwrite("iterative_bidirectional_routing", &Configuration::iterativeBidirectionalRouting)
       .def_readwrite("lookahead", &Configuration::lookahead)
       .def_readwrite("admissible_heuristic",
                      &Configuration::admissibleHeuristic)
