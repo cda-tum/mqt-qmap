@@ -7,12 +7,13 @@
 
 #include "operations/OpType.hpp"
 
+#include <array>
 #include <initializer_list>
 #include <vector>
 
 namespace cs {
 class GateSet {
-  const std::array<qc::OpType, 10> singleQubitCliffords = {
+  static constexpr std::array<qc::OpType, 10> SINGLE_QUBIT_CLIFFORDS = {
       qc::OpType::I,    qc::OpType::H,   qc::OpType::X,   qc::OpType::Y,
       qc::OpType::Z,    qc::OpType::S,   qc::OpType::Sdg, qc::OpType::SX,
       qc::OpType::SXdg, qc::OpType::None};
@@ -122,9 +123,9 @@ public:
 
   [[nodiscard]] bool isValidGateSet() const {
     return std::all_of(gates.begin(), gates.end(), [](const auto& g) {
-      return std::find(singleQubitCliffords.begin(),
-                       singleQubitCliffords.end(),
-                       g) != singleQubitCliffords.end();
+      return std::find(SINGLE_QUBIT_CLIFFORDS.begin(),
+                       SINGLE_QUBIT_CLIFFORDS.end(),
+                       g) != SINGLE_QUBIT_CLIFFORDS.end();
     });
   }
 
