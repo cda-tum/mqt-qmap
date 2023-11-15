@@ -61,8 +61,8 @@ void GateEncoder::createTwoQubitGateVariables() {
 void GateEncoder::Variables::collectSingleQubitGateVariables(
     const std::size_t pos, const std::size_t qubit,
     LogicVector& variables) const {
-  const auto& singleQubitGates = gS[pos];
-  for (const auto& gate : singleQubitGates) {
+  const auto& singleQubitGateVariables = gS[pos];
+  for (const auto& gate : singleQubitGateVariables) {
     variables.emplace_back(gate[qubit]);
   }
 }
@@ -298,9 +298,9 @@ void GateEncoder::assertSingleQubitGateCancellationConstraints(
   if (singleQubitGates.containsZ()) {
     paulis.emplace_back(qc::OpType::Z);
   }
-  bool containsPaulis = singleQubitGates.containsX() ||
-                        singleQubitGates.containsY() ||
-                        singleQubitGates.containsZ();
+  const bool containsPaulis = singleQubitGates.containsX() ||
+                              singleQubitGates.containsY() ||
+                              singleQubitGates.containsZ();
   if (containsPaulis) {
     auto gates      = gSNow[singleQubitGates.gateToIndex(paulis[0])][qubit];
     auto disallowed = !gSNext[singleQubitGates.gateToIndex(paulis[0])][qubit];

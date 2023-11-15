@@ -33,10 +33,10 @@ void PhaseCorrectionEncoder::createVariables() {
     }
   }
 
-  std::bitset<64> init = uncorrected.getBVFrom(2 * N);
-  initialPhase         = vectorFromBitset(init);
-  std::bitset<64> tar  = target.getBVFrom(2 * N);
-  targetPhase          = vectorFromBitset(tar);
+  const std::bitset<64> init = uncorrected.getBVFrom(2 * N);
+  initialPhase               = vectorFromBitset(init);
+  const std::bitset<64> tar  = target.getBVFrom(2 * N);
+  targetPhase                = vectorFromBitset(tar);
 }
 
 void PhaseCorrectionEncoder::encodePauliConstraints() {
@@ -113,7 +113,7 @@ PhaseCorrectionEncoder::vectorFromBitset(const std::bitset<64>& bs) const {
   LogicVector result{};
   result.reserve(S);
   for (std::size_t i = 0U; i < S; ++i) {
-    result.emplace_back(LogicTerm(bs[i]));
+    result.emplace_back(bs[i]);
   }
   return result;
 }

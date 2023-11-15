@@ -31,11 +31,11 @@ public:
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
         lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)),
         ignoreRChanges(ignorePhase) {
-    if (!singleQGates.isValidGateSet()) {
+    if (!singleQubitGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
     }
     if (!singleQubitGates.isComplete()) {
-      std::cerr << "Warning: The gate set " << singleQGates.toString()
+      std::cerr << "Warning: The gate set " << singleQubitGates.toString()
                 << "is not complete. The synthesis might fail." << std::endl;
     }
   }
