@@ -7,10 +7,10 @@
 
 #include "operations/OpType.hpp"
 
+#include <algorithm>
 #include <array>
 #include <initializer_list>
 #include <vector>
-#include <algorithm>
 
 namespace cs {
 class GateSet {
