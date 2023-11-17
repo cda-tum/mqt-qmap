@@ -5,6 +5,7 @@
 
 #include "cliffordsynthesis/Tableau.hpp"
 
+#include "operations/OpType.hpp"
 #include "utils.hpp"
 
 namespace cs {
@@ -48,6 +49,38 @@ void Tableau::import(std::istream& is) {
   }
 }
 
+void Tableau::applySingleQGate(const qc::OpType& gate, std::size_t target) {
+  switch (gate) {
+  case qc::OpType::H:
+    applyH(target);
+    break;
+  case qc::OpType::S:
+    applyS(target);
+    break;
+  case qc::OpType::Sdg:
+    applySdag(target);
+    break;
+  case qc::OpType::SX:
+    applySx(target);
+    break;
+  case qc::OpType::SXdg:
+    applySxdag(target);
+    break;
+  case qc::OpType::X:
+    applyX(target);
+    break;
+  case qc::OpType::Y:
+    applyY(target);
+    break;
+  case qc::OpType::Z:
+    applyZ(target);
+    break;
+  default:
+    util::fatal("Tableau::applyGate: Unsupported non-controlled gate type " +
+                qc::toString(gate));
+  }
+}
+
 void Tableau::applyGate(const qc::Operation* const gate) {
   if (gate->getNcontrols() > 1U) {
     util::fatal("Tableau::applyGate: Only operations with up to one control "
@@ -60,28 +93,14 @@ void Tableau::applyGate(const qc::Operation* const gate) {
   if (!gate->isControlled()) {
     switch (gate->getType()) {
     case qc::OpType::H:
-      applyH(target);
-      break;
     case qc::OpType::S:
-      applyS(target);
-      break;
     case qc::OpType::Sdg:
-      applySdag(target);
-      break;
     case qc::OpType::SX:
-      applySx(target);
-      break;
     case qc::OpType::SXdg:
-      applySxdag(target);
-      break;
     case qc::OpType::X:
-      applyX(target);
-      break;
     case qc::OpType::Y:
-      applyY(target);
-      break;
     case qc::OpType::Z:
-      applyZ(target);
+      applySingleQGate(gate->getType(), target);
       break;
     case qc::OpType::SWAP: {
       const auto target2 = static_cast<std::size_t>(gate->getTargets().at(1U));

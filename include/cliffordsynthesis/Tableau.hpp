@@ -6,6 +6,7 @@
 #pragma once
 
 #include "QuantumComputation.hpp"
+#include "operations/OpType.hpp"
 #include "utils/logging.hpp"
 
 #include <cstdint>
@@ -98,6 +99,7 @@ public:
   }
 
   void applyGate(const qc::Operation* gate);
+  void applySingleQGate(const qc::OpType& gate, std::size_t target);
   void applyH(std::size_t target);
   void applyS(std::size_t target);
   void applySdag(std::size_t target);
@@ -119,6 +121,19 @@ public:
   }
   [[gnu::pure]] friend bool operator!=(const Tableau& lhs, const Tableau& rhs) {
     return !(lhs == rhs);
+  }
+
+  [[nodiscard]] bool equalUpToPhase(const Tableau& rhs) const {
+    const auto& lhsTab = this->getTableau();
+    const auto& rhsTab = rhs.getTableau();
+    for (std::size_t i = 0; i < lhsTab.size(); ++i) {
+      for (std::size_t j = 0; j < lhsTab[i].size() - 1; ++j) {
+        if (lhsTab[i][j] != rhsTab[i][j]) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   [[nodiscard]] bool isIdentityTableau() const;

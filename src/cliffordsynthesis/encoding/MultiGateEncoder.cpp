@@ -5,8 +5,11 @@
 
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 
+#include "LogicTerm/Logic.hpp"
 #include "LogicTerm/LogicTerm.hpp"
 #include "utils/logging.hpp"
+
+#include <string>
 
 namespace cs::encoding {
 
@@ -18,9 +21,11 @@ void encoding::MultiGateEncoder::assertConsistency() const {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector gateVariables{};
+      LogicVector trgtVariables{};
+      LogicVector ctrlVariables{};
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, false, gateVariables);
+      vars.collectTwoQubitGateVariables(t, q, true, trgtVariables);
+      vars.collectTwoQubitGateVariables(t, q, false, ctrlVariables);
 
       IF_PLOG(plog::verbose) {
         TRACE() << "Gate variables at time " << t << " and qubit " << q;
@@ -31,14 +36,24 @@ void encoding::MultiGateEncoder::assertConsistency() const {
       if (singleQubitGates.paulis().size() >
           1) { // if no Paulis are present we can relax the exactlyone
                // constraint
+        // collect all variables into gateVariables
+        gateVariables.insert(gateVariables.end(), trgtVariables.begin(),
+                             trgtVariables.end());
+        gateVariables.insert(gateVariables.end(), ctrlVariables.begin(),
+                             ctrlVariables.end());
         assertExactlyOne(gateVariables);
-
       } else {
-        auto atLeastOne = LogicTerm(false);
+        auto atLeastOneSingle = LogicTerm(false);
         for (const auto& var : gateVariables) {
-          atLeastOne = atLeastOne || var;
+          atLeastOneSingle = atLeastOneSingle || var;
         }
-        lb->assertFormula(atLeastOne);
+        auto consistency = atLeastOneSingle;
+        if (!trgtVariables.empty() && !ctrlVariables.empty()) {
+          consistency = consistency || createExactlyOne(trgtVariables) ||
+                        createExactlyOne(ctrlVariables);
+        }
+
+        lb->assertFormula(consistency);
       }
     }
   }

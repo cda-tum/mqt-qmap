@@ -7,9 +7,11 @@
 
 #include "Definitions.hpp"
 #include "LogicBlock/LogicBlock.hpp"
+#include "LogicTerm/LogicTerm.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/GateSet.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "operations/OpType.hpp"
 
@@ -27,10 +29,11 @@ public:
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock,
-              GateSet singleQGates, bool ignorePhase = false)
+              GateSet singleQGates, Tableau initialTableau,
+              bool ignorePhase = false)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
         lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)),
-        ignoreRChanges(ignorePhase) {
+        init(std::move(initialTableau)), ignoreRChanges(ignorePhase) {
     if (!singleQubitGates.isValidGateSet()) {
       throw qc::QFRException("Invalid gate set");
     }
@@ -93,7 +96,8 @@ protected:
   // the gates that are used
   GateSet singleQubitGates;
 
-  bool ignoreRChanges{false};
+  Tableau init{};
+  bool    ignoreRChanges{false};
 
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
@@ -101,6 +105,8 @@ protected:
       std::function<logicbase::LogicTerm(std::size_t, std::size_t, qc::OpType)>;
 
   void assertExactlyOne(const logicbase::LogicVector& variables) const;
+  [[nodiscard]] logicbase::LogicTerm
+  createExactlyOne(const logicbase::LogicVector& variables) const;
 
   virtual void assertConsistency() const = 0;
 
@@ -127,11 +133,13 @@ protected:
                                         logicbase::Model&       model,
                                         qc::QuantumComputation& qc,
                                         std::size_t&       nSingleQubitGates,
-                                        std::vector<bool>& hasGate);
+                                        std::vector<bool>& hasGate,
+                                        Tableau&           intermediateTableau);
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
                                      std::size_t&            nTwoQubitGates,
-                                     std::vector<bool>&      hasGate);
+                                     std::vector<bool>&      hasGate,
+                                     Tableau& intermediateTableau);
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);

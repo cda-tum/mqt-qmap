@@ -7,8 +7,10 @@
 
 #include "Definitions.hpp"
 #include "Encodings/Encodings.hpp"
+#include "LogicTerm/LogicTerm.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/GateSet.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/Utils.hpp"
 #include "operations/OpType.hpp"
 #include "utils/logging.hpp"
@@ -84,10 +86,14 @@ void GateEncoder::Variables::collectTwoQubitGateVariables(
   }
 }
 
-void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
+LogicTerm
+GateEncoder::createExactlyOne(const logicbase::LogicVector& variables) const {
   const auto variableGrouping = encodings::groupVars(variables, 3U);
-  lb->assertFormula(encodings::exactlyOneCmdr(variableGrouping,
-                                              LogicTerm::noneTerm(), lb.get()));
+  return encodings::exactlyOneCmdr(variableGrouping, LogicTerm::noneTerm(),
+                                   lb.get());
+}
+void GateEncoder::assertExactlyOne(const LogicVector& variables) const {
+  lb->assertFormula(createExactlyOne(variables));
 }
 
 std::vector<GateEncoder::TransformationFamily>
@@ -173,11 +179,14 @@ qc::QuantumComputation GateEncoder::extractCircuitFromModel(Results& res,
   std::size_t nSingleQubitGates = 0U;
   std::size_t nTwoQubitGates    = 0U;
 
+  Tableau                intermediateTableau = init;
   qc::QuantumComputation qc(N);
   for (std::size_t t = 0; t < T; ++t) {
     std::vector<bool> hasGate(N, false);
-    extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates, hasGate);
-    extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates, hasGate);
+    extractSingleQubitGatesFromModel(t, model, qc, nSingleQubitGates, hasGate,
+                                     intermediateTableau);
+    extractTwoQubitGatesFromModel(t, model, qc, nTwoQubitGates, hasGate,
+                                  intermediateTableau);
   }
 
   res.setSingleQubitGates(nSingleQubitGates);
@@ -217,7 +226,8 @@ void GateEncoder::assertTwoQubitGateConstraints(std::size_t pos) {
 
 void GateEncoder::extractSingleQubitGatesFromModel(
     const std::size_t pos, Model& model, qc::QuantumComputation& qc,
-    std::size_t& nSingleQubitGates, std::vector<bool>& hasGate) {
+    std::size_t& nSingleQubitGates, std::vector<bool>& hasGate,
+    Tableau& intermediateTableau) {
   const auto& singleQubitGateVars = vars.gS[pos];
   auto        validPaulis         = singleQubitGates.paulis();
   for (std::size_t q = 0U; q < N; ++q) {
@@ -232,10 +242,18 @@ void GateEncoder::extractSingleQubitGatesFromModel(
       if (model.getBoolValue(
               singleQubitGateVars[singleQubitGates.gateToIndex(gate)][q],
               lb.get())) {
+        auto temp = intermediateTableau;
+        temp.applySingleQGate(gate, q);
+        if ((ignoreRChanges && intermediateTableau.equalUpToPhase(temp)) ||
+            intermediateTableau == temp) {
+          continue;
+        }
+        intermediateTableau.applySingleQGate(gate, q);
         qc.emplace_back<qc::StandardOperation>(N, q, gate);
         hasGate[q] = true;
         ++nSingleQubitGates;
         DEBUG() << toString(gate) << "(" << q << ")";
+        break;
       }
     }
   }
@@ -245,7 +263,8 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
                                                 Model&                  model,
                                                 qc::QuantumComputation& qc,
                                                 size_t& nTwoQubitGates,
-                                                std::vector<bool>& hasGate) {
+                                                std::vector<bool>& hasGate,
+                                                Tableau& intermediateTableau) {
   const auto& twoQubitGates = vars.gC[pos];
   for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
     if (hasGate[ctrl]) {
@@ -258,6 +277,15 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
       const auto control =
           qc::Control{static_cast<qc::Qubit>(ctrl), qc::Control::Type::Pos};
       if (model.getBoolValue(twoQubitGates[ctrl][trgt], lb.get())) {
+        auto temp = intermediateTableau;
+        temp.applyCX(ctrl, trgt);
+        DEBUG() << temp.toString();
+        DEBUG() << intermediateTableau.toString();
+        if ((ignoreRChanges && intermediateTableau.equalUpToPhase(temp)) ||
+            intermediateTableau == temp) { // gate doesn't do anything
+          continue;
+        }
+        intermediateTableau.applyCX(ctrl, trgt);
         qc.emplace_back<qc::StandardOperation>(N, control, trgt, qc::OpType::X);
         hasGate[ctrl] = true;
         hasGate[trgt] = true;

@@ -66,14 +66,19 @@ void SATEncoder::createFormulation() {
   tableauEncoder->assertTableau(*config.initialTableau, 0U);
   tableauEncoder->assertTableau(*config.targetTableau, T);
 
+  if (config.ignoreRChanges) {
+    config.gateSet.removePaulis();
+    config.gateSet.emplace_back(qc::OpType::None);
+  }
+
   if (config.useMultiGateEncoding) {
     gateEncoder = std::make_shared<MultiGateEncoder>(
         N, S, T, tableauEncoder->getVariables(), lb, config.gateSet,
-        config.ignoreRChanges);
+        *config.initialTableau, config.ignoreRChanges);
   } else {
     gateEncoder = std::make_shared<SingleGateEncoder>(
         N, S, T, tableauEncoder->getVariables(), lb, config.gateSet,
-        config.ignoreRChanges);
+        *config.initialTableau, config.ignoreRChanges);
   }
   gateEncoder->createSingleQubitGateVariables();
   gateEncoder->createTwoQubitGateVariables();
