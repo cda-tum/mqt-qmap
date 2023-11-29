@@ -5,8 +5,11 @@
 
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 
+#include "LogicTerm/Logic.hpp"
 #include "LogicTerm/LogicTerm.hpp"
 #include "utils/logging.hpp"
+
+#include <string>
 
 namespace cs::encoding {
 
@@ -18,9 +21,11 @@ void encoding::MultiGateEncoder::assertConsistency() const {
     // asserting only a single gate is applied on each qubit.
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector gateVariables{};
+      LogicVector trgtVariables{};
+      LogicVector ctrlVariables{};
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, false, gateVariables);
+      vars.collectTwoQubitGateVariables(t, q, true, trgtVariables);
+      vars.collectTwoQubitGateVariables(t, q, false, ctrlVariables);
 
       IF_PLOG(plog::verbose) {
         TRACE() << "Gate variables at time " << t << " and qubit " << q;
@@ -28,8 +33,28 @@ void encoding::MultiGateEncoder::assertConsistency() const {
           TRACE() << var.getName();
         }
       }
+      if (singleQubitGates.paulis().size() >
+          1) { // if no Paulis are present we can relax the exactlyone
+               // constraint
+        // collect all variables into gateVariables
+        gateVariables.insert(gateVariables.end(), trgtVariables.begin(),
+                             trgtVariables.end());
+        gateVariables.insert(gateVariables.end(), ctrlVariables.begin(),
+                             ctrlVariables.end());
+        assertExactlyOne(gateVariables);
+      } else {
+        auto atLeastOneSingle = LogicTerm(false);
+        for (const auto& var : gateVariables) {
+          atLeastOneSingle = atLeastOneSingle || var;
+        }
+        auto consistency = atLeastOneSingle;
+        if (!trgtVariables.empty() && !ctrlVariables.empty()) {
+          consistency = consistency || createExactlyOne(trgtVariables) ||
+                        createExactlyOne(ctrlVariables);
+        }
 
-      assertExactlyOne(gateVariables);
+        lb->assertFormula(consistency);
+      }
     }
   }
 }
@@ -39,48 +64,28 @@ void encoding::MultiGateEncoder::assertGateConstraints() {
   xorHelpers = logicbase::LogicMatrix{T};
   for (std::size_t t = 0U; t < T; ++t) {
     TRACE() << "Asserting gate constraints at time " << t;
-    rChanges = tvars->r[t];
-    splitXorR(tvars->r[t], t);
+    if (!ignoreRChanges) {
+      rChanges = tvars->r[t];
+      splitXorR(tvars->r[t], t);
+    }
     assertSingleQubitGateConstraints(t);
     assertTwoQubitGateConstraints(t);
     TRACE() << "Asserting r changes at time " << t;
-    lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
-  }
-}
 
-void encoding::MultiGateEncoder::assertSingleQubitGateConstraints(
-    const std::size_t pos) {
-  for (std::size_t q = 0U; q < N; ++q) {
-    assertZConstraints(pos, q);
-    assertXConstraints(pos, q);
-    assertRConstraints(pos, q);
+    if (!ignoreRChanges) {
+      lb->assertFormula(tvars->r[t + 1] == xorHelpers[t].back());
+    }
   }
 }
 
 void MultiGateEncoder::assertRConstraints(const std::size_t pos,
                                           const std::size_t qubit) {
-  for (const auto gate : SINGLE_QUBIT_GATES) {
+  for (const auto gate : singleQubitGates) {
     const auto& change =
-        LogicTerm::ite(vars.gS[pos][gateToIndex(gate)][qubit],
+        LogicTerm::ite(vars.gS[pos][singleQubitGates.gateToIndex(gate)][qubit],
                        tvars->singleQubitRChange(pos, qubit, gate),
                        LogicTerm(0, static_cast<std::int16_t>(S)));
     splitXorR(change, pos);
-  }
-}
-
-void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
-    const std::size_t pos) {
-  const auto& twoQubitGates = vars.gC[pos];
-  for (std::size_t ctrl = 0U; ctrl < N; ++ctrl) {
-    for (std::size_t trgt = 0U; trgt < N; ++trgt) {
-      if (ctrl == trgt) {
-        continue;
-      }
-      const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
-      lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
-
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
-    }
   }
 }
 
@@ -95,11 +100,17 @@ LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->z[pos + 1][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 1][trgt] == zTrgt);
 
+  return changes;
+}
+
+[[nodiscard]] logicbase::LogicTerm
+MultiGateEncoder::createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                                            std::size_t trgt) {
   const auto& newRChanges = LogicTerm::ite(
       vars.gC[pos][ctrl][trgt], tvars->twoQubitRChange(pos, ctrl, trgt),
       LogicTerm(0, static_cast<std::int16_t>(S)));
   splitXorR(newRChanges, pos);
-  return changes;
+  return logicbase::LogicTerm(true);
 }
 
 void MultiGateEncoder::assertSingleQubitGateOrderConstraints(
@@ -116,14 +127,16 @@ void MultiGateEncoder::assertSingleQubitGateOrderConstraints(
   // once no gate is applied to the considered qubit, no single qubit gate can
   // be applied to it in the next time step.
   auto noSingleQubitGate = LogicTerm(true);
-  for (const auto gate : SINGLE_QUBIT_GATES) {
+  for (const auto gate : singleQubitGates) {
     if (gate == qc::OpType::None) {
       continue;
     }
-    noSingleQubitGate = noSingleQubitGate && !gSNext[gateToIndex(gate)][qubit];
+    noSingleQubitGate =
+        noSingleQubitGate && !gSNext[singleQubitGates.gateToIndex(gate)][qubit];
   }
   lb->assertFormula(LogicTerm::implies(
-      gSNow[gateToIndex(qc::OpType::None)][qubit], noSingleQubitGate));
+      gSNow[singleQubitGates.gateToIndex(qc::OpType::None)][qubit],
+      noSingleQubitGate));
 }
 
 void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
@@ -147,16 +160,16 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   // hadamards on both qubits => no CNOT on them in the next time step (CNOT can
   // be conjugated with Hadamards) No Combination of Paulis on both Qubits
   // before a CNOT These gates can be just pushed through to the other side
-  constexpr auto noneIndex = gateToIndex(qc::OpType::None);
-  const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
-  const auto     noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
+  auto       noneIndex     = singleQubitGates.gateToIndex(qc::OpType::None);
+  const auto noGate        = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
 
-  constexpr auto hIndex = gateToIndex(qc::OpType::H);
-  constexpr auto xIndex = gateToIndex(qc::OpType::X);
-  constexpr auto zIndex = gateToIndex(qc::OpType::Z);
-  constexpr auto yIndex = gateToIndex(qc::OpType::Y);
-  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
-  const auto     gateBeforeCtrl =
+  auto       hIndex = singleQubitGates.gateToIndex(qc::OpType::H);
+  auto       xIndex = singleQubitGates.gateToIndex(qc::OpType::X);
+  auto       zIndex = singleQubitGates.gateToIndex(qc::OpType::Z);
+  auto       yIndex = singleQubitGates.gateToIndex(qc::OpType::Y);
+  const auto hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+  const auto gateBeforeCtrl =
       gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] || gSNow[yIndex][ctrl];
   const auto gateBeforeTarget =
       gSNow[zIndex][trgt] || gSNow[xIndex][trgt] || gSNow[yIndex][ctrl];

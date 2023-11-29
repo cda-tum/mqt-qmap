@@ -9,6 +9,8 @@
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "utils/logging.hpp"
 
+#include <cstddef>
+
 namespace cs::encoding {
 
 using namespace logicbase;
@@ -37,13 +39,20 @@ void ObjectiveEncoder::optimizeDepth() const {
   DEBUG() << "Optimizing depth";
   auto* optimizer = dynamic_cast<LogicBlockOptimizer*>(lb.get());
 
-  constexpr auto noGateIndex = GateEncoder::gateToIndex(qc::OpType::None);
+  auto noGateIndex = singleQubitGates.gateToIndex(qc::OpType::None);
   for (std::size_t t = 0U; t < T; ++t) {
     const auto& gS     = gvars->gS[t];
     auto        noGate = LogicTerm(true);
     for (std::size_t q = 0U; q < N; ++q) {
       noGate = noGate && gS[noGateIndex][q];
+      for (std::size_t tar = 0U; tar < N; ++tar) {
+        if (tar == q) {
+          continue;
+        }
+        noGate = noGate && !gvars->gC[t][q][tar];
+      }
     }
+
     optimizer->weightedTerm(!noGate, 1);
   }
   optimizer->makeMinimize();

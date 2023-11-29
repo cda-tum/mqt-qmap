@@ -5,6 +5,7 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
+#include "cliffordsynthesis/Tableau.hpp"
 #include "utils/logging.hpp"
 
 namespace cs::encoding {
@@ -17,7 +18,9 @@ void TableauEncoder::createTableauVariables() {
   DEBUG() << "Creating tableau variables.";
   vars.x.reserve(T);
   vars.z.reserve(T);
-  vars.r.reserve(T);
+  if (!ignoreR) {
+    vars.r.reserve(T);
+  }
   for (std::size_t t = 0U; t <= T; ++t) {
     auto& x = vars.x.emplace_back();
     auto& z = vars.z.emplace_back();
@@ -33,9 +36,11 @@ void TableauEncoder::createTableauVariables() {
       TRACE() << "Creating variable " << zName;
       z.emplace_back(lb->makeVariable(zName, CType::BITVECTOR, n));
     }
-    const std::string rName = "r_" + std::to_string(t);
-    TRACE() << "Creating variable " << rName;
-    vars.r.emplace_back(lb->makeVariable(rName, CType::BITVECTOR, n));
+    if (!ignoreR) {
+      const std::string rName = "r_" + std::to_string(t);
+      TRACE() << "Creating variable " << rName;
+      vars.r.emplace_back(lb->makeVariable(rName, CType::BITVECTOR, n));
+    }
   }
 }
 
@@ -53,13 +58,15 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
     lb->assertFormula(vars.z[t][a] == LogicTerm(targetZ, n));
   }
 
-  const auto targetR = tableau.getBVFrom(2U * N);
-  lb->assertFormula(vars.r[t] == LogicTerm(targetR, n));
+  if (!ignoreR) {
+    const auto targetR = tableau.getBVFrom(2U * N);
+    lb->assertFormula(vars.r[t] == LogicTerm(targetR, n));
+  }
 }
 
-void TableauEncoder::extractTableauFromModel(Results&          results,
-                                             const std::size_t t,
-                                             Model&            model) const {
+Tableau TableauEncoder::extractTableauFromModel(Results&          results,
+                                                const std::size_t t,
+                                                Model&            model) const {
   Tableau tableau(N, S > N);
   for (std::size_t i = 0; i < N; ++i) {
     const auto bvx = model.getBitvectorValue(vars.x[t][i], lb.get());
@@ -67,10 +74,12 @@ void TableauEncoder::extractTableauFromModel(Results&          results,
     const auto bvz = model.getBitvectorValue(vars.z[t][i], lb.get());
     tableau.populateTableauFrom(bvz, S, i + N);
   }
-  const auto bvr = model.getBitvectorValue(vars.r[t], lb.get());
-  tableau.populateTableauFrom(bvr, S, 2 * N);
-
+  if (!ignoreR) {
+    const auto bvr = model.getBitvectorValue(vars.r[t], lb.get());
+    tableau.populateTableauFrom(bvr, S, 2 * N);
+  }
   results.setResultTableau(tableau);
+  return tableau;
 }
 
 LogicTerm

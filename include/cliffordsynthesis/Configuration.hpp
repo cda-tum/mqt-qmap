@@ -5,13 +5,16 @@
 
 #pragma once
 
+#include "GateSet.hpp"
 #include "TargetMetric.hpp"
 #include "nlohmann/json.hpp"
+#include "operations/OpType.hpp"
 
 #include <plog/Log.h>
 #include <thread>
 #include <unordered_map>
 #include <variant>
+#include <vector>
 
 namespace cs {
 
@@ -48,6 +51,12 @@ struct Configuration {
   std::size_t splitSize         = 5U;
   std::size_t nThreadsHeuristic = std::thread::hardware_concurrency();
 
+  GateSet gateSet = {qc::OpType::None, qc::OpType::S, qc::OpType::Sdg,
+                     qc::OpType::H,    qc::OpType::X, qc::OpType::Y,
+                     qc::OpType::Z};
+
+  bool delayPaulis = false;
+
   [[nodiscard]] nlohmann::json json() const {
     nlohmann::json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
@@ -66,6 +75,8 @@ struct Configuration {
     j["heuristic"]           = heuristic;
     j["split_size"]          = splitSize;
     j["n_threads_heuristic"] = nThreadsHeuristic;
+    j["gate_set"]            = gateSet.toString();
+    j["delay_paulis"]        = delayPaulis;
     if (!solverParameters.empty()) {
       nlohmann::json solverParametersJson;
       for (const auto& entry : solverParameters) {

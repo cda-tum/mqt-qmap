@@ -64,17 +64,22 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SATEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SingleGateEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/TableauEncoder.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/PhaseCorrectionEncoder.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
     ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
     ${PROJECT_SOURCE_DIR}/include/utils.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/GateSet.hpp
+    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Utils.hpp
     cliffordsynthesis/encoding/GateEncoder.cpp
     cliffordsynthesis/encoding/MultiGateEncoder.cpp
     cliffordsynthesis/encoding/ObjectiveEncoder.cpp
     cliffordsynthesis/encoding/SATEncoder.cpp
     cliffordsynthesis/encoding/SingleGateEncoder.cpp
     cliffordsynthesis/encoding/TableauEncoder.cpp
+    cliffordsynthesis/encoding/PhaseCorrectionEncoder.cpp
     cliffordsynthesis/Tableau.cpp
+    cliffordsynthesis/Utils.cpp
     utils.cpp)
 
   add_internal_library(${lib} ${srcfile})

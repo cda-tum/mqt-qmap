@@ -92,8 +92,8 @@ void Architecture::loadProperties(const std::string& filename) {
 }
 
 void Architecture::loadProperties(std::istream&& is) {
-  static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
-                                          "rz", "sx", "x"};
+  static const auto singleQubitGates = {"id", "u1", "u2", "u3",
+                                        "rz", "sx", "x"};
 
   properties.clear();
 
@@ -115,7 +115,7 @@ void Architecture::loadProperties(std::istream&& is) {
     properties.qubitFrequency.set(qubitNumber, std::stod(data.at(3U)));
     properties.readoutErrorRate.set(qubitNumber, std::stod(data.at(4U)));
     // csv file reports average single qubit fidelities
-    for (const auto& operation : SINGLE_QUBIT_GATES) {
+    for (const auto& operation : singleQubitGates) {
       properties.setSingleQubitErrorRate(qubitNumber, operation,
                                          std::stod(data.at(5)));
     }

@@ -57,6 +57,10 @@ public:
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
 
     SolverParameterMap solverParameters = {};
+
+    GateSet gateSet = {};
+
+    bool ignoreRChanges = false;
   };
 
   SATEncoder() = default;
@@ -86,6 +90,8 @@ protected:
   std::size_t N{}; // NOLINT (readability-identifier-naming)
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
+  // number of rows in the tableau S
+  std::size_t S{}; // NOLINT (readability-identifier-naming)
 };
 
 } // namespace cs::encoding

@@ -5,13 +5,21 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "LogicBlock/LogicBlock.hpp"
+#include "LogicTerm/LogicTerm.hpp"
+#include "QuantumComputation.hpp"
+#include "cliffordsynthesis/GateSet.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "operations/OpType.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace cs::encoding {
 
@@ -20,9 +28,20 @@ public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
-              std::shared_ptr<logicbase::LogicBlock> logicBlock)
+              std::shared_ptr<logicbase::LogicBlock> logicBlock,
+              GateSet singleQGates, Tableau initialTableau,
+              bool ignorePhase = false)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
-        lb(std::move(logicBlock)) {}
+        lb(std::move(logicBlock)), singleQubitGates(std::move(singleQGates)),
+        init(std::move(initialTableau)), ignoreRChanges(ignorePhase) {
+    if (!singleQubitGates.isValidGateSet()) {
+      throw qc::QFRException("Invalid gate set");
+    }
+    if (!singleQubitGates.isComplete()) {
+      std::cerr << "Warning: The gate set " << singleQubitGates.toString()
+                << "is not complete. The synthesis might fail." << std::endl;
+    }
+  }
   virtual ~GateEncoder() = default;
 
   struct Variables {
@@ -52,53 +71,10 @@ public:
   virtual void encodeSymmetryBreakingConstraints();
 
   // extracting the circuit
-  void extractCircuitFromModel(Results& res, logicbase::Model& model);
+  qc::QuantumComputation extractCircuitFromModel(Results&          res,
+                                                 logicbase::Model& model);
 
   [[nodiscard]] auto* getVariables() { return &vars; }
-
-  static constexpr std::array<qc::OpType, 7> SINGLE_QUBIT_GATES = {
-      qc::OpType::None, qc::OpType::X, qc::OpType::Y,  qc::OpType::Z,
-      qc::OpType::H,    qc::OpType::S, qc::OpType::Sdg};
-
-  [[nodiscard]] static constexpr std::size_t
-  gateToIndex(const qc::OpType type) {
-    for (std::size_t i = 0; i < SINGLE_QUBIT_GATES.size(); ++i) {
-      if (SINGLE_QUBIT_GATES.at(i) == type) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
-  template <qc::OpType Gate>
-  [[nodiscard]] static constexpr bool containsGate() {
-    for (const auto& g : // NOLINT(readability-use-anyofallof)
-         SINGLE_QUBIT_GATES) {
-      if (g == Gate) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  [[nodiscard]] static constexpr bool containsX() {
-    return containsGate<qc::OpType::X>();
-  }
-  [[nodiscard]] static constexpr bool containsY() {
-    return containsGate<qc::OpType::Y>();
-  }
-  [[nodiscard]] static constexpr bool containsZ() {
-    return containsGate<qc::OpType::Z>();
-  }
-  [[nodiscard]] static constexpr bool containsH() {
-    return containsGate<qc::OpType::H>();
-  }
-  [[nodiscard]] static constexpr bool containsS() {
-    return containsGate<qc::OpType::S>();
-  }
-  [[nodiscard]] static constexpr bool containsSdag() {
-    return containsGate<qc::OpType::Sdg>();
-  }
 
 protected:
   // number of qubits N
@@ -117,19 +93,27 @@ protected:
   // the logic block to use
   std::shared_ptr<logicbase::LogicBlock> lb{};
 
+  // the gates that are used
+  GateSet singleQubitGates;
+
+  Tableau init{};
+  bool    ignoreRChanges{false};
+
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
   using GateToTransformation =
       std::function<logicbase::LogicTerm(std::size_t, std::size_t, qc::OpType)>;
 
   void assertExactlyOne(const logicbase::LogicVector& variables) const;
+  [[nodiscard]] logicbase::LogicTerm
+  createExactlyOne(const logicbase::LogicVector& variables) const;
 
   virtual void assertConsistency() const = 0;
 
-  virtual void assertGateConstraints()                           = 0;
-  virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
-  virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
-  [[nodiscard]] static std::vector<TransformationFamily>
+  virtual void assertGateConstraints() = 0;
+  void         assertSingleQubitGateConstraints(std::size_t pos);
+  void         assertTwoQubitGateConstraints(std::size_t pos);
+  [[nodiscard]] std::vector<TransformationFamily>
        collectGateTransformations(std::size_t pos, std::size_t qubit,
                                   const GateToTransformation& gateToTransformation);
   void assertGatesImplyTransform(
@@ -141,14 +125,21 @@ protected:
   [[nodiscard]] virtual logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) = 0;
+  [[nodiscard]] virtual logicbase::LogicTerm
+  createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                            std::size_t trgt) = 0;
 
   void extractSingleQubitGatesFromModel(std::size_t             pos,
                                         logicbase::Model&       model,
                                         qc::QuantumComputation& qc,
-                                        std::size_t& nSingleQubitGates);
+                                        std::size_t&       nSingleQubitGates,
+                                        std::vector<bool>& hasGate,
+                                        Tableau&           intermediateTableau);
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
-                                     std::size_t&            nTwoQubitGates);
+                                     std::size_t&            nTwoQubitGates,
+                                     std::vector<bool>&      hasGate,
+                                     Tableau& intermediateTableau);
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);

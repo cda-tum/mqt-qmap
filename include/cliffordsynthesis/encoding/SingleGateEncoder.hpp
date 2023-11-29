@@ -20,12 +20,13 @@ public:
 protected:
   void assertConsistency() const override;
   void assertGateConstraints() override;
-  void assertSingleQubitGateConstraints(std::size_t pos) override;
-  void assertTwoQubitGateConstraints(std::size_t pos) override;
   void assertNoGateNoChangeConstraint(std::size_t pos);
   [[nodiscard]] logicbase::LogicTerm
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) override;
+  [[nodiscard]] logicbase::LogicTerm
+  createTwoQubitRConstraint(std::size_t pos, std::size_t ctrl,
+                            std::size_t trgt) override;
 
   [[nodiscard]] logicbase::LogicTerm createNoChangeOnQubit(std::size_t pos,
                                                            std::size_t q);
