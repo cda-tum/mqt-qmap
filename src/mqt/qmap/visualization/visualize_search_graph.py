@@ -173,7 +173,7 @@ def _layout_search_graph(
             search_graph, root, origin=(0, 0), scalex=60, scaley=-1
         )
     else:
-        pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])  # t
+        pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])
 
     if not tapered_layer_heights:
         return pos

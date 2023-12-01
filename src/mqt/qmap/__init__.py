@@ -41,8 +41,10 @@ from .pyqmap import (
     Verbosity,
 )
 from .subarchitectures import SubarchitectureOrder
+from . import visualization
 
 __all__ = [
+    "visualization",
     "compile",
     "Method",
     "InitialLayout",
