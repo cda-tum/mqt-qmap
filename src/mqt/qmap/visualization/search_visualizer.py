@@ -175,7 +175,7 @@ class SearchVisualizer:
             search_progression_speed (float): Speed of the search progression animation. Defaults to 2.
             plotly_settings (MutableMapping[str, MutableMapping[str, any]] | None): Plotly configuration dictionaries to be passed through. Defaults to None.
         .. code-block:: text
-        
+
             {
                 "layout": settings for plotly.graph_objects.Layout (of subplots figure)
                 "arrows": settings for plotly.graph_objects.layout.Annotation
