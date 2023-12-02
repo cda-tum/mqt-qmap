@@ -75,6 +75,7 @@ class CircuitInfo:
     direction_reverse: int
     gates: int
     layers: int
+    total_fidelity: float
     name: str
     qubits: int
     single_qubit_gates: int
