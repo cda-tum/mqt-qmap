@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-from mqt.qmap.visualization.visualize_search_graph import SearchNode, visualize_search_graph
+from .visualize_search_graph import SearchNode, visualize_search_graph
 
 if TYPE_CHECKING:
     from ipywidgets import Widget
