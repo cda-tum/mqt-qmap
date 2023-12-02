@@ -42,6 +42,11 @@ struct Configuration {
   // initial layout to use for heuristic approach
   InitialLayout initialLayout = InitialLayout::None;
 
+  // controls the number of iterative bidirectional routing passes, i.e. after
+  // an initial layout is found, the circuit is routed multiple times back and 
+  // forth (using settings optimized for time-efficiency) without inserting any 
+  // swaps, to improve the initial layout, only after which the actual routing
+  // is performed
   std::size_t iterativeBidirectionalRouting = 0;
 
   // lookahead scheme settings
