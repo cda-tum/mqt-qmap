@@ -15,6 +15,7 @@
 
 #include <set>
 
+// NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 struct Configuration {
   Configuration() = default;
 
