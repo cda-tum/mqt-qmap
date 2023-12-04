@@ -107,6 +107,7 @@ repos:
     rev: v4.0.0-alpha.3
     hooks:
       - id: prettier
+        entry: env PRETTIER_LEGACY_CLI=1 prettier # temporary fix for https://github.com/prettier/prettier/issues/15742
         types_or: [yaml, markdown, html, css, scss, javascript, json]
 
   # Catch common capitalization mistakes
