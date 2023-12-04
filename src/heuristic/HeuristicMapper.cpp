@@ -591,8 +591,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       if (config.dataLoggingEnabled()) {
         qc::CompoundOperation compOp(architecture->getNqubits());
         for (const auto& gate : layers.at(layer)) {
-          std::unique_ptr<qc::Operation> op = gate.op->clone();
-          compOp.emplace_back(op);
+          compOp.emplace_back(gate.op->clone());
         }
 
         dataLogger->logFinalizeLayer(layer, compOp, singleQubitMultiplicity,
@@ -662,8 +661,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   if (config.dataLoggingEnabled()) {
     qc::CompoundOperation compOp(architecture->getNqubits());
     for (const auto& gate : layers.at(layer)) {
-      std::unique_ptr<qc::Operation> op = gate.op->clone();
-      compOp.emplace_back(op);
+      compOp.emplace_back(gate.op->clone());
     }
 
     dataLogger->logFinalizeLayer(
