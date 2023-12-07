@@ -48,6 +48,11 @@ struct Configuration {
   // optimized for time-efficiency) without actually inserting any swaps;
   // this gradually improves the initial layout; after all passes are done,
   // one final full routing pass is performed
+  //
+  // G. Li, Y. Ding, and Y. Xie, "Tackling the qubit mapping problem for 
+  // NISQ-era quantum devices", Proc. 24th Int. Conf. on Architectural Support 
+  // for Program. Languages and Oper. Syst. (ASPLOS)
+  // https://arxiv.org/abs/1809.02573
   bool        iterativeBidirectionalRouting       = false;
   std::size_t iterativeBidirectionalRoutingPasses = 0;
 
