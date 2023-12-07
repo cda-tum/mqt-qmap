@@ -49,7 +49,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
         << std::endl;
     config.teleportationQubits = 0;
   }
-  if (config.splitLayerAfterExpandedNodes > 0 &&
+  if (config.automaticLayerSplits &&
       (config.layering == Layering::OddGates ||
        config.layering == Layering::QubitTriangle)) {
     std::cerr << "Layer splitting cannot be used with odd gates or qubit "
@@ -57,7 +57,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
                  "non-disjoint gate sets! Performing mapping without layer "
                  "splitting."
               << std::endl;
-    config.splitLayerAfterExpandedNodes = 0;
+    config.automaticLayerSplits = false;
   }
   const auto start = std::chrono::steady_clock::now();
   initResults();
@@ -77,7 +77,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
     printQubits(std::clog);
   }
 
-  for (std::size_t i = 0; i < config.iterativeBidirectionalRouting; ++i) {
+  for (std::size_t i = 0; i < config.iterativeBidirectionalRoutingPasses; ++i) {
     if (config.verbose) {
       std::clog << std::endl
                 << "Iterative bidirectional routing (forward pass " << i
@@ -585,8 +585,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
 
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
-    if (splittable && config.splitLayerAfterExpandedNodes > 0 &&
-        expandedNodes >= config.splitLayerAfterExpandedNodes) {
+    if (splittable && config.automaticLayerSplits &&
+        expandedNodes >= config.automaticLayerSplitsNodeLimit) {
       if (config.dataLoggingEnabled()) {
         qc::CompoundOperation compOp(architecture->getNqubits());
         for (const auto& gate : layers.at(layer)) {

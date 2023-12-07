@@ -43,12 +43,13 @@ struct Configuration {
   // initial layout to use for heuristic approach
   InitialLayout initialLayout = InitialLayout::Dynamic;
 
-  // controls the number of iterative bidirectional routing passes, i.e. after
-  // an initial layout is found, the circuit is routed multiple times back and
-  // forth (using settings optimized for time-efficiency) without inserting any
-  // swaps, to improve the initial layout, only after which the actual routing
-  // is performed
-  std::size_t iterativeBidirectionalRouting = 0;
+  // iterative bidirectional routing, i.e. after an initial layout is found, 
+  // the circuit is routed multiple times back and forth (using settings 
+  // optimized for time-efficiency) without actually inserting any swaps;
+  // this gradually improves the initial layout; after all passes are done,
+  // one final full routing pass is performed
+  bool iterativeBidirectionalRouting = true;
+  std::size_t iterativeBidirectionalRoutingPasses = 0;
 
   // lookahead scheme settings
   bool        lookahead            = true;
@@ -65,9 +66,12 @@ struct Configuration {
   // timeout merely affects exact mapper
   std::size_t timeout = 3600000; // 60min timeout
 
-  // after how many expanded nodes to split layer in heuristic mapper, 0 to
-  // disable
-  std::size_t splitLayerAfterExpandedNodes = 0;
+  // if layers should be automatically split after a certain number of expanded 
+  // nodes, thereby reducing the search space (but potentially eliminating 
+  // opportunities for cost savings); acts as a control between runtime and 
+  // result quality
+  bool automaticLayerSplits = false;
+  std::size_t automaticLayerSplitsNodeLimit = 5000;
 
   // encoding of at most and exactly one constraints in exact mapper
   Encoding          encoding          = Encoding::Commander;
