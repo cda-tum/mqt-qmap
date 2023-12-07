@@ -22,42 +22,30 @@ void HeuristicMapper::map(const Configuration& configuration) {
     return;
   }
   if (config.considerFidelity && !architecture->isFidelityAvailable()) {
-    std::cerr << "No calibration data available for this architecture! "
-              << "Performing mapping without considering fidelity."
+    std::cerr << "No calibration data available for this architecture!"
               << std::endl;
-    config.considerFidelity = false;
+    return;
   }
   if (config.considerFidelity && config.lookahead) {
     std::cerr << "Lookahead is not yet supported for heuristic mapper using "
-                 "fidelity-aware mapping! Performing mapping without "
-                 "using lookahead."
+                 "fidelity-aware mapping!"
               << std::endl;
-    config.lookahead = false;
+    return;
   }
   if (config.considerFidelity &&
       config.initialLayout == InitialLayout::Dynamic) {
     std::cerr << "Initial layout strategy " << toString(config.initialLayout)
               << " not yet supported for heuristic mapper using fidelity-aware "
-                 "mapping! Mapping aborted."
+                 "mapping!"
               << std::endl;
     return;
   }
   if (config.considerFidelity && config.teleportationQubits > 0) {
     std::cerr
         << "Teleportation is not yet supported for heuristic mapper using "
-           "fidelity-aware mapping! Performing mapping without teleportation."
+           "fidelity-aware mapping!."
         << std::endl;
-    config.teleportationQubits = 0;
-  }
-  if (config.automaticLayerSplits &&
-      (config.layering == Layering::OddGates ||
-       config.layering == Layering::QubitTriangle)) {
-    std::cerr << "Layer splitting cannot be used with odd gates or qubit "
-                 "triangle layering, as it might not conserve gate order for "
-                 "non-disjoint gate sets! Performing mapping without layer "
-                 "splitting."
-              << std::endl;
-    config.automaticLayerSplits = false;
+    return;
   }
   const auto start = std::chrono::steady_clock::now();
   initResults();
