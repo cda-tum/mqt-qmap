@@ -1197,7 +1197,9 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   settings.postMappingOptimizations = false;
   settings.swapOnFirstLayer         = true;
   settings.automaticLayerSplits     = true;
-  settings.automaticLayerSplitsNodeLimit = 1; // force splittings after 1st expanded node until layers are unsplittable
+  settings.automaticLayerSplitsNodeLimit =
+      1; // force splittings after 1st expanded node until layers are
+         // unsplittable
   settings.dataLoggingPath = "test_log/";
   mapper->map(settings);
   mapper->dumpResult("simple_grid_mapped.qasm");
