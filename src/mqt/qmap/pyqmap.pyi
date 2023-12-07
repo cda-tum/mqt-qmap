@@ -76,6 +76,7 @@ class CircuitInfo:
     gates: int
     layers: int
     total_fidelity: float
+    total_log_fidelity: float
     name: str
     qubits: int
     single_qubit_gates: int

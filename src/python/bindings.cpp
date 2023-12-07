@@ -251,6 +251,8 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
       .def_readwrite("total_fidelity",
                      &MappingResults::CircuitInfo::totalFidelity)
+      .def_readwrite("total_log_fidelity",
+                     &MappingResults::CircuitInfo::totalLogFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",
                      &MappingResults::CircuitInfo::directionReverse)
