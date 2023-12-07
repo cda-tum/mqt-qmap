@@ -249,7 +249,6 @@ bool Mapper::isLayerSplittable(std::size_t index) {
                        return activeQubits2QGates.at(index).find(q) ==
                               activeQubits2QGates.at(index).end();
                      });
-  return false;
 }
 
 void Mapper::splitLayer(std::size_t index, Architecture& arch) {
