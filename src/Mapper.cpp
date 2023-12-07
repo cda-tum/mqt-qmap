@@ -272,7 +272,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
 
   // 2Q-gates
   bool even = false;
-  for (auto edge : twoQubitMultiplicity) {
+  for (const auto edge : twoQubitMultiplicity) {
     if (even) {
       twoQubitMultiplicity0.insert(edge);
       activeQubits0.emplace(edge.first.first);
@@ -327,16 +327,16 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   for (auto& gate : layers[index]) {
     if (gate.singleQubit()) {
       if (singleQubitMultiplicity0[gate.target] > 0) {
-        layer0.push_back(gate);
+        layer0.emplace_back(gate);
       } else {
-        layer1.push_back(gate);
+        layer1.emplace_back(gate);
       }
     } else {
       if (activeQubits2QGates0.find(gate.target) !=
           activeQubits2QGates0.end()) {
-        layer0.push_back(gate);
+        layer0.emplace_back(gate);
       } else {
-        layer1.push_back(gate);
+        layer1.emplace_back(gate);
       }
     }
   }

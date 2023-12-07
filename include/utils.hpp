@@ -90,9 +90,9 @@ public:
    * @param removeLastEdge if set to true, the cost for the last swap on any
    * path is removed (i.e. distance is given for moving "next to" qubit)
    */
-  static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
+  static void buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
                          Matrix& distanceTable, const Matrix& edgeWeights,
-                         double reversalCost, bool removeLastEdge);
+                         const double reversalCost, const bool removeLastEdge);
   /**
    * @brief builds a 3d matrix containing the distance tables giving the minimal
    * distances between 2 qubit when upto k edges can be skipped.
@@ -117,8 +117,8 @@ public:
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
-                       std::uint16_t start, const Matrix& edgeWeights,
-                       double reversalCost);
+                       const std::uint16_t start, const Matrix& edgeWeights,
+                       const double reversalCost);
 
   struct NodeComparator {
     bool operator()(const Node* x, const Node* y) {

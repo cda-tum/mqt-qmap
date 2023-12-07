@@ -9,7 +9,7 @@
 
 void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
                           Matrix& distanceTable, const Matrix& edgeWeights,
-                          double reversalCost, bool removeLastEdge) {
+                          const double reversalCost, const bool removeLastEdge) {
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
@@ -46,8 +46,8 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 }
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
-                        std::vector<Node>& nodes, std::uint16_t start,
-                        const Matrix& edgeWeights, double reversalCost) {
+                        std::vector<Node>& nodes, const std::uint16_t start,
+                        const Matrix& edgeWeights, const double reversalCost) {
   std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
