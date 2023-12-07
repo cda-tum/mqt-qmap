@@ -48,7 +48,7 @@ struct Configuration {
   // optimized for time-efficiency) without actually inserting any swaps;
   // this gradually improves the initial layout; after all passes are done,
   // one final full routing pass is performed
-  bool        iterativeBidirectionalRouting       = true;
+  bool        iterativeBidirectionalRouting       = false;
   std::size_t iterativeBidirectionalRoutingPasses = 0;
 
   // lookahead scheme settings
@@ -70,7 +70,7 @@ struct Configuration {
   // nodes, thereby reducing the search space (but potentially eliminating
   // opportunities for cost savings); acts as a control between runtime and
   // result quality
-  bool        automaticLayerSplits          = false;
+  bool        automaticLayerSplits          = true;
   std::size_t automaticLayerSplitsNodeLimit = 5000;
 
   // encoding of at most and exactly one constraints in exact mapper

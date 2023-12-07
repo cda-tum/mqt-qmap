@@ -847,6 +847,7 @@ TEST_P(HeuristicTestFidelity, Identity) {
   settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Identity;
   settings.considerFidelity = true;
+  settings.lookahead        = false;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
   mapper->printResult(std::cout);
@@ -858,6 +859,7 @@ TEST_P(HeuristicTestFidelity, Static) {
   settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
+  settings.lookahead        = false;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
   mapper->printResult(std::cout);
@@ -869,6 +871,7 @@ TEST_P(HeuristicTestFidelity, NoFidelity) {
   settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
+  settings.lookahead        = false;
   nonFidelityMapper->map(settings);
   nonFidelityMapper->dumpResult(GetParam() +
                                 "_heuristic_london_nofidelity.qasm");
@@ -932,6 +935,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
+  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1017,6 +1021,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
+  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1079,6 +1084,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
+  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("single_qubits_compete.qasm");
   mapper->printResult(std::cout);
@@ -1196,6 +1202,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.swapOnFirstLayer         = true;
+  settings.lookahead                = false;
   settings.automaticLayerSplits     = true;
   settings.automaticLayerSplitsNodeLimit =
       1; // force splittings after 1st expanded node until layers are
