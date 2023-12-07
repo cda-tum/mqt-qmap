@@ -38,10 +38,10 @@ struct Configuration {
   std::set<std::uint16_t> subgraph{};
 
   // how to cluster the gates into layers
-  Layering layering = Layering::None;
+  Layering layering = Layering::IndividualGates;
 
   // initial layout to use for heuristic approach
-  InitialLayout initialLayout = InitialLayout::None;
+  InitialLayout initialLayout = InitialLayout::Dynamic;
 
   // controls the number of iterative bidirectional routing passes, i.e. after
   // an initial layout is found, the circuit is routed multiple times back and

@@ -210,7 +210,6 @@ void HeuristicMapper::createInitialMapping() {
     staticInitialMapping();
     break;
   case InitialLayout::Dynamic:
-  case InitialLayout::None:
     // nothing to be done here
     break;
 

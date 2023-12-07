@@ -125,7 +125,6 @@ void Mapper::createLayers() {
     // https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
     switch (config.layering) {
     case Layering::IndividualGates:
-    case Layering::None:
       // each gate is put in a new layer
       layers.emplace_back();
       if (control.has_value()) {

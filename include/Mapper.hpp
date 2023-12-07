@@ -148,7 +148,7 @@ protected:
    * methods of layering described in
    * https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
    *
-   * Layering::IndividualGates/Layering::None -> each gate on separate layer
+   * Layering::IndividualGates -> each gate on separate layer
    * Layering::DisjointQubits -> each layer contains gates only acting on a
    * disjoint set of qubits
    * Layering::OddGates -> always 2 gates per layer

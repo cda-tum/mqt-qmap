@@ -361,14 +361,12 @@ TEST_P(ExactTest, toStringMethods) {
   EXPECT_EQ(toString(InitialLayout::Identity), "identity");
   EXPECT_EQ(toString(InitialLayout::Static), "static");
   EXPECT_EQ(toString(InitialLayout::Dynamic), "dynamic");
-  EXPECT_EQ(toString(InitialLayout::None), "none");
 
   EXPECT_EQ(toString(Layering::IndividualGates), "individual_gates");
   EXPECT_EQ(toString(Layering::DisjointQubits), "disjoint_qubits");
   EXPECT_EQ(toString(Layering::Disjoint2qBlocks), "disjoint_2q_blocks");
   EXPECT_EQ(toString(Layering::OddGates), "odd_gates");
   EXPECT_EQ(toString(Layering::QubitTriangle), "qubit_triangle");
-  EXPECT_EQ(toString(Layering::None), "none");
 
   EXPECT_EQ(toString(Encoding::Naive), "naive");
   EXPECT_EQ(toString(Encoding::Commander), "commander");

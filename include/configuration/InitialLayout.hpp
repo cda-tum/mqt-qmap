@@ -10,7 +10,7 @@
 /// Identity: q_i -> Q_i
 /// Static: first layer is mapped q_c -> Q_c and q_t -> Q_t
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
-enum class InitialLayout { None, Identity, Static, Dynamic };
+enum class InitialLayout { Identity, Static, Dynamic };
 
 [[maybe_unused]] static inline std::string
 toString(const InitialLayout strategy) {
@@ -21,24 +21,19 @@ toString(const InitialLayout strategy) {
     return "static";
   case InitialLayout::Dynamic:
     return "dynamic";
-  case InitialLayout::None:
-    return "none";
   }
   return " ";
 }
 
 [[maybe_unused]] static InitialLayout
 initialLayoutFromString(const std::string& initialLayout) {
-  if (initialLayout == "none" || initialLayout == "0") {
-    return InitialLayout::None;
-  }
-  if (initialLayout == "identity" || initialLayout == "1") {
+  if (initialLayout == "identity" || initialLayout == "0") {
     return InitialLayout::Identity;
   }
-  if (initialLayout == "static" || initialLayout == "2") {
+  if (initialLayout == "static" || initialLayout == "1") {
     return InitialLayout::Static;
   }
-  if (initialLayout == "dynamic" || initialLayout == "3") {
+  if (initialLayout == "dynamic" || initialLayout == "2") {
     return InitialLayout::Dynamic;
   }
   throw std::invalid_argument("Invalid initial layout value: " + initialLayout);
