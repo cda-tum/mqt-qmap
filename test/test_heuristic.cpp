@@ -28,20 +28,19 @@ TEST(Functionality, NodeCostCalculation) {
       {Exchange(0, 1, qc::OpType::Teleportation)},
       {Exchange(1, 2, qc::OpType::SWAP)}};
 
-  HeuristicMapper::Node node(0, 0, qubits, locations, swaps, 5.);
-  EXPECT_NEAR(node.costFixed, 5., tolerance);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits,
-                           true, false);
-  EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits,
-                           false, false);
+  HeuristicMapper::Node node(0, 0, qubits, locations, swaps, 5., 0, false, false);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
               tolerance);
-  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity, false);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits,
-                           true, false);
+  
+  node = HeuristicMapper::Node(0, 0, qubits, locations, swaps, 5., 0, false, true);
+  EXPECT_NEAR(node.costFixed, 5., tolerance);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
+  EXPECT_NEAR(node.costHeur,
+              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
+  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity);
+  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
               tolerance);
@@ -57,7 +56,7 @@ TEST(Functionality, NodeCostCalculation) {
               tolerance);
   EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
               tolerance);
-  node.recalculateFixedCost(arch, empty1Mult, multiplicity, false);
+  node.recalculateFixedCost(arch, empty1Mult, multiplicity);
   EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
@@ -217,10 +216,10 @@ TEST(Functionality, HeuristicAdmissibility) {
   std::stack<std::size_t> permStack{};
 
   auto initNode =
-      HeuristicMapper::Node(0, 0, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5});
-  initNode.recalculateFixedCost(architecture, empty1Mult, multiplicity, false);
+      HeuristicMapper::Node(0, 0, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}, {}, 0., 0, false, true);
+  initNode.recalculateFixedCost(architecture, empty1Mult, multiplicity);
   initNode.updateHeuristicCost(architecture, empty1Mult, multiplicity,
-                               consideredQubits, true, false);
+                               consideredQubits);
   nodeStack.emplace_back(initNode);
   permStack.emplace(perms.size());
 
@@ -240,10 +239,10 @@ TEST(Functionality, HeuristicAdmissibility) {
     --permStack.top();
     const auto perm = perms[permStack.top()];
     auto newNode    = HeuristicMapper::Node(1, 0, node.qubits, node.locations,
-                                            node.swaps, node.costFixed);
-    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity, false);
+                                            node.swaps, node.costFixed, node.depth + 1, false, true);
+    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity);
     newNode.updateHeuristicCost(architecture, empty1Mult, multiplicity,
-                                consideredQubits, true, false);
+                                consideredQubits);
     nodeStack.emplace_back(newNode);
     permStack.emplace(perms.size());
   }

@@ -545,7 +545,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       singleQubitMultiplicities.at(layer);
   const TwoQubitMultiplicity& twoQubitMultiplicity =
       twoQubitMultiplicities.at(layer);
-  Node node(nextNodeId++);
+  Node node(nextNodeId++, considerFidelity, config.admissibleHeuristic);
   Node bestDoneNode(0);
   bool done = false;
 
@@ -554,10 +554,9 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   node.locations = locations;
   node.qubits    = qubits;
   node.recalculateFixedCost(*architecture, singleQubitMultiplicity,
-                            twoQubitMultiplicity, config.considerFidelity);
+                            twoQubitMultiplicity);
   node.updateHeuristicCost(*architecture, singleQubitMultiplicity,
-                           twoQubitMultiplicity, consideredQubits,
-                           config.admissibleHeuristic, config.considerFidelity);
+                           twoQubitMultiplicity, consideredQubits);
 
   if (config.dataLoggingEnabled()) {
     dataLogger->logSearchNode(layer, node.id, node.parent, node.costFixed,
@@ -747,21 +746,19 @@ void HeuristicMapper::expandNodeAddOneSwap(
   const auto& config = results.config;
 
   Node newNode = Node(nextNodeId++, node.id, node.qubits, node.locations,
-                      node.swaps, node.costFixed, node.depth + 1);
+                      node.swaps, node.costFixed, node.depth + 1, node.considerFidelity, node.admissibleHeuristic);
 
   if (architecture->isEdgeConnected(swap) ||
       architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
     newNode.applySWAP(swap, *architecture, singleQubitMultiplicities.at(layer),
-                      twoQubitMultiplicities.at(layer),
-                      config.considerFidelity);
+                      twoQubitMultiplicities.at(layer));
   } else {
     newNode.applyTeleportation(swap, *architecture);
   }
 
   newNode.updateHeuristicCost(
       *architecture, singleQubitMultiplicities.at(layer),
-      twoQubitMultiplicities.at(layer), consideredQubits,
-      results.config.admissibleHeuristic, results.config.considerFidelity);
+      twoQubitMultiplicities.at(layer), consideredQubits);
 
   // calculate heuristics for the cost of the following layers
   if (config.lookahead) {
@@ -841,8 +838,7 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
 void HeuristicMapper::Node::applySWAP(
     const Edge& swap, Architecture& arch,
     const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity,
-    bool                           considerFidelity) {
+    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
   ++nswaps;
   swaps.emplace_back();
   const auto q1 = qubits.at(swap.first);
@@ -993,8 +989,7 @@ void HeuristicMapper::Node::applyTeleportation(const Edge&   swap,
 void HeuristicMapper::Node::recalculateFixedCost(
     const Architecture&            arch,
     const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity,
-    bool                           considerFidelity) {
+    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
   costFixed = 0;
   if (considerFidelity) {
     // adding costs of single qubit gates
@@ -1065,8 +1060,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
     const Architecture&                      arch,
     const SingleQubitMultiplicity&           singleQubitGateMultiplicity,
     const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
-    const std::unordered_set<std::uint16_t>& consideredQubits,
-    bool admissibleHeuristic, bool considerFidelity) {
+    const std::unordered_set<std::uint16_t>& consideredQubits) {
   costHeur = 0.;
   done     = true;
 
