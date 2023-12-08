@@ -746,7 +746,8 @@ void HeuristicMapper::expandNodeAddOneSwap(
   const auto& config = results.config;
 
   Node newNode = Node(nextNodeId++, node.id, node.qubits, node.locations,
-                      node.swaps, node.costFixed, node.depth + 1, node.considerFidelity, node.admissibleHeuristic);
+                      node.swaps, node.costFixed, node.depth + 1,
+                      node.considerFidelity, node.admissibleHeuristic);
 
   if (architecture->isEdgeConnected(swap) ||
       architecture->isEdgeConnected(Edge{swap.second, swap.first})) {

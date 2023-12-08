@@ -62,9 +62,9 @@ public:
      * mapping */
     std::size_t nswaps = 0;
     /** depth in search tree (starting with 0 at the root) */
-    std::size_t depth = 0;
-    std::size_t    parent                   = 0;
-    std::size_t    id;
+    std::size_t depth  = 0;
+    std::size_t parent = 0;
+    std::size_t id;
     /** true if all qubit pairs are mapped next to each other on the
      * architecture */
     bool done = true;
@@ -73,7 +73,10 @@ public:
     /** controls if admissible heuristic should be used */
     bool admissibleHeuristic = true;
 
-    explicit Node(std::size_t nodeId, const bool considerFid = false, const bool admissibleHeur = true) : id(nodeId), considerFidelity(considerFid), admissibleHeuristic(admissibleHeur) {};
+    explicit Node(std::size_t nodeId, const bool considerFid = false,
+                  const bool admissibleHeur = true)
+        : id(nodeId), considerFidelity(considerFid),
+          admissibleHeuristic(admissibleHeur){};
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
@@ -81,7 +84,8 @@ public:
          const double initCostFixed = 0, const std::size_t searchDepth = 0,
          const bool considerFid = false, const bool admissibleHeur = true)
         : costFixed(initCostFixed), depth(searchDepth), parent(parentId),
-          id(nodeId), considerFidelity(considerFid), admissibleHeuristic(admissibleHeur) {
+          id(nodeId), considerFidelity(considerFid),
+          admissibleHeuristic(admissibleHeur) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
