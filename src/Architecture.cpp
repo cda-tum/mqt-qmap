@@ -65,7 +65,7 @@ void Architecture::loadCouplingMap(std::istream&& is) {
 }
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
-  nqubits = nQ;
+  nqubits     = nQ;
   couplingMap = cm;
   properties.clear();
   name = "generic_" + std::to_string(nQ);
@@ -167,7 +167,7 @@ void Architecture::loadProperties(const Properties& props) {
       }
     }
     nqubits = props.getNqubits();
-    name = "generic_" + std::to_string(nqubits);
+    name    = "generic_" + std::to_string(nqubits);
     createDistanceTable();
   }
   properties = props;
