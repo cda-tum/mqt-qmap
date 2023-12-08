@@ -244,13 +244,13 @@ void DataLogger::logMappingResult(MappingResults& result) {
   }
 
   // prepare json data
-  nlohmann::json json = result.json();
-  auto& stats                 = json["statistics"];
-  auto& benchmark              = stats["benchmark"];
+  nlohmann::json json      = result.json();
+  auto&          stats     = json["statistics"];
+  auto&          benchmark = stats["benchmark"];
   for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
-    auto& layerBenchmark     = result.layerHeuristicBenchmark.at(i);
-    auto& jsonLayerBenchmark = benchmark["layers"][i];
-    jsonLayerBenchmark["expanded_nodes"]  = layerBenchmark.expandedNodes;
+    auto& layerBenchmark                 = result.layerHeuristicBenchmark.at(i);
+    auto& jsonLayerBenchmark             = benchmark["layers"][i];
+    jsonLayerBenchmark["expanded_nodes"] = layerBenchmark.expandedNodes;
     jsonLayerBenchmark["generated_nodes"] = layerBenchmark.generatedNodes;
     jsonLayerBenchmark["solution_depth"]  = layerBenchmark.solutionDepth;
     jsonLayerBenchmark["time_per_node"]   = layerBenchmark.timePerNode;

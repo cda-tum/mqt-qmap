@@ -370,9 +370,12 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(configJson["pre_mapping_optimizations"],
             settings.preMappingOptimizations);
   const auto& heuristicSettingsJson = configJson["settings"];
-  EXPECT_EQ(heuristicSettingsJson["admissible_heuristic"], settings.admissibleHeuristic);
-  EXPECT_EQ(heuristicSettingsJson["consider_fidelity"], settings.considerFidelity);
-  EXPECT_EQ(heuristicSettingsJson["initial_layout"], toString(settings.initialLayout));
+  EXPECT_EQ(heuristicSettingsJson["admissible_heuristic"],
+            settings.admissibleHeuristic);
+  EXPECT_EQ(heuristicSettingsJson["consider_fidelity"],
+            settings.considerFidelity);
+  EXPECT_EQ(heuristicSettingsJson["initial_layout"],
+            toString(settings.initialLayout));
   if (settings.lookahead) {
     const auto& lookaheadJson = heuristicSettingsJson["lookahead"];
     EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
@@ -385,7 +388,7 @@ TEST(Functionality, DataLogger) {
     EXPECT_EQ(teleportationJson["seed"], settings.teleportationSeed);
     EXPECT_EQ(teleportationJson["fake"], settings.teleportationFake);
   }
-  
+
   const auto& inCircJson = resultJson["circuit"];
   EXPECT_EQ(inCircJson["cnots"], results.input.cnots);
   EXPECT_EQ(inCircJson["gates"], results.input.gates);
