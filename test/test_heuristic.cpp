@@ -361,30 +361,39 @@ TEST(Functionality, DataLogger) {
   const auto& configJson = resultJson["config"];
   EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
             settings.addMeasurementsToMappedCircuit);
-  EXPECT_EQ(configJson["admissible_heuristic"], settings.admissibleHeuristic);
-  EXPECT_EQ(configJson["consider_fidelity"], settings.considerFidelity);
-  EXPECT_EQ(configJson["initial_layout"], toString(settings.initialLayout));
-  EXPECT_EQ(configJson["layering"], toString(settings.layering));
+  EXPECT_EQ(configJson["debug"], settings.debug);
+  EXPECT_EQ(configJson["verbose"], settings.verbose);
+  EXPECT_EQ(configJson["layering_strategy"], toString(settings.layering));
   EXPECT_EQ(configJson["method"], toString(settings.method));
   EXPECT_EQ(configJson["post_mapping_optimizations"],
             settings.postMappingOptimizations);
   EXPECT_EQ(configJson["pre_mapping_optimizations"],
             settings.preMappingOptimizations);
-  EXPECT_EQ(configJson["teleportation"], settings.useTeleportation);
-  EXPECT_EQ(configJson["timeout"], settings.timeout);
-  const auto& lookaheadJson = configJson["lookahead"];
-  EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
-  EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
-  EXPECT_EQ(lookaheadJson["nr_lookaheads"], settings.nrLookaheads);
-
-  const auto& inCircJson = resultJson["input_circuit"];
+  const auto& heuristicSettingsJson = configJson["settings"];
+  EXPECT_EQ(heuristicSettingsJson["admissible_heuristic"], settings.admissibleHeuristic);
+  EXPECT_EQ(heuristicSettingsJson["consider_fidelity"], settings.considerFidelity);
+  EXPECT_EQ(heuristicSettingsJson["initial_layout"], toString(settings.initialLayout));
+  if (settings.lookahead) {
+    const auto& lookaheadJson = heuristicSettingsJson["lookahead"];
+    EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
+    EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
+    EXPECT_EQ(lookaheadJson["lookaheads"], settings.nrLookaheads);
+  }
+  if (settings.useTeleportation) {
+    const auto& teleportationJson = heuristicSettingsJson["teleportation"];
+    EXPECT_EQ(teleportationJson["qubits"], settings.teleportationQubits);
+    EXPECT_EQ(teleportationJson["seed"], settings.teleportationSeed);
+    EXPECT_EQ(teleportationJson["fake"], settings.teleportationFake);
+  }
+  
+  const auto& inCircJson = resultJson["circuit"];
   EXPECT_EQ(inCircJson["cnots"], results.input.cnots);
   EXPECT_EQ(inCircJson["gates"], results.input.gates);
   EXPECT_EQ(inCircJson["name"], results.input.name);
   EXPECT_EQ(inCircJson["qubits"], results.input.qubits);
   EXPECT_EQ(inCircJson["single_qubit_gates"], results.input.singleQubitGates);
 
-  const auto& outCircJson = resultJson["output_circuit"];
+  const auto& outCircJson = resultJson["mapped_circuit"];
   EXPECT_EQ(outCircJson["cnots"], results.output.cnots);
   EXPECT_EQ(outCircJson["gates"], results.output.gates);
   EXPECT_EQ(outCircJson["name"], results.output.name);
@@ -401,7 +410,6 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(statJson["mapping_time"], results.time);
   EXPECT_EQ(statJson["swaps"], results.output.swaps);
   EXPECT_EQ(statJson["teleportations"], results.output.teleportations);
-  EXPECT_EQ(statJson["timeout"], results.timeout);
   EXPECT_EQ(statJson["total_fidelity"], results.output.totalFidelity);
   EXPECT_EQ(statJson["total_log_fidelity"], results.output.totalLogFidelity);
 

@@ -244,95 +244,20 @@ void DataLogger::logMappingResult(MappingResults& result) {
   }
 
   // prepare json data
-  nlohmann::json json;
-  auto&          circuit        = json["input_circuit"];
-  circuit["name"]               = result.input.name;
-  circuit["qubits"]             = result.input.qubits;
-  circuit["gates"]              = result.input.gates;
-  circuit["single_qubit_gates"] = result.input.singleQubitGates;
-  circuit["cnots"]              = result.input.cnots;
-
-  auto& mappedCirc                 = json["output_circuit"];
-  mappedCirc["name"]               = result.output.name;
-  mappedCirc["qubits"]             = result.output.qubits;
-  mappedCirc["gates"]              = result.output.gates;
-  mappedCirc["single_qubit_gates"] = result.output.singleQubitGates;
-  mappedCirc["cnots"]              = result.output.cnots;
-
-  auto& config                         = json["config"];
-  config["method"]                     = toString(result.config.method);
-  config["pre_mapping_optimizations"]  = result.config.preMappingOptimizations;
-  config["post_mapping_optimizations"] = result.config.postMappingOptimizations;
-  config["add_measurements_to_mapped_circuit"] =
-      result.config.addMeasurementsToMappedCircuit;
-  config["layering"]       = toString(result.config.layering);
-  config["initial_layout"] = toString(result.config.initialLayout);
-  if (result.config.useTeleportation) {
-    auto& teleportation     = config["teleportation"];
-    teleportation["qubits"] = result.config.teleportationQubits;
-    teleportation["seed"]   = result.config.teleportationSeed;
-    teleportation["fake"]   = result.config.teleportationFake;
-  } else {
-    config["teleportation"] = false;
-  }
-  config["timeout"] = result.config.timeout;
-
+  nlohmann::json json = result.json();
   auto& stats                 = json["statistics"];
-  stats["timeout"]            = result.timeout;
-  stats["mapping_time"]       = result.time;
-  stats["layers"]             = result.input.layers;
-  stats["swaps"]              = result.output.swaps;
-  stats["total_fidelity"]     = result.output.totalFidelity;
-  stats["total_log_fidelity"] = result.output.totalLogFidelity;
-  stats["additional_gates"] =
-      static_cast<std::make_signed_t<decltype(result.output.gates)>>(
-          result.output.gates) -
-      static_cast<std::make_signed_t<decltype(result.input.gates)>>(
-          result.input.gates);
-
-  if (result.config.method == Method::Exact) {
-    config["encoding"]           = result.config.encoding;
-    config["commander_grouping"] = result.config.commanderGrouping;
-    config["subgraph"]           = result.config.subgraph;
-    config["use_subsets"]        = result.config.useSubsets;
-
-    stats["direction_reverse"] = result.output.directionReverse;
-    if (result.config.includeWCNF && !result.wcnf.empty()) {
-      stats["WCNF"] = result.wcnf;
-    }
-  } else if (result.config.method == Method::Heuristic) {
-    if (result.config.lookahead) {
-      auto& lookahead            = config["lookahead"];
-      lookahead["nr_lookaheads"] = result.config.nrLookaheads;
-      lookahead["first_factor"]  = result.config.firstLookaheadFactor;
-      lookahead["factor"]        = result.config.lookaheadFactor;
-    } else {
-      config["lookahead"] = false;
-    }
-    config["admissible_heuristic"] = result.config.admissibleHeuristic;
-    config["consider_fidelity"]    = result.config.considerFidelity;
-
-    stats["teleportations"]      = result.output.teleportations;
-    auto& benchmark              = stats["benchmark"];
-    benchmark["expanded_nodes"]  = result.heuristicBenchmark.expandedNodes;
-    benchmark["generated_nodes"] = result.heuristicBenchmark.generatedNodes;
-    benchmark["time_per_node"]   = result.heuristicBenchmark.timePerNode;
-    benchmark["average_branching_factor"] =
-        result.heuristicBenchmark.averageBranchingFactor;
-    benchmark["effective_branching_factor"] =
-        result.heuristicBenchmark.effectiveBranchingFactor;
-    for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
-      auto& layerBenchmark     = result.layerHeuristicBenchmark.at(i);
-      auto& jsonLayerBenchmark = benchmark["layers"][i];
-      jsonLayerBenchmark["expanded_nodes"]  = layerBenchmark.expandedNodes;
-      jsonLayerBenchmark["generated_nodes"] = layerBenchmark.generatedNodes;
-      jsonLayerBenchmark["solution_depth"]  = layerBenchmark.solutionDepth;
-      jsonLayerBenchmark["time_per_node"]   = layerBenchmark.timePerNode;
-      jsonLayerBenchmark["average_branching_factor"] =
-          layerBenchmark.averageBranchingFactor;
-      jsonLayerBenchmark["effective_branching_factor"] =
-          layerBenchmark.effectiveBranchingFactor;
-    }
+  auto& benchmark              = stats["benchmark"];
+  for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
+    auto& layerBenchmark     = result.layerHeuristicBenchmark.at(i);
+    auto& jsonLayerBenchmark = benchmark["layers"][i];
+    jsonLayerBenchmark["expanded_nodes"]  = layerBenchmark.expandedNodes;
+    jsonLayerBenchmark["generated_nodes"] = layerBenchmark.generatedNodes;
+    jsonLayerBenchmark["solution_depth"]  = layerBenchmark.solutionDepth;
+    jsonLayerBenchmark["time_per_node"]   = layerBenchmark.timePerNode;
+    jsonLayerBenchmark["average_branching_factor"] =
+        layerBenchmark.averageBranchingFactor;
+    jsonLayerBenchmark["effective_branching_factor"] =
+        layerBenchmark.effectiveBranchingFactor;
   }
 
   // write json data to file
