@@ -44,8 +44,6 @@ void Architecture::loadCouplingMap(std::istream&& is) {
   if (std::getline(is, line)) {
     if (std::regex_search(line, m, rNqubits)) {
       nqubits = static_cast<std::uint16_t>(std::stoul(m.str(1)));
-      zeroMatrix.clear();
-      zeroMatrix.resize(nqubits, std::vector<double>(nqubits, 0.0));
     } else {
       throw QMAPException("No qubit count found in coupling map file: " + line);
     }
@@ -68,8 +66,6 @@ void Architecture::loadCouplingMap(std::istream&& is) {
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
   nqubits = nQ;
-  zeroMatrix.clear();
-  zeroMatrix.resize(nqubits, std::vector<double>(nqubits, 0.0));
   couplingMap = cm;
   properties.clear();
   name = "generic_" + std::to_string(nQ);
@@ -157,8 +153,6 @@ void Architecture::loadProperties(std::istream&& is) {
   properties.setNqubits(qubitNumber);
   if (!isArchitectureAvailable()) {
     nqubits = qubitNumber;
-    zeroMatrix.clear();
-    zeroMatrix.resize(nqubits, std::vector<double>(nqubits, 0.0));
     createDistanceTable();
   }
 
@@ -173,8 +167,6 @@ void Architecture::loadProperties(const Properties& props) {
       }
     }
     nqubits = props.getNqubits();
-    zeroMatrix.clear();
-    zeroMatrix.resize(nqubits, std::vector<double>(nqubits, 0.0));
     name = "generic_" + std::to_string(nqubits);
     createDistanceTable();
   }

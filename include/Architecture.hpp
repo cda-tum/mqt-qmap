@@ -275,7 +275,8 @@ public:
       throw QMAPException("No fidelity data available.");
     }
     if (skipEdges >= fidelityDistanceTables.size()) {
-      return zeroMatrix;
+      static Matrix defaultMatrix(nqubits, std::vector<double>(nqubits, 0.0));
+      return defaultMatrix;
     }
     return fidelityDistanceTables.at(skipEdges);
   }
@@ -391,7 +392,6 @@ public:
   void reset() {
     name    = "";
     nqubits = 0;
-    zeroMatrix.clear();
     couplingMap.clear();
     distanceTable.clear();
     isBidirectional = true;
@@ -477,7 +477,6 @@ public:
 protected:
   std::string                                        name;
   std::uint16_t                                      nqubits               = 0;
-  Matrix                                             zeroMatrix            = {};
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
