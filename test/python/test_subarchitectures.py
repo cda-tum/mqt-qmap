@@ -27,53 +27,49 @@ with contextlib.suppress(TypeError):
 @pytest.fixture()
 def ibm_guadalupe() -> SubarchitectureOrder:
     """Return the SubarchitectureOrder for the IBM Guadalupe architecture."""
-    return SubarchitectureOrder.from_coupling_map(
-        [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 5),
-            (1, 4),
-            (5, 8),
-            (4, 7),
-            (6, 7),
-            (8, 9),
-            (7, 10),
-            (8, 11),
-            (10, 12),
-            (12, 15),
-            (12, 13),
-            (13, 14),
-            (11, 14),
-        ]
-    )
+    return SubarchitectureOrder.from_coupling_map([
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 5),
+        (1, 4),
+        (5, 8),
+        (4, 7),
+        (6, 7),
+        (8, 9),
+        (7, 10),
+        (8, 11),
+        (10, 12),
+        (12, 15),
+        (12, 13),
+        (13, 14),
+        (11, 14),
+    ])
 
 
 @pytest.fixture()
 def rigetti16() -> SubarchitectureOrder:
     """Return the SubarchitectureOrder for the Rigetti 16Q architecture."""
-    return SubarchitectureOrder.from_coupling_map(
-        [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-            (4, 5),
-            (5, 6),
-            (6, 7),
-            (7, 8),
-            (8, 9),
-            (9, 10),
-            (10, 11),
-            (11, 12),
-            (12, 13),
-            (13, 14),
-            (14, 15),
-            (0, 15),
-            (3, 12),
-            (4, 11),
-        ]
-    )
+    return SubarchitectureOrder.from_coupling_map([
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 8),
+        (8, 9),
+        (9, 10),
+        (10, 11),
+        (11, 12),
+        (12, 13),
+        (13, 14),
+        (14, 15),
+        (0, 15),
+        (3, 12),
+        (4, 11),
+    ])
 
 
 @pytest.fixture()
