@@ -188,7 +188,7 @@ void Architecture::createDistanceTable() {
   isBidirectional = true;
   Matrix edgeWeights(
       nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::infinity()));
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       isBidirectional                            = false;
@@ -210,11 +210,11 @@ void Architecture::createFidelityTable() {
   twoQubitFidelityCosts.clear();
   twoQubitFidelityCosts.resize(
       nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::infinity()));
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
   swapFidelityCosts.clear();
   swapFidelityCosts.resize(
       nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::infinity()));
+      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
 
   singleQubitFidelities.resize(nqubits, 1.0);
   singleQubitFidelityCosts.resize(nqubits, 0.0);
