@@ -157,6 +157,10 @@ void DataLogger::logFinalizeLayer(
 };
 
 void DataLogger::splitLayer() {
+  if (deactivated) {
+    return;
+  }
+  
   const std::size_t layerIndex = searchNodesLogFiles.size() - 1;
   if (searchNodesLogFiles.at(layerIndex).is_open()) {
     std::cerr << "[data-logging] Error: layer " << layerIndex
@@ -273,4 +277,5 @@ void DataLogger::close() {
       searchNodesLogFiles.at(i).close();
     }
   }
+  deactivated = true;
 }

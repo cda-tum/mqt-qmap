@@ -54,9 +54,15 @@ public:
   void splitLayer();
   void logMappingResult(MappingResults& result);
   void logInputCircuit(qc::QuantumComputation& qc) {
+    if (deactivated) {
+      return;
+    }
     qc.dump(dataLoggingPath + "/input.qasm", qc::Format::OpenQASM);
   };
   void logOutputCircuit(qc::QuantumComputation& qc) {
+    if (deactivated) {
+      return;
+    }
     qc.dump(dataLoggingPath + "/output.qasm", qc::Format::OpenQASM);
   }
   void close();

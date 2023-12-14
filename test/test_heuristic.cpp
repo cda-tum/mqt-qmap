@@ -279,6 +279,33 @@ TEST(Functionality, HeuristicAdmissibility) {
   }
 }
 
+TEST(Functionality, DataLoggerAfterClose) {
+  std::string dataLoggingPath = "test_log/";
+  qc::QuantumComputation qc{1};
+  qc.x(0);
+  Architecture    arch{1, {}};
+  std::unique_ptr<DataLogger> dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
+  dataLogger->clearLog();
+  dataLogger->close();
+  
+  dataLogger->logArchitecture();
+  dataLogger->logInputCircuit(qc);
+  dataLogger->logOutputCircuit(qc);
+  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
+  qc::CompoundOperation compOp(0);
+  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
+  dataLogger->splitLayer();
+  MappingResults result;
+  dataLogger->logMappingResult(result);
+  
+  // count files and subdirectories in data logging path
+  std::size_t fileCount = 0;
+  for ([[maybe_unused]] const auto& _ : std::filesystem::directory_iterator(dataLoggingPath)) {
+    ++fileCount;
+  }
+  EXPECT_EQ(fileCount, 0);
+}
+
 TEST(Functionality, DataLogger) {
   // setting up example architecture and circuit
   Architecture      architecture{};
@@ -304,6 +331,7 @@ TEST(Functionality, DataLogger) {
   qc::QuantumComputation qc{4, 4};
   qc.cx(1, 0);
   qc.cx(3, 2);
+  qc.barrier({0, 1, 2, 3});
   qc.setName("test_circ");
 
   Configuration settings{};
@@ -320,7 +348,12 @@ TEST(Functionality, DataLogger) {
   settings.considerFidelity         = false;
   settings.useTeleportation         = false;
   // setting data logging path to enable data logging
-  settings.dataLoggingPath = "test_log/";
+  settings.dataLoggingPath = "test_log";
+  
+  // remove directory at data logging path if it already exists
+  if (std::filesystem::exists(settings.dataLoggingPath)) {
+    std::filesystem::remove_all(settings.dataLoggingPath);
+  }
 
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   mapper->map(settings);
@@ -328,10 +361,10 @@ TEST(Functionality, DataLogger) {
   MappingResults& results = mapper->getResults();
 
   // comparing logged architecture information with original architecture object
-  auto archFile = std::ifstream(settings.dataLoggingPath + "architecture.json");
+  auto archFile = std::ifstream(settings.dataLoggingPath + "/architecture.json");
   if (!archFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
-           << "architecture.json";
+           << "/architecture.json";
   }
   const auto archJson = nlohmann::json::parse(archFile);
   EXPECT_EQ(archJson["name"], architecture.getName());
@@ -382,10 +415,10 @@ TEST(Functionality, DataLogger) {
 
   // comparing logged mapping result with mapping result object
   auto resultFile =
-      std::ifstream(settings.dataLoggingPath + "mapping_result.json");
+      std::ifstream(settings.dataLoggingPath + "/mapping_result.json");
   if (!resultFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
-           << "mapping_result.json";
+           << "/mapping_result.json";
   }
   const auto  resultJson = nlohmann::json::parse(resultFile);
   const auto& configJson = resultJson["config"];
@@ -476,10 +509,10 @@ TEST(Functionality, DataLogger) {
 
   // comparing logged input and output circuits with input circuit object and
   // mapped circuit object
-  auto inputQasmFile = std::ifstream(settings.dataLoggingPath + "input.qasm");
+  auto inputQasmFile = std::ifstream(settings.dataLoggingPath + "/input.qasm");
   if (!inputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
-           << "input.qasm";
+           << "/input.qasm";
   }
   std::stringstream inputFileBuffer;
   inputFileBuffer << inputQasmFile.rdbuf();
@@ -487,10 +520,10 @@ TEST(Functionality, DataLogger) {
   qc.dumpOpenQASM(inputQasmBuffer);
   EXPECT_EQ(inputFileBuffer.str(), inputQasmBuffer.str());
 
-  auto outputQasmFile = std::ifstream(settings.dataLoggingPath + "output.qasm");
+  auto outputQasmFile = std::ifstream(settings.dataLoggingPath + "/output.qasm");
   if (!outputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
-           << "output.qasm";
+           << "/output.qasm";
   }
   std::stringstream outputFileBuffer;
   outputFileBuffer << outputQasmFile.rdbuf();
@@ -501,10 +534,10 @@ TEST(Functionality, DataLogger) {
   // checking logged search graph info against known values (correct qubit
   // number, valid layouts, correct data types in all csv fields, etc.)
   for (std::size_t i = 0; i < results.input.layers; ++i) {
-    auto layerFile = std::ifstream(settings.dataLoggingPath + "layer_" +
+    auto layerFile = std::ifstream(settings.dataLoggingPath + "/layer_" +
                                    std::to_string(i) + ".json");
     if (!layerFile.is_open()) {
-      FAIL() << "Could not open file " << settings.dataLoggingPath << "layer_"
+      FAIL() << "Could not open file " << settings.dataLoggingPath << "/layer_"
              << i << ".json";
     }
     const auto        layerJson   = nlohmann::json::parse(layerFile);
@@ -514,10 +547,10 @@ TEST(Functionality, DataLogger) {
               architecture.getNqubits());
 
     auto layerNodeFile = std::ifstream(
-        settings.dataLoggingPath + "nodes_layer_" + std::to_string(i) + ".csv");
+        settings.dataLoggingPath + "/nodes_layer_" + std::to_string(i) + ".csv");
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath
-             << "nodes_layer_" << i << ".csv";
+             << "/nodes_layer_" << i << ".csv";
     }
     std::string           line;
     bool                  foundFinalNode = false;
@@ -542,7 +575,7 @@ TEST(Functionality, DataLogger) {
         nodeIds.insert(nodeId);
       } else {
         FAIL() << "Missing value for node id in " << settings.dataLoggingPath
-               << "nodes_layer_" << i << ".csv";
+               << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         parentId = std::stoull(col);
@@ -551,42 +584,42 @@ TEST(Functionality, DataLogger) {
         }
       } else {
         FAIL() << "Missing value for parent node id in "
-               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         costFixed = std::stod(col);
       } else {
         FAIL() << "Missing value for fixed cost in " << settings.dataLoggingPath
-               << "nodes_layer_" << i << ".csv";
+               << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         costHeur = std::stod(col);
       } else {
         FAIL() << "Missing value for heuristic cost in "
-               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         lookaheadPenalty = std::stod(col);
       } else {
         FAIL() << "Missing value for lookahead penalty in "
-               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         isValidMapping = std::stoull(col);
         if (isValidMapping > 1) {
           FAIL() << "Non-boolean value " << isValidMapping
                  << " for isValidMapping in " << settings.dataLoggingPath
-                 << "nodes_layer_" << i << ".csv";
+                 << "/nodes_layer_" << i << ".csv";
         }
       } else {
         FAIL() << "Missing value for isValidMapping in "
-               << settings.dataLoggingPath << "nodes_layer_" << i << ".csv";
+               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         depth = std::stoull(col);
       } else {
         FAIL() << "Missing value for depth in " << settings.dataLoggingPath
-               << "nodes_layer_" << i << ".csv";
+               << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         std::stringstream qubitMapBuffer(col);
@@ -599,7 +632,7 @@ TEST(Functionality, DataLogger) {
         EXPECT_EQ(layout.size(), architecture.getNqubits());
       } else {
         FAIL() << "Missing value for layout in " << settings.dataLoggingPath
-               << "nodes_layer_" << i << ".csv";
+               << "/nodes_layer_" << i << ".csv";
       }
       if (std::getline(lineStream, col, ';')) {
         std::stringstream swapBuffer(col);
@@ -627,24 +660,24 @@ TEST(Functionality, DataLogger) {
     }
     if (!foundFinalNode) {
       FAIL() << "Could not find final node in " << settings.dataLoggingPath
-             << "nodes_layer_" << i << ".csv";
+             << "/nodes_layer_" << i << ".csv";
     }
   }
 
   // checking if files for non-existing layers are not created
   auto afterLastLayerFile =
-      std::ifstream(settings.dataLoggingPath + "layer_" +
+      std::ifstream(settings.dataLoggingPath + "/layer_" +
                     std::to_string(results.input.layers) + ".json");
   if (afterLastLayerFile.is_open()) {
-    FAIL() << "File " << settings.dataLoggingPath << "layer_"
+    FAIL() << "File " << settings.dataLoggingPath << "/layer_"
            << results.input.layers
            << ".json should not exist, as there are not that many layers";
   }
   auto afterLastLayerNodesFile =
-      std::ifstream(settings.dataLoggingPath + "nodes_layer_" +
+      std::ifstream(settings.dataLoggingPath + "/nodes_layer_" +
                     std::to_string(results.input.layers) + ".csv");
   if (afterLastLayerNodesFile.is_open()) {
-    FAIL() << "File " << settings.dataLoggingPath << "nodes_layer_"
+    FAIL() << "File " << settings.dataLoggingPath << "/nodes_layer_"
            << results.input.layers
            << ".csv should not exist, as there are not that many layers";
   }
