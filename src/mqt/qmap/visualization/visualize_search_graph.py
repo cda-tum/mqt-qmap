@@ -374,7 +374,7 @@ def _prepare_search_graph_scatter_data(
                 stem_x.extend((nx, nx, None))
                 stem_y.extend((ny, ny, None))
                 stem_z.extend((min_nz, max_nz, None))
-        if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:  # noqa: PLR0916
+        if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
             min_x = nx
             max_x = nx
             min_y = ny
@@ -411,7 +411,7 @@ def _prepare_search_graph_scatter_data(
             else:
                 node_color[i].append(curr_color)
 
-    if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:  # noqa: PLR0916
+    if min_x is None or max_x is None or min_y is None or max_y is None or min_z is None or max_z is None:
         msg = "No nodes in search graph."
         raise ValueError(msg)
 
@@ -599,22 +599,24 @@ def _draw_swap_arrows(
         sw0_considered = layout[sw[0]] in considered_qubit_colors
         sw1_considered = layout[sw[1]] in considered_qubit_colors
         if shared_swaps and sw0_considered and sw1_considered:
-            props_list.append(
-                {
-                    "color": considered_qubit_colors[layout[sw[0]]],
-                    "straight": sw[0] < sw[1],
-                    "color2": considered_qubit_colors[layout[sw[1]]],
-                }
-            )
+            props_list.append({
+                "color": considered_qubit_colors[layout[sw[0]]],
+                "straight": sw[0] < sw[1],
+                "color2": considered_qubit_colors[layout[sw[1]]],
+            })
         else:
             if sw0_considered:
-                props_list.append(
-                    {"color": considered_qubit_colors[layout[sw[0]]], "straight": sw[0] < sw[1], "color2": None}
-                )
+                props_list.append({
+                    "color": considered_qubit_colors[layout[sw[0]]],
+                    "straight": sw[0] < sw[1],
+                    "color2": None,
+                })
             if sw1_considered:
-                props_list.append(
-                    {"color": considered_qubit_colors[layout[sw[1]]], "straight": sw[0] >= sw[1], "color2": None}
-                )
+                props_list.append({
+                    "color": considered_qubit_colors[layout[sw[1]]],
+                    "straight": sw[0] >= sw[1],
+                    "color2": None,
+                })
         layout[sw[0]], layout[sw[1]] = layout[sw[1]], layout[sw[0]]
 
     list_of_arch_arrows = []
@@ -920,7 +922,7 @@ _cost_string_lambdas = {
 
 
 def _cost_string_to_lambda(cost_string: str) -> Callable[[SearchNode], float] | None:
-    return _cost_string_lambdas.get(cost_string, None)
+    return _cost_string_lambdas.get(cost_string)
 
 
 default_plotly_settings: _PlotlySettings = {

@@ -186,9 +186,8 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 
 void Architecture::createDistanceTable() {
   isBidirectional = true;
-  Matrix edgeWeights(
-      nqubits,
-      std::vector<double>(nqubits, std::numeric_limits<double>::max()));
+  Matrix edgeWeights(nqubits, std::vector<double>(
+                                  nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       isBidirectional                            = false;

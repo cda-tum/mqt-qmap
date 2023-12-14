@@ -20,7 +20,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
   if (config.layering == Layering::OddGates ||
       config.layering == Layering::QubitTriangle) {
     throw QMAPException("Layering strategy " + toString(config.layering) +
-                            " not suitable for heuristic mapper!");
+                        " not suitable for heuristic mapper!");
   }
   if (config.considerFidelity && !architecture->isFidelityAvailable()) {
     throw QMAPException("No calibration data available for this architecture!");
@@ -314,7 +314,7 @@ void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
   auto& config           = results.config;
   config.dataLoggingPath = ""; // disable data logging for pseudo routing
   config.debug           = false;
-  
+
   for (std::size_t i = 0; i < layers.size(); ++i) {
     auto       layerIndex = (reverse ? layers.size() - i - 1 : i);
     const Node result     = aStarMap(layerIndex, reverse);
@@ -327,7 +327,7 @@ void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
       printQubits(std::clog);
     }
   }
-  
+
   // restore original global data
   results                   = originalResults;
   layers                    = originalLayers;
@@ -345,7 +345,7 @@ void HeuristicMapper::routeCircuit() {
   std::vector<std::size_t> gatesToAdjust{};
   results.output.gates = 0U;
   for (std::size_t layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
-    const Node result     = aStarMap(layerIndex, false);
+    const Node result = aStarMap(layerIndex, false);
 
     qubits    = result.qubits;
     locations = result.locations;

@@ -168,25 +168,25 @@ TEST(Functionality, EmptyDump) {
 TEST(Functionality, InvalidSettings) {
   qc::QuantumComputation qc{1};
   qc.x(0);
-  Architecture    arch{1, {}};
-  auto props = Architecture::Properties();
+  Architecture arch{1, {}};
+  auto         props = Architecture::Properties();
   props.setSingleQubitErrorRate(0, "x", 0.1);
   arch.loadProperties(props);
   HeuristicMapper mapper(qc, arch);
-  auto config = Configuration{};
-  config.method = Method::Heuristic;
-  config.layering = Layering::OddGates;
+  auto            config = Configuration{};
+  config.method          = Method::Heuristic;
+  config.layering        = Layering::OddGates;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.layering = Layering::QubitTriangle;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.layering = Layering::IndividualGates;
+  config.layering         = Layering::IndividualGates;
   config.considerFidelity = true;
-  config.lookahead = true;
+  config.lookahead        = true;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.lookahead = false;
+  config.lookahead     = false;
   config.initialLayout = InitialLayout::Dynamic;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.initialLayout = InitialLayout::Static;
+  config.initialLayout       = InitialLayout::Static;
   config.teleportationQubits = 2;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.teleportationQubits = 0;
@@ -672,7 +672,7 @@ protected:
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
     settings.debug     = true;
     settings.verbose   = true;
-    
+
     settings.iterativeBidirectionalRouting       = true;
     settings.iterativeBidirectionalRoutingPasses = 3;
   }
