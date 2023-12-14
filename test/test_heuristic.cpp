@@ -671,6 +671,10 @@ protected:
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
     settings.debug     = true;
+    settings.verbose   = true;
+    
+    settings.iterativeBidirectionalRouting       = true;
+    settings.iterativeBidirectionalRoutingPasses = 3;
   }
 };
 
