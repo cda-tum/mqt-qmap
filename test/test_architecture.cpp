@@ -865,27 +865,45 @@ TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
 
 TEST(TestArchitecture, FidelityDistanceNoFidelity) {
   const Architecture architecture(4, {{0, 1}, {1, 2}, {1, 3}});
-  
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(0)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(1)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(2)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(3)), QMAPException);
-  
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 0)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 1)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 2)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 3)), QMAPException);
-  
-  EXPECT_THROW(static_cast<void>(architecture.getFidelityTable()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelities()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCosts()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCost(0)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCosts()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(0, 1)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCosts()), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(0, 1)), QMAPException);
+
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(0)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(1)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(2)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(3)),
+               QMAPException);
+
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 0)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 1)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 2)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 2, 3)),
+               QMAPException);
+
+  EXPECT_THROW(static_cast<void>(architecture.getFidelityTable()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelities()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCosts()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCost(0)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCosts()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(0, 1)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCosts()),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(0, 1)),
+               QMAPException);
 }
 
 TEST(TestArchitecture, DistanceCheapestPathTest) {

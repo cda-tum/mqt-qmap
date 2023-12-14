@@ -280,7 +280,7 @@ TEST(Functionality, HeuristicAdmissibility) {
 }
 
 TEST(Functionality, DataLoggerAfterClose) {
-  const std::string dataLoggingPath = "test_log/";
+  const std::string      dataLoggingPath = "test_log/";
   qc::QuantumComputation qc{1};
   qc.x(0);
   Architecture                arch{1, {}};
