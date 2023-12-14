@@ -276,7 +276,7 @@ public:
     }
     if (skipEdges >= fidelityDistanceTables.size()) {
       const static Matrix DEFAULT_MATRIX(nqubits,
-                                        std::vector<double>(nqubits, 0.0));
+                                         std::vector<double>(nqubits, 0.0));
       return DEFAULT_MATRIX;
     }
     return fidelityDistanceTables.at(skipEdges);
