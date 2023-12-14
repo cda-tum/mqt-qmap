@@ -225,14 +225,20 @@ protected:
   /**
    * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology
    * constraints and optimize fidelity if activated
+   */
+  void routeCircuit();
+  
+  /**
+   * @brief Performes pseudo-routing on the input circuit, i.e. rearranges the 
+   * qubit layout layer by layer to meet topology constraints without actually 
+   * inserting SWAPs (leaves all global data unchanged except for `qubits` and 
+   * `locations`, which hold the final layout)
+   * 
+   * used for iterative bidirectional routing
    *
    * @param reverse if true, the circuit is routed from the end to the beginning
-   * (this will not produce a valid mapping, use only with pseudo routing!)
-   * @param pseudoRouting if true, routing will only be simulated without
-   * altering the circuit or modifying any other global data except for `qubits`
-   * and `locations`, which will hold the final qubit layout afterwards
    */
-  void routeCircuit(bool reverse = false, bool pseudoRouting = false);
+  void pseudoRouteCircuit(bool reverse = false);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the

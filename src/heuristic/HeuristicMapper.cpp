@@ -71,13 +71,13 @@ void HeuristicMapper::map(const Configuration& configuration) {
                 << "Iterative bidirectional routing (forward pass " << i
                 << "):" << std::endl;
     }
-    routeCircuit(false, true);
+    pseudoRouteCircuit(false);
     if (config.verbose) {
       std::clog << std::endl
                 << "Iterative bidirectional routing (backward pass " << i
                 << "):" << std::endl;
     }
-    routeCircuit(true, true);
+    pseudoRouteCircuit(true);
 
     if (config.verbose) {
       std::clog << std::endl << "Main routing:" << std::endl;
@@ -308,11 +308,8 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
   qc::QuantumComputation::findAndSWAP(target, *pos, qcMapped.outputPermutation);
 }
 
-void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
-  assert(!reverse ||
-         pseudoRouting); // reverse routing is only supported for pseudo routing
-
-  // save original global data for restoring it later if pseudo routing is used
+void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
+  // save original global data for restoring it later
   const auto originalResults                   = results;
   const auto originalLayers                    = layers;
   const auto originalSingleQubitMultiplicities = singleQubitMultiplicities;
@@ -321,15 +318,10 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
   const auto originalActiveQubits1QGates       = activeQubits1QGates;
   const auto originalActiveQubits2QGates       = activeQubits2QGates;
 
-  auto& config = results.config;
-  if (pseudoRouting) {
-    config.dataLoggingPath = ""; // disable data logging for pseudo routing
-    config.debug           = false;
-  }
-
-  std::size_t              gateidx = 0;
-  std::vector<std::size_t> gatesToAdjust{};
-  results.output.gates = 0U;
+  auto& config           = results.config;
+  config.dataLoggingPath = ""; // disable data logging for pseudo routing
+  config.debug           = false;
+  
   for (std::size_t i = 0; i < layers.size(); ++i) {
     auto       layerIndex = (reverse ? layers.size() - i - 1 : i);
     const Node result     = aStarMap(layerIndex, reverse);
@@ -341,9 +333,33 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
       printLocations(std::clog);
       printQubits(std::clog);
     }
+  }
+  
+  // restore original global data
+  results                   = originalResults;
+  layers                    = originalLayers;
+  singleQubitMultiplicities = originalSingleQubitMultiplicities;
+  twoQubitMultiplicities    = originalTwoQubitMultiplicities;
+  activeQubits              = originalActiveQubits;
+  activeQubits1QGates       = originalActiveQubits1QGates;
+  activeQubits2QGates       = originalActiveQubits2QGates;
+}
 
-    if (pseudoRouting) {
-      continue;
+void HeuristicMapper::routeCircuit() {
+  auto& config = results.config;
+
+  std::size_t              gateidx = 0;
+  std::vector<std::size_t> gatesToAdjust{};
+  results.output.gates = 0U;
+  for (std::size_t layerIndex = 0; layerIndex < layers.size(); ++layerIndex) {
+    const Node result     = aStarMap(layerIndex, false);
+
+    qubits    = result.qubits;
+    locations = result.locations;
+
+    if (config.verbose) {
+      printLocations(std::clog);
+      printQubits(std::clog);
     }
 
     // initial layer needs no swaps
@@ -444,18 +460,6 @@ void HeuristicMapper::routeCircuit(bool reverse, bool pseudoRouting) {
           (static_cast<double>(layer.expandedNodes) /
            static_cast<double>(benchmark.expandedNodes));
     }
-  }
-
-  if (pseudoRouting) {
-    // restore original global data
-    results                   = originalResults;
-    layers                    = originalLayers;
-    singleQubitMultiplicities = originalSingleQubitMultiplicities;
-    twoQubitMultiplicities    = originalTwoQubitMultiplicities;
-    activeQubits              = originalActiveQubits;
-    activeQubits1QGates       = originalActiveQubits1QGates;
-    activeQubits2QGates       = originalActiveQubits2QGates;
-    return;
   }
 
   // infer output permutation from qubit locations
