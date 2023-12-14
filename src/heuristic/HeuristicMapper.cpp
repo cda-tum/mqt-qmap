@@ -5,6 +5,8 @@
 
 #include "heuristic/HeuristicMapper.hpp"
 
+#include "utils.hpp"
+
 #include <chrono>
 
 void HeuristicMapper::map(const Configuration& configuration) {
@@ -17,35 +19,26 @@ void HeuristicMapper::map(const Configuration& configuration) {
   auto& config   = results.config;
   if (config.layering == Layering::OddGates ||
       config.layering == Layering::QubitTriangle) {
-    std::cerr << "Layering strategy " << toString(config.layering)
-              << " not suitable for heuristic mapper!" << std::endl;
-    return;
+    throw QMAPException("Layering strategy " + toString(config.layering) +
+                            " not suitable for heuristic mapper!");
   }
   if (config.considerFidelity && !architecture->isFidelityAvailable()) {
-    std::cerr << "No calibration data available for this architecture!"
-              << std::endl;
-    return;
+    throw QMAPException("No calibration data available for this architecture!");
   }
   if (config.considerFidelity && config.lookahead) {
-    std::cerr << "Lookahead is not yet supported for heuristic mapper using "
-                 "fidelity-aware mapping!"
-              << std::endl;
-    return;
+    throw QMAPException("Lookahead is not yet supported for heuristic mapper "
+                        "using fidelity-aware mapping!");
   }
   if (config.considerFidelity &&
       config.initialLayout == InitialLayout::Dynamic) {
-    std::cerr << "Initial layout strategy " << toString(config.initialLayout)
-              << " not yet supported for heuristic mapper using fidelity-aware "
-                 "mapping!"
-              << std::endl;
-    return;
+    throw QMAPException("Initial layout strategy " +
+                        toString(config.initialLayout) +
+                        " not yet supported for heuristic mapper using "
+                        "fidelity-aware mapping!");
   }
   if (config.considerFidelity && config.teleportationQubits > 0) {
-    std::cerr
-        << "Teleportation is not yet supported for heuristic mapper using "
-           "fidelity-aware mapping!."
-        << std::endl;
-    return;
+    throw QMAPException("Teleportation is not yet supported for heuristic "
+                        "mapper using fidelity-aware mapping!");
   }
   const auto start = std::chrono::steady_clock::now();
   initResults();

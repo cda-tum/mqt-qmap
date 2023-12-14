@@ -165,6 +165,34 @@ TEST(Functionality, EmptyDump) {
   EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
 }
 
+TEST(Functionality, InvalidSettings) {
+  qc::QuantumComputation qc{1};
+  qc.x(0);
+  Architecture    arch{1, {}};
+  auto props = Architecture::Properties();
+  props.setSingleQubitErrorRate(0, "x", 0.1);
+  arch.loadProperties(props);
+  HeuristicMapper mapper(qc, arch);
+  auto config = Configuration{};
+  config.method = Method::Heuristic;
+  config.layering = Layering::OddGates;
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  config.layering = Layering::QubitTriangle;
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  config.layering = Layering::IndividualGates;
+  config.considerFidelity = true;
+  config.lookahead = true;
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  config.lookahead = false;
+  config.initialLayout = InitialLayout::Dynamic;
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  config.initialLayout = InitialLayout::Static;
+  config.teleportationQubits = 2;
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  config.teleportationQubits = 0;
+  EXPECT_NO_THROW(mapper.map(config));
+}
+
 TEST(Functionality, NoMeasurmentsAdded) {
   using namespace qc::literals;
   // construct circuit
@@ -885,11 +913,7 @@ TEST_P(HeuristicTestFidelity, NoFidelity) {
   settings.initialLayout    = InitialLayout::Static;
   settings.considerFidelity = true;
   settings.lookahead        = false;
-  nonFidelityMapper->map(settings);
-  nonFidelityMapper->dumpResult(GetParam() +
-                                "_heuristic_london_nofidelity.qasm");
-  nonFidelityMapper->printResult(std::cout);
-  SUCCEED() << "Mapping successful";
+  EXPECT_THROW(nonFidelityMapper->map(settings), QMAPException);
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {
