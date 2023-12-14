@@ -270,7 +270,7 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
 
   // 2Q-gates
   bool even = false;
-  for (const auto edge : twoQubitMultiplicity) {
+  for (const auto& edge : twoQubitMultiplicity) {
     if (even) {
       twoQubitMultiplicity0.insert(edge);
       activeQubits0.emplace(edge.first.first);

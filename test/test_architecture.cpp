@@ -762,9 +762,9 @@ TEST(TestArchitecture, FidelitySwapCostTest) {
   props.setTwoQubitErrorRate(2, 4, 0.4);
   props.setTwoQubitErrorRate(4, 2, 0.4);
 
-  Architecture      architecture(5, cm, props);
+  const Architecture architecture(5, cm, props);
 
-  const Matrix swapFidCost = architecture.getSwapFidelityCosts();
+  const Matrix& swapFidCost = architecture.getSwapFidelityCosts();
 
   EXPECT_EQ(swapFidCost.size(), 5);
   EXPECT_EQ(swapFidCost[0].size(), 5);
@@ -857,7 +857,7 @@ TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
 }
 
 TEST(TestArchitecture, FidelityDistanceNoFidelity) {
-  Architecture architecture(4, {{0, 1}, {1, 2}, {1, 3}});
+  const Architecture architecture(4, {{0, 1}, {1, 2}, {1, 3}});
   
   EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable()), QMAPException);
   EXPECT_THROW(static_cast<void>(architecture.getFidelityDistanceTable(0)), QMAPException);

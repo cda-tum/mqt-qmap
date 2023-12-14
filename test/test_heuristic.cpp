@@ -280,7 +280,7 @@ TEST(Functionality, HeuristicAdmissibility) {
 }
 
 TEST(Functionality, DataLoggerAfterClose) {
-  std::string dataLoggingPath = "test_log/";
+  const std::string dataLoggingPath = "test_log/";
   qc::QuantumComputation qc{1};
   qc.x(0);
   Architecture    arch{1, {}};
@@ -292,7 +292,7 @@ TEST(Functionality, DataLoggerAfterClose) {
   dataLogger->logInputCircuit(qc);
   dataLogger->logOutputCircuit(qc);
   dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
-  qc::CompoundOperation compOp(0);
+  const qc::CompoundOperation compOp(0);
   dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
   dataLogger->splitLayer();
   MappingResults result;

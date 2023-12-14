@@ -275,7 +275,7 @@ public:
       throw QMAPException("No fidelity data available.");
     }
     if (skipEdges >= fidelityDistanceTables.size()) {
-      static Matrix defaultMatrix(nqubits, std::vector<double>(nqubits, 0.0));
+      const static Matrix defaultMatrix(nqubits, std::vector<double>(nqubits, 0.0));
       return defaultMatrix;
     }
     return fidelityDistanceTables.at(skipEdges);
