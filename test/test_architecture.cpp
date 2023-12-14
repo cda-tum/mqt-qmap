@@ -480,9 +480,11 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
       matrixNear(architecture.getFidelityDistanceTable(5), zeroMatrix, 1e-6));
   EXPECT_TRUE(
       matrixNear(architecture.getFidelityDistanceTable(6), zeroMatrix, 1e-6));
-  
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 7)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(7, 0)), QMAPException);
+
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(0, 7)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.fidelityDistance(7, 0)),
+               QMAPException);
 }
 
 TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
@@ -804,12 +806,17 @@ TEST(TestArchitecture, FidelitySwapCostTest) {
   EXPECT_GT(swapFidCost[4][1], 1e20);
   EXPECT_NEAR(swapFidCost[4][2], -3 * std::log2(1 - 0.4), tolerance);
   EXPECT_GT(swapFidCost[4][3], 1e20);
-  
-  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCost(5)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(5, 0)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(0, 5)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(5, 0)), QMAPException);
-  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(0, 5)), QMAPException);
+
+  EXPECT_THROW(static_cast<void>(architecture.getSingleQubitFidelityCost(5)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(5, 0)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getTwoQubitFidelityCost(0, 5)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(5, 0)),
+               QMAPException);
+  EXPECT_THROW(static_cast<void>(architecture.getSwapFidelityCost(0, 5)),
+               QMAPException);
 }
 
 TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {

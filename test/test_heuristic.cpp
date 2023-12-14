@@ -283,11 +283,12 @@ TEST(Functionality, DataLoggerAfterClose) {
   const std::string dataLoggingPath = "test_log/";
   qc::QuantumComputation qc{1};
   qc.x(0);
-  Architecture    arch{1, {}};
-  std::unique_ptr<DataLogger> dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
+  Architecture                arch{1, {}};
+  std::unique_ptr<DataLogger> dataLogger =
+      std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
   dataLogger->clearLog();
   dataLogger->close();
-  
+
   dataLogger->logArchitecture();
   dataLogger->logInputCircuit(qc);
   dataLogger->logOutputCircuit(qc);
@@ -297,10 +298,11 @@ TEST(Functionality, DataLoggerAfterClose) {
   dataLogger->splitLayer();
   MappingResults result;
   dataLogger->logMappingResult(result);
-  
+
   // count files and subdirectories in data logging path
   std::size_t fileCount = 0;
-  for ([[maybe_unused]] const auto& _ : std::filesystem::directory_iterator(dataLoggingPath)) {
+  for ([[maybe_unused]] const auto& _ :
+       std::filesystem::directory_iterator(dataLoggingPath)) {
     ++fileCount;
   }
   EXPECT_EQ(fileCount, 0);
@@ -348,7 +350,7 @@ TEST(Functionality, DataLogger) {
   settings.useTeleportation         = false;
   // setting data logging path to enable data logging
   settings.dataLoggingPath = "test_log";
-  
+
   // remove directory at data logging path if it already exists
   if (std::filesystem::exists(settings.dataLoggingPath)) {
     std::filesystem::remove_all(settings.dataLoggingPath);
@@ -360,7 +362,8 @@ TEST(Functionality, DataLogger) {
   MappingResults& results = mapper->getResults();
 
   // comparing logged architecture information with original architecture object
-  auto archFile = std::ifstream(settings.dataLoggingPath + "/architecture.json");
+  auto archFile =
+      std::ifstream(settings.dataLoggingPath + "/architecture.json");
   if (!archFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/architecture.json";
@@ -519,7 +522,8 @@ TEST(Functionality, DataLogger) {
   qc.dumpOpenQASM(inputQasmBuffer);
   EXPECT_EQ(inputFileBuffer.str(), inputQasmBuffer.str());
 
-  auto outputQasmFile = std::ifstream(settings.dataLoggingPath + "/output.qasm");
+  auto outputQasmFile =
+      std::ifstream(settings.dataLoggingPath + "/output.qasm");
   if (!outputQasmFile.is_open()) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/output.qasm";
@@ -545,8 +549,9 @@ TEST(Functionality, DataLogger) {
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
               architecture.getNqubits());
 
-    auto layerNodeFile = std::ifstream(
-        settings.dataLoggingPath + "/nodes_layer_" + std::to_string(i) + ".csv");
+    auto layerNodeFile =
+        std::ifstream(settings.dataLoggingPath + "/nodes_layer_" +
+                      std::to_string(i) + ".csv");
     if (!layerNodeFile.is_open()) {
       FAIL() << "Could not open file " << settings.dataLoggingPath
              << "/nodes_layer_" << i << ".csv";
