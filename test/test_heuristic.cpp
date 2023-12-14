@@ -331,7 +331,6 @@ TEST(Functionality, DataLogger) {
   qc::QuantumComputation qc{4, 4};
   qc.cx(1, 0);
   qc.cx(3, 2);
-  qc.barrier({0, 1, 2, 3});
   qc.setName("test_circ");
 
   Configuration settings{};
