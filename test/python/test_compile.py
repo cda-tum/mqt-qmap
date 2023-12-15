@@ -120,8 +120,8 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     arch = qmap.Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)})
     visualizer = qmap.visualization.SearchVisualizer()
     _, results = qmap.compile(
-        example_circuit, 
-        arch=arch, 
+        example_circuit,
+        arch=arch,
         method="exact",
         encoding="commander",
         commander_grouping="fixed3",
@@ -131,7 +131,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         include_WCNF=False,
         use_subsets=True,
         subgraph=None,
-        add_measurements_to_mapped_circuit=True
+        add_measurements_to_mapped_circuit=True,
     )
     assert results.configuration.method == qmap.Method.heuristic
     assert results.configuration.encoding == qmap.Encoding.commander
@@ -143,10 +143,10 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
     assert results.configuration.add_measurements_to_mapped_circuit is True
-    
+
     _, results = qmap.compile(
-        example_circuit, 
-        arch=arch, 
+        example_circuit,
+        arch=arch,
         method="heuristic",
         consider_fidelity=False,
         initial_layout="dynamic",
@@ -162,7 +162,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         post_mapping_optimizations=True,
         verbose=True,
         debug=True,
-        visualizer=visualizer
+        visualizer=visualizer,
     )
     assert results.configuration.method == qmap.Method.heuristic
     assert results.configuration.consider_fidelity is False
@@ -183,10 +183,10 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.verbose is True
     assert results.configuration.debug is True
     assert results.configuration.data_logging_path == visualizer.data_logging_path
-    
+
     _, results = qmap.compile(
-        example_circuit, 
-        arch=arch, 
+        example_circuit,
+        arch=arch,
         method="heuristic",
         consider_fidelity=True,
         initial_layout="identity",
@@ -198,7 +198,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         pre_mapping_optimizations=False,
         post_mapping_optimizations=False,
         verbose=False,
-        debug=False
+        debug=False,
     )
     assert results.configuration.method == qmap.Method.heuristic
     assert results.configuration.consider_fidelity is True
