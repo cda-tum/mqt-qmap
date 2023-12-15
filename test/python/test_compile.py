@@ -148,7 +148,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
     assert results.configuration.add_measurements_to_mapped_circuit is True
-    
+
     with qmap.visualization.SearchVisualizer() as visualizer:
         _, results = qmap.compile(
             example_circuit,
