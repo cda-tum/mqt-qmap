@@ -235,8 +235,9 @@ TEST(Functionality, InvalidCircuits) {
   EXPECT_THROW(mapper.map(config), QMAPException);
 
   // gate with >1 control
-  qc::QuantumComputation qc3{3U};
-  const qc::StandardOperation op = qc::StandardOperation(3, {{0}, {1}}, qc::Qubit{2});
+  qc::QuantumComputation      qc3{3U};
+  const qc::StandardOperation op =
+      qc::StandardOperation(3, {{0}, {1}}, qc::Qubit{2});
   qc3.emplace_back(op.clone());
   Architecture    arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
   HeuristicMapper mapper3(qc3, arch2);
