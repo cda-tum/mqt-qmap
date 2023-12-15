@@ -223,6 +223,26 @@ TEST(Functionality, NoMeasurmentsAdded) {
   EXPECT_NE(qcMapped.back()->getType(), qc::Measure);
 }
 
+TEST(Functionality, InvalidCircuits) {
+  Configuration config{};
+  config.method = Method::Heuristic;
+  
+  // architecture not connected
+  qc::QuantumComputation qc{2U};
+  qc.cx({0}, 1);
+  Architecture arch{2U, {}};
+  HeuristicMapper mapper(qc, arch);
+  EXPECT_THROW(mapper.map(config), QMAPException);
+  
+  // gate with >1 control
+  qc::QuantumComputation qc3{3U};
+  qc::StandardOperation op = qc::StandardOperation(3, {{0}, {1}}, qc::Qubit{2});
+  qc3.emplace_back(op.clone());
+  Architecture arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
+  HeuristicMapper mapper3(qc3, arch2);
+  EXPECT_THROW(mapper3.map(config), QMAPException);
+}
+
 TEST(Functionality, HeuristicAdmissibility) {
   Architecture      architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
@@ -278,19 +298,26 @@ TEST(Functionality, HeuristicAdmissibility) {
 
 TEST(Functionality, DataLoggerAfterClose) {
   const std::string      dataLoggingPath = "test_log/";
-  qc::QuantumComputation qc{1};
+  qc::QuantumComputation qc{3};
   qc.x(0);
-  Architecture                arch{1, {}};
+  Architecture                arch{3, {}};
   std::unique_ptr<DataLogger> dataLogger =
       std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
-  dataLogger->clearLog();
+  const qc::CompoundOperation compOp(3);
+  Exchange teleport(0, 2, 1, qc::OpType::Teleportation);
+  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {{teleport}}, 0);
+  dataLogger->logSearchNode(1, 0, 0, 0., 0., 0., {}, false, {}, 0);
+  dataLogger->splitLayer();
+  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
+  dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
+  dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
   dataLogger->close();
+  dataLogger->clearLog();
 
   dataLogger->logArchitecture();
   dataLogger->logInputCircuit(qc);
   dataLogger->logOutputCircuit(qc);
   dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {}, 0);
-  const qc::CompoundOperation compOp(0);
   dataLogger->logFinalizeLayer(0, compOp, {}, {}, {}, 0, 0., 0., 0., {}, {}, 0);
   dataLogger->splitLayer();
   MappingResults result;
@@ -879,6 +906,7 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
   settings.initialLayout       = InitialLayout::Dynamic;
   settings.debug               = true;
+  settings.verbose             = true;
   settings.teleportationQubits = std::min(
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());
