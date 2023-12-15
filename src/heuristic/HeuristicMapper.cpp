@@ -104,8 +104,8 @@ void HeuristicMapper::staticInitialMapping() {
         locations.at(gate.target)     = static_cast<std::int16_t>(q1);
         qcMapped.initialLayout.at(q0) = static_cast<qc::Qubit>(gate.control);
         qcMapped.initialLayout.at(q1) = static_cast<qc::Qubit>(gate.target);
-        qcMapped.outputPermutation.at(q0) = static_cast<qc::Qubit>(
-          gate.control);
+        qcMapped.outputPermutation.at(q0) =
+            static_cast<qc::Qubit>(gate.control);
         qcMapped.outputPermutation.at(q1) = static_cast<qc::Qubit>(gate.target);
         break;
       }
