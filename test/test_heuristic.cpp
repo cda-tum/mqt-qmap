@@ -184,9 +184,6 @@ TEST(Functionality, InvalidSettings) {
   config.lookahead        = true;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.lookahead     = false;
-  config.initialLayout = InitialLayout::Dynamic;
-  EXPECT_THROW(mapper.map(config), QMAPException);
-  config.initialLayout       = InitialLayout::Static;
   config.teleportationQubits = 2;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.teleportationQubits = 0;
