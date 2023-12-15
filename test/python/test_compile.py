@@ -118,13 +118,13 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
 def test_parameters(example_circuit: QuantumCircuit) -> None:
     """Test that parameters to compile are properly parsed and passed to the backend."""
     properties = qmap.Architecture.Properties()
-    properties.set_single_qubit_error(0, 'x', 0.01)
-    properties.set_single_qubit_error(1, 'x', 0.01)
-    properties.set_single_qubit_error(2, 'x', 0.01)
-    properties.set_two_qubit_error(0, 1, 0.02, 'cx')
-    properties.set_two_qubit_error(1, 0, 0.02, 'cx')
-    properties.set_two_qubit_error(1, 2, 0.02, 'cx')
-    properties.set_two_qubit_error(2, 1, 0.02, 'cx')
+    properties.set_single_qubit_error(0, "x", 0.01)
+    properties.set_single_qubit_error(1, "x", 0.01)
+    properties.set_single_qubit_error(2, "x", 0.01)
+    properties.set_two_qubit_error(0, 1, 0.02, "cx")
+    properties.set_two_qubit_error(1, 0, 0.02, "cx")
+    properties.set_two_qubit_error(1, 2, 0.02, "cx")
+    properties.set_two_qubit_error(2, 1, 0.02, "cx")
     arch = qmap.Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
     visualizer = qmap.visualization.SearchVisualizer()
     _, results = qmap.compile(
