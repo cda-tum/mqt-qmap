@@ -183,7 +183,7 @@ TEST(Functionality, InvalidSettings) {
   config.considerFidelity = true;
   config.lookahead        = true;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.lookahead     = false;
+  config.lookahead           = false;
   config.teleportationQubits = 2;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.teleportationQubits = 0;
