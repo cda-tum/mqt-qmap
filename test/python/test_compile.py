@@ -133,7 +133,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         subgraph=None,
         add_measurements_to_mapped_circuit=True,
     )
-    assert results.configuration.method == qmap.Method.heuristic
+    assert results.configuration.method == qmap.Method.exact
     assert results.configuration.encoding == qmap.Encoding.commander
     assert results.configuration.commander_grouping == qmap.CommanderGrouping.fixed3
     assert results.configuration.use_bdd is False
