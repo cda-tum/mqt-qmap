@@ -213,4 +213,4 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.post_mapping_optimizations is False
     assert results.configuration.verbose is False
     assert results.configuration.debug is False
-    assert results.configuration.data_logging_path == ""
+    assert not results.configuration.data_logging_path
