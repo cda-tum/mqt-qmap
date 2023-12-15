@@ -155,7 +155,6 @@ TEST(Functionality, HeuristicBenchmark) {
 
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
-  qc.x(0);
   Architecture    arch{1, {}};
   HeuristicMapper mapper(qc, arch);
   mapper.dumpResult("test.qasm");
@@ -867,7 +866,7 @@ protected:
 
 INSTANTIATE_TEST_SUITE_P(
     HeuristicTeleport, HeuristicTest20QTeleport,
-    testing::Combine(testing::Values(1, 2, 3, 1337, 1338, 3147),
+    testing::Combine(testing::Values(0, 1, 2, 3, 1337, 1338, 3147),
                      testing::Values("ising_model_10", "rd73_140", "cnt3-5_179",
                                      "qft_16", "z4_268")),
     [](const testing::TestParamInfo<HeuristicTest20QTeleport::ParamType>& inf) {
@@ -940,6 +939,18 @@ TEST_P(HeuristicTestFidelity, Static) {
   Configuration settings{};
   settings.layering         = Layering::DisjointQubits;
   settings.initialLayout    = InitialLayout::Static;
+  settings.considerFidelity = true;
+  settings.lookahead        = false;
+  mapper->map(settings);
+  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
+  mapper->printResult(std::cout);
+  SUCCEED() << "Mapping successful";
+}
+
+TEST_P(HeuristicTestFidelity, Dynamic) {
+  Configuration settings{};
+  settings.layering         = Layering::DisjointQubits;
+  settings.initialLayout    = InitialLayout::Dynamic;
   settings.considerFidelity = true;
   settings.lookahead        = false;
   mapper->map(settings);

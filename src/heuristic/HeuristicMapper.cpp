@@ -29,13 +29,6 @@ void HeuristicMapper::map(const Configuration& configuration) {
     throw QMAPException("Lookahead is not yet supported for heuristic mapper "
                         "using fidelity-aware mapping!");
   }
-  if (config.considerFidelity &&
-      config.initialLayout == InitialLayout::Dynamic) {
-    throw QMAPException("Initial layout strategy " +
-                        toString(config.initialLayout) +
-                        " not yet supported for heuristic mapper using "
-                        "fidelity-aware mapping!");
-  }
   if (config.considerFidelity && config.teleportationQubits > 0) {
     throw QMAPException("Teleportation is not yet supported for heuristic "
                         "mapper using fidelity-aware mapping!");
@@ -111,8 +104,8 @@ void HeuristicMapper::staticInitialMapping() {
         locations.at(gate.target)     = static_cast<std::int16_t>(q1);
         qcMapped.initialLayout.at(q0) = static_cast<qc::Qubit>(gate.control);
         qcMapped.initialLayout.at(q1) = static_cast<qc::Qubit>(gate.target);
-        qcMapped.outputPermutation.at(q0) =
-            static_cast<qc::Qubit>(gate.control);
+        qcMapped.outputPermutation.at(q0) = static_cast<qc::Qubit>(
+          gate.control);
         qcMapped.outputPermutation.at(q1) = static_cast<qc::Qubit>(gate.target);
         break;
       }
