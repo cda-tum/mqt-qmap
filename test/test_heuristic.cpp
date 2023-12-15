@@ -155,6 +155,7 @@ TEST(Functionality, HeuristicBenchmark) {
 
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
+  qc.x(0);
   Architecture           arch{1, {}};
   HeuristicMapper        mapper(qc, arch);
   mapper.dumpResult("test.qasm");
