@@ -126,7 +126,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     properties.set_two_qubit_error(1, 2, 0.02, "cx")
     properties.set_two_qubit_error(2, 1, 0.02, "cx")
     arch = qmap.Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
-    visualizer = qmap.visualization.SearchVisualizer()
     _, results = qmap.compile(
         example_circuit,
         arch=arch,
@@ -149,46 +148,47 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
     assert results.configuration.add_measurements_to_mapped_circuit is True
-
-    _, results = qmap.compile(
-        example_circuit,
-        arch=arch,
-        method="heuristic",
-        consider_fidelity=False,
-        initial_layout="dynamic",
-        iterative_bidirectional_routing_passes=1,
-        layering="individual_gates",
-        automatic_layer_splits_node_limit=5000,
-        lookaheads=15,
-        lookahead_factor=0.5,
-        use_teleportation=True,
-        teleportation_fake=False,
-        teleportation_seed=0,
-        pre_mapping_optimizations=True,
-        post_mapping_optimizations=True,
-        verbose=True,
-        debug=True,
-        visualizer=visualizer,
-    )
-    assert results.configuration.method == qmap.Method.heuristic
-    assert results.configuration.consider_fidelity is False
-    assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
-    assert results.configuration.iterative_bidirectional_routing is True
-    assert results.configuration.iterative_bidirectional_routing_passes == 1
-    assert results.configuration.layering == qmap.Layering.individual_gates
-    assert results.configuration.automatic_layer_splits is True
-    assert results.configuration.automatic_layer_splits_node_limit == 5000
-    assert results.configuration.lookaheads == 15
-    assert results.configuration.lookahead is True
-    assert results.configuration.lookahead_factor == 0.5
-    assert results.configuration.use_teleportation is True
-    assert results.configuration.teleportation_fake is False
-    assert results.configuration.teleportation_seed == 0
-    assert results.configuration.pre_mapping_optimizations is True
-    assert results.configuration.post_mapping_optimizations is True
-    assert results.configuration.verbose is True
-    assert results.configuration.debug is True
-    assert results.configuration.data_logging_path == visualizer.data_logging_path
+    
+    with qmap.visualization.SearchVisualizer() as visualizer:
+        _, results = qmap.compile(
+            example_circuit,
+            arch=arch,
+            method="heuristic",
+            consider_fidelity=False,
+            initial_layout="dynamic",
+            iterative_bidirectional_routing_passes=1,
+            layering="individual_gates",
+            automatic_layer_splits_node_limit=5000,
+            lookaheads=15,
+            lookahead_factor=0.5,
+            use_teleportation=True,
+            teleportation_fake=False,
+            teleportation_seed=0,
+            pre_mapping_optimizations=True,
+            post_mapping_optimizations=True,
+            verbose=True,
+            debug=True,
+            visualizer=visualizer,
+        )
+        assert results.configuration.method == qmap.Method.heuristic
+        assert results.configuration.consider_fidelity is False
+        assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
+        assert results.configuration.iterative_bidirectional_routing is True
+        assert results.configuration.iterative_bidirectional_routing_passes == 1
+        assert results.configuration.layering == qmap.Layering.individual_gates
+        assert results.configuration.automatic_layer_splits is True
+        assert results.configuration.automatic_layer_splits_node_limit == 5000
+        assert results.configuration.lookaheads == 15
+        assert results.configuration.lookahead is True
+        assert results.configuration.lookahead_factor == 0.5
+        assert results.configuration.use_teleportation is True
+        assert results.configuration.teleportation_fake is False
+        assert results.configuration.teleportation_seed == 0
+        assert results.configuration.pre_mapping_optimizations is True
+        assert results.configuration.post_mapping_optimizations is True
+        assert results.configuration.verbose is True
+        assert results.configuration.debug is True
+        assert results.configuration.data_logging_path == visualizer.data_logging_path
 
     _, results = qmap.compile(
         example_circuit,
