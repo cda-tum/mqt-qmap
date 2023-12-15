@@ -127,7 +127,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         commander_grouping="fixed3",
         use_bdd=False,
         swap_reduction="coupling_limit",
-        swap_limit=0,
         include_WCNF=False,
         use_subsets=True,
         subgraph=None,
@@ -138,7 +137,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.commander_grouping == qmap.CommanderGrouping.fixed3
     assert results.configuration.use_bdd is False
     assert results.configuration.swap_reduction == qmap.SwapReduction.coupling_limit
-    assert results.configuration.swap_limit == 0
     assert results.configuration.include_WCNF is False
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
