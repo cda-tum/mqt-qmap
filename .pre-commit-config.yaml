@@ -104,7 +104,7 @@ repos:
 
   # Format configuration files with prettier
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.6
+    rev: v4.0.0-alpha.4
     hooks:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
