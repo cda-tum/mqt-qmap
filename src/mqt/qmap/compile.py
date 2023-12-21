@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
-    from .visualization.search_visualizer import SearchVisualizer
+    from .visualization import SearchVisualizer
 
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration

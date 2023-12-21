@@ -70,7 +70,7 @@ visualization = [
     "ipywidgets>=7.6.5",
     "graphviz"
 ]
-dev = ["mqt.qmap[coverage, docs, visualization]"]
+dev = ["mqt.qmap[coverage, docs]"]
 
 [project.urls]
 Homepage = "https://github.com/cda-tum/mqt-qmap"
