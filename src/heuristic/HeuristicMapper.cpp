@@ -557,13 +557,12 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
 
   const auto  start         = std::chrono::steady_clock::now();
   std::size_t expandedNodes = 0;
-
-  const bool splittable = isLayerSplittable(layer);
+  
+  const bool splittable = config.automaticLayerSplits ? isLayerSplittable(layer) : false;
 
   while (!nodes.empty() && (!done || nodes.top().getTotalCost() <
                                          bestDoneNode.getTotalFixedCost())) {
-    if (splittable && config.automaticLayerSplits &&
-        expandedNodes >= config.automaticLayerSplitsNodeLimit) {
+    if (splittable && expandedNodes >= config.automaticLayerSplitsNodeLimit) {
       if (config.dataLoggingEnabled()) {
         qc::CompoundOperation compOp(architecture->getNqubits());
         for (const auto& gate : layers.at(layer)) {
