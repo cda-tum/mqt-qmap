@@ -331,7 +331,7 @@ def _prepare_search_graph_scatter_data(
     float,
     float,
     float,
-    float
+    float,
 ]:  # edge_x, edge_y, edge_z, node_x, node_y, node_z, node_color, stem_x, stem_y, stem_z, min_x, max_x, min_y, max_y, min_z, max_z
     edge_x: list[float | None] = []
     edge_y: list[float | None] = []
@@ -780,7 +780,7 @@ def _load_layer_data(
     float,  # search_min_y
     float,  # search_max_y
     float,  # search_min_z
-    float  # search_max_z
+    float,  # search_max_z
 ]:
     if not Path(f"{data_logging_path}layer_{layer}.json").exists():
         msg = f"No data at {data_logging_path}layer_{layer}.json"
@@ -1028,7 +1028,7 @@ def _visualize_search_graph_check_parameters(
     Sequence[bool],  # search_node_invert_color_scale
     Sequence[bool],  # prioritize_search_node_color
     Sequence[str],  # search_node_colorbar_title
-    _PlotlySettings  # plotly_settings
+    _PlotlySettings,  # plotly_settings
 ]:
     if not isinstance(data_logging_path, str):
         msg = "data_logging_path must be a string"  # type: ignore[unreachable]
@@ -1512,8 +1512,7 @@ def visualize_search_graph(
     search_node_color: str
     | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
     prioritize_search_node_color: bool | Sequence[bool] = False,
-    search_node_color_scale: Colorscale
-    | Sequence[Colorscale] = "YlGnBu",
+    search_node_color_scale: Colorscale | Sequence[Colorscale] = "YlGnBu",
     search_node_invert_color_scale: bool | Sequence[bool] = True,
     search_node_colorbar_title: str | Sequence[str | None] | None = None,
     search_node_colorbar_spacing: float = 0.06,
