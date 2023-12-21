@@ -27,7 +27,7 @@ class SearchVisualizer:
                 Defaults to None, in which case a temporary folder will be created.
         """
         if data_logging_path is not None:
-            self.data_logging_path = data_logging_path
+            self.data_logging_path: str | None = data_logging_path
             self.data_logging_tmp_dir: TemporaryDirectory[str] | None = None
         else:
             self.data_logging_tmp_dir = TemporaryDirectory()
