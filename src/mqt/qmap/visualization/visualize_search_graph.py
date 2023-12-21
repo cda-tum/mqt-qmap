@@ -173,7 +173,7 @@ def _layout_search_graph(
             search_graph, root, origin=(0, 0), scalex=60, scaley=-1
         )
     else:
-        pos = graphviz_layout(search_graph, prog=method, root=search_graph.nodes[0])
+        pos = graphviz_layout(search_graph, prog=method, root=root)
 
     if not tapered_layer_heights:
         return pos
@@ -309,17 +309,11 @@ def _prepare_search_graph_scatter_data(
     search_pos: MutableMapping[int, Position],
     use3d: bool,
     search_node_color: Sequence[str | Callable[[SearchNode], float]],
-    # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
-    # function that takes a node parameter dict and returns a float (e.g. lambda node: node['total_cost'] + node['fixed_cost'])
-    # node parameter dict: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-    #                       "final": bool, "depth": int, "layout": Sequence[int], "swaps": Sequence[tuple[int, int]]}
-    # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
-    # if in that case no is list is provided all points per node will be the same color
     prioritize_search_node_color: Sequence[bool],
     search_node_height: Sequence[Callable[[SearchNode], float]],
-    color_valid_mapping: str | None,  # static HTML color (e.g. 'blue' or '#0000FF')
-    color_final_node: str | None,  # static HTML color (e.g. 'blue' or '#0000FF')
-    draw_stems: bool,  # only applicable for 3D plots
+    color_valid_mapping: str | None,
+    color_final_node: str | None,
+    draw_stems: bool,
     draw_edges: bool,
 ) -> tuple[
     Sequence[float | None],
@@ -337,7 +331,7 @@ def _prepare_search_graph_scatter_data(
     float,
     float,
     float,
-    float,
+    float
 ]:  # edge_x, edge_y, edge_z, node_x, node_y, node_z, node_color, stem_x, stem_y, stem_z, min_x, max_x, min_y, max_y, min_z, max_z
     edge_x: list[float | None] = []
     edge_y: list[float | None] = []
@@ -695,7 +689,7 @@ def _visualize_layout(
     arch_x_arrow_spacing: float,
     arch_y_arrow_spacing: float,
     show_shared_swaps: bool,
-    layout_node_trace_index: int,  # current_node_layout_visualized
+    layout_node_trace_index: int,
     search_node_trace: go.Scatter | None,
     plotly_settings: _PlotlySettings,
 ) -> None:
@@ -786,7 +780,7 @@ def _load_layer_data(
     float,  # search_min_y
     float,  # search_max_y
     float,  # search_min_z
-    float,  # search_max_z
+    float  # search_max_z
 ]:
     if not Path(f"{data_logging_path}layer_{layer}.json").exists():
         msg = f"No data at {data_logging_path}layer_{layer}.json"
@@ -1034,7 +1028,7 @@ def _visualize_search_graph_check_parameters(
     Sequence[bool],  # search_node_invert_color_scale
     Sequence[bool],  # prioritize_search_node_color
     Sequence[str],  # search_node_colorbar_title
-    _PlotlySettings,  # plotly_settings
+    _PlotlySettings  # plotly_settings
 ]:
     if not isinstance(data_logging_path, str):
         msg = "data_logging_path must be a string"  # type: ignore[unreachable]
@@ -1491,7 +1485,7 @@ def _visualize_search_graph_check_parameters(
 
 def visualize_search_graph(
     data_logging_path: str,
-    layer: int | Literal["interactive"] = "interactive",  # 'interactive' (slider menu) | index
+    layer: int | Literal["interactive"] = "interactive",
     architecture_node_positions: MutableMapping[int, Position] | None = None,
     architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
     search_node_layout: Literal[
@@ -1508,71 +1502,31 @@ def visualize_search_graph(
     draw_search_edges: bool = True,
     search_edges_width: float = 0.5,
     search_edges_color: str = "#888",
-    search_edges_dash: str = "solid",  # 'solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot', string containing a dash length list in pixels or percentages (e.g. '5px 10px 2px 2px', '5, 10, 2, 2', '10% 20% 40%')
+    search_edges_dash: str = "solid",
     tapered_search_layer_heights: bool = True,
     show_layout: Literal["hover", "click"] | None = "hover",
     show_swaps: bool = True,
-    show_shared_swaps: bool = True,  # if one swap moves 2 considered qubits -> combine into one two-colored and two-headed arrow
-    color_valid_mapping: str | None = "green",  # static HTML color (e.g. 'blue' or '#0000FF')
-    color_final_node: str | None = "red",  # static HTML color (e.g. 'blue' or '#0000FF')
+    show_shared_swaps: bool = True,
+    color_valid_mapping: str | None = "green",
+    color_final_node: str | None = "red",
     search_node_color: str
     | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
-    # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
-    # function that takes a SearchNode and returns a float (e.g. lambda n: n.fixed_cost + n.heuristic_cost)
-    # node fields: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-    #                       "final": bool, "depth": int, "layout": Sequence[int], "swaps": Sequence[tuple[int, int]]}
-    # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
-    # if in that case no is list is provided all points per node will be the same color
-    prioritize_search_node_color: bool
-    | Sequence[
-        bool
-    ] = False,  # if True, search_node_color will be prioritized over color_valid_mapping and color_final_node
+    prioritize_search_node_color: bool | Sequence[bool] = False,
     search_node_color_scale: Colorscale
-    | Sequence[Colorscale] = "YlGnBu",  # https://plotly.com/python/builtin-colorscales/
-    # aggrnyl     agsunset    blackbody   bluered     blues       blugrn      bluyl       brwnyl
-    # bugn        bupu        burg        burgyl      cividis     darkmint    electric    emrld
-    # gnbu        greens      greys       hot         inferno     jet         magenta     magma
-    # mint        orrd        oranges     oryel       peach       pinkyl      plasma      plotly3
-    # pubu        pubugn      purd        purp        purples     purpor      rainbow     rdbu
-    # rdpu        redor       reds        sunset      sunsetdark  teal        tealgrn     turbo
-    # viridis     ylgn        ylgnbu      ylorbr      ylorrd      algae       amp         deep
-    # dense       gray        haline      ice         matter      solar       speed       tempo
-    # thermal     turbid      armyrose    brbg        earth       fall        geyser      prgn
-    # piyg        picnic      portland    puor        rdgy        rdylbu      rdylgn      spectral
-    # tealrose    temps       tropic      balance     curl        delta       oxy         edge
-    # hsv         icefire     phase       twilight    mrybm       mygbm       armylg      falllg
+    | Sequence[Colorscale] = "YlGnBu",
     search_node_invert_color_scale: bool | Sequence[bool] = True,
     search_node_colorbar_title: str | Sequence[str | None] | None = None,
     search_node_colorbar_spacing: float = 0.06,
     search_node_height: str
     | (Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]) = "total_cost",
-    # just as with search_node_color (without color strings), but possible to specify a list to draw multiple point per node on different heights
-    # only applicable if use3d is True
     draw_stems: bool = False,
     stems_width: float = 0.7,
     stems_color: str = "#444",
-    stems_dash: str = "solid",  # 'solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot', string containing a dash length list in pixels or percentages (e.g. '5px 10px 2px 2px', '5, 10, 2, 2', '10% 20% 40%')
+    stems_dash: str = "solid",
     show_search_progression: bool = True,
     search_progression_step: int = 10,
-    search_progression_speed: float = 2,  # steps per second
+    search_progression_speed: float = 2,
     plotly_settings: MutableMapping[str, MutableMapping[str, object]] | None = None,
-    # {
-    #   'layout': settings for plotly.graph_objects.Layout (of subplots figure)
-    #   'arrows': settings for plotly.graph_objects.layout.Annotation
-    #   'stats_legend': settings for plotly.graph_objects.layout.Annotation
-    #   'search_nodes': settings for plotly.graph_objects.Scatter resp. ...Scatter3d
-    #   'search_edges': settings for plotly.graph_objects.Scatter resp. ...Scatter3d
-    #   'architecture_nodes': settings for plotly.graph_objects.Scatter
-    #   'architecture_edges': settings for plotly.graph_objects.Scatter
-    #   'architecture_edge_labels': settings for plotly.graph_objects.Scatter
-    #   'search_xaxis': settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis
-    #   'search_yaxis': settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis
-    #   'search_zaxis': settings for plotly.graph_objects.layout.scene.ZAxis
-    #   'architecture_xaxis': settings for plotly.graph_objects.layout.XAxis
-    #   'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis
-    # }
-    # TODO: show archticture edge labels (and make text adjustable)
-    # TODO: make hover text of search (especially for multiple points per node!) and architecture nodes adjustable
 ) -> Widget:
     """Creates a widget to visualize a search graph.
 
@@ -1600,7 +1554,7 @@ def visualize_search_graph(
         show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
         color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
         color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
-        search_node_color (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple point per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
+        search_node_color (str | Callable[[SearchNode], float] | Sequence[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by `search_node_color_scale`, or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple points per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
         prioritize_search_node_color (bool | Sequence[ bool ]): If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
         search_node_color_scale (str | Sequence[str]): Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
         search_node_invert_color_scale (bool | Sequence[bool]): If the color scale should be inverted. Defaults to True.
@@ -1613,7 +1567,7 @@ def visualize_search_graph(
         stems_dash (str): Dashing of stems in 3D search graphs (in CSS format). Defaults to "solid".
         show_search_progression (bool): If the search progression should be animated. Defaults to True.
         search_progression_step (int): Step size (in number of nodes added) of search progression animation. Defaults to 10.
-        search_progression_speed (float): Speed of the search progression animation. Defaults to 2.
+        search_progression_speed (float): Speed of the search progression animation in steps per second. Defaults to 2.
         plotly_settings (MutableMapping[str, MutableMapping[str, any]] | None): Plotly configuration dictionaries to be passed through. Defaults to None.
     .. code-block:: text
 
@@ -1639,6 +1593,8 @@ def visualize_search_graph(
     Returns:
         Widget: An interactive IPython widget to visualize the search graph.
     """
+    # TODO: show archticture edge labels (and make text adjustable)
+    # TODO: make hover text of search (especially for multiple points per node!) and architecture nodes adjustable
     # check and process all parameters
     if plotly_settings is None:
         plotly_settings = {}

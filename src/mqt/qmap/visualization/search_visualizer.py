@@ -54,7 +54,7 @@ class SearchVisualizer:
 
     def visualize_search_graph(
         self,
-        layer: int | Literal["interactive"] = "interactive",  # 'interactive' (slider menu) | index
+        layer: int | Literal["interactive"] = "interactive",
         architecture_node_positions: MutableMapping[int, tuple[float, float]] | None = None,
         architecture_layout: Literal["dot", "neato", "fdp", "sfdp", "circo", "twopi", "osage", "patchwork"] = "sfdp",
         search_node_layout: Literal[
@@ -71,68 +71,30 @@ class SearchVisualizer:
         draw_search_edges: bool = True,
         search_edges_width: float = 0.5,
         search_edges_color: str = "#888",
-        search_edges_dash: str = "solid",  # 'solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot', string containing a dash length list in pixels or percentages (e.g. '5px 10px 2px 2px', '5, 10, 2, 2', '10% 20% 40%')
+        search_edges_dash: str = "solid",
         tapered_search_layer_heights: bool = True,
         show_layout: Literal["hover", "click"] | None = "hover",
         show_swaps: bool = True,
-        show_shared_swaps: bool = True,  # if one swap moves 2 considered qubits -> combine into one two-colored and two-headed arrow
-        color_valid_mapping: str | None = "green",  # static HTML color (e.g. 'blue' or '#0000FF')
-        color_final_node: str | None = "red",  # static HTML color (e.g. 'blue' or '#0000FF')
+        show_shared_swaps: bool = True,
+        color_valid_mapping: str | None = "green",
+        color_final_node: str | None = "red",
         search_node_color: str
         | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]) = "total_cost",
-        # 'total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty' | static HTML color (e.g. 'blue' or '#0000FF') |
-        # function that takes a SearchNode and returns a float (e.g. lambda n: n.fixed_cost + n.heuristic_cost)
-        # node fields: {"fixed_cost": float, "heuristic_cost": float, "lookahead_penalty": float, "is_valid_mapping": bool,
-        #                       "final": bool, "depth": int, "layout": tuple[int, ...], "swaps": tuple[tuple[int, int], ...]}
-        # or list of the above if 3d graph is used and multiple points per node are defined in search_node_height (lengths need to match)
-        # if in that case no is list is provided all points per node will be the same color
-        prioritize_search_node_color: bool
-        | list[
-            bool
-        ] = False,  # if True, search_node_color will be prioritized over color_valid_mapping and color_final_node
-        search_node_color_scale: str | list[str] = "YlGnBu",  # https://plotly.com/python/builtin-colorscales/
-        # aggrnyl     agsunset    blackbody   bluered     blues       blugrn      bluyl       brwnyl
-        # bugn        bupu        burg        burgyl      cividis     darkmint    electric    emrld
-        # gnbu        greens      greys       hot         inferno     jet         magenta     magma
-        # mint        orrd        oranges     oryel       peach       pinkyl      plasma      plotly3
-        # pubu        pubugn      purd        purp        purples     purpor      rainbow     rdbu
-        # rdpu        redor       reds        sunset      sunsetdark  teal        tealgrn     turbo
-        # viridis     ylgn        ylgnbu      ylorbr      ylorrd      algae       amp         deep
-        # dense       gray        haline      ice         matter      solar       speed       tempo
-        # thermal     turbid      armyrose    brbg        earth       fall        geyser      prgn
-        # piyg        picnic      portland    puor        rdgy        rdylbu      rdylgn      spectral
-        # tealrose    temps       tropic      balance     curl        delta       oxy         edge
-        # hsv         icefire     phase       twilight    mrybm       mygbm       armylg      falllg
+        prioritize_search_node_color: bool | list[bool] = False,
+        search_node_color_scale: str | list[str] = "YlGnBu",
         search_node_invert_color_scale: bool | list[bool] = True,
         search_node_colorbar_title: str | list[str | None] | None = None,
         search_node_colorbar_spacing: float = 0.06,
         search_node_height: str
         | (Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]) = "total_cost",
-        # just as with search_node_color (without color strings), but possible to specify a list to draw multiple point per node on different heights
-        # only applicable if use3d is True
         draw_stems: bool = False,
         stems_width: float = 0.7,
         stems_color: str = "#444",
-        stems_dash: str = "solid",  # 'solid', 'dot', 'dash', 'longdash', 'dashdot', 'longdashdot', string containing a dash length list in pixels or percentages (e.g. '5px 10px 2px 2px', '5, 10, 2, 2', '10% 20% 40%')
+        stems_dash: str = "solid",
         show_search_progression: bool = True,
         search_progression_step: int = 10,
-        search_progression_speed: float = 2,  # steps per second
+        search_progression_speed: float = 2,
         plotly_settings: MutableMapping[str, MutableMapping[str, object]] | None = None,
-        # {
-        #   'layout': settings for plotly.graph_objects.Layout (of subplots figure)
-        #   'arrows': settings for plotly.graph_objects.layout.Annotation
-        #   'stats_legend': settings for plotly.graph_objects.layout.Annotation
-        #   'search_nodes': settings for plotly.graph_objects.Scatter resp. ...Scatter3d
-        #   'search_edges': settings for plotly.graph_objects.Scatter resp. ...Scatter3d
-        #   'architecture_nodes': settings for plotly.graph_objects.Scatter
-        #   'architecture_edges': settings for plotly.graph_objects.Scatter
-        #   'architecture_edge_labels': settings for plotly.graph_objects.Scatter
-        #   'search_xaxis': settings for plotly.graph_objects.layout.XAxis resp. ...layout.scene.XAxis
-        #   'search_yaxis': settings for plotly.graph_objects.layout.YAxis resp. ...layout.scene.YAxis
-        #   'search_zaxis': settings for plotly.graph_objects.layout.scene.ZAxis
-        #   'architecture_xaxis': settings for plotly.graph_objects.layout.XAxis
-        #   'architecture_yaxis': settings for plotly.graph_objects.layout.YAxis
-        # }
     ) -> Widget:
         """Creates a widget to visualize the search graph.
 
@@ -159,7 +121,7 @@ class SearchVisualizer:
             show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
             color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
             color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
-            search_node_color (str | Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by ``search_node_color_scale`` , or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple point per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
+            search_node_color (str | Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by ``search_node_color_scale`` , or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple points per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
             prioritize_search_node_color (bool | list[ bool ]): If search_node_color should be prioritized over color_valid_mapping and color_final_node. Defaults to False.
             search_node_color_scale (str | list[str]): Color scale to be used for converting float data features to search node colors. (See https://plotly.com/python/builtin-colorscales/ for valid values). Defaults to "YlGnBu".
             search_node_invert_color_scale (bool | list[bool]): If the color scale should be inverted. Defaults to True.
