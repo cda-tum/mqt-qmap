@@ -30,7 +30,7 @@ repos:
 
   # Clean jupyter notebooks
   - repo: https://github.com/srstevenson/nb-clean
-    rev: 3.1.0
+    rev: 3.2.0
     hooks:
       - id: nb-clean
 
@@ -51,7 +51,7 @@ repos:
 
   # Python linting using ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.7
+    rev: v0.1.8
     hooks:
       - id: ruff
         args: ["--fix", "--show-fixes"]
