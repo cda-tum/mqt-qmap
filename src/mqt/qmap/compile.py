@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
 
+    from .visualization import SearchVisualizer
+
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
 from .pyqmap import (
@@ -58,8 +60,13 @@ def compile(  # noqa: A001
     arch: str | Arch | Architecture | Backend | None,
     calibration: str | BackendProperties | Target | None = None,
     method: str | Method = "heuristic",
+    consider_fidelity: bool = False,
     initial_layout: str | InitialLayout = "dynamic",
+    iterative_bidirectional_routing_passes: int | None = None,
     layering: str | Layering = "individual_gates",
+    automatic_layer_splits_node_limit: int | None = 5000,
+    lookaheads: int | None = 15,
+    lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
     teleportation_fake: bool = False,
     teleportation_seed: int = 0,
@@ -76,6 +83,7 @@ def compile(  # noqa: A001
     add_measurements_to_mapped_circuit: bool = True,
     verbose: bool = False,
     debug: bool = False,
+    visualizer: SearchVisualizer | None = None,
 ) -> tuple[QuantumCircuit, MappingResults]:
     """Interface to the MQT QMAP tool for mapping quantum circuits.
 
@@ -84,8 +92,13 @@ def compile(  # noqa: A001
         arch: The architecture to map to.
         calibration: The calibration to use.
         method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
+        consider_fidelity: Whether to consider the fidelity of the gates. Defaults to False.
         initial_layout: The initial layout to use. Defaults to "dynamic".
+        iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
         layering: The layering strategy to use. Defaults to "individual_gates".
+        automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
+        lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
+        lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
         commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
         use_bdd: Whether to use BDDs to limit the search space. Defaults to False. Use with caution.
@@ -102,6 +115,7 @@ def compile(  # noqa: A001
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
         verbose: Print more detailed information during the mapping process. Defaults to False.
         debug: Gather additional information during the mapping process (e.g. number of generated nodes, branching factors, ...). Defaults to False.
+        visualizer: A SearchVisualizer object to log the search process to. Defaults to None.
 
     Returns:
         The mapped circuit and the mapping results.
@@ -118,8 +132,19 @@ def compile(  # noqa: A001
 
     config = Configuration()
     config.method = Method(method)
+    config.consider_fidelity = consider_fidelity
     config.initial_layout = InitialLayout(initial_layout)
+    if iterative_bidirectional_routing_passes is None:
+        config.iterative_bidirectional_routing = False
+    else:
+        config.iterative_bidirectional_routing = True
+        config.iterative_bidirectional_routing_passes = iterative_bidirectional_routing_passes
     config.layering = Layering(layering)
+    if automatic_layer_splits_node_limit is None:
+        config.automatic_layer_splits = False
+    else:
+        config.automatic_layer_splits = True
+        config.automatic_layer_splits_node_limit = automatic_layer_splits_node_limit
     config.encoding = Encoding(encoding)
     config.commander_grouping = CommanderGrouping(commander_grouping)
     config.swap_reduction = SwapReduction(swap_reduction)
@@ -136,6 +161,15 @@ def compile(  # noqa: A001
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
     config.verbose = verbose
     config.debug = debug
+    if visualizer is not None and visualizer.data_logging_path is not None:
+        config.data_logging_path = visualizer.data_logging_path
+    if lookaheads is None:
+        config.lookaheads = 0
+        config.lookahead = False
+    else:
+        config.lookaheads = lookaheads
+        config.lookahead = True
+    config.lookahead_factor = lookahead_factor
 
     results = map(circ, architecture, config)
 

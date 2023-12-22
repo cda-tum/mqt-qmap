@@ -18,9 +18,30 @@
 #include <string>
 #include <unordered_set>
 
-constexpr std::int16_t  DEFAULT_POSITION  = -1;
-constexpr double        INITIAL_FIDELITY  = 1.0;
-constexpr std::uint16_t MAX_DEVICE_QUBITS = 128;
+/**
+ * number of two-qubit gates acting on pairs of logical qubits in some layer
+ * where the keys correspond to logical qubit pairs ({q1, q2}, with q1<=q2)
+ * and the values to the number of gates acting on a pair in each direction
+ * (the first number with control=q1, target=q2 and the second the reverse).
+ *
+ * e.g., with multiplicity {{0,1},{2,3}} there are 2 gates with logical
+ * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
+ * and 0 as target.
+ */
+using TwoQubitMultiplicity =
+    std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
+
+/**
+ * number of single-qubit gates acting on each logical qubit in some
+ * layer.
+ *
+ * e.g. with multiplicity {1,0,2} there is 1 1Q-gate acting on q0, no 1Q-gates
+ * acting on q1, and 2 1Q-gates acting on q2
+ */
+using SingleQubitMultiplicity = std::vector<std::uint16_t>;
+
+constexpr std::int16_t DEFAULT_POSITION = -1;
+constexpr double       INITIAL_FIDELITY = 1.0;
 
 class Mapper {
 protected:
@@ -66,6 +87,35 @@ protected:
   std::vector<std::vector<Gate>> layers{};
 
   /**
+   * @brief The number of 1Q-gates acting on each logical qubit in each layer
+   */
+  std::vector<SingleQubitMultiplicity> singleQubitMultiplicities{};
+
+  /**
+   * @brief The number of 2Q-gates acting on each pair of logical qubits in each
+   * layer
+   */
+  std::vector<TwoQubitMultiplicity> twoQubitMultiplicities{};
+
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by
+   * a gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits{};
+
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by
+   * a 1Q-gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits1QGates{};
+
+  /**
+   * @brief For each layer the set of all logical qubits, which are acted on by
+   * a 2Q-gate in the layer
+   */
+  std::vector<std::unordered_set<std::uint16_t>> activeQubits2QGates{};
+
+  /**
    * @brief containing the logical qubit currently mapped to each physical
    * qubit. `qubits[physical_qubit] = logical_qubit`
    *
@@ -98,7 +148,7 @@ protected:
    * methods of layering described in
    * https://iic.jku.at/files/eda/2019_dac_mapping_quantum_circuits_ibm_architectures_using_minimal_number_swap_h_gates.pdf
    *
-   * Layering::IndividualGates/Layering::None -> each gate on separate layer
+   * Layering::IndividualGates -> each gate on separate layer
    * Layering::DisjointQubits -> each layer contains gates only acting on a
    * disjoint set of qubits
    * Layering::OddGates -> always 2 gates per layer
@@ -110,6 +160,26 @@ protected:
    * a disjoint set of qubits
    */
   virtual void createLayers();
+
+  /**
+   * @brief Returns true if the layer at the given index can be split into two
+   * without resulting in an empty layer (assuming the original layer only has
+   * disjoint 2Q-gate-blocks)
+   *
+   * @param index the index of the layer to be split
+   * @return true if the layer is splittable
+   * @return false if splitting the layer will result in an empty layer
+   */
+  virtual bool isLayerSplittable(std::size_t index);
+
+  /**
+   * @brief Splits the layer at the given index into two layers with half as
+   * many qubits acted on by gates in each layer
+   *
+   * @param index the index of the layer to be split
+   * @param arch architecture on which the circuit is mapped
+   */
+  virtual void splitLayer(std::size_t index, Architecture& arch);
 
   /**
    * gates are put in the last layer (from the back of the circuit) in which

@@ -33,6 +33,8 @@ constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
+constexpr std::uint16_t MAX_DEVICE_QUBITS = 128;
+
 class Architecture {
 public:
   class Properties {
@@ -238,6 +240,10 @@ public:
     createDistanceTable();
   }
 
+  [[nodiscard]] bool isEdgeConnected(const Edge& edge) const {
+    return couplingMap.find(edge) != couplingMap.end();
+  }
+
   CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
   std::vector<std::pair<std::int16_t, std::int16_t>>& getTeleportationQubits() {
     return teleportationQubits;
@@ -254,10 +260,125 @@ public:
     createFidelityTable();
   }
 
-  [[nodiscard]] const Matrix& getFidelityTable() const { return fidelityTable; }
+  [[nodiscard]] bool isFidelityAvailable() const { return fidelityAvailable; }
+
+  [[nodiscard]] const std::vector<Matrix>& getFidelityDistanceTables() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    return fidelityDistanceTables;
+  }
+
+  [[nodiscard]] const Matrix&
+  getFidelityDistanceTable(std::size_t skipEdges) const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    if (skipEdges >= fidelityDistanceTables.size()) {
+      const static Matrix DEFAULT_MATRIX(nqubits,
+                                         std::vector<double>(nqubits, 0.0));
+      return DEFAULT_MATRIX;
+    }
+    return fidelityDistanceTables.at(skipEdges);
+  }
+
+  [[nodiscard]] const Matrix& getFidelityDistanceTable() const {
+    return getFidelityDistanceTable(0);
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1, std::uint16_t q2,
+                                        std::size_t skipEdges) const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    if (q1 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    if (q2 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    if (skipEdges >= fidelityDistanceTables.size()) {
+      return 0.;
+    }
+    return fidelityDistanceTables.at(skipEdges).at(q1).at(q2);
+  }
+
+  [[nodiscard]] double fidelityDistance(std::uint16_t q1,
+                                        std::uint16_t q2) const {
+    return fidelityDistance(q1, q2, 0);
+  }
+
+  [[nodiscard]] const Matrix& getFidelityTable() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    return fidelityTable;
+  }
 
   [[nodiscard]] const std::vector<double>& getSingleQubitFidelities() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
     return singleQubitFidelities;
+  }
+
+  [[nodiscard]] const std::vector<double>& getSingleQubitFidelityCosts() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    return singleQubitFidelityCosts;
+  }
+
+  [[nodiscard]] double getSingleQubitFidelityCost(std::uint16_t qbit) const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    if (qbit >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    return singleQubitFidelityCosts.at(qbit);
+  }
+
+  [[nodiscard]] const Matrix& getTwoQubitFidelityCosts() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    return twoQubitFidelityCosts;
+  }
+
+  [[nodiscard]] double getTwoQubitFidelityCost(std::uint16_t q1,
+                                               std::uint16_t q2) const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    if (q1 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    if (q2 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    return twoQubitFidelityCosts.at(q1).at(q2);
+  }
+
+  [[nodiscard]] const Matrix& getSwapFidelityCosts() const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    return swapFidelityCosts;
+  }
+
+  [[nodiscard]] double getSwapFidelityCost(std::uint16_t q1,
+                                           std::uint16_t q2) const {
+    if (!fidelityAvailable) {
+      throw QMAPException("No fidelity data available.");
+    }
+    if (q1 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    if (q2 >= nqubits) {
+      throw QMAPException("Qubit out of range.");
+    }
+    return swapFidelityCosts.at(q1).at(q2);
   }
 
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
@@ -276,8 +397,13 @@ public:
     distanceTable.clear();
     isBidirectional = true;
     properties.clear();
+    fidelityAvailable = false;
     fidelityTable.clear();
     singleQubitFidelities.clear();
+    singleQubitFidelityCosts.clear();
+    twoQubitFidelityCosts.clear();
+    swapFidelityCosts.clear();
+    fidelityDistanceTables.clear();
   }
 
   [[nodiscard]] double distance(std::uint16_t control,
@@ -357,9 +483,14 @@ protected:
   bool                                               isBidirectional = true;
   Matrix                                             distanceTable   = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
-  Properties                                         properties            = {};
-  Matrix                                             fidelityTable         = {};
+  Properties                                         properties        = {};
+  bool                                               fidelityAvailable = false;
+  Matrix                                             fidelityTable     = {};
   std::vector<double>                                singleQubitFidelities = {};
+  std::vector<double> singleQubitFidelityCosts                             = {};
+  Matrix              twoQubitFidelityCosts                                = {};
+  Matrix              swapFidelityCosts                                    = {};
+  std::vector<Matrix> fidelityDistanceTables                               = {};
 
   void createDistanceTable();
   void createFidelityTable();

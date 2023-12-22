@@ -113,3 +113,110 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
+
+
+def test_parameters(example_circuit: QuantumCircuit) -> None:
+    """Test that parameters to compile are properly parsed and passed to the backend."""
+    properties = qmap.Architecture.Properties()
+    properties.set_single_qubit_error(0, "x", 0.01)
+    properties.set_single_qubit_error(1, "x", 0.01)
+    properties.set_single_qubit_error(2, "x", 0.01)
+    properties.set_two_qubit_error(0, 1, 0.02, "cx")
+    properties.set_two_qubit_error(1, 0, 0.02, "cx")
+    properties.set_two_qubit_error(1, 2, 0.02, "cx")
+    properties.set_two_qubit_error(2, 1, 0.02, "cx")
+    arch = qmap.Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
+    _, results = qmap.compile(
+        example_circuit,
+        arch=arch,
+        method="exact",
+        encoding="commander",
+        commander_grouping="fixed3",
+        use_bdd=False,
+        swap_reduction="coupling_limit",
+        include_WCNF=False,
+        use_subsets=True,
+        subgraph=None,
+        add_measurements_to_mapped_circuit=True,
+    )
+    assert results.configuration.method == qmap.Method.exact
+    assert results.configuration.encoding == qmap.Encoding.commander
+    assert results.configuration.commander_grouping == qmap.CommanderGrouping.fixed3
+    assert results.configuration.use_bdd is False
+    assert results.configuration.swap_reduction == qmap.SwapReduction.coupling_limit
+    assert results.configuration.include_WCNF is False
+    assert results.configuration.use_subsets is True
+    assert results.configuration.subgraph == set()
+    assert results.configuration.add_measurements_to_mapped_circuit is True
+
+    with qmap.visualization.SearchVisualizer() as visualizer:
+        _, results = qmap.compile(
+            example_circuit,
+            arch=arch,
+            method="heuristic",
+            consider_fidelity=False,
+            initial_layout="dynamic",
+            iterative_bidirectional_routing_passes=1,
+            layering="individual_gates",
+            automatic_layer_splits_node_limit=5000,
+            lookaheads=15,
+            lookahead_factor=0.5,
+            use_teleportation=True,
+            teleportation_fake=False,
+            teleportation_seed=0,
+            pre_mapping_optimizations=True,
+            post_mapping_optimizations=True,
+            verbose=True,
+            debug=True,
+            visualizer=visualizer,
+        )
+        assert results.configuration.method == qmap.Method.heuristic
+        assert results.configuration.consider_fidelity is False
+        assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
+        assert results.configuration.iterative_bidirectional_routing is True
+        assert results.configuration.iterative_bidirectional_routing_passes == 1
+        assert results.configuration.layering == qmap.Layering.individual_gates
+        assert results.configuration.automatic_layer_splits is True
+        assert results.configuration.automatic_layer_splits_node_limit == 5000
+        assert results.configuration.lookaheads == 15
+        assert results.configuration.lookahead is True
+        assert results.configuration.lookahead_factor == 0.5
+        assert results.configuration.use_teleportation is True
+        assert results.configuration.teleportation_fake is False
+        assert results.configuration.teleportation_seed == 0
+        assert results.configuration.pre_mapping_optimizations is True
+        assert results.configuration.post_mapping_optimizations is True
+        assert results.configuration.verbose is True
+        assert results.configuration.debug is True
+        assert results.configuration.data_logging_path == visualizer.data_logging_path
+
+    _, results = qmap.compile(
+        example_circuit,
+        arch=arch,
+        method="heuristic",
+        consider_fidelity=True,
+        initial_layout="identity",
+        iterative_bidirectional_routing_passes=None,
+        layering="disjoint_qubits",
+        automatic_layer_splits_node_limit=None,
+        lookaheads=None,
+        use_teleportation=False,
+        pre_mapping_optimizations=False,
+        post_mapping_optimizations=False,
+        verbose=False,
+        debug=False,
+    )
+    assert results.configuration.method == qmap.Method.heuristic
+    assert results.configuration.consider_fidelity is True
+    assert results.configuration.initial_layout == qmap.InitialLayout.identity
+    assert results.configuration.iterative_bidirectional_routing is False
+    assert results.configuration.layering == qmap.Layering.disjoint_qubits
+    assert results.configuration.automatic_layer_splits is False
+    assert results.configuration.lookaheads == 0
+    assert results.configuration.lookahead is False
+    assert results.configuration.use_teleportation is False
+    assert results.configuration.pre_mapping_optimizations is False
+    assert results.configuration.post_mapping_optimizations is False
+    assert results.configuration.verbose is False
+    assert results.configuration.debug is False
+    assert not results.configuration.data_logging_path

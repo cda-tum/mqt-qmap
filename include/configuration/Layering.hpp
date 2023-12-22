@@ -8,7 +8,6 @@
 #include <iostream>
 
 enum class Layering {
-  None,
   IndividualGates,
   DisjointQubits,
   OddGates,
@@ -28,30 +27,25 @@ enum class Layering {
     return "qubit_triangle";
   case Layering::Disjoint2qBlocks:
     return "disjoint_2q_blocks";
-  case Layering::None:
-    return "none";
   }
   return " ";
 }
 
 [[maybe_unused]] static Layering
 layeringFromString(const std::string& layering) {
-  if (layering == "none" || layering == "0") {
-    return Layering::None;
-  }
-  if (layering == "individual_gates" || layering == "1") {
+  if (layering == "individual_gates" || layering == "0") {
     return Layering::IndividualGates;
   }
-  if (layering == "disjoint_qubits" || layering == "2") {
+  if (layering == "disjoint_qubits" || layering == "1") {
     return Layering::DisjointQubits;
   }
-  if (layering == "odd_gates" || layering == "3") {
+  if (layering == "odd_gates" || layering == "2") {
     return Layering::OddGates;
   }
-  if (layering == "qubit_triangle" || layering == "4") {
+  if (layering == "qubit_triangle" || layering == "3") {
     return Layering::QubitTriangle;
   }
-  if (layering == "disjoint_2q_blocks" || layering == "5") {
+  if (layering == "disjoint_2q_blocks" || layering == "4") {
     return Layering::Disjoint2qBlocks;
   }
   throw std::invalid_argument("Invalid layering value: " + layering);

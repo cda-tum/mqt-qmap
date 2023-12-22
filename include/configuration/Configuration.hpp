@@ -15,33 +15,49 @@
 
 #include <set>
 
+// NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 struct Configuration {
   Configuration() = default;
 
   // which method to use
-  Method method = Method::Heuristic;
+  Method method              = Method::Heuristic;
+  bool   admissibleHeuristic = true;
+  bool   considerFidelity    = false;
 
   bool preMappingOptimizations  = true;
   bool postMappingOptimizations = true;
 
   bool addMeasurementsToMappedCircuit = true;
+  bool swapOnFirstLayer               = false;
 
-  bool verbose = false;
-  bool debug   = false;
+  bool        verbose = false;
+  bool        debug   = false;
+  std::string dataLoggingPath;
 
   // map to particular subgraph of architecture (in exact mapper)
   std::set<std::uint16_t> subgraph{};
 
   // how to cluster the gates into layers
-  Layering layering = Layering::None;
+  Layering layering = Layering::IndividualGates;
 
   // initial layout to use for heuristic approach
-  InitialLayout initialLayout = InitialLayout::None;
+  InitialLayout initialLayout = InitialLayout::Dynamic;
+
+  // iterative bidirectional routing, i.e. after an initial layout is found,
+  // the circuit is routed multiple times back and forth (using settings
+  // optimized for time-efficiency) without actually inserting any swaps;
+  // this gradually improves the initial layout; after all passes are done,
+  // one final full routing pass is performed
+  //
+  // G. Li, Y. Ding, and Y. Xie, "Tackling the qubit mapping problem for
+  // NISQ-era quantum devices", Proc. 24th Int. Conf. on Architectural Support
+  // for Program. Languages and Oper. Syst. (ASPLOS)
+  // https://arxiv.org/abs/1809.02573
+  bool        iterativeBidirectionalRouting       = false;
+  std::size_t iterativeBidirectionalRoutingPasses = 0;
 
   // lookahead scheme settings
   bool        lookahead            = true;
-  bool        admissibleHeuristic  = true;
-  bool        considerFidelity     = true;
   std::size_t nrLookaheads         = 15;
   double      firstLookaheadFactor = 0.75;
   double      lookaheadFactor      = 0.5;
@@ -54,6 +70,13 @@ struct Configuration {
 
   // timeout merely affects exact mapper
   std::size_t timeout = 3600000; // 60min timeout
+
+  // if layers should be automatically split after a certain number of expanded
+  // nodes, thereby reducing the search space (but potentially eliminating
+  // opportunities for cost savings); acts as a control between runtime and
+  // result quality
+  bool        automaticLayerSplits          = true;
+  std::size_t automaticLayerSplitsNodeLimit = 5000;
 
   // encoding of at most and exactly one constraints in exact mapper
   Encoding          encoding          = Encoding::Commander;
@@ -73,6 +96,10 @@ struct Configuration {
 
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }
+
+  [[nodiscard]] bool dataLoggingEnabled() const {
+    return !dataLoggingPath.empty();
+  }
 
   void               setTimeout(const std::size_t sec) { timeout = sec; }
   [[nodiscard]] bool swapLimitsEnabled() const {

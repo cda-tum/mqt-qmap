@@ -47,7 +47,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 }
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
-                        std::vector<Node>& nodes, std::uint16_t start,
+                        std::vector<Node>& nodes, const std::uint16_t start,
                         const Matrix& edgeWeights, const double reversalCost) {
   std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
@@ -91,6 +91,61 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
           queue.push(&nodes.at(*to));
         }
       }
+    }
+  }
+}
+
+void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
+                                  const CouplingMap&   couplingMap,
+                                  std::vector<Matrix>& edgeSkipDistanceTable) {
+  /* to find the cheapest distance between 2 qubits skipping any 1 edge, we
+  iterate over all edges, for each assume the current edge to be the one skipped
+  and are thereby able to retrieve the distance by just adding the distances
+  from the source and target qubit to each of the qubits on the edge. Taking the
+  minimum over all edges gives us the cheapest distance skipping any 1 edge.
+
+  For skipping any 2 edges, we can use the same approach, but on one side of the
+  edge taking not the regular distance but the previously calculated distance
+  skipping 1 edge. The same approach can be used for skipping any 3 edges, etc.
+  */
+  edgeSkipDistanceTable.clear();
+  edgeSkipDistanceTable.emplace_back(distanceTable);
+  const std::size_t n = distanceTable.size();
+  for (std::size_t k = 1; k <= n; ++k) {
+    // k...number of edges to be skipped along each path
+    edgeSkipDistanceTable.emplace_back(
+        n, std::vector<double>(n, std::numeric_limits<double>::max()));
+    Matrix* currentTable = &edgeSkipDistanceTable.back();
+    for (std::size_t q = 0; q < n; ++q) {
+      currentTable->at(q).at(q) = 0.;
+    }
+    bool done = false;
+    for (const auto& [e1, e2] : couplingMap) { // edge to be skipped
+      for (std::size_t l = 0; l < k; ++l) {
+        done = true;
+        // l ... number of edges to skip before edge
+        for (std::size_t q1 = 0; q1 < n; ++q1) {        // q1 ... source qubit
+          for (std::size_t q2 = q1 + 1; q2 < n; ++q2) { // q2 ... target qubit
+            currentTable->at(q1).at(q2) =
+                std::min(currentTable->at(q1).at(q2),
+                         edgeSkipDistanceTable.at(l).at(q1).at(e1) +
+                             edgeSkipDistanceTable.at(k - l - 1).at(e2).at(q2));
+            currentTable->at(q1).at(q2) =
+                std::min(currentTable->at(q1).at(q2),
+                         edgeSkipDistanceTable.at(l).at(q1).at(e2) +
+                             edgeSkipDistanceTable.at(k - l - 1).at(e1).at(q2));
+            currentTable->at(q2).at(q1) = currentTable->at(q1).at(q2);
+            if (done && currentTable->at(q2).at(q1) > 0) {
+              done = false;
+            }
+          }
+        }
+      }
+    }
+    if (done) {
+      // all distances of the last matrix where 0
+      edgeSkipDistanceTable.pop_back();
+      break;
     }
   }
 }

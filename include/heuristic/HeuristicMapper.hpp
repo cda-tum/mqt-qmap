@@ -3,25 +3,13 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "DataLogger.hpp"
 #include "Mapper.hpp"
 #include "heuristic/UniquePriorityQueue.hpp"
 
 #include <cmath>
 
 #pragma once
-
-/**
- * number of two-qubit gates acting on pairs of logical qubits in some layer
- * where the keys correspond to logical qubit pairs ({q1, q2}, with q1<=q2)
- * and the values to the number of gates acting on a pair in each direction
- * (the first number with control=q1, target=q2 and the second the reverse).
- *
- * e.g., with multiplicity {{0,1},{2,3}} there are 2 gates with logical
- * qubit 0 as control and qubit 1 as target, and 3 gates with 1 as control
- * and 0 as target.
- */
-using TwoQubitMultiplicity =
-    std::map<Edge, std::pair<std::uint16_t, std::uint16_t>>;
 
 class HeuristicMapper : public Mapper {
 public:
@@ -42,15 +30,11 @@ public:
    * swaps, mappings and costs
    */
   struct Node {
-    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps
-     * already added) */
-    double costFixed = 0;
-    /** heuristic cost expected for future swaps needed in current circuit layer
-     */
-    double costHeur = 0.;
-    /** heuristic cost expected for future swaps needed in later circuit layers
-     * (further layers contribute less) */
-    double lookaheadPenalty = 0.;
+    /** gates (pair of logical qubits) currently mapped next to each other */
+    std::set<Edge> validMappedTwoQubitGates = {};
+    /** swaps used to get from mapping after last layer to the current mapping;
+     * each search node begins a new entry in the outer vector */
+    std::vector<std::vector<Exchange>> swaps = {};
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `qubits[physical_qubit] = logical_qubit`
@@ -65,24 +49,43 @@ public:
      * The inverse of `qubits`
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
-    /** true if all qubit pairs are mapped next to each other on the
-     * architecture */
-    bool done = true;
-    /** swaps used to get from mapping after last layer to the current mapping;
-     * each search node begins a new entry in the outer vector */
-    std::vector<std::vector<Exchange>> swaps = {};
+    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps
+     * already added) */
+    double costFixed = 0;
+    /** heuristic cost expected for future swaps needed in current circuit layer
+     */
+    double costHeur = 0.;
+    /** heuristic cost expected for future swaps needed in later circuit layers
+     * (further layers contribute less) */
+    double lookaheadPenalty = 0.;
     /** number of swaps used to get from mapping after last layer to the current
      * mapping */
     std::size_t nswaps = 0;
     /** depth in search tree (starting with 0 at the root) */
-    std::size_t depth = 0;
+    std::size_t depth  = 0;
+    std::size_t parent = 0;
+    std::size_t id;
+    /** true if all qubit pairs are mapped next to each other on the
+     * architecture */
+    bool done = true;
+    /** controls if fidelity-aware heuristic should be used */
+    bool considerFidelity = false;
+    /** controls if admissible heuristic should be used */
+    bool admissibleHeuristic = true;
 
-    Node() = default;
-    Node(const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
+    explicit Node(std::size_t nodeId, const bool considerFid = false,
+                  const bool admissibleHeur = true)
+        : id(nodeId), considerFidelity(considerFid),
+          admissibleHeuristic(admissibleHeur){};
+    Node(std::size_t nodeId, std::size_t parentId,
+         const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<std::vector<Exchange>>&          sw = {},
-         const double initCostFixed = 0, const std::size_t searchDepth = 0)
-        : costFixed(initCostFixed), depth(searchDepth) {
+         const double initCostFixed = 0, const std::size_t searchDepth = 0,
+         const bool considerFid = false, const bool admissibleHeur = true)
+        : costFixed(initCostFixed), depth(searchDepth), parent(parentId),
+          id(nodeId), considerFidelity(considerFid),
+          admissibleHeuristic(admissibleHeur) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -106,7 +109,9 @@ public:
      * @brief applies an in-place swap of 2 qubits in `qubits` and `locations`
      * of the node
      */
-    void applySWAP(const Edge& swap, Architecture& arch);
+    void applySWAP(const Edge& swap, Architecture& arch,
+                   const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+                   const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
 
     /**
      * @brief applies an in-place teleportation of 2 qubits in `qubits` and
@@ -121,7 +126,10 @@ public:
      * @param arch the architecture for calculating distances between physical
      * qubits and supplying qubit information such as fidelity
      */
-    void recalculateFixedCost(const Architecture& arch);
+    void recalculateFixedCost(
+        const Architecture&            arch,
+        const SingleQubitMultiplicity& singleQubitGateMultiplicity,
+        const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
 
     /**
      * @brief calculates the heuristic cost of the current mapping in the node
@@ -137,10 +145,11 @@ public:
      * such that it is admissible (i.e. A*-search should yield the optimal
      * solution using this heuristic)
      */
-    void
-    updateHeuristicCost(const Architecture&         arch,
-                        const TwoQubitMultiplicity& twoQubitGateMultiplicity,
-                        bool                        admissibleHeuristic);
+    void updateHeuristicCost(
+        const Architecture&                      arch,
+        const SingleQubitMultiplicity&           singleQubitGateMultiplicity,
+        const TwoQubitMultiplicity&              twoQubitGateMultiplicity,
+        const std::unordered_set<std::uint16_t>& consideredQubits);
 
     std::ostream& print(std::ostream& out) const {
       out << "{\n";
@@ -156,7 +165,9 @@ public:
   };
 
 protected:
-  UniquePriorityQueue<Node> nodes{};
+  UniquePriorityQueue<Node>   nodes{};
+  std::unique_ptr<DataLogger> dataLogger;
+  std::size_t                 nextNodeId = 0;
 
   /**
    * @brief creates an initial mapping of logical qubits to physical qubits with
@@ -209,8 +220,25 @@ protected:
    * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  virtual void
-  mapUnmappedGates(const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+  virtual void mapUnmappedGates(std::size_t layer);
+
+  /**
+   * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology
+   * constraints and optimize fidelity if activated
+   */
+  void routeCircuit();
+
+  /**
+   * @brief Performs pseudo-routing on the input circuit, i.e. rearranges the
+   * qubit layout layer by layer to meet topology constraints without actually
+   * inserting SWAPs (leaves all global data unchanged except for `qubits` and
+   * `locations`, which hold the final layout)
+   *
+   * used for iterative bidirectional routing
+   *
+   * @param reverse if true, the circuit is routed from the end to the beginning
+   */
+  void pseudoRouteCircuit(bool reverse = false);
 
   /**
    * @brief search for an optimal mapping/set of swaps using A*-search and the
@@ -221,8 +249,9 @@ protected:
    * current layer in their fields `costHeur` and `done`)
    *
    * @param layer index of the current circuit layer
+   * @param reverse if true, the circuit is mapped from the end to the beginning
    */
-  virtual Node aStarMap(std::size_t layer);
+  virtual Node aStarMap(std::size_t layer, bool reverse);
 
   /**
    * @brief expand the given node by calling `expand_node_add_one_swap` for all
@@ -237,8 +266,7 @@ protected:
    * of logical qubits in the current layer
    */
   void expandNode(const std::unordered_set<std::uint16_t>& consideredQubits,
-                  Node& node, std::size_t layer,
-                  const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+                  Node& node, std::size_t layer);
 
   /**
    * @brief creates a new node with a swap on the given edge and adds it to
@@ -250,9 +278,9 @@ protected:
    * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
    * of logical qubits in the current layer
    */
-  void
-  expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer,
-                       const TwoQubitMultiplicity& twoQubitGateMultiplicity);
+  void expandNodeAddOneSwap(
+      const Edge& swap, Node& node, std::size_t layer,
+      const std::unordered_set<std::uint16_t>& consideredQubits);
 
   /**
    * @brief calculates the heuristic cost for the following layers and saves it

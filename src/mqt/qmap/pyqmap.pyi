@@ -75,6 +75,8 @@ class CircuitInfo:
     direction_reverse: int
     gates: int
     layers: int
+    total_fidelity: float
+    total_log_fidelity: float
     name: str
     qubits: int
     single_qubit_gates: int
@@ -116,7 +118,11 @@ class Configuration:
     first_lookahead_factor: float
     include_WCNF: bool  # noqa: N815
     initial_layout: InitialLayout
+    iterative_bidirectional_routing: bool
+    iterative_bidirectional_routing_passes: int
     layering: Layering
+    automatic_layer_splits: bool
+    automatic_layer_splits_node_limit: int
     lookahead: bool
     lookahead_factor: float
     lookaheads: int
@@ -135,6 +141,7 @@ class Configuration:
     use_teleportation: bool
     verbose: bool
     debug: bool
+    data_logging_path: str
     def __init__(self) -> None: ...
     def json(self) -> dict[str, Any]: ...
 

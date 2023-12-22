@@ -39,12 +39,12 @@ dependencies = [
     "qiskit-terra>=0.20.2",
     "rustworkx[all]>=0.13.0",
     "importlib_resources>=5.0; python_version < '3.10'",
-    "typing_extensions>=4.0",
+    "typing_extensions>=4.0"
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest>=7", "mqt.qcec>=2"]
+test = ["pytest>=7", "mqt.qcec>=2", "mqt.qmap[visualization]"]
 coverage = ["mqt.qmap[test]", "pytest-cov"]
 docs = [
     "furo>=2023.08.17",
@@ -60,6 +60,14 @@ docs = [
     "sphinxext-opengraph",
     "sphinx-autodoc-typehints",
     "qiskit-terra[visualization]",
+    "mqt.qmap[visualization]"
+]
+visualization = [
+    "distinctipy>=1.2.2",
+    "plotly>=5.15.0",
+    "networkx>=2.5",
+    "walkerlayout>=1.0.2",
+    "ipywidgets>=7.6.5",
 ]
 dev = ["mqt.qmap[coverage, docs]"]
 
@@ -145,6 +153,7 @@ filterwarnings = [
 
 [tool.coverage]
 run.source = ["mqt.qmap"]
+run.omit = ["*/visualization/*"]
 report.exclude_also = [
     '\.\.\.',
     'if TYPE_CHECKING:',
@@ -162,7 +171,7 @@ explicit_package_bases = true
 pretty = true
 
 [[tool.mypy.overrides]]
-module = ["qiskit.*", "matplotlib.*"]
+module = ["qiskit.*", "matplotlib.*", "networkx.*", "plotly.*", "_plotly_utils.*", "distinctipy.*", "ipywidgets.*", "walkerlayout.*"]
 ignore_missing_imports = true
 
 

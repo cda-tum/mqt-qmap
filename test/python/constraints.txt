@@ -7,3 +7,8 @@ typing_extensions==4.0.0
 qiskit-terra==0.20.2
 rustworkx==0.13.0
 mqt.qcec==2.0.0
+distinctipy==1.2.2
+plotly==5.15.0
+networkx==2.5
+walkerlayout==1.0.2
+ipywidgets==7.6.5

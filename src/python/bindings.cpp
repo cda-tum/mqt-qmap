@@ -180,8 +180,17 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("method", &Configuration::method)
       .def_readwrite("verbose", &Configuration::verbose)
       .def_readwrite("debug", &Configuration::debug)
+      .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
+      .def_readwrite("automatic_layer_splits",
+                     &Configuration::automaticLayerSplits)
+      .def_readwrite("automatic_layer_splits_node_limit",
+                     &Configuration::automaticLayerSplitsNodeLimit)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
+      .def_readwrite("iterative_bidirectional_routing",
+                     &Configuration::iterativeBidirectionalRouting)
+      .def_readwrite("iterative_bidirectional_routing_passes",
+                     &Configuration::iterativeBidirectionalRoutingPasses)
       .def_readwrite("lookahead", &Configuration::lookahead)
       .def_readwrite("admissible_heuristic",
                      &Configuration::admissibleHeuristic)
@@ -244,6 +253,10 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::CircuitInfo::singleQubitGates)
       .def_readwrite("cnots", &MappingResults::CircuitInfo::cnots)
       .def_readwrite("layers", &MappingResults::CircuitInfo::layers)
+      .def_readwrite("total_fidelity",
+                     &MappingResults::CircuitInfo::totalFidelity)
+      .def_readwrite("total_log_fidelity",
+                     &MappingResults::CircuitInfo::totalLogFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",
                      &MappingResults::CircuitInfo::directionReverse)
