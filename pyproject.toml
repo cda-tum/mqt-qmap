@@ -68,7 +68,6 @@ visualization = [
     "networkx>=2.5",
     "walkerlayout>=1.0.2",
     "ipywidgets>=7.6.5",
-    "graphviz"
 ]
 dev = ["mqt.qmap[coverage, docs]"]
 
