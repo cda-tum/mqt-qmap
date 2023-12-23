@@ -74,7 +74,7 @@ void Mapper::processDisjoint2qBlockLayer(
   std::size_t layer = 0;
   if (!control.has_value()) {
     // single qubit gates can always be added to the last 2Q block and should
-    // affect placings of future 2Q blocks
+    // not affect placings of future 2Q blocks
     if (lastLayer.at(target).has_value()) {
       layer = *lastLayer.at(target);
     }
