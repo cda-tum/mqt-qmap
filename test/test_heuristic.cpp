@@ -731,16 +731,16 @@ protected:
     for (size_t i = 0; i < 3; ++i) {
       qc.measure(static_cast<qc::Qubit>(i), i);
     }
-    
+
     arch = Architecture{4, {{0, 1}, {1, 2}, {2, 3}}};
-    
+
     settings.initialLayout                  = InitialLayout::Dynamic;
     settings.preMappingOptimizations        = false;
     settings.postMappingOptimizations       = false;
     settings.addMeasurementsToMappedCircuit = true;
     settings.addBarriersBetweenLayers       = true;
     settings.automaticLayerSplits           = false;
-    
+
     mapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
 };
