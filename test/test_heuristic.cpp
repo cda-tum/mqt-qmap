@@ -72,50 +72,90 @@ TEST(Functionality, NodeCostCalculation) {
               tolerance);
 }
 
-TEST(Functionality, InsertBarriersBetweenLayers) {
-  Architecture architecture{3, {{0, 1}, {1, 2}}};
+TEST(Functionality, LayeringTest) {
+  Architecture architecture{4, {{0, 1}, {1, 2}, {2, 3}}};
 
-  qc::QuantumComputation qc{3, 3};
+  qc::QuantumComputation qc{4, 4};
   qc.x(0);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 2);
-  qc.cx(qc::Control{1}, 2);
   qc.x(1);
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{2}, 3);
+  qc.cx(qc::Control{1}, 2);
+  qc.x(3);
 
   qc.barrier({0, 1, 2});
   for (size_t i = 0; i < 3; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
   
-  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
-  settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Dynamic;
-  settings.preMappingOptimizations  = true;
-  settings.postMappingOptimizations = true;
-  settings.lookahead                = true;
-  settings.nrLookaheads             = 15;
+  settings.preMappingOptimizations  = false;
+  settings.postMappingOptimizations = false;
   settings.addMeasurementsToMappedCircuit = true;
   settings.addBarriersBetweenLayers = true;
-  mapper->map(settings);
+  settings.automaticLayerSplits     = false;
   
-  // get the resulting circuit
+  
+  // Disjoint2qBlocks
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  settings.layering = Layering::Disjoint2qBlocks;
+  mapper->map(settings);
+  auto result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 2);
+  // get mapped circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM);
   qcMapped.import(qasm, qc::Format::OpenQASM);
-  
-  qasm = std::stringstream();
-  mapper->dumpResult(qasm, qc::Format::OpenQASM);
-  std::cout << qasm.str() << std::endl;
-  
+  // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
     if (op->getType() == qc::Barrier) {
       ++barriers;
     }
   }
-  EXPECT_EQ(barriers, 3);
+  EXPECT_EQ(barriers, result.input.layers);
+  
+  // DisjointQubits
+  mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  settings.layering = Layering::DisjointQubits;
+  mapper->map(settings);
+  result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 3);
+  // get mapped circuit
+  qcMapped = qc::QuantumComputation();
+  qasm = std::stringstream{};
+  mapper->dumpResult(qasm, qc::Format::OpenQASM);
+  qcMapped.import(qasm, qc::Format::OpenQASM);
+  // check barrier count
+  barriers = 0;
+  for (const auto& op : qcMapped) {
+    if (op->getType() == qc::Barrier) {
+      ++barriers;
+    }
+  }
+  EXPECT_EQ(barriers, result.input.layers);
+  
+  // IndividualGates
+  mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  settings.layering = Layering::IndividualGates;
+  mapper->map(settings);
+  result = mapper->getResults();
+  EXPECT_EQ(result.input.layers, 6);
+  // get mapped circuit
+  qcMapped = qc::QuantumComputation();
+  qasm = std::stringstream{};
+  mapper->dumpResult(qasm, qc::Format::OpenQASM);
+  qcMapped.import(qasm, qc::Format::OpenQASM);
+  // check barrier count
+  barriers = 0;
+  for (const auto& op : qcMapped) {
+    if (op->getType() == qc::Barrier) {
+      ++barriers;
+    }
+  }
+  EXPECT_EQ(barriers, result.input.layers);
 }
 
 TEST(Functionality, HeuristicBenchmark) {

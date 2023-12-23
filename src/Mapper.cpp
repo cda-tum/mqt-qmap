@@ -35,18 +35,11 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
 void Mapper::processDisjointQubitLayer(
     std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
     const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate, bool collect2qBlocks) {
+    qc::Operation* gate) {
   std::size_t layer = 0;
   if (!control.has_value()) {
     if (lastLayer.at(target).has_value()) {
-      layer = *lastLayer.at(target);
-      // single qubit gates can always be added to the last 2Q block
-      if (!collect2qBlocks) {
-        layer++;
-      }
-    }
-    if (!collect2qBlocks) {
-      lastLayer.at(target) = layer;
+      layer = *lastLayer.at(target) + 1;
     }
     lastLayer.at(target) = layer;
   } else {
@@ -59,15 +52,50 @@ void Mapper::processDisjointQubitLayer(
       layer = *lastLayer.at(*control) + 1;
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+    }
+    lastLayer.at(*control) = layer;
+    lastLayer.at(target)   = layer;
+  }
 
-      if (collect2qBlocks &&
-          (*lastLayer.at(*control) == *lastLayer.at(target))) {
+  if (layers.size() <= layer) {
+    layers.emplace_back();
+  }
+  if (control.has_value()) {
+    layers.at(layer).emplace_back(*control, target, gate);
+  } else {
+    layers.at(layer).emplace_back(-1, target, gate);
+  }
+}
+
+void Mapper::processDisjoint2qBlockLayer(
+    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    const std::optional<std::uint16_t>& control, const std::uint16_t target,
+    qc::Operation* gate) {
+  std::size_t layer = 0;
+  if (!control.has_value()) {
+    // single qubit gates can always be added to the last 2Q block and should
+    // affect placings of future 2Q blocks
+    if (lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(target);
+    }
+  } else {
+    if (!lastLayer.at(*control).has_value() &&
+        !lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else if (!lastLayer.at(*control).has_value()) {
+      layer = *lastLayer.at(target) + 1;
+    } else if (!lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(*control) + 1;
+    } else {
+      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+
+      if (*lastLayer.at(*control) == *lastLayer.at(target)) {
         for (auto& g : layers.at(layer - 1)) {
           if ((g.control == *control && g.target == target) ||
               (g.control == target && g.target == *control)) {
             // if last layer contained gate with equivalent qubit set, use that
             // layer
-            layer--;
+            --layer;
             break;
           }
         }
@@ -134,10 +162,10 @@ void Mapper::createLayers() {
       }
       break;
     case Layering::DisjointQubits:
-      processDisjointQubitLayer(lastLayer, control, target, gate.get(), false);
+      processDisjointQubitLayer(lastLayer, control, target, gate.get());
       break;
     case Layering::Disjoint2qBlocks:
-      processDisjointQubitLayer(lastLayer, control, target, gate.get(), true);
+      processDisjoint2qBlockLayer(lastLayer, control, target, gate.get());
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
