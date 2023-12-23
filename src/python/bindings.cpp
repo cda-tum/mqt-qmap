@@ -220,6 +220,8 @@ PYBIND11_MODULE(pyqmap, m) {
                      &Configuration::postMappingOptimizations)
       .def_readwrite("add_measurements_to_mapped_circuit",
                      &Configuration::addMeasurementsToMappedCircuit)
+      .def_readwrite("add_barriers_between_layers",
+                     &Configuration::addBarriersBetweenLayers)
       .def("json", &Configuration::json)
       .def("__repr__", &Configuration::toString);
 

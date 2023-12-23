@@ -348,6 +348,11 @@ void HeuristicMapper::routeCircuit() {
       printQubits(std::clog);
     }
 
+    if (layerIndex != 0 && config.addBarriersBetweenLayers) {
+      qcMapped.barrier();
+      gateidx++;
+    }
+
     // initial layer needs no swaps
     if (layerIndex != 0 || config.swapOnFirstLayer) {
       for (const auto& swaps : result.swaps) {
