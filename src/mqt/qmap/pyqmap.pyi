@@ -110,6 +110,7 @@ class CommanderGrouping:
 
 class Configuration:
     add_measurements_to_mapped_circuit: bool
+    add_barriers_between_layers: bool
     admissible_heuristic: bool
     consider_fidelity: bool
     commander_grouping: CommanderGrouping

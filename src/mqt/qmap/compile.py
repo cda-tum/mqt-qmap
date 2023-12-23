@@ -81,6 +81,7 @@ def compile(  # noqa: A001
     pre_mapping_optimizations: bool = True,
     post_mapping_optimizations: bool = True,
     add_measurements_to_mapped_circuit: bool = True,
+    add_barriers_between_layers: bool = False,
     verbose: bool = False,
     debug: bool = False,
     visualizer: SearchVisualizer | None = None,
@@ -113,6 +114,7 @@ def compile(  # noqa: A001
         pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
         post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
+        add_barriers_between_layers: Whether to add barriers between layers to make them apparent after mapping. Defaults to False.
         verbose: Print more detailed information during the mapping process. Defaults to False.
         debug: Gather additional information during the mapping process (e.g. number of generated nodes, branching factors, ...). Defaults to False.
         visualizer: A SearchVisualizer object to log the search process to. Defaults to None.
@@ -159,6 +161,7 @@ def compile(  # noqa: A001
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit
+    config.add_barriers_between_layers = add_barriers_between_layers
     config.verbose = verbose
     config.debug = debug
     if visualizer is not None and visualizer.data_logging_path is not None:

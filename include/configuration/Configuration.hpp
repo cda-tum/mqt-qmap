@@ -29,6 +29,7 @@ struct Configuration {
 
   bool addMeasurementsToMappedCircuit = true;
   bool swapOnFirstLayer               = false;
+  bool addBarriersBetweenLayers       = false;
 
   bool        verbose = false;
   bool        debug   = false;
