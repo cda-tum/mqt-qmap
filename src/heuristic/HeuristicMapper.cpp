@@ -347,7 +347,7 @@ void HeuristicMapper::routeCircuit() {
       printLocations(std::clog);
       printQubits(std::clog);
     }
-    
+
     if (layerIndex != 0 && config.addBarriersBetweenLayers) {
       qcMapped.barrier();
       gateidx++;

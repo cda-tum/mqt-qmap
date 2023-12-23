@@ -87,18 +87,17 @@ TEST(Functionality, LayeringTest) {
   for (size_t i = 0; i < 3; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
-  
+
   Configuration settings{};
-  settings.initialLayout            = InitialLayout::Dynamic;
-  settings.preMappingOptimizations  = false;
-  settings.postMappingOptimizations = false;
+  settings.initialLayout                  = InitialLayout::Dynamic;
+  settings.preMappingOptimizations        = false;
+  settings.postMappingOptimizations       = false;
   settings.addMeasurementsToMappedCircuit = true;
-  settings.addBarriersBetweenLayers = true;
-  settings.automaticLayerSplits     = false;
-  
-  
+  settings.addBarriersBetweenLayers       = true;
+  settings.automaticLayerSplits           = false;
+
   // Disjoint2qBlocks
-  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  auto mapper       = std::make_unique<HeuristicMapper>(qc, architecture);
   settings.layering = Layering::Disjoint2qBlocks;
   mapper->map(settings);
   auto result = mapper->getResults();
@@ -116,16 +115,16 @@ TEST(Functionality, LayeringTest) {
     }
   }
   EXPECT_EQ(barriers, result.input.layers);
-  
+
   // DisjointQubits
-  mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  mapper            = std::make_unique<HeuristicMapper>(qc, architecture);
   settings.layering = Layering::DisjointQubits;
   mapper->map(settings);
   result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 3);
   // get mapped circuit
   qcMapped = qc::QuantumComputation();
-  qasm = std::stringstream{};
+  qasm     = std::stringstream{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM);
   qcMapped.import(qasm, qc::Format::OpenQASM);
   // check barrier count
@@ -136,16 +135,16 @@ TEST(Functionality, LayeringTest) {
     }
   }
   EXPECT_EQ(barriers, result.input.layers);
-  
+
   // IndividualGates
-  mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  mapper            = std::make_unique<HeuristicMapper>(qc, architecture);
   settings.layering = Layering::IndividualGates;
   mapper->map(settings);
   result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 6);
   // get mapped circuit
   qcMapped = qc::QuantumComputation();
-  qasm = std::stringstream{};
+  qasm     = std::stringstream{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM);
   qcMapped.import(qasm, qc::Format::OpenQASM);
   // check barrier count

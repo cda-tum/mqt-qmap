@@ -198,10 +198,10 @@ protected:
       std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
       const std::optional<std::uint16_t>& control, std::uint16_t target,
       qc::Operation* gate);
-  
+
   /**
    * Similar to processDisjointQubitLayer, but instead of treating each gate
-   * individually, gates are collected in 2Q-blocks, which are layered 
+   * individually, gates are collected in 2Q-blocks, which are layered
    * disjointly to each other
    *
    * @param lastLayer the array storing the last layer each qubit is used in
