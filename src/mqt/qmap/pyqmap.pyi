@@ -217,6 +217,25 @@ class Layering:
     @property
     def value(self) -> int: ...
 
+class HeuristicBenchmarkInfo:
+    expanded_nodes: int
+    generated_nodes: int
+    time_per_node: float
+    average_branching_factor: float
+    effective_branching_factor: float
+    def __init__(self) -> None: ...
+    def json(self) -> dict[str, Any]: ...
+
+class LayerHeuristicBenchmarkInfo:
+    expanded_nodes: int
+    generated_nodes: int
+    solution_depth: int
+    time_per_node: float
+    average_branching_factor: float
+    effective_branching_factor: float
+    def __init__(self) -> None: ...
+    def json(self) -> dict[str, Any]: ...
+
 class MappingResults:
     configuration: Configuration
     input: Any  # noqa: A003
@@ -225,6 +244,8 @@ class MappingResults:
     time: float
     timeout: bool
     wcnf: str
+    heuristic_benchmark: HeuristicBenchmarkInfo
+    layer_heuristic_benchmark: LayerHeuristicBenchmarkInfo
     def __init__(self) -> None: ...
     def csv(self) -> str: ...
     def json(self) -> dict[str, Any]: ...

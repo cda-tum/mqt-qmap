@@ -273,8 +273,6 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::HeuristicBenchmarkInfo::expandedNodes)
       .def_readwrite("generated_nodes",
                      &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
-      .def_readwrite("solution_depth",
-                     &MappingResults::HeuristicBenchmarkInfo::solutionDepth)
       .def_readwrite("time_per_node",
                      &MappingResults::HeuristicBenchmarkInfo::timePerNode)
       .def_readwrite(
@@ -282,7 +280,28 @@ PYBIND11_MODULE(pyqmap, m) {
           &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
       .def_readwrite(
           "effective_branching_factor",
-          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor);
+          &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
+      .def("json", &MappingResults::HeuristicBenchmarkInfo::json);
+  
+  // Heuristic benchmark information for individual layers
+  py::class_<MappingResults::LayerHeuristicBenchmarkInfo>(
+      m, "LayerHeuristicBenchmarkInfo", "Heuristic benchmark information")
+      .def(py::init<>())
+      .def_readwrite("expanded_nodes",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
+      .def_readwrite("generated_nodes",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite("solution_depth",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
+      .def_readwrite("time_per_node",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::timePerNode)
+      .def_readwrite(
+          "average_branching_factor",
+          &MappingResults::LayerHeuristicBenchmarkInfo::averageBranchingFactor)
+      .def_readwrite(
+          "effective_branching_factor",
+          &MappingResults::LayerHeuristicBenchmarkInfo::effectiveBranchingFactor)
+      .def("json", &MappingResults::LayerHeuristicBenchmarkInfo::json);
 
   auto arch = py::class_<Architecture>(
       m, "Architecture", "Class representing device/backend information");

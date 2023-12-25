@@ -35,10 +35,39 @@ struct MappingResults {
   struct HeuristicBenchmarkInfo {
     std::size_t expandedNodes            = 0;
     std::size_t generatedNodes           = 0;
+    double      timePerNode              = 0.;
+    double      averageBranchingFactor   = 0.;
+    double      effectiveBranchingFactor = 0.;
+    
+    [[nodiscard]] virtual nlohmann::json json() const {
+      nlohmann::json resultJSON{};
+      resultJSON["expanded_nodes"]  = expandedNodes;
+      resultJSON["generated_nodes"] = generatedNodes;
+      resultJSON["time_per_node"]   = timePerNode;
+      resultJSON["average_branching_factor"] = averageBranchingFactor;
+      resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
+      return resultJSON;
+    }
+  };
+  
+  struct LayerHeuristicBenchmarkInfo {
+    std::size_t expandedNodes            = 0;
+    std::size_t generatedNodes           = 0;
     std::size_t solutionDepth            = 0;
     double      timePerNode              = 0.;
     double      averageBranchingFactor   = 0.;
     double      effectiveBranchingFactor = 0.;
+    
+    [[nodiscard]] virtual nlohmann::json json() const {
+      nlohmann::json resultJSON{};
+      resultJSON["expanded_nodes"]  = expandedNodes;
+      resultJSON["generated_nodes"] = generatedNodes;
+      resultJSON["solution_depth"] = solutionDepth;
+      resultJSON["time_per_node"]   = timePerNode;
+      resultJSON["average_branching_factor"] = averageBranchingFactor;
+      resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
+      return resultJSON;
+    }
   };
 
   CircuitInfo input{};
@@ -55,7 +84,7 @@ struct MappingResults {
   std::string wcnf{};
 
   HeuristicBenchmarkInfo              heuristicBenchmark{};
-  std::vector<HeuristicBenchmarkInfo> layerHeuristicBenchmark{};
+  std::vector<LayerHeuristicBenchmarkInfo> layerHeuristicBenchmark{};
 
   MappingResults()          = default;
   virtual ~MappingResults() = default;
@@ -109,14 +138,7 @@ struct MappingResults {
       }
     } else if (config.method == Method::Heuristic) {
       stats["teleportations"]      = output.teleportations;
-      auto& benchmark              = stats["benchmark"];
-      benchmark["expanded_nodes"]  = heuristicBenchmark.expandedNodes;
-      benchmark["generated_nodes"] = heuristicBenchmark.generatedNodes;
-      benchmark["time_per_node"]   = heuristicBenchmark.timePerNode;
-      benchmark["average_branching_factor"] =
-          heuristicBenchmark.averageBranchingFactor;
-      benchmark["effective_branching_factor"] =
-          heuristicBenchmark.effectiveBranchingFactor;
+      stats["benchmark"]           = heuristicBenchmark.json();
     }
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -
