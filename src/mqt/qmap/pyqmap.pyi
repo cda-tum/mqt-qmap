@@ -229,6 +229,10 @@ class HeuristicBenchmarkInfo:
 class LayerHeuristicBenchmarkInfo:
     expanded_nodes: int
     generated_nodes: int
+    expanded_nodes_after_first_solution: int
+    expanded_nodes_after_optimal_solution: int
+    solution_nodes: int
+    solution_nodes_after_optimal_solution: int
     solution_depth: int
     time_per_node: float
     average_branching_factor: float

@@ -291,6 +291,14 @@ PYBIND11_MODULE(pyqmap, m) {
                      &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
       .def_readwrite("generated_nodes",
                      &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite("expanded_nodes_after_first_solution",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodesAfterFirstSolution)
+      .def_readwrite("expanded_nodes_after_optimal_solution",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodesAfterOptimalSolution)
+      .def_readwrite("solution_nodes",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodes)
+      .def_readwrite("solution_nodes_after_optimal_solution",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodesAfterOptimalSolution)
       .def_readwrite("solution_depth",
                      &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
       .def_readwrite("time_per_node",

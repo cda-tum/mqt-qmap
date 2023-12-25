@@ -51,17 +51,25 @@ struct MappingResults {
   };
   
   struct LayerHeuristicBenchmarkInfo {
-    std::size_t expandedNodes            = 0;
-    std::size_t generatedNodes           = 0;
-    std::size_t solutionDepth            = 0;
-    double      timePerNode              = 0.;
-    double      averageBranchingFactor   = 0.;
-    double      effectiveBranchingFactor = 0.;
+    std::size_t expandedNodes                     = 0;
+    std::size_t generatedNodes                    = 0;
+    std::size_t expandedNodesAfterFirstSolution   = 0;
+    std::size_t expandedNodesAfterOptimalSolution = 0;
+    std::size_t solutionNodes                     = 0;
+    std::size_t solutionNodesAfterOptimalSolution = 0;
+    std::size_t solutionDepth                     = 0;
+    double      timePerNode                       = 0.;
+    double      averageBranchingFactor            = 0.;
+    double      effectiveBranchingFactor          = 0.;
     
     [[nodiscard]] virtual nlohmann::json json() const {
       nlohmann::json resultJSON{};
       resultJSON["expanded_nodes"]  = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
+      resultJSON["expanded_nodes_after_first_solution"] = expandedNodesAfterFirstSolution;
+      resultJSON["expanded_nodes_after_optimal_solution"] = expandedNodesAfterOptimalSolution;
+      resultJSON["solution_nodes"]  = solutionNodes;
+      resultJSON["solution_nodes_after_optimal_solution"] = solutionNodesAfterOptimalSolution;
       resultJSON["solution_depth"] = solutionDepth;
       resultJSON["time_per_node"]   = timePerNode;
       resultJSON["average_branching_factor"] = averageBranchingFactor;
