@@ -515,8 +515,8 @@ TEST(Functionality, DataLogger) {
             results.heuristicBenchmark.expandedNodes);
   EXPECT_EQ(benchmarkJson["generated_nodes"],
             results.heuristicBenchmark.generatedNodes);
-  EXPECT_EQ(benchmarkJson["time_per_node"],
-            results.heuristicBenchmark.timePerNode);
+  EXPECT_EQ(benchmarkJson["seconds_per_node"],
+            results.heuristicBenchmark.secondsPerNode);
   const auto& benchmarkLayersJson = benchmarkJson["layers"];
   EXPECT_EQ(benchmarkLayersJson.size(), results.layerHeuristicBenchmark.size());
   for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
@@ -530,8 +530,8 @@ TEST(Functionality, DataLogger) {
               results.layerHeuristicBenchmark.at(i).generatedNodes);
     EXPECT_EQ(benchmarkLayersJson[i]["solution_depth"],
               results.layerHeuristicBenchmark.at(i).solutionDepth);
-    EXPECT_EQ(benchmarkLayersJson[i]["time_per_node"],
-              results.layerHeuristicBenchmark.at(i).timePerNode);
+    EXPECT_EQ(benchmarkLayersJson[i]["seconds_per_node"],
+              results.layerHeuristicBenchmark.at(i).secondsPerNode);
   }
 
   // comparing logged input and output circuits with input circuit object and

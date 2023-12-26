@@ -441,7 +441,7 @@ void HeuristicMapper::routeCircuit() {
 
   if (config.debug && results.heuristicBenchmark.expandedNodes > 0) {
     auto& benchmark = results.heuristicBenchmark;
-    benchmark.timePerNode /= static_cast<double>(benchmark.expandedNodes);
+    benchmark.secondsPerNode /= static_cast<double>(benchmark.expandedNodes);
     benchmark.averageBranchingFactor =
         static_cast<double>(benchmark.generatedNodes - layers.size()) /
         static_cast<double>(benchmark.expandedNodes);
@@ -566,6 +566,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   std::size_t expandedNodesAfterOptimalSolution = 0;
   std::size_t solutionNodes                     = 0;
   std::size_t solutionNodesAfterOptimalSolution = 0;
+  bool earlyTermination = false;
 
   const bool splittable =
       config.automaticLayerSplits ? isLayerSplittable(layer) : false;
@@ -616,6 +617,33 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     if (done) {
       ++expandedNodesAfterFirstSolution;
       ++expandedNodesAfterOptimalSolution;
+      
+      if (config.earlyTermination != EarlyTermination::None) {
+        std::size_t n = 0;
+        switch (config.earlyTermination) {
+          case EarlyTermination::ExpandedNodes:
+            n = expandedNodes;
+            break;
+          case EarlyTermination::ExpandedNodesAfterFirstSolution:
+            n = expandedNodesAfterFirstSolution;
+            break;
+          case EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution:
+            n = expandedNodesAfterOptimalSolution;
+            break;
+          case EarlyTermination::SolutionNodes:
+            n = solutionNodes;
+            break;
+          case EarlyTermination::SolutionNodesAfterCurrentOptimalSolution:
+            n = solutionNodesAfterOptimalSolution;
+            break;
+          default:
+            break;
+        }
+        if (n >= config.earlyTerminationLimit) {
+          earlyTermination = true;
+          break;
+        }
+      }
     }
   }
 
@@ -636,16 +664,17 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     layerResultsIt->expandedNodesAfterOptimalSolution = expandedNodesAfterOptimalSolution;
     layerResultsIt->solutionNodes = solutionNodes;
     layerResultsIt->solutionNodesAfterOptimalSolution = solutionNodesAfterOptimalSolution;
+    layerResultsIt->earlyTermination = earlyTermination;
 
     const std::chrono::duration<double> diff = end - start;
-    results.heuristicBenchmark.timePerNode += diff.count();
+    results.heuristicBenchmark.secondsPerNode += diff.count();
 
     layerResultsIt->generatedNodes =
         layerResultsIt->expandedNodes + nodes.size();
     results.heuristicBenchmark.generatedNodes += layerResultsIt->generatedNodes;
 
     if (layerResultsIt->expandedNodes > 0) {
-      layerResultsIt->timePerNode =
+      layerResultsIt->secondsPerNode =
           diff.count() / static_cast<double>(layerResultsIt->expandedNodes);
       layerResultsIt->averageBranchingFactor =
           static_cast<double>(layerResultsIt->generatedNodes - 1) /

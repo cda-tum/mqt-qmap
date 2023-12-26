@@ -135,6 +135,20 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(py::init([](const std::string& str) -> Layering {
         return layeringFromString(str);
       }));
+  
+  // Early termination strategy in heuristic mapper
+  py::enum_<EarlyTermination>(m, "EarlyTermination")
+      .value("none", EarlyTermination::None)
+      .value("expanded_nodes", EarlyTermination::ExpandedNodes)
+      .value("expanded_nodes_after_first_solution", EarlyTermination::ExpandedNodesAfterFirstSolution)
+      .value("expanded_nodes_after_current_optimal_solution", EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution)
+      .value("solution_nodes", EarlyTermination::SolutionNodes)
+      .value("solution_nodes_after_current_optimal_solution", EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
+      .export_values()
+      // allow construction from string
+      .def(py::init([](const std::string& str) -> EarlyTermination {
+        return earlyTerminationFromString(str);
+      }));
 
   // Encoding settings for at-most-one and exactly-one constraints
   py::enum_<Encoding>(m, "Encoding")
@@ -186,6 +200,10 @@ PYBIND11_MODULE(pyqmap, m) {
                      &Configuration::automaticLayerSplits)
       .def_readwrite("automatic_layer_splits_node_limit",
                      &Configuration::automaticLayerSplitsNodeLimit)
+      .def_readwrite("early_termination",
+                     &Configuration::earlyTermination)
+      .def_readwrite("early_termination_limit",
+                     &Configuration::earlyTerminationLimit)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
       .def_readwrite("iterative_bidirectional_routing",
                      &Configuration::iterativeBidirectionalRouting)
@@ -274,7 +292,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("generated_nodes",
                      &MappingResults::HeuristicBenchmarkInfo::generatedNodes)
       .def_readwrite("time_per_node",
-                     &MappingResults::HeuristicBenchmarkInfo::timePerNode)
+                     &MappingResults::HeuristicBenchmarkInfo::secondsPerNode)
       .def_readwrite(
           "average_branching_factor",
           &MappingResults::HeuristicBenchmarkInfo::averageBranchingFactor)
@@ -302,13 +320,16 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("solution_depth",
                      &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
       .def_readwrite("time_per_node",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::timePerNode)
+                     &MappingResults::LayerHeuristicBenchmarkInfo::secondsPerNode)
       .def_readwrite(
           "average_branching_factor",
           &MappingResults::LayerHeuristicBenchmarkInfo::averageBranchingFactor)
       .def_readwrite(
           "effective_branching_factor",
           &MappingResults::LayerHeuristicBenchmarkInfo::effectiveBranchingFactor)
+      .def_readwrite(
+          "early_termination",
+          &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)
       .def("json", &MappingResults::LayerHeuristicBenchmarkInfo::json);
 
   auto arch = py::class_<Architecture>(

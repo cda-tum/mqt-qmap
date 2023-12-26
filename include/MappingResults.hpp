@@ -35,7 +35,7 @@ struct MappingResults {
   struct HeuristicBenchmarkInfo {
     std::size_t expandedNodes            = 0;
     std::size_t generatedNodes           = 0;
-    double      timePerNode              = 0.;
+    double      secondsPerNode              = 0.;
     double      averageBranchingFactor   = 0.;
     double      effectiveBranchingFactor = 0.;
     
@@ -43,7 +43,7 @@ struct MappingResults {
       nlohmann::json resultJSON{};
       resultJSON["expanded_nodes"]  = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
-      resultJSON["time_per_node"]   = timePerNode;
+      resultJSON["seconds_per_node"]   = secondsPerNode;
       resultJSON["average_branching_factor"] = averageBranchingFactor;
       resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
       return resultJSON;
@@ -58,9 +58,10 @@ struct MappingResults {
     std::size_t solutionNodes                     = 0;
     std::size_t solutionNodesAfterOptimalSolution = 0;
     std::size_t solutionDepth                     = 0;
-    double      timePerNode                       = 0.;
+    double      secondsPerNode                    = 0.;
     double      averageBranchingFactor            = 0.;
     double      effectiveBranchingFactor          = 0.;
+    bool        earlyTermination                  = false;
     
     [[nodiscard]] virtual nlohmann::json json() const {
       nlohmann::json resultJSON{};
@@ -71,9 +72,10 @@ struct MappingResults {
       resultJSON["solution_nodes"]  = solutionNodes;
       resultJSON["solution_nodes_after_optimal_solution"] = solutionNodesAfterOptimalSolution;
       resultJSON["solution_depth"] = solutionDepth;
-      resultJSON["time_per_node"]   = timePerNode;
+      resultJSON["seconds_per_node"]   = secondsPerNode;
       resultJSON["average_branching_factor"] = averageBranchingFactor;
       resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
+      resultJSON["early_termination"] = earlyTermination;
       return resultJSON;
     }
   };
