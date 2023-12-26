@@ -61,6 +61,8 @@ public:
     /** number of swaps used to get from mapping after last layer to the current
      * mapping */
     std::size_t nswaps = 0;
+    /** number of swaps that were shared with another considered qubit */
+    std::size_t sharedSwaps = 0;
     /** depth in search tree (starting with 0 at the root) */
     std::size_t depth  = 0;
     std::size_t parent = 0;
@@ -111,7 +113,8 @@ public:
      */
     void applySWAP(const Edge& swap, Architecture& arch,
                    const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-                   const TwoQubitMultiplicity&    twoQubitGateMultiplicity);
+                   const TwoQubitMultiplicity&    twoQubitGateMultiplicity,
+                   const std::unordered_set<std::uint16_t>& consideredQubits);
 
     /**
      * @brief applies an in-place teleportation of 2 qubits in `qubits` and

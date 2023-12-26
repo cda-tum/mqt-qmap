@@ -41,7 +41,7 @@ TEST(Functionality, NodeCostCalculation) {
   node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity);
+  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity, consideredQubits);
   node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
@@ -289,7 +289,7 @@ TEST(Functionality, HeuristicAdmissibility) {
     auto       newNode =
         HeuristicMapper::Node(1, 0, node.qubits, node.locations, node.swaps,
                               node.costFixed, node.depth + 1, false, true);
-    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity);
+    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity, consideredQubits);
     newNode.updateHeuristicCost(architecture, empty1Mult, multiplicity,
                                 consideredQubits);
     nodeStack.emplace_back(newNode);

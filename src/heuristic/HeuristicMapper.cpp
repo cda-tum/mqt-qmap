@@ -747,7 +747,7 @@ void HeuristicMapper::expandNodeAddOneSwap(
   if (architecture->isEdgeConnected(swap) ||
       architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
     newNode.applySWAP(swap, *architecture, singleQubitMultiplicities.at(layer),
-                      twoQubitMultiplicities.at(layer));
+                      twoQubitMultiplicities.at(layer), consideredQubits);
   } else {
     newNode.applyTeleportation(swap, *architecture);
   }
@@ -834,11 +834,17 @@ void HeuristicMapper::lookahead(const std::size_t      layer,
 void HeuristicMapper::Node::applySWAP(
     const Edge& swap, Architecture& arch,
     const SingleQubitMultiplicity& singleQubitGateMultiplicity,
-    const TwoQubitMultiplicity&    twoQubitGateMultiplicity) {
+    const TwoQubitMultiplicity&    twoQubitGateMultiplicity,
+    const std::unordered_set<std::uint16_t>& consideredQubits) {
   ++nswaps;
   swaps.emplace_back();
   const auto q1 = qubits.at(swap.first);
   const auto q2 = qubits.at(swap.second);
+  
+  if (consideredQubits.find(swap.first) != consideredQubits.end() &&
+      consideredQubits.find(swap.second) != consideredQubits.end()) {
+    ++sharedSwaps;
+  }
 
   qubits.at(swap.first)  = q2;
   qubits.at(swap.second) = q1;
@@ -1106,7 +1112,10 @@ void HeuristicMapper::Node::updateHeuristicCost(
       done = false;
     }
 
-    if (considerFidelity) {
+    if (!considerFidelity) {
+      costHeur += arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
+                        static_cast<std::uint16_t>(locations.at(q2)));
+    } else {
       // find the optimal edge, to which to remap the given virtual qubit
       // pair and take the cost of moving it there via swaps plus the
       // fidelity cost  of executing all their shared gates on that edge
@@ -1149,26 +1158,17 @@ void HeuristicMapper::Node::updateHeuristicCost(
       } else {
         costHeur += swapCost;
       }
-    } else {
-      const double swapCostStraight =
-          arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
-                        static_cast<std::uint16_t>(locations.at(q2)));
-      const double swapCostReverse =
-          arch.distance(static_cast<std::uint16_t>(locations.at(q2)),
-                        static_cast<std::uint16_t>(locations.at(q1)));
-
-      if (admissibleHeuristic) {
-        if (straightMultiplicity > 0) {
-          costHeur = std::max(costHeur, swapCostStraight);
-        }
-        if (reverseMultiplicity > 0) {
-          costHeur = std::max(costHeur, swapCostReverse);
-        }
-      } else {
-        costHeur += swapCostStraight * straightMultiplicity +
-                    swapCostReverse * reverseMultiplicity;
-      }
     }
   }
+  
+  if(!considerFidelity && admissibleHeuristic){
+    auto n = consideredQubits.size();
+    if (arch.bidirectional()) {
+      costHeur -= ((n-1)*n/2 - sharedSwaps)*COST_BIDIRECTIONAL_SWAP;
+    } else {
+      costHeur -= ((n-1)*n/2 - sharedSwaps)*COST_UNIDIRECTIONAL_SWAP;
+    }
+  }
+  
   costHeur -= savingsPotential;
 }
