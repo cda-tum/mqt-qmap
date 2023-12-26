@@ -1065,6 +1065,7 @@ void HeuristicMapper::Node::updateHeuristicCost(
     const std::unordered_set<std::uint16_t>& consideredQubits) {
   costHeur = 0.;
   done     = true;
+  double costSum = 0.;
 
   // single qubit gate savings potential by moving them to different physical
   // qubits with higher fidelity
@@ -1113,8 +1114,10 @@ void HeuristicMapper::Node::updateHeuristicCost(
     }
 
     if (!considerFidelity) {
-      costHeur += arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
+      const double swapCost = arch.distance(static_cast<std::uint16_t>(locations.at(q1)),
                         static_cast<std::uint16_t>(locations.at(q2)));
+      costHeur = std::max(costHeur, swapCost);
+      costSum += swapCost;
     } else {
       // find the optimal edge, to which to remap the given virtual qubit
       // pair and take the cost of moving it there via swaps plus the
@@ -1161,12 +1164,18 @@ void HeuristicMapper::Node::updateHeuristicCost(
     }
   }
   
-  if(!considerFidelity && admissibleHeuristic){
-    auto n = consideredQubits.size();
-    if (arch.bidirectional()) {
-      costHeur -= ((n-1)*n/2 - sharedSwaps)*COST_BIDIRECTIONAL_SWAP;
+  if(!considerFidelity){
+    if (!admissibleHeuristic) {
+      costHeur = costSum;
     } else {
-      costHeur -= ((n-1)*n/2 - sharedSwaps)*COST_UNIDIRECTIONAL_SWAP;
+      std::size_t n = consideredQubits.size();
+      double sharedSwapCostReduction = 0;
+      if (arch.bidirectional()) {
+        sharedSwapCostReduction = ((n-1)*n/2 - sharedSwaps)*COST_BIDIRECTIONAL_SWAP;
+      } else {
+        sharedSwapCostReduction = ((n-1)*n/2 - sharedSwaps)*COST_UNIDIRECTIONAL_SWAP;
+      }
+      costHeur = std::max(costHeur, costSum - sharedSwapCostReduction);
     }
   }
   
