@@ -712,6 +712,118 @@ TEST(Functionality, DataLogger) {
   }
 }
 
+TEST(Functionality, InitialLayoutDump) {
+  // queko's BNTF/16QBT_05CYC_TFL_9.qasm
+  qc::QuantumComputation qc{16U};
+  qc.x(15);
+  qc.x(4);
+  qc.cx(10, 8);
+  qc.cx(3, 5);
+  qc.cx(7, 1);
+  qc.cx(6, 12);
+  qc.cx(0, 13);
+  qc.x(10);
+  qc.x(9);
+  qc.x(1);
+  qc.x(2);
+  qc.x(12);
+  qc.cx(3, 11);
+  qc.cx(0, 13);
+  qc.x(9);
+  qc.x(6);
+  qc.x(2);
+  qc.x(0);
+  qc.x(12);
+  qc.x(7);
+  qc.cx(10, 8);
+  qc.cx(13, 5);
+  qc.x(10);
+  qc.x(15);
+  qc.x(9);
+  qc.x(1);
+  qc.x(13);
+  qc.x(5);
+  qc.cx(6, 12);
+  qc.cx(7, 11);
+  qc.cx(14, 4);
+  qc.x(1);
+  qc.x(14);
+  qc.x(4);
+  qc.cx(12, 10);
+  qc.cx(3, 5);
+  qc.cx(8, 7);
+  
+  // subgraph of IBM's Brisbane Backend
+  Architecture    arch{27U, {
+    {1, 0},
+    {2, 1},
+    {3, 2},
+    {4, 3},
+    {4, 5},
+    {4, 15},
+    {6, 5},
+    {6, 7},
+    {7, 8},
+    {8, 9},
+    {10, 9},
+    {10, 11},
+    {11, 12},
+    {12, 17},
+    {13, 12},
+    {14, 0},
+    {14, 18},
+    {15, 22},
+    {16, 8},
+    {16, 26},
+    {18, 19},
+    {20, 19},
+    {21, 20},
+    {21, 22},
+    {22, 23},
+    {24, 23},
+    {25, 24},
+    {26, 25}
+  }};
+  
+  Configuration config{};
+  config.method = Method::Heuristic;
+  config.layering = Layering::Disjoint2qBlocks;
+  
+  HeuristicMapper mapper(qc, arch);
+  mapper.map(config);
+  
+  std::stringstream qasmStream{};
+  mapper.dumpResult(qasmStream, qc::Format::OpenQASM);
+  const std::string qasm = qasmStream.str();
+  
+  qasmStream = std::stringstream(qasm);
+  auto qcMapped = qc::QuantumComputation();
+  qcMapped.import(qasmStream, qc::Format::OpenQASM);
+  
+  qasmStream = std::stringstream(qasm);
+  std::string line;
+  bool foundPermutation = false;
+  while (std::getline(qasmStream, line)) {
+    if (line.rfind("// i ", 0) == 0) {
+      std::stringstream lineStream(line.substr(5));
+      std::string       entry;
+      std::vector<std::uint32_t> qubits{};
+      while (std::getline(lineStream, entry, ' ')) {
+        EXPECT_NO_THROW(qubits.push_back(std::stoi(entry))) << "invalid qubit id " << entry;
+      }
+      std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
+      EXPECT_EQ(qubitSet.size(), qubits.size());
+      for (std::uint32_t i = 0; i < qcMapped.getNqubits(); ++i) {
+        EXPECT_TRUE(qubitSet.count(i) > 0) << "qubit " << std::to_string(i) <<
+                                               " not found in layout";
+      }
+      foundPermutation = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(foundPermutation) << "no initial layout found in mapped circuit";
+}
+
 class LayeringTest : public testing::Test {
 protected:
   qc::QuantumComputation           qc{};
