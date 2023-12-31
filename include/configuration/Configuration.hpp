@@ -7,8 +7,10 @@
 
 #include "CommanderGrouping.hpp"
 #include "Encoding.hpp"
+#include "Heuristic.hpp"
 #include "InitialLayout.hpp"
 #include "Layering.hpp"
+#include "LookaheadHeuristic.hpp"
 #include "Method.hpp"
 #include "SwapReduction.hpp"
 #include "nlohmann/json.hpp"
@@ -21,8 +23,7 @@ struct Configuration {
 
   // which method to use
   Method method              = Method::Heuristic;
-  bool   admissibleHeuristic = true;
-  bool   considerFidelity    = false;
+  Heuristic heuristic        = Heuristic::SwapCountMaxDistance;
 
   bool preMappingOptimizations  = true;
   bool postMappingOptimizations = true;
@@ -58,10 +59,10 @@ struct Configuration {
   std::size_t iterativeBidirectionalRoutingPasses = 0;
 
   // lookahead scheme settings
-  bool        lookahead            = true;
-  std::size_t nrLookaheads         = 15;
-  double      firstLookaheadFactor = 0.75;
-  double      lookaheadFactor      = 0.5;
+  LookaheadHeuristic lookaheadHeuristic   = LookaheadHeuristic::None;
+  std::size_t        nrLookaheads         = 15;
+  double             firstLookaheadFactor = 0.75;
+  double             lookaheadFactor      = 0.5;
 
   // teleportation settings
   bool          useTeleportation    = false;

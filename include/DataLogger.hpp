@@ -37,7 +37,7 @@ public:
                      double lookaheadPenalty,
                      const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
                      bool                                      validMapping,
-                     const std::vector<std::vector<Exchange>>& swaps,
+                     const std::vector<Exchange>& swaps,
                      std::size_t                               depth);
   void logFinalizeLayer(
       std::size_t layer, const qc::CompoundOperation& ops,
@@ -49,7 +49,7 @@ public:
       std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
       double                                             finalLookaheadPenalty,
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
-      const std::vector<std::vector<Exchange>>&          finalSwaps,
+      const std::vector<Exchange>&          finalSwaps,
       std::size_t                                        finalSearchDepth);
   void splitLayer();
   void logMappingResult(MappingResults& result);

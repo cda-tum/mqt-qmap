@@ -23,7 +23,9 @@ from .pyqmap import (
     Configuration,
     Encoding,
     InitialLayout,
+    Heuristic,
     Layering,
+    LookaheadHeuristic,
     MappingResults,
     Method,
     SwapReduction,
@@ -60,12 +62,13 @@ def compile(  # noqa: A001
     arch: str | Arch | Architecture | Backend | None,
     calibration: str | BackendProperties | Target | None = None,
     method: str | Method = "heuristic",
-    consider_fidelity: bool = False,
+    heuristic: str | Heuristic = "gate_count_max_distance",
     initial_layout: str | InitialLayout = "dynamic",
     iterative_bidirectional_routing_passes: int | None = None,
     layering: str | Layering = "individual_gates",
     automatic_layer_splits_node_limit: int | None = 5000,
-    lookaheads: int | None = 15,
+    lookahead_heuristic: str | LookaheadHeuristic | None = "gate_count_max_distance",
+    lookaheads: int = 15,
     lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
     teleportation_fake: bool = False,
@@ -93,11 +96,12 @@ def compile(  # noqa: A001
         arch: The architecture to map to.
         calibration: The calibration to use.
         method: The mapping method to use. Either "heuristic" or "exact". Defaults to "heuristic".
-        consider_fidelity: Whether to consider the fidelity of the gates. Defaults to False.
+        heuristic: The heuristic function to use for the routing search. Defaults to "gate_count_max_distance".
         initial_layout: The initial layout to use. Defaults to "dynamic".
         iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
         layering: The layering strategy to use. Defaults to "individual_gates".
         automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
+        lookahead_heuristic: The heuristic function to use as a lookahead penalty during search or None to disable lookahead. Defaults to "gate_count_max_distance".
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
         lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
@@ -134,7 +138,7 @@ def compile(  # noqa: A001
 
     config = Configuration()
     config.method = Method(method)
-    config.consider_fidelity = consider_fidelity
+    config.heuristic = Heuristic(heuristic)
     config.initial_layout = InitialLayout(initial_layout)
     if iterative_bidirectional_routing_passes is None:
         config.iterative_bidirectional_routing = False
@@ -166,12 +170,12 @@ def compile(  # noqa: A001
     config.debug = debug
     if visualizer is not None and visualizer.data_logging_path is not None:
         config.data_logging_path = visualizer.data_logging_path
-    if lookaheads is None:
+    if lookahead_heuristic is None:
+        config.lookahead_heuristic = LookaheadHeuristic.none
         config.lookaheads = 0
-        config.lookahead = False
     else:
+        config.lookahead_heuristic = LookaheadHeuristic(lookahead_heuristic)
         config.lookaheads = lookaheads
-        config.lookahead = True
     config.lookahead_factor = lookahead_factor
 
     results = map(circ, architecture, config)

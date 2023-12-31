@@ -97,12 +97,12 @@ TEST(Functionality, HeuristicBenchmark) {
 
   const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
+  settings.heuristic                = Heuristic::GateCountMaxDistance;
   settings.layering                 = Layering::DisjointQubits;
   settings.initialLayout            = InitialLayout::Identity;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
-  settings.lookahead                = false;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.debug                    = true;
   mapper->map(settings);
   auto& result = mapper->getResults();
@@ -175,18 +175,23 @@ TEST(Functionality, InvalidSettings) {
   HeuristicMapper mapper(qc, arch);
   auto            config = Configuration{};
   config.method          = Method::Heuristic;
+  config.heuristic       = Heuristic::GateCountMaxDistance;
+  config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
+  // invalid layering
   config.layering        = Layering::OddGates;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.layering = Layering::QubitTriangle;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.layering         = Layering::IndividualGates;
-  config.considerFidelity = true;
-  config.lookahead        = true;
+  // fidelity-aware heuristic with non-fidelity-aware lookahead heuristic
+  config.heuristic        = Heuristic::FidelityBestLocation;
   EXPECT_THROW(mapper.map(config), QMAPException);
-  config.lookahead           = false;
+  config.lookaheadHeuristic = LookaheadHeuristic::None;
+  // fidelity-aware heuristic with teleportation
   config.teleportationQubits = 2;
   EXPECT_THROW(mapper.map(config), QMAPException);
   config.teleportationQubits = 0;
+  // valid settings
   EXPECT_NO_THROW(mapper.map(config));
 }
 
@@ -244,6 +249,7 @@ TEST(Functionality, InvalidCircuits) {
   EXPECT_THROW(mapper3.map(config), QMAPException);
 }
 
+// TODO: replace with principal admissibility test
 TEST(Functionality, HeuristicAdmissibility) {
   Architecture      architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
@@ -361,17 +367,16 @@ TEST(Functionality, DataLogger) {
   qc.setName("test_circ");
 
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
+  settings.heuristic                = Heuristic::GateCountMaxDistance;
   settings.layering                 = Layering::IndividualGates;
   settings.initialLayout            = InitialLayout::Identity;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
-  settings.lookahead                = true;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::GateCountMaxDistance;
   settings.nrLookaheads             = 1;
   settings.firstLookaheadFactor     = 0.5;
   settings.lookaheadFactor          = 0.9;
   settings.debug                    = true;
-  settings.considerFidelity         = false;
   settings.useTeleportation         = false;
   // setting data logging path to enable data logging
   settings.dataLoggingPath = "test_log";
@@ -460,14 +465,12 @@ TEST(Functionality, DataLogger) {
   EXPECT_EQ(configJson["pre_mapping_optimizations"],
             settings.preMappingOptimizations);
   const auto& heuristicSettingsJson = configJson["settings"];
-  EXPECT_EQ(heuristicSettingsJson["admissible_heuristic"],
-            settings.admissibleHeuristic);
-  EXPECT_EQ(heuristicSettingsJson["consider_fidelity"],
-            settings.considerFidelity);
+  EXPECT_EQ(heuristicSettingsJson["heuristic"], toString(settings.heuristic));
   EXPECT_EQ(heuristicSettingsJson["initial_layout"],
             toString(settings.initialLayout));
-  if (settings.lookahead) {
+  if (settings.lookaheadHeuristic != LookaheadHeuristic::None) {
     const auto& lookaheadJson = heuristicSettingsJson["lookahead"];
+    EXPECT_EQ(lookaheadJson["heuristic"], toString(settings.lookaheadHeuristic));
     EXPECT_EQ(lookaheadJson["factor"], settings.lookaheadFactor);
     EXPECT_EQ(lookaheadJson["first_factor"], settings.firstLookaheadFactor);
     EXPECT_EQ(lookaheadJson["lookaheads"], settings.nrLookaheads);
@@ -1045,10 +1048,10 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTestFidelity, Identity) {
   Configuration settings{};
-  settings.layering         = Layering::DisjointQubits;
-  settings.initialLayout    = InitialLayout::Identity;
-  settings.considerFidelity = true;
-  settings.lookahead        = false;
+  settings.layering           = Layering::DisjointQubits;
+  settings.initialLayout      = InitialLayout::Identity;
+  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
   mapper->printResult(std::cout);
@@ -1057,10 +1060,10 @@ TEST_P(HeuristicTestFidelity, Identity) {
 
 TEST_P(HeuristicTestFidelity, Static) {
   Configuration settings{};
-  settings.layering         = Layering::DisjointQubits;
-  settings.initialLayout    = InitialLayout::Static;
-  settings.considerFidelity = true;
-  settings.lookahead        = false;
+  settings.layering           = Layering::DisjointQubits;
+  settings.initialLayout      = InitialLayout::Static;
+  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
   mapper->printResult(std::cout);
@@ -1069,10 +1072,10 @@ TEST_P(HeuristicTestFidelity, Static) {
 
 TEST_P(HeuristicTestFidelity, Dynamic) {
   Configuration settings{};
-  settings.layering         = Layering::DisjointQubits;
-  settings.initialLayout    = InitialLayout::Dynamic;
-  settings.considerFidelity = true;
-  settings.lookahead        = false;
+  settings.layering           = Layering::DisjointQubits;
+  settings.initialLayout      = InitialLayout::Dynamic;
+  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
   mapper->printResult(std::cout);
@@ -1081,10 +1084,10 @@ TEST_P(HeuristicTestFidelity, Dynamic) {
 
 TEST_P(HeuristicTestFidelity, NoFidelity) {
   Configuration settings{};
-  settings.layering         = Layering::DisjointQubits;
-  settings.initialLayout    = InitialLayout::Static;
-  settings.considerFidelity = true;
-  settings.lookahead        = false;
+  settings.layering           = Layering::DisjointQubits;
+  settings.initialLayout      = InitialLayout::Static;
+  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
   EXPECT_THROW(nonFidelityMapper->map(settings), QMAPException);
 }
 
@@ -1136,15 +1139,14 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
-  settings.considerFidelity         = true;
+  settings.heuristic                = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
-  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1222,15 +1224,14 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
-  settings.considerFidelity         = true;
+  settings.heuristic                = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
-  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
@@ -1285,15 +1286,14 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
-  settings.considerFidelity         = true;
+  settings.heuristic                = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.verbose                  = true;
   settings.swapOnFirstLayer         = true;
-  settings.lookahead                = false;
   mapper->map(settings);
   mapper->dumpResult("single_qubits_compete.qasm");
   mapper->printResult(std::cout);
@@ -1404,14 +1404,13 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
 
   Configuration settings{};
   settings.verbose                  = true;
-  settings.admissibleHeuristic      = true;
   settings.layering                 = Layering::Disjoint2qBlocks;
   settings.initialLayout            = InitialLayout::Identity;
-  settings.considerFidelity         = true;
+  settings.heuristic                = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
   settings.swapOnFirstLayer         = true;
-  settings.lookahead                = false;
   settings.automaticLayerSplits     = true;
   settings.automaticLayerSplitsNodeLimit =
       1; // force splittings after 1st expanded node until layers are
