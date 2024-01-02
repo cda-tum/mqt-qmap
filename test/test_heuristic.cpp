@@ -785,7 +785,8 @@ TEST(Functionality, InitialLayoutDump) {
       std::string                entry;
       std::vector<std::uint32_t> qubits{};
       while (std::getline(lineStream, entry, ' ')) {
-        EXPECT_NO_THROW(qubits.emplace_back(static_cast<std::uint32_t>(std::stoul(entry))))
+        EXPECT_NO_THROW(
+            qubits.emplace_back(static_cast<std::uint32_t>(std::stoul(entry))))
             << "invalid qubit id " << entry;
       }
       const std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
