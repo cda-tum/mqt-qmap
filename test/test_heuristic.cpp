@@ -785,10 +785,10 @@ TEST(Functionality, InitialLayoutDump) {
       std::string                entry;
       std::vector<std::uint32_t> qubits{};
       while (std::getline(lineStream, entry, ' ')) {
-        EXPECT_NO_THROW(qubits.push_back(std::stoi(entry)))
+        EXPECT_NO_THROW(qubits.emplace_back(static_cast<std::uint32_t>(std::stoul(entry))))
             << "invalid qubit id " << entry;
       }
-      std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
+      const std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
       EXPECT_EQ(qubitSet.size(), qubits.size());
       for (std::uint32_t i = 0; i < qcMapped.getNqubits(); ++i) {
         EXPECT_TRUE(qubitSet.count(i) > 0)
