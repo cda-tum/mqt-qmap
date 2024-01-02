@@ -21,6 +21,7 @@ from .pyqmap import (
     Architecture,
     CommanderGrouping,
     Configuration,
+    EarlyTermination,
     Encoding,
     InitialLayout,
     Layering,
@@ -65,6 +66,8 @@ def compile(  # noqa: A001
     iterative_bidirectional_routing_passes: int | None = None,
     layering: str | Layering = "individual_gates",
     automatic_layer_splits_node_limit: int | None = 5000,
+    early_termination: str | EarlyTermination = "none",
+    early_termination_limit: int = 0,
     lookaheads: int | None = 15,
     lookahead_factor: float = 0.5,
     use_teleportation: bool = False,
@@ -98,6 +101,8 @@ def compile(  # noqa: A001
         iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
         layering: The layering strategy to use. Defaults to "individual_gates".
         automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
+        early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guarantueed to be optimal. Defaults to "none".
+        early_termination_limit: The number of nodes (counted according to the early termination strategy) after which to terminate the search early. Defaults to 0.
         lookaheads: The number of lookaheads to be used or None if no lookahead should be used. Defaults to 15.
         lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
@@ -147,6 +152,8 @@ def compile(  # noqa: A001
     else:
         config.automatic_layer_splits = True
         config.automatic_layer_splits_node_limit = automatic_layer_splits_node_limit
+    config.early_termination = EarlyTermination(early_termination)
+    config.early_termination_limit = early_termination_limit
     config.encoding = Encoding(encoding)
     config.commander_grouping = CommanderGrouping(commander_grouping)
     config.swap_reduction = SwapReduction(swap_reduction)
