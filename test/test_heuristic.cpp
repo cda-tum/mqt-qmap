@@ -49,6 +49,8 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
   if (!layerNodeFile.is_open()) {
     throw std::runtime_error("Could not open file " + layerNodeFilePath);
   }
+  // iterating over the lines in the csv file and then over the entries 
+  // separated by ';'
   std::string line;
   while (std::getline(layerNodeFile, line)) {
     if (line.empty()) {
@@ -143,10 +145,9 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
         std::stringstream(entry) >> q1 >> q2 >> opTypeStr;
         qc::OpType opType = qc::OpType::SWAP;
         if (opTypeStr.size() > 0) {
+          // if no opType is given, the default value is SWAP
           opType = qc::opTypeFromString(opTypeStr);
         }
-        // ignoring op type for now, which is logged as 3rd value unless it is
-        // SWAP
         node.swaps.emplace_back(q1, q2, opType);
       }
     }
@@ -339,10 +340,14 @@ TEST_P(TestHeuristics, HeuristicProperties) {
   EXPECT_TRUE(!isAdmissible(settings.heuristic) ||
               isPrincipallyAdmissible(settings.heuristic))
       << "Admissible heuristics are by definition also principally admissible";
-
+  
+  // list of nodes for each search process (i.e. each layer) in all mappings
+  // each node is at the position corresponding to its id; positions of unused 
+  // ids are filled with default values (i.e. node.id = 0)
   std::vector<std::vector<HeuristicMapper::Node>> allNodes{};
   std::vector<std::size_t>                        finalSolutionIds{};
-
+  
+  // map to IBM Yorktown if possible
   if (qc.getNqubits() <= ibmqYorktown.getNqubits()) {
     if (isFidelityAware(settings.heuristic)) {
       EXPECT_THROW(ibmqYorktownMapper->map(settings), QMAPException);
@@ -358,7 +363,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       }
     }
   }
-
+  
+  // map to IBM London if possible
   if (qc.getNqubits() <= ibmqLondon.getNqubits()) {
     ibmqLondonMapper->map(settings);
     auto results = ibmqLondonMapper->getResults();
@@ -370,7 +376,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           getFinalNodeFromDatalog(settings.dataLoggingPath, i));
     }
   }
-
+  
+  // map to IBM QX5 if possible
   if (qc.getNqubits() <= ibmQX5.getNqubits()) {
     if (isFidelityAware(settings.heuristic)) {
       EXPECT_THROW(ibmQX5Mapper->map(settings), QMAPException);
@@ -400,6 +407,9 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     EXPECT_TRUE(finalSolutionNode.validMapping);
 
     if (isPrincipallyAdmissible(settings.heuristic)) {
+      // for principally admissible heuristics all nodes on the optimal 
+      // solution path should have 
+      // node.costFixed+node.costHeur <= finalSolutionNode.costFixed
       auto solutionPath = getPathToRoot(nodes, finalSolutionId);
       for (auto nodeId : solutionPath) {
         auto& node = nodes.at(nodeId);
@@ -433,12 +443,19 @@ TEST_P(TestHeuristics, HeuristicProperties) {
 
       if (node.validMapping) {
         if (isTight(settings.heuristic)) {
+          // tight heuristics are 0 in any goal node
           EXPECT_NEAR(node.costHeur, 0., tolerance)
               << "Heuristic " << toString(settings.heuristic)
               << " is not tight";
         }
 
         if (isAdmissible(settings.heuristic)) {
+          // for admissible heuristics all nodes should have
+          // node.costFixed+node.costHeur <= solutionNode.costFixed,
+          // where solutionNode is the best goal node reachable from the node;
+          // since reachability in a directed tree is equivalent to the being 
+          // on the same path to the root, one can also check that all nodes on 
+          // the path to the root from any goal node fulfill this condition
           auto path = getPathToRoot(nodes, node.id);
           for (auto nodeId : path) {
             auto& n = nodes.at(nodeId);
