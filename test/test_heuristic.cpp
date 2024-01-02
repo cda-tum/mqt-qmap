@@ -13,52 +13,231 @@
 #include <stack>
 #include <string>
 
-TEST(Functionality, NodeCostCalculation) {
+/**
+ * @brief Get id of the final node in a given layer from a data log.
+ */
+std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath, std::size_t layer) {
+  auto layerFile = std::ifstream(dataLoggingPath + "/layer_" +
+                                  std::to_string(layer) + ".json");
+  if (!layerFile.is_open()) {
+    throw std::runtime_error("Could not open file " + dataLoggingPath + 
+            "/layer_" + std::to_string(layer) + ".json");
+  }
+  const auto        layerJson   = nlohmann::json::parse(layerFile);
+  if (layerJson.find("final_node_id") == layerJson.end()) {
+    throw std::runtime_error("Missing key \"final_node_id\" in " + dataLoggingPath + 
+            "/layer_" + std::to_string(layer) + ".json");
+  }
+  const std::size_t finalNodeId = layerJson["final_node_id"];
+  return finalNodeId;
+}
+
+/**
+ * @brief parses all nodes in a given layer from a data log and enter them 
+ * into `nodes` with each node at the position corresponding to its id.
+ * 
+ * Only logged values are entered into the nodes, all other values are left at 
+ * default (e.g. `validMappedTwoQubitGates` and `sharedSwaps`)
+ */
+void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer, std::vector<HeuristicMapper::Node>& nodes) {
+  std::string layerNodeFilePath = dataLoggingPath + "/nodes_layer_" + std::to_string(layer) + ".csv";
+  auto layerNodeFile = std::ifstream(layerNodeFilePath);
+  if (!layerNodeFile.is_open()) {
+    throw std::runtime_error("Could not open file " + layerNodeFilePath);
+  }
+  std::string           line;
+  while (std::getline(layerNodeFile, line)) {
+    if (line.empty()) {
+      continue;
+    }
+    std::string                                        col;
+    std::size_t                                        nodeId           = 0;
+    
+    std::vector<std::int32_t>                          layout{};
+    std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
+    std::stringstream                                  lineStream(line);
+    if (std::getline(lineStream, col, ';')) {
+      nodeId = std::stoull(col);
+      if (nodeId >= nodes.size()) {
+        throw std::runtime_error("Node id " + std::to_string(nodeId) + " out of range in " + layerNodeFilePath);
+      }
+      nodes[nodeId].id = nodeId;
+    } else {
+      throw std::runtime_error("Missing value for node id in " + layerNodeFilePath);
+    }
+    auto& node = nodes[nodeId];
+    if (std::getline(lineStream, col, ';')) {
+      node.parent = std::stoull(col);
+    } else {
+      throw std::runtime_error("Missing value for parent node id in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      node.costFixed = std::stod(col);
+    } else {
+      throw std::runtime_error("Missing value for fixed cost in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      node.costHeur = std::stod(col);
+    } else {
+      throw std::runtime_error("Missing value for heuristic cost in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      node.lookaheadPenalty = std::stod(col);
+    } else {
+      throw std::runtime_error("Missing value for lookahead penalty in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      std::size_t validMapping = std::stoull(col);
+      if (validMapping > 1) {
+        throw std::runtime_error("Non-boolean value " + std::to_string(validMapping) + 
+                " for validMapping in " + layerNodeFilePath);
+      }
+      node.validMapping = static_cast<bool>(validMapping);
+    } else {
+      throw std::runtime_error("Missing value for validMapping in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      node.depth = std::stoull(col);
+    } else {
+      throw std::runtime_error("Missing value for depth in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      for (std::size_t i = 0; i < MAX_DEVICE_QUBITS; ++i) {
+        node.qubits[i] = -1;
+        node.locations[i] = -1;
+      }
+      
+      std::stringstream qubitMapBuffer(col);
+      std::string       entry;
+      for (std::size_t i = 0; std::getline(qubitMapBuffer, entry, ','); ++i) {
+        auto qubit = static_cast<std::int16_t>(std::stoi(entry));
+        node.qubits[i] = qubit;
+        if (qubit >= 0) {
+          node.locations[qubit] = static_cast<std::int16_t>(i);
+        }
+      }
+    } else {
+      throw std::runtime_error("Missing value for qubit layout in " + layerNodeFilePath);
+    }
+    if (std::getline(lineStream, col, ';')) {
+      std::stringstream swapBuffer(col);
+      std::string       entry;
+      while (std::getline(swapBuffer, entry, ',')) {
+        std::uint16_t q1 = 0;
+        std::uint16_t q2 = 0;
+        std::string opTypeStr = "";
+        std::stringstream(entry) >> q1 >> q2 >> opTypeStr;
+        qc::OpType opType = qc::OpType::SWAP;
+        if (opTypeStr.size() > 0) {
+          opType = qc::opTypeFromString(opTypeStr);
+        }
+        // ignoring op type for now, which is logged as 3rd value unless it is SWAP
+        node.swaps.emplace_back(q1, q2, opType);
+      }
+    }
+  }
+}
+
+/**
+ * @brief Get the path from a node to the root node (id of the given node is the first element, id of the root is last)
+ * 
+ * @param nodes vector of all nodes (each at the position corresponding to its id)
+ * @param nodeId id of the node from which to find the path to the root
+ */
+std::vector<std::size_t> getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
+  std::vector<std::size_t> path{};
+  if (nodeId >= nodes.size() || nodes[nodeId].id != nodeId) {
+    throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
+  }
+  auto& node = nodes[nodeId];
+  while (node.parent != node.id) {
+    path.push_back(node.id);
+    if (node.parent >= nodes.size() || nodes[node.parent].id != node.parent) {
+      throw std::runtime_error("Invalid parent id " + std::to_string(node.parent) + " for node " + std::to_string(node.id));
+    }
+    node = nodes[node.parent];
+  }
+  path.push_back(node.id);
+  return path;
+}
+
+
+
+
+Architecture internalsTestArchitecture{1, {}};
+class InternalsTest : public HeuristicMapper, public testing::Test {
+  protected:
+    InternalsTest() : HeuristicMapper(qc::QuantumComputation{1}, internalsTestArchitecture) {}
+    void SetUp() override {
+      results = MappingResults{};
+    }
+};
+
+TEST_F(InternalsTest, NodeCostCalculation) {
   const double                  tolerance = 1e-6;
-  const CouplingMap             cm        = {{0, 1}, {1, 2}, {3, 1}, {4, 3}};
-  Architecture                  arch{5, cm};
-  const SingleQubitMultiplicity empty1Mult                  = {};
-  const std::unordered_set<std::uint16_t>& consideredQubits = {0, 1, 2, 3, 5};
-  const TwoQubitMultiplicity               multiplicity     = {{{0, 1}, {5, 2}},
-                                                               {{2, 3}, {0, 1}}};
-  const std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits  = {4, 3, 1, 2, 0};
-  const std::array<std::int16_t, MAX_DEVICE_QUBITS> locations = {4, 2, 3, 1, 0};
+  
+  results.config.heuristic = Heuristic::GateCountMaxDistance;
+  results.config.lookaheadHeuristic = LookaheadHeuristic::None;
+  results.config.layering = Layering::Disjoint2qBlocks;
+  
+  architecture->loadCouplingMap(5, {{0, 1}, {1, 2}, {3, 1}, {4, 3}});
+  qc = qc::QuantumComputation{5};
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{0}, 1);
+  qc.cx(qc::Control{1}, 0);
+  qc.cx(qc::Control{1}, 0);
+  qc.cx(qc::Control{3}, 2);
+  createLayers();
+  
+  EXPECT_EQ(layers.size(), 1) << "layering failed, not able to test node cost calculation";
 
-  const std::vector<std::vector<Exchange>> swaps = {
-      {Exchange(0, 1, qc::OpType::Teleportation)},
-      {Exchange(1, 2, qc::OpType::SWAP)}};
-
-  HeuristicMapper::Node node(0, 0, qubits, locations, swaps, 5., 0, false,
-                             false);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
+  const std::vector<Exchange> swaps{
+      Exchange(0, 1, qc::OpType::Teleportation),
+      Exchange(1, 2, qc::OpType::SWAP)};
+  
+  HeuristicMapper::Node node(0, 0, {4, 3, 1, 2, 0}, {4, 2, 3, 1, 0}, swaps, {{2, 3}}, 5., 0);
+  EXPECT_NEAR(node.costFixed, 5., tolerance);
+  EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance);
+  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 1);
+  
+  results.config.heuristic = Heuristic::GateCountSumDistance;
+  updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
               tolerance);
-
-  node =
-      HeuristicMapper::Node(0, 0, qubits, locations, swaps, 5., 0, false, true);
-  EXPECT_NEAR(node.costFixed, 5., tolerance);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
+  EXPECT_NEAR(node.costFixed, 5., tolerance) << "updateHeuristicCost should not change costFixed";
+  
+  results.config.heuristic = Heuristic::GateCountMaxDistance;
+  updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  node.applySWAP({3, 4}, arch, empty1Mult, multiplicity, consideredQubits);
-  node.updateHeuristicCost(arch, empty1Mult, multiplicity, consideredQubits);
+  EXPECT_NEAR(node.costFixed, 5., tolerance) << "updateHeuristicCost should not change costFixed";
+  
+  applySWAP({3, 4}, 0 , node);
   EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
               tolerance);
+  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
+  
   node.lookaheadPenalty = 0.;
   EXPECT_NEAR(node.getTotalCost(),
               5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
               tolerance);
   EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP,
               tolerance);
+  
   node.lookaheadPenalty = 2.;
   EXPECT_NEAR(node.getTotalCost(),
               7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
               tolerance);
   EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
               tolerance);
-  node.recalculateFixedCost(arch, empty1Mult, multiplicity);
+  
+  recalculateFixedCost(0, node);
+  EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
   EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
@@ -71,6 +250,171 @@ TEST(Functionality, NodeCostCalculation) {
               2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
               tolerance);
 }
+
+
+class TestHeuristics : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
+protected:
+  std::string testExampleDir      = "../examples/";
+  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testCalibrationDir  = "../extern/calibration/";
+
+  qc::QuantumComputation           qc{};
+  Architecture                     ibmqYorktown{}; // 5 qubits
+  Architecture                     ibmqLondon{}; // 5 qubits (with calibration)
+  std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
+  std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
+  Architecture                     ibmQX5{}; // 16 qubits
+  std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
+  Configuration                    settings{};
+  const double                     tolerance = 1e-6;
+
+  void SetUp() override {
+    qc.import(testExampleDir + std::get<1>(GetParam()) + ".qasm");
+    ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
+    ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
+    ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
+    ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
+    ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
+    ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
+    ibmQX5Mapper   = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    settings.debug     = true;
+    settings.automaticLayerSplits = false;
+    settings.initialLayout = InitialLayout::Identity;
+    settings.layering = Layering::DisjointQubits;
+    settings.lookaheadHeuristic = LookaheadHeuristic::None;
+    settings.heuristic = std::get<0>(GetParam());
+    settings.dataLoggingPath = "test_log";
+  }
+};
+
+INSTANTIATE_TEST_SUITE_P(
+    Heuristic, TestHeuristics,
+    testing::Combine(
+      testing::Values(
+        Heuristic::GateCountMaxDistance,
+        Heuristic::GateCountSumDistance,
+        Heuristic::GateCountSumDistanceMinusSharedSwaps,
+        Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps,
+        Heuristic::FidelityBestLocation
+      ),
+      testing::Values(
+        "3_17_13", // 5q
+        "ex-1_166", // 5q
+        "ham3_102", // 5q
+        "miller_11", // 5q
+        "4gt11_84", // 5q
+        "4mod5-v0_20", // 5q
+        "mod5d1_63", // 5q
+        "ising_model_10", // 16q
+        "rd73_140",  // 16q
+        "cnt3-5_179", // 16q
+        "qft_16",  // 16q
+        "z4_268" // 16q
+      )
+    ),
+    [](const testing::TestParamInfo<TestHeuristics::ParamType>& inf) {
+      std::string name = std::get<1>(inf.param);
+      std::replace(name.begin(), name.end(), '-', '_');
+      std::stringstream ss{};
+      ss << name << "_" << toString(std::get<0>(inf.param));
+      return ss.str();
+    });
+
+TEST_P(TestHeuristics, HeuristicProperties) {
+  EXPECT_TRUE(!isAdmissible(settings.heuristic) || isPrincipallyAdmissible(settings.heuristic)) << "Admissible heuristics are by definition also principally admissible";
+  
+  std::vector<std::vector<HeuristicMapper::Node>> allNodes{};
+  std::vector<std::size_t> finalSolutionIds{};
+  
+  if (qc.getNqubits() <= ibmqYorktown.getNqubits()) {
+    if (isFidelityAware(settings.heuristic)) {
+      EXPECT_THROW(ibmqYorktownMapper->map(settings), QMAPException);
+    } else {
+      ibmqYorktownMapper->map(settings);
+      auto results = ibmqYorktownMapper->getResults();
+      for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
+        allNodes.emplace_back(results.layerHeuristicBenchmark.at(i).generatedNodes);
+        parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
+        finalSolutionIds.push_back(getFinalNodeFromDatalog(settings.dataLoggingPath, i));
+      }
+    }
+  }
+  
+  if (qc.getNqubits() <= ibmqLondon.getNqubits()) {
+    ibmqLondonMapper->map(settings);
+    auto results = ibmqLondonMapper->getResults();
+    for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
+      allNodes.emplace_back(results.layerHeuristicBenchmark.at(i).generatedNodes);
+        parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
+      finalSolutionIds.push_back(getFinalNodeFromDatalog(settings.dataLoggingPath, i));
+    }
+  }
+  
+  if (qc.getNqubits() <= ibmQX5.getNqubits()) {
+    if (isFidelityAware(settings.heuristic)) {
+      EXPECT_THROW(ibmQX5Mapper->map(settings), QMAPException);
+    } else {
+      ibmQX5Mapper->map(settings);
+      auto results = ibmQX5Mapper->getResults();
+      for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
+        allNodes.emplace_back(results.layerHeuristicBenchmark.at(i).generatedNodes);
+        parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
+        finalSolutionIds.push_back(getFinalNodeFromDatalog(settings.dataLoggingPath, i));
+      }
+    }
+  }
+  
+  for (std::size_t i = 0; i < allNodes.size(); ++i) {
+    auto& nodes = allNodes.at(i);
+    auto& finalSolutionId = finalSolutionIds.at(i);
+    
+    if (finalSolutionId >= nodes.size() || nodes.at(finalSolutionId).id != finalSolutionId) {
+      FAIL() << "Final solution node " << finalSolutionId << " not found in nodes of layer " << i;
+    }
+    auto& finalSolutionNode = nodes.at(finalSolutionId);
+    EXPECT_TRUE(finalSolutionNode.validMapping);
+    
+    if (isPrincipallyAdmissible(settings.heuristic)) {
+      auto solutionPath = getPathToRoot(nodes, finalSolutionId);
+      for (auto nodeId : solutionPath) {
+        auto& node = nodes.at(nodeId);
+        EXPECT_LE(node.getTotalCost(), finalSolutionNode.costFixed) << "Heuristic " << toString(settings.heuristic) << " is not principally admissible";
+      }
+    }
+    
+    for (std::size_t j = 0; j < nodes.size(); ++j) {
+      const auto& node = nodes.at(j);
+      if (j != node.id) {
+        continue;
+      }
+      
+      // check non-decreasing total cost
+      if (node.parent != node.id) {
+        if (node.parent >= nodes.size() || nodes.at(node.parent).id != node.parent) {
+          FAIL() << "Invalid parent id " << node.parent << " for node " << node.id;
+        }
+        EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost()) << "Heuristic " << toString(settings.heuristic) << " does not result in non-decreasing cost estimation";
+      }
+      
+      EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance) << "Lookahead penalty not 0 even though lookahead has been deactivated";
+      
+      if (node.validMapping) {
+        if (isTight(settings.heuristic)) {
+          EXPECT_NEAR(node.costHeur, 0., tolerance) << "Heuristic " << toString(settings.heuristic) << " is not tight";
+        }
+        
+        if (isAdmissible(settings.heuristic)) {
+          auto path = getPathToRoot(nodes, node.id);
+          for (auto nodeId : path) {
+            auto& n = nodes.at(nodeId);
+            EXPECT_LE(n.getTotalCost(), node.costFixed) << "Heuristic " << toString(settings.heuristic) << " is not admissible";
+          }
+        }
+      }
+    }
+  }
+}
+
 
 TEST(Functionality, HeuristicBenchmark) {
   /*
@@ -247,60 +591,6 @@ TEST(Functionality, InvalidCircuits) {
   Architecture    arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
   HeuristicMapper mapper3(qc3, arch2);
   EXPECT_THROW(mapper3.map(config), QMAPException);
-}
-
-// TODO: replace with principal admissibility test
-TEST(Functionality, HeuristicAdmissibility) {
-  Architecture      architecture{};
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
-                          {3, 2}, {3, 4}, {4, 3}, {4, 5}, {5, 4}};
-  architecture.loadCouplingMap(6, cm);
-  const std::vector<Edge> perms{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}};
-
-  const SingleQubitMultiplicity            empty1Mult       = {};
-  const std::unordered_set<std::uint16_t>& consideredQubits = {0, 1, 2,
-                                                               3, 4, 5};
-  const TwoQubitMultiplicity               multiplicity     = {
-      {{0, 4}, {1, 0}}, {{1, 3}, {1, 0}}, {{2, 5}, {1, 0}}};
-
-  // perform depth-limited depth first search
-  const std::size_t                  depthLimit = 6;
-  std::vector<HeuristicMapper::Node> nodeStack{};
-  nodeStack.reserve(depthLimit);
-  std::stack<std::size_t> permStack{};
-
-  auto initNode = HeuristicMapper::Node(
-      0, 0, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5}, {}, 0., 0, false, true);
-  initNode.recalculateFixedCost(architecture, empty1Mult, multiplicity);
-  initNode.updateHeuristicCost(architecture, empty1Mult, multiplicity,
-                               consideredQubits);
-  nodeStack.emplace_back(initNode);
-  permStack.emplace(perms.size());
-
-  while (!nodeStack.empty()) {
-    const auto& node = nodeStack.back();
-    if (node.done) {
-      // check if all nodes in stack have lower or equal cost
-      for (const auto& prevNode : nodeStack) {
-        EXPECT_LE(prevNode.getTotalCost(), node.getTotalCost());
-      }
-    }
-    if (node.done || nodeStack.size() >= depthLimit || permStack.top() == 0) {
-      nodeStack.pop_back();
-      permStack.pop();
-      continue;
-    }
-    --permStack.top();
-    const auto perm = perms[permStack.top()];
-    auto       newNode =
-        HeuristicMapper::Node(1, 0, node.qubits, node.locations, node.swaps,
-                              node.costFixed, node.depth + 1, false, true);
-    newNode.applySWAP(perm, architecture, empty1Mult, multiplicity, consideredQubits);
-    newNode.updateHeuristicCost(architecture, empty1Mult, multiplicity,
-                                consideredQubits);
-    nodeStack.emplace_back(newNode);
-    permStack.emplace(perms.size());
-  }
 }
 
 TEST(Functionality, DataLoggerAfterClose) {
@@ -576,123 +866,49 @@ TEST(Functionality, DataLogger) {
     EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
               architecture.getNqubits());
-
-    auto layerNodeFile =
-        std::ifstream(settings.dataLoggingPath + "/nodes_layer_" +
-                      std::to_string(i) + ".csv");
-    if (!layerNodeFile.is_open()) {
-      FAIL() << "Could not open file " << settings.dataLoggingPath
-             << "/nodes_layer_" << i << ".csv";
+    
+    std::vector<HeuristicMapper::Node> nodes{results.layerHeuristicBenchmark.at(i).generatedNodes};
+    parseNodesFromDatalog(settings.dataLoggingPath, i, nodes);
+    
+    if (finalNodeId >= nodes.size() || nodes.at(finalNodeId).id != finalNodeId) {
+      FAIL() << "Final solution node " << finalNodeId << " not found in nodes of layer " << i;
     }
-    std::string           line;
-    bool                  foundFinalNode = false;
-    std::set<std::size_t> nodeIds;
-    while (std::getline(layerNodeFile, line)) {
-      if (line.empty()) {
+    auto& finalSolutionNode = nodes.at(finalNodeId);
+    EXPECT_EQ(layerJson["final_cost_fixed"], finalSolutionNode.costFixed);
+    EXPECT_EQ(layerJson["final_cost_heur"], finalSolutionNode.costHeur);
+    EXPECT_EQ(layerJson["final_lookahead_penalty"], finalSolutionNode.lookaheadPenalty);
+    EXPECT_EQ(layerJson["final_search_depth"], finalSolutionNode.depth);
+    std::vector<std::int16_t> layout{};
+    for (std::size_t j = 0; j < architecture.getNqubits(); ++j) {
+      layout.emplace_back(finalSolutionNode.qubits[j]);
+    }
+    std::vector<std::pair<std::uint16_t, std::uint16_t>> swaps{};
+    for (auto& swap : finalSolutionNode.swaps) {
+      swaps.emplace_back(swap.first, swap.second);
+    }
+    EXPECT_EQ(layerJson["final_layout"], layout);
+    EXPECT_EQ(layerJson["final_swaps"], swaps);
+    EXPECT_EQ(finalSolutionNode.validMapping, true);
+    
+    for (std::size_t j = 0; j < nodes.size(); ++j) {
+      auto& node = nodes.at(j);
+      if (j != node.id) {
         continue;
       }
-      std::string                                        col;
-      std::size_t                                        nodeId           = 0;
-      std::size_t                                        parentId         = 0;
-      std::size_t                                        depth            = 0;
-      std::size_t                                        isValidMapping   = 0;
-      double                                             costFixed        = 0.;
-      double                                             costHeur         = 0.;
-      double                                             lookaheadPenalty = 0.;
-      std::vector<std::int32_t>                          layout{};
-      std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
-      std::stringstream                                  lineStream(line);
-      if (std::getline(lineStream, col, ';')) {
-        nodeId = std::stoull(col);
-        nodeIds.insert(nodeId);
-      } else {
-        FAIL() << "Missing value for node id in " << settings.dataLoggingPath
-               << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        parentId = std::stoull(col);
-        if (nodeId != 0) {
-          EXPECT_TRUE(nodeIds.count(parentId) > 0);
+      
+      for (std::size_t k = 0; k < architecture.getNqubits(); ++k) {
+        EXPECT_GE(node.qubits[k], -1);
+        EXPECT_LT(node.qubits[k], qc.getNqubits());
+        EXPECT_GE(node.locations[k], -1);
+        EXPECT_LT(node.locations[k], architecture.getNqubits());
+        
+        if (node.qubits[k] >= 0) {
+          EXPECT_EQ(node.locations[static_cast<std::size_t>(node.qubits[k])], static_cast<std::int16_t>(k));
         }
-      } else {
-        FAIL() << "Missing value for parent node id in "
-               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        costFixed = std::stod(col);
-      } else {
-        FAIL() << "Missing value for fixed cost in " << settings.dataLoggingPath
-               << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        costHeur = std::stod(col);
-      } else {
-        FAIL() << "Missing value for heuristic cost in "
-               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        lookaheadPenalty = std::stod(col);
-      } else {
-        FAIL() << "Missing value for lookahead penalty in "
-               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        isValidMapping = std::stoull(col);
-        if (isValidMapping > 1) {
-          FAIL() << "Non-boolean value " << isValidMapping
-                 << " for isValidMapping in " << settings.dataLoggingPath
-                 << "/nodes_layer_" << i << ".csv";
-        }
-      } else {
-        FAIL() << "Missing value for isValidMapping in "
-               << settings.dataLoggingPath << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        depth = std::stoull(col);
-      } else {
-        FAIL() << "Missing value for depth in " << settings.dataLoggingPath
-               << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        std::stringstream qubitMapBuffer(col);
-        std::string       entry;
-        while (std::getline(qubitMapBuffer, entry, ',')) {
-          const std::int32_t qubit = std::stoi(entry);
-          layout.push_back(qubit);
-          EXPECT_TRUE(-1 <= qubit && qubit < architecture.getNqubits());
-        }
-        EXPECT_EQ(layout.size(), architecture.getNqubits());
-      } else {
-        FAIL() << "Missing value for layout in " << settings.dataLoggingPath
-               << "/nodes_layer_" << i << ".csv";
-      }
-      if (std::getline(lineStream, col, ';')) {
-        std::stringstream swapBuffer(col);
-        std::string       entry;
-        while (std::getline(swapBuffer, entry, ',')) {
-          std::int32_t q1 = 0;
-          std::int32_t q2 = 0;
-          std::stringstream(entry) >> q1 >> q2;
-          EXPECT_TRUE(0 <= q1 && q1 < architecture.getNqubits());
-          EXPECT_TRUE(0 <= q2 && q2 < architecture.getNqubits());
-          swaps.emplace_back(q1, q2);
+        if (node.locations[k] >= 0) {
+          EXPECT_EQ(node.qubits[static_cast<std::size_t>(node.locations[k])], static_cast<std::int16_t>(k));
         }
       }
-
-      if (nodeId == finalNodeId) {
-        foundFinalNode = true;
-        EXPECT_EQ(layerJson["final_cost_fixed"], costFixed);
-        EXPECT_EQ(layerJson["final_cost_heur"], costHeur);
-        EXPECT_EQ(layerJson["final_layout"], layout);
-        EXPECT_EQ(layerJson["final_lookahead_penalty"], lookaheadPenalty);
-        EXPECT_EQ(layerJson["final_search_depth"], depth);
-        EXPECT_EQ(layerJson["final_swaps"], swaps);
-        EXPECT_EQ(isValidMapping, 1);
-      }
-    }
-    if (!foundFinalNode) {
-      FAIL() << "Could not find final node in " << settings.dataLoggingPath
-             << "/nodes_layer_" << i << ".csv";
     }
   }
 
@@ -1003,7 +1219,6 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
   settings.initialLayout       = InitialLayout::Dynamic;
   settings.debug               = true;
-  settings.verbose             = true;
   settings.teleportationQubits = std::min(
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());

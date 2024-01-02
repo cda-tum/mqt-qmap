@@ -58,32 +58,33 @@ public:
     /** heuristic cost expected for future swaps needed in later circuit layers
      * (further layers contribute less) */
     double lookaheadPenalty = 0.;
-    /** number of swaps used to get from mapping after last layer to the current
-     * mapping */
-    std::size_t nswaps = 0;
     /** number of swaps that were shared with another considered qubit */
     std::size_t sharedSwaps = 0;
     /** depth in search tree (starting with 0 at the root) */
     std::size_t depth  = 0;
     std::size_t parent = 0;
-    std::size_t id;
+    std::size_t id = 0;
     /** true if all qubit pairs are mapped next to each other on the
      * architecture */
     bool validMapping = true;
     
-
+    explicit Node() = default;
     explicit Node(std::size_t nodeId)
         : id(nodeId) {};
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<Exchange>& sw = {},
+         const std::set<Edge>& valid2QGates = {},
          const double initCostFixed = 0, const std::size_t searchDepth = 0)
         : costFixed(initCostFixed), depth(searchDepth), parent(parentId),
           id(nodeId) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
+      std::copy(valid2QGates.begin(), valid2QGates.end(),
+                std::inserter(validMappedTwoQubitGates,
+                              validMappedTwoQubitGates.begin()));
     }
 
     /**
@@ -108,7 +109,11 @@ public:
       out << "\t\t\"heuristic\": " << costHeur << ",\n";
       out << "\t\t\"lookahead_penalty\": " << lookaheadPenalty << "\n";
       out << "\t},\n";
-      out << "\t\"nswaps\": " << nswaps << "\n}\n";
+      out << "\t\"swaps\": ";
+      for (const auto& swap : swaps) {
+        out << "(" << swap.first << " " << swap.second << ") ";
+      }
+      out << "\n}\n";
       return out;
     }
   };
@@ -231,8 +236,7 @@ protected:
    * of logical qubits in the current layer
    */
   void expandNodeAddOneSwap(
-      const Edge& swap, Node& node, std::size_t layer,
-      const std::unordered_set<std::uint16_t>& consideredQubits);
+      const Edge& swap, Node& node, std::size_t layer);
   
   /**
    * @brief applies an in-place swap of 2 virtual qubits in the given node and recalculates all costs accordingly
@@ -271,10 +275,9 @@ protected:
   /**
    * @brief recalculates the gate-count-optimizing fixed cost of the node from the current mapping and swaps
    *
-   * @param layer index of current circuit layer
    * @param node search node for which to recalculate the fixed cost
    */
-  void recalculateFixedCostNonFidelity(std::size_t layer, Node& node);
+  void recalculateFixedCostNonFidelity(Node& node);
 
   /**
    * @brief calculates the heuristic cost of the current mapping in the node
@@ -413,6 +416,13 @@ inline bool operator<(const HeuristicMapper::Node& x,
 
 inline bool operator>(const HeuristicMapper::Node& x,
                       const HeuristicMapper::Node& y) {
+  // order nodes by costFixed + costHeur + lookaheadPenalty (increasing)
+  // then by validMapping (true before false)
+  // then by costHeur + lookaheadPenalty (increasing), 
+  //          equivalent to ordering by costFixed (decreasing)
+  // then by the amount of validly mapped 2q gates (decreasing)
+  // then by the qubit mapping (lexicographically) as an arbitrary but 
+  //          consistent tie-breaker
   const auto xcost = x.getTotalCost();
   const auto ycost = y.getTotalCost();
   if (std::abs(xcost - ycost) > 1e-6) {
@@ -431,5 +441,10 @@ inline bool operator>(const HeuristicMapper::Node& x,
   if (std::abs(xheur - yheur) > 1e-6) {
     return xheur > yheur;
   }
+  
+  if (x.validMappedTwoQubitGates.size() != y.validMappedTwoQubitGates.size()) {
+    return x.validMappedTwoQubitGates.size() < y.validMappedTwoQubitGates.size();
+  }
+  
   return x < y;
 }
