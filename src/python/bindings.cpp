@@ -122,13 +122,15 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(py::init([](const std::string& str) -> InitialLayout {
         return initialLayoutFromString(str);
       }));
-  
+
   // Heuristic function
   py::enum_<Heuristic>(m, "Heuristic")
       .value("gate_count_max_distance", Heuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance", Heuristic::GateCountSumDistance)
-      .value("gate_count_sum_distance_minus_shared_swaps", Heuristic::GateCountSumDistanceMinusSharedSwaps)
-      .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps", Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
+      .value("gate_count_sum_distance_minus_shared_swaps",
+             Heuristic::GateCountSumDistanceMinusSharedSwaps)
+      .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps",
+             Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
       .value("fidelity_best_location", Heuristic::FidelityBestLocation)
       .export_values()
       // allow construction from string
@@ -139,8 +141,10 @@ PYBIND11_MODULE(pyqmap, m) {
   // Lookahead heuristic function
   py::enum_<LookaheadHeuristic>(m, "LookaheadHeuristic")
       .value("none", LookaheadHeuristic::None)
-      .value("gate_count_max_distance", LookaheadHeuristic::GateCountMaxDistance)
-      .value("gate_count_sum_distance", LookaheadHeuristic::GateCountSumDistance)
+      .value("gate_count_max_distance",
+             LookaheadHeuristic::GateCountMaxDistance)
+      .value("gate_count_sum_distance",
+             LookaheadHeuristic::GateCountSumDistance)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> LookaheadHeuristic {

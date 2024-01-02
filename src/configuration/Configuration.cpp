@@ -19,9 +19,9 @@ nlohmann::json Configuration::json() const {
   config["debug"]                              = debug;
 
   if (method == Method::Heuristic) {
-    auto& heuristicJson               = config["settings"];
-    heuristicJson["heuristic"]            = ::toString(heuristic);
-    heuristicJson["initial_layout"]       = ::toString(initialLayout);
+    auto& heuristicJson             = config["settings"];
+    heuristicJson["heuristic"]      = ::toString(heuristic);
+    heuristicJson["initial_layout"] = ::toString(initialLayout);
     if (lookaheadHeuristic != LookaheadHeuristic::None) {
       auto& lookaheadSettings           = heuristicJson["lookahead"];
       lookaheadSettings["heuristic"]    = ::toString(lookaheadHeuristic);

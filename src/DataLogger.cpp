@@ -87,8 +87,7 @@ void DataLogger::logFinalizeLayer(
     std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
     double                                             finalLookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
-    const std::vector<Exchange>&                       finalSwaps,
-    std::size_t                                        finalSearchDepth) {
+    const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth) {
   if (deactivated) {
     return;
   }
@@ -141,8 +140,8 @@ void DataLogger::logFinalizeLayer(
   if (finalSwaps.empty()) {
     json["final_swaps"] = nlohmann::json::array();
   } else {
-    auto& finalSwapsJSON = json["final_swaps"];
-    std::size_t i = 0;
+    auto&       finalSwapsJSON = json["final_swaps"];
+    std::size_t i              = 0;
     for (const auto& swap : finalSwaps) {
       finalSwapsJSON[i][0] = swap.first;
       finalSwapsJSON[i][1] = swap.second;
@@ -186,8 +185,7 @@ void DataLogger::logSearchNode(
     std::size_t layerIndex, std::size_t nodeId, std::size_t parentId,
     double costFixed, double costHeur, double lookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
-    bool validMapping, const std::vector<Exchange>& swaps,
-    std::size_t depth) {
+    bool validMapping, const std::vector<Exchange>& swaps, std::size_t depth) {
   if (deactivated) {
     return;
   }

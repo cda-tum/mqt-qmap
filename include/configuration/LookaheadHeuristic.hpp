@@ -10,9 +10,11 @@
 enum class LookaheadHeuristic {
   /** no lookahead */
   None,
-  /** maximum over all distances between any virtual qubit pair in the given layer; optimizing gate-count */
+  /** maximum over all distances between any virtual qubit pair in the given
+     layer; optimizing gate-count */
   GateCountMaxDistance,
-  /** sum over all distances between any virtual qubit pair in the given layer; optimizing gate-count */
+  /** sum over all distances between any virtual qubit pair in the given layer;
+     optimizing gate-count */
   GateCountSumDistance
 };
 
@@ -20,7 +22,8 @@ enum class LookaheadHeuristic {
  * A heuristic is fidelity aware if it takes into account the error rates of
  * physical qubits and minimizes the total error of the mapped circuit.
  */
-[[maybe_unused]] static inline bool isFidelityAware(const LookaheadHeuristic heuristic) {
+[[maybe_unused]] static inline bool
+isFidelityAware(const LookaheadHeuristic heuristic) {
   switch (heuristic) {
   case LookaheadHeuristic::None:
   case LookaheadHeuristic::GateCountMaxDistance:
@@ -30,7 +33,8 @@ enum class LookaheadHeuristic {
   return false;
 }
 
-[[maybe_unused]] static inline std::string toString(const LookaheadHeuristic heuristic) {
+[[maybe_unused]] static inline std::string
+toString(const LookaheadHeuristic heuristic) {
   switch (heuristic) {
   case LookaheadHeuristic::None:
     return "none";
@@ -42,7 +46,8 @@ enum class LookaheadHeuristic {
   return " ";
 }
 
-[[maybe_unused]] static LookaheadHeuristic lookaheadHeuristicFromString(const std::string& heuristic) {
+[[maybe_unused]] static LookaheadHeuristic
+lookaheadHeuristicFromString(const std::string& heuristic) {
   if (heuristic == "none" || heuristic == "0") {
     return LookaheadHeuristic::None;
   }
@@ -52,5 +57,6 @@ enum class LookaheadHeuristic {
   if (heuristic == "gate_count_sum_distance" || heuristic == "2") {
     return LookaheadHeuristic::GateCountSumDistance;
   }
-  throw std::invalid_argument("Invalid lookahead heuristic value: " + heuristic);
+  throw std::invalid_argument("Invalid lookahead heuristic value: " +
+                              heuristic);
 }

@@ -8,22 +8,30 @@
 #include <iostream>
 
 enum class Heuristic {
-  /** maximum over all distances between any virtual qubit pair in the current layer; optimizing gate-count; admissible; tight */
+  /** maximum over all distances between any virtual qubit pair in the current
+     layer; optimizing gate-count; admissible; tight */
   GateCountMaxDistance,
-  /** sum over all distances between any virtual qubit pair in the current layer; optimizing gate-count; not admissible; tight */
+  /** sum over all distances between any virtual qubit pair in the current
+     layer; optimizing gate-count; not admissible; tight */
   GateCountSumDistance,
-  /** sum over all distances between any virtual qubit pair in the current layer minus the upper limit of viable shared swaps; optimizing gate-count; admissible; tight */
+  /** sum over all distances between any virtual qubit pair in the current layer
+     minus the upper limit of viable shared swaps; optimizing gate-count;
+     admissible; tight */
   GateCountSumDistanceMinusSharedSwaps,
-  /** maximum of `Heuristic::GateCountMaxDistance` and `Heuristic::GateCountSumDistanceMinusSharedSwaps`; optimizing gate-count; admissible; tight */
+  /** maximum of `Heuristic::GateCountMaxDistance` and
+     `Heuristic::GateCountSumDistanceMinusSharedSwaps`; optimizing gate-count;
+     admissible; tight */
   GateCountMaxDistanceOrSumDistanceMinusSharedSwaps,
-  /** minimum cost if each virtual qubit pair/qubit is mapped to its individually best physical edge/qubit; optimizing fidelity; admissible; tight */
+  /** minimum cost if each virtual qubit pair/qubit is mapped to its
+     individually best physical edge/qubit; optimizing fidelity; admissible;
+     tight */
   FidelityBestLocation
 };
 
 /**
- * A heuristic is admissible if it never overestimates the cost of the best 
- * reachable goal node, i.e. c(n*) <= c(n) + h(n) for cost function c, 
- * heuristic h, any node n in the search graph, and n* the best reachable goal 
+ * A heuristic is admissible if it never overestimates the cost of the best
+ * reachable goal node, i.e. c(n*) <= c(n) + h(n) for cost function c,
+ * heuristic h, any node n in the search graph, and n* the best reachable goal
  * node from n.
  */
 [[maybe_unused]] static inline bool isAdmissible(const Heuristic heuristic) {
@@ -40,12 +48,13 @@ enum class Heuristic {
 }
 
 /**
- * A heuristic is principally admissible if it never overestimates the cost of the
- * globally optimal solution along the solution path, i.e. c(n*) <= c(n) + h(n)
- * for cost function c, heuristic h, any node n along the optimal solution path, 
- * and n* the globally optimal solution node.
+ * A heuristic is principally admissible if it never overestimates the cost of
+ * the globally optimal solution along the solution path, i.e. c(n*) <= c(n) +
+ * h(n) for cost function c, heuristic h, any node n along the optimal solution
+ * path, and n* the globally optimal solution node.
  */
-[[maybe_unused]] static inline bool isPrincipallyAdmissible(const Heuristic heuristic) {
+[[maybe_unused]] static inline bool
+isPrincipallyAdmissible(const Heuristic heuristic) {
   switch (heuristic) {
   case Heuristic::GateCountMaxDistance:
   case Heuristic::GateCountSumDistanceMinusSharedSwaps:
@@ -108,17 +117,21 @@ enum class Heuristic {
   return " ";
 }
 
-[[maybe_unused]] static Heuristic heuristicFromString(const std::string& heuristic) {
+[[maybe_unused]] static Heuristic
+heuristicFromString(const std::string& heuristic) {
   if (heuristic == "gate_count_max_distance" || heuristic == "0") {
     return Heuristic::GateCountMaxDistance;
   }
   if (heuristic == "gate_count_sum_distance" || heuristic == "1") {
     return Heuristic::GateCountSumDistance;
   }
-  if (heuristic == "gate_count_sum_distance_minus_shared_swaps" || heuristic == "2") {
+  if (heuristic == "gate_count_sum_distance_minus_shared_swaps" ||
+      heuristic == "2") {
     return Heuristic::GateCountSumDistanceMinusSharedSwaps;
   }
-  if (heuristic == "gate_count_max_distance_or_sum_distance_minus_shared_swaps" || heuristic == "3") {
+  if (heuristic ==
+          "gate_count_max_distance_or_sum_distance_minus_shared_swaps" ||
+      heuristic == "3") {
     return Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps;
   }
   if (heuristic == "fidelity_best_location" || heuristic == "4") {

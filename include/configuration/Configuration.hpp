@@ -22,8 +22,8 @@ struct Configuration {
   Configuration() = default;
 
   // which method to use
-  Method method              = Method::Heuristic;
-  Heuristic heuristic        = Heuristic::GateCountMaxDistance;
+  Method    method    = Method::Heuristic;
+  Heuristic heuristic = Heuristic::GateCountMaxDistance;
 
   bool preMappingOptimizations  = true;
   bool postMappingOptimizations = true;
@@ -59,10 +59,11 @@ struct Configuration {
   std::size_t iterativeBidirectionalRoutingPasses = 0;
 
   // lookahead scheme settings
-  LookaheadHeuristic lookaheadHeuristic   = LookaheadHeuristic::GateCountMaxDistance;
-  std::size_t        nrLookaheads         = 15;
-  double             firstLookaheadFactor = 0.75;
-  double             lookaheadFactor      = 0.5;
+  LookaheadHeuristic lookaheadHeuristic =
+      LookaheadHeuristic::GateCountMaxDistance;
+  std::size_t nrLookaheads         = 15;
+  double      firstLookaheadFactor = 0.75;
+  double      lookaheadFactor      = 0.5;
 
   // teleportation settings
   bool          useTeleportation    = false;
