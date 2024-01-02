@@ -6,11 +6,11 @@
 #pragma once
 
 #include "CommanderGrouping.hpp"
+#include "EarlyTermination.hpp"
 #include "Encoding.hpp"
 #include "InitialLayout.hpp"
 #include "Layering.hpp"
 #include "Method.hpp"
-#include "EarlyTermination.hpp"
 #include "SwapReduction.hpp"
 #include "nlohmann/json.hpp"
 
@@ -79,11 +79,11 @@ struct Configuration {
   // result quality
   bool        automaticLayerSplits          = true;
   std::size_t automaticLayerSplitsNodeLimit = 5000;
-  
-  // strategy for terminating the heuristic search early (i.e. once a goal node 
-  // has been found, but before it is guaranteed that the optimal solution has 
+
+  // strategy for terminating the heuristic search early (i.e. once a goal node
+  // has been found, but before it is guaranteed that the optimal solution has
   // been found)
-  EarlyTermination earlyTermination = EarlyTermination::None;
+  EarlyTermination earlyTermination      = EarlyTermination::None;
   std::size_t      earlyTerminationLimit = 0;
 
   // encoding of at most and exactly one constraints in exact mapper

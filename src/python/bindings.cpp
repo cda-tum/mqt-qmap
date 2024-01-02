@@ -135,15 +135,18 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(py::init([](const std::string& str) -> Layering {
         return layeringFromString(str);
       }));
-  
+
   // Early termination strategy in heuristic mapper
   py::enum_<EarlyTermination>(m, "EarlyTermination")
       .value("none", EarlyTermination::None)
       .value("expanded_nodes", EarlyTermination::ExpandedNodes)
-      .value("expanded_nodes_after_first_solution", EarlyTermination::ExpandedNodesAfterFirstSolution)
-      .value("expanded_nodes_after_current_optimal_solution", EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution)
+      .value("expanded_nodes_after_first_solution",
+             EarlyTermination::ExpandedNodesAfterFirstSolution)
+      .value("expanded_nodes_after_current_optimal_solution",
+             EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution)
       .value("solution_nodes", EarlyTermination::SolutionNodes)
-      .value("solution_nodes_after_current_optimal_solution", EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
+      .value("solution_nodes_after_current_optimal_solution",
+             EarlyTermination::SolutionNodesAfterCurrentOptimalSolution)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> EarlyTermination {
@@ -200,8 +203,7 @@ PYBIND11_MODULE(pyqmap, m) {
                      &Configuration::automaticLayerSplits)
       .def_readwrite("automatic_layer_splits_node_limit",
                      &Configuration::automaticLayerSplitsNodeLimit)
-      .def_readwrite("early_termination",
-                     &Configuration::earlyTermination)
+      .def_readwrite("early_termination", &Configuration::earlyTermination)
       .def_readwrite("early_termination_limit",
                      &Configuration::earlyTerminationLimit)
       .def_readwrite("initial_layout", &Configuration::initialLayout)
@@ -300,33 +302,41 @@ PYBIND11_MODULE(pyqmap, m) {
           "effective_branching_factor",
           &MappingResults::HeuristicBenchmarkInfo::effectiveBranchingFactor)
       .def("json", &MappingResults::HeuristicBenchmarkInfo::json);
-  
+
   // Heuristic benchmark information for individual layers
   py::class_<MappingResults::LayerHeuristicBenchmarkInfo>(
       m, "LayerHeuristicBenchmarkInfo", "Heuristic benchmark information")
       .def(py::init<>())
-      .def_readwrite("expanded_nodes",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
-      .def_readwrite("generated_nodes",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
+      .def_readwrite(
+          "expanded_nodes",
+          &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodes)
+      .def_readwrite(
+          "generated_nodes",
+          &MappingResults::LayerHeuristicBenchmarkInfo::generatedNodes)
       .def_readwrite("expanded_nodes_after_first_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodesAfterFirstSolution)
+                     &MappingResults::LayerHeuristicBenchmarkInfo::
+                         expandedNodesAfterFirstSolution)
       .def_readwrite("expanded_nodes_after_optimal_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::expandedNodesAfterOptimalSolution)
-      .def_readwrite("solution_nodes",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodes)
+                     &MappingResults::LayerHeuristicBenchmarkInfo::
+                         expandedNodesAfterOptimalSolution)
+      .def_readwrite(
+          "solution_nodes",
+          &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodes)
       .def_readwrite("solution_nodes_after_optimal_solution",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionNodesAfterOptimalSolution)
-      .def_readwrite("solution_depth",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
-      .def_readwrite("time_per_node",
-                     &MappingResults::LayerHeuristicBenchmarkInfo::secondsPerNode)
+                     &MappingResults::LayerHeuristicBenchmarkInfo::
+                         solutionNodesAfterOptimalSolution)
+      .def_readwrite(
+          "solution_depth",
+          &MappingResults::LayerHeuristicBenchmarkInfo::solutionDepth)
+      .def_readwrite(
+          "time_per_node",
+          &MappingResults::LayerHeuristicBenchmarkInfo::secondsPerNode)
       .def_readwrite(
           "average_branching_factor",
           &MappingResults::LayerHeuristicBenchmarkInfo::averageBranchingFactor)
-      .def_readwrite(
-          "effective_branching_factor",
-          &MappingResults::LayerHeuristicBenchmarkInfo::effectiveBranchingFactor)
+      .def_readwrite("effective_branching_factor",
+                     &MappingResults::LayerHeuristicBenchmarkInfo::
+                         effectiveBranchingFactor)
       .def_readwrite(
           "early_termination",
           &MappingResults::LayerHeuristicBenchmarkInfo::earlyTermination)

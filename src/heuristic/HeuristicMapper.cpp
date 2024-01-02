@@ -566,7 +566,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   std::size_t expandedNodesAfterOptimalSolution = 0;
   std::size_t solutionNodes                     = 0;
   std::size_t solutionNodesAfterOptimalSolution = 0;
-  bool earlyTermination = false;
+  bool        earlyTermination                  = false;
 
   const bool splittable =
       config.automaticLayerSplits ? isLayerSplittable(layer) : false;
@@ -600,7 +600,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       ++solutionNodes;
       if (!done ||
           current.getTotalFixedCost() < bestDoneNode.getTotalFixedCost()) {
-        bestDoneNode = current;
+        bestDoneNode                      = current;
         expandedNodesAfterOptimalSolution = 0;
         solutionNodesAfterOptimalSolution = 0;
       } else {
@@ -617,27 +617,27 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     if (done) {
       ++expandedNodesAfterFirstSolution;
       ++expandedNodesAfterOptimalSolution;
-      
+
       if (config.earlyTermination != EarlyTermination::None) {
         std::size_t n = 0;
         switch (config.earlyTermination) {
-          case EarlyTermination::ExpandedNodes:
-            n = expandedNodes;
-            break;
-          case EarlyTermination::ExpandedNodesAfterFirstSolution:
-            n = expandedNodesAfterFirstSolution;
-            break;
-          case EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution:
-            n = expandedNodesAfterOptimalSolution;
-            break;
-          case EarlyTermination::SolutionNodes:
-            n = solutionNodes;
-            break;
-          case EarlyTermination::SolutionNodesAfterCurrentOptimalSolution:
-            n = solutionNodesAfterOptimalSolution;
-            break;
-          default:
-            break;
+        case EarlyTermination::ExpandedNodes:
+          n = expandedNodes;
+          break;
+        case EarlyTermination::ExpandedNodesAfterFirstSolution:
+          n = expandedNodesAfterFirstSolution;
+          break;
+        case EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution:
+          n = expandedNodesAfterOptimalSolution;
+          break;
+        case EarlyTermination::SolutionNodes:
+          n = solutionNodes;
+          break;
+        case EarlyTermination::SolutionNodesAfterCurrentOptimalSolution:
+          n = solutionNodesAfterOptimalSolution;
+          break;
+        default:
+          break;
         }
         if (n >= config.earlyTerminationLimit) {
           earlyTermination = true;
@@ -660,10 +660,13 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     results.heuristicBenchmark.expandedNodes += expandedNodes;
 
     layerResultsIt->solutionDepth = result.depth;
-    layerResultsIt->expandedNodesAfterFirstSolution = expandedNodesAfterFirstSolution;
-    layerResultsIt->expandedNodesAfterOptimalSolution = expandedNodesAfterOptimalSolution;
+    layerResultsIt->expandedNodesAfterFirstSolution =
+        expandedNodesAfterFirstSolution;
+    layerResultsIt->expandedNodesAfterOptimalSolution =
+        expandedNodesAfterOptimalSolution;
     layerResultsIt->solutionNodes = solutionNodes;
-    layerResultsIt->solutionNodesAfterOptimalSolution = solutionNodesAfterOptimalSolution;
+    layerResultsIt->solutionNodesAfterOptimalSolution =
+        solutionNodesAfterOptimalSolution;
     layerResultsIt->earlyTermination = earlyTermination;
 
     const std::chrono::duration<double> diff = end - start;

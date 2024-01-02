@@ -35,21 +35,21 @@ struct MappingResults {
   struct HeuristicBenchmarkInfo {
     std::size_t expandedNodes            = 0;
     std::size_t generatedNodes           = 0;
-    double      secondsPerNode              = 0.;
+    double      secondsPerNode           = 0.;
     double      averageBranchingFactor   = 0.;
     double      effectiveBranchingFactor = 0.;
-    
+
     [[nodiscard]] virtual nlohmann::json json() const {
       nlohmann::json resultJSON{};
-      resultJSON["expanded_nodes"]  = expandedNodes;
-      resultJSON["generated_nodes"] = generatedNodes;
-      resultJSON["seconds_per_node"]   = secondsPerNode;
-      resultJSON["average_branching_factor"] = averageBranchingFactor;
+      resultJSON["expanded_nodes"]             = expandedNodes;
+      resultJSON["generated_nodes"]            = generatedNodes;
+      resultJSON["seconds_per_node"]           = secondsPerNode;
+      resultJSON["average_branching_factor"]   = averageBranchingFactor;
       resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
       return resultJSON;
     }
   };
-  
+
   struct LayerHeuristicBenchmarkInfo {
     std::size_t expandedNodes                     = 0;
     std::size_t generatedNodes                    = 0;
@@ -62,20 +62,23 @@ struct MappingResults {
     double      averageBranchingFactor            = 0.;
     double      effectiveBranchingFactor          = 0.;
     bool        earlyTermination                  = false;
-    
+
     [[nodiscard]] virtual nlohmann::json json() const {
       nlohmann::json resultJSON{};
       resultJSON["expanded_nodes"]  = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
-      resultJSON["expanded_nodes_after_first_solution"] = expandedNodesAfterFirstSolution;
-      resultJSON["expanded_nodes_after_optimal_solution"] = expandedNodesAfterOptimalSolution;
-      resultJSON["solution_nodes"]  = solutionNodes;
-      resultJSON["solution_nodes_after_optimal_solution"] = solutionNodesAfterOptimalSolution;
-      resultJSON["solution_depth"] = solutionDepth;
-      resultJSON["seconds_per_node"]   = secondsPerNode;
-      resultJSON["average_branching_factor"] = averageBranchingFactor;
+      resultJSON["expanded_nodes_after_first_solution"] =
+          expandedNodesAfterFirstSolution;
+      resultJSON["expanded_nodes_after_optimal_solution"] =
+          expandedNodesAfterOptimalSolution;
+      resultJSON["solution_nodes"] = solutionNodes;
+      resultJSON["solution_nodes_after_optimal_solution"] =
+          solutionNodesAfterOptimalSolution;
+      resultJSON["solution_depth"]             = solutionDepth;
+      resultJSON["seconds_per_node"]           = secondsPerNode;
+      resultJSON["average_branching_factor"]   = averageBranchingFactor;
       resultJSON["effective_branching_factor"] = effectiveBranchingFactor;
-      resultJSON["early_termination"] = earlyTermination;
+      resultJSON["early_termination"]          = earlyTermination;
       return resultJSON;
     }
   };
@@ -93,7 +96,7 @@ struct MappingResults {
 
   std::string wcnf{};
 
-  HeuristicBenchmarkInfo              heuristicBenchmark{};
+  HeuristicBenchmarkInfo                   heuristicBenchmark{};
   std::vector<LayerHeuristicBenchmarkInfo> layerHeuristicBenchmark{};
 
   MappingResults()          = default;
@@ -147,8 +150,8 @@ struct MappingResults {
         stats["WCNF"] = wcnf;
       }
     } else if (config.method == Method::Heuristic) {
-      stats["teleportations"]      = output.teleportations;
-      stats["benchmark"]           = heuristicBenchmark.json();
+      stats["teleportations"] = output.teleportations;
+      stats["benchmark"]      = heuristicBenchmark.json();
     }
     stats["additional_gates"] =
         static_cast<std::make_signed_t<decltype(output.gates)>>(output.gates) -
