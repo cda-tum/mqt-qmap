@@ -508,7 +508,7 @@ void HeuristicMapper::routeCircuit() {
           locations.at(target) = static_cast<std::int16_t>(loc);
           qubits.at(loc)       = static_cast<std::int16_t>(target);
           op->setTargets({static_cast<qc::Qubit>(loc)});
-          qcMapped.initialLayout.at(target)                       = loc;
+          qcMapped.initialLayout.at(loc)                          = target;
           qcMapped.outputPermutation[static_cast<qc::Qubit>(loc)] = target;
           qcMapped.garbage.at(loc)                                = false;
         } else {
