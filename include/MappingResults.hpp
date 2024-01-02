@@ -39,7 +39,7 @@ struct MappingResults {
     double      averageBranchingFactor   = 0.;
     double      effectiveBranchingFactor = 0.;
 
-    [[nodiscard]] virtual nlohmann::json json() const {
+    [[nodiscard]] nlohmann::json json() const {
       nlohmann::json resultJSON{};
       resultJSON["expanded_nodes"]             = expandedNodes;
       resultJSON["generated_nodes"]            = generatedNodes;
@@ -63,7 +63,7 @@ struct MappingResults {
     double      effectiveBranchingFactor          = 0.;
     bool        earlyTermination                  = false;
 
-    [[nodiscard]] virtual nlohmann::json json() const {
+    [[nodiscard]] nlohmann::json json() const {
       nlohmann::json resultJSON{};
       resultJSON["expanded_nodes"]  = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
