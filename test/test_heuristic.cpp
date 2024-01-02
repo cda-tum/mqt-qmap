@@ -713,17 +713,18 @@ TEST(Functionality, DataLogger) {
 }
 
 TEST(Functionality, terminationStrategyFromString) {
-  const std::vector<std::pair<std::string, EarlyTermination>> terminationStrategies = {
-      {"none", EarlyTermination::None},
-      {"expanded_nodes", EarlyTermination::ExpandedNodes},
-      {"expanded_nodes_after_first_solution",
-       EarlyTermination::ExpandedNodesAfterFirstSolution},
-      {"expanded_nodes_after_current_optimal_solution",
-       EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution},
-      {"solution_nodes", EarlyTermination::SolutionNodes},
-      {"solution_nodes_after_current_optimal_solution",
-       EarlyTermination::SolutionNodesAfterCurrentOptimalSolution}};
-  
+  const std::vector<std::pair<std::string, EarlyTermination>>
+      terminationStrategies = {
+          {"none", EarlyTermination::None},
+          {"expanded_nodes", EarlyTermination::ExpandedNodes},
+          {"expanded_nodes_after_first_solution",
+           EarlyTermination::ExpandedNodesAfterFirstSolution},
+          {"expanded_nodes_after_current_optimal_solution",
+           EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution},
+          {"solution_nodes", EarlyTermination::SolutionNodes},
+          {"solution_nodes_after_current_optimal_solution",
+           EarlyTermination::SolutionNodesAfterCurrentOptimalSolution}};
+
   for (const auto& [str, termination] : terminationStrategies) {
     EXPECT_EQ(earlyTerminationFromString(str), termination);
   }
@@ -734,9 +735,9 @@ TEST(Functionality, earlyTermination) {
   qc::QuantumComputation qc{7};
   qc.x(0);
   qc.cx(qc::Control{1}, 3);
-  
-  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2}, 
-                          {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
+
+  const CouplingMap        cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+                                 {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
   Architecture::Properties props{};
   props.setSingleQubitErrorRate(0, "x", 0.9);
   props.setSingleQubitErrorRate(1, "x", 0.5);
@@ -749,59 +750,64 @@ TEST(Functionality, earlyTermination) {
     props.setTwoQubitErrorRate(edge.first, edge.second, 0.01, "cx");
   }
   Architecture arch{7, cm, props};
-  
+
   Configuration config{};
-  config.method = Method::Heuristic;
-  config.layering = Layering::DisjointQubits;
-  config.initialLayout = InitialLayout::Identity;
-  config.automaticLayerSplits = false;
+  config.method                        = Method::Heuristic;
+  config.layering                      = Layering::DisjointQubits;
+  config.initialLayout                 = InitialLayout::Identity;
+  config.automaticLayerSplits          = false;
   config.iterativeBidirectionalRouting = false;
-  config.debug = true;
-  config.admissibleHeuristic = true;
-  config.considerFidelity = true;
-  config.lookahead = false;
-  config.earlyTerminationLimit = 4;
-  
-  auto mapper = std::make_unique<HeuristicMapper>(qc, arch);
+  config.debug                         = true;
+  config.admissibleHeuristic           = true;
+  config.considerFidelity              = true;
+  config.lookahead                     = false;
+  config.earlyTerminationLimit         = 4;
+
+  auto mapper             = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::None;
   mapper->map(config);
   auto results = mapper->getResults();
   EXPECT_FALSE(results.layerHeuristicBenchmark[0].earlyTermination);
-  
-  mapper = std::make_unique<HeuristicMapper>(qc, arch);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::ExpandedNodesAfterFirstSolution;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
-  EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodesAfterFirstSolution, 4);
-  
+  EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodesAfterFirstSolution,
+            4);
+
   mapper = std::make_unique<HeuristicMapper>(qc, arch);
-  config.earlyTermination = EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution;
+  config.earlyTermination =
+      EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
-  EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodesAfterOptimalSolution, 4);
-  
-  mapper = std::make_unique<HeuristicMapper>(qc, arch);
+  EXPECT_EQ(
+      results.layerHeuristicBenchmark[0].expandedNodesAfterOptimalSolution, 4);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::ExpandedNodes;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
   EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodes, 4);
-  
-  mapper = std::make_unique<HeuristicMapper>(qc, arch);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::SolutionNodes;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
   EXPECT_EQ(results.layerHeuristicBenchmark[0].solutionNodes, 4);
-  
+
   mapper = std::make_unique<HeuristicMapper>(qc, arch);
-  config.earlyTermination = EarlyTermination::SolutionNodesAfterCurrentOptimalSolution;
+  config.earlyTermination =
+      EarlyTermination::SolutionNodesAfterCurrentOptimalSolution;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
-  EXPECT_EQ(results.layerHeuristicBenchmark[0].solutionNodesAfterOptimalSolution, 4);
+  EXPECT_EQ(
+      results.layerHeuristicBenchmark[0].solutionNodesAfterOptimalSolution, 4);
 }
 
 TEST(Functionality, InitialLayoutDump) {
