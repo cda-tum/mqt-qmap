@@ -845,8 +845,8 @@ TEST(Functionality, DataLogger) {
             results.heuristicBenchmark.expandedNodes);
   EXPECT_EQ(benchmarkJson["generated_nodes"],
             results.heuristicBenchmark.generatedNodes);
-  EXPECT_EQ(benchmarkJson["time_per_node"],
-            results.heuristicBenchmark.timePerNode);
+  EXPECT_EQ(benchmarkJson["seconds_per_node"],
+            results.heuristicBenchmark.secondsPerNode);
   const auto& benchmarkLayersJson = benchmarkJson["layers"];
   EXPECT_EQ(benchmarkLayersJson.size(), results.layerHeuristicBenchmark.size());
   for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
@@ -860,8 +860,8 @@ TEST(Functionality, DataLogger) {
               results.layerHeuristicBenchmark.at(i).generatedNodes);
     EXPECT_EQ(benchmarkLayersJson[i]["solution_depth"],
               results.layerHeuristicBenchmark.at(i).solutionDepth);
-    EXPECT_EQ(benchmarkLayersJson[i]["time_per_node"],
-              results.layerHeuristicBenchmark.at(i).timePerNode);
+    EXPECT_EQ(benchmarkLayersJson[i]["seconds_per_node"],
+              results.layerHeuristicBenchmark.at(i).secondsPerNode);
   }
 
   // comparing logged input and output circuits with input circuit object and
@@ -972,6 +972,193 @@ TEST(Functionality, DataLogger) {
            << results.input.layers
            << ".csv should not exist, as there are not that many layers";
   }
+}
+
+TEST(Functionality, terminationStrategyFromString) {
+  const std::vector<std::pair<std::string, EarlyTermination>>
+      terminationStrategies = {
+          {"none", EarlyTermination::None},
+          {"expanded_nodes", EarlyTermination::ExpandedNodes},
+          {"expanded_nodes_after_first_solution",
+           EarlyTermination::ExpandedNodesAfterFirstSolution},
+          {"expanded_nodes_after_current_optimal_solution",
+           EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution},
+          {"solution_nodes", EarlyTermination::SolutionNodes},
+          {"solution_nodes_after_current_optimal_solution",
+           EarlyTermination::SolutionNodesAfterCurrentOptimalSolution}};
+
+  for (const auto& [str, termination] : terminationStrategies) {
+    EXPECT_EQ(earlyTerminationFromString(str), termination);
+  }
+  EXPECT_THROW(earlyTerminationFromString("invalid"), std::invalid_argument);
+}
+
+TEST(Functionality, earlyTermination) {
+  qc::QuantumComputation qc{7};
+  qc.x(0);
+  qc.cx(qc::Control{1}, 3);
+
+  const CouplingMap        cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+                                 {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
+  Architecture::Properties props{};
+  props.setSingleQubitErrorRate(0, "x", 0.9);
+  props.setSingleQubitErrorRate(1, "x", 0.5);
+  props.setSingleQubitErrorRate(2, "x", 0.5);
+  props.setSingleQubitErrorRate(3, "x", 0.5);
+  props.setSingleQubitErrorRate(4, "x", 0.5);
+  props.setSingleQubitErrorRate(5, "x", 0.5);
+  props.setSingleQubitErrorRate(6, "x", 0.1);
+  for (auto edge : cm) {
+    props.setTwoQubitErrorRate(edge.first, edge.second, 0.01, "cx");
+  }
+  Architecture arch{7, cm, props};
+
+  Configuration config{};
+  config.method                        = Method::Heuristic;
+  config.layering                      = Layering::DisjointQubits;
+  config.initialLayout                 = InitialLayout::Identity;
+  config.automaticLayerSplits          = false;
+  config.iterativeBidirectionalRouting = false;
+  config.debug                         = true;
+  config.heuristic                     = Heuristic::FidelityBestLocation;
+  config.lookaheadHeuristic            = LookaheadHeuristic::None;
+  config.earlyTerminationLimit         = 4;
+
+  auto mapper             = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination = EarlyTermination::None;
+  mapper->map(config);
+  auto results = mapper->getResults();
+  EXPECT_FALSE(results.layerHeuristicBenchmark[0].earlyTermination);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination = EarlyTermination::ExpandedNodesAfterFirstSolution;
+  mapper->map(config);
+  results = mapper->getResults();
+  EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
+  EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodesAfterFirstSolution,
+            4);
+
+  mapper = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination =
+      EarlyTermination::ExpandedNodesAfterCurrentOptimalSolution;
+  mapper->map(config);
+  results = mapper->getResults();
+  EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
+  EXPECT_EQ(
+      results.layerHeuristicBenchmark[0].expandedNodesAfterOptimalSolution, 4);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination = EarlyTermination::ExpandedNodes;
+  mapper->map(config);
+  results = mapper->getResults();
+  EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
+  EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodes, 4);
+
+  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination = EarlyTermination::SolutionNodes;
+  mapper->map(config);
+  results = mapper->getResults();
+  EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
+  EXPECT_EQ(results.layerHeuristicBenchmark[0].solutionNodes, 4);
+
+  mapper = std::make_unique<HeuristicMapper>(qc, arch);
+  config.earlyTermination =
+      EarlyTermination::SolutionNodesAfterCurrentOptimalSolution;
+  mapper->map(config);
+  results = mapper->getResults();
+  EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
+  EXPECT_EQ(
+      results.layerHeuristicBenchmark[0].solutionNodesAfterOptimalSolution, 4);
+}
+
+TEST(Functionality, InitialLayoutDump) {
+  // queko's BNTF/16QBT_05CYC_TFL_9.qasm
+  qc::QuantumComputation qc{16U};
+  qc.x(15);
+  qc.x(4);
+  qc.cx(10, 8);
+  qc.cx(3, 5);
+  qc.cx(7, 1);
+  qc.cx(6, 12);
+  qc.cx(0, 13);
+  qc.x(10);
+  qc.x(9);
+  qc.x(1);
+  qc.x(2);
+  qc.x(12);
+  qc.cx(3, 11);
+  qc.cx(0, 13);
+  qc.x(9);
+  qc.x(6);
+  qc.x(2);
+  qc.x(0);
+  qc.x(12);
+  qc.x(7);
+  qc.cx(10, 8);
+  qc.cx(13, 5);
+  qc.x(10);
+  qc.x(15);
+  qc.x(9);
+  qc.x(1);
+  qc.x(13);
+  qc.x(5);
+  qc.cx(6, 12);
+  qc.cx(7, 11);
+  qc.cx(14, 4);
+  qc.x(1);
+  qc.x(14);
+  qc.x(4);
+  qc.cx(12, 10);
+  qc.cx(3, 5);
+  qc.cx(8, 7);
+
+  // subgraph of IBM's Brisbane Backend
+  Architecture arch{27U,
+                    {{1, 0},   {2, 1},   {3, 2},   {4, 3},   {4, 5},   {4, 15},
+                     {6, 5},   {6, 7},   {7, 8},   {8, 9},   {10, 9},  {10, 11},
+                     {11, 12}, {12, 17}, {13, 12}, {14, 0},  {14, 18}, {15, 22},
+                     {16, 8},  {16, 26}, {18, 19}, {20, 19}, {21, 20}, {21, 22},
+                     {22, 23}, {24, 23}, {25, 24}, {26, 25}}};
+
+  Configuration config{};
+  config.method   = Method::Heuristic;
+  config.layering = Layering::Disjoint2qBlocks;
+
+  HeuristicMapper mapper(qc, arch);
+  mapper.map(config);
+
+  std::stringstream qasmStream{};
+  mapper.dumpResult(qasmStream, qc::Format::OpenQASM);
+  const std::string qasm = qasmStream.str();
+
+  qasmStream    = std::stringstream(qasm);
+  auto qcMapped = qc::QuantumComputation();
+  qcMapped.import(qasmStream, qc::Format::OpenQASM);
+
+  qasmStream = std::stringstream(qasm);
+  std::string line;
+  bool        foundPermutation = false;
+  while (std::getline(qasmStream, line)) {
+    if (line.rfind("// i ", 0) == 0) {
+      std::stringstream          lineStream(line.substr(5));
+      std::string                entry;
+      std::vector<std::uint32_t> qubits{};
+      while (std::getline(lineStream, entry, ' ')) {
+        EXPECT_NO_THROW(
+            qubits.emplace_back(static_cast<std::uint32_t>(std::stoul(entry))))
+            << "invalid qubit id " << entry;
+      }
+      const std::set<std::uint32_t> qubitSet(qubits.begin(), qubits.end());
+      EXPECT_EQ(qubitSet.size(), qubits.size());
+      for (std::uint32_t i = 0; i < qcMapped.getNqubits(); ++i) {
+        EXPECT_TRUE(qubitSet.count(i) > 0)
+            << "qubit " << std::to_string(i) << " not found in layout";
+      }
+      foundPermutation = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(foundPermutation) << "no initial layout found in mapped circuit";
 }
 
 class LayeringTest : public testing::Test {

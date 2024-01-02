@@ -246,16 +246,7 @@ void DataLogger::logMappingResult(MappingResults& result) {
   auto&          stats     = json["statistics"];
   auto&          benchmark = stats["benchmark"];
   for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
-    auto& layerBenchmark                 = result.layerHeuristicBenchmark.at(i);
-    auto& jsonLayerBenchmark             = benchmark["layers"][i];
-    jsonLayerBenchmark["expanded_nodes"] = layerBenchmark.expandedNodes;
-    jsonLayerBenchmark["generated_nodes"] = layerBenchmark.generatedNodes;
-    jsonLayerBenchmark["solution_depth"]  = layerBenchmark.solutionDepth;
-    jsonLayerBenchmark["time_per_node"]   = layerBenchmark.timePerNode;
-    jsonLayerBenchmark["average_branching_factor"] =
-        layerBenchmark.averageBranchingFactor;
-    jsonLayerBenchmark["effective_branching_factor"] =
-        layerBenchmark.effectiveBranchingFactor;
+    benchmark["layers"][i] = result.layerHeuristicBenchmark.at(i).json();
   }
 
   // write json data to file
