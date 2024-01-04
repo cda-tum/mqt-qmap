@@ -197,9 +197,10 @@ void Architecture::createDistanceTable() {
       edgeWeights.at(edge.first).at(edge.second) = COST_BIDIRECTIONAL_SWAP;
     }
   }
-
-  Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                       COST_DIRECTION_REVERSE, true);
+  
+  Matrix simpleDistanceTable{};
+  Dijkstra::buildTable(couplingMap, simpleDistanceTable, edgeWeights);
+  Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, couplingMap, COST_DIRECTION_REVERSE, distanceTable);
 }
 
 void Architecture::createFidelityTable() {
@@ -264,8 +265,7 @@ void Architecture::createFidelityTable() {
   fidelityDistanceTables.clear();
   if (fidelityAvailable) {
     Matrix distances = {};
-    Dijkstra::buildTable(nqubits, couplingMap, distances, swapFidelityCosts, 0.,
-                         false);
+    Dijkstra::buildTable(couplingMap, distances, swapFidelityCosts);
     Dijkstra::buildEdgeSkipTable(distances, couplingMap,
                                  fidelityDistanceTables);
   }

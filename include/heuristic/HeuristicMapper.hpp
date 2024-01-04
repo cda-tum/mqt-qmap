@@ -278,9 +278,10 @@ protected:
    * @brief recalculates the gate-count-optimizing fixed cost of the node from
    * the current mapping and swaps
    *
+   * @param layer index of current circuit layer
    * @param node search node for which to recalculate the fixed cost
    */
-  void recalculateFixedCostNonFidelity(Node& node);
+  void recalculateFixedCostNonFidelity(std::size_t layer, Node& node);
 
   /**
    * @brief calculates the heuristic cost of the current mapping in the node

@@ -55,44 +55,30 @@ public:
 class Dijkstra {
 public:
   struct Node {
-    /** true if the path contains any forward edge
-        (i.e. an edge on which a CNOT with directionality q1->q2
-        can be applied without the need of a CNOT reversal) */
-    bool containsCorrectEdge = false;
     /** true if the node has already been expanded */
     bool visited = false;
     /** current qubit */
     std::optional<std::uint16_t> pos = std::nullopt;
     /** current cost of the path */
     double cost = -1.;
-    /** current cost of the path with the last swap removed */
-    double prevCost = -1.;
   };
 
   /**
    * @brief builds a distance table containing the minimal costs for moving
-   * logical qubits from one physical qubit to/next to another (along the
-   * cheapest path)
+   * logical qubits from one physical qubit to another (along the cheapest path)
    *
    * e.g. cost of moving qubit q1 onto q2:
    * distanceTable[q1][q2]
    *
-   * @param n size of the distance table (i.e. number of qubits)
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param distanceTable target table
    * @param edgeWeights matrix containing costs for swapping any two, connected
    * qubits (this might be uniform for all edges or different for each edge, as
    * e.g. in the case of fidelity-aware distances or distances on
    * mixed bi/unidirectional architectures)
-   * @param reversalCost cost added if path consists only of back edges, i.e.
-   * the 2-qubit gate to be mapped would need to be reversed in any case
-   * (if reversal costs are handled elsewhere this should be set to 0)
-   * @param removeLastEdge if set to true, the cost for the last swap on any
-   * path is removed (i.e. distance is given for moving "next to" qubit)
    */
-  static void buildTable(std::uint16_t n, const CouplingMap& couplingMap,
-                         Matrix& distanceTable, const Matrix& edgeWeights,
-                         double reversalCost, bool removeLastEdge);
+  static void buildTable(const CouplingMap& couplingMap,
+                         Matrix& distanceTable, const Matrix& edgeWeights);
   /**
    * @brief builds a 3d matrix containing the distance tables giving the minimal
    * distances between 2 qubit when upto k edges can be skipped.
@@ -102,39 +88,46 @@ public:
    *
    * if k > edgeSkipDistanceTable.size() a cost of 0 can be assumed
    *
-   * this implementation does not work with distance tables containing CNOT
-   * reversal costs or the last edge removed
-   * (only pure distances between 2 qubits)
-   *
-   * @param distanceTable 2d matrix containing pure distances between any 2
-   * qubits: distanceTable[source][target]
+   * @param distanceTable 2d matrix containing distances between any 2 qubits: 
+   * distanceTable[source][target]
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param edgeSkipDistanceTable 3d target table
    */
   static void buildEdgeSkipTable(const Matrix&        distanceTable,
                                  const CouplingMap&   couplingMap,
                                  std::vector<Matrix>& edgeSkipDistanceTable);
+  /**
+   * @brief builds a distance table containing the minimal costs for moving
+   * logical qubits from one physical qubit to another (along the cheapest path)
+   * while skipping a single edge, i.e. equivalent to buildEdgeSkipTable(...)[1]
+   * 
+   * An additional reversal cost can be specified, which is added to the cost if
+   * the skipped edge is a back edge
+   *
+   * @param distanceTable 2d matrix containing distances between any 2 qubits: 
+   * distanceTable[source][target]
+   * @param couplingMap coupling map specifying all edges in the architecture
+   * @param reversalCost cost for reversing an edge
+   * @param edgeSkipDistanceTable target distance table
+   */
+  static void buildSingleEdgeSkipTable(const Matrix&        distanceTable,
+                                 const CouplingMap&   couplingMap,
+                                 const double reversalCost,
+                                 Matrix& edgeSkipDistanceTable);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
-                       std::uint16_t start, const Matrix& edgeWeights,
-                       double reversalCost);
+                       std::uint16_t start, const Matrix& edgeWeights);
 
   struct NodeComparator {
     bool operator()(const Node* x, const Node* y) {
-      if (x->cost != y->cost) {
-        return x->cost > y->cost;
-      }
-      return !x->containsCorrectEdge && y->containsCorrectEdge;
+      return x->cost > y->cost;
     }
   };
 };
 
 inline bool operator<(const Dijkstra::Node& x, const Dijkstra::Node& y) {
-  if (x.cost != y.cost) {
-    return x.cost < y.cost;
-  }
-  return x.containsCorrectEdge && !y.containsCorrectEdge;
+  return x.cost < y.cost;
 }
 
 /// Iterating routine through all combinations
