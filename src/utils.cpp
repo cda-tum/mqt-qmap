@@ -152,7 +152,7 @@ void Dijkstra::buildSingleEdgeSkipTable(const Matrix&        distanceTable,
               std::min(edgeSkipDistanceTable.at(q2).at(q1),
                       distanceTable.at(q2).at(e1) + distanceTable.at(e2).at(q1));
           edgeSkipDistanceTable.at(q2).at(q1) =
-              std::min(edgeSkipDistanceTable.at(q2).at(q2),
+              std::min(edgeSkipDistanceTable.at(q2).at(q1),
                       distanceTable.at(q2).at(e2) + distanceTable.at(e1).at(q1) + reversalCost);
         }
         

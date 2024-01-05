@@ -58,9 +58,7 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
     }
     std::string col;
     std::size_t nodeId = 0;
-
-    std::vector<std::int32_t>                          layout{};
-    std::vector<std::pair<std::int16_t, std::int16_t>> swaps{};
+    
     std::stringstream                                  lineStream(line);
     if (std::getline(lineStream, col, ';')) {
       nodeId = std::stoull(col);
@@ -168,17 +166,17 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   if (nodeId >= nodes.size() || nodes[nodeId].id != nodeId) {
     throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
   }
-  auto& node = nodes[nodeId];
-  while (node.parent != node.id) {
-    path.push_back(node.id);
-    if (node.parent >= nodes.size() || nodes[node.parent].id != node.parent) {
+  auto node = &nodes[nodeId];
+  while (node->parent != node->id) {
+    path.push_back(node->id);
+    if (node->parent >= nodes.size() || nodes[node->parent].id != node->parent) {
       throw std::runtime_error("Invalid parent id " +
-                               std::to_string(node.parent) + " for node " +
-                               std::to_string(node.id));
+                               std::to_string(node->parent) + " for node " +
+                               std::to_string(node->id));
     }
-    node = nodes[node.parent];
+    node = &nodes[node->parent];
   }
-  path.push_back(node.id);
+  path.push_back(node->id);
   return path;
 }
 
@@ -412,8 +410,10 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       // node.costFixed+node.costHeur <= finalSolutionNode.costFixed
       auto solutionPath = getPathToRoot(nodes, finalSolutionId);
       for (auto nodeId : solutionPath) {
-        auto& node = nodes.at(nodeId);
-        EXPECT_LE(node.getTotalCost(), finalSolutionNode.costFixed)
+        if (nodes.at(nodeId).id != nodeId) {
+          throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
+        }
+        EXPECT_LE(nodes.at(nodeId).getTotalCost(), finalSolutionNode.costFixed)
             << "Heuristic " << toString(settings.heuristic)
             << " is not principally admissible";
       }
