@@ -174,21 +174,21 @@ TEST(Functionality, BenchmarkGeneratedNodes) {
   Architecture ibmQX5{};
   ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
   auto ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
-  
+
   Configuration settings{};
-  settings.admissibleHeuristic = true;
-  settings.lookahead = false;
-  settings.layering = Layering::IndividualGates;
-  settings.automaticLayerSplits = false;
-  settings.initialLayout = InitialLayout::Identity;
-  settings.preMappingOptimizations = false;
+  settings.admissibleHeuristic      = true;
+  settings.lookahead                = false;
+  settings.layering                 = Layering::IndividualGates;
+  settings.automaticLayerSplits     = false;
+  settings.initialLayout            = InitialLayout::Identity;
+  settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
-  settings.considerFidelity = false;
-  settings.useTeleportation = false;
-  settings.debug = true;
+  settings.considerFidelity         = false;
+  settings.useTeleportation         = false;
+  settings.debug                    = true;
   ibmQX5Mapper->map(settings);
   auto results = ibmQX5Mapper->getResults();
-  
+
   EXPECT_EQ(results.heuristicBenchmark.generatedNodes, 30);
   EXPECT_EQ(results.layerHeuristicBenchmark.at(0).generatedNodes, 30);
 }
