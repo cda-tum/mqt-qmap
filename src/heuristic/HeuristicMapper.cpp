@@ -20,7 +20,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
 
   results        = MappingResults{};
   results.config = configuration;
-  auto& config   = results.config;
+  const auto& config   = results.config;
   if (config.layering == Layering::OddGates ||
       config.layering == Layering::QubitTriangle) {
     throw QMAPException("Layering strategy " + toString(config.layering) +
@@ -224,8 +224,8 @@ void HeuristicMapper::mapUnmappedGates(std::size_t layer) {
   for (const auto& [logEdge, _] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = logEdge;
 
-    auto q1Location = locations.at(q1);
-    auto q2Location = locations.at(q2);
+    const auto q1Location = locations.at(q1);
+    const auto q2Location = locations.at(q2);
 
     if (q1Location == DEFAULT_POSITION && q2Location == DEFAULT_POSITION) {
       std::set<Edge> possibleEdges{};
@@ -286,7 +286,7 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
   for (std::uint16_t i = 0; i < architecture->getNqubits(); ++i) {
     if (qubits.at(i) == DEFAULT_POSITION) {
       // TODO: Consider fidelity here if available
-      auto distance = distanceOnArchitectureOfPhysicalQubits(
+      const auto distance = distanceOnArchitectureOfPhysicalQubits(
           static_cast<std::uint16_t>(locations.at(source)), i);
       if (distance < min) {
         min = distance;
@@ -316,7 +316,7 @@ void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
   config.debug           = false;
 
   for (std::size_t i = 0; i < layers.size(); ++i) {
-    auto       layerIndex = (reverse ? layers.size() - i - 1 : i);
+    const auto       layerIndex = (reverse ? layers.size() - i - 1 : i);
     const Node result     = aStarMap(layerIndex, reverse);
 
     qubits    = result.qubits;
@@ -339,7 +339,7 @@ void HeuristicMapper::pseudoRouteCircuit(bool reverse) {
 }
 
 void HeuristicMapper::routeCircuit() {
-  auto& config = results.config;
+  const auto& config = results.config;
 
   std::size_t              gateidx = 0;
   std::vector<std::size_t> gatesToAdjust{};
@@ -499,8 +499,8 @@ void HeuristicMapper::routeCircuit() {
       }
       if (!gatesToAdjust.empty() && gatesToAdjust.back() == gateidx) {
         gatesToAdjust.pop_back();
-        auto target         = op->getTargets().at(0);
-        auto targetLocation = locations.at(target);
+        const auto target         = op->getTargets().at(0);
+        const auto targetLocation = locations.at(target);
 
         if (targetLocation == -1) {
           // qubit only occurs in single qubit gates, can be mapped to an
@@ -534,7 +534,7 @@ void HeuristicMapper::routeCircuit() {
 }
 
 HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
-  auto& config = results.config;
+  const auto& config = results.config;
   nextNodeId   = 0;
 
   const std::unordered_set<std::uint16_t>& consideredQubits =
@@ -769,8 +769,8 @@ void HeuristicMapper::expandNode(
     for (const auto& edge : perms) {
       if (edge.first == node.locations.at(q) ||
           edge.second == node.locations.at(q)) {
-        auto q1 = node.qubits.at(edge.first);
-        auto q2 = node.qubits.at(edge.second);
+        const auto q1 = node.qubits.at(edge.first);
+        const auto q2 = node.qubits.at(edge.second);
         if (q2 == -1 || q1 == -1) {
           expandNodeAddOneSwap(edge, node, layer);
         } else if (!usedSwaps.at(static_cast<std::size_t>(q1))
@@ -867,8 +867,8 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
 
 void HeuristicMapper::recalculateFixedCostFidelity(std::size_t layer,
                                                    Node&       node) {
-  auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
-  auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
+  const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
+  const auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
 
   node.costFixed = 0;
   // adding costs of single qubit gates
@@ -910,8 +910,8 @@ void HeuristicMapper::recalculateFixedCostFidelity(std::size_t layer,
 
 void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
                                 Node& node) {
-  auto& consideredQubits            = activeQubits.at(layer);
-  auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
+  const auto& consideredQubits            = activeQubits.at(layer);
+  const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
 
   const auto q1 = node.qubits.at(swap.first);
   const auto q2 = node.qubits.at(swap.second);
@@ -1275,9 +1275,9 @@ HeuristicMapper::heuristicGateCountMaxDistanceOrSumDistanceMinusSharedSwaps(
 
 double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
                                                       Node&       node) {
-  auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
-  auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
-  auto& consideredQubits            = activeQubits.at(layer);
+  const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
+  const auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
+  const auto& consideredQubits            = activeQubits.at(layer);
 
   double costHeur = 0.;
 
@@ -1405,8 +1405,8 @@ HeuristicMapper::lookaheadGateCountMaxDistance(const std::size_t      layer,
   for (const auto& [edge, multiplicity] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = edge;
 
-    auto loc1 = node.locations.at(q1);
-    auto loc2 = node.locations.at(q2);
+    const auto loc1 = node.locations.at(q1);
+    const auto loc2 = node.locations.at(q2);
     if (loc1 == DEFAULT_POSITION && loc2 == DEFAULT_POSITION) {
       // no penalty
     } else if (loc1 == DEFAULT_POSITION) {
@@ -1430,7 +1430,7 @@ HeuristicMapper::lookaheadGateCountMaxDistance(const std::size_t      layer,
       }
       penalty = std::max(penalty, min);
     } else {
-      auto cost = architecture->distance(static_cast<std::uint16_t>(loc1),
+      const auto cost = architecture->distance(static_cast<std::uint16_t>(loc1),
                                          static_cast<std::uint16_t>(loc2));
       penalty   = std::max(penalty, cost);
     }
@@ -1447,8 +1447,8 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
   for (const auto& [edge, multiplicity] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = edge;
 
-    auto loc1 = node.locations.at(q1);
-    auto loc2 = node.locations.at(q2);
+    const auto loc1 = node.locations.at(q1);
+    const auto loc2 = node.locations.at(q2);
     if (loc1 == DEFAULT_POSITION && loc2 == DEFAULT_POSITION) {
       // no penalty
     } else if (loc1 == DEFAULT_POSITION) {
@@ -1472,7 +1472,7 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
       }
       penalty = min;
     } else {
-      auto cost = architecture->distance(static_cast<std::uint16_t>(loc1),
+      const auto cost = architecture->distance(static_cast<std::uint16_t>(loc1),
                                          static_cast<std::uint16_t>(loc2));
       penalty   = cost;
     }
