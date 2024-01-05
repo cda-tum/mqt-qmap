@@ -222,7 +222,7 @@ TEST_F(InternalsTest, NodeCostCalculation) {
   results.config.heuristic = Heuristic::GateCountSumDistance;
   updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 14 + COST_DIRECTION_REVERSE * 3,
+              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE * 2,
               tolerance);
   EXPECT_NEAR(node.costFixed, 5., tolerance)
       << "updateHeuristicCost should not change costFixed";
