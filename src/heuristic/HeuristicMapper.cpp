@@ -672,8 +672,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
     const std::chrono::duration<double> diff = end - start;
     results.heuristicBenchmark.secondsPerNode += diff.count();
 
-    layerResultsIt->generatedNodes =
-        layerResultsIt->expandedNodes + nodes.size();
+    layerResultsIt->generatedNodes = nextNodeId;
     results.heuristicBenchmark.generatedNodes += layerResultsIt->generatedNodes;
 
     if (layerResultsIt->expandedNodes > 0) {
