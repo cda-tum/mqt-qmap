@@ -571,14 +571,13 @@ TEST(Functionality, BenchmarkGeneratedNodes) {
   auto ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
 
   Configuration settings{};
-  settings.admissibleHeuristic      = true;
-  settings.lookahead                = false;
+  settings.heuristic                = Heuristic::GateCountMaxDistance;
+  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
   settings.layering                 = Layering::IndividualGates;
   settings.automaticLayerSplits     = false;
   settings.initialLayout            = InitialLayout::Identity;
   settings.preMappingOptimizations  = false;
   settings.postMappingOptimizations = false;
-  settings.considerFidelity         = false;
   settings.useTeleportation         = false;
   settings.debug                    = true;
   ibmQX5Mapper->map(settings);
