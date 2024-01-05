@@ -2040,7 +2040,8 @@ def visualize_search_graph(
                 )
 
         current_node_layout_visualized = None
-        visualize_search_node_layout(None, [0], None)
+        if not hide_layout:
+            visualize_search_node_layout(None, [0], None)
         cl = current_layer
         current_layer = None  # to prevent triggering redraw in update_timestep
         timestep_play.max = len(search_graph.nodes)
