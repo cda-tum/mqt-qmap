@@ -1036,9 +1036,12 @@ TEST(Functionality, terminationStrategyFromString) {
 }
 
 TEST(Functionality, earlyTermination) {
-  qc::QuantumComputation qc{7};
+  qc::QuantumComputation qc{7, 7};
   qc.x(0);
-  qc.cx(qc::Control{1}, 3);
+  qc.cx(qc::Control{1}, 2);
+  for (std::size_t i = 0; i < 7; ++i) {
+    qc.measure(static_cast<qc::Qubit>(i), i);
+  }
 
   const CouplingMap        cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
                                  {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
