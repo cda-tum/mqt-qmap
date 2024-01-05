@@ -48,6 +48,23 @@ enum class Heuristic {
 }
 
 /**
+ * A heuristic is non-decreasing if the estimated cost (i.e. c(n) + h(n)) is 
+ * non-decreasing along any path.
+ */
+[[maybe_unused]] static inline bool isNonDecreasing(const Heuristic heuristic) {
+  switch (heuristic) {
+  case Heuristic::GateCountMaxDistance:
+  case Heuristic::FidelityBestLocation:
+  case Heuristic::GateCountSumDistanceMinusSharedSwaps:
+  case Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps:
+    return true;
+  case Heuristic::GateCountSumDistance:
+    return false;
+  }
+  return false;
+}
+
+/**
  * A heuristic is principally admissible if it never overestimates the cost of
  * the globally optimal solution along the solution path, i.e. c(n*) <= c(n) +
  * h(n) for cost function c, heuristic h, any node n along the optimal solution

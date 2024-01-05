@@ -49,10 +49,19 @@ public:
      * The inverse of `qubits`
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
-    /** current fixed cost (for non-fidelity-aware mapping cost of all swaps
-     * already added) */
-    double costFixed = 0;
-    /** heuristic cost expected for future swaps needed in current circuit layer
+    /** current fixed cost
+     * 
+     * non-fidelity-aware: cost of all swaps used in the node
+     * 
+     * fidelity-aware: fidelity cost of all swaps used in the node + fidelity 
+     *    cost of all validly mapped gates at their current position
+     */
+    double costFixed = 0.;
+    /** current fixed cost of reversals (only for non-fidelity-aware mapping 
+     * and only in goal nodes)*/
+    double costFixedReversals = 0.;
+    /** heuristic cost (i.e. expected difference from current cost to cost of 
+     * the best reachable goal node)
      */
     double costHeur = 0.;
     /** heuristic cost expected for future swaps needed in later circuit layers
@@ -75,8 +84,8 @@ public:
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<Exchange>&                       sw           = {},
          const std::set<Edge>&                              valid2QGates = {},
-         const double initCostFixed = 0, const std::size_t searchDepth = 0)
-        : costFixed(initCostFixed), depth(searchDepth), parent(parentId),
+         const double initCostFixed = 0, const double initCostFixedReversals = 0, const std::size_t searchDepth = 0)
+        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals), depth(searchDepth), parent(parentId),
           id(nodeId) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
@@ -90,14 +99,14 @@ public:
      * @brief returns costFixed + costHeur + lookaheadPenalty
      */
     [[nodiscard]] double getTotalCost() const {
-      return costFixed + costHeur + lookaheadPenalty;
+      return costFixed + costFixedReversals + costHeur + lookaheadPenalty;
     }
 
     /**
      * @brief returns costFixed + lookaheadPenalty
      */
     [[nodiscard]] double getTotalFixedCost() const {
-      return costFixed + lookaheadPenalty;
+      return costFixed + costFixedReversals + lookaheadPenalty;
     }
 
     std::ostream& print(std::ostream& out) const {
@@ -278,10 +287,18 @@ protected:
    * @brief recalculates the gate-count-optimizing fixed cost of the node from
    * the current mapping and swaps
    *
+   * @param node search node for which to recalculate the fixed cost
+   */
+  void recalculateFixedCostNonFidelity(Node& node);
+
+  /**
+   * @brief recalculates the gate-count-optimizing fixed cost of all reversals 
+   * in the current mapping of a goal node or sets it to 0 otherwise
+   *
    * @param layer index of current circuit layer
    * @param node search node for which to recalculate the fixed cost
    */
-  void recalculateFixedCostNonFidelity(std::size_t layer, Node& node);
+  void recalculateFixedCostReversals(std::size_t layer, Node& node);
 
   /**
    * @brief calculates the heuristic cost of the current mapping in the node

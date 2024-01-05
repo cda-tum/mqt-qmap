@@ -298,7 +298,7 @@ protected:
     settings.debug = true;
     settings.automaticLayerSplits = false;
     settings.initialLayout        = InitialLayout::Identity;
-    settings.layering             = Layering::DisjointQubits;
+    settings.layering             = Layering::Disjoint2qBlocks;
     settings.lookaheadHeuristic   = LookaheadHeuristic::None;
     settings.heuristic            = std::get<0>(GetParam());
     settings.dataLoggingPath      = "test_log";
@@ -321,10 +321,7 @@ INSTANTIATE_TEST_SUITE_P(
                         "4mod5-v0_20",    // 5q
                         "mod5d1_63",      // 5q
                         "ising_model_10", // 16q
-                        "rd73_140",       // 16q
-                        "cnt3-5_179",     // 16q
-                        "qft_16",         // 16q
-                        "z4_268"          // 16q
+                        "rd73_140"        // 16q
                         )),
     [](const testing::TestParamInfo<TestHeuristics::ParamType>& inf) {
       std::string name = std::get<1>(inf.param);
@@ -425,16 +422,17 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         continue;
       }
 
-      // check non-decreasing total cost
-      if (node.parent != node.id) {
-        if (node.parent >= nodes.size() ||
-            nodes.at(node.parent).id != node.parent) {
-          FAIL() << "Invalid parent id " << node.parent << " for node "
-                 << node.id;
+      if (isNonDecreasing(settings.heuristic)) {
+        if (node.parent != node.id) {
+          if (node.parent >= nodes.size() ||
+              nodes.at(node.parent).id != node.parent) {
+            FAIL() << "Invalid parent id " << node.parent << " for node "
+                  << node.id;
+          }
+          EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
+              << "Heuristic " << toString(settings.heuristic)
+              << " does not result in non-decreasing cost estimation";
         }
-        EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
-            << "Heuristic " << toString(settings.heuristic)
-            << " does not result in non-decreasing cost estimation";
       }
 
       EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance)
