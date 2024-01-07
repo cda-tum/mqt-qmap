@@ -340,6 +340,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
   // each node is at the position corresponding to its id; positions of unused 
   // ids are filled with default values (i.e. node.id = 0)
   std::vector<std::vector<HeuristicMapper::Node>> allNodes{};
+  std::vector<std::string>                        layerNames{};
   std::vector<std::size_t>                        finalSolutionIds{};
   
   // map to IBM Yorktown if possible
@@ -352,6 +353,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
         allNodes.emplace_back(
             results.layerHeuristicBenchmark.at(i).generatedNodes);
+        layerNames.emplace_back("on ibmq_yorktown in layer " + std::to_string(i));
         parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
         finalSolutionIds.push_back(
             getFinalNodeFromDatalog(settings.dataLoggingPath, i));
@@ -366,6 +368,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
       allNodes.emplace_back(
           results.layerHeuristicBenchmark.at(i).generatedNodes);
+      layerNames.emplace_back("on ibmq_london in layer " + std::to_string(i));
       parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
       finalSolutionIds.push_back(
           getFinalNodeFromDatalog(settings.dataLoggingPath, i));
@@ -382,6 +385,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
         allNodes.emplace_back(
             results.layerHeuristicBenchmark.at(i).generatedNodes);
+        layerNames.emplace_back("on ibmQX5 in layer " + std::to_string(i));
         parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
         finalSolutionIds.push_back(
             getFinalNodeFromDatalog(settings.dataLoggingPath, i));
@@ -396,7 +400,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     if (finalSolutionId >= nodes.size() ||
         nodes.at(finalSolutionId).id != finalSolutionId) {
       FAIL() << "Final solution node " << finalSolutionId
-             << " not found in nodes of layer " << i;
+             << " not found " << layerNames.at(i);
     }
     auto& finalSolutionNode = nodes.at(finalSolutionId);
     EXPECT_TRUE(finalSolutionNode.validMapping);
@@ -408,11 +412,12 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       auto solutionPath = getPathToRoot(nodes, finalSolutionId);
       for (auto nodeId : solutionPath) {
         if (nodes.at(nodeId).id != nodeId) {
-          throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
+          throw std::runtime_error("Invalid node id " + std::to_string(nodeId) + " " + layerNames.at(i));
         }
         EXPECT_LE(nodes.at(nodeId).getTotalCost(), finalSolutionNode.costFixed)
             << "Heuristic " << toString(settings.heuristic)
-            << " is not principally admissible";
+            << " is not principally admissible " << layerNames.at(i) 
+            << " in node " << nodeId;
       }
     }
 
@@ -427,24 +432,25 @@ TEST_P(TestHeuristics, HeuristicProperties) {
           if (node.parent >= nodes.size() ||
               nodes.at(node.parent).id != node.parent) {
             FAIL() << "Invalid parent id " << node.parent << " for node "
-                  << node.id;
+                  << node.id << " " << layerNames.at(i);
           }
           EXPECT_GE(node.getTotalCost(), nodes.at(node.parent).getTotalCost())
               << "Heuristic " << toString(settings.heuristic)
-              << " does not result in non-decreasing cost estimation";
+              << " does not result in non-decreasing cost estimation " 
+              << layerNames.at(i) << " in node " << node.id;
         }
       }
 
       EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance)
-          << "Lookahead penalty not 0 even though lookahead has been "
-             "deactivated";
+          << "Lookahead penalty not 0 " << layerNames.at(i) 
+          << " even though lookahead has been deactivated";
 
       if (node.validMapping) {
         if (isTight(settings.heuristic)) {
           // tight heuristics are 0 in any goal node
           EXPECT_NEAR(node.costHeur, 0., tolerance)
               << "Heuristic " << toString(settings.heuristic)
-              << " is not tight";
+              << " is not tight " << layerNames.at(i) << " in node " << node.id;
         }
 
         if (isAdmissible(settings.heuristic)) {
@@ -459,7 +465,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
             auto& n = nodes.at(nodeId);
             EXPECT_LE(n.getTotalCost(), node.costFixed)
                 << "Heuristic " << toString(settings.heuristic)
-                << " is not admissible";
+                << " is not admissible " << layerNames.at(i) 
+                << " in node " << nodeId;
           }
         }
       }

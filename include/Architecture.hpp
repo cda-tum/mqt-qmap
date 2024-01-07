@@ -249,7 +249,12 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
+  [[nodiscard]] const Matrix& getDistanceTable(bool includeReversalCost = true) const { 
+    if (includeReversalCost) {
+      return distanceTableReversals;
+    }
+    return distanceTable; 
+  }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -382,6 +387,8 @@ public:
   }
 
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
+  
+  [[nodiscard]] bool unidirectional() const { return isUnidirectional; }
 
   [[nodiscard]] bool isArchitectureAvailable() const {
     return !(name.empty()) && nqubits != 0;
@@ -395,7 +402,9 @@ public:
     nqubits = 0;
     couplingMap.clear();
     distanceTable.clear();
+    distanceTableReversals.clear();
     isBidirectional = true;
+    isUnidirectional = true;
     properties.clear();
     fidelityAvailable = false;
     fidelityTable.clear();
@@ -407,8 +416,12 @@ public:
   }
 
   [[nodiscard]] double distance(std::uint16_t control,
-                                std::uint16_t target) const {
+                                std::uint16_t target,
+                                bool includeReversalCost = true) const {
     if (currentTeleportations.empty()) {
+      if (includeReversalCost) {
+        return distanceTableReversals.at(control).at(target);
+      }
       return distanceTable.at(control).at(target);
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
@@ -481,7 +494,9 @@ protected:
   CouplingMap                                        couplingMap           = {};
   CouplingMap                                        currentTeleportations = {};
   bool                                               isBidirectional = true;
+  bool                                               isUnidirectional = true;
   Matrix                                             distanceTable   = {};
+  Matrix                                             distanceTableReversals = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties        = {};
   bool                                               fidelityAvailable = false;

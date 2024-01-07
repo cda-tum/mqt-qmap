@@ -84,9 +84,13 @@ public:
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
          const std::vector<Exchange>&                       sw           = {},
          const std::set<Edge>&                              valid2QGates = {},
-         const double initCostFixed = 0, const double initCostFixedReversals = 0, const std::size_t searchDepth = 0)
-        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals), depth(searchDepth), parent(parentId),
-          id(nodeId) {
+         const double initCostFixed = 0, 
+         const double initCostFixedReversals = 0, 
+         const std::size_t searchDepth = 0, 
+         const std::size_t initSharedSwaps = 0)
+        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals), 
+          depth(searchDepth), parent(parentId), id(nodeId), 
+          sharedSwaps(initSharedSwaps) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -217,21 +221,29 @@ protected:
    * @param reverse if true, the circuit is mapped from the end to the beginning
    */
   virtual Node aStarMap(std::size_t layer, bool reverse);
+  
+  /**
+   * @brief Get all qubits that are acted on by a relevant gate in the given layer
+   * 
+   * @param layer the layer for which to get the considered qubits
+   */
+  const std::unordered_set<std::uint16_t>& getConsideredQubits(std::size_t layer) const {
+    if (fidelityAwareHeur) {
+      return activeQubits.at(layer);
+    } else {
+      return activeQubits2QGates.at(layer);
+    }
+  }
 
   /**
    * @brief expand the given node by calling `expand_node_add_one_swap` for all
    * possible swaps, which creates new search nodes and adds them to
    * `HeuristicMapper::nodes`
    *
-   * @param consideredQubits set of all qubits that are acted on by a
-   * 2-qubit-gate in the respective layer
    * @param node current search node
    * @param layer index of current circuit layer
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
-   * of logical qubits in the current layer
    */
-  void expandNode(const std::unordered_set<std::uint16_t>& consideredQubits,
-                  Node& node, std::size_t layer);
+  void expandNode(Node& node, std::size_t layer);
 
   /**
    * @brief creates a new node with a swap on the given edge and adds it to
@@ -240,8 +252,6 @@ protected:
    * @param swap edge on which to perform a swap
    * @param node current search node
    * @param layer index of current circuit layer
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
-   * of logical qubits in the current layer
    */
   void expandNodeAddOneSwap(const Edge& swap, Node& node, std::size_t layer);
 
@@ -255,7 +265,7 @@ protected:
    */
   void applySWAP(const Edge& swap, std::size_t layer, Node& node);
 
-  /**
+  /**d
    * @brief applies an in-place teleportation of 2 virtual qubits in the given
    * node and recalculates all costs accordingly
    *
