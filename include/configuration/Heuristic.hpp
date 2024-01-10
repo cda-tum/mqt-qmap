@@ -48,7 +48,7 @@ enum class Heuristic {
 }
 
 /**
- * A heuristic is non-decreasing if the estimated cost (i.e. c(n) + h(n)) is 
+ * A heuristic is non-decreasing if the estimated cost (i.e. c(n) + h(n)) is
  * non-decreasing along any path.
  */
 [[maybe_unused]] static inline bool isNonDecreasing(const Heuristic heuristic) {

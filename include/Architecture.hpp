@@ -249,11 +249,12 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable(bool includeReversalCost = true) const { 
+  [[nodiscard]] const Matrix&
+  getDistanceTable(bool includeReversalCost = true) const {
     if (includeReversalCost) {
       return distanceTableReversals;
     }
-    return distanceTable; 
+    return distanceTable;
   }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
@@ -387,7 +388,7 @@ public:
   }
 
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
-  
+
   [[nodiscard]] bool unidirectional() const { return isUnidirectional; }
 
   [[nodiscard]] bool isArchitectureAvailable() const {
@@ -403,7 +404,7 @@ public:
     couplingMap.clear();
     distanceTable.clear();
     distanceTableReversals.clear();
-    isBidirectional = true;
+    isBidirectional  = true;
     isUnidirectional = true;
     properties.clear();
     fidelityAvailable = false;
@@ -415,8 +416,7 @@ public:
     fidelityDistanceTables.clear();
   }
 
-  [[nodiscard]] double distance(std::uint16_t control,
-                                std::uint16_t target,
+  [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target,
                                 bool includeReversalCost = true) const {
     if (currentTeleportations.empty()) {
       if (includeReversalCost) {
@@ -489,14 +489,14 @@ public:
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
 protected:
-  std::string                                        name;
-  std::uint16_t                                      nqubits               = 0;
-  CouplingMap                                        couplingMap           = {};
-  CouplingMap                                        currentTeleportations = {};
-  bool                                               isBidirectional = true;
-  bool                                               isUnidirectional = true;
-  Matrix                                             distanceTable   = {};
-  Matrix                                             distanceTableReversals = {};
+  std::string   name;
+  std::uint16_t nqubits                = 0;
+  CouplingMap   couplingMap            = {};
+  CouplingMap   currentTeleportations  = {};
+  bool          isBidirectional        = true;
+  bool          isUnidirectional       = true;
+  Matrix        distanceTable          = {};
+  Matrix        distanceTableReversals = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties        = {};
   bool                                               fidelityAvailable = false;

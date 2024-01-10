@@ -77,8 +77,8 @@ public:
    * e.g. in the case of fidelity-aware distances or distances on
    * mixed bi/unidirectional architectures)
    */
-  static void buildTable(const CouplingMap& couplingMap,
-                         Matrix& distanceTable, const Matrix& edgeWeights);
+  static void buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
+                         const Matrix& edgeWeights);
   /**
    * @brief builds a 3d matrix containing the distance tables giving the minimal
    * distances between 2 qubit when upto k edges can be skipped.
@@ -88,7 +88,7 @@ public:
    *
    * if k > edgeSkipDistanceTable.size() a cost of 0 can be assumed
    *
-   * @param distanceTable 2d matrix containing distances between any 2 qubits: 
+   * @param distanceTable 2d matrix containing distances between any 2 qubits:
    * distanceTable[source][target]
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param edgeSkipDistanceTable 3d target table
@@ -100,29 +100,27 @@ public:
    * @brief builds a distance table containing the minimal costs for moving
    * logical qubits from one physical qubit to another (along the cheapest path)
    * while skipping a single edge, i.e. equivalent to buildEdgeSkipTable(...)[1]
-   * 
+   *
    * An additional reversal cost can be specified, which is added to the cost if
    * the skipped edge is a back edge
    *
-   * @param distanceTable 2d matrix containing distances between any 2 qubits: 
+   * @param distanceTable 2d matrix containing distances between any 2 qubits:
    * distanceTable[source][target]
    * @param couplingMap coupling map specifying all edges in the architecture
    * @param reversalCost cost for reversing an edge
    * @param edgeSkipDistanceTable target distance table
    */
-  static void buildSingleEdgeSkipTable(const Matrix&        distanceTable,
-                                 const CouplingMap&   couplingMap,
-                                 const double reversalCost,
-                                 Matrix& edgeSkipDistanceTable);
+  static void buildSingleEdgeSkipTable(const Matrix&      distanceTable,
+                                       const CouplingMap& couplingMap,
+                                       const double       reversalCost,
+                                       Matrix& edgeSkipDistanceTable);
 
 protected:
   static void dijkstra(const CouplingMap& couplingMap, std::vector<Node>& nodes,
                        std::uint16_t start, const Matrix& edgeWeights);
 
   struct NodeComparator {
-    bool operator()(const Node* x, const Node* y) {
-      return x->cost > y->cost;
-    }
+    bool operator()(const Node* x, const Node* y) { return x->cost > y->cost; }
   };
 };
 

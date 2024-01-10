@@ -50,24 +50,24 @@ public:
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
     /** current fixed cost
-     * 
+     *
      * non-fidelity-aware: cost of all swaps used in the node
-     * 
-     * fidelity-aware: fidelity cost of all swaps used in the node + fidelity 
+     *
+     * fidelity-aware: fidelity cost of all swaps used in the node + fidelity
      *    cost of all validly mapped gates at their current position
      */
     double costFixed = 0.;
-    /** current fixed cost of reversals (only for non-fidelity-aware mapping 
+    /** current fixed cost of reversals (only for non-fidelity-aware mapping
      * and only in goal nodes)*/
     double costFixedReversals = 0.;
-    /** heuristic cost (i.e. expected difference from current cost to cost of 
+    /** heuristic cost (i.e. expected difference from current cost to cost of
      * the best reachable goal node)
      */
     double costHeur = 0.;
     /** heuristic cost expected for future swaps needed in later circuit layers
      * (further layers contribute less) */
     double lookaheadPenalty = 0.;
-    /** number of swaps that were shared with another considered qubit such 
+    /** number of swaps that were shared with another considered qubit such
      * that both qubits got closer to being validly mapped*/
     std::size_t sharedSwaps = 0;
     /** depth in search tree (starting with 0 at the root) */
@@ -82,21 +82,21 @@ public:
       qubits.fill(DEFAULT_POSITION);
       locations.fill(DEFAULT_POSITION);
     };
-    explicit Node(std::size_t nodeId) : id(nodeId){
+    explicit Node(std::size_t nodeId) : id(nodeId) {
       qubits.fill(DEFAULT_POSITION);
       locations.fill(DEFAULT_POSITION);
     };
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
-         const std::vector<Exchange>&                       sw           = {},
-         const std::set<Edge>&                              valid2QGates = {},
-         const double initCostFixed = 0, 
-         const double initCostFixedReversals = 0, 
-         const std::size_t searchDepth = 0, 
-         const std::size_t initSharedSwaps = 0)
-        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals), 
-          depth(searchDepth), parent(parentId), id(nodeId), 
+         const std::vector<Exchange>&                       sw            = {},
+         const std::set<Edge>&                              valid2QGates  = {},
+         const double                                       initCostFixed = 0,
+         const double      initCostFixedReversals                         = 0,
+         const std::size_t searchDepth                                    = 0,
+         const std::size_t initSharedSwaps                                = 0)
+        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals),
+          depth(searchDepth), parent(parentId), id(nodeId),
           sharedSwaps(initSharedSwaps) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
@@ -228,13 +228,15 @@ protected:
    * @param reverse if true, the circuit is mapped from the end to the beginning
    */
   virtual Node aStarMap(std::size_t layer, bool reverse);
-  
+
   /**
-   * @brief Get all qubits that are acted on by a relevant gate in the given layer
-   * 
+   * @brief Get all qubits that are acted on by a relevant gate in the given
+   * layer
+   *
    * @param layer the layer for which to get the considered qubits
    */
-  const std::unordered_set<std::uint16_t>& getConsideredQubits(std::size_t layer) const {
+  const std::unordered_set<std::uint16_t>&
+  getConsideredQubits(std::size_t layer) const {
     if (fidelityAwareHeur) {
       return activeQubits.at(layer);
     } else {
@@ -281,11 +283,11 @@ protected:
    * @param node search node in which to apply the swap
    */
   void applyTeleportation(const Edge& swap, std::size_t layer, Node& node);
-  
+
   /**
-   * @brief increments `node.sharedSwaps` if the given swap is shared with 
+   * @brief increments `node.sharedSwaps` if the given swap is shared with
    * another qubit such that both qubits get closer to being validly mapped
-   * 
+   *
    * @param swap the swap to check
    * @param layer index of current circuit layer
    * @param node search node in which to update `sharedSwaps`
@@ -319,7 +321,7 @@ protected:
   void recalculateFixedCostNonFidelity(Node& node);
 
   /**
-   * @brief recalculates the gate-count-optimizing fixed cost of all reversals 
+   * @brief recalculates the gate-count-optimizing fixed cost of all reversals
    * in the current mapping of a goal node or sets it to 0 otherwise
    *
    * @param layer index of current circuit layer
@@ -506,7 +508,7 @@ inline bool operator>(const HeuristicMapper::Node& x,
 }
 
 inline bool operator==(const HeuristicMapper::Node& x,
-                      const HeuristicMapper::Node& y) {
+                       const HeuristicMapper::Node& y) {
   auto itx = x.qubits.begin(); // NOLINT (readability-qualified-auto)
   auto ity = y.qubits.begin(); // NOLINT (readability-qualified-auto)
   while (itx != x.qubits.end() && ity != y.qubits.end()) {

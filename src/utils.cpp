@@ -7,22 +7,22 @@
 
 #include <cassert>
 
-void Dijkstra::buildTable(const CouplingMap& couplingMap,
-                          Matrix& distanceTable, const Matrix& edgeWeights) {
+void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
+                          const Matrix& edgeWeights) {
   const std::uint16_t n = edgeWeights.size(); // number of qubits
-  
+
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
   for (std::uint16_t i = 0; i < n; ++i) {
     std::vector<Dijkstra::Node> nodes(n);
     for (std::uint16_t j = 0; j < n; ++j) {
-      nodes.at(j).visited             = false;
-      nodes.at(j).pos                 = j;
-      nodes.at(j).cost                = -1.;
+      nodes.at(j).visited = false;
+      nodes.at(j).pos     = j;
+      nodes.at(j).cost    = -1.;
     }
 
-    nodes.at(i).cost     = 0;
+    nodes.at(i).cost = 0;
 
     dijkstra(couplingMap, nodes, i, edgeWeights);
 
@@ -60,8 +60,8 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         }
 
         Node newNode;
-        newNode.cost     = current->cost + edgeWeights.at(*pos).at(*to);
-        newNode.pos      = to;
+        newNode.cost = current->cost + edgeWeights.at(*pos).at(*to);
+        newNode.pos  = to;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;
           queue.push(&nodes.at(*to));
@@ -126,17 +126,18 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
   }
 }
 
-void Dijkstra::buildSingleEdgeSkipTable(const Matrix&        distanceTable,
-                                        const CouplingMap&   couplingMap,
-                                        const double reversalCost,
+void Dijkstra::buildSingleEdgeSkipTable(const Matrix&      distanceTable,
+                                        const CouplingMap& couplingMap,
+                                        const double       reversalCost,
                                         Matrix& edgeSkipDistanceTable) {
   const std::size_t n = distanceTable.size();
   edgeSkipDistanceTable.clear();
-  edgeSkipDistanceTable.resize(n, std::vector<double>(n, std::numeric_limits<double>::max()));
+  edgeSkipDistanceTable.resize(
+      n, std::vector<double>(n, std::numeric_limits<double>::max()));
   for (std::size_t q = 0; q < n; ++q) {
     edgeSkipDistanceTable.at(q).at(q) = 0.;
   }
-  for (const auto& [e1, e2] : couplingMap) { // edge to be skipped
+  for (const auto& [e1, e2] : couplingMap) {        // edge to be skipped
     for (std::size_t q1 = 0; q1 < n; ++q1) {        // q1 ... source qubit
       for (std::size_t q2 = q1 + 1; q2 < n; ++q2) { // q2 ... target qubit
         edgeSkipDistanceTable.at(q1).at(q2) =
@@ -144,18 +145,20 @@ void Dijkstra::buildSingleEdgeSkipTable(const Matrix&        distanceTable,
                      distanceTable.at(q1).at(e1) + distanceTable.at(e2).at(q2));
         edgeSkipDistanceTable.at(q1).at(q2) =
             std::min(edgeSkipDistanceTable.at(q1).at(q2),
-                     distanceTable.at(q1).at(e2) + distanceTable.at(e1).at(q2) + reversalCost);
+                     distanceTable.at(q1).at(e2) + distanceTable.at(e1).at(q2) +
+                         reversalCost);
         if (reversalCost == 0.) {
-          edgeSkipDistanceTable.at(q2).at(q1) = edgeSkipDistanceTable.at(q1).at(q2);
+          edgeSkipDistanceTable.at(q2).at(q1) =
+              edgeSkipDistanceTable.at(q1).at(q2);
         } else {
+          edgeSkipDistanceTable.at(q2).at(q1) = std::min(
+              edgeSkipDistanceTable.at(q2).at(q1),
+              distanceTable.at(q2).at(e1) + distanceTable.at(e2).at(q1));
           edgeSkipDistanceTable.at(q2).at(q1) =
               std::min(edgeSkipDistanceTable.at(q2).at(q1),
-                      distanceTable.at(q2).at(e1) + distanceTable.at(e2).at(q1));
-          edgeSkipDistanceTable.at(q2).at(q1) =
-              std::min(edgeSkipDistanceTable.at(q2).at(q1),
-                      distanceTable.at(q2).at(e2) + distanceTable.at(e1).at(q1) + reversalCost);
+                       distanceTable.at(q2).at(e2) +
+                           distanceTable.at(e1).at(q1) + reversalCost);
         }
-        
       }
     }
   }
