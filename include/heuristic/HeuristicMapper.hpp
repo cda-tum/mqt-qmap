@@ -67,7 +67,8 @@ public:
     /** heuristic cost expected for future swaps needed in later circuit layers
      * (further layers contribute less) */
     double lookaheadPenalty = 0.;
-    /** number of swaps that were shared with another considered qubit */
+    /** number of swaps that were shared with another considered qubit such 
+     * that both qubits got closer to being validly mapped*/
     std::size_t sharedSwaps = 0;
     /** depth in search tree (starting with 0 at the root) */
     std::size_t depth  = 0;
@@ -77,8 +78,14 @@ public:
      * architecture */
     bool validMapping = true;
 
-    explicit Node() = default;
-    explicit Node(std::size_t nodeId) : id(nodeId){};
+    explicit Node() {
+      qubits.fill(DEFAULT_POSITION);
+      locations.fill(DEFAULT_POSITION);
+    };
+    explicit Node(std::size_t nodeId) : id(nodeId){
+      qubits.fill(DEFAULT_POSITION);
+      locations.fill(DEFAULT_POSITION);
+    };
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
@@ -265,7 +272,7 @@ protected:
    */
   void applySWAP(const Edge& swap, std::size_t layer, Node& node);
 
-  /**d
+  /**
    * @brief applies an in-place teleportation of 2 virtual qubits in the given
    * node and recalculates all costs accordingly
    *
@@ -274,6 +281,16 @@ protected:
    * @param node search node in which to apply the swap
    */
   void applyTeleportation(const Edge& swap, std::size_t layer, Node& node);
+  
+  /**
+   * @brief increments `node.sharedSwaps` if the given swap is shared with 
+   * another qubit such that both qubits get closer to being validly mapped
+   * 
+   * @param swap the swap to check
+   * @param layer index of current circuit layer
+   * @param node search node in which to update `sharedSwaps`
+   */
+  void updateSharedSwaps(const Edge& swap, std::size_t layer, Node& node);
 
   /**
    * @brief recalculates the fixed cost of the node from the current mapping and
@@ -467,10 +484,10 @@ inline bool operator>(const HeuristicMapper::Node& x,
     return xcost > ycost;
   }
 
-  if (x.validMapping) {
+  if (x.validMapping && !y.validMapping) {
     return false;
   }
-  if (y.validMapping) {
+  if (y.validMapping && !x.validMapping) {
     return true;
   }
 
@@ -486,4 +503,18 @@ inline bool operator>(const HeuristicMapper::Node& x,
   }
 
   return x < y;
+}
+
+inline bool operator==(const HeuristicMapper::Node& x,
+                      const HeuristicMapper::Node& y) {
+  auto itx = x.qubits.begin(); // NOLINT (readability-qualified-auto)
+  auto ity = y.qubits.begin(); // NOLINT (readability-qualified-auto)
+  while (itx != x.qubits.end() && ity != y.qubits.end()) {
+    if (*itx != *ity) {
+      return false;
+    }
+    ++itx;
+    ++ity;
+  }
+  return true;
 }
