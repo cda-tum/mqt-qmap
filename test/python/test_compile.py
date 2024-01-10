@@ -154,11 +154,12 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
             example_circuit,
             arch=arch,
             method="heuristic",
-            consider_fidelity=False,
+            heuristic="gate_count_max_distance",
             initial_layout="dynamic",
             iterative_bidirectional_routing_passes=1,
             layering="individual_gates",
             automatic_layer_splits_node_limit=5000,
+            lookahead_heuristic="gate_count_max_distance",
             lookaheads=15,
             lookahead_factor=0.5,
             use_teleportation=True,
@@ -171,7 +172,8 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
             visualizer=visualizer,
         )
         assert results.configuration.method == qmap.Method.heuristic
-        assert results.configuration.consider_fidelity is False
+        assert results.configuration.heuristic is qmap.Heuristic.gate_count_max_distance
+        assert results.configuration.lookahead_heuristic is qmap.LookaheadHeuristic.gate_count_max_distance
         assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
         assert results.configuration.iterative_bidirectional_routing is True
         assert results.configuration.iterative_bidirectional_routing_passes == 1
@@ -179,7 +181,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         assert results.configuration.automatic_layer_splits is True
         assert results.configuration.automatic_layer_splits_node_limit == 5000
         assert results.configuration.lookaheads == 15
-        assert results.configuration.lookahead is True
         assert results.configuration.lookahead_factor == 0.5
         assert results.configuration.use_teleportation is True
         assert results.configuration.teleportation_fake is False
@@ -194,12 +195,12 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         example_circuit,
         arch=arch,
         method="heuristic",
-        consider_fidelity=True,
+        heuristic="fidelity_best_location",
         initial_layout="identity",
         iterative_bidirectional_routing_passes=None,
         layering="disjoint_qubits",
         automatic_layer_splits_node_limit=None,
-        lookaheads=None,
+        lookahead_heuristic=None,
         use_teleportation=False,
         pre_mapping_optimizations=False,
         post_mapping_optimizations=False,
@@ -207,7 +208,8 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         debug=False,
     )
     assert results.configuration.method == qmap.Method.heuristic
-    assert results.configuration.consider_fidelity is True
+    assert results.configuration.heuristic is qmap.Heuristic.fidelity_best_location
+    assert results.configuration.lookahead_heuristic is qmap.LookaheadHeuristic.none
     assert results.configuration.initial_layout == qmap.InitialLayout.identity
     assert results.configuration.iterative_bidirectional_routing is False
     assert results.configuration.layering == qmap.Layering.disjoint_qubits
