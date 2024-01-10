@@ -201,8 +201,7 @@ def _layout_search_graph(
     if not tapered_layer_heights:
         return pos
 
-    layers_x = {}
-    layer_spacings = {}
+    layers_x: dict[float, list[float]] = {}
     for n in pos:
         x, y = pos[n]
         if y not in layers_x:
@@ -212,11 +211,12 @@ def _layout_search_graph(
     if len(layers_x) >= len(search_graph.nodes):
         return pos
 
+    layer_spacings: dict[float, float] = {}
     avg_spacing = 0.0
     for y in layers_x:
         layer_spacings[y] = _get_avg_min_distance(layers_x[y])
         avg_spacing += layer_spacings[y]
-    avg_spacing /= len(layers_x)
+    avg_spacing /= float(len(layers_x))
     layer_spacings_items = sorted(layer_spacings.items(), key=lambda x: x[0])
     for i in range(len(layer_spacings_items)):
         before = layer_spacings_items[i - 1][1] if i != 0 else 0
