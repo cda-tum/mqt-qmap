@@ -131,6 +131,7 @@ def _copy_to_dict(
 class RootNodeNotFoundError(Exception):
     """Raised when the root node of a search graph could not be found."""
 
+
 class FinalNodeNotFoundError(Exception):
     """Raised when the final solution node of a search graph could not be found."""
 
@@ -177,7 +178,7 @@ def _parse_search_graph(file_path: str, final_node_id: int, only_solution_path: 
             if node.nodeid != root:
                 graph.add_edge(node.nodeid, node.parent)
     else:
-        for _, node in nodes.items():
+        for node in nodes.values():
             graph.add_node(node.nodeid, data=node)
             if node.nodeid != root:
                 graph.add_edge(node.nodeid, node.parent)
@@ -826,7 +827,9 @@ def _load_layer_data(
     initial_positions = _reverse_layout(initial_layout)
     final_node_id = circuit_layer["final_node_id"]
 
-    graph, graph_root = _parse_search_graph(f"{data_logging_path}nodes_layer_{layer}.csv", final_node_id, show_only_solution_path)
+    graph, graph_root = _parse_search_graph(
+        f"{data_logging_path}nodes_layer_{layer}.csv", final_node_id, show_only_solution_path
+    )
 
     pos = _layout_search_graph(graph, graph_root, layout, tapered_layer_heights)
 
@@ -1174,7 +1177,7 @@ def _visualize_search_graph_check_parameters(
     if not isinstance(show_shared_swaps, bool):
         msg = "show_shared_swaps must be a boolean"  # type: ignore[unreachable]
         raise TypeError(msg)
-    
+
     if not isinstance(show_only_solution_path, bool):
         msg = "show_only_solution_path must be a boolean"  # type: ignore[unreachable]
         raise TypeError(msg)
@@ -2010,7 +2013,7 @@ def visualize_search_graph(
                 color_final_node,
                 draw_stems,
                 draw_search_edges,
-                show_only_solution_path
+                show_only_solution_path,
             )
         search_graph = search_graphs[current_layer]
         initial_layout = initial_layouts[current_layer]
