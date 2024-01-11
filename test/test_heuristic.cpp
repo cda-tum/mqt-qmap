@@ -1121,7 +1121,7 @@ protected:
     std::stringstream ss{};
     ss << cn << "_" << toString(std::get<0>(GetParam()));
     std::string testName = ss.str();
-    
+
     circuitName = std::get<1>(GetParam());
     qc.import(testExampleDir + circuitName + ".qasm");
     ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
@@ -1137,7 +1137,7 @@ protected:
     settings.layering             = Layering::Disjoint2qBlocks;
     settings.lookaheadHeuristic   = LookaheadHeuristic::None;
     settings.heuristic            = std::get<0>(GetParam());
-    settings.dataLoggingPath      = "test_log/heur_properties_" + testName + "/";
+    settings.dataLoggingPath = "test_log/heur_properties_" + testName + "/";
   }
 };
 
