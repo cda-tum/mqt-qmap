@@ -76,6 +76,7 @@ class SearchVisualizer:
         show_layout: Literal["hover", "click"] | None = "hover",
         show_swaps: bool = True,
         show_shared_swaps: bool = True,
+        show_only_solution_path: bool = False,
         color_valid_mapping: str | None = "green",
         color_final_node: str | None = "red",
         search_node_color: str
@@ -119,6 +120,7 @@ class SearchVisualizer:
             show_layout (Literal['hover', 'click'] | None): If the current qubit layout should be shown on the qubit connectivity graph, when clicking or hovering on a search node or not at all. Defaults to "hover".
             show_swaps (bool): Showing swaps on the connectivity graph. Defaults to True.
             show_shared_swaps (bool): Indicate a shared swap by 1 arrow with 2 heads, otherwise 2 arrows in opposite direction are drawn for the 1 shared swap. Defaults to True.
+            show_only_solution_path (bool): If only the final solution path should be shown. Defaults to False.
             color_valid_mapping (str | None): Color to use for search nodes containing a valid qubit layout (in CSS format). Defaults to "green".
             color_final_node (str | None): Color to use for the final solution search node (in CSS format). Defaults to "red".
             search_node_color (str | Callable[[SearchNode], float] | list[str | Callable[[SearchNode], float]]): Color to be used for search nodes. Either a static color (in CSS format) or function mapping a mqt.qmap.visualization.SearchNode to a float value, which in turn gets translated into a color by ``search_node_color_scale`` , or a preset data feature ('total_cost' | 'fixed_cost' | 'heuristic_cost' | 'lookahead_penalty'). In case a 3D search graph is used with multiple points per search node, each point's color can be controlled individually via a list. Defaults to "total_cost".
@@ -187,6 +189,7 @@ class SearchVisualizer:
             show_layout=show_layout,
             show_swaps=show_swaps,
             show_shared_swaps=show_shared_swaps,
+            show_only_solution_path=show_only_solution_path,
             color_valid_mapping=color_valid_mapping,
             color_final_node=color_final_node,
             search_node_color=search_node_color,
