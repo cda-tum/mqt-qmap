@@ -157,7 +157,9 @@ void HeuristicMapper::createInitialMapping() {
       mt.seed(config.teleportationSeed);
     }
 
-    std::uniform_int_distribution<> dis(0, static_cast<std::int32_t>(architecture->getCouplingMap().size() - 1));
+    std::uniform_int_distribution<> dis(
+        0,
+        static_cast<std::int32_t>(architecture->getCouplingMap().size() - 1));
 
     for (std::size_t i = 0; i < config.teleportationQubits; i += 2) {
       Edge e{};
