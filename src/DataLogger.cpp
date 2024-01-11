@@ -15,7 +15,7 @@ void DataLogger::initLog() {
   }
   const std::filesystem::path dirPath(dataLoggingPath);
   if (!std::filesystem::exists(dirPath)) {
-    std::filesystem::create_directory(dirPath);
+    std::filesystem::create_directories(dirPath);
   }
   clearLog();
 };

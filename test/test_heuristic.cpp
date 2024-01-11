@@ -21,6 +21,9 @@ constexpr qc::OpType SWAP = qc::OpType::SWAP;
  */
 std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
                                     std::size_t layer) {
+  if (dataLoggingPath.back() != '/') {
+    dataLoggingPath += '/';
+  }
   auto layerFile = std::ifstream(dataLoggingPath + "/layer_" +
                                  std::to_string(layer) + ".json");
   if (!layerFile.is_open()) {
@@ -46,6 +49,9 @@ std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
  */
 void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
                            std::vector<HeuristicMapper::Node>& nodes) {
+  if (dataLoggingPath.back() != '/') {
+    dataLoggingPath += '/';
+  }
   std::string layerNodeFilePath =
       dataLoggingPath + "/nodes_layer_" + std::to_string(layer) + ".csv";
   auto layerNodeFile = std::ifstream(layerNodeFilePath);
@@ -1110,6 +1116,12 @@ protected:
   }
 
   void SetUp() override {
+    std::string cn = std::get<1>(GetParam());
+    std::replace(cn.begin(), cn.end(), '-', '_');
+    std::stringstream ss{};
+    ss << cn << "_" << toString(std::get<0>(GetParam()));
+    std::string testName = ss.str();
+    
     circuitName = std::get<1>(GetParam());
     qc.import(testExampleDir + circuitName + ".qasm");
     ibmqYorktown.loadCouplingMap(AvailableArchitecture::IbmqYorktown);
@@ -1125,7 +1137,7 @@ protected:
     settings.layering             = Layering::Disjoint2qBlocks;
     settings.lookaheadHeuristic   = LookaheadHeuristic::None;
     settings.heuristic            = std::get<0>(GetParam());
-    settings.dataLoggingPath      = "test_log";
+    settings.dataLoggingPath      = "test_log/heur_properties_" + testName + "/";
   }
 };
 
@@ -1535,7 +1547,7 @@ TEST(Functionality, InvalidCircuits) {
 }
 
 TEST(Functionality, DataLoggerAfterClose) {
-  const std::string      dataLoggingPath = "test_log/";
+  const std::string      dataLoggingPath = "test_log/datalogger_after_close/";
   qc::QuantumComputation qc{3};
   qc.x(0);
   Architecture                arch{3, {}};
@@ -1610,7 +1622,7 @@ TEST(Functionality, DataLogger) {
   settings.debug                    = true;
   settings.useTeleportation         = false;
   // setting data logging path to enable data logging
-  settings.dataLoggingPath = "test_log";
+  settings.dataLoggingPath = "test_log/datalogger";
 
   // remove directory at data logging path if it already exists
   if (std::filesystem::exists(settings.dataLoggingPath)) {
@@ -2183,7 +2195,6 @@ protected:
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
     ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
     settings.debug     = true;
-    settings.verbose   = true;
 
     settings.iterativeBidirectionalRouting       = true;
     settings.iterativeBidirectionalRoutingPasses = 3;
@@ -2768,7 +2779,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   settings.automaticLayerSplitsNodeLimit =
       1; // force splittings after 1st expanded node until layers are
          // unsplittable
-  settings.dataLoggingPath = "test_log/";
+  settings.dataLoggingPath = "test_log/layer_splitting/";
   mapper->map(settings);
   mapper->dumpResult("simple_grid_mapped.qasm");
   mapper->printResult(std::cout);
