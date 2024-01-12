@@ -90,16 +90,16 @@ TEST(General, DijkstraCNOTReversal) {
                               {0, 0, 0, 3, 0}};
   Matrix       simpleDistanceTable{};
   Dijkstra::buildTable(cm, simpleDistanceTable, edgeWeights);
-  Matrix distanceTable{};
+  Matrix fullDistanceTable{};
   Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, cm, 1.,
-                                     distanceTable);
+                                     fullDistanceTable);
 
   const Matrix targetTable2 = {{0, 0, 3, 6, 9},
                                {1, 0, 1, 3, 6},
                                {3, 0, 0, 0, 3},
                                {6, 3, 1, 0, 0},
                                {9, 6, 4, 1, 0}};
-  EXPECT_EQ(distanceTable, targetTable2);
+  EXPECT_EQ(fullDistanceTable, targetTable2);
 }
 
 TEST(General, DijkstraSkipEdges) {

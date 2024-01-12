@@ -30,9 +30,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
   if (fidelityAwareHeur && !architecture->isFidelityAvailable()) {
     throw QMAPException("No calibration data available for this architecture!");
   }
-  if (fidelityAwareHeur &&
-      !(isFidelityAware(config.lookaheadHeuristic) ||
-        config.lookaheadHeuristic == LookaheadHeuristic::None)) {
+  if (fidelityAwareHeur && !isFidelityAware(config.lookaheadHeuristic) && config.lookaheadHeuristic != LookaheadHeuristic::None) {
     throw QMAPException("Fidelity-aware heuristics may only be used with "
                         "fidelity-aware lookahead heuristics (or no "
                         "lookahead)!");
@@ -944,7 +942,6 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
   // check if swap created or destroyed any valid mappings of qubit pairs
   for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
     const auto [q3, q4]                   = edge;
-    const auto [forwardMult, reverseMult] = mult;
     if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
@@ -1085,7 +1082,6 @@ void HeuristicMapper::applyTeleportation(const Edge& swap, std::size_t layer,
   // check if swap created or destroyed any valid mappings of qubit pairs
   for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
     const auto [q3, q4]                   = edge;
-    const auto [forwardMult, reverseMult] = mult;
     if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
@@ -1114,79 +1110,69 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
 
   const auto q1 = node.qubits.at(swap.first);
   const auto q2 = node.qubits.at(swap.second);
+  if (q1 == -1 || q2 == -1 || consideredQubits.find(static_cast<std::uint16_t>(q1)) != consideredQubits.end() || consideredQubits.find(static_cast<std::uint16_t>(q2)) != consideredQubits.end()) {
+    // the given swap can only be a shared swap if both qubits are active in 
+    // the current layer
+    return;
+  }
 
-  if (consideredQubits.find(q1) != consideredQubits.end() &&
-      consideredQubits.find(q2) != consideredQubits.end()) {
-    // TODO: handle single qubit gates for fidelity aware heuristic
-    Edge logEdge1 = {q1, q1};
-    Edge logEdge2 = {q2, q2};
-    for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
-      if (edge.first == q1) {
-        logEdge1.second = edge.second;
-      } else if (edge.second == q1) {
-        logEdge1.second = edge.first;
-      }
-      if (edge.first == q2) {
-        logEdge2.second = edge.second;
-      } else if (edge.second == q2) {
-        logEdge2.second = edge.first;
-      }
+  // TODO: handle single qubit gates for fidelity aware heuristic, if 
+  //        `Node::sharedSwaps` is ever used in a fidelity aware heuristic
+  Edge logEdge1 = {q1, q1};
+  Edge logEdge2 = {q2, q2};
+  for (const auto& [edge, multiplicity] : twoQubitGateMultiplicity) {
+    if (edge.first == q1) {
+      logEdge1.second = edge.second;
+    } else if (edge.second == q1) {
+      logEdge1.second = edge.first;
     }
-    if ( // if both swapped qubits are acted on by a 2q gate
-        logEdge1.second != q1 && logEdge2.second != q2 &&
-        // if it is not the same 2q gate acting on both qubits
-        logEdge1.second != q2) {
-      double logEdge1DistanceBefore;
-      double logEdge1DistanceNew;
-      double logEdge2DistanceBefore;
-      double logEdge2DistanceNew;
-      if (fidelityAwareHeur) {
-        logEdge1DistanceBefore =
-            std::min(architecture->fidelityDistance(
-                         swap.first, node.locations[logEdge1.second]),
-                     architecture->fidelityDistance(
-                         node.locations[logEdge1.second], swap.first));
-        logEdge1DistanceNew =
-            std::min(architecture->fidelityDistance(
-                         swap.second, node.locations[logEdge1.second]),
-                     architecture->fidelityDistance(
-                         node.locations[logEdge1.second], swap.second));
-        logEdge2DistanceBefore =
-            std::min(architecture->fidelityDistance(
-                         swap.second, node.locations[logEdge2.second]),
-                     architecture->fidelityDistance(
-                         node.locations[logEdge2.second], swap.second));
-        logEdge2DistanceNew =
-            std::min(architecture->fidelityDistance(
-                         swap.first, node.locations[logEdge2.second]),
-                     architecture->fidelityDistance(
-                         node.locations[logEdge2.second], swap.first));
-      } else {
-        logEdge1DistanceBefore =
-            std::min(architecture->distance(
-                         swap.first, node.locations[logEdge1.second], false),
-                     architecture->distance(node.locations[logEdge1.second],
-                                            swap.first, false));
-        logEdge1DistanceNew =
-            std::min(architecture->distance(
-                         swap.second, node.locations[logEdge1.second], false),
-                     architecture->distance(node.locations[logEdge1.second],
-                                            swap.second, false));
-        logEdge2DistanceBefore =
-            std::min(architecture->distance(
-                         swap.second, node.locations[logEdge2.second], false),
-                     architecture->distance(node.locations[logEdge2.second],
-                                            swap.second, false));
-        logEdge2DistanceNew =
-            std::min(architecture->distance(
-                         swap.first, node.locations[logEdge2.second], false),
-                     architecture->distance(node.locations[logEdge2.second],
-                                            swap.first, false));
-      }
-      if (logEdge1DistanceNew < logEdge1DistanceBefore &&
-          logEdge2DistanceNew < logEdge2DistanceBefore) {
-        ++node.sharedSwaps;
-      }
+    if (edge.first == q2) {
+      logEdge2.second = edge.second;
+    } else if (edge.second == q2) {
+      logEdge2.second = edge.first;
+    }
+  }
+  if ( // if both swapped qubits are acted on by a 2q gate
+      logEdge1.second != q1 && logEdge2.second != q2 &&
+      // if it is not the same 2q gate acting on both qubits
+      logEdge1.second != q2) {
+    auto physQ3 = static_cast<std::uint16_t>(node.locations.at(logEdge1.second));
+    auto physQ4 = static_cast<std::uint16_t>(node.locations.at(logEdge2.second));
+                      
+    double logEdge1DistanceBefore = 0.;
+    double logEdge1DistanceNew = 0.;
+    double logEdge2DistanceBefore = 0.;
+    double logEdge2DistanceNew = 0.;
+    if (fidelityAwareHeur) {
+      logEdge1DistanceBefore =
+          std::min(architecture->fidelityDistance(swap.first, physQ3),
+                   architecture->fidelityDistance(physQ3, swap.first));
+      logEdge1DistanceNew =
+          std::min(architecture->fidelityDistance(swap.second, physQ3),
+                   architecture->fidelityDistance(physQ3, swap.second));
+      logEdge2DistanceBefore =
+          std::min(architecture->fidelityDistance(swap.second, physQ4),
+                   architecture->fidelityDistance(physQ4, swap.second));
+      logEdge2DistanceNew =
+          std::min(architecture->fidelityDistance(swap.first, physQ4),
+                   architecture->fidelityDistance(physQ4, swap.first));
+    } else {
+      logEdge1DistanceBefore =
+          std::min(architecture->distance(swap.first, physQ3, false),
+                   architecture->distance(physQ3, swap.first, false));
+      logEdge1DistanceNew =
+          std::min(architecture->distance(swap.second, physQ3, false),
+                   architecture->distance(physQ3, swap.second, false));
+      logEdge2DistanceBefore =
+          std::min(architecture->distance(swap.second, physQ4, false),
+                   architecture->distance(physQ4,swap.second, false));
+      logEdge2DistanceNew =
+          std::min(architecture->distance(swap.first, physQ4, false),
+                   architecture->distance(physQ4,swap.first, false));
+    }
+    if (logEdge1DistanceNew < logEdge1DistanceBefore &&
+        logEdge2DistanceNew < logEdge2DistanceBefore) {
+      ++node.sharedSwaps;
     }
   }
 }
@@ -1355,7 +1341,7 @@ double HeuristicMapper::heuristicGateCountSumDistanceMinusSharedSwaps(
   }
 
   // sort number of swaps in descending order
-  std::sort(nSwaps.begin(), nSwaps.end(), std::greater<std::size_t>());
+  std::sort(nSwaps.begin(), nSwaps.end(), std::greater<>());
 
   // infer maximum number of shared swaps
   std::size_t maxSharedSwaps = 0;

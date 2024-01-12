@@ -15,6 +15,7 @@
 #include <unordered_map>
 
 constexpr qc::OpType SWAP = qc::OpType::SWAP;
+constexpr double FLOAT_TOLERANCE = 1e-6;
 
 /**
  * @brief Get id of the final node in a given layer from a data log.
@@ -52,7 +53,7 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
   if (dataLoggingPath.back() != '/') {
     dataLoggingPath += '/';
   }
-  std::string layerNodeFilePath =
+  const std::string layerNodeFilePath =
       dataLoggingPath + "/nodes_layer_" + std::to_string(layer) + ".csv";
   auto layerNodeFile = std::ifstream(layerNodeFilePath);
   if (!layerNodeFile.is_open()) {
@@ -106,7 +107,7 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
                                layerNodeFilePath);
     }
     if (std::getline(lineStream, col, ';')) {
-      std::size_t validMapping = std::stoull(col);
+      const std::size_t validMapping = std::stoull(col);
       if (validMapping > 1) {
         throw std::runtime_error("Non-boolean value " +
                                  std::to_string(validMapping) +
@@ -128,9 +129,9 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
       std::string       entry;
       for (std::size_t i = 0; std::getline(qubitMapBuffer, entry, ','); ++i) {
         auto qubit     = static_cast<std::int16_t>(std::stoi(entry));
-        node.qubits[i] = qubit;
+        node.qubits.at(i) = qubit;
         if (qubit >= 0) {
-          node.locations[qubit] = static_cast<std::int16_t>(i);
+          node.locations.at(static_cast<std::size_t>(qubit)) = static_cast<std::int16_t>(i);
         }
       }
     } else {
@@ -141,12 +142,12 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
       std::stringstream swapBuffer(col);
       std::string       entry;
       while (std::getline(swapBuffer, entry, ',')) {
-        std::uint16_t q1        = 0;
-        std::uint16_t q2        = 0;
-        std::string   opTypeStr = "";
+        std::uint16_t q1 = 0;
+        std::uint16_t q2 = 0;
+        std::string   opTypeStr;
         std::stringstream(entry) >> q1 >> q2 >> opTypeStr;
         qc::OpType opType = SWAP;
-        if (opTypeStr.size() > 0) {
+        if (!opTypeStr.empty()) {
           // if no opType is given, the default value is SWAP
           opType = qc::opTypeFromString(opTypeStr);
         }
@@ -170,7 +171,7 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   if (nodeId >= nodes.size() || nodes[nodeId].id != nodeId) {
     throw std::runtime_error("Invalid node id " + std::to_string(nodeId));
   }
-  auto node = &nodes[nodeId];
+  auto* node = &nodes[nodeId];
   while (node->parent != node->id) {
     path.push_back(node->id);
     if (node->parent >= nodes.size() ||
@@ -187,17 +188,15 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
 
 class InternalsTest : public HeuristicMapper, public testing::Test {
 protected:
-  static Architecture defaultArch;
+  static Architecture defaultArch; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   InternalsTest() : HeuristicMapper(qc::QuantumComputation{1}, defaultArch) {}
   void SetUp() override { results = MappingResults{}; }
 };
 
-Architecture InternalsTest::defaultArch{1, {}};
+Architecture InternalsTest::defaultArch{1, {}}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 TEST_F(InternalsTest, NodeCostCalculation) {
-  const double tolerance = 1e-6;
-
   results.config.heuristic          = Heuristic::GateCountMaxDistance;
   results.config.lookaheadHeuristic = LookaheadHeuristic::None;
   results.config.layering           = Layering::Disjoint2qBlocks;
@@ -222,58 +221,58 @@ TEST_F(InternalsTest, NodeCostCalculation) {
 
   HeuristicMapper::Node node(0, 0, {4, 3, 1, 2, 0}, {4, 2, 3, 1, 0}, swaps,
                              {{2, 3}}, 5., 0);
-  EXPECT_NEAR(node.costFixed, 5., tolerance);
-  EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance);
+  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE);
+  EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE);
   EXPECT_EQ(node.validMappedTwoQubitGates.size(), 1);
 
   results.config.heuristic = Heuristic::GateCountSumDistance;
   updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
               COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE * 2,
-              tolerance);
-  EXPECT_NEAR(node.costFixed, 5., tolerance)
+              FLOAT_TOLERANCE);
+  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE)
       << "updateHeuristicCost should not change costFixed";
 
   results.config.heuristic = Heuristic::GateCountMaxDistance;
   updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, tolerance);
-  EXPECT_NEAR(node.costFixed, 5., tolerance)
+              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, FLOAT_TOLERANCE);
+  EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE)
       << "updateHeuristicCost should not change costFixed";
 
   applySWAP({3, 4}, 0, node);
-  EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, tolerance);
+  EXPECT_NEAR(node.costFixed, 5. + COST_UNIDIRECTIONAL_SWAP, FLOAT_TOLERANCE);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
 
   node.lookaheadPenalty = 0.;
   EXPECT_NEAR(node.getTotalCost(),
               5. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.getTotalFixedCost(), 5. + COST_UNIDIRECTIONAL_SWAP,
-              tolerance);
+              FLOAT_TOLERANCE);
 
   node.lookaheadPenalty = 2.;
   EXPECT_NEAR(node.getTotalCost(),
               7. + COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.getTotalFixedCost(), 7. + COST_UNIDIRECTIONAL_SWAP,
-              tolerance);
+              FLOAT_TOLERANCE);
 
   recalculateFixedCost(0, node);
   EXPECT_EQ(node.validMappedTwoQubitGates.size(), 0);
   EXPECT_NEAR(node.costFixed, COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.costHeur, COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.getTotalCost(),
               2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 3 +
                   COST_DIRECTION_REVERSE,
-              tolerance);
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.getTotalFixedCost(),
               2. + COST_TELEPORTATION + COST_UNIDIRECTIONAL_SWAP * 2,
-              tolerance);
+              FLOAT_TOLERANCE);
 }
 
 class TestHeuristics
@@ -292,10 +291,9 @@ protected:
   Architecture                     ibmQX5{}; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
   Configuration                    settings{};
-  const double                     tolerance = 1e-6;
 
   static std::unordered_map<std::string, std::vector<HeuristicMapper::Node>>
-      optimalSolutions;
+      optimalSolutions; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   static void SetUpTestSuite() {
     // prepare precalculated optimal solutions to compare against
@@ -1104,10 +1102,10 @@ protected:
                   optimalSolutions.at(circuit).at(i).locations.end(), -1);
         for (std::size_t j = 0; j < qubits.at(i).size(); ++j) {
           if (qubits.at(i).at(j) >= 0) {
-            optimalSolutions.at(circuit).at(i).qubits[j] = qubits.at(i).at(j);
+            optimalSolutions.at(circuit).at(i).qubits.at(j) = qubits.at(i).at(j);
             optimalSolutions.at(circuit)
                 .at(i)
-                .locations[static_cast<std::size_t>(qubits.at(i).at(j))] =
+                .locations.at(static_cast<std::size_t>(qubits.at(i).at(j))) =
                 static_cast<std::int16_t>(j);
           }
         }
@@ -1120,7 +1118,7 @@ protected:
     std::replace(cn.begin(), cn.end(), '-', '_');
     std::stringstream ss{};
     ss << cn << "_" << toString(std::get<0>(GetParam()));
-    std::string testName = ss.str();
+    const std::string testName = ss.str();
 
     circuitName = std::get<1>(GetParam());
     qc.import(testExampleDir + circuitName + ".qasm");
@@ -1142,7 +1140,7 @@ protected:
 };
 
 std::unordered_map<std::string, std::vector<HeuristicMapper::Node>>
-    TestHeuristics::optimalSolutions{};
+    TestHeuristics::optimalSolutions{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 INSTANTIATE_TEST_SUITE_P(
     Heuristic, TestHeuristics,
@@ -1309,14 +1307,14 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         }
       }
 
-      EXPECT_NEAR(node.lookaheadPenalty, 0., tolerance)
+      EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE)
           << "Lookahead penalty not 0 " << layerNames.at(i)
           << " even though lookahead has been deactivated";
 
       if (node.validMapping) {
         if (isTight(settings.heuristic)) {
           // tight heuristics are 0 in any goal node
-          EXPECT_NEAR(node.costHeur, 0., tolerance)
+          EXPECT_NEAR(node.costHeur, 0., FLOAT_TOLERANCE)
               << "Heuristic " << toString(settings.heuristic)
               << " is not tight " << layerNames.at(i) << " in node " << node.id;
         }
@@ -1838,9 +1836,10 @@ TEST(Functionality, DataLogger) {
     EXPECT_EQ(layerJson["final_search_depth"], finalSolutionNode.depth);
     std::vector<std::int16_t> layout{};
     for (std::size_t j = 0; j < architecture.getNqubits(); ++j) {
-      layout.emplace_back(finalSolutionNode.qubits[j]);
+      layout.emplace_back(finalSolutionNode.qubits.at(j));
     }
     std::vector<std::pair<std::uint16_t, std::uint16_t>> swaps{};
+    swaps.reserve(finalSolutionNode.swaps.size());
     for (auto& swap : finalSolutionNode.swaps) {
       swaps.emplace_back(swap.first, swap.second);
     }
@@ -1855,17 +1854,17 @@ TEST(Functionality, DataLogger) {
       }
 
       for (std::size_t k = 0; k < architecture.getNqubits(); ++k) {
-        EXPECT_GE(node.qubits[k], -1);
-        EXPECT_LT(node.qubits[k], qc.getNqubits());
-        EXPECT_GE(node.locations[k], -1);
-        EXPECT_LT(node.locations[k], architecture.getNqubits());
+        EXPECT_GE(node.qubits.at(k), -1);
+        EXPECT_LT(node.qubits.at(k), qc.getNqubits());
+        EXPECT_GE(node.locations.at(k), -1);
+        EXPECT_LT(node.locations.at(k), architecture.getNqubits());
 
-        if (node.qubits[k] >= 0) {
-          EXPECT_EQ(node.locations[static_cast<std::size_t>(node.qubits[k])],
+        if (node.qubits.at(k) >= 0) {
+          EXPECT_EQ(node.locations[static_cast<std::size_t>(node.qubits.at(k))],
                     static_cast<std::int16_t>(k));
         }
-        if (node.locations[k] >= 0) {
-          EXPECT_EQ(node.qubits[static_cast<std::size_t>(node.locations[k])],
+        if (node.locations.at(k) >= 0) {
+          EXPECT_EQ(node.qubits[static_cast<std::size_t>(node.locations.at(k))],
                     static_cast<std::int16_t>(k));
         }
       }

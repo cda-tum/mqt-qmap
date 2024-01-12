@@ -96,8 +96,8 @@ public:
          const std::size_t searchDepth                                    = 0,
          const std::size_t initSharedSwaps                                = 0)
         : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals),
-          depth(searchDepth), parent(parentId), id(nodeId),
-          sharedSwaps(initSharedSwaps) {
+          sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId), 
+          id(nodeId) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());
       std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
@@ -239,9 +239,8 @@ protected:
   getConsideredQubits(std::size_t layer) const {
     if (fidelityAwareHeur) {
       return activeQubits.at(layer);
-    } else {
-      return activeQubits2QGates.at(layer);
     }
+    return activeQubits2QGates.at(layer);
   }
 
   /**

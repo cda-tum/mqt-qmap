@@ -9,7 +9,8 @@
 
 void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
                           const Matrix& edgeWeights) {
-  const std::uint16_t n = edgeWeights.size(); // number of qubits
+  // number of qubits
+  const auto n = static_cast<std::uint16_t>(edgeWeights.size());
 
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
