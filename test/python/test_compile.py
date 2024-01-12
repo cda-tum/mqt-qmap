@@ -172,8 +172,8 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
             visualizer=visualizer,
         )
         assert results.configuration.method == qmap.Method.heuristic
-        assert results.configuration.heuristic is qmap.Heuristic.gate_count_max_distance
-        assert results.configuration.lookahead_heuristic is qmap.LookaheadHeuristic.gate_count_max_distance
+        assert results.configuration.heuristic == qmap.Heuristic.gate_count_max_distance
+        assert results.configuration.lookahead_heuristic == qmap.LookaheadHeuristic.gate_count_max_distance
         assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
         assert results.configuration.iterative_bidirectional_routing is True
         assert results.configuration.iterative_bidirectional_routing_passes == 1
@@ -208,8 +208,8 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         debug=False,
     )
     assert results.configuration.method == qmap.Method.heuristic
-    assert results.configuration.heuristic is qmap.Heuristic.fidelity_best_location
-    assert results.configuration.lookahead_heuristic is qmap.LookaheadHeuristic.none
+    assert results.configuration.heuristic == qmap.Heuristic.fidelity_best_location
+    assert results.configuration.lookahead_heuristic == qmap.LookaheadHeuristic.none
     assert results.configuration.initial_layout == qmap.InitialLayout.identity
     assert results.configuration.iterative_bidirectional_routing is False
     assert results.configuration.layering == qmap.Layering.disjoint_qubits
