@@ -112,7 +112,7 @@ public:
    */
   static void buildSingleEdgeSkipTable(const Matrix&      distanceTable,
                                        const CouplingMap& couplingMap,
-                                       double reversalCost,
+                                       double             reversalCost,
                                        Matrix& edgeSkipDistanceTable);
 
 protected:

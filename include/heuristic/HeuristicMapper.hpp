@@ -96,7 +96,7 @@ public:
          const std::size_t searchDepth                                    = 0,
          const std::size_t initSharedSwaps                                = 0)
         : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals),
-          sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId), 
+          sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId),
           id(nodeId) {
       std::copy(q.begin(), q.end(), qubits.begin());
       std::copy(loc.begin(), loc.end(), locations.begin());

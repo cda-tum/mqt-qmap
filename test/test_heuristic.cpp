@@ -14,8 +14,8 @@
 #include <string>
 #include <unordered_map>
 
-constexpr qc::OpType SWAP = qc::OpType::SWAP;
-constexpr double FLOAT_TOLERANCE = 1e-6;
+constexpr qc::OpType SWAP            = qc::OpType::SWAP;
+constexpr double     FLOAT_TOLERANCE = 1e-6;
 
 /**
  * @brief Get id of the final node in a given layer from a data log.
@@ -128,10 +128,11 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
       std::stringstream qubitMapBuffer(col);
       std::string       entry;
       for (std::size_t i = 0; std::getline(qubitMapBuffer, entry, ','); ++i) {
-        auto qubit     = static_cast<std::int16_t>(std::stoi(entry));
+        auto qubit        = static_cast<std::int16_t>(std::stoi(entry));
         node.qubits.at(i) = qubit;
         if (qubit >= 0) {
-          node.locations.at(static_cast<std::size_t>(qubit)) = static_cast<std::int16_t>(i);
+          node.locations.at(static_cast<std::size_t>(qubit)) =
+              static_cast<std::int16_t>(i);
         }
       }
     } else {
@@ -188,13 +189,15 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
 
 class InternalsTest : public HeuristicMapper, public testing::Test {
 protected:
-  static Architecture defaultArch; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+  static Architecture
+      defaultArch; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
   InternalsTest() : HeuristicMapper(qc::QuantumComputation{1}, defaultArch) {}
   void SetUp() override { results = MappingResults{}; }
 };
 
-Architecture InternalsTest::defaultArch{1, {}}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+Architecture InternalsTest::defaultArch{
+    1, {}}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 TEST_F(InternalsTest, NodeCostCalculation) {
   results.config.heuristic          = Heuristic::GateCountMaxDistance;
@@ -236,7 +239,8 @@ TEST_F(InternalsTest, NodeCostCalculation) {
   results.config.heuristic = Heuristic::GateCountMaxDistance;
   updateHeuristicCost(0, node);
   EXPECT_NEAR(node.costHeur,
-              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE, FLOAT_TOLERANCE);
+              COST_UNIDIRECTIONAL_SWAP * 2 + COST_DIRECTION_REVERSE,
+              FLOAT_TOLERANCE);
   EXPECT_NEAR(node.costFixed, 5., FLOAT_TOLERANCE)
       << "updateHeuristicCost should not change costFixed";
 
@@ -1102,10 +1106,10 @@ protected:
                   optimalSolutions.at(circuit).at(i).locations.end(), -1);
         for (std::size_t j = 0; j < qubits.at(i).size(); ++j) {
           if (qubits.at(i).at(j) >= 0) {
-            optimalSolutions.at(circuit).at(i).qubits.at(j) = qubits.at(i).at(j);
-            optimalSolutions.at(circuit)
-                .at(i)
-                .locations.at(static_cast<std::size_t>(qubits.at(i).at(j))) =
+            optimalSolutions.at(circuit).at(i).qubits.at(j) =
+                qubits.at(i).at(j);
+            optimalSolutions.at(circuit).at(i).locations.at(
+                static_cast<std::size_t>(qubits.at(i).at(j))) =
                 static_cast<std::int16_t>(j);
           }
         }
@@ -1140,7 +1144,8 @@ protected:
 };
 
 std::unordered_map<std::string, std::vector<HeuristicMapper::Node>>
-    TestHeuristics::optimalSolutions{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    TestHeuristics::
+        optimalSolutions{}; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
 INSTANTIATE_TEST_SUITE_P(
     Heuristic, TestHeuristics,
