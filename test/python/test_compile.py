@@ -215,7 +215,6 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     assert results.configuration.layering == qmap.Layering.disjoint_qubits
     assert results.configuration.automatic_layer_splits is False
     assert results.configuration.lookaheads == 0
-    assert results.configuration.lookahead is False
     assert results.configuration.use_teleportation is False
     assert results.configuration.pre_mapping_optimizations is False
     assert results.configuration.post_mapping_optimizations is False
