@@ -424,7 +424,7 @@ protected:
 
   static const std::unordered_map<std::string,
                                   std::vector<std::vector<std::int16_t>>>
-      optimalSolutions;
+      OPTIMAL_SOLUTIONS;
 
   void SetUp() override {
     std::string cn = std::get<1>(GetParam());
@@ -453,7 +453,7 @@ protected:
 };
 
 const std::unordered_map<std::string, std::vector<std::vector<std::int16_t>>>
-    TestHeuristics::optimalSolutions{
+    TestHeuristics::OPTIMAL_SOLUTIONS{
         {"3_17_13",
          {{0, 1, 2},
           {0, 1, 2},
@@ -867,8 +867,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         // However, if a heuristic is both principally admissible and tight,
         // it is guaranteed to always find the same solution as any other such
         // heuristic.
-        if (optimalSolutions.find(circuitName) == optimalSolutions.end() ||
-            optimalSolutions.at(circuitName).size() <= i) {
+        if (OPTIMAL_SOLUTIONS.find(circuitName) == OPTIMAL_SOLUTIONS.end() ||
+            OPTIMAL_SOLUTIONS.at(circuitName).size() <= i) {
           throw std::runtime_error(
               "Missing precalculated optimal solution for circuit " +
               circuitName);
@@ -884,7 +884,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         std::copy(finalSolutionNode.qubits.begin(),
                   finalSolutionNode.qubits.begin() + finalLayoutLastIndex + 1,
                   std::back_inserter(finalLayout));
-        EXPECT_EQ(finalLayout, optimalSolutions.at(circuitName).at(i))
+        EXPECT_EQ(finalLayout, OPTIMAL_SOLUTIONS.at(circuitName).at(i))
             << "Heuristic " << toString(settings.heuristic)
             << " did not find the optimal solution " << layerNames.at(i);
       }
