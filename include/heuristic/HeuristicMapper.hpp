@@ -160,26 +160,6 @@ protected:
   virtual void staticInitialMapping();
 
   /**
-   * @brief returns distance of the given logical qubit pair according to the
-   * current mapping
-   */
-  double distanceOnArchitectureOfLogicalQubits(std::uint16_t control,
-                                               std::uint16_t target) {
-    return architecture->distance(
-        static_cast<std::uint16_t>(locations.at(control)),
-        static_cast<std::uint16_t>(locations.at(target)));
-  }
-
-  /**
-   * @brief returns distance of the given physical qubit pair on the
-   * architecture
-   */
-  double distanceOnArchitectureOfPhysicalQubits(std::uint16_t control,
-                                                std::uint16_t target) {
-    return architecture->distance(control, target);
-  }
-
-  /**
    * @brief map the logical qubit `target` to a free physical qubit, that is
    * nearest to the physical qubit `source` is mapped to
    *

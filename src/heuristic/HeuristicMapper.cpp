@@ -288,7 +288,7 @@ void HeuristicMapper::mapToMinDistance(const std::uint16_t source,
   for (std::uint16_t i = 0; i < architecture->getNqubits(); ++i) {
     if (qubits.at(i) == DEFAULT_POSITION) {
       // TODO: Consider fidelity here if available
-      const auto distance = distanceOnArchitectureOfPhysicalQubits(
+      const auto distance = architecture->distance(
           static_cast<std::uint16_t>(locations.at(source)), i);
       if (distance < min) {
         min = distance;
@@ -1112,9 +1112,9 @@ void HeuristicMapper::updateSharedSwaps(const Edge& swap, std::size_t layer,
   const auto q1 = node.qubits.at(swap.first);
   const auto q2 = node.qubits.at(swap.second);
   if (q1 == -1 || q2 == -1 ||
-      consideredQubits.find(static_cast<std::uint16_t>(q1)) !=
+      consideredQubits.find(static_cast<std::uint16_t>(q1)) ==
           consideredQubits.end() ||
-      consideredQubits.find(static_cast<std::uint16_t>(q2)) !=
+      consideredQubits.find(static_cast<std::uint16_t>(q2)) ==
           consideredQubits.end()) {
     // the given swap can only be a shared swap if both qubits are active in
     // the current layer
@@ -1486,6 +1486,7 @@ double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
 void HeuristicMapper::updateLookaheadPenalty(const std::size_t      layer,
                                              HeuristicMapper::Node& node) {
   const auto& config    = results.config;
+  node.lookaheadPenalty = 0.;
   auto        nextLayer = getNextLayer(layer);
   double      factor    = config.firstLookaheadFactor;
 
@@ -1520,6 +1521,7 @@ HeuristicMapper::lookaheadGateCountMaxDistance(const std::size_t      layer,
 
   for (const auto& [edge, multiplicity] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = edge;
+    const auto [forwardMult, reverseMult] = multiplicity;
 
     const auto loc1 = node.locations.at(q1);
     const auto loc2 = node.locations.at(q2);
@@ -1530,8 +1532,14 @@ HeuristicMapper::lookaheadGateCountMaxDistance(const std::size_t      layer,
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
           // TODO: Consider fidelity here if available
-          min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
+          if (forwardMult > 0) {
+            min = std::min(min, architecture->distance(
                                   j, static_cast<std::uint16_t>(loc2)));
+          }
+          if (reverseMult > 0) {
+            min = std::min(min, architecture->distance(
+                                  static_cast<std::uint16_t>(loc2), j));
+          }
         }
       }
       penalty = std::max(penalty, min);
@@ -1540,14 +1548,27 @@ HeuristicMapper::lookaheadGateCountMaxDistance(const std::size_t      layer,
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
           // TODO: Consider fidelity here if available
-          min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
+          if (forwardMult > 0) {
+            min = std::min(min, architecture->distance(
                                   static_cast<std::uint16_t>(loc1), j));
+          }
+          if (reverseMult > 0) {
+            min = std::min(min, architecture->distance(
+                                  j, static_cast<std::uint16_t>(loc1)));
+          }
         }
       }
       penalty = std::max(penalty, min);
     } else {
-      const auto cost = architecture->distance(
-          static_cast<std::uint16_t>(loc1), static_cast<std::uint16_t>(loc2));
+      double cost = std::numeric_limits<double>::max();
+      if (forwardMult > 0) {
+        cost = std::min(cost, architecture->distance(
+          static_cast<std::uint16_t>(loc1), static_cast<std::uint16_t>(loc2)));
+      }
+      if (reverseMult > 0) {
+        cost = std::min(cost, architecture->distance(
+          static_cast<std::uint16_t>(loc2), static_cast<std::uint16_t>(loc1)));
+      }
       penalty = std::max(penalty, cost);
     }
   }
@@ -1562,6 +1583,7 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
 
   for (const auto& [edge, multiplicity] : twoQubitMultiplicities.at(layer)) {
     const auto& [q1, q2] = edge;
+    const auto [forwardMult, reverseMult] = multiplicity;
 
     const auto loc1 = node.locations.at(q1);
     const auto loc2 = node.locations.at(q2);
@@ -1572,8 +1594,14 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
           // TODO: Consider fidelity here if available
-          min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
+          if (forwardMult > 0) {
+            min = std::min(min, architecture->distance(
                                   j, static_cast<std::uint16_t>(loc2)));
+          }
+          if (reverseMult > 0) {
+            min = std::min(min, architecture->distance(
+                                  static_cast<std::uint16_t>(loc2), j));
+          }
         }
       }
       penalty += min;
@@ -1582,15 +1610,28 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
           // TODO: Consider fidelity here if available
-          min = std::min(min, distanceOnArchitectureOfPhysicalQubits(
+          if (forwardMult > 0) {
+            min = std::min(min, architecture->distance(
                                   static_cast<std::uint16_t>(loc1), j));
+          }
+          if (reverseMult > 0) {
+            min = std::min(min, architecture->distance(
+                                  j, static_cast<std::uint16_t>(loc1)));
+          }
         }
       }
-      penalty = min;
+      penalty += min;
     } else {
-      const auto cost = architecture->distance(
-          static_cast<std::uint16_t>(loc1), static_cast<std::uint16_t>(loc2));
-      penalty = cost;
+      double cost = std::numeric_limits<double>::max();
+      if (forwardMult > 0) {
+        cost = std::min(cost, architecture->distance(
+          static_cast<std::uint16_t>(loc1), static_cast<std::uint16_t>(loc2)));
+      }
+      if (reverseMult > 0) {
+        cost = std::min(cost, architecture->distance(
+          static_cast<std::uint16_t>(loc2), static_cast<std::uint16_t>(loc1)));
+      }
+      penalty += cost;
     }
   }
 
