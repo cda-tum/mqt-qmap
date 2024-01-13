@@ -370,11 +370,8 @@ void HeuristicMapper::routeCircuit() {
             std::clog << "SWAP: " << swap.first << " <-> " << swap.second
                       << "\n";
           }
-          if (!architecture->isEdgeConnected({swap.first, swap.second}) &&
-              !architecture->isEdgeConnected({swap.second, swap.first})) {
-            throw QMAPException("Invalid SWAP: " + std::to_string(swap.first) +
-                                "<->" + std::to_string(swap.second));
-          }
+          // check if SWAP is placed on a valid edge
+          assert(architecture->isEdgeConnected({swap.first, swap.second}, false));
           qcMapped.swap(swap.first, swap.second);
           results.output.swaps++;
         } else if (swap.op == qc::Teleportation) {
@@ -422,11 +419,8 @@ void HeuristicMapper::routeCircuit() {
             locations.at(gate.target)};
         if (!architecture->isEdgeConnected(cnot)) {
           const Edge reversed = {cnot.second, cnot.first};
-          if (!architecture->isEdgeConnected(reversed)) {
-            throw QMAPException(
-                "Invalid CNOT: " + std::to_string(reversed.first) + "-" +
-                std::to_string(reversed.second));
-          }
+          // check if CNOT is placed on a valid edge
+          assert(architecture->isEdgeConnected(reversed));
           qcMapped.h(reversed.first);
           qcMapped.h(reversed.second);
           qcMapped.cx(qc::Control{static_cast<qc::Qubit>(reversed.first)},
@@ -793,8 +787,7 @@ void HeuristicMapper::expandNodeAddOneSwap(const Edge& swap, Node& node,
            node.validMappedTwoQubitGates, node.costFixed,
            node.costFixedReversals, node.depth + 1, node.sharedSwaps);
 
-  if (architecture->isEdgeConnected(swap) ||
-      architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
+  if (architecture->isEdgeConnected(swap, false)) {
     applySWAP(swap, layer, newNode);
   } else {
     applyTeleportation(swap, layer, newNode);
@@ -817,8 +810,8 @@ void HeuristicMapper::recalculateFixedCost(std::size_t layer, Node& node) {
     const auto physQ1   = static_cast<std::uint16_t>(node.locations.at(q1));
     const auto physQ2   = static_cast<std::uint16_t>(node.locations.at(q2));
 
-    if (architecture->isEdgeConnected({physQ1, physQ2}) ||
-        architecture->isEdgeConnected({physQ2, physQ1})) { // validly mapped
+    if (architecture->isEdgeConnected({physQ1, physQ2}, false)) { 
+      // validly mapped
       node.validMappedTwoQubitGates.emplace(q1, q2);
     }
   }
@@ -866,7 +859,7 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
     if (swap.op == qc::SWAP) {
       if (architecture->bidirectional()) {
         node.costFixed += COST_BIDIRECTIONAL_SWAP;
-      } else if (architecture->unidirectional() || !architecture->isEdgeConnected({swap.second, swap.first}) || !architecture->isEdgeConnected({swap.first, swap.second})) {
+      } else if (architecture->unidirectional() || !architecture->isEdgeBidirectional({swap.first, swap.second})) {
         node.costFixed += COST_UNIDIRECTIONAL_SWAP;
       } else {
         node.costFixed += COST_BIDIRECTIONAL_SWAP;
@@ -941,8 +934,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
         static_cast<std::int16_t>(swap.first);
   }
 
-  if (architecture->isEdgeConnected(swap) ||
-      architecture->isEdgeConnected(Edge{swap.second, swap.first})) {
+  if (architecture->isEdgeConnected(swap, false)) {
     node.swaps.emplace_back(swap.first, swap.second, qc::SWAP);
   } else {
     throw QMAPException("Something wrong in applySWAP.");
@@ -954,8 +946,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
-      if (architecture->isEdgeConnected(Edge{physQ3, physQ4}) ||
-          architecture->isEdgeConnected(Edge{physQ4, physQ3})) {
+      if (architecture->isEdgeConnected({physQ3, physQ4}, false)) {
         // validly mapped now
         if (fidelityAwareHeur && node.validMappedTwoQubitGates.find(edge) ==
                                      node.validMappedTwoQubitGates.end()) {
@@ -1020,7 +1011,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
   } else {
     if (architecture->bidirectional()) {
       node.costFixed += COST_BIDIRECTIONAL_SWAP;
-    } else if (architecture->unidirectional() || !architecture->isEdgeConnected({swap.second, swap.first}) || !architecture->isEdgeConnected({swap.first, swap.second})) {
+    } else if (architecture->unidirectional() || !architecture->isEdgeBidirectional({swap.first, swap.second})) {
       node.costFixed += COST_UNIDIRECTIONAL_SWAP;
     } else {
       node.costFixed += COST_BIDIRECTIONAL_SWAP;
@@ -1070,8 +1061,7 @@ void HeuristicMapper::applyTeleportation(const Edge& swap, std::size_t layer,
 
   std::uint16_t source = std::numeric_limits<decltype(source)>::max();
   std::uint16_t target = std::numeric_limits<decltype(target)>::max();
-  if (architecture->isEdgeConnected({swap.first, middleAnc}) ||
-      architecture->isEdgeConnected({middleAnc, swap.first})) {
+  if (architecture->isEdgeConnected({swap.first, middleAnc}, false)) {
     source = swap.first;
     target = swap.second;
   } else {
@@ -1096,8 +1086,7 @@ void HeuristicMapper::applyTeleportation(const Edge& swap, std::size_t layer,
     if (q3 == q1 || q3 == q2 || q4 == q1 || q4 == q2) {
       const auto physQ3 = static_cast<std::uint16_t>(node.locations.at(q3));
       const auto physQ4 = static_cast<std::uint16_t>(node.locations.at(q4));
-      if (architecture->isEdgeConnected(Edge{physQ3, physQ4}) ||
-          architecture->isEdgeConnected(Edge{physQ4, physQ3})) {
+      if (architecture->isEdgeConnected({physQ3, physQ4}, false)) {
         // validly mapped now
         node.validMappedTwoQubitGates.emplace(edge);
       } else {

@@ -240,8 +240,17 @@ public:
     createDistanceTable();
   }
 
-  [[nodiscard]] bool isEdgeConnected(const Edge& edge) const {
-    return couplingMap.find(edge) != couplingMap.end();
+  [[nodiscard]] bool isEdgeConnected(const Edge& edge, const bool considerDirection = true) const {
+    if (considerDirection) {
+      return couplingMap.find(edge) != couplingMap.end();
+    }
+    return couplingMap.find(edge) != couplingMap.end() ||
+           couplingMap.find({edge.second, edge.first}) != couplingMap.end();
+  }
+
+  [[nodiscard]] bool isEdgeBidirectional(const Edge& edge) const {
+    return couplingMap.find(edge) != couplingMap.end() &&
+           couplingMap.find({edge.second, edge.first}) != couplingMap.end();
   }
 
   CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
