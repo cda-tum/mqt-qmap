@@ -502,8 +502,15 @@ protected:
   std::uint16_t nqubits                = 0;
   CouplingMap   couplingMap            = {};
   CouplingMap   currentTeleportations  = {};
+  
+  /** true if the coupling map contains no unidirectional edges */
   bool          isBidirectional        = true;
+  /** true if the coupling map contains no bidirectional edges */
   bool          isUnidirectional       = true;
+  // by this definition the empty coupling map is both bidirectional and 
+  // unidirectional, and coupling maps containing both bidirectional and 
+  // unidirectional edges are neither bidirectional nor unidirectional
+  
   Matrix        distanceTable          = {};
   Matrix        distanceTableReversals = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
