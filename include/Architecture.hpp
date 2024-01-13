@@ -240,7 +240,8 @@ public:
     createDistanceTable();
   }
 
-  [[nodiscard]] bool isEdgeConnected(const Edge& edge, const bool considerDirection = true) const {
+  [[nodiscard]] bool
+  isEdgeConnected(const Edge& edge, const bool considerDirection = true) const {
     if (considerDirection) {
       return couplingMap.find(edge) != couplingMap.end();
     }
@@ -499,20 +500,20 @@ public:
 
 protected:
   std::string   name;
-  std::uint16_t nqubits                = 0;
-  CouplingMap   couplingMap            = {};
-  CouplingMap   currentTeleportations  = {};
-  
+  std::uint16_t nqubits               = 0;
+  CouplingMap   couplingMap           = {};
+  CouplingMap   currentTeleportations = {};
+
   /** true if the coupling map contains no unidirectional edges */
-  bool          isBidirectional        = true;
+  bool isBidirectional = true;
   /** true if the coupling map contains no bidirectional edges */
-  bool          isUnidirectional       = true;
-  // by this definition the empty coupling map is both bidirectional and 
-  // unidirectional, and coupling maps containing both bidirectional and 
+  bool isUnidirectional = true;
+  // by this definition the empty coupling map is both bidirectional and
+  // unidirectional, and coupling maps containing both bidirectional and
   // unidirectional edges are neither bidirectional nor unidirectional
-  
-  Matrix        distanceTable          = {};
-  Matrix        distanceTableReversals = {};
+
+  Matrix distanceTable          = {};
+  Matrix distanceTableReversals = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties        = {};
   bool                                               fidelityAvailable = false;
