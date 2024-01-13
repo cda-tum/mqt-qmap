@@ -834,20 +834,26 @@ void HeuristicMapper::recalculateFixedCost(std::size_t layer, Node& node) {
 void HeuristicMapper::recalculateFixedCostReversals(std::size_t layer,
                                                     Node&       node) {
   node.costFixedReversals = 0.;
-  if (!fidelityAwareHeur && node.validMappedTwoQubitGates.size() ==
-                                twoQubitMultiplicities.at(layer).size()) {
-    // only consider reversal costs as fixed in goal nodes
-    for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
-      const auto [q1, q2]                   = edge;
-      const auto [forwardMult, reverseMult] = mult;
-      const auto physQ1 = static_cast<std::uint16_t>(node.locations.at(q1));
-      const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
+  if (architecture->bidirectional() || fidelityAwareHeur || 
+      node.validMappedTwoQubitGates.size() != 
+        twoQubitMultiplicities.at(layer).size()) {
+    // costFixedReversals should only be non-zero in goal nodes for
+    // non-fidelity-aware heuristics and if there are unidirectional
+    // edges in the architecture
+    return;
+  }
+  
+  // only consider reversal costs as fixed in goal nodes
+  for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
+    const auto [q1, q2]                   = edge;
+    const auto [forwardMult, reverseMult] = mult;
+    const auto physQ1 = static_cast<std::uint16_t>(node.locations.at(q1));
+    const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
 
-      if (!architecture->isEdgeConnected({physQ1, physQ2})) {
-        node.costFixedReversals += forwardMult * COST_DIRECTION_REVERSE;
-      } else if (!architecture->isEdgeConnected({physQ2, physQ1})) {
-        node.costFixedReversals += reverseMult * COST_DIRECTION_REVERSE;
-      }
+    if (!architecture->isEdgeConnected({physQ1, physQ2})) {
+      node.costFixedReversals += forwardMult * COST_DIRECTION_REVERSE;
+    } else if (!architecture->isEdgeConnected({physQ2, physQ1})) {
+      node.costFixedReversals += reverseMult * COST_DIRECTION_REVERSE;
     }
   }
 }
@@ -860,8 +866,10 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
     if (swap.op == qc::SWAP) {
       if (architecture->bidirectional()) {
         node.costFixed += COST_BIDIRECTIONAL_SWAP;
-      } else {
+      } else if (architecture->unidirectional() || !architecture->isEdgeConnected({swap.second, swap.first}) || !architecture->isEdgeConnected({swap.first, swap.second})) {
         node.costFixed += COST_UNIDIRECTIONAL_SWAP;
+      } else {
+        node.costFixed += COST_BIDIRECTIONAL_SWAP;
       }
     } else if (swap.op == qc::Teleportation) {
       node.costFixed += COST_TELEPORTATION;
@@ -1012,8 +1020,10 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
   } else {
     if (architecture->bidirectional()) {
       node.costFixed += COST_BIDIRECTIONAL_SWAP;
-    } else {
+    } else if (architecture->unidirectional() || !architecture->isEdgeConnected({swap.second, swap.first}) || !architecture->isEdgeConnected({swap.first, swap.second})) {
       node.costFixed += COST_UNIDIRECTIONAL_SWAP;
+    } else {
+      node.costFixed += COST_BIDIRECTIONAL_SWAP;
     }
   }
 
@@ -1224,7 +1234,8 @@ double HeuristicMapper::heuristicGateCountMaxDistance(std::size_t layer,
     const auto physQ1 = static_cast<std::uint16_t>(node.locations.at(q1));
     const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
 
-    if (node.validMappedTwoQubitGates.find(edge) !=
+    if (!architecture->bidirectional() && 
+        node.validMappedTwoQubitGates.find(edge) != 
         node.validMappedTwoQubitGates.end()) {
       // validly mapped 2-qubit-gates
       if (!architecture->isEdgeConnected({physQ1, physQ2})) {
@@ -1263,7 +1274,8 @@ double HeuristicMapper::heuristicGateCountSumDistance(std::size_t layer,
     const auto physQ1 = static_cast<std::uint16_t>(node.locations.at(q1));
     const auto physQ2 = static_cast<std::uint16_t>(node.locations.at(q2));
 
-    if (node.validMappedTwoQubitGates.find(edge) !=
+    if (!architecture->bidirectional() && 
+        node.validMappedTwoQubitGates.find(edge) !=
         node.validMappedTwoQubitGates.end()) {
       // validly mapped 2-qubit-gates
       if (!architecture->isEdgeConnected({physQ1, physQ2})) {
