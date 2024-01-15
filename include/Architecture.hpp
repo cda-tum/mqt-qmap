@@ -397,8 +397,10 @@ public:
     return swapFidelityCosts.at(q1).at(q2);
   }
 
+  /** true if the coupling map contains no unidirectional edges */
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
-
+  
+  /** true if the coupling map contains no bidirectional edges */
   [[nodiscard]] bool unidirectional() const { return isUnidirectional; }
 
   [[nodiscard]] bool isArchitectureAvailable() const {

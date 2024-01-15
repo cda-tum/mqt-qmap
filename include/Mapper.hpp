@@ -41,7 +41,6 @@ using TwoQubitMultiplicity =
 using SingleQubitMultiplicity = std::vector<std::uint16_t>;
 
 constexpr std::int16_t DEFAULT_POSITION = -1;
-constexpr double       INITIAL_FIDELITY = 1.0;
 
 class Mapper {
 protected:
@@ -129,7 +128,6 @@ protected:
    * The inverse of `qubits`
    */
   std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
-  std::array<double, MAX_DEVICE_QUBITS>       fidelities{};
 
   std::unordered_set<std::uint16_t> usedDeviceQubits{};
 

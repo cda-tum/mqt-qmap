@@ -465,11 +465,8 @@ inline bool operator>(const HeuristicMapper::Node& x,
     return xcost > ycost;
   }
 
-  if (x.validMapping && !y.validMapping) {
-    return false;
-  }
-  if (y.validMapping && !x.validMapping) {
-    return true;
+  if (x.validMapping != y.validMapping) {
+    return y.validMapping;
   }
 
   const auto xheur = x.costHeur + x.lookaheadPenalty;
@@ -484,18 +481,4 @@ inline bool operator>(const HeuristicMapper::Node& x,
   }
 
   return x < y;
-}
-
-inline bool operator==(const HeuristicMapper::Node& x,
-                       const HeuristicMapper::Node& y) {
-  auto itx = x.qubits.begin(); // NOLINT (readability-qualified-auto)
-  auto ity = y.qubits.begin(); // NOLINT (readability-qualified-auto)
-  while (itx != x.qubits.end() && ity != y.qubits.end()) {
-    if (*itx != *ity) {
-      return false;
-    }
-    ++itx;
-    ++ity;
-  }
-  return true;
 }

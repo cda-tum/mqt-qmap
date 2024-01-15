@@ -24,7 +24,6 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
     : qc(std::move(quantumComputation)), architecture(&arch) {
   qubits.fill(DEFAULT_POSITION);
   locations.fill(DEFAULT_POSITION);
-  fidelities.fill(INITIAL_FIDELITY);
 
   // strip away qubits that are not used in the circuit
   qc.stripIdleQubits(true, true);

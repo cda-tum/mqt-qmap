@@ -209,14 +209,14 @@ TEST_F(InternalsTest, NodeCostCalculation) {
   // layer 0 distances:
   // 0-1: 2 swaps & 2 reversals
   // 2-3: 0 swaps & 1 reversals
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{1}, 0);
-  qc.cx(qc::Control{1}, 0);
-  qc.cx(qc::Control{3}, 2);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(1, 0);
+  qc.cx(1, 0);
+  qc.cx(3, 2);
   // Architecture::distance currently counts at most 1 reversal per qubit pair
   createLayers();
 
@@ -293,29 +293,29 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
   // layer 0 distances:
   // 0-1: 2 swaps & 2 reversals
   // 2-3: 0 swaps & 1 reversals
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{0}, 1);
-  qc.cx(qc::Control{1}, 0);
-  qc.cx(qc::Control{1}, 0);
-  qc.cx(qc::Control{3}, 2);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(0, 1);
+  qc.cx(1, 0);
+  qc.cx(1, 0);
+  qc.cx(3, 2);
 
   // layer 1 distances:
   // 0-4: 2 swaps & 0 reversals
   // 1-2: 1 swaps & 1 reversals
-  qc.cx(qc::Control{0}, 4);
-  qc.cx(qc::Control{0}, 4);
-  qc.cx(qc::Control{1}, 2);
+  qc.cx(0, 4);
+  qc.cx(0, 4);
+  qc.cx(1, 2);
 
   // layer 2 distances:
   // 0-1: 2 swaps & 0 reversals
-  qc.cx(qc::Control{0}, 1);
+  qc.cx(0, 1);
 
   // layer 3 distances:
   // 0-4: 2 swaps & 0 reversals
-  qc.cx(qc::Control{4}, 0);
+  qc.cx(4, 0);
 
   // Architecture::distance currently counts at most 1 reversal per qubit pair
 
@@ -957,9 +957,9 @@ TEST(Functionality, HeuristicBenchmark) {
   architecture.loadCouplingMap(5, cm);
 
   qc::QuantumComputation qc{5, 5};
-  qc.cx(qc::Control{4}, 2);
-  qc.cx(qc::Control{3}, 1);
-  qc.cx(qc::Control{4}, 1);
+  qc.cx(4, 2);
+  qc.cx(3, 1);
+  qc.cx(4, 1);
 
   qc.barrier({0, 1, 2, 3, 4});
   for (size_t i = 0; i < 5; ++i) {
@@ -1038,7 +1038,7 @@ TEST(Functionality, EmptyDump) {
 
 TEST(Functionality, BenchmarkGeneratedNodes) {
   qc::QuantumComputation qc{16, 16};
-  qc.cx(qc::Control{0}, 6);
+  qc.cx(0, 6);
   for (std::size_t i = 0; i < 16; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -1517,7 +1517,7 @@ TEST(Functionality, terminationStrategyFromString) {
 TEST(Functionality, earlyTermination) {
   qc::QuantumComputation qc{7, 7};
   qc.x(0);
-  qc.cx(qc::Control{1}, 2);
+  qc.cx(1, 2);
   for (std::size_t i = 0; i < 7; ++i) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
@@ -1696,9 +1696,9 @@ protected:
     qc = qc::QuantumComputation{4, 4};
     qc.x(0);
     qc.x(1);
-    qc.cx(qc::Control{0}, 1);
-    qc.cx(qc::Control{2}, 3);
-    qc.cx(qc::Control{1}, 2);
+    qc.cx(0, 1);
+    qc.cx(2, 3);
+    qc.cx(1, 2);
     qc.x(3);
     qc.barrier({0, 1, 2});
     for (size_t i = 0; i < 3; ++i) {
@@ -2361,8 +2361,8 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   qc.x(5);
   qc.x(7);
   for (std::size_t i = 0; i < 5; ++i) {
-    qc.cx(qc::Control{3}, 0);
-    qc.cx(qc::Control{9}, 2);
+    qc.cx(3, 0);
+    qc.cx(9, 2);
   }
 
   for (size_t i = 0; i < 12; ++i) {
