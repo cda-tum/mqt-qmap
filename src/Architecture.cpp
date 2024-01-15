@@ -276,10 +276,7 @@ void Architecture::createFidelityTable() {
 
   fidelityDistanceTables.clear();
   if (fidelityAvailable) {
-    Matrix distances = {};
-    Dijkstra::buildTable(couplingMap, distances, swapFidelityCosts);
-    Dijkstra::buildEdgeSkipTable(distances, couplingMap,
-                                 fidelityDistanceTables);
+    Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables, swapFidelityCosts);
   }
 }
 

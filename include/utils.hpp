@@ -84,18 +84,23 @@ public:
    * distances between 2 qubit when upto k edges can be skipped.
    *
    * e.g. cost of moving qubit q1 onto q2 skipping upto 3 edges:
-   * edgeSkipDistanceTable[3][q1][q2]
+   * distanceTables[3][q1][q2]
    *
-   * if k > edgeSkipDistanceTable.size() a cost of 0 can be assumed
+   * if k > distanceTables.size() a cost of 0 can be assumed
    *
-   * @param distanceTable 2d matrix containing distances between any 2 qubits:
-   * distanceTable[source][target]
    * @param couplingMap coupling map specifying all edges in the architecture
-   * @param edgeSkipDistanceTable 3d target table
+   * @param distanceTables vector to fill with target tables (from 0 skips in 
+   * the first entry to k skips in the last entry, where k is the last index 
+   * not containing a matrix of pure 0s i.e. k+1 = diameter of the coupling 
+   * graph)
+   * @param edgeWeights matrix containing costs for swapping any two, connected
+   * qubits (this might be uniform for all edges or different for each edge, as
+   * e.g. in the case of fidelity-aware distances or distances on
+   * mixed bi/unidirectional architectures)
    */
-  static void buildEdgeSkipTable(const Matrix&        distanceTable,
-                                 const CouplingMap&   couplingMap,
-                                 std::vector<Matrix>& edgeSkipDistanceTable);
+  static void buildEdgeSkipTable(const CouplingMap& couplingMap, 
+                                 std::vector<Matrix>& distanceTables,
+                                 const Matrix& edgeWeights);
   /**
    * @brief builds a distance table containing the minimal costs for moving
    * logical qubits from one physical qubit to another (along the cheapest path)

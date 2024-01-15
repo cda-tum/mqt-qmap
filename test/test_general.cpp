@@ -181,6 +181,6 @@ TEST(General, DijkstraSkipEdges) {
        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}};
   std::vector<Matrix> edgeSkipDistanceTable = {};
-  Dijkstra::buildEdgeSkipTable(distanceTable, cm, edgeSkipDistanceTable);
+  Dijkstra::buildEdgeSkipTable(cm, edgeSkipDistanceTable, edgeWeights);
   EXPECT_EQ(edgeSkipDistanceTable, edgeSkipTargetTable);
 }

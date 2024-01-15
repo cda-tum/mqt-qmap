@@ -72,9 +72,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
   }
 }
 
-void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
-                                  const CouplingMap&   couplingMap,
-                                  std::vector<Matrix>& edgeSkipDistanceTable) {
+void Dijkstra::buildEdgeSkipTable(const CouplingMap& couplingMap, 
+                                  std::vector<Matrix>& distanceTables,
+                                  const Matrix& edgeWeights) {
   /* to find the cheapest distance between 2 qubits skipping any 1 edge, we
   iterate over all edges, for each assume the current edge to be the one skipped
   and are thereby able to retrieve the distance by just adding the distances
@@ -85,14 +85,15 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
   edge taking not the regular distance but the previously calculated distance
   skipping 1 edge. The same approach can be used for skipping any 3 edges, etc.
   */
-  edgeSkipDistanceTable.clear();
-  edgeSkipDistanceTable.emplace_back(distanceTable);
-  const std::size_t n = distanceTable.size();
+  distanceTables.clear();
+  distanceTables.emplace_back();
+  buildTable(couplingMap, distanceTables.back(), edgeWeights);
+  const std::size_t n = edgeWeights.size();
   for (std::size_t k = 1; k <= n; ++k) {
     // k...number of edges to be skipped along each path
-    edgeSkipDistanceTable.emplace_back(
+    distanceTables.emplace_back(
         n, std::vector<double>(n, std::numeric_limits<double>::max()));
-    Matrix* currentTable = &edgeSkipDistanceTable.back();
+    Matrix* currentTable = &distanceTables.back();
     for (std::size_t q = 0; q < n; ++q) {
       currentTable->at(q).at(q) = 0.;
     }
@@ -105,12 +106,12 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
           for (std::size_t q2 = q1 + 1; q2 < n; ++q2) { // q2 ... target qubit
             currentTable->at(q1).at(q2) =
                 std::min(currentTable->at(q1).at(q2),
-                         edgeSkipDistanceTable.at(l).at(q1).at(e1) +
-                             edgeSkipDistanceTable.at(k - l - 1).at(e2).at(q2));
+                         distanceTables.at(l).at(q1).at(e1) +
+                             distanceTables.at(k - l - 1).at(e2).at(q2));
             currentTable->at(q1).at(q2) =
                 std::min(currentTable->at(q1).at(q2),
-                         edgeSkipDistanceTable.at(l).at(q1).at(e2) +
-                             edgeSkipDistanceTable.at(k - l - 1).at(e1).at(q2));
+                         distanceTables.at(l).at(q1).at(e2) +
+                             distanceTables.at(k - l - 1).at(e1).at(q2));
             currentTable->at(q2).at(q1) = currentTable->at(q1).at(q2);
             if (done && currentTable->at(q2).at(q1) > 0) {
               done = false;
@@ -121,7 +122,7 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
     }
     if (done) {
       // all distances of the last matrix where 0
-      edgeSkipDistanceTable.pop_back();
+      distanceTables.pop_back();
       break;
     }
   }
