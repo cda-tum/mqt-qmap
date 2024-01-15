@@ -948,7 +948,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     node.locations.at(static_cast<std::size_t>(q2)) =
         static_cast<std::int16_t>(swap.first);
   }
-  
+
   node.swaps.emplace_back(swap.first, swap.second, qc::SWAP);
 
   // check if swap created or destroyed any valid mappings of qubit pairs
@@ -1068,7 +1068,7 @@ void HeuristicMapper::applyTeleportation(const Edge& swap, std::size_t layer,
       middleAnc = static_cast<std::uint16_t>(qpair.first);
     }
   }
-  
+
   // Teleportation between wrong qubits
   assert(middleAnc != std::numeric_limits<decltype(middleAnc)>::max());
 

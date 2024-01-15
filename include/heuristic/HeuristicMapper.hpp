@@ -95,9 +95,9 @@ public:
          const double      initCostFixedReversals                         = 0,
          const std::size_t searchDepth                                    = 0,
          const std::size_t initSharedSwaps                                = 0)
-        : validMappedTwoQubitGates(valid2QGates), swaps(sw), qubits(q), 
-          locations(loc), costFixed(initCostFixed), 
-          costFixedReversals(initCostFixedReversals), 
+        : validMappedTwoQubitGates(valid2QGates), swaps(sw), qubits(q),
+          locations(loc), costFixed(initCostFixed),
+          costFixedReversals(initCostFixedReversals),
           sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId),
           id(nodeId) {}
 
