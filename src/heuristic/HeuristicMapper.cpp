@@ -22,24 +22,7 @@ void HeuristicMapper::map(const Configuration& configuration) {
   results            = MappingResults{};
   results.config     = configuration;
   const auto& config = results.config;
-  if (config.layering == Layering::OddGates ||
-      config.layering == Layering::QubitTriangle) {
-    throw QMAPException("Layering strategy " + toString(config.layering) +
-                        " not suitable for heuristic mapper!");
-  }
-  if (fidelityAwareHeur && !architecture->isFidelityAvailable()) {
-    throw QMAPException("No calibration data available for this architecture!");
-  }
-  if (fidelityAwareHeur && !isFidelityAware(config.lookaheadHeuristic) &&
-      config.lookaheadHeuristic != LookaheadHeuristic::None) {
-    throw QMAPException("Fidelity-aware heuristics may only be used with "
-                        "fidelity-aware lookahead heuristics (or no "
-                        "lookahead)!");
-  }
-  if (fidelityAwareHeur && config.teleportationQubits > 0) {
-    throw QMAPException("Teleportation is not yet supported for heuristic "
-                        "mapper using fidelity-aware mapping!");
-  }
+  checkParameters();
   const auto start = std::chrono::steady_clock::now();
   initResults();
 
@@ -132,6 +115,30 @@ void HeuristicMapper::staticInitialMapping() {
         }
       }
     }
+  }
+}
+
+void HeuristicMapper::checkParameters() {
+  const auto& config = results.config;
+  if (config.layering == Layering::OddGates ||
+      config.layering == Layering::QubitTriangle) {
+    throw QMAPException("Layering strategy " + toString(config.layering) +
+                        " not suitable for heuristic mapper!");
+  }
+  if (fidelityAwareHeur && !architecture->isFidelityAvailable()) {
+    throw QMAPException("Fidelity aware heuristic chosen, but no or "
+                        "insufficient calibration data available for this "
+                        "architecture!");
+  }
+  if (fidelityAwareHeur && !isFidelityAware(config.lookaheadHeuristic) &&
+      config.lookaheadHeuristic != LookaheadHeuristic::None) {
+    throw QMAPException("Fidelity-aware heuristics may only be used with "
+                        "fidelity-aware lookahead heuristics (or no "
+                        "lookahead)!");
+  }
+  if (fidelityAwareHeur && config.teleportationQubits > 0) {
+    throw QMAPException("Teleportation is not yet supported for heuristic "
+                        "mapper using fidelity-aware mapping!");
   }
 }
 
