@@ -95,16 +95,11 @@ public:
          const double      initCostFixedReversals                         = 0,
          const std::size_t searchDepth                                    = 0,
          const std::size_t initSharedSwaps                                = 0)
-        : costFixed(initCostFixed), costFixedReversals(initCostFixedReversals),
+        : validMappedTwoQubitGates(valid2QGates), swaps(sw), qubits(q), 
+          locations(loc), costFixed(initCostFixed), 
+          costFixedReversals(initCostFixedReversals), 
           sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId),
-          id(nodeId) {
-      std::copy(q.begin(), q.end(), qubits.begin());
-      std::copy(loc.begin(), loc.end(), locations.begin());
-      std::copy(sw.begin(), sw.end(), std::back_inserter(swaps));
-      std::copy(valid2QGates.begin(), valid2QGates.end(),
-                std::inserter(validMappedTwoQubitGates,
-                              validMappedTwoQubitGates.begin()));
-    }
+          id(nodeId) {}
 
     /**
      * @brief returns costFixed + costHeur + lookaheadPenalty
