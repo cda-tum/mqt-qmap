@@ -865,7 +865,7 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
   // swap costs
   for (auto& swap : node.swaps) {
     if (swap.op == qc::SWAP) {
-      // branch clone intended for performance reasons (checking edge-wise for 
+      // branch clone intended for performance reasons (checking edge-wise for
       // bidirectionality is not O(1))
       // NOLINTBEGIN(bugprone-branch-clone)
       if (architecture->bidirectional()) {
@@ -1023,7 +1023,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     node.costFixed +=
         architecture->getSwapFidelityCost(swap.first, swap.second);
   } else {
-    // branch clone intended for performance reasons (checking edge-wise for 
+    // branch clone intended for performance reasons (checking edge-wise for
     // bidirectionality is not O(1))
     // NOLINTBEGIN(bugprone-branch-clone)
     if (architecture->bidirectional()) {

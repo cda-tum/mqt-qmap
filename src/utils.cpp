@@ -72,9 +72,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
   }
 }
 
-void Dijkstra::buildEdgeSkipTable(const CouplingMap& couplingMap, 
+void Dijkstra::buildEdgeSkipTable(const CouplingMap&   couplingMap,
                                   std::vector<Matrix>& distanceTables,
-                                  const Matrix& edgeWeights) {
+                                  const Matrix&        edgeWeights) {
   /* to find the cheapest distance between 2 qubits skipping any 1 edge, we
   iterate over all edges, for each assume the current edge to be the one skipped
   and are thereby able to retrieve the distance by just adding the distances

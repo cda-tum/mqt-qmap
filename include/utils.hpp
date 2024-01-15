@@ -89,18 +89,18 @@ public:
    * if k > distanceTables.size() a cost of 0 can be assumed
    *
    * @param couplingMap coupling map specifying all edges in the architecture
-   * @param distanceTables vector to fill with target tables (from 0 skips in 
-   * the first entry to k skips in the last entry, where k is the last index 
-   * not containing a matrix of pure 0s i.e. k+1 = diameter of the coupling 
+   * @param distanceTables vector to fill with target tables (from 0 skips in
+   * the first entry to k skips in the last entry, where k is the last index
+   * not containing a matrix of pure 0s i.e. k+1 = diameter of the coupling
    * graph)
    * @param edgeWeights matrix containing costs for swapping any two, connected
    * qubits (this might be uniform for all edges or different for each edge, as
    * e.g. in the case of fidelity-aware distances or distances on
    * mixed bi/unidirectional architectures)
    */
-  static void buildEdgeSkipTable(const CouplingMap& couplingMap, 
+  static void buildEdgeSkipTable(const CouplingMap&   couplingMap,
                                  std::vector<Matrix>& distanceTables,
-                                 const Matrix& edgeWeights);
+                                 const Matrix&        edgeWeights);
   /**
    * @brief builds a distance table containing the minimal costs for moving
    * logical qubits from one physical qubit to another (along the cheapest path)

@@ -144,7 +144,7 @@ protected:
   bool                        principallyAdmissibleHeur = true;
   bool                        tightHeur                 = true;
   bool                        fidelityAwareHeur         = false;
-  
+
   /**
    * @brief check the `results.config` for any invalid settings
    */

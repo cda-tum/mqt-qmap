@@ -399,7 +399,7 @@ public:
 
   /** true if the coupling map contains no unidirectional edges */
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
-  
+
   /** true if the coupling map contains no bidirectional edges */
   [[nodiscard]] bool unidirectional() const { return isUnidirectional; }
 
