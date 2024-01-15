@@ -929,6 +929,7 @@ void HeuristicMapper::recalculateFixedCostFidelity(std::size_t layer,
 
 void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
                                 Node& node) {
+  assert(architecture->isEdgeConnected(swap, false));
   const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
 
   const auto q1 = node.qubits.at(swap.first);
@@ -947,12 +948,8 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     node.locations.at(static_cast<std::size_t>(q2)) =
         static_cast<std::int16_t>(swap.first);
   }
-
-  if (architecture->isEdgeConnected(swap, false)) {
-    node.swaps.emplace_back(swap.first, swap.second, qc::SWAP);
-  } else {
-    throw QMAPException("Something wrong in applySWAP.");
-  }
+  
+  node.swaps.emplace_back(swap.first, swap.second, qc::SWAP);
 
   // check if swap created or destroyed any valid mappings of qubit pairs
   for (const auto& [edge, mult] : twoQubitMultiplicities.at(layer)) {
@@ -1071,12 +1068,9 @@ void HeuristicMapper::applyTeleportation(const Edge& swap, std::size_t layer,
       middleAnc = static_cast<std::uint16_t>(qpair.first);
     }
   }
-
-  if (middleAnc == std::numeric_limits<decltype(middleAnc)>::max()) {
-    throw QMAPException("Teleportation between seemingly wrong qubits: " +
-                        std::to_string(swap.first) + " <--> " +
-                        std::to_string(swap.second));
-  }
+  
+  // Teleportation between wrong qubits
+  assert(middleAnc != std::numeric_limits<decltype(middleAnc)>::max());
 
   std::uint16_t source = std::numeric_limits<decltype(source)>::max();
   std::uint16_t target = std::numeric_limits<decltype(target)>::max();
