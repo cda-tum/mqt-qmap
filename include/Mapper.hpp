@@ -14,10 +14,10 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <string>
-#include <set>
 #include <map>
+#include <memory>
+#include <set>
+#include <string>
 
 /**
  * number of two-qubit gates acting on pairs of logical qubits in some layer
