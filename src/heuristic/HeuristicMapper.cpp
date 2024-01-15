@@ -865,6 +865,9 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
   // swap costs
   for (auto& swap : node.swaps) {
     if (swap.op == qc::SWAP) {
+      // branch clone intended for performance reasons (checking edge-wise for 
+      // bidirectionality is not O(1))
+      // NOLINTBEGIN(bugprone-branch-clone)
       if (architecture->bidirectional()) {
         node.costFixed += COST_BIDIRECTIONAL_SWAP;
       } else if (architecture->unidirectional() ||
@@ -874,6 +877,7 @@ void HeuristicMapper::recalculateFixedCostNonFidelity(Node& node) {
       } else {
         node.costFixed += COST_BIDIRECTIONAL_SWAP;
       }
+      // NOLINTEND(bugprone-branch-clone)
     } else if (swap.op == qc::Teleportation) {
       node.costFixed += COST_TELEPORTATION;
     }
@@ -1019,6 +1023,9 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     node.costFixed +=
         architecture->getSwapFidelityCost(swap.first, swap.second);
   } else {
+    // branch clone intended for performance reasons (checking edge-wise for 
+    // bidirectionality is not O(1))
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (architecture->bidirectional()) {
       node.costFixed += COST_BIDIRECTIONAL_SWAP;
     } else if (architecture->unidirectional() ||
@@ -1027,6 +1034,7 @@ void HeuristicMapper::applySWAP(const Edge& swap, std::size_t layer,
     } else {
       node.costFixed += COST_BIDIRECTIONAL_SWAP;
     }
+    // NOLINTEND(bugprone-branch-clone)
   }
 
   recalculateFixedCostReversals(layer, node);
