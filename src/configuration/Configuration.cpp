@@ -33,7 +33,7 @@ nlohmann::json Configuration::json() const {
       lookaheadSettings["heuristic"] = ::toString(lookaheadHeuristic);
       auto& lookaheadHeuristicPropertiesJson =
           lookaheadSettings["heuristic_properties"];
-      heuristicPropertiesJson["fidelity_aware"] =
+      lookaheadHeuristicPropertiesJson["fidelity_aware"] =
           isFidelityAware(lookaheadHeuristic);
       lookaheadSettings["lookaheads"]   = nrLookaheads;
       lookaheadSettings["first_factor"] = firstLookaheadFactor;
