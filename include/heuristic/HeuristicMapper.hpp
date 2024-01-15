@@ -215,7 +215,7 @@ protected:
    *
    * @param layer the layer for which to get the considered qubits
    */
-  const std::unordered_set<std::uint16_t>&
+  const std::set<std::uint16_t>&
   getConsideredQubits(std::size_t layer) const {
     if (fidelityAwareHeur) {
       return activeQubits.at(layer);
