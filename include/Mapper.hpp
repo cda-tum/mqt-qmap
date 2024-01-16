@@ -14,9 +14,10 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
-#include <unordered_set>
 
 /**
  * number of two-qubit gates acting on pairs of logical qubits in some layer
@@ -41,7 +42,6 @@ using TwoQubitMultiplicity =
 using SingleQubitMultiplicity = std::vector<std::uint16_t>;
 
 constexpr std::int16_t DEFAULT_POSITION = -1;
-constexpr double       INITIAL_FIDELITY = 1.0;
 
 class Mapper {
 protected:
@@ -101,19 +101,19 @@ protected:
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a gate in the layer
    */
-  std::vector<std::unordered_set<std::uint16_t>> activeQubits{};
+  std::vector<std::set<std::uint16_t>> activeQubits{};
 
   /**
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a 1Q-gate in the layer
    */
-  std::vector<std::unordered_set<std::uint16_t>> activeQubits1QGates{};
+  std::vector<std::set<std::uint16_t>> activeQubits1QGates{};
 
   /**
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a 2Q-gate in the layer
    */
-  std::vector<std::unordered_set<std::uint16_t>> activeQubits2QGates{};
+  std::vector<std::set<std::uint16_t>> activeQubits2QGates{};
 
   /**
    * @brief containing the logical qubit currently mapped to each physical
@@ -129,9 +129,6 @@ protected:
    * The inverse of `qubits`
    */
   std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
-  std::array<double, MAX_DEVICE_QUBITS>       fidelities{};
-
-  std::unordered_set<std::uint16_t> usedDeviceQubits{};
 
   MappingResults results{};
 
@@ -361,7 +358,6 @@ public:
     layers.clear();
     qubits.fill(DEFAULT_POSITION);
     locations.fill(DEFAULT_POSITION);
-    usedDeviceQubits.clear();
 
     results = MappingResults();
   }

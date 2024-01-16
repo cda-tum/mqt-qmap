@@ -19,9 +19,15 @@ The following classes provide a more explicit way of initializing the respective
     .. currentmodule:: mqt.qmap
     .. autoclass:: Method
 
+    .. autoclass:: Heuristic
+
+    .. autoclass:: LookaheadHeuristic
+
     .. autoclass:: Layering
 
     .. autoclass:: InitialLayout
+
+    .. autoclass:: EarlyTermination
 
     .. autoclass:: Encoding
 

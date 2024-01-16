@@ -123,6 +123,34 @@ PYBIND11_MODULE(pyqmap, m) {
         return initialLayoutFromString(str);
       }));
 
+  // Heuristic function
+  py::enum_<Heuristic>(m, "Heuristic")
+      .value("gate_count_max_distance", Heuristic::GateCountMaxDistance)
+      .value("gate_count_sum_distance", Heuristic::GateCountSumDistance)
+      .value("gate_count_sum_distance_minus_shared_swaps",
+             Heuristic::GateCountSumDistanceMinusSharedSwaps)
+      .value("gate_count_max_distance_or_sum_distance_minus_shared_swaps",
+             Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps)
+      .value("fidelity_best_location", Heuristic::FidelityBestLocation)
+      .export_values()
+      // allow construction from string
+      .def(py::init([](const std::string& str) -> Heuristic {
+        return heuristicFromString(str);
+      }));
+
+  // Lookahead heuristic function
+  py::enum_<LookaheadHeuristic>(m, "LookaheadHeuristic")
+      .value("none", LookaheadHeuristic::None)
+      .value("gate_count_max_distance",
+             LookaheadHeuristic::GateCountMaxDistance)
+      .value("gate_count_sum_distance",
+             LookaheadHeuristic::GateCountSumDistance)
+      .export_values()
+      // allow construction from string
+      .def(py::init([](const std::string& str) -> LookaheadHeuristic {
+        return lookaheadHeuristicFromString(str);
+      }));
+
   // Gate clustering / layering strategy
   py::enum_<Layering>(m, "Layering")
       .value("individual_gates", Layering::IndividualGates)
@@ -195,6 +223,7 @@ PYBIND11_MODULE(pyqmap, m) {
       "Configuration options for the MQT QMAP quantum circuit mapping tool")
       .def(py::init<>())
       .def_readwrite("method", &Configuration::method)
+      .def_readwrite("heuristic", &Configuration::heuristic)
       .def_readwrite("verbose", &Configuration::verbose)
       .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
@@ -211,10 +240,7 @@ PYBIND11_MODULE(pyqmap, m) {
                      &Configuration::iterativeBidirectionalRouting)
       .def_readwrite("iterative_bidirectional_routing_passes",
                      &Configuration::iterativeBidirectionalRoutingPasses)
-      .def_readwrite("lookahead", &Configuration::lookahead)
-      .def_readwrite("admissible_heuristic",
-                     &Configuration::admissibleHeuristic)
-      .def_readwrite("consider_fidelity", &Configuration::considerFidelity)
+      .def_readwrite("lookahead_heuristic", &Configuration::lookaheadHeuristic)
       .def_readwrite("lookaheads", &Configuration::nrLookaheads)
       .def_readwrite("first_lookahead_factor",
                      &Configuration::firstLookaheadFactor)

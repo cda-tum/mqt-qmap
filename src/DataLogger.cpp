@@ -15,7 +15,7 @@ void DataLogger::initLog() {
   }
   const std::filesystem::path dirPath(dataLoggingPath);
   if (!std::filesystem::exists(dirPath)) {
-    std::filesystem::create_directory(dirPath);
+    std::filesystem::create_directories(dirPath);
   }
   clearLog();
 };
@@ -87,8 +87,7 @@ void DataLogger::logFinalizeLayer(
     std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
     double                                             finalLookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
-    const std::vector<std::vector<Exchange>>&          finalSwaps,
-    std::size_t                                        finalSearchDepth) {
+    const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth) {
   if (deactivated) {
     return;
   }
@@ -141,14 +140,12 @@ void DataLogger::logFinalizeLayer(
   if (finalSwaps.empty()) {
     json["final_swaps"] = nlohmann::json::array();
   } else {
-    auto& finalSwapsJSON = json["final_swaps"];
-    for (const auto& swaps : finalSwaps) {
-      std::size_t i = 0;
-      for (const auto& swap : swaps) {
-        finalSwapsJSON[i][0] = swap.first;
-        finalSwapsJSON[i][1] = swap.second;
-        ++i;
-      }
+    auto&       finalSwapsJSON = json["final_swaps"];
+    std::size_t i              = 0;
+    for (const auto& swap : finalSwaps) {
+      finalSwapsJSON[i][0] = swap.first;
+      finalSwapsJSON[i][1] = swap.second;
+      ++i;
     }
   }
   json["final_search_depth"] = finalSearchDepth;
@@ -188,8 +185,7 @@ void DataLogger::logSearchNode(
     std::size_t layerIndex, std::size_t nodeId, std::size_t parentId,
     double costFixed, double costHeur, double lookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
-    bool validMapping, const std::vector<std::vector<Exchange>>& swaps,
-    std::size_t depth) {
+    bool validMapping, const std::vector<Exchange>& swaps, std::size_t depth) {
   if (deactivated) {
     return;
   }
@@ -214,18 +210,16 @@ void DataLogger::logSearchNode(
     of.seekp(-1, std::ios_base::cur); // remove last comma
   }
   of << ";";
-  for (const auto& sw : swaps) {
-    for (const auto& s : sw) {
-      of << s.first << " " << s.second;
-      if (s.op != qc::OpType::SWAP) {
-        of << " " << s.op;
-        if (s.middleAncilla !=
-            std::numeric_limits<decltype(s.middleAncilla)>::max()) {
-          of << " " << s.middleAncilla;
-        }
+  for (const auto& s : swaps) {
+    of << s.first << " " << s.second;
+    if (s.op != qc::OpType::SWAP) {
+      of << " " << s.op;
+      if (s.middleAncilla !=
+          std::numeric_limits<decltype(s.middleAncilla)>::max()) {
+        of << " " << s.middleAncilla;
       }
-      of << ",";
     }
+    of << ",";
   }
   if (!swaps.empty()) {
     of.seekp(-1, std::ios_base::cur); // remove last comma

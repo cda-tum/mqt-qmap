@@ -185,21 +185,34 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
-  isBidirectional = true;
+  isBidirectional  = true;
+  isUnidirectional = true;
   Matrix edgeWeights(nqubits, std::vector<double>(
                                   nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
+      // unidirectional edge
       isBidirectional                            = false;
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
       edgeWeights.at(edge.first).at(edge.second) = COST_UNIDIRECTIONAL_SWAP;
     } else {
+      // bidirectional edge
+      isUnidirectional                           = false;
       edgeWeights.at(edge.first).at(edge.second) = COST_BIDIRECTIONAL_SWAP;
     }
   }
 
-  Dijkstra::buildTable(nqubits, couplingMap, distanceTable, edgeWeights,
-                       COST_DIRECTION_REVERSE, true);
+  Matrix simpleDistanceTable{};
+  Dijkstra::buildTable(couplingMap, simpleDistanceTable, edgeWeights);
+  Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, couplingMap, 0.,
+                                     distanceTable);
+  if (bidirectional()) {
+    distanceTableReversals = distanceTable;
+  } else {
+    Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, couplingMap,
+                                       COST_DIRECTION_REVERSE,
+                                       distanceTableReversals);
+  }
 }
 
 void Architecture::createFidelityTable() {
@@ -263,11 +276,8 @@ void Architecture::createFidelityTable() {
 
   fidelityDistanceTables.clear();
   if (fidelityAvailable) {
-    Matrix distances = {};
-    Dijkstra::buildTable(nqubits, couplingMap, distances, swapFidelityCosts, 0.,
-                         false);
-    Dijkstra::buildEdgeSkipTable(distances, couplingMap,
-                                 fidelityDistanceTables);
+    Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
+                                 swapFidelityCosts);
   }
 }
 

@@ -240,8 +240,18 @@ public:
     createDistanceTable();
   }
 
-  [[nodiscard]] bool isEdgeConnected(const Edge& edge) const {
-    return couplingMap.find(edge) != couplingMap.end();
+  [[nodiscard]] bool
+  isEdgeConnected(const Edge& edge, const bool considerDirection = true) const {
+    if (considerDirection) {
+      return couplingMap.find(edge) != couplingMap.end();
+    }
+    return couplingMap.find(edge) != couplingMap.end() ||
+           couplingMap.find({edge.second, edge.first}) != couplingMap.end();
+  }
+
+  [[nodiscard]] bool isEdgeBidirectional(const Edge& edge) const {
+    return couplingMap.find(edge) != couplingMap.end() &&
+           couplingMap.find({edge.second, edge.first}) != couplingMap.end();
   }
 
   CouplingMap& getCurrentTeleportations() { return currentTeleportations; }
@@ -249,7 +259,13 @@ public:
     return teleportationQubits;
   }
 
-  [[nodiscard]] const Matrix& getDistanceTable() const { return distanceTable; }
+  [[nodiscard]] const Matrix&
+  getDistanceTable(bool includeReversalCost = true) const {
+    if (includeReversalCost) {
+      return distanceTableReversals;
+    }
+    return distanceTable;
+  }
 
   [[nodiscard]] const Properties& getProperties() const { return properties; }
 
@@ -381,7 +397,11 @@ public:
     return swapFidelityCosts.at(q1).at(q2);
   }
 
+  /** true if the coupling map contains no unidirectional edges */
   [[nodiscard]] bool bidirectional() const { return isBidirectional; }
+
+  /** true if the coupling map contains no bidirectional edges */
+  [[nodiscard]] bool unidirectional() const { return isUnidirectional; }
 
   [[nodiscard]] bool isArchitectureAvailable() const {
     return !(name.empty()) && nqubits != 0;
@@ -395,7 +415,9 @@ public:
     nqubits = 0;
     couplingMap.clear();
     distanceTable.clear();
-    isBidirectional = true;
+    distanceTableReversals.clear();
+    isBidirectional  = true;
+    isUnidirectional = true;
     properties.clear();
     fidelityAvailable = false;
     fidelityTable.clear();
@@ -406,9 +428,12 @@ public:
     fidelityDistanceTables.clear();
   }
 
-  [[nodiscard]] double distance(std::uint16_t control,
-                                std::uint16_t target) const {
+  [[nodiscard]] double distance(std::uint16_t control, std::uint16_t target,
+                                bool includeReversalCost = true) const {
     if (currentTeleportations.empty()) {
+      if (includeReversalCost) {
+        return distanceTableReversals.at(control).at(target);
+      }
       return distanceTable.at(control).at(target);
     }
     return static_cast<double>(bfs(control, target, currentTeleportations));
@@ -476,12 +501,21 @@ public:
   static void printCouplingMap(const CouplingMap& cm, std::ostream& os);
 
 protected:
-  std::string                                        name;
-  std::uint16_t                                      nqubits               = 0;
-  CouplingMap                                        couplingMap           = {};
-  CouplingMap                                        currentTeleportations = {};
-  bool                                               isBidirectional = true;
-  Matrix                                             distanceTable   = {};
+  std::string   name;
+  std::uint16_t nqubits               = 0;
+  CouplingMap   couplingMap           = {};
+  CouplingMap   currentTeleportations = {};
+
+  /** true if the coupling map contains no unidirectional edges */
+  bool isBidirectional = true;
+  /** true if the coupling map contains no bidirectional edges */
+  bool isUnidirectional = true;
+  // by this definition the empty coupling map is both bidirectional and
+  // unidirectional, and coupling maps containing both bidirectional and
+  // unidirectional edges are neither bidirectional nor unidirectional
+
+  Matrix distanceTable          = {};
+  Matrix distanceTableReversals = {};
   std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
   Properties                                         properties        = {};
   bool                                               fidelityAvailable = false;

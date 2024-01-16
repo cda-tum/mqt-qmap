@@ -72,14 +72,8 @@ TEST(General, Dijkstra) {
   const Matrix targetTable1 = {
       {0, 1, 3, 6}, {1, 0, 2, 5}, {10, 9, 0, 3}, {7, 6, 3, 0}};
   Matrix distanceTable{};
-  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights, 0, false);
+  Dijkstra::buildTable(cm, distanceTable, edgeWeights);
   EXPECT_EQ(distanceTable, targetTable1);
-
-  const Matrix targetTable2 = {
-      {0, 0, 1, 3}, {0, 0, 0, 2}, {9, 3, 0, 0}, {6, 0, 0, 0}};
-  distanceTable = {};
-  Dijkstra::buildTable(4, cm, distanceTable, edgeWeights, 0, true);
-  EXPECT_EQ(distanceTable, targetTable2);
 }
 
 TEST(General, DijkstraCNOTReversal) {
@@ -94,24 +88,18 @@ TEST(General, DijkstraCNOTReversal) {
                               {0, 3, 0, 3, 0},
                               {0, 0, 3, 0, 3},
                               {0, 0, 0, 3, 0}};
-
-  const Matrix targetTable1 = {{0, 3, 6, 9, 12},
-                               {4, 0, 4, 6, 9},
-                               {6, 3, 0, 3, 6},
-                               {9, 6, 4, 0, 3},
-                               {12, 9, 7, 4, 0}};
-  Matrix       distanceTable{};
-  Dijkstra::buildTable(5, cm, distanceTable, edgeWeights, 1, false);
-  EXPECT_EQ(distanceTable, targetTable1);
+  Matrix       simpleDistanceTable{};
+  Dijkstra::buildTable(cm, simpleDistanceTable, edgeWeights);
+  Matrix fullDistanceTable{};
+  Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, cm, 1.,
+                                     fullDistanceTable);
 
   const Matrix targetTable2 = {{0, 0, 3, 6, 9},
                                {1, 0, 1, 3, 6},
                                {3, 0, 0, 0, 3},
                                {6, 3, 1, 0, 0},
                                {9, 6, 4, 1, 0}};
-  distanceTable             = {};
-  Dijkstra::buildTable(5, cm, distanceTable, edgeWeights, 1, true);
-  EXPECT_EQ(distanceTable, targetTable2);
+  EXPECT_EQ(fullDistanceTable, targetTable2);
 }
 
 TEST(General, DijkstraSkipEdges) {
@@ -147,7 +135,7 @@ TEST(General, DijkstraSkipEdges) {
       {6, 8, 7, 6, 4, 2, 0, 1, 2, 3},  {7, 9, 8, 7, 5, 3, 1, 0, 1, 2},
       {8, 10, 9, 8, 6, 4, 2, 1, 0, 1}, {9, 11, 10, 9, 7, 5, 3, 2, 1, 0}};
   Matrix distanceTable{};
-  Dijkstra::buildTable(10, cm, distanceTable, edgeWeights, 0, false);
+  Dijkstra::buildTable(cm, distanceTable, edgeWeights);
   EXPECT_EQ(distanceTable, targetTable);
 
   const std::vector<Matrix> edgeSkipTargetTable = {
@@ -193,6 +181,6 @@ TEST(General, DijkstraSkipEdges) {
        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}};
   std::vector<Matrix> edgeSkipDistanceTable = {};
-  Dijkstra::buildEdgeSkipTable(distanceTable, cm, edgeSkipDistanceTable);
+  Dijkstra::buildEdgeSkipTable(cm, edgeSkipDistanceTable, edgeWeights);
   EXPECT_EQ(edgeSkipDistanceTable, edgeSkipTargetTable);
 }

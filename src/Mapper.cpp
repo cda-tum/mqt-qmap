@@ -24,7 +24,6 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
     : qc(std::move(quantumComputation)), architecture(&arch) {
   qubits.fill(DEFAULT_POSITION);
   locations.fill(DEFAULT_POSITION);
-  fidelities.fill(INITIAL_FIDELITY);
 
   // strip away qubits that are not used in the circuit
   qc.stripIdleQubits(true, true);
@@ -217,12 +216,12 @@ void Mapper::createLayers() {
       layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
   twoQubitMultiplicities =
       std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
-  activeQubits = std::vector<std::unordered_set<std::uint16_t>>(
-      layers.size(), std::unordered_set<std::uint16_t>{});
-  activeQubits1QGates = std::vector<std::unordered_set<std::uint16_t>>(
-      layers.size(), std::unordered_set<std::uint16_t>{});
-  activeQubits2QGates = std::vector<std::unordered_set<std::uint16_t>>(
-      layers.size(), std::unordered_set<std::uint16_t>{});
+  activeQubits = std::vector<std::set<std::uint16_t>>(
+      layers.size(), std::set<std::uint16_t>{});
+  activeQubits1QGates = std::vector<std::set<std::uint16_t>>(
+      layers.size(), std::set<std::uint16_t>{});
+  activeQubits2QGates = std::vector<std::set<std::uint16_t>>(
+      layers.size(), std::set<std::uint16_t>{});
 
   for (std::size_t i = 0; i < layers.size(); ++i) {
     for (const auto& gate : layers[i]) {
@@ -289,12 +288,12 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   SingleQubitMultiplicity singleQubitMultiplicity1(arch.getNqubits(), 0);
   TwoQubitMultiplicity    twoQubitMultiplicity0{};
   TwoQubitMultiplicity    twoQubitMultiplicity1{};
-  std::unordered_set<std::uint16_t> activeQubits0{};
-  std::unordered_set<std::uint16_t> activeQubits1QGates0{};
-  std::unordered_set<std::uint16_t> activeQubits2QGates0{};
-  std::unordered_set<std::uint16_t> activeQubits1{};
-  std::unordered_set<std::uint16_t> activeQubits1QGates1{};
-  std::unordered_set<std::uint16_t> activeQubits2QGates1{};
+  std::set<std::uint16_t> activeQubits0{};
+  std::set<std::uint16_t> activeQubits1QGates0{};
+  std::set<std::uint16_t> activeQubits2QGates0{};
+  std::set<std::uint16_t> activeQubits1{};
+  std::set<std::uint16_t> activeQubits1QGates1{};
+  std::set<std::uint16_t> activeQubits2QGates1{};
 
   // 2Q-gates
   bool even = false;
@@ -392,24 +391,21 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
   activeQubits[index] = activeQubits0;
   activeQubits.insert(
       activeQubits.begin() +
-          static_cast<
-              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits1);
   activeQubits1QGates[index] = activeQubits1QGates0;
   activeQubits1QGates.insert(
       activeQubits1QGates.begin() +
-          static_cast<
-              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits1QGates1);
   activeQubits2QGates[index] = activeQubits2QGates0;
   activeQubits2QGates.insert(
       activeQubits2QGates.begin() +
-          static_cast<
-              std::vector<std::unordered_set<std::uint16_t>>::difference_type>(
+          static_cast<std::vector<std::set<std::uint16_t>>::difference_type>(
               index) +
           1,
       activeQubits2QGates1);

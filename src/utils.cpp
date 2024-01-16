@@ -7,40 +7,31 @@
 
 #include <cassert>
 
-void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
-                          Matrix& distanceTable, const Matrix& edgeWeights,
-                          const double reversalCost,
-                          const bool   removeLastEdge) {
+void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
+                          const Matrix& edgeWeights) {
+  // number of qubits
+  const auto n = static_cast<std::uint16_t>(edgeWeights.size());
+
   distanceTable.clear();
   distanceTable.resize(n, std::vector<double>(n, -1.));
 
   for (std::uint16_t i = 0; i < n; ++i) {
     std::vector<Dijkstra::Node> nodes(n);
     for (std::uint16_t j = 0; j < n; ++j) {
-      nodes.at(j).containsCorrectEdge = false;
-      nodes.at(j).visited             = false;
-      nodes.at(j).pos                 = j;
-      nodes.at(j).cost                = -1.;
-      nodes.at(j).prevCost            = -1.;
+      nodes.at(j).visited = false;
+      nodes.at(j).pos     = j;
+      nodes.at(j).cost    = -1.;
     }
 
-    // initially all paths assume that a CNOT reversal will be necessary,
-    // as soon as a forward edge is encountered along the path, the cost
-    // for the reversal is removed
-    nodes.at(i).cost     = reversalCost;
-    nodes.at(i).prevCost = reversalCost;
+    nodes.at(i).cost = 0;
 
-    dijkstra(couplingMap, nodes, i, edgeWeights, reversalCost);
+    dijkstra(couplingMap, nodes, i, edgeWeights);
 
     for (std::uint16_t j = 0; j < n; ++j) {
       if (i == j) {
         distanceTable.at(i).at(j) = 0;
       } else {
-        if (removeLastEdge) {
-          distanceTable.at(i).at(j) = nodes.at(j).prevCost;
-        } else {
-          distanceTable.at(i).at(j) = nodes.at(j).cost;
-        }
+        distanceTable.at(i).at(j) = nodes.at(j).cost;
       }
     }
   }
@@ -48,7 +39,7 @@ void Dijkstra::buildTable(const std::uint16_t n, const CouplingMap& couplingMap,
 
 void Dijkstra::dijkstra(const CouplingMap& couplingMap,
                         std::vector<Node>& nodes, const std::uint16_t start,
-                        const Matrix& edgeWeights, const double reversalCost) {
+                        const Matrix& edgeWeights) {
   std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
@@ -59,14 +50,8 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
 
     for (const auto& edge : couplingMap) {
       std::optional<std::uint16_t> to = std::nullopt;
-      // if the path up to here already contains a forward edge, we do not care
-      // about the directionality of other edges anymore; the value of the last
-      // node is therefore kept and only overwritten with true if the current
-      // edge is a forward edge (but never with false)
-      bool correctEdge = current->containsCorrectEdge;
       if (pos == edge.first) { // forward edge
-        to          = edge.second;
-        correctEdge = true;
+        to = edge.second;
       } else if (pos == edge.second) { // back edge
         to = edge.first;
       }
@@ -76,16 +61,8 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
         }
 
         Node newNode;
-        newNode.cost     = current->cost + edgeWeights.at(*pos).at(*to);
-        newNode.prevCost = current->cost;
-        newNode.pos      = to;
-        newNode.containsCorrectEdge = correctEdge;
-        if (newNode.containsCorrectEdge && !current->containsCorrectEdge) {
-          // when encountering the first forward edge along the path, the
-          // reversal costs need to be removed
-          newNode.cost -= reversalCost;
-          newNode.prevCost -= reversalCost;
-        }
+        newNode.cost = current->cost + edgeWeights.at(*pos).at(*to);
+        newNode.pos  = to;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;
           queue.push(&nodes.at(*to));
@@ -95,9 +72,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
   }
 }
 
-void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
-                                  const CouplingMap&   couplingMap,
-                                  std::vector<Matrix>& edgeSkipDistanceTable) {
+void Dijkstra::buildEdgeSkipTable(const CouplingMap&   couplingMap,
+                                  std::vector<Matrix>& distanceTables,
+                                  const Matrix&        edgeWeights) {
   /* to find the cheapest distance between 2 qubits skipping any 1 edge, we
   iterate over all edges, for each assume the current edge to be the one skipped
   and are thereby able to retrieve the distance by just adding the distances
@@ -108,14 +85,15 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
   edge taking not the regular distance but the previously calculated distance
   skipping 1 edge. The same approach can be used for skipping any 3 edges, etc.
   */
-  edgeSkipDistanceTable.clear();
-  edgeSkipDistanceTable.emplace_back(distanceTable);
-  const std::size_t n = distanceTable.size();
+  distanceTables.clear();
+  distanceTables.emplace_back();
+  buildTable(couplingMap, distanceTables.back(), edgeWeights);
+  const std::size_t n = edgeWeights.size();
   for (std::size_t k = 1; k <= n; ++k) {
     // k...number of edges to be skipped along each path
-    edgeSkipDistanceTable.emplace_back(
+    distanceTables.emplace_back(
         n, std::vector<double>(n, std::numeric_limits<double>::max()));
-    Matrix* currentTable = &edgeSkipDistanceTable.back();
+    Matrix* currentTable = &distanceTables.back();
     for (std::size_t q = 0; q < n; ++q) {
       currentTable->at(q).at(q) = 0.;
     }
@@ -128,12 +106,12 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
           for (std::size_t q2 = q1 + 1; q2 < n; ++q2) { // q2 ... target qubit
             currentTable->at(q1).at(q2) =
                 std::min(currentTable->at(q1).at(q2),
-                         edgeSkipDistanceTable.at(l).at(q1).at(e1) +
-                             edgeSkipDistanceTable.at(k - l - 1).at(e2).at(q2));
+                         distanceTables.at(l).at(q1).at(e1) +
+                             distanceTables.at(k - l - 1).at(e2).at(q2));
             currentTable->at(q1).at(q2) =
                 std::min(currentTable->at(q1).at(q2),
-                         edgeSkipDistanceTable.at(l).at(q1).at(e2) +
-                             edgeSkipDistanceTable.at(k - l - 1).at(e1).at(q2));
+                         distanceTables.at(l).at(q1).at(e2) +
+                             distanceTables.at(k - l - 1).at(e1).at(q2));
             currentTable->at(q2).at(q1) = currentTable->at(q1).at(q2);
             if (done && currentTable->at(q2).at(q1) > 0) {
               done = false;
@@ -144,8 +122,46 @@ void Dijkstra::buildEdgeSkipTable(const Matrix&        distanceTable,
     }
     if (done) {
       // all distances of the last matrix where 0
-      edgeSkipDistanceTable.pop_back();
+      distanceTables.pop_back();
       break;
+    }
+  }
+}
+
+void Dijkstra::buildSingleEdgeSkipTable(const Matrix&      distanceTable,
+                                        const CouplingMap& couplingMap,
+                                        const double       reversalCost,
+                                        Matrix& edgeSkipDistanceTable) {
+  const std::size_t n = distanceTable.size();
+  edgeSkipDistanceTable.clear();
+  edgeSkipDistanceTable.resize(
+      n, std::vector<double>(n, std::numeric_limits<double>::max()));
+  for (std::size_t q = 0; q < n; ++q) {
+    edgeSkipDistanceTable.at(q).at(q) = 0.;
+  }
+  for (const auto& [e1, e2] : couplingMap) {        // edge to be skipped
+    for (std::size_t q1 = 0; q1 < n; ++q1) {        // q1 ... source qubit
+      for (std::size_t q2 = q1 + 1; q2 < n; ++q2) { // q2 ... target qubit
+        edgeSkipDistanceTable.at(q1).at(q2) =
+            std::min(edgeSkipDistanceTable.at(q1).at(q2),
+                     distanceTable.at(q1).at(e1) + distanceTable.at(e2).at(q2));
+        edgeSkipDistanceTable.at(q1).at(q2) =
+            std::min(edgeSkipDistanceTable.at(q1).at(q2),
+                     distanceTable.at(q1).at(e2) + distanceTable.at(e1).at(q2) +
+                         reversalCost);
+        if (reversalCost == 0.) {
+          edgeSkipDistanceTable.at(q2).at(q1) =
+              edgeSkipDistanceTable.at(q1).at(q2);
+        } else {
+          edgeSkipDistanceTable.at(q2).at(q1) = std::min(
+              edgeSkipDistanceTable.at(q2).at(q1),
+              distanceTable.at(q2).at(e1) + distanceTable.at(e2).at(q1));
+          edgeSkipDistanceTable.at(q2).at(q1) =
+              std::min(edgeSkipDistanceTable.at(q2).at(q1),
+                       distanceTable.at(q2).at(e2) +
+                           distanceTable.at(e1).at(q1) + reversalCost);
+        }
+      }
     }
   }
 }
