@@ -118,6 +118,20 @@ isPrincipallyAdmissible(const Heuristic heuristic) {
   return false;
 }
 
+/**
+ * If the heuristic tracks its currently intended target location for each 
+ * logical qubit in `HeuristicMapper::Node::targetLocations`, which is then 
+ * used by some lookahead heuristics
+ */
+[[maybe_unused]] static inline bool tracksTargetLocations(const Heuristic heuristic) {
+  switch (heuristic) {
+  case Heuristic::FidelityBestLocation:
+    return true;
+  default:
+    return false;
+  }
+}
+
 [[maybe_unused]] static inline std::string toString(const Heuristic heuristic) {
   switch (heuristic) {
   case Heuristic::GateCountMaxDistance:

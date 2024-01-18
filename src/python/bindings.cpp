@@ -117,6 +117,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("identity", InitialLayout::Identity)
       .value("static", InitialLayout::Static)
       .value("dynamic", InitialLayout::Dynamic)
+      .value("dynamic_greedy_lookahead", InitialLayout::DynamicGreedyLookahead)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> InitialLayout {
@@ -145,6 +146,10 @@ PYBIND11_MODULE(pyqmap, m) {
              LookaheadHeuristic::GateCountMaxDistance)
       .value("gate_count_sum_distance",
              LookaheadHeuristic::GateCountSumDistance)
+      .value("fidelity_current_location",
+             LookaheadHeuristic::FidelityCurrentLocation)
+      .value("fidelity_current_target_location",
+             LookaheadHeuristic::FidelityCurrentTargetLocation)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> LookaheadHeuristic {
@@ -158,6 +163,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .value("odd_gates", Layering::OddGates)
       .value("qubit_triangle", Layering::QubitTriangle)
       .value("disjoint_2q_blocks", Layering::Disjoint2qBlocks)
+      .value("disjoint_same_op_type_blocks", Layering::DisjointSameOpTypeBlocks)
       .export_values()
       // allow construction from string
       .def(py::init([](const std::string& str) -> Layering {
@@ -228,6 +234,9 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
+      .def_readwrite("maximum_active_qubits", &Configuration::maximumActiveQubits)
+      .def_readwrite("maximum_active_qubits_1q_gates", &Configuration::maximumActiveQubits1QGates)
+      .def_readwrite("maximum_active_qubits_2q_gates", &Configuration::maximumActiveQubits2QGates)
       .def_readwrite("automatic_layer_splits",
                      &Configuration::automaticLayerSplits)
       .def_readwrite("automatic_layer_splits_node_limit",

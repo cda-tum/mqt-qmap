@@ -15,7 +15,16 @@ enum class LookaheadHeuristic {
   GateCountMaxDistance,
   /** sum over all distances between any virtual qubit pair in the given layer;
      optimizing gate-count */
-  GateCountSumDistance
+  GateCountSumDistance,
+  /** sums the fidelity costs of any mapped 1Q gates in the given layer and 
+   * fidelity distances between mapped qubit pairs of 2Q gates from their 
+   * current location; optimizing fidelity */
+  FidelityCurrentLocation,
+  /** sums the fidelity costs of any mapped 1Q gates in the given layer and 
+   * fidelity distances between mapped qubit pairs of 2Q gates from the 
+   * currently intended target location (if applicable, otherwise from their 
+   * current location); optimizing fidelity */
+  FidelityCurrentTargetLocation
 };
 
 /**
@@ -29,8 +38,25 @@ isFidelityAware(const LookaheadHeuristic heuristic) {
   case LookaheadHeuristic::GateCountMaxDistance:
   case LookaheadHeuristic::GateCountSumDistance:
     return false;
+  case LookaheadHeuristic::FidelityCurrentLocation:
+  case LookaheadHeuristic::FidelityCurrentTargetLocation:
+    return true;
   }
   return false;
+}
+
+/**
+ * Uses the currently intended target location for each logical qubit in 
+ * `HeuristicMapper::Node::targetLocations` and therefore requires a heuristic, 
+ * which tracks those.
+ */
+[[maybe_unused]] static inline bool usesTargetLocations(const LookaheadHeuristic heuristic) {
+  switch (heuristic) {
+  case LookaheadHeuristic::FidelityCurrentTargetLocation:
+    return true;
+  default:
+    return false;
+  }
 }
 
 [[maybe_unused]] static inline std::string
@@ -42,6 +68,10 @@ toString(const LookaheadHeuristic heuristic) {
     return "gate_count_max_distance";
   case LookaheadHeuristic::GateCountSumDistance:
     return "gate_count_sum_distance";
+  case LookaheadHeuristic::FidelityCurrentLocation:
+    return "fidelity_current_location";
+  case LookaheadHeuristic::FidelityCurrentTargetLocation:
+    return "fidelity_current_target_location";
   }
   return " ";
 }
@@ -56,6 +86,12 @@ lookaheadHeuristicFromString(const std::string& heuristic) {
   }
   if (heuristic == "gate_count_sum_distance" || heuristic == "2") {
     return LookaheadHeuristic::GateCountSumDistance;
+  }
+  if (heuristic == "fidelity_current_location" || heuristic == "3") {
+    return LookaheadHeuristic::FidelityCurrentLocation;
+  }
+  if (heuristic == "fidelity_current_target_location" || heuristic == "4") {
+    return LookaheadHeuristic::FidelityCurrentTargetLocation;
   }
   throw std::invalid_argument("Invalid lookahead heuristic value: " +
                               heuristic);

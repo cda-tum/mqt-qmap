@@ -67,6 +67,9 @@ def compile(  # noqa: A001
     initial_layout: str | InitialLayout = "dynamic",
     iterative_bidirectional_routing_passes: int | None = None,
     layering: str | Layering = "individual_gates",
+    maximum_active_qubits: int = 0,
+    maximum_active_qubits_1q_gates: int = 0,
+    maximum_active_qubits_2q_gates: int = 0,
     automatic_layer_splits_node_limit: int | None = 5000,
     early_termination: str | EarlyTermination = "none",
     early_termination_limit: int = 0,
@@ -103,6 +106,9 @@ def compile(  # noqa: A001
         initial_layout: The initial layout to use. Defaults to "dynamic".
         iterative_bidirectional_routing_passes: Number of iterative bidirectional routing passes to perform or None to disable. Defaults to None.
         layering: The layering strategy to use. Defaults to "individual_gates".
+        maximum_active_qubits: The maximum number of active qubits in a single layer or 0 for no limit. Defaults to 0.
+        maximum_active_qubits_1q_gates: The maximum number of active qubits in a single layer for 1-qubit gates or 0 for no limit. Defaults to 0.
+        maximum_active_qubits_2q_gates: The maximum number of active qubits in a single layer for 2-qubit gates or 0 for no limit. Defaults to 0.
         automatic_layer_splits_node_limit: The number of expanded nodes after which to split a layer or None to disable automatic layer splitting. Defaults to 5000.
         early_termination: The early termination strategy to use, i.e. terminating the search after a goal node has been found, but before it is guarantueed to be optimal. Defaults to "none".
         early_termination_limit: The number of nodes (counted according to the early termination strategy) after which to terminate the search early. Defaults to 0.
@@ -151,6 +157,9 @@ def compile(  # noqa: A001
         config.iterative_bidirectional_routing = True
         config.iterative_bidirectional_routing_passes = iterative_bidirectional_routing_passes
     config.layering = Layering(layering)
+    config.maximum_active_qubits = maximum_active_qubits
+    config.maximum_active_qubits_1q_gates = maximum_active_qubits_1q_gates
+    config.maximum_active_qubits_2q_gates = maximum_active_qubits_2q_gates
     if automatic_layer_splits_node_limit is None:
         config.automatic_layer_splits = False
     else:

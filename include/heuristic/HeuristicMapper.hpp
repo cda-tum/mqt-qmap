@@ -49,6 +49,16 @@ public:
      * The inverse of `qubits`
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
+    /**
+     * containing the currently intended target location (i.e. the physical 
+     * qubit) of each logical qubit.
+     * `targetLocations[logical_qubit] = target_physical_qubit`
+     *
+     * multiple logical qubits can have the same target location
+     * 
+     * only tracked by some heuristics (see `tracksTargetLocations()`)
+     */
+    std::array<std::int16_t, MAX_DEVICE_QUBITS> targetLocations{};
     /** current fixed cost
      *
      * non-fidelity-aware: cost of all swaps used in the node
@@ -81,10 +91,12 @@ public:
     explicit Node() {
       qubits.fill(DEFAULT_POSITION);
       locations.fill(DEFAULT_POSITION);
+      targetLocations.fill(DEFAULT_POSITION);
     };
     explicit Node(std::size_t nodeId) : id(nodeId) {
       qubits.fill(DEFAULT_POSITION);
       locations.fill(DEFAULT_POSITION);
+      targetLocations.fill(DEFAULT_POSITION);
     };
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
@@ -99,13 +111,22 @@ public:
           locations(loc), costFixed(initCostFixed),
           costFixedReversals(initCostFixedReversals),
           sharedSwaps(initSharedSwaps), depth(searchDepth), parent(parentId),
-          id(nodeId) {}
+          id(nodeId) {
+      targetLocations.fill(DEFAULT_POSITION);
+    }
 
     /**
      * @brief returns costFixed + costHeur + lookaheadPenalty
      */
     [[nodiscard]] double getTotalCost() const {
       return costFixed + costFixedReversals + costHeur + lookaheadPenalty;
+    }
+
+    /**
+     * @brief returns costFixed + costHeur + lookaheadPenalty
+     */
+    [[nodiscard]] double getTotalCostNoLookahead() const {
+      return costFixed + costFixedReversals + costHeur;
     }
 
     /**
@@ -171,12 +192,22 @@ protected:
 
   /**
    * @brief maps any yet unmapped qubits, which are acted on in a given layer,
-   * to a physical qubit.
+   * to a physical qubit using a greedy heuristic strategy minimizing the 
+   * distance between 2Q gates in the current layer.
    *
-   * @param twoQubitGateMultiplicity number of two qubit gates acting on pairs
-   * of logical qubits in the current layer
+   * @param layer the layer for which to map the qubits
    */
   virtual void mapUnmappedGates(std::size_t layer);
+
+  /**
+   * @brief maps any yet unmapped logical qubits, which are acted on in a given 
+   * layer, greedily to the one free physical qubit, that results in the lowest 
+   * lookahead penalty (using the same lookahead settings as for the routing 
+   * search)
+   *
+   * @param layer the layer for which to map the qubits
+   */
+  virtual void mapUnmappedGatesLookahead(std::size_t layer);
 
   /**
    * @brief Routes the input circuit, i.e. inserts SWAPs to meet topology
@@ -379,10 +410,11 @@ protected:
    * layers (depreciated by a constant factor growing with each layer) and
    * saves it in the node as `Node::lookaheadPenalty`
    *
-   * @param layer index of current circuit layer
+   * @param nextLayer index of the layer after the current circuit layer, i.e. 
+   * the first layer considered in the lookahead
    * @param node search node for which to calculate lookahead penalty
    */
-  void updateLookaheadPenalty(std::size_t layer, Node& node);
+  void updateLookaheadPenalty(std::size_t nextLayer, Node& node);
 
   /**
    * @brief calculates the lookahead penalty for one layer using
@@ -407,6 +439,30 @@ protected:
    * @return lookahead penalty
    */
   double lookaheadGateCountSumDistance(std::size_t layer, Node& node);
+
+  /**
+   * @brief calculates the lookahead penalty for one layer using
+   * `LookaheadHeuristic::FidelityCurrentLocation`
+   *
+   * @param layer index of the circuit layer for which to calculate the
+   * lookahead penalty
+   * @param node search node for which to calculate the heuristic cost
+   *
+   * @return lookahead penalty
+   */
+  double lookaheadFidelityCurrentLocation(std::size_t layer, Node& node);
+
+  /**
+   * @brief calculates the lookahead penalty for one layer using
+   * `LookaheadHeuristic::FidelityCurrentTargetLocation`
+   *
+   * @param layer index of the circuit layer for which to calculate the
+   * lookahead penalty
+   * @param node search node for which to calculate the heuristic cost
+   *
+   * @return lookahead penalty
+   */
+  double lookaheadFidelityCurrentTargetLocation(std::size_t layer, Node& node);
 
   static double computeEffectiveBranchingRate(std::size_t       nodesProcessed,
                                               const std::size_t solutionDepth) {
