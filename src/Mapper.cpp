@@ -31,10 +31,9 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 }
 
-void Mapper::processDisjointQubitLayer(
+std::size_t Mapper::processDisjointQubitLayer(
     std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-    const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate) {
+    const std::optional<std::uint16_t>& control, const std::uint16_t target) {
   std::size_t layer = 0;
   if (!control.has_value()) {
     if (lastLayer.at(target).has_value()) {
@@ -55,21 +54,12 @@ void Mapper::processDisjointQubitLayer(
     lastLayer.at(*control) = layer;
     lastLayer.at(target)   = layer;
   }
-
-  if (layers.size() <= layer) {
-    layers.emplace_back();
-  }
-  if (control.has_value()) {
-    layers.at(layer).emplace_back(*control, target, gate);
-  } else {
-    layers.at(layer).emplace_back(-1, target, gate);
-  }
+  return layer;
 }
 
-void Mapper::processDisjoint2qBlockLayer(
+std::size_t Mapper::processDisjoint2qBlockLayer(
     std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-    const std::optional<std::uint16_t>& control, const std::uint16_t target,
-    qc::Operation* gate) {
+    const std::optional<std::uint16_t>& control, const std::uint16_t target) {
   std::size_t layer = 0;
   if (!control.has_value()) {
     // single qubit gates can always be added to the last 2Q block and should
@@ -103,22 +93,82 @@ void Mapper::processDisjoint2qBlockLayer(
     lastLayer.at(*control) = layer;
     lastLayer.at(target)   = layer;
   }
+  return layer;
+}
 
-  if (layers.size() <= layer) {
-    layers.emplace_back();
-  }
-  if (control.has_value()) {
-    layers.at(layer).emplace_back(*control, target, gate);
+std::size_t Mapper::processDisjointSameOpTypeBlockLayer(
+      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+      std::array<qc::OpType, MAX_DEVICE_QUBITS>& lastLayerOpType,
+      const std::optional<std::uint16_t>& control, std::uint16_t target,
+      qc::Operation* gate) {
+  std::size_t layer = 0;
+  if (!control.has_value()) {
+    if (lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(target);
+      if (lastLayerOpType.at(target) != gate->getType()) {
+        ++layer;
+      }
+      lastLayer.at(target) = layer;
+    }
   } else {
-    layers.at(layer).emplace_back(-1, target, gate);
+    if (!lastLayer.at(*control).has_value() &&
+        !lastLayer.at(target).has_value()) {
+      layer = 0;
+    } else if (!lastLayer.at(*control).has_value()) {
+      layer = *lastLayer.at(target) + 1;
+    } else if (!lastLayer.at(target).has_value()) {
+      layer = *lastLayer.at(*control) + 1;
+    } else {
+      layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
+
+      if (*lastLayer.at(*control) == *lastLayer.at(target) && 
+          lastLayerOpType.at(*control) == gate->getType() && 
+          lastLayerOpType.at(target) == gate->getType()) {
+        for (auto& g : layers.at(layer - 1)) {
+          if ((g.control == *control && g.target == target) ||
+              (g.control == target && g.target == *control)) {
+            // if last layer contained gate with equivalent qubit set, use that
+            // layer
+            --layer;
+            break;
+          }
+        }
+      }
+    }
+    lastLayer.at(*control) = layer;
+    lastLayer.at(target)   = layer;
   }
+  return layer;
 }
 
 void Mapper::createLayers() {
   const auto& config = results.config;
   std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS> lastLayer{};
+  std::array<qc::OpType, MAX_DEVICE_QUBITS> lastLayerOpType{};
+  lastLayerOpType.fill(qc::OpType::None);
+  
+  singleQubitMultiplicities.clear();
+  twoQubitMultiplicities.clear();
+  activeQubits.clear();
+  activeQubits1QGates.clear();
+  activeQubits2QGates.clear();
+  layers.clear();
+  
+  maximumActiveQubits = config.maximumActiveQubits;
+  maximumActiveQubits1QGates = config.maximumActiveQubits1QGates;
+  maximumActiveQubits2QGates = config.maximumActiveQubits2QGates;
+  // TODO: find maximum matching in architecture to prevent overfilling
+  // maximumActiveQubits2QGates = std::max(config.maximumActiveQubits2QGates, 2*architecture->getMaxMatchingSize());
+  
+  if (maximumActiveQubits == 1) {
+    throw QMAPException("maximumActiveQubits cannot be 1, since this prevents placing any 2q gates!");
+  }
+  if (maximumActiveQubits2QGates == 1) {
+    throw QMAPException("maximumActiveQubits2QGates cannot be 1, since this prevents placing any 2q gates!");
+  }
 
   auto qubitsInLayer = std::set<std::uint16_t>{};
+  std::size_t layer = 0;
 
   bool even = true;
   for (auto& gate : qc) {
@@ -153,54 +203,38 @@ void Mapper::createLayers() {
     switch (config.layering) {
     case Layering::IndividualGates:
       // each gate is put in a new layer
-      layers.emplace_back();
-      if (control.has_value()) {
-        layers.back().emplace_back(*control, target, gate.get());
-      } else {
-        layers.back().emplace_back(-1, target, gate.get());
-      }
+      layer = layers.size();
       break;
     case Layering::DisjointQubits:
-      processDisjointQubitLayer(lastLayer, control, target, gate.get());
+      layer = processDisjointQubitLayer(lastLayer, control, target);
       break;
     case Layering::Disjoint2qBlocks:
-      processDisjoint2qBlockLayer(lastLayer, control, target, gate.get());
+      layer = processDisjoint2qBlockLayer(lastLayer, control, target);
+      break;
+    case Layering::DisjointSameOpTypeBlocks:
+      layer = processDisjointSameOpTypeBlockLayer(lastLayer, lastLayerOpType, control, target, gate.get());
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
       if (even) {
-        layers.emplace_back();
-        if (control.has_value()) {
-          layers.back().emplace_back(*control, target, gate.get());
-        } else {
-          layers.back().emplace_back(-1, target, gate.get());
-        }
+        layer = layers.size();
       } else {
-        if (control.has_value()) {
-          layers.back().emplace_back(*control, target, gate.get());
-        } else {
-          layers.back().emplace_back(-1, target, gate.get());
-        }
+        assert(!layers.empty());
+        layer = layers.size()-1;
       }
       even = !even;
       break;
     case Layering::QubitTriangle:
-      if (layers.empty()) {
-        layers.emplace_back();
-      }
-
       if (singleQubit) {
         // single qubit gates can be added in any layer
-        layers.back().emplace_back(-1, target, gate.get());
+        layer = layers.empty() ? 0 : layers.size()-1;
       } else {
         qubitsInLayer.insert(*control);
         qubitsInLayer.insert(target);
-
         if (qubitsInLayer.size() <= 3) {
-          layers.back().emplace_back(*control, target, gate.get());
+          layer = layers.size()-1;
         } else {
-          layers.emplace_back();
-          layers.back().emplace_back(*control, target, gate.get());
+          layer = layers.size();
           qubitsInLayer.clear();
           qubitsInLayer.insert(*control);
           qubitsInLayer.insert(target);
@@ -208,54 +242,114 @@ void Mapper::createLayers() {
       }
       break;
     }
-  }
-  results.input.layers = layers.size();
-
-  // compute qubit gate multiplicities
-  singleQubitMultiplicities = std::vector<SingleQubitMultiplicity>(
-      layers.size(), SingleQubitMultiplicity(architecture->getNqubits(), 0));
-  twoQubitMultiplicities =
-      std::vector<TwoQubitMultiplicity>(layers.size(), TwoQubitMultiplicity{});
-  activeQubits = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-  activeQubits1QGates = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-  activeQubits2QGates = std::vector<std::set<std::uint16_t>>(
-      layers.size(), std::set<std::uint16_t>{});
-
-  for (std::size_t i = 0; i < layers.size(); ++i) {
-    for (const auto& gate : layers[i]) {
-      if (gate.singleQubit()) {
-        activeQubits[i].emplace(gate.target);
-        activeQubits1QGates[i].emplace(gate.target);
-        ++singleQubitMultiplicities[i][gate.target];
+    
+    // check if layer is full, if so step to the next layer
+    bool layerChanged = false;
+    while(layer < layers.size()) {
+      if (maximumActiveQubits > 0 &&
+        maximumActiveQubits < activeQubits.at(layer).size() + 
+        static_cast<std::size_t>(
+          activeQubits.at(layer).find(target) == 
+          activeQubits.at(layer).end()) + 
+        (singleQubit ? 0 : 
+          static_cast<std::size_t>(
+            activeQubits.at(layer).find(*control) == 
+            activeQubits.at(layer).end()
+          )
+        )
+      ) {
+        // if activeQubits.size() would grow above maximumActiveQubits
+        ++layer;
+        layerChanged = true;
+        continue;
+      }
+      if (control.has_value()) {
+        // 2q gate
+        if (maximumActiveQubits2QGates > 0 &&
+          maximumActiveQubits2QGates < activeQubits2QGates.at(layer).size() + 
+          static_cast<std::size_t>(
+            activeQubits2QGates.at(layer).find(target) == 
+            activeQubits2QGates.at(layer).end()) + 
+          static_cast<std::size_t>(
+            activeQubits2QGates.at(layer).find(*control) == 
+            activeQubits2QGates.at(layer).end()
+          )
+        ) {
+          // if activeQubits2QGates.size() would grow above 
+          // maximumActiveQubits2QGates
+          ++layer;
+          layerChanged = true;
+          continue;
+        }
       } else {
-        activeQubits[i].emplace(gate.control);
-        activeQubits[i].emplace(gate.target);
-        activeQubits2QGates[i].emplace(gate.control);
-        activeQubits2QGates[i].emplace(gate.target);
-        if (gate.control >= gate.target) {
-          const auto edge =
-              std::pair(gate.target, static_cast<std::uint16_t>(gate.control));
-          if (twoQubitMultiplicities[i].find(edge) ==
-              twoQubitMultiplicities[i].end()) {
-            twoQubitMultiplicities[i][edge] = {0, 1};
-          } else {
-            twoQubitMultiplicities[i][edge].second++;
-          }
-        } else {
-          const auto edge =
-              std::pair(static_cast<std::uint16_t>(gate.control), gate.target);
-          if (twoQubitMultiplicities[i].find(edge) ==
-              twoQubitMultiplicities[i].end()) {
-            twoQubitMultiplicities[i][edge] = {1, 0};
-          } else {
-            twoQubitMultiplicities[i][edge].first++;
-          }
+        // 1q gate
+        if (maximumActiveQubits1QGates > 0 &&
+          maximumActiveQubits1QGates < activeQubits1QGates.at(layer).size() + 
+          static_cast<std::size_t>(
+            activeQubits1QGates.at(layer).find(target) == 
+            activeQubits1QGates.at(layer).end())
+        ) {
+          // if activeQubits1QGates.size() would grow above 
+          // maximumActiveQubits1QGates
+          ++layer;
+          layerChanged = true;
+          continue;
+        }
+      }
+      break;
+    }
+    
+    if (layerChanged) {
+      even = true;
+      lastLayer.at(target)   = layer;
+      lastLayerOpType.at(target) = gate->getType();
+      if (!singleQubit) {
+        lastLayer.at(*control) = layer;
+        lastLayerOpType.at(*control) = gate->getType();
+        qubitsInLayer.clear();
+        qubitsInLayer.insert(*control);
+        qubitsInLayer.insert(target);
+      }
+    }
+    
+    while(layers.size() <= layer) {
+      singleQubitMultiplicities.emplace_back(architecture->getNqubits(), 0);
+      twoQubitMultiplicities.emplace_back();
+      activeQubits.emplace_back();
+      activeQubits1QGates.emplace_back();
+      activeQubits2QGates.emplace_back();
+      layers.emplace_back();
+    }
+    
+    if (singleQubit) {
+      layers.at(layer).emplace_back(-1, target, gate.get());
+      activeQubits.at(layer).emplace(target);
+      activeQubits1QGates.at(layer).emplace(target);
+      ++singleQubitMultiplicities.at(layer).at(target);
+    } else {
+      layers.at(layer).emplace_back(*control, target, gate.get());
+      activeQubits.at(layer).emplace(*control);
+      activeQubits.at(layer).emplace(target);
+      activeQubits2QGates.at(layer).emplace(*control);
+      activeQubits2QGates.at(layer).emplace(target);
+      if (*control >= target) {
+        auto insertResult = twoQubitMultiplicities.at(layer).insert({{target, *control}, {0, 1}});
+        if (insertResult.second) {
+          // if there is already an entry for this edge, the multiplicity in 
+          // the backward direction is increased
+          insertResult.first->second.second++;
+        }
+      } else {
+        auto insertResult = twoQubitMultiplicities.at(layer).insert({{*control, target}, {1, 0}});
+        if (insertResult.second) {
+          // if there is already an entry for this edge, the multiplicity in
+          // the forward direction is increased
+          insertResult.first->second.first++;
         }
       }
     }
   }
+  results.input.layers = layers.size();
 }
 
 bool Mapper::isLayerSplittable(std::size_t index) {
