@@ -50,12 +50,12 @@ public:
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
     /**
-     * containing the currently intended target location (i.e. the physical 
+     * containing the currently intended target location (i.e. the physical
      * qubit) of each logical qubit.
      * `targetLocations[logical_qubit] = target_physical_qubit`
      *
      * multiple logical qubits can have the same target location
-     * 
+     *
      * only tracked by some heuristics (see `tracksTargetLocations()`)
      */
     std::array<std::int16_t, MAX_DEVICE_QUBITS> targetLocations{};
@@ -192,7 +192,7 @@ protected:
 
   /**
    * @brief maps any yet unmapped qubits, which are acted on in a given layer,
-   * to a physical qubit using a greedy heuristic strategy minimizing the 
+   * to a physical qubit using a greedy heuristic strategy minimizing the
    * distance between 2Q gates in the current layer.
    *
    * @param layer the layer for which to map the qubits
@@ -200,9 +200,9 @@ protected:
   virtual void mapUnmappedGates(std::size_t layer);
 
   /**
-   * @brief maps any yet unmapped logical qubits, which are acted on in a given 
-   * layer, greedily to the one free physical qubit, that results in the lowest 
-   * lookahead penalty (using the same lookahead settings as for the routing 
+   * @brief maps any yet unmapped logical qubits, which are acted on in a given
+   * layer, greedily to the one free physical qubit, that results in the lowest
+   * lookahead penalty (using the same lookahead settings as for the routing
    * search)
    *
    * @param layer the layer for which to map the qubits
@@ -410,7 +410,7 @@ protected:
    * layers (depreciated by a constant factor growing with each layer) and
    * saves it in the node as `Node::lookaheadPenalty`
    *
-   * @param nextLayer index of the layer after the current circuit layer, i.e. 
+   * @param nextLayer index of the layer after the current circuit layer, i.e.
    * the first layer considered in the lookahead
    * @param node search node for which to calculate lookahead penalty
    */

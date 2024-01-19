@@ -7,24 +7,24 @@
 
 #include <iostream>
 
-/// 
-/// Static: 
-/// Dynamic: 
+///
+/// Static:
+/// Dynamic:
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
-enum class InitialLayout { 
+enum class InitialLayout {
   /** q_i -> Q_i */
-  Identity, 
+  Identity,
   /** first layer is mapped q_c -> Q_c and q_t -> Q_t */
-  Static, 
-  /** Layout is generated on demand upon encountering a specific gate using a 
-   * bespoke greedy heuristic strategy minimizing the distance between 2Q gates 
+  Static,
+  /** Layout is generated on demand upon encountering a specific gate using a
+   * bespoke greedy heuristic strategy minimizing the distance between 2Q gates
    * in the current layer */
-  Dynamic, 
-  /** Layout is generated on demand upon encountering a specific gate mapping 
-   * each logical qubit greedily to the one free physical qubit, that results 
-   * in the lowest lookahead penalty (using the same lookahead settings as for 
+  Dynamic,
+  /** Layout is generated on demand upon encountering a specific gate mapping
+   * each logical qubit greedily to the one free physical qubit, that results
+   * in the lowest lookahead penalty (using the same lookahead settings as for
    * the routing search)*/
-  DynamicGreedyLookahead 
+  DynamicGreedyLookahead
 };
 
 [[maybe_unused]] static inline std::string

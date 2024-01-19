@@ -114,7 +114,7 @@ protected:
    * a 2Q-gate in the layer
    */
   std::vector<std::set<std::uint16_t>> activeQubits2QGates{};
-  
+
   /**
    * @brief upper limit for activeQubits in each layer; 0 is equal to no limit
    */
@@ -202,7 +202,7 @@ protected:
    * @param lastLayer the array storing the last layer each qubit is used in
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
-   * 
+   *
    * @return the index of the first layer the gate can be added to
    */
   std::size_t processDisjointQubitLayer(
@@ -217,16 +217,16 @@ protected:
    * @param lastLayer the array storing the last layer each qubit is used in
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
-   * 
+   *
    * @return the index of the first layer the gate can be added to
    */
   std::size_t processDisjoint2qBlockLayer(
       std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
       const std::optional<std::uint16_t>& control, std::uint16_t target);
-  
+
   /**
    * Equivalent to processDisjoint2qBlockLayer, but only collecting blocks of
-   * the same gate type (e.g. only CNOTs or only X gates), i.e. different gate 
+   * the same gate type (e.g. only CNOTs or only X gates), i.e. different gate
    * types on the same qubits are separated to different layers
    *
    * @param lastLayer the array storing the last layer each qubit is used in
@@ -234,7 +234,7 @@ protected:
    * @param control the (potential) control qubit of the gate
    * @param target the target qubit of the gate
    * @param gate the operation of the gate to be added to the circuit
-   * 
+   *
    * @return the index of the first layer the gate can be added to
    */
   std::size_t processDisjointSameOpTypeBlockLayer(

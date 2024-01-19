@@ -146,8 +146,11 @@ void HeuristicMapper::checkParameters() {
                         toString(config.lookaheadHeuristic) +
                         " requires heuristic that tracks target locations!");
   }
-  if (config.initialLayout == InitialLayout::DynamicGreedyLookahead && config.lookaheadHeuristic == LookaheadHeuristic::None) {
-    throw QMAPException("Initial layout strategy " + toString(config.initialLayout) + " requires lookahead heuristic!");
+  if (config.initialLayout == InitialLayout::DynamicGreedyLookahead &&
+      config.lookaheadHeuristic == LookaheadHeuristic::None) {
+    throw QMAPException("Initial layout strategy " +
+                        toString(config.initialLayout) +
+                        " requires lookahead heuristic!");
   }
 }
 
@@ -306,9 +309,10 @@ void HeuristicMapper::mapUnmappedGatesLookahead(std::size_t layer) {
   if (fidelityAwareHeur) {
     for (const auto& q : activeQubits1QGates.at(layer)) {
       if (locations.at(q) == DEFAULT_POSITION) {
-        double bestLookaheadPenalty = std::numeric_limits<double>::max();
-        std::int16_t bestPhysQbit   = DEFAULT_POSITION;
-        for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits(); ++physQbit) {
+        double       bestLookaheadPenalty = std::numeric_limits<double>::max();
+        std::int16_t bestPhysQbit         = DEFAULT_POSITION;
+        for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits();
+             ++physQbit) {
           if (qubits.at(physQbit) != DEFAULT_POSITION) {
             continue;
           }
@@ -317,20 +321,25 @@ void HeuristicMapper::mapUnmappedGatesLookahead(std::size_t layer) {
           updateLookaheadPenalty(layer, node);
           if (node.lookaheadPenalty < bestLookaheadPenalty) {
             bestLookaheadPenalty = node.lookaheadPenalty;
-            bestPhysQbit = static_cast<std::int16_t>(physQbit);
+            bestPhysQbit         = static_cast<std::int16_t>(physQbit);
           }
           node.locations.at(q)     = DEFAULT_POSITION;
           node.qubits.at(physQbit) = DEFAULT_POSITION;
         }
-        // if there are enough qubits in the architecture (which should be 
+        // if there are enough qubits in the architecture (which should be
         // checked in advance), there should always be a free qubit
         assert(bestPhysQbit != DEFAULT_POSITION);
         node.locations.at(q) = bestPhysQbit;
-        node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q);
+        node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+            static_cast<std::int16_t>(q);
         locations.at(q) = bestPhysQbit;
-        qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q);
-        qc::QuantumComputation::findAndSWAP(q, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
-        qc::QuantumComputation::findAndSWAP(q, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.outputPermutation);
+        qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+            static_cast<std::int16_t>(q);
+        qc::QuantumComputation::findAndSWAP(
+            q, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
+        qc::QuantumComputation::findAndSWAP(
+            q, static_cast<qc::Qubit>(bestPhysQbit),
+            qcMapped.outputPermutation);
       }
     }
   }
@@ -342,26 +351,28 @@ void HeuristicMapper::mapUnmappedGatesLookahead(std::size_t layer) {
     const auto q2Location = locations.at(q2);
 
     if (q1Location == DEFAULT_POSITION && q2Location == DEFAULT_POSITION) {
-      double bestLookaheadPenalty = std::numeric_limits<double>::max();
-      std::int16_t bestPhysQ1     = DEFAULT_POSITION;
-      std::int16_t bestPhysQ2     = DEFAULT_POSITION;
-      for (std::uint16_t physQ1 = 0; physQ1 < architecture->getNqubits(); ++physQ1) {
+      double       bestLookaheadPenalty = std::numeric_limits<double>::max();
+      std::int16_t bestPhysQ1           = DEFAULT_POSITION;
+      std::int16_t bestPhysQ2           = DEFAULT_POSITION;
+      for (std::uint16_t physQ1 = 0; physQ1 < architecture->getNqubits();
+           ++physQ1) {
         if (qubits.at(physQ1) != DEFAULT_POSITION) {
           continue;
         }
-        for (std::uint16_t physQ2 = 0; physQ2 < architecture->getNqubits(); ++physQ2) {
+        for (std::uint16_t physQ2 = 0; physQ2 < architecture->getNqubits();
+             ++physQ2) {
           if (physQ1 == physQ2 || qubits.at(physQ2) != DEFAULT_POSITION) {
             continue;
           }
-          node.locations.at(q1)     = static_cast<std::int16_t>(physQ1);
+          node.locations.at(q1)  = static_cast<std::int16_t>(physQ1);
           node.qubits.at(physQ1) = static_cast<std::int16_t>(q1);
-          node.locations.at(q2)     = static_cast<std::int16_t>(physQ2);
+          node.locations.at(q2)  = static_cast<std::int16_t>(physQ2);
           node.qubits.at(physQ2) = static_cast<std::int16_t>(q2);
           updateLookaheadPenalty(layer, node);
           if (node.lookaheadPenalty < bestLookaheadPenalty) {
             bestLookaheadPenalty = node.lookaheadPenalty;
-            bestPhysQ1 = static_cast<std::int16_t>(physQ1);
-            bestPhysQ2 = static_cast<std::int16_t>(physQ2);
+            bestPhysQ1           = static_cast<std::int16_t>(physQ1);
+            bestPhysQ2           = static_cast<std::int16_t>(physQ2);
           }
           node.locations.at(q1)  = DEFAULT_POSITION;
           node.qubits.at(physQ1) = DEFAULT_POSITION;
@@ -369,72 +380,91 @@ void HeuristicMapper::mapUnmappedGatesLookahead(std::size_t layer) {
           node.qubits.at(physQ2) = DEFAULT_POSITION;
         }
       }
-      // if there are enough qubits in the architecture (which should be 
+      // if there are enough qubits in the architecture (which should be
       // checked in advance), there should always be a free qubit
       assert(bestPhysQ1 != DEFAULT_POSITION && bestPhysQ2 != DEFAULT_POSITION);
       node.locations.at(q1) = bestPhysQ1;
       node.locations.at(q2) = bestPhysQ2;
-      node.qubits.at(static_cast<std::uint16_t>(bestPhysQ1))  = static_cast<std::int16_t>(q1);
-      node.qubits.at(static_cast<std::uint16_t>(bestPhysQ2)) = static_cast<std::int16_t>(q2);
+      node.qubits.at(static_cast<std::uint16_t>(bestPhysQ1)) =
+          static_cast<std::int16_t>(q1);
+      node.qubits.at(static_cast<std::uint16_t>(bestPhysQ2)) =
+          static_cast<std::int16_t>(q2);
       locations.at(q1) = bestPhysQ1;
       locations.at(q2) = bestPhysQ2;
-      qubits.at(static_cast<std::uint16_t>(bestPhysQ1))  = static_cast<std::int16_t>(q1);
-      qubits.at(static_cast<std::uint16_t>(bestPhysQ2)) = static_cast<std::int16_t>(q2);
-      qc::QuantumComputation::findAndSWAP(q1, static_cast<qc::Qubit>(bestPhysQ1), qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(q2, static_cast<qc::Qubit>(bestPhysQ2), qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(q1, static_cast<qc::Qubit>(bestPhysQ1), qcMapped.outputPermutation);
-      qc::QuantumComputation::findAndSWAP(q2, static_cast<qc::Qubit>(bestPhysQ2), qcMapped.outputPermutation);
+      qubits.at(static_cast<std::uint16_t>(bestPhysQ1)) =
+          static_cast<std::int16_t>(q1);
+      qubits.at(static_cast<std::uint16_t>(bestPhysQ2)) =
+          static_cast<std::int16_t>(q2);
+      qc::QuantumComputation::findAndSWAP(
+          q1, static_cast<qc::Qubit>(bestPhysQ1), qcMapped.initialLayout);
+      qc::QuantumComputation::findAndSWAP(
+          q2, static_cast<qc::Qubit>(bestPhysQ2), qcMapped.initialLayout);
+      qc::QuantumComputation::findAndSWAP(
+          q1, static_cast<qc::Qubit>(bestPhysQ1), qcMapped.outputPermutation);
+      qc::QuantumComputation::findAndSWAP(
+          q2, static_cast<qc::Qubit>(bestPhysQ2), qcMapped.outputPermutation);
     } else if (q1Location == DEFAULT_POSITION) {
-      double bestLookaheadPenalty = std::numeric_limits<double>::max();
-      std::int16_t bestPhysQbit   = DEFAULT_POSITION;
-      for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits(); ++physQbit) {
+      double       bestLookaheadPenalty = std::numeric_limits<double>::max();
+      std::int16_t bestPhysQbit         = DEFAULT_POSITION;
+      for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits();
+           ++physQbit) {
         if (qubits.at(physQbit) != DEFAULT_POSITION) {
           continue;
         }
-        node.locations.at(q1)     = static_cast<std::int16_t>(physQbit);
+        node.locations.at(q1)    = static_cast<std::int16_t>(physQbit);
         node.qubits.at(physQbit) = static_cast<std::int16_t>(q1);
         updateLookaheadPenalty(layer, node);
         if (node.lookaheadPenalty < bestLookaheadPenalty) {
           bestLookaheadPenalty = node.lookaheadPenalty;
-          bestPhysQbit = static_cast<std::int16_t>(physQbit);
+          bestPhysQbit         = static_cast<std::int16_t>(physQbit);
         }
-        node.locations.at(q1)     = DEFAULT_POSITION;
+        node.locations.at(q1)    = DEFAULT_POSITION;
         node.qubits.at(physQbit) = DEFAULT_POSITION;
       }
-      // if there are enough qubits in the architecture (which should be 
+      // if there are enough qubits in the architecture (which should be
       // checked in advance), there should always be a free qubit
       assert(bestPhysQbit != DEFAULT_POSITION);
       node.locations.at(q1) = bestPhysQbit;
-      node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q1);
+      node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+          static_cast<std::int16_t>(q1);
       locations.at(q1) = bestPhysQbit;
-      qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q1);
-      qc::QuantumComputation::findAndSWAP(q1, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(q1, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.outputPermutation);
-    } else if (q2Location == DEFAULT_POSITION) {double bestLookaheadPenalty = std::numeric_limits<double>::max();
-      std::int16_t bestPhysQbit   = DEFAULT_POSITION;
-      for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits(); ++physQbit) {
+      qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+          static_cast<std::int16_t>(q1);
+      qc::QuantumComputation::findAndSWAP(
+          q1, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
+      qc::QuantumComputation::findAndSWAP(
+          q1, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.outputPermutation);
+    } else if (q2Location == DEFAULT_POSITION) {
+      double       bestLookaheadPenalty = std::numeric_limits<double>::max();
+      std::int16_t bestPhysQbit         = DEFAULT_POSITION;
+      for (std::uint16_t physQbit = 0; physQbit < architecture->getNqubits();
+           ++physQbit) {
         if (qubits.at(physQbit) != DEFAULT_POSITION) {
           continue;
         }
-        node.locations.at(q2)     = static_cast<std::int16_t>(physQbit);
+        node.locations.at(q2)    = static_cast<std::int16_t>(physQbit);
         node.qubits.at(physQbit) = static_cast<std::int16_t>(q2);
         updateLookaheadPenalty(layer, node);
         if (node.lookaheadPenalty < bestLookaheadPenalty) {
           bestLookaheadPenalty = node.lookaheadPenalty;
-          bestPhysQbit = static_cast<std::int16_t>(physQbit);
+          bestPhysQbit         = static_cast<std::int16_t>(physQbit);
         }
-        node.locations.at(q2)     = DEFAULT_POSITION;
+        node.locations.at(q2)    = DEFAULT_POSITION;
         node.qubits.at(physQbit) = DEFAULT_POSITION;
       }
-      // if there are enough qubits in the architecture (which should be 
+      // if there are enough qubits in the architecture (which should be
       // checked in advance), there should always be a free qubit
       assert(bestPhysQbit != DEFAULT_POSITION);
       node.locations.at(q2) = bestPhysQbit;
-      node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q2);
+      node.qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+          static_cast<std::int16_t>(q2);
       locations.at(q2) = bestPhysQbit;
-      qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) = static_cast<std::int16_t>(q2);
-      qc::QuantumComputation::findAndSWAP(q2, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
-      qc::QuantumComputation::findAndSWAP(q2, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.outputPermutation);
+      qubits.at(static_cast<std::uint16_t>(bestPhysQbit)) =
+          static_cast<std::int16_t>(q2);
+      qc::QuantumComputation::findAndSWAP(
+          q2, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.initialLayout);
+      qc::QuantumComputation::findAndSWAP(
+          q2, static_cast<qc::Qubit>(bestPhysQbit), qcMapped.outputPermutation);
     }
   }
 }
@@ -699,7 +729,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   Node node(nextNodeId++);
   Node bestDoneNode(0);
   bool validMapping = false;
-  
+
   if (config.initialLayout == InitialLayout::DynamicGreedyLookahead) {
     mapUnmappedGatesLookahead(layer);
   } else {
@@ -1574,10 +1604,12 @@ double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
     if (singleQubitGateMultiplicity.at(logQbit) == 0) {
       continue;
     }
-    double       qbitSavings  = 0;
-    const auto currentLocaction = static_cast<std::uint16_t>(node.locations.at(logQbit));
-    auto targetLocation = currentLocaction;
-    const double currFidelity = architecture->getSingleQubitFidelityCost(currentLocaction);
+    double     qbitSavings = 0;
+    const auto currentLocaction =
+        static_cast<std::uint16_t>(node.locations.at(logQbit));
+    auto         targetLocation = currentLocaction;
+    const double currFidelity =
+        architecture->getSingleQubitFidelityCost(currentLocaction);
     for (std::uint16_t physQbit = 0U; physQbit < architecture->getNqubits();
          ++physQbit) {
       if (architecture->getSingleQubitFidelityCost(physQbit) >= currFidelity) {
@@ -1591,11 +1623,12 @@ double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
               static_cast<std::uint16_t>(node.locations.at(logQbit)), physQbit,
               consideredQubits.size() - 1);
       if (curSavings > qbitSavings) {
-        qbitSavings   = curSavings;
+        qbitSavings    = curSavings;
         targetLocation = physQbit;
       }
     }
-    node.targetLocations.at(logQbit) = static_cast<std::int16_t>(targetLocation);
+    node.targetLocations.at(logQbit) =
+        static_cast<std::int16_t>(targetLocation);
     savingsPotential += qbitSavings;
   }
 
@@ -1614,31 +1647,35 @@ double HeuristicMapper::heuristicFidelityBestLocation(std::size_t layer,
     // pair and take the cost of moving it there via swaps plus the
     // fidelity cost  of executing all their shared gates on that edge
     // as the qubit pairs cost
-    double swapCost = std::numeric_limits<double>::max();
-    const auto currentLocation1 = static_cast<std::uint16_t>(node.locations.at(q1));
-    const auto currentLocation2 = static_cast<std::uint16_t>(node.locations.at(q2));
+    double     swapCost = std::numeric_limits<double>::max();
+    const auto currentLocation1 =
+        static_cast<std::uint16_t>(node.locations.at(q1));
+    const auto currentLocation2 =
+        static_cast<std::uint16_t>(node.locations.at(q2));
     auto targetLocation1 = currentLocation1;
     auto targetLocation2 = currentLocation2;
     for (const auto& [physQ1, physQ2] : architecture->getCouplingMap()) {
       const auto currSwapCost = std::min(
-        forwardMult * architecture->getTwoQubitFidelityCost(physQ1, physQ2) +
-        reverseMult * architecture->getTwoQubitFidelityCost(physQ2, physQ1) +
-        architecture->fidelityDistance(
-            static_cast<std::uint16_t>(node.locations.at(q1)), physQ1,
-            consideredQubits.size() - 1) +
-        architecture->fidelityDistance(
-            static_cast<std::uint16_t>(node.locations.at(q2)), physQ2,
-            consideredQubits.size() - 1),
-        forwardMult * architecture->getTwoQubitFidelityCost(physQ2, physQ1) +
-        reverseMult * architecture->getTwoQubitFidelityCost(physQ1, physQ2) +
-        architecture->fidelityDistance(
-            static_cast<std::uint16_t>(node.locations.at(q2)), physQ1,
-            consideredQubits.size() - 1) +
-        architecture->fidelityDistance(
-            static_cast<std::uint16_t>(node.locations.at(q1)), physQ2,
-            consideredQubits.size() - 1));
+          forwardMult * architecture->getTwoQubitFidelityCost(physQ1, physQ2) +
+              reverseMult *
+                  architecture->getTwoQubitFidelityCost(physQ2, physQ1) +
+              architecture->fidelityDistance(
+                  static_cast<std::uint16_t>(node.locations.at(q1)), physQ1,
+                  consideredQubits.size() - 1) +
+              architecture->fidelityDistance(
+                  static_cast<std::uint16_t>(node.locations.at(q2)), physQ2,
+                  consideredQubits.size() - 1),
+          forwardMult * architecture->getTwoQubitFidelityCost(physQ2, physQ1) +
+              reverseMult *
+                  architecture->getTwoQubitFidelityCost(physQ1, physQ2) +
+              architecture->fidelityDistance(
+                  static_cast<std::uint16_t>(node.locations.at(q2)), physQ1,
+                  consideredQubits.size() - 1) +
+              architecture->fidelityDistance(
+                  static_cast<std::uint16_t>(node.locations.at(q1)), physQ2,
+                  consideredQubits.size() - 1));
       if (swapCost > currSwapCost) {
-        swapCost = currSwapCost;
+        swapCost        = currSwapCost;
         targetLocation1 = physQ1;
         targetLocation2 = physQ2;
       }
@@ -1822,12 +1859,14 @@ HeuristicMapper::lookaheadGateCountSumDistance(const std::size_t      layer,
   return penalty;
 }
 
-double HeuristicMapper::lookaheadFidelityCurrentLocation(const std::size_t layer, HeuristicMapper::Node& node) {
+double
+HeuristicMapper::lookaheadFidelityCurrentLocation(const std::size_t      layer,
+                                                  HeuristicMapper::Node& node) {
   const auto& consideredQubits            = getConsideredQubits(layer);
   const auto& activeQubits1Q              = activeQubits1QGates.at(layer);
   const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
   const auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
-  
+
   double penalty = 0.;
   for (const auto& logQbit : activeQubits1Q) {
     if (singleQubitGateMultiplicity.at(logQbit) == 0) {
@@ -1837,7 +1876,9 @@ double HeuristicMapper::lookaheadFidelityCurrentLocation(const std::size_t layer
     if (physQbit == DEFAULT_POSITION) {
       continue;
     }
-    penalty += singleQubitGateMultiplicity.at(logQbit) * architecture->getSingleQubitFidelityCost(static_cast<std::uint16_t>(physQbit));
+    penalty += singleQubitGateMultiplicity.at(logQbit) *
+               architecture->getSingleQubitFidelityCost(
+                   static_cast<std::uint16_t>(physQbit));
   }
 
   for (const auto& [edge, mult] : twoQubitGateMultiplicity) {
@@ -1845,16 +1886,17 @@ double HeuristicMapper::lookaheadFidelityCurrentLocation(const std::size_t layer
 
     const auto physQ1 = node.locations.at(q1);
     const auto physQ2 = node.locations.at(q2);
-    
+
     if (physQ1 == DEFAULT_POSITION && physQ2 == DEFAULT_POSITION) {
       // no penalty
     } else if (physQ1 == DEFAULT_POSITION) {
       double min = std::numeric_limits<double>::max();
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
-          // 1 swap could potentially be saved by sharing with any other 
+          // 1 swap could potentially be saved by sharing with any other
           // considered qubit + 1 edge is left to execute the gates on
-          min = std::min(min, architecture->fidelityDistance(j, physQ2, consideredQubits.size()));
+          min = std::min(min, architecture->fidelityDistance(
+                                  j, physQ2, consideredQubits.size()));
         }
       }
       penalty += min;
@@ -1862,26 +1904,29 @@ double HeuristicMapper::lookaheadFidelityCurrentLocation(const std::size_t layer
       double min = std::numeric_limits<double>::max();
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
-          // 1 swap could potentially be saved by sharing with any other 
+          // 1 swap could potentially be saved by sharing with any other
           // considered qubit + 1 edge is left to execute the gates on
-          min = std::min(min, architecture->fidelityDistance(j, physQ1, consideredQubits.size()));
+          min = std::min(min, architecture->fidelityDistance(
+                                  j, physQ1, consideredQubits.size()));
         }
       }
       penalty += min;
     } else {
-      penalty += architecture->fidelityDistance(physQ1, physQ2, consideredQubits.size());
+      penalty += architecture->fidelityDistance(physQ1, physQ2,
+                                                consideredQubits.size());
     }
   }
 
   return penalty;
 }
 
-double HeuristicMapper::lookaheadFidelityCurrentTargetLocation(const std::size_t layer, HeuristicMapper::Node& node) {
+double HeuristicMapper::lookaheadFidelityCurrentTargetLocation(
+    const std::size_t layer, HeuristicMapper::Node& node) {
   const auto& consideredQubits            = getConsideredQubits(layer);
   const auto& activeQubits1Q              = activeQubits1QGates.at(layer);
   const auto& singleQubitGateMultiplicity = singleQubitMultiplicities.at(layer);
   const auto& twoQubitGateMultiplicity    = twoQubitMultiplicities.at(layer);
-  
+
   double penalty = 0.;
   for (const auto& logQbit : activeQubits1Q) {
     if (singleQubitGateMultiplicity.at(logQbit) == 0) {
@@ -1894,7 +1939,9 @@ double HeuristicMapper::lookaheadFidelityCurrentTargetLocation(const std::size_t
     if (physQbit == DEFAULT_POSITION) {
       continue;
     }
-    penalty += singleQubitGateMultiplicity.at(logQbit) * architecture->getSingleQubitFidelityCost(static_cast<std::uint16_t>(physQbit));
+    penalty += singleQubitGateMultiplicity.at(logQbit) *
+               architecture->getSingleQubitFidelityCost(
+                   static_cast<std::uint16_t>(physQbit));
   }
 
   for (const auto& [edge, mult] : twoQubitGateMultiplicity) {
@@ -1908,16 +1955,17 @@ double HeuristicMapper::lookaheadFidelityCurrentTargetLocation(const std::size_t
     if (physQ2 == DEFAULT_POSITION) {
       physQ2 = node.locations.at(q2);
     }
-    
+
     if (physQ1 == DEFAULT_POSITION && physQ2 == DEFAULT_POSITION) {
       // no penalty
     } else if (physQ1 == DEFAULT_POSITION) {
       double min = std::numeric_limits<double>::max();
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
-          // 1 swap could potentially be saved by sharing with any other 
+          // 1 swap could potentially be saved by sharing with any other
           // considered qubit + 1 edge is left to execute the gates on
-          min = std::min(min, architecture->fidelityDistance(j, physQ2, consideredQubits.size()));
+          min = std::min(min, architecture->fidelityDistance(
+                                  j, physQ2, consideredQubits.size()));
         }
       }
       penalty += min;
@@ -1925,14 +1973,16 @@ double HeuristicMapper::lookaheadFidelityCurrentTargetLocation(const std::size_t
       double min = std::numeric_limits<double>::max();
       for (std::uint16_t j = 0; j < architecture->getNqubits(); ++j) {
         if (node.qubits.at(j) == DEFAULT_POSITION) {
-          // 1 swap could potentially be saved by sharing with any other 
+          // 1 swap could potentially be saved by sharing with any other
           // considered qubit + 1 edge is left to execute the gates on
-          min = std::min(min, architecture->fidelityDistance(j, physQ1, consideredQubits.size()));
+          min = std::min(min, architecture->fidelityDistance(
+                                  j, physQ1, consideredQubits.size()));
         }
       }
       penalty += min;
     } else {
-      penalty += architecture->fidelityDistance(physQ1, physQ2, consideredQubits.size());
+      penalty += architecture->fidelityDistance(physQ1, physQ2,
+                                                consideredQubits.size());
     }
   }
 

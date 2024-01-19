@@ -97,10 +97,10 @@ std::size_t Mapper::processDisjoint2qBlockLayer(
 }
 
 std::size_t Mapper::processDisjointSameOpTypeBlockLayer(
-      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-      std::array<qc::OpType, MAX_DEVICE_QUBITS>& lastLayerOpType,
-      const std::optional<std::uint16_t>& control, std::uint16_t target,
-      qc::Operation* gate) {
+    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    std::array<qc::OpType, MAX_DEVICE_QUBITS>&                 lastLayerOpType,
+    const std::optional<std::uint16_t>& control, std::uint16_t target,
+    qc::Operation* gate) {
   std::size_t layer = 0;
   if (!control.has_value()) {
     if (lastLayer.at(target).has_value()) {
@@ -121,8 +121,8 @@ std::size_t Mapper::processDisjointSameOpTypeBlockLayer(
     } else {
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
 
-      if (*lastLayer.at(*control) == *lastLayer.at(target) && 
-          lastLayerOpType.at(*control) == gate->getType() && 
+      if (*lastLayer.at(*control) == *lastLayer.at(target) &&
+          lastLayerOpType.at(*control) == gate->getType() &&
           lastLayerOpType.at(target) == gate->getType()) {
         for (auto& g : layers.at(layer - 1)) {
           if ((g.control == *control && g.target == target) ||
@@ -144,31 +144,34 @@ std::size_t Mapper::processDisjointSameOpTypeBlockLayer(
 void Mapper::createLayers() {
   const auto& config = results.config;
   std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS> lastLayer{};
-  std::array<qc::OpType, MAX_DEVICE_QUBITS> lastLayerOpType{};
+  std::array<qc::OpType, MAX_DEVICE_QUBITS>                 lastLayerOpType{};
   lastLayerOpType.fill(qc::OpType::None);
-  
+
   singleQubitMultiplicities.clear();
   twoQubitMultiplicities.clear();
   activeQubits.clear();
   activeQubits1QGates.clear();
   activeQubits2QGates.clear();
   layers.clear();
-  
-  maximumActiveQubits = config.maximumActiveQubits;
+
+  maximumActiveQubits        = config.maximumActiveQubits;
   maximumActiveQubits1QGates = config.maximumActiveQubits1QGates;
   maximumActiveQubits2QGates = config.maximumActiveQubits2QGates;
   // TODO: find maximum matching in architecture to prevent overfilling
-  // maximumActiveQubits2QGates = std::max(config.maximumActiveQubits2QGates, 2*architecture->getMaxMatchingSize());
-  
+  // maximumActiveQubits2QGates = std::max(config.maximumActiveQubits2QGates,
+  // 2*architecture->getMaxMatchingSize());
+
   if (maximumActiveQubits == 1) {
-    throw QMAPException("maximumActiveQubits cannot be 1, since this prevents placing any 2q gates!");
+    throw QMAPException("maximumActiveQubits cannot be 1, since this prevents "
+                        "placing any 2q gates!");
   }
   if (maximumActiveQubits2QGates == 1) {
-    throw QMAPException("maximumActiveQubits2QGates cannot be 1, since this prevents placing any 2q gates!");
+    throw QMAPException("maximumActiveQubits2QGates cannot be 1, since this "
+                        "prevents placing any 2q gates!");
   }
 
-  auto qubitsInLayer = std::set<std::uint16_t>{};
-  std::size_t layer = 0;
+  auto        qubitsInLayer = std::set<std::uint16_t>{};
+  std::size_t layer         = 0;
 
   bool even = true;
   for (auto& gate : qc) {
@@ -212,7 +215,8 @@ void Mapper::createLayers() {
       layer = processDisjoint2qBlockLayer(lastLayer, control, target);
       break;
     case Layering::DisjointSameOpTypeBlocks:
-      layer = processDisjointSameOpTypeBlockLayer(lastLayer, lastLayerOpType, control, target, gate.get());
+      layer = processDisjointSameOpTypeBlockLayer(lastLayer, lastLayerOpType,
+                                                  control, target, gate.get());
       break;
     case Layering::OddGates:
       // every other gate is put in a new layer
@@ -220,19 +224,19 @@ void Mapper::createLayers() {
         layer = layers.size();
       } else {
         assert(!layers.empty());
-        layer = layers.size()-1;
+        layer = layers.size() - 1;
       }
       even = !even;
       break;
     case Layering::QubitTriangle:
       if (singleQubit) {
         // single qubit gates can be added in any layer
-        layer = layers.empty() ? 0 : layers.size()-1;
+        layer = layers.empty() ? 0 : layers.size() - 1;
       } else {
         qubitsInLayer.insert(*control);
         qubitsInLayer.insert(target);
         if (qubitsInLayer.size() <= 3) {
-          layer = layers.size()-1;
+          layer = layers.size() - 1;
         } else {
           layer = layers.size();
           qubitsInLayer.clear();
@@ -242,22 +246,20 @@ void Mapper::createLayers() {
       }
       break;
     }
-    
+
     // check if layer is full, if so step to the next layer
     bool layerChanged = false;
-    while(layer < layers.size()) {
+    while (layer < layers.size()) {
       if (maximumActiveQubits > 0 &&
-        maximumActiveQubits < activeQubits.at(layer).size() + 
-        static_cast<std::size_t>(
-          activeQubits.at(layer).find(target) == 
-          activeQubits.at(layer).end()) + 
-        (singleQubit ? 0 : 
-          static_cast<std::size_t>(
-            activeQubits.at(layer).find(*control) == 
-            activeQubits.at(layer).end()
-          )
-        )
-      ) {
+          maximumActiveQubits <
+              activeQubits.at(layer).size() +
+                  static_cast<std::size_t>(
+                      activeQubits.at(layer).find(target) ==
+                      activeQubits.at(layer).end()) +
+                  (singleQubit ? 0
+                               : static_cast<std::size_t>(
+                                     activeQubits.at(layer).find(*control) ==
+                                     activeQubits.at(layer).end()))) {
         // if activeQubits.size() would grow above maximumActiveQubits
         ++layer;
         layerChanged = true;
@@ -266,16 +268,15 @@ void Mapper::createLayers() {
       if (control.has_value()) {
         // 2q gate
         if (maximumActiveQubits2QGates > 0 &&
-          maximumActiveQubits2QGates < activeQubits2QGates.at(layer).size() + 
-          static_cast<std::size_t>(
-            activeQubits2QGates.at(layer).find(target) == 
-            activeQubits2QGates.at(layer).end()) + 
-          static_cast<std::size_t>(
-            activeQubits2QGates.at(layer).find(*control) == 
-            activeQubits2QGates.at(layer).end()
-          )
-        ) {
-          // if activeQubits2QGates.size() would grow above 
+            maximumActiveQubits2QGates <
+                activeQubits2QGates.at(layer).size() +
+                    static_cast<std::size_t>(
+                        activeQubits2QGates.at(layer).find(target) ==
+                        activeQubits2QGates.at(layer).end()) +
+                    static_cast<std::size_t>(
+                        activeQubits2QGates.at(layer).find(*control) ==
+                        activeQubits2QGates.at(layer).end())) {
+          // if activeQubits2QGates.size() would grow above
           // maximumActiveQubits2QGates
           ++layer;
           layerChanged = true;
@@ -284,12 +285,12 @@ void Mapper::createLayers() {
       } else {
         // 1q gate
         if (maximumActiveQubits1QGates > 0 &&
-          maximumActiveQubits1QGates < activeQubits1QGates.at(layer).size() + 
-          static_cast<std::size_t>(
-            activeQubits1QGates.at(layer).find(target) == 
-            activeQubits1QGates.at(layer).end())
-        ) {
-          // if activeQubits1QGates.size() would grow above 
+            maximumActiveQubits1QGates <
+                activeQubits1QGates.at(layer).size() +
+                    static_cast<std::size_t>(
+                        activeQubits1QGates.at(layer).find(target) ==
+                        activeQubits1QGates.at(layer).end())) {
+          // if activeQubits1QGates.size() would grow above
           // maximumActiveQubits1QGates
           ++layer;
           layerChanged = true;
@@ -298,21 +299,21 @@ void Mapper::createLayers() {
       }
       break;
     }
-    
+
     if (layerChanged) {
-      even = true;
-      lastLayer.at(target)   = layer;
+      even                       = true;
+      lastLayer.at(target)       = layer;
       lastLayerOpType.at(target) = gate->getType();
       if (!singleQubit) {
-        lastLayer.at(*control) = layer;
+        lastLayer.at(*control)       = layer;
         lastLayerOpType.at(*control) = gate->getType();
         qubitsInLayer.clear();
         qubitsInLayer.insert(*control);
         qubitsInLayer.insert(target);
       }
     }
-    
-    while(layers.size() <= layer) {
+
+    while (layers.size() <= layer) {
       singleQubitMultiplicities.emplace_back(architecture->getNqubits(), 0);
       twoQubitMultiplicities.emplace_back();
       activeQubits.emplace_back();
@@ -320,7 +321,7 @@ void Mapper::createLayers() {
       activeQubits2QGates.emplace_back();
       layers.emplace_back();
     }
-    
+
     if (singleQubit) {
       layers.at(layer).emplace_back(-1, target, gate.get());
       activeQubits.at(layer).emplace(target);
@@ -333,14 +334,16 @@ void Mapper::createLayers() {
       activeQubits2QGates.at(layer).emplace(*control);
       activeQubits2QGates.at(layer).emplace(target);
       if (*control >= target) {
-        auto insertResult = twoQubitMultiplicities.at(layer).insert({{target, *control}, {0, 1}});
+        auto insertResult = twoQubitMultiplicities.at(layer).insert(
+            {{target, *control}, {0, 1}});
         if (insertResult.second) {
-          // if there is already an entry for this edge, the multiplicity in 
+          // if there is already an entry for this edge, the multiplicity in
           // the backward direction is increased
           insertResult.first->second.second++;
         }
       } else {
-        auto insertResult = twoQubitMultiplicities.at(layer).insert({{*control, target}, {1, 0}});
+        auto insertResult = twoQubitMultiplicities.at(layer).insert(
+            {{*control, target}, {1, 0}});
         if (insertResult.second) {
           // if there is already an entry for this edge, the multiplicity in
           // the forward direction is increased

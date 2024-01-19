@@ -234,9 +234,12 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("debug", &Configuration::debug)
       .def_readwrite("data_logging_path", &Configuration::dataLoggingPath)
       .def_readwrite("layering", &Configuration::layering)
-      .def_readwrite("maximum_active_qubits", &Configuration::maximumActiveQubits)
-      .def_readwrite("maximum_active_qubits_1q_gates", &Configuration::maximumActiveQubits1QGates)
-      .def_readwrite("maximum_active_qubits_2q_gates", &Configuration::maximumActiveQubits2QGates)
+      .def_readwrite("maximum_active_qubits",
+                     &Configuration::maximumActiveQubits)
+      .def_readwrite("maximum_active_qubits_1q_gates",
+                     &Configuration::maximumActiveQubits1QGates)
+      .def_readwrite("maximum_active_qubits_2q_gates",
+                     &Configuration::maximumActiveQubits2QGates)
       .def_readwrite("automatic_layer_splits",
                      &Configuration::automaticLayerSplits)
       .def_readwrite("automatic_layer_splits_node_limit",

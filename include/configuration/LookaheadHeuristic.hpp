@@ -16,13 +16,13 @@ enum class LookaheadHeuristic {
   /** sum over all distances between any virtual qubit pair in the given layer;
      optimizing gate-count */
   GateCountSumDistance,
-  /** sums the fidelity costs of any mapped 1Q gates in the given layer and 
-   * fidelity distances between mapped qubit pairs of 2Q gates from their 
+  /** sums the fidelity costs of any mapped 1Q gates in the given layer and
+   * fidelity distances between mapped qubit pairs of 2Q gates from their
    * current location; optimizing fidelity */
   FidelityCurrentLocation,
-  /** sums the fidelity costs of any mapped 1Q gates in the given layer and 
-   * fidelity distances between mapped qubit pairs of 2Q gates from the 
-   * currently intended target location (if applicable, otherwise from their 
+  /** sums the fidelity costs of any mapped 1Q gates in the given layer and
+   * fidelity distances between mapped qubit pairs of 2Q gates from the
+   * currently intended target location (if applicable, otherwise from their
    * current location); optimizing fidelity */
   FidelityCurrentTargetLocation
 };
@@ -46,11 +46,12 @@ isFidelityAware(const LookaheadHeuristic heuristic) {
 }
 
 /**
- * Uses the currently intended target location for each logical qubit in 
- * `HeuristicMapper::Node::targetLocations` and therefore requires a heuristic, 
+ * Uses the currently intended target location for each logical qubit in
+ * `HeuristicMapper::Node::targetLocations` and therefore requires a heuristic,
  * which tracks those.
  */
-[[maybe_unused]] static inline bool usesTargetLocations(const LookaheadHeuristic heuristic) {
+[[maybe_unused]] static inline bool
+usesTargetLocations(const LookaheadHeuristic heuristic) {
   switch (heuristic) {
   case LookaheadHeuristic::FidelityCurrentTargetLocation:
     return true;
