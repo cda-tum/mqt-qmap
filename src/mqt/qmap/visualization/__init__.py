@@ -9,4 +9,4 @@ from __future__ import annotations
 from .search_visualizer import SearchVisualizer
 from .visualize_search_graph import SearchNode, visualize_search_graph
 
-__all__ = ["visualize_search_graph", "SearchVisualizer", "SearchNode"]
+__all__ = ["SearchNode", "SearchVisualizer", "visualize_search_graph"]
