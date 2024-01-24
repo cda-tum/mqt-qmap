@@ -1,0 +1,63 @@
+{
+  "name": "Nature",
+  "grid": "nature.csv",
+  "operations": [
+    {
+      "name": "rz",
+      "type": "local",
+      "zones": [
+        "storage + readout"
+      ],
+      "time": 0.5,
+      "fidelity": 0.999
+    },
+    {
+      "name": "ry",
+      "type": "global",
+      "zones": [
+        "storage + readout"
+      ],
+      "time": 0.5,
+      "fidelity": 0.999
+    },
+    {
+      "name": "cz",
+      "type": "global",
+      "zones": [
+        "entangling"
+      ],
+      "time": 0.2,
+      "fidelity": 0.9959
+    },
+    {
+      "name": "measure",
+      "type": "global",
+      "zones": [
+        "readout"
+      ],
+      "time": 0.2,
+      "fidelity": 0.95
+    }
+  ],
+  "decoherence": {
+    "t1": 100000000,
+    "t2": 1500000
+  },
+  "interactionRadius": 3,
+  "AOD": {
+    "number": 1,
+    "minAtomDistance": 0.1,
+    "move": {
+      "speed": 0.55,
+      "fidelity": 1
+    },
+    "activate": {
+      "time": 20,
+      "fidelity": 1
+    },
+    "deactivate": {
+      "time": 20,
+      "fidelity": 1
+    }
+  }
+}
