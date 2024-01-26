@@ -15,18 +15,16 @@ protected:
   std::string testArchitectureDir = "../examples/na/";
 };
 
-INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,
-                         testing::Values("nature.csv"));
+INSTANTIATE_TEST_SUITE_P(NAArchitecture, TestArchitecture,
+                         testing::Values("nature.json"));
 
-TEST_P(TestArchitecture, QubitMap) {
+TEST_P(TestArchitecture, Import) {
   const auto&       archName = GetParam();
   std::stringstream ss;
   ss << testArchitectureDir << archName;
-  std::string filename = ss.str();
+  std::string      filename = ss.str();
   na::Architecture arch(filename);
 
-  // EXPECT_EQ();
-  // EXPECT_TRUE();
-  // EXPECT_THROW();
-  // EXPECT_NEAR(,1e-6);
+  EXPECT_EQ(arch.getNZones(), 3);
+  EXPECT_EQ(arch.getNSites(), 400);
 }
