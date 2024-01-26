@@ -153,18 +153,20 @@ run.omit = ["*/visualization/*"]
 report.exclude_also = [
     '\.\.\.',
     'if TYPE_CHECKING:',
+    'raise AssertionError',
+    'raise NotImplementedError',
 ]
 
 [tool.mypy]
 files = ["src/mqt", "test/python"]
 mypy_path = ["$MYPY_CONFIG_FILE_DIR/src"]
 python_version = "3.8"
-strict = true
-show_error_codes = true
+warn_unused_configs = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-warn_unreachable = true
+strict = true
+disallow_untyped_defs = false
 explicit_package_bases = true
-pretty = true
+warn_unreachable = true
 
 [[tool.mypy.overrides]]
 module = ["qiskit.*", "matplotlib.*", "networkx.*", "plotly.*", "_plotly_utils.*", "distinctipy.*", "ipywidgets.*", "walkerlayout.*"]
