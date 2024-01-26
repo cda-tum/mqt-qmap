@@ -60,9 +60,9 @@ inline Type getTypeOfString(const std::string& s) {
  */
 class Point {
 public:
-  std::uint16_t x;
-  std::uint16_t y;
-  Point(std::uint16_t x, std::uint16_t y) : x(x), y(y){};
+  std::uint32_t x;
+  std::uint32_t y;
+  Point(std::uint32_t x, std::uint32_t y) : x(x), y(y){};
   inline Point operator-(const Point&& p) {
     x -= p.x;
     y -= p.y;
@@ -73,7 +73,9 @@ public:
     y += p.y;
     return *this;
   }
-  [[nodiscard]] auto length() const { return std::abs(x * x + y * y); }
+  [[nodiscard]] auto length() const {
+    return static_cast<std::uint32_t>(std::round(std::sqrt(x * x + y * y)));
+  }
 };
 
 /**
@@ -95,7 +97,7 @@ using Value = qc::fp;
 /**
  * @brief Any information on numbers of somethin
  */
-using Number = std::uint16_t;
+using Number = std::uint64_t;
 
 class Architecture {
 public:
@@ -143,18 +145,34 @@ public:
   };
   class Shutteling {
   public:
-    Value  speed;
-    Value  fidelity;
     Number rows;
     Number cols;
+    Value  speed;
+    Value  fidelity;
     Value  activationTime;
     Value  activationFidelity;
     Value  deactivationTime;
     Value  deactivationFidelity;
-    Shutteling(const Shutteling& sh) = default;
-    Shutteling(Value sp, Value fi, Value ta, Value fa, Value td, Value fd)
-        : speed(sp), fidelity(fi), activationTime(ta), activationFidelity(fa),
-          deactivationTime(td), deactivationFidelity(fd) {}
+    Shutteling()               = default;
+    Shutteling(Shutteling& sh) = default;
+    Shutteling(Number rs, Number cs, Value sp, Value fi, Value ta, Value fa,
+               Value td, Value fd)
+        : rows(rs), cols(cs), speed(sp), fidelity(fi), activationTime(ta),
+          activationFidelity(fa), deactivationTime(td),
+          deactivationFidelity(fd) {}
+    Shutteling& operator=(Shutteling&& s) noexcept {
+      if (this != &s) {
+        rows                 = s.rows;
+        cols                 = s.cols;
+        speed                = s.speed;
+        fidelity             = s.fidelity;
+        activationTime       = s.activationTime;
+        activationFidelity   = s.activationFidelity;
+        deactivationTime     = s.deactivationTime;
+        deactivationFidelity = s.deactivationFidelity;
+      }
+      return *this;
+    }
   };
 
 protected:
@@ -209,19 +227,34 @@ public:
     }
     return it->second;
   }
+  /**
+   * @brief Returns the distance between two sites.
+   *
+   * @param i address of first site
+   * @param j address of second site
+   * @return the distance in µm
+   */
   [[nodiscard]] auto getDistance(Index i, Index j) {
     return (getPos(j) - getPos(i)).length();
   }
-  [[nodiscard]] bool isAllowed(qc::OpType gate, Index qubit) {
-    auto it = operations.find(gate);
-    if (it == operations.end())
-      return false; // gate not supported at all
-    auto zone = getZone(qubit);
-    auto zit  = it->second.zones.find(zone);
-    if (zit == it->second.zones.end())
-      return false; // gate not supported at this location
-    else
-      return true;
-  }
+  /**
+   * @brief Checks whether the gate can be applied (locally) on this qubit.
+   *
+   * @param gate the gate
+   * @param qubit the qubit
+   * @return true if the gate is a local operation and available in the zone of
+   * the qubit,
+   * @return false otherwise
+   */
+  [[nodiscard]] bool isAllowedLocally(qc::OpType gate, Index qubit);
+  /**
+   * @brief Checks whether the gate is a global gate for this Zone.
+   *
+   * @param gate the gate
+   * @param zone the zone
+   * @return true if the gate is global and applicable in this zone,
+   * @return false otherwise
+   */
+  [[nodiscard]] bool isAllowedGlobally(qc::OpType gate, Zone zone);
 };
 } // namespace na

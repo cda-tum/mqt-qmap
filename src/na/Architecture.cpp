@@ -5,9 +5,9 @@
 
 #include "na/Architecture.hpp"
 
-#include "OpType.hpp"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "operations/OpType.hpp"
 
 #include <exception>
 #include <filesystem>
@@ -58,7 +58,9 @@ Architecture::Architecture(std::string& filename) {
         zones.emplace_back(sZone);
       }
       sites.emplace_back(
-          Point(stoi(sX), stoi(sY)), // make point from x and y (convert to int)
+          Point(static_cast<std::uint32_t>(std::stoul(sX)),
+                static_cast<std::uint32_t>(std::stoul(
+                    sY))), // make point from x and y (convert to int)
           nameToZone.find(sZone)->second, // find the id of the zone
           getTypeOfString(sType));        // convert to type
     }
@@ -71,27 +73,49 @@ Architecture::Architecture(std::string& filename) {
       for (auto const& zs : op["zones"]) {
         zo.emplace(nameToZone.find(zs)->second);
       }
-      Value const fi   = op["fidelity"];
-      Value const ti   = op["time"];
-      Operation const o = {ty, sc, zo, ti, fi};
+      Value const     fi = op["fidelity"];
+      Value const     ti = op["time"];
+      Operation const o  = {ty, sc, zo, ti, fi};
       operations.emplace(ty, o);
     }
     decoherenceTimes = Architecture::DecoherenceTimes(
         data["decoherence"]["t1"], data["decoherence"]["t2"]);
     nAods             = data["AOD"]["number"];
-    shutteling.rows          = data["AOD"]["rows"];
-    shutteling.cols          = data["AOD"]["cols"];
-    shutteling.speed = data["AOD"]["move"]["speed"];
-    shutteling.fidelity = data["AOD"]["move"]["fidelity"];
-    shutteling.activationTime = data["AOD"]["activate"]["time"];
-    shutteling.activationFidelity = data["AOD"]["activate"]["fidelity"];
-    shutteling.deactivationTime = data["AOD"]["deactivate"]["time"];
-    shutteling.deactivationFidelity = data["AOD"]["deactivate"]["fidelity"];
+    shutteling        = {data["AOD"]["rows"],
+                         data["AOD"]["cols"],
+                         data["AOD"]["move"]["speed"],
+                         data["AOD"]["move"]["fidelity"],
+                         data["AOD"]["activate"]["time"],
+                         data["AOD"]["activate"]["fidelity"],
+                         data["AOD"]["deactivate"]["time"],
+                         data["AOD"]["deactivate"]["fidelity"]};
     minAtomDistance   = data["minAtomDistance"];
     interactionRadius = data["interactionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file." +
                              std::string(e.what()));
   }
+}
+
+bool Architecture::isAllowedLocally(qc::OpType gate, Index qubit) {
+  auto it = operations.find(gate);
+  if (it == operations.end()) {
+    return false; // gate not supported at all
+  }
+  if (it->second.scope != Scope::Local) {
+    return false; // gate cannot be applied individually
+  }
+  auto zone = getZone(qubit);
+  auto zit  = it->second.zones.find(zone);
+  return zit == it->second.zones.end();
+}
+
+bool Architecture::isAllowedGlobally(qc::OpType gate, Zone zone) {
+  auto it = operations.find(gate);
+  if (it == operations.end()) {
+    return false; // gate not supported at all
+  }
+  auto zit = it->second.zones.find(zone);
+  return zit == it->second.zones.end();
 }
 } // namespace na
