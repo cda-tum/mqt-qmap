@@ -27,4 +27,5 @@ TEST_P(TestArchitecture, Import) {
 
   EXPECT_EQ(arch.getNZones(), 3);
   EXPECT_EQ(arch.getNSites(), 400);
+  EXPECT_EQ(arch.getName(), "Nature");
 }
