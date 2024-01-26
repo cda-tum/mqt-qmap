@@ -45,8 +45,8 @@ Architecture::Architecture(std::string& filename) {
     std::string                 line;
     std::map<std::string, Zone> nameToZone;
 
-    gridFs >> line; // skip first line, i.e. header
-    while (gridFs >> line) {  // read one line
+    gridFs >> line;                       // skip first line, i.e. header
+    while (gridFs >> line) {              // read one line
       std::stringstream lineStream(line); // make a stream of this line
       std::string       sAddr;
       std::string       sX;
