@@ -97,6 +97,15 @@ target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
 
+# neutral atoms mapper library
+set(lib ${PROJECT_NAME}_na_lib)
+add_library(
+  ${lib}
+  na/NeutralAtomMapper.cpp ${PROJECT_SOURCE_DIR}/include/na/NeutralAtomMapper.hpp
+  ${PROJECT_SOURCE_DIR}/include/na/Architecture.hpp ${PROJECT_SOURCE_DIR}/include/Mapper.hpp
+  na/Architecture.cpp Mapper.cpp)
+add_internal_library(${lib} NeutralAtomMapper)
+
 if(BUILD_MQT_QMAP_BINDINGS)
   add_subdirectory(python)
 endif()

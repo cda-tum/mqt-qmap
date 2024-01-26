@@ -19,6 +19,11 @@ if(TARGET ${PROJECT_NAME}_exact_lib)
     ${CMAKE_CURRENT_SOURCE_DIR}/test_encodings.cpp)
 endif()
 
+if(TARGET ${PROJECT_NAME}_na_lib)
+  package_add_test(${PROJECT_NAME}_na_test ${PROJECT_NAME}_na_lib
+                   ${CMAKE_CURRENT_SOURCE_DIR}/na/test_architecture.cpp)
+endif()
+
 if(TARGET ${PROJECT_NAME}_cliffordsynthesis_lib)
   configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
                  ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json COPYONLY)
