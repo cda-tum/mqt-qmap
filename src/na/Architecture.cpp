@@ -79,9 +79,15 @@ Architecture::Architecture(std::string& filename) {
     decoherenceTimes = Architecture::DecoherenceTimes(
         data["decoherence"]["t1"], data["decoherence"]["t2"]);
     nAods             = data["AOD"]["number"];
-    nAodRows          = data["AOD"]["rows"];
-    nAodCols          = data["AOD"]["columns"];
-    minAtomDistance   = data["AOD"]["minAtomDistance"];
+    shutteling.rows          = data["AOD"]["rows"];
+    shutteling.cols          = data["AOD"]["cols"];
+    shutteling.speed = data["AOD"]["move"]["speed"];
+    shutteling.fidelity = data["AOD"]["move"]["fidelity"];
+    shutteling.activationTime = data["AOD"]["activate"]["time"];
+    shutteling.activationFidelity = data["AOD"]["activate"]["fidelity"];
+    shutteling.deactivationTime = data["AOD"]["deactivate"]["time"];
+    shutteling.deactivationFidelity = data["AOD"]["deactivate"]["fidelity"];
+    minAtomDistance   = data["minAtomDistance"];
     interactionRadius = data["interactionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file." +
