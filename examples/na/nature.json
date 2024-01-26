@@ -5,38 +5,28 @@
     {
       "name": "rz",
       "type": "local",
-      "zones": [
-        "storage",
-        "readout"
-      ],
+      "zones": ["storage", "readout"],
       "time": 0.5,
       "fidelity": 0.999
     },
     {
       "name": "ry",
       "type": "global",
-      "zones": [
-        "storage",
-        "readout"
-      ],
+      "zones": ["storage", "readout"],
       "time": 0.5,
       "fidelity": 0.999
     },
     {
       "name": "cz",
       "type": "global",
-      "zones": [
-        "entangling"
-      ],
+      "zones": ["entangling"],
       "time": 0.2,
       "fidelity": 0.9959
     },
     {
       "name": "measure",
       "type": "global",
-      "zones": [
-        "readout"
-      ],
+      "zones": ["readout"],
       "time": 0.2,
       "fidelity": 0.95
     }
