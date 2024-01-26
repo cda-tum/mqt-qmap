@@ -34,13 +34,19 @@ Architecture::Architecture(std::string& filename) {
     name = data["name"];
     // load CSV
     std::stringstream ss;
-    ss << getDirnameOf(filename) << data["grid"];
+    ss << getDirnameOf(filename) << "/" << data["grid"].get<std::string>();
     std::ifstream gridFs(ss.str());
+    if (!gridFs.is_open()) {
+      std::stringstream msg;
+      msg << "Could not open file with file name: " << ss.str() << ".";
+      throw std::runtime_error(msg.str());
+    }
     // auxiliary variables
     std::string                 line;
     std::map<std::string, Zone> nameToZone;
 
-    while (std::getline(gridFs, line)) {  // read one line
+    gridFs >> line; // skip first line, i.e. header
+    while (gridFs >> line) {  // read one line
       std::stringstream lineStream(line); // make a stream of this line
       std::string       sAddr;
       std::string       sX;
@@ -80,20 +86,19 @@ Architecture::Architecture(std::string& filename) {
     }
     decoherenceTimes = Architecture::DecoherenceTimes(
         data["decoherence"]["t1"], data["decoherence"]["t2"]);
-    nAods             = data["AOD"]["number"];
-    shutteling        = {data["AOD"]["rows"],
-                         data["AOD"]["cols"],
-                         data["AOD"]["move"]["speed"],
-                         data["AOD"]["move"]["fidelity"],
-                         data["AOD"]["activate"]["time"],
-                         data["AOD"]["activate"]["fidelity"],
-                         data["AOD"]["deactivate"]["time"],
-                         data["AOD"]["deactivate"]["fidelity"]};
+    nAods      = data["AOD"]["number"];
+    shutteling = Architecture::Shutteling(
+        data["AOD"]["rows"], data["AOD"]["columns"],
+        data["AOD"]["move"]["speed"], data["AOD"]["move"]["fidelity"],
+        data["AOD"]["activate"]["time"], data["AOD"]["activate"]["fidelity"],
+        data["AOD"]["deactivate"]["time"],
+        data["AOD"]["deactivate"]["fidelity"]);
     minAtomDistance   = data["minAtomDistance"];
     interactionRadius = data["interactionRadius"];
   } catch (std::exception& e) {
-    throw std::runtime_error("Could not parse JSON file." +
-                             std::string(e.what()));
+    throw std::runtime_error(
+        "While parsing the JSON file, the following error occured: " +
+        std::string(e.what()));
   }
 }
 
