@@ -6,7 +6,8 @@
       "name": "rz",
       "type": "local",
       "zones": [
-        "storage + readout"
+        "storage",
+        "readout"
       ],
       "time": 0.5,
       "fidelity": 0.999
@@ -15,7 +16,8 @@
       "name": "ry",
       "type": "global",
       "zones": [
-        "storage + readout"
+        "storage",
+        "readout"
       ],
       "time": 0.5,
       "fidelity": 0.999
@@ -44,9 +46,11 @@
     "t2": 1500000
   },
   "interactionRadius": 3,
+  "minAtomDistance": 0.1,
   "AOD": {
     "number": 1,
-    "minAtomDistance": 0.1,
+    "rows": 5,
+    "columns": 5,
     "move": {
       "speed": 0.55,
       "fidelity": 1
