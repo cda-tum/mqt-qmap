@@ -97,7 +97,7 @@ Architecture::Architecture(std::string& filename) {
     interactionRadius = data["interactionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error(
-        "While parsing the JSON file, the following error occured: " +
+        "While parsing the JSON file, the following error occurred: " +
         std::string(e.what()));
   }
 }

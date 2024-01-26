@@ -173,7 +173,7 @@ public:
   };
 
 protected:
-  std::string name; // the name of the architecure
+  std::string name; // the name of the architecture
   std::vector<std::string>
       zones; // a mapping from zones (int) to their name from the config
   std::vector<Site> sites;  // a vector of sites (Position, Zone, Type)
@@ -182,7 +182,7 @@ protected:
       operations; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes; // the decoherence characteristic
   Number           nAods;            // number of AODs for atom movement
-  Shutteling       shutteling;       // all properties reagrding AODs
+  Shutteling       shutteling;       // all properties regarding AODs
   Value minAtomDistance;   // minimal distance that must be kept between atoms
   Value interactionRadius; // the Rydberg radius
 
@@ -220,7 +220,7 @@ public:
     auto it = operations.find(t);
     if (it == operations.end()) {
       throw std::invalid_argument(
-          "This operation is not supported by this architecure.");
+          "This operation is not supported by this architecture.");
     }
     return it->second;
   }
