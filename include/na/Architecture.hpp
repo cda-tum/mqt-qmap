@@ -212,5 +212,16 @@ public:
   [[nodiscard]] auto getDistance(Index i, Index j) {
     return (getPos(j) - getPos(i)).length();
   }
+  [[nodiscard]] bool isAllowed(qc::OpType gate, Index qubit) {
+    auto it = operations.find(gate);
+    if (it == operations.end())
+      return false; // gate not supported at all
+    auto zone = getZone(qubit);
+    auto zit  = it->second.zones.find(zone);
+    if (zit == it->second.zones.end())
+      return false; // gate not supported at this location
+    else
+      return true;
+  }
 };
 } // namespace na
