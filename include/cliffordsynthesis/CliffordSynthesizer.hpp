@@ -51,7 +51,7 @@ public:
     std::stringstream ss;
     ss << results.getResultCircuit();
     resultCircuit = std::make_unique<qc::QuantumComputation>();
-    resultCircuit->import(ss, qc::Format::OpenQASM);
+    resultCircuit->import(ss, qc::Format::OpenQASM3);
   }
 
   [[nodiscard]] qc::QuantumComputation& getResultCircuit() {

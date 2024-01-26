@@ -7,6 +7,8 @@
 
 #include "utils.hpp"
 
+#include <regex>
+
 namespace cs {
 void Tableau::dump(const std::string& filename) const {
   auto of = std::ofstream(filename);

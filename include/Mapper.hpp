@@ -289,7 +289,7 @@ public:
     if (extension == "real") {
       dumpResult(outputFilename, qc::Format::Real);
     } else if (extension == "qasm") {
-      dumpResult(outputFilename, qc::Format::OpenQASM);
+      dumpResult(outputFilename, qc::Format::OpenQASM3);
     } else {
       throw QMAPException("[dump] Extension " + extension +
                           " not recognized/supported for dumping.");

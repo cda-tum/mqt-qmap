@@ -109,7 +109,7 @@ void DataLogger::logFinalizeLayer(
   }
   nlohmann::json    json;
   std::stringstream qasmStream;
-  ops.dumpOpenQASM(qasmStream, qregs, cregs);
+  ops.dumpOpenQASM3(qasmStream, qregs, cregs);
   json["qasm"] = qasmStream.str();
   if (twoQubitMultiplicity.empty()) {
     json["two_qubit_multiplicity"] = nlohmann::json::array();

@@ -391,7 +391,7 @@ TEST_F(ExactTest, CircuitWithOnlySingleQubitGates) {
   qc.x(1);
   ibmQX4Mapper = std::make_unique<ExactMapper>(qc, ibmQX4);
   ibmQX4Mapper->map(settings);
-  ibmQX4Mapper->dumpResult(std::cout, qc::Format::OpenQASM);
+  ibmQX4Mapper->dumpResult(std::cout, qc::Format::OpenQASM3);
   SUCCEED() << "Mapping successful";
 }
 
@@ -405,10 +405,10 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
   mapper.map(settings);
 
   std::ostringstream oss{};
-  mapper.dumpResult(oss, qc::Format::OpenQASM);
+  mapper.dumpResult(oss, qc::Format::OpenQASM3);
   auto               qcMapped = qc::QuantumComputation();
   std::istringstream iss{oss.str()};
-  qcMapped.import(iss, qc::Format::OpenQASM);
+  qcMapped.import(iss, qc::Format::OpenQASM3);
   std::cout << qcMapped << std::endl;
   EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
   EXPECT_EQ(qcMapped.initialLayout[0], 3);
@@ -502,8 +502,8 @@ TEST_F(ExactTest, NoMeasurmentsAdded) {
   // get the resulting circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  ibmqLondonMapper->dumpResult(qasm, qc::Format::OpenQASM);
-  qcMapped.import(qasm, qc::Format::OpenQASM);
+  ibmqLondonMapper->dumpResult(qasm, qc::Format::OpenQASM3);
+  qcMapped.import(qasm, qc::Format::OpenQASM3);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 4U);
@@ -522,7 +522,7 @@ TEST_F(ExactTest, Test4QCircuitThatUsesAll5Q) {
                        "cx q[1],q[2];\n"
                        "cx q[2],q[3];\n"
                        "cx q[3],q[0];\n"};
-  qc.import(ss, qc::Format::OpenQASM);
+  qc.import(ss, qc::Format::OpenQASM3);
 
   auto mapper = ExactMapper(qc, arch);
   // explicitly do not use subsets, but the full architecture
@@ -582,7 +582,7 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance) {
   Architecture      arch;
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
   arch.loadCouplingMap(5, cm);
-  qc.import(ss, qc::Format::OpenQASM);
+  qc.import(ss, qc::Format::OpenQASM3);
 
   auto mapper            = ExactMapper(qc, arch);
   settings.swapReduction = SwapReduction::CouplingLimit;
@@ -614,7 +614,7 @@ TEST_F(ExactTest, RegressionTestExactMapperPerformance2) {
   Architecture      arch;
   const CouplingMap cm = {{1, 0}, {2, 0}, {2, 1}, {3, 2}, {3, 4}, {4, 2}};
   arch.loadCouplingMap(5, cm);
-  qc.import(ss, qc::Format::OpenQASM);
+  qc.import(ss, qc::Format::OpenQASM3);
 
   auto mapper            = ExactMapper(qc, arch);
   settings.swapReduction = SwapReduction::CouplingLimit;
