@@ -91,8 +91,8 @@ target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicb
 add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
 
 # add LogicBlocks library
-target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib PUBLIC logicblocks::Logic
-                                                                   logicblocks::Encodings)
+target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib
+                      PUBLIC logicblocks::Logic logicblocks::Encodings nlohmann_json::nlohmann_json)
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
