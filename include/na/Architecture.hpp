@@ -141,6 +141,21 @@ public:
         : type(type), scope(scope), zones(std::move(zones)), time(time),
           fidelity(fidelity) {}
   };
+  class Shutteling {
+  public:
+    Value  speed;
+    Value  fidelity;
+    Number rows;
+    Number cols;
+    Value  activationTime;
+    Value  activationFidelity;
+    Value  deactivationTime;
+    Value  deactivationFidelity;
+    Shutteling(const Shutteling& sh) = default;
+    Shutteling(Value sp, Value fi, Value ta, Value fa, Value td, Value fd)
+        : speed(sp), fidelity(fi), activationTime(ta), activationFidelity(fa),
+          deactivationTime(td), deactivationFidelity(fd) {}
+  };
 
 protected:
   std::string name; // the name of the architecure
@@ -149,11 +164,10 @@ protected:
   std::vector<Site> sites;  // a vector of sites (Position, Zone, Type)
   Number            nSites; // number of sites
   std::map<qc::OpType, Operation>
-                   operations; // all possible operations by their type, i.e. gate set
+      operations; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes; // the decoherence characteristic
   Number           nAods;            // number of AODs for atom movement
-  Number           nAodRows;         // possible rows per AOD
-  Number           nAodCols;         // possible columns per AOD
+  Shutteling       shutteling;       // all properties reagrding AODs
   Value minAtomDistance;   // minimal distance that must be kept between atoms
   Value interactionRadius; // the Rydberg radius
 
@@ -180,11 +194,14 @@ public:
   }
   [[nodiscard]] inline auto getDecoherenceTimes() { return decoherenceTimes; }
   [[nodiscard]] inline auto getNAods() const { return nAods; }
-  [[nodiscard]] inline auto getNAodRows() const { return nAodRows; }
-  [[nodiscard]] inline auto getNAodCols() const { return nAodCols; }
-  [[nodiscard]] inline auto getMinAtomDistance() const { return minAtomDistance; }
-  [[nodiscard]] inline auto getInteractionRadius() const { return interactionRadius; }
-  [[nodiscard]] auto        getOperationByOpType(const qc::OpType& t) {
+  [[nodiscard]] inline auto getShutteling() { return shutteling; }
+  [[nodiscard]] inline auto getMinAtomDistance() const {
+    return minAtomDistance;
+  }
+  [[nodiscard]] inline auto getInteractionRadius() const {
+    return interactionRadius;
+  }
+  [[nodiscard]] auto getOperationByOpType(const qc::OpType& t) {
     auto it = operations.find(t);
     if (it == operations.end()) {
       throw std::invalid_argument(
