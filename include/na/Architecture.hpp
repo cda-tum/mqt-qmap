@@ -6,12 +6,13 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "OpType.hpp"
+#include "operations/OpType.hpp"
 
 #include <cstdint>
 #include <cstdlib>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -23,6 +24,18 @@ namespace na {
  * @brief The scope of an operation (Global or Local)
  */
 enum class Scope { Global, Local };
+static std::map<std::string, Scope> const STRING_TO_SCOPE = {
+    {"Global", Scope::Global}, {"Local", Scope::Local}};
+/**
+ * @brief Get the Scope of a gate from a string
+ *
+ * @param s the name
+ * @return Type
+ */
+inline Scope getScopeOfString(const std::string& s) {
+  auto it = STRING_TO_SCOPE.find(s);
+  return it->second;
+}
 
 /**
  * @brief The type of a site (SLM or AOD)
@@ -37,7 +50,7 @@ static std::map<std::string, Type> const STRING_TO_TYPE = {{"SLM", Type::SLM},
  * @param s the name
  * @return Type
  */
-inline Type getTypeOfString(std::string& s) {
+inline Type getTypeOfString(const std::string& s) {
   auto it = STRING_TO_TYPE.find(s);
   return it->second;
 }
@@ -50,12 +63,12 @@ public:
   std::uint16_t x;
   std::uint16_t y;
   Point(std::uint16_t x, std::uint16_t y) : x(x), y(y){};
-  inline Point operator-(Point&& p) {
+  inline Point operator-(const Point&& p) {
     x -= p.x;
     y -= p.y;
     return *this;
   }
-  inline Point operator+(Point&& p) {
+  inline Point operator+(const Point&& p) {
     x += p.x;
     y += p.y;
     return *this;
@@ -122,6 +135,7 @@ public:
     std::set<Zone> zones;    // the zones where the gate can be applied
     Value          time;     // the time the gate takes to be applied
     Value          fidelity; // the fidelity of the gate
+    Operation(const Operation& op) = default;
     Operation(qc::OpType type, Scope scope, std::set<Zone> zones, Value time,
               Value fidelity)
         : type(type), scope(scope), zones(std::move(zones)), time(time),
@@ -132,13 +146,14 @@ protected:
   std::string name; // the name of the architecure
   std::vector<std::string>
       zones; // a mapping from zones (int) to their name from the config
-  std::vector<Site>   sites;      // a vector of sites (Position, Zone, Type)
-  Number              nSites;     // number of sites
-  std::set<Operation> operations; // all possible operations, i.e. gate set
-  DecoherenceTimes    decoherenceTimes; // the decoherence characteristic
-  Number              nAods;            // number of AODs for atom movement
-  Number              nAodRows;         // possible rows per AOD
-  Number              nAodCols;         // possible columns per AOD
+  std::vector<Site> sites;  // a vector of sites (Position, Zone, Type)
+  Number            nSites; // number of sites
+  std::map<qc::OpType, Operation>
+                   operations; // all possible operations by their type, i.e. gate set
+  DecoherenceTimes decoherenceTimes; // the decoherence characteristic
+  Number           nAods;            // number of AODs for atom movement
+  Number           nAodRows;         // possible rows per AOD
+  Number           nAodCols;         // possible columns per AOD
   Value minAtomDistance;   // minimal distance that must be kept between atoms
   Value interactionRadius; // the Rydberg radius
 
@@ -153,23 +168,30 @@ public:
   [[nodiscard]] inline auto getName() { return name; }
   [[nodiscard]] inline auto getNZones() { return zones.size(); }
   [[nodiscard]] inline auto getZoneLabel(const Index& i) { return zones.at(i); }
-  [[nodiscard]] inline auto getNSites() { return nSites; }
-  [[nodiscard]] inline auto getType(const Index& i) {
+  [[nodiscard]] inline auto getNSites() const { return nSites; }
+  [[nodiscard]] auto        getType(const Index& i) {
     return std::get<Type>(sites.at(i));
   }
-  [[nodiscard]] inline auto getZone(const Index& i) {
+  [[nodiscard]] auto getZone(const Index& i) {
     return std::get<Zone>(sites.at(i));
   }
   [[nodiscard]] inline auto getPos(const Index& i) {
     return std::get<Point>(sites.at(i));
   }
   [[nodiscard]] inline auto getDecoherenceTimes() { return decoherenceTimes; }
-  [[nodiscard]] inline auto getNAods() { return nAods; }
-  [[nodiscard]] inline auto getNAodRows() { return nAodRows; }
-  [[nodiscard]] inline auto getNAodCols() { return nAodCols; }
-  [[nodiscard]] inline auto getMinAtomDistance() { return minAtomDistance; }
-  [[nodiscard]] inline auto getInteractionRadius() { return interactionRadius; }
-
+  [[nodiscard]] inline auto getNAods() const { return nAods; }
+  [[nodiscard]] inline auto getNAodRows() const { return nAodRows; }
+  [[nodiscard]] inline auto getNAodCols() const { return nAodCols; }
+  [[nodiscard]] inline auto getMinAtomDistance() const { return minAtomDistance; }
+  [[nodiscard]] inline auto getInteractionRadius() const { return interactionRadius; }
+  [[nodiscard]] auto        getOperationByOpType(const qc::OpType& t) {
+    auto it = operations.find(t);
+    if (it == operations.end()) {
+      throw std::invalid_argument(
+          "This operation is not supported by this architecure.");
+    }
+    return it->second;
+  }
   [[nodiscard]] auto getDistance(Index i, Index j) {
     return (getPos(j) - getPos(i)).length();
   }
