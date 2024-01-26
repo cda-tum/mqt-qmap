@@ -1,8 +1,9 @@
 [build-system]
 requires = [
-  "scikit-build-core>=0.10.1",
-  "setuptools-scm>=7",
-  "pybind11>=2.13.5",
+    "scikit-build-core>=0.10.1",
+    "setuptools-scm>=7",
+    "pybind11>=2.13.5",
+    "mqt.core @ git+https://github.com/cda-tum/mqt-core.git@shared-libs",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -41,7 +42,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "qiskit[qasm3-import]>=1.0.0",
+    "mqt.core[qiskit] @ git+https://github.com/cda-tum/mqt-core.git@shared-libs",
     "rustworkx[all]>=0.14.0",
     "importlib_resources>=5.0; python_version < '3.10'",
     "typing_extensions>=4.6; python_version < '3.10'",
@@ -315,13 +316,17 @@ environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3
 before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
-    "auditwheel repair -w {dest_dir} {wheel}",
+  """auditwheel repair -w {dest_dir} {wheel} \
+--exclude libmqt-core-ir.so.2.6 \
+--exclude libmqt-core-circuit-optimizer.so.2.6 \
+--exclude libmqt-core-na.so.2.6""",
 ]
 
 [tool.cibuildwheel.macos]
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel} --ignore-missing-dependencies"
 
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel>=1.7.3"
-repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
+repair-wheel-command = """delvewheel repair -w {dest_dir} {wheel} --namespace-pkg mqt --no-dll \"mqt-core-ir.dll;mqt-core-circuit-optimizer.dll;mqt-core-na.dll\""""
 environment = { CMAKE_GENERATOR = "Ninja", SKBUILD_CMAKE_ARGS="--fresh" }
