@@ -242,7 +242,7 @@ class SubarchitectureOrder:
         colors = [SubarchitectureOrder.inactive_color for _ in range(self.arch.num_nodes())]
         for node in subarchitecture.nodes():
             colors[node] = SubarchitectureOrder.active_color
-        return rxviz.mpl_draw(self.arch, node_color=colors)  # type: ignore[no-untyped-call]
+        return rxviz.mpl_draw(self.arch, node_color=colors)  # type: ignore[call-arg]
 
     def draw_subarchitectures(self, subarchitectures: list[Graph] | list[tuple[int, int]]) -> list[figure.Figure]:
         """Create matplotlib figures showing subarchitectures within the entire architecture.
@@ -266,10 +266,10 @@ class SubarchitectureOrder:
         for i in range(1, self.arch.num_nodes() + 1):
             node_combinations = combinations(range(self.arch.num_nodes()), i)
             for sg in (self.arch.subgraph(selected_nodes) for selected_nodes in node_combinations):
-                if rx.is_connected(sg):  # type: ignore[attr-defined]
+                if rx.is_connected(sg):
                     new_class = True
                     for g in self.sgs[i]:
-                        if rx.is_isomorphic(g, sg):  # type: ignore[attr-defined]
+                        if rx.is_isomorphic(g, sg):
                             new_class = False
                             break
                     if new_class:
@@ -286,7 +286,7 @@ class SubarchitectureOrder:
         for n, sgs_n in enumerate(self.sgs[:-1]):
             for i, sg in enumerate(sgs_n):
                 for j, parent_sg in enumerate(self.sgs[n + 1]):
-                    matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)  # type: ignore[attr-defined]
+                    matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)
                     for iso in matcher:
                         self.subarch_order[(n, i)].add((n + 1, j))
                         iso_rev = {val: key for key, val in iso.items()}
@@ -360,8 +360,8 @@ class SubarchitectureOrder:
                 if v is w:
                     continue
                 if (
-                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda _x: 1, goal=w)[w]  # type: ignore[attr-defined]
-                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda _x: 1, goal=iso[w])[iso[w]]  # type: ignore[attr-defined]
+                    rx.dijkstra_shortest_path_lengths(lhs, v, lambda _x: 1, goal=w)[w]
+                    > rx.dijkstra_shortest_path_lengths(rhs, iso[v], lambda _x: 1, goal=iso[w])[iso[w]]
                 ):
                     return True
         return False
