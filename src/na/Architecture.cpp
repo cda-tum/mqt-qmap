@@ -44,31 +44,36 @@ Architecture::Architecture(std::string& filename) {
     // auxiliary variables
     std::string                 line;
     std::map<std::string, Zone> nameToZone;
+    try {
+      gridFs >> line;                       // skip first line, i.e. header
+      while (gridFs >> line) {              // read one line
+        std::stringstream lineStream(line); // make a stream of this line
+        std::string       sAddr;
+        std::string       sX;
+        std::string       sY;
+        std::string       sZone;
+        std::string       sType;
 
-    gridFs >> line;                       // skip first line, i.e. header
-    while (gridFs >> line) {              // read one line
-      std::stringstream lineStream(line); // make a stream of this line
-      std::string       sAddr;
-      std::string       sX;
-      std::string       sY;
-      std::string       sZone;
-      std::string       sType;
+        std::getline(lineStream, sAddr, ','); // read until the next separator
+        std::getline(lineStream, sX, ',');
+        std::getline(lineStream, sY, ',');
+        std::getline(lineStream, sZone, ',');
+        std::getline(lineStream, sType, ',');
 
-      std::getline(lineStream, sAddr, ','); // read until the next separator
-      std::getline(lineStream, sX, ',');
-      std::getline(lineStream, sY, ',');
-      std::getline(lineStream, sZone, ',');
-      std::getline(lineStream, sType, ',');
-
-      if (nameToZone.try_emplace(sZone, nameToZone.size()).second) {
-        zones.emplace_back(sZone);
+        if (nameToZone.try_emplace(sZone, nameToZone.size()).second) {
+          zones.emplace_back(sZone);
+        }
+        sites.emplace_back(
+            Point(static_cast<std::uint32_t>(std::stoul(sX)),
+                  static_cast<std::uint32_t>(std::stoul(
+                      sY))), // make point from x and y (convert to int)
+            nameToZone.find(sZone)->second, // find the id of the zone
+            getTypeOfString(sType));        // convert to type
       }
-      sites.emplace_back(
-          Point(static_cast<std::uint32_t>(std::stoul(sX)),
-                static_cast<std::uint32_t>(std::stoul(
-                    sY))), // make point from x and y (convert to int)
-          nameToZone.find(sZone)->second, // find the id of the zone
-          getTypeOfString(sType));        // convert to type
+    } catch (std::exception& e) {
+      throw std::runtime_error(
+          "While parsing the CSV file, the following error occurred: " +
+          std::string(e.what()));
     }
     nSites = sites.size();
     // load rest of JSON
