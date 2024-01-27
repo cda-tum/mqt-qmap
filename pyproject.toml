@@ -254,7 +254,6 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
-test-skip = "cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 build-frontend = "build"
 
 [tool.cibuildwheel.linux]
