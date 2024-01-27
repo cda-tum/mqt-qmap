@@ -145,6 +145,7 @@ filterwarnings = [
     "ignore:.*qiskit.__qiskit_version__.*:DeprecationWarning:qiskit:",
     "ignore:.*qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals*:DeprecationWarning:qiskit",
     "ignore:.*qiskit.extensions module is pending deprecation*:PendingDeprecationWarning:qiskit",
+    'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
 ]
 
 [tool.coverage]
