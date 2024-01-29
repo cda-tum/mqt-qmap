@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "operations/OpType.hpp"
+#include "na/Definitions.hpp"
 
 #include <cstdint>
 #include <cstdlib>
@@ -52,29 +53,6 @@ inline Type getTypeOfString(const std::string& s) {
   auto it = STRING_TO_TYPE.find(s);
   return it->second;
 }
-
-/**
- * @brief Class to store two-dimensional coordinates
- */
-class Point {
-public:
-  std::uint32_t x;
-  std::uint32_t y;
-  Point(const std::uint32_t x, const std::uint32_t y) : x(x), y(y){};
-  inline Point operator-(const Point& p) {
-    x -= p.x;
-    y -= p.y;
-    return *this;
-  }
-  inline Point operator+(const Point& p) {
-    x += p.x;
-    y += p.y;
-    return *this;
-  }
-  [[nodiscard]] auto length() const {
-    return static_cast<std::uint32_t>(std::round(std::sqrt(x * x + y * y)));
-  }
-};
 
 /**
  * @brief For Indices
