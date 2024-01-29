@@ -232,6 +232,7 @@ extend-ignore = [
     "PLC0415", # Import should be at top of file
     "PT004",   # Incorrect, just usefixtures instead.
     "S101",    # Use of assert detected
+    "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
 ]
 isort.required-imports = ["from __future__ import annotations"]
 

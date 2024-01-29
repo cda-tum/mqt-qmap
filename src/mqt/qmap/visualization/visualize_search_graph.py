@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 import networkx as nx
 import plotly
 import plotly.graph_objects as go
-from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator
+from _plotly_utils.basevalidators import ColorscaleValidator, ColorValidator  # noqa: PLC2701
 from distinctipy import distinctipy
 from ipywidgets import HBox, IntSlider, Layout, Play, VBox, Widget, interactive, jslink
 from networkx.drawing.nx_pydot import graphviz_layout
