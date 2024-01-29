@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, qasm3
 from qiskit.quantum_info import Clifford, PauliList
+from qiskit.transpiler.layout import TranspileLayout
 
 from .compile import extract_initial_layout_from_qasm
 from .pyqmap import (
@@ -81,19 +82,12 @@ def _config_from_kwargs(kwargs: dict[str, Any]) -> SynthesisConfiguration:
 
 def _circuit_from_qasm(qasm: str) -> QuantumCircuit:
     """Create a proper :class:`qiskit.QuantumCircuit` from a QASM string (including layout information)."""
-    circ = QuantumCircuit.from_qasm_str(qasm)
+    circ = qasm3.loads(qasm)
     layout = extract_initial_layout_from_qasm(qasm, circ.qregs)
 
-    # qiskit-terra 0.22.0 introduced a breaking change in the `_layout` of the `QuantumCircuit` class.
-    # To maintain backwards compatibility, the following `try... except` block is necessary.
-    try:
-        from qiskit.transpiler.layout import TranspileLayout
-
-        circ._layout = TranspileLayout(  # noqa: SLF001
-            initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-        )
-    except ImportError:
-        circ._layout = layout  # noqa: SLF001
+    circ._layout = TranspileLayout(  # noqa: SLF001
+        initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
+    )
 
     return circ
 
@@ -102,7 +96,7 @@ def synthesize_clifford(
     target_tableau: str | Clifford | PauliList | Tableau,
     initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
-    **kwargs: Any | None,  # noqa: ANN401
+    **kwargs: Any,  # noqa: ANN401
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Synthesize a Clifford circuit from a given tableau starting from an (optional) initial tableau.
 
@@ -147,7 +141,7 @@ def optimize_clifford(
     circuit: str | QuantumCircuit | QuantumComputation,
     initial_tableau: str | Clifford | PauliList | Tableau | None = None,
     include_destabilizers: bool = False,
-    **kwargs: Any | None,  # noqa: ANN401
+    **kwargs: Any,  # noqa: ANN401
 ) -> tuple[QuantumCircuit, SynthesisResults]:
     """Optimize a Clifford circuit starting from an (optional) initial tableau.
 
