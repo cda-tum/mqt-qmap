@@ -36,7 +36,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "qiskit-terra>=0.20.2",
+    "qiskit[qasm3-import]>=0.45.0",
     "rustworkx[all]>=0.13.0",
     "importlib_resources>=5.0; python_version < '3.10'",
     "typing_extensions>=4.0"
@@ -59,7 +59,7 @@ docs = [
     "nbsphinx",
     "sphinxext-opengraph",
     "sphinx-autodoc-typehints",
-    "qiskit-terra[visualization]",
+    "qiskit[visualization]",
     "mqt.qmap[visualization]"
 ]
 visualization = [
@@ -81,8 +81,8 @@ Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
 # Protect the configuration against future changes in scikit-build-core
 minimum-version = "0.6.1"
 
-# Set the target to build
-cmake.targets = ["pyqmap"]
+# Set the wheel install directory
+wheel.install-dir = "mqt/qmap"
 
 # Set required CMake and Ninja versions
 cmake.minimum-version = "3.19"
@@ -90,9 +90,6 @@ ninja.minimum-version = "1.10"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
-
-# Build stable ABI wheels for CPython 3.12+
-wheel.py-api = "cp312"
 
 # Explicitly set the package directory
 wheel.packages = ["src/mqt"]
@@ -120,7 +117,6 @@ sdist.exclude = [
 [tool.scikit-build.cmake.define]
 BUILD_MQT_QMAP_TESTS = "OFF"
 BUILD_MQT_QMAP_BINDINGS = "ON"
-ENABLE_IPO = "ON"
 
 
 [tool.check-sdist]
@@ -149,6 +145,7 @@ filterwarnings = [
     "ignore:.*qiskit.__qiskit_version__.*:DeprecationWarning:qiskit:",
     "ignore:.*qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals*:DeprecationWarning:qiskit",
     "ignore:.*qiskit.extensions module is pending deprecation*:PendingDeprecationWarning:qiskit",
+    'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
 ]
 
 [tool.coverage]
@@ -157,18 +154,20 @@ run.omit = ["*/visualization/*"]
 report.exclude_also = [
     '\.\.\.',
     'if TYPE_CHECKING:',
+    'raise AssertionError',
+    'raise NotImplementedError',
 ]
 
 [tool.mypy]
 files = ["src/mqt", "test/python"]
 mypy_path = ["$MYPY_CONFIG_FILE_DIR/src"]
 python_version = "3.8"
-strict = true
-show_error_codes = true
+warn_unused_configs = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-warn_unreachable = true
+strict = true
+disallow_untyped_defs = false
 explicit_package_bases = true
-pretty = true
+warn_unreachable = true
 
 [[tool.mypy.overrides]]
 module = ["qiskit.*", "matplotlib.*", "networkx.*", "plotly.*", "_plotly_utils.*", "distinctipy.*", "ipywidgets.*", "walkerlayout.*"]
@@ -256,7 +255,6 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
-test-skip = "cp312-*"  # Qiskit Terra does not support Python 3.12 yet
 build-frontend = "build"
 
 [tool.cibuildwheel.linux]

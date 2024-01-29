@@ -318,9 +318,9 @@ class LayerHeuristicBenchmarkInfo:
 
 class MappingResults:
     configuration: Configuration
-    input: Any  # noqa: A003
+    input: CircuitInfo  # noqa: A003
     mapped_circuit: str
-    output: Any
+    output: CircuitInfo
     time: float
     timeout: bool
     wcnf: str
@@ -479,7 +479,7 @@ class QuantumComputation:
 
 class Tableau:
     @overload
-    def __init__(self, n: int, include_stabilizers: bool) -> None: ...
+    def __init__(self, n: int, include_stabilizers: bool = False) -> None: ...
     @overload
     def __init__(self, description: str) -> None: ...
     @overload

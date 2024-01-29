@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit import QuantumCircuit, QuantumRegister
-from qiskit.transpiler import Layout
+from qiskit import QuantumCircuit, QuantumRegister, qasm3
+from qiskit.transpiler import Layout, TranspileLayout
 
 if TYPE_CHECKING:
     from qiskit.providers import Backend
@@ -187,18 +187,11 @@ def compile(  # noqa: A001
 
     results = map(circ, architecture, config)
 
-    circ = QuantumCircuit.from_qasm_str(results.mapped_circuit)
+    circ = qasm3.loads(results.mapped_circuit)
     layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
 
-    # qiskit-terra 0.22.0 introduced a breaking change in the `_layout` of the `QuantumCircuit` class.
-    # To maintain backwards compatibility, the following `try... except` block is necessary.
-    try:
-        from qiskit.transpiler.layout import TranspileLayout
-
-        circ._layout = TranspileLayout(  # noqa: SLF001
-            initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-        )
-    except ImportError:
-        circ._layout = layout  # noqa: SLF001
+    circ._layout = TranspileLayout(  # noqa: SLF001
+        initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
+    )
 
     return circ, results

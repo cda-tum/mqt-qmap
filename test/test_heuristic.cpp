@@ -1118,8 +1118,8 @@ TEST(Functionality, NoMeasurmentsAdded) {
   // get the resulting circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper.dumpResult(qasm, qc::Format::OpenQASM);
-  qcMapped.import(qasm, qc::Format::OpenQASM);
+  mapper.dumpResult(qasm, qc::Format::OpenQASM3);
+  qcMapped.import(qasm, qc::Format::OpenQASM3);
 
   // check no measurements were added
   EXPECT_EQ(qcMapped.getNops(), 3U);
@@ -1392,7 +1392,7 @@ TEST(Functionality, DataLogger) {
   std::stringstream inputFileBuffer;
   inputFileBuffer << inputQasmFile.rdbuf();
   std::stringstream inputQasmBuffer;
-  qc.dumpOpenQASM(inputQasmBuffer);
+  qc.dumpOpenQASM3(inputQasmBuffer);
   EXPECT_EQ(inputFileBuffer.str(), inputQasmBuffer.str());
 
   auto outputQasmFile =
@@ -1404,7 +1404,7 @@ TEST(Functionality, DataLogger) {
   std::stringstream outputFileBuffer;
   outputFileBuffer << outputQasmFile.rdbuf();
   std::stringstream outputQasmBuffer;
-  mapper->dumpResult(outputQasmBuffer, qc::Format::OpenQASM);
+  mapper->dumpResult(outputQasmBuffer, qc::Format::OpenQASM3);
   EXPECT_EQ(outputFileBuffer.str(), outputQasmBuffer.str());
 
   // checking logged search graph info against known values (correct qubit
@@ -1652,12 +1652,12 @@ TEST(Functionality, InitialLayoutDump) {
   mapper.map(config);
 
   std::stringstream qasmStream{};
-  mapper.dumpResult(qasmStream, qc::Format::OpenQASM);
+  mapper.dumpResult(qasmStream, qc::Format::OpenQASM3);
   const std::string qasm = qasmStream.str();
 
   qasmStream    = std::stringstream(qasm);
   auto qcMapped = qc::QuantumComputation();
-  qcMapped.import(qasmStream, qc::Format::OpenQASM);
+  qcMapped.import(qasmStream, qc::Format::OpenQASM3);
 
   qasmStream = std::stringstream(qasm);
   std::string line;
@@ -1726,8 +1726,8 @@ TEST_F(LayeringTest, Disjoint2qBlocks) {
   // get mapped circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM);
-  qcMapped.import(qasm, qc::Format::OpenQASM);
+  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
+  qcMapped.import(qasm, qc::Format::OpenQASM3);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
@@ -1746,8 +1746,8 @@ TEST_F(LayeringTest, DisjointQubits) {
   // get mapped circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM);
-  qcMapped.import(qasm, qc::Format::OpenQASM);
+  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
+  qcMapped.import(qasm, qc::Format::OpenQASM3);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {
@@ -1766,8 +1766,8 @@ TEST_F(LayeringTest, IndividualGates) {
   // get mapped circuit
   auto              qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM);
-  qcMapped.import(qasm, qc::Format::OpenQASM);
+  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
+  qcMapped.import(qasm, qc::Format::OpenQASM3);
   // check barrier count
   std::size_t barriers = 0;
   for (const auto& op : qcMapped) {

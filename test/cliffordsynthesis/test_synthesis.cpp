@@ -67,7 +67,7 @@ protected:
     if (!test.initialCircuit.empty()) {
       std::stringstream      ss(test.initialCircuit);
       qc::QuantumComputation qc{};
-      qc.import(ss, qc::Format::OpenQASM);
+      qc.import(ss, qc::Format::OpenQASM3);
       std::cout << "Initial circuit:\n" << qc;
       targetTableau = Tableau(qc);
       targetTableauWithDestabilizer =

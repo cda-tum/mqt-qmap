@@ -115,7 +115,7 @@ def test_singleton_graph(singleton_graph: Graph) -> None:
     assert len(order.sgs) == 2
     assert len(order.sgs[0]) == 0
     assert len(order.sgs[1]) == 1
-    assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)  # type: ignore[attr-defined]
+    assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)
 
 
 def test_two_node_graph(singleton_graph: Graph) -> None:
@@ -125,8 +125,8 @@ def test_two_node_graph(singleton_graph: Graph) -> None:
     assert len(order.sgs[0]) == 0
     assert len(order.sgs[1]) == 1
     assert len(order.sgs[2]) == 1
-    assert rx.is_isomorphic(order.optimal_candidates(2)[0], order.sgs[2][0])  # type: ignore[attr-defined]
-    assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)  # type: ignore[attr-defined]
+    assert rx.is_isomorphic(order.optimal_candidates(2)[0], order.sgs[2][0])
+    assert rx.is_isomorphic(order.optimal_candidates(1)[0], singleton_graph)
 
 
 def test_ibm_guadalupe_opt(ibm_guadalupe: SubarchitectureOrder) -> None:
@@ -135,7 +135,7 @@ def test_ibm_guadalupe_opt(ibm_guadalupe: SubarchitectureOrder) -> None:
     assert len(opt_cand_9) == 2
     assert opt_cand_9[0].num_nodes() == 15
     assert opt_cand_9[1].num_nodes() == 15
-    assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])  # type: ignore[attr-defined]
+    assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])
 
 
 def test_ibm_guadalupe_cov(ibm_guadalupe: SubarchitectureOrder) -> None:
@@ -146,7 +146,7 @@ def test_ibm_guadalupe_cov(ibm_guadalupe: SubarchitectureOrder) -> None:
     for sg in ibm_guadalupe.sgs[9]:
         covered = False
         for co in cov:
-            if rx.is_subgraph_isomorphic(co, sg):  # type: ignore[attr-defined]
+            if rx.is_subgraph_isomorphic(co, sg):
                 covered = True
                 break
         assert covered
@@ -158,7 +158,7 @@ def test_rigetti16_opt(rigetti16: SubarchitectureOrder, rigetti16_opt: Graph) ->
     assert len(opt) == 1
 
     opt_cand = opt[0]
-    assert rx.is_isomorphic(opt_cand, rigetti16_opt)  # type: ignore[attr-defined]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
 
 
 def test_rigetti16_opt_library(rigetti16_opt: Graph) -> None:
@@ -167,7 +167,7 @@ def test_rigetti16_opt_library(rigetti16_opt: Graph) -> None:
     assert len(opt) == 1
 
     opt_cand = opt[0]
-    assert rx.is_isomorphic(opt_cand, rigetti16_opt)  # type: ignore[attr-defined]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
 
 
 def test_rigetti16_opt_library_from_str(rigetti16_opt: Graph) -> None:
@@ -176,7 +176,7 @@ def test_rigetti16_opt_library_from_str(rigetti16_opt: Graph) -> None:
     assert len(opt) == 1
 
     opt_cand = opt[0]
-    assert rx.is_isomorphic(opt_cand, rigetti16_opt)  # type: ignore[attr-defined]
+    assert rx.is_isomorphic(opt_cand, rigetti16_opt)
 
 
 def test_ibm_guadalupe_library() -> None:
@@ -185,7 +185,7 @@ def test_ibm_guadalupe_library() -> None:
     assert len(opt_cand_9) == 2
     assert opt_cand_9[0].num_nodes() == 15
     assert opt_cand_9[1].num_nodes() == 15
-    assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])  # type: ignore[attr-defined]
+    assert not rx.is_isomorphic(opt_cand_9[0], opt_cand_9[1])
 
 
 def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
@@ -204,7 +204,7 @@ def test_store_subarch(ibm_guadalupe: SubarchitectureOrder) -> None:
 
     assert len(opt_origin) == len(opt_loaded)
     for opt_cand_orig, opt_cand_load in zip(opt_origin, opt_loaded):
-        assert rx.is_isomorphic(opt_cand_load, opt_cand_orig)  # type: ignore[attr-defined]
+        assert rx.is_isomorphic(opt_cand_load, opt_cand_orig)
 
 
 def test_subarchitecture_from_qmap_arch() -> None:

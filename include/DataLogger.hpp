@@ -55,13 +55,13 @@ public:
     if (deactivated) {
       return;
     }
-    qc.dump(dataLoggingPath + "/input.qasm", qc::Format::OpenQASM);
+    qc.dump(dataLoggingPath + "/input.qasm", qc::Format::OpenQASM3);
   };
   void logOutputCircuit(qc::QuantumComputation& qc) {
     if (deactivated) {
       return;
     }
-    qc.dump(dataLoggingPath + "/output.qasm", qc::Format::OpenQASM);
+    qc.dump(dataLoggingPath + "/output.qasm", qc::Format::OpenQASM3);
   }
   void close();
 

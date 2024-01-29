@@ -58,7 +58,7 @@ public:
 
   void setResultCircuit(qc::QuantumComputation& qc) {
     std::stringstream ss;
-    qc.dumpOpenQASM(ss);
+    qc.dumpOpenQASM3(ss);
     resultCircuit = ss.str();
   }
   void setResultTableau(const Tableau& tableau) {

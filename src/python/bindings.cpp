@@ -67,7 +67,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
   auto& results = mapper->getResults();
 
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM);
+  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
   results.mappedCircuit = qasm.str();
 
   return results;
@@ -672,7 +672,7 @@ PYBIND11_MODULE(pyqmap, m) {
       [](const std::string& qasm) {
         std::stringstream      ss(qasm);
         qc::QuantumComputation qc{};
-        qc.import(ss, qc::Format::OpenQASM);
+        qc.import(ss, qc::Format::OpenQASM3);
         return qc;
       },
       "qasm"_a, "Reads a quantum circuit from a qasm string.");
