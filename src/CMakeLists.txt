@@ -1,75 +1,62 @@
-# add LogicBlocks target
-set(BUILD_LB_TESTS
-    OFF
-    CACHE BOOL "Build LogicBlocks tests")
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/LogicBlocks" "extern/LogicBlocks" EXCLUDE_FROM_ALL)
-# add MQT::Core target
-set(BUILD_MQT_CORE_TESTS
-    OFF
-    CACHE BOOL "Build MQT Core tests")
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/mqt-core" "extern/mqt-core" EXCLUDE_FROM_ALL)
+set(MQT_QMAP_TARGET_NAME mqt-qmap)
 
 # macro to add core libraries
 macro(ADD_INTERNAL_LIBRARY libname)
   set(lib ${libname})
 
   # set include directories
-  target_include_directories(${lib} PUBLIC ${PROJECT_SOURCE_DIR}/include
-                                           ${PROJECT_BINARY_DIR}/include)
+  target_include_directories(${lib} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
   # add MQT::qfr library
-  target_link_libraries(${lib} PUBLIC MQT::Core)
-
-  # add MQT alias
-  add_library(MQT::${lib} ALIAS ${lib})
-
+  target_link_libraries(${lib} PUBLIC MQT::Core nlohmann_json::nlohmann_json)
+  target_link_libraries(${lib} PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 endmacro()
 
 # macro to add mapping libraries
 macro(ADD_QMAP_LIBRARY libname srcfile)
-  set(lib ${PROJECT_NAME}_${libname}_lib)
+  set(lib ${MQT_QMAP_TARGET_NAME}-${libname})
 
   # main project library
   add_library(
     ${lib}
     ${libname}/${srcfile}.cpp
-    ${PROJECT_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${PROJECT_SOURCE_DIR}/include/Architecture.hpp
-    ${PROJECT_SOURCE_DIR}/include/configuration
-    ${PROJECT_SOURCE_DIR}/include/DataLogger.hpp
-    ${PROJECT_SOURCE_DIR}/include/heuristic/UniquePriorityQueue.hpp
-    ${PROJECT_SOURCE_DIR}/include/Mapper.hpp
-    ${PROJECT_SOURCE_DIR}/include/MappingResults.hpp
-    ${PROJECT_SOURCE_DIR}/include/utils.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/${libname}/${srcfile}.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/Architecture.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/configuration
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/DataLogger.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/heuristic/UniquePriorityQueue.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/Mapper.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/MappingResults.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/utils.hpp
     Architecture.cpp
     configuration/Configuration.cpp
     DataLogger.cpp
     Mapper.cpp
     utils.cpp)
 
-  add_internal_library(${lib} ${srcfile})
+  add_internal_library(${lib})
 endmacro()
 
 # macro to add synthesis libraries
 macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
-  set(lib ${PROJECT_NAME}_${libname}_lib)
+  set(lib ${MQT_QMAP_TARGET_NAME}-${libname})
 
   # main project library
   add_library(
     ${lib}
     ${libname}/${srcfile}.cpp
-    ${PROJECT_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Configuration.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/GateEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/MultiGateEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/ObjectiveEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SATEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/SingleGateEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/encoding/TableauEncoder.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Results.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/Tableau.hpp
-    ${PROJECT_SOURCE_DIR}/include/cliffordsynthesis/TargetMetric.hpp
-    ${PROJECT_SOURCE_DIR}/include/utils.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/${libname}/${srcfile}.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/Configuration.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/GateEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/MultiGateEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/ObjectiveEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/SATEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/SingleGateEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/encoding/TableauEncoder.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/Results.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/Tableau.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/cliffordsynthesis/TargetMetric.hpp
+    ${MQT_QMAP_INCLUDE_BUILD_DIR}/utils.hpp
     cliffordsynthesis/encoding/GateEncoder.cpp
     cliffordsynthesis/encoding/MultiGateEncoder.cpp
     cliffordsynthesis/encoding/ObjectiveEncoder.cpp
@@ -79,23 +66,32 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     cliffordsynthesis/Tableau.cpp
     utils.cpp)
 
-  add_internal_library(${lib} ${srcfile})
+  add_internal_library(${lib})
 endmacro()
 
 # exact mapper project library
 add_qmap_library(exact ExactMapper)
 
+# enable PIC for LogicBlocks
+set_target_properties(LogicTerm_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # add LogicBlocks library
-target_link_libraries(${PROJECT_NAME}_exact_lib PUBLIC logicblocks::Logic logicblocks::Encodings)
+target_link_libraries(${MQT_QMAP_TARGET_NAME}-exact PUBLIC logicblocks::Logic
+                                                           logicblocks::Encodings)
 
 add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
 
 # add LogicBlocks library
-target_link_libraries(${PROJECT_NAME}_cliffordsynthesis_lib
-                      PUBLIC logicblocks::Logic logicblocks::Encodings nlohmann_json::nlohmann_json)
+target_link_libraries(${MQT_QMAP_TARGET_NAME}-cliffordsynthesis PUBLIC logicblocks::Logic
+                                                                       logicblocks::Encodings)
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
+
+# add MQT alias targets
+add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
+add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
+add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
 
 if(BUILD_MQT_QMAP_BINDINGS)
   add_subdirectory(python)

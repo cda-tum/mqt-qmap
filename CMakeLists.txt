@@ -2,38 +2,29 @@
 cmake_minimum_required(VERSION 3.19...3.28)
 
 project(
-  qmap
+  mqt-qmap
   LANGUAGES CXX
   DESCRIPTION "MQT QMAP - A library for mapping of quantum circuits to quantum architectures")
 
-# check whether the submodule ``modulename`` is correctly cloned in the ``/extern`` directory.
-macro(CHECK_SUBMODULE_PRESENT modulename)
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/${modulename}/CMakeLists.txt")
-    message(
-      FATAL_ERROR
-        "${modulename} submodule not cloned properly. \
-        Please run `git submodule update --init --recursive` \
-        from the main project directory")
-  endif()
-endmacro()
-
-check_submodule_present(mqt-core)
-check_submodule_present(LogicBlocks)
-
+option(BUILD_MQT_QMAP_TESTS "Also build tests for the MQT QMAP project" ON)
 option(BUILD_MQT_QMAP_BINDINGS "Build the MQT QMAP Python bindings" OFF)
+
 if(BUILD_MQT_QMAP_BINDINGS)
   # ensure that the BINDINGS option is set
   set(BINDINGS
       ON
-      CACHE BOOL "Enable settings related to Python bindings" FORCE)
-  # cmake-lint: disable=C0103
+      CACHE INTERNAL "Enable settings related to Python bindings")
+  # Some common settings for finding Python
   set(Python_FIND_VIRTUALENV
       FIRST
       CACHE STRING "Give precedence to virtualenvs when searching for Python")
-  # cmake-lint: disable=C0103
+  set(Python_FIND_FRAMEWORK
+      LAST
+      CACHE STRING "Prefer Brew/Conda to Apple framework Python")
   set(Python_ARTIFACTS_INTERACTIVE
       ON
       CACHE BOOL "Prevent multiple searches for Python and instead cache the results.")
+
   # top-level call to find Python
   find_package(
     Python 3.8 REQUIRED
@@ -44,17 +35,15 @@ endif()
 # Add path for custom modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# search for Z3
-find_package(Z3 4.8.15)
-if(NOT Z3_FOUND)
-  message(WARNING "Did not find Z3. Exact library and other depending target will not be available")
-endif()
+include(cmake/ExternalDependencies.cmake)
+
+# set the include directory for the build tree
+set(MQT_QMAP_INCLUDE_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # add main library code
 add_subdirectory(src)
 
 # add test code
-option(BUILD_MQT_QMAP_TESTS "Also build tests for the MQT QMAP project" ON)
 if(BUILD_MQT_QMAP_TESTS)
   enable_testing()
   include(GoogleTest)
