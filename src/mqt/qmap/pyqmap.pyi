@@ -318,7 +318,7 @@ class LayerHeuristicBenchmarkInfo:
 
 class MappingResults:
     configuration: Configuration
-    input: CircuitInfo  # noqa: A003
+    input: CircuitInfo
     mapped_circuit: str
     output: CircuitInfo
     time: float
