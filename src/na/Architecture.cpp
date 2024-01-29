@@ -92,7 +92,7 @@ Architecture::Architecture(std::string& filename) {
     decoherenceTimes = Architecture::DecoherenceTimes(
         data["decoherence"]["t1"], data["decoherence"]["t2"]);
     nAods      = data["AOD"]["number"];
-    shutteling = Architecture::Shutteling(
+    shuttling = Architecture::Shuttling(
         data["AOD"]["rows"], data["AOD"]["columns"],
         data["AOD"]["move"]["speed"], data["AOD"]["move"]["fidelity"],
         data["AOD"]["activate"]["time"], data["AOD"]["activate"]["fidelity"],

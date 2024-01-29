@@ -140,7 +140,7 @@ public:
         : type(type), scope(scope), zones(std::move(zones)), time(time),
           fidelity(fidelity) {}
   };
-  class Shutteling {
+  class Shuttling {
   public:
     Number rows;
     Number cols;
@@ -150,14 +150,14 @@ public:
     Value  activationFidelity;
     Value  deactivationTime;
     Value  deactivationFidelity;
-    Shutteling()               = default;
-    Shutteling(Shutteling& sh) = default;
-    Shutteling(Number rs, Number cs, Value sp, Value fi, Value ta, Value fa,
+    Shuttling()               = default;
+    Shuttling(Shuttling& sh) = default;
+    Shuttling(Number rs, Number cs, Value sp, Value fi, Value ta, Value fa,
                Value td, Value fd)
         : rows(rs), cols(cs), speed(sp), fidelity(fi), activationTime(ta),
           activationFidelity(fa), deactivationTime(td),
           deactivationFidelity(fd) {}
-    Shutteling& operator=(Shutteling&& s) noexcept {
+    Shuttling& operator=(Shuttling&& s) noexcept {
       if (this != &s) {
         rows                 = s.rows;
         cols                 = s.cols;
@@ -182,7 +182,7 @@ protected:
       operations; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes; // the decoherence characteristic
   Number           nAods;            // number of AODs for atom movement
-  Shutteling       shutteling;       // all properties regarding AODs
+  Shuttling       shuttling;       // all properties regarding AODs
   Value minAtomDistance;   // minimal distance that must be kept between atoms
   Value interactionRadius; // the Rydberg radius
 
@@ -209,7 +209,7 @@ public:
   }
   [[nodiscard]] inline auto getDecoherenceTimes() { return decoherenceTimes; }
   [[nodiscard]] inline auto getNAods() const { return nAods; }
-  [[nodiscard]] inline auto getShutteling() { return shutteling; }
+  [[nodiscard]] inline auto getShuttling() { return shuttling; }
   [[nodiscard]] inline auto getMinAtomDistance() const {
     return minAtomDistance;
   }
