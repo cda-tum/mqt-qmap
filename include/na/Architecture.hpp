@@ -1,6 +1,6 @@
 //
 // This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
+// See README.md or go to https://github.com/cda-tum/mqt-qmap for more information.
 //
 
 #pragma once
@@ -20,11 +20,9 @@
 
 namespace na {
 
-/**
- * @brief The scope of an operation (Global or Local)
- */
-enum class Scope { Global, Local };
-static std::map<std::string, Scope> const STRING_TO_SCOPE = {
+/// The scope of an operation (Global or Local)
+enum class Scope: uint8_t { Global, Local };
+static constexpr std::map<std::string, Scope> STRING_TO_SCOPE = {
     {"Global", Scope::Global}, {"Local", Scope::Local}};
 /**
  * @brief Get the Scope of a gate from a string
@@ -62,13 +60,13 @@ class Point {
 public:
   std::uint32_t x;
   std::uint32_t y;
-  Point(std::uint32_t x, std::uint32_t y) : x(x), y(y){};
-  inline Point operator-(const Point&& p) {
+  Point(const std::uint32_t x, const std::uint32_t y) : x(x), y(y){};
+  inline Point operator-(const Point& p) {
     x -= p.x;
     y -= p.y;
     return *this;
   }
-  inline Point operator+(const Point&& p) {
+  inline Point operator+(const Point& p) {
     x += p.x;
     y += p.y;
     return *this;
@@ -95,9 +93,9 @@ using Site = std::tuple<Point, Zone, Type>;
  */
 using Value = qc::fp;
 /**
- * @brief Any information on numbers of somethin
+ * @brief Any information on numbers of something
  */
-using Number = std::uint64_t;
+using Number = std::size_t
 
 class Architecture {
 public:
@@ -110,8 +108,7 @@ public:
    * - T2
    * - effective decoherence time
    */
-  class DecoherenceTimes {
-  public:
+  struct DecoherenceTimes {
     Value t1                              = 0;
     Value t2                              = 0;
     Value tEff                            = 0;
