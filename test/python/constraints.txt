@@ -4,7 +4,7 @@ pybind11==2.11.0
 pytest==7.0.0
 importlib_resources==5.0.0
 typing_extensions==4.0.0
-qiskit==0.45.0
+qiskit==0.46.0
 rustworkx==0.13.0
 mqt.qcec==2.0.0
 distinctipy==1.2.2

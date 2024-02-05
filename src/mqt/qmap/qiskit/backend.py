@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit.providers import Backend, BackendV1, BackendV2
+from qiskit.providers import Backend, BackendV1, BackendV2, BackendV2Converter
 
 if TYPE_CHECKING:
-    from qiskit.providers.models import BackendProperties
     from qiskit.transpiler import Target
 
 from mqt.qmap import Architecture
@@ -24,55 +23,11 @@ def import_backend(backend: Backend) -> Architecture:
 
     """
     if isinstance(backend, BackendV1):
-        return import_backend_v1(backend)
+        return import_backend_v2(BackendV2Converter(backend))
     if isinstance(backend, BackendV2):
         return import_backend_v2(backend)
     msg = f"Backend type {type(backend)} not supported."
     raise TypeError(msg)
-
-
-def import_backend_properties(backend_properties: BackendProperties) -> Architecture.Properties:
-    """Import backend properties from qiskit.providers.models.BackendProperties.
-
-    Args:
-        backend_properties: The backend properties to import.
-
-    Returns:
-        The imported backend properties as an Architecture.Properties object.
-    """
-    props = Architecture.Properties()
-    props.name = backend_properties.backend_name
-    props.num_qubits = len(backend_properties.qubits)
-    for qubit in range(props.num_qubits):
-        props.set_t1(qubit, backend_properties.t1(qubit))
-        props.set_t2(qubit, backend_properties.t2(qubit))
-        props.set_frequency(qubit, backend_properties.frequency(qubit))
-        props.set_readout_error(qubit, backend_properties.readout_error(qubit))
-
-    for gate in backend_properties.gates:
-        if gate.gate == "reset":
-            continue
-
-        if len(gate.qubits) == 1:
-            props.set_single_qubit_error(
-                gate.qubits[0], gate.gate, backend_properties.gate_error(gate.gate, gate.qubits)
-            )
-        elif len(gate.qubits) == 2:
-            props.set_two_qubit_error(
-                gate.qubits[0], gate.qubits[1], backend_properties.gate_error(gate.gate, gate.qubits), gate.gate
-            )
-    return props
-
-
-def import_backend_v1(backend: BackendV1) -> Architecture:
-    """Import a backend from qiskit.providers.BackendV1."""
-    arch = Architecture()
-    arch.name = backend.name()
-    arch.num_qubits = backend.configuration().n_qubits
-    arch.coupling_map = {(c[0], c[1]) for c in backend.configuration().coupling_map}
-    arch.properties = import_backend_properties(backend.properties())
-
-    return arch
 
 
 def import_target(target: Target) -> Architecture.Properties:
