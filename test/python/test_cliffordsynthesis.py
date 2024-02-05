@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, qasm2
 from qiskit.quantum_info import Clifford, PauliList
 
 from mqt import qcec, qmap
@@ -236,8 +236,7 @@ def test_optimize_quantum_computation(bell_circuit: QuantumCircuit) -> None:
 
 def test_optimize_from_qasm_file(bell_circuit: QuantumCircuit) -> None:
     """Test that we can optimize from a QASM file."""
-    with Path("bell.qasm").open("w") as f:
-        f.write(bell_circuit.qasm())
+    qasm2.dump(bell_circuit, Path("bell.qasm"))
     circ, _ = qmap.optimize_clifford(circuit="bell.qasm")
     assert qcec.verify(circ, bell_circuit).considered_equivalent()
 

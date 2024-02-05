@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from matplotlib import figure
-    from qiskit.providers import BackendV1
+    from qiskit.providers import BackendV1, BackendV2
     from typing_extensions import TypeAlias
 
     from . import Architecture
@@ -102,6 +102,19 @@ class SubarchitectureOrder:
             The resulting partial order.
         """
         coupling_map = [(c[0], c[1]) for c in backend.configuration().coupling_map]
+        return cls.from_coupling_map(coupling_map)
+
+    @classmethod
+    def from_backend_v2(cls, backend: BackendV2) -> SubarchitectureOrder:
+        """Construct the partial order from a coupling map defined as a Qiskit backend.
+
+        Args:
+            backend: Qiskit backend.
+
+        Returns:
+            The resulting partial order.
+        """
+        coupling_map = [(c[0], c[1]) for c in backend.coupling_map]
         return cls.from_coupling_map(coupling_map)
 
     @classmethod
