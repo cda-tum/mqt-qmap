@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Optional
 
 import pytest
 import rustworkx as rx
-from qiskit.providers.fake_provider import FakeLondon
+from qiskit.providers.fake_provider import GenericBackendV2
 
 from mqt.qmap import Architecture
 from mqt.qmap.subarchitectures import (
@@ -219,9 +219,9 @@ def test_subarchitecture_from_qmap_arch() -> None:
 
 def test_subarchitecture_from_qiskit_backend() -> None:
     """Verify that subarchitecture order can be created from Qiskit backends."""
-    arch = FakeLondon()
-    so_arch = SubarchitectureOrder.from_backend(arch)
-    cm = [(c[0], c[1]) for c in arch.configuration().coupling_map]
+    arch = GenericBackendV2(num_qubits=5, coupling_map=[[0, 1], [1, 0], [1, 2], [2, 1], [1, 3], [3, 1], [3, 4], [4, 3]])
+    so_arch = SubarchitectureOrder.from_backend_v2(arch)
+    cm = [(c[0], c[1]) for c in arch.coupling_map]
     so_cm = SubarchitectureOrder.from_coupling_map(cm)
 
     assert so_arch.subarch_order == so_cm.subarch_order
