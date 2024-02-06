@@ -1,29 +1,33 @@
 //
 // This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more information.
+// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
+// information.
 //
 
 #pragma once
 
 #include "Definitions.hpp"
-#include "operations/OpType.hpp"
 #include "na/Definitions.hpp"
+#include "operations/OpType.hpp"
 
 #include <cstdint>
 #include <cstdlib>
 #include <map>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace na {
 
 /// The scope of an operation (Global or Local)
-enum class Scope: uint8_t { Global, Local };
-static constexpr std::map<std::string, Scope> STRING_TO_SCOPE = {
+enum class Scope : uint8_t { Global, Local };
+static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
     {"Global", Scope::Global}, {"Local", Scope::Local}};
 /**
  * @brief Get the Scope of a gate from a string
@@ -31,9 +35,14 @@ static constexpr std::map<std::string, Scope> STRING_TO_SCOPE = {
  * @param s the name
  * @return Type
  */
+
 inline Scope getScopeOfString(const std::string& s) {
-  auto it = STRING_TO_SCOPE.find(s);
-  return it->second;
+  if (const auto it = STRING_TO_SCOPE.find(s); it != STRING_TO_SCOPE.end()) {
+    return it->second;
+  }
+  std::stringstream ss;
+  ss << "The scope " << s << " is not supported.";
+  throw std::invalid_argument(ss.str());
 }
 
 /**
@@ -50,35 +59,29 @@ static std::map<std::string, Type> const STRING_TO_TYPE = {{"SLM", Type::SLM},
  * @return Type
  */
 inline Type getTypeOfString(const std::string& s) {
-  auto it = STRING_TO_TYPE.find(s);
-  return it->second;
+  if (auto it = STRING_TO_TYPE.find(s); it != STRING_TO_TYPE.end()) {
+    return it->second;
+  }
+  std::stringstream ss;
+  ss << "The type " << s << " is not supported.";
+  throw std::invalid_argument(ss.str());
 }
 
-/**
- * @brief For Indices
- */
+/// For Indices
 using Index = std::size_t;
-/**
- * @brief The zones are just stored as int
- */
+/// The zones are just stored as int
 using Zone = Index;
-/**
- * @brief A site is defined by a position, a zone, and a type
- */
+/// A site is defined by a position, a zone, and a type
 using Site = std::tuple<Point, Zone, Type>;
-/**
- * @brief Any double-valued property
- */
+/// Any double-valued property
 using Value = qc::fp;
-/**
- * @brief Any information on numbers of something
- */
-using Number = std::size_t
+/// Any information on numbers of something
+using Number = std::size_t;
 
 class Architecture {
 public:
   /**
-   * @brief Class to store the decoherence times of a neutral atom
+   * @brief Struct to store the decoherence times of a neutral atom
    * architecture
    * @details
    * The decoherence times of a neutral atom architecture are:
@@ -87,82 +90,55 @@ public:
    * - effective decoherence time
    */
   struct DecoherenceTimes {
-    Value t1                              = 0;
-    Value t2                              = 0;
-    Value tEff                            = 0;
-    DecoherenceTimes()                    = default;
-    DecoherenceTimes(DecoherenceTimes& t) = default;
+    Value t1                                  = 0;
+    Value t2                                  = 0;
+    Value tEff                                = 0;
+    DecoherenceTimes()                        = default;
+    DecoherenceTimes(const DecoherenceTimes&) = default;
+    virtual ~DecoherenceTimes()               = default;
     inline DecoherenceTimes(Value t1, Value t2)
         : t1(t1), t2(t2), tEff(t1 * t2 / (t1 + t2)) {}
-    virtual ~DecoherenceTimes() = default;
-    explicit          operator double() const { return tEff; }
-    DecoherenceTimes& operator=(DecoherenceTimes&& t) noexcept {
-      if (this != &t) {
-        t1   = t.t1;
-        t2   = t.t2;
-        tEff = t.tEff;
-      }
-      return *this;
-    }
+    explicit operator double() const { return tEff; }
   };
-  class Operation {
-  public:
-    qc::OpType type;  // the type of the gate, use also RY for global ones here
-    Scope      scope; // local or global
-    std::set<Zone> zones;    // the zones where the gate can be applied
-    Value          time;     // the time the gate takes to be applied
-    Value          fidelity; // the fidelity of the gate
-    Operation(const Operation& op) = default;
-    Operation(qc::OpType type, Scope scope, std::set<Zone> zones, Value time,
-              Value fidelity)
-        : type(type), scope(scope), zones(std::move(zones)), time(time),
-          fidelity(fidelity) {}
+  /**
+   * @brief Strcut to store the properties of an operation.
+   * @details Times are in µs, fidelities are in [0,1].
+   */
+  struct OperationProperties {
+    Scope                    scope; // local or global
+    std::unordered_set<Zone> zones; // the zones where the gate can be applied
+    Value time;     // the time the gate takes to be applied in µs
+    Value fidelity; // the fidelity of the gate
   };
-  class Shuttling {
-  public:
-    Number rows;
-    Number cols;
-    Value  speed;
-    Value  fidelity;
-    Value  activationTime;
-    Value  activationFidelity;
-    Value  deactivationTime;
-    Value  deactivationFidelity;
-    Shuttling()               = default;
-    Shuttling(Shuttling& sh) = default;
-    Shuttling(Number rs, Number cs, Value sp, Value fi, Value ta, Value fa,
-               Value td, Value fd)
-        : rows(rs), cols(cs), speed(sp), fidelity(fi), activationTime(ta),
-          activationFidelity(fa), deactivationTime(td),
-          deactivationFidelity(fd) {}
-    Shuttling& operator=(Shuttling&& s) noexcept {
-      if (this != &s) {
-        rows                 = s.rows;
-        cols                 = s.cols;
-        speed                = s.speed;
-        fidelity             = s.fidelity;
-        activationTime       = s.activationTime;
-        activationFidelity   = s.activationFidelity;
-        deactivationTime     = s.deactivationTime;
-        deactivationFidelity = s.deactivationFidelity;
-      }
-      return *this;
-    }
+  /**
+   * @brief Struct to store the properties of a Shuttling operation (i.e. of the
+   * AOD).
+   * @details Times are in µs, fidelities are in [0,1], and velocities are in
+   * µm/µs.
+   */
+  struct ShuttlingProperties {
+    Number rows                 = 0; // maximum number of rows in one AOD
+    Number cols                 = 0; // maximum number of columns in one AOD
+    Value  speed                = 0; // speed of the AOD in µm/µs
+    Value  fidelity             = 1; // fidelity during the shuttling
+    Value  activationTime       = 0; // time to activate the AOD in µs
+    Value  activationFidelity   = 1; // fidelity of the activation
+    Value  deactivationTime     = 0; // time to deactivate the AOD in µs
+    Value  deactivationFidelity = 1; // fidelity of the deactivation
   };
 
 protected:
-  std::string name; // the name of the architecture
+  std::string name{}; // the name of the architecture
   std::vector<std::string>
-      zones; // a mapping from zones (int) to their name from the config
-  std::vector<Site> sites;  // a vector of sites (Position, Zone, Type)
-  Number            nSites; // number of sites
-  std::map<qc::OpType, Operation>
-      operations; // all possible operations by their type, i.e. gate set
-  DecoherenceTimes decoherenceTimes; // the decoherence characteristic
-  Number           nAods;            // number of AODs for atom movement
-  Shuttling       shuttling;       // all properties regarding AODs
-  Value minAtomDistance;   // minimal distance that must be kept between atoms
-  Value interactionRadius; // the Rydberg radius
+      zones{}; // a mapping from zones (int) to their name from the config
+  std::vector<Site> sites{}; // a vector of sites (Position, Zone, Type)
+  std::map<qc::OpType, OperationProperties>
+      gateSet{}; // all possible operations by their type, i.e. gate set
+  DecoherenceTimes    decoherenceTimes{};  // the decoherence characteristic
+  Number              nShuttlingUnits = 0; // number of AODs for atom movement
+  ShuttlingProperties shuttling{};         // all properties regarding AODs
+  Value minAtomDistance = 0; // minimal distance that must be kept between atoms
+  Value interactionRadius = 0; // the Rydberg radius
 
 public:
   /**
@@ -170,37 +146,37 @@ public:
    *
    * @param filename The path to the JSON file
    */
-  explicit Architecture(std::string& filename);
+  Architecture(const std::string& jsonFn, const std::string& csvFn);
+  Architecture(std::istream& jsonS, std::istream& csvS);
   virtual ~Architecture() = default;
-  [[nodiscard]] inline auto getName() { return name; }
-  [[nodiscard]] inline auto getNZones() { return zones.size(); }
-  [[nodiscard]] inline auto getZoneLabel(const Index& i) { return zones.at(i); }
-  [[nodiscard]] inline auto getNSites() const { return nSites; }
-  [[nodiscard]] auto        getType(const Index& i) {
+  [[nodiscard]] auto getName() const { return name; }
+  [[nodiscard]] auto getNZones() const { return zones.size(); }
+  [[nodiscard]] auto getZoneLabel(const Index& i) const { return zones.at(i); }
+  [[nodiscard]] auto getNSites() const { return sites.size(); }
+  [[nodiscard]] auto getType(const Index& i) const {
     return std::get<Type>(sites.at(i));
   }
-  [[nodiscard]] auto getZone(const Index& i) {
+  [[nodiscard]] auto getZone(const Index& i) const {
     return std::get<Zone>(sites.at(i));
   }
-  [[nodiscard]] inline auto getPos(const Index& i) {
+  [[nodiscard]] auto getPos(const Index& i) const {
     return std::get<Point>(sites.at(i));
   }
-  [[nodiscard]] inline auto getDecoherenceTimes() { return decoherenceTimes; }
-  [[nodiscard]] inline auto getNAods() const { return nAods; }
-  [[nodiscard]] inline auto getShuttling() { return shuttling; }
-  [[nodiscard]] inline auto getMinAtomDistance() const {
-    return minAtomDistance;
+  [[nodiscard]] auto getDecoherenceTimes() const -> DecoherenceTimes {
+    return decoherenceTimes;
   }
-  [[nodiscard]] inline auto getInteractionRadius() const {
-    return interactionRadius;
-  }
-  [[nodiscard]] auto getOperationByOpType(const qc::OpType& t) {
-    auto it = operations.find(t);
-    if (it == operations.end()) {
-      throw std::invalid_argument(
-          "This operation is not supported by this architecture.");
+  [[nodiscard]] auto getNShuttlingUnits() const { return nShuttlingUnits; }
+  [[nodiscard]] auto getShuttling() const -> ShuttlingProperties { return shuttling; }
+  [[nodiscard]] auto getMinAtomDistance() const { return minAtomDistance; }
+  [[nodiscard]] auto getInteractionRadius() const { return interactionRadius; }
+  [[nodiscard]] auto getOpPropsByOpType(const qc::OpType& t) const
+      -> OperationProperties {
+    if (auto it = gateSet.find(t); it != gateSet.end()) {
+      return it->second;
     }
-    return it->second;
+    std::stringstream ss;
+    ss << "The operation " << qc::toString(t) << " is not supported.";
+    throw std::invalid_argument(ss.str());
   }
   /**
    * @brief Returns the distance between two sites.
@@ -209,7 +185,7 @@ public:
    * @param j address of second site
    * @return the distance in µm
    */
-  [[nodiscard]] auto getDistance(Index i, Index j) {
+  [[nodiscard]] auto getDistance(Index i, Index j) const {
     return (getPos(j) - getPos(i)).length();
   }
   /**
@@ -221,7 +197,7 @@ public:
    * the qubit,
    * @return false otherwise
    */
-  [[nodiscard]] bool isAllowedLocally(qc::OpType gate, Index qubit);
+  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Index qubit) const;
   /**
    * @brief Checks whether the gate is a global gate for this Zone.
    *
@@ -230,6 +206,6 @@ public:
    * @return true if the gate is global and applicable in this zone,
    * @return false otherwise
    */
-  [[nodiscard]] bool isAllowedGlobally(qc::OpType gate, Zone zone);
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone) const;
 };
 } // namespace na

@@ -3,4 +3,3 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "na/Architecture.hpp"
