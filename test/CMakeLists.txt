@@ -8,9 +8,9 @@ if(TARGET MQT::QMapExact)
 endif()
 
 if(TARGET MQT::QMapCliffordSynthesis)
-  configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
+  configure_file(${PROJECT_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
                  ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json COPYONLY)
-  configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/circuits.json
+  configure_file(${PROJECT_SOURCE_DIR}/test/cliffordsynthesis/circuits.json
                  ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/circuits.json COPYONLY)
   package_add_test(
     mqt-qmap-cliffordsynthesis-test MQT::QMapCliffordSynthesis
