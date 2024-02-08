@@ -1,31 +1,30 @@
-#include "na/Configuration.hpp"
+#include "Configuration.hpp"
 #include <iostream>
 #include <fstream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
-// Constructor
-Configuration::Configuration() : patchRows(0), patchCols(0) {}
+namespace na {
 
-// Parse configuration from a JSON file
-bool Configuration::parseFromFile(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
-        return false;
+Configuration::Configuration(const std::string& filename) {
+    std::ifstream fs(filename);
+    if (!fs.good()) {
+        throw std::runtime_error("Could not open JSON file.");
     }
+    *this = Configuration(fs);
+}
 
-    json config;
+Configuration::Configuration(std::istream& fs) {
+    json data;
     try {
-        file >> config;
+        fs >> data;
     } catch (const std::exception& e) {
         std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-        return false;
     }
 
-    if (config.contains("patch") && config["patch"].is_object()) {
-        auto& patch = config["patch"];
+    if (data.contains("patch") && data["patch"].is_object()) {
+        auto& patch = data["patch"];
         if (patch.contains("rows") && patch["rows"].is_number_integer()) {
             patchRows = patch["rows"];
         }
@@ -34,9 +33,8 @@ bool Configuration::parseFromFile(const std::string& filename) {
         }
     }
 
-    if (config.contains("singleQubitScheduling") && config["singleQubitScheduling"].is_string()) {
-        singleQubitScheduling = config["singleQubitScheduling"];
+    if (data.contains("singleQubitScheduling") && data["singleQubitScheduling"].is_binary()) {
+        singleQubitScheduling = data["singleQubitScheduling"];
     }
-
-    return true;
-}
+};
+} // namespace na
