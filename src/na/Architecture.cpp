@@ -3,7 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "na/Architecture.hpp"
+#include "Architecture.hpp"
 
 #include "nlohmann/json.hpp"
 #include "operations/OpType.hpp"

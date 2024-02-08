@@ -149,6 +149,7 @@ public:
   Architecture(const std::string& jsonFn, const std::string& csvFn);
   Architecture(std::istream& jsonS, std::istream& csvS);
   virtual ~Architecture() = default;
+
   [[nodiscard]] auto getName() const { return name; }
   [[nodiscard]] auto getNZones() const { return zones.size(); }
   [[nodiscard]] auto getZoneLabel(const Index& i) const { return zones.at(i); }
