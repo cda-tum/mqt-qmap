@@ -1,7 +1,15 @@
-# neutral atoms mapper library
-add_library(
-  ${PROJECT_NAME}_na_lib
-  na/NeutralAtomMapper.cpp ${PROJECT_SOURCE_DIR}/include/na/NeutralAtomMapper.hpp
-  ${PROJECT_SOURCE_DIR}/include/na/Architecture.hpp ${PROJECT_SOURCE_DIR}/include/Mapper.hpp
-  na/Architecture.cpp Mapper.cpp)
-add_internal_library(${PROJECT_NAME}_na_lib NeutralAtomMapper)
+if(NOT TARGET ${MQT_CORE_TARGET_NAME}-na)
+  file(GLOB_RECURSE NA_HEADERS ${MQT_CORE_INCLUDE_BUILD_DIR}/na/*.hpp)
+
+  # add NA package library
+  add_library(
+    ${MQT_CORE_TARGET_NAME}-na
+    ${NA_HEADERS}
+    Architecture.cpp
+    Configuration.cpp
+    NeutralAtomMapper.cpp)
+
+  target_link_libraries(${MQT_CORE_TARGET_NAME}-na PUBLIC MQT::Core)
+  target_link_libraries(${MQT_CORE_TARGET_NAME}-na PRIVATE MQT::ProjectOptions
+    MQT::ProjectWarnings)
+endif()
