@@ -2,15 +2,20 @@
 
 #include <string>
 
+namespace na {
 class Configuration {
+private:
+    int patchRows = 1;
+    int patchCols = 1;
+    bool singleQubitScheduling = false;
+
 public:
-    int patchRows;
-    int patchCols;
-    std::string singleQubitScheduling;
+    explicit Configuration(const std::string& filename);
+    explicit Configuration(std::istream& fs);
+    virtual ~Configuration() = default;
 
-    // Constructor
-    Configuration();
-
-    // Parse configuration from a JSON file
-    bool parseFromFile(const std::string& filename);
+    [[nodiscard]] auto getPatchRows() const -> int { return patchRows; }
+    [[nodiscard]] auto getPatchCols() const -> int { return patchCols; }
+    [[nodiscard]] auto isSingleQubitSchedulingAllowed() const -> bool { return singleQubitScheduling; }
 };
+} // namespace na
