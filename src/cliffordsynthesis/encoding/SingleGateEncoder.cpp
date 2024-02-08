@@ -5,14 +5,14 @@
 
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 
-#include "utils/logging.hpp"
+#include "plog/Log.h"
 
 namespace cs::encoding {
 
 using namespace logicbase;
 
 void SingleGateEncoder::assertConsistency() const {
-  DEBUG() << "Asserting gate consistency";
+  PLOG_DEBUG << "Asserting gate consistency";
   LogicVector gateVariables{};
   gateVariables.reserve(N * (1 + SINGLE_QUBIT_GATES.size()));
   for (std::size_t t = 0U; t < T; ++t) {
@@ -21,9 +21,9 @@ void SingleGateEncoder::assertConsistency() const {
       vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
     }
     IF_PLOG(plog::verbose) {
-      TRACE() << "Gate variables at time " << t;
+      PLOG_VERBOSE << "Gate variables at time " << t;
       for (const auto& var : gateVariables) {
-        TRACE() << var.getName();
+        PLOG_VERBOSE << var.getName();
       }
     }
     assertExactlyOne(gateVariables);
@@ -32,9 +32,9 @@ void SingleGateEncoder::assertConsistency() const {
 }
 
 void SingleGateEncoder::assertGateConstraints() {
-  DEBUG() << "Asserting gate constraints";
+  PLOG_DEBUG << "Asserting gate constraints";
   for (std::size_t t = 0U; t < T; ++t) {
-    TRACE() << "Asserting gate constraints at time " << t;
+    PLOG_VERBOSE << "Asserting gate constraints at time " << t;
     assertSingleQubitGateConstraints(t);
     assertTwoQubitGateConstraints(t);
     assertNoGateNoChangeConstraint(t);
@@ -51,7 +51,7 @@ void SingleGateEncoder::assertNoGateNoChangeConstraint(const std::size_t pos) {
 
 void SingleGateEncoder::assertSingleQubitGateConstraints(std::size_t pos) {
   for (std::size_t q = 0U; q < N; ++q) {
-    DEBUG() << "Asserting gates on " << q;
+    PLOG_DEBUG << "Asserting gates on " << q;
     assertZConstraints(pos, q);
     assertXConstraints(pos, q);
     assertRConstraints(pos, q);
@@ -67,7 +67,7 @@ void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
       }
       const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);
 
-      DEBUG() << "Asserting CNOT on " << ctrl << " and " << trgt;
+      PLOG_DEBUG << "Asserting CNOT on " << ctrl << " and " << trgt;
 
       lb->assertFormula(LogicTerm::implies(twoQubitGates[ctrl][trgt], changes));
     }

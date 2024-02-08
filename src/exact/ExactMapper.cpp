@@ -5,9 +5,10 @@
 
 #include "exact/ExactMapper.hpp"
 
-#include "Encodings/Encodings.hpp"
-#include "LogicBlock/LogicBlock.hpp"
-#include "LogicUtil/util_logicblock.hpp"
+#include "logicblocks/Encodings.hpp"
+#include "logicblocks/LogicBlock.hpp"
+#include "logicblocks/Model.hpp"
+#include "logicblocks/util_logicblock.hpp"
 
 void ExactMapper::map(const Configuration& settings) {
   results.config     = settings;

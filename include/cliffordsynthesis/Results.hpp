@@ -6,8 +6,8 @@
 #pragma once
 
 #include "CircuitOptimizer.hpp"
-#include "LogicTerm/Logic.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "logicblocks/Logic.hpp"
 
 #include <nlohmann/json.hpp>
 #include <sstream>

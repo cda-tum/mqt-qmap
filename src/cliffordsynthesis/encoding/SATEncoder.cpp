@@ -5,21 +5,24 @@
 
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
-#include "LogicUtil/util_logicblock.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
-#include "utils/logging.hpp"
+#include "logicblocks/util_logicblock.hpp"
+#include "plog/Log.h"
 
 #include <chrono>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <variant>
 
 namespace cs::encoding {
 
 using namespace logicbase;
 
 void SATEncoder::initializeSolver() {
-  DEBUG() << "Initializing solver engine.";
-  bool success        = false;
-  LogicTerm::termType = TermType::BASE;
+  PLOG_DEBUG << "Initializing solver engine.";
+  bool              success = false;
   logicutil::Params params;
   for (const auto& [key, value] : config.solverParameters) {
     if (std::holds_alternative<bool>(value)) {
@@ -31,7 +34,9 @@ void SATEncoder::initializeSolver() {
     } else if (std::holds_alternative<double>(value)) {
       params.addParam(key, std::get<double>(value));
     } else {
-      FATAL() << "Unknown parameter type.";
+      const auto msg = "Unknown parameter type for " + key;
+      PLOG_FATAL << msg;
+      throw std::runtime_error(msg);
     }
   }
 
@@ -41,12 +46,14 @@ void SATEncoder::initializeSolver() {
     lb = logicutil::getZ3LogicBlock(success, true, params);
   }
   if (!success) {
-    FATAL() << "Could not initialize solver engine.";
+    const auto msg = "Could not initialize solver engine.";
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 }
 
 void SATEncoder::createFormulation() {
-  INFO() << "Creating formulation.";
+  PLOG_INFO << "Creating formulation.";
   const auto start = std::chrono::high_resolution_clock::now();
   initializeSolver();
 
@@ -95,11 +102,11 @@ void SATEncoder::createFormulation() {
   const auto duration =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
           .count();
-  INFO() << "Formulation created in " << duration << " ms.";
+  PLOG_INFO << "Formulation created in " << duration << " ms.";
 }
 
 Result SATEncoder::solve() const {
-  INFO() << "Solving the SAT instance.";
+  PLOG_INFO << "Solving the SAT instance.";
 
   const auto start  = std::chrono::high_resolution_clock::now();
   const auto result = lb->solve();
@@ -107,7 +114,7 @@ Result SATEncoder::solve() const {
   const auto runtime =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
           .count();
-  INFO() << "Instance solved in " << runtime << " ms.";
+  PLOG_INFO << "Instance solved in " << runtime << " ms.";
   return result;
 }
 
