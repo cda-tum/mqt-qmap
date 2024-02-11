@@ -167,7 +167,9 @@ public:
     return decoherenceTimes;
   }
   [[nodiscard]] auto getNShuttlingUnits() const { return nShuttlingUnits; }
-  [[nodiscard]] auto getShuttling() const -> ShuttlingProperties { return shuttling; }
+  [[nodiscard]] auto getShuttling() const -> ShuttlingProperties {
+    return shuttling;
+  }
   [[nodiscard]] auto getMinAtomDistance() const { return minAtomDistance; }
   [[nodiscard]] auto getInteractionRadius() const { return interactionRadius; }
   [[nodiscard]] auto getOpPropsByOpType(const qc::OpType& t) const
