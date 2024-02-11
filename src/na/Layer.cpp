@@ -284,5 +284,40 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
       }
     }
   }
+  // process the remaining lookahead for every qubit
+  for (qc::Qubit qubit = 0; qubit < nqubits; ++qubit) {
+    if (lookahead[qubit] != nullptr) {
+      auto const current = lookahead[qubit];
+      lookahead[qubit] = nullptr;
+      // add an enabling edge from each constructive operation
+      for (const auto& constructiveOp : constructive[qubit]) {
+        constructiveOp->addEnabledSuccessor(current);
+      }
+      // add a disabling edge from each destructive operation
+      for (const auto& destructiveOp : destructive[qubit]) {
+        destructiveOp->addDisabledSuccessor(current);
+      }
+      // check whether the current operation commutes with the current
+      // group members
+      if (!commutesAtQubit(currentGroup[qubit][0]->getOperation(),
+                            current->getOperation(), qubit)) {
+        // here: the current operation does not commute with the current
+        // group members and is not the inverse of the lookahead
+        // --> start a new group
+        // TODO: Can this be beautified with the copy-assign operator?
+        predecessorGroup[qubit].clear();
+        for (const auto& v : currentGroup[qubit]) {
+          predecessorGroup[qubit].emplace_back(v);
+        }
+        currentGroup[qubit].clear();
+      }
+      // add an enabling edge from each predecessor
+      for (const auto& predecessor : predecessorGroup[qubit]) {
+        predecessor->addEnabledSuccessor(current);
+      }
+      // add the current vertex to the current group
+      currentGroup[qubit].emplace_back(current);
+    }
+  }
 }
 } // namespace na

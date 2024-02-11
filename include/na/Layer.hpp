@@ -42,7 +42,7 @@ protected:
     std::vector<std::shared_ptr<DAGVertex>> disabledSuccessors  = {};
     bool                                    executed            = false;
     const std::unique_ptr<qc::Operation>*   operation;
-    std::shared_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>
+    std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
         executableSet;
 
   public:
@@ -54,10 +54,9 @@ protected:
      * @param operation
      * @param executableSet
      */
-    DAGVertex(
-        const std::unique_ptr<qc::Operation>* operation,
-        const std::shared_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>&
-            executableSet)
+    DAGVertex(const std::unique_ptr<qc::Operation>* operation,
+              std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
+                  executableSet)
         : operation(operation), executableSet(executableSet) {
       updateExecutableSet();
     }
@@ -82,9 +81,9 @@ protected:
     }
     auto updateExecutableSet() -> void {
       if (isExecutable()) {
-        executableSet->insert(std::make_shared<DAGVertex>(this));
+        (*executableSet)->insert(std::make_shared<DAGVertex>(this));
       } else {
-        executableSet->erase(std::make_shared<DAGVertex>(this));
+        (*executableSet)->erase(std::make_shared<DAGVertex>(this));
       }
     }
 
@@ -130,7 +129,7 @@ protected:
   auto constructDAG(const qc::QuantumComputation& qc) -> void;
 
 public:
-  explicit Layer(qc::QuantumComputation& qc) { constructDAG(qc); }
+  explicit Layer(const qc::QuantumComputation& qc) { constructDAG(qc); }
   [[nodiscard]] auto getExecutableSet() const
       -> std::shared_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>> {
     return executableSet;
