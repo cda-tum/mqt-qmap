@@ -2,10 +2,9 @@
 
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
-#include "Model.hpp"
+#include "Z3Model.hpp"
 
 #include <cstdint>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -35,10 +34,6 @@ void LogicBlock::reset() {
   clauses.clear();
   internalReset();
   gid = 0U;
-}
-
-void LogicBlock::dump(const LogicTerm& a, std::ostream& stream) {
-  a.prettyPrint(stream);
 }
 
 void LogicBlockOptimizer::reset() {

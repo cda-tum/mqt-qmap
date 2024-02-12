@@ -1,5 +1,6 @@
 #pragma once
 
+#include "LogicBlock.hpp"
 #include "LogicTerm.hpp"
 #include "Model.hpp"
 #include "z3++.h"
@@ -20,10 +21,9 @@ protected:
 public:
   Z3Model(std::shared_ptr<z3::context> context, std::shared_ptr<z3::model> mdl)
       : model(std::move(mdl)), ctx(std::move(context)) {}
-  int       getIntValue(const LogicTerm& a, LogicBlock* lb) override;
-  LogicTerm getValue(const LogicTerm& a, LogicBlock* lb) override;
-  bool      getBoolValue(const LogicTerm& a, LogicBlock* lb) override;
-  double    getRealValue(const LogicTerm& a, LogicBlock* lb) override;
-  uint64_t  getBitvectorValue(const LogicTerm& a, LogicBlock* lb) override;
+  int      getIntValue(const LogicTerm& a, LogicBlock* lb) override;
+  bool     getBoolValue(const LogicTerm& a, LogicBlock* lb) override;
+  double   getRealValue(const LogicTerm& a, LogicBlock* lb) override;
+  uint64_t getBitvectorValue(const LogicTerm& a, LogicBlock* lb) override;
 };
 } // namespace z3logic

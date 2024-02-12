@@ -28,8 +28,6 @@ protected:
                                cache{};
   std::shared_ptr<z3::context> ctx;
 
-  bool producedInstance = false;
-
 public:
   explicit Z3Base(std::shared_ptr<z3::context> context)
       : ctx(std::move(context)) {}
@@ -80,7 +78,6 @@ public:
   void        assertFormula(const LogicTerm& a) override;
   void        produceInstance() override;
   Result      solve() override;
-  void        dumpZ3State(std::ostream& stream);
   std::string dumpInternalSolver() override {
     std::stringstream ss;
     ss << (*solver);
@@ -112,7 +109,6 @@ public:
   void   assertFormula(const LogicTerm& a) override;
   void   produceInstance() override;
   Result solve() override;
-  void   dumpZ3State(std::ostream& stream);
 
   bool        makeMinimize() override;
   bool        makeMaximize() override;

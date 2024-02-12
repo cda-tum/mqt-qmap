@@ -2,7 +2,7 @@
 
 #include "Logic.hpp"
 
-#include <bitset>
+#include <cmath>
 #include <cstdint>
 #include <initializer_list>
 #include <limits>
@@ -10,28 +10,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace logicbase {
-
-void LogicTerm::print(std::ostream& os) const {
-  os << getStrRep(opType);
-  if (opType == OpType::Variable) {
-    os << " " << toString(cType);
-    os << " " << (name.empty() ? std::to_string(id) : name);
-  } else if (opType == OpType::Constant) {
-    os << " " << toString(cType);
-    os << " " << getValue();
-  } else {
-    for (const auto& n : nodes) {
-      n.print(os);
-      os << ", ";
-    }
-  }
-  if (opType != OpType::Variable && opType != OpType::Constant) {
-    os << ">";
-  }
-}
 
 uint64_t LogicTerm::getMaxChildrenDepth() const {
   uint64_t max = 0;
@@ -115,52 +97,6 @@ std::string LogicTerm::getStrRep(OpType op) {
     break;
   }
   return os.str();
-}
-
-void LogicTerm::prettyPrint(std::ostream& os, int32_t printDepth, bool isNeg,
-                            bool printNL, bool lastNL) const {
-  if (!isNeg) {
-    for (int32_t i = 0; i < printDepth; ++i) {
-      os << "  ";
-    }
-  }
-  if (opType != OpType::Variable && opType != OpType::Constant &&
-      opType != OpType::NEG && printNL) {
-    os << '\n';
-    for (int32_t i = 0; i < printDepth; ++i) {
-      os << "  ";
-    }
-  }
-  os << getStrRep(opType);
-  if (opType == OpType::Variable) {
-    os << " " << toString(cType);
-    os << " " << (name.empty() ? std::to_string(id) : name);
-  } else if (opType == OpType::Constant) {
-    os << " " << toString(cType);
-    os << " " << getValue();
-  } else {
-    if (opType != OpType::NEG) {
-      os << '\n';
-    }
-    for (auto i = 0U; i < nodes.size(); ++i) {
-      nodes[i].prettyPrint(os, printDepth + 1, opType == OpType::NEG, i != 0,
-                           i != nodes.size() - 1);
-    }
-  }
-  if (opType != OpType::Variable && opType != OpType::Constant &&
-      opType != OpType::NEG) {
-    os << '\n';
-    for (int32_t i = 0; i < printDepth; ++i) {
-      os << "  ";
-    }
-    os << ">";
-    if (lastNL) {
-      os << '\n';
-    }
-  }
-  if (opType == OpType::NEG) {
-    os << " >";
-  }
 }
 
 LogicTerm::LogicTerm(const OpType op, const LogicTerm& a, const LogicTerm& b)
@@ -470,23 +406,6 @@ bool LogicTerm::deepEquals(const LogicTerm& other) const {
     }
   }
   return true;
-}
-
-std::string LogicTerm::getValue() const {
-  if (cType == CType::BOOL) {
-    return std::to_string(static_cast<int>(getBoolValue()));
-  }
-  if (cType == CType::INT) {
-    return std::to_string(getIntValue());
-  }
-  if (cType == CType::REAL) {
-    return std::to_string(getFloatValue());
-  }
-  if (cType == CType::BITVECTOR) {
-    return std::bitset<256U>{getBitVectorValue()}.to_string().substr(
-        256U - static_cast<size_t>(bvSize), static_cast<size_t>(bvSize));
-  }
-  throw std::runtime_error("Invalid CType of LogicTerm");
 }
 
 Logic* LogicTerm::getValidLogicPtr(const LogicTerm& a, const LogicTerm& b) {

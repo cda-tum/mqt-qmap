@@ -29,8 +29,6 @@ public:
 
   Model* getModel() { return model; }
 
-  virtual void dump(const LogicTerm& a, std::ostream& stream);
-
   virtual void assertFormula(const LogicTerm& a);
 
   LogicTerm makeVariable(const std::string& name, CType type = CType::BOOL,

@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
-#include <ostream>
 #include <string>
 #include <vector>
 
@@ -131,18 +130,13 @@ public:
   [[nodiscard]] Logic*             getLogic() const { return lb; }
   [[nodiscard]] uint64_t           getDepth() const { return depth; }
 
-  [[nodiscard]] bool        getBoolValue() const;
-  [[nodiscard]] int         getIntValue() const;
-  [[nodiscard]] double      getFloatValue() const;
-  [[nodiscard]] uint64_t    getBitVectorValue() const;
-  [[nodiscard]] uint16_t    getBitVectorSize() const;
-  [[nodiscard]] std::string getValue() const;
+  [[nodiscard]] bool     getBoolValue() const;
+  [[nodiscard]] int      getIntValue() const;
+  [[nodiscard]] double   getFloatValue() const;
+  [[nodiscard]] uint64_t getBitVectorValue() const;
+  [[nodiscard]] uint16_t getBitVectorSize() const;
 
   [[nodiscard]] bool deepEquals(const LogicTerm& other) const;
-
-  void print(std::ostream& os) const;
-  void prettyPrint(std::ostream& os, int printDepth = 0, bool isNeg = false,
-                   bool printNL = false, bool lastNL = false) const;
 
   [[nodiscard]] uint64_t getMaxChildrenDepth() const;
 

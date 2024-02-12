@@ -199,11 +199,6 @@ void Z3LogicBlock::assertFormula(const LogicTerm& a) {
   }
 }
 
-void Z3LogicBlock::dumpZ3State(std::ostream& stream) {
-  stream << "Z3State: " << '\n';
-  stream << solver << '\n';
-}
-
 void Z3LogicBlock::produceInstance() {
   for (const auto& clause : clauses) {
     solver->add(convert(clause, CType::BOOL).simplify());
@@ -433,11 +428,6 @@ void Z3LogicOptimizer::assertFormula(const LogicTerm& a) {
       optimizer->add(convert(a, CType::BOOL).simplify());
     }
   }
-}
-
-void Z3LogicOptimizer::dumpZ3State(std::ostream& stream) {
-  stream << "Z3State: " << '\n';
-  stream << optimizer << '\n';
 }
 
 void Z3LogicOptimizer::produceInstance() {
