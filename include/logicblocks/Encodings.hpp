@@ -1,8 +1,11 @@
 #pragma once
 
 #include "LogicBlock.hpp"
+#include "LogicTerm.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <set>
 #include <utility>
 #include <vector>
@@ -12,15 +15,15 @@ namespace encodings {
 using namespace logicbase;
 
 struct NestedVar {
-  explicit NestedVar(LogicTerm v) : var(std::move(v)), list(){};
-  NestedVar(LogicTerm v, std::vector<NestedVar> l)
-      : var(std::move(v)), list(std::move(l)) {}
+  explicit NestedVar(const LogicTerm& v) : var(v){};
+  NestedVar(const LogicTerm& v, std::vector<NestedVar> l)
+      : var(v), list(std::move(l)) {}
   LogicTerm              var = LogicTerm::noneTerm();
   std::vector<NestedVar> list;
 };
 
 struct WeightedVar {
-  WeightedVar(LogicTerm v, const int w) : var(std::move(v)), weight(w) {}
+  WeightedVar(const LogicTerm& v, const int w) : var(v), weight(w) {}
   LogicTerm var    = LogicTerm::noneTerm();
   int       weight = 0;
 };
@@ -31,10 +34,10 @@ inline bool operator==(const WeightedVar& rhs, const WeightedVar& lhs) {
   return rhs.weight == lhs.weight && rhs.var.getID() == lhs.var.getID();
 }
 
-enum class Type { Uninitialized, AuxVar, ProgramVar };
+enum class Type : uint8_t { Uninitialized, AuxVar, ProgramVar };
 struct SavedLit {
   SavedLit() : var(LogicTerm::noneTerm()) {}
-  SavedLit(Type t, LogicTerm v) : type(t), var(std::move(v)) {}
+  SavedLit(Type t, const LogicTerm& v) : type(t), var(v) {}
   Type      type = Type::Uninitialized;
   LogicTerm var  = LogicTerm::noneTerm();
 };

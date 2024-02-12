@@ -66,7 +66,7 @@ void Tableau::import(std::istream& is) {
 
 void Tableau::applyGate(const qc::Operation* const gate) {
   if (gate->getNcontrols() > 1U) {
-    const auto msg =
+    const auto* const msg =
         "Tableau::applyGate: Only operations with up to one control "
         "are supported.";
     PLOG_FATAL << msg;
@@ -186,7 +186,7 @@ std::string Tableau::toString() const {
   std::stringstream ss;
   for (const auto& row : tableau) {
     if (row.size() != tableau.back().size()) {
-      const auto msg = "Tableau::toString: Tableau is not rectangular";
+      const auto* const msg = "Tableau::toString: Tableau is not rectangular";
       PLOG_FATAL << msg;
       throw std::runtime_error(msg);
     }

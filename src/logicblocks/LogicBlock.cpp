@@ -1,6 +1,13 @@
 #include "LogicBlock.hpp"
 
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
 #include "Model.hpp"
+
+#include <cstdint>
+#include <ostream>
+#include <stdexcept>
+#include <string>
 
 namespace logicbase {
 
@@ -19,7 +26,7 @@ LogicTerm LogicBlock::makeVariable(const std::string& name, CType type,
   if (type == CType::BITVECTOR && bvSize == 0) {
     throw std::invalid_argument("bv_size must be > 0");
   }
-  return LogicTerm(name, type, this, bvSize);
+  return {name, type, this, bvSize};
 }
 
 void LogicBlock::reset() {

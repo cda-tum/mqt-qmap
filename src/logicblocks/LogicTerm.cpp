@@ -527,10 +527,6 @@ Logic* LogicTerm::getValidLogicPtr(const LogicTerm& a, const LogicTerm& b,
 
 LogicTerm LogicTerm::combineTerms(const LogicTerm& a, const LogicTerm& b,
                                   OpType op, Logic* logic) {
-  if (a.getCType() == CType::BITVECTOR && b.getCType() == CType::BITVECTOR &&
-      LogicTerm::useBitVectorConversions) {
-    op = getBVConversion(op);
-  }
   if ((a.getOpType() == op || b.getOpType() == op) && isAssociative(op)) {
     std::vector<LogicTerm> terms{};
     terms.reserve(a.getNodes().size() + b.getNodes().size());
@@ -567,6 +563,7 @@ LogicTerm LogicTerm::combineConst(const LogicTerm& a, const LogicTerm& b,
     case OpType::MUL:
       return LogicTerm(a.getIntValue() * b.getIntValue());
     case OpType::DIV:
+      // NOLINTNEXTLINE(clang-analyzer-core.DivideZero)
       return LogicTerm(a.getIntValue() / b.getIntValue());
     case OpType::GT:
       return LogicTerm(a.getIntValue() > b.getIntValue());
@@ -598,11 +595,6 @@ LogicTerm LogicTerm::combineConst(const LogicTerm& a, const LogicTerm& b,
 LogicTerm LogicTerm::combineOneConst(const LogicTerm& constant,
                                      const LogicTerm& other, OpType op,
                                      Logic* logic) {
-  if (constant.getCType() == CType::BITVECTOR &&
-      other.getCType() == CType::BITVECTOR &&
-      LogicTerm::useBitVectorConversions) {
-    op = getBVConversion(op);
-  }
   switch (op) { // TODO handle other CTypes
   case OpType::AND: {
     if (constant.getBoolValue()) {
@@ -647,7 +639,7 @@ LogicTerm LogicTerm::combineOneConst(const LogicTerm& constant,
     return {OpType::DIV, other, constant, CType::INT, logic};
   }
   default: // TODO there are multiple ctypes
-    return LogicTerm(op, other, constant, getResultCType(op), logic);
+    return {op, other, constant, getResultCType(op), logic};
   }
 }
 
@@ -668,26 +660,6 @@ LogicTerm LogicTerm::negateTerm(const LogicTerm& term, Logic* logic) {
   } else {
     return {OpType::NEG, term, term.getCType(), logic};
   };
-}
-
-OpType LogicTerm::getBVConversion(OpType op) {
-  switch (op) {
-  case OpType::AND:
-    op = OpType::BitAnd;
-    break;
-  case OpType::OR:
-    op = OpType::BitOr;
-    break;
-  case OpType::EQ:
-    op = OpType::BitEq;
-    break;
-  case OpType::XOR:
-    op = OpType::BitXor;
-    break;
-  default:
-    break;
-  }
-  return op;
 }
 
 LogicTerm LogicTerm::getBoolConversion() const {

@@ -12,9 +12,6 @@
 
 namespace logicbase {
 class LogicTerm {
-public:
-  static inline bool useBitVectorConversions = false;
-
 private:
   Logic*      lb    = nullptr;
   uint64_t    id    = 0;
@@ -30,6 +27,7 @@ private:
   std::vector<LogicTerm> nodes{};
   CType                  cType = CType::BOOL;
 
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static inline uint64_t gid = 1;
 
 public:
@@ -168,8 +166,6 @@ public:
 
   [[nodiscard]] static LogicTerm negateTerm(const LogicTerm& term,
                                             Logic*           logic);
-
-  [[nodiscard]] static OpType getBVConversion(OpType op);
 
   [[nodiscard]] LogicTerm getBoolConversion() const;
 
