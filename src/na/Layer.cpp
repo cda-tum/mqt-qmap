@@ -8,6 +8,7 @@
 #include "Definitions.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <set>
 
 namespace na {
@@ -191,25 +192,24 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
   // constructive operation enables them again
   // ---
   // those that add a (+) edge to the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> constructive(nqubits);
+  std::vector<std::vector<DAGVertex*>> constructive(nqubits);
   // those that add a (-) edge to the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> destructive(nqubits);
+  std::vector<std::vector<DAGVertex*>> destructive(nqubits);
   // those that are already in the current group where all gates commute on
   // this qubit
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> currentGroup(nqubits);
+  std::vector<std::vector<DAGVertex*>> currentGroup(nqubits);
   // lookahead of 1 serves as a buffer for the next operation on each qubit
-  std::vector<std::shared_ptr<DAGVertex>> lookahead(nqubits);
+  std::vector<DAGVertex*> lookahead(nqubits);
   // the predecessor of the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> predecessorGroup(
-      nqubits);
+  std::vector<std::vector<DAGVertex*>> predecessorGroup(nqubits);
   // all operations acting on a qubit (processed so far) excluding
   // constructive and destructive operations
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> qubitOperations(nqubits);
+  std::vector<std::vector<DAGVertex*>> qubitOperations(nqubits);
   // iterate over all operations in the quantum circuit
   for (const auto& op : qc) {
     // create a vertex for the current operation
-    std::shared_ptr<DAGVertex> const vertex =
-        std::make_shared<DAGVertex>(*op, &executableSet);
+    // FIXME: Introduce unique_ptr to get rid of the warning (rn: delete missing
+    DAGVertex* vertex = new DAGVertex(&op, &executableSet);
     // iterate over all qubits the operation acts on
     for (const auto& qubit : op->getUsedQubits()) {
       // check whether the lookahead is empty
@@ -221,12 +221,23 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
         // here: the lookahead is not empty
         // get the current vertext from the lookahead and store the new
         // vertex in the lookahead
-        auto const current = lookahead[qubit];
-        lookahead[qubit]   = vertex;
+        auto* const current = lookahead[qubit];
+        lookahead[qubit]    = vertex;
         // check whether the current operation is the inverse of the
         // lookahead
-        if (isInverse(current->getOperation(), lookahead[0]->getOperation())) {
+        if (isInverse(current->getOperation(),
+                      lookahead[qubit]->getOperation())) {
           // here: the current operation is the inverse of the lookahead
+          // add an enabling edge from the lookahead to all operations on this
+          // qubit including the destructive ones
+          for (const auto& qubitOperation : qubitOperations[qubit]) {
+            lookahead[qubit]->addEnabledSuccessor(qubitOperation);
+          }
+          for (const auto& qubitOperation : destructive[qubit]) {
+            lookahead[qubit]->addEnabledSuccessor(qubitOperation);
+          }
+          // add the lookahead to the constructive group
+          constructive[qubit].emplace_back(lookahead[qubit]);
           // add a disabling edge to all operations on this qubit including
           // the destructive ones
           for (const auto& qubitOperation : qubitOperations[qubit]) {
@@ -239,16 +250,6 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
           current->addEnabledSuccessor(lookahead[qubit]);
           // add the current vertex to the destructive group
           destructive[qubit].emplace_back(current);
-          // add an enabling edge from the lookahead to all operations on this
-          // qubit including the destructive ones
-          for (const auto& qubitOperation : qubitOperations[qubit]) {
-            lookahead[qubit]->addEnabledSuccessor(qubitOperation);
-          }
-          for (const auto& qubitOperation : destructive[qubit]) {
-            lookahead[qubit]->addEnabledSuccessor(qubitOperation);
-          }
-          // add the lookahead to the constructive group
-          constructive[qubit].emplace_back(lookahead[qubit]);
           // clear the lookahead
           lookahead[qubit] = nullptr;
         } else {
@@ -262,7 +263,8 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
           }
           // check whether the current operation commutes with the current
           // group members
-          if (!commutesAtQubit(currentGroup[qubit][0]->getOperation(),
+          if (!currentGroup[qubit].empty() &&
+              !commutesAtQubit(currentGroup[qubit][0]->getOperation(),
                                current->getOperation(), qubit)) {
             // here: the current operation does not commute with the current
             // group members and is not the inverse of the lookahead
@@ -280,6 +282,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
           }
           // add the current vertex to the current group
           currentGroup[qubit].emplace_back(current);
+          qubitOperations[qubit].emplace_back(current);
         }
       }
     }
@@ -288,7 +291,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
   for (qc::Qubit qubit = 0; qubit < nqubits; ++qubit) {
     if (lookahead[qubit] != nullptr) {
       auto const current = lookahead[qubit];
-      lookahead[qubit] = nullptr;
+      lookahead[qubit]   = nullptr;
       // add an enabling edge from each constructive operation
       for (const auto& constructiveOp : constructive[qubit]) {
         constructiveOp->addEnabledSuccessor(current);
@@ -299,8 +302,9 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
       }
       // check whether the current operation commutes with the current
       // group members
-      if (!commutesAtQubit(currentGroup[qubit][0]->getOperation(),
-                            current->getOperation(), qubit)) {
+      if (!currentGroup[qubit].empty() &&
+          !commutesAtQubit(currentGroup[qubit][0]->getOperation(),
+                           current->getOperation(), qubit)) {
         // here: the current operation does not commute with the current
         // group members and is not the inverse of the lookahead
         // --> start a new group
@@ -317,6 +321,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
       }
       // add the current vertex to the current group
       currentGroup[qubit].emplace_back(current);
+      qubitOperations[qubit].emplace_back(current);
     }
   }
 }

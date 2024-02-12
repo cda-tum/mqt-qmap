@@ -12,6 +12,7 @@
 #include "operations/Operation.hpp"
 
 #include <cassert>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <set>
@@ -31,19 +32,18 @@ static constexpr std::array<qc::OpType, 10> DIAGONAL_GATES = {
  * ahead layer.
  */
 class Layer {
-protected:
+public:
   class DAGVertex {
   protected:
     // if the executableCounter becomes equal to the executableThreshold the
     // vertex becomes executable
-    std::size_t                             executableThreshold = 0;
-    std::size_t                             executableCounter   = 0;
-    std::vector<std::shared_ptr<DAGVertex>> enabledSuccessors   = {};
-    std::vector<std::shared_ptr<DAGVertex>> disabledSuccessors  = {};
-    bool                                    executed            = false;
-    const std::unique_ptr<qc::Operation>*   operation;
-    std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
-        executableSet;
+    std::size_t                                      executableThreshold = 0;
+    std::size_t                                      executableCounter   = 0;
+    std::vector<DAGVertex*>                          enabledSuccessors   = {};
+    std::vector<DAGVertex*>                          disabledSuccessors  = {};
+    bool                                             executed = false;
+    const std::unique_ptr<qc::Operation>*            operation;
+    std::unique_ptr<std::unordered_set<DAGVertex*>>* executableSet;
 
   public:
     /**
@@ -54,15 +54,14 @@ protected:
      * @param operation
      * @param executableSet
      */
-    DAGVertex(const std::unique_ptr<qc::Operation>* operation,
-              std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
-                  executableSet)
+    DAGVertex(const std::unique_ptr<qc::Operation>*            operation,
+              std::unique_ptr<std::unordered_set<DAGVertex*>>* executableSet)
         : operation(operation), executableSet(executableSet) {
       updateExecutableSet();
     }
     [[nodiscard]] auto isExecutable() const {
       assert(executableCounter <= executableThreshold);
-      return !executed && executableCounter == executableThreshold;
+      return (!executed) && executableCounter == executableThreshold;
     }
     [[nodiscard]] auto isExecuted() const { return executed; }
     [[nodiscard]] auto getOperation() const
@@ -81,9 +80,15 @@ protected:
     }
     auto updateExecutableSet() -> void {
       if (isExecutable()) {
-        (*executableSet)->insert(std::make_shared<DAGVertex>(this));
+        if (const auto& it = (*executableSet)->find(this);
+            it == (*executableSet)->end()) {
+          (*executableSet)->insert(this);
+        }
       } else {
-        (*executableSet)->erase(std::make_shared<DAGVertex>(this));
+        if (const auto& it = (*executableSet)->find(this);
+            it != (*executableSet)->end()) {
+          (*executableSet)->erase(this);
+        }
       }
     }
 
@@ -97,25 +102,27 @@ protected:
         for (const auto& successor : enabledSuccessors) {
           successor->incExecutableCounter();
         }
+        updateExecutableSet();
       } else {
         throw std::logic_error(
             "The vertex is not executable and cannot be executed.");
       }
     }
-    auto addEnabledSuccessor(std::shared_ptr<DAGVertex> successor) {
+    auto addEnabledSuccessor(DAGVertex* successor) {
       enabledSuccessors.emplace_back(successor);
-      successor->executableThreshold++;
+      ++successor->executableThreshold;
       successor->updateExecutableSet();
     }
-    auto addDisabledSuccessor(std::shared_ptr<DAGVertex> successor) {
+    auto addDisabledSuccessor(DAGVertex* successor) {
       disabledSuccessors.emplace_back(successor);
-      successor->executableThreshold--;
+      --successor->executableThreshold;
       successor->updateExecutableSet();
     }
   };
-  std::shared_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>
-      executableSet =
-          std::make_unique<std::unordered_set<std::shared_ptr<DAGVertex>>>();
+
+protected:
+  std::unique_ptr<std::unordered_set<DAGVertex*>> executableSet =
+      std::make_unique<std::unordered_set<DAGVertex*>>();
 
   /// Checks whether two operations commute on a given qubit.
   [[nodiscard]] static auto
@@ -131,15 +138,10 @@ protected:
 public:
   explicit Layer(const qc::QuantumComputation& qc) { constructDAG(qc); }
   [[nodiscard]] auto getExecutableSet() const
-      -> std::shared_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>> {
-    return executableSet;
+      -> const std::unique_ptr<std::unordered_set<DAGVertex*>>* {
+    return &executableSet;
   }
-  static auto execute(const std::vector<std::shared_ptr<DAGVertex>>& vertices)
-      -> void {
-    for (const auto& vertex : vertices) {
-      vertex->execute();
-    }
-  }
+  static auto execute(DAGVertex* vertex) -> void { vertex->execute(); }
 };
 
 } // namespace na
