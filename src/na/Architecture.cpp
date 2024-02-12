@@ -115,8 +115,8 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
   }
 }
 
-auto Architecture::isAllowedLocally(const qc::OpType gate,
-                                    const Index      qubit) const {
+auto Architecture::isAllowedLocallyIn(const qc::OpType gate,
+                                      const Zone       zone) const -> bool {
   const auto it = gateSet.find(gate);
   if (it == gateSet.end()) {
     return false; // gate not supported at all
@@ -124,17 +124,25 @@ auto Architecture::isAllowedLocally(const qc::OpType gate,
   if (it->second.scope != Scope::Local) {
     return false; // gate cannot be applied individually
   }
-  const auto  zone      = getZone(qubit);
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
 
+auto Architecture::isAllowedLocallyAt(const qc::OpType gate,
+                                      const Index      qubit) const -> bool {
+  const auto zone = getZone(qubit);
+  return isAllowedLocallyIn(gate, zone);
+}
+
 auto Architecture::isAllowedGlobally(const qc::OpType gate,
-                                     const Zone       zone) const {
+                                     const Zone       zone) const -> bool {
   const auto it = gateSet.find(gate);
   if (it == gateSet.end()) {
     return false; // gate not supported at all
+  }
+  if (it->second.scope != Scope::Global) {
+    return false; // gate cannot be applied globally
   }
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones

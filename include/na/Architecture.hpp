@@ -28,7 +28,8 @@ namespace na {
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
 static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
-    {"Global", Scope::Global}, {"Local", Scope::Local}};
+    {"Global", Scope::Global}, {"Local", Scope::Local},
+    {"global", Scope::Global}, {"local", Scope::Local}};
 /**
  * @brief Get the Scope of a gate from a string
  *
@@ -200,7 +201,17 @@ public:
    * the qubit,
    * @return false otherwise
    */
-  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Index qubit) const;
+  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit) const -> bool;
+  /**
+   * @brief Checks whether the gate can be applied (locally) in this zone.
+   *
+   * @param gate the gate
+   * @param qubit the qubit
+   * @return true if the gate is a local operation and available in the zone of
+   * the qubit,
+   * @return false otherwise
+   */
+  [[nodiscard]] auto isAllowedLocallyIn(qc::OpType gate, Zone zone) const -> bool;
   /**
    * @brief Checks whether the gate is a global gate for this Zone.
    *
@@ -209,6 +220,6 @@ public:
    * @return true if the gate is global and applicable in this zone,
    * @return false otherwise
    */
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone) const;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone) const -> bool;
 };
 } // namespace na
