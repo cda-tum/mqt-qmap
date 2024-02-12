@@ -77,8 +77,8 @@ repos:
           - importlib_resources
           - numpy
           - pytest
-          - mqt.core~=2.2.2
-          - mqt.qcec
+          - mqt.core @ git+https://github.com/cda-tum/mqt-core.git@installation-improvements
+          - mqt.qcec @ git+https://github.com/cda-tum/mqt-qcec.git@mqt-core-switch
 
   # Check for spelling
   - repo: https://github.com/codespell-project/codespell
