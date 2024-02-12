@@ -6,7 +6,8 @@ set(FETCH_PACKAGES "")
 # search for Z3
 find_package(Z3 4.8.15)
 if(NOT Z3_FOUND)
-  message(WARNING "Did not find Z3. Exact library and other depending target will not be available")
+  message(
+    WARNING "Did not find Z3. Exact mapper and Clifford synthesis libraries will not be available")
 endif()
 
 if(BUILD_MQT_QMAP_BINDINGS)
@@ -52,20 +53,20 @@ else()
   endif()
 endif()
 
-set(BUILD_LB_TESTS
-    OFF
-    CACHE BOOL "Build LogicBlocks tests")
-set(FETCHCONTENT_SOURCE_DIR_LOGICBLOCKS
-    ${PROJECT_SOURCE_DIR}/extern/LogicBlocks
-    CACHE
-      PATH
-      "Path to the source directory of the LogicBlocks library. This variable is used by FetchContent to download the library if it is not already available."
-)
-FetchContent_Declare(
-  LogicBlocks
-  GIT_REPOSITORY https://github.com/cda-tum/LogicBlocks.git
-  GIT_TAG main)
-list(APPEND FETCH_PACKAGES LogicBlocks)
+set(PLOG_VERSION
+    1.1.10
+    CACHE STRING "Plog version")
+set(PLOG_URL https://github.com/SergiusTheBest/plog/archive/refs/tags/${PLOG_VERSION}.tar.gz)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  FetchContent_Declare(plog URL ${PLOG_URL} FIND_PACKAGE_ARGS ${PLOG_VERSION})
+  list(APPEND FETCH_PACKAGES plog)
+else()
+  find_package(plog ${PLOG_VERSION} QUIET)
+  if(NOT plog_FOUND)
+    FetchContent_Declare(plog URL ${PLOG_URL})
+    list(APPEND FETCH_PACKAGES plog)
+  endif()
+endif()
 
 if(BUILD_MQT_QMAP_TESTS)
   set(gtest_force_shared_crt

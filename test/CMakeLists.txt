@@ -17,3 +17,8 @@ if(TARGET MQT::QMapCliffordSynthesis)
     ${CMAKE_CURRENT_SOURCE_DIR}/test_tableau.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cliffordsynthesis/test_synthesis.cpp)
 endif()
+
+if(TARGET MQT::LogicBlocks)
+  package_add_test(mqt-logic-blocks-test MQT::LogicBlocks
+                   ${CMAKE_CURRENT_SOURCE_DIR}/test_logicblocks.cpp)
+endif()

@@ -325,29 +325,6 @@ TEST_P(ExactTest, IncreasingUnidirectional) {
   SUCCEED() << "Mapping successful";
 }
 
-TEST_P(ExactTest, LimitsBidirectionalBDD) {
-  settings.enableSwapLimits = true;
-  settings.useSubsets       = false;
-  settings.useBDD           = true;
-  settings.swapReduction    = SwapReduction::CouplingLimit;
-  ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                 "_exact_yorktown_swapreduct_bdd.qasm");
-  ibmqYorktownMapper->printResult(std::cout);
-  SUCCEED() << "Mapping successful";
-}
-TEST_P(ExactTest, LimitsBidirectionalSubsetSwapsBDD) {
-  settings.enableSwapLimits = true;
-  settings.useSubsets       = true;
-  settings.useBDD           = true;
-  settings.swapReduction    = SwapReduction::CouplingLimit;
-  ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() +
-                                 "_exact_yorktown_swapreduct_bdd.qasm");
-  ibmqYorktownMapper->printResult(std::cout);
-  SUCCEED() << "Mapping successful";
-}
-
 TEST_P(ExactTest, NoSubsets) {
   settings.useSubsets       = false;
   settings.enableSwapLimits = false;

@@ -25,8 +25,8 @@ public:
   template <class Op>
   void limitGateCount(const std::size_t maxGateCount, Op op,
                       const bool includeSingleQubitGates = true) const {
-    DEBUG() << "Limiting gate count to at most " << maxGateCount
-            << (includeSingleQubitGates ? "" : " two-qubit") << " gate(s)";
+    PLOG_DEBUG << "Limiting gate count to at most " << maxGateCount
+               << (includeSingleQubitGates ? "" : " two-qubit") << " gate(s)";
 
     const auto cost = collectGateCount(includeSingleQubitGates);
     lb->assertFormula(

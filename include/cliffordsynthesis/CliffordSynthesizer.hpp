@@ -10,10 +10,13 @@
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
+#include "plog/Log.h"
 
 #include <cstddef>
-#include <optional>
+#include <limits>
+#include <memory>
 #include <sstream>
+#include <utility>
 
 namespace cs {
 
@@ -103,47 +106,47 @@ protected:
   template <typename T>
   void runBinarySearch(T& value, T lowerBound, T upperBound,
                        const EncoderConfig& config) {
-    INFO() << "Running binary search in range [" << lowerBound << ", "
-           << upperBound << ")";
+    PLOG_INFO << "Running binary search in range [" << lowerBound << ", "
+              << upperBound << ")";
 
     while (lowerBound != upperBound) {
       value = (lowerBound + upperBound) / 2;
-      INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
-             << upperBound << ")";
+      PLOG_INFO << "Trying value " << value << " in range [" << lowerBound
+                << ", " << upperBound << ")";
       const auto r = callSolver(config);
       updateResults(configuration, r, results);
       if (r.sat()) {
         upperBound = value;
-        INFO() << "Found solution. New upper bound is " << upperBound;
+        PLOG_INFO << "Found solution. New upper bound is " << upperBound;
       } else {
         lowerBound = value + 1;
-        INFO() << "No solution found. New lower bound is " << lowerBound;
+        PLOG_INFO << "No solution found. New lower bound is " << lowerBound;
       }
     }
-    INFO() << "Found optimum: " << lowerBound;
+    PLOG_INFO << "Found optimum: " << lowerBound;
   }
 
   template <typename T>
   void runLinearSearch(T& value, T lowerBound, T upperBound,
                        const EncoderConfig& config) {
-    INFO() << "Running linear search in range [" << lowerBound << ", "
-           << upperBound << ")";
+    PLOG_INFO << "Running linear search in range [" << lowerBound << ", "
+              << upperBound << ")";
 
     if (upperBound == 0U) {
       upperBound = std::numeric_limits<std::size_t>::max();
     }
     for (value = lowerBound; value < upperBound; ++value) {
-      INFO() << "Trying value " << value << " in range [" << lowerBound << ", "
-             << upperBound << ")";
+      PLOG_INFO << "Trying value " << value << " in range [" << lowerBound
+                << ", " << upperBound << ")";
       const auto r = callSolver(config);
       updateResults(configuration, r, results);
       if (r.sat()) {
-        INFO() << "Found optimum " << value;
+        PLOG_INFO << "Found optimum " << value;
         return;
       }
-      INFO() << "No solution found. Trying next value.";
+      PLOG_INFO << "No solution found. Trying next value.";
     }
-    INFO() << "No solution found in given interval.";
+    PLOG_INFO << "No solution found in given interval.";
   }
 
   static std::shared_ptr<qc::QuantumComputation>

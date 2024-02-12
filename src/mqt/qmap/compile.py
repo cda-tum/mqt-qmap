@@ -78,7 +78,6 @@ def compile(  # noqa: A001
     teleportation_seed: int = 0,
     encoding: str | Encoding = "commander",
     commander_grouping: str | CommanderGrouping = "fixed3",
-    use_bdd: bool = False,
     swap_reduction: str | SwapReduction = "coupling_limit",
     swap_limit: int = 0,
     include_WCNF: bool = False,  # noqa: N803
@@ -111,7 +110,6 @@ def compile(  # noqa: A001
         lookahead_factor: The rate at which the contribution of future layers to the lookahead decreases. Defaults to 0.5.
         encoding: The encoding to use for the AMO and exactly one constraints. Defaults to "naive".
         commander_grouping: The grouping strategy to use for the commander and bimander encoding. Defaults to "halves".
-        use_bdd: Whether to use BDDs to limit the search space. Defaults to False. Use with caution.
         swap_reduction: The swap reduction strategy to use. Defaults to "coupling_limit".
         swap_limit: Set a custom limit for max swaps per layer, for the increasing reduction strategy it sets the max swaps per layer. Defaults to 0.
         include_WCNF: Include WCNF file in the results. Defaults to False.
@@ -162,7 +160,6 @@ def compile(  # noqa: A001
     config.commander_grouping = CommanderGrouping(commander_grouping)
     config.swap_reduction = SwapReduction(swap_reduction)
     config.swap_limit = swap_limit
-    config.use_bdd = use_bdd
     config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
     config.subgraph = subgraph

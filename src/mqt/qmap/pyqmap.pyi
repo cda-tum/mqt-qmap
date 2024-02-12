@@ -139,7 +139,6 @@ class Configuration:
     teleportation_qubits: int
     teleportation_seed: int
     timeout: int
-    use_bdd: bool
     use_subsets: bool
     use_teleportation: bool
     verbose: bool

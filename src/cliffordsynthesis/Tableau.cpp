@@ -5,15 +5,27 @@
 
 #include "cliffordsynthesis/Tableau.hpp"
 
+#include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
+#include "plog/Log.h"
 #include "utils.hpp"
 
+#include <cstddef>
+#include <fstream>
+#include <istream>
+#include <ostream>
 #include <regex>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace cs {
 void Tableau::dump(const std::string& filename) const {
   auto of = std::ofstream(filename);
   if (!of.good()) {
-    util::fatal("Error opening file " + filename);
+    const auto msg = "Error opening file " + filename;
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
   dump(of);
 }
@@ -23,7 +35,9 @@ void Tableau::dump(std::ostream& of) const { of << *this; }
 void Tableau::import(const std::string& filename) {
   auto is = std::ifstream(filename);
   if (!is.good()) {
-    util::fatal("Error opening file " + filename);
+    const auto msg = "Error opening file " + filename;
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
   import(is);
 }
@@ -52,8 +66,11 @@ void Tableau::import(std::istream& is) {
 
 void Tableau::applyGate(const qc::Operation* const gate) {
   if (gate->getNcontrols() > 1U) {
-    util::fatal("Tableau::applyGate: Only operations with up to one control "
-                "are supported.");
+    const auto* const msg =
+        "Tableau::applyGate: Only operations with up to one control "
+        "are supported.";
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 
   const auto target = static_cast<std::size_t>(gate->getTargets().at(0U));
@@ -107,8 +124,11 @@ void Tableau::applyGate(const qc::Operation* const gate) {
     }
     default:
       // unsupported non-controlled gate type
-      util::fatal("Tableau::applyGate: Unsupported non-controlled gate type " +
-                  qc::toString(gate->getType()));
+      const auto msg =
+          "Tableau::applyGate: Unsupported non-controlled gate type " +
+          qc::toString(gate->getType());
+      PLOG_FATAL << msg;
+      throw std::runtime_error(msg);
     }
   } else {
     const auto control =
@@ -125,8 +145,10 @@ void Tableau::applyGate(const qc::Operation* const gate) {
       break;
     default:
       // unsupported controlled gate type
-      util::fatal("Tableau::applyGate: Unsupported controlled gate type " +
-                  qc::toString(gate->getType()));
+      const auto msg = "Tableau::applyGate: Unsupported controlled gate type " +
+                       qc::toString(gate->getType());
+      PLOG_FATAL << msg;
+      throw std::runtime_error(msg);
     }
   }
 }
@@ -164,8 +186,9 @@ std::string Tableau::toString() const {
   std::stringstream ss;
   for (const auto& row : tableau) {
     if (row.size() != tableau.back().size()) {
-      util::fatal("Tableau is not rectangular.");
-      return "";
+      const auto* const msg = "Tableau::toString: Tableau is not rectangular";
+      PLOG_FATAL << msg;
+      throw std::runtime_error(msg);
     }
     for (const auto& s : row) {
       ss << std::to_string(s) << ';';

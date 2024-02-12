@@ -5,9 +5,10 @@
 
 #include "exact/ExactMapper.hpp"
 
-#include "Encodings/Encodings.hpp"
-#include "LogicBlock/LogicBlock.hpp"
-#include "LogicUtil/util_logicblock.hpp"
+#include "logicblocks/Encodings.hpp"
+#include "logicblocks/LogicBlock.hpp"
+#include "logicblocks/Model.hpp"
+#include "logicblocks/util_logicblock.hpp"
 
 void ExactMapper::map(const Configuration& settings) {
   results.config     = settings;
@@ -407,7 +408,7 @@ void ExactMapper::coreMappingRoutine(
   //////////////////////////////////////////
   /// 	Check necessary permutations	//
   //////////////////////////////////////////
-  if (config.swapLimitsEnabled() && !config.useBDD) {
+  if (config.swapLimitsEnabled()) {
     do {
       auto picost = architecture->minimumNumberOfSwaps(
           pi, static_cast<std::int64_t>(limit));
@@ -696,9 +697,7 @@ number of variables: (|L|-1) * m!
   // cost for permutations
   piCount         = 0;
   internalPiCount = 0;
-  std::vector<std::set<encodings::WeightedVar>> weightedVars(
-      reducedLayerIndices.size());
-  auto cost = LogicTerm(0);
+  auto cost       = LogicTerm(0);
   do {
     if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
@@ -710,21 +709,11 @@ number of variables: (|L|-1) * m!
       for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
         lb->weightedTerm(y[k - 1][internalPiCount],
                          static_cast<double>(picost));
-        if (config.useBDD) {
-          weightedVars[k].emplace(y[k - 1][internalPiCount],
-                                  static_cast<int>(picost));
-        }
       }
       ++internalPiCount;
     }
     ++piCount;
   } while (std::next_permutation(pi.begin(), pi.end()));
-  if (config.swapLimitsEnabled() && config.useBDD) {
-    for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      lb->assertFormula(BuildBDD(weightedVars[k], y[k - 1],
-                                 static_cast<int>(limit), lb.get()));
-    }
-  }
 
   // cost for reversed directions
   if (!architecture->bidirectional()) {

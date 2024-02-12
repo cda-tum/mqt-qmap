@@ -5,9 +5,15 @@
 
 #include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 
-#include "LogicTerm/LogicTerm.hpp"
-#include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
-#include "utils/logging.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
+#include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "logicblocks/LogicTerm.hpp"
+#include "operations/OpType.hpp"
+#include "plog/Log.h"
+
+#include <cstddef>
+#include <functional>
+#include <stdexcept>
 
 namespace cs::encoding {
 
@@ -27,14 +33,14 @@ ObjectiveEncoder::collectGateCount(const bool includeSingleQubitGates) const {
 
 void ObjectiveEncoder::optimizeGateCount(
     const bool includeSingleQubitGates) const {
-  DEBUG() << "Optimizing " << (includeSingleQubitGates ? "" : "two-qubit ")
-          << "gate count";
+  PLOG_DEBUG << "Optimizing " << (includeSingleQubitGates ? "" : "two-qubit ")
+             << "gate count";
   const auto cost = collectGateCount(includeSingleQubitGates);
   dynamic_cast<LogicBlockOptimizer*>(lb.get())->minimize(cost);
 }
 
 void ObjectiveEncoder::optimizeDepth() const {
-  DEBUG() << "Optimizing depth";
+  PLOG_DEBUG << "Optimizing depth";
   auto* optimizer = dynamic_cast<LogicBlockOptimizer*>(lb.get());
 
   constexpr auto noGateIndex = GateEncoder::gateToIndex(qc::OpType::None);
@@ -61,7 +67,9 @@ void ObjectiveEncoder::optimizeMetric(TargetMetric targetMetric) const {
     optimizeDepth();
     break;
   default:
-    FATAL() << "Unknown target metric: " << toString(targetMetric);
+    const auto msg = "Unknown target metric: " + toString(targetMetric);
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 }
 } // namespace cs::encoding

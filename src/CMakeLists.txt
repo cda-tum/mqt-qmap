@@ -70,20 +70,19 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
 endmacro()
 
 # exact mapper project library
-add_qmap_library(exact ExactMapper)
+if(Z3_FOUND)
+  # add LogicBlocks library
+  add_subdirectory(logicblocks)
 
-# enable PIC for LogicBlocks
-set_target_properties(LogicTerm_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  add_qmap_library(exact ExactMapper)
+  target_link_libraries(${MQT_QMAP_TARGET_NAME}-exact PRIVATE MQT::LogicBlocks)
 
-# add LogicBlocks library
-target_link_libraries(${MQT_QMAP_TARGET_NAME}-exact PUBLIC logicblocks::Logic
-                                                           logicblocks::Encodings)
-
-add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
-
-# add LogicBlocks library
-target_link_libraries(${MQT_QMAP_TARGET_NAME}-cliffordsynthesis PUBLIC logicblocks::Logic
-                                                                       logicblocks::Encodings)
+  add_synthesis_library(cliffordsynthesis CliffordSynthesizer)
+  target_link_libraries(
+    ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis
+    PUBLIC plog::plog
+    PRIVATE MQT::LogicBlocks)
+endif()
 
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
