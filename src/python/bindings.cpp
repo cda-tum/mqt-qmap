@@ -258,7 +258,6 @@ PYBIND11_MODULE(pyqmap, m) {
       .def_readwrite("enable_limits", &Configuration::enableSwapLimits)
       .def_readwrite("swap_reduction", &Configuration::swapReduction)
       .def_readwrite("swap_limit", &Configuration::swapLimit)
-      .def_readwrite("use_bdd", &Configuration::useBDD)
       .def_readwrite("subgraph", &Configuration::subgraph)
       .def_readwrite("pre_mapping_optimizations",
                      &Configuration::preMappingOptimizations)

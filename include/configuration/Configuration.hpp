@@ -102,7 +102,6 @@ struct Configuration {
   bool          enableSwapLimits = true;
   SwapReduction swapReduction    = SwapReduction::CouplingLimit;
   std::size_t   swapLimit        = 0;
-  bool          useBDD           = false;
 
   [[nodiscard]] nlohmann::json json() const;
   [[nodiscard]] std::string    toString() const { return json().dump(2); }

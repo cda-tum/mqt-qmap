@@ -64,12 +64,4 @@ std::vector<NestedVar> groupVarsAux(const std::vector<NestedVar>& vars,
 
 std::vector<std::vector<LogicTerm>>
 groupVarsBimander(const std::vector<LogicTerm>& vars, std::size_t groupCount);
-
-[[maybe_unused]] LogicTerm BuildBDD(const std::set<WeightedVar>&  inputLiterals,
-                                    const std::vector<LogicTerm>& vars, int leq,
-                                    LogicBlock* lb);
-LogicTerm BuildBDD(uint64_t index, int64_t curSum, int64_t maxSum, int64_t k,
-                   const std::vector<WeightedVar>& inputLiterals,
-                   const std::vector<LogicTerm>& vars, LogicTerm& formula,
-                   LogicTerm& trueLit, LogicBlock* lb);
 } // namespace encodings
