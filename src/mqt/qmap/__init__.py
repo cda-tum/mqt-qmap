@@ -10,13 +10,22 @@ import os
 import sys
 from pathlib import Path
 
-if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
-    lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
-    if lib_path.exists():
-        os.add_dll_directory(str(lib_path))
-    bin_path = Path(os.environ["Z3_ROOT"]) / "bin"
-    if bin_path.exists():
-        os.add_dll_directory(str(bin_path))
+# under Windows, make sure to add the appropriate DLL directory to the PATH
+if sys.platform == "win32":  # pragma: no cover
+    import os
+    import sysconfig
+    from pathlib import Path
+
+    bin_dir = Path(sysconfig.get_paths()["purelib"]) / "mqt" / "core" / "bin"
+    os.add_dll_directory(str(bin_dir))
+
+    if sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
+        lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
+        if lib_path.exists():
+            os.add_dll_directory(str(lib_path))
+        bin_path = Path(os.environ["Z3_ROOT"]) / "bin"
+        if bin_path.exists():
+            os.add_dll_directory(str(bin_path))
 
 from . import visualization
 from ._version import version as __version__
@@ -35,7 +44,6 @@ from .pyqmap import (
     LookaheadHeuristic,
     MappingResults,
     Method,
-    QuantumComputation,
     SwapReduction,
     SynthesisConfiguration,
     SynthesisResults,
@@ -58,7 +66,6 @@ __all__ = [
     "LookaheadHeuristic",
     "MappingResults",
     "Method",
-    "QuantumComputation",
     "SubarchitectureOrder",
     "SwapReduction",
     "SynthesisConfiguration",

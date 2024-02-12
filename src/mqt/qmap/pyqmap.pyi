@@ -1,6 +1,6 @@
 from typing import Any, ClassVar, overload
 
-from qiskit import QuantumCircuit
+from mqt.core import QuantumComputation
 
 class Arch:
     __members__: ClassVar[dict[Arch, int]] = ...  # read-only
@@ -376,7 +376,7 @@ class SwapReduction:
     @property
     def value(self) -> int: ...
 
-def map(circ: str | QuantumCircuit, arch: Architecture, config: Configuration) -> MappingResults: ...  # noqa: A001
+def map(circ: QuantumComputation, arch: Architecture, config: Configuration) -> MappingResults: ...  # noqa: A001
 
 class TargetMetric:
     __members__: ClassVar[dict[TargetMetric, int]] = ...  # read-only
@@ -467,15 +467,6 @@ class SynthesisResults:
     def tableau(self) -> str: ...
     @property
     def two_qubit_gates(self) -> int: ...
-
-class QuantumComputation:
-    def __init__(self) -> None: ...
-    @staticmethod
-    def from_file(file: str) -> QuantumComputation: ...
-    @staticmethod
-    def from_qasm_str(qasm: str) -> QuantumComputation: ...
-    @staticmethod
-    def from_qiskit(circuit: QuantumCircuit) -> QuantumComputation: ...
 
 class Tableau:
     @overload
