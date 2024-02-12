@@ -7,9 +7,7 @@ if(TARGET MQT::QMapExact)
                    ${CMAKE_CURRENT_SOURCE_DIR}/test_encodings.cpp)
 endif()
 
-if(TARGET MQT::QMapNA)
-  package_add_test(mqt-qmap-na-test MQT::QMapNA ${CMAKE_CURRENT_SOURCE_DIR}/na/test_architecture.cpp)
-endif()
+add_subdirectory(na)
 
 if(TARGET MQT::QMapCliffordSynthesis)
   configure_file(${CMAKE_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json

@@ -11,6 +11,8 @@ if(NOT TARGET ${MQT_QMAP_NA_TARGET_NAME})
 
   target_include_directories(${MQT_QMAP_NA_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/na>)
 
-  target_link_libraries(${MQT_QMAP_NA_TARGET_NAME} PUBLIC MQT::Core nlohmann_json::nlohmann_json)
+  target_link_libraries(${MQT_QMAP_NA_TARGET_NAME} PUBLIC MQT::Core MQT::CoreNA nlohmann_json::nlohmann_json)
   target_link_libraries(${MQT_QMAP_NA_TARGET_NAME} PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+
+  add_library(MQT::QMapNA ALIAS ${MQT_QMAP_NA_TARGET_NAME})
 endif()
