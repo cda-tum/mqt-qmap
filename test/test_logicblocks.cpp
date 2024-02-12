@@ -1,0 +1,1269 @@
+
+#include "Encodings.hpp"
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
+#include "Z3Logic.hpp"
+#include "Z3Model.hpp"
+
+#include "gtest/gtest.h"
+#include <cstddef>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <z3++.h>
+
+using namespace logicbase;
+
+class TestZ3 : public testing::TestWithParam<logicbase::OpType> {
+protected:
+  void SetUp() override {}
+};
+TEST(TestZ3, ConstructDestruct) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> const z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+
+  LogicTerm const t = LogicTerm("x", CType::BOOL);
+}
+
+TEST(TestZ3, SimpleTrue) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  z3logic::Z3LogicBlock z3logic(ctx, solver, true);
+
+  LogicTerm a = z3logic.makeVariable("a", CType::BOOL);
+  LogicTerm b = z3logic.makeVariable("b", CType::BOOL);
+  LogicTerm c = z3logic.makeVariable("c", CType::BOOL);
+
+  z3logic.assertFormula(a && b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+  EXPECT_EQ(a.getMaxChildrenDepth(), 1);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a || b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a == b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a != b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a && !b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a || !b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(LogicTerm::implies(a, b));
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+
+  z3logic.assertFormula(a);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+  c = z3logic.makeVariable("c", CType::BOOL);
+
+  z3logic.assertFormula(a && b && c);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a                 = z3logic.makeVariable("a", CType::BOOL);
+  b                 = z3logic.makeVariable("b", CType::BOOL);
+  c                 = z3logic.makeVariable("c", CType::BOOL);
+  LogicTerm const d = z3logic.makeVariable("d", CType::BOOL);
+
+  z3logic.assertFormula((a && b) || (c && d));
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, SimpleFalse) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  z3logic::Z3LogicBlock z3logic(ctx, solver, false);
+
+  LogicTerm a = z3logic.makeVariable("a", CType::BOOL);
+  LogicTerm b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a);
+  z3logic.assertFormula(a);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!b);
+  z3logic.assertFormula(b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a);
+  z3logic.assertFormula(b);
+  z3logic.assertFormula(a == b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a);
+  z3logic.assertFormula(!b);
+  z3logic.assertFormula(a == b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a);
+  z3logic.assertFormula(b);
+  z3logic.assertFormula(a == b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a);
+  z3logic.assertFormula(b);
+  z3logic.assertFormula(a != b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a);
+  z3logic.assertFormula(!b);
+  z3logic.assertFormula(a != b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(!a);
+  z3logic.assertFormula(!b);
+  z3logic.assertFormula(a && !b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a);
+  z3logic.assertFormula(b);
+  z3logic.assertFormula(a && !b);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+
+  z3logic.assertFormula(a);
+  z3logic.assertFormula(!b);
+  z3logic.assertFormula(LogicTerm::implies(a, b));
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::UNSAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, IntBase) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  z3logic::Z3LogicBlock z3logic(ctx, solver, false);
+
+  LogicTerm a = z3logic.makeVariable("a", CType::INT);
+  LogicTerm b = z3logic.makeVariable("b", CType::INT);
+  LogicTerm c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a + b == c);
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a - b == c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a * b == c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a / b == c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+
+  z3logic.assertFormula(a > b);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a < c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+
+  z3logic.assertFormula(a >= b);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a <= c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+}
+TEST(TestZ3, IntNumbers) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  z3logic::Z3LogicBlock z3logic(ctx, solver, false);
+
+  LogicTerm a = z3logic.makeVariable("a", CType::INT);
+  LogicTerm b = z3logic.makeVariable("b", CType::INT);
+  LogicTerm c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula(a - b == c);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula(c + b == a);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula((a > b) == LogicTerm(true));
+  z3logic.assertFormula((b > c) == LogicTerm(true));
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula((c < a) == LogicTerm(true));
+  z3logic.assertFormula((a < LogicTerm(4)) == LogicTerm(true));
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  LogicTerm boolA = z3logic.makeVariable("bool_a", CType::BOOL);
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula(LogicTerm::ite(boolA, a, b) == a);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+
+  boolA = z3logic.makeVariable("bool_a", CType::BOOL);
+
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
+
+  z3logic.assertFormula(a == LogicTerm(3));
+  z3logic.assertFormula(b == LogicTerm(2));
+  z3logic.assertFormula(c == LogicTerm(1));
+  z3logic.assertFormula(LogicTerm::ite(boolA, a, b) == b);
+
+  z3logic.produceInstance();
+
+  EXPECT_EQ(z3logic.solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, AMOAndExactlyOneNaive) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+
+  std::vector<std::vector<LogicTerm>> aNodes;
+
+  for (int i = 0; i < 4; ++i) {
+    aNodes.emplace_back();
+    for (int j = 0; j < 4; ++j) {
+      aNodes.back().emplace_back(z3logic->makeVariable(
+          "a_" + std::to_string(i) + "_" + std::to_string(j), CType::BOOL));
+    }
+  }
+
+  for (size_t i = 0; i < 4; ++i) {
+    LogicTerm a = LogicTerm(0);
+    for (size_t j = 0; j < 4; ++j) {
+      a = a + LogicTerm::ite(aNodes[i][j], LogicTerm(1), LogicTerm(0));
+    }
+    LogicTerm const aa = (a <= LogicTerm(1));
+    z3logic->assertFormula(aa);
+  }
+  for (size_t i = 0; i < 4; ++i) {
+    LogicTerm a = LogicTerm(0);
+    for (size_t j = 0; j < 4; ++j) {
+      a = a + LogicTerm::ite(aNodes[j][i], LogicTerm(1), LogicTerm(0));
+    }
+    LogicTerm const aa = (a == LogicTerm(1));
+    z3logic->assertFormula(aa);
+  }
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, AMOAndExactlyOneCMDR) {
+  using namespace encodings;
+
+  size_t const n = 22;
+
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+
+  std::vector<std::vector<LogicTerm>> aNodes;
+
+  for (size_t i = 0; i < n; ++i) {
+    aNodes.emplace_back();
+    for (size_t j = 0; j < n; ++j) {
+      aNodes.back().emplace_back(z3logic->makeVariable(
+          "a_" + std::to_string(i) + "_" + std::to_string(j), CType::BOOL));
+    }
+  }
+
+  for (size_t i = 0; i < n; ++i) {
+    std::vector<LogicTerm> a;
+    for (size_t j = 0; j < n; ++j) {
+      a.emplace_back(aNodes[i][j]);
+    }
+    LogicTerm const aa = encodings::exactlyOneCmdr(
+        groupVars(a, n / 2), LogicTerm::noneTerm(), z3logic.get());
+    z3logic->assertFormula(aa);
+  }
+  for (size_t i = 0; i < n; ++i) {
+    std::vector<LogicTerm> a;
+    for (size_t j = 0; j < n; ++j) {
+      a.emplace_back(aNodes[i][j]);
+    }
+    LogicTerm const aa =
+        atMostOneCmdr(groupVars(a, 3), LogicTerm::noneTerm(), z3logic.get());
+    z3logic->assertFormula(aa);
+  }
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, AMOAndExactlyOneBimander) {
+  using namespace encodings;
+
+  size_t const n = 11;
+
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+
+  std::vector<std::vector<LogicTerm>> aNodes;
+
+  for (size_t i = 0; i < n; ++i) {
+    aNodes.emplace_back();
+    for (size_t j = 0; j < n; ++j) {
+      aNodes.back().emplace_back(z3logic->makeVariable(
+          "a_" + std::to_string(i) + "_" + std::to_string(j), CType::BOOL));
+    }
+  }
+
+  for (size_t i = 0; i < n; ++i) {
+    std::vector<LogicTerm> a;
+    for (size_t j = 0; j < n; ++j) {
+      a.emplace_back(aNodes[i][j]);
+    }
+    LogicTerm const aa =
+        exactlyOneCmdr(groupVars(a, 3), LogicTerm::noneTerm(), z3logic.get());
+    z3logic->assertFormula(aa);
+  }
+  for (size_t i = 0; i < n; ++i) {
+    std::vector<LogicTerm> a;
+    for (size_t j = 0; j < n; ++j) {
+      a.emplace_back(aNodes[i][j]);
+    }
+    LogicTerm const aa = atMostOneBiMander(a, z3logic.get());
+    z3logic->assertFormula(aa);
+  }
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, TestBasicModel) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, false);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm const c = z3logic->makeVariable("c", CType::REAL);
+  LogicTerm const d = z3logic->makeVariable("d", CType::BITVECTOR, 8);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(b == LogicTerm(1));
+  z3logic->assertFormula(c == LogicTerm(1.0));
+  z3logic->assertFormula(d == LogicTerm(1, 8));
+
+  z3logic->produceInstance();
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  auto* model = z3logic->getModel();
+
+  EXPECT_EQ(model->getBoolValue(a, z3logic.get()), true);
+  EXPECT_EQ(model->getIntValue(b, z3logic.get()), 1);
+  EXPECT_EQ(model->getRealValue(c, z3logic.get()), 1.0);
+  EXPECT_EQ(model->getBitvectorValue(d, z3logic.get()), 1);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, TestVariableConversionsToBool) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm const c = z3logic->makeVariable("c", CType::REAL);
+  LogicTerm const d = z3logic->makeVariable("d", CType::BITVECTOR, 32);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(b);
+  z3logic->assertFormula(c);
+  z3logic->assertFormula(d);
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, TestVariableConversionsToBV) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm const c = z3logic->makeVariable("c", CType::REAL);
+  LogicTerm const d = z3logic->makeVariable("d", CType::BITVECTOR, 32);
+
+  z3logic->assertFormula(LogicTerm::bvAnd(d, a) == d);
+  z3logic->assertFormula(LogicTerm::eq(d, a) == d);
+  z3logic->assertFormula(LogicTerm::bvOr(d, b) == d);
+  z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, TestVariableConversionsToInt) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm const c = z3logic->makeVariable("c", CType::REAL);
+  LogicTerm const d = z3logic->makeVariable("d", CType::BITVECTOR, 32);
+
+  z3logic->assertFormula(LogicTerm::bvAnd(d, a) == d);
+  z3logic->assertFormula(LogicTerm::bvOr(d, b) == d);
+  z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+TEST(TestZ3, TestVariableConversionsToReal) {
+  std::shared_ptr<z3::context> const ctx   = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> const solver = std::make_shared<z3::solver>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicBlock> z3logic =
+      std::make_unique<z3logic::Z3LogicBlock>(ctx, solver, true);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm const c = z3logic->makeVariable("c", CType::REAL);
+  LogicTerm const d = z3logic->makeVariable("d", CType::BITVECTOR, 32);
+
+  z3logic->assertFormula(LogicTerm::bvAnd(d, a) == d);
+  z3logic->assertFormula(LogicTerm::bvOr(d, b) == d);
+  z3logic->assertFormula(LogicTerm::bvXor(d, b) == d);
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic.reset();
+}
+
+class TestZ3Opt : public testing::TestWithParam<logicbase::OpType> {
+protected:
+  void SetUp() override {}
+};
+
+TEST(TestZ3Opt, ConstructDestruct) {
+  using namespace logicbase;
+
+  std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::optimize> const opt =
+      std::make_shared<z3::optimize>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+  LogicTerm const a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm const b = z3logic->makeVariable("b", CType::BOOL);
+  LogicTerm const c = z3logic->makeVariable("c", CType::BOOL);
+
+  z3logic->assertFormula(a && b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+  std::stringstream ss{};
+  ss << opt;
+
+  z3logic->reset();
+}
+
+TEST(TestZ3Opt, SimpleTrue) {
+  using namespace logicbase;
+
+  std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::optimize> const opt =
+      std::make_shared<z3::optimize>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+  LogicTerm a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm b = z3logic->makeVariable("b", CType::BOOL);
+  LogicTerm c = z3logic->makeVariable("c", CType::BOOL);
+
+  z3logic->assertFormula(a && b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a || b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a == b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a != b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a && !b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a || !b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(LogicTerm::implies(a, b));
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+
+  z3logic->assertFormula(a);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+  c = z3logic->makeVariable("c", CType::BOOL);
+
+  z3logic->assertFormula(a && b && c);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic->reset();
+}
+
+TEST(TestZ3Opt, SimpleFalse) {
+  using namespace logicbase;
+
+  std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::optimize> const opt =
+      std::make_shared<z3::optimize>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+  LogicTerm a = z3logic->makeVariable("a", CType::BOOL);
+  LogicTerm b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a);
+  z3logic->assertFormula(a);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!b);
+  z3logic->assertFormula(b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a);
+  z3logic->assertFormula(b);
+  z3logic->assertFormula(a == b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(!b);
+  z3logic->assertFormula(a == b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a);
+  z3logic->assertFormula(b);
+  z3logic->assertFormula(a == b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(b);
+  z3logic->assertFormula(a != b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a);
+  z3logic->assertFormula(!b);
+  z3logic->assertFormula(a != b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(!a);
+  z3logic->assertFormula(!b);
+  z3logic->assertFormula(a && !b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(b);
+  z3logic->assertFormula(a && !b);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::BOOL);
+  b = z3logic->makeVariable("b", CType::BOOL);
+
+  z3logic->assertFormula(a);
+  z3logic->assertFormula(!b);
+  z3logic->assertFormula(LogicTerm::implies(a, b));
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::UNSAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+}
+
+TEST(TestZ3Opt, IntBase) {
+  using namespace logicbase;
+
+  std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::optimize> const opt =
+      std::make_shared<z3::optimize>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+  LogicTerm a = z3logic->makeVariable("a", CType::INT);
+  LogicTerm b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a + b == c);
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a - b == c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a * b == c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a / b == c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+
+  z3logic->assertFormula(a > b);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a < c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+
+  z3logic->assertFormula(a >= b);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a <= c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+}
+TEST(TestZ3Opt, IntNumbers) {
+  using namespace logicbase;
+
+  std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::optimize> const opt =
+      std::make_shared<z3::optimize>(*ctx);
+
+  std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+      std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+  LogicTerm a = z3logic->makeVariable("a", CType::INT);
+  LogicTerm b = z3logic->makeVariable("b", CType::INT);
+  LogicTerm c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula(a - b == c);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula(c + b == a);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula((a > b) == LogicTerm(true));
+  z3logic->assertFormula((b > c) == LogicTerm(true));
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula((c < a) == LogicTerm(true));
+  z3logic->assertFormula((a < LogicTerm(4)) == LogicTerm(true));
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  LogicTerm boolA = z3logic->makeVariable("bool_a", CType::BOOL);
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula(LogicTerm::ite(boolA, a, b) == a);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+
+  boolA = z3logic->makeVariable("bool_a", CType::BOOL);
+
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
+
+  z3logic->assertFormula(a == LogicTerm(3));
+  z3logic->assertFormula(b == LogicTerm(2));
+  z3logic->assertFormula(c == LogicTerm(1));
+  z3logic->assertFormula(LogicTerm::ite(boolA, a, b) == b);
+
+  z3logic->produceInstance();
+
+  EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+  z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+  z3logic->reset();
+}
+
+TEST(TestZ3Opt, AMOAndExactlyOneNaive) {
+  {
+    using namespace logicbase;
+    std::shared_ptr<z3::context> const  ctx = std::make_shared<z3::context>();
+    std::shared_ptr<z3::optimize> const opt =
+        std::make_shared<z3::optimize>(*ctx);
+
+    std::unique_ptr<z3logic::Z3LogicOptimizer> z3logic =
+        std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+
+    std::vector<std::vector<LogicTerm>> aNodes;
+
+    for (int i = 0; i < 4; ++i) {
+      aNodes.emplace_back();
+      for (int j = 0; j < 4; ++j) {
+        aNodes.back().emplace_back(z3logic->makeVariable(
+            "a_" + std::to_string(i) + "_" + std::to_string(j), CType::BOOL));
+      }
+    }
+
+    for (size_t i = 0; i < 4; ++i) {
+      LogicTerm a = LogicTerm(0);
+      for (size_t j = 0; j < 4; ++j) {
+        a = a + LogicTerm::ite(aNodes[i][j], LogicTerm(1), LogicTerm(0));
+      }
+      LogicTerm const aa = (a <= LogicTerm(1));
+      z3logic->assertFormula(aa);
+    }
+    for (size_t i = 0; i < 4; ++i) {
+      LogicTerm a = LogicTerm(0);
+      for (size_t j = 0; j < 4; ++j) {
+        a = a + LogicTerm::ite(aNodes[j][i], LogicTerm(1), LogicTerm(0));
+      }
+      LogicTerm const aa = (a == LogicTerm(1));
+      z3logic->assertFormula(aa);
+    }
+
+    z3logic->produceInstance();
+
+    EXPECT_EQ(z3logic->solve(), Result::SAT);
+
+    z3logic = std::make_unique<z3logic::Z3LogicOptimizer>(ctx, opt, false);
+    z3logic->reset();
+  }
+}
