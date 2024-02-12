@@ -46,7 +46,7 @@ void SATEncoder::initializeSolver() {
     lb = logicutil::getZ3LogicBlock(success, true, params);
   }
   if (!success) {
-    const auto msg = "Could not initialize solver engine.";
+    const auto* const msg = "Could not initialize solver engine.";
     PLOG_FATAL << msg;
     throw std::runtime_error(msg);
   }

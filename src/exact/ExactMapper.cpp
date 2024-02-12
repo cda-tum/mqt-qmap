@@ -697,9 +697,7 @@ number of variables: (|L|-1) * m!
   // cost for permutations
   piCount         = 0;
   internalPiCount = 0;
-  std::vector<std::set<encodings::WeightedVar>> weightedVars(
-      reducedLayerIndices.size());
-  auto cost = LogicTerm(0);
+  auto cost       = LogicTerm(0);
   do {
     if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
