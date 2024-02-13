@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <set>
 
 namespace na {
@@ -192,24 +193,25 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
   // constructive operation enables them again
   // ---
   // those that add a (+) edge to the current group members
-  std::vector<std::vector<DAGVertex*>> constructive(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> constructive(nqubits);
   // those that add a (-) edge to the current group members
-  std::vector<std::vector<DAGVertex*>> destructive(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> destructive(nqubits);
   // those that are already in the current group where all gates commute on
   // this qubit
-  std::vector<std::vector<DAGVertex*>> currentGroup(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> currentGroup(nqubits);
   // lookahead of 1 serves as a buffer for the next operation on each qubit
-  std::vector<DAGVertex*> lookahead(nqubits);
+  std::vector<std::shared_ptr<DAGVertex>> lookahead(nqubits);
   // the predecessor of the current group members
-  std::vector<std::vector<DAGVertex*>> predecessorGroup(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> predecessorGroup(nqubits);
   // all operations acting on a qubit (processed so far) excluding
   // constructive and destructive operations
-  std::vector<std::vector<DAGVertex*>> qubitOperations(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> qubitOperations(nqubits);
   // iterate over all operations in the quantum circuit
   for (const auto& op : qc) {
     // create a vertex for the current operation
     // FIXME: Introduce unique_ptr to get rid of the warning (rn: delete missing
-    DAGVertex* vertex = new DAGVertex(&op, &executableSet);
+    std::shared_ptr<DAGVertex> const vertex =
+        std::make_shared<DAGVertex>(&op, &executableSet);
     // iterate over all qubits the operation acts on
     for (const auto& qubit : op->getUsedQubits()) {
       // check whether the lookahead is empty
@@ -221,7 +223,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
         // here: the lookahead is not empty
         // get the current vertext from the lookahead and store the new
         // vertex in the lookahead
-        auto* const current = lookahead[qubit];
+        std::shared_ptr<DAGVertex> const current = lookahead[qubit];
         lookahead[qubit]    = vertex;
         // check whether the current operation is the inverse of the
         // lookahead
