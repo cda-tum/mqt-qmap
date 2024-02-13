@@ -10,6 +10,7 @@
 #include "QuantumComputation.hpp"
 
 #include <cstdint>
+#include <vector>
 
 namespace na {
 
@@ -27,6 +28,13 @@ protected:
   na::Architecture                  arch;
   na::Configuration                 config;
   na::NeutralAtomMapper::Statistics stats{};
+
+  struct Atom {
+    enum class Position { UNDEFINED, ZONE, DEFINED };
+    Position          pos   = Position::UNDEFINED;
+    qc::Qubit         qubit = 0;
+    std::vector<Zone> zone{};
+  };
 
 public:
   explicit NeutralAtomMapper(const Architecture&  arch,
