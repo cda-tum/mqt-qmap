@@ -8,6 +8,7 @@
 #include "nlohmann/json.hpp"
 #include "operations/OpType.hpp"
 
+#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -83,14 +84,16 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
     nShuttlingUnits = sites.size();
     // load rest of JSON
     for (auto const& op : data["operations"]) {
-      qc::OpType const         ty = qc::opTypeFromString(op["name"]);
-      Scope const              sc = getScopeOfString(op["type"]);
+      const std::string                    opName = op["name"];
+      const std::pair<qc::OpType, Number> ty     = {
+          qc::opTypeFromString(opName), opName.find_first_not_of('c')};
+      const Scope              sc = getScopeOfString(op["type"]);
       std::unordered_set<Zone> zo = {};
       for (auto const& zs : op["zones"]) {
         zo.emplace(nameToZone.find(zs)->second);
       }
-      Value const               fi = op["fidelity"];
-      Value const               ti = op["time"];
+      const Value               fi = op["fidelity"];
+      const Value               ti = op["time"];
       OperationProperties const o  = {sc, zo, ti, fi};
       gateSet.emplace(ty, o);
     }
@@ -115,35 +118,40 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
   }
 }
 
-auto Architecture::isAllowedLocallyIn(const qc::OpType gate,
-                                      const Zone       zone) const -> bool {
-  const auto it = gateSet.find(gate);
-  if (it == gateSet.end()) {
+auto Architecture::isAllowedLocally(const qc::OpType gate, Number nctrl) const
+    -> bool {
+  const auto it = gateSet.find({gate, nctrl});
+  return it != gateSet.end() && it->second.scope == Scope::Local;
+}
+auto Architecture::isAllowedLocally(const qc::OpType gate, const Zone zone,
+                                    Number nctrl) const -> bool {
+  if (!isAllowedLocally(gate, nctrl)) {
     return false; // gate not supported at all
   }
-  if (it->second.scope != Scope::Local) {
-    return false; // gate cannot be applied individually
-  }
+  const auto  it        = gateSet.find({gate, nctrl});
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
 
-auto Architecture::isAllowedLocallyAt(const qc::OpType gate,
-                                      const Index      qubit) const -> bool {
+auto Architecture::isAllowedLocallyAt(const qc::OpType gate, const Index qubit,
+                                      Number nctrl) const -> bool {
   const auto zone = getZone(qubit);
-  return isAllowedLocallyIn(gate, zone);
+  return isAllowedLocally(gate, zone, nctrl);
 }
 
-auto Architecture::isAllowedGlobally(const qc::OpType gate,
-                                     const Zone       zone) const -> bool {
-  const auto it = gateSet.find(gate);
-  if (it == gateSet.end()) {
+auto Architecture::isAllowedGlobally(const qc::OpType gate, Number nctrl) const
+    -> bool {
+  const auto it = gateSet.find({gate, nctrl});
+  return it != gateSet.end() && it->second.scope == Scope::Global;
+}
+
+auto Architecture::isAllowedGlobally(const qc::OpType gate, const Zone zone,
+                                     Number nctrl) const -> bool {
+  if (!isAllowedGlobally(gate, nctrl)) {
     return false; // gate not supported at all
   }
-  if (it->second.scope != Scope::Global) {
-    return false; // gate cannot be applied globally
-  }
+  const auto  it        = gateSet.find({gate, nctrl});
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();

@@ -133,7 +133,7 @@ protected:
   std::vector<std::string>
       zones{}; // a mapping from zones (int) to their name from the config
   std::vector<Site> sites{}; // a vector of sites (Position, Zone, Type)
-  std::map<qc::OpType, OperationProperties>
+  std::map<std::pair<qc::OpType, Number>, OperationProperties>
       gateSet{}; // all possible operations by their type, i.e. gate set
   DecoherenceTimes    decoherenceTimes{};  // the decoherence characteristic
   Number              nShuttlingUnits = 0; // number of AODs for atom movement
@@ -173,9 +173,9 @@ public:
   }
   [[nodiscard]] auto getMinAtomDistance() const { return minAtomDistance; }
   [[nodiscard]] auto getInteractionRadius() const { return interactionRadius; }
-  [[nodiscard]] auto getOpPropsByOpType(const qc::OpType& t) const
+  [[nodiscard]] auto getOpPropsByOpType(const qc::OpType& t, Number nctrl) const
       -> OperationProperties {
-    if (auto it = gateSet.find(t); it != gateSet.end()) {
+    if (auto it = gateSet.find({t, nctrl}); it != gateSet.end()) {
       return it->second;
     }
     std::stringstream ss;
@@ -192,34 +192,14 @@ public:
   [[nodiscard]] auto getDistance(Index i, Index j) const {
     return (getPos(j) - getPos(i)).length();
   }
-  /**
-   * @brief Checks whether the gate can be applied (locally) on this qubit.
-   *
-   * @param gate the gate
-   * @param qubit the qubit
-   * @return true if the gate is a local operation and available in the zone of
-   * the qubit,
-   * @return false otherwise
-   */
-  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit) const -> bool;
-  /**
-   * @brief Checks whether the gate can be applied (locally) in this zone.
-   *
-   * @param gate the gate
-   * @param qubit the qubit
-   * @return true if the gate is a local operation and available in the zone of
-   * the qubit,
-   * @return false otherwise
-   */
-  [[nodiscard]] auto isAllowedLocallyIn(qc::OpType gate, Zone zone) const -> bool;
-  /**
-   * @brief Checks whether the gate is a global gate for this Zone.
-   *
-   * @param gate the gate
-   * @param zone the zone
-   * @return true if the gate is global and applicable in this zone,
-   * @return false otherwise
-   */
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone) const -> bool;
+  /// Checks whether the gate can be applied at all.
+  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Number nctrl) const -> bool;
+  /// Checks whether the gate can be applied (locally) in this zone.
+  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Zone zone, Number nctrl) const -> bool;
+  /// Checks whether the gate can be applied (locally) on this qubit.
+  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit, Number nctrl) const -> bool;
+  /// Checks whether the gate is a global gate for this Zone.
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Number nctrl) const -> bool;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone, Number nctrl) const -> bool;
 };
 } // namespace na
