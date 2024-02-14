@@ -22,7 +22,7 @@
 [[nodiscard]] auto makeGlobalRY(const std::vector<qc::fp>& param)
     -> std::unique_ptr<na::GlobalOperation> {
   std::unique_ptr<na::GlobalOperation> gry =
-      std::make_unique<na::GlobalOperation>(qc::OpType::RY, 3);
+      std::make_unique<na::GlobalOperation>(qc::OpType::RY, 0, 3);
   gry->setParameter(param);
   gry->emplace_back<qc::StandardOperation>(3, static_cast<qc::Qubit>(0),
                                            qc::OpType::RY, param);
@@ -59,7 +59,7 @@ TEST(TestNALayer, ExecutableSet) {
 
   na::Layer const layer(qc);
   EXPECT_EQ((*layer.getExecutableSet())->size(), 1); // layer (1)
-  na::Layer::DAGVertex* v = *(*layer.getExecutableSet())->begin();
+  std::shared_ptr<na::Layer::DAGVertex> v = *(*layer.getExecutableSet())->begin();
   na::Layer::execute(v);
   EXPECT_EQ((*layer.getExecutableSet())->size(), 3); // layer (2)
   v = *(*layer.getExecutableSet())->begin();

@@ -361,7 +361,7 @@ TEST_F(TestNAArchitecture, Import) {
 TEST_F(TestNAArchitecture, GateApplicability) {
   na::Architecture const arch(ARCH_FN, GRID_FN);
 
-  EXPECT_TRUE(arch.isAllowedGlobally(qc::OpType::RY, 1));
-  EXPECT_TRUE(arch.isAllowedGlobally(qc::OpType::Z, 0));
-  EXPECT_TRUE(arch.isAllowedLocallyIn(qc::OpType::RZ, 1));
+  EXPECT_TRUE(arch.isAllowedGlobally(qc::OpType::RY, 1, 0));
+  EXPECT_TRUE(arch.isAllowedGlobally(qc::OpType::Z, 0, 1));
+  EXPECT_TRUE(arch.isAllowedLocally(qc::OpType::RZ, 1, 0));
 }
