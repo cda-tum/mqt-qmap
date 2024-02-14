@@ -46,7 +46,6 @@ public:
     std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
         executableSet;
 
-  public:
     /**
      * @brief Construct a new DAGVertex
      * @details The constructor initializes the vertex with the given operation
@@ -58,8 +57,15 @@ public:
     DAGVertex(const std::unique_ptr<qc::Operation>* operation,
               std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
                   executableSet)
-        : operation(operation), executableSet(executableSet) {
-      updateExecutableSet();
+        : operation(operation), executableSet(executableSet) {}
+  public:
+    [[nodiscard]] static auto
+    create(const std::unique_ptr<qc::Operation>* operation,
+           std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
+               executableSet) -> std::shared_ptr<DAGVertex> {
+      std::shared_ptr<DAGVertex> v (new DAGVertex(operation, executableSet));
+      v->updateExecutableSet();
+      return v;
     }
     [[nodiscard]] auto isExecutable() const {
       assert(executableCounter <= executableThreshold);
@@ -80,6 +86,10 @@ public:
       executableCounter--;
       updateExecutableSet();
     }
+    /**
+     * @brief Inserts or removes the vertex from the executable set.
+     * @warning May not be called from the constructor.
+     */
     auto updateExecutableSet() -> void {
       if (isExecutable()) {
         if (const auto& it = (*executableSet)->find(shared_from_this());
@@ -123,8 +133,9 @@ public:
   };
 
 protected:
-  std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>> executableSet =
-      std::make_unique<std::unordered_set<std::shared_ptr<DAGVertex>>>();
+  std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>
+      executableSet =
+          std::make_unique<std::unordered_set<std::shared_ptr<DAGVertex>>>();
 
   /// Checks whether two operations commute on a given qubit.
   [[nodiscard]] static auto
@@ -139,11 +150,13 @@ protected:
 
 public:
   explicit Layer(const qc::QuantumComputation& qc) { constructDAG(qc); }
-  [[nodiscard]] auto getExecutableSet() const
-      -> const std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>* {
+  [[nodiscard]] auto getExecutableSet() const -> const
+      std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>* {
     return &executableSet;
   }
-  static auto execute(const std::shared_ptr<DAGVertex>& vertex) -> void { vertex->execute(); }
+  static auto execute(const std::shared_ptr<DAGVertex>& vertex) -> void {
+    vertex->execute();
+  }
 };
 
 } // namespace na

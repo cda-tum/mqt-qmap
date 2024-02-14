@@ -210,8 +210,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
   for (const auto& op : qc) {
     // create a vertex for the current operation
     // FIXME: Introduce unique_ptr to get rid of the warning (rn: delete missing
-    std::shared_ptr<DAGVertex> const vertex =
-        std::make_shared<DAGVertex>(&op, &executableSet);
+    std::shared_ptr<DAGVertex> const vertex = DAGVertex::create(&op, &executableSet);
     // iterate over all qubits the operation acts on
     for (const auto& qubit : op->getUsedQubits()) {
       // check whether the lookahead is empty
