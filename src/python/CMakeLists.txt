@@ -1,3 +1,12 @@
+if(APPLE)
+  set(BASEPOINT @loader_path)
+else()
+  set(BASEPOINT $ORIGIN)
+endif()
+list(APPEND CMAKE_INSTALL_RPATH ${BASEPOINT} ${BASEPOINT}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+
 pybind11_add_module(
   pyqmap
   # Prefer thin LTO if available
