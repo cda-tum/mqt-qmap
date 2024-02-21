@@ -5,7 +5,7 @@ pytest==7.0.0
 importlib_resources==5.0.0
 typing_extensions==4.0.0
 qiskit==1.0.0
-rustworkx==0.13.0
+rustworkx==0.14.0
 mqt.qcec==2.0.0
 distinctipy==1.2.2
 plotly==5.15.0
