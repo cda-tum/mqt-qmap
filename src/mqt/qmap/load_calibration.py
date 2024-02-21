@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from qiskit.providers.models import BackendProperties
 from qiskit.transpiler.target import Target
 
 if TYPE_CHECKING:
     from .pyqmap import Architecture
 
 
-def load_calibration(architecture: Architecture, calibration: str | Target | None = None) -> None:
+def load_calibration(architecture: Architecture, calibration: str | Target | BackendProperties | None = None) -> None:
     """Load a calibration from a string, BackendProperties, or Target.
 
     Args:
@@ -22,6 +23,10 @@ def load_calibration(architecture: Architecture, calibration: str | Target | Non
 
     if isinstance(calibration, str):
         architecture.load_properties(calibration)
+    elif isinstance(calibration, BackendProperties):
+        from mqt.qmap.qiskit.backend import import_backend_properties
+
+        architecture.load_properties(import_backend_properties(calibration))
     elif isinstance(calibration, Target):
         from mqt.qmap.qiskit.backend import import_target
 

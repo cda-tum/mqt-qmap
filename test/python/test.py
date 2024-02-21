@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from qiskit import QuantumCircuit
-from qiskit.providers.fake_provider import FakeLondon
+from qiskit.providers.fake_provider import Fake5QV1
 
 from mqt import qmap
 
@@ -16,5 +16,5 @@ if __name__ == "__main__":
     print(qc.draw(fold=-1))
 
     # compile the circuit
-    qc_mapped, results = qmap.compile(qc, arch=FakeLondon())
+    qc_mapped, results = qmap.compile(qc, arch=Fake5QV1())
     print(qc_mapped.draw(fold=-1))
