@@ -252,6 +252,7 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
+test-skip = "cp38-macosx_arm64"
 build-frontend = "build"
 
 [tool.cibuildwheel.linux]
