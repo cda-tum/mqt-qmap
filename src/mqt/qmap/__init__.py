@@ -18,7 +18,6 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
     if bin_path.exists():
         os.add_dll_directory(str(bin_path))
 
-from . import visualization
 from ._version import version as __version__
 from .clifford_synthesis import optimize_clifford, synthesize_clifford
 from .compile import compile
@@ -70,5 +69,4 @@ __all__ = [
     "compile",
     "optimize_clifford",
     "synthesize_clifford",
-    "visualization",
 ]
