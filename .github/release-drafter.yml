@@ -1,4 +1,4 @@
-name-template: "QMAP $RESOLVED_VERSION Release"
+name-template: "MQT QMAP $RESOLVED_VERSION Release"
 tag-template: "v$RESOLVED_VERSION"
 categories:
   - title: "🚀 Features and Enhancements"
