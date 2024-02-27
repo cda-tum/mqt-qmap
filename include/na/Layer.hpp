@@ -1,11 +1,14 @@
 //
 // This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
+// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
+// information.
 //
 
 #pragma once
 
+#include "Architecture.hpp"
 #include "Definitions.hpp"
+#include "Graph.hpp"
 #include "QuantumComputation.hpp"
 #include "na/GlobalOperation.hpp"
 #include "operations/OpType.hpp"
@@ -58,12 +61,13 @@ public:
               std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
                   executableSet)
         : operation(operation), executableSet(executableSet) {}
+
   public:
     [[nodiscard]] static auto
     create(const std::unique_ptr<qc::Operation>* operation,
            std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>*
                executableSet) -> std::shared_ptr<DAGVertex> {
-      std::shared_ptr<DAGVertex> v (new DAGVertex(operation, executableSet));
+      std::shared_ptr<DAGVertex> v(new DAGVertex(operation, executableSet));
       v->updateExecutableSet();
       return v;
     }
@@ -149,14 +153,33 @@ protected:
   auto constructDAG(const qc::QuantumComputation& qc) -> void;
 
 public:
+  Layer() = default;
+  Layer(const Layer& other) {
+    executableSet =
+        std::make_unique<std::unordered_set<std::shared_ptr<DAGVertex>>>(
+            other.executableSet->cbegin(), other.executableSet->cend());
+  }
+  virtual ~Layer() = default;
   explicit Layer(const qc::QuantumComputation& qc) { constructDAG(qc); }
+  Layer& operator=(const Layer& other) {
+    executableSet =
+        std::make_unique<std::unordered_set<std::shared_ptr<DAGVertex>>>(
+            other.executableSet->cbegin(), other.executableSet->cend());
+    return *this;
+  }
   [[nodiscard]] auto getExecutableSet() const -> const
       std::unique_ptr<std::unordered_set<std::shared_ptr<DAGVertex>>>* {
     return &executableSet;
   }
+  auto setCircuit(const qc::QuantumComputation& qc) -> void {
+    executableSet->clear();
+    constructDAG(qc);
+  }
   static auto execute(const std::shared_ptr<DAGVertex>& vertex) -> void {
     vertex->execute();
   }
+  [[nodiscard]] auto constructInteractionGraph(qc::OpType opType, Number nctrl) const
+      -> Graph<std::shared_ptr<DAGVertex>>;
 };
 
 } // namespace na

@@ -1,0 +1,229 @@
+//
+// This file is part of the MQT QMAP library released under the MIT license.
+// See README.md or go to https://github.com/cda-tum/qmap for more information.
+//
+
+#include "Graph.hpp"
+#include "Layer.hpp"
+#include "QuantumComputation.hpp"
+#include "operations/OpType.hpp"
+
+#include "gtest/gtest.h"
+#include <__algorithm/remove_if.h>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <numeric>
+
+class TestNAGraph : public testing::Test {
+protected:
+  qc::QuantumComputation                           qc{};
+  na::Layer                                        layer{};
+  na::Graph<std::shared_ptr<na::Layer::DAGVertex>> graph{};
+  void                                             SetUp() override {
+    qc = qc::QuantumComputation(8);
+    qc.cz(1, 2);
+    qc.cz(1, 6);
+    qc.cz(2, 7);
+    qc.cz(3, 4);
+    qc.cz(3, 5);
+    qc.cz(4, 5);
+    qc.cz(4, 7);
+    qc.cz(5, 7);
+    qc.cz(6, 7);
+    layer = na::Layer(qc);
+    graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
+  }
+};
+
+TEST_F(TestNAGraph, Getter) {
+  EXPECT_EQ(graph.getNEdges(), 9);
+  EXPECT_EQ(graph.getNVertices(), 7);
+  EXPECT_EQ(graph.getDegree(1), 2);
+  EXPECT_EQ(graph.getDegree(2), 2);
+  EXPECT_EQ(graph.getDegree(3), 2);
+  EXPECT_EQ(graph.getDegree(4), 3);
+  EXPECT_EQ(graph.getDegree(5), 3);
+  EXPECT_EQ(graph.getDegree(6), 2);
+  EXPECT_EQ(graph.getDegree(7), 4);
+  EXPECT_THROW(std::ignore = graph.getDegree(0), std::invalid_argument);
+  EXPECT_TRUE(graph.isAdjacent(1, 2));
+  EXPECT_FALSE(graph.isAdjacent(1, 3));
+  EXPECT_FALSE(graph.isAdjacent(1, 4));
+  EXPECT_FALSE(graph.isAdjacent(1, 5));
+  EXPECT_TRUE(graph.isAdjacent(1, 6));
+  EXPECT_FALSE(graph.isAdjacent(1, 7));
+  EXPECT_TRUE(graph.isAdjacent(2, 1));
+  EXPECT_FALSE(graph.isAdjacent(2, 3));
+  EXPECT_FALSE(graph.isAdjacent(2, 4));
+  EXPECT_FALSE(graph.isAdjacent(2, 5));
+  EXPECT_FALSE(graph.isAdjacent(2, 6));
+  EXPECT_TRUE(graph.isAdjacent(2, 7));
+  EXPECT_FALSE(graph.isAdjacent(3, 1));
+  EXPECT_FALSE(graph.isAdjacent(3, 2));
+  EXPECT_TRUE(graph.isAdjacent(3, 4));
+  EXPECT_TRUE(graph.isAdjacent(3, 5));
+  EXPECT_FALSE(graph.isAdjacent(3, 6));
+  EXPECT_FALSE(graph.isAdjacent(3, 7));
+  EXPECT_FALSE(graph.isAdjacent(4, 1));
+  EXPECT_FALSE(graph.isAdjacent(4, 2));
+  EXPECT_TRUE(graph.isAdjacent(4, 3));
+  EXPECT_TRUE(graph.isAdjacent(4, 5));
+  EXPECT_FALSE(graph.isAdjacent(4, 6));
+  EXPECT_TRUE(graph.isAdjacent(4, 7));
+  EXPECT_FALSE(graph.isAdjacent(5, 1));
+  EXPECT_FALSE(graph.isAdjacent(5, 2));
+  EXPECT_TRUE(graph.isAdjacent(5, 3));
+  EXPECT_TRUE(graph.isAdjacent(5, 4));
+  EXPECT_FALSE(graph.isAdjacent(5, 6));
+  EXPECT_TRUE(graph.isAdjacent(5, 7));
+  EXPECT_TRUE(graph.isAdjacent(6, 1));
+  EXPECT_FALSE(graph.isAdjacent(6, 2));
+  EXPECT_FALSE(graph.isAdjacent(6, 3));
+  EXPECT_FALSE(graph.isAdjacent(6, 4));
+  EXPECT_FALSE(graph.isAdjacent(6, 5));
+  EXPECT_TRUE(graph.isAdjacent(6, 7));
+  EXPECT_FALSE(graph.isAdjacent(7, 1));
+  EXPECT_TRUE(graph.isAdjacent(7, 2));
+  EXPECT_FALSE(graph.isAdjacent(7, 3));
+  EXPECT_TRUE(graph.isAdjacent(7, 4));
+  EXPECT_TRUE(graph.isAdjacent(7, 5));
+  EXPECT_TRUE(graph.isAdjacent(7, 6));
+}
+
+TEST_F(TestNAGraph, MaxIndepSet) {
+  const auto& mis = graph.getMaxIndependentSet();
+  EXPECT_EQ(mis.size(), 3);
+  EXPECT_TRUE(mis.count(1));
+  EXPECT_TRUE(mis.count(3));
+  EXPECT_TRUE(mis.count(7));
+}
+
+TEST_F(TestNAGraph, Coloring) {
+  const auto& mis      = graph.getMaxIndependentSet();
+  const auto& queue    = graph.sortByDegreeDesc(mis);
+  const auto& edges    = graph.coveredEdges(mis);
+  const auto& coloring = graph.colorEdges(edges, queue);
+  // check that adjacent edges have different colors
+  for (const auto& [e, k] : coloring) {
+    for (const auto& [f, l] : coloring) {
+      if (e != f && (e.first == f.first || e.first == f.second ||
+                     e.second == f.first || e.second == f.second)) {
+        EXPECT_NE(k, l);
+      }
+    }
+  }
+  // check that all edges obey the topological sorting of the queue
+  for (const auto& [e, k] : coloring) {
+    for (const auto& [f, l] : coloring) {
+      if (e != f) {
+        qc::Qubit u = 0;
+        qc::Qubit v = 0;
+        if (e.first == f.first) {
+          u = e.second;
+          v = f.second;
+        } else if (e.first == f.second) {
+          u = e.second;
+          v = f.first;
+        } else if (e.second == f.first) {
+          u = e.first;
+          v = f.second;
+        } else if (e.second == f.second) {
+          u = e.first;
+          v = f.first;
+        } else {
+          continue;
+        }
+        const auto& uIt = std::find(queue.cbegin(), queue.cend(), u);
+        const auto& vIt = std::find(queue.cbegin(), queue.cend(), v);
+        if (uIt != queue.cend() && vIt != queue.cend()) {
+          if (std::distance(queue.cbegin(), uIt) <
+              std::distance(queue.cbegin(), vIt)) {
+            EXPECT_LT(k, l);
+          } else {
+            EXPECT_GT(k, l);
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST_F(TestNAGraph, SequenceOrdering) {
+  const auto& sequence = graph.computeSequence();
+  const auto& moveable = sequence.first;
+  // check that the order of moveable qubits is consistent
+  auto order =
+      std::accumulate(moveable[0].cbegin(), moveable[0].cend(),
+                      std::vector<qc::Qubit>{}, [](auto& acc, const auto& p) {
+                        acc.push_back(p.first);
+                        return acc;
+                      });
+  std::sort(order.begin(), order.end(), [&](const auto& p, const auto& q) {
+    return moveable[0].at(p) < moveable[0].at(q);
+  });
+  for (std::size_t t = 0; t < moveable.size(); ++t) {
+    EXPECT_EQ(moveable[t].size(), order.size());
+    for (std::size_t i = 1; i < order.size(); ++i) {
+      const auto& x1It = moveable[t].find(order[i - 1]);
+      const auto& x2It = moveable[t].find(order[i]);
+      EXPECT_NE(x1It, moveable[t].cend());
+      EXPECT_NE(x2It, moveable[t].cend());
+      EXPECT_LT(x1It->second, x2It->second);
+    }
+  }
+}
+
+TEST_F(TestNAGraph, InteractionExists) {
+  const auto& sequence = graph.computeSequence();
+  const auto& moveable = sequence.first;
+  const auto& fixed    = sequence.second;
+  // check that all interactions are part of the interaction graph
+  for (const auto& seq : moveable) {
+    for (const auto& s : seq) {
+      const auto& p = s.first;
+      const auto& x = s.second;
+      const auto& qIt =
+          std::find_if(fixed.cbegin(), fixed.cend(),
+                       [&](const auto& q) { return q.second == x; });
+      if (qIt != fixed.cend()) {
+        EXPECT_TRUE(graph.isAdjacent(p, qIt->first));
+      }
+    }
+  }
+}
+
+TEST_F(TestNAGraph, CoveredInteractions) {
+  const auto& mis          = graph.getMaxIndependentSet();
+  const auto& coveredEdges = graph.coveredEdges(mis);
+  // TODO for some reason this must be a vector, set gives an error
+  std::vector<std::pair<qc::Qubit, qc::Qubit>> coveredEdgesVec(
+      coveredEdges.cbegin(), coveredEdges.cend());
+  const auto& sequence = graph.computeSequence();
+  const auto& moveable = sequence.first;
+  const auto& fixed    = sequence.second;
+  // check that all interactions that are covered by the independent set are
+  // part of the sequence
+  for (const auto& seq : moveable) {
+    for (const auto& s : seq) {
+      const auto  p = s.first;
+      const auto  x = s.second;
+      const auto& qIt =
+          std::find_if(fixed.cbegin(), fixed.cend(),
+                       [&](const auto& q) { return q.second == x; });
+      if (qIt != fixed.cend()) {
+        const auto q = qIt->first;
+        coveredEdgesVec.erase(
+            std::remove_if(coveredEdgesVec.begin(), coveredEdgesVec.end(),
+                           [&](const auto& e) {
+                             return (e.first == q && e.second == p) ||
+                                    (e.first == p && e.second == q);
+                           }),
+            coveredEdgesVec.end());
+      }
+    }
+  }
+  // all edges are covered
+  EXPECT_EQ(coveredEdgesVec.size(), 0);
+}

@@ -59,7 +59,8 @@ TEST(TestNALayer, ExecutableSet) {
 
   na::Layer const layer(qc);
   EXPECT_EQ((*layer.getExecutableSet())->size(), 1); // layer (1)
-  std::shared_ptr<na::Layer::DAGVertex> v = *(*layer.getExecutableSet())->begin();
+  std::shared_ptr<na::Layer::DAGVertex> v =
+      *(*layer.getExecutableSet())->begin();
   na::Layer::execute(v);
   EXPECT_EQ((*layer.getExecutableSet())->size(), 3); // layer (2)
   v = *(*layer.getExecutableSet())->begin();
@@ -76,9 +77,28 @@ TEST(TestNALayer, ExecutableSet) {
   EXPECT_EQ((*layer.getExecutableSet())->size(), 3); // layer (4), (5), (9)
   // execute layer (4) and (5)
   for (const auto& u : **layer.getExecutableSet()) {
-    if(const auto& it = (*u->getOperation())->getUsedQubits(); it.find(0) != it.end()) {
+    if (const auto& it = (*u->getOperation())->getUsedQubits();
+        it.find(0) != it.end()) {
       na::Layer::execute(u);
     }
   }
   EXPECT_EQ((*layer.getExecutableSet())->size(), 2); // layer (6), (9)
+}
+
+TEST(TestNALayer, AllExecutable) {
+  qc::QuantumComputation qc{};
+  na::Layer              layer{};
+  qc = qc::QuantumComputation(8);
+  qc.cz(1, 2);
+  qc.cz(1, 6);
+  qc.cz(2, 7);
+  qc.cz(3, 4);
+  qc.cz(3, 5);
+  qc.cz(4, 5);
+  qc.cz(4, 6);
+  qc.cz(4, 7);
+  qc.cz(5, 7);
+  qc.cz(6, 7);
+  layer = na::Layer(qc);
+  EXPECT_EQ((*layer.getExecutableSet())->size(), 10);
 }

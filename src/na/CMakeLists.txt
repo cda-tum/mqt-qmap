@@ -1,3 +1,9 @@
+#
+# This file is part of the MQT QMAP library released under the MIT license.
+# See README.md or go to https://github.com/cda-tum/mqt-qmap for more
+# information.
+#
+
 set(MQT_QMAP_NA_TARGET_NAME ${MQT_QMAP_TARGET_NAME}-na)
 
 if(NOT TARGET ${MQT_QMAP_NA_TARGET_NAME})

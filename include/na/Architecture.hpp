@@ -25,11 +25,19 @@
 
 namespace na {
 
+// TODO provide a set for every SLM trap of adjacent AOD traps
+// TODO provide some kind of access to the row and colum to enable movement to
+// an entire line with an AOD; for that one needs to know what the line is
+// TODO provide functions to retrive the number of rows and columns of a zone
+// and to retrieve the atoms of a row and line of a zone
+
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
 static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
-    {"Global", Scope::Global}, {"Local", Scope::Local},
-    {"global", Scope::Global}, {"local", Scope::Local}};
+    {"Global", Scope::Global},
+    {"Local", Scope::Local},
+    {"global", Scope::Global},
+    {"local", Scope::Local}};
 /**
  * @brief Get the Scope of a gate from a string
  *
@@ -193,13 +201,18 @@ public:
     return (getPos(j) - getPos(i)).length();
   }
   /// Checks whether the gate can be applied at all.
-  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Number nctrl) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Number nctrl) const
+      -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
-  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Zone zone, Number nctrl) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Zone zone,
+                                      Number nctrl) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit, Number nctrl) const -> bool;
+  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit,
+                                        Number nctrl) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Number nctrl) const -> bool;
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone, Number nctrl) const -> bool;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Number nctrl) const
+      -> bool;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone,
+                                       Number nctrl) const -> bool;
 };
 } // namespace na

@@ -1,9 +1,11 @@
 //
 // This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
+// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
+// information.
 //
 
 #include "Layer.hpp"
+#include "Graph.hpp"
 
 #include "Definitions.hpp"
 
@@ -14,6 +16,7 @@
 
 namespace na {
 
+/// Checks whether the two operations commute on the given qubit.
 [[nodiscard]] auto
 Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
                        const std::unique_ptr<qc::Operation>* op2,
@@ -186,31 +189,32 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
   return false;
 }
 auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
-  const auto nqubits = qc.getNqubits();
+  const auto nQubits = qc.getNqubits();
   // For a pair of self-canceling operations like two consecutive X operations
   // or RY rotations with opposite angles the first operations is a
   // destructive operation that disables operations until the consecutive
   // constructive operation enables them again
   // ---
   // those that add a (+) edge to the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> constructive(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> constructive(nQubits);
   // those that add a (-) edge to the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> destructive(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> destructive(nQubits);
   // those that are already in the current group where all gates commute on
   // this qubit
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> currentGroup(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> currentGroup(nQubits);
   // lookahead of 1 serves as a buffer for the next operation on each qubit
-  std::vector<std::shared_ptr<DAGVertex>> lookahead(nqubits);
+  std::vector<std::shared_ptr<DAGVertex>> lookahead(nQubits);
   // the predecessor of the current group members
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> predecessorGroup(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> predecessorGroup(
+      nQubits);
   // all operations acting on a qubit (processed so far) excluding
   // constructive and destructive operations
-  std::vector<std::vector<std::shared_ptr<DAGVertex>>> qubitOperations(nqubits);
+  std::vector<std::vector<std::shared_ptr<DAGVertex>>> qubitOperations(nQubits);
   // iterate over all operations in the quantum circuit
   for (const auto& op : qc) {
     // create a vertex for the current operation
-    // FIXME: Introduce unique_ptr to get rid of the warning (rn: delete missing
-    std::shared_ptr<DAGVertex> const vertex = DAGVertex::create(&op, &executableSet);
+    std::shared_ptr<DAGVertex> const vertex =
+        DAGVertex::create(&op, &executableSet);
     // iterate over all qubits the operation acts on
     for (const auto& qubit : op->getUsedQubits()) {
       // check whether the lookahead is empty
@@ -220,10 +224,10 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
         lookahead[qubit] = vertex;
       } else {
         // here: the lookahead is not empty
-        // get the current vertext from the lookahead and store the new
+        // get the current vertex from the lookahead and store the new
         // vertex in the lookahead
         std::shared_ptr<DAGVertex> const current = lookahead[qubit];
-        lookahead[qubit]    = vertex;
+        lookahead[qubit]                         = vertex;
         // check whether the current operation is the inverse of the
         // lookahead
         if (isInverse(current->getOperation(),
@@ -270,11 +274,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
             // here: the current operation does not commute with the current
             // group members and is not the inverse of the lookahead
             // --> start a new group
-            // TODO: Can this be beautified with the copy-assign operator?
-            predecessorGroup[qubit].clear();
-            for (const auto& v : currentGroup[qubit]) {
-              predecessorGroup[qubit].emplace_back(v);
-            }
+            predecessorGroup[qubit] = currentGroup[qubit];
             currentGroup[qubit].clear();
           }
           // add an enabling edge from each predecessor
@@ -289,7 +289,7 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
     }
   }
   // process the remaining lookahead for every qubit
-  for (qc::Qubit qubit = 0; qubit < nqubits; ++qubit) {
+  for (qc::Qubit qubit = 0; qubit < nQubits; ++qubit) {
     if (lookahead[qubit] != nullptr) {
       auto const current = lookahead[qubit];
       lookahead[qubit]   = nullptr;
@@ -325,5 +325,44 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
       qubitOperations[qubit].emplace_back(current);
     }
   }
+}
+[[nodiscard]] auto Layer::constructInteractionGraph(qc::OpType opType, Number nctrl) const
+    -> Graph<std::shared_ptr<DAGVertex>> {
+  switch (opType) {
+  case qc::X:
+  case qc::Y:
+  case qc::Z:
+  case qc::RX:
+  case qc::RY:
+  case qc::RZ:
+    if (nctrl == 1) {
+      break;
+    }
+    [[fallthrough]];
+  default:
+    std::stringstream ss;
+    ss << "The operation type ";
+    for (std::size_t i = 0; i < nctrl; ++i) {
+      ss << "c";
+    }
+    ss << qc::toString(opType)
+       << " is not supported for constructing an interaction graph.";
+    throw std::invalid_argument(ss.str());
+  }
+  Graph<std::shared_ptr<DAGVertex>> graph;
+  for (const auto& vertex : *executableSet) {
+    const auto& gate = *vertex->getOperation();
+    if (gate->getType() == opType && gate->getNcontrols() == nctrl) {
+      const auto& usedQubits = gate->getUsedQubits();
+      if (usedQubits.size() != 2) {
+        throw std::invalid_argument(
+            "The interaction graph can only be constructed for two-qubit "
+            "gates.");
+      }
+      std::vector<qc::Qubit> q(usedQubits.cbegin(), usedQubits.cend());
+      graph.addEdge(q[0], q[1], vertex);
+    }
+  }
+  return graph;
 }
 } // namespace na
