@@ -6,7 +6,6 @@
 #include "Definitions.hpp"
 #include "Layer.hpp"
 #include "QuantumComputation.hpp"
-#include "na/GlobalOperation.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
@@ -18,20 +17,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-[[nodiscard]] auto makeGlobalRY(const std::vector<qc::fp>& param)
-    -> std::unique_ptr<na::GlobalOperation> {
-  std::unique_ptr<na::GlobalOperation> gry =
-      std::make_unique<na::GlobalOperation>(qc::OpType::RY, 0, 3);
-  gry->setParameter(param);
-  gry->emplace_back<qc::StandardOperation>(3, static_cast<qc::Qubit>(0),
-                                           qc::OpType::RY, param);
-  gry->emplace_back<qc::StandardOperation>(3, static_cast<qc::Qubit>(1),
-                                           qc::OpType::RY, param);
-  gry->emplace_back<qc::StandardOperation>(3, static_cast<qc::Qubit>(2),
-                                           qc::OpType::RY, param);
-  return gry;
-}
 
 TEST(TestNALayer, ExecutableSet) {
   auto qc = qc::QuantumComputation(3);
@@ -45,16 +30,20 @@ TEST(TestNALayer, ExecutableSet) {
 └─────────┘└─────────┘└──────────┘      └─────────┘           └──────────┘
     (1)        (2)        (3)     (4)(5)    (6)        (7)        (8)     (9)
   */
-  qc.emplace_back(makeGlobalRY({qc::PI_2}));
+  qc.emplace_back<qc::StandardOperation>(
+      3, qc::Targets{0, 1, 2}, qc::OpType::RY, std::vector<qc::fp>{qc::PI_2});
   qc.rz(qc::PI_4, 0);
   qc.rz(qc::PI_4, 1);
   qc.rz(qc::PI_4, 2);
-  qc.emplace_back(makeGlobalRY({-qc::PI_2}));
+  qc.emplace_back<qc::StandardOperation>(
+      3, qc::Targets{0, 1, 2}, qc::OpType::RY, std::vector<qc::fp>{-qc::PI_2});
   qc.cz(0, 1);
   qc.cz(0, 2);
-  qc.emplace_back(makeGlobalRY({qc::PI_2}));
+  qc.emplace_back<qc::StandardOperation>(
+      3, qc::Targets{0, 1, 2}, qc::OpType::RY, std::vector<qc::fp>{qc::PI_2});
   qc.rz(qc::PI_4, 0);
-  qc.emplace_back(makeGlobalRY({-qc::PI_2}));
+  qc.emplace_back<qc::StandardOperation>(
+      3, qc::Targets{0, 1, 2}, qc::OpType::RY, std::vector<qc::fp>{-qc::PI_2});
   qc.cz(1, 2);
 
   na::Layer const layer(qc);

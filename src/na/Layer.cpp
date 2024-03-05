@@ -5,9 +5,10 @@
 //
 
 #include "Layer.hpp"
-#include "Graph.hpp"
 
 #include "Definitions.hpp"
+#include "Graph.hpp"
+#include "operations/OpType.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -23,7 +24,7 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
                        const qc::Qubit&                      qubit) -> bool {
   // FIXME: Cleanup this conditional branch, but how?
   // check whether both operations act on the given qubit
-  if (!(*op1)->actsOn(qubit) || !(*op2)->actsOn(qubit)) {
+  if (!(*op1)->actsOn(qubit) or !(*op2)->actsOn(qubit)) {
     throw std::invalid_argument(
         "The operations do not act on the given qubit.");
   }
@@ -38,13 +39,7 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
       return true;
     }
     // here: qubit is a target of op2
-    return std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                     (*op2)->getType()) != DIAGONAL_GATES.end() ||
-           ((*op2)->getType() == qc::OpType::Global &&
-            std::find(
-                DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                (dynamic_cast<GlobalOperation*>(op2->get())->getOpsType())) !=
-                DIAGONAL_GATES.end());
+    return isDiagonal((*op2)->getType());
     // true, iff qubit is a target and op2 is a diagonal gate
     //         ┌────┐
     // q: ──■──┤ RZ ├
@@ -53,13 +48,7 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
   // here: qubit is a target of op1
   if (const auto& controls2 = (*op2)->getControls();
       controls2.find(qubit) != controls2.end()) {
-    return std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                     (*op1)->getType()) != DIAGONAL_GATES.end() ||
-           ((*op1)->getType() == qc::OpType::Global &&
-            std::find(
-                DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                (dynamic_cast<GlobalOperation*>(op1->get())->getOpsType())) !=
-                DIAGONAL_GATES.end());
+    return isDiagonal((*op1)->getType());
     // true, iff qubit is a target and op1 is a diagonal gate and op2 is
     // controlled
     //    ┌────┐
@@ -67,32 +56,17 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
     //    └────┘  |
   }
   // here: qubit is a target of both operations
-  if ((std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                 (*op1)->getType()) != DIAGONAL_GATES.end() ||
-       ((*op1)->getType() == qc::OpType::Global &&
-        std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                  (dynamic_cast<GlobalOperation*>(op1->get())->getOpsType())) !=
-            DIAGONAL_GATES.end())) &&
-      (std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                 (*op2)->getType()) != DIAGONAL_GATES.end() ||
-       ((*op2)->getType() == qc::OpType::Global &&
-        std::find(DIAGONAL_GATES.begin(), DIAGONAL_GATES.end(),
-                  (dynamic_cast<GlobalOperation*>(op2->get())->getOpsType())) !=
-            DIAGONAL_GATES.end()))) {
+  if (isDiagonal((*op1)->getType()) and isDiagonal((*op2)->getType())) {
     // if both operations are diagonal gates
     //    ┌────┐┌────┐
     // q: ┤ RZ ├┤ RZ ├
     //    └────┘└────┘
     return true;
   }
-  return ((*op1)->getType() == (*op2)->getType() &&
-          (*op1)->getType() < qc::OpType::Compound) ||
-         // FIXME: Beautify the hack with '< qc::OpType::Compound' to identify
-         // FIXME: standard gates
-         ((*op1)->getType() == qc::OpType::Global &&
-          (*op2)->getType() == qc::OpType::Global &&
-          (dynamic_cast<GlobalOperation*>(op1->get())->getOpsType() ==
-           dynamic_cast<GlobalOperation*>(op2->get())->getOpsType()));
+  return (*op1)->getType() == (*op2)->getType() and
+         (*op1)->getType() < qc::OpType::Compound;
+  // FIXME: Beautify the hack with '< qc::OpType::Compound' to identify
+  // FIXME: standard gates
   // true, iff both operations are of the same type
   //    ┌───┐┌───┐
   // q: ┤ A ├┤ A ├
@@ -102,89 +76,48 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
                                     const std::unique_ptr<qc::Operation>* op2)
     -> bool {
   // TODO: Add check for remaining operations
-  if ((*op1)->getControls() == (*op2)->getControls() &&
+  if ((*op1)->getControls() == (*op2)->getControls() and
       (*op1)->getTargets() == (*op2)->getTargets()) {
-    if ((*op1)->getType() == qc::OpType::Global &&
-        (*op2)->getType() == qc::OpType::Global) {
-      const auto& gop1 = dynamic_cast<GlobalOperation*>(op1->get());
-      const auto& gop2 = dynamic_cast<GlobalOperation*>(op2->get());
-      return (gop1->getOpsType() == qc::OpType::I &&
-              gop2->getOpsType() == qc::OpType::I) ||
-             (gop1->getOpsType() == qc::OpType::X &&
-              gop2->getOpsType() == qc::OpType::X) ||
-             (gop1->getOpsType() == qc::OpType::Y &&
-              gop2->getOpsType() == qc::OpType::Y) ||
-             (gop1->getOpsType() == qc::OpType::Z &&
-              gop2->getOpsType() == qc::OpType::Z) ||
-             (gop1->getOpsType() == qc::OpType::S &&
-              gop2->getOpsType() == qc::OpType::Sdg) ||
-             (gop1->getOpsType() == qc::OpType::Sdg &&
-              gop2->getOpsType() == qc::OpType::S) ||
-             (gop1->getOpsType() == qc::OpType::SX &&
-              gop2->getOpsType() == qc::OpType::SXdg) ||
-             (gop1->getOpsType() == qc::OpType::SXdg &&
-              gop2->getOpsType() == qc::OpType::SX) ||
-             (gop1->getOpsType() == qc::OpType::T &&
-              gop2->getOpsType() == qc::OpType::Tdg) ||
-             (gop1->getOpsType() == qc::OpType::Tdg &&
-              gop2->getOpsType() == qc::OpType::T) ||
-             (gop1->getOpsType() == qc::OpType::H &&
-              gop2->getOpsType() == qc::OpType::H) ||
-             (gop1->getOpsType() == qc::OpType::P &&
-              gop2->getOpsType() == qc::OpType::P &&
-              std::abs(gop1->getParameter()[0] + gop2->getParameter()[0]) <
-                  qc::PARAMETER_TOLERANCE) ||
-             (gop1->getOpsType() == qc::OpType::RX &&
-              gop2->getOpsType() == qc::OpType::RX &&
-              std::abs(gop1->getParameter()[0] + gop2->getParameter()[0]) <
-                  qc::PARAMETER_TOLERANCE) ||
-             (gop1->getOpsType() == qc::OpType::RY &&
-              gop2->getOpsType() == qc::OpType::RY &&
-              std::abs(gop1->getParameter()[0] + gop2->getParameter()[0]) <
-                  qc::PARAMETER_TOLERANCE) ||
-             (gop1->getOpsType() == qc::OpType::RZ &&
-              gop2->getOpsType() == qc::OpType::RZ &&
-              std::abs(gop1->getParameter()[0] + gop2->getParameter()[0]) <
-                  qc::PARAMETER_TOLERANCE);
-    }
-    return ((*op1)->getType() == qc::OpType::I &&
-            (*op2)->getType() == qc::OpType::I) ||
-           ((*op1)->getType() == qc::OpType::X &&
-            (*op2)->getType() == qc::OpType::X) ||
-           ((*op1)->getType() == qc::OpType::Y &&
-            (*op2)->getType() == qc::OpType::Y) ||
-           ((*op1)->getType() == qc::OpType::Z &&
-            (*op2)->getType() == qc::OpType::Z) ||
-           ((*op1)->getType() == qc::OpType::S &&
-            (*op2)->getType() == qc::OpType::Sdg) ||
-           ((*op1)->getType() == qc::OpType::Sdg &&
-            (*op2)->getType() == qc::OpType::S) ||
-           ((*op1)->getType() == qc::OpType::SX &&
-            (*op2)->getType() == qc::OpType::SXdg) ||
-           ((*op1)->getType() == qc::OpType::SXdg &&
-            (*op2)->getType() == qc::OpType::SX) ||
-           ((*op1)->getType() == qc::OpType::T &&
-            (*op2)->getType() == qc::OpType::Tdg) ||
-           ((*op1)->getType() == qc::OpType::Tdg &&
-            (*op2)->getType() == qc::OpType::T) ||
-           ((*op1)->getType() == qc::OpType::H &&
-            (*op2)->getType() == qc::OpType::H) ||
-           ((*op1)->getType() == qc::OpType::P &&
-            (*op2)->getType() == qc::OpType::P &&
-            std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
-                qc::PARAMETER_TOLERANCE) ||
-           ((*op1)->getType() == qc::OpType::RX &&
-            (*op2)->getType() == qc::OpType::RX &&
-            std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
-                qc::PARAMETER_TOLERANCE) ||
-           ((*op1)->getType() == qc::OpType::RY &&
-            (*op2)->getType() == qc::OpType::RY &&
-            std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
-                qc::PARAMETER_TOLERANCE) ||
-           ((*op1)->getType() == qc::OpType::RZ &&
-            (*op2)->getType() == qc::OpType::RZ &&
-            std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
-                qc::PARAMETER_TOLERANCE);
+    auto result =
+        ((*op1)->getType() == qc::OpType::I and
+         (*op2)->getType() == qc::OpType::I) or
+        ((*op1)->getType() == qc::OpType::X and
+         (*op2)->getType() == qc::OpType::X) or
+        ((*op1)->getType() == qc::OpType::Y and
+         (*op2)->getType() == qc::OpType::Y) or
+        ((*op1)->getType() == qc::OpType::Z and
+         (*op2)->getType() == qc::OpType::Z) or
+        ((*op1)->getType() == qc::OpType::S and
+         (*op2)->getType() == qc::OpType::Sdg) or
+        ((*op1)->getType() == qc::OpType::Sdg and
+         (*op2)->getType() == qc::OpType::S) or
+        ((*op1)->getType() == qc::OpType::SX and
+         (*op2)->getType() == qc::OpType::SXdg) or
+        ((*op1)->getType() == qc::OpType::SXdg and
+         (*op2)->getType() == qc::OpType::SX) or
+        ((*op1)->getType() == qc::OpType::T and
+         (*op2)->getType() == qc::OpType::Tdg) or
+        ((*op1)->getType() == qc::OpType::Tdg and
+         (*op2)->getType() == qc::OpType::T) or
+        ((*op1)->getType() == qc::OpType::H and
+         (*op2)->getType() == qc::OpType::H) or
+        ((*op1)->getType() == qc::OpType::P and
+         (*op2)->getType() == qc::OpType::P and
+         std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
+             qc::PARAMETER_TOLERANCE) or
+        ((*op1)->getType() == qc::OpType::RX and
+         (*op2)->getType() == qc::OpType::RX and
+         std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
+             qc::PARAMETER_TOLERANCE) or
+        ((*op1)->getType() == qc::OpType::RY and
+         (*op2)->getType() == qc::OpType::RY and
+         std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
+             qc::PARAMETER_TOLERANCE) or
+        ((*op1)->getType() == qc::OpType::RZ and
+         (*op2)->getType() == qc::OpType::RZ and
+         std::abs((*op1)->getParameter()[0] + (*op2)->getParameter()[0]) <
+             qc::PARAMETER_TOLERANCE);
+    return result;
   }
   return false;
 }
@@ -268,12 +201,13 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
           }
           // check whether the current operation commutes with the current
           // group members
-          if (!currentGroup[qubit].empty() &&
+          if (!currentGroup[qubit].empty() and
               !commutesAtQubit(currentGroup[qubit][0]->getOperation(),
                                current->getOperation(), qubit)) {
             // here: the current operation does not commute with the current
             // group members and is not the inverse of the lookahead
             // --> start a new group
+            predecessorGroup[qubit].clear();
             predecessorGroup[qubit] = currentGroup[qubit];
             currentGroup[qubit].clear();
           }
@@ -303,17 +237,14 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
       }
       // check whether the current operation commutes with the current
       // group members
-      if (!currentGroup[qubit].empty() &&
+      if (!currentGroup[qubit].empty() and
           !commutesAtQubit(currentGroup[qubit][0]->getOperation(),
                            current->getOperation(), qubit)) {
         // here: the current operation does not commute with the current
         // group members and is not the inverse of the lookahead
         // --> start a new group
-        // TODO: Can this be beautified with the copy-assign operator?
         predecessorGroup[qubit].clear();
-        for (const auto& v : currentGroup[qubit]) {
-          predecessorGroup[qubit].emplace_back(v);
-        }
+        predecessorGroup[qubit] = currentGroup[qubit];
         currentGroup[qubit].clear();
       }
       // add an enabling edge from each predecessor
@@ -326,33 +257,33 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
     }
   }
 }
-[[nodiscard]] auto Layer::constructInteractionGraph(qc::OpType opType, Number nctrl) const
+[[nodiscard]] auto Layer::constructInteractionGraph(OpType opType) const
     -> Graph<std::shared_ptr<DAGVertex>> {
-  switch (opType) {
+  switch (opType.type) {
   case qc::X:
   case qc::Y:
   case qc::Z:
   case qc::RX:
   case qc::RY:
   case qc::RZ:
-    if (nctrl == 1) {
+    if (opType.nctrl == 1) {
       break;
     }
     [[fallthrough]];
   default:
     std::stringstream ss;
     ss << "The operation type ";
-    for (std::size_t i = 0; i < nctrl; ++i) {
+    for (std::size_t i = 0; i < opType.nctrl; ++i) {
       ss << "c";
     }
-    ss << qc::toString(opType)
-       << " is not supported for constructing an interaction graph.";
+    ss << opType << " is not supported for constructing an interaction graph.";
     throw std::invalid_argument(ss.str());
   }
   Graph<std::shared_ptr<DAGVertex>> graph;
   for (const auto& vertex : *executableSet) {
     const auto& gate = *vertex->getOperation();
-    if (gate->getType() == opType && gate->getNcontrols() == nctrl) {
+    if (gate->getType() == opType.type and
+        gate->getNcontrols() == opType.nctrl) {
       const auto& usedQubits = gate->getUsedQubits();
       if (usedQubits.size() != 2) {
         throw std::invalid_argument(

@@ -1,32 +1,72 @@
 {
   "name": "Nature",
-  "grid": "nature.csv",
+  "initialZones": [
+    "storage"
+  ],
+  "zones": [
+    {
+      "name": "entangling",
+      "xmin": -12,
+      "xmax": 126,
+      "ymin": -12,
+      "ymax": 31,
+      "fidelity": 0.999
+    },
+    {
+      "name": "storage",
+      "xmin": -12,
+      "xmax": 126,
+      "ymin": 32,
+      "ymax": 123,
+      "fidelity": 0.99
+    },
+    {
+      "name": "readout",
+      "xmin": -12,
+      "xmax": 126,
+      "ymin": 124,
+      "ymax": 160,
+      "fidelity": 0.95
+    }
+  ],
   "operations": [
     {
       "name": "rz",
       "type": "local",
-      "zones": ["storage", "readout"],
+      "zones": [
+        "entangling",
+        "storage",
+        "readout"
+      ],
       "time": 0.5,
       "fidelity": 0.999
     },
     {
       "name": "ry",
       "type": "global",
-      "zones": ["storage", "readout"],
+      "zones": [
+        "entangling",
+        "storage",
+        "readout"
+      ],
       "time": 0.5,
       "fidelity": 0.999
     },
     {
       "name": "cz",
       "type": "global",
-      "zones": ["entangling"],
+      "zones": [
+        "entangling"
+      ],
       "time": 0.2,
       "fidelity": 0.9959
     },
     {
       "name": "measure",
       "type": "global",
-      "zones": ["readout"],
+      "zones": [
+        "readout"
+      ],
       "time": 0.2,
       "fidelity": 0.95
     }
@@ -35,23 +75,28 @@
     "t1": 100000000,
     "t2": 1500000
   },
-  "interactionRadius": 3,
-  "minAtomDistance": 0.1,
-  "AOD": {
-    "number": 1,
-    "rows": 5,
-    "columns": 5,
-    "move": {
-      "speed": 0.55,
-      "fidelity": 1
-    },
-    "activate": {
-      "time": 20,
-      "fidelity": 1
-    },
-    "deactivate": {
-      "time": 20,
-      "fidelity": 1
+  "interactionRadius": 2,
+  "minAtomDistance": 1,
+  "AOD": [
+    {
+      "rows": 5,
+      "columns": 5,
+      "xmin": -2.5,
+      "xmax": 2.5,
+      "ymin": -2.5,
+      "ymax": 2.5,
+      "move": {
+        "speed": 0.55,
+        "fidelity": 1
+      },
+      "load": {
+        "time": 20,
+        "fidelity": 1
+      },
+      "store": {
+        "time": 20,
+        "fidelity": 1
+      }
     }
-  }
+  ]
 }

@@ -10,6 +10,7 @@
 #include "na/Definitions.hpp"
 #include "operations/OpType.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
@@ -54,38 +55,14 @@ inline Scope getScopeOfString(const std::string& s) {
   throw std::invalid_argument(ss.str());
 }
 
-/**
- * @brief The type of a site (SLM or AOD)
- * @details SLM comprises both AOD and SLM; AOD denotes AOD only.
- */
-enum class Type { SLM, AOD };
-static std::map<std::string, Type> const STRING_TO_TYPE = {{"SLM", Type::SLM},
-                                                           {"AOD", Type::AOD}};
-/**
- * @brief Get the Type of a site (SLM or AOD) from a string
- *
- * @param s the name
- * @return Type
- */
-inline Type getTypeOfString(const std::string& s) {
-  if (auto it = STRING_TO_TYPE.find(s); it != STRING_TO_TYPE.end()) {
-    return it->second;
-  }
-  std::stringstream ss;
-  ss << "The type " << s << " is not supported.";
-  throw std::invalid_argument(ss.str());
-}
-
 /// For Indices
 using Index = std::size_t;
 /// The zones are just stored as int
 using Zone = Index;
-/// A site is defined by a position, a zone, and a type
-using Site = std::tuple<Point, Zone, Type>;
 /// Any double-valued property
 using Value = qc::fp;
 /// Any information on numbers of something
-using Number = std::size_t;
+using Number = std::int64_t;
 
 class Architecture {
 public:
@@ -126,28 +103,40 @@ public:
    * µm/µs.
    */
   struct ShuttlingProperties {
-    Number rows                 = 0; // maximum number of rows in one AOD
-    Number cols                 = 0; // maximum number of columns in one AOD
-    Value  speed                = 0; // speed of the AOD in µm/µs
-    Value  fidelity             = 1; // fidelity during the shuttling
-    Value  activationTime       = 0; // time to activate the AOD in µs
-    Value  activationFidelity   = 1; // fidelity of the activation
-    Value  deactivationTime     = 0; // time to deactivate the AOD in µs
-    Value  deactivationFidelity = 1; // fidelity of the deactivation
+    Number rows          = 0; // maximum number of rows in one AOD
+    Number cols          = 0; // maximum number of columns in one AOD
+    Number minX          = 0; // minimum x position of the AOD
+    Number maxX          = 0; // maximum x position of the AOD
+    Number minY          = 0; // minimum y position of the AOD
+    Number maxY          = 0; // maximum y position of the AOD
+    Value  speed         = 0; // speed of the AOD in µm/µs
+    Value  fidelity      = 1; // fidelity during the shuttling
+    Value  loadTime      = 0; // time to activate the AOD in µs
+    Value  loadFidelity  = 1; // fidelity of the load
+    Value  storeTime     = 0; // time to deactivate the AOD in µs
+    Value  storeFidelity = 1; // fidelity of the store
+  };
+  struct ZoneProperties {
+    std::string name{};       // the name of the zone
+    Number      minX     = 0; // minimum x dimension
+    Number      maxX     = 0; // maximum x dimension
+    Number      minY     = 0; // minimum y dimension
+    Number      maxY     = 0; // maximum y dimension
+    Value       fidelity = 1; // fidelity during idling
   };
 
 protected:
   std::string name{}; // the name of the architecture
-  std::vector<std::string>
+  std::vector<ZoneProperties>
       zones{}; // a mapping from zones (int) to their name from the config
-  std::vector<Site> sites{}; // a vector of sites (Position, Zone, Type)
-  std::map<std::pair<qc::OpType, Number>, OperationProperties>
+  std::vector<Point> sites{}; // a vector of sites
+  std::unordered_map<OpType, OperationProperties>
       gateSet{}; // all possible operations by their type, i.e. gate set
-  DecoherenceTimes    decoherenceTimes{};  // the decoherence characteristic
-  Number              nShuttlingUnits = 0; // number of AODs for atom movement
-  ShuttlingProperties shuttling{};         // all properties regarding AODs
-  Value minAtomDistance = 0; // minimal distance that must be kept between atoms
-  Value interactionRadius = 0; // the Rydberg radius
+  DecoherenceTimes decoherenceTimes{}; // the decoherence characteristic
+  std::vector<ShuttlingProperties> shuttling{}; // all properties regarding AODs
+  Index minAtomDistance = 0; // minimal distance that must be kept between atoms
+  Index interactionRadius = 0;      // the Rydberg radius
+  std::vector<Zone> initialZones{}; // the zones where the atoms are initially
 
 public:
   /**
@@ -159,35 +148,45 @@ public:
   Architecture(std::istream& jsonS, std::istream& csvS);
   virtual ~Architecture() = default;
 
-  [[nodiscard]] auto getName() const { return name; }
-  [[nodiscard]] auto getNZones() const { return zones.size(); }
-  [[nodiscard]] auto getZoneLabel(const Index& i) const { return zones.at(i); }
-  [[nodiscard]] auto getNSites() const { return sites.size(); }
-  [[nodiscard]] auto getType(const Index& i) const {
-    return std::get<Type>(sites.at(i));
+  [[nodiscard]] auto getName() const -> std::string { return name; }
+  [[nodiscard]] auto getNZones() const -> Index { return zones.size(); }
+  [[nodiscard]] auto getZoneLabel(const Index& i) const -> std::string {
+    return zones[i].name;
   }
-  [[nodiscard]] auto getZone(const Index& i) const {
-    return std::get<Zone>(sites.at(i));
+  [[nodiscard]] auto getInitialZones() const -> const std::vector<Zone>& {
+    return initialZones;
   }
-  [[nodiscard]] auto getPos(const Index& i) const {
-    return std::get<Point>(sites.at(i));
+  [[nodiscard]] auto getNSites() const -> Index { return sites.size(); }
+  [[nodiscard]] auto getPositionOfSite(const Index& i) const {
+    return sites[i];
   }
   [[nodiscard]] auto getDecoherenceTimes() const -> DecoherenceTimes {
     return decoherenceTimes;
   }
-  [[nodiscard]] auto getNShuttlingUnits() const { return nShuttlingUnits; }
-  [[nodiscard]] auto getShuttling() const -> ShuttlingProperties {
-    return shuttling;
+  [[nodiscard]] auto getNShuttlingUnits() const -> Index {
+    return shuttling.size();
   }
-  [[nodiscard]] auto getMinAtomDistance() const { return minAtomDistance; }
-  [[nodiscard]] auto getInteractionRadius() const { return interactionRadius; }
-  [[nodiscard]] auto getOpPropsByOpType(const qc::OpType& t, Number nctrl) const
+  [[nodiscard]] auto getPropertiesOfShuttlingUnit(const Index& i) const
+      -> ShuttlingProperties {
+    return shuttling[i];
+  }
+  [[nodiscard]] auto getMinAtomDistance() const -> Index {
+    return minAtomDistance;
+  }
+  [[nodiscard]] auto getInteractionRadius() const -> Index {
+    return interactionRadius;
+  }
+  [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
+      -> ZoneProperties {
+    return zones[zone];
+  }
+  [[nodiscard]] auto getPropertiesOfOperation(const OpType& t) const
       -> OperationProperties {
-    if (auto it = gateSet.find({t, nctrl}); it != gateSet.end()) {
+    if (auto it = gateSet.find(t); it != gateSet.end()) {
       return it->second;
     }
     std::stringstream ss;
-    ss << "The operation " << qc::toString(t) << " is not supported.";
+    ss << "The operation " << t << " is not supported.";
     throw std::invalid_argument(ss.str());
   }
   /**
@@ -197,22 +196,54 @@ public:
    * @param j address of second site
    * @return the distance in µm
    */
-  [[nodiscard]] auto getDistance(Index i, Index j) const {
-    return (getPos(j) - getPos(i)).length();
+  [[nodiscard]] auto getDistance(const Index& i, const Index& j) const
+      -> Index {
+    return (getPositionOfSite(j) - getPositionOfSite(i)).length();
+  }
+  [[nodiscard]] auto getZoneAt(const Point& p) const -> Zone;
+  [[nodiscard]] auto getZoneOfSite(const Index& i) const -> Zone {
+    return getZoneAt(getPositionOfSite(i));
   }
   /// Checks whether the gate can be applied at all.
-  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Number nctrl) const
-      -> bool;
+  [[nodiscard]] auto isAllowedLocally(const OpType& t) const -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
-  [[nodiscard]] auto isAllowedLocally(qc::OpType gate, Zone zone,
-                                      Number nctrl) const -> bool;
-  /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType gate, Index qubit,
-                                        Number nctrl) const -> bool;
-  /// Checks whether the gate is a global gate for this Zone.
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Number nctrl) const
+  [[nodiscard]] auto isAllowedLocally(const OpType& t, const Zone& zone) const
       -> bool;
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType gate, Zone zone,
-                                       Number nctrl) const -> bool;
+  /// Checks whether the gate can be applied (locally) on this qubit.
+  [[nodiscard]] auto isAllowedLocallyAtSite(const OpType& t,
+                                            const Index&  qubit) const -> bool;
+  /// Checks whether the gate can be applied (locally) on this qubit.
+  [[nodiscard]] auto isAllowedLocallyAt(const OpType& t, const Point& p) const
+      -> bool;
+  /// Checks whether the gate is a global gate for this Zone.
+  [[nodiscard]] auto isAllowedGlobally(const OpType& t) const -> bool;
+  [[nodiscard]] auto isAllowedGlobally(const OpType& t, const Zone& zone) const
+      -> bool;
+  [[nodiscard]] auto isInSameRow(const Index& i, const Index& j) const -> bool;
+  [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;
+  [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
+  [[nodiscard]] auto getNcolsInZone(const Zone& z) const -> Index;
+  [[nodiscard]] auto getSitesInRow(const Zone& z, const Index& row) const
+      -> std::vector<Index>;
+  [[nodiscard]] auto getSitesInCol(const Zone& z, const Index& col) const
+      -> std::vector<Index>;
+  [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
+  [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
+  [[nodiscard]] auto getNearestXLeft(const Number& x) const -> Number;
+  [[nodiscard]] auto getNearestXRight(const Number& x) const -> Number;
+  [[nodiscard]] auto getNearestYUp(const Number& x) const -> Number;
+  [[nodiscard]] auto getNearestYDown(const Number& x) const -> Number;
+  [[nodiscard]] auto getNearestSiteLeft(const Point& p) const -> Index;
+  [[nodiscard]] auto getNearestSiteRight(const Point& p) const -> Index;
+  [[nodiscard]] auto getNearestSiteUp(const Point& p) const -> Index;
+  [[nodiscard]] auto getNearestSiteDown(const Point& p) const -> Index;
+  [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
+  [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
+
+private:
+  [[nodiscard]] auto getRowsInZone(const Zone& z) const -> std::vector<Number>;
+  [[nodiscard]] auto getColsInZone(const Zone& z) const -> std::vector<Number>;
+  [[nodiscard]] auto getRows() const -> std::vector<Number>;
+  [[nodiscard]] auto getCols() const -> std::vector<Number>;
 };
 } // namespace na

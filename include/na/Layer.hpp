@@ -10,7 +10,6 @@
 #include "Definitions.hpp"
 #include "Graph.hpp"
 #include "QuantumComputation.hpp"
-#include "na/GlobalOperation.hpp"
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
 
@@ -24,9 +23,6 @@
 #include <vector>
 
 namespace na {
-static constexpr std::array<qc::OpType, 10> DIAGONAL_GATES = {
-    qc::Barrier, qc::I,   qc::Z, qc::S,  qc::Sdg,
-    qc::T,       qc::Tdg, qc::P, qc::RZ, qc::RZZ};
 /**
  * @brief Class to manage the creation of layers when traversing a quantum
  * circuit.
@@ -178,7 +174,7 @@ public:
   static auto execute(const std::shared_ptr<DAGVertex>& vertex) -> void {
     vertex->execute();
   }
-  [[nodiscard]] auto constructInteractionGraph(qc::OpType opType, Number nctrl) const
+  [[nodiscard]] auto constructInteractionGraph(OpType opType) const
       -> Graph<std::shared_ptr<DAGVertex>>;
 };
 

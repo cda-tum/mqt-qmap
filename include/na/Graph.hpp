@@ -467,19 +467,20 @@ public:
           std::vector<std::size_t> leftNeighbors;
           std::copy_if(moveableXsIds.cbegin(), moveableXsIds.cend(),
                        std::back_inserter(leftNeighbors),
-                       [&](const auto& j) { return j < i; });
+                       [&](const auto& j) { return j > i; });
           std::vector<std::size_t> rightNeighbors;
           std::copy_if(moveableXsIds.cbegin(), moveableXsIds.cend(),
                        std::back_inserter(rightNeighbors),
-                       [&](const auto& j) { return j > i; });
+                       [&](const auto& j) { return j < i; });
           if (!leftNeighbors.empty() && !rightNeighbors.empty()) {
             // get min left and max right neighbor
             const auto& leftNeighbor =
-                std::max_element(leftNeighbors.cbegin(), leftNeighbors.cend());
-            const auto& rightNeighbor = std::min_element(
+                std::min_element(leftNeighbors.cbegin(), leftNeighbors.cend());
+            const auto& rightNeighbor = std::max_element(
                 rightNeighbors.cbegin(), rightNeighbors.cend());
-            const auto& pair = std::pair<std::size_t, std::size_t>(
-                *leftNeighbor, *rightNeighbor);
+            const auto& pair = std::pair<std::int64_t, std::int64_t>(
+                moveableXs[moveable[*leftNeighbor]],
+                moveableXs[moveable[*rightNeighbor]]);
             if (tSlack.find(pair) == tSlack.end()) {
               tSlack[pair] = 1;
             } else {
@@ -533,6 +534,7 @@ public:
         slackPositions.emplace_back(pair.first);
       }
     }
+    std::sort(slackPositions.begin(), slackPositions.end());
     return slackPositions;
   }
   /**

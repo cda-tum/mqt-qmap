@@ -33,7 +33,7 @@ protected:
     qc.cz(5, 7);
     qc.cz(6, 7);
     layer = na::Layer(qc);
-    graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
+    graph = layer.constructInteractionGraph({qc::OpType::Z, 1});
   }
 };
 

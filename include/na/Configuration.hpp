@@ -16,6 +16,7 @@ private:
   bool singleQubitScheduling = false;
 
 public:
+  Configuration() = default;
   explicit Configuration(const std::string& filename);
   explicit Configuration(std::istream& fs);
   virtual ~Configuration() = default;
