@@ -24,7 +24,7 @@ public:
   [[nodiscard]] auto getParams() const -> const std::vector<qc::fp>& {
     return params;
   }
-  static auto        isGlobalOperation() -> bool { return true; }
+  auto        isGlobalOperation() -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override {
     std::stringstream ss;
     ss << type;
@@ -38,6 +38,9 @@ public:
     }
     ss << ";" << std::endl;
     return ss.str();
+  }
+  [[nodiscard]] auto clone() const -> std::unique_ptr<NAOperation> override {
+    return std::make_unique<NAGlobalOperation>(*this);
   }
 };
 } // namespace na

@@ -285,89 +285,89 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   assert(it != rows.cend());
   return static_cast<Index>(std::distance(cols.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getNearestXLeft(const Number& x) const
+[[nodiscard]] auto Architecture::getNearestXLeft(const Number& x, const bool proper) const
     -> Number {
   const auto& cols = getCols();
   if (!std::any_of(cols.cbegin(), cols.cend(),
-                   [&](const auto& c) { return c <= x; })) {
+                   [&](const auto& c) { return proper ? c < x : c <= x; })) {
     return x;
   }
   return std::accumulate(cols.cbegin(), cols.cend(), LONG_LONG_MIN,
                          [&](const auto& acc, const auto& c) {
-                           return acc < c and c < x ? c : acc;
+                           return (acc < c and (proper ? c < x : c <= x)) ? c : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestXRight(const Number& x) const
+[[nodiscard]] auto Architecture::getNearestXRight(const Number& x, const bool proper) const
     -> Number {
   const auto& cols = getCols();
   if (!std::any_of(cols.cbegin(), cols.cend(),
-                   [&](const auto& c) { return c >= x; })) {
+                   [&](const auto& c) { return proper ? c > x : c >= x; })) {
     return x;
   }
   return std::accumulate(cols.cbegin(), cols.cend(), LONG_LONG_MAX,
                          [&](const auto& acc, const auto& c) {
-                           return acc > c and c > x ? c : acc;
+                           return (acc > c and (proper ? c > x : c >= x)) ? c : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestYUp(const Number& y) const
+[[nodiscard]] auto Architecture::getNearestYUp(const Number& y, const bool proper) const
     -> Number {
   const auto& rows = getRows();
   if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& c) { return c <= y; })) {
+                   [&](const auto& c) { return proper ? c < y : c <= y; })) {
     return y;
   }
   return std::accumulate(rows.cbegin(), rows.cend(), LONG_LONG_MIN,
                          [&](const auto& acc, const auto& r) {
-                           return acc < r and r < y ? r : acc;
+                           return (acc < r and (proper ? r < y : r <= y)) ? r : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestYDown(const Number& y) const
+[[nodiscard]] auto Architecture::getNearestYDown(const Number& y, const bool proper) const
     -> Number {
   const auto& rows = getRows();
   if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& c) { return c >= y; })) {
+                   [&](const auto& c) { return proper ? c > y : c >= y; })) {
     return y;
   }
   return std::accumulate(rows.cbegin(), rows.cend(), LONG_LONG_MAX,
                          [&](const auto& acc, const auto& r) {
-                           return acc > r and r > y ? r : acc;
+                           return (acc > r and (proper ? r > y : r >= y)) ? r : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestSiteLeft(const Point& p) const
+[[nodiscard]] auto Architecture::getNearestSiteLeft(const Point& p, const bool proper) const
+    -> Index {
+  const auto& it =
+      std::find_if(sites.crbegin(), sites.crend(),
+                   [&](const auto& s) { return s.y == p.y and (proper ? s.x < p.x : s.x <= p.x); });
+  if (it == sites.crend()) {
+    throw std::invalid_argument("No site found.");
+  }
+  return sites.size() - static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
+}
+[[nodiscard]] auto Architecture::getNearestSiteRight(const Point& p, const bool proper) const
     -> Index {
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(),
-                   [&](const auto& s) { return s.y == p.y and s.x <= p.x; });
+                   [&](const auto& s) { return s.y == p.y and (proper ? s.x > p.x : s.x >= p.x); });
   if (it == sites.cend()) {
     throw std::invalid_argument("No site found.");
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getNearestSiteRight(const Point& p) const
+[[nodiscard]] auto Architecture::getNearestSiteUp(const Point& p, const bool proper) const
     -> Index {
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(),
-                   [&](const auto& s) { return s.y == p.y and s.x >= p.x; });
+                   [&](const auto& s) { return s.x == p.x and (proper ? s.y < p.y : s.y <= p.y); });
   if (it == sites.cend()) {
     throw std::invalid_argument("No site found.");
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getNearestSiteUp(const Point& p) const
+[[nodiscard]] auto Architecture::getNearestSiteDown(const Point& p, const bool proper) const
     -> Index {
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(),
-                   [&](const auto& s) { return s.x == p.x and s.y <= p.y; });
-  if (it == sites.cend()) {
-    throw std::invalid_argument("No site found.");
-  }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
-}
-[[nodiscard]] auto Architecture::getNearestSiteDown(const Point& p) const
-    -> Index {
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(),
-                   [&](const auto& s) { return s.x == p.x and s.y >= p.y; });
+                   [&](const auto& s) { return s.x == p.x and (proper ? s.y > p.y : s.y >= p.y); });
   if (it == sites.cend()) {
     throw std::invalid_argument("No site found.");
   }

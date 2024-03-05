@@ -21,6 +21,8 @@
 #include <__algorithm/remove_if.h>
 #include <algorithm>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 namespace na {
 
@@ -51,9 +53,122 @@ auto NeutralAtomMapper::preprocess() -> void {
       throw std::logic_error("Operation type is not supported.");
     }
   }
+  // apply configuration to architecture
+
 }
 
-auto NeutralAtomMapper::postprocess() -> void {}
+auto NeutralAtomMapper::postprocess() -> void {
+  const auto prelQC = mappedQc;
+  mappedQc.clear();
+  const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
+  for (const auto& op : prelQC) {
+    if (op->isShuttlingOperation()) {
+      const auto& sop = dynamic_cast<NAShuttlingOperation&>(*op);
+      if (sop.getType() == MOVE) {
+        std::vector<std::shared_ptr<Point>> hOffsetStart;
+        std::vector<std::shared_ptr<Point>> hOffsetEnd;
+        std::vector<std::shared_ptr<Point>> vMoveStart;
+        std::vector<std::shared_ptr<Point>> vMoveEnd;
+        std::vector<std::shared_ptr<Point>> hMoveStart;
+        std::vector<std::shared_ptr<Point>> hMoveEnd;
+        std::vector<std::shared_ptr<Point>> vOffsetStart;
+        std::vector<std::shared_ptr<Point>> vOffsetEnd;
+        bool                                vOffset = false;
+        for (std::size_t i = 0; i < sop.getStart().size(); ++i) {
+          auto        start = *sop.getStart()[i];
+          auto        end   = *sop.getEnd()[i];
+          const auto  dx    = end.x - start.x;
+          Point const mid   = {start.x, end.y};
+          if (dx > 0) {
+            try {
+              const auto& s = arch.getNearestSiteRight(mid, true);
+              if (arch.getPositionOfSite(s).x < end.x) {
+                vOffset = true;
+              }
+            } catch (std::invalid_argument& e) {
+            }
+          } else if (dx < 0) {
+            try {
+              const auto& s = arch.getNearestSiteLeft(mid, true);
+              if (arch.getPositionOfSite(s).x > end.x) {
+                vOffset = true;
+              }
+            } catch (std::invalid_argument& e) {
+            }
+          }
+        }
+        for (std::size_t i = 0; i < sop.getStart().size(); ++i) {
+          auto       start = *sop.getStart()[i];
+          auto       end   = *sop.getEnd()[i];
+          const auto dx    = end.x - start.x;
+          const auto dy    = end.y - start.y;
+          if (dy > 0) {
+            try {
+              const auto& s = arch.getNearestSiteDown(start, true);
+              if (arch.getPositionOfSite(s).y < end.y) {
+                // in this case an atom is on the way
+                hOffsetStart.emplace_back(std::make_shared<Point>(start));
+                start.x += (dx >= 0 ? d : -d);
+                hOffsetEnd.emplace_back(std::make_shared<Point>(start));
+              }
+            } catch (std::invalid_argument& e) {
+            }
+          } else if (dy < 0) {
+            try {
+              const auto& s = arch.getNearestSiteUp(start, true);
+              if (arch.getPositionOfSite(s).y > end.y) {
+                // in this case an atom is on the way
+                hOffsetStart.emplace_back(std::make_shared<Point>(start));
+                start.x += (dx >= 0 ? d : -d);
+                hOffsetEnd.emplace_back(std::make_shared<Point>(start));
+              }
+            } catch (std::invalid_argument& e) {
+            }
+          }
+          Point mid = {start.x, end.y};
+          if (vOffset) {
+            mid.y += (dy >= 0 ? -d : d);
+          }
+          if (start.y != mid.y) {
+            vMoveStart.emplace_back(std::make_shared<Point>(start));
+            start = mid;
+            vMoveEnd.emplace_back(std::make_shared<Point>(start));
+          }
+          if (start.x != end.x) {
+            hMoveStart.emplace_back(std::make_shared<Point>(start));
+            start.x = end.x;
+            hMoveEnd.emplace_back(std::make_shared<Point>(start));
+          }
+          if (start.y != end.y) {
+            vOffsetStart.emplace_back(std::make_shared<Point>(start));
+            start.y = end.y;
+            vOffsetEnd.emplace_back(std::make_shared<Point>(start));
+          }
+        }
+        if (!hOffsetStart.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, hOffsetStart,
+                                                     hOffsetEnd);
+        }
+        if (!vMoveStart.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, vMoveStart,
+                                                     vMoveEnd);
+        }
+        if (!hMoveStart.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, hMoveStart,
+                                                     hMoveEnd);
+        }
+        if (!vOffsetStart.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, vOffsetStart,
+                                                     vOffsetEnd);
+        }
+      } else {
+        mappedQc.emplaceBack(op->clone());
+      }
+    } else {
+      mappedQc.emplaceBack(op->clone());
+    }
+  }
+}
 
 auto NeutralAtomMapper::checkApplicability(
     const std::unique_ptr<qc::Operation>& op,
@@ -266,12 +381,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               [&](const auto& a, const auto& b) {
                 return fixed.at(a) < fixed.at(b);
               });
-    std::cout << "fixedOrdered: ";
-    for (const auto& q : fixedOrdered) {
-      std::cout << q << " (" << fixed.at(q) << "), ";
-    }
-    std::cout << std::endl;
-
     // get a vector of the fixed atoms in the order to pick them up based on
     // their misplacement value
     std::vector<qc::Qubit> pickUpOrderFixed(fixedOrdered);
@@ -791,11 +900,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           }
         }
       }
-            std::cout << "(4) " << start.size() << " <> " << end.size() << std::endl;
       if (!start.empty()) {
         mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
       }
-      std::cout << "(5) " << loadStart.size() << " <> " << loadEnd.size() << std::endl;
       mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
     }
     // all atoms are picked up in order, move them to the interaction zone and
@@ -832,7 +939,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         }
         endMoveable.emplace_back(placement[q].currentPosition);
       }
-      std::cout << "(6) " << startMoveable.size() << " <> " << endMoveable.size() << std::endl;
       mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startMoveable,
                                                  endMoveable);
       mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
@@ -938,7 +1044,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           end.emplace_back(placement[q].currentPosition);
         }
       }
-      std::cout << "(7) " << start.size() << " <> " << end.size() << std::endl;
       mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
       mappedQc.emplaceBack<NAShuttlingOperation>(STORE, storeStart, storeEnd);
     }

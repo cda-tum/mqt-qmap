@@ -40,7 +40,7 @@ public:
   [[nodiscard]] auto getParams() const -> std::vector<qc::fp> {
     return params;
   }
-  static auto        isLocalOperation() -> bool { return true; }
+  auto        isLocalOperation() -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override {
     std::stringstream ss;
     ss << type;
@@ -59,6 +59,9 @@ public:
     ss.seekp(-2, std::ios_base::end);
     ss << ";" << std::endl;
     return ss.str();
+  }
+  [[nodiscard]] auto clone() const -> std::unique_ptr<NAOperation> override {
+    return std::make_unique<NALocalOperation>(*this);
   }
 };
 } // namespace na

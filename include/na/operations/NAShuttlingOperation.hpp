@@ -33,6 +33,7 @@ public:
       : NAShuttlingOperation(
             type, std::vector<std::shared_ptr<Point>>{std::move(start)},
             std::vector<std::shared_ptr<Point>>{std::move(end)}) {}
+  [[nodiscard]] auto getType() const -> ShuttleType { return type; }
   [[nodiscard]] auto getStart() const
       -> const std::vector<std::shared_ptr<Point>>& {
     return start;
@@ -41,7 +42,7 @@ public:
       -> const std::vector<std::shared_ptr<Point>>& {
     return end;
   }
-  static auto        isShuttlingOperation() -> bool { return true; }
+  auto        isShuttlingOperation() -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override {
     std::stringstream ss;
     switch (type) {
@@ -67,6 +68,9 @@ public:
     ss.seekp(-2, std::ios_base::end);
     ss << ";" << std::endl;
     return ss.str();
+  }
+  [[nodiscard]] auto clone() const -> std::unique_ptr<NAOperation> override {
+    return std::make_unique<NAShuttlingOperation>(*this);
   }
 };
 } // namespace na

@@ -55,8 +55,8 @@ q_7: ────────■──■──■──■─┤         ├─
   qc.cz(3, 5);
   qc.cz(4, 5);
   qc.cz(1, 2);
-  qc.dumpOpenQASM2(std::cout);
-  std::cout << "-------------------------------------------------" << std::endl;
+  // qc.dumpOpenQASM2(std::cout);
+  // std::cout << "-------------------------------------------------" << std::endl;
   auto layer = Layer(qc);
   auto graph = layer.constructInteractionGraph({qc::OpType::Z, 1});
   auto arch = Architecture("examples/na/nature.json", "examples/na/nature.csv");

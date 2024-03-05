@@ -229,14 +229,26 @@ public:
       -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
-  [[nodiscard]] auto getNearestXLeft(const Number& x) const -> Number;
-  [[nodiscard]] auto getNearestXRight(const Number& x) const -> Number;
-  [[nodiscard]] auto getNearestYUp(const Number& x) const -> Number;
-  [[nodiscard]] auto getNearestYDown(const Number& x) const -> Number;
-  [[nodiscard]] auto getNearestSiteLeft(const Point& p) const -> Index;
-  [[nodiscard]] auto getNearestSiteRight(const Point& p) const -> Index;
-  [[nodiscard]] auto getNearestSiteUp(const Point& p) const -> Index;
-  [[nodiscard]] auto getNearestSiteDown(const Point& p) const -> Index;
+  [[nodiscard]] auto getNearestXLeft(const Number& x,
+                                     const bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestXRight(const Number& x,
+                                      const bool    proper = true) const
+      -> Number;
+  [[nodiscard]] auto getNearestYUp(const Number& x,
+                                   const bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestYDown(const Number& x,
+                                     const bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestSiteLeft(const Point& p,
+                                        const bool   proper = false) const
+      -> Index;
+  [[nodiscard]] auto getNearestSiteRight(const Point& p,
+                                         const bool   proper = false) const
+      -> Index;
+  [[nodiscard]] auto getNearestSiteUp(const Point& p,
+                                      const bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteDown(const Point& p,
+                                        const bool   proper = false) const
+      -> Index;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
 

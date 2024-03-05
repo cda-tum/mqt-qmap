@@ -3,6 +3,7 @@
 #include "NAOperation.hpp"
 #include "na/Definitions.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -13,7 +14,29 @@ protected:
   std::vector<std::unique_ptr<NAOperation>> operations;
 
 public:
-  template <class T> auto emplaceBack(const std::unique_ptr<T>&& op) -> void {
+  NAQuantumComputation() = default;
+  NAQuantumComputation(NAQuantumComputation&& qc) noexcept = default;
+  NAQuantumComputation& operator=(NAQuantumComputation&& qc) noexcept = default;
+  NAQuantumComputation(const NAQuantumComputation& qc)
+      : initialPositions(qc.initialPositions) {
+    operations.reserve(qc.operations.size());
+    std::transform(qc.operations.cbegin(), qc.operations.cend(),
+                   std::back_inserter(operations),
+                   [](const auto& op) { return op->clone(); });
+  }
+  NAQuantumComputation& operator=(const NAQuantumComputation& qc) {
+    if (this != &qc) {
+      initialPositions = qc.initialPositions;
+      operations.clear();
+      operations.reserve(qc.operations.size());
+      std::transform(qc.operations.cbegin(), qc.operations.cend(),
+                     std::back_inserter(operations),
+                     [](const auto& op) { return op->clone(); });
+    }
+    return *this;
+  }
+  virtual ~NAQuantumComputation()                                 = default;
+  template <class T> auto emplaceBack(std::unique_ptr<T>&& op) -> void {
     static_assert(std::is_base_of<NAOperation, T>::value,
                   "T must be a subclass of NAOperation.");
     operations.emplace_back(std::move(op));
@@ -28,7 +51,10 @@ public:
                   "T must be a subclass of NAOperation.");
     operations.emplace_back(std::make_unique<T>(args...));
   }
-  [[nodiscard]] auto getInitialPositions() const -> std::vector<std::shared_ptr<Point>> {
+  auto               clear() -> void { operations.clear(); }
+  [[nodiscard]] auto size() const -> std::size_t { return operations.size(); }
+  [[nodiscard]] auto getInitialPositions() const
+      -> std::vector<std::shared_ptr<Point>> {
     return initialPositions;
   }
   auto emplaceInitialPosition(std::shared_ptr<Point> p) -> void {
