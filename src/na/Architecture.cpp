@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -372,13 +373,14 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                   const bool   proper) const
     -> Index {
   const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
+      std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
         return s.x == p.x and (proper ? s.y < p.y : s.y <= p.y);
       });
-  if (it == sites.cend()) {
+  if (it == sites.crend()) {
     throw std::invalid_argument("No site found.");
   }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
+  return sites.size() -
+         static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
 }
 [[nodiscard]] auto Architecture::getNearestSiteDown(const Point& p,
                                                     const bool   proper) const
@@ -395,50 +397,90 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
 [[nodiscard]] auto Architecture::getNearestSiteUpRight(const Point& p,
                                                        bool proper) const
     -> Index {
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return proper ? s.x > p.x and s.y < p.y : s.x >= p.x and s.y <= p.y;
+  std::vector<Index> siteIdxs(sites.size());
+  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
+  const auto& opt = std::accumulate(
+      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
+      [&](const auto& acc, const auto& i) {
+        const auto& s = sites[i];
+        if (proper ? s.x > p.x and s.y < p.y : s.x >= p.x and s.y <= p.y) {
+          if (not acc or
+              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
+            return std::optional<Index>(i);
+          }
+        }
+        return acc;
       });
-  if (it == sites.cend()) {
+  if (not opt) {
     throw std::invalid_argument("No site found.");
   }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
+  return *opt;
 }
 [[nodiscard]] auto Architecture::getNearestSiteUpLeft(const Point& p,
                                                       bool         proper) const
     -> Index {
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y;
+  std::vector<Index> siteIdxs(sites.size());
+  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
+  const auto& opt = std::accumulate(
+      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
+      [&](const auto& acc, const auto& i) {
+        const auto& s = sites[i];
+        if (proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) {
+          if (not acc or
+              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
+            return std::optional<Index>(i);
+          }
+        }
+        return acc;
       });
-  if (it == sites.cend()) {
+  if (not opt) {
     throw std::invalid_argument("No site found.");
   }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
+  return *opt;
 }
 [[nodiscard]] auto Architecture::getNearestSiteDownLeft(const Point& p,
                                                         bool proper) const
     -> Index {
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y;
+  std::vector<Index> siteIdxs(sites.size());
+  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
+  const auto& opt = std::accumulate(
+      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
+      [&](const auto& acc, const auto& i) {
+        const auto& s = sites[i];
+        if (proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) {
+          if (not acc or
+              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
+            return std::optional<Index>(i);
+          }
+        }
+        return acc;
       });
-  if (it == sites.cend()) {
+  if (not opt) {
     throw std::invalid_argument("No site found.");
   }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
+  return *opt;
 }
 [[nodiscard]] auto Architecture::getNearestSiteDownRight(const Point& p,
                                                          bool proper) const
     -> Index {
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y;
+  std::vector<Index> siteIdxs(sites.size());
+  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
+  const auto& opt = std::accumulate(
+      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
+      [&](const auto& acc, const auto& i) {
+        const auto& s = sites[i];
+        if (proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) {
+          if (not acc or
+              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
+            return std::optional<Index>(i);
+          }
+        }
+        return acc;
       });
-  if (it == sites.cend()) {
+  if (not opt) {
     throw std::invalid_argument("No site found.");
   }
-  return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
+  return *opt;
 }
 [[nodiscard]] auto Architecture::getSiteAt(const Point& p) const -> Index {
   std::vector<std::size_t> enumerate(sites.size());
@@ -514,16 +556,62 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                      const Number& rows,
                                                      const Number& cols) const
     -> Point {
-  const auto d = static_cast<std::int64_t>(getMinAtomDistance());
+  const auto d = static_cast<std::int64_t>(getNoInteractionRadius());
   // get nearest site to p
   Index nearestSite = 0;
   try {
-    nearestSite = rows >= 0 ? (cols >= 0 ? getNearestSiteDownRight(p)
-                                         : getNearestSiteDownLeft(p))
-                            : (cols >= 0 ? getNearestSiteUpRight(p)
-                                         : getNearestSiteUpLeft(p));
+    nearestSite = rows >= 0 ? (cols >= 0 ? getNearestSiteUpLeft(p)
+                                         : getNearestSiteUpRight(p))
+                            : (cols >= 0 ? getNearestSiteDownLeft(p)
+                                         : getNearestSiteDownRight(p));
   } catch (std::invalid_argument& e) {
-    return {p.x + rows * d, p.y + cols * d};
+    if (rows >= 0 and cols >= 0) {
+      try {
+        nearestSite               = getNearestSiteUpRight(p);
+        const auto nearestSitePos = getPositionOfSite(nearestSite);
+        const auto dy             = p.y - nearestSitePos.y;
+        Index      anchorSite     = nearestSite;
+        auto       anchorSitePos  = nearestSitePos;
+        auto       r              = std::abs(rows);
+        for (; r > 0; --r) {
+          try {
+            anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true)
+                                   : getNearestSiteUp(anchorSitePos, true);
+          } catch (std::invalid_argument& e) {
+            break;
+          }
+          anchorSitePos = getPositionOfSite(anchorSite);
+        }
+        anchorSitePos.y =
+            rows >= 0 ? anchorSitePos.y + r * d : anchorSitePos.y - r * d;
+        return {p.x + cols * d, anchorSitePos.y + dy};
+      } catch (std::invalid_argument& e) {
+        try {
+          nearestSite               = getNearestSiteDownLeft(p);
+          const auto nearestSitePos = getPositionOfSite(nearestSite);
+          const auto dx             = p.x - nearestSitePos.x;
+          Index      anchorSite     = nearestSite;
+          auto       anchorSitePos  = nearestSitePos;
+          auto       c              = std::abs(cols);
+          for (; c > 0; --c) {
+            try {
+              anchorSite = cols >= 0 ? getNearestSiteRight(anchorSitePos, true)
+                                     : getNearestSiteLeft(anchorSitePos, true);
+            } catch (std::invalid_argument& e) {
+              break;
+            }
+            anchorSitePos = getPositionOfSite(anchorSite);
+          }
+          anchorSitePos.x =
+              cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
+          return {anchorSitePos.x + dx, p.y + rows * d};
+        } catch (std::invalid_argument& e) {
+          return {p.x + rows * d, p.y + cols * d};
+        }
+      }
+    } else {
+      throw std::logic_error("Not implemented.");
+    }
   }
   // get position of nearest site
   const auto nearestSitePos = getPositionOfSite(nearestSite);

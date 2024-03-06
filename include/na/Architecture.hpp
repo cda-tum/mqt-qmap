@@ -181,6 +181,9 @@ public:
   [[nodiscard]] auto getInteractionRadius() const -> Index {
     return interactionRadius;
   }
+  [[nodiscard]] auto getNoInteractionRadius() const -> Index {
+    return interactionRadius + 2;
+  }
   [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
       -> ZoneProperties {
     return zones[zone];

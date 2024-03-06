@@ -24,7 +24,9 @@ public:
   struct Statistics {
     std::size_t numInitialGates = 0;
     std::size_t numMappedGates  = 0;
+    qc::fp      preprocessTime  = 0.0; // [ms]
     qc::fp      mappingTime     = 0.0; // [ms]
+    qc::fp      postprocessTime = 0.0; // [ms]
   };
 
 protected:
@@ -59,8 +61,7 @@ protected:
                   const qc::Qubit& q) const -> std::int64_t;
 
 public:
-  explicit NeutralAtomMapper(Architecture   arch,
-                             const Configuration& config)
+  explicit NeutralAtomMapper(Architecture arch, const Configuration& config)
       : initialArch(std::move(arch)), arch(initialArch.withConfig(config)),
         config(config) {}
   virtual ~NeutralAtomMapper() = default;
