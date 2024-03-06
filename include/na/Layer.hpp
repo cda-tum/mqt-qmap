@@ -176,6 +176,8 @@ public:
   }
   [[nodiscard]] auto constructInteractionGraph(OpType opType) const
       -> Graph<std::shared_ptr<DAGVertex>>;
+  [[nodiscard]] auto getExecutablesOfType(OpType opType) const
+      -> std::vector<std::shared_ptr<DAGVertex>>;
 };
 
 } // namespace na

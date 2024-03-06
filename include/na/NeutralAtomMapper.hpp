@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -29,6 +30,7 @@ public:
 protected:
   qc::QuantumComputation            initialQc{};
   NAQuantumComputation              mappedQc{};
+  na::Architecture                  initialArch;
   na::Architecture                  arch;
   na::Configuration                 config;
   na::NeutralAtomMapper::Statistics stats{};
@@ -38,7 +40,7 @@ protected:
   public:
     enum class PositionStatus { UNDEFINED, DEFINED };
     PositionStatus         positionStatus  = PositionStatus::UNDEFINED;
-    std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0,0);
+    std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
     std::vector<Zone>      zones;
     explicit Atom(const std::vector<Zone>& zones) : zones(zones){};
@@ -49,17 +51,18 @@ protected:
   [[nodiscard]] auto
        checkApplicability(const std::unique_ptr<qc::Operation>& op,
                           const std::vector<Atom>& placement) const -> bool;
-  auto updatePlacement(
-      const std::unique_ptr<qc::Operation>& op, std::vector<Atom>& placement) const -> void;
+  auto updatePlacement(const std::unique_ptr<qc::Operation>& op,
+                       std::vector<Atom>& placement) const -> void;
   [[nodiscard]] auto
   getMisplacement(const std::vector<Atom>&                           initial,
                   const std::unordered_map<qc::Qubit, std::int64_t>& target,
                   const qc::Qubit& q) const -> std::int64_t;
 
 public:
-  explicit NeutralAtomMapper(const Architecture&  arch,
+  explicit NeutralAtomMapper(Architecture   arch,
                              const Configuration& config)
-      : arch(arch), config(config) {}
+      : initialArch(std::move(arch)), arch(initialArch.withConfig(config)),
+        config(config) {}
   virtual ~NeutralAtomMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto getResult() const -> const NAQuantumComputation& {

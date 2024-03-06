@@ -40,6 +40,7 @@ public:
   [[nodiscard]] auto getParams() const -> std::vector<qc::fp> {
     return params;
   }
+  [[nodiscard]] auto getType() const -> OpType { return type; }
   auto        isLocalOperation() -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override {
     std::stringstream ss;

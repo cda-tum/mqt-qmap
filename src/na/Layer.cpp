@@ -296,4 +296,15 @@ auto Layer::constructDAG(const qc::QuantumComputation& qc) -> void {
   }
   return graph;
 }
+[[nodiscard]] auto Layer::getExecutablesOfType(OpType opType) const
+    -> std::vector<std::shared_ptr<DAGVertex>> {
+  std::vector<std::shared_ptr<DAGVertex>> executables;
+  for (const auto& vertex : *executableSet) {
+    if ((*vertex->getOperation())->getType() == opType.type and
+        (*vertex->getOperation())->getNcontrols() == opType.nctrl) {
+      executables.emplace_back(vertex);
+    }
+  }
+  return executables;
+}
 } // namespace na

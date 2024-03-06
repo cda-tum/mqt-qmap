@@ -14,8 +14,8 @@ protected:
   std::vector<std::unique_ptr<NAOperation>> operations;
 
 public:
-  NAQuantumComputation() = default;
-  NAQuantumComputation(NAQuantumComputation&& qc) noexcept = default;
+  NAQuantumComputation()                                              = default;
+  NAQuantumComputation(NAQuantumComputation&& qc) noexcept            = default;
   NAQuantumComputation& operator=(NAQuantumComputation&& qc) noexcept = default;
   NAQuantumComputation(const NAQuantumComputation& qc)
       : initialPositions(qc.initialPositions) {
@@ -35,7 +35,7 @@ public:
     }
     return *this;
   }
-  virtual ~NAQuantumComputation()                                 = default;
+  virtual ~NAQuantumComputation() = default;
   template <class T> auto emplaceBack(std::unique_ptr<T>&& op) -> void {
     static_assert(std::is_base_of<NAOperation, T>::value,
                   "T must be a subclass of NAOperation.");
@@ -51,7 +51,8 @@ public:
                   "T must be a subclass of NAOperation.");
     operations.emplace_back(std::make_unique<T>(args...));
   }
-  auto               clear() -> void { operations.clear(); }
+  auto clear() -> void { operations.clear(); }
+  auto clearInitialPositions() -> void { initialPositions.clear(); }
   [[nodiscard]] auto size() const -> std::size_t { return operations.size(); }
   [[nodiscard]] auto getInitialPositions() const
       -> std::vector<std::shared_ptr<Point>> {

@@ -32,17 +32,12 @@ Configuration::Configuration(std::istream& fs) {
 
   if (data.contains("patch") && data["patch"].is_object()) {
     auto& patch = data["patch"];
-    if (patch.contains("rows") && patch["rows"].is_number_integer()) {
+    if (patch.contains("rows") && patch["rows"].is_number_unsigned()) {
       patchRows = patch["rows"];
     }
-    if (patch.contains("cols") && patch["cols"].is_number_integer()) {
+    if (patch.contains("cols") && patch["cols"].is_number_unsigned()) {
       patchCols = patch["cols"];
     }
-  }
-
-  if (data.contains("singleQubitScheduling") &&
-      data["singleQubitScheduling"].is_binary()) {
-    singleQubitScheduling = data["singleQubitScheduling"];
   }
 };
 } // namespace na

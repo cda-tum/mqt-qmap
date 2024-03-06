@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Configuration.hpp"
 #include "Definitions.hpp"
 #include "na/Definitions.hpp"
 #include "operations/OpType.hpp"
@@ -146,7 +147,11 @@ public:
    */
   Architecture(const std::string& jsonFn, const std::string& csvFn);
   Architecture(std::istream& jsonS, std::istream& csvS);
-  virtual ~Architecture() = default;
+  Architecture(const Architecture&)            = default;
+  Architecture(Architecture&&)                 = default;
+  virtual ~Architecture()                      = default;
+  Architecture& operator=(const Architecture&) = default;
+  Architecture& operator=(Architecture&&)      = default;
 
   [[nodiscard]] auto getName() const -> std::string { return name; }
   [[nodiscard]] auto getNZones() const -> Index { return zones.size(); }
@@ -229,28 +234,37 @@ public:
       -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
-  [[nodiscard]] auto getNearestXLeft(const Number& x,
-                                     const bool proper = true) const -> Number;
-  [[nodiscard]] auto getNearestXRight(const Number& x,
-                                      const bool    proper = true) const
+  [[nodiscard]] auto getNearestXLeft(const Number& x, bool proper = true) const
       -> Number;
-  [[nodiscard]] auto getNearestYUp(const Number& x,
-                                   const bool proper = true) const -> Number;
-  [[nodiscard]] auto getNearestYDown(const Number& x,
-                                     const bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestXRight(const Number& x, bool proper = true) const
+      -> Number;
+  [[nodiscard]] auto getNearestYUp(const Number& y, bool proper = true) const
+      -> Number;
+  [[nodiscard]] auto getNearestYDown(const Number& y, bool proper = true) const
+      -> Number;
   [[nodiscard]] auto getNearestSiteLeft(const Point& p,
-                                        const bool   proper = false) const
-      -> Index;
+                                        bool proper = false) const -> Index;
   [[nodiscard]] auto getNearestSiteRight(const Point& p,
-                                         const bool   proper = false) const
+                                         bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false) const
       -> Index;
-  [[nodiscard]] auto getNearestSiteUp(const Point& p,
-                                      const bool proper = false) const -> Index;
   [[nodiscard]] auto getNearestSiteDown(const Point& p,
-                                        const bool   proper = false) const
+                                        bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUpRight(const Point& p,
+                                           bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUpLeft(const Point& p,
+                                          bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteDownLeft(const Point& p,
+                                            bool proper = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteDownRight(const Point& p,
+                                             bool         proper = false) const
       -> Index;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
+  [[nodiscard]] auto withConfig(const Configuration& config) const
+      -> Architecture;
+  [[nodiscard]] auto getPositionOffsetBy(const Point& p, const Number& rows,
+                                         const Number& cols) const -> Point;
 
 private:
   [[nodiscard]] auto getRowsInZone(const Zone& z) const -> std::vector<Number>;

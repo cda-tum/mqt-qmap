@@ -60,7 +60,7 @@ q_7: ────────■──■──■──■─┤         ├─
   auto layer = Layer(qc);
   auto graph = layer.constructInteractionGraph({qc::OpType::Z, 1});
   auto arch = Architecture("examples/na/nature.json", "examples/na/nature.csv");
-  auto mapper = NeutralAtomMapper(arch, {});
+  auto mapper = NeutralAtomMapper(arch, Configuration{3, 2});
   mapper.map(qc);
   const auto& mappedQc = mapper.getResult();
   std::cout << mappedQc << std::endl;
