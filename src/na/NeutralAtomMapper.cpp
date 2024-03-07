@@ -30,8 +30,16 @@ namespace na {
 auto NeutralAtomMapper::preprocess() -> void {
   // validate circuit
   for (const auto& op : initialQc) {
-    if (op->isStandardOperation()) {
-      if (!isIndividual(*op) && op->getNcontrols() + op->getNtargets() > 2) {
+    if (op->isCompoundOperation() and isGlobal(*op)) {
+      const auto& co = dynamic_cast<qc::CompoundOperation&>(*op);
+      if (!arch.isAllowedGlobally({co.at(0)->getType(), 0})) {
+        std::stringstream ss;
+        ss << "The chosen architecture does not support the operation "
+           << OpType{op->getType(), 0} << " globally.";
+        throw std::invalid_argument(ss.str());
+      }
+    } else if (op->isStandardOperation()) {
+      if (!isIndividual(*op) and op->getNcontrols() + op->getNtargets() > 2) {
         throw std::logic_error("Operations acting on more than two qubits "
                                "are not supported yet.");
       }
@@ -232,6 +240,9 @@ auto NeutralAtomMapper::postprocess() -> void {
 auto NeutralAtomMapper::checkApplicability(
     const std::unique_ptr<qc::Operation>& op,
     const std::vector<Atom>&              placement) const -> bool {
+  if (op->isCompoundOperation()) {
+    return true;
+  }
   assert(op->isStandardOperation()); // ensured by preprocess
   if (arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
     if (op->getNcontrols() == 0) {
@@ -275,6 +286,9 @@ auto NeutralAtomMapper::checkApplicability(
 auto NeutralAtomMapper::updatePlacement(
     const std::unique_ptr<qc::Operation>& op,
     std::vector<Atom>&                    placement) const -> void {
+  if (op->isCompoundOperation()) {
+    return;
+  }
   if (arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
     if (op->getNcontrols() == 0) {
       // individual gate that can act on one or more atoms
@@ -394,8 +408,12 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       if (checkApplicability(op, placement)) {
         updatePlacement(op, placement);
         (*it)->execute();
-        if (isGlobal(*op) and
-            arch.isAllowedGlobally({op->getType(), op->getNcontrols()})) {
+        if (op->isCompoundOperation()) {
+          const auto& co = dynamic_cast<qc::CompoundOperation&>(*op);
+          mappedQc.emplaceBack<NAGlobalOperation>(
+              OpType{co.at(0)->getType(), 0}, co.at(0)->getParameter());
+        } else if (isGlobal(*op) and arch.isAllowedGlobally(
+                                         {op->getType(), op->getNcontrols()})) {
           mappedQc.emplaceBack<NAGlobalOperation>(
               OpType{op->getType(), op->getNcontrols()}, op->getParameter());
         } else {
@@ -537,7 +555,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       currentlyShuttling.insert(q);
       // iterate through all not yet picked up atoms to the left and check
       // whether they can be picked up
-      auto x = currentX - d;
+      const auto nextX = arch.getNearestXLeft(currentX, true);
+      auto       x  = nextX == currentX ? currentX - dx : nextX + d;
       if (i > 0) {
         for (std::size_t j = i - 1;; --j) {
           const auto p = fixedOrdered[j];
@@ -547,8 +566,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             start.emplace_back(placement[p].currentPosition);
             placement[p].currentPosition = std::make_shared<Point>(x, y);
             end.emplace_back(placement[p].currentPosition);
-            const auto nx = arch.getNearestXLeft(x);
-            x             = nx == x ? x - dx : nx - d;
+            const auto xl = arch.getNearestXLeft(x, true);
+            const auto nx = arch.getNearestXLeft(xl, true);
+            x             = nx == xl ? xl - dx : nx + d;
           } else {
             // check whether j can be
             // picked up
@@ -567,7 +587,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(x + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                x -= d;
+                const auto nx = arch.getNearestXLeft(x, true);
+                x             = nx == x ? x - dx : nx + d;
               }
             } else {
               // if atom is not placed
@@ -593,7 +614,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     // of the atom
                     free = true;
                   } else {
-                    freeX -= d;
+                    const auto nx = arch.getNearestXLeft(freeX, true);
+                    freeX         = nx == freeX ? freeX - dx : nx + d;
                   }
                 }
               } catch (std::invalid_argument& e) {
@@ -619,7 +641,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(freeX + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                x = freeX - d;
+                const auto nx = arch.getNearestXLeft(freeX, true);
+                x             = nx == x ? x - dx : nx + d;
               }
             }
           }
@@ -843,7 +866,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       currentlyShuttling.insert(q);
       // iterate through all not yet picked up atoms to the left and check
       // whether they can be picked up
-      auto x = currentX - d;
+      const auto nextX = arch.getNearestXLeft(currentX, true);
+      auto       x  = nextX == currentX ? currentX - dx : nextX + d;
       if (i > 0) {
         for (std::size_t j = i - 1;; --j) {
           const auto p = moveableOrdered[j];
@@ -853,8 +877,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             start.emplace_back(placement[p].currentPosition);
             placement[p].currentPosition = std::make_shared<Point>(x, y);
             end.emplace_back(placement[p].currentPosition);
-            const auto nx = arch.getNearestXLeft(x);
-            x             = nx == x ? x - dx : nx - d;
+            const auto xl = arch.getNearestXLeft(x, true);
+            const auto nx = arch.getNearestXLeft(xl, true);
+            x             = nx == xl ? xl - dx : nx + d;
           } else {
             // check whether j can be
             // picked up
@@ -874,7 +899,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(x + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                x -= d;
+                const auto nx = arch.getNearestXLeft(x, true);
+                x             = nx == x ? x - dx : nx + d;
               }
             } else {
               // if atom is not placed
@@ -900,7 +926,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     // of the atom
                     free = true;
                   } else {
-                    freeX -= d;
+                    const auto nx = arch.getNearestXLeft(freeX, true);
+                    freeX         = nx == freeX ? freeX - dx : nx + d;
                   }
                 }
               } catch (std::invalid_argument& e) {
@@ -927,7 +954,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(freeX + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                x = freeX - d;
+                const auto nx = arch.getNearestXLeft(freeX, true);
+                x             = nx == x ? x - dx : nx + d;
               }
             }
           }

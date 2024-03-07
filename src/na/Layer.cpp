@@ -8,12 +8,15 @@
 
 #include "Definitions.hpp"
 #include "Graph.hpp"
+#include "operations/CompoundOperation.hpp"
 #include "operations/OpType.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <set>
+#include <unordered_set>
 
 namespace na {
 
@@ -22,6 +25,30 @@ namespace na {
 Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
                        const std::unique_ptr<qc::Operation>* op2,
                        const qc::Qubit&                      qubit) -> bool {
+  // if an operation is a compound operation extract the corresponding operation
+  if ((*op1)->isCompoundOperation()) {
+    const auto& co         = dynamic_cast<qc::CompoundOperation&>(**op1);
+    const auto& opsOnQubit = std::accumulate(
+        co.cbegin(), co.cend(),
+        std::unordered_set<const std::unique_ptr<qc::Operation>*>{},
+        [qubit](auto& set, const auto& op) {
+          if (op->actsOn(qubit)) {
+            set.insert(&op);
+          }
+          return set;
+        });
+    if (opsOnQubit.empty()) {
+      return true;
+    }
+    if (opsOnQubit.size() == 1) {
+      const std::unique_ptr<qc::Operation>* op = *opsOnQubit.begin();
+      return commutesAtQubit(op2, op, qubit);
+    }
+    return false;
+  }
+  if ((*op2)->isCompoundOperation()) {
+    return commutesAtQubit(op2, op1, qubit);
+  }
   // FIXME: Cleanup this conditional branch, but how?
   // check whether both operations act on the given qubit
   if (!(*op1)->actsOn(qubit) or !(*op2)->actsOn(qubit)) {
@@ -76,6 +103,29 @@ Layer::commutesAtQubit(const std::unique_ptr<qc::Operation>* op1,
                                     const std::unique_ptr<qc::Operation>* op2)
     -> bool {
   // TODO: Add check for remaining operations
+  if ((*op1)->isCompoundOperation() or (*op2)->isCompoundOperation()) {
+    if ((*op1)->isCompoundOperation() and (*op2)->isCompoundOperation()) {
+      const auto& co1 = dynamic_cast<qc::CompoundOperation&>(**op1);
+      const auto& co2 = dynamic_cast<qc::CompoundOperation&>(**op2);
+      if (co1.size() != co2.size()) {
+        return false;
+      }
+      std::unordered_set<qc::Qubit> usedQubits;
+      for (auto it1 = co1.cbegin(), it2 = co2.cbegin(); it1 != co1.cend(); ++it1, ++it2) {
+        if (!isInverse(&*it1, &*it2)) {
+          return false;
+        }
+        for (const auto q : (*it1)->getUsedQubits()) {
+          if (usedQubits.find(q) != usedQubits.end()) {
+            return false;
+          }
+          usedQubits.insert(q);
+        }
+      }
+      return true;
+    }
+    return false;
+  }
   if ((*op1)->getControls() == (*op2)->getControls() and
       (*op1)->getTargets() == (*op2)->getTargets()) {
     auto result =
