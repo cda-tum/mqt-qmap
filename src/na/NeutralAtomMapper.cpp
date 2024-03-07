@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 namespace na {
@@ -74,17 +75,26 @@ auto NeutralAtomMapper::postprocess() -> void {
     if (op->isGlobalOperation()) {
       mappedQc.emplaceBack(op->clone());
     } else if (op->isLocalOperation()) {
-      const auto& lop = dynamic_cast<NALocalOperation&>(*op);
-      for (std::int64_t r = 0; r < rows; ++r) {
-        std::vector<std::shared_ptr<Point>> positions;
-        for (const auto& p : lop.getPositions()) {
-          for (std::int64_t c = 0; c < cols; ++c) {
-            positions.emplace_back(std::make_shared<Point>(
-                initialArch.getPositionOffsetBy(*p, r, c)));
+      const auto& lop       = dynamic_cast<NALocalOperation&>(*op);
+      const auto& posPerRow = std::accumulate(
+          lop.getPositions().cbegin(), lop.getPositions().cend(),
+          std::map<std::int64_t, std::set<std::int64_t>>(),
+          [&](auto& acc, const auto& p) {
+            acc[p->y].insert(p->x);
+            return acc;
+          });
+      for (const auto& [y, xs] : posPerRow) {
+        for (std::int64_t r = 0; r < rows; ++r) {
+          std::vector<std::shared_ptr<Point>> positions;
+          for (const auto x : xs) {
+            for (std::int64_t c = 0; c < cols; ++c) {
+              positions.emplace_back(std::make_shared<Point>(
+                  initialArch.getPositionOffsetBy({x, y}, r, c)));
+            }
           }
+          mappedQc.emplaceBack<NALocalOperation>(lop.getType(), lop.getParams(),
+                                                 positions);
         }
-        mappedQc.emplaceBack<NALocalOperation>(lop.getType(), lop.getParams(),
-                                               positions);
       }
     } else if (op->isShuttlingOperation()) {
       const auto& sop = dynamic_cast<NAShuttlingOperation&>(*op);
@@ -356,9 +366,9 @@ auto NeutralAtomMapper::updatePlacement(
 
 auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   auto startPreprocess = std::chrono::high_resolution_clock::now();
-  initialQc    = qc;
-  auto nqubits = initialQc.getNqubits();
-  mappedQc     = NAQuantumComputation();
+  initialQc            = qc;
+  auto nqubits         = initialQc.getNqubits();
+  mappedQc             = NAQuantumComputation();
   preprocess();
   // store the placement of atoms, both the initial one (needed later) and the
   // current one leave atoms unmapped as long as possible. This mighty induce
@@ -432,7 +442,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
     // this distance is used for spacing atoms that should interact or pass
     // another atom
     const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
-    const auto dx = static_cast<std::int64_t>(config.getPatchCols()) * static_cast<std::int64_t>(arch.getNoInteractionRadius());
+    const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
+                    static_cast<std::int64_t>(arch.getNoInteractionRadius());
     // pick up the fixed atoms and move them to the interaction zone
     // get a vector of the fixed atoms ordered by their initial position from
     // left to right
@@ -1294,9 +1305,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   stats.numMappedGates  = qc.getNops();
   // get the mapping time in milliseconds
   stats.preprocessTime =
-      std::chrono::duration<qc::fp, std::milli>(startMapping - startPreprocess).count();
+      std::chrono::duration<qc::fp, std::milli>(startMapping - startPreprocess)
+          .count();
   stats.mappingTime =
-      std::chrono::duration<qc::fp, std::milli>(startPostprocess - startMapping).count();
+      std::chrono::duration<qc::fp, std::milli>(startPostprocess - startMapping)
+          .count();
   stats.postprocessTime =
       std::chrono::duration<qc::fp, std::milli>(end - startPostprocess).count();
   done = true;
