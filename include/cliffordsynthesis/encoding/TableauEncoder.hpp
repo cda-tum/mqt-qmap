@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "LogicBlock/LogicBlock.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "logicblocks/LogicBlock.hpp"
 
 #include <cstddef>
 #include <memory>

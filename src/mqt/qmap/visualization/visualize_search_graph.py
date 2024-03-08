@@ -1960,7 +1960,7 @@ def visualize_search_graph(
         disabled=False,
     )
     timestep_slider = IntSlider(
-        min=timestep_play.min, max=timestep_play.max, step=timestep_play.step, layout=Layout(width=f"{width-232}px")
+        min=timestep_play.min, max=timestep_play.max, step=timestep_play.step, layout=Layout(width=f"{width - 232}px")
     )
     jslink((timestep_play, "value"), (timestep_slider, "value"))
     timestep_play.observe(update_timestep, names="value")
@@ -2094,7 +2094,12 @@ def visualize_search_graph(
     layer_slider = interactive(
         update_layer,
         new_layer=IntSlider(
-            min=0, max=number_of_layers - 1, step=1, value=0, description="Layer:", layout=Layout(width=f"{width-80}px")
+            min=0,
+            max=number_of_layers - 1,
+            step=1,
+            value=0,
+            description="Layer:",
+            layout=Layout(width=f"{width - 80}px"),
         ),
     )
 

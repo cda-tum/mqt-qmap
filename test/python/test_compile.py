@@ -7,8 +7,21 @@ from pathlib import Path
 import pytest
 from qiskit import QuantumCircuit
 
-from mqt import qmap
 from mqt.qcec import verify
+from mqt.qmap import (
+    Arch,
+    Architecture,
+    CommanderGrouping,
+    Encoding,
+    Heuristic,
+    InitialLayout,
+    Layering,
+    LookaheadHeuristic,
+    Method,
+    SwapReduction,
+    compile,
+)
+from mqt.qmap.visualization import SearchVisualizer
 
 
 @pytest.fixture()
@@ -25,7 +38,7 @@ def example_circuit() -> QuantumCircuit:
 def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
     """Test that either arch or calibration must be provided."""
     with pytest.raises(ValueError, match="Either arch or calibration must be specified"):
-        qmap.compile(example_circuit, arch=None, calibration=None)
+        compile(example_circuit, arch=None, calibration=None)
 
 
 @pytest.mark.parametrize(
@@ -43,7 +56,7 @@ def test_either_arch_or_calibration(example_circuit: QuantumCircuit) -> None:
 )
 def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str) -> None:
     """Test that the available architectures can be properly used."""
-    example_circuit_mapped, results = qmap.compile(example_circuit, arch=arch)
+    example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
     assert results.mapped_circuit
 
@@ -55,19 +68,19 @@ def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str)
 @pytest.mark.parametrize(
     "arch",
     [
-        qmap.Arch.IBM_QX4,
-        qmap.Arch.IBM_QX5,
-        qmap.Arch.IBMQ_Yorktown,
-        qmap.Arch.IBMQ_London,
-        qmap.Arch.IBMQ_Bogota,
-        qmap.Arch.IBMQ_Tokyo,
-        qmap.Arch.Rigetti_Agave,
-        qmap.Arch.Rigetti_Aspen,
+        Arch.IBM_QX4,
+        Arch.IBM_QX5,
+        Arch.IBMQ_Yorktown,
+        Arch.IBMQ_London,
+        Arch.IBMQ_Bogota,
+        Arch.IBMQ_Tokyo,
+        Arch.Rigetti_Agave,
+        Arch.Rigetti_Aspen,
     ],
 )
-def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: qmap.Arch) -> None:
+def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: Arch) -> None:
     """Test that the available architecture enums can be properly used."""
-    example_circuit_mapped, results = qmap.compile(example_circuit, arch=arch)
+    example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
     assert results.mapped_circuit
 
@@ -80,7 +93,7 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
     with Path("test_architecture.arch").open("w+") as f:
         f.write("3\n0 1\n0 2\n1 2\n")
 
-    example_circuit_mapped, results = qmap.compile(example_circuit, arch="test_architecture.arch")
+    example_circuit_mapped, results = compile(example_circuit, arch="test_architecture.arch")
     assert results.timeout is False
     assert results.mapped_circuit
 
@@ -90,8 +103,8 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
 
 def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
     """Test that architectures from python can be properly used."""
-    arch = qmap.Architecture(3, {(0, 1), (0, 2), (1, 2)})
-    example_circuit_mapped, results = qmap.compile(example_circuit, arch=arch)
+    arch = Architecture(3, {(0, 1), (0, 2), (1, 2)})
+    example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
     assert results.mapped_circuit
 
@@ -107,7 +120,7 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
         f.write('Q1,0,0,0,1e-2,1e-4,"1_2: 1e-2"\n')
         f.write("Q2,0,0,0,1e-2,1e-4, \n")
 
-    example_circuit_mapped, results = qmap.compile(example_circuit, arch=None, calibration="test_calibration.cal")
+    example_circuit_mapped, results = compile(example_circuit, arch=None, calibration="test_calibration.cal")
     assert results.timeout is False
     assert results.mapped_circuit
 
@@ -117,7 +130,7 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
 
 def test_parameters(example_circuit: QuantumCircuit) -> None:
     """Test that parameters to compile are properly parsed and passed to the backend."""
-    properties = qmap.Architecture.Properties()
+    properties = Architecture.Properties()
     properties.set_single_qubit_error(0, "x", 0.01)
     properties.set_single_qubit_error(1, "x", 0.01)
     properties.set_single_qubit_error(2, "x", 0.01)
@@ -125,32 +138,30 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
     properties.set_two_qubit_error(1, 0, 0.02, "cx")
     properties.set_two_qubit_error(1, 2, 0.02, "cx")
     properties.set_two_qubit_error(2, 1, 0.02, "cx")
-    arch = qmap.Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
-    _, results = qmap.compile(
+    arch = Architecture(3, {(0, 1), (1, 0), (1, 2), (2, 1)}, properties)
+    _, results = compile(
         example_circuit,
         arch=arch,
         method="exact",
         encoding="commander",
         commander_grouping="fixed3",
-        use_bdd=False,
         swap_reduction="coupling_limit",
         include_WCNF=False,
         use_subsets=True,
         subgraph=None,
         add_measurements_to_mapped_circuit=True,
     )
-    assert results.configuration.method == qmap.Method.exact
-    assert results.configuration.encoding == qmap.Encoding.commander
-    assert results.configuration.commander_grouping == qmap.CommanderGrouping.fixed3
-    assert results.configuration.use_bdd is False
-    assert results.configuration.swap_reduction == qmap.SwapReduction.coupling_limit
+    assert results.configuration.method == Method.exact
+    assert results.configuration.encoding == Encoding.commander
+    assert results.configuration.commander_grouping == CommanderGrouping.fixed3
+    assert results.configuration.swap_reduction == SwapReduction.coupling_limit
     assert results.configuration.include_WCNF is False
     assert results.configuration.use_subsets is True
     assert results.configuration.subgraph == set()
     assert results.configuration.add_measurements_to_mapped_circuit is True
 
-    with qmap.visualization.SearchVisualizer() as visualizer:
-        _, results = qmap.compile(
+    with SearchVisualizer() as visualizer:
+        _, results = compile(
             example_circuit,
             arch=arch,
             method="heuristic",
@@ -171,13 +182,13 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
             debug=True,
             visualizer=visualizer,
         )
-        assert results.configuration.method == qmap.Method.heuristic
-        assert results.configuration.heuristic == qmap.Heuristic.gate_count_max_distance
-        assert results.configuration.lookahead_heuristic == qmap.LookaheadHeuristic.gate_count_max_distance
-        assert results.configuration.initial_layout == qmap.InitialLayout.dynamic
+        assert results.configuration.method == Method.heuristic
+        assert results.configuration.heuristic == Heuristic.gate_count_max_distance
+        assert results.configuration.lookahead_heuristic == LookaheadHeuristic.gate_count_max_distance
+        assert results.configuration.initial_layout == InitialLayout.dynamic
         assert results.configuration.iterative_bidirectional_routing is True
         assert results.configuration.iterative_bidirectional_routing_passes == 1
-        assert results.configuration.layering == qmap.Layering.individual_gates
+        assert results.configuration.layering == Layering.individual_gates
         assert results.configuration.automatic_layer_splits is True
         assert results.configuration.automatic_layer_splits_node_limit == 5000
         assert results.configuration.lookaheads == 15
@@ -191,7 +202,7 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         assert results.configuration.debug is True
         assert results.configuration.data_logging_path == visualizer.data_logging_path
 
-    _, results = qmap.compile(
+    _, results = compile(
         example_circuit,
         arch=arch,
         method="heuristic",
@@ -207,12 +218,12 @@ def test_parameters(example_circuit: QuantumCircuit) -> None:
         verbose=False,
         debug=False,
     )
-    assert results.configuration.method == qmap.Method.heuristic
-    assert results.configuration.heuristic == qmap.Heuristic.fidelity_best_location
-    assert results.configuration.lookahead_heuristic == qmap.LookaheadHeuristic.none
-    assert results.configuration.initial_layout == qmap.InitialLayout.identity
+    assert results.configuration.method == Method.heuristic
+    assert results.configuration.heuristic == Heuristic.fidelity_best_location
+    assert results.configuration.lookahead_heuristic == LookaheadHeuristic.none
+    assert results.configuration.initial_layout == InitialLayout.identity
     assert results.configuration.iterative_bidirectional_routing is False
-    assert results.configuration.layering == qmap.Layering.disjoint_qubits
+    assert results.configuration.layering == Layering.disjoint_qubits
     assert results.configuration.automatic_layer_splits is False
     assert results.configuration.lookaheads == 0
     assert results.configuration.use_teleportation is False

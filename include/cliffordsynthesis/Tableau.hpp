@@ -6,7 +6,7 @@
 #pragma once
 
 #include "QuantumComputation.hpp"
-#include "utils/logging.hpp"
+#include "plog/Log.h"
 
 #include <cstdint>
 #include <fstream>

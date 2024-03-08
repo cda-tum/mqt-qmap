@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.6.1", "setuptools-scm>=7", "pybind11>=2.11"]
+requires = ["scikit-build-core>=0.8.1", "setuptools-scm>=7", "pybind11>=2.11"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -36,15 +36,15 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "qiskit[qasm3-import]>=0.46.0",
-    "rustworkx[all]>=0.13.0",
+    "qiskit[qasm3-import]>=1.0.0",
+    "rustworkx[all]>=0.14.0",
     "importlib_resources>=5.0; python_version < '3.10'",
-    "typing_extensions>=4.0"
+    "typing_extensions>=4.2"
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest>=7", "mqt.qcec>=2", "mqt.qmap[visualization]"]
+test = ["pytest>=7", "mqt.qcec>=2.4.5", "mqt.qmap[visualization]"]
 coverage = ["mqt.qmap[test]", "pytest-cov"]
 docs = [
     "furo>=2023.08.17",
@@ -79,14 +79,14 @@ Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
 
 [tool.scikit-build]
 # Protect the configuration against future changes in scikit-build-core
-minimum-version = "0.6.1"
+minimum-version = "0.8.1"
 
 # Set the wheel install directory
 wheel.install-dir = "mqt/qmap"
 
 # Set required CMake and Ninja versions
-cmake.minimum-version = "3.19"
-ninja.minimum-version = "1.10"
+cmake.version = ">=3.19"
+ninja.version = ">=1.10"
 
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
@@ -141,14 +141,7 @@ log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = [
     "error",
-    "ignore:Conversion.*to a scalar is deprecated.*:DeprecationWarning:qiskit:",
-    "ignore:.*qiskit.__qiskit_version__.*:DeprecationWarning:qiskit:",
-    "ignore:.*qiskit.utils.algorithm_globals.QiskitAlgorithmGlobals*:DeprecationWarning:qiskit",
-    "ignore:.*qiskit.extensions module is pending deprecation*:PendingDeprecationWarning:qiskit",
     'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
-    'ignore:.*qiskit.utils.parallel*:DeprecationWarning:qiskit',
-    'ignore:.*qiskit.tools.events*:DeprecationWarning:qiskit',
-    'ignore:.*qiskit.qasm*:DeprecationWarning:qiskit',
 ]
 
 [tool.coverage]
@@ -226,7 +219,7 @@ extend-select = [
     "UP",          # pyupgrade
     "YTT",         # flake8-2020
 ]
-extend-ignore = [
+ignore = [
     "ANN101",  # Missing type annotation for `self` in method
     "ANN102",  # Missing type annotation for `cls` in classmethod
     "ISC001",  # Conflicts with formatter
@@ -250,7 +243,7 @@ isort.required-imports = ["from __future__ import annotations"]
     "I002", # Allow missing `from __future__ import annotations` import
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
 
@@ -259,6 +252,7 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
+test-skip = "cp38-macosx_arm64"
 build-frontend = "build"
 
 [tool.cibuildwheel.linux]

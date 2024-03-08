@@ -62,7 +62,6 @@ nlohmann::json Configuration::json() const {
       if (swapLimit > 0) {
         limits["swap_limit"] = swapLimit;
       }
-      limits["use_bdd"] = useBDD;
     }
   }
 

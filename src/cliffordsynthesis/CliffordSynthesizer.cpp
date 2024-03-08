@@ -5,16 +5,18 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "LogicTerm/Logic.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
-#include "utils/logging.hpp"
+#include "logicblocks/Logic.hpp"
+#include "plog/Appenders/ColorConsoleAppender.h"
+#include "plog/Formatters/TxtFormatter.h"
+#include "plog/Init.h"
+#include "plog/Log.h"
 
 #include <chrono>
 #include <fstream>
 #include <future>
 #include <memory>
-#include <thread>
 
 namespace cs {
 
@@ -28,7 +30,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   }
   plog::get()->setMaxSeverity(configuration.verbosity);
 
-  INFO() << "Optimization target: " << toString(configuration.target);
+  PLOG_INFO << "Optimization target: " << toString(configuration.target);
 
   const auto start = std::chrono::high_resolution_clock::now();
 
@@ -74,7 +76,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     // if the upper bound is 0, the solution does not require any gates and the
     // synthesis is done.
     if (upper == 0U) {
-      INFO() << "No gates required.";
+      PLOG_INFO << "No gates required.";
       return;
     }
   }
@@ -103,14 +105,14 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
 
   const auto end = std::chrono::high_resolution_clock::now();
   const std::chrono::duration<double> diff = end - start;
-  INFO() << "Synthesis took " << diff.count() << " seconds";
+  PLOG_INFO << "Synthesis took " << diff.count() << " seconds";
   results.setRuntime(diff.count());
 }
 
 void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
   if (config.timestepLimit != 0U) {
-    INFO() << "Using configured initial timestep limit: "
-           << config.timestepLimit;
+    PLOG_INFO << "Using configured initial timestep limit: "
+              << config.timestepLimit;
     return;
   }
 
@@ -118,7 +120,7 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
   // and increase the limit geometrically until a solution is found.
   if (!results.sat()) {
     config.timestepLimit = 1U;
-    INFO()
+    PLOG_INFO
         << "No initial circuit specified. Using initial timestep limit of 1.";
     return;
   }
@@ -128,12 +130,13 @@ void CliffordSynthesizer::determineInitialTimestepLimit(EncoderConfig& config) {
   // timesteps. Furthermore, no upper bound needs to be determined.
   if (requiresMultiGateEncoding(config.targetMetric)) {
     config.timestepLimit = results.getDepth();
-    INFO() << "Using initial circuit's depth as initial timestep limit: "
-           << config.timestepLimit;
+    PLOG_INFO << "Using initial circuit's depth as initial timestep limit: "
+              << config.timestepLimit;
   } else {
     config.timestepLimit = results.getGates();
-    INFO() << "Using initial circuit's gate count as initial timestep limit: "
-           << config.timestepLimit;
+    PLOG_INFO
+        << "Using initial circuit's gate count as initial timestep limit: "
+        << config.timestepLimit;
   }
 }
 
@@ -150,8 +153,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     return {lowerBound, upperBound};
   }
 
-  INFO() << "Searching for upper bound for the number of timesteps starting "
-         << "with " << upperBound;
+  PLOG_INFO << "Searching for upper bound for the number of timesteps starting "
+            << "with " << upperBound;
 
   config.useMaxSAT = false;
   while (!results.sat()) {
@@ -159,8 +162,8 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     if (!results.sat()) {
       lowerBound = upperBound + 1U;
       upperBound *= 2U;
-      INFO() << "No solution found for " << config.timestepLimit
-             << " timestep(s). Doubling timestep limit to " << upperBound;
+      PLOG_INFO << "No solution found for " << config.timestepLimit
+                << " timestep(s). Doubling timestep limit to " << upperBound;
       config.timestepLimit = upperBound;
     }
   }
@@ -172,7 +175,7 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
     upperBound = std::min(upperBound, results.getDepth());
   }
 
-  INFO() << "Found upper bound for the number of timesteps: " << upperBound;
+  PLOG_INFO << "Found upper bound for the number of timesteps: " << upperBound;
   return {lowerBound, upperBound};
 }
 
@@ -246,9 +249,9 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
     return;
   }
 
-  INFO() << "Found a depth-optimal circuit with depth " << results.getDepth()
-         << " and " << results.getGates()
-         << " gate(s). Trying to minimize the number of gates.";
+  PLOG_INFO << "Found a depth-optimal circuit with depth " << results.getDepth()
+            << " and " << results.getGates()
+            << " gate(s). Trying to minimize the number of gates.";
 
   config.targetMetric         = TargetMetric::Gates;
   config.timestepLimit        = results.getDepth();
@@ -262,8 +265,8 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
     runBinarySearch(*config.gateLimit, results.getDepth(), results.getGates(),
                     config);
   }
-  INFO() << "Found a depth " << results.getDepth() << " circuit with "
-         << results.getGates() << " gate(s).";
+  PLOG_INFO << "Found a depth " << results.getDepth() << " circuit with "
+            << results.getGates() << " gate(s).";
 }
 
 void CliffordSynthesizer::twoQubitGateOptimalSynthesis(
@@ -321,9 +324,9 @@ void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
     return;
   }
 
-  INFO() << "Trying to find a solution with less than "
-         << results.getTwoQubitGates() << " two-qubit gates and at most "
-         << gateCount << " gates.";
+  PLOG_INFO << "Trying to find a solution with less than "
+            << results.getTwoQubitGates() << " two-qubit gates and at most "
+            << gateCount << " gates.";
 
   config.targetMetric         = TargetMetric::TwoQubitGates;
   config.timestepLimit        = gateCount;
@@ -333,9 +336,9 @@ void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
 
   runMaxSAT(config);
 
-  INFO() << "Found a circuit with " << results.getTwoQubitGates()
-         << " two-qubit gate(s) and " << results.getGates()
-         << " gate(s) overall.";
+  PLOG_INFO << "Found a circuit with " << results.getTwoQubitGates()
+            << " two-qubit gate(s) and " << results.getGates()
+            << " gate(s) overall.";
 }
 
 void CliffordSynthesizer::minimizeGatesFixedTwoQubitGateCount(
@@ -348,10 +351,10 @@ void CliffordSynthesizer::minimizeGatesFixedTwoQubitGateCount(
     return;
   }
 
-  INFO() << "Found a two-qubit gate-count-optimal circuit with "
-         << results.getTwoQubitGates() << " two-qubit gate(s) and "
-         << results.getGates()
-         << " gate(s) overall. Trying to minimize the number of gates.";
+  PLOG_INFO << "Found a two-qubit gate-count-optimal circuit with "
+            << results.getTwoQubitGates() << " two-qubit gate(s) and "
+            << results.getGates()
+            << " gate(s) overall. Trying to minimize the number of gates.";
 
   config.targetMetric         = TargetMetric::Gates;
   config.timestepLimit        = results.getGates();
@@ -365,19 +368,19 @@ void CliffordSynthesizer::minimizeGatesFixedTwoQubitGateCount(
     runBinarySearch(config.timestepLimit, results.getTwoQubitGates(),
                     results.getGates(), config);
   }
-  INFO() << "Found a circuit with " << results.getTwoQubitGates()
-         << " two-qubit gate(s) and " << results.getGates()
-         << " gate(s) overall.";
+  PLOG_INFO << "Found a circuit with " << results.getTwoQubitGates()
+            << " two-qubit gate(s) and " << results.getGates()
+            << " gate(s) overall.";
 }
 
 void CliffordSynthesizer::runMaxSAT(const EncoderConfig& config) {
-  INFO() << "Running MaxSAT scheme with timestep limit "
-         << config.timestepLimit;
+  PLOG_INFO << "Running MaxSAT scheme with timestep limit "
+            << config.timestepLimit;
   const auto r = callSolver(config);
   if (r.sat()) {
-    INFO() << "Found a solution.";
+    PLOG_INFO << "Found a solution.";
   } else {
-    INFO() << "No solution found.";
+    PLOG_INFO << "No solution found.";
   }
   updateResults(configuration, r, results);
 }
@@ -390,7 +393,7 @@ Results CliffordSynthesizer::callSolver(const EncoderConfig& config) {
     const auto filename = configuration.intermediateResultsPath +
                           "intermediate_" + std::to_string(solverCalls) +
                           ".qasm";
-    INFO() << "Dumping circuit to " << filename;
+    PLOG_INFO << "Dumping circuit to " << filename;
     std::ofstream file(filename);
     file << res.getResultCircuit();
     file.close();
@@ -473,7 +476,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
 }
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
-  INFO() << "Optimizing Circuit with Heuristic";
+  PLOG_INFO << "Optimizing Circuit with Heuristic";
   if (initialCircuit->getDepth() == 0) {
     return;
   }

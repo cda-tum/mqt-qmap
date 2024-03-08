@@ -5,16 +5,17 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
-#include "utils/logging.hpp"
+#include "logicblocks/Model.hpp"
+#include "plog/Log.h"
 
 namespace cs::encoding {
 
 using namespace logicbase;
 
 void TableauEncoder::createTableauVariables() {
-  const auto n = static_cast<std::int16_t>(S);
+  const auto n = static_cast<std::uint16_t>(S);
 
-  DEBUG() << "Creating tableau variables.";
+  PLOG_DEBUG << "Creating tableau variables.";
   vars.x.reserve(T);
   vars.z.reserve(T);
   vars.r.reserve(T);
@@ -26,25 +27,25 @@ void TableauEncoder::createTableauVariables() {
     for (std::size_t i = 0U; i < N; ++i) {
       const std::string xName =
           "x_" + std::to_string(t) + "_" + std::to_string(i);
-      TRACE() << "Creating variable " << xName;
+      PLOG_VERBOSE << "Creating variable " << xName;
       x.emplace_back(lb->makeVariable(xName, CType::BITVECTOR, n));
       const std::string zName =
           "z_" + std::to_string(t) + "_" + std::to_string(i);
-      TRACE() << "Creating variable " << zName;
+      PLOG_VERBOSE << "Creating variable " << zName;
       z.emplace_back(lb->makeVariable(zName, CType::BITVECTOR, n));
     }
     const std::string rName = "r_" + std::to_string(t);
-    TRACE() << "Creating variable " << rName;
+    PLOG_VERBOSE << "Creating variable " << rName;
     vars.r.emplace_back(lb->makeVariable(rName, CType::BITVECTOR, n));
   }
 }
 
 void TableauEncoder::assertTableau(const Tableau&    tableau,
                                    const std::size_t t) {
-  const auto n = static_cast<std::int16_t>(S);
+  const auto n = static_cast<std::uint16_t>(S);
 
-  DEBUG() << "Asserting tableau at time step " << t;
-  TRACE() << "Tableau:\n" << tableau;
+  PLOG_DEBUG << "Asserting tableau at time step " << t;
+  PLOG_VERBOSE << "Tableau:\n" << tableau;
   for (auto a = 0U; a < N; ++a) {
     const auto targetX = tableau.getBVFrom(a);
     lb->assertFormula(vars.x[t][a] == LogicTerm(targetX, n));
@@ -88,8 +89,9 @@ TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
   case qc::OpType::H:
     return z[pos][qubit];
   default:
-    FATAL() << "Unsupported single-qubit gate: " << toString(gate);
-    return LogicTerm::noneTerm();
+    const auto msg = "Unsupported single-qubit gate: " + toString(gate);
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 }
 
@@ -109,8 +111,9 @@ TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
   case qc::OpType::Sdg:
     return (z[pos][qubit] ^ x[pos][qubit]);
   default:
-    FATAL() << "Unsupported single-qubit gate: " << toString(gate);
-    return LogicTerm::noneTerm();
+    const auto msg = "Unsupported single-qubit gate: " + toString(gate);
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 }
 
@@ -135,8 +138,9 @@ TableauEncoder::Variables::singleQubitRChange(const std::size_t pos,
   case qc::OpType::Z:
     return x[pos][qubit];
   default:
-    FATAL() << "Unsupported single-qubit gate: " << toString(gate);
-    return LogicTerm::noneTerm();
+    const auto msg = "Unsupported single-qubit gate: " + toString(gate);
+    PLOG_FATAL << msg;
+    throw std::runtime_error(msg);
   }
 }
 

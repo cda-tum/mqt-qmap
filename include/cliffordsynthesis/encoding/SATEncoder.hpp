@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include "LogicBlock/LogicBlock.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 #include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "logicblocks/LogicBlock.hpp"
 #include "operations/OpType.hpp"
 
 #include <cstddef>

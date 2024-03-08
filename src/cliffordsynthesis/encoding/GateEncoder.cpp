@@ -5,15 +5,18 @@
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
-#include "Encodings/Encodings.hpp"
-#include "utils/logging.hpp"
+#include "Definitions.hpp"
+#include "logicblocks/Encodings.hpp"
+#include "logicblocks/Model.hpp"
+#include "operations/StandardOperation.hpp"
+#include "plog/Log.h"
 
 namespace cs::encoding {
 
 using namespace logicbase;
 
 void GateEncoder::createSingleQubitGateVariables() {
-  DEBUG() << "Creating single-qubit gate variables.";
+  PLOG_DEBUG << "Creating single-qubit gate variables.";
   vars.gS.reserve(T);
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gS.emplace_back();
@@ -24,7 +27,7 @@ void GateEncoder::createSingleQubitGateVariables() {
       for (std::size_t q = 0U; q < N; ++q) {
         const std::string gName = "g_" + std::to_string(t) + "_" +
                                   toString(gate) + "_" + std::to_string(q);
-        TRACE() << "Creating variable " << gName;
+        PLOG_VERBOSE << "Creating variable " << gName;
         g.emplace_back(lb->makeVariable(gName));
       }
     }
@@ -32,7 +35,7 @@ void GateEncoder::createSingleQubitGateVariables() {
 }
 
 void GateEncoder::createTwoQubitGateVariables() {
-  DEBUG() << "Creating two-qubit gate variables.";
+  PLOG_DEBUG << "Creating two-qubit gate variables.";
   vars.gC.reserve(T);
   for (std::size_t t = 0U; t < T; ++t) {
     auto& timeStep = vars.gC.emplace_back();
@@ -44,7 +47,7 @@ void GateEncoder::createTwoQubitGateVariables() {
         const std::string gName = "g_" + std::to_string(t) + "_cx_" +
                                   std::to_string(ctrl) + "_" +
                                   std::to_string(trgt);
-        TRACE() << "Creating variable " << gName;
+        PLOG_VERBOSE << "Creating variable " << gName;
         control.emplace_back(lb->makeVariable(gName));
       }
     }
@@ -189,7 +192,7 @@ void GateEncoder::extractSingleQubitGatesFromModel(
                              lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, q, gate);
         ++nSingleQubitGates;
-        DEBUG() << toString(gate) << "(" << q << ")";
+        PLOG_DEBUG << toString(gate) << "(" << q << ")";
       }
     }
   }
@@ -210,14 +213,14 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
       if (model.getBoolValue(twoQubitGates[ctrl][trgt], lb.get())) {
         qc.emplace_back<qc::StandardOperation>(N, control, trgt, qc::OpType::X);
         ++nTwoQubitGates;
-        DEBUG() << "CX(" << ctrl << ", " << trgt << ")";
+        PLOG_DEBUG << "CX(" << ctrl << ", " << trgt << ")";
       }
     }
   }
 }
 
 void GateEncoder::encodeSymmetryBreakingConstraints() {
-  DEBUG() << "Encoding symmetry breaking constraints.";
+  PLOG_DEBUG << "Encoding symmetry breaking constraints.";
   for (std::size_t t = 0U; t < T; ++t) {
     assertSingleQubitGateSymmetryBreakingConstraints(t);
     assertTwoQubitGateSymmetryBreakingConstraints(t);
