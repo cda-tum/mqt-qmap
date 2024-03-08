@@ -14,6 +14,17 @@ using json = nlohmann::json;
 
 namespace na {
 
+inline auto getMethodOfString(const std::string& method) -> NaMappingMethod {
+  if (const auto it = STRING_TO_METHOD.find(method);
+      it != STRING_TO_METHOD.end()) {
+    return it->second;
+  }
+  std::stringstream ss;
+  ss << "The method " << method << " is not supported.";
+  throw std::invalid_argument(ss.str());
+}
+
+
 Configuration::Configuration(const std::string& filename) {
   std::ifstream fs(filename);
   if (!fs.good()) {
@@ -39,5 +50,8 @@ Configuration::Configuration(std::istream& fs) {
       patchCols = patch["cols"];
     }
   }
-};
+  if (data.contains("method") && data["method"].is_string()) {
+    method = getMethodOfString(data["method"]);
+  }
+}
 } // namespace na

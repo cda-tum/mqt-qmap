@@ -2,5 +2,6 @@
   "patch": {
     "rows": 3,
     "cols": 2
-  }
+  },
+  "method": "SMART"
 }

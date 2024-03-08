@@ -77,7 +77,7 @@
   },
   "interactionRadius": 2,
   "minAtomDistance": 1,
-  "AOD": [
+  "shuttling": [
     {
       "rows": 5,
       "columns": 5,
