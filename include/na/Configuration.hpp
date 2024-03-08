@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
-
+#include <unordered_map>
 namespace na {
 
 enum class NaMappingMethod : std::uint8_t { NAIVE, SMART };
