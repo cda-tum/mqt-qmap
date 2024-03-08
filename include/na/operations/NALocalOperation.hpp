@@ -34,10 +34,10 @@ public:
       : NALocalOperation(type, params, std::vector<std::shared_ptr<Point>>{std::move(position)}) {}
   explicit NALocalOperation(const OpType& type, std::shared_ptr<Point> position)
       : NALocalOperation(type, {}, std::move(position)) {}
-  [[nodiscard]] auto getPositions() const -> std::vector<std::shared_ptr<Point>> {
+  [[nodiscard]] auto getPositions() const -> const std::vector<std::shared_ptr<Point>>& {
     return positions;
   }
-  [[nodiscard]] auto getParams() const -> std::vector<qc::fp> {
+  [[nodiscard]] auto getParams() const -> const std::vector<qc::fp>& {
     return params;
   }
   [[nodiscard]] auto getType() const -> OpType { return type; }

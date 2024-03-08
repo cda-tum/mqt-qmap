@@ -84,8 +84,9 @@ auto NeutralAtomMapper::postprocess() -> void {
       mappedQc.emplaceBack(op->clone());
     } else if (op->isLocalOperation()) {
       const auto& lop       = dynamic_cast<NALocalOperation&>(*op);
+      const auto& allPositions = lop.getPositions();
       const auto& posPerRow = std::accumulate(
-          lop.getPositions().cbegin(), lop.getPositions().cend(),
+          allPositions.cbegin(), allPositions.cend(),
           std::map<std::int64_t, std::set<std::int64_t>>(),
           [&](auto& acc, const auto& p) {
             acc[p->y].insert(p->x);
@@ -394,12 +395,26 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   std::vector<bool>             initialFreeSites(arch.getNSites(), true);
   std::vector<bool>             currentFreeSites(arch.getNSites(), true);
   std::unordered_set<qc::Qubit> currentlyShuttling{};
+  // this distance is used for spacing atoms that should interact or pass
+  // another atom
+  const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
+  const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
+                  static_cast<std::int64_t>(arch.getNoInteractionRadius());
   // get start time
   auto startMapping = std::chrono::high_resolution_clock::now();
   //============================ START MAPPING ============================
   Layer const layer         = Layer(initialQc);
   const auto& executableSet = layer.getExecutableSet();
   auto        it            = (*executableSet)->begin();
+  if (config.getMethod() == NaMappingMethod::NAIVE) {
+    for (qc::Qubit q = 0; q < nqubits; ++q) {
+      placement[q].positionStatus = Atom::PositionStatus::DEFINED;
+      const auto s = arch.getSitesInZone(initialZones.front())[q];
+      *placement[q].initialPosition = arch.getPositionOfSite(s);
+      initialFreeSites[s]           = false;
+      currentFreeSites[s]           = false;
+    }
+  }
   while (it != (*executableSet)->end()) {
     // 1. execute all gates that are directly applicable and do not need
     //    shuttling
@@ -444,453 +459,311 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
     if (it == (*executableSet)->end()) {
       break;
     }
-    // 2. when no such gates are left, extract an interaction graph of gates
-    //    of the same type and two targets, i.e. cz gates
-    const Graph<std::shared_ptr<Layer::DAGVertex>> graph =
-        layer.constructInteractionGraph({qc::OpType::Z, 1});
-    if (graph.getNVertices() == 0) {
-      throw std::logic_error(
-          "Other gates than cz are not supported for mapping yet.");
-      // TODO: support other gates than cz
-    }
-    const auto& sequence = graph.computeSequence();
-    const auto& moveable = sequence.first;
-    const auto& fixed    = sequence.second;
-    // 3. move the atoms accordingly and execute the gates
-    // this distance is used for spacing atoms that should interact or pass
-    // another atom
-    const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
-    const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
-                    static_cast<std::int64_t>(arch.getNoInteractionRadius());
-    // pick up the fixed atoms and move them to the interaction zone
-    // get a vector of the fixed atoms ordered by their initial position from
-    // left to right
-    std::vector<qc::Qubit> fixedOrdered;
-    std::transform(fixed.cbegin(), fixed.cend(), back_inserter(fixedOrdered),
-                   [](const auto& v) { return v.first; });
-    std::sort(fixedOrdered.begin(), fixedOrdered.end(),
-              [&](const auto& a, const auto& b) {
-                return fixed.at(a) < fixed.at(b);
-              });
-    // get a vector of the fixed atoms in the order to pick them up based on
-    // their misplacement value
-    std::vector<qc::Qubit> pickUpOrderFixed(fixedOrdered);
-    std::sort(pickUpOrderFixed.begin(), pickUpOrderFixed.end(),
-              [&](const auto& a, const auto& b) {
-                return std::abs(getMisplacement(placement, fixed, a)) >
-                       std::abs(getMisplacement(placement, fixed, b));
-              });
-    // repeat until all atoms are picked up
-    while (!pickUpOrderFixed.empty()) {
-      // extract the first atom from the pick up order
-      const auto q = pickUpOrderFixed.front();
-      pickUpOrderFixed.erase(
-          std::remove(pickUpOrderFixed.begin(), pickUpOrderFixed.end(), q),
-          pickUpOrderFixed.end());
-      // get the index of the picked atom among the fixed atoms ordered by their
-      // initial position
-      const auto& fixIt =
-          std::find(fixedOrdered.cbegin(), fixedOrdered.cend(), q);
-      const auto& i = static_cast<std::uint64_t>(
-          std::distance(fixedOrdered.cbegin(), fixIt));
-      // if the placement of the atom is undefined, find a good placement for it
-      if (placement[q].positionStatus == Atom::PositionStatus::UNDEFINED) {
-        // calculate not picked up atoms to the left in the resulting order
-        // note: all remaining atoms that are not picked up yet have undefined
-        // positions as well
-        auto notPickedUpLeft = 0UL;
-        for (std::size_t j = 0; j < i; ++j) {
-          const auto& p = fixedOrdered[j];
-          // not picked up yet and left
-          // of q in the end
-          if (currentlyShuttling.find(p) == currentlyShuttling.cend() and
-              fixed.at(p) < fixed.at(q)) {
-            ++notPickedUpLeft;
-          }
-        }
-        Zone        zone           = 0;
-        Index       row            = 0;
-        std::size_t freeSpotsInRow = 0;
-        for (const auto& z : placement[q].zones) {
-          for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
-            const auto& sitesInRow = arch.getSitesInRow(z, r);
-            const auto& n =
-                std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
-                                [&](const auto& acc, const auto& s) {
-                                  return acc + (initialFreeSites[s] ? 1 : 0);
-                                });
-            if (freeSpotsInRow <= notPickedUpLeft and n > freeSpotsInRow) {
-              freeSpotsInRow = n;
-              zone           = z;
-              row            = r;
-            }
-          }
-        }
-        // place q on the i-th free spot where i is the minimum of the number of
-        // not picked up atoms to the left and free spots available
-        auto possibleSites = arch.getSitesInRow(zone, row);
-        possibleSites.erase(
-            std::remove_if(possibleSites.begin(), possibleSites.end(),
-                           [&](const auto s) { return !initialFreeSites[s]; }),
-            possibleSites.end());
-        const auto s =
-            possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
-        placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
-        *placement[q].initialPosition = arch.getPositionOfSite(s);
-        initialFreeSites[s]           = false;
-        currentFreeSites[s]           = false;
-      }
-      // here the position of q is defined
-      std::vector<std::shared_ptr<Point>> start;
-      std::vector<std::shared_ptr<Point>> end;
-      std::vector<std::shared_ptr<Point>> loadStart;
-      std::vector<std::shared_ptr<Point>> loadEnd;
-      const auto currentX = placement[q].currentPosition->x;
-      const auto y        = placement[q].currentPosition->y;
-      // pick up q itself
-      loadStart.emplace_back(placement[q].currentPosition);
-      currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
-      placement[q].currentPosition = std::make_shared<Point>(currentX + d, y);
-      loadEnd.emplace_back(placement[q].currentPosition);
-      currentlyShuttling.insert(q);
-      // iterate through all not yet picked up atoms to the left and check
-      // whether they can be picked up
-      const auto nextX = arch.getNearestXLeft(currentX, true);
-      auto       x  = nextX == currentX ? currentX - dx : nextX + d;
-      if (i > 0) {
-        for (std::size_t j = i - 1;; --j) {
-          const auto p = fixedOrdered[j];
-          // if the atom is picked up,
-          // move it to the correct row
-          if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
-            start.emplace_back(placement[p].currentPosition);
-            placement[p].currentPosition = std::make_shared<Point>(x, y);
-            end.emplace_back(placement[p].currentPosition);
-            const auto xl = arch.getNearestXLeft(x, true);
-            const auto nx = arch.getNearestXLeft(xl, true);
-            x             = nx == xl ? xl - dx : nx + d;
-          } else {
-            // check whether j can be
-            // picked up
-            if (placement[p].positionStatus == Atom::PositionStatus::DEFINED) {
-              if (placement[p].currentPosition->y == y and
-                  placement[p].currentPosition->x <= x - d) {
-                // pick up p
-                pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
-                                                   pickUpOrderFixed.end(), p),
-                                       pickUpOrderFixed.end());
-                x = placement[p].currentPosition->x;
-                loadStart.emplace_back(placement[p].currentPosition);
-                currentFreeSites[arch.getSiteAt(
-                    *placement[p].currentPosition)] = true;
-                placement[p].currentPosition =
-                    std::make_shared<Point>(x + d, y);
-                loadEnd.emplace_back(placement[p].currentPosition);
-                currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXLeft(x, true);
-                x             = nx == x ? x - dx : nx + d;
-              }
-            } else {
-              // if atom is not placed
-              // yet find a site to the
-              // left that it can be
-              // picked up together with
-              // q, i.e. find next free
-              // site to the left
-              std::int64_t freeX = x;
-              bool         free  = false;
-              try {
-                while (!free) {
-                  const auto& site = arch.getNearestSiteLeft({freeX, y});
-                  freeX            = arch.getPositionOfSite(site).x;
-                  if (initialFreeSites[site] and
-                      std::find(placement[p].zones.cbegin(),
-                                placement[p].zones.cend(),
-                                arch.getZoneOfSite(site)) !=
-                          placement[p].zones.cend()) {
-                    // the site is free
-                    // and satisfies the
-                    // zone restrictions
-                    // of the atom
-                    free = true;
-                  } else {
-                    const auto nx = arch.getNearestXLeft(freeX, true);
-                    freeX         = nx == freeX ? freeX - dx : nx + d;
-                  }
-                }
-              } catch (std::invalid_argument& e) {
-                // if x reached the left
-                // end and there was no
-                // site to the left
-                // anymore, free remains
-                // false in this case
-              }
-              if (free) {
-                // place p on the free
-                // site
-                placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
-                *placement[p].initialPosition = {freeX, y};
-                initialFreeSites[arch.getSiteAt(
-                    *placement[p].initialPosition)] = false;
-                // pick up p
-                pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
-                                                   pickUpOrderFixed.end(), p),
-                                       pickUpOrderFixed.end());
-                loadStart.emplace_back(placement[p].currentPosition);
-                placement[p].currentPosition =
-                    std::make_shared<Point>(freeX + d, y);
-                loadEnd.emplace_back(placement[p].currentPosition);
-                currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXLeft(freeX, true);
-                x             = nx == x ? x - dx : nx + d;
-              }
-            }
-          }
-          if (j == 0) {
-            break;
-          }
-        }
-      }
-      // iterate through all not yet picked up atoms to the right and check
-      // whether they can be picked up
-      x = arch.getNearestXRight(currentX + d) + d;
-      for (std::size_t j = i + 1; j < fixedOrdered.size(); ++j) {
-        const auto p = fixedOrdered[j];
-        // if the atom is picked up, move it to the correct row
-        if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
-          start.emplace_back(placement[p].currentPosition);
-          placement[p].currentPosition = std::make_shared<Point>(x, y);
-          end.emplace_back(placement[p].currentPosition);
-          const auto nx = arch.getNearestXRight(x) + d;
-          x             = nx == x ? x + dx : nx + d;
-        } else {
-          // check whether j can be
-          // picked up
-          if (placement[p].positionStatus == Atom::PositionStatus::DEFINED) {
-            if (placement[p].currentPosition->y == y and
-                placement[p].currentPosition->x >= x - d) {
-              // pick up p
-              pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
-                                                 pickUpOrderFixed.end(), p),
-                                     pickUpOrderFixed.end());
-              x = placement[p].currentPosition->x;
-              loadStart.emplace_back(placement[p].currentPosition);
-              currentFreeSites[arch.getSiteAt(*placement[p].currentPosition)] =
-                  true;
-              placement[p].currentPosition = std::make_shared<Point>(x + d, y);
-              loadEnd.emplace_back(placement[p].currentPosition);
-              currentlyShuttling.insert(p);
-              const auto nx = arch.getNearestXRight(x + d);
-              x             = nx == x + d ? nx - d + dx : nx + d;
-            }
-          } else {
-            // if atom is not placed yet
-            // find a site to the right
-            // that it can be picked up
-            // together with q, i.e. find
-            // next free site to the
-            // right
-            std::int64_t freeX = x;
-            bool         free  = false;
-            try {
-              while (!free) {
-                const auto& site = arch.getNearestSiteRight({freeX - d, y});
-                freeX            = arch.getPositionOfSite(site).x;
-                if (initialFreeSites[site] and
-                    std::find(placement[p].zones.cbegin(),
-                              placement[p].zones.cend(),
-                              arch.getZoneOfSite(site)) !=
-                        placement[p].zones.cend()) {
-                  // the site is free and
-                  // satisfies the zone
-                  // restrictions of the
-                  // atom
-                  free = true;
-                } else {
-                  freeX = arch.getNearestXRight(freeX + d) + d;
-                }
-              }
-            } catch (std::invalid_argument& e) {
-              // if x reached the right
-              // end and there was no
-              // site to the right
-              // anymore, free remains
-              // false in this case
-            }
-            if (free) {
-              // place p on the free site
-              placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
-              *placement[p].initialPosition = {freeX, y};
-              initialFreeSites[arch.getSiteAt(*placement[p].initialPosition)] =
-                  false;
-              // pick up p
-              pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
-                                                 pickUpOrderFixed.end(), p),
-                                     pickUpOrderFixed.end());
-              loadStart.emplace_back(placement[p].currentPosition);
-              placement[p].currentPosition =
-                  std::make_shared<Point>(freeX + d, y);
-              loadEnd.emplace_back(placement[p].currentPosition);
-              currentlyShuttling.insert(p);
-              const auto nx = arch.getNearestXRight(freeX + d);
-              x             = nx == freeX + d ? nx - d + dx : nx + d;
-            }
-          }
-        }
-      }
-      if (!start.empty()) {
-        mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
-      }
-      mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
-    }
-    // all atoms are picked up in order, move them to the interaction zone and
-    // store them there
-    std::vector<std::shared_ptr<Point>> startFixed;
-    std::vector<std::shared_ptr<Point>> midFixed;
-    std::vector<std::shared_ptr<Point>> endFixed;
-    const Zone                          interactionZone =
-        *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
-    const auto sites = arch.getSitesInRow(interactionZone, 0);
-    for (const auto& [q, x] : fixed) {
-      if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
-        std::stringstream ss;
-        ss << "Atom " << q << " was unexpectedly not picked up.";
-        throw std::logic_error(ss.str());
-      }
-      if (!currentFreeSites[sites[static_cast<std::size_t>(x)]]) {
+    if (config.getMethod() == NaMappingMethod::NAIVE) {
+      const std::unique_ptr<qc::Operation>& op = *(*it)->getOperation();
+      if (op->getType() != qc::OpType::Z or op->getNtargets() != 1 or
+          op->getNcontrols() != 1) {
         throw std::logic_error(
-            "Target site in interaction zone is unexpectedly occupied.");
+            "Other gates than cz are not supported for mapping yet.");
       }
-      const auto pos =
-          arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
-      startFixed.emplace_back(placement[q].currentPosition);
-      placement[q].currentPosition = std::make_shared<Point>(pos.x + d, pos.y);
-      midFixed.emplace_back(placement[q].currentPosition);
-      placement[q].currentPosition = std::make_shared<Point>(pos);
-      endFixed.emplace_back(placement[q].currentPosition);
-      currentFreeSites[sites[static_cast<std::size_t>(x)]] = false;
-    }
-    currentlyShuttling.clear();
-    mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startFixed, midFixed);
-    mappedQc.emplaceBack<NAShuttlingOperation>(STORE, midFixed, endFixed);
-    // -----------------------------------------------------------------
-    // pick-up the moveable atoms and move them to the interaction zone
-    std::vector<qc::Qubit> moveableOrdered;
-    std::transform(moveable[0].cbegin(), moveable[0].cend(),
-                   back_inserter(moveableOrdered),
-                   [](const auto& v) { return v.first; });
-    std::sort(moveableOrdered.begin(), moveableOrdered.end(),
-              [&](const auto& a, const auto& b) {
-                return moveable[0].at(a) < moveable[0].at(b);
-              });
-    // get a vector of the fixed atoms in the order to pick them up based on
-    // their misplacement value
-    std::vector<qc::Qubit> pickUpOrderMoveable(moveableOrdered);
-    std::sort(pickUpOrderMoveable.begin(), pickUpOrderMoveable.end(),
-              [&](const auto& a, const auto& b) {
-                return std::abs(getMisplacement(placement, moveable[0], a)) >
-                       std::abs(getMisplacement(placement, moveable[0], b));
-              });
-    // repeat until all atoms are picked up
-    while (!pickUpOrderMoveable.empty()) {
-      // extract the first atom from the pick up order
-      const auto q = pickUpOrderMoveable.front();
-      pickUpOrderMoveable.erase(std::remove(pickUpOrderMoveable.begin(),
-                                            pickUpOrderMoveable.end(), q),
-                                pickUpOrderMoveable.end());
-      // get the index of the picked atom among the fixed atoms ordered by their
-      // initial position
-      const auto& fixIt =
-          std::find(moveableOrdered.cbegin(), moveableOrdered.cend(), q);
-      const auto& i = static_cast<std::uint64_t>(
-          std::distance(moveableOrdered.cbegin(), fixIt));
-      // if the placement of the atom is undefined, find a good placement for it
-      if (placement[q].positionStatus == Atom::PositionStatus::UNDEFINED) {
-        // calculate not picked up atoms to the left in the resulting order
-        // note: all remaining atoms that are not picked up yet have undefined
-        // positions as well
-        auto notPickedUpLeft = 0UL;
-        for (std::size_t j = 0; j < i; ++j) {
-          const auto& p = moveableOrdered[j];
-          // not picked up yet and left
-          // of q in the end
-          if (currentlyShuttling.find(p) == currentlyShuttling.cend() and
-              fixed.at(p) < fixed.at(q)) {
-            ++notPickedUpLeft;
+      (*it)->execute();
+      const auto&  q1     = op->getTargets().front();
+      const auto&  q2     = (*op->getControls().begin()).qubit;
+      Point        start  = *placement[q1].currentPosition;
+      Point        end    = start;
+      const Point& target = arch.getPositionOfSite(arch.getSitesInZone(
+          *arch.getPropertiesOfOperation({op->getType(), 1}).zones.begin())[0]);
+      end.x += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          LOAD,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = end;
+      end   = target;
+      end.x += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          MOVE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = end;
+      end.x -= d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          STORE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = *placement[q2].currentPosition;
+      end   = start;
+      end.x += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          LOAD,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = end;
+      end   = target;
+      end.y += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          MOVE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          MOVE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)});
+      end = *placement[q2].currentPosition;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          STORE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = target;
+      end   = start;
+      end.x += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          LOAD,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = end;
+      end   = *placement[q1].currentPosition;
+      end.x += d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          MOVE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+      start = end;
+      end.x -= d;
+      mappedQc.emplaceBack<NAShuttlingOperation>(
+          STORE,
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
+          std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
+    } else if (config.getMethod() == NaMappingMethod::SMART) {
+      // 2. when no such gates are left, extract an interaction graph of gates
+      //    of the same type and two targets, i.e. cz gates
+      const Graph<std::shared_ptr<Layer::DAGVertex>> graph =
+          layer.constructInteractionGraph({qc::OpType::Z, 1});
+      if (graph.getNVertices() == 0) {
+        throw std::logic_error(
+            "Other gates than cz are not supported for mapping yet.");
+        // TODO: support other gates than cz
+      }
+      const auto& sequence = graph.computeSequence();
+      const auto& moveable = sequence.first;
+      const auto& fixed    = sequence.second;
+      // 3. move the atoms accordingly and execute the gates
+      // pick up the fixed atoms and move them to the interaction zone
+      // get a vector of the fixed atoms ordered by their initial position from
+      // left to right
+      std::vector<qc::Qubit> fixedOrdered;
+      std::transform(fixed.cbegin(), fixed.cend(), back_inserter(fixedOrdered),
+                     [](const auto& v) { return v.first; });
+      std::sort(fixedOrdered.begin(), fixedOrdered.end(),
+                [&](const auto& a, const auto& b) {
+                  return fixed.at(a) < fixed.at(b);
+                });
+      // get a vector of the fixed atoms in the order to pick them up based on
+      // their misplacement value
+      std::vector<qc::Qubit> pickUpOrderFixed(fixedOrdered);
+      std::sort(pickUpOrderFixed.begin(), pickUpOrderFixed.end(),
+                [&](const auto& a, const auto& b) {
+                  return std::abs(getMisplacement(placement, fixed, a)) >
+                         std::abs(getMisplacement(placement, fixed, b));
+                });
+      // repeat until all atoms are picked up
+      while (!pickUpOrderFixed.empty()) {
+        // extract the first atom from the pick up order
+        const auto q = pickUpOrderFixed.front();
+        pickUpOrderFixed.erase(
+            std::remove(pickUpOrderFixed.begin(), pickUpOrderFixed.end(), q),
+            pickUpOrderFixed.end());
+        // get the index of the picked atom among the fixed atoms ordered by
+        // their initial position
+        const auto& fixIt =
+            std::find(fixedOrdered.cbegin(), fixedOrdered.cend(), q);
+        const auto& i = static_cast<std::uint64_t>(
+            std::distance(fixedOrdered.cbegin(), fixIt));
+        // if the placement of the atom is undefined, find a good placement for
+        // it
+        if (placement[q].positionStatus == Atom::PositionStatus::UNDEFINED) {
+          // calculate not picked up atoms to the left in the resulting order
+          // note: all remaining atoms that are not picked up yet have undefined
+          // positions as well
+          auto notPickedUpLeft = 0UL;
+          for (std::size_t j = 0; j < i; ++j) {
+            const auto& p = fixedOrdered[j];
+            // not picked up yet and left
+            // of q in the end
+            if (currentlyShuttling.find(p) == currentlyShuttling.cend() and
+                fixed.at(p) < fixed.at(q)) {
+              ++notPickedUpLeft;
+            }
           }
+          Zone        zone           = 0;
+          Index       row            = 0;
+          std::size_t freeSpotsInRow = 0;
+          for (const auto& z : placement[q].zones) {
+            for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
+              const auto& sitesInRow = arch.getSitesInRow(z, r);
+              const auto& n =
+                  std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
+                                  [&](const auto& acc, const auto& s) {
+                                    return acc + (initialFreeSites[s] ? 1 : 0);
+                                  });
+              if (freeSpotsInRow <= notPickedUpLeft and n > freeSpotsInRow) {
+                freeSpotsInRow = n;
+                zone           = z;
+                row            = r;
+              }
+            }
+          }
+          // place q on the i-th free spot where i is the minimum of the number
+          // of not picked up atoms to the left and free spots available
+          auto possibleSites = arch.getSitesInRow(zone, row);
+          possibleSites.erase(std::remove_if(possibleSites.begin(),
+                                             possibleSites.end(),
+                                             [&](const auto s) {
+                                               return !initialFreeSites[s];
+                                             }),
+                              possibleSites.end());
+          const auto s =
+              possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
+          placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
+          *placement[q].initialPosition = arch.getPositionOfSite(s);
+          initialFreeSites[s]           = false;
+          currentFreeSites[s]           = false;
         }
-        Zone        zone           = 0;
-        Index       row            = 0;
-        std::size_t freeSpotsInRow = 0;
-        for (const auto& z : placement[q].zones) {
-          for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
-            const auto& sitesInRow = arch.getSitesInRow(z, r);
-            const auto& n =
-                std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
-                                [&](const auto& acc, const auto& s) {
-                                  return acc + (initialFreeSites[s] ? 1 : 0);
-                                });
-            if (freeSpotsInRow <= notPickedUpLeft and n > freeSpotsInRow) {
-              freeSpotsInRow = n;
-              zone           = z;
-              row            = r;
+        // here the position of q is defined
+        std::vector<std::shared_ptr<Point>> start;
+        std::vector<std::shared_ptr<Point>> end;
+        std::vector<std::shared_ptr<Point>> loadStart;
+        std::vector<std::shared_ptr<Point>> loadEnd;
+        const auto currentX = placement[q].currentPosition->x;
+        const auto y        = placement[q].currentPosition->y;
+        // pick up q itself
+        loadStart.emplace_back(placement[q].currentPosition);
+        currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+        placement[q].currentPosition = std::make_shared<Point>(currentX + d, y);
+        loadEnd.emplace_back(placement[q].currentPosition);
+        currentlyShuttling.insert(q);
+        // iterate through all not yet picked up atoms to the left and check
+        // whether they can be picked up
+        const auto nextX = arch.getNearestXLeft(currentX, true);
+        auto       x     = nextX == currentX ? currentX - dx : nextX + d;
+        if (i > 0) {
+          for (std::size_t j = i - 1;; --j) {
+            const auto p = fixedOrdered[j];
+            // if the atom is picked up,
+            // move it to the correct row
+            if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
+              start.emplace_back(placement[p].currentPosition);
+              placement[p].currentPosition = std::make_shared<Point>(x, y);
+              end.emplace_back(placement[p].currentPosition);
+              const auto xl = arch.getNearestXLeft(x, true);
+              const auto nx = arch.getNearestXLeft(xl, true);
+              x             = nx == xl ? xl - dx : nx + d;
+            } else {
+              // check whether j can be
+              // picked up
+              if (placement[p].positionStatus ==
+                  Atom::PositionStatus::DEFINED) {
+                if (placement[p].currentPosition->y == y and
+                    placement[p].currentPosition->x <= x - d) {
+                  // pick up p
+                  pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
+                                                     pickUpOrderFixed.end(), p),
+                                         pickUpOrderFixed.end());
+                  x = placement[p].currentPosition->x;
+                  loadStart.emplace_back(placement[p].currentPosition);
+                  currentFreeSites[arch.getSiteAt(
+                      *placement[p].currentPosition)] = true;
+                  placement[p].currentPosition =
+                      std::make_shared<Point>(x + d, y);
+                  loadEnd.emplace_back(placement[p].currentPosition);
+                  currentlyShuttling.insert(p);
+                  const auto nx = arch.getNearestXLeft(x, true);
+                  x             = nx == x ? x - dx : nx + d;
+                }
+              } else {
+                // if atom is not placed
+                // yet find a site to the
+                // left that it can be
+                // picked up together with
+                // q, i.e. find next free
+                // site to the left
+                std::int64_t freeX = x;
+                bool         free  = false;
+                try {
+                  while (!free) {
+                    const auto& site = arch.getNearestSiteLeft({freeX, y});
+                    freeX            = arch.getPositionOfSite(site).x;
+                    if (initialFreeSites[site] and
+                        std::find(placement[p].zones.cbegin(),
+                                  placement[p].zones.cend(),
+                                  arch.getZoneOfSite(site)) !=
+                            placement[p].zones.cend()) {
+                      // the site is free
+                      // and satisfies the
+                      // zone restrictions
+                      // of the atom
+                      free = true;
+                    } else {
+                      const auto nx = arch.getNearestXLeft(freeX, true);
+                      freeX         = nx == freeX ? freeX - dx : nx + d;
+                    }
+                  }
+                } catch (std::invalid_argument& e) {
+                  // if x reached the left
+                  // end and there was no
+                  // site to the left
+                  // anymore, free remains
+                  // false in this case
+                }
+                if (free) {
+                  // place p on the free
+                  // site
+                  placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
+                  *placement[p].initialPosition = {freeX, y};
+                  initialFreeSites[arch.getSiteAt(
+                      *placement[p].initialPosition)] = false;
+                  // pick up p
+                  pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
+                                                     pickUpOrderFixed.end(), p),
+                                         pickUpOrderFixed.end());
+                  loadStart.emplace_back(placement[p].currentPosition);
+                  placement[p].currentPosition =
+                      std::make_shared<Point>(freeX + d, y);
+                  loadEnd.emplace_back(placement[p].currentPosition);
+                  currentlyShuttling.insert(p);
+                  const auto nx = arch.getNearestXLeft(freeX, true);
+                  x             = nx == x ? x - dx : nx + d;
+                }
+              }
+            }
+            if (j == 0) {
+              break;
             }
           }
         }
-        // place q on the i-th free spot where i is the minimum of the number of
-        // not picked up atoms to the left and free spots available
-        auto possibleSites = arch.getSitesInRow(zone, row);
-        possibleSites.erase(
-            std::remove_if(possibleSites.begin(), possibleSites.end(),
-                           [&](const auto s) { return !initialFreeSites[s]; }),
-            possibleSites.end());
-        const auto s =
-            possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
-        placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
-        *placement[q].initialPosition = arch.getPositionOfSite(s);
-        initialFreeSites[s]           = false;
-        currentFreeSites[s]           = false;
-      }
-      // here the position of q is defined
-      std::vector<std::shared_ptr<Point>> start;
-      std::vector<std::shared_ptr<Point>> end;
-      std::vector<std::shared_ptr<Point>> loadStart;
-      std::vector<std::shared_ptr<Point>> loadEnd;
-      const auto currentX = placement[q].currentPosition->x;
-      const auto y        = placement[q].currentPosition->y;
-      // pick up q itself
-      loadStart.emplace_back(placement[q].currentPosition);
-      currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
-      placement[q].currentPosition = std::make_shared<Point>(currentX + d, y);
-      loadEnd.emplace_back(placement[q].currentPosition);
-      currentlyShuttling.insert(q);
-      // iterate through all not yet picked up atoms to the left and check
-      // whether they can be picked up
-      const auto nextX = arch.getNearestXLeft(currentX, true);
-      auto       x  = nextX == currentX ? currentX - dx : nextX + d;
-      if (i > 0) {
-        for (std::size_t j = i - 1;; --j) {
-          const auto p = moveableOrdered[j];
-          // if the atom is picked up,
-          // move it to the correct row
+        // iterate through all not yet picked up atoms to the right and check
+        // whether they can be picked up
+        x = arch.getNearestXRight(currentX + d) + d;
+        for (std::size_t j = i + 1; j < fixedOrdered.size(); ++j) {
+          const auto p = fixedOrdered[j];
+          // if the atom is picked up, move it to the correct row
           if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
             start.emplace_back(placement[p].currentPosition);
             placement[p].currentPosition = std::make_shared<Point>(x, y);
             end.emplace_back(placement[p].currentPosition);
-            const auto xl = arch.getNearestXLeft(x, true);
-            const auto nx = arch.getNearestXLeft(xl, true);
-            x             = nx == xl ? xl - dx : nx + d;
+            const auto nx = arch.getNearestXRight(x) + d;
+            x             = nx == x ? x + dx : nx + d;
           } else {
             // check whether j can be
             // picked up
             if (placement[p].positionStatus == Atom::PositionStatus::DEFINED) {
               if (placement[p].currentPosition->y == y and
-                  placement[p].currentPosition->x <= x - d) {
+                  placement[p].currentPosition->x >= x - d) {
                 // pick up p
-                pickUpOrderMoveable.erase(
-                    std::remove(pickUpOrderMoveable.begin(),
-                                pickUpOrderMoveable.end(), p),
-                    pickUpOrderMoveable.end());
+                pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
+                                                   pickUpOrderFixed.end(), p),
+                                       pickUpOrderFixed.end());
                 x = placement[p].currentPosition->x;
                 loadStart.emplace_back(placement[p].currentPosition);
                 currentFreeSites[arch.getSiteAt(
@@ -899,407 +772,639 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(x + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXLeft(x, true);
-                x             = nx == x ? x - dx : nx + d;
+                const auto nx = arch.getNearestXRight(x + d);
+                x             = nx == x + d ? nx - d + dx : nx + d;
               }
             } else {
-              // if atom is not placed
-              // yet find a site to the
-              // left that it can be
-              // picked up together with
-              // q, i.e. find next free
-              // site to the left
+              // if atom is not placed yet
+              // find a site to the right
+              // that it can be picked up
+              // together with q, i.e. find
+              // next free site to the
+              // right
               std::int64_t freeX = x;
               bool         free  = false;
               try {
                 while (!free) {
-                  const auto& site = arch.getNearestSiteLeft({freeX, y});
+                  const auto& site = arch.getNearestSiteRight({freeX - d, y});
                   freeX            = arch.getPositionOfSite(site).x;
                   if (initialFreeSites[site] and
                       std::find(placement[p].zones.cbegin(),
                                 placement[p].zones.cend(),
                                 arch.getZoneOfSite(site)) !=
                           placement[p].zones.cend()) {
-                    // the site is free
-                    // and satisfies the
-                    // zone restrictions
-                    // of the atom
+                    // the site is free and
+                    // satisfies the zone
+                    // restrictions of the
+                    // atom
                     free = true;
                   } else {
-                    const auto nx = arch.getNearestXLeft(freeX, true);
-                    freeX         = nx == freeX ? freeX - dx : nx + d;
+                    freeX = arch.getNearestXRight(freeX + d) + d;
                   }
                 }
               } catch (std::invalid_argument& e) {
-                // if x reached the left
+                // if x reached the right
                 // end and there was no
-                // site to the left
+                // site to the right
                 // anymore, free remains
                 // false in this case
               }
               if (free) {
-                // place p on the free
-                // site
+                // place p on the free site
                 placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
                 *placement[p].initialPosition = {freeX, y};
                 initialFreeSites[arch.getSiteAt(
                     *placement[p].initialPosition)] = false;
                 // pick up p
-                pickUpOrderMoveable.erase(
-                    std::remove(pickUpOrderMoveable.begin(),
-                                pickUpOrderMoveable.end(), p),
-                    pickUpOrderMoveable.end());
+                pickUpOrderFixed.erase(std::remove(pickUpOrderFixed.begin(),
+                                                   pickUpOrderFixed.end(), p),
+                                       pickUpOrderFixed.end());
                 loadStart.emplace_back(placement[p].currentPosition);
                 placement[p].currentPosition =
                     std::make_shared<Point>(freeX + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXLeft(freeX, true);
-                x             = nx == x ? x - dx : nx + d;
+                const auto nx = arch.getNearestXRight(freeX + d);
+                x             = nx == freeX + d ? nx - d + dx : nx + d;
               }
             }
           }
-          if (j == 0) {
-            break;
-          }
         }
-      }
-      // iterate through all not yet picked up atoms to the right and check
-      // whether they can be picked up
-      x = arch.getNearestXRight(currentX) + d;
-      for (std::size_t j = i + 1; j < moveableOrdered.size(); ++j) {
-        const auto p = moveableOrdered[j];
-        // if the atom is picked up, move it to the correct row
-        if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
-          start.emplace_back(placement[p].currentPosition);
-          placement[p].currentPosition = std::make_shared<Point>(x, y);
-          end.emplace_back(placement[p].currentPosition);
-          const auto nx = arch.getNearestXRight(x + d);
-          x             = nx == x + d ? nx - d + dx : nx + d;
-        } else {
-          // check whether j can be
-          // picked up
-          if (placement[p].positionStatus == Atom::PositionStatus::DEFINED) {
-            if (placement[p].currentPosition->y == y and
-                placement[p].currentPosition->x >= x - d) {
-              // pick up p
-              pickUpOrderMoveable.erase(std::remove(pickUpOrderMoveable.begin(),
-                                                    pickUpOrderMoveable.end(),
-                                                    p),
-                                        pickUpOrderMoveable.end());
-              x = placement[p].currentPosition->x;
-              loadStart.emplace_back(placement[p].currentPosition);
-              currentFreeSites[arch.getSiteAt(*placement[p].currentPosition)] =
-                  true;
-              placement[p].currentPosition = std::make_shared<Point>(x + d, y);
-              loadEnd.emplace_back(placement[p].currentPosition);
-              currentlyShuttling.insert(p);
-              const auto nx = arch.getNearestXRight(x + d);
-              x             = nx == x + d ? nx - d + dx : nx + d;
-            }
-          } else {
-            // if atom is not placed yet
-            // find a site to the right
-            // that it can be picked up
-            // together with q, i.e. find
-            // next free site to the
-            // right
-            std::int64_t freeX = x;
-            bool         free  = false;
-            try {
-              while (!free) {
-                const auto& site = arch.getNearestSiteRight({freeX - d, y});
-                freeX            = arch.getPositionOfSite(site).x;
-                if (initialFreeSites[site] and
-                    std::find(placement[p].zones.cbegin(),
-                              placement[p].zones.cend(),
-                              arch.getZoneOfSite(site)) !=
-                        placement[p].zones.cend()) {
-                  // the site is free and
-                  // satisfies the zone
-                  // restrictions of the
-                  // atom
-                  free = true;
-                } else {
-                  freeX = arch.getNearestXRight(freeX + d) + d;
-                }
-              }
-            } catch (std::invalid_argument& e) {
-              // if x reached the right
-              // end and there was no
-              // site to the right
-              // anymore, free remains
-              // false in this case
-            }
-            if (free) {
-              // place p on the free site
-              placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
-              *placement[p].initialPosition = {freeX, y};
-              initialFreeSites[arch.getSiteAt(*placement[p].initialPosition)] =
-                  false;
-              // pick up p
-              pickUpOrderMoveable.erase(std::remove(pickUpOrderMoveable.begin(),
-                                                    pickUpOrderMoveable.end(),
-                                                    p),
-                                        pickUpOrderMoveable.end());
-              loadStart.emplace_back(placement[p].currentPosition);
-              placement[p].currentPosition =
-                  std::make_shared<Point>(freeX + d, y);
-              loadEnd.emplace_back(placement[p].currentPosition);
-              currentlyShuttling.insert(p);
-              const auto nx = arch.getNearestXRight(freeX + d);
-              x             = nx == freeX + d ? nx - d + dx : nx + d;
-            }
-          }
+        if (!start.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
         }
+        mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
       }
-      if (!start.empty()) {
-        mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
-      }
-      mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
-    }
-    // all atoms are picked up in order, move them to the interaction zone and
-    // store them there
-    std::vector<std::shared_ptr<Point>> startMoveable;
-    std::vector<std::shared_ptr<Point>> endMoveable;
-    std::transform(moveableOrdered.cbegin(), moveableOrdered.cend(),
-                   std::back_inserter(startMoveable),
-                   [&](const auto& q) { return placement[q].currentPosition; });
-    // ------------------------------------------------------------------
-    // 4. Apply the cz gates
-
-    for (const auto& timeframe : moveable) {
-      for (const auto q : moveableOrdered) {
-        const auto x = timeframe.at(q);
+      // all atoms are picked up in order, move them to the interaction zone and
+      // store them there
+      std::vector<std::shared_ptr<Point>> startFixed;
+      std::vector<std::shared_ptr<Point>> midFixed;
+      std::vector<std::shared_ptr<Point>> endFixed;
+      const Zone                          interactionZone =
+          *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
+      const auto sites = arch.getSitesInRow(interactionZone, 0);
+      for (const auto& [q, x] : fixed) {
         if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
           std::stringstream ss;
-          ss << "Atom " << q
-             << " was unexpectedly not "
-                "picked up.";
+          ss << "Atom " << q << " was unexpectedly not picked up.";
           throw std::logic_error(ss.str());
         }
-        if (x >= 0 and static_cast<std::size_t>(x) < sites.size()) {
-          const auto pos =
-              arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
-          placement[q].currentPosition =
-              std::make_shared<Point>(pos.x, pos.y + d);
-        } else if (x < 0) {
-          const auto pos = arch.getPositionOfSite(sites[0]);
-          placement[q].currentPosition =
-              std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
-        } else { // x >= sites.size()
-          const auto pos = arch.getPositionOfSite(sites[sites.size() - 1]);
-          placement[q].currentPosition =
-              std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
+        if (!currentFreeSites[sites[static_cast<std::size_t>(x)]]) {
+          throw std::logic_error(
+              "Target site in interaction zone is unexpectedly occupied.");
         }
-        endMoveable.emplace_back(placement[q].currentPosition);
+        const auto pos =
+            arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
+        startFixed.emplace_back(placement[q].currentPosition);
+        placement[q].currentPosition =
+            std::make_shared<Point>(pos.x + d, pos.y);
+        midFixed.emplace_back(placement[q].currentPosition);
+        placement[q].currentPosition = std::make_shared<Point>(pos);
+        endFixed.emplace_back(placement[q].currentPosition);
+        currentFreeSites[sites[static_cast<std::size_t>(x)]] = false;
       }
-      mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startMoveable,
-                                                 endMoveable);
-      mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
-      for (const auto& q : moveableOrdered) {
-        for (const auto& p : fixedOrdered) {
-          const auto qPos = *placement[q].currentPosition;
-          const auto pPos = *placement[p].currentPosition;
-          if ((qPos - pPos).length() <= arch.getInteractionRadius()) {
-            graph.getEdge(p, q)->execute();
+      currentlyShuttling.clear();
+      mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startFixed, midFixed);
+      mappedQc.emplaceBack<NAShuttlingOperation>(STORE, midFixed, endFixed);
+      // -----------------------------------------------------------------
+      // pick-up the moveable atoms and move them to the interaction zone
+      std::vector<qc::Qubit> moveableOrdered;
+      std::transform(moveable[0].cbegin(), moveable[0].cend(),
+                     back_inserter(moveableOrdered),
+                     [](const auto& v) { return v.first; });
+      std::sort(moveableOrdered.begin(), moveableOrdered.end(),
+                [&](const auto& a, const auto& b) {
+                  return moveable[0].at(a) < moveable[0].at(b);
+                });
+      // get a vector of the fixed atoms in the order to pick them up based on
+      // their misplacement value
+      std::vector<qc::Qubit> pickUpOrderMoveable(moveableOrdered);
+      std::sort(pickUpOrderMoveable.begin(), pickUpOrderMoveable.end(),
+                [&](const auto& a, const auto& b) {
+                  return std::abs(getMisplacement(placement, moveable[0], a)) >
+                         std::abs(getMisplacement(placement, moveable[0], b));
+                });
+      // repeat until all atoms are picked up
+      while (!pickUpOrderMoveable.empty()) {
+        // extract the first atom from the pick up order
+        const auto q = pickUpOrderMoveable.front();
+        pickUpOrderMoveable.erase(std::remove(pickUpOrderMoveable.begin(),
+                                              pickUpOrderMoveable.end(), q),
+                                  pickUpOrderMoveable.end());
+        // get the index of the picked atom among the fixed atoms ordered by
+        // their initial position
+        const auto& fixIt =
+            std::find(moveableOrdered.cbegin(), moveableOrdered.cend(), q);
+        const auto& i = static_cast<std::uint64_t>(
+            std::distance(moveableOrdered.cbegin(), fixIt));
+        // if the placement of the atom is undefined, find a good placement for
+        // it
+        if (placement[q].positionStatus == Atom::PositionStatus::UNDEFINED) {
+          // calculate not picked up atoms to the left in the resulting order
+          // note: all remaining atoms that are not picked up yet have undefined
+          // positions as well
+          auto notPickedUpLeft = 0UL;
+          for (std::size_t j = 0; j < i; ++j) {
+            const auto& p = moveableOrdered[j];
+            // not picked up yet and left
+            // of q in the end
+            if (currentlyShuttling.find(p) == currentlyShuttling.cend() and
+                fixed.at(p) < fixed.at(q)) {
+              ++notPickedUpLeft;
+            }
+          }
+          Zone        zone           = 0;
+          Index       row            = 0;
+          std::size_t freeSpotsInRow = 0;
+          for (const auto& z : placement[q].zones) {
+            for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
+              const auto& sitesInRow = arch.getSitesInRow(z, r);
+              const auto& n =
+                  std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
+                                  [&](const auto& acc, const auto& s) {
+                                    return acc + (initialFreeSites[s] ? 1 : 0);
+                                  });
+              if (freeSpotsInRow <= notPickedUpLeft and n > freeSpotsInRow) {
+                freeSpotsInRow = n;
+                zone           = z;
+                row            = r;
+              }
+            }
+          }
+          // place q on the i-th free spot where i is the minimum of the number
+          // of not picked up atoms to the left and free spots available
+          auto possibleSites = arch.getSitesInRow(zone, row);
+          possibleSites.erase(std::remove_if(possibleSites.begin(),
+                                             possibleSites.end(),
+                                             [&](const auto s) {
+                                               return !initialFreeSites[s];
+                                             }),
+                              possibleSites.end());
+          const auto s =
+              possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
+          placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
+          *placement[q].initialPosition = arch.getPositionOfSite(s);
+          initialFreeSites[s]           = false;
+          currentFreeSites[s]           = false;
+        }
+        // here the position of q is defined
+        std::vector<std::shared_ptr<Point>> start;
+        std::vector<std::shared_ptr<Point>> end;
+        std::vector<std::shared_ptr<Point>> loadStart;
+        std::vector<std::shared_ptr<Point>> loadEnd;
+        const auto currentX = placement[q].currentPosition->x;
+        const auto y        = placement[q].currentPosition->y;
+        // pick up q itself
+        loadStart.emplace_back(placement[q].currentPosition);
+        currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+        placement[q].currentPosition = std::make_shared<Point>(currentX + d, y);
+        loadEnd.emplace_back(placement[q].currentPosition);
+        currentlyShuttling.insert(q);
+        // iterate through all not yet picked up atoms to the left and check
+        // whether they can be picked up
+        const auto nextX = arch.getNearestXLeft(currentX, true);
+        auto       x     = nextX == currentX ? currentX - dx : nextX + d;
+        if (i > 0) {
+          for (std::size_t j = i - 1;; --j) {
+            const auto p = moveableOrdered[j];
+            // if the atom is picked up,
+            // move it to the correct row
+            if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
+              start.emplace_back(placement[p].currentPosition);
+              placement[p].currentPosition = std::make_shared<Point>(x, y);
+              end.emplace_back(placement[p].currentPosition);
+              const auto xl = arch.getNearestXLeft(x, true);
+              const auto nx = arch.getNearestXLeft(xl, true);
+              x             = nx == xl ? xl - dx : nx + d;
+            } else {
+              // check whether j can be
+              // picked up
+              if (placement[p].positionStatus ==
+                  Atom::PositionStatus::DEFINED) {
+                if (placement[p].currentPosition->y == y and
+                    placement[p].currentPosition->x <= x - d) {
+                  // pick up p
+                  pickUpOrderMoveable.erase(
+                      std::remove(pickUpOrderMoveable.begin(),
+                                  pickUpOrderMoveable.end(), p),
+                      pickUpOrderMoveable.end());
+                  x = placement[p].currentPosition->x;
+                  loadStart.emplace_back(placement[p].currentPosition);
+                  currentFreeSites[arch.getSiteAt(
+                      *placement[p].currentPosition)] = true;
+                  placement[p].currentPosition =
+                      std::make_shared<Point>(x + d, y);
+                  loadEnd.emplace_back(placement[p].currentPosition);
+                  currentlyShuttling.insert(p);
+                  const auto nx = arch.getNearestXLeft(x, true);
+                  x             = nx == x ? x - dx : nx + d;
+                }
+              } else {
+                // if atom is not placed
+                // yet find a site to the
+                // left that it can be
+                // picked up together with
+                // q, i.e. find next free
+                // site to the left
+                std::int64_t freeX = x;
+                bool         free  = false;
+                try {
+                  while (!free) {
+                    const auto& site = arch.getNearestSiteLeft({freeX, y});
+                    freeX            = arch.getPositionOfSite(site).x;
+                    if (initialFreeSites[site] and
+                        std::find(placement[p].zones.cbegin(),
+                                  placement[p].zones.cend(),
+                                  arch.getZoneOfSite(site)) !=
+                            placement[p].zones.cend()) {
+                      // the site is free
+                      // and satisfies the
+                      // zone restrictions
+                      // of the atom
+                      free = true;
+                    } else {
+                      const auto nx = arch.getNearestXLeft(freeX, true);
+                      freeX         = nx == freeX ? freeX - dx : nx + d;
+                    }
+                  }
+                } catch (std::invalid_argument& e) {
+                  // if x reached the left
+                  // end and there was no
+                  // site to the left
+                  // anymore, free remains
+                  // false in this case
+                }
+                if (free) {
+                  // place p on the free
+                  // site
+                  placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
+                  *placement[p].initialPosition = {freeX, y};
+                  initialFreeSites[arch.getSiteAt(
+                      *placement[p].initialPosition)] = false;
+                  // pick up p
+                  pickUpOrderMoveable.erase(
+                      std::remove(pickUpOrderMoveable.begin(),
+                                  pickUpOrderMoveable.end(), p),
+                      pickUpOrderMoveable.end());
+                  loadStart.emplace_back(placement[p].currentPosition);
+                  placement[p].currentPosition =
+                      std::make_shared<Point>(freeX + d, y);
+                  loadEnd.emplace_back(placement[p].currentPosition);
+                  currentlyShuttling.insert(p);
+                  const auto nx = arch.getNearestXLeft(freeX, true);
+                  x             = nx == x ? x - dx : nx + d;
+                }
+              }
+            }
+            if (j == 0) {
+              break;
+            }
           }
         }
-      }
-      startMoveable.clear();
-      startMoveable = endMoveable;
-      endMoveable.clear();
-    }
-    // -----------------------------------------------------------------
-    // 5. move the atoms back to the storage zone
-    std::vector<std::tuple<Zone, Index, std::size_t>> freeSitesPerRow;
-    for (const auto& z : initialZones) {
-      for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
-        const auto& sitesInRow = arch.getSitesInRow(z, r);
-        freeSitesPerRow.emplace_back(
-            z, r,
-            std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
-                            [&](const auto& acc, const auto& s) {
-                              return acc + (initialFreeSites[s] ? 1 : 0);
-                            }));
-      }
-    }
-    std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
-              [&](const auto& a, const auto& b) {
-                return std::get<2>(a) > std::get<2>(b);
-              });
-    std::size_t moveableSpotsNeeded = moveableOrdered.size();
-    std::vector<std::tuple<Zone, Index, std::size_t>> moveableSelectedRows;
-    for (std::size_t i = 0; i < freeSitesPerRow.size(); ++i) {
-      const auto& [z, r, n] = freeSitesPerRow[i];
-      if (n >= moveableSpotsNeeded) {
-        if (i + 1 == freeSitesPerRow.size() or
-            std::get<2>(freeSitesPerRow[i + 1]) < moveableSpotsNeeded) {
-          moveableSelectedRows.emplace_back(z, r, moveableSpotsNeeded);
-          moveableSpotsNeeded = 0;
-          freeSitesPerRow[i]  = {z, r, n - moveableSpotsNeeded};
-          break;
-        }
-      } else {
-        moveableSelectedRows.emplace_back(z, r, n);
-        moveableSpotsNeeded -= n;
-        freeSitesPerRow[i] = {z, r, 0};
-      }
-    }
-    std::sort(moveableSelectedRows.begin(), moveableSelectedRows.end(),
-              [&](const auto& a, const auto& b) {
-                return (std::get<0>(a) == std::get<0>(b) and
-                        std::get<1>(a) < std::get<1>(b)) or
-                       std::get<0>(a) < std::get<0>(b);
-              });
-    for (auto& [z, r, n] : moveableSelectedRows) {
-      std::vector<std::shared_ptr<Point>> start;
-      std::vector<std::shared_ptr<Point>> end;
-      std::vector<std::shared_ptr<Point>> storeStart;
-      std::vector<std::shared_ptr<Point>> storeEnd;
-      for (std::size_t i = 0; i < moveableOrdered.size(); ++i) {
-        const auto& q = moveableOrdered[i];
-        start.emplace_back(placement[q].currentPosition);
-        if (n > 0) {
-          const auto& sitesInRow = arch.getSitesInRow(z, r);
-          // find next (leftmost) free
-          // site in the row
-          const auto& s =
-              *std::find_if(sitesInRow.cbegin(), sitesInRow.cend(),
-                            [&](const auto& s) { return currentFreeSites[s]; });
-          const auto& sPos = arch.getPositionOfSite(s);
-          // store the current atom in
-          // the free spot either if
-          // there are as many atoms as
-          // free spots to the right (all
-          // can be stored in this line)
-          // or the atom is closer than
-          // the next one to the right
-          if (n == moveableOrdered.size() - i or
-              std::abs(placement[q].currentPosition->x - sPos.x) <
-                  std::abs(
-                      placement[moveableOrdered[i + 1]].currentPosition->x -
-                      sPos.x)) {
-            placement[q].currentPosition =
-                std::make_shared<Point>(sPos.x + d, sPos.y);
-            end.emplace_back(placement[q].currentPosition);
-            storeStart.emplace_back(placement[q].currentPosition);
-            placement[q].currentPosition =
-                std::make_shared<Point>(sPos.x, sPos.y);
-            storeEnd.emplace_back(placement[q].currentPosition);
-            currentlyShuttling.erase(q);
-            currentFreeSites[s] = false;
-            initialFreeSites[s] = false;
-            n -= 1;
+        // iterate through all not yet picked up atoms to the right and check
+        // whether they can be picked up
+        x = arch.getNearestXRight(currentX) + d;
+        for (std::size_t j = i + 1; j < moveableOrdered.size(); ++j) {
+          const auto p = moveableOrdered[j];
+          // if the atom is picked up, move it to the correct row
+          if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
+            start.emplace_back(placement[p].currentPosition);
+            placement[p].currentPosition = std::make_shared<Point>(x, y);
+            end.emplace_back(placement[p].currentPosition);
+            const auto nx = arch.getNearestXRight(x + d);
+            x             = nx == x + d ? nx - d + dx : nx + d;
           } else {
-            placement[q].currentPosition = std::make_shared<Point>(
-                arch.getNearestXLeft(placement[q].currentPosition->x) + d,
-                sPos.y);
-            end.emplace_back(placement[q].currentPosition);
+            // check whether j can be
+            // picked up
+            if (placement[p].positionStatus == Atom::PositionStatus::DEFINED) {
+              if (placement[p].currentPosition->y == y and
+                  placement[p].currentPosition->x >= x - d) {
+                // pick up p
+                pickUpOrderMoveable.erase(
+                    std::remove(pickUpOrderMoveable.begin(),
+                                pickUpOrderMoveable.end(), p),
+                    pickUpOrderMoveable.end());
+                x = placement[p].currentPosition->x;
+                loadStart.emplace_back(placement[p].currentPosition);
+                currentFreeSites[arch.getSiteAt(
+                    *placement[p].currentPosition)] = true;
+                placement[p].currentPosition =
+                    std::make_shared<Point>(x + d, y);
+                loadEnd.emplace_back(placement[p].currentPosition);
+                currentlyShuttling.insert(p);
+                const auto nx = arch.getNearestXRight(x + d);
+                x             = nx == x + d ? nx - d + dx : nx + d;
+              }
+            } else {
+              // if atom is not placed yet
+              // find a site to the right
+              // that it can be picked up
+              // together with q, i.e. find
+              // next free site to the
+              // right
+              std::int64_t freeX = x;
+              bool         free  = false;
+              try {
+                while (!free) {
+                  const auto& site = arch.getNearestSiteRight({freeX - d, y});
+                  freeX            = arch.getPositionOfSite(site).x;
+                  if (initialFreeSites[site] and
+                      std::find(placement[p].zones.cbegin(),
+                                placement[p].zones.cend(),
+                                arch.getZoneOfSite(site)) !=
+                          placement[p].zones.cend()) {
+                    // the site is free and
+                    // satisfies the zone
+                    // restrictions of the
+                    // atom
+                    free = true;
+                  } else {
+                    freeX = arch.getNearestXRight(freeX + d) + d;
+                  }
+                }
+              } catch (std::invalid_argument& e) {
+                // if x reached the right
+                // end and there was no
+                // site to the right
+                // anymore, free remains
+                // false in this case
+              }
+              if (free) {
+                // place p on the free site
+                placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
+                *placement[p].initialPosition = {freeX, y};
+                initialFreeSites[arch.getSiteAt(
+                    *placement[p].initialPosition)] = false;
+                // pick up p
+                pickUpOrderMoveable.erase(
+                    std::remove(pickUpOrderMoveable.begin(),
+                                pickUpOrderMoveable.end(), p),
+                    pickUpOrderMoveable.end());
+                loadStart.emplace_back(placement[p].currentPosition);
+                placement[p].currentPosition =
+                    std::make_shared<Point>(freeX + d, y);
+                loadEnd.emplace_back(placement[p].currentPosition);
+                currentlyShuttling.insert(p);
+                const auto nx = arch.getNearestXRight(freeX + d);
+                x             = nx == freeX + d ? nx - d + dx : nx + d;
+              }
+            }
+          }
+        }
+        if (!start.empty()) {
+          mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
+        }
+        mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
+      }
+      // all atoms are picked up in order, move them to the interaction zone and
+      // store them there
+      std::vector<std::shared_ptr<Point>> startMoveable;
+      std::vector<std::shared_ptr<Point>> endMoveable;
+      std::transform(moveableOrdered.cbegin(), moveableOrdered.cend(),
+                     std::back_inserter(startMoveable), [&](const auto& q) {
+                       return placement[q].currentPosition;
+                     });
+      // ------------------------------------------------------------------
+      // 4. Apply the cz gates
+
+      for (const auto& timeframe : moveable) {
+        for (const auto q : moveableOrdered) {
+          const auto x = timeframe.at(q);
+          if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
+            std::stringstream ss;
+            ss << "Atom " << q
+               << " was unexpectedly not "
+                  "picked up.";
+            throw std::logic_error(ss.str());
+          }
+          if (x >= 0 and static_cast<std::size_t>(x) < sites.size()) {
+            const auto pos =
+                arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
+            placement[q].currentPosition =
+                std::make_shared<Point>(pos.x, pos.y + d);
+          } else if (x < 0) {
+            const auto pos = arch.getPositionOfSite(sites[0]);
+            placement[q].currentPosition =
+                std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
+          } else { // x >= sites.size()
+            const auto pos = arch.getPositionOfSite(sites[sites.size() - 1]);
+            placement[q].currentPosition =
+                std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
+          }
+          endMoveable.emplace_back(placement[q].currentPosition);
+        }
+        mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, startMoveable,
+                                                   endMoveable);
+        mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
+        for (const auto& q : moveableOrdered) {
+          for (const auto& p : fixedOrdered) {
+            const auto qPos = *placement[q].currentPosition;
+            const auto pPos = *placement[p].currentPosition;
+            if ((qPos - pPos).length() <= arch.getInteractionRadius()) {
+              graph.getEdge(p, q)->execute();
+            }
+          }
+        }
+        startMoveable.clear();
+        startMoveable = endMoveable;
+        endMoveable.clear();
+      }
+      // -----------------------------------------------------------------
+      // 5. move the atoms back to the storage zone
+      std::vector<std::tuple<Zone, Index, std::size_t>> freeSitesPerRow;
+      for (const auto& z : initialZones) {
+        for (std::size_t r = 0; r < arch.getNrowsInZone(z); ++r) {
+          const auto& sitesInRow = arch.getSitesInRow(z, r);
+          freeSitesPerRow.emplace_back(
+              z, r,
+              std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
+                              [&](const auto& acc, const auto& s) {
+                                return acc + (initialFreeSites[s] ? 1 : 0);
+                              }));
+        }
+      }
+      std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
+                [&](const auto& a, const auto& b) {
+                  return std::get<2>(a) > std::get<2>(b);
+                });
+      std::size_t moveableSpotsNeeded = moveableOrdered.size();
+      std::vector<std::tuple<Zone, Index, std::size_t>> moveableSelectedRows;
+      for (std::size_t i = 0; i < freeSitesPerRow.size(); ++i) {
+        const auto& [z, r, n] = freeSitesPerRow[i];
+        if (n >= moveableSpotsNeeded) {
+          if (i + 1 == freeSitesPerRow.size() or
+              std::get<2>(freeSitesPerRow[i + 1]) < moveableSpotsNeeded) {
+            moveableSelectedRows.emplace_back(z, r, moveableSpotsNeeded);
+            moveableSpotsNeeded = 0;
+            freeSitesPerRow[i]  = {z, r, n - moveableSpotsNeeded};
+            break;
           }
         } else {
-          const auto y = arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
-          placement[q].currentPosition = std::make_shared<Point>(
-              arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
-          end.emplace_back(placement[q].currentPosition);
+          moveableSelectedRows.emplace_back(z, r, n);
+          moveableSpotsNeeded -= n;
+          freeSitesPerRow[i] = {z, r, 0};
         }
       }
-      mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
-      mappedQc.emplaceBack<NAShuttlingOperation>(STORE, storeStart, storeEnd);
-    }
-    // -------------------------------------------------------------
-    startFixed.clear();
-    endFixed.clear();
-    for (const auto& q : fixedOrdered) {
-      startFixed.emplace_back(placement[q].currentPosition);
-      const auto pos = *placement[q].currentPosition;
-      currentlyShuttling.insert(q);
-      currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
-      placement[q].currentPosition = std::make_shared<Point>(pos.x + d, pos.y);
-      endFixed.emplace_back(placement[q].currentPosition);
-    }
-    mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, startFixed, endFixed);
-    std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
-              [&](const auto& a, const auto& b) {
-                return std::get<2>(a) > std::get<2>(b);
-              });
-    std::size_t fixedSpotsNeeded = fixedOrdered.size();
-    std::vector<std::tuple<Zone, Index, std::size_t>> fixedSelectedRows;
-    for (std::size_t i = 0; i < freeSitesPerRow.size(); ++i) {
-      const auto& [z, r, n] = freeSitesPerRow[i];
-      if (n >= fixedSpotsNeeded) {
-        if (i + 1 == freeSitesPerRow.size() or
-            std::get<2>(freeSitesPerRow[i + 1]) < fixedSpotsNeeded) {
-          fixedSelectedRows.emplace_back(z, r, fixedSpotsNeeded);
-          fixedSpotsNeeded   = 0;
-          freeSitesPerRow[i] = {z, r, n - fixedSpotsNeeded};
-          break;
-        }
-      } else {
-        fixedSelectedRows.emplace_back(z, r, n);
-        fixedSpotsNeeded -= n;
-        freeSitesPerRow[i] = {z, r, 0};
-      }
-    }
-    std::sort(fixedSelectedRows.begin(), fixedSelectedRows.end(),
-              [&](const auto& a, const auto& b) {
-                return (std::get<0>(a) == std::get<0>(b) and
-                        std::get<1>(a) < std::get<1>(b)) or
-                       std::get<0>(a) < std::get<0>(b);
-              });
-    for (auto& [z, r, n] : fixedSelectedRows) {
-      std::vector<std::shared_ptr<Point>> start;
-      std::vector<std::shared_ptr<Point>> end;
-      std::vector<std::shared_ptr<Point>> storeStart;
-      std::vector<std::shared_ptr<Point>> storeEnd;
-      for (std::size_t i = 0; i < fixedOrdered.size(); ++i) {
-        const auto& q = fixedOrdered[i];
-        start.emplace_back(placement[q].currentPosition);
-        if (n > 0) {
-          const auto& sitesInRow = arch.getSitesInRow(z, r);
-          // find next (leftmost) free
-          // site in the row
-          const auto& s =
-              *std::find_if(sitesInRow.cbegin(), sitesInRow.cend(),
-                            [&](const auto& s) { return currentFreeSites[s]; });
-          const auto& sPos = arch.getPositionOfSite(s);
-          // store the current atom in
-          // the free spot either if
-          // there are as many atoms as
-          // free spots to the right (all
-          // can be stored in this line)
-          // or the atom is closer than
-          // the next one to the right
-          if (n == fixedOrdered.size() - i or
-              std::abs(placement[q].currentPosition->x - sPos.x) <
-                  std::abs(placement[fixedOrdered[i + 1]].currentPosition->x -
-                           sPos.x)) {
-            placement[q].currentPosition =
-                std::make_shared<Point>(sPos.x + d, sPos.y);
-            end.emplace_back(placement[q].currentPosition);
-            storeStart.emplace_back(placement[q].currentPosition);
-            placement[q].currentPosition =
-                std::make_shared<Point>(sPos.x, sPos.y);
-            storeEnd.emplace_back(placement[q].currentPosition);
-            currentlyShuttling.erase(q);
-            currentFreeSites[s] = false;
-            initialFreeSites[s] = false;
-            n -= 1;
+      std::sort(moveableSelectedRows.begin(), moveableSelectedRows.end(),
+                [&](const auto& a, const auto& b) {
+                  return (std::get<0>(a) == std::get<0>(b) and
+                          std::get<1>(a) < std::get<1>(b)) or
+                         std::get<0>(a) < std::get<0>(b);
+                });
+      for (auto& [z, r, n] : moveableSelectedRows) {
+        std::vector<std::shared_ptr<Point>> start;
+        std::vector<std::shared_ptr<Point>> end;
+        std::vector<std::shared_ptr<Point>> storeStart;
+        std::vector<std::shared_ptr<Point>> storeEnd;
+        for (std::size_t i = 0; i < moveableOrdered.size(); ++i) {
+          const auto& q = moveableOrdered[i];
+          start.emplace_back(placement[q].currentPosition);
+          if (n > 0) {
+            const auto& sitesInRow = arch.getSitesInRow(z, r);
+            // find next (leftmost) free
+            // site in the row
+            const auto& s = *std::find_if(
+                sitesInRow.cbegin(), sitesInRow.cend(),
+                [&](const auto& s) { return currentFreeSites[s]; });
+            const auto& sPos = arch.getPositionOfSite(s);
+            // store the current atom in
+            // the free spot either if
+            // there are as many atoms as
+            // free spots to the right (all
+            // can be stored in this line)
+            // or the atom is closer than
+            // the next one to the right
+            if (n == moveableOrdered.size() - i or
+                std::abs(placement[q].currentPosition->x - sPos.x) <
+                    std::abs(
+                        placement[moveableOrdered[i + 1]].currentPosition->x -
+                        sPos.x)) {
+              placement[q].currentPosition =
+                  std::make_shared<Point>(sPos.x + d, sPos.y);
+              end.emplace_back(placement[q].currentPosition);
+              storeStart.emplace_back(placement[q].currentPosition);
+              placement[q].currentPosition =
+                  std::make_shared<Point>(sPos.x, sPos.y);
+              storeEnd.emplace_back(placement[q].currentPosition);
+              currentlyShuttling.erase(q);
+              currentFreeSites[s] = false;
+              initialFreeSites[s] = false;
+              n -= 1;
+            } else {
+              placement[q].currentPosition = std::make_shared<Point>(
+                  arch.getNearestXLeft(placement[q].currentPosition->x) + d,
+                  sPos.y);
+              end.emplace_back(placement[q].currentPosition);
+            }
           } else {
+            const auto y =
+                arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
             placement[q].currentPosition = std::make_shared<Point>(
-                arch.getNearestXLeft(placement[q].currentPosition->x) + d,
-                sPos.y);
+                arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
             end.emplace_back(placement[q].currentPosition);
           }
+        }
+        mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
+        mappedQc.emplaceBack<NAShuttlingOperation>(STORE, storeStart, storeEnd);
+      }
+      // -------------------------------------------------------------
+      startFixed.clear();
+      endFixed.clear();
+      for (const auto& q : fixedOrdered) {
+        startFixed.emplace_back(placement[q].currentPosition);
+        const auto pos = *placement[q].currentPosition;
+        currentlyShuttling.insert(q);
+        currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+        placement[q].currentPosition =
+            std::make_shared<Point>(pos.x + d, pos.y);
+        endFixed.emplace_back(placement[q].currentPosition);
+      }
+      mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, startFixed, endFixed);
+      std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
+                [&](const auto& a, const auto& b) {
+                  return std::get<2>(a) > std::get<2>(b);
+                });
+      std::size_t fixedSpotsNeeded = fixedOrdered.size();
+      std::vector<std::tuple<Zone, Index, std::size_t>> fixedSelectedRows;
+      for (std::size_t i = 0; i < freeSitesPerRow.size(); ++i) {
+        const auto& [z, r, n] = freeSitesPerRow[i];
+        if (n >= fixedSpotsNeeded) {
+          if (i + 1 == freeSitesPerRow.size() or
+              std::get<2>(freeSitesPerRow[i + 1]) < fixedSpotsNeeded) {
+            fixedSelectedRows.emplace_back(z, r, fixedSpotsNeeded);
+            fixedSpotsNeeded   = 0;
+            freeSitesPerRow[i] = {z, r, n - fixedSpotsNeeded};
+            break;
+          }
         } else {
-          const auto y = arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
-          placement[q].currentPosition = std::make_shared<Point>(
-              arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
-          end.emplace_back(placement[q].currentPosition);
+          fixedSelectedRows.emplace_back(z, r, n);
+          fixedSpotsNeeded -= n;
+          freeSitesPerRow[i] = {z, r, 0};
         }
       }
-      mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
-      mappedQc.emplaceBack<NAShuttlingOperation>(STORE, storeStart, storeEnd);
+      std::sort(fixedSelectedRows.begin(), fixedSelectedRows.end(),
+                [&](const auto& a, const auto& b) {
+                  return (std::get<0>(a) == std::get<0>(b) and
+                          std::get<1>(a) < std::get<1>(b)) or
+                         std::get<0>(a) < std::get<0>(b);
+                });
+      for (auto& [z, r, n] : fixedSelectedRows) {
+        std::vector<std::shared_ptr<Point>> start;
+        std::vector<std::shared_ptr<Point>> end;
+        std::vector<std::shared_ptr<Point>> storeStart;
+        std::vector<std::shared_ptr<Point>> storeEnd;
+        for (std::size_t i = 0; i < fixedOrdered.size(); ++i) {
+          const auto& q = fixedOrdered[i];
+          start.emplace_back(placement[q].currentPosition);
+          if (n > 0) {
+            const auto& sitesInRow = arch.getSitesInRow(z, r);
+            // find next (leftmost) free
+            // site in the row
+            const auto& s = *std::find_if(
+                sitesInRow.cbegin(), sitesInRow.cend(),
+                [&](const auto& s) { return currentFreeSites[s]; });
+            const auto& sPos = arch.getPositionOfSite(s);
+            // store the current atom in
+            // the free spot either if
+            // there are as many atoms as
+            // free spots to the right (all
+            // can be stored in this line)
+            // or the atom is closer than
+            // the next one to the right
+            if (n == fixedOrdered.size() - i or
+                std::abs(placement[q].currentPosition->x - sPos.x) <
+                    std::abs(placement[fixedOrdered[i + 1]].currentPosition->x -
+                             sPos.x)) {
+              placement[q].currentPosition =
+                  std::make_shared<Point>(sPos.x + d, sPos.y);
+              end.emplace_back(placement[q].currentPosition);
+              storeStart.emplace_back(placement[q].currentPosition);
+              placement[q].currentPosition =
+                  std::make_shared<Point>(sPos.x, sPos.y);
+              storeEnd.emplace_back(placement[q].currentPosition);
+              currentlyShuttling.erase(q);
+              currentFreeSites[s] = false;
+              initialFreeSites[s] = false;
+              n -= 1;
+            } else {
+              placement[q].currentPosition = std::make_shared<Point>(
+                  arch.getNearestXLeft(placement[q].currentPosition->x) + d,
+                  sPos.y);
+              end.emplace_back(placement[q].currentPosition);
+            }
+          } else {
+            const auto y =
+                arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
+            placement[q].currentPosition = std::make_shared<Point>(
+                arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
+            end.emplace_back(placement[q].currentPosition);
+          }
+        }
+        mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, end);
+        mappedQc.emplaceBack<NAShuttlingOperation>(STORE, storeStart, storeEnd);
+      }
+    } else {
+      throw std::logic_error("NA mapping method not implemented.");
     }
     // -------------------------------------------------------------
     it = (*executableSet)->begin();

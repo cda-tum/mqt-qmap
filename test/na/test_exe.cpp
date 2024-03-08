@@ -158,13 +158,13 @@ Options parseCommandLine(int argc, char* argv[]) {
 auto main(int argc, char* argv[]) -> int {
   Options options = parseCommandLine(argc, argv);
   if (options.architecture.empty()) {
-    options.architecture = "examples/na/nature.json";
+    options.architecture = "examples/na/architecture.json";
   }
   if (options.layout.empty()) {
-    options.layout = "examples/na/nature.csv";
+    options.layout = "examples/na/layout.csv";
   }
   if (options.configuration.empty()) {
-    options.configuration = "examples/na/config.json";
+    options.configuration = "examples/na/configuration.json";
   }
   if (!options.outputFilename.empty()) {
     std::ofstream outputStream(options.outputFilename);

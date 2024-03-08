@@ -153,26 +153,26 @@ public:
   Architecture& operator=(const Architecture&) = default;
   Architecture& operator=(Architecture&&)      = default;
 
-  [[nodiscard]] auto getName() const -> std::string { return name; }
+  [[nodiscard]] auto getName() const -> const std::string& { return name; }
   [[nodiscard]] auto getNZones() const -> Index { return zones.size(); }
-  [[nodiscard]] auto getZoneLabel(const Index& i) const -> std::string {
+  [[nodiscard]] auto getZoneLabel(const Index& i) const -> const std::string& {
     return zones[i].name;
   }
   [[nodiscard]] auto getInitialZones() const -> const std::vector<Zone>& {
     return initialZones;
   }
   [[nodiscard]] auto getNSites() const -> Index { return sites.size(); }
-  [[nodiscard]] auto getPositionOfSite(const Index& i) const {
+  [[nodiscard]] auto getPositionOfSite(const Index& i) const -> const Point& {
     return sites[i];
   }
-  [[nodiscard]] auto getDecoherenceTimes() const -> DecoherenceTimes {
+  [[nodiscard]] auto getDecoherenceTimes() const -> const DecoherenceTimes& {
     return decoherenceTimes;
   }
   [[nodiscard]] auto getNShuttlingUnits() const -> Index {
     return shuttling.size();
   }
   [[nodiscard]] auto getPropertiesOfShuttlingUnit(const Index& i) const
-      -> ShuttlingProperties {
+      -> const ShuttlingProperties& {
     return shuttling[i];
   }
   [[nodiscard]] auto getMinAtomDistance() const -> Index {
@@ -185,11 +185,11 @@ public:
     return interactionRadius + 2;
   }
   [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
-      -> ZoneProperties {
+      -> const ZoneProperties& {
     return zones[zone];
   }
   [[nodiscard]] auto getPropertiesOfOperation(const OpType& t) const
-      -> OperationProperties {
+      -> const OperationProperties& {
     if (auto it = gateSet.find(t); it != gateSet.end()) {
       return it->second;
     }

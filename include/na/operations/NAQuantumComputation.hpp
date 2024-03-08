@@ -55,7 +55,7 @@ public:
   auto clearInitialPositions() -> void { initialPositions.clear(); }
   [[nodiscard]] auto size() const -> std::size_t { return operations.size(); }
   [[nodiscard]] auto getInitialPositions() const
-      -> std::vector<std::shared_ptr<Point>> {
+      -> const std::vector<std::shared_ptr<Point>>& {
     return initialPositions;
   }
   auto emplaceInitialPosition(std::shared_ptr<Point> p) -> void {
