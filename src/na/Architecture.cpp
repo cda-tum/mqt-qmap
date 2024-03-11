@@ -33,11 +33,15 @@ Architecture::Architecture(const std::string& jsonFn,
                            const std::string& csvFn) {
   std::ifstream jsonS(jsonFn);
   if (!jsonS.good()) {
-    throw std::runtime_error("Could not open JSON file.");
+    std::stringstream ss;
+    ss << "Could not open JSON file " << jsonFn << ".";
+    throw std::runtime_error(ss.str());
   }
   std::ifstream csvS(csvFn);
   if (!csvS.good()) {
-    throw std::runtime_error("Could not open CSV file.");
+    std::stringstream ss;
+    ss << "Could not open CSV file " << csvFn << ".";
+    throw std::runtime_error(ss.str());
   }
   *this = Architecture(jsonS, csvS);
 }

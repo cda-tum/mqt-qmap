@@ -83,15 +83,15 @@ auto NeutralAtomMapper::postprocess() -> void {
     if (op->isGlobalOperation()) {
       mappedQc.emplaceBack(op->clone());
     } else if (op->isLocalOperation()) {
-      const auto& lop       = dynamic_cast<NALocalOperation&>(*op);
+      const auto& lop          = dynamic_cast<NALocalOperation&>(*op);
       const auto& allPositions = lop.getPositions();
-      const auto& posPerRow = std::accumulate(
-          allPositions.cbegin(), allPositions.cend(),
-          std::map<std::int64_t, std::set<std::int64_t>>(),
-          [&](auto& acc, const auto& p) {
-            acc[p->y].insert(p->x);
-            return acc;
-          });
+      const auto& posPerRow =
+          std::accumulate(allPositions.cbegin(), allPositions.cend(),
+                          std::map<std::int64_t, std::set<std::int64_t>>(),
+                          [&](auto& acc, const auto& p) {
+                            acc[p->y].insert(p->x);
+                            return acc;
+                          });
       for (const auto& [y, xs] : posPerRow) {
         for (std::int64_t r = 0; r < rows; ++r) {
           std::vector<std::shared_ptr<Point>> positions;
@@ -380,10 +380,11 @@ auto NeutralAtomMapper::updatePlacement(
 }
 
 auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
-  auto startPreprocess = std::chrono::high_resolution_clock::now();
-  initialQc            = qc;
-  auto nqubits         = initialQc.getNqubits();
-  mappedQc             = NAQuantumComputation();
+  auto startPreprocess    = std::chrono::high_resolution_clock::now();
+  initialQc               = qc;
+  const auto  nqubits     = initialQc.getNqubits();
+  std::size_t maxSeqWidth = 0;
+  mappedQc                = NAQuantumComputation();
   preprocess();
   // store the placement of atoms, both the initial one (needed later) and the
   // current one leave atoms unmapped as long as possible. This mighty induce
@@ -559,6 +560,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 [&](const auto& a, const auto& b) {
                   return fixed.at(a) < fixed.at(b);
                 });
+      maxSeqWidth =
+          std::max(maxSeqWidth, static_cast<std::size_t>(fixed.at(
+                                    fixedOrdered[fixedOrdered.size() - 1])));
       // get a vector of the fixed atoms in the order to pick them up based on
       // their misplacement value
       std::vector<qc::Qubit> pickUpOrderFixed(fixedOrdered);
@@ -1435,7 +1439,10 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   auto end = std::chrono::high_resolution_clock::now();
   // build remaining statistics
   stats.numInitialGates = qc.getNops();
-  stats.numMappedGates  = qc.getNops();
+  stats.initialDepth    = qc.getDepth();
+  stats.numMappedGates  = mappedQc.size();
+  stats.numQubits       = nqubits;
+  stats.maxSeqWidth     = maxSeqWidth;
   // get the mapping time in milliseconds
   stats.preprocessTime =
       std::chrono::duration<qc::fp, std::milli>(startMapping - startPreprocess)

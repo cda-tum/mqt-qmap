@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <sstream>
 
 using json = nlohmann::json;
 
@@ -28,7 +29,9 @@ inline auto getMethodOfString(const std::string& method) -> NaMappingMethod {
 Configuration::Configuration(const std::string& filename) {
   std::ifstream fs(filename);
   if (!fs.good()) {
-    throw std::runtime_error("Could not open JSON file.");
+    std::stringstream ss;
+    ss << "Could not open JSON file " << filename << ".";
+    throw std::runtime_error(ss.str());
   }
   *this = Configuration(fs);
 }

@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -22,11 +23,29 @@ namespace na {
 class NeutralAtomMapper {
 public:
   struct Statistics {
-    std::size_t numInitialGates = 0;
-    std::size_t numMappedGates  = 0;
-    qc::fp      preprocessTime  = 0.0; // [ms]
-    qc::fp      mappingTime     = 0.0; // [ms]
-    qc::fp      postprocessTime = 0.0; // [ms]
+    std::size_t        numInitialGates = 0;
+    std::size_t        initialDepth    = 0;
+    std::size_t        numMappedGates  = 0;
+    std::size_t        numQubits       = 0;
+    std::size_t        maxSeqWidth     = 0;
+    qc::fp             preprocessTime  = 0.0; // [ms]
+    qc::fp             mappingTime     = 0.0; // [ms]
+    qc::fp             postprocessTime = 0.0; // [ms]
+    [[nodiscard]] static auto header() -> std::string {
+      return "numInitialGates,initialDepth,numMappedGates,numQubits,"
+             "maxSeqWidth,preprocessTime,mappingTime,postprocessTime\n";
+    }
+    [[nodiscard]] auto toString() const -> std::string {
+      std::stringstream ss;
+      ss << numInitialGates << "," << initialDepth << "," << numMappedGates
+         << "," << numQubits << "," << maxSeqWidth << "," << preprocessTime
+         << "," << mappingTime << "," << postprocessTime << std::endl;
+      return ss.str();
+    }
+    friend auto operator<< (std::ostream& os, const Statistics& s) -> std::ostream& {
+      os << s.toString();
+      return os;
+    }
   };
 
 protected:
