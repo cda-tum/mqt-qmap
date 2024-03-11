@@ -511,6 +511,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(start)},
           std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)});
       mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
+      maxSeqWidth = 1UL;
       mappedQc.emplaceBack<NAShuttlingOperation>(
           MOVE,
           std::vector<std::shared_ptr<Point>>{std::make_shared<Point>(end)},
@@ -565,7 +566,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                   return fixed.at(a) < fixed.at(b);
                 });
       maxSeqWidth =
-          std::max(maxSeqWidth, static_cast<std::size_t>(fixed.at(
+          std::max(maxSeqWidth, 1UL + static_cast<std::size_t>(fixed.at(
                                     fixedOrdered[fixedOrdered.size() - 1])));
       // get a vector of the fixed atoms in the order to pick them up based on
       // their misplacement value
@@ -1446,7 +1447,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   stats.initialDepth    = qc.getDepth();
   stats.numMappedGates  = mappedQc.size();
   stats.numQubits       = nqubits;
-  stats.maxSeqWidth     = maxSeqWidth;
+  stats.maxSeqWidth     = config.getPatchCols() * maxSeqWidth;
   // get the mapping time in milliseconds
   stats.preprocessTime =
       std::chrono::duration<qc::fp, std::milli>(startMapping - startPreprocess)
