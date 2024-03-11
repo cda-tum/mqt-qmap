@@ -23,6 +23,7 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <sstream>
 #include <vector>
 
 namespace na {
@@ -40,8 +41,11 @@ auto NeutralAtomMapper::preprocess() -> void {
       }
     } else if (op->isStandardOperation()) {
       if (!isIndividual(*op) and op->getNcontrols() + op->getNtargets() > 2) {
-        throw std::logic_error("Operations acting on more than two qubits "
-                               "are not supported yet.");
+        std::stringstream ss;
+        ss << "The chosen architecture does not support the operation "
+           << OpType{op->getType(), op->getNcontrols()} << " acting on more "
+           << "than two qubits.";
+        throw std::logic_error(ss.str());
       }
       if (!arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
         if (!arch.isAllowedGlobally({op->getType(), op->getNcontrols()})) {
