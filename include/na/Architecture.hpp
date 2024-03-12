@@ -245,22 +245,25 @@ public:
       -> Number;
   [[nodiscard]] auto getNearestYDown(const Number& y, bool proper = true) const
       -> Number;
-  [[nodiscard]] auto getNearestSiteLeft(const Point& p,
-                                        bool proper = false, bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteRight(const Point& p,
-                                         bool proper = false, bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false, bool sameZone = false) const
+  [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
+                                        bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,
+                                         bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false,
+                                      bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteDown(const Point& p, bool proper = false,
+                                        bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUpRight(const Point& p, bool proper = false,
+                                           bool sameZone = false) const
       -> Index;
-  [[nodiscard]] auto getNearestSiteDown(const Point& p,
-                                        bool proper = false, bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUpRight(const Point& p,
-                                           bool proper = false, bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUpLeft(const Point& p,
-                                          bool proper = false, bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteDownLeft(const Point& p,
-                                            bool proper = false, bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteUpLeft(const Point& p, bool proper = false,
+                                          bool sameZone = false) const -> Index;
+  [[nodiscard]] auto getNearestSiteDownLeft(const Point& p, bool proper = false,
+                                            bool sameZone = false) const
+      -> Index;
   [[nodiscard]] auto getNearestSiteDownRight(const Point& p,
-                                             bool         proper = false, bool sameZone = false) const
+                                             bool         proper = false,
+                                             bool sameZone       = false) const
       -> Index;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;

@@ -565,9 +565,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 [&](const auto& a, const auto& b) {
                   return fixed.at(a) < fixed.at(b);
                 });
-      maxSeqWidth =
-          std::max(maxSeqWidth, 1UL + static_cast<std::size_t>(fixed.at(
-                                    fixedOrdered[fixedOrdered.size() - 1])));
+      maxSeqWidth = std::max(maxSeqWidth,
+                             1UL + static_cast<std::size_t>(fixed.at(
+                                       fixedOrdered[fixedOrdered.size() - 1])));
       // get a vector of the fixed atoms in the order to pick them up based on
       // their misplacement value
       std::vector<qc::Qubit> pickUpOrderFixed(fixedOrdered);

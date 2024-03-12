@@ -411,7 +411,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
 [[nodiscard]] auto
-Architecture::getNearestSiteUpRight(const Point& p, bool proper,
+Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
                                     const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
   std::vector<Index> siteIdxs(sites.size());
@@ -420,8 +420,8 @@ Architecture::getNearestSiteUpRight(const Point& p, bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if (proper ? s.x > p.x and s.y < p.y
-                   : s.x >= p.x and s.y <= p.y and
+        if ((proper ? s.x > p.x and s.y < p.y
+                   : s.x >= p.x and s.y <= p.y) and
                          (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
@@ -436,7 +436,7 @@ Architecture::getNearestSiteUpRight(const Point& p, bool proper,
   return *opt;
 }
 [[nodiscard]] auto Architecture::getNearestSiteUpLeft(const Point& p,
-                                                      bool         proper,
+                                                      const bool   proper,
                                                       const bool sameZone) const
     -> Index {
   const auto&        zone = getZoneAt(p);
@@ -446,8 +446,8 @@ Architecture::getNearestSiteUpRight(const Point& p, bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if (proper ? s.x < p.x and s.y < p.y
-                   : s.x <= p.x and s.y <= p.y and
+        if ((proper ? s.x < p.x and s.y < p.y
+                   : s.x <= p.x and s.y <= p.y) and
                          (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
@@ -462,7 +462,7 @@ Architecture::getNearestSiteUpRight(const Point& p, bool proper,
   return *opt;
 }
 [[nodiscard]] auto
-Architecture::getNearestSiteDownLeft(const Point& p, bool proper,
+Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
                                      const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
   std::vector<Index> siteIdxs(sites.size());
@@ -471,8 +471,8 @@ Architecture::getNearestSiteDownLeft(const Point& p, bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if (proper ? s.x < p.x and s.y > p.y
-                   : s.x <= p.x and s.y >= p.y and
+        if ((proper ? s.x < p.x and s.y > p.y
+                   : s.x <= p.x and s.y >= p.y) and
                          (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
@@ -487,7 +487,7 @@ Architecture::getNearestSiteDownLeft(const Point& p, bool proper,
   return *opt;
 }
 [[nodiscard]] auto
-Architecture::getNearestSiteDownRight(const Point& p, bool proper,
+Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
                                       const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
   std::vector<Index> siteIdxs(sites.size());
@@ -496,8 +496,8 @@ Architecture::getNearestSiteDownRight(const Point& p, bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if (proper ? s.x > p.x and s.y > p.y
-                   : s.x >= p.x and s.y >= p.y and
+        if ((proper ? s.x > p.x and s.y > p.y
+                   : s.x >= p.x and s.y >= p.y) and
                          (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
