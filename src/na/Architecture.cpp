@@ -125,7 +125,7 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
   }
 }
 
-[[nodiscard]] auto Architecture::getZoneAt(const Point& p) const -> Zone {
+auto Architecture::getZoneAt(const Point& p) const -> Zone {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -191,19 +191,24 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
-[[nodiscard]] auto Architecture::getRows() const -> std::vector<Number> {
+auto Architecture::getRows() const -> std::vector<Number> {
   std::unordered_set<Number> rows;
   std::for_each(sites.cbegin(), sites.cend(),
                 [&](const auto& s) { rows.insert(s.y); });
-  return {rows.cbegin(), rows.cend()};
+  std::vector<Number> result(rows.cbegin(), rows.cend());
+  std::sort(result.begin(), result.end());
+  return result;
 }
-[[nodiscard]] auto Architecture::getCols() const -> std::vector<Number> {
+auto Architecture::getCols() const -> std::vector<Number> {
   std::unordered_set<Number> cols;
   std::for_each(sites.cbegin(), sites.cend(),
                 [&](const auto& s) { cols.insert(s.x); });
-  return {cols.cbegin(), cols.cend()};
+
+  std::vector<Number> result(cols.cbegin(), cols.cend());
+  std::sort(result.begin(), result.end());
+  return result;
 }
-[[nodiscard]] auto Architecture::getRowsInZone(const Zone& z) const
+auto Architecture::getRowsInZone(const Zone& z) const
     -> std::vector<Number> {
   std::unordered_set<Number> rows;
   std::for_each(sites.cbegin(), sites.cend(), [&](const auto& s) {
@@ -211,9 +216,11 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
       rows.insert(s.y);
     }
   });
-  return {rows.cbegin(), rows.cend()};
+  std::vector<Number> result(rows.cbegin(), rows.cend());
+  std::sort(result.begin(), result.end());
+  return result;
 }
-[[nodiscard]] auto Architecture::getColsInZone(const Zone& z) const
+auto Architecture::getColsInZone(const Zone& z) const
     -> std::vector<Number> {
   std::unordered_set<Number> cols;
   std::for_each(sites.cbegin(), sites.cend(), [&](const auto& s) {
@@ -221,23 +228,25 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
       cols.insert(s.x);
     }
   });
-  return {cols.cbegin(), cols.cend()};
+  std::vector<Number> result(cols.cbegin(), cols.cend());
+  std::sort(result.begin(), result.end());
+  return result;
 }
-[[nodiscard]] auto Architecture::isInSameRow(const Index& i,
+auto Architecture::isInSameRow(const Index& i,
                                              const Index& j) const -> bool {
   return getPositionOfSite(i).y == getPositionOfSite(j).y;
 }
-[[nodiscard]] auto Architecture::isInSameCol(const Index& i,
+auto Architecture::isInSameCol(const Index& i,
                                              const Index& j) const -> bool {
   return getPositionOfSite(i).x == getPositionOfSite(j).x;
 }
-[[nodiscard]] auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
+auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
   return Architecture::getRowsInZone(z).size();
 }
-[[nodiscard]] auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
+auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
   return Architecture::getColsInZone(z).size();
 }
-[[nodiscard]] auto Architecture::getSitesInRow(const Zone&  z,
+auto Architecture::getSitesInRow(const Zone&  z,
                                                const Index& row) const
     -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
@@ -252,7 +261,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                });
   return atoms;
 }
-[[nodiscard]] auto Architecture::getSitesInCol(const Zone&  z,
+auto Architecture::getSitesInCol(const Zone&  z,
                                                const Index& col) const
     -> std::vector<Index> {
   const auto         x = Architecture::getColsInZone(z)[col];
@@ -267,7 +276,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                });
   return atoms;
 }
-[[nodiscard]] auto Architecture::getSitesInZone(const Zone& z) const
+auto Architecture::getSitesInZone(const Zone& z) const
     -> std::vector<Index> {
   std::vector<Index> atoms;
   std::vector<Index> enumerate(sites.size());
@@ -280,19 +289,19 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                });
   return atoms;
 }
-[[nodiscard]] auto Architecture::getRowInZoneOf(const Index& i) const -> Index {
+auto Architecture::getRowInZoneOf(const Index& i) const -> Index {
   const auto& rows = Architecture::getRowsInZone(getZoneOfSite(i));
   const auto& it   = std::find(rows.cbegin(), rows.cend(), sites[i].y);
   assert(it != rows.cend());
   return static_cast<Index>(std::distance(rows.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getColInZoneOf(const Index& i) const -> Index {
+auto Architecture::getColInZoneOf(const Index& i) const -> Index {
   const auto& cols = Architecture::getColsInZone(getZoneOfSite(i));
   const auto& it   = std::find(cols.cbegin(), cols.cend(), sites[i].x);
   assert(it != rows.cend());
   return static_cast<Index>(std::distance(cols.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getNearestXLeft(const Number& x,
+auto Architecture::getNearestXLeft(const Number& x,
                                                  const bool    proper) const
     -> Number {
   const auto& cols = getCols();
@@ -306,7 +315,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                                           : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestXRight(const Number& x,
+auto Architecture::getNearestXRight(const Number& x,
                                                   const bool    proper) const
     -> Number {
   const auto& cols = getCols();
@@ -320,7 +329,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                                           : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestYUp(const Number& y,
+auto Architecture::getNearestYUp(const Number& y,
                                                const bool    proper) const
     -> Number {
   const auto& rows = getRows();
@@ -334,7 +343,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                                           : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestYDown(const Number& y,
+auto Architecture::getNearestYDown(const Number& y,
                                                  const bool    proper) const
     -> Number {
   const auto& rows = getRows();
@@ -348,7 +357,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
                                                                           : acc;
                          });
 }
-[[nodiscard]] auto Architecture::getNearestSiteLeft(const Point& p,
+auto Architecture::getNearestSiteLeft(const Point& p,
                                                     const bool   proper,
                                                     const bool   sameZone) const
     -> Index {
@@ -364,7 +373,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   return sites.size() -
          static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
 }
-[[nodiscard]] auto Architecture::getNearestSiteRight(const Point& p,
+auto Architecture::getNearestSiteRight(const Point& p,
                                                      const bool   proper,
                                                      const bool sameZone) const
     -> Index {
@@ -379,7 +388,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
-[[nodiscard]] auto Architecture::getNearestSiteUp(const Point& p,
+auto Architecture::getNearestSiteUp(const Point& p,
                                                   const bool   proper,
                                                   const bool   sameZone) const
     -> Index {
@@ -395,7 +404,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   return sites.size() -
          static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
 }
-[[nodiscard]] auto Architecture::getNearestSiteDown(const Point& p,
+auto Architecture::getNearestSiteDown(const Point& p,
                                                     const bool   proper,
                                                     const bool   sameZone) const
     -> Index {
@@ -410,7 +419,7 @@ auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
-[[nodiscard]] auto
+auto
 Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
                                     const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
@@ -420,9 +429,8 @@ Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if ((proper ? s.x > p.x and s.y < p.y
-                   : s.x >= p.x and s.y <= p.y) and
-                         (not sameZone or getZoneAt(s) == zone)) {
+        if ((proper ? s.x > p.x and s.y < p.y : s.x >= p.x and s.y <= p.y) and
+            (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
             return std::optional<Index>(i);
@@ -435,7 +443,7 @@ Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
   }
   return *opt;
 }
-[[nodiscard]] auto Architecture::getNearestSiteUpLeft(const Point& p,
+auto Architecture::getNearestSiteUpLeft(const Point& p,
                                                       const bool   proper,
                                                       const bool sameZone) const
     -> Index {
@@ -446,9 +454,8 @@ Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if ((proper ? s.x < p.x and s.y < p.y
-                   : s.x <= p.x and s.y <= p.y) and
-                         (not sameZone or getZoneAt(s) == zone)) {
+        if ((proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) and
+            (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
             return std::optional<Index>(i);
@@ -461,7 +468,7 @@ Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
   }
   return *opt;
 }
-[[nodiscard]] auto
+auto
 Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
                                      const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
@@ -471,9 +478,8 @@ Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if ((proper ? s.x < p.x and s.y > p.y
-                   : s.x <= p.x and s.y >= p.y) and
-                         (not sameZone or getZoneAt(s) == zone)) {
+        if ((proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) and
+            (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
             return std::optional<Index>(i);
@@ -486,7 +492,7 @@ Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
   }
   return *opt;
 }
-[[nodiscard]] auto
+auto
 Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
                                       const bool sameZone) const -> Index {
   const auto&        zone = getZoneAt(p);
@@ -496,9 +502,8 @@ Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
       siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
       [&](const auto& acc, const auto& i) {
         const auto& s = sites[i];
-        if ((proper ? s.x > p.x and s.y > p.y
-                   : s.x >= p.x and s.y >= p.y) and
-                         (not sameZone or getZoneAt(s) == zone)) {
+        if ((proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) and
+            (not sameZone or getZoneAt(s) == zone)) {
           if (not acc or
               (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
             return std::optional<Index>(i);
@@ -511,17 +516,19 @@ Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
   }
   return *opt;
 }
-[[nodiscard]] auto Architecture::getSiteAt(const Point& p) const -> Index {
+auto Architecture::getSiteAt(const Point& p) const -> Index {
   std::vector<std::size_t> enumerate(sites.size());
   std::iota(enumerate.begin(), enumerate.end(), 0ULL);
   const auto& it = std::find_if(enumerate.cbegin(), enumerate.cend(),
                                 [&](const auto i) { return sites[i] == p; });
   if (it == enumerate.end()) {
-    throw std::invalid_argument("No site at this position.");
+    std::stringstream ss;
+    ss << "No site at position " << p << ".";
+    throw std::invalid_argument(ss.str());
   }
   return *it;
 }
-[[nodiscard]] auto Architecture::withConfig(const Configuration& config) const
+auto Architecture::withConfig(const Configuration& config) const
     -> Architecture {
   Architecture result = *this;
   result.sites.clear();
@@ -581,7 +588,7 @@ Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
   }
   return result;
 }
-[[nodiscard]] auto Architecture::getPositionOffsetBy(const Point&  p,
+auto Architecture::getPositionOffsetBy(const Point&  p,
                                                      const Number& rows,
                                                      const Number& cols) const
     -> Point {

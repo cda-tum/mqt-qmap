@@ -1228,13 +1228,15 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               z, r,
               std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
                               [&](const auto& acc, const auto& s) {
-                                return acc + (initialFreeSites[s] ? 1 : 0);
+                                return acc + (currentFreeSites[s] ? 1 : 0);
                               }));
         }
       }
       std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
                 [&](const auto& a, const auto& b) {
-                  return std::get<2>(a) > std::get<2>(b);
+                  return (std::get<2>(a) == std::get<2>(b) and
+                          std::get<1>(a) > std::get<1>(b)) or
+                         std::get<2>(a) > std::get<2>(b);
                 });
       std::size_t moveableSpotsNeeded = moveableOrdered.size();
       std::vector<std::tuple<Zone, Index, std::size_t>> moveableSelectedRows;
@@ -1244,14 +1246,14 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           if (i + 1 == freeSitesPerRow.size() or
               std::get<2>(freeSitesPerRow[i + 1]) < moveableSpotsNeeded) {
             moveableSelectedRows.emplace_back(z, r, moveableSpotsNeeded);
-            moveableSpotsNeeded = 0;
             freeSitesPerRow[i]  = {z, r, n - moveableSpotsNeeded};
+            moveableSpotsNeeded = 0;
             break;
           }
         } else {
           moveableSelectedRows.emplace_back(z, r, n);
-          moveableSpotsNeeded -= n;
           freeSitesPerRow[i] = {z, r, 0};
+          moveableSpotsNeeded -= n;
         }
       }
       std::sort(moveableSelectedRows.begin(), moveableSelectedRows.end(),
@@ -1276,13 +1278,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 sitesInRow.cbegin(), sitesInRow.cend(),
                 [&](const auto& s) { return currentFreeSites[s]; });
             const auto& sPos = arch.getPositionOfSite(s);
-            // store the current atom in
-            // the free spot either if
-            // there are as many atoms as
-            // free spots to the right (all
-            // can be stored in this line)
-            // or the atom is closer than
-            // the next one to the right
+            // store the current atom in the free spot either if there are as
+            // many atoms as free spots to the right (all can be stored in this
+            // line) or the atom is closer than the next one to the right
             if (n == moveableOrdered.size() - i or
                 std::abs(placement[q].currentPosition->x - sPos.x) <
                     std::abs(
@@ -1331,7 +1329,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, startFixed, endFixed);
       std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
                 [&](const auto& a, const auto& b) {
-                  return std::get<2>(a) > std::get<2>(b);
+                  return (std::get<2>(a) == std::get<2>(b) and
+                          std::get<1>(a) > std::get<1>(b)) or
+                         std::get<2>(a) > std::get<2>(b);
                 });
       std::size_t fixedSpotsNeeded = fixedOrdered.size();
       std::vector<std::tuple<Zone, Index, std::size_t>> fixedSelectedRows;
@@ -1367,19 +1367,14 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           start.emplace_back(placement[q].currentPosition);
           if (n > 0) {
             const auto& sitesInRow = arch.getSitesInRow(z, r);
-            // find next (leftmost) free
-            // site in the row
+            // find next (leftmost) free site in the row
             const auto& s = *std::find_if(
                 sitesInRow.cbegin(), sitesInRow.cend(),
                 [&](const auto& s) { return currentFreeSites[s]; });
             const auto& sPos = arch.getPositionOfSite(s);
-            // store the current atom in
-            // the free spot either if
-            // there are as many atoms as
-            // free spots to the right (all
-            // can be stored in this line)
-            // or the atom is closer than
-            // the next one to the right
+            // store the current atom in the free spot either if there are as
+            // many atoms as free spots to the right (all can be stored in this
+            // line) or the atom is closer than the next one to the right
             if (n == fixedOrdered.size() - i or
                 std::abs(placement[q].currentPosition->x - sPos.x) <
                     std::abs(placement[fixedOrdered[i + 1]].currentPosition->x -
