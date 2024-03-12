@@ -609,6 +609,30 @@ public:
             if (vwColor + 1 == uwColor) {
               return true;
             }
+          } else { // inter.empty() ==> no common neighbor
+            std::vector<std::size_t> enumerate(sequence.size());
+            std::iota(enumerate.begin(), enumerate.end(), 0);
+            const auto vMaxSeq = std::accumulate(
+                enumerate.cbegin(), enumerate.cend(), sequence.size(),
+                [&](std::size_t acc, const std::size_t i) {
+                  const auto value = sequence[i];
+                  if (neighborsOfV.find(value) != neighborsOfV.end()) {
+                    return std::min(acc, static_cast<std::size_t>(i));
+                  }
+                  return acc;
+                });
+            const auto uMaxSeq = std::accumulate(
+                enumerate.cbegin(), enumerate.cend(), sequence.size(),
+                [&](std::size_t acc, const std::size_t i) {
+                  const auto value = sequence[i];
+                  if (neighborsOfU.find(value) != neighborsOfU.end()) {
+                    return std::min(acc, static_cast<std::size_t>(i));
+                  }
+                  return acc;
+                });
+            if (vMaxSeq > uMaxSeq) {
+              return true;
+            }
           }
           return false;
         });
@@ -702,6 +726,28 @@ public:
           }
         }
       }
+    }
+    std::cout << "Degree of all atoms: ";
+    for (const auto& v : sequence) {
+      std::cout << v << " -> " << getDegree(v) << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "Coloring: ";
+    for (const auto& [e, t] : coloring) {
+      std::cout << e.first << " - " << e.second << " -> " << t << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "Fixed positions: ";
+    for (const auto& [v, x] : fixedPositions) {
+      std::cout << v << " -> " << x << ", ";
+    }
+    std::cout << std::endl;
+    for (Color t = 0; t <= maxColor; ++t) {
+      std::cout << "Moveable positions at timestamp " << t << ": ";
+      for (const auto& [v, x] : moveablePositions[t]) {
+        std::cout << v << " -> " << x << ", ";
+      }
+      std::cout << std::endl;
     }
     return std::make_pair(moveablePositions, fixedPositions);
   }
