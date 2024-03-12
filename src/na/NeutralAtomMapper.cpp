@@ -654,8 +654,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         currentlyShuttling.insert(q);
         // iterate through all not yet picked up atoms to the left and check
         // whether they can be picked up
-        const auto nextX = arch.getNearestXLeft(currentX, true);
-        auto       x     = nextX == currentX ? currentX - dx : nextX + d;
+        const auto nextX =
+            arch.getNearestXLeft(currentX, arch.getZoneAt({currentX, y}), true);
+        auto x = nextX == currentX ? currentX - dx : nextX + d;
         if (i > 0) {
           for (std::size_t j = i - 1;; --j) {
             const auto p = fixedOrdered[j];
@@ -665,9 +666,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               start.emplace_back(placement[p].currentPosition);
               placement[p].currentPosition = std::make_shared<Point>(x, y);
               end.emplace_back(placement[p].currentPosition);
-              const auto xl = arch.getNearestXLeft(x, true);
-              const auto nx = arch.getNearestXLeft(xl, true);
-              x             = nx == xl ? xl - dx : nx + d;
+              const auto xl =
+                  arch.getNearestXLeft(x, arch.getZoneAt({x, y}), true);
+              const auto nx =
+                  arch.getNearestXLeft(xl, arch.getZoneAt({xl, y}), true);
+              x = nx == xl ? xl - dx : nx + d;
             } else {
               // check whether j can be
               // picked up
@@ -687,16 +690,14 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                       std::make_shared<Point>(x + d, y);
                   loadEnd.emplace_back(placement[p].currentPosition);
                   currentlyShuttling.insert(p);
-                  const auto nx = arch.getNearestXLeft(x, true);
-                  x             = nx == x ? x - dx : nx + d;
+                  const auto nx =
+                      arch.getNearestXLeft(x, arch.getZoneAt({x, y}), true);
+                  x = nx == x ? x - dx : nx + d;
                 }
               } else {
-                // if atom is not placed
-                // yet find a site to the
-                // left that it can be
-                // picked up together with
-                // q, i.e. find next free
-                // site to the left
+                // if atom is not placed yet find a site to the left that it can
+                // be picked up together with q, i.e. find next free site to the
+                // left
                 std::int64_t freeX = x;
                 bool         free  = false;
                 try {
@@ -708,26 +709,21 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                                   placement[p].zones.cend(),
                                   arch.getZoneOfSite(site)) !=
                             placement[p].zones.cend()) {
-                      // the site is free
-                      // and satisfies the
-                      // zone restrictions
-                      // of the atom
+                      // the site is free and satisfies the zone restrictions of
+                      // the atom
                       free = true;
                     } else {
-                      const auto nx = arch.getNearestXLeft(freeX, true);
-                      freeX         = nx == freeX ? freeX - dx : nx + d;
+                      const auto nx = arch.getNearestXLeft(
+                          freeX, arch.getZoneAt({freeX - d, y}), true);
+                      freeX = nx == freeX ? freeX - dx : nx + d;
                     }
                   }
                 } catch (std::invalid_argument& e) {
-                  // if x reached the left
-                  // end and there was no
-                  // site to the left
-                  // anymore, free remains
-                  // false in this case
+                  // if x reached the left end and there was no site to the left
+                  // anymore, free remains false in this case
                 }
                 if (free) {
-                  // place p on the free
-                  // site
+                  // place p on the free site
                   placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
                   *placement[p].initialPosition = {freeX, y};
                   initialFreeSites[arch.getSiteAt(
@@ -741,8 +737,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                       std::make_shared<Point>(freeX + d, y);
                   loadEnd.emplace_back(placement[p].currentPosition);
                   currentlyShuttling.insert(p);
-                  const auto nx = arch.getNearestXLeft(freeX, true);
-                  x             = nx == x ? x - dx : nx + d;
+                  const auto nx = arch.getNearestXLeft(
+                      freeX, arch.getZoneAt({freeX - d, y}), true);
+                  x = nx == x ? x - dx : nx + d;
                 }
               }
             }
@@ -753,7 +750,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         }
         // iterate through all not yet picked up atoms to the right and check
         // whether they can be picked up
-        x = arch.getNearestXRight(currentX + d) + d;
+        x = arch.getNearestXRight(currentX + d, arch.getZoneAt({x, y})) + d;
         for (std::size_t j = i + 1; j < fixedOrdered.size(); ++j) {
           const auto p = fixedOrdered[j];
           // if the atom is picked up, move it to the correct row
@@ -761,8 +758,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             start.emplace_back(placement[p].currentPosition);
             placement[p].currentPosition = std::make_shared<Point>(x, y);
             end.emplace_back(placement[p].currentPosition);
-            const auto nx = arch.getNearestXRight(x) + d;
-            x             = nx == x ? x + dx : nx + d;
+            const auto nx =
+                arch.getNearestXRight(x, arch.getZoneAt({x, y}));
+            x = nx == x ? x + dx : nx + d;
           } else {
             // check whether j can be
             // picked up
@@ -781,15 +779,13 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(x + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXRight(x + d);
-                x             = nx == x + d ? nx - d + dx : nx + d;
+                const auto nx =
+                    arch.getNearestXRight(x + d, arch.getZoneAt({x, y}));
+                x = nx == x + d ? nx - d + dx : nx + d;
               }
             } else {
-              // if atom is not placed yet
-              // find a site to the right
-              // that it can be picked up
-              // together with q, i.e. find
-              // next free site to the
+              // if atom is not placed yet find a site to the right that it can
+              // be picked up together with q, i.e. find next free site to the
               // right
               std::int64_t freeX = x;
               bool         free  = false;
@@ -802,21 +798,18 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                                 placement[p].zones.cend(),
                                 arch.getZoneOfSite(site)) !=
                           placement[p].zones.cend()) {
-                    // the site is free and
-                    // satisfies the zone
-                    // restrictions of the
-                    // atom
+                    // the site is free and satisfies the zone restrictions of
+                    // the atom
                     free = true;
                   } else {
-                    freeX = arch.getNearestXRight(freeX + d) + d;
+                    freeX = arch.getNearestXRight(freeX + d,
+                                                  arch.getZoneAt({freeX, y})) +
+                            d;
                   }
                 }
               } catch (std::invalid_argument& e) {
-                // if x reached the right
-                // end and there was no
-                // site to the right
-                // anymore, free remains
-                // false in this case
+                // if x reached the right end and there was no site to the right
+                // anymore, free remains false in this case
               }
               if (free) {
                 // place p on the free site
@@ -833,8 +826,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(freeX + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXRight(freeX + d);
-                x             = nx == freeX + d ? nx - d + dx : nx + d;
+                const auto nx = arch.getNearestXRight(
+                    freeX + d, arch.getZoneAt({freeX, y}));
+                x = nx == freeX + d ? nx - d + dx : nx + d;
               }
             }
           }
@@ -971,8 +965,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         currentlyShuttling.insert(q);
         // iterate through all not yet picked up atoms to the left and check
         // whether they can be picked up
-        const auto nextX = arch.getNearestXLeft(currentX, true);
-        auto       x     = nextX == currentX ? currentX - dx : nextX + d;
+        const auto nextX =
+            arch.getNearestXLeft(currentX, arch.getZoneAt({currentX, y}), true);
+        auto x = nextX == currentX ? currentX - dx : nextX + d;
         if (i > 0) {
           for (std::size_t j = i - 1;; --j) {
             const auto p = moveableOrdered[j];
@@ -982,9 +977,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               start.emplace_back(placement[p].currentPosition);
               placement[p].currentPosition = std::make_shared<Point>(x, y);
               end.emplace_back(placement[p].currentPosition);
-              const auto xl = arch.getNearestXLeft(x, true);
-              const auto nx = arch.getNearestXLeft(xl, true);
-              x             = nx == xl ? xl - dx : nx + d;
+              const auto xl =
+                  arch.getNearestXLeft(x, arch.getZoneAt({x, y}), true);
+              const auto nx =
+                  arch.getNearestXLeft(xl, arch.getZoneAt({xl, y}), true);
+              x = nx == xl ? xl - dx : nx + d;
             } else {
               // check whether j can be
               // picked up
@@ -1005,16 +1002,14 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                       std::make_shared<Point>(x + d, y);
                   loadEnd.emplace_back(placement[p].currentPosition);
                   currentlyShuttling.insert(p);
-                  const auto nx = arch.getNearestXLeft(x, true);
-                  x             = nx == x ? x - dx : nx + d;
+                  const auto nx =
+                      arch.getNearestXLeft(x, arch.getZoneAt({x, y}), true);
+                  x = nx == x ? x - dx : nx + d;
                 }
               } else {
-                // if atom is not placed
-                // yet find a site to the
-                // left that it can be
-                // picked up together with
-                // q, i.e. find next free
-                // site to the left
+                // if atom is not placed yet find a site to the left that it can
+                // be picked up together with q, i.e. find next free site to the
+                // left
                 std::int64_t freeX = x;
                 bool         free  = false;
                 try {
@@ -1026,26 +1021,21 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                                   placement[p].zones.cend(),
                                   arch.getZoneOfSite(site)) !=
                             placement[p].zones.cend()) {
-                      // the site is free
-                      // and satisfies the
-                      // zone restrictions
-                      // of the atom
+                      // the site is free and satisfies the zone restrictions of
+                      // the atom
                       free = true;
                     } else {
-                      const auto nx = arch.getNearestXLeft(freeX, true);
-                      freeX         = nx == freeX ? freeX - dx : nx + d;
+                      const auto nx = arch.getNearestXLeft(
+                          freeX, arch.getZoneAt({freeX - d, y}), true);
+                      freeX = nx == freeX ? freeX - dx : nx + d;
                     }
                   }
                 } catch (std::invalid_argument& e) {
-                  // if x reached the left
-                  // end and there was no
-                  // site to the left
-                  // anymore, free remains
-                  // false in this case
+                  // if x reached the left end and there was no site to the left
+                  // anymore, free remains false in this case
                 }
                 if (free) {
-                  // place p on the free
-                  // site
+                  // place p on the free site
                   placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
                   *placement[p].initialPosition = {freeX, y};
                   initialFreeSites[arch.getSiteAt(
@@ -1060,8 +1050,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                       std::make_shared<Point>(freeX + d, y);
                   loadEnd.emplace_back(placement[p].currentPosition);
                   currentlyShuttling.insert(p);
-                  const auto nx = arch.getNearestXLeft(freeX, true);
-                  x             = nx == x ? x - dx : nx + d;
+                  const auto nx = arch.getNearestXLeft(
+                      freeX, arch.getZoneAt({freeX - d, y}), true);
+                  x = nx == x ? x - dx : nx + d;
                 }
               }
             }
@@ -1072,7 +1063,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         }
         // iterate through all not yet picked up atoms to the right and check
         // whether they can be picked up
-        x = arch.getNearestXRight(currentX) + d;
+        x = arch.getNearestXRight(currentX, arch.getZoneAt({x, y})) + d;
         for (std::size_t j = i + 1; j < moveableOrdered.size(); ++j) {
           const auto p = moveableOrdered[j];
           // if the atom is picked up, move it to the correct row
@@ -1080,8 +1071,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             start.emplace_back(placement[p].currentPosition);
             placement[p].currentPosition = std::make_shared<Point>(x, y);
             end.emplace_back(placement[p].currentPosition);
-            const auto nx = arch.getNearestXRight(x + d);
-            x             = nx == x + d ? nx - d + dx : nx + d;
+            const auto nx =
+                arch.getNearestXRight(x + d, arch.getZoneAt({x, y}));
+            x = nx == x + d ? nx - d + dx : nx + d;
           } else {
             // check whether j can be
             // picked up
@@ -1101,15 +1093,13 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(x + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXRight(x + d);
-                x             = nx == x + d ? nx - d + dx : nx + d;
+                const auto nx =
+                    arch.getNearestXRight(x + d, arch.getZoneAt({x, y}));
+                x = nx == x + d ? nx - d + dx : nx + d;
               }
             } else {
-              // if atom is not placed yet
-              // find a site to the right
-              // that it can be picked up
-              // together with q, i.e. find
-              // next free site to the
+              // if atom is not placed yet find a site to the right that it can
+              // be picked up together with q, i.e. find next free site to the
               // right
               std::int64_t freeX = x;
               bool         free  = false;
@@ -1122,21 +1112,18 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                                 placement[p].zones.cend(),
                                 arch.getZoneOfSite(site)) !=
                           placement[p].zones.cend()) {
-                    // the site is free and
-                    // satisfies the zone
-                    // restrictions of the
-                    // atom
+                    // the site is free and satisfies the zone restrictions of
+                    // the atom
                     free = true;
                   } else {
-                    freeX = arch.getNearestXRight(freeX + d) + d;
+                    freeX = arch.getNearestXRight(freeX + d,
+                                                  arch.getZoneAt({freeX, y})) +
+                            d;
                   }
                 }
               } catch (std::invalid_argument& e) {
-                // if x reached the right
-                // end and there was no
-                // site to the right
-                // anymore, free remains
-                // false in this case
+                // if x reached the right end and there was no site to the right
+                // anymore, free remains false in this case
               }
               if (free) {
                 // place p on the free site
@@ -1154,8 +1141,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                     std::make_shared<Point>(freeX + d, y);
                 loadEnd.emplace_back(placement[p].currentPosition);
                 currentlyShuttling.insert(p);
-                const auto nx = arch.getNearestXRight(freeX + d);
-                x             = nx == freeX + d ? nx - d + dx : nx + d;
+                const auto nx = arch.getNearestXRight(
+                    freeX + d, arch.getZoneAt({freeX, y}));
+                x = nx == freeX + d ? nx - d + dx : nx + d;
               }
             }
           }
@@ -1299,7 +1287,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               n -= 1;
             } else {
               placement[q].currentPosition = std::make_shared<Point>(
-                  arch.getNearestXLeft(placement[q].currentPosition->x) + d,
+                  arch.getNearestXLeft(
+                      placement[q].currentPosition->x,
+                      arch.getZoneAt(
+                          {placement[q].currentPosition->x, sPos.y})) +
+                      d,
                   sPos.y);
               end.emplace_back(placement[q].currentPosition);
             }
@@ -1307,7 +1299,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto y =
                 arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
             placement[q].currentPosition = std::make_shared<Point>(
-                arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
+                arch.getNearestXLeft(
+                    placement[q].currentPosition->x,
+                    arch.getZoneAt({placement[q].currentPosition->x, y})) +
+                    d,
+                y);
             end.emplace_back(placement[q].currentPosition);
           }
         }
@@ -1392,7 +1388,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               n -= 1;
             } else {
               placement[q].currentPosition = std::make_shared<Point>(
-                  arch.getNearestXLeft(placement[q].currentPosition->x) + d,
+                  arch.getNearestXLeft(
+                      placement[q].currentPosition->x,
+                      arch.getZoneAt(
+                          {placement[q].currentPosition->x, sPos.y})) +
+                      d,
                   sPos.y);
               end.emplace_back(placement[q].currentPosition);
             }
@@ -1400,7 +1400,11 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto y =
                 arch.getPositionOfSite(arch.getSitesInRow(z, r)[0]).y;
             placement[q].currentPosition = std::make_shared<Point>(
-                arch.getNearestXLeft(placement[q].currentPosition->x) + d, y);
+                arch.getNearestXLeft(
+                    placement[q].currentPosition->x,
+                    arch.getZoneAt({placement[q].currentPosition->x, y})) +
+                    d,
+                y);
             end.emplace_back(placement[q].currentPosition);
           }
         }

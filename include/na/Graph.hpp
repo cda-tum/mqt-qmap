@@ -727,28 +727,6 @@ public:
         }
       }
     }
-    std::cout << "Degree of all atoms: ";
-    for (const auto& v : sequence) {
-      std::cout << v << " -> " << getDegree(v) << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "Coloring: ";
-    for (const auto& [e, t] : coloring) {
-      std::cout << e.first << " - " << e.second << " -> " << t << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "Fixed positions: ";
-    for (const auto& [v, x] : fixedPositions) {
-      std::cout << v << " -> " << x << ", ";
-    }
-    std::cout << std::endl;
-    for (Color t = 0; t <= maxColor; ++t) {
-      std::cout << "Moveable positions at timestamp " << t << ": ";
-      for (const auto& [v, x] : moveablePositions[t]) {
-        std::cout << v << " -> " << x << ", ";
-      }
-      std::cout << std::endl;
-    }
     return std::make_pair(moveablePositions, fixedPositions);
   }
 };

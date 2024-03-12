@@ -237,13 +237,13 @@ public:
       -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
-  [[nodiscard]] auto getNearestXLeft(const Number& x, bool proper = true) const
+  [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z, bool proper = true) const
       -> Number;
-  [[nodiscard]] auto getNearestXRight(const Number& x, bool proper = true) const
+  [[nodiscard]] auto getNearestXRight(const Number& x, const Zone& z, bool proper = true) const
       -> Number;
-  [[nodiscard]] auto getNearestYUp(const Number& y, bool proper = true) const
+  [[nodiscard]] auto getNearestYUp(const Number& y, const Zone& z, bool proper = true) const
       -> Number;
-  [[nodiscard]] auto getNearestYDown(const Number& y, bool proper = true) const
+  [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z, bool proper = true) const
       -> Number;
   [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
                                         bool sameZone = false) const -> Index;
