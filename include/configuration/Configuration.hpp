@@ -41,7 +41,10 @@ struct Configuration {
   std::set<std::uint16_t> subgraph{};
 
   // how to cluster the gates into layers
-  Layering layering = Layering::IndividualGates;
+  Layering    layering                   = Layering::IndividualGates;
+  std::size_t maximumActiveQubits        = 0;
+  std::size_t maximumActiveQubits1QGates = 0;
+  std::size_t maximumActiveQubits2QGates = 0;
 
   // initial layout to use for heuristic approach
   InitialLayout initialLayout = InitialLayout::Dynamic;
