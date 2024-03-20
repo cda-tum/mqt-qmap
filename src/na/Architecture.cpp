@@ -572,14 +572,15 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
   // get nearest site to p
   Index nearestSite = 0;
   try {
-    nearestSite = rows >= 0 ? (cols >= 0 ? getNearestSiteUpLeft(p)
-                                         : getNearestSiteUpRight(p))
-                            : (cols >= 0 ? getNearestSiteDownLeft(p)
-                                         : getNearestSiteDownRight(p));
+    nearestSite = rows >= 0
+                      ? (cols >= 0 ? getNearestSiteUpLeft(p, false, true)
+                                   : getNearestSiteUpRight(p, false, true))
+                      : (cols >= 0 ? getNearestSiteDownLeft(p, false, true)
+                                   : getNearestSiteDownRight(p, false, true));
   } catch (std::invalid_argument& e) {
     if (rows >= 0 and cols >= 0) {
       try {
-        nearestSite               = getNearestSiteUpRight(p);
+        nearestSite               = getNearestSiteUpRight(p, false, true);
         const auto nearestSitePos = getPositionOfSite(nearestSite);
         const auto dy             = p.y - nearestSitePos.y;
         Index      anchorSite     = nearestSite;
@@ -587,8 +588,9 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
         auto       r              = std::abs(rows);
         for (; r > 0; --r) {
           try {
-            anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true)
-                                   : getNearestSiteUp(anchorSitePos, true);
+            anchorSite = rows >= 0
+                             ? getNearestSiteDown(anchorSitePos, true, true)
+                             : getNearestSiteUp(anchorSitePos, true, true);
           } catch (std::invalid_argument& e) {
             break;
           }
@@ -599,7 +601,7 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
         return {p.x + cols * d, anchorSitePos.y + dy};
       } catch (std::invalid_argument& e) {
         try {
-          nearestSite               = getNearestSiteDownLeft(p);
+          nearestSite               = getNearestSiteDownLeft(p, false, true);
           const auto nearestSitePos = getPositionOfSite(nearestSite);
           const auto dx             = p.x - nearestSitePos.x;
           Index      anchorSite     = nearestSite;
@@ -607,8 +609,9 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
           auto       c              = std::abs(cols);
           for (; c > 0; --c) {
             try {
-              anchorSite = cols >= 0 ? getNearestSiteRight(anchorSitePos, true)
-                                     : getNearestSiteLeft(anchorSitePos, true);
+              anchorSite = cols >= 0
+                               ? getNearestSiteRight(anchorSitePos, true, true)
+                               : getNearestSiteLeft(anchorSitePos, true, true);
             } catch (std::invalid_argument& e) {
               break;
             }
@@ -635,8 +638,8 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
   auto       c              = std::abs(cols);
   for (; r > 0; --r) {
     try {
-      anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true)
-                             : getNearestSiteUp(anchorSitePos, true);
+      anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)
+                             : getNearestSiteUp(anchorSitePos, true, true);
     } catch (std::invalid_argument& e) {
       break;
     }
@@ -644,8 +647,8 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
   }
   for (; c > 0; --c) {
     try {
-      anchorSite = cols >= 0 ? getNearestSiteRight(anchorSitePos, true)
-                             : getNearestSiteLeft(anchorSitePos, true);
+      anchorSite = cols >= 0 ? getNearestSiteRight(anchorSitePos, true, true)
+                             : getNearestSiteLeft(anchorSitePos, true, true);
     } catch (std::invalid_argument& e) {
       break;
     }
