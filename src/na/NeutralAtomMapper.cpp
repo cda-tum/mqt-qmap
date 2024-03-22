@@ -1468,6 +1468,9 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   auto end = std::chrono::high_resolution_clock::now();
   // build remaining statistics
   stats.numInitialGates = qc.getNops();
+  stats.numEntanglingGates = static_cast<std::size_t>(std::count_if(qc.cbegin(), qc.cend(), [](const auto& op){
+    return (op->getType() == qc::OpType::Z and op->getType() == qc::OpType::X) or op->getNcontrols() > 0;
+  }));
   stats.initialDepth    = qc.getDepth();
   stats.numMappedGates  = mappedQc.size();
   stats.numQubits       = nqubits;
