@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "DisjointSet.hpp"
 
 #include <__algorithm/remove.h>
 #include <__algorithm/remove_if.h>
@@ -103,8 +104,8 @@ public:
     std::size_t const i      = mapping.at(v);
     std::size_t       degree = 0;
     for (std::size_t j = 0; j < nVertices; ++j) {
-      if ((i < j && adjacencyMatrix[i][j - i] != nullptr) ||
-          (j < i && adjacencyMatrix[j][i - j] != nullptr)) {
+      if ((i < j and adjacencyMatrix[i][j - i] != nullptr) or
+          (j < i and adjacencyMatrix[j][i - j] != nullptr)) {
         ++degree;
       }
     }
@@ -122,14 +123,14 @@ public:
       -> bool {
     std::size_t const i = mapping.at(u);
     std::size_t const j = mapping.at(v);
-    return (i < j && adjacencyMatrix[i][j - i] != nullptr) ||
-           (j < i && adjacencyMatrix[j][i - j] != nullptr);
+    return (i < j and adjacencyMatrix[i][j - i] != nullptr) or
+           (j < i and adjacencyMatrix[j][i - j] != nullptr);
   }
   [[nodiscard]] auto
   // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
   isAdjacentEdge(const std::pair<qc::Qubit, qc::Qubit>& e,
                  const std::pair<qc::Qubit, qc::Qubit>& f) const -> bool {
-    return e.first == f.first || e.first == f.second || e.second == f.first ||
+    return e.first == f.first or e.first == f.second or e.second == f.first or
            e.second == f.second;
   }
   [[nodiscard]] auto getMaxIndependentSet() const
@@ -140,7 +141,7 @@ public:
       result.emplace(v);
       queue.erase(std::remove_if(queue.begin(), queue.end(),
                                  [&](const qc::Qubit& u) {
-                                   return u == v || isAdjacent(u, v);
+                                   return u == v or isAdjacent(u, v);
                                  }),
                   queue.end());
     }
@@ -161,14 +162,14 @@ public:
       std::size_t const i = mapping.at(v);
       for (std::size_t j = 0; j < nVertices; ++j) {
         // check whether indices i and j are adjacent
-        if (i < j && adjacencyMatrix[i][j - i] != nullptr) {
+        if (i < j and adjacencyMatrix[i][j - i] != nullptr) {
           qc::Qubit const& u = invMapping.at(j);
           if (u < v) {
             result.emplace(u, v);
           } else {
             result.emplace(v, u);
           }
-        } else if (j < i && adjacencyMatrix[j][i - j] != nullptr) {
+        } else if (j < i and adjacencyMatrix[j][i - j] != nullptr) {
           qc::Qubit const& u = invMapping.at(j);
           if (u < v) {
             result.emplace(u, v);
@@ -215,7 +216,7 @@ public:
     // edges that do not contain the vertex v
     Color minAdmissableColor = 0;
     for (const auto& [f, k] : coloring) {
-      if (isAdjacentEdge(e, f) && v != f.first && v != f.second) {
+      if (isAdjacentEdge(e, f) and v != f.first and v != f.second) {
         minAdmissableColor =
             std::max(minAdmissableColor, static_cast<Color>(k + 1));
       }
@@ -273,7 +274,7 @@ public:
       std::copy_if(edges.cbegin(), edges.cend(),
                    std::back_inserter(adjacentEdges),
                    [&](const std::pair<qc::Qubit, qc::Qubit>& e) {
-                     return e.first == v || e.second == v;
+                     return e.first == v or e.second == v;
                    });
       while (!adjacentEdges.empty()) {
         // calculate the maximum number of distinct colors of adjacent edges
@@ -316,7 +317,7 @@ public:
           if (isAdjacentEdge(e, f)) {
             std::vector<bool> usedColors(maxColor + 1, false);
             for (const auto& g : edges) {
-              if (isAdjacentEdge(f, g) && coloring.find(g) != coloring.end()) {
+              if (isAdjacentEdge(f, g) and coloring.find(g) != coloring.end()) {
                 usedColors[coloring[g]] = true;
               }
             }
@@ -423,7 +424,7 @@ public:
       // x-coordinates of movable vertices at timestamp t
       std::unordered_map<qc::Qubit, std::size_t> moveableXs{};
       for (const qc::Qubit v : moveable) {
-        // get the neighbors of u and v
+        // get the neighbors of v
         const std::set<qc::Qubit> neighborsOfV = std::accumulate(
             coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
             [&](std::set<qc::Qubit> acc, auto value) {
@@ -448,21 +449,21 @@ public:
               static_cast<std::size_t>(std::distance(fixed.cbegin(), it));
         }
       }
+      // map the keys of moveableXs to their indices in moveable
+      std::vector<std::size_t> moveableXsIds{};
+      std::transform(moveableXs.cbegin(), moveableXs.cend(),
+                     std::back_inserter(moveableXsIds), [&](const auto& value) {
+                       const auto& it = std::find(moveable.cbegin(),
+                                                  moveable.cend(), value.first);
+                       return static_cast<std::size_t>(
+                           std::distance(moveable.cbegin(), it));
+                     });
       for (const qc::Qubit v : moveable) {
         if (moveableXs.find(v) == moveableXs.end()) {
+          // index of v in moveable
           const auto& it = std::find(moveable.cbegin(), moveable.cend(), v);
           const auto  i =
               static_cast<std::size_t>(std::distance(moveable.cbegin(), it));
-          // map the keys of moveableXs to their indices in moveable
-          std::vector<std::size_t> moveableXsIds{};
-          std::transform(
-              moveableXs.cbegin(), moveableXs.cend(),
-              std::back_inserter(moveableXsIds), [&](const auto& value) {
-                const auto& it =
-                    std::find(moveable.cbegin(), moveable.cend(), value.first);
-                return static_cast<std::size_t>(
-                    std::distance(moveable.cbegin(), it));
-              });
           // get the index of the left neighbor in the keys of moveableXs
           std::vector<std::size_t> leftNeighbors;
           std::copy_if(moveableXsIds.cbegin(), moveableXsIds.cend(),
@@ -472,7 +473,9 @@ public:
           std::copy_if(moveableXsIds.cbegin(), moveableXsIds.cend(),
                        std::back_inserter(rightNeighbors),
                        [&](const auto& j) { return j < i; });
-          if (!leftNeighbors.empty() && !rightNeighbors.empty()) {
+          // if there is a left and right neighbor, we have to add a
+          // slack position
+          if (!leftNeighbors.empty() and !rightNeighbors.empty()) {
             // get min left and max right neighbor
             const auto& leftNeighbor =
                 std::min_element(leftNeighbors.cbegin(), leftNeighbors.cend());
@@ -492,8 +495,7 @@ public:
       // tSlack is completely computed until here
       for (const auto& elem : slack) {
         const auto& pair = elem.first;
-        const auto& s    = elem.second;
-        for (std::size_t i = 0; i < s; ++i) {
+        for (std::size_t i = 0; i < elem.second; ++i) {
           // check whether narrow slack positions are subsumed by wider slack
           // positions added from previous timestamps
           const auto& superPairs = std::accumulate(
@@ -537,6 +539,30 @@ public:
     std::sort(slackPositions.begin(), slackPositions.end());
     return slackPositions;
   }
+  [[nodiscard]] auto
+  groupByConnectedComponent(const std::vector<qc::Qubit>& sequence) const
+      -> std::vector<qc::Qubit> {
+    const auto&            vertices = getVertices();
+    DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
+    for (const qc::Qubit& v : vertices) {
+      for (const qc::Qubit& u : vertices) {
+        if (isAdjacent(v, u)) {
+          ds.unionSet(v, u);
+        }
+      }
+    }
+    std::vector<qc::Qubit> result{};
+    for (const qc::Qubit& v : vertices) {
+      if (ds.findSet(v) == v) {
+        for (const qc::Qubit& u : sequence) {
+          if (ds.findSet(u) == v) {
+            result.emplace_back(u);
+          }
+        }
+      }
+    }
+    return result;
+  }
   /**
    * @brief Partitions the set of vertices into moveable and fixed vertices
    * with the aim to maximize the number of executable gates in one run
@@ -548,11 +574,23 @@ public:
   [[nodiscard]] auto computeSequence() const
       -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                    std::unordered_map<qc::Qubit, std::int64_t>> {
-    auto                         mis      = getMaxIndependentSet();
-    std::vector<qc::Qubit> const sequence = sortByDegreeDesc(mis);
+    auto        mis               = getMaxIndependentSet();
+    const auto& sequenceUngrouped = sortByDegreeDesc(mis);
+    const auto& sequence = groupByConnectedComponent(sequenceUngrouped);
     std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, Color,
                        PairHash<qc::Qubit>> const coloring =
         colorEdges(coveredEdges(mis), sequence);
+    std::cout << toString();
+    std::cout << "Independent Set: ";
+    for (const auto& v : sequence) {
+      std::cout << v << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "Coloring: ";
+    for (const auto& [e, c] : coloring) {
+      std::cout << "(" << e.first << ", " << e.second << "): " << c << ", ";
+    }
+    std::cout << std::endl;
     // take the difference of all vertices and the mis
     std::unordered_set<qc::Qubit> const& difference = std::accumulate(
         mapping.cbegin(), mapping.cend(), std::unordered_set<qc::Qubit>(),
@@ -562,86 +600,108 @@ public:
           }
           return acc;
         });
-    std::vector<qc::Qubit> const& fixed =
-        topoOrder(difference, [&](const qc::Qubit& v, const qc::Qubit& u) {
-          const std::set<qc::Qubit> neighborsOfV = std::accumulate(
-              coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
-              [&](std::set<qc::Qubit> acc, auto value) {
-                std::pair<qc::Qubit, qc::Qubit> e = value.first;
-                if (e.first == v) {
-                  acc.emplace(e.second);
-                } else if (e.second == v) {
-                  acc.emplace(e.first);
+    std::vector<
+        qc::Qubit> const& fixed = topoOrder(difference, [&](const qc::Qubit& v,
+                                                            const qc::Qubit&
+                                                                u) {
+      const std::set<qc::Qubit> neighborsOfV = std::accumulate(
+          coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
+          [&](std::set<qc::Qubit> acc, auto value) {
+            std::pair<qc::Qubit, qc::Qubit> e = value.first;
+            if (e.first == v) {
+              acc.emplace(e.second);
+            } else if (e.second == v) {
+              acc.emplace(e.first);
+            }
+            return acc;
+          });
+      const std::set<qc::Qubit> neighborsOfU = std::accumulate(
+          coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
+          [&](std::set<qc::Qubit> acc, auto value) {
+            std::pair<qc::Qubit, qc::Qubit> e = value.first;
+            if (e.first == u) {
+              acc.emplace(e.second);
+            } else if (e.second == u) {
+              acc.emplace(e.first);
+            }
+            return acc;
+          });
+      std::set<qc::Qubit> inter{};
+      std::set_intersection(neighborsOfV.cbegin(), neighborsOfV.cend(),
+                            neighborsOfU.cbegin(), neighborsOfU.cend(),
+                            std::inserter(inter, inter.end()));
+      if (!inter.empty()) {
+        const qc::Qubit w = *inter.begin();
+        const auto& vit = coloring.find(std::pair<qc::Qubit, qc::Qubit>(v, w));
+        const Color vwColor =
+            vit != coloring.end()
+                ? vit->second
+                : coloring.find(std::pair<qc::Qubit, qc::Qubit>(w, v))->second;
+        const auto& uit = coloring.find(std::pair<qc::Qubit, qc::Qubit>(u, w));
+        const Color uwColor =
+            uit != coloring.end()
+                ? uit->second
+                : coloring.find(std::pair<qc::Qubit, qc::Qubit>(w, u))->second;
+        if (vwColor + 1 == uwColor) {
+          return true;
+        }
+      } else { // inter.empty() ==> no common neighbor
+        const auto maxColor = std::accumulate(
+            coloring.cbegin(), coloring.cend(), static_cast<Color>(0),
+            [](Color acc, const auto& value) {
+              return std::max(acc, value.second);
+            });
+        for (Color t = 0; t <= maxColor; ++t) {
+          std::vector<std::size_t> enumerate(sequence.size());
+          std::iota(enumerate.begin(), enumerate.end(), 0);
+          const auto vMaxSeq = std::accumulate(
+              enumerate.cbegin(), enumerate.cend(), sequence.size(),
+              [&](std::size_t acc, const std::size_t i) {
+                const auto value = sequence[i];
+                if (neighborsOfV.find(value) != neighborsOfV.end() and
+                    ((coloring.find(std::pair<qc::Qubit, qc::Qubit>(
+                          v, value)) != coloring.end() and
+                      coloring.find(std::pair<qc::Qubit, qc::Qubit>(v, value))
+                              ->second == t) or
+                     (coloring.find(std::pair<qc::Qubit, qc::Qubit>(
+                          value, v)) != coloring.end() and
+                      coloring.find(std::pair<qc::Qubit, qc::Qubit>(value, v))
+                              ->second == t))) {
+                  return std::min(acc, static_cast<std::size_t>(i));
                 }
                 return acc;
               });
-          const std::set<qc::Qubit> neighborsOfU = std::accumulate(
-              coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
-              [&](std::set<qc::Qubit> acc, auto value) {
-                std::pair<qc::Qubit, qc::Qubit> e = value.first;
-                if (e.first == u) {
-                  acc.emplace(e.second);
-                } else if (e.second == u) {
-                  acc.emplace(e.first);
+          const auto uMaxSeq = std::accumulate(
+              enumerate.cbegin(), enumerate.cend(), sequence.size(),
+              [&](std::size_t acc, const std::size_t i) {
+                const auto value = sequence[i];
+                if (neighborsOfU.find(value) != neighborsOfU.end() and
+                    ((coloring.find(std::pair<qc::Qubit, qc::Qubit>(
+                          u, value)) != coloring.end() and
+                      coloring.find(std::pair<qc::Qubit, qc::Qubit>(u, value))
+                              ->second == t) or
+                     (coloring.find(std::pair<qc::Qubit, qc::Qubit>(
+                          value, u)) != coloring.end() and
+                      coloring.find(std::pair<qc::Qubit, qc::Qubit>(value, u))
+                              ->second == t))) {
+                  return std::min(acc, static_cast<std::size_t>(i));
                 }
                 return acc;
               });
-          std::set<qc::Qubit> inter{};
-          std::set_intersection(neighborsOfV.cbegin(), neighborsOfV.cend(),
-                                neighborsOfU.cbegin(), neighborsOfU.cend(),
-                                std::inserter(inter, inter.end()));
-          if (!inter.empty()) {
-            const qc::Qubit w = *inter.begin();
-            const auto&     vit =
-                coloring.find(std::pair<qc::Qubit, qc::Qubit>(v, w));
-            const Color vwColor =
-                vit != coloring.end()
-                    ? vit->second
-                    : coloring.find(std::pair<qc::Qubit, qc::Qubit>(w, v))
-                          ->second;
-            const auto& uit =
-                coloring.find(std::pair<qc::Qubit, qc::Qubit>(u, w));
-            const Color uwColor =
-                uit != coloring.end()
-                    ? uit->second
-                    : coloring.find(std::pair<qc::Qubit, qc::Qubit>(w, u))
-                          ->second;
-            if (vwColor + 1 == uwColor) {
-              return true;
-            }
-          } else { // inter.empty() ==> no common neighbor
-            std::vector<std::size_t> enumerate(sequence.size());
-            std::iota(enumerate.begin(), enumerate.end(), 0);
-            const auto vMaxSeq = std::accumulate(
-                enumerate.cbegin(), enumerate.cend(), sequence.size(),
-                [&](std::size_t acc, const std::size_t i) {
-                  const auto value = sequence[i];
-                  if (neighborsOfV.find(value) != neighborsOfV.end()) {
-                    return std::min(acc, static_cast<std::size_t>(i));
-                  }
-                  return acc;
-                });
-            const auto uMaxSeq = std::accumulate(
-                enumerate.cbegin(), enumerate.cend(), sequence.size(),
-                [&](std::size_t acc, const std::size_t i) {
-                  const auto value = sequence[i];
-                  if (neighborsOfU.find(value) != neighborsOfU.end()) {
-                    return std::min(acc, static_cast<std::size_t>(i));
-                  }
-                  return acc;
-                });
-            if (vMaxSeq > uMaxSeq) {
-              return true;
-            }
+          if (vMaxSeq < sequence.size() and uMaxSeq < sequence.size() and
+              vMaxSeq > uMaxSeq) {
+            return true;
           }
-          return false;
-        });
+        }
+      }
+      return false;
+    });
     const auto& slack = computeSlackPositions(sequence, fixed, coloring);
     // compute relative x positions of fixed vertices
     std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
     for (std::uint32_t x = 0, i = 0; x < fixed.size(); ++x) {
       fixedPositions[fixed[x]] = static_cast<std::int64_t>(x) + i;
-      while (i < slack.size() && x == slack[i]) {
+      while (i < slack.size() and x == slack[i]) {
         ++i;
       }
     }
@@ -728,6 +788,27 @@ public:
       }
     }
     return std::make_pair(moveablePositions, fixedPositions);
+  }
+  // Outputs a string representation of the graph in the DOT format
+  [[nodiscard]] auto toString() const -> std::string {
+    std::stringstream ss;
+    ss << "graph {\n";
+    for (const auto& [v, i] : mapping) {
+      ss << "  " << i << " [label=\"" << v << "\"];\n";
+    }
+    for (std::size_t i = 0; i < nVertices; ++i) {
+      for (std::size_t j = i + 1; j < nVertices; ++j) {
+        if (adjacencyMatrix[i][j - i] != nullptr) {
+          ss << "  " << i << " -- " << j << ";\n";
+        }
+      }
+    }
+    ss << "}\n";
+    return ss.str();
+  }
+  friend auto operator<<(std::ostream& os, const Graph& g) -> std::ostream& {
+    os << g.toString(); // Using toString() method
+    return os;
   }
 };
 } // namespace na

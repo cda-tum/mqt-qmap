@@ -39,10 +39,10 @@ public:
     }
     [[nodiscard]] auto toString() const -> std::string {
       std::stringstream ss;
-      ss << numInitialGates << "," << numEntanglingGates << ","
-         << numEntanglingGates << "," << initialDepth << "," << numMappedGates
-         << "," << numQubits << "," << maxSeqWidth << "," << preprocessTime
-         << "," << mappingTime << "," << postprocessTime << std::endl;
+      ss << numInitialGates << "," << numEntanglingGates << "," << initialDepth
+         << "," << numMappedGates << "," << numQubits << "," << maxSeqWidth
+         << "," << preprocessTime << "," << mappingTime << ","
+         << postprocessTime << std::endl;
       return ss.str();
     }
     friend auto operator<<(std::ostream& os, const Statistics& s)
