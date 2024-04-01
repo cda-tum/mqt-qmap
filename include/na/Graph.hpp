@@ -93,7 +93,9 @@ public:
               : adjacencyMatrix[j][i - j] != nullptr) {
       return i < j ? adjacencyMatrix[i][j - i] : adjacencyMatrix[j][i - j];
     }
-    throw std::invalid_argument("The edge does not exist.");
+    std::stringstream ss;
+    ss << "The edge (" << v << ", " << u << ") does not exist.";
+    throw std::invalid_argument(ss.str());
   }
   [[nodiscard]] auto getDegree(qc::Qubit v) const -> std::size_t {
     if (mapping.find(v) == mapping.end()) {
@@ -580,17 +582,6 @@ public:
     std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, Color,
                        PairHash<qc::Qubit>> const coloring =
         colorEdges(coveredEdges(mis), sequence);
-    std::cout << toString();
-    std::cout << "Independent Set: ";
-    for (const auto& v : sequence) {
-      std::cout << v << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "Coloring: ";
-    for (const auto& [e, c] : coloring) {
-      std::cout << "(" << e.first << ", " << e.second << "): " << c << ", ";
-    }
-    std::cout << std::endl;
     // take the difference of all vertices and the mis
     std::unordered_set<qc::Qubit> const& difference = std::accumulate(
         mapping.cbegin(), mapping.cend(), std::unordered_set<qc::Qubit>(),
@@ -738,23 +729,10 @@ public:
           moveablePositions[t][v] = it->second;
         }
       }
-      for (const qc::Qubit v : sequence) {
+      for (std::size_t i = 0; i < sequence.size(); ++i) {
+        const qc::Qubit v = sequence[i];
         if (moveablePositions[t].find(v) == moveablePositions[t].end()) {
-          const auto& it = std::find(sequence.cbegin(), sequence.cend(), v);
-          const auto  i =
-              static_cast<std::size_t>(std::distance(sequence.cbegin(), it));
-          // map the keys of moveableXs to their indices in moveable
-          std::vector<std::size_t> moveableXsIds{};
-          std::transform(
-              moveablePositions[t].cbegin(), moveablePositions[t].cend(),
-              std::back_inserter(moveableXsIds), [&](const auto& value) {
-                const auto& it =
-                    std::find(sequence.cbegin(), sequence.cend(), value.first);
-                return static_cast<std::size_t>(
-                    std::distance(sequence.cbegin(), it));
-              });
-          if (std::find(moveableXsIds.cbegin(), moveableXsIds.cend(), i - 1) !=
-              moveableXsIds.cend()) {
+          if (i > 0) {
             // right neighbor already has a position
             const auto rightNeighbor = i - 1;
             const auto rightNeighborX =
@@ -777,12 +755,45 @@ public:
             const auto& maxIt = std::max_element(freeX.cbegin(), freeX.cend());
             moveablePositions[t][v] = *maxIt;
           } else {
-            const auto& leftNeighbor =
-                std::max_element(moveableXsIds.cbegin(), moveableXsIds.cend());
-            const auto leftNeighborX =
-                moveablePositions[t][sequence[*leftNeighbor]];
-            moveablePositions[t][v] =
-                leftNeighborX + static_cast<std::int64_t>(*leftNeighbor);
+            // it is the rightmost atom (w/o position)
+            const auto leftNeighbor = std::accumulate(
+                moveablePositions[t].cbegin(), moveablePositions[t].cend(),
+                std::make_pair(0UL, 0LL),
+                [](const std::pair<const qc::Qubit, std::int64_t>& acc,
+                   const auto&                                     value) {
+                  if (value.second > acc.second) {
+                    return value;
+                  }
+                  return acc;
+                });
+            // k is the number of spots between the left positioned neighbor and
+            // the leftmost atom (including itself)
+            const auto         k = static_cast<std::size_t>(std::distance(
+                sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(),
+                                                     leftNeighbor.first)));
+            const std::int64_t maxX =
+                std::accumulate(fixedPositions.cbegin(), fixedPositions.cend(),
+                                0LL, [](const auto& acc, const auto& value) {
+                                  return std::max(acc, value.second);
+                                });
+            std::vector<std::int64_t> xrange(
+                static_cast<std::size_t>(maxX - leftNeighbor.second));
+            std::iota(xrange.begin(), xrange.end(), leftNeighbor.second + 1);
+            std::vector<std::int64_t> freeX;
+            std::copy_if(xrange.cbegin(), xrange.cend(),
+                         std::back_inserter(freeX), [&](const std::int64_t x) {
+                           return std::all_of(fixedPositions.cbegin(),
+                                              fixedPositions.cend(),
+                                              [&](const auto& value) {
+                                                return x != value.second;
+                                              });
+                         });
+            if (k <= freeX.size()) {
+              moveablePositions[t][v] = freeX[k - 1];
+            } else {
+              moveablePositions[t][v] = maxX + static_cast<std::int64_t>(k) -
+                                        static_cast<std::int64_t>(freeX.size());
+            }
           }
         }
       }

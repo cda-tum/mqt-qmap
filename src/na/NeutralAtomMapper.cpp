@@ -1169,9 +1169,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           const auto x = timeframe.at(q);
           if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
             std::stringstream ss;
-            ss << "Atom " << q
-               << " was unexpectedly not "
-                  "picked up.";
+            ss << "Atom " << q << " was unexpectedly not picked up.";
             throw std::logic_error(ss.str());
           }
           if (x >= 0 and static_cast<std::size_t>(x) < sites.size()) {
@@ -1467,14 +1465,17 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   postprocess();
   auto end = std::chrono::high_resolution_clock::now();
   // build remaining statistics
-  stats.numInitialGates = qc.getNops();
-  stats.numEntanglingGates = static_cast<std::size_t>(std::count_if(qc.cbegin(), qc.cend(), [](const auto& op){
-    return (op->getType() == qc::OpType::Z and op->getType() == qc::OpType::X) or op->getNcontrols() > 0;
-  }));
-  stats.initialDepth    = qc.getDepth();
-  stats.numMappedGates  = mappedQc.size();
-  stats.numQubits       = nqubits;
-  stats.maxSeqWidth     = config.getPatchCols() * maxSeqWidth;
+  stats.numInitialGates    = qc.getNops();
+  stats.numEntanglingGates = static_cast<std::size_t>(
+      std::count_if(qc.cbegin(), qc.cend(), [](const auto& op) {
+        return (op->getType() == qc::OpType::Z and
+                op->getType() == qc::OpType::X) or
+               op->getNcontrols() > 0;
+      }));
+  stats.initialDepth   = qc.getDepth();
+  stats.numMappedGates = mappedQc.size();
+  stats.numQubits      = nqubits;
+  stats.maxSeqWidth    = config.getPatchCols() * maxSeqWidth;
   // get the mapping time in milliseconds
   stats.preprocessTime =
       std::chrono::duration<qc::fp, std::milli>(startMapping - startPreprocess)
