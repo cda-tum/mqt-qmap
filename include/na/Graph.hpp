@@ -13,6 +13,7 @@
 #include <__algorithm/remove_if.h>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -23,6 +24,7 @@
 #include <set>
 #include <sstream>
 #include <stack>
+#include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -213,7 +215,8 @@ public:
       const std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, Color,
                                PairHash<qc::Qubit>>& coloring,
       const Color& maxColor, const std::pair<qc::Qubit, qc::Qubit>& e,
-      const qc::Qubit& v) const -> Color {
+      const qc::Qubit& v, const std::vector<qc::Qubit>& sequence,
+      const std::vector<std::vector<bool>>& partialOrder) const -> Color {
     // compute the minimum admissable color as the maximum color +1 of adjacent
     // edges that do not contain the vertex v
     Color minAdmissableColor = 0;
@@ -233,8 +236,69 @@ public:
       }
     }
     // The minAdmissableColor is now the minimum of the free colors
-    minAdmissableColor = *freeColors.begin();
-    return minAdmissableColor;
+    // that does not generate a cycle in the graph induced by the partial order
+    // of SLM traps.
+
+    // for every SLM trap and color, calculate its rank
+    std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>> ranks;
+    for (const auto& [f, k] : coloring) {
+      const auto& it = std::find(sequence.cbegin(), sequence.cend(), f.first);
+      if (it != sequence.cend()) {
+        ranks[f.second][k] =
+            static_cast<std::size_t>(std::distance(sequence.cbegin(), it));
+      } else {
+        ranks[f.first][k] = static_cast<std::size_t>(std::distance(
+            sequence.cbegin(),
+            std::find(sequence.cbegin(), sequence.cend(), f.second)));
+      }
+    }
+    // u is the SLM trap that is adjacent to v in the edge e
+    const qc::Qubit u = v == e.first ? e.second : e.first;
+    // get the index of v in sequence
+    const auto rankOfU = static_cast<std::size_t>(std::distance(
+        sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(), v)));
+    for (const auto leastAdmissableColor : freeColors) {
+      bool isAdmissable = true;
+      for (const auto& [f, k] : coloring) {
+        if (f.first == v or f.second == v) {
+          const qc::Qubit w = f.first == v ? f.second : f.first;
+          if (k > leastAdmissableColor) {
+            if (partialOrder[mapping.at(w)][mapping.at(u)]) {
+              isAdmissable = false;
+              break;
+            }
+          } else if (k < leastAdmissableColor) {
+            if (partialOrder[mapping.at(u)][mapping.at(w)]) {
+              throw std::logic_error("Coloring cannot be completed to a valid "
+                                     "one (cycle is unavoidable).");
+            }
+          }
+        } else if (k == leastAdmissableColor) {
+          // get the SLM atom from the edge f
+          const qc::Qubit w = std::find(sequence.cbegin(), sequence.cend(),
+                                        f.first) == sequence.end()
+                                  ? f.first
+                                  : f.second;
+          if (rankOfU > ranks[w][k]) {
+            if (partialOrder[mapping.at(w)][mapping.at(u)]) {
+              isAdmissable = false;
+              break;
+            }
+          } else if (rankOfU < ranks[w][k]) {
+            if (partialOrder[mapping.at(u)][mapping.at(w)]) {
+              isAdmissable = false;
+              break;
+            }
+          } else {
+            throw std::logic_error("Ranks are not consistent.");
+          }
+        }
+      }
+      if (isAdmissable) {
+        return leastAdmissableColor;
+      }
+    }
+    throw std::logic_error("No admissable color found (should never occur).");
   }
   /**
    * @brief Colors all given edges starting with edges that are adjacent to the
@@ -270,6 +334,12 @@ public:
                           return isAdjacentEdge(e, f);
                         }));
     }
+    // represent the partial order on the SLM atoms as a directed graph with all
+    // transitive edges
+    std::vector<std::vector<bool>> partialOrder(
+        getNVertices(), std::vector<bool>(getNVertices(), false));
+    // for every SLM trap and color, calculate its rank
+    std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>> ranks;
 
     for (const auto& v : nodesQueue) {
       std::vector<std::pair<qc::Qubit, qc::Qubit>> adjacentEdges{};
@@ -278,42 +348,62 @@ public:
                    [&](const std::pair<qc::Qubit, qc::Qubit>& e) {
                      return e.first == v or e.second == v;
                    });
-      while (!adjacentEdges.empty()) {
-        // calculate the maximum number of distinct colors of adjacent edges
-        std::size_t maxNAdjColor = 0;
-        for (const auto& e : adjacentEdges) {
-          maxNAdjColor = std::max(maxNAdjColor, nAdjColors[e]);
-        }
-        // select the edges with the maximum number of distinct colors
-        std::vector<std::pair<qc::Qubit, qc::Qubit>> selectedEdges{};
-        std::copy_if(adjacentEdges.cbegin(), adjacentEdges.cend(),
-                     std::back_inserter(selectedEdges),
-                     [&](const std::pair<qc::Qubit, qc::Qubit>& e) {
-                       return nAdjColors[e] == maxNAdjColor;
-                     });
-        // if there are multiple edges with the maximum number of distinct
-        if (selectedEdges.size() > 1) {
-          // calculate the maximum degree of the selected edges
-          std::size_t maxDegree = 0;
-          for (const auto& e : selectedEdges) {
-            maxDegree = std::max(maxDegree, edgeDegree[e]);
-          }
-          // remove all edges with a degree less than the maximum degree
-          selectedEdges.erase(
-              std::remove_if(selectedEdges.begin(), selectedEdges.end(),
-                             [&](const std::pair<qc::Qubit, qc::Qubit>& e) {
-                               return edgeDegree[e] < maxDegree;
-                             }),
-              selectedEdges.end());
-        }
-        // pick any edge from the remaining selected edges
-        auto& e = selectedEdges[0];
+      std::sort(adjacentEdges.begin(), adjacentEdges.end(),
+                [&](const std::pair<qc::Qubit, qc::Qubit>& a,
+                    const std::pair<qc::Qubit, qc::Qubit>& b) {
+                  const auto u = a.first == v ? a.second : a.first;
+                  const auto w = b.first == v ? b.second : b.first;
+                  return partialOrder[mapping.at(u)][mapping.at(w)] or
+                         (!partialOrder[mapping.at(w)][mapping.at(u)] and
+                          (nAdjColors[a] > nAdjColors[b] or
+                           (nAdjColors[a] == nAdjColors[b] and
+                            edgeDegree[a] > edgeDegree[b])));
+                });
+      for (const auto& e : adjacentEdges) {
         // color the edge
-        adjacentEdges.erase(
-            std::remove(adjacentEdges.begin(), adjacentEdges.end(), e),
-            adjacentEdges.end());
-        coloring[e] = getLeastAdmissableColor(coloring, maxColor, e, v);
-        maxColor    = std::max(maxColor, coloring[e]);
+        coloring[e] = getLeastAdmissableColor(coloring, maxColor, e, v,
+                                              nodesQueue, partialOrder);
+        std::cout << "Coloring edge (" << e.first << ", " << e.second
+                  << ") with color " << coloring[e] << std::endl;
+        // update partial order
+        const qc::Qubit u     = e.first == v ? e.second : e.first;
+        ranks[u][coloring[e]] = static_cast<std::size_t>(std::distance(
+            nodesQueue.cbegin(),
+            std::find(nodesQueue.cbegin(), nodesQueue.cend(), v)));
+        for (const auto& [f, k] : coloring) {
+          if (f.first == v or f.second == v) {
+            const qc::Qubit w = f.first == v ? f.second : f.first;
+            if (k < coloring[e]) {
+              partialOrder[mapping.at(w)][mapping.at(u)] = true;
+            } else if (k > coloring[e]) {
+              partialOrder[mapping.at(u)][mapping.at(w)] = true;
+            }
+          } else if (k == coloring[e]) {
+            const qc::Qubit w =
+                std::find(nodesQueue.cbegin(), nodesQueue.cend(), f.first) ==
+                        nodesQueue.cend()
+                    ? f.first
+                    : f.second;
+            if (ranks[u][k] < ranks[w][k]) {
+              partialOrder[mapping.at(w)][mapping.at(u)] = true;
+            } else if (ranks[u][k] > ranks[w][k]) {
+              partialOrder[mapping.at(u)][mapping.at(w)] = true;
+            } else {
+              throw std::logic_error("Coloring is not valid.");
+            }
+          }
+        }
+        // calculate transitive closure
+        for (std::size_t i = 0; i < getNVertices(); ++i) {
+          for (std::size_t j = 0; j < getNVertices(); ++j) {
+            for (std::size_t k = 0; k < getNVertices(); ++k) {
+              partialOrder[j][k] = partialOrder[j][k] ||
+                                   (partialOrder[j][i] && partialOrder[i][k]);
+            }
+          }
+        }
+
+        maxColor = std::max(maxColor, coloring[e]);
         // update the number of distinct colors of adjacent edges
         for (const auto& f : edges) {
           if (isAdjacentEdge(e, f)) {
@@ -579,9 +669,26 @@ public:
     auto        mis               = getMaxIndependentSet();
     const auto& sequenceUngrouped = sortByDegreeDesc(mis);
     const auto& sequence = groupByConnectedComponent(sequenceUngrouped);
+    std::cout << toString();
+    std::cout << "Independent Set: ";
+    for (const auto& v : sequence) {
+      std::cout << v << ", ";
+    }
+    std::cout << std::endl;
     std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, Color,
                        PairHash<qc::Qubit>> const coloring =
         colorEdges(coveredEdges(mis), sequence);
+    std::cout << toString();
+    std::cout << "Independent Set: ";
+    for (const auto& v : sequence) {
+      std::cout << v << ", ";
+    }
+    std::cout << std::endl;
+    std::cout << "Coloring: ";
+    for (const auto& [e, c] : coloring) {
+      std::cout << "(" << e.first << ", " << e.second << "): " << c << ", ";
+    }
+    std::cout << std::endl;
     // take the difference of all vertices and the mis
     std::unordered_set<qc::Qubit> const& difference = std::accumulate(
         mapping.cbegin(), mapping.cend(), std::unordered_set<qc::Qubit>(),
