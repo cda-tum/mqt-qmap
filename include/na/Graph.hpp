@@ -363,8 +363,6 @@ public:
         // color the edge
         coloring[e] = getLeastAdmissableColor(coloring, maxColor, e, v,
                                               nodesQueue, partialOrder);
-        std::cout << "Coloring edge (" << e.first << ", " << e.second
-                  << ") with color " << coloring[e] << std::endl;
         // update partial order
         const qc::Qubit u     = e.first == v ? e.second : e.first;
         ranks[u][coloring[e]] = static_cast<std::size_t>(std::distance(
@@ -669,26 +667,9 @@ public:
     auto        mis               = getMaxIndependentSet();
     const auto& sequenceUngrouped = sortByDegreeDesc(mis);
     const auto& sequence = groupByConnectedComponent(sequenceUngrouped);
-    std::cout << toString();
-    std::cout << "Independent Set: ";
-    for (const auto& v : sequence) {
-      std::cout << v << ", ";
-    }
-    std::cout << std::endl;
     std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, Color,
                        PairHash<qc::Qubit>> const coloring =
         colorEdges(coveredEdges(mis), sequence);
-    std::cout << toString();
-    std::cout << "Independent Set: ";
-    for (const auto& v : sequence) {
-      std::cout << v << ", ";
-    }
-    std::cout << std::endl;
-    std::cout << "Coloring: ";
-    for (const auto& [e, c] : coloring) {
-      std::cout << "(" << e.first << ", " << e.second << "): " << c << ", ";
-    }
-    std::cout << std::endl;
     // take the difference of all vertices and the mis
     std::unordered_set<qc::Qubit> const& difference = std::accumulate(
         mapping.cbegin(), mapping.cend(), std::unordered_set<qc::Qubit>(),

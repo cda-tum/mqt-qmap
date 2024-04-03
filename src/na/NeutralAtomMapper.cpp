@@ -1166,27 +1166,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                      });
       // ------------------------------------------------------------------
       // 4. Apply the cz gates
-      std::cout << "MoveableOrdered: " << std::endl;
-      for (const auto& q : moveableOrdered) {
-        std::cout << q << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "FixedOrdered: " << std::endl;
-      for (const auto& q : fixedOrdered) {
-        std::cout << q << " ";
-      }
-      std::cout << std::endl;
-      std::cout << "Fixed: " << std::endl;
-      for (const auto& [q, x] : fixed) {
-        std::cout << q << " -> " << x << ", ";
-      }
-      std::cout << std::endl;
       for (const auto& timeframe : moveable) {
-        std::cout << "Timeframe: " << std::endl;
-        for (const auto& [q, x] : timeframe) {
-          std::cout << q << " -> " << x << ", ";
-        }
-        std::cout << std::endl;
         for (const auto q : moveableOrdered) {
           const auto x = timeframe.at(q);
           if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
@@ -1218,9 +1198,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto qPos = *placement[q].currentPosition;
             const auto pPos = *placement[p].currentPosition;
             if ((qPos - pPos).length() <= arch.getInteractionRadius()) {
-              std::cout << "CZ(" << q << ", " << p << ")" << std::endl;
               graph.getEdge(p, q)->execute();
-              std::cout << "--> done" << std::endl;
             }
           }
         }
