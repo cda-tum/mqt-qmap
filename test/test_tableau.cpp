@@ -517,9 +517,9 @@ TEST_F(TestTableau, CircuitTranslation) {
   qc.dcx(0, 1);
   qc.ecr(0, 1);
 
-  auto compOP = std::make_unique<qc::CompoundOperation>(2U);
-  compOP->emplace_back<qc::StandardOperation>(2U, 0, qc::H);
-  compOP->emplace_back<qc::StandardOperation>(2U, 0_pc, 1, qc::X);
+  auto compOP = std::make_unique<qc::CompoundOperation>();
+  compOP->emplace_back<qc::StandardOperation>(0, qc::H);
+  compOP->emplace_back<qc::StandardOperation>(0_pc, 1, qc::X);
   qc.emplace_back(compOP);
 
   EXPECT_NO_THROW(tableau = cs::Tableau(qc););

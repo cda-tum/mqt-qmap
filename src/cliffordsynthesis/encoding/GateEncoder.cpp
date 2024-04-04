@@ -190,7 +190,7 @@ void GateEncoder::extractSingleQubitGatesFromModel(
       }
       if (model.getBoolValue(singleQubitGates[gateToIndex(gate)][q],
                              lb.get())) {
-        qc.emplace_back<qc::StandardOperation>(N, q, gate);
+        qc.emplace_back<qc::StandardOperation>(q, gate);
         ++nSingleQubitGates;
         PLOG_DEBUG << toString(gate) << "(" << q << ")";
       }
@@ -211,7 +211,7 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
       const auto control =
           qc::Control{static_cast<qc::Qubit>(ctrl), qc::Control::Type::Pos};
       if (model.getBoolValue(twoQubitGates[ctrl][trgt], lb.get())) {
-        qc.emplace_back<qc::StandardOperation>(N, control, trgt, qc::OpType::X);
+        qc.cx(control, static_cast<qc::Qubit>(trgt));
         ++nTwoQubitGates;
         PLOG_DEBUG << "CX(" << ctrl << ", " << trgt << ")";
       }

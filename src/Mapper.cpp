@@ -6,7 +6,11 @@
 #include "Mapper.hpp"
 
 #include "CircuitOptimizer.hpp"
+#include "Definitions.hpp"
+#include "operations/CompoundOperation.hpp"
 
+#include <cassert>
+#include <cmath>
 #include <utility>
 
 void Mapper::initResults() {
