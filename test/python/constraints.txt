@@ -3,7 +3,7 @@ setuptools-scm==7.0.0
 pybind11==2.11.0
 pytest==7.0.0
 importlib_resources==5.0.0
-typing_extensions==4.2.0
+typing_extensions==4.6.0
 qiskit==1.0.0
 rustworkx==0.14.0
 mqt.qcec==2.4.5
