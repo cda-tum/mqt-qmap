@@ -5,9 +5,11 @@
 
 #include "heuristic/HeuristicMapper.hpp"
 
+#include "operations/StandardOperation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 
 void HeuristicMapper::map(const Configuration& configuration) {
@@ -43,20 +45,18 @@ void HeuristicMapper::map(const Configuration& configuration) {
 
   for (std::size_t i = 0; i < config.iterativeBidirectionalRoutingPasses; ++i) {
     if (config.verbose) {
-      std::clog << std::endl
-                << "Iterative bidirectional routing (forward pass " << i
-                << "):" << std::endl;
+      std::clog << "\nIterative bidirectional routing (forward pass " << i
+                << "):\n";
     }
     pseudoRouteCircuit(false);
     if (config.verbose) {
-      std::clog << std::endl
-                << "Iterative bidirectional routing (backward pass " << i
-                << "):" << std::endl;
+      std::clog << "\nIterative bidirectional routing (backward pass " << i
+                << "):\n";
     }
     pseudoRouteCircuit(true);
 
     if (config.verbose) {
-      std::clog << std::endl << "Main routing:" << std::endl;
+      std::clog << "\nMain routing:\n";
     }
   }
 
@@ -388,7 +388,6 @@ void HeuristicMapper::routeCircuit() {
                       << "\n";
           }
           qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(),
               qc::Targets{static_cast<qc::Qubit>(swap.first),
                           static_cast<qc::Qubit>(swap.second),
                           static_cast<qc::Qubit>(swap.middleAncilla)},
@@ -411,14 +410,12 @@ void HeuristicMapper::routeCircuit() {
       if (gate.singleQubit()) {
         if (locations.at(gate.target) == DEFAULT_POSITION) {
           qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(), gate.target, op->getType(),
-              op->getParameter());
+              gate.target, op->getType(), op->getParameter());
           gatesToAdjust.push_back(gateidx);
           gateidx++;
         } else {
           qcMapped.emplace_back<qc::StandardOperation>(
-              qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-              op->getParameter());
+              locations.at(gate.target), op->getType(), op->getParameter());
           gateidx++;
         }
       } else {
@@ -581,7 +578,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
           nodes.top().getTotalCost() < bestDoneNode.getTotalFixedCost())) {
     if (splittable && expandedNodes >= config.automaticLayerSplitsNodeLimit) {
       if (config.dataLoggingEnabled()) {
-        qc::CompoundOperation compOp(architecture->getNqubits());
+        qc::CompoundOperation compOp{};
         for (const auto& gate : layers.at(layer)) {
           compOp.emplace_back(gate.op->clone());
         }
@@ -593,7 +590,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       }
       splitLayer(layer, *architecture);
       if (config.verbose) {
-        std::clog << "Split layer" << std::endl;
+        std::clog << "Split layer\n";
       }
       // recursively restart search with newly split layer
       // (step to the end of the circuit, if reverse mapping is active, since
@@ -694,7 +691,7 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
   }
 
   if (config.dataLoggingEnabled()) {
-    qc::CompoundOperation compOp(architecture->getNqubits());
+    qc::CompoundOperation compOp{};
     for (const auto& gate : layers.at(layer)) {
       compOp.emplace_back(gate.op->clone());
     }

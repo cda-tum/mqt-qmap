@@ -10,6 +10,8 @@
 #include "logicblocks/Model.hpp"
 #include "logicblocks/util_logicblock.hpp"
 
+#include <cassert>
+
 void ExactMapper::map(const Configuration& settings) {
   results.config     = settings;
   const auto& config = results.config;
@@ -279,8 +281,7 @@ void ExactMapper::map(const Configuration& settings) {
         }
 
         qcMapped.emplace_back<qc::StandardOperation>(
-            qcMapped.getNqubits(), locations.at(gate.target), op->getType(),
-            op->getParameter());
+            locations.at(gate.target), op->getType(), op->getParameter());
       } else {
         const Edge cnot = {locations.at(static_cast<std::size_t>(gate.control)),
                            locations.at(gate.target)};
