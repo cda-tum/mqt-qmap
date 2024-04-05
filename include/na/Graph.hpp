@@ -583,42 +583,61 @@ public:
         }
       }
       // tSlack is completely computed until here
+      // merge tSlack with slack
+      std::unordered_map<std::pair<std::size_t, std::size_t>, std::size_t,
+                       PairHash<std::size_t>> newSlack;
       for (const auto& elem : slack) {
         const auto& pair = elem.first;
         for (std::size_t i = 0; i < elem.second; ++i) {
-          // check whether narrow slack positions are subsumed by wider slack
-          // positions added from previous timestamps
-          const auto& superPairs = std::accumulate(
+          // check whether existing slack positions overlap with newly required ones
+          const auto& overlappingPairs = std::accumulate(
               tSlack.cbegin(), tSlack.cend(),
               std::vector<std::pair<std::size_t, std::size_t>>(),
               [&](auto& acc, const auto& value) {
-                if (value.first.first >= pair.first &&
-                    value.first.second <= pair.second) {
+                if (value.first.first < pair.second &&
+                    pair.first < value.first.second) {
                   acc.emplace_back(value.first);
                 }
                 return acc;
               });
-          if (!superPairs.empty()) {
+          if (!overlappingPairs.empty()) {
+            // select the smallest one to not loose a lot flexibility
             const std::pair<std::size_t, std::size_t>& minSuperPair =
-                *(std::min_element(superPairs.cbegin(), superPairs.cend(),
+                *(std::min_element(overlappingPairs.cbegin(), overlappingPairs.cend(),
                                    [](const auto& a, const auto& b) {
                                      return a.second - a.first <
                                             b.second - b.first;
                                    }));
-            tSlack[minSuperPair]--;
+            --tSlack[minSuperPair];
             if (tSlack[minSuperPair] == 0) {
               tSlack.erase(minSuperPair);
+            }
+            const std::pair<std::size_t, std::size_t> newPair{
+                std::max(pair.first, minSuperPair.first),
+                std::min(pair.second, minSuperPair.second)};
+            if (newSlack.find(newPair) == newSlack.end()) {
+              newSlack[newPair] = 1;
+            } else {
+              ++newSlack[newPair];
+            }
+          } else {
+            if (newSlack.find(pair) == newSlack.end()) {
+              newSlack[pair] = 1;
+            } else {
+              ++newSlack[pair];
             }
           }
         }
       }
       for (const auto& [pair, s] : tSlack) {
-        if (slack.find(pair) == slack.end()) {
-          slack[pair] = s;
+        if (newSlack.find(pair) == newSlack.end()) {
+          newSlack[pair] = s;
         } else {
-          slack[pair] += s;
+          newSlack[pair] += s;
         }
       }
+      slack.clear();
+      slack = newSlack;
     }
     std::vector<std::size_t> slackPositions{};
     for (const auto& [pair, s] : slack) {
