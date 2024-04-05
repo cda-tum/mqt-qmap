@@ -118,6 +118,7 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
     }
     minAtomDistance   = data["minAtomDistance"];
     interactionRadius = data["interactionRadius"];
+    noInteractionRadius = data["noInteractionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error(
         "While reading the JSON data, the following error occurred: " +

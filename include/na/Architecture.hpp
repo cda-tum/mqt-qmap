@@ -137,6 +137,7 @@ protected:
   std::vector<ShuttlingProperties> shuttling{}; // all properties regarding AODs
   Index minAtomDistance = 0; // minimal distance that must be kept between atoms
   Index interactionRadius = 0;      // the Rydberg radius
+  Index noInteractionRadius = 0;      // sufficient radius to avoid Rydberg interaction
   std::vector<Zone> initialZones{}; // the zones where the atoms are initially
 
 public:
@@ -182,7 +183,7 @@ public:
     return interactionRadius;
   }
   [[nodiscard]] auto getNoInteractionRadius() const -> Index {
-    return interactionRadius + 2;
+    return noInteractionRadius;
   }
   [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
       -> const ZoneProperties& {
