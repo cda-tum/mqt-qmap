@@ -45,7 +45,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 test = ["pytest>=7", "mqt.qcec>=2.4.5", "mqt.qmap[visualization]"]
-coverage = ["mqt.qmap[test]", "pytest-cov"]
+coverage = ["mqt.qmap[test]", "pytest-cov>=4"]
 docs = [
     "furo>=2023.08.17",
     "sphinx",
