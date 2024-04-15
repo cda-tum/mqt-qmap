@@ -46,6 +46,8 @@ if TYPE_CHECKING:
         color2: str | None
 
 
+import operator
+
 import networkx as nx
 import plotly
 import plotly.graph_objects as go
@@ -217,7 +219,7 @@ def _layout_search_graph(
         layer_spacings[y] = _get_avg_min_distance(layers_x[y])
         avg_spacing += layer_spacings[y]
     avg_spacing /= float(len(layers_x))
-    layer_spacings_items = sorted(layer_spacings.items(), key=lambda x: x[0])
+    layer_spacings_items = sorted(layer_spacings.items(), key=operator.itemgetter(0))
     for i in range(len(layer_spacings_items)):
         before = layer_spacings_items[i - 1][1] if i != 0 else 0
         after = layer_spacings_items[i + 1][1] if i != len(layer_spacings_items) - 1 else before
@@ -1774,10 +1776,10 @@ def visualize_search_graph(
         arch_y_spacing = _get_avg_min_distance([p[1] for p in architecture_node_positions.values()])
         arch_x_arrow_spacing = (arch_x_spacing if arch_x_spacing > 0 else arch_y_spacing) * swap_arrow_spacing
         arch_y_arrow_spacing = (arch_y_spacing if arch_y_spacing > 0 else arch_x_spacing) * swap_arrow_spacing
-        arch_x_min = min(architecture_node_positions.values(), key=lambda p: p[0])[0]
-        arch_x_max = max(architecture_node_positions.values(), key=lambda p: p[0])[0]
-        arch_y_min = min(architecture_node_positions.values(), key=lambda p: p[1])[1]
-        arch_y_max = max(architecture_node_positions.values(), key=lambda p: p[1])[1]
+        arch_x_min = min(architecture_node_positions.values(), key=operator.itemgetter(0))[0]
+        arch_x_max = max(architecture_node_positions.values(), key=operator.itemgetter(0))[0]
+        arch_y_min = min(architecture_node_positions.values(), key=operator.itemgetter(1))[1]
+        arch_y_max = max(architecture_node_positions.values(), key=operator.itemgetter(1))[1]
 
         arch_edge_trace, arch_edge_label_trace = _draw_architecture_edges(
             arch_graph, architecture_node_positions, full_plotly_settings
