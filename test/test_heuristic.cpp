@@ -1138,10 +1138,8 @@ TEST(Functionality, InvalidCircuits) {
   EXPECT_THROW(mapper.map(config), QMAPException);
 
   // gate with >1 control
-  qc::QuantumComputation      qc3{3U};
-  const qc::StandardOperation op =
-      qc::StandardOperation(3, {{0}, {1}}, qc::Qubit{2});
-  qc3.emplace_back(op.clone());
+  qc::QuantumComputation qc3{3U};
+  qc3.mcx({0, 1}, 2);
   Architecture    arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
   HeuristicMapper mapper3(qc3, arch2);
   EXPECT_THROW(mapper3.map(config), QMAPException);
@@ -1151,10 +1149,9 @@ TEST(Functionality, DataLoggerAfterClose) {
   const std::string      dataLoggingPath = "test_log/datalogger_after_close/";
   qc::QuantumComputation qc{3};
   qc.x(0);
-  Architecture                arch{3, {}};
-  std::unique_ptr<DataLogger> dataLogger =
-      std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
-  const qc::CompoundOperation compOp(3);
+  Architecture arch{3, {}};
+  auto dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
+  const qc::CompoundOperation compOp{};
   Exchange                    teleport(0, 2, 1, qc::OpType::Teleportation);
   dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {{teleport}}, 0);
   dataLogger->logSearchNode(1, 0, 0, 0., 0., 0., {}, false, {}, 0);
