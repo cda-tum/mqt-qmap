@@ -15,7 +15,7 @@ namespace encodings {
 using namespace logicbase;
 
 struct NestedVar {
-  explicit NestedVar(const LogicTerm& v) : var(v){};
+  explicit NestedVar(const LogicTerm& v) : var(v) {};
   NestedVar(const LogicTerm& v, std::vector<NestedVar> l)
       : var(v), list(std::move(l)) {}
   LogicTerm              var = LogicTerm::noneTerm();
