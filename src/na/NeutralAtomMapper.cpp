@@ -14,7 +14,7 @@
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
-#include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
 
 #include <__algorithm/remove.h>
 #include <__algorithm/remove_if.h>
@@ -37,7 +37,7 @@ auto NeutralAtomMapper::preprocess() -> void {
         throw std::invalid_argument(ss.str());
       }
     } else if (op->isStandardOperation()) {
-      if (!isSingleQubitGate(op->getType()) and
+      if (!op->isIndividual() and
           op->getNcontrols() + op->getNtargets() > 2) {
         std::stringstream ss;
         ss << "The current implementation does not support the operation "
@@ -53,7 +53,7 @@ auto NeutralAtomMapper::preprocess() -> void {
           throw std::invalid_argument(ss.str());
         }
         // the gate is global: if it is a 1Q-gate it must be applied globally
-        if (isSingleQubitGate(op->getType()) and
+        if (op->isIndividual() and
             !isGlobal(*op, initialQc.getNqubits())) {
           std::stringstream ss;
           ss << "The chosen architecture does not support the operation "
@@ -275,7 +275,7 @@ auto NeutralAtomMapper::checkApplicability(
     }
   } else {
     assert(arch.isAllowedGlobally({op->getType(), op->getNcontrols()}));
-    if (qc::isSingleQubitGate(op->getType())) {
+    if (op->isIndividual()) {
       assert(isGlobal(*op, initialQc.getNqubits()));
       // purely globally gate can always be applied
       return true;
@@ -320,7 +320,7 @@ auto NeutralAtomMapper::updatePlacement(
     }
   } else {
     assert(arch.isAllowedGlobally({op->getType(), op->getNcontrols()}));
-    if (isSingleQubitGate(op->getType())) {
+    if (op->isIndividual()) {
       assert(isGlobal(*op, initialQc.getNqubits()));
       // purely globally gate can always be applied
       std::for_each(
