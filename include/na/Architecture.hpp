@@ -8,30 +8,18 @@
 
 #include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "na/Definitions.hpp"
-#include "operations/OpType.hpp"
+#include "na/NADefinitions.hpp"
 
-#include <algorithm>
 #include <cstdint>
-#include <cstdlib>
-#include <map>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace na {
-
-// TODO provide a set for every SLM trap of adjacent AOD traps
-// TODO provide some kind of access to the row and colum to enable movement to
-// an entire line with an AOD; for that one needs to know what the line is
-// TODO provide functions to retrive the number of rows and columns of a zone
-// and to retrieve the atoms of a row and line of a zone
 
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
@@ -40,13 +28,13 @@ static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
     {"Local", Scope::Local},
     {"global", Scope::Global},
     {"local", Scope::Local}};
+
 /**
  * @brief Get the Scope of a gate from a string
  *
  * @param s the name
  * @return Type
  */
-
 inline Scope getScopeOfString(const std::string& s) {
   if (const auto it = STRING_TO_SCOPE.find(s); it != STRING_TO_SCOPE.end()) {
     return it->second;
@@ -77,13 +65,13 @@ public:
    * - effective decoherence time
    */
   struct DecoherenceTimes {
-    Value t1                                  = 0;
-    Value t2                                  = 0;
-    Value tEff                                = 0;
-    DecoherenceTimes()                        = default;
-    DecoherenceTimes(const DecoherenceTimes&) = default;
-    virtual ~DecoherenceTimes()               = default;
-    inline DecoherenceTimes(Value t1, Value t2)
+    Value    t1                                        = 0;
+    Value    t2                                        = 0;
+    Value    tEff                                      = 0;
+             DecoherenceTimes()                        = default;
+             DecoherenceTimes(const DecoherenceTimes&) = default;
+    virtual ~DecoherenceTimes()                        = default;
+             DecoherenceTimes(const Value t1, const Value t2)
         : t1(t1), t2(t2), tEff(t1 * t2 / (t1 + t2)) {}
     explicit operator double() const { return tEff; }
   };
@@ -118,7 +106,7 @@ public:
     Value  storeFidelity = 1; // fidelity of the store
   };
   struct ZoneProperties {
-    std::string name{};       // the name of the zone
+    std::string name;         // the name of the zone
     Number      minX     = 0; // minimum x dimension
     Number      maxX     = 0; // maximum x dimension
     Number      minY     = 0; // minimum y dimension
@@ -127,29 +115,31 @@ public:
   };
 
 protected:
-  std::string name{}; // the name of the architecture
+  std::string name; // the name of the architecture
   std::vector<ZoneProperties>
-      zones{}; // a mapping from zones (int) to their name from the config
-  std::vector<Point> sites{}; // a vector of sites
+      zones; // a mapping from zones (int) to their name from the config
+  std::vector<Point> sites; // a vector of sites
   std::unordered_map<OpType, OperationProperties>
-      gateSet{}; // all possible operations by their type, i.e. gate set
-  DecoherenceTimes decoherenceTimes{}; // the decoherence characteristic
-  std::vector<ShuttlingProperties> shuttling{}; // all properties regarding AODs
+      gateSet; // all possible operations by their type, i.e. gate set
+  DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
+  std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
   Index minAtomDistance = 0; // minimal distance that must be kept between atoms
-  Index interactionRadius = 0;      // the Rydberg radius
-  Index noInteractionRadius = 0;      // sufficient radius to avoid Rydberg interaction
-  std::vector<Zone> initialZones{}; // the zones where the atoms are initially
+  Index interactionRadius = 0; // the Rydberg radius
+  Index noInteractionRadius =
+      0; // sufficient radius to avoid Rydberg interaction
+  std::vector<Zone> initialZones; // the zones where the atoms are initially
 
 public:
   /**
    * @brief Import a new architecture from a file.
    *
-   * @param filename The path to the JSON file
+   * @param jsonFn The path to the JSON file
+   * @param csvFn The path to the CSV file
    */
-  Architecture(const std::string& jsonFn, const std::string& csvFn);
-  Architecture(std::istream& jsonS, std::istream& csvS);
-  Architecture(const Architecture&)            = default;
-  Architecture(Architecture&&)                 = default;
+           Architecture(const std::string& jsonFn, const std::string& csvFn);
+           Architecture(std::istream& jsonS, std::istream& csvS);
+           Architecture(const Architecture&)   = default;
+           Architecture(Architecture&&)        = default;
   virtual ~Architecture()                      = default;
   Architecture& operator=(const Architecture&) = default;
   Architecture& operator=(Architecture&&)      = default;
@@ -238,14 +228,14 @@ public:
       -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
-  [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z, bool proper = true) const
-      -> Number;
-  [[nodiscard]] auto getNearestXRight(const Number& x, const Zone& z, bool proper = true) const
-      -> Number;
-  [[nodiscard]] auto getNearestYUp(const Number& y, const Zone& z, bool proper = true) const
-      -> Number;
-  [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z, bool proper = true) const
-      -> Number;
+  [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
+                                     bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestXRight(const Number& x, const Zone& z,
+                                      bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestYUp(const Number& y, const Zone& z,
+                                   bool proper = true) const -> Number;
+  [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z,
+                                     bool proper = true) const -> Number;
   [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
                                         bool sameZone = false) const -> Index;
   [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,

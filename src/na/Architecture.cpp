@@ -294,7 +294,7 @@ auto Architecture::getRowInZoneOf(const Index& i) const -> Index {
 auto Architecture::getColInZoneOf(const Index& i) const -> Index {
   const auto& cols = Architecture::getColsInZone(getZoneOfSite(i));
   const auto& it   = std::find(cols.cbegin(), cols.cend(), sites[i].x);
-  assert(it != rows.cend());
+  assert(it != cols.cend());
   return static_cast<Index>(std::distance(cols.cbegin(), it));
 }
 auto Architecture::getNearestXLeft(const Number& x, const Zone& z,

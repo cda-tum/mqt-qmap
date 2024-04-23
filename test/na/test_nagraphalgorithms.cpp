@@ -3,25 +3,24 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Graph.hpp"
 #include "Layer.hpp"
+#include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "operations/OpType.hpp"
 
 #include "gtest/gtest.h"
 #include <__algorithm/remove_if.h>
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <memory>
 #include <numeric>
 
 class TestNAGraph : public testing::Test {
 protected:
-  qc::QuantumComputation                           qc{};
-  na::Layer                                        layer{};
-  na::Graph<std::shared_ptr<na::Layer::DAGVertex>> graph{};
-  void                                             SetUp() override {
+  qc::QuantumComputation                                                qc;
+  qc::Layer                                                             layer;
+  qc::UndirectedGraph<qc::Qubit, std::shared_ptr<qc::Layer::DAGVertex>> graph{};
+  void SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
     qc.cz(1, 6);
@@ -32,8 +31,8 @@ protected:
     qc.cz(4, 7);
     qc.cz(5, 7);
     qc.cz(6, 7);
-    layer = na::Layer(qc);
-    graph = layer.constructInteractionGraph({qc::OpType::Z, 1});
+    layer = qc::Layer(qc);
+    graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
   }
 };
 
@@ -93,7 +92,7 @@ TEST_F(TestNAGraph, Getter) {
 }
 
 TEST_F(TestNAGraph, MaxIndepSet) {
-  const auto& mis = graph.getMaxIndependentSet();
+  const auto& mis = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
   EXPECT_EQ(mis.size(), 3);
   EXPECT_TRUE(mis.count(1));
   EXPECT_TRUE(mis.count(3));
@@ -101,10 +100,14 @@ TEST_F(TestNAGraph, MaxIndepSet) {
 }
 
 TEST_F(TestNAGraph, Coloring) {
-  const auto& mis      = graph.getMaxIndependentSet();
-  const auto& queue    = graph.sortByDegreeDesc(mis);
-  const auto& edges    = graph.coveredEdges(mis);
-  const auto& coloring = graph.colorEdges(edges, queue);
+  const auto& mis = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  std::vector queue(mis.cbegin(), mis.cend());
+  // sort the vertices by degree in descending order
+  std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
+    return graph.getDegree(u) > graph.getDegree(v);
+  });
+  const auto& edges    = na::NAGraphAlgorithms::coveredEdges(graph, mis);
+  const auto& [coloring, _]= na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
   // check that adjacent edges have different colors
   for (const auto& [e, k] : coloring) {
     for (const auto& [f, l] : coloring) {
@@ -151,7 +154,7 @@ TEST_F(TestNAGraph, Coloring) {
 }
 
 TEST_F(TestNAGraph, SequenceOrdering) {
-  const auto& sequence = graph.computeSequence();
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
   const auto& moveable = sequence.first;
   // check that the order of moveable qubits is consistent
   auto order =
@@ -163,20 +166,20 @@ TEST_F(TestNAGraph, SequenceOrdering) {
   std::sort(order.begin(), order.end(), [&](const auto& p, const auto& q) {
     return moveable[0].at(p) < moveable[0].at(q);
   });
-  for (std::size_t t = 0; t < moveable.size(); ++t) {
-    EXPECT_EQ(moveable[t].size(), order.size());
+  for (const auto & t : moveable) {
+    EXPECT_EQ(t.size(), order.size());
     for (std::size_t i = 1; i < order.size(); ++i) {
-      const auto& x1It = moveable[t].find(order[i - 1]);
-      const auto& x2It = moveable[t].find(order[i]);
-      EXPECT_NE(x1It, moveable[t].cend());
-      EXPECT_NE(x2It, moveable[t].cend());
+      const auto& x1It = t.find(order[i - 1]);
+      const auto& x2It = t.find(order[i]);
+      EXPECT_NE(x1It, t.cend());
+      EXPECT_NE(x2It, t.cend());
       EXPECT_LT(x1It->second, x2It->second);
     }
   }
 }
 
 TEST_F(TestNAGraph, InteractionExists) {
-  const auto& sequence = graph.computeSequence();
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
   const auto& moveable = sequence.first;
   const auto& fixed    = sequence.second;
   // check that all interactions are part of the interaction graph
@@ -195,12 +198,12 @@ TEST_F(TestNAGraph, InteractionExists) {
 }
 
 TEST_F(TestNAGraph, CoveredInteractions) {
-  const auto& mis          = graph.getMaxIndependentSet();
-  const auto& coveredEdges = graph.coveredEdges(mis);
+  const auto& mis          = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& coveredEdges = na::NAGraphAlgorithms::coveredEdges(graph, mis);
   // TODO for some reason this must be a vector, set gives an error
   std::vector<std::pair<qc::Qubit, qc::Qubit>> coveredEdgesVec(
       coveredEdges.cbegin(), coveredEdges.cend());
-  const auto& sequence = graph.computeSequence();
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
   const auto& moveable = sequence.first;
   const auto& fixed    = sequence.second;
   // check that all interactions that are covered by the independent set are

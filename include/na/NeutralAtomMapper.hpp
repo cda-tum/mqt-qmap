@@ -9,13 +9,11 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "QuantumComputation.hpp"
-#include "operations/NAQuantumComputation.hpp"
+#include "na/NAComputation.hpp"
 #include "operations/Operation.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <sstream>
-#include <utility>
 #include <vector>
 
 namespace na {
@@ -42,7 +40,7 @@ public:
       ss << numInitialGates << "," << numEntanglingGates << "," << initialDepth
          << "," << numMappedGates << "," << numQubits << "," << maxSeqWidth
          << "," << preprocessTime << "," << mappingTime << ","
-         << postprocessTime << std::endl;
+         << postprocessTime << '\n';
       return ss.str();
     }
     friend auto operator<<(std::ostream& os, const Statistics& s)
@@ -53,17 +51,17 @@ public:
   };
 
 protected:
-  qc::QuantumComputation            initialQc{};
-  NAQuantumComputation              mappedQc{};
-  na::Architecture                  initialArch;
-  na::Architecture                  arch;
-  na::Configuration                 config;
-  na::NeutralAtomMapper::Statistics stats{};
-  bool                              done = false;
+  qc::QuantumComputation initialQc;
+  NAComputation          mappedQc;
+  Architecture           initialArch;
+  Architecture           arch;
+  Configuration          config;
+  Statistics             stats{};
+  bool                   done = false;
 
   class Atom {
   public:
-    enum class PositionStatus { UNDEFINED, DEFINED };
+    enum class PositionStatus : std::uint8_t { UNDEFINED, DEFINED };
     PositionStatus         positionStatus  = PositionStatus::UNDEFINED;
     std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
@@ -78,18 +76,18 @@ protected:
                           const std::vector<Atom>& placement) const -> bool;
   auto updatePlacement(const std::unique_ptr<qc::Operation>& op,
                        std::vector<Atom>& placement) const -> void;
-  [[nodiscard]] auto
+  [[nodiscard]] static auto
   getMisplacement(const std::vector<Atom>&                           initial,
                   const std::unordered_map<qc::Qubit, std::int64_t>& target,
-                  const qc::Qubit& q) const -> std::int64_t;
+                  const qc::Qubit& q) -> std::int64_t;
 
 public:
   explicit NeutralAtomMapper(Architecture arch, const Configuration& config)
       : initialArch(std::move(arch)), arch(initialArch.withConfig(config)),
         config(config) {}
-  virtual ~NeutralAtomMapper() = default;
+  virtual ~          NeutralAtomMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
-  [[nodiscard]] auto getResult() const -> const NAQuantumComputation& {
+  [[nodiscard]] auto getResult() const -> const NAComputation& {
     if (!done) {
       throw std::logic_error("No result available.");
     }
