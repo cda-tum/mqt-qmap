@@ -400,8 +400,8 @@ auto NAGraphAlgorithms::computeRestingPositions(
 }
 
 auto NAGraphAlgorithms::groupByConnectedComponent(
-    const InteractionGraph& g, const std::vector<qc::Qubit>& sequence)
-    -> std::vector<qc::Qubit> {
+    const InteractionGraph&       g,
+    const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit> {
   const auto&                vertices = g.getVertices();
   qc::DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
   for (const qc::Qubit& v : vertices) {

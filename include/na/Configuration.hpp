@@ -17,8 +17,8 @@ static const std::unordered_map<std::string, NaMappingMethod> STRING_TO_METHOD =
     {{"Naive", NaMappingMethod::NAIVE}, {"Smart", NaMappingMethod::SMART},
      {"naive", NaMappingMethod::NAIVE}, {"smart", NaMappingMethod::SMART},
      {"NAIVE", NaMappingMethod::NAIVE}, {"SMART", NaMappingMethod::SMART}};
-[[nodiscard]] inline auto getMethodOfString(const std::string& method)
-    -> NaMappingMethod;
+[[nodiscard]] inline auto
+getMethodOfString(const std::string& method) -> NaMappingMethod;
 class Configuration {
 private:
   std::size_t     patchRows = 1;

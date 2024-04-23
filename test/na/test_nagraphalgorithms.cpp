@@ -106,8 +106,9 @@ TEST_F(TestNAGraph, Coloring) {
   std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
     return graph.getDegree(u) > graph.getDegree(v);
   });
-  const auto& edges    = na::NAGraphAlgorithms::coveredEdges(graph, mis);
-  const auto& [coloring, _]= na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
+  const auto& edges = na::NAGraphAlgorithms::coveredEdges(graph, mis);
+  const auto& [coloring, _] =
+      na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
   // check that adjacent edges have different colors
   for (const auto& [e, k] : coloring) {
     for (const auto& [f, l] : coloring) {
@@ -166,7 +167,7 @@ TEST_F(TestNAGraph, SequenceOrdering) {
   std::sort(order.begin(), order.end(), [&](const auto& p, const auto& q) {
     return moveable[0].at(p) < moveable[0].at(q);
   });
-  for (const auto & t : moveable) {
+  for (const auto& t : moveable) {
     EXPECT_EQ(t.size(), order.size());
     for (std::size_t i = 1; i < order.size(); ++i) {
       const auto& x1It = t.find(order[i - 1]);

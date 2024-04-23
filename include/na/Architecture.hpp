@@ -65,13 +65,13 @@ public:
    * - effective decoherence time
    */
   struct DecoherenceTimes {
-    Value    t1                                        = 0;
-    Value    t2                                        = 0;
-    Value    tEff                                      = 0;
-             DecoherenceTimes()                        = default;
-             DecoherenceTimes(const DecoherenceTimes&) = default;
-    virtual ~DecoherenceTimes()                        = default;
-             DecoherenceTimes(const Value t1, const Value t2)
+    Value t1                                  = 0;
+    Value t2                                  = 0;
+    Value tEff                                = 0;
+    DecoherenceTimes()                        = default;
+    DecoherenceTimes(const DecoherenceTimes&) = default;
+    virtual ~DecoherenceTimes()               = default;
+    DecoherenceTimes(const Value t1, const Value t2)
         : t1(t1), t2(t2), tEff(t1 * t2 / (t1 + t2)) {}
     explicit operator double() const { return tEff; }
   };
@@ -136,10 +136,10 @@ public:
    * @param jsonFn The path to the JSON file
    * @param csvFn The path to the CSV file
    */
-           Architecture(const std::string& jsonFn, const std::string& csvFn);
-           Architecture(std::istream& jsonS, std::istream& csvS);
-           Architecture(const Architecture&)   = default;
-           Architecture(Architecture&&)        = default;
+  Architecture(const std::string& jsonFn, const std::string& csvFn);
+  Architecture(std::istream& jsonS, std::istream& csvS);
+  Architecture(const Architecture&)            = default;
+  Architecture(Architecture&&)                 = default;
   virtual ~Architecture()                      = default;
   Architecture& operator=(const Architecture&) = default;
   Architecture& operator=(Architecture&&)      = default;
@@ -175,8 +175,8 @@ public:
   [[nodiscard]] auto getNoInteractionRadius() const -> Index {
     return noInteractionRadius;
   }
-  [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
-      -> const ZoneProperties& {
+  [[nodiscard]] auto
+  getPropertiesOfZone(const Zone& zone) const -> const ZoneProperties& {
     return zones[zone];
   }
   [[nodiscard]] auto getPropertiesOfOperation(const OpType& t) const
@@ -195,8 +195,8 @@ public:
    * @param j address of second site
    * @return the distance in µm
    */
-  [[nodiscard]] auto getDistance(const Index& i, const Index& j) const
-      -> Index {
+  [[nodiscard]] auto getDistance(const Index& i,
+                                 const Index& j) const -> Index {
     return (getPositionOfSite(j) - getPositionOfSite(i)).length();
   }
   [[nodiscard]] auto getZoneAt(const Point& p) const -> Zone;
@@ -206,26 +206,26 @@ public:
   /// Checks whether the gate can be applied at all.
   [[nodiscard]] auto isAllowedLocally(const OpType& t) const -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
-  [[nodiscard]] auto isAllowedLocally(const OpType& t, const Zone& zone) const
-      -> bool;
+  [[nodiscard]] auto isAllowedLocally(const OpType& t,
+                                      const Zone&   zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
   [[nodiscard]] auto isAllowedLocallyAtSite(const OpType& t,
                                             const Index&  qubit) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAt(const OpType& t, const Point& p) const
-      -> bool;
+  [[nodiscard]] auto isAllowedLocallyAt(const OpType& t,
+                                        const Point&  p) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.
   [[nodiscard]] auto isAllowedGlobally(const OpType& t) const -> bool;
-  [[nodiscard]] auto isAllowedGlobally(const OpType& t, const Zone& zone) const
-      -> bool;
+  [[nodiscard]] auto isAllowedGlobally(const OpType& t,
+                                       const Zone&   zone) const -> bool;
   [[nodiscard]] auto isInSameRow(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto getNcolsInZone(const Zone& z) const -> Index;
-  [[nodiscard]] auto getSitesInRow(const Zone& z, const Index& row) const
-      -> std::vector<Index>;
-  [[nodiscard]] auto getSitesInCol(const Zone& z, const Index& col) const
-      -> std::vector<Index>;
+  [[nodiscard]] auto
+  getSitesInRow(const Zone& z, const Index& row) const -> std::vector<Index>;
+  [[nodiscard]] auto
+  getSitesInCol(const Zone& z, const Index& col) const -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
@@ -244,22 +244,21 @@ public:
                                       bool sameZone = false) const -> Index;
   [[nodiscard]] auto getNearestSiteDown(const Point& p, bool proper = false,
                                         bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUpRight(const Point& p, bool proper = false,
-                                           bool sameZone = false) const
-      -> Index;
+  [[nodiscard]] auto
+                     getNearestSiteUpRight(const Point& p, bool proper = false,
+                                           bool sameZone = false) const -> Index;
   [[nodiscard]] auto getNearestSiteUpLeft(const Point& p, bool proper = false,
                                           bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteDownLeft(const Point& p, bool proper = false,
-                                            bool sameZone = false) const
-      -> Index;
-  [[nodiscard]] auto getNearestSiteDownRight(const Point& p,
-                                             bool         proper = false,
-                                             bool sameZone       = false) const
-      -> Index;
+  [[nodiscard]] auto
+  getNearestSiteDownLeft(const Point& p, bool proper = false,
+                         bool sameZone = false) const -> Index;
+  [[nodiscard]] auto
+  getNearestSiteDownRight(const Point& p, bool proper = false,
+                          bool sameZone = false) const -> Index;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
-  [[nodiscard]] auto withConfig(const Configuration& config) const
-      -> Architecture;
+  [[nodiscard]] auto
+  withConfig(const Configuration& config) const -> Architecture;
   [[nodiscard]] auto getPositionOffsetBy(const Point& p, const Number& rows,
                                          const Number& cols) const -> Point;
 

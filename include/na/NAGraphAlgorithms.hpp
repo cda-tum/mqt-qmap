@@ -91,10 +91,9 @@ public:
       const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>& coloring)
       -> std::vector<std::size_t>;
 
-  [[nodiscard]] static auto
-  groupByConnectedComponent(const InteractionGraph&       g,
-                            const std::vector<qc::Qubit>& sequence)
-      -> std::vector<qc::Qubit>;
+  [[nodiscard]] static auto groupByConnectedComponent(
+      const InteractionGraph&       g,
+      const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit>;
 
   /**
    * @brief Partitions the set of vertices into moveable and fixed vertices

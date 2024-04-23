@@ -517,7 +517,8 @@ TEST_F(TestNAArchitecture, WithConfiguration) {
   for (std::size_t z = 0; z < modArch.getNZones(); ++z) {
     std::cout << "Zone: " << modArch.getZoneLabel(z) << std::endl;
     for (const auto s : modArch.getSitesInZone(z)) {
-      std::cout << "  Site: " << s << "(" << modArch.getPositionOfSite(s) << ")" << std::endl;
+      std::cout << "  Site: " << s << "(" << modArch.getPositionOfSite(s) << ")"
+                << std::endl;
     }
   }
 }

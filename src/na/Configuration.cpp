@@ -25,7 +25,6 @@ inline auto getMethodOfString(const std::string& method) -> NaMappingMethod {
   throw std::invalid_argument(ss.str());
 }
 
-
 Configuration::Configuration(const std::string& filename) {
   std::ifstream fs(filename);
   if (!fs.good()) {

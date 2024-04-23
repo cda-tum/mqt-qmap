@@ -37,8 +37,7 @@ auto NeutralAtomMapper::preprocess() -> void {
         throw std::invalid_argument(ss.str());
       }
     } else if (op->isStandardOperation()) {
-      if (!op->isIndividual() and
-          op->getNcontrols() + op->getNtargets() > 2) {
+      if (!op->isIndividual() and op->getNcontrols() + op->getNtargets() > 2) {
         std::stringstream ss;
         ss << "The current implementation does not support the operation "
            << OpType{op->getType(), op->getNcontrols()} << " acting on more "
@@ -53,8 +52,7 @@ auto NeutralAtomMapper::preprocess() -> void {
           throw std::invalid_argument(ss.str());
         }
         // the gate is global: if it is a 1Q-gate it must be applied globally
-        if (op->isIndividual() and
-            !isGlobal(*op, initialQc.getNqubits())) {
+        if (op->isIndividual() and !isGlobal(*op, initialQc.getNqubits())) {
           std::stringstream ss;
           ss << "The chosen architecture does not support the operation "
              << OpType{op->getType(), op->getNcontrols()} << " locally.";
@@ -296,25 +294,24 @@ auto NeutralAtomMapper::updatePlacement(
   if (arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
     if (op->getNcontrols() == 0) {
       // individual gate that can act on one or more atoms
-      std::for_each(
-          op->getTargets().cbegin(), op->getTargets().cend(),
-          [&](const auto& qubit) {
-            switch (placement[qubit].positionStatus) {
-            case Atom::PositionStatus::UNDEFINED:
-              // remove all zones where the gate is not applicable
-              placement[qubit].zones.erase(
-                  std::remove_if(
-                      placement[qubit].zones.begin(),
-                      placement[qubit].zones.end(),
-                      [&](auto& z) {
-                        return !arch.isAllowedLocally({op->getType(), 0}, z);
-                      }),
-                  placement[qubit].zones.end());
-              break;
-            case Atom::PositionStatus::DEFINED:
-              break;
-            }
-          });
+      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
+                    [&](const auto& qubit) {
+                      switch (placement[qubit].positionStatus) {
+                      case Atom::PositionStatus::UNDEFINED:
+                        // remove all zones where the gate is not applicable
+                        placement[qubit].zones.erase(
+                            std::remove_if(placement[qubit].zones.begin(),
+                                           placement[qubit].zones.end(),
+                                           [&](auto& z) {
+                                             return !arch.isAllowedLocally(
+                                                 {op->getType(), 0}, z);
+                                           }),
+                            placement[qubit].zones.end());
+                        break;
+                      case Atom::PositionStatus::DEFINED:
+                        break;
+                      }
+                    });
     } else {
       // TODO single controlled local gate that acts exactly on two atoms
     }
@@ -323,24 +320,23 @@ auto NeutralAtomMapper::updatePlacement(
     if (op->isIndividual()) {
       assert(isGlobal(*op, initialQc.getNqubits()));
       // purely globally gate can always be applied
-      std::for_each(
-          op->getTargets().cbegin(), op->getTargets().cend(),
-          [&](const auto qubit) {
-            switch (placement[qubit].positionStatus) {
-            case Atom::PositionStatus::UNDEFINED:
-              placement[qubit].zones.erase(
-                  std::remove_if(
-                      placement[qubit].zones.begin(),
-                      placement[qubit].zones.end(),
-                      [&](auto& z) {
-                        return !arch.isAllowedGlobally({op->getType(), 0}, z);
-                      }),
-                  placement[qubit].zones.end());
-              break;
-            case Atom::PositionStatus::DEFINED:
-              break;
-            }
-          });
+      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
+                    [&](const auto qubit) {
+                      switch (placement[qubit].positionStatus) {
+                      case Atom::PositionStatus::UNDEFINED:
+                        placement[qubit].zones.erase(
+                            std::remove_if(placement[qubit].zones.begin(),
+                                           placement[qubit].zones.end(),
+                                           [&](auto& z) {
+                                             return !arch.isAllowedGlobally(
+                                                 {op->getType(), 0}, z);
+                                           }),
+                            placement[qubit].zones.end());
+                        break;
+                      case Atom::PositionStatus::DEFINED:
+                        break;
+                      }
+                    });
     } else {
       assert(op->getNcontrols() + op->getNtargets() == 2);
       // TODO single controlled global gate that acts exactly on two atoms

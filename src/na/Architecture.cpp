@@ -116,8 +116,8 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
                              sh["store"]["time"], sh["store"]["fidelity"]};
       shuttling.emplace_back(sp);
     }
-    minAtomDistance   = data["minAtomDistance"];
-    interactionRadius = data["interactionRadius"];
+    minAtomDistance     = data["minAtomDistance"];
+    interactionRadius   = data["interactionRadius"];
     noInteractionRadius = data["noInteractionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error(
@@ -144,8 +144,8 @@ auto Architecture::isAllowedLocally(const OpType& t) const -> bool {
   const auto it = gateSet.find(t);
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const OpType& t, const Zone& zone) const
-    -> bool {
+auto Architecture::isAllowedLocally(const OpType& t,
+                                    const Zone&   zone) const -> bool {
   if (!isAllowedLocally(t)) {
     return false; // gate not supported at all
   }
@@ -161,8 +161,8 @@ auto Architecture::isAllowedLocallyAtSite(const OpType& t,
   return isAllowedLocally(t, zone);
 }
 
-auto Architecture::isAllowedLocallyAt(const OpType& t, const Point& p) const
-    -> bool {
+auto Architecture::isAllowedLocallyAt(const OpType& t,
+                                      const Point&  p) const -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -182,8 +182,8 @@ auto Architecture::isAllowedGlobally(const OpType& t) const -> bool {
   return it != gateSet.end() && it->second.scope == Scope::Global;
 }
 
-auto Architecture::isAllowedGlobally(const OpType& t, const Zone& zone) const
-    -> bool {
+auto Architecture::isAllowedGlobally(const OpType& t,
+                                     const Zone&   zone) const -> bool {
   if (!isAllowedGlobally(t)) {
     return false; // gate not supported at all
   }
@@ -245,8 +245,8 @@ auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
 auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
   return Architecture::getColsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
-    -> std::vector<Index> {
+auto Architecture::getSitesInRow(const Zone&  z,
+                                 const Index& row) const -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
   std::vector<Index> enumerate(sites.size());
@@ -259,8 +259,8 @@ auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
                });
   return atoms;
 }
-auto Architecture::getSitesInCol(const Zone& z, const Index& col) const
-    -> std::vector<Index> {
+auto Architecture::getSitesInCol(const Zone&  z,
+                                 const Index& col) const -> std::vector<Index> {
   const auto         x = Architecture::getColsInZone(z)[col];
   std::vector<Index> atoms;
   std::vector<Index> enumerate(sites.size());

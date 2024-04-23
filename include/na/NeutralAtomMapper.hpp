@@ -43,8 +43,8 @@ public:
          << postprocessTime << '\n';
       return ss.str();
     }
-    friend auto operator<<(std::ostream& os, const Statistics& s)
-        -> std::ostream& {
+    friend auto operator<<(std::ostream&     os,
+                           const Statistics& s) -> std::ostream& {
       os << s.toString();
       return os;
     }
@@ -85,7 +85,7 @@ public:
   explicit NeutralAtomMapper(Architecture arch, const Configuration& config)
       : initialArch(std::move(arch)), arch(initialArch.withConfig(config)),
         config(config) {}
-  virtual ~          NeutralAtomMapper() = default;
+  virtual ~NeutralAtomMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto getResult() const -> const NAComputation& {
     if (!done) {
@@ -93,8 +93,8 @@ public:
     }
     return mappedQc;
   }
-  [[nodiscard]] auto getStats() const
-      -> const na::NeutralAtomMapper::Statistics& {
+  [[nodiscard]] auto
+  getStats() const -> const na::NeutralAtomMapper::Statistics& {
     if (!done) {
       throw std::logic_error("No statistics available.");
     }
