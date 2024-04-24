@@ -83,9 +83,43 @@ protected:
   auto updatePlacement(const std::unique_ptr<qc::Operation>& op,
                        std::vector<Atom>& placement) const -> void;
   [[nodiscard]] static auto
-  getMisplacement(const std::vector<Atom>&                           initial,
-                  const std::unordered_map<qc::Qubit, std::int64_t>& target,
-                  const qc::Qubit& q) -> std::int64_t;
+  getMisplacement(const std::vector<Atom>&      initial,
+                  const std::vector<qc::Qubit>& target, const qc::Qubit& q)
+      -> std::int64_t;
+  /**
+   *
+   * @param initialFreeSites The sites that are not yet occupied from the start
+   * of the circuit until the current execution step.
+   * @param currentFreeSites The currently not occupied sites.
+   * @param placement The current placement of the atoms. Will be modified
+   * throughout the course of executing the function.
+   * @param currentlyShuttling The qubits that are currently being shuttled.
+   * @param qubits The qubits to be shuttled.
+   * @param destination The destination zone.
+   */
+  auto shuttle(std::vector<bool>&             initialFreeSites,
+               std::vector<bool>&             currentFreeSites,
+               std::vector<Atom>&             placement,
+               std::unordered_set<qc::Qubit>& currentlyShuttling,
+               const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
+  /**
+   *
+   * @param initialFreeSites The sites that are not yet occupied from the start
+   * of the circuit until the current execution step.
+   * @param currentFreeSites The currently not occupied sites.
+   * @param placement The current placement of the atoms. Will be modified
+   * throughout the course of executing the function.
+   * @param currentlyShuttling The qubits that are currently being shuttled.
+   * @param qubits The qubits to be shuttled mapped to their final position.
+   * @param store Whether to store the atoms at the final position. If false,
+   * also the last movement is skip and assumed to be performed by the caller.
+   */
+  auto shuttle(std::vector<bool>&                          initialFreeSites,
+               std::vector<bool>&                          currentFreeSites,
+               std::vector<Atom>&                          placement,
+               std::unordered_set<qc::Qubit>&              currentlyShuttling,
+               const std::unordered_map<qc::Qubit, Point>& qubits,
+               bool store = true) -> void;
 
 public:
   explicit NeutralAtomMapper(Architecture arch, const Configuration& config)
