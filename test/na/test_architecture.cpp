@@ -95,9 +95,10 @@ protected:
              "    \"t1\": 100000000,\n"
              "    \"t2\": 1500000\n"
              "  },\n"
-             "  \"interactionRadius\": 3,\n"
-             "  \"minAtomDistance\": 0.1,\n"
-             "  \"AOD\": [\n"
+             "  \"interactionRadius\": 2,\n"
+             "  \"noInteractionRadius\": 5,\n"
+             "  \"minAtomDistance\": 1,\n"
+             "  \"shuttling\": [\n"
              "    {\n"
              "      \"rows\": 5,\n"
              "      \"columns\": 5,\n"
@@ -487,12 +488,16 @@ protected:
     gridF.close();
   }
   void TearDown() override {
-    std::remove(ARCH_FN);
-    std::remove(GRID_FN);
+    // std::remove(ARCH_FN);
+    // std::remove(GRID_FN);
   }
 };
 
 TEST_F(TestNAArchitecture, Import) {
+  // print out content of file at ARCH_FN
+  // std::ifstream archF(ARCH_FN);
+  // std::cout << archF.rdbuf();
+  // archF.close();
   na::Architecture const arch(ARCH_FN, GRID_FN);
 
   EXPECT_EQ(arch.getNZones(), 3);

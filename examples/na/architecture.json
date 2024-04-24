@@ -4,27 +4,27 @@
   "zones": [
     {
       "name": "entangling",
-      "xmin": -12,
-      "xmax": 172,
+      "xmin": -30,
+      "xmax": 264,
       "ymin": -12,
-      "ymax": 31,
-      "fidelity": 0.999
+      "ymax": 44,
+      "fidelity": 0.9959
     },
     {
       "name": "storage",
-      "xmin": -12,
-      "xmax": 126,
-      "ymin": 32,
-      "ymax": 123,
-      "fidelity": 0.99
+      "xmin": -30,
+      "xmax": 264,
+      "ymin": 45,
+      "ymax": 162,
+      "fidelity": 1
     },
     {
       "name": "readout",
-      "xmin": -12,
-      "xmax": 126,
-      "ymin": 124,
-      "ymax": 160,
-      "fidelity": 0.95
+      "xmin": -30,
+      "xmax": 264,
+      "ymin": 163,
+      "ymax": 209,
+      "fidelity": 0.99
     }
   ],
   "operations": [
@@ -62,6 +62,7 @@
     "t2": 1500000
   },
   "interactionRadius": 2,
+  "noInteractionRadius": 5,
   "minAtomDistance": 1,
   "shuttling": [
     {

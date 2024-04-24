@@ -10,17 +10,13 @@
 #include "operations/OpType.hpp"
 
 #include <algorithm>
-#include <climits>
-#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <map>
-#include <memory>
 #include <numeric>
 #include <optional>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -51,9 +47,11 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
   // load CSV
   // auxiliary variables
   std::string line;
+  std::size_t lineno = 1;
   try {
-    csvS >> line;                         // skip first line, i.e. header
-    while (csvS >> line) {                // read one line
+    csvS >> line; // skip first line, i.e. header
+    while (csvS >> line) {
+      ++lineno;
       std::stringstream lineStream(line); // make a stream of this line
       std::string       sX;
       std::string       sY;
@@ -66,9 +64,10 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
           std::stoi(sY)); // make point from x and y (convert to int)
     }
   } catch (std::exception& e) {
-    throw std::runtime_error(
-        "While parsing the CSV file, the following error occurred: " +
-        std::string(e.what()));
+    std::stringstream ss;
+    ss << "While parsing the CSV file, the following error occurred in line "
+       << lineno << "(" << line << ")" << ": " << e.what();
+    throw std::runtime_error(ss.str());
   }
   // load JSON
   try {
