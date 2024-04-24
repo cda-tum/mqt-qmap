@@ -348,6 +348,46 @@ auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                                                                           : acc;
                          });
 }
+auto Architecture::hasSiteLeft(const Point& p, bool proper, bool sameZone) const
+    -> bool {
+  const auto& zone = getZoneAt(p);
+  const auto& it =
+      std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
+        return s.y == p.y and (proper ? s.x < p.x : s.x <= p.x) and
+               (not sameZone or getZoneAt(s) == zone);
+      });
+  return it != sites.crend();
+}
+auto Architecture::hasSiteRight(const Point& p, bool proper,
+                                bool sameZone) const -> bool {
+  const auto& zone = getZoneAt(p);
+  const auto& it =
+      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
+        return s.y == p.y and (proper ? s.x > p.x : s.x >= p.x) and
+               (not sameZone or getZoneAt(s) == zone);
+      });
+  return it != sites.cend();
+}
+auto Architecture::hasSiteUp(const Point& p, bool proper, bool sameZone) const
+    -> bool {
+  const auto& zone = getZoneAt(p);
+  const auto& it =
+      std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
+        return s.x == p.x and (proper ? s.y < p.y : s.y <= p.y) and
+               (not sameZone or getZoneAt(s) == zone);
+      });
+  return it != sites.crend();
+}
+auto Architecture::hasSiteDown(const Point& p, bool proper, bool sameZone) const
+    -> bool {
+  const auto& zone = getZoneAt(p);
+  const auto& it =
+      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
+        return s.x == p.x and (proper ? s.y > p.y : s.y >= p.y) and
+               (not sameZone or getZoneAt(s) == zone);
+      });
+  return it != sites.cend();
+}
 auto Architecture::getNearestSiteLeft(const Point& p, const bool proper,
                                       const bool sameZone) const -> Index {
   const auto& zone = getZoneAt(p);

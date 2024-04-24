@@ -488,16 +488,12 @@ protected:
     gridF.close();
   }
   void TearDown() override {
-    // std::remove(ARCH_FN);
-    // std::remove(GRID_FN);
+    std::remove(ARCH_FN);
+    std::remove(GRID_FN);
   }
 };
 
 TEST_F(TestNAArchitecture, Import) {
-  // print out content of file at ARCH_FN
-  // std::ifstream archF(ARCH_FN);
-  // std::cout << archF.rdbuf();
-  // archF.close();
   na::Architecture const arch(ARCH_FN, GRID_FN);
 
   EXPECT_EQ(arch.getNZones(), 3);
@@ -519,11 +515,4 @@ TEST_F(TestNAArchitecture, WithConfiguration) {
   na::Configuration const config(2, 3);
   const auto              modArch = arch.withConfig(config);
   EXPECT_EQ(modArch.getNSites(), 54);
-  for (std::size_t z = 0; z < modArch.getNZones(); ++z) {
-    std::cout << "Zone: " << modArch.getZoneLabel(z) << std::endl;
-    for (const auto s : modArch.getSitesInZone(z)) {
-      std::cout << "  Site: " << s << "(" << modArch.getPositionOfSite(s) << ")"
-                << std::endl;
-    }
-  }
 }

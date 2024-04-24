@@ -25,8 +25,7 @@
 
 namespace na {
 
-auto NeutralAtomMapper::preprocess() -> void {
-  // validate circuit
+auto NeutralAtomMapper::validateCircuit() -> void {
   for (const auto& op : initialQc) {
     if (op->isCompoundOperation() and isGlobal(*op, initialQc.getNqubits())) {
       const auto& co = dynamic_cast<qc::CompoundOperation&>(*op);
@@ -65,8 +64,7 @@ auto NeutralAtomMapper::preprocess() -> void {
   }
 }
 
-auto NeutralAtomMapper::postprocess() -> void {
-  // make patches
+auto NeutralAtomMapper::makeLogicalArrays() -> void {
   const auto logicQC = mappedQc;
   mappedQc.clear();
   mappedQc.clearInitialPositions();
@@ -127,13 +125,16 @@ auto NeutralAtomMapper::postprocess() -> void {
       throw std::logic_error("Operation type is not supported.");
     }
   }
+}
+
+auto NeutralAtomMapper::calculateMovements() -> void {
   const auto prelQC = mappedQc;
   mappedQc.clear();
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
   for (const auto& op : prelQC) {
     if (op->isShuttlingOperation()) {
-      const auto& sop = dynamic_cast<NAShuttlingOperation&>(*op);
-      if (sop.getType() == MOVE) {
+      const auto& shuttlingOp = dynamic_cast<NAShuttlingOperation&>(*op);
+      if (shuttlingOp.getType() == MOVE) {
         std::vector<std::shared_ptr<Point>> hOffsetStart;
         std::vector<std::shared_ptr<Point>> hOffsetEnd;
         std::vector<std::shared_ptr<Point>> vMoveStart;
@@ -143,36 +144,34 @@ auto NeutralAtomMapper::postprocess() -> void {
         std::vector<std::shared_ptr<Point>> vOffsetStart;
         std::vector<std::shared_ptr<Point>> vOffsetEnd;
         bool                                vOffset = false;
-        for (std::size_t i = 0; i < sop.getStart().size(); ++i) {
-          auto        start = *sop.getStart()[i];
-          auto        end   = *sop.getEnd()[i];
+        for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
+          const auto  start = *shuttlingOp.getStart()[i];
+          const auto  end   = *shuttlingOp.getEnd()[i];
           const auto  dx    = end.x - start.x;
           Point const mid   = {start.x, end.y};
           if (dx > 0) {
-            try {
+            if (arch.hasSiteRight(mid, true)) {
               const auto& s = arch.getNearestSiteRight(mid, true);
               if (arch.getPositionOfSite(s).x < end.x) {
                 vOffset = true;
               }
-            } catch (std::invalid_argument& e) {
             }
           } else if (dx < 0) {
-            try {
+            if (arch.hasSiteLeft(mid, true)) {
               const auto& s = arch.getNearestSiteLeft(mid, true);
               if (arch.getPositionOfSite(s).x > end.x) {
                 vOffset = true;
               }
-            } catch (std::invalid_argument& e) {
             }
           }
         }
-        for (std::size_t i = 0; i < sop.getStart().size(); ++i) {
-          auto       start = *sop.getStart()[i];
-          auto       end   = *sop.getEnd()[i];
+        for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
+          auto       start = *shuttlingOp.getStart()[i];
+          auto       end   = *shuttlingOp.getEnd()[i];
           const auto dx    = end.x - start.x;
           const auto dy    = end.y - start.y;
           if (dy > 0) {
-            try {
+            if (arch.hasSiteDown(start, true)) {
               const auto& s = arch.getNearestSiteDown(start, true);
               if (arch.getPositionOfSite(s).y < end.y) {
                 // in this case an atom is on the way
@@ -180,10 +179,9 @@ auto NeutralAtomMapper::postprocess() -> void {
                 start.x += (dx >= 0 ? d : -d);
                 hOffsetEnd.emplace_back(std::make_shared<Point>(start));
               }
-            } catch (std::invalid_argument& e) {
             }
           } else if (dy < 0) {
-            try {
+            if (arch.hasSiteUp(start, true)) {
               const auto& s = arch.getNearestSiteUp(start, true);
               if (arch.getPositionOfSite(s).y > end.y) {
                 // in this case an atom is on the way
@@ -191,7 +189,6 @@ auto NeutralAtomMapper::postprocess() -> void {
                 start.x += (dx >= 0 ? d : -d);
                 hOffsetEnd.emplace_back(std::make_shared<Point>(start));
               }
-            } catch (std::invalid_argument& e) {
             }
           }
           Point mid = {start.x, end.y};
@@ -267,22 +264,19 @@ auto NeutralAtomMapper::checkApplicability(
                                              *placement[qubit].currentPosition);
             }
           });
-    } else {
-      // TODO single controlled local gate that acts exactly on two atoms
-      return false;
     }
-  } else {
-    assert(arch.isAllowedGlobally({op->getType(), op->getNcontrols()}));
-    if (op->isIndividual()) {
-      assert(isGlobal(*op, initialQc.getNqubits()));
-      // purely globally gate can always be applied
-      return true;
-    } else {
-      assert(op->getNcontrols() + op->getNtargets() == 2);
-      // TODO single controlled global gate that acts exactly on two atoms
-      return false;
-    }
+    // TODO single controlled local gate that acts exactly on two atoms
+    return false;
   }
+  assert(arch.isAllowedGlobally({op->getType(), op->getNcontrols()}));
+  if (op->isIndividual()) {
+    assert(isGlobal(*op, initialQc.getNqubits()));
+    // purely globally gate can always be applied
+    return true;
+  }
+  assert(op->getNcontrols() + op->getNtargets() == 2);
+  // TODO single controlled global gate that acts exactly on two atoms
+  return false;
 }
 
 auto NeutralAtomMapper::updatePlacement(
@@ -696,27 +690,22 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 // left
                 std::int64_t freeX = x;
                 bool         free  = false;
-                try {
-                  while (!free) {
-                    const auto& site = arch.getNearestSiteLeft({freeX, y});
-                    freeX            = arch.getPositionOfSite(site).x;
-                    if (initialFreeSites[site] and
-                        std::find(placement[p].zones.cbegin(),
-                                  placement[p].zones.cend(),
-                                  arch.getZoneOfSite(site)) !=
-                            placement[p].zones.cend()) {
-                      // the site is free and satisfies the zone restrictions of
-                      // the atom
-                      free = true;
-                    } else {
-                      const auto nx = arch.getNearestXLeft(
-                          freeX, arch.getZoneAt({freeX - d, y}), true);
-                      freeX = nx == freeX ? freeX - dx : nx + d;
-                    }
+                while (!free and arch.hasSiteLeft({freeX, y})) {
+                  const auto& site = arch.getNearestSiteLeft({freeX, y});
+                  freeX            = arch.getPositionOfSite(site).x;
+                  if (initialFreeSites[site] and
+                      std::find(placement[p].zones.cbegin(),
+                                placement[p].zones.cend(),
+                                arch.getZoneOfSite(site)) !=
+                          placement[p].zones.cend()) {
+                    // the site is free and satisfies the zone restrictions of
+                    // the atom
+                    free = true;
+                  } else {
+                    const auto nx = arch.getNearestXLeft(
+                        freeX, arch.getZoneAt({freeX - d, y}), true);
+                    freeX = nx == freeX ? freeX - dx : nx + d;
                   }
-                } catch (std::invalid_argument& e) {
-                  // if x reached the left end and there was no site to the left
-                  // anymore, free remains false in this case
                 }
                 if (free) {
                   // place p on the free site
@@ -785,27 +774,22 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               // right
               std::int64_t freeX = x;
               bool         free  = false;
-              try {
-                while (!free) {
-                  const auto& site = arch.getNearestSiteRight({freeX - d, y});
-                  freeX            = arch.getPositionOfSite(site).x;
-                  if (initialFreeSites[site] and
-                      std::find(placement[p].zones.cbegin(),
-                                placement[p].zones.cend(),
-                                arch.getZoneOfSite(site)) !=
-                          placement[p].zones.cend()) {
-                    // the site is free and satisfies the zone restrictions of
-                    // the atom
-                    free = true;
-                  } else {
-                    freeX = arch.getNearestXRight(freeX + d,
-                                                  arch.getZoneAt({freeX, y})) +
-                            d;
-                  }
+              while (!free and arch.hasSiteRight({freeX - d, y})) {
+                const auto& site = arch.getNearestSiteRight({freeX - d, y});
+                freeX            = arch.getPositionOfSite(site).x;
+                if (initialFreeSites[site] and
+                    std::find(placement[p].zones.cbegin(),
+                              placement[p].zones.cend(),
+                              arch.getZoneOfSite(site)) !=
+                        placement[p].zones.cend()) {
+                  // the site is free and satisfies the zone restrictions of
+                  // the atom
+                  free = true;
+                } else {
+                  freeX = arch.getNearestXRight(freeX + d,
+                                                arch.getZoneAt({freeX, y})) +
+                          d;
                 }
-              } catch (std::invalid_argument& e) {
-                // if x reached the right end and there was no site to the right
-                // anymore, free remains false in this case
               }
               if (free) {
                 // place p on the free site
@@ -1009,27 +993,22 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 // left
                 std::int64_t freeX = x;
                 bool         free  = false;
-                try {
-                  while (!free) {
-                    const auto& site = arch.getNearestSiteLeft({freeX, y});
-                    freeX            = arch.getPositionOfSite(site).x;
-                    if (initialFreeSites[site] and
-                        std::find(placement[p].zones.cbegin(),
-                                  placement[p].zones.cend(),
-                                  arch.getZoneOfSite(site)) !=
-                            placement[p].zones.cend()) {
-                      // the site is free and satisfies the zone restrictions of
-                      // the atom
-                      free = true;
-                    } else {
-                      const auto nx = arch.getNearestXLeft(
-                          freeX, arch.getZoneAt({freeX - d, y}), true);
-                      freeX = nx == freeX ? freeX - dx : nx + d;
-                    }
+                while (!free and arch.hasSiteLeft({freeX, y})) {
+                  const auto& site = arch.getNearestSiteLeft({freeX, y});
+                  freeX            = arch.getPositionOfSite(site).x;
+                  if (initialFreeSites[site] and
+                      std::find(placement[p].zones.cbegin(),
+                                placement[p].zones.cend(),
+                                arch.getZoneOfSite(site)) !=
+                          placement[p].zones.cend()) {
+                    // the site is free and satisfies the zone restrictions of
+                    // the atom
+                    free = true;
+                  } else {
+                    const auto nx = arch.getNearestXLeft(
+                        freeX, arch.getZoneAt({freeX - d, y}), true);
+                    freeX = nx == freeX ? freeX - dx : nx + d;
                   }
-                } catch (std::invalid_argument& e) {
-                  // if x reached the left end and there was no site to the left
-                  // anymore, free remains false in this case
                 }
                 if (free) {
                   // place p on the free site
@@ -1101,27 +1080,22 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
               // right
               std::int64_t freeX = x;
               bool         free  = false;
-              try {
-                while (!free) {
-                  const auto& site = arch.getNearestSiteRight({freeX - d, y});
-                  freeX            = arch.getPositionOfSite(site).x;
-                  if (initialFreeSites[site] and
-                      std::find(placement[p].zones.cbegin(),
-                                placement[p].zones.cend(),
-                                arch.getZoneOfSite(site)) !=
-                          placement[p].zones.cend()) {
-                    // the site is free and satisfies the zone restrictions of
-                    // the atom
-                    free = true;
-                  } else {
-                    freeX = arch.getNearestXRight(freeX + d,
-                                                  arch.getZoneAt({freeX, y})) +
-                            d;
-                  }
+              while (!free and arch.hasSiteRight({freeX - d, y})) {
+                const auto& site = arch.getNearestSiteRight({freeX - d, y});
+                freeX            = arch.getPositionOfSite(site).x;
+                if (initialFreeSites[site] and
+                    std::find(placement[p].zones.cbegin(),
+                              placement[p].zones.cend(),
+                              arch.getZoneOfSite(site)) !=
+                        placement[p].zones.cend()) {
+                  // the site is free and satisfies the zone restrictions of
+                  // the atom
+                  free = true;
+                } else {
+                  freeX = arch.getNearestXRight(freeX + d,
+                                                arch.getZoneAt({freeX, y})) +
+                          d;
                 }
-              } catch (std::invalid_argument& e) {
-                // if x reached the right end and there was no site to the right
-                // anymore, free remains false in this case
               }
               if (free) {
                 // place p on the free site
@@ -1236,7 +1210,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             moveableSelectedRows.emplace_back(zF, rF, moveableSpotsNeeded);
             freeSitesPerRow[firstIWithSameN] = {zF, rF,
                                                 nF - moveableSpotsNeeded};
-            moveableSpotsNeeded              = 0;
             break;
           }
         } else {
@@ -1265,10 +1238,10 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           if (currentlyShuttling.find(q) != currentlyShuttling.cend()) {
             start.emplace_back(placement[q].currentPosition);
             if (n == currentlyShuttling.size() - notStoredLeft) {
-              const auto& s = *std::find_if(
+              const auto& site = *std::find_if(
                   sitesInRow.cbegin(), sitesInRow.cend(),
                   [&](const auto& s) { return currentFreeSites[s]; });
-              const auto& sPos = arch.getPositionOfSite(s);
+              const auto& sPos = arch.getPositionOfSite(site);
               placement[q].currentPosition =
                   std::make_shared<Point>(sPos.x + d, sPos.y);
               end.emplace_back(placement[q].currentPosition);
@@ -1277,8 +1250,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                   std::make_shared<Point>(sPos.x, sPos.y);
               storeEnd.emplace_back(placement[q].currentPosition);
               currentlyShuttling.erase(q);
-              currentFreeSites[s] = false;
-              initialFreeSites[s] = false;
+              currentFreeSites[site] = false;
+              initialFreeSites[site] = false;
               n -= 1;
             } else if (j < sitesInRow.size() and
                        currentFreeSites[sitesInRow[j]]) {
@@ -1350,7 +1323,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto [zF, rF, nF] = freeSitesPerRow[firstIWithSameN];
             fixedSelectedRows.emplace_back(zF, rF, fixedSpotsNeeded);
             freeSitesPerRow[firstIWithSameN] = {zF, rF, nF - fixedSpotsNeeded};
-            fixedSpotsNeeded                 = 0;
             break;
           }
         } else {
@@ -1379,10 +1351,10 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           if (currentlyShuttling.find(q) != currentlyShuttling.cend()) {
             start.emplace_back(placement[q].currentPosition);
             if (n == currentlyShuttling.size() - notStoredLeft) {
-              const auto& s = *std::find_if(
+              const auto& site = *std::find_if(
                   sitesInRow.cbegin(), sitesInRow.cend(),
                   [&](const auto& s) { return currentFreeSites[s]; });
-              const auto& sPos = arch.getPositionOfSite(s);
+              const auto& sPos = arch.getPositionOfSite(site);
               placement[q].currentPosition =
                   std::make_shared<Point>(sPos.x + d, sPos.y);
               end.emplace_back(placement[q].currentPosition);
@@ -1391,8 +1363,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                   std::make_shared<Point>(sPos.x, sPos.y);
               storeEnd.emplace_back(placement[q].currentPosition);
               currentlyShuttling.erase(q);
-              currentFreeSites[s] = false;
-              initialFreeSites[s] = false;
+              currentFreeSites[site] = false;
+              initialFreeSites[site] = false;
               n -= 1;
             } else if (j < sitesInRow.size() and
                        currentFreeSites[sitesInRow[j]]) {

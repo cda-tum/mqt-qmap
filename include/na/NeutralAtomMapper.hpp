@@ -69,8 +69,14 @@ protected:
     explicit Atom(const std::vector<Zone>& zones) : zones(zones){};
     explicit Atom() : Atom({}){};
   };
-  auto preprocess() -> void;
-  auto postprocess() -> void;
+  auto preprocess() -> void { validateCircuit(); }
+  auto validateCircuit() -> void;
+  auto postprocess() -> void {
+    makeLogicalArrays();
+    calculateMovements();
+  }
+  auto makeLogicalArrays() -> void;
+  auto calculateMovements() -> void;
   [[nodiscard]] auto
        checkApplicability(const std::unique_ptr<qc::Operation>& op,
                           const std::vector<Atom>& placement) const -> bool;
