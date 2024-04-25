@@ -23,7 +23,7 @@ namespace na {
 using Color = std::uint16_t;
 using Edge  = std::pair<qc::Qubit, qc::Qubit>;
 using InteractionGraph =
-    qc::UndirectedGraph<qc::Qubit, std::shared_ptr<qc::Layer::DAGVertex>>;
+    qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex>;
 
 class NAGraphAlgorithms {
 public:

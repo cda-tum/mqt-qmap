@@ -19,7 +19,7 @@ class TestNAGraph : public testing::Test {
 protected:
   qc::QuantumComputation                                                qc;
   qc::Layer                                                             layer;
-  qc::UndirectedGraph<qc::Qubit, std::shared_ptr<qc::Layer::DAGVertex>> graph{};
+  qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex> graph{};
   void SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
