@@ -397,6 +397,9 @@ auto NeutralAtomMapper::shuttle(
         end.emplace_back(placement[q].currentPosition);
       }
     }
+    if (!start.empty()) {
+      mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, start, end);
+    }
   }
   std::vector<std::tuple<Index, std::size_t>> freeSitesPerRow;
   for (std::size_t r = 0; r < arch.getNrowsInZone(destination); ++r) {
