@@ -364,11 +364,9 @@ auto NeutralAtomMapper::getMisplacement(const std::vector<Atom>&      initial,
                              return acc;
                            }) +
            // count the spots the atom must be moved relatively
-           std::count_if(
-               target.cbegin(), target.cend(),
-               [&](const auto& p) { return p.second < target.at(q); }) -
+           static_cast<std::int64_t>(indexOfQ) -
            std::count_if(target.cbegin(), target.cend(), [&](const auto& p) {
-             return initial[p.first].currentPosition->x <
+             return initial[p].currentPosition->x <
                     initial[q].currentPosition->x;
            });
   }
@@ -385,23 +383,19 @@ auto NeutralAtomMapper::shuttle(
   const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
   const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
                   static_cast<std::int64_t>(arch.getNoInteractionRadius());
-  std::vector<qc::Qubit> qubitsOrdered;
-  std::transform(qubits.cbegin(), qubits.cend(), back_inserter(qubitsOrdered),
-                 [](const auto& v) { return v.first; });
-  std::sort(qubitsOrdered.begin(), qubitsOrdered.end(),
-            [&](const auto& a, const auto& b) {
-              return qubits.at(a).x < qubits.at(b).x;
-            });
-  std::vector<std::shared_ptr<Point>> start;
-  std::vector<std::shared_ptr<Point>> end;
-  for (const auto q : qubitsOrdered) {
-    if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
-      start.emplace_back(placement[q].currentPosition);
-      const auto pos = *placement[q].currentPosition;
-      currentlyShuttling.insert(q);
-      currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
-      placement[q].currentPosition = std::make_shared<Point>(pos.x + d, pos.y);
-      end.emplace_back(placement[q].currentPosition);
+  { // load atoms that are not already shuttling
+    std::vector<std::shared_ptr<Point>> start;
+    std::vector<std::shared_ptr<Point>> end;
+    for (const auto q : qubits) {
+      if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
+        start.emplace_back(placement[q].currentPosition);
+        const auto pos = *placement[q].currentPosition;
+        currentlyShuttling.insert(q);
+        currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+        placement[q].currentPosition =
+            std::make_shared<Point>(pos.x + d, pos.y);
+        end.emplace_back(placement[q].currentPosition);
+      }
     }
   }
   std::vector<std::tuple<Index, std::size_t>> freeSitesPerRow;
@@ -456,7 +450,7 @@ auto NeutralAtomMapper::shuttle(
     const auto& sitesInRow = arch.getSitesInRow(destination, r);
     const auto  y =
         arch.getPositionOfSite(arch.getSitesInRow(destination, r)[0]).y;
-    for (const auto q : qubitsOrdered) {
+    for (const auto q : qubits) {
       if (currentlyShuttling.find(q) != currentlyShuttling.cend()) {
         start.emplace_back(placement[q].currentPosition);
         if (n == currentlyShuttling.size() - notStoredLeft) {
@@ -899,7 +893,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       }
       (*it)->execute();
       const auto&  q1     = op->getTargets().front();
-      const auto&  q2     = (*op->getControls().begin()).qubit;
+      const auto&  q2     = op->getControls().begin()->qubit;
       Point        start  = *placement[q1].currentPosition;
       Point        end    = start;
       const Point& target = arch.getPositionOfSite(arch.getSitesInZone(
@@ -993,22 +987,22 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       const auto sites = arch.getSitesInRow(interactionZone, 0);
       std::unordered_map<qc::Qubit, Point> finalFixedPositions;
       for (const auto& [q, x] : fixed) {
-        if (x >= sites.size()) {
+        if (static_cast<std::size_t>(x) >= sites.size()) {
           throw std::logic_error(
               "Target site in interaction zone is out of bounds. Possible "
               "reason "
               "for this error: Entangling zone is not wide enough.");
         }
-        finalFixedPositions[q] =
-            arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
+        finalFixedPositions.emplace(
+            q, arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]));
       }
       shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
               finalFixedPositions, true);
       // -----------------------------------------------------------------
       std::unordered_map<qc::Qubit, Point> finalMoveablePositions;
       for (const auto& [q, x] : moveable[0]) {
-        finalMoveablePositions[q] =
-            arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
+        finalMoveablePositions.emplace(
+            q, arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]));
       }
       shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
               finalMoveablePositions, false);
@@ -1020,7 +1014,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                      [](const auto& v) { return v.first; });
       std::sort(moveableOrdered.begin(), moveableOrdered.end(),
                 [&](const auto& a, const auto& b) {
-                  return moveable[0].at(a).x < moveable[0].at(b).x;
+                  return moveable[0].at(a) < moveable[0].at(b);
                 });
       std::vector<std::shared_ptr<Point>> startMoveable;
       std::vector<std::shared_ptr<Point>> endMoveable;
