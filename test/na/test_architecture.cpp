@@ -1476,8 +1476,9 @@ TEST_F(TestNAArchitecture, SiteLeft) {
   const na::Architecture arch(ARCH_FN, GRID_FN);
   EXPECT_TRUE(arch.hasSiteLeft({3, 0}, false, true));
   EXPECT_FALSE(arch.hasSiteLeft({3, 0}, true, true));
-  EXPECT_EQ(arch.getPositionOfSite(arch.getNearestSiteLeft({3, 0}, false, true)),
-            (na::Point{3, 0}));
+  EXPECT_EQ(
+      arch.getPositionOfSite(arch.getNearestSiteLeft({3, 0}, false, true)),
+      (na::Point{3, 0}));
   EXPECT_ANY_THROW(std::ignore = arch.getNearestSiteLeft({3, 0}, true, true));
 }
 

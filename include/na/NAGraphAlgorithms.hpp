@@ -20,10 +20,9 @@
 
 namespace na {
 
-using Color = std::uint16_t;
-using Edge  = std::pair<qc::Qubit, qc::Qubit>;
-using InteractionGraph =
-    qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex>;
+using Color            = std::uint16_t;
+using Edge             = std::pair<qc::Qubit, qc::Qubit>;
+using InteractionGraph = qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex>;
 
 class NAGraphAlgorithms {
 public:

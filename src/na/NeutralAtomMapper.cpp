@@ -903,66 +903,56 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           *arch.getPropertiesOfOperation({op->getType(), 1}).zones.begin())[0]);
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD,
-          std::vector{std::make_shared<Point>(start)},
+          LOAD, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = end;
       end   = target;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE,
-          std::vector{std::make_shared<Point>(start)},
+          MOVE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = end;
       end.x -= d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE,
-          std::vector{std::make_shared<Point>(start)},
+          STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = *placement[q2].currentPosition;
       end   = start;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD,
-          std::vector{std::make_shared<Point>(start)},
+          LOAD, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = end;
       end   = target;
       end.y += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE,
-          std::vector{std::make_shared<Point>(start)},
+          MOVE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       mappedQc.emplaceBack<NAGlobalOperation>(OpType{qc::OpType::Z, 1});
       maxSeqWidth = 1UL;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE,
-          std::vector{std::make_shared<Point>(end)},
+          MOVE, std::vector{std::make_shared<Point>(end)},
           std::vector{std::make_shared<Point>(start)});
       end = *placement[q2].currentPosition;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE,
-          std::vector{std::make_shared<Point>(start)},
+          STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = target;
       end   = start;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD,
-          std::vector{std::make_shared<Point>(start)},
+          LOAD, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = end;
       end   = *placement[q1].currentPosition;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE,
-          std::vector{std::make_shared<Point>(start)},
+          MOVE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
       start = end;
       end.x -= d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE,
-          std::vector{std::make_shared<Point>(start)},
+          STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
     } else if (config.getMethod() == NaMappingMethod::SMART) {
       // 2. when no such gates are left, extract an interaction graph of gates

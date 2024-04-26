@@ -237,13 +237,13 @@ public:
   [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z,
                                      bool proper = true) const -> Number;
   [[nodiscard]] auto hasSiteLeft(const Point& p, bool proper = false,
-                                        bool sameZone = false) const -> bool;
+                                 bool sameZone = false) const -> bool;
   [[nodiscard]] auto hasSiteRight(const Point& p, bool proper = false,
-                                         bool sameZone = false) const -> bool;
+                                  bool sameZone = false) const -> bool;
   [[nodiscard]] auto hasSiteUp(const Point& p, bool proper = false,
-                                      bool sameZone = false) const -> bool;
+                               bool sameZone = false) const -> bool;
   [[nodiscard]] auto hasSiteDown(const Point& p, bool proper = false,
-                                        bool sameZone = false) const -> bool;
+                                 bool sameZone = false) const -> bool;
   [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
                                         bool sameZone = false) const -> Index;
   [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,

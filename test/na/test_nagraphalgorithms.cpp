@@ -17,10 +17,10 @@
 
 class TestNAGraph : public testing::Test {
 protected:
-  qc::QuantumComputation                                                qc;
-  qc::Layer                                                             layer;
+  qc::QuantumComputation                               qc;
+  qc::Layer                                            layer;
   qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex> graph{};
-  void SetUp() override {
+  void                                                 SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
     qc.cz(1, 6);

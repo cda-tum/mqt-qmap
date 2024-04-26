@@ -27,12 +27,12 @@ private:
 
 public:
   Configuration() = default;
-  explicit Configuration(const NaMappingMethod method) : method(method){};
+  explicit Configuration(const NaMappingMethod method) : method(method) {};
   explicit Configuration(const std::size_t rows, const std::size_t cols)
-      : patchRows(rows), patchCols(cols){};
+      : patchRows(rows), patchCols(cols) {};
   explicit Configuration(const std::size_t rows, const std::size_t cols,
                          const NaMappingMethod method)
-      : patchRows(rows), patchCols(cols), method(method){};
+      : patchRows(rows), patchCols(cols), method(method) {};
   explicit Configuration(const std::string& filename);
   explicit Configuration(std::istream& fs);
   virtual ~Configuration() = default;
