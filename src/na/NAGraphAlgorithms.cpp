@@ -235,7 +235,7 @@ auto NAGraphAlgorithms::colorEdges(
             }
           }
           nAdjColors[f] = static_cast<std::size_t>(
-              std::count(usedColors.cbegin(), usedColors.cend(),
+              std::count_if(usedColors.cbegin(), usedColors.cend(),
                          [](const bool& b) { return b; }));
         }
       }

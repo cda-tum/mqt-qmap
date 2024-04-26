@@ -97,7 +97,7 @@ protected:
    * @param qubits The qubits to be shuttled.
    * @param destination The destination zone.
    */
-  auto shuttle(std::vector<bool>&             initialFreeSites,
+  auto store(std::vector<bool>&             initialFreeSites,
                std::vector<bool>&             currentFreeSites,
                std::vector<Atom>&             placement,
                std::unordered_set<qc::Qubit>& currentlyShuttling,
@@ -111,15 +111,12 @@ protected:
    * throughout the course of executing the function.
    * @param currentlyShuttling The qubits that are currently being shuttled.
    * @param qubits The qubits to be shuttled mapped to their final position.
-   * @param store Whether to store the atoms at the final position. If false,
-   * also the last movement is skip and assumed to be performed by the caller.
    */
-  auto shuttle(std::vector<bool>&                          initialFreeSites,
+  auto pickUp(std::vector<bool>&                          initialFreeSites,
                std::vector<bool>&                          currentFreeSites,
                std::vector<Atom>&                          placement,
                std::unordered_set<qc::Qubit>&              currentlyShuttling,
-               const std::unordered_map<qc::Qubit, Point>& qubits,
-               bool store = true) -> void;
+               const std::vector<qc::Qubit>& qubits) -> void;
 
 public:
   explicit NeutralAtomMapper(Architecture arch, const Configuration& config)

@@ -288,24 +288,25 @@ auto NeutralAtomMapper::updatePlacement(
   if (arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
     if (op->getNcontrols() == 0) {
       // individual gate that can act on one or more atoms
-      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
-                    [&](const auto& qubit) {
-                      switch (placement[qubit].positionStatus) {
-                      case Atom::PositionStatus::UNDEFINED:
-                        // remove all zones where the gate is not applicable
-                        placement[qubit].zones.erase(
-                            std::remove_if(placement[qubit].zones.begin(),
-                                           placement[qubit].zones.end(),
-                                           [&](auto& z) {
-                                             return !arch.isAllowedLocally(
-                                                 {op->getType(), 0}, z);
-                                           }),
-                            placement[qubit].zones.end());
-                        break;
-                      case Atom::PositionStatus::DEFINED:
-                        break;
-                      }
-                    });
+      std::for_each(
+          op->getTargets().cbegin(), op->getTargets().cend(),
+          [&](const auto& qubit) {
+            switch (placement[qubit].positionStatus) {
+            case Atom::PositionStatus::UNDEFINED:
+              // remove all zones where the gate is not applicable
+              placement[qubit].zones.erase(
+                  std::remove_if(
+                      placement[qubit].zones.begin(),
+                      placement[qubit].zones.end(),
+                      [&](auto& z) {
+                        return !arch.isAllowedLocally({op->getType(), 0}, z);
+                      }),
+                  placement[qubit].zones.end());
+              break;
+            case Atom::PositionStatus::DEFINED:
+              break;
+            }
+          });
     } else {
       // TODO single controlled local gate that acts exactly on two atoms
     }
@@ -314,23 +315,24 @@ auto NeutralAtomMapper::updatePlacement(
     if (op->isIndividual()) {
       assert(isGlobal(*op, initialQc.getNqubits()));
       // purely globally gate can always be applied
-      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
-                    [&](const auto qubit) {
-                      switch (placement[qubit].positionStatus) {
-                      case Atom::PositionStatus::UNDEFINED:
-                        placement[qubit].zones.erase(
-                            std::remove_if(placement[qubit].zones.begin(),
-                                           placement[qubit].zones.end(),
-                                           [&](auto& z) {
-                                             return !arch.isAllowedGlobally(
-                                                 {op->getType(), 0}, z);
-                                           }),
-                            placement[qubit].zones.end());
-                        break;
-                      case Atom::PositionStatus::DEFINED:
-                        break;
-                      }
-                    });
+      std::for_each(
+          op->getTargets().cbegin(), op->getTargets().cend(),
+          [&](const auto qubit) {
+            switch (placement[qubit].positionStatus) {
+            case Atom::PositionStatus::UNDEFINED:
+              placement[qubit].zones.erase(
+                  std::remove_if(
+                      placement[qubit].zones.begin(),
+                      placement[qubit].zones.end(),
+                      [&](auto& z) {
+                        return !arch.isAllowedGlobally({op->getType(), 0}, z);
+                      }),
+                  placement[qubit].zones.end());
+              break;
+            case Atom::PositionStatus::DEFINED:
+              break;
+            }
+          });
     } else {
       assert(op->getNcontrols() + op->getNtargets() == 2);
       // TODO single controlled global gate that acts exactly on two atoms
@@ -373,7 +375,7 @@ auto NeutralAtomMapper::getMisplacement(const std::vector<Atom>&      initial,
   return 0;
 }
 
-auto NeutralAtomMapper::shuttle(
+auto NeutralAtomMapper::store(
     std::vector<bool>& initialFreeSites, std::vector<bool>& currentFreeSites,
     std::vector<Atom>&             placement,
     std::unordered_set<qc::Qubit>& currentlyShuttling,
@@ -508,23 +510,16 @@ auto NeutralAtomMapper::shuttle(
   }
 }
 
-auto NeutralAtomMapper::shuttle(
+auto NeutralAtomMapper::pickUp(
     std::vector<bool>& initialFreeSites, std::vector<bool>& currentFreeSites,
-    std::vector<Atom>&                          placement,
-    std::unordered_set<qc::Qubit>&              currentlyShuttling,
-    const std::unordered_map<qc::Qubit, Point>& qubits, bool store) -> void {
+    std::vector<Atom>&             placement,
+    std::unordered_set<qc::Qubit>& currentlyShuttling,
+    const std::vector<qc::Qubit>&  qubitsOrdered) -> void {
   // this distance is used for spacing atoms that should interact or pass
   // another atom
   const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
   const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
                   static_cast<std::int64_t>(arch.getNoInteractionRadius());
-  std::vector<qc::Qubit> qubitsOrdered;
-  std::transform(qubits.cbegin(), qubits.cend(), back_inserter(qubitsOrdered),
-                 [](const auto& v) { return v.first; });
-  std::sort(qubitsOrdered.begin(), qubitsOrdered.end(),
-            [&](const auto& a, const auto& b) {
-              return qubits.at(a).x < qubits.at(b).x;
-            });
   // get a vector of the atoms in the order to pick them up based on
   // their misplacement value
   std::vector pickUpOrder(qubitsOrdered);
@@ -553,10 +548,8 @@ auto NeutralAtomMapper::shuttle(
       auto notPickedUpLeft = 0UL;
       for (std::size_t j = 0; j < i; ++j) {
         const auto& p = qubitsOrdered[j];
-        // not picked up yet and left
-        // of q in the end
-        if (currentlyShuttling.find(p) == currentlyShuttling.cend() and
-            qubits.at(p).x < qubits.at(q).x) {
+        // not picked up yet and left of q in the end
+        if (currentlyShuttling.find(p) == currentlyShuttling.cend()) {
           ++notPickedUpLeft;
         }
       }
@@ -776,33 +769,6 @@ auto NeutralAtomMapper::shuttle(
     }
     mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
   }
-  if (store) {
-    // all atoms are picked up in order, move them to the destination zone and
-    // store them there
-    std::vector<std::shared_ptr<Point>> start;
-    std::vector<std::shared_ptr<Point>> mid;
-    std::vector<std::shared_ptr<Point>> end;
-    for (const auto& [q, p] : qubits) {
-      if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
-        std::stringstream ss;
-        ss << "Atom " << q << " was unexpectedly not picked up.";
-        throw std::logic_error(ss.str());
-      }
-      if (!currentFreeSites[arch.getSiteAt(p)]) {
-        throw std::logic_error(
-            "Target site in interaction zone is unexpectedly occupied.");
-      }
-      start.emplace_back(placement[q].currentPosition);
-      placement[q].currentPosition = std::make_shared<Point>(p.x + d, p.y);
-      mid.emplace_back(placement[q].currentPosition);
-      currentFreeSites[arch.getSiteAt(p)] = false;
-      placement[q].currentPosition        = std::make_shared<Point>(p);
-      end.emplace_back(placement[q].currentPosition);
-    }
-    currentlyShuttling.clear();
-    mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, mid);
-    mappedQc.emplaceBack<NAShuttlingOperation>(STORE, mid, end);
-  }
 }
 
 auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
@@ -887,6 +853,8 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
     if (it == (*executableSet)->end()) {
       break;
     }
+    // 2. when no such gates are left, extract an interaction graph of gates
+    //    of the same type and two targets, i.e. cz gates
     if (config.getMethod() == NaMappingMethod::NAIVE) {
       const std::unique_ptr<qc::Operation>& op = *(*it)->getOperation();
       if (op->getType() != qc::OpType::Z or op->getNtargets() != 1 or
@@ -955,8 +923,6 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
           STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
     } else if (config.getMethod() == NaMappingMethod::SMART) {
-      // 2. when no such gates are left, extract an interaction graph of gates
-      //    of the same type and two targets, i.e. cz gates
       const auto& graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
       if (graph.getNVertices() == 0) {
         throw std::logic_error(
@@ -973,34 +939,57 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       maxSeqWidth = std::accumulate(
           fixed.cbegin(), fixed.cend(), maxSeqWidth,
           [&](const auto max, const auto& q) {
+            assert(q.second >= 0);
             return std::max(max, static_cast<std::size_t>(q.second));
           });
       const Zone interactionZone =
           *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
       const auto sites = arch.getSitesInRow(interactionZone, 0);
-      std::unordered_map<qc::Qubit, Point> finalFixedPositions;
+      if (sites.size() < maxSeqWidth) {
+        std::stringstream ss;
+        ss << "Target site in " << arch.getZoneLabel(interactionZone)
+           << " zone is out of bounds. Possible reason for this error: The "
+              "zone is not wide enough.";
+        throw std::logic_error(ss.str());
+      }
+      std::vector<qc::Qubit> fixedOrdered;
+      std::transform(fixed.cbegin(), fixed.cend(), back_inserter(fixedOrdered),
+                     [](const auto& v) { return v.first; });
+      std::sort(fixedOrdered.begin(), fixedOrdered.end(),
+                [&](const auto& a, const auto& b) {
+                  return fixed.at(a) < fixed.at(b);
+                });
+      pickUp(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
+             fixedOrdered);
+      // all atoms are picked up in order, move them to the destination zone and
+      // store them there
+      std::vector<std::shared_ptr<Point>> start{};
+      std::vector<std::shared_ptr<Point>> mid{};
+      std::vector<std::shared_ptr<Point>> end{};
       for (const auto& [q, x] : fixed) {
-        if (static_cast<std::size_t>(x) >= sites.size()) {
-          throw std::logic_error(
-              "Target site in interaction zone is out of bounds. Possible "
-              "reason "
-              "for this error: Entangling zone is not wide enough.");
+        if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
+          std::stringstream ss;
+          ss << "Atom " << q << " was unexpectedly not picked up.";
+          throw std::logic_error(ss.str());
         }
-        finalFixedPositions.emplace(
-            q, arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]));
+        assert (x >= 0);
+        const auto& p =
+            arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
+        if (!currentFreeSites[arch.getSiteAt(p)]) {
+          throw std::logic_error(
+              "Target site in interaction zone is unexpectedly occupied.");
+        }
+        start.emplace_back(placement[q].currentPosition);
+        placement[q].currentPosition = std::make_shared<Point>(p.x + d, p.y);
+        mid.emplace_back(placement[q].currentPosition);
+        currentFreeSites[arch.getSiteAt(p)] = false;
+        placement[q].currentPosition        = std::make_shared<Point>(p);
+        end.emplace_back(placement[q].currentPosition);
       }
-      shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
-              finalFixedPositions, true);
+      currentlyShuttling.clear();
+      mappedQc.emplaceBack<NAShuttlingOperation>(MOVE, start, mid);
+      mappedQc.emplaceBack<NAShuttlingOperation>(STORE, mid, end);
       // -----------------------------------------------------------------
-      std::unordered_map<qc::Qubit, Point> finalMoveablePositions;
-      for (const auto& [q, x] : moveable[0]) {
-        finalMoveablePositions.emplace(
-            q, arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]));
-      }
-      shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
-              finalMoveablePositions, false);
-      // ------------------------------------------------------------------
-      // 4. Apply the cz gates
       std::vector<qc::Qubit> moveableOrdered;
       std::transform(moveable[0].cbegin(), moveable[0].cend(),
                      back_inserter(moveableOrdered),
@@ -1009,6 +998,10 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
                 [&](const auto& a, const auto& b) {
                   return moveable[0].at(a) < moveable[0].at(b);
                 });
+      pickUp(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
+             moveableOrdered);
+      // ------------------------------------------------------------------
+      // 4. Apply the cz gates
       std::vector<std::shared_ptr<Point>> startMoveable;
       std::vector<std::shared_ptr<Point>> endMoveable;
       std::transform(moveableOrdered.cbegin(), moveableOrdered.cend(),
@@ -1061,13 +1054,13 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         throw std::logic_error("Currently only one storage zone is supported.");
       }
       const auto storageZone = initialZones.front();
-      shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
+      store(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
               moveableOrdered, storageZone);
       // -------------------------------------------------------------
       std::vector<qc::Qubit> fixedVector;
       std::transform(fixed.cbegin(), fixed.cend(), back_inserter(fixedVector),
                      [](const auto& v) { return v.first; });
-      shuttle(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
+      store(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
               fixedVector, storageZone);
     } else {
       throw std::logic_error("NA mapping method not implemented.");
