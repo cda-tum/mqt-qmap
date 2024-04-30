@@ -93,7 +93,7 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
       freeColors.erase(k);
     }
   }
-  // The minAdmissableColor is now the minimum of the free colors
+  // The minAdmissibleColor is now the minimum of the free colors
   // that does not generate a cycle in the graph induced by the partial order
   // of SLM traps.
 
@@ -103,23 +103,23 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
   // (not contained in ranks since the edge e is not colored yet)
   const auto rankOfU = static_cast<std::size_t>(std::distance(
       sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(), v)));
-  for (const auto leastAdmissableColor : freeColors) {
+  for (const auto leastAdmissibleColor : freeColors) {
     bool isAdmissable = true;
     for (const auto& [f, k] : coloring) {
       if (f.first == v or f.second == v) {
         const qc::Qubit w = f.first == v ? f.second : f.first;
-        if (k > leastAdmissableColor) {
+        if (k > leastAdmissibleColor) {
           if (partialOrder.isReachable(w, u)) {
             isAdmissable = false;
             break;
           }
-        } else if (k < leastAdmissableColor) {
+        } else if (k < leastAdmissibleColor) {
           if (partialOrder.isReachable(u, w)) {
             throw std::logic_error("Coloring cannot be completed to a valid "
                                    "one (cycle is unavoidable).");
           }
         }
-      } else if (k == leastAdmissableColor) {
+      } else if (k == leastAdmissibleColor) {
         // get the SLM atom from the edge f
         if (const qc::Qubit w = std::find(sequence.cbegin(), sequence.cend(),
                                           f.first) == sequence.end()
@@ -141,7 +141,7 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
       }
     }
     if (isAdmissable) {
-      return leastAdmissableColor;
+      return leastAdmissibleColor;
     }
   }
   throw std::logic_error("No admissible color found (should never occur).");
