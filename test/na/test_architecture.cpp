@@ -1434,7 +1434,7 @@ TEST_F(TestNAArchitecture, Import) {
   na::Architecture const arch(ARCH_FN, GRID_FN);
 
   EXPECT_EQ(arch.getNZones(), 3);
-  EXPECT_EQ(arch.getNSites(), 360);
+  EXPECT_EQ(arch.getNSites(), 1296);
   EXPECT_EQ(arch.getName(), "Nature");
   EXPECT_EQ(arch.getZoneLabel(arch.getZoneOfSite(0)), "entangling");
 }
@@ -1451,7 +1451,7 @@ TEST_F(TestNAArchitecture, WithConfiguration) {
   na::Architecture const  arch(ARCH_FN, GRID_FN);
   na::Configuration const config(2, 3);
   const auto              modArch = arch.withConfig(config);
-  EXPECT_EQ(modArch.getNSites(), 54);
+  EXPECT_EQ(modArch.getNSites(), 216);
 }
 
 TEST_F(TestNAArchitecture, SiteUp) {
