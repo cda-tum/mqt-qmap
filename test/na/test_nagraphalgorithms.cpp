@@ -198,8 +198,9 @@ TEST_F(TestNAGraph, InteractionExists) {
 }
 
 TEST_F(TestNAGraph, CoveredInteractions) {
-  const auto& maxIndepSet          = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
-  const auto& coveredEdges = na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
+  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& coveredEdges =
+      na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
   std::vector<std::pair<qc::Qubit, qc::Qubit>> coveredEdgesVec(
       coveredEdges.cbegin(), coveredEdges.cend());
