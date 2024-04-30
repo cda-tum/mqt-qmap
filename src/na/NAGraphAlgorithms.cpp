@@ -78,7 +78,8 @@ auto NAGraphAlgorithms::getLeastAdmissableColor(
   // edges that do not contain the vertex v
   Color minAdmissableColor = 0;
   for (const auto& [f, k] : coloring) {
-    if (InteractionGraph::isAdjacentEdge(e, f) and v != f.first and v != f.second) {
+    if (InteractionGraph::isAdjacentEdge(e, f) and v != f.first and
+        v != f.second) {
       minAdmissableColor =
           std::max(minAdmissableColor, static_cast<Color>(k + 1));
     }
@@ -250,8 +251,8 @@ auto NAGraphAlgorithms::colorEdges(
 
 auto NAGraphAlgorithms::computeRestingPositions(
     const std::vector<qc::Qubit>& moveable, const std::vector<qc::Qubit>& fixed,
-    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>& coloring)
-    -> std::vector<std::size_t> {
+    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
+        coloring) -> std::vector<std::size_t> {
   const Color maxColor = std::accumulate(
       coloring.cbegin(), coloring.cend(), static_cast<Color>(0),
       [](Color acc, const auto& value) { return std::max(acc, value.second); });
@@ -404,8 +405,8 @@ auto NAGraphAlgorithms::computeRestingPositions(
 }
 
 auto NAGraphAlgorithms::groupByConnectedComponent(
-    const InteractionGraph& g, const std::vector<qc::Qubit>& sequence)
-    -> std::vector<qc::Qubit> {
+    const InteractionGraph&       g,
+    const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit> {
   const auto&                vertices = g.getVertices();
   qc::DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
   for (const qc::Qubit& v : vertices) {

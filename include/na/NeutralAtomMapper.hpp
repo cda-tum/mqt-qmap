@@ -78,10 +78,10 @@ protected:
   auto makeLogicalArrays() -> void;
   auto calculateMovements() -> void;
   [[nodiscard]] auto
-       checkApplicability(const qc::Operation* op,
+       checkApplicability(const qc::Operation*     op,
                           const std::vector<Atom>& placement) const -> bool;
   auto updatePlacement(const qc::Operation* op,
-                       std::vector<Atom>& placement) const -> void;
+                       std::vector<Atom>&   placement) const -> void;
   [[nodiscard]] static auto
   getMisplacement(const std::vector<Atom>&      initial,
                   const std::vector<qc::Qubit>& target,
@@ -97,11 +97,10 @@ protected:
    * @param qubits The qubits to be shuttled.
    * @param destination The destination zone.
    */
-  auto store(std::vector<bool>&             initialFreeSites,
-               std::vector<bool>&             currentFreeSites,
-               std::vector<Atom>&             placement,
-               std::unordered_set<qc::Qubit>& currentlyShuttling,
-               const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
+  auto store(std::vector<bool>& initialFreeSites,
+             std::vector<bool>& currentFreeSites, std::vector<Atom>& placement,
+             std::unordered_set<qc::Qubit>& currentlyShuttling,
+             const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
   /**
    *
    * @param initialFreeSites The sites that are not yet occupied from the start
@@ -112,11 +111,10 @@ protected:
    * @param currentlyShuttling The qubits that are currently being shuttled.
    * @param qubits The qubits to be shuttled mapped to their final position.
    */
-  auto pickUp(std::vector<bool>&                          initialFreeSites,
-               std::vector<bool>&                          currentFreeSites,
-               std::vector<Atom>&                          placement,
-               std::unordered_set<qc::Qubit>&              currentlyShuttling,
-               const std::vector<qc::Qubit>& qubits) -> void;
+  auto pickUp(std::vector<bool>& initialFreeSites,
+              std::vector<bool>& currentFreeSites, std::vector<Atom>& placement,
+              std::unordered_set<qc::Qubit>& currentlyShuttling,
+              const std::vector<qc::Qubit>&  qubits) -> void;
 
 public:
   explicit NeutralAtomMapper(Architecture arch, const Configuration& config)

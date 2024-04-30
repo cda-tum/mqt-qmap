@@ -207,17 +207,17 @@ public:
   [[nodiscard]] auto isAllowedLocally(const FullOpType& t) const -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
   [[nodiscard]] auto isAllowedLocally(const FullOpType& t,
-                                      const Zone&   zone) const -> bool;
+                                      const Zone&       zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
   [[nodiscard]] auto isAllowedLocallyAtSite(const FullOpType& t,
-                                            const Index&  qubit) const -> bool;
+                                            const Index& qubit) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
   [[nodiscard]] auto isAllowedLocallyAt(const FullOpType& t,
-                                        const Point&  p) const -> bool;
+                                        const Point&      p) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t) const -> bool;
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
-                                       const Zone&   zone) const -> bool;
+                                       const Zone&       zone) const -> bool;
   [[nodiscard]] auto isInSameRow(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;

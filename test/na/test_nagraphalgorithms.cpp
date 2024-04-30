@@ -3,9 +3,9 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "datastructures/Layer.hpp"
 #include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
+#include "datastructures/Layer.hpp"
 #include "operations/OpType.hpp"
 
 #include "gtest/gtest.h"
@@ -16,10 +16,10 @@
 
 class TestNAGraph : public testing::Test {
 protected:
-  qc::QuantumComputation                               qc;
-  qc::Layer                                            layer;
-  na::InteractionGraph graph{};
-  void                                                 SetUp() override {
+  qc::QuantumComputation qc;
+  qc::Layer              layer;
+  na::InteractionGraph   graph{};
+  void                   SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
     qc.cz(1, 6);
