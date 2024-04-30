@@ -71,8 +71,8 @@ public:
     DecoherenceTimes()                        = default;
     DecoherenceTimes(const DecoherenceTimes&) = default;
     virtual ~DecoherenceTimes()               = default;
-    DecoherenceTimes(const Value t1, const Value t2)
-        : t1(t1), t2(t2), tEff(t1 * t2 / (t1 + t2)) {}
+    DecoherenceTimes(const Value t1time, const Value t2time)
+        : t1(t1time), t2(t2time), tEff(t1 * t2 / (t1 + t2)) {}
     explicit operator double() const { return tEff; }
   };
   /**

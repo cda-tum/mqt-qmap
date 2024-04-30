@@ -144,7 +144,7 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
       return leastAdmissableColor;
     }
   }
-  throw std::logic_error("No admissable color found (should never occur).");
+  throw std::logic_error("No admissible color found (should never occur).");
 }
 
 auto NAGraphAlgorithms::colorEdges(
@@ -491,7 +491,8 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
           const auto rightNeighbor = i - 1;
           const auto rightNeighborX =
               moveablePositions[t][sequence[rightNeighbor]];
-          const std::int64_t minX = std::min(rightNeighborX - 1, -1LL);
+          const std::int64_t minX =
+              std::min(rightNeighborX - 1, static_cast<std::int64_t>(-1));
           assert(rightNeighborX - minX >= 0);
           std::vector<std::int64_t> xrange(
               static_cast<std::size_t>(rightNeighborX - minX));
@@ -526,7 +527,8 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
                                                    leftNeighbor.first)));
           const std::int64_t maxX =
               std::accumulate(fixedPositions.cbegin(), fixedPositions.cend(),
-                              0LL, [](const auto& acc, const auto& value) {
+                              static_cast<std::int64_t>(0),
+                              [](const auto& acc, const auto& value) {
                                 return std::max(acc, value.second);
                               });
           std::vector<std::int64_t> xrange(

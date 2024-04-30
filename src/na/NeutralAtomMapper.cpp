@@ -17,6 +17,7 @@
 #include "operations/Operation.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <numeric>
 #include <sstream>
 #include <vector>

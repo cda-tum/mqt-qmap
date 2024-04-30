@@ -10,8 +10,9 @@
 #include "operations/OpType.hpp"
 
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
 #include <exception>
-#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <limits>
@@ -304,11 +305,11 @@ auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
                    [&](const auto& c) { return proper ? c < x : c <= x; })) {
     return x;
   }
-  return std::accumulate(cols.cbegin(), cols.cend(), LONG_LONG_MIN,
-                         [&](const auto& acc, const auto& c) {
-                           return (acc < c and (proper ? c < x : c <= x)) ? c
-                                                                          : acc;
-                         });
+  return std::accumulate(
+      cols.cbegin(), cols.cend(), std::numeric_limits<Number>::min(),
+      [&](const auto& acc, const auto& c) {
+        return (acc < c and (proper ? c < x : c <= x)) ? c : acc;
+      });
 }
 auto Architecture::getNearestXRight(const Number& x, const Zone& z,
                                     const bool proper) const -> Number {
@@ -317,11 +318,11 @@ auto Architecture::getNearestXRight(const Number& x, const Zone& z,
                    [&](const auto& c) { return proper ? c > x : c >= x; })) {
     return x;
   }
-  return std::accumulate(cols.cbegin(), cols.cend(), LONG_LONG_MAX,
-                         [&](const auto& acc, const auto& c) {
-                           return (acc > c and (proper ? c > x : c >= x)) ? c
-                                                                          : acc;
-                         });
+  return std::accumulate(
+      cols.cbegin(), cols.cend(), std::numeric_limits<Number>::max(),
+      [&](const auto& acc, const auto& c) {
+        return (acc > c and (proper ? c > x : c >= x)) ? c : acc;
+      });
 }
 auto Architecture::getNearestYUp(const Number& y, const Zone& z,
                                  const bool proper) const -> Number {
@@ -330,11 +331,11 @@ auto Architecture::getNearestYUp(const Number& y, const Zone& z,
                    [&](const auto& c) { return proper ? c < y : c <= y; })) {
     return y;
   }
-  return std::accumulate(rows.cbegin(), rows.cend(), LONG_LONG_MIN,
-                         [&](const auto& acc, const auto& r) {
-                           return (acc < r and (proper ? r < y : r <= y)) ? r
-                                                                          : acc;
-                         });
+  return std::accumulate(
+      rows.cbegin(), rows.cend(), std::numeric_limits<Number>::min(),
+      [&](const auto& acc, const auto& r) {
+        return (acc < r and (proper ? r < y : r <= y)) ? r : acc;
+      });
 }
 auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                                    const bool proper) const -> Number {
@@ -343,11 +344,11 @@ auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                    [&](const auto& c) { return proper ? c > y : c >= y; })) {
     return y;
   }
-  return std::accumulate(rows.cbegin(), rows.cend(), LONG_LONG_MAX,
-                         [&](const auto& acc, const auto& r) {
-                           return (acc > r and (proper ? r > y : r >= y)) ? r
-                                                                          : acc;
-                         });
+  return std::accumulate(
+      rows.cbegin(), rows.cend(), std::numeric_limits<Number>::max(),
+      [&](const auto& acc, const auto& r) {
+        return (acc > r and (proper ? r > y : r >= y)) ? r : acc;
+      });
 }
 auto Architecture::hasSiteLeft(const Point& p, bool proper,
                                bool sameZone) const -> bool {
@@ -632,7 +633,7 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
             anchorSite = rows >= 0
                              ? getNearestSiteDown(anchorSitePos, true, true)
                              : getNearestSiteUp(anchorSitePos, true, true);
-          } catch (std::invalid_argument& e) {
+          } catch (std::invalid_argument& ex) {
             break;
           }
           anchorSitePos = getPositionOfSite(anchorSite);
@@ -640,7 +641,7 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
         anchorSitePos.y =
             rows >= 0 ? anchorSitePos.y + r * d : anchorSitePos.y - r * d;
         return {p.x + cols * d, anchorSitePos.y + dy};
-      } catch (std::invalid_argument& e) {
+      } catch (std::invalid_argument& ex) {
         try {
           nearestSite               = getNearestSiteDownLeft(p, false, true);
           const auto nearestSitePos = getPositionOfSite(nearestSite);
@@ -653,7 +654,7 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
               anchorSite = cols >= 0
                                ? getNearestSiteRight(anchorSitePos, true, true)
                                : getNearestSiteLeft(anchorSitePos, true, true);
-            } catch (std::invalid_argument& e) {
+            } catch (std::invalid_argument& exx) {
               break;
             }
             anchorSitePos = getPositionOfSite(anchorSite);
@@ -661,7 +662,7 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
           anchorSitePos.x =
               cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
           return {anchorSitePos.x + dx, p.y + rows * d};
-        } catch (std::invalid_argument& e) {
+        } catch (std::invalid_argument& exx) {
           return {p.x + rows * d, p.y + cols * d};
         }
       }
