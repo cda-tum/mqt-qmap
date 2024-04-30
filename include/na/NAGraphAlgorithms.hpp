@@ -35,9 +35,9 @@ public:
       -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>;
 
   /**
-   * @brief Get the Least Admissable Color for an edge.
+   * @brief Get the Least Admissible Color for an edge.
    * @details For a coloring to be valid no two adjacent edges can have the same
-   * color. Consequently, the least admissable color is one that is not used by
+   * color. Consequently, the least admissible color is one that is not used by
    * any adjacent edge.
    * Additionally, the color must be greater than the maximum color of any
    * adjacent edge that does not contain the vertex v to ensure that the
@@ -60,7 +60,7 @@ public:
    * @param v
    * @return auto
    */
-  [[nodiscard]] static auto getLeastAdmissableColor(
+  [[nodiscard]] static auto getLeastAdmissibleColor(
       const InteractionGraph& g,
       const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                    coloring,

@@ -56,7 +56,7 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
       result.merge(g.getAdjacentEdges(v));
     } catch (const std::invalid_argument&) {
       std::stringstream ss;
-      ss << "Vertices must be a subset of all verticies in the graph, in "
+      ss << "Vertices must be a subset of all vertices in the graph, in "
             "particular "
          << v << " is not in the graph.";
       throw std::invalid_argument(ss.str());
@@ -65,7 +65,7 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
   return result;
 }
 
-auto NAGraphAlgorithms::getLeastAdmissableColor(
+auto NAGraphAlgorithms::getLeastAdmissibleColor(
     const InteractionGraph& g,
     const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                  coloring,
@@ -74,18 +74,18 @@ auto NAGraphAlgorithms::getLeastAdmissableColor(
     const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
     std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>> ranks)
     -> Color {
-  // compute the minimum admissable color as the maximum color +1 of adjacent
+  // compute the minimum admissible color as the maximum color +1 of adjacent
   // edges that do not contain the vertex v
-  Color minAdmissableColor = 0;
+  Color minAdmissibleColor = 0;
   for (const auto& [f, k] : coloring) {
     if (InteractionGraph::isAdjacentEdge(e, f) and v != f.first and
         v != f.second) {
-      minAdmissableColor =
-          std::max(minAdmissableColor, static_cast<Color>(k + 1));
+      minAdmissibleColor =
+          std::max(minAdmissibleColor, static_cast<Color>(k + 1));
     }
   }
   std::set<Color> freeColors; // shall be sorted
-  for (Color k = minAdmissableColor; k <= maxColor + 1; ++k) {
+  for (Color k = minAdmissibleColor; k <= maxColor + 1; ++k) {
     freeColors.emplace(k);
   }
   for (const auto& [f, k] : coloring) {
@@ -199,7 +199,7 @@ auto NAGraphAlgorithms::colorEdges(
               });
     for (const auto& e : adjacentEdges) {
       // color the edge
-      coloring[e] = getLeastAdmissableColor(g, coloring, maxColor, e, v,
+      coloring[e] = getLeastAdmissibleColor(g, coloring, maxColor, e, v,
                                             nodesQueue, partialOrder, ranks);
       // update partial order
       const qc::Qubit u     = e.first == v ? e.second : e.first;
@@ -432,8 +432,8 @@ auto NAGraphAlgorithms::groupByConnectedComponent(
 auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
     -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                  std::unordered_map<qc::Qubit, std::int64_t>> {
-  const auto& mis = getMaxIndependentSet(g);
-  std::vector sequenceUngrouped(mis.cbegin(), mis.cend());
+  const auto& maxIndepSet = getMaxIndependentSet(g);
+  std::vector sequenceUngrouped(maxIndepSet.cbegin(), maxIndepSet.cend());
   // sort the vertices by degree in descending order
   std::sort(sequenceUngrouped.begin(), sequenceUngrouped.end(),
             [&](const auto& u, const auto& v) {
@@ -441,7 +441,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
             });
   const auto& sequence = groupByConnectedComponent(g, sequenceUngrouped);
   const auto& [coloring, partialOrder] =
-      colorEdges(g, coveredEdges(g, mis), sequence);
+      colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
   const auto& fixed   = partialOrder.orderTopologically();
   const auto& resting = computeRestingPositions(sequence, fixed, coloring);
   // compute relative x positions of fixed vertices

@@ -91,21 +91,21 @@ TEST_F(TestNAGraph, Getter) {
 }
 
 TEST_F(TestNAGraph, MaxIndepSet) {
-  const auto& mis = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
-  EXPECT_EQ(mis.size(), 3);
-  EXPECT_TRUE(mis.count(1));
-  EXPECT_TRUE(mis.count(3));
-  EXPECT_TRUE(mis.count(7));
+  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  EXPECT_EQ(maxIndepSet.size(), 3);
+  EXPECT_TRUE(maxIndepSet.count(1));
+  EXPECT_TRUE(maxIndepSet.count(3));
+  EXPECT_TRUE(maxIndepSet.count(7));
 }
 
 TEST_F(TestNAGraph, Coloring) {
-  const auto& mis = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
-  std::vector queue(mis.cbegin(), mis.cend());
+  const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  std::vector queue(maxIndepSet.cbegin(), maxIndepSet.cend());
   // sort the vertices by degree in descending order
   std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
     return graph.getDegree(u) > graph.getDegree(v);
   });
-  const auto& edges = na::NAGraphAlgorithms::coveredEdges(graph, mis);
+  const auto& edges = na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   const auto& [coloring, _] =
       na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
   // check that adjacent edges have different colors
@@ -198,8 +198,8 @@ TEST_F(TestNAGraph, InteractionExists) {
 }
 
 TEST_F(TestNAGraph, CoveredInteractions) {
-  const auto& mis          = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
-  const auto& coveredEdges = na::NAGraphAlgorithms::coveredEdges(graph, mis);
+  const auto& maxIndepSet          = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
+  const auto& coveredEdges = na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
   std::vector<std::pair<qc::Qubit, qc::Qubit>> coveredEdgesVec(
       coveredEdges.cbegin(), coveredEdges.cend());
