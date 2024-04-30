@@ -78,9 +78,9 @@ protected:
   auto makeLogicalArrays() -> void;
   auto calculateMovements() -> void;
   [[nodiscard]] auto
-       checkApplicability(const std::unique_ptr<qc::Operation>& op,
+       checkApplicability(const qc::Operation* op,
                           const std::vector<Atom>& placement) const -> bool;
-  auto updatePlacement(const std::unique_ptr<qc::Operation>& op,
+  auto updatePlacement(const qc::Operation* op,
                        std::vector<Atom>& placement) const -> void;
   [[nodiscard]] static auto
   getMisplacement(const std::vector<Atom>&      initial,

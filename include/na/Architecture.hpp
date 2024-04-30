@@ -119,7 +119,7 @@ protected:
   std::vector<ZoneProperties>
       zones; // a mapping from zones (int) to their name from the config
   std::vector<Point> sites; // a vector of sites
-  std::unordered_map<OpType, OperationProperties>
+  std::unordered_map<FullOpType, OperationProperties>
       gateSet; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
   std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
@@ -179,7 +179,7 @@ public:
   getPropertiesOfZone(const Zone& zone) const -> const ZoneProperties& {
     return zones[zone];
   }
-  [[nodiscard]] auto getPropertiesOfOperation(const OpType& t) const
+  [[nodiscard]] auto getPropertiesOfOperation(const FullOpType& t) const
       -> const OperationProperties& {
     if (auto it = gateSet.find(t); it != gateSet.end()) {
       return it->second;
@@ -204,19 +204,19 @@ public:
     return getZoneAt(getPositionOfSite(i));
   }
   /// Checks whether the gate can be applied at all.
-  [[nodiscard]] auto isAllowedLocally(const OpType& t) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(const FullOpType& t) const -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
-  [[nodiscard]] auto isAllowedLocally(const OpType& t,
+  [[nodiscard]] auto isAllowedLocally(const FullOpType& t,
                                       const Zone&   zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAtSite(const OpType& t,
+  [[nodiscard]] auto isAllowedLocallyAtSite(const FullOpType& t,
                                             const Index&  qubit) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAt(const OpType& t,
+  [[nodiscard]] auto isAllowedLocallyAt(const FullOpType& t,
                                         const Point&  p) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.
-  [[nodiscard]] auto isAllowedGlobally(const OpType& t) const -> bool;
-  [[nodiscard]] auto isAllowedGlobally(const OpType& t,
+  [[nodiscard]] auto isAllowedGlobally(const FullOpType& t) const -> bool;
+  [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
                                        const Zone&   zone) const -> bool;
   [[nodiscard]] auto isInSameRow(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;

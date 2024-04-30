@@ -7,9 +7,9 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "DirectedAcyclicGraph.hpp"
-#include "Layer.hpp"
-#include "UndirectedGraph.hpp"
+#include "datastructures/DirectedAcyclicGraph.hpp"
+#include "datastructures/Layer.hpp"
+#include "datastructures/UndirectedGraph.hpp"
 
 #include <cassert>
 #include <cstddef>
@@ -22,7 +22,7 @@ namespace na {
 
 using Color            = std::uint16_t;
 using Edge             = std::pair<qc::Qubit, qc::Qubit>;
-using InteractionGraph = qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex>;
+using InteractionGraph = qc::Layer::InteractionGraph;
 
 class NAGraphAlgorithms {
 public:
@@ -32,7 +32,7 @@ public:
   [[nodiscard]] static auto
   coveredEdges(const InteractionGraph&              g,
                const std::unordered_set<qc::Qubit>& vs)
-      -> std::unordered_set<Edge, qc::PairHash<qc::Qubit>>;
+      -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>;
 
   /**
    * @brief Get the Least Admissable Color for an edge.
@@ -61,8 +61,9 @@ public:
    * @return auto
    */
   [[nodiscard]] static auto getLeastAdmissableColor(
-      const InteractionGraph&                                         g,
-      const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>& coloring,
+      const InteractionGraph& g,
+      const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
+                   coloring,
       const Color& maxColor, const Edge& e, const qc::Qubit& v,
       const std::vector<qc::Qubit>&              sequence,
       const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
@@ -77,22 +78,24 @@ public:
    * @param nodesQueue could for example be sorted by degree, highest first
    * @return
    */
-  [[nodiscard]] static auto
-  colorEdges(const InteractionGraph&                                  g,
-             const std::unordered_set<Edge, qc::PairHash<qc::Qubit>>& edges,
-             const std::vector<qc::Qubit>& nodesQueue)
-      -> std::pair<std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>,
-                   qc::DirectedAcyclicGraph<qc::Qubit>>;
+  [[nodiscard]] static auto colorEdges(
+      const InteractionGraph&                                             g,
+      const std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>& edges,
+      const std::vector<qc::Qubit>& nodesQueue)
+      -> std::pair<
+          std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>,
+          qc::DirectedAcyclicGraph<qc::Qubit>>;
 
   [[nodiscard]] static auto computeRestingPositions(
-      const std::vector<qc::Qubit>&                                   moveable,
-      const std::vector<qc::Qubit>&                                   fixed,
-      const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>& coloring)
-      -> std::vector<std::size_t>;
+      const std::vector<qc::Qubit>& moveable,
+      const std::vector<qc::Qubit>& fixed,
+      const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
+          coloring) -> std::vector<std::size_t>;
 
-  [[nodiscard]] static auto groupByConnectedComponent(
-      const InteractionGraph&       g,
-      const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit>;
+  [[nodiscard]] static auto
+  groupByConnectedComponent(const InteractionGraph&       g,
+                            const std::vector<qc::Qubit>& sequence)
+      -> std::vector<qc::Qubit>;
 
   /**
    * @brief Partitions the set of vertices into moveable and fixed vertices

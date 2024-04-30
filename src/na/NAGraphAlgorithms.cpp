@@ -7,12 +7,11 @@
 #include "NAGraphAlgorithms.hpp"
 
 #include "Definitions.hpp"
-#include "DirectedAcyclicGraph.hpp"
-#include "DisjointSet.hpp"
-#include "Layer.hpp"
-#include "UndirectedGraph.hpp"
+#include "datastructures/DirectedAcyclicGraph.hpp"
+#include "datastructures/DisjointSet.hpp"
+#include "datastructures/Layer.hpp"
+#include "datastructures/UndirectedGraph.hpp"
 
-#include <__algorithm/remove_if.h>
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -50,8 +49,8 @@ auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
 
 auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
                                      const std::unordered_set<qc::Qubit>& vs)
-    -> std::unordered_set<Edge, qc::PairHash<qc::Qubit>> {
-  std::unordered_set<Edge, qc::PairHash<qc::Qubit>> result;
+    -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> {
+  std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> result;
   for (qc::Qubit const& v : vs) {
     try {
       result.merge(g.getAdjacentEdges(v));
@@ -67,8 +66,9 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
 }
 
 auto NAGraphAlgorithms::getLeastAdmissableColor(
-    const InteractionGraph&                                         g,
-    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>& coloring,
+    const InteractionGraph& g,
+    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
+                 coloring,
     const Color& maxColor, const Edge& e, const qc::Qubit& v,
     const std::vector<qc::Qubit>&              sequence,
     const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
@@ -78,7 +78,7 @@ auto NAGraphAlgorithms::getLeastAdmissableColor(
   // edges that do not contain the vertex v
   Color minAdmissableColor = 0;
   for (const auto& [f, k] : coloring) {
-    if (g.isAdjacentEdge(e, f) and v != f.first and v != f.second) {
+    if (InteractionGraph::isAdjacentEdge(e, f) and v != f.first and v != f.second) {
       minAdmissableColor =
           std::max(minAdmissableColor, static_cast<Color>(k + 1));
     }
@@ -147,17 +147,21 @@ auto NAGraphAlgorithms::getLeastAdmissableColor(
 }
 
 auto NAGraphAlgorithms::colorEdges(
-    const InteractionGraph&                                  g,
-    const std::unordered_set<Edge, qc::PairHash<qc::Qubit>>& edges,
-    const std::vector<qc::Qubit>&                            nodesQueue)
-    -> std::pair<std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>,
-                 qc::DirectedAcyclicGraph<qc::Qubit>> {
-  std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>> coloring{};
-  Color                                                    maxColor = 0;
+    const InteractionGraph&                                             g,
+    const std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>& edges,
+    const std::vector<qc::Qubit>& nodesQueue)
+    -> std::pair<
+        std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>,
+        qc::DirectedAcyclicGraph<qc::Qubit>> {
+  std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>
+        coloring{};
+  Color maxColor = 0;
   // number of distinct colors of edges adjacent to an edge
-  std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit>> nAdjColors;
+  std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit, qc::Qubit>>
+      nAdjColors;
   // the degree of the edge seen as a node
-  std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit>> edgeDegree;
+  std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit, qc::Qubit>>
+      edgeDegree;
   for (const auto& e : edges) {
     nAdjColors[e] = 0;
     edgeDegree[e] = static_cast<std::size_t>(
@@ -236,7 +240,7 @@ auto NAGraphAlgorithms::colorEdges(
           }
           nAdjColors[f] = static_cast<std::size_t>(
               std::count_if(usedColors.cbegin(), usedColors.cend(),
-                         [](const bool& b) { return b; }));
+                            [](const bool& b) { return b; }));
         }
       }
     }
@@ -246,18 +250,18 @@ auto NAGraphAlgorithms::colorEdges(
 
 auto NAGraphAlgorithms::computeRestingPositions(
     const std::vector<qc::Qubit>& moveable, const std::vector<qc::Qubit>& fixed,
-    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit>>& coloring)
+    const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>& coloring)
     -> std::vector<std::size_t> {
   const Color maxColor = std::accumulate(
       coloring.cbegin(), coloring.cend(), static_cast<Color>(0),
       [](Color acc, const auto& value) { return std::max(acc, value.second); });
   std::unordered_map<std::pair<std::size_t, std::size_t>, std::size_t,
-                     qc::PairHash<std::size_t>>
+                     qc::PairHash<std::size_t, std::size_t>>
       resting{};
   for (Color t = 0; t <= maxColor; ++t) {
     // resting positions for timestamp t
     std::unordered_map<std::pair<std::size_t, std::size_t>, std::size_t,
-                       qc::PairHash<std::size_t>>
+                       qc::PairHash<std::size_t, std::size_t>>
         tResting{};
     // x-coordinates of movable vertices at timestamp t
     std::unordered_map<qc::Qubit, std::size_t> moveableXs{};
@@ -333,7 +337,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
     // tResting is completely computed until here
     // merge tResting with resting
     std::unordered_map<std::pair<std::size_t, std::size_t>, std::size_t,
-                       qc::PairHash<std::size_t>>
+                       qc::PairHash<std::size_t, std::size_t>>
         newResting;
     for (const auto& elem : resting) {
       const auto& pair = elem.first;
@@ -400,8 +404,8 @@ auto NAGraphAlgorithms::computeRestingPositions(
 }
 
 auto NAGraphAlgorithms::groupByConnectedComponent(
-    const InteractionGraph&       g,
-    const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit> {
+    const InteractionGraph& g, const std::vector<qc::Qubit>& sequence)
+    -> std::vector<qc::Qubit> {
   const auto&                vertices = g.getVertices();
   qc::DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
   for (const qc::Qubit& v : vertices) {

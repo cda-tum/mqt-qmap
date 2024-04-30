@@ -67,7 +67,8 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
   } catch (std::exception& e) {
     std::stringstream ss;
     ss << "While parsing the CSV file, the following error occurred in line "
-       << lineno << "(" << line << ")" << ": " << e.what();
+       << lineno << "(" << line << ")"
+       << ": " << e.what();
     throw std::runtime_error(ss.str());
   }
   // load JSON
@@ -93,7 +94,7 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
     }
     for (auto const& op : data["operations"]) {
       const std::string        opName = op["name"];
-      const OpType             ty     = {qc::opTypeFromString(opName),
+      const FullOpType         ty     = {qc::opTypeFromString(opName),
                                          opName.find_first_not_of('c')};
       const Scope              sc     = getScopeOfString(op["type"]);
       std::unordered_set<Zone> zo     = {};
@@ -140,12 +141,12 @@ auto Architecture::getZoneAt(const Point& p) const -> Zone {
   return static_cast<Zone>(std::distance(zones.cbegin(), it));
 }
 
-auto Architecture::isAllowedLocally(const OpType& t) const -> bool {
+auto Architecture::isAllowedLocally(const FullOpType& t) const -> bool {
   const auto it = gateSet.find(t);
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const OpType& t,
-                                    const Zone&   zone) const -> bool {
+auto Architecture::isAllowedLocally(const FullOpType& t, const Zone& zone) const
+    -> bool {
   if (!isAllowedLocally(t)) {
     return false; // gate not supported at all
   }
@@ -155,14 +156,14 @@ auto Architecture::isAllowedLocally(const OpType& t,
   return gateZones.find(zone) != gateZones.end();
 }
 
-auto Architecture::isAllowedLocallyAtSite(const OpType& t,
-                                          const Index&  qubit) const -> bool {
+auto Architecture::isAllowedLocallyAtSite(const FullOpType& t,
+                                          const Index& qubit) const -> bool {
   const auto zone = getZoneOfSite(qubit);
   return isAllowedLocally(t, zone);
 }
 
-auto Architecture::isAllowedLocallyAt(const OpType& t,
-                                      const Point&  p) const -> bool {
+auto Architecture::isAllowedLocallyAt(const FullOpType& t, const Point& p) const
+    -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -177,13 +178,13 @@ auto Architecture::isAllowedLocallyAt(const OpType& t,
                           static_cast<Zone>(std::distance(zones.cbegin(), it)));
 }
 
-auto Architecture::isAllowedGlobally(const OpType& t) const -> bool {
+auto Architecture::isAllowedGlobally(const FullOpType& t) const -> bool {
   const auto it = gateSet.find(t);
   return it != gateSet.end() && it->second.scope == Scope::Global;
 }
 
-auto Architecture::isAllowedGlobally(const OpType& t,
-                                     const Zone&   zone) const -> bool {
+auto Architecture::isAllowedGlobally(const FullOpType& t,
+                                     const Zone&       zone) const -> bool {
   if (!isAllowedGlobally(t)) {
     return false; // gate not supported at all
   }
@@ -245,8 +246,8 @@ auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
 auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
   return Architecture::getColsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone&  z,
-                                 const Index& row) const -> std::vector<Index> {
+auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
+    -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
   std::vector<Index> enumerate(sites.size());
@@ -259,8 +260,8 @@ auto Architecture::getSitesInRow(const Zone&  z,
                });
   return atoms;
 }
-auto Architecture::getSitesInCol(const Zone&  z,
-                                 const Index& col) const -> std::vector<Index> {
+auto Architecture::getSitesInCol(const Zone& z, const Index& col) const
+    -> std::vector<Index> {
   const auto         x = Architecture::getColsInZone(z)[col];
   std::vector<Index> atoms;
   std::vector<Index> enumerate(sites.size());
@@ -349,8 +350,8 @@ auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                                                                           : acc;
                          });
 }
-auto Architecture::hasSiteLeft(const Point& p, bool proper,
-                               bool sameZone) const -> bool {
+auto Architecture::hasSiteLeft(const Point& p, bool proper, bool sameZone) const
+    -> bool {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
@@ -369,8 +370,8 @@ auto Architecture::hasSiteRight(const Point& p, bool proper,
       });
   return it != sites.cend();
 }
-auto Architecture::hasSiteUp(const Point& p, bool proper,
-                             bool sameZone) const -> bool {
+auto Architecture::hasSiteUp(const Point& p, bool proper, bool sameZone) const
+    -> bool {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
@@ -379,8 +380,8 @@ auto Architecture::hasSiteUp(const Point& p, bool proper,
       });
   return it != sites.crend();
 }
-auto Architecture::hasSiteDown(const Point& p, bool proper,
-                               bool sameZone) const -> bool {
+auto Architecture::hasSiteDown(const Point& p, bool proper, bool sameZone) const
+    -> bool {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {

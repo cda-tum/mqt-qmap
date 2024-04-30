@@ -3,13 +3,12 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Layer.hpp"
+#include "datastructures/Layer.hpp"
 #include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "operations/OpType.hpp"
 
 #include "gtest/gtest.h"
-#include <__algorithm/remove_if.h>
 #include <algorithm>
 #include <iterator>
 #include <memory>
@@ -19,7 +18,7 @@ class TestNAGraph : public testing::Test {
 protected:
   qc::QuantumComputation                               qc;
   qc::Layer                                            layer;
-  qc::UndirectedGraph<qc::Qubit, qc::Layer::DAGVertex> graph{};
+  na::InteractionGraph graph{};
   void                                                 SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
