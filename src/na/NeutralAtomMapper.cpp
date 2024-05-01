@@ -554,7 +554,7 @@ auto NeutralAtomMapper::pickUp(
       // calculate not picked up atoms to the left in the resulting order
       // note: all remaining atoms that are not picked up yet have undefined
       // positions as well
-      auto notPickedUpLeft = 0UL;
+      std::size_t notPickedUpLeft = 0U;
       for (std::size_t j = 0; j < i; ++j) {
         const auto& p = qubitsOrdered[j];
         // not picked up yet and left of q in the end
@@ -588,8 +588,8 @@ auto NeutralAtomMapper::pickUp(
           std::remove_if(possibleSites.begin(), possibleSites.end(),
                          [&](const auto s) { return !initialFreeSites[s]; }),
           possibleSites.end());
-      const auto s =
-          possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
+      const auto s                  = possibleSites[std::min(
+          notPickedUpLeft, static_cast<std::size_t>(freeSpotsInRow - 1))];
       placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
       *placement[q].initialPosition = arch.getPositionOfSite(s);
       initialFreeSites[s]           = false;
