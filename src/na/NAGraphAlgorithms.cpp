@@ -89,7 +89,7 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
     freeColors.emplace(k);
   }
   for (const auto& [f, k] : coloring) {
-    if (g.isAdjacentEdge(e, f)) {
+    if (InteractionGraph::isAdjacentEdge(e, f)) {
       freeColors.erase(k);
     }
   }
@@ -166,8 +166,9 @@ auto NAGraphAlgorithms::colorEdges(
   for (const auto& e : edges) {
     nAdjColors[e] = 0;
     edgeDegree[e] = static_cast<std::size_t>(
-        std::count_if(edges.cbegin(), edges.cend(),
-                      [&](const Edge& f) { return g.isAdjacentEdge(e, f); }));
+        std::count_if(edges.cbegin(), edges.cend(), [&](const Edge& f) {
+          return InteractionGraph::isAdjacentEdge(e, f);
+        }));
   }
   // represent the partial order on the SLM atoms as a directed acyclic graph
   qc::DirectedAcyclicGraph<qc::Qubit> partialOrder;
@@ -232,10 +233,11 @@ auto NAGraphAlgorithms::colorEdges(
       maxColor = std::max(maxColor, coloring[e]);
       // update the number of distinct colors of adjacent edges
       for (const auto& f : edges) {
-        if (g.isAdjacentEdge(e, f)) {
+        if (InteractionGraph::isAdjacentEdge(e, f)) {
           std::vector<bool> usedColors(maxColor + 1, false);
           for (const auto& h : edges) {
-            if (g.isAdjacentEdge(f, h) and coloring.find(h) != coloring.end()) {
+            if (InteractionGraph::isAdjacentEdge(f, h) and
+                coloring.find(h) != coloring.end()) {
               usedColors[coloring[h]] = true;
             }
           }
@@ -271,7 +273,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
       const std::set<qc::Qubit> neighborsOfV = std::accumulate(
           coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
           [&](std::set<qc::Qubit> acc, auto value) {
-            Edge e = value.first;
+            const Edge e = value.first;
             if (value.second == t) {
               if (e.first == v) {
                 acc.emplace(e.second);
@@ -465,7 +467,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
           coloring.cbegin(), coloring.cend(), std::set<qc::Qubit>(),
           [&](std::set<qc::Qubit> acc, auto value) {
             if (value.second == t) {
-              Edge e = value.first;
+              const Edge e = value.first;
               if (e.first == v) {
                 acc.emplace(e.second);
               } else if (e.second == v) {
