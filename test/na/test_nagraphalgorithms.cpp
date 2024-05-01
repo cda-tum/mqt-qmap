@@ -106,11 +106,10 @@ TEST_F(TestNAGraph, Coloring) {
     return graph.getDegree(u) > graph.getDegree(v);
   });
   const auto& edges = na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
-  const auto& [coloring, _] =
-      na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
+  const auto& coloring = na::NAGraphAlgorithms::colorEdges(graph, edges, queue);
   // check that adjacent edges have different colors
-  for (const auto& [e, k] : coloring) {
-    for (const auto& [f, l] : coloring) {
+  for (const auto& [e, k] : coloring.first) {
+    for (const auto& [f, l] : coloring.first) {
       if (e != f && (e.first == f.first || e.first == f.second ||
                      e.second == f.first || e.second == f.second)) {
         EXPECT_NE(k, l);
@@ -118,8 +117,8 @@ TEST_F(TestNAGraph, Coloring) {
     }
   }
   // check that all edges obey the topological sorting of the queue
-  for (const auto& [e, k] : coloring) {
-    for (const auto& [f, l] : coloring) {
+  for (const auto& [e, k] : coloring.first) {
+    for (const auto& [f, l] : coloring.first) {
       if (e != f) {
         qc::Qubit u = 0;
         qc::Qubit v = 0;

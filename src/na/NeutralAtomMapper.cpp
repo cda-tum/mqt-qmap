@@ -360,14 +360,14 @@ auto NeutralAtomMapper::getMisplacement(const std::vector<Atom>&      initial,
                            [&](const auto& acc, const auto& i) {
                              if (initial.at(target[i]).positionStatus ==
                                  Atom::PositionStatus::DEFINED) {
-                               if (initial.at(target[i]).currentPosition->x >
-                                       initial.at(q).currentPosition->x and
-                                   i < indexOfQ) {
+                               if (i < indexOfQ &&
+                                   initial.at(target[i]).currentPosition->x >
+                                       initial.at(q).currentPosition->x) {
                                  return acc + 1;
                                }
-                               if (initial.at(target[i]).currentPosition->x <
-                                       initial.at(q).currentPosition->x and
-                                   i > indexOfQ) {
+                               if (i > indexOfQ &&
+                                   initial.at(target[i]).currentPosition->x <
+                                       initial.at(q).currentPosition->x) {
                                  return acc - 1;
                                }
                              }
