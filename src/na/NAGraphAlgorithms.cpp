@@ -66,7 +66,6 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
 }
 
 auto NAGraphAlgorithms::getLeastAdmissibleColor(
-    const InteractionGraph& g,
     const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                  coloring,
     const Color& maxColor, const Edge& e, const qc::Qubit& v,
@@ -200,7 +199,7 @@ auto NAGraphAlgorithms::colorEdges(
               });
     for (const auto& e : adjacentEdges) {
       // color the edge
-      coloring[e] = getLeastAdmissibleColor(g, coloring, maxColor, e, v,
+      coloring[e] = getLeastAdmissibleColor(coloring, maxColor, e, v,
                                             nodesQueue, partialOrder, ranks);
       // update partial order
       const qc::Qubit u     = e.first == v ? e.second : e.first;

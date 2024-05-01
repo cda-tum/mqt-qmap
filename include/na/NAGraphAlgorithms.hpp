@@ -61,7 +61,6 @@ public:
    * @return auto
    */
   [[nodiscard]] static auto getLeastAdmissibleColor(
-      const InteractionGraph& g,
       const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                    coloring,
       const Color& maxColor, const Edge& e, const qc::Qubit& v,
