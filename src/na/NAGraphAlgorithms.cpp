@@ -36,7 +36,8 @@ auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
   std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
     return g.getDegree(u) > g.getDegree(v);
   });
-  for (qc::Qubit v = queue.front(); !queue.empty(); v = queue.front()) {
+  while (!queue.empty()) {
+    const qc::Qubit v = queue.front();
     result.emplace(v);
     queue.erase(std::remove_if(queue.begin(), queue.end(),
                                [&](const qc::Qubit& u) {

@@ -540,14 +540,16 @@ auto Architecture::withConfig(const Configuration& config) const
           }
           if (patchFittable) {
             result.sites.emplace_back(s);
-            row = i;
+            auto rowOpt = std::optional<Index>(i);
             for (std::size_t r = 0; r < config.getPatchRows(); ++r) {
-              auto col = row;
+              auto colOpt = rowOpt;
               for (std::size_t c = 0; c < config.getPatchCols(); ++c) {
-                usedSites[col] = true;
-                col = *getNearestSiteRight(getPositionOfSite(col), true, true);
+                usedSites[*colOpt] = true;
+                colOpt =
+                    getNearestSiteRight(getPositionOfSite(*colOpt), true, true);
               }
-              row = *getNearestSiteDown(getPositionOfSite(row), true, true);
+              rowOpt =
+                  getNearestSiteDown(getPositionOfSite(*rowOpt), true, true);
             }
           }
         }
