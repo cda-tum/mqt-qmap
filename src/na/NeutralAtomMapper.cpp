@@ -7,6 +7,7 @@
 #include "NeutralAtomMapper.hpp"
 
 #include "Architecture.hpp"
+#include "Definitions.hpp"
 #include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
@@ -17,6 +18,7 @@
 #include "operations/Operation.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <numeric>
 #include <sstream>
@@ -261,6 +263,8 @@ auto NeutralAtomMapper::checkApplicability(
               // check whether the gate is applicable at the current position
               return arch.isAllowedLocallyAt({op->getType(), 0},
                                              *placement[qubit].currentPosition);
+            default:
+              qc::unreachable();
             }
           });
     }

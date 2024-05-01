@@ -6,14 +6,18 @@
 
 #include "Architecture.hpp"
 
+#include "Configuration.hpp"
+#include "na/NADefinitions.hpp"
 #include "nlohmann/json.hpp"
 #include "operations/OpType.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <fstream>
+#include <istream>
 #include <iterator>
 #include <limits>
 #include <map>
@@ -85,8 +89,8 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
     std::map<std::string, Zone> nameToZone;
     for (const auto& zone : data["zones"]) {
       nameToZone[zone["name"]] = zones.size();
-      ZoneProperties zp{zone["name"], zone["xmin"], zone["xmax"],
-                        zone["ymin"], zone["ymax"], zone["fidelity"]};
+      const ZoneProperties zp{zone["name"], zone["xmin"], zone["xmax"],
+                              zone["ymin"], zone["ymax"], zone["fidelity"]};
       zones.emplace_back(zp);
     }
     for (auto const& zone : data["initialZones"]) {
@@ -109,12 +113,13 @@ Architecture::Architecture(std::istream& jsonS, std::istream& csvS) {
     decoherenceTimes = Architecture::DecoherenceTimes(
         data["decoherence"]["t1"], data["decoherence"]["t2"]);
     for (const auto& sh : data["shuttling"]) {
-      ShuttlingProperties sp{sh["rows"],          sh["columns"],
-                             sh["xmin"],          sh["xmax"],
-                             sh["ymin"],          sh["ymax"],
-                             sh["move"]["speed"], sh["move"]["fidelity"],
-                             sh["load"]["time"],  sh["load"]["fidelity"],
-                             sh["store"]["time"], sh["store"]["fidelity"]};
+      const ShuttlingProperties sp{
+          sh["rows"],          sh["columns"],
+          sh["xmin"],          sh["xmax"],
+          sh["ymin"],          sh["ymax"],
+          sh["move"]["speed"], sh["move"]["fidelity"],
+          sh["load"]["time"],  sh["load"]["fidelity"],
+          sh["store"]["time"], sh["store"]["fidelity"]};
       shuttling.emplace_back(sp);
     }
     minAtomDistance     = data["minAtomDistance"];
@@ -614,60 +619,63 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
   // get nearest site to p
   Index nearestSite = 0;
   try {
-    nearestSite = rows >= 0
-                      ? (cols >= 0 ? getNearestSiteUpLeft(p, false, true)
-                                   : getNearestSiteUpRight(p, false, true))
-                      : (cols >= 0 ? getNearestSiteDownLeft(p, false, true)
-                                   : getNearestSiteDownRight(p, false, true));
+    if (rows >= 0) {
+      if (cols >= 0) {
+        nearestSite = getNearestSiteUpLeft(p, false, true);
+      } else {
+        nearestSite = getNearestSiteUpRight(p, false, true);
+      }
+    } else {
+      if (cols >= 0) {
+        nearestSite = getNearestSiteDownLeft(p, false, true);
+      } else {
+        nearestSite = getNearestSiteDownRight(p, false, true);
+      }
+    }
   } catch (std::invalid_argument& e) {
-    if (rows >= 0 and cols >= 0) {
+    try {
+      nearestSite               = getNearestSiteUpRight(p, false, true);
+      const auto nearestSitePos = getPositionOfSite(nearestSite);
+      const auto dy             = p.y - nearestSitePos.y;
+      Index      anchorSite     = nearestSite;
+      auto       anchorSitePos  = nearestSitePos;
+      auto       r              = std::abs(rows);
+      for (; r > 0; --r) {
+        try {
+          anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)
+                                 : getNearestSiteUp(anchorSitePos, true, true);
+        } catch (std::invalid_argument& ex) {
+          break;
+        }
+        anchorSitePos = getPositionOfSite(anchorSite);
+      }
+      anchorSitePos.y =
+          rows >= 0 ? anchorSitePos.y + r * d : anchorSitePos.y - r * d;
+      return {p.x + cols * d, anchorSitePos.y + dy};
+    } catch (std::invalid_argument& ex) {
       try {
-        nearestSite               = getNearestSiteUpRight(p, false, true);
+        nearestSite               = getNearestSiteDownLeft(p, false, true);
         const auto nearestSitePos = getPositionOfSite(nearestSite);
-        const auto dy             = p.y - nearestSitePos.y;
+        const auto dx             = p.x - nearestSitePos.x;
         Index      anchorSite     = nearestSite;
         auto       anchorSitePos  = nearestSitePos;
-        auto       r              = std::abs(rows);
-        for (; r > 0; --r) {
+        auto       c              = std::abs(cols);
+        for (; c > 0; --c) {
           try {
-            anchorSite = rows >= 0
-                             ? getNearestSiteDown(anchorSitePos, true, true)
-                             : getNearestSiteUp(anchorSitePos, true, true);
-          } catch (std::invalid_argument& ex) {
+            anchorSite = cols >= 0
+                             ? getNearestSiteRight(anchorSitePos, true, true)
+                             : getNearestSiteLeft(anchorSitePos, true, true);
+          } catch (std::invalid_argument& exx) {
             break;
           }
           anchorSitePos = getPositionOfSite(anchorSite);
         }
-        anchorSitePos.y =
-            rows >= 0 ? anchorSitePos.y + r * d : anchorSitePos.y - r * d;
-        return {p.x + cols * d, anchorSitePos.y + dy};
-      } catch (std::invalid_argument& ex) {
-        try {
-          nearestSite               = getNearestSiteDownLeft(p, false, true);
-          const auto nearestSitePos = getPositionOfSite(nearestSite);
-          const auto dx             = p.x - nearestSitePos.x;
-          Index      anchorSite     = nearestSite;
-          auto       anchorSitePos  = nearestSitePos;
-          auto       c              = std::abs(cols);
-          for (; c > 0; --c) {
-            try {
-              anchorSite = cols >= 0
-                               ? getNearestSiteRight(anchorSitePos, true, true)
-                               : getNearestSiteLeft(anchorSitePos, true, true);
-            } catch (std::invalid_argument& exx) {
-              break;
-            }
-            anchorSitePos = getPositionOfSite(anchorSite);
-          }
-          anchorSitePos.x =
-              cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
-          return {anchorSitePos.x + dx, p.y + rows * d};
-        } catch (std::invalid_argument& exx) {
-          return {p.x + rows * d, p.y + cols * d};
-        }
+        anchorSitePos.x =
+            cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
+        return {anchorSitePos.x + dx, p.y + rows * d};
+      } catch (std::invalid_argument& exx) {
+        return {p.x + rows * d, p.y + cols * d};
       }
-    } else {
-      throw std::logic_error("Not implemented.");
     }
   }
   // get position of nearest site

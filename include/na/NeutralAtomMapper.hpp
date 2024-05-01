@@ -8,12 +8,21 @@
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "na/NAComputation.hpp"
+#include "na/NADefinitions.hpp"
 #include "operations/Operation.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <memory>
+#include <ostream>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -45,8 +54,7 @@ public:
     }
     friend auto operator<<(std::ostream&     os,
                            const Statistics& s) -> std::ostream& {
-      os << s.toString();
-      return os;
+      return os << s.toString();
     }
   };
 
@@ -66,8 +74,7 @@ protected:
     std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
     std::vector<Zone>      zones;
-    explicit Atom(const std::vector<Zone>& zones) : zones(zones) {};
-    explicit Atom() : Atom({}) {};
+    explicit Atom(const std::vector<Zone>& z = {}) : zones(z) {};
   };
   auto preprocess() -> void { validateCircuit(); }
   auto validateCircuit() -> void;
@@ -117,9 +124,10 @@ protected:
               const std::vector<qc::Qubit>&  qubits) -> void;
 
 public:
-  explicit NeutralAtomMapper(Architecture arch, const Configuration& config)
-      : initialArch(std::move(arch)), arch(initialArch.withConfig(config)),
-        config(config) {}
+  explicit NeutralAtomMapper(Architecture         architecture,
+                             const Configuration& configuration)
+      : initialArch(std::move(architecture)),
+        arch(initialArch.withConfig(configuration)), config(configuration) {}
   virtual ~NeutralAtomMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto getResult() const -> const NAComputation& {
