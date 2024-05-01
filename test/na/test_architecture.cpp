@@ -4,12 +4,13 @@
 //
 
 #include "Architecture.hpp"
+#include "Configuration.hpp"
 #include "operations/OpType.hpp"
 
 #include "gtest/gtest.h"
+#include <cstdio>
 #include <fstream>
-#include <random>
-#include <sstream>
+#include <optional>
 #include <string>
 
 constexpr const char* ARCH_FN = "arch.json";
@@ -1456,38 +1457,39 @@ TEST_F(TestNAArchitecture, WithConfiguration) {
 
 TEST_F(TestNAArchitecture, SiteUp) {
   const na::Architecture arch(ARCH_FN, GRID_FN);
-  EXPECT_TRUE(arch.hasSiteUp({3, 3}, false, true));
-  EXPECT_FALSE(arch.hasSiteUp({3, 0}, true, true));
-  EXPECT_EQ(arch.getPositionOfSite(arch.getNearestSiteUp({3, 3}, true, true)),
+  EXPECT_TRUE(arch.hasSiteUp({3, 3}, false, true).second);
+  EXPECT_FALSE(arch.hasSiteUp({3, 0}, true, true).second);
+  EXPECT_EQ(arch.getPositionOfSite(*arch.getNearestSiteUp({3, 3}, true, true)),
             (na::Point{3, 0}));
-  EXPECT_ANY_THROW(std::ignore = arch.getNearestSiteUp({3, 0}, true, true));
+  EXPECT_EQ(arch.getNearestSiteUp({3, 0}, true, true), std::nullopt);
 }
 
 TEST_F(TestNAArchitecture, SiteDown) {
   const na::Architecture arch(ARCH_FN, GRID_FN);
-  EXPECT_FALSE(arch.hasSiteDown({0, 3}, false, true));
-  EXPECT_TRUE(arch.hasSiteDown({3, 0}, true, true));
-  EXPECT_ANY_THROW(std::ignore = arch.getNearestSiteDown({0, 3}, false, true));
-  EXPECT_EQ(arch.getPositionOfSite(arch.getNearestSiteDown({3, 0}, true, true)),
-            (na::Point{3, 12}));
+  EXPECT_FALSE(arch.hasSiteDown({0, 3}, false, true).second);
+  EXPECT_TRUE(arch.hasSiteDown({3, 0}, true, true).second);
+  EXPECT_EQ(arch.getNearestSiteDown({0, 3}, false, true), std::nullopt);
+  EXPECT_EQ(
+      arch.getPositionOfSite(*arch.getNearestSiteDown({3, 0}, true, true)),
+      (na::Point{3, 12}));
 }
 
 TEST_F(TestNAArchitecture, SiteLeft) {
   const na::Architecture arch(ARCH_FN, GRID_FN);
-  EXPECT_TRUE(arch.hasSiteLeft({3, 0}, false, true));
-  EXPECT_FALSE(arch.hasSiteLeft({3, 0}, true, true));
+  EXPECT_TRUE(arch.hasSiteLeft({3, 0}, false, true).second);
+  EXPECT_FALSE(arch.hasSiteLeft({3, 0}, true, true).second);
   EXPECT_EQ(
-      arch.getPositionOfSite(arch.getNearestSiteLeft({3, 0}, false, true)),
+      arch.getPositionOfSite(*arch.getNearestSiteLeft({3, 0}, false, true)),
       (na::Point{3, 0}));
-  EXPECT_ANY_THROW(std::ignore = arch.getNearestSiteLeft({3, 0}, true, true));
+  EXPECT_EQ(arch.getNearestSiteLeft({3, 0}, true, true), std::nullopt);
 }
 
 TEST_F(TestNAArchitecture, SiteRight) {
   const na::Architecture arch(ARCH_FN, GRID_FN);
-  EXPECT_TRUE(arch.hasSiteRight({3, 0}, false, true));
-  EXPECT_FALSE(arch.hasSiteRight({3, 3}, true, true));
+  EXPECT_TRUE(arch.hasSiteRight({3, 0}, false, true).second);
+  EXPECT_FALSE(arch.hasSiteRight({3, 3}, true, true).second);
   EXPECT_EQ(
-      arch.getPositionOfSite(arch.getNearestSiteRight({3, 0}, true, true)),
+      arch.getPositionOfSite(*arch.getNearestSiteRight({3, 0}, true, true)),
       (na::Point{13, 0}));
-  EXPECT_ANY_THROW(std::ignore = arch.getNearestSiteRight({3, 3}, true, true));
+  EXPECT_EQ(arch.getNearestSiteRight({3, 3}, true, true), std::nullopt);
 }

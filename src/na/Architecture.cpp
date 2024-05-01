@@ -19,7 +19,6 @@
 #include <fstream>
 #include <istream>
 #include <iterator>
-#include <limits>
 #include <map>
 #include <numeric>
 #include <optional>
@@ -27,6 +26,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -305,253 +305,200 @@ auto Architecture::getColInZoneOf(const Index& i) const -> Index {
 }
 auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
                                    const bool proper) const -> Number {
-  const auto& cols = getColsInZone(z);
-  if (!std::any_of(cols.cbegin(), cols.cend(),
-                   [&](const auto& c) { return proper ? c < x : c <= x; })) {
-    return x;
+  const auto& cols   = getColsInZone(z);
+  Number      result = x;
+  for (const auto& c : cols) {
+    if ((proper ? c < x : c <= x) && c > result) {
+      result = c;
+    }
   }
-  return std::accumulate(
-      cols.cbegin(), cols.cend(), std::numeric_limits<Number>::min(),
-      [&](const auto& acc, const auto& c) {
-        return (acc < c and (proper ? c < x : c <= x)) ? c : acc;
-      });
+  return result;
 }
+
 auto Architecture::getNearestXRight(const Number& x, const Zone& z,
                                     const bool proper) const -> Number {
-  const auto& cols = getColsInZone(z);
-  if (!std::any_of(cols.cbegin(), cols.cend(),
-                   [&](const auto& c) { return proper ? c > x : c >= x; })) {
-    return x;
+  const auto& cols   = getColsInZone(z);
+  Number      result = x;
+  for (const auto& c : cols) {
+    if ((proper ? c > x : c >= x) && c < result) {
+      result = c;
+    }
   }
-  return std::accumulate(
-      cols.cbegin(), cols.cend(), std::numeric_limits<Number>::max(),
-      [&](const auto& acc, const auto& c) {
-        return (acc > c and (proper ? c > x : c >= x)) ? c : acc;
-      });
+  return result;
 }
+
 auto Architecture::getNearestYUp(const Number& y, const Zone& z,
                                  const bool proper) const -> Number {
-  const auto& rows = getRowsInZone(z);
-  if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& c) { return proper ? c < y : c <= y; })) {
-    return y;
+  const auto& rows   = getRowsInZone(z);
+  Number      result = y;
+  for (const auto& r : rows) {
+    if ((proper ? r < y : r <= y) && r > result) {
+      result = r;
+    }
   }
-  return std::accumulate(
-      rows.cbegin(), rows.cend(), std::numeric_limits<Number>::min(),
-      [&](const auto& acc, const auto& r) {
-        return (acc < r and (proper ? r < y : r <= y)) ? r : acc;
-      });
+  return result;
 }
+
 auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                                    const bool proper) const -> Number {
-  const auto& rows = getRowsInZone(z);
-  if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& c) { return proper ? c > y : c >= y; })) {
-    return y;
+  const auto& rows   = getRowsInZone(z);
+  Number      result = y;
+  for (const auto& r : rows) {
+    if ((proper ? r > y : r >= y) && r < result) {
+      result = r;
+    }
   }
-  return std::accumulate(
-      rows.cbegin(), rows.cend(), std::numeric_limits<Number>::max(),
-      [&](const auto& acc, const auto& r) {
-        return (acc > r and (proper ? r > y : r >= y)) ? r : acc;
-      });
+  return result;
 }
-auto Architecture::hasSiteLeft(const Point& p, bool proper,
-                               bool sameZone) const -> bool {
+auto Architecture::hasSiteLeft(const Point& p, bool proper, bool sameZone) const
+    -> std::pair<std::vector<Point>::const_reverse_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
         return s.y == p.y and (proper ? s.x < p.x : s.x <= p.x) and
                (not sameZone or getZoneAt(s) == zone);
       });
-  return it != sites.crend();
+  return {it, it != sites.crend()};
 }
-auto Architecture::hasSiteRight(const Point& p, bool proper,
-                                bool sameZone) const -> bool {
+auto Architecture::hasSiteRight(const Point& p, bool proper, bool sameZone)
+    const -> std::pair<std::vector<Point>::const_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
         return s.y == p.y and (proper ? s.x > p.x : s.x >= p.x) and
                (not sameZone or getZoneAt(s) == zone);
       });
-  return it != sites.cend();
+  return {it, it != sites.cend()};
 }
-auto Architecture::hasSiteUp(const Point& p, bool proper,
-                             bool sameZone) const -> bool {
+auto Architecture::hasSiteUp(const Point& p, bool proper, bool sameZone) const
+    -> std::pair<std::vector<Point>::const_reverse_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
         return s.x == p.x and (proper ? s.y < p.y : s.y <= p.y) and
                (not sameZone or getZoneAt(s) == zone);
       });
-  return it != sites.crend();
+  return {it, it != sites.crend()};
 }
-auto Architecture::hasSiteDown(const Point& p, bool proper,
-                               bool sameZone) const -> bool {
+auto Architecture::hasSiteDown(const Point& p, bool proper, bool sameZone) const
+    -> std::pair<std::vector<Point>::const_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
         return s.x == p.x and (proper ? s.y > p.y : s.y >= p.y) and
                (not sameZone or getZoneAt(s) == zone);
       });
-  return it != sites.cend();
+  return {it, it != sites.cend()};
 }
 auto Architecture::getNearestSiteLeft(const Point& p, const bool proper,
-                                      const bool sameZone) const -> Index {
-  const auto& zone = getZoneAt(p);
-  const auto& it =
-      std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
-        return s.y == p.y and (proper ? s.x < p.x : s.x <= p.x) and
-               (not sameZone or getZoneAt(s) == zone);
-      });
-  if (it == sites.crend()) {
-    throw std::invalid_argument("No site found.");
+                                      const bool sameZone) const
+    -> std::optional<Index> {
+  const auto& [it, success] = hasSiteLeft(p, proper, sameZone);
+  if (not success) {
+    return std::nullopt;
   }
   return sites.size() -
          static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
 }
 auto Architecture::getNearestSiteRight(const Point& p, const bool proper,
-                                       const bool sameZone) const -> Index {
-  const auto& zone = getZoneAt(p);
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return s.y == p.y and (proper ? s.x > p.x : s.x >= p.x) and
-               (not sameZone or getZoneAt(s) == zone);
-      });
-  if (it == sites.cend()) {
-    throw std::invalid_argument("No site found.");
+                                       const bool sameZone) const
+    -> std::optional<Index> {
+  const auto& [it, success] = hasSiteRight(p, proper, sameZone);
+  if (not success) {
+    return std::nullopt;
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
 auto Architecture::getNearestSiteUp(const Point& p, const bool proper,
-                                    const bool sameZone) const -> Index {
-  const auto& zone = getZoneAt(p);
-  const auto& it =
-      std::find_if(sites.crbegin(), sites.crend(), [&](const auto& s) {
-        return s.x == p.x and (proper ? s.y < p.y : s.y <= p.y) and
-               (not sameZone or getZoneAt(s) == zone);
-      });
-  if (it == sites.crend()) {
-    throw std::invalid_argument("No site found.");
+                                    const bool sameZone) const
+    -> std::optional<Index> {
+  const auto& [it, success] = hasSiteUp(p, proper, sameZone);
+  if (not success) {
+    return std::nullopt;
   }
   return sites.size() -
          static_cast<std::size_t>(std::distance(sites.crbegin(), it)) - 1;
 }
 auto Architecture::getNearestSiteDown(const Point& p, const bool proper,
-                                      const bool sameZone) const -> Index {
-  const auto& zone = getZoneAt(p);
-  const auto& it =
-      std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
-        return s.x == p.x and (proper ? s.y > p.y : s.y >= p.y) and
-               (not sameZone or getZoneAt(s) == zone);
-      });
-  if (it == sites.cend()) {
-    throw std::invalid_argument("No site found.");
+                                      const bool sameZone) const
+    -> std::optional<Index> {
+  const auto& [it, success] = hasSiteDown(p, proper, sameZone);
+  if (not success) {
+    return std::nullopt;
   }
   return static_cast<std::size_t>(std::distance(sites.cbegin(), it));
 }
 auto Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
-                                         const bool sameZone) const -> Index {
-  const auto&        zone = getZoneAt(p);
-  std::vector<Index> siteIdxs(sites.size());
-  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
-  const auto& opt = std::accumulate(
-      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
-      [&](const auto& acc, const auto& i) {
-        const auto& s = sites[i];
-        if ((proper ? s.x > p.x and s.y < p.y : s.x >= p.x and s.y <= p.y) and
-            (not sameZone or getZoneAt(s) == zone)) {
-          if (not acc or
-              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
-            return std::optional<Index>(i);
-          }
-        }
-        return acc;
-      });
-  if (not opt) {
-    throw std::invalid_argument("No site found.");
+                                         const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x > p.x and s.y < p.y : s.x >= p.x and s.y <= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
   }
-  return *opt;
+  return opt;
 }
 auto Architecture::getNearestSiteUpLeft(const Point& p, const bool proper,
-                                        const bool sameZone) const -> Index {
-  const auto&        zone = getZoneAt(p);
-  std::vector<Index> siteIdxs(sites.size());
-  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
-  const auto& opt = std::accumulate(
-      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
-      [&](const auto& acc, const auto& i) {
-        const auto& s = sites[i];
-        if ((proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) and
-            (not sameZone or getZoneAt(s) == zone)) {
-          if (not acc or
-              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
-            return std::optional<Index>(i);
-          }
-        }
-        return acc;
-      });
-  if (not opt) {
-    throw std::invalid_argument("No site found.");
+                                        const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
   }
-  return *opt;
+  return opt;
 }
 auto Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
-                                          const bool sameZone) const -> Index {
-  const auto&        zone = getZoneAt(p);
-  std::vector<Index> siteIdxs(sites.size());
-  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
-  const auto& opt = std::accumulate(
-      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
-      [&](const auto& acc, const auto& i) {
-        const auto& s = sites[i];
-        if ((proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) and
-            (not sameZone or getZoneAt(s) == zone)) {
-          if (not acc or
-              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
-            return std::optional<Index>(i);
-          }
-        }
-        return acc;
-      });
-  if (not opt) {
-    throw std::invalid_argument("No site found.");
+                                          const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
   }
-  return *opt;
+  return opt;
 }
 auto Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
-                                           const bool sameZone) const -> Index {
-  const auto&        zone = getZoneAt(p);
-  std::vector<Index> siteIdxs(sites.size());
-  std::iota(siteIdxs.begin(), siteIdxs.end(), 0UL);
-  const auto& opt = std::accumulate(
-      siteIdxs.cbegin(), siteIdxs.cend(), std::optional<Index>{},
-      [&](const auto& acc, const auto& i) {
-        const auto& s = sites[i];
-        if ((proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) and
-            (not sameZone or getZoneAt(s) == zone)) {
-          if (not acc or
-              (s - p).length() < (getPositionOfSite(*acc) - p).length()) {
-            return std::optional<Index>(i);
-          }
-        }
-        return acc;
-      });
-  if (not opt) {
-    throw std::invalid_argument("No site found.");
+                                           const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
   }
-  return *opt;
+  return opt;
 }
-auto Architecture::getSiteAt(const Point& p) const -> Index {
-  std::vector<std::size_t> enumerate(sites.size());
-  std::iota(enumerate.begin(), enumerate.end(), 0ULL);
-  const auto& it = std::find_if(enumerate.cbegin(), enumerate.cend(),
-                                [&](const auto i) { return sites[i] == p; });
-  if (it == enumerate.end()) {
-    std::stringstream ss;
-    ss << "No site at position " << p << ".";
-    throw std::invalid_argument(ss.str());
+auto Architecture::getSiteAt(const Point& p) const -> std::optional<Index> {
+  auto it = std::find_if(sites.begin(), sites.end(),
+                         [&](const auto& site) { return site == p; });
+  if (it == sites.end()) {
+    return std::nullopt;
   }
-  return *it;
+  return std::distance(sites.begin(), it);
 }
 auto Architecture::withConfig(const Configuration& config) const
     -> Architecture {
@@ -567,44 +514,40 @@ auto Architecture::withConfig(const Configuration& config) const
         if (!usedSites[i]) {
           // s is not used yet
           bool patchFittable = true;
-          try {
-            auto row = i;
-            for (std::size_t r = 0;;) {
-              auto col = row;
-              for (std::size_t c = 0;;) {
-                if (++c < config.getPatchCols()) {
-                  col = getNearestSiteRight(getPositionOfSite(col), true, true);
-                } else {
-                  break;
-                }
-              }
-              if (++r < config.getPatchRows()) {
-                row = getNearestSiteDown(getPositionOfSite(row), true, true);
-              } else {
+          auto row           = i;
+          for (std::size_t r = 1; r < config.getPatchRows(); ++r) {
+            auto col = row;
+            for (std::size_t c = 1; c < config.getPatchCols(); ++c) {
+              auto nextCol =
+                  getNearestSiteRight(getPositionOfSite(col), true, true);
+              if (!nextCol.has_value()) {
+                patchFittable = false;
                 break;
               }
+              col = nextCol.value();
             }
-          } catch (std::invalid_argument& e) {
-            patchFittable = false;
+            if (!patchFittable) {
+              break;
+            }
+
+            auto nextRow =
+                getNearestSiteDown(getPositionOfSite(row), true, true);
+            if (!nextRow.has_value()) {
+              patchFittable = false;
+              break;
+            }
+            row = nextRow.value();
           }
           if (patchFittable) {
             result.sites.emplace_back(s);
-            auto row = i;
-            for (std::size_t r = 0;;) {
+            row = i;
+            for (std::size_t r = 0; r < config.getPatchRows(); ++r) {
               auto col = row;
-              for (std::size_t c = 0;;) {
+              for (std::size_t c = 0; c < config.getPatchCols(); ++c) {
                 usedSites[col] = true;
-                if (++c < config.getPatchCols()) {
-                  col = getNearestSiteRight(getPositionOfSite(col), true, true);
-                } else {
-                  break;
-                }
+                col = *getNearestSiteRight(getPositionOfSite(col), true, true);
               }
-              if (++r < config.getPatchRows()) {
-                row = getNearestSiteDown(getPositionOfSite(row), true, true);
-              } else {
-                break;
-              }
+              row = *getNearestSiteDown(getPositionOfSite(row), true, true);
             }
           }
         }
@@ -617,92 +560,75 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
                                        const Number& cols) const -> Point {
   const auto d = static_cast<std::int64_t>(getNoInteractionRadius());
   // get nearest site to p
-  Index nearestSite = 0;
-  try {
-    if (rows >= 0) {
-      if (cols >= 0) {
-        nearestSite = getNearestSiteUpLeft(p, false, true);
-      } else {
-        nearestSite = getNearestSiteUpRight(p, false, true);
+  // checks in all directions except the one pointed to by rows and cols
+  std::optional<Index> nearestSiteOpt;
+  if (rows >= 0) {
+    if (cols >= 0) {
+      nearestSiteOpt = getNearestSiteUpLeft(p, false, true);
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteUpRight(p, false, true);
+      }
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteDownLeft(p, false, true);
       }
     } else {
-      if (cols >= 0) {
-        nearestSite = getNearestSiteDownLeft(p, false, true);
-      } else {
-        nearestSite = getNearestSiteDownRight(p, false, true);
+      nearestSiteOpt = getNearestSiteUpRight(p, false, true);
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteUpLeft(p, false, true);
+      }
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteDownRight(p, false, true);
       }
     }
-  } catch (std::invalid_argument& e) {
-    try {
-      nearestSite               = getNearestSiteUpRight(p, false, true);
-      const auto nearestSitePos = getPositionOfSite(nearestSite);
-      const auto dy             = p.y - nearestSitePos.y;
-      Index      anchorSite     = nearestSite;
-      auto       anchorSitePos  = nearestSitePos;
-      auto       r              = std::abs(rows);
-      for (; r > 0; --r) {
-        try {
-          anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)
-                                 : getNearestSiteUp(anchorSitePos, true, true);
-        } catch (std::invalid_argument& ex) {
-          break;
-        }
-        anchorSitePos = getPositionOfSite(anchorSite);
+  } else {
+    if (cols >= 0) {
+      nearestSiteOpt = getNearestSiteDownLeft(p, false, true);
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteUpLeft(p, false, true);
       }
-      anchorSitePos.y =
-          rows >= 0 ? anchorSitePos.y + r * d : anchorSitePos.y - r * d;
-      return {p.x + cols * d, anchorSitePos.y + dy};
-    } catch (std::invalid_argument& ex) {
-      try {
-        nearestSite               = getNearestSiteDownLeft(p, false, true);
-        const auto nearestSitePos = getPositionOfSite(nearestSite);
-        const auto dx             = p.x - nearestSitePos.x;
-        Index      anchorSite     = nearestSite;
-        auto       anchorSitePos  = nearestSitePos;
-        auto       c              = std::abs(cols);
-        for (; c > 0; --c) {
-          try {
-            anchorSite = cols >= 0
-                             ? getNearestSiteRight(anchorSitePos, true, true)
-                             : getNearestSiteLeft(anchorSitePos, true, true);
-          } catch (std::invalid_argument& exx) {
-            break;
-          }
-          anchorSitePos = getPositionOfSite(anchorSite);
-        }
-        anchorSitePos.x =
-            cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
-        return {anchorSitePos.x + dx, p.y + rows * d};
-      } catch (std::invalid_argument& exx) {
-        return {p.x + rows * d, p.y + cols * d};
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteDownRight(p, false, true);
+      }
+    } else {
+      nearestSiteOpt = getNearestSiteDownRight(p, false, true);
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteDownLeft(p, false, true);
+      }
+      if (!nearestSiteOpt.has_value()) {
+        nearestSiteOpt = getNearestSiteUpRight(p, false, true);
       }
     }
   }
+
+  if (!nearestSiteOpt.has_value()) {
+    return {p.x + rows * d, p.y + cols * d};
+  }
+
   // get position of nearest site
-  const auto nearestSitePos = getPositionOfSite(nearestSite);
+  const auto nearestSitePos = getPositionOfSite(nearestSiteOpt.value());
   const auto dx             = p.x - nearestSitePos.x;
   const auto dy             = p.y - nearestSitePos.y;
-  Index      anchorSite     = nearestSite;
   auto       anchorSitePos  = nearestSitePos;
   auto       r              = std::abs(rows);
   auto       c              = std::abs(cols);
+
   for (; r > 0; --r) {
-    try {
-      anchorSite = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)
-                             : getNearestSiteUp(anchorSitePos, true, true);
-    } catch (std::invalid_argument& e) {
+    auto nextSiteOpt = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)
+                                 : getNearestSiteUp(anchorSitePos, true, true);
+    if (!nextSiteOpt.has_value()) {
       break;
     }
-    anchorSitePos = getPositionOfSite(anchorSite);
+    anchorSitePos = getPositionOfSite(nextSiteOpt.value());
   }
+
   for (; c > 0; --c) {
-    try {
-      anchorSite = cols >= 0 ? getNearestSiteRight(anchorSitePos, true, true)
-                             : getNearestSiteLeft(anchorSitePos, true, true);
-    } catch (std::invalid_argument& e) {
+    auto nextSiteOpt = cols >= 0
+                           ? getNearestSiteRight(anchorSitePos, true, true)
+                           : getNearestSiteLeft(anchorSitePos, true, true);
+    if (!nextSiteOpt.has_value()) {
       break;
     }
-    anchorSitePos = getPositionOfSite(anchorSite);
+    anchorSitePos = getPositionOfSite(nextSiteOpt.value());
   }
   anchorSitePos.x =
       cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;

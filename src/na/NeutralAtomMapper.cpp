@@ -7,6 +7,7 @@
 #include "NeutralAtomMapper.hpp"
 
 #include "Architecture.hpp"
+#include "Configuration.hpp"
 #include "Definitions.hpp"
 #include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
@@ -15,13 +16,24 @@
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cstddef>
+#include <iterator>
+#include <map>
+#include <memory>
 #include <numeric>
+#include <optional>
+#include <ratio>
 #include <sstream>
+#include <stdexcept>
+#include <tuple>
+#include <unordered_set>
 #include <vector>
 
 namespace na {
@@ -152,16 +164,14 @@ auto NeutralAtomMapper::calculateMovements() -> void {
           const auto  dx    = end.x - start.x;
           Point const mid   = {start.x, end.y};
           if (dx > 0) {
-            if (arch.hasSiteRight(mid, true)) {
-              const auto& s = arch.getNearestSiteRight(mid, true);
-              if (arch.getPositionOfSite(s).x < end.x) {
+            if (const auto s = arch.getNearestSiteRight(mid, true)) {
+              if (arch.getPositionOfSite(*s).x < end.x) {
                 vOffset = true;
               }
             }
           } else if (dx < 0) {
-            if (arch.hasSiteLeft(mid, true)) {
-              const auto& s = arch.getNearestSiteLeft(mid, true);
-              if (arch.getPositionOfSite(s).x > end.x) {
+            if (const auto s = arch.getNearestSiteLeft(mid, true)) {
+              if (arch.getPositionOfSite(*s).x > end.x) {
                 vOffset = true;
               }
             }
@@ -173,9 +183,8 @@ auto NeutralAtomMapper::calculateMovements() -> void {
           const auto dx    = end.x - start.x;
           const auto dy    = end.y - start.y;
           if (dy > 0) {
-            if (arch.hasSiteDown(start, true)) {
-              const auto& s = arch.getNearestSiteDown(start, true);
-              if (arch.getPositionOfSite(s).y < end.y) {
+            if (const auto s = arch.getNearestSiteDown(start, true)) {
+              if (arch.getPositionOfSite(*s).y < end.y) {
                 // in this case an atom is on the way
                 hOffsetStart.emplace_back(std::make_shared<Point>(start));
                 start.x += (dx >= 0 ? d : -d);
@@ -183,9 +192,8 @@ auto NeutralAtomMapper::calculateMovements() -> void {
               }
             }
           } else if (dy < 0) {
-            if (arch.hasSiteUp(start, true)) {
-              const auto& s = arch.getNearestSiteUp(start, true);
-              if (arch.getPositionOfSite(s).y > end.y) {
+            if (const auto s = arch.getNearestSiteUp(start, true)) {
+              if (arch.getPositionOfSite(*s).y > end.y) {
                 // in this case an atom is on the way
                 hOffsetStart.emplace_back(std::make_shared<Point>(start));
                 start.x += (dx >= 0 ? d : -d);
@@ -392,11 +400,11 @@ auto NeutralAtomMapper::store(std::vector<bool>&             initialFreeSites,
     for (const auto q : qubits) {
       if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
         start.emplace_back(placement[q].currentPosition);
-        const auto pos = *placement[q].currentPosition;
         currentlyShuttling.insert(q);
-        currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+        currentFreeSites[*arch.getSiteAt(*placement[q].currentPosition)] = true;
         placement[q].currentPosition =
-            std::make_shared<Point>(pos.x + d, pos.y);
+            std::make_shared<Point>(placement[q].currentPosition->x + d,
+                                    placement[q].currentPosition->y);
         end.emplace_back(placement[q].currentPosition);
       }
     }
@@ -596,7 +604,7 @@ auto NeutralAtomMapper::pickUp(
     const auto y        = placement[q].currentPosition->y;
     // pick up q itself
     loadStart.emplace_back(placement[q].currentPosition);
-    currentFreeSites[arch.getSiteAt(*placement[q].currentPosition)] = true;
+    currentFreeSites[*arch.getSiteAt(*placement[q].currentPosition)] = true;
     placement[q].currentPosition = std::make_shared<Point>(currentX + d, y);
     loadEnd.emplace_back(placement[q].currentPosition);
     currentlyShuttling.insert(q);
@@ -630,7 +638,7 @@ auto NeutralAtomMapper::pickUp(
                   pickUpOrder.end());
               x = placement[p].currentPosition->x;
               loadStart.emplace_back(placement[p].currentPosition);
-              currentFreeSites[arch.getSiteAt(*placement[p].currentPosition)] =
+              currentFreeSites[*arch.getSiteAt(*placement[p].currentPosition)] =
                   true;
               placement[p].currentPosition = std::make_shared<Point>(x + d, y);
               loadEnd.emplace_back(placement[p].currentPosition);
@@ -645,9 +653,13 @@ auto NeutralAtomMapper::pickUp(
             // left
             std::int64_t freeX = x;
             bool         free  = false;
-            while (!free and arch.hasSiteLeft({freeX, y})) {
-              const auto& site = arch.getNearestSiteLeft({freeX, y});
-              freeX            = arch.getPositionOfSite(site).x;
+            while (!free) {
+              const auto siteOpt = arch.getNearestSiteLeft({freeX, y});
+              if (!siteOpt) {
+                break;
+              }
+              const auto site = *siteOpt;
+              freeX           = arch.getPositionOfSite(site).x;
               if (initialFreeSites[site] and
                   std::find(
                       placement[p].zones.cbegin(), placement[p].zones.cend(),
@@ -665,7 +677,7 @@ auto NeutralAtomMapper::pickUp(
               // place p on the free site
               placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
               *placement[p].initialPosition = {freeX, y};
-              initialFreeSites[arch.getSiteAt(*placement[p].initialPosition)] =
+              initialFreeSites[*arch.getSiteAt(*placement[p].initialPosition)] =
                   false;
               // pick up p
               pickUpOrder.erase(
@@ -712,7 +724,7 @@ auto NeutralAtomMapper::pickUp(
                 pickUpOrder.end());
             x = placement[p].currentPosition->x;
             loadStart.emplace_back(placement[p].currentPosition);
-            currentFreeSites[arch.getSiteAt(*placement[p].currentPosition)] =
+            currentFreeSites[*arch.getSiteAt(*placement[p].currentPosition)] =
                 true;
             placement[p].currentPosition = std::make_shared<Point>(x + d, y);
             loadEnd.emplace_back(placement[p].currentPosition);
@@ -727,9 +739,13 @@ auto NeutralAtomMapper::pickUp(
           // right
           std::int64_t freeX = x;
           bool         free  = false;
-          while (!free and arch.hasSiteRight({freeX - d, y})) {
-            const auto& site = arch.getNearestSiteRight({freeX - d, y});
-            freeX            = arch.getPositionOfSite(site).x;
+          while (!free) {
+            const auto siteOpt = arch.getNearestSiteRight({freeX - d, y});
+            if (!siteOpt) {
+              break;
+            }
+            const auto site = *siteOpt;
+            freeX           = arch.getPositionOfSite(site).x;
             if (initialFreeSites[site] and
                 std::find(
                     placement[p].zones.cbegin(), placement[p].zones.cend(),
@@ -747,7 +763,7 @@ auto NeutralAtomMapper::pickUp(
             // place p on the free site
             placement[p].positionStatus   = Atom::PositionStatus::DEFINED;
             *placement[p].initialPosition = {freeX, y};
-            initialFreeSites[arch.getSiteAt(*placement[p].initialPosition)] =
+            initialFreeSites[*arch.getSiteAt(*placement[p].initialPosition)] =
                 false;
             // pick up p
             pickUpOrder.erase(
@@ -977,15 +993,15 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
         assert(x >= 0);
         const auto& p =
             arch.getPositionOfSite(sites[static_cast<std::size_t>(x)]);
-        if (!currentFreeSites[arch.getSiteAt(p)]) {
+        if (!currentFreeSites[*arch.getSiteAt(p)]) {
           throw std::logic_error(
               "Target site in interaction zone is unexpectedly occupied.");
         }
         start.emplace_back(placement[q].currentPosition);
         placement[q].currentPosition = std::make_shared<Point>(p.x + d, p.y);
         mid.emplace_back(placement[q].currentPosition);
-        currentFreeSites[arch.getSiteAt(p)] = false;
-        placement[q].currentPosition        = std::make_shared<Point>(p);
+        currentFreeSites[*arch.getSiteAt(p)] = false;
+        placement[q].currentPosition         = std::make_shared<Point>(p);
         end.emplace_back(placement[q].currentPosition);
       }
       currentlyShuttling.clear();

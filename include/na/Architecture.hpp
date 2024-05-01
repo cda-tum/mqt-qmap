@@ -10,7 +10,10 @@
 #include "Definitions.hpp"
 #include "na/NADefinitions.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <istream>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -237,33 +240,42 @@ public:
   [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z,
                                      bool proper = true) const -> Number;
   [[nodiscard]] auto hasSiteLeft(const Point& p, bool proper = false,
-                                 bool sameZone = false) const -> bool;
+                                 bool sameZone = false) const
+      -> std::pair<std::vector<Point>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteRight(const Point& p, bool proper = false,
-                                  bool sameZone = false) const -> bool;
+                                  bool sameZone = false) const
+      -> std::pair<std::vector<Point>::const_iterator, bool>;
   [[nodiscard]] auto hasSiteUp(const Point& p, bool proper = false,
-                               bool sameZone = false) const -> bool;
+                               bool sameZone = false) const
+      -> std::pair<std::vector<Point>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteDown(const Point& p, bool proper = false,
-                                 bool sameZone = false) const -> bool;
-  [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
-                                        bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,
-                                         bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false,
-                                      bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteDown(const Point& p, bool proper = false,
-                                        bool sameZone = false) const -> Index;
+                                 bool sameZone = false) const
+      -> std::pair<std::vector<Point>::const_iterator, bool>;
   [[nodiscard]] auto
-                     getNearestSiteUpRight(const Point& p, bool proper = false,
-                                           bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getNearestSiteUpLeft(const Point& p, bool proper = false,
-                                          bool sameZone = false) const -> Index;
+  getNearestSiteLeft(const Point& p, bool proper = false,
+                     bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteRight(const Point& p, bool proper = false,
+                      bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUp(const Point& p, bool proper = false,
+                   bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteDown(const Point& p, bool proper = false,
+                     bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUpRight(const Point& p, bool proper = false,
+                        bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUpLeft(const Point& p, bool proper = false,
+                       bool sameZone = false) const -> std::optional<Index>;
   [[nodiscard]] auto
   getNearestSiteDownLeft(const Point& p, bool proper = false,
-                         bool sameZone = false) const -> Index;
+                         bool sameZone = false) const -> std::optional<Index>;
   [[nodiscard]] auto
   getNearestSiteDownRight(const Point& p, bool proper = false,
-                          bool sameZone = false) const -> Index;
-  [[nodiscard]] auto getSiteAt(const Point& p) const -> Index;
+                          bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto getSiteAt(const Point& p) const -> std::optional<Index>;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
   [[nodiscard]] auto
   withConfig(const Configuration& config) const -> Architecture;
