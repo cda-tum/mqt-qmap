@@ -40,7 +40,7 @@ release = version.split("+")[0]
 project = "QMAP"
 author = "Lukas Burgholzer"
 language = "en"
-project_copyright = "Chair for Design Automation, Technical University of Munich"
+project_copyright = "2024, Chair for Design Automation, Technical University of Munich"
 
 master_doc = "index"
 
