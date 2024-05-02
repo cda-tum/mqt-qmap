@@ -13,7 +13,8 @@ TEST(Configuration, MethodOfString) {
   EXPECT_EQ(na::getMethodOfString("smart"), na::NAMappingMethod::SMART);
   EXPECT_EQ(na::getMethodOfString("NaIvE"), na::NAMappingMethod::NAIVE);
   EXPECT_EQ(na::getMethodOfString("sMaRt"), na::NAMappingMethod::SMART);
-  EXPECT_THROW(std::ignore = na::getMethodOfString("unsupported"), std::invalid_argument);
+  EXPECT_THROW(std::ignore = na::getMethodOfString("unsupported"),
+               std::invalid_argument);
 }
 
 TEST(Configuration, Import) {
@@ -27,7 +28,7 @@ TEST(Configuration, Import) {
       "method": "smart"
     }
   )");
-  na::Configuration config(configIS);
+  na::Configuration  config(configIS);
   EXPECT_EQ(config.getPatchRows(), 2);
   EXPECT_EQ(config.getPatchCols(), 3);
   EXPECT_EQ(config.getMethod(), na::NAMappingMethod::SMART);

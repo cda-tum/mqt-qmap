@@ -68,12 +68,12 @@ public:
    * - effective decoherence time
    */
   struct DecoherenceTimes {
-    Value    t1                 = 0;
-    Value    t2                 = 0;
-    Value    tEff               = 0;
-             DecoherenceTimes() = default;
+    Value t1                    = 0;
+    Value t2                    = 0;
+    Value tEff                  = 0;
+    DecoherenceTimes()          = default;
     virtual ~DecoherenceTimes() = default;
-             DecoherenceTimes(const Value t1time, const Value t2time)
+    DecoherenceTimes(const Value t1time, const Value t2time)
         : t1(t1time), t2(t2time), tEff(t1 * t2 / (t1 + t2)) {}
     explicit operator double() const { return tEff; }
   };
@@ -96,10 +96,10 @@ public:
   struct ShuttlingProperties {
     Number rows          = 0; // maximum number of rows in one AOD
     Number cols          = 0; // maximum number of columns in one AOD
-    Value minX          = 0; // minimum x position of the AOD
-    Value maxX          = 0; // maximum x position of the AOD
-    Value minY          = 0; // minimum y position of the AOD
-    Value maxY          = 0; // maximum y position of the AOD
+    Value  minX          = 0; // minimum x position of the AOD
+    Value  maxX          = 0; // maximum x position of the AOD
+    Value  minY          = 0; // minimum y position of the AOD
+    Value  maxY          = 0; // maximum y position of the AOD
     Value  speed         = 0; // speed of the AOD in µm/µs
     Value  fidelity      = 1; // fidelity during the shuttling
     Value  loadTime      = 0; // time to activate the AOD in µs
@@ -109,10 +109,10 @@ public:
   };
   struct ZoneProperties {
     std::string name;         // the name of the zone
-    Value      minX     = 0; // minimum x dimension
-    Value      maxX     = 0; // maximum x dimension
-    Value      minY     = 0; // minimum y dimension
-    Value      maxY     = 0; // maximum y dimension
+    Value       minX     = 0; // minimum x dimension
+    Value       maxX     = 0; // maximum x dimension
+    Value       minY     = 0; // minimum y dimension
+    Value       maxY     = 0; // maximum y dimension
     Value       fidelity = 1; // fidelity during idling
   };
 
@@ -145,11 +145,11 @@ public:
   Architecture(std::istream& jsonS, std::istream& csvS) {
     fromFileStream(jsonS, csvS);
   };
-                Architecture(const Architecture&) = default;
-                Architecture(Architecture&&)      = default;
-  virtual ~     Architecture()                    = default;
-  Architecture& operator=(const Architecture&)    = default;
-  Architecture& operator=(Architecture&&)         = default;
+  Architecture(const Architecture&)            = default;
+  Architecture(Architecture&&)                 = default;
+  virtual ~Architecture()                      = default;
+  Architecture& operator=(const Architecture&) = default;
+  Architecture& operator=(Architecture&&)      = default;
 
   auto fromFile(const std::string& jsonFn, const std::string& csvFn) -> void;
   auto fromFileStream(std::istream& jsonS, std::istream& csvS) -> void;
@@ -184,8 +184,8 @@ public:
   [[nodiscard]] auto getNoInteractionRadius() const -> Index {
     return noInteractionRadius;
   }
-  [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
-      -> const ZoneProperties& {
+  [[nodiscard]] auto
+  getPropertiesOfZone(const Zone& zone) const -> const ZoneProperties& {
     return zones[zone];
   }
   [[nodiscard]] auto getPropertiesOfOperation(const FullOpType& t) const
@@ -204,8 +204,8 @@ public:
    * @param j address of second site
    * @return the distance in µm
    */
-  [[nodiscard]] auto getDistance(const Index& i, const Index& j) const
-      -> Index {
+  [[nodiscard]] auto getDistance(const Index& i,
+                                 const Index& j) const -> Index {
     return (getPositionOfSite(j) - getPositionOfSite(i)).length();
   }
   [[nodiscard]] auto getZoneAt(const Point& p) const -> Zone;
@@ -231,10 +231,10 @@ public:
   [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto getNcolsInZone(const Zone& z) const -> Index;
-  [[nodiscard]] auto getSitesInRow(const Zone& z, const Index& row) const
-      -> std::vector<Index>;
-  [[nodiscard]] auto getSitesInCol(const Zone& z, const Index& col) const
-      -> std::vector<Index>;
+  [[nodiscard]] auto
+  getSitesInRow(const Zone& z, const Index& row) const -> std::vector<Index>;
+  [[nodiscard]] auto
+  getSitesInCol(const Zone& z, const Index& col) const -> std::vector<Index>;
   [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
@@ -257,35 +257,34 @@ public:
   [[nodiscard]] auto hasSiteDown(const Point& p, bool proper = false,
                                  bool sameZone = false) const
       -> std::pair<std::vector<Point>::const_iterator, bool>;
-  [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
-                                        bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,
-                                         bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false,
-                                      bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteDown(const Point& p, bool proper = false,
-                                        bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteUpRight(const Point& p, bool proper = false,
-                                           bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteUpLeft(const Point& p, bool proper = false,
-                                          bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteDownLeft(const Point& p, bool proper = false,
-                                            bool sameZone = false) const
-      -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteDownRight(const Point& p,
-                                             bool         proper = false,
-                                             bool sameZone       = false) const
-      -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteLeft(const Point& p, bool proper = false,
+                     bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteRight(const Point& p, bool proper = false,
+                      bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUp(const Point& p, bool proper = false,
+                   bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteDown(const Point& p, bool proper = false,
+                     bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUpRight(const Point& p, bool proper = false,
+                        bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteUpLeft(const Point& p, bool proper = false,
+                       bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteDownLeft(const Point& p, bool proper = false,
+                         bool sameZone = false) const -> std::optional<Index>;
+  [[nodiscard]] auto
+  getNearestSiteDownRight(const Point& p, bool proper = false,
+                          bool sameZone = false) const -> std::optional<Index>;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> std::optional<Index>;
   [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
-  [[nodiscard]] auto withConfig(const Configuration& config) const
-      -> Architecture;
+  [[nodiscard]] auto
+  withConfig(const Configuration& config) const -> Architecture;
   [[nodiscard]] auto getPositionOffsetBy(const Point& p, const Number& rows,
                                          const Number& cols) const -> Point;
 

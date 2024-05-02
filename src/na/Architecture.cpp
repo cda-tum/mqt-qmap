@@ -32,8 +32,8 @@
 
 namespace na {
 
-auto Architecture::fromFile(const std::string& jsonFn, const std::string& csvFn)
-    -> void {
+auto Architecture::fromFile(const std::string& jsonFn,
+                            const std::string& csvFn) -> void {
   std::ifstream jsonS(jsonFn);
   if (!jsonS.good()) {
     std::stringstream ss;
@@ -49,89 +49,89 @@ auto Architecture::fromFile(const std::string& jsonFn, const std::string& csvFn)
   *this = Architecture(jsonS, csvS);
 }
 
-auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
-    -> void {
-nlohmann::json data;
-// load CSV
-// auxiliary variables
-std::string line;
-std::size_t lineno = 1;
-try {
-  csvS >> line; // skip first line, i.e. header
-  while (csvS >> line) {
-    ++lineno;
-    std::stringstream lineStream(line); // make a stream of this line
-    std::string       sX;
-    std::string       sY;
+auto Architecture::fromFileStream(std::istream& jsonS,
+                                  std::istream& csvS) -> void {
+  nlohmann::json data;
+  // load CSV
+  // auxiliary variables
+  std::string line;
+  std::size_t lineno = 1;
+  try {
+    csvS >> line; // skip first line, i.e. header
+    while (csvS >> line) {
+      ++lineno;
+      std::stringstream lineStream(line); // make a stream of this line
+      std::string       sX;
+      std::string       sY;
 
-    std::getline(lineStream, sX, ',');
-    std::getline(lineStream, sY);
+      std::getline(lineStream, sX, ',');
+      std::getline(lineStream, sY);
 
-    sites.emplace_back(
-        std::stoi(sX),
-        std::stoi(sY)); // make point from x and y (convert to int)
-  }
-} catch (std::exception& e) {
-  std::stringstream ss;
-  ss << "While parsing the CSV file, the following error occurred in line "
-     << lineno << "(" << line << ")"
-     << ": " << e.what();
-  throw std::runtime_error(ss.str());
-}
-// load JSON
-try {
-  jsonS >> data;
-} catch (std::exception& e) {
-  throw std::runtime_error(
-      "While parsing the JSON file, the following error occurred: " +
-      std::string(e.what()));
-}
-try {
-  // load rest of JSON
-  name = data["name"];
-  std::map<std::string, Zone> nameToZone;
-  for (const auto& zone : data["zones"]) {
-    nameToZone[zone["name"]] = zones.size();
-    const ZoneProperties zp{zone["name"], zone["xmin"], zone["xmax"],
-                            zone["ymin"], zone["ymax"], zone["fidelity"]};
-    zones.emplace_back(zp);
-  }
-  for (auto const& zone : data["initialZones"]) {
-    initialZones.emplace_back(nameToZone.find(zone)->second);
-  }
-  for (auto const& op : data["operations"]) {
-    const std::string        opName = op["name"];
-    const FullOpType         ty     = {qc::opTypeFromString(opName),
-                                       opName.find_first_not_of('c')};
-    const Scope              sc     = getScopeOfString(op["type"]);
-    std::unordered_set<Zone> zo     = {};
-    for (auto const& zs : op["zones"]) {
-      zo.emplace(nameToZone.find(zs)->second);
+      sites.emplace_back(
+          std::stoi(sX),
+          std::stoi(sY)); // make point from x and y (convert to int)
     }
-    const Value               fi = op["fidelity"];
-    const Value               ti = op["time"];
-    OperationProperties const o  = {sc, zo, ti, fi};
-    gateSet.emplace(ty, o);
+  } catch (std::exception& e) {
+    std::stringstream ss;
+    ss << "While parsing the CSV file, the following error occurred in line "
+       << lineno << "(" << line << ")" << ": " << e.what();
+    throw std::runtime_error(ss.str());
   }
-  decoherenceTimes = Architecture::DecoherenceTimes(data["decoherence"]["t1"],
-                                                    data["decoherence"]["t2"]);
-  for (const auto& sh : data["shuttling"]) {
-    const ShuttlingProperties sp{sh["rows"],          sh["columns"],
-                                 sh["xmin"],          sh["xmax"],
-                                 sh["ymin"],          sh["ymax"],
-                                 sh["move"]["speed"], sh["move"]["fidelity"],
-                                 sh["load"]["time"],  sh["load"]["fidelity"],
-                                 sh["store"]["time"], sh["store"]["fidelity"]};
-    shuttling.emplace_back(sp);
+  // load JSON
+  try {
+    jsonS >> data;
+  } catch (std::exception& e) {
+    throw std::runtime_error(
+        "While parsing the JSON file, the following error occurred: " +
+        std::string(e.what()));
   }
-  minAtomDistance     = data["minAtomDistance"];
-  interactionRadius   = data["interactionRadius"];
-  noInteractionRadius = data["noInteractionRadius"];
-} catch (std::exception& e) {
-  throw std::runtime_error(
-      "While reading the JSON data, the following error occurred: " +
-      std::string(e.what()));
-}
+  try {
+    // load rest of JSON
+    name = data["name"];
+    std::map<std::string, Zone> nameToZone;
+    for (const auto& zone : data["zones"]) {
+      nameToZone[zone["name"]] = zones.size();
+      const ZoneProperties zp{zone["name"], zone["xmin"], zone["xmax"],
+                              zone["ymin"], zone["ymax"], zone["fidelity"]};
+      zones.emplace_back(zp);
+    }
+    for (auto const& zone : data["initialZones"]) {
+      initialZones.emplace_back(nameToZone.find(zone)->second);
+    }
+    for (auto const& op : data["operations"]) {
+      const std::string        opName = op["name"];
+      const FullOpType         ty     = {qc::opTypeFromString(opName),
+                                         opName.find_first_not_of('c')};
+      const Scope              sc     = getScopeOfString(op["type"]);
+      std::unordered_set<Zone> zo     = {};
+      for (auto const& zs : op["zones"]) {
+        zo.emplace(nameToZone.find(zs)->second);
+      }
+      const Value               fi = op["fidelity"];
+      const Value               ti = op["time"];
+      OperationProperties const o  = {sc, zo, ti, fi};
+      gateSet.emplace(ty, o);
+    }
+    decoherenceTimes = Architecture::DecoherenceTimes(
+        data["decoherence"]["t1"], data["decoherence"]["t2"]);
+    for (const auto& sh : data["shuttling"]) {
+      const ShuttlingProperties sp{
+          sh["rows"],          sh["columns"],
+          sh["xmin"],          sh["xmax"],
+          sh["ymin"],          sh["ymax"],
+          sh["move"]["speed"], sh["move"]["fidelity"],
+          sh["load"]["time"],  sh["load"]["fidelity"],
+          sh["store"]["time"], sh["store"]["fidelity"]};
+      shuttling.emplace_back(sp);
+    }
+    minAtomDistance     = data["minAtomDistance"];
+    interactionRadius   = data["interactionRadius"];
+    noInteractionRadius = data["noInteractionRadius"];
+  } catch (std::exception& e) {
+    throw std::runtime_error(
+        "While reading the JSON data, the following error occurred: " +
+        std::string(e.what()));
+  }
 }
 
 auto Architecture::getZoneAt(const Point& p) const -> Zone {
@@ -152,8 +152,8 @@ auto Architecture::isAllowedLocally(const FullOpType& t) const -> bool {
   const auto it = gateSet.find(t);
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const FullOpType& t, const Zone& zone) const
-    -> bool {
+auto Architecture::isAllowedLocally(const FullOpType& t,
+                                    const Zone&       zone) const -> bool {
   if (!isAllowedLocally(t)) {
     return false; // gate not supported at all
   }
@@ -169,8 +169,8 @@ auto Architecture::isAllowedLocallyAtSite(const FullOpType& t,
   return isAllowedLocally(t, zone);
 }
 
-auto Architecture::isAllowedLocallyAt(const FullOpType& t, const Point& p) const
-    -> bool {
+auto Architecture::isAllowedLocallyAt(const FullOpType& t,
+                                      const Point&      p) const -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -253,8 +253,8 @@ auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
 auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
   return Architecture::getColsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
-    -> std::vector<Index> {
+auto Architecture::getSitesInRow(const Zone&  z,
+                                 const Index& row) const -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
   for (Index i = 0; i < sites.size(); ++i) {
@@ -266,8 +266,8 @@ auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
   return atoms;
 }
 
-auto Architecture::getSitesInCol(const Zone& z, const Index& col) const
-    -> std::vector<Index> {
+auto Architecture::getSitesInCol(const Zone&  z,
+                                 const Index& col) const -> std::vector<Index> {
   const auto         x = Architecture::getColsInZone(z)[col];
   std::vector<Index> atoms;
   for (Index i = 0; i < sites.size(); ++i) {
@@ -379,9 +379,8 @@ auto Architecture::hasSiteLeft(const Point& p, bool proper, bool sameZone) const
       });
   return {it, it != sites.crend()};
 }
-auto Architecture::hasSiteRight(const Point& p, bool proper,
-                                bool sameZone) const
-    -> std::pair<std::vector<Point>::const_iterator, bool> {
+auto Architecture::hasSiteRight(const Point& p, bool proper, bool sameZone)
+    const -> std::pair<std::vector<Point>::const_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
