@@ -34,4 +34,6 @@ TEST(Configuration, Import) {
   EXPECT_EQ(config.getPatchRows(), 2);
   EXPECT_EQ(config.getPatchCols(), 3);
   EXPECT_EQ(config.getMethod(), na::NAMappingMethod::MaximizeParallelism);
+  std::istringstream invalidJson("{name: invalid}");
+  EXPECT_THROW(na::Configuration ignore(invalidJson), std::runtime_error);
 }
