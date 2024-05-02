@@ -7,11 +7,13 @@
 [![codecov](https://img.shields.io/codecov/c/github/cda-tum/mqt-qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/mqt-qmap)
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cda-tum/mqt-qmap/main/docs/source/_static/mqt_light.png" width="60%">
-    <img src="https://raw.githubusercontent.com/cda-tum/mqt-qmap/main/docs/source/_static/mqt_dark.png" width="60%">
-  </picture>
-  </p>
+  <a href="https://mqt.readthedocs.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/cda-tum/mqt-qmap/main/docs/source/_static/mqt_light.png" width="60%">
+      <img src="https://raw.githubusercontent.com/cda-tum/mqt-qmap/main/docs/source/_static/mqt_dark.png" width="60%">
+    </picture>
+  </a>
+</p>
 
 # MQT QMAP - A tool for Quantum Circuit Compilation
 
