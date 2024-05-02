@@ -256,40 +256,37 @@ auto Architecture::getSitesInRow(const Zone&  z,
                                  const Index& row) const -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
-  std::vector<Index> enumerate(sites.size());
-  std::iota(enumerate.begin(), enumerate.end(), 0);
-  std::copy_if(enumerate.cbegin(), enumerate.cend(), std::back_inserter(atoms),
-               [&](const auto& i) {
-                 const auto& s = sites[i];
-                 return s.y == y && s.x >= zones[z].minX &&
-                        s.x <= zones[z].maxX;
-               });
+  for (Index i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if (s.y == y && s.x >= zones[z].minX && s.x <= zones[z].maxX) {
+      atoms.emplace_back(i);
+    }
+  }
   return atoms;
 }
+
 auto Architecture::getSitesInCol(const Zone&  z,
                                  const Index& col) const -> std::vector<Index> {
   const auto         x = Architecture::getColsInZone(z)[col];
   std::vector<Index> atoms;
-  std::vector<Index> enumerate(sites.size());
-  std::iota(enumerate.begin(), enumerate.end(), 0);
-  std::copy_if(enumerate.cbegin(), enumerate.cend(), std::back_inserter(atoms),
-               [&](const auto& i) {
-                 const auto& s = sites[i];
-                 return s.x == x && s.y >= zones[z].minY &&
-                        s.y <= zones[z].maxY;
-               });
+  for (Index i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if (s.x == x && s.y >= zones[z].minY && s.y <= zones[z].maxY) {
+      atoms.emplace_back(i);
+    }
+  }
   return atoms;
 }
+
 auto Architecture::getSitesInZone(const Zone& z) const -> std::vector<Index> {
   std::vector<Index> atoms;
-  std::vector<Index> enumerate(sites.size());
-  std::iota(enumerate.begin(), enumerate.end(), 0);
-  std::copy_if(enumerate.cbegin(), enumerate.cend(), std::back_inserter(atoms),
-               [&](const auto& i) {
-                 const auto& s = sites[i];
-                 return s.x >= zones[z].minX && s.x <= zones[z].maxX &&
-                        s.y >= zones[z].minY && s.y <= zones[z].maxY;
-               });
+  for (Index i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if (s.x >= zones[z].minX && s.x <= zones[z].maxX && s.y >= zones[z].minY &&
+        s.y <= zones[z].maxY) {
+      atoms.emplace_back(i);
+    }
+  }
   return atoms;
 }
 auto Architecture::getRowInZoneOf(const Index& i) const -> Index {
