@@ -27,10 +27,7 @@ namespace na {
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
 static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
-    {"Global", Scope::Global},
-    {"Local", Scope::Local},
-    {"global", Scope::Global},
-    {"local", Scope::Local}};
+    {"global", Scope::Global}, {"local", Scope::Local}};
 
 /**
  * @brief Get the Scope of a gate from a string
@@ -38,8 +35,11 @@ static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
  * @param s the name
  * @return Type
  */
-inline Scope getScopeOfString(const std::string& s) {
-  if (const auto it = STRING_TO_SCOPE.find(s); it != STRING_TO_SCOPE.end()) {
+inline auto getScopeOfString(const std::string& s) -> Scope {
+  std::string sLowerCase = s;
+  std::transform(sLowerCase.begin(), sLowerCase.end(), sLowerCase.begin(),
+                 ::tolower);
+  if (const auto it = STRING_TO_SCOPE.find(sLowerCase); it != STRING_TO_SCOPE.end()) {
     return it->second;
   }
   std::stringstream ss;
@@ -63,9 +63,9 @@ public:
    * architecture
    * @details
    * The decoherence times of a neutral atom architecture are:
-   * - T1
-   * - T2
-   * - effective decoherence time
+   * - T1 [µs]
+   * - T2 [µs]
+   * - effective decoherence time [µs]
    */
   struct DecoherenceTimes {
     Value t1                    = 0;
@@ -78,7 +78,7 @@ public:
     explicit operator double() const { return tEff; }
   };
   /**
-   * @brief Strcut to store the properties of an operation.
+   * @brief Struct to store the properties of an operation.
    * @details Times are in µs, fidelities are in [0,1].
    */
   struct OperationProperties {

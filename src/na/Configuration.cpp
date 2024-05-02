@@ -44,7 +44,9 @@ Configuration::Configuration(std::istream& fs) {
   try {
     fs >> data;
   } catch (const std::exception& e) {
-    std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+    std::stringstream ss;
+    ss << "Error parsing JSON: " << e.what() << std::endl;
+    throw std::runtime_error(ss.str());
   }
 
   if (data.contains("patch") && data["patch"].is_object()) {

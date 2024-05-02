@@ -4,7 +4,7 @@
 // information.
 //
 
-#include "NeutralAtomMapper.hpp"
+#include "NAMapper.hpp"
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
@@ -816,7 +816,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
   const qc::Layer layer(initialQc);
   const auto&     executableSet = layer.getExecutableSet();
   auto            it            = executableSet.begin();
-  if (config.getMethod() == NAMappingMethod::NAIVE) {
+  if (config.getMethod() == NAMappingMethod::Naive) {
     for (qc::Qubit q = 0; q < nqubits; ++q) {
       placement[q].positionStatus = Atom::PositionStatus::DEFINED;
       const auto s = arch.getSitesInZone(initialZones.front())[q];
@@ -873,7 +873,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
     }
     // 2. when no such gates are left, extract an interaction graph of gates
     //    of the same type and two targets, i.e. cz gates
-    if (config.getMethod() == NAMappingMethod::NAIVE) {
+    if (config.getMethod() == NAMappingMethod::Naive) {
       const qc::Operation* op = (*it)->getOperation();
       if (op->getType() != qc::OpType::Z or op->getNtargets() != 1 or
           op->getNcontrols() != 1) {
@@ -940,7 +940,7 @@ auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
       mappedQc.emplaceBack<NAShuttlingOperation>(
           STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
-    } else if (config.getMethod() == NAMappingMethod::SMART) {
+    } else if (config.getMethod() == NAMappingMethod::MaximizeParallelism) {
       const auto& graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
       if (graph.getNVertices() == 0) {
         throw std::logic_error(
