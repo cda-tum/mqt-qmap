@@ -15,7 +15,8 @@ namespace na {
 
 enum class NAMappingMethod : std::uint8_t { Naive, MaximizeParallelism };
 static const std::unordered_map<std::string, NAMappingMethod> STRING_TO_METHOD =
-    {{"naive", NAMappingMethod::Naive}, {"maximize parallelism", NAMappingMethod::MaximizeParallelism}};
+    {{"naive", NAMappingMethod::Naive},
+     {"maximize parallelism", NAMappingMethod::MaximizeParallelism}};
 [[nodiscard]] inline auto
 getMethodOfString(const std::string& method) -> NAMappingMethod;
 class Configuration {

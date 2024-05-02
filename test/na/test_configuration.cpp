@@ -30,7 +30,7 @@ TEST(Configuration, Import) {
       "method": "smart"
     }
   )");
-  na::Configuration config(configIS);
+  na::Configuration  config(configIS);
   EXPECT_EQ(config.getPatchRows(), 2);
   EXPECT_EQ(config.getPatchCols(), 3);
   EXPECT_EQ(config.getMethod(), na::NAMappingMethod::MaximizeParallelism);

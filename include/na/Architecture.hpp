@@ -39,7 +39,8 @@ inline auto getScopeOfString(const std::string& s) -> Scope {
   std::string sLowerCase = s;
   std::transform(sLowerCase.begin(), sLowerCase.end(), sLowerCase.begin(),
                  ::tolower);
-  if (const auto it = STRING_TO_SCOPE.find(sLowerCase); it != STRING_TO_SCOPE.end()) {
+  if (const auto it = STRING_TO_SCOPE.find(sLowerCase);
+      it != STRING_TO_SCOPE.end()) {
     return it->second;
   }
   std::stringstream ss;
