@@ -27,7 +27,7 @@ TEST(Configuration, Import) {
         "rows": 2,
         "cols": 3
       },
-      "method": "smart"
+      "method": "maximize parallelism"
     }
   )");
   na::Configuration  config(configIS);
