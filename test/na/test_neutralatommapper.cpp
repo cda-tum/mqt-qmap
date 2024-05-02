@@ -1571,7 +1571,7 @@ TEST(NeutralAtomMapper, QAOA5) {
   // ---------------------------------------------------------------------
   na::NeutralAtomMapper mapper(
       na::Architecture(archFn, gridFn),
-      na::Configuration(3, 3, na::NaMappingMethod::SMART));
+      na::Configuration(3, 3, na::NAMappingMethod::SMART));
   mapper.map(qc::QuantumComputation(circFn));
   std::ignore = mapper.getStats();
   std::ignore = mapper.getResult();

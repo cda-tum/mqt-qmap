@@ -15,8 +15,11 @@ using json = nlohmann::json;
 
 namespace na {
 
-inline auto getMethodOfString(const std::string& method) -> NaMappingMethod {
-  if (const auto it = STRING_TO_METHOD.find(method);
+inline auto getMethodOfString(const std::string& method) -> NAMappingMethod {
+  std::string methodLowerCase = method;
+  std::transform(methodLowerCase.begin(), methodLowerCase.end(), methodLowerCase.begin(),
+                 [](const auto c) { return std::tolower(c); });
+  if (const auto it = STRING_TO_METHOD.find(methodLowerCase);
       it != STRING_TO_METHOD.end()) {
     return it->second;
   }
