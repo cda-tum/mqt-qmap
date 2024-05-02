@@ -19,6 +19,7 @@
 #include <fstream>
 #include <istream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
 #include <optional>
@@ -305,8 +306,13 @@ auto Architecture::getColInZoneOf(const Index& i) const -> Index {
 }
 auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
                                    const bool proper) const -> Number {
-  const auto& cols   = getColsInZone(z);
-  Number      result = x;
+  const auto& cols = getColsInZone(z);
+  if (!std::any_of(cols.cbegin(), cols.cend(),
+                   [&](const auto& c) { return proper ? c < x : c <= x; })) {
+    return x;
+  }
+
+  Number result = std::numeric_limits<Number>::min();
   for (const auto& c : cols) {
     if ((proper ? c < x : c <= x) && c > result) {
       result = c;
@@ -317,8 +323,13 @@ auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
 
 auto Architecture::getNearestXRight(const Number& x, const Zone& z,
                                     const bool proper) const -> Number {
-  const auto& cols   = getColsInZone(z);
-  Number      result = x;
+  const auto& cols = getColsInZone(z);
+  if (!std::any_of(cols.cbegin(), cols.cend(),
+                   [&](const auto& c) { return proper ? c > x : c >= x; })) {
+    return x;
+  }
+
+  Number result = std::numeric_limits<Number>::max();
   for (const auto& c : cols) {
     if ((proper ? c > x : c >= x) && c < result) {
       result = c;
@@ -329,8 +340,13 @@ auto Architecture::getNearestXRight(const Number& x, const Zone& z,
 
 auto Architecture::getNearestYUp(const Number& y, const Zone& z,
                                  const bool proper) const -> Number {
-  const auto& rows   = getRowsInZone(z);
-  Number      result = y;
+  const auto& rows = getRowsInZone(z);
+  if (!std::any_of(rows.cbegin(), rows.cend(),
+                   [&](const auto& r) { return proper ? r < y : r <= y; })) {
+    return y;
+  }
+
+  Number result = std::numeric_limits<Number>::min();
   for (const auto& r : rows) {
     if ((proper ? r < y : r <= y) && r > result) {
       result = r;
@@ -341,8 +357,13 @@ auto Architecture::getNearestYUp(const Number& y, const Zone& z,
 
 auto Architecture::getNearestYDown(const Number& y, const Zone& z,
                                    const bool proper) const -> Number {
-  const auto& rows   = getRowsInZone(z);
-  Number      result = y;
+  const auto& rows = getRowsInZone(z);
+  if (!std::any_of(rows.cbegin(), rows.cend(),
+                   [&](const auto& r) { return proper ? r > y : r >= y; })) {
+    return y;
+  }
+
+  Number result = std::numeric_limits<Number>::max();
   for (const auto& r : rows) {
     if ((proper ? r > y : r >= y) && r < result) {
       result = r;
