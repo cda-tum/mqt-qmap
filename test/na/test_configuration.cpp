@@ -33,5 +33,5 @@ TEST(Configuration, Import) {
   na::Configuration config(configIS);
   EXPECT_EQ(config.getPatchRows(), 2);
   EXPECT_EQ(config.getPatchCols(), 3);
-  EXPECT_EQ(config.getMethod(), na::NAMappingMethod::SMART);
+  EXPECT_EQ(config.getMethod(), na::NAMappingMethod::MaximizeParallelism);
 }
