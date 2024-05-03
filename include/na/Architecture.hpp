@@ -95,12 +95,12 @@ public:
    * µm/µs.
    */
   struct ShuttlingProperties {
-    Number rows          = 0; // maximum number of rows in one AOD
-    Number cols          = 0; // maximum number of columns in one AOD
-    Value  minX          = 0; // minimum x position of the AOD
-    Value  maxX          = 0; // maximum x position of the AOD
-    Value  minY          = 0; // minimum y position of the AOD
-    Value  maxY          = 0; // maximum y position of the AOD
+    Index rows          = 0; // maximum number of rows in one AOD
+    Index cols          = 0; // maximum number of columns in one AOD
+    Number  minX          = 0; // minimum x position of the AOD
+    Number  maxX          = 0; // maximum x position of the AOD
+    Number  minY          = 0; // minimum y position of the AOD
+    Number  maxY          = 0; // maximum y position of the AOD
     Value  speed         = 0; // speed of the AOD in µm/µs
     Value  fidelity      = 1; // fidelity during the shuttling
     Value  loadTime      = 0; // time to activate the AOD in µs
@@ -110,10 +110,10 @@ public:
   };
   struct ZoneProperties {
     std::string name;         // the name of the zone
-    Value       minX     = 0; // minimum x dimension
-    Value       maxX     = 0; // maximum x dimension
-    Value       minY     = 0; // minimum y dimension
-    Value       maxY     = 0; // maximum y dimension
+    Number       minX     = 0; // minimum x dimension
+    Number       maxX     = 0; // maximum x dimension
+    Number       minY     = 0; // minimum y dimension
+    Number       maxY     = 0; // maximum y dimension
     Value       fidelity = 1; // fidelity during idling
   };
 
@@ -126,9 +126,9 @@ protected:
       gateSet; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
   std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
-  Value minAtomDistance = 0; // minimal distance that must be kept between atoms
-  Value interactionRadius = 0; // the Rydberg radius
-  Value noInteractionRadius =
+  Index minAtomDistance = 0; // minimal distance that must be kept between atoms
+  Index interactionRadius = 0; // the Rydberg radius
+  Index noInteractionRadius =
       0; // sufficient radius to avoid Rydberg interaction
   std::vector<Zone> initialZones; // the zones where the atoms are initially
 
