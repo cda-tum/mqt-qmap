@@ -147,19 +147,19 @@ auto NAMapper::makeLogicalArrays() -> void {
  * @details This function is called after the circuit is mapped to the
  * architecture. At this point, only the start and end point of each shuttling
  * operations is specified. During shuttling the collisiion with other atoms
- * must be prevented. This is achieved by moving atoms first in x-direction and
- * then in y-direction with possible offsets to avoid collisions. In the example
+ * must be prevented. This is achieved by moving atoms first in y-direction and
+ * then in x-direction with possible offsets to avoid collisions. In the example
  * below you can see the shuttling operation before and after this function is
  * called.
  *            Before                                  After
  * ===========================================================================
- *  Atom --> o     o     o <-- End          o     o     o  ┌─ o <-- End
- *                     /                                   |
- *     o     o     o /   o     o            o     o     o  |  o     o
- *                 /                                       |
- *     o     o   / o     o     o            o     o     o  |  o     o
- *             /                                  ┌────────┘
- * Start --> o     o     o     o        Start --> o     o     o     o
+ *  Atom --> o     o     o <-- End          o     o     o     o <-- End
+ *                     ∕                             ┌────────┘
+ *     o     o     o ∕   o     o            o     o  ⏐  o     o     o
+ *                 ∕                                 ⏐
+ *     o     o   ∕ o     o     o            o     o  ⏐  o     o     o
+ *             ∕                                     ⏐
+ * Start --> o     o     o     o        Start --> o ─┘  o     o     o
  */
 auto NAMapper::calculateMovements() -> void {
   const auto prelQC = mappedQc;
@@ -186,12 +186,16 @@ auto NAMapper::calculateMovements() -> void {
           if (dx > 0) {
             if (const auto s = arch.getNearestSiteRight(mid, true)) {
               if (arch.getPositionOfSite(*s).x < end.x) {
+                // in this case not the entire y-movement is possible in one go
+                // we stop earlier to perform the x-movement without collision
+                // and then continue with the y-movement (voffset)
                 vOffset = true;
               }
             }
           } else if (dx < 0) {
             if (const auto s = arch.getNearestSiteLeft(mid, true)) {
               if (arch.getPositionOfSite(*s).x > end.x) {
+                // see comment in the cae above
                 vOffset = true;
               }
             }
@@ -221,6 +225,8 @@ auto NAMapper::calculateMovements() -> void {
               }
             }
           }
+          // at this stage, if an hoffset is necessary, the start position was
+          // modified already to reflect the hoffset
           Point mid = {start.x, end.y};
           if (vOffset) {
             mid.y += (dy >= 0 ? -d : d);
