@@ -185,9 +185,7 @@ TEST_F(NAArchitecture, GateProperty) {
   EXPECT_EQ(arch.getPropertiesOfOperation({qc::OpType::RY, 0}).scope,
             na::Scope::Global);
   EXPECT_EQ(arch.getPropertiesOfOperation({qc::OpType::Z, 1}).fidelity, 0.9959);
-  EXPECT_THROW(std::ignore = arch.getPropertiesOfOperation({
-                   qc::OpType::RX,
-               }),
+  EXPECT_THROW(std::ignore = arch.getPropertiesOfOperation({qc::OpType::RX, 0}),
                std::invalid_argument);
 }
 

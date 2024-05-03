@@ -32,8 +32,8 @@
 
 namespace na {
 
-auto Architecture::fromFile(const std::string& jsonFn,
-                            const std::string& csvFn) -> void {
+auto Architecture::fromFile(const std::string& jsonFn, const std::string& csvFn)
+    -> void {
   std::ifstream jsonS(jsonFn);
   if (!jsonS.good()) {
     std::stringstream ss;
@@ -49,8 +49,8 @@ auto Architecture::fromFile(const std::string& jsonFn,
   *this = Architecture(jsonS, csvS);
 }
 
-auto Architecture::fromFileStream(std::istream& jsonS,
-                                  std::istream& csvS) -> void {
+auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
+    -> void {
   nlohmann::json data;
   // load CSV
   // auxiliary variables
@@ -74,7 +74,8 @@ auto Architecture::fromFileStream(std::istream& jsonS,
   } catch (std::exception& e) {
     std::stringstream ss;
     ss << "While parsing the CSV file, the following error occurred in line "
-       << lineno << "(" << line << ")" << ": " << e.what();
+       << lineno << "(" << line << ")"
+       << ": " << e.what();
     throw std::runtime_error(ss.str());
   }
   // load JSON
@@ -152,8 +153,8 @@ auto Architecture::isAllowedLocally(const FullOpType& t) const -> bool {
   const auto it = gateSet.find(t);
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const FullOpType& t,
-                                    const Zone&       zone) const -> bool {
+auto Architecture::isAllowedLocally(const FullOpType& t, const Zone& zone) const
+    -> bool {
   if (!isAllowedLocally(t)) {
     return false; // gate not supported at all
   }
@@ -169,8 +170,8 @@ auto Architecture::isAllowedLocallyAtSite(const FullOpType& t,
   return isAllowedLocally(t, zone);
 }
 
-auto Architecture::isAllowedLocallyAt(const FullOpType& t,
-                                      const Point&      p) const -> bool {
+auto Architecture::isAllowedLocallyAt(const FullOpType& t, const Point& p) const
+    -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -227,13 +228,24 @@ auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
 auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
   return Architecture::getRowsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone&  z,
-                                 const Index& row) const -> std::vector<Index> {
+auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
+    -> std::vector<Index> {
   const auto         y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
   for (Index i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
     if (s.y == y && s.x >= zones[z].minX && s.x <= zones[z].maxX) {
+      atoms.emplace_back(i);
+    }
+  }
+  return atoms;
+}
+auto Architecture::getSitesInZone(const Zone& z) const -> std::vector<Index> {
+  std::vector<Index> atoms;
+  for (Index i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if (s.x >= zones[z].minX && s.x <= zones[z].maxX && s.y >= zones[z].minY &&
+        s.y <= zones[z].maxY) {
       atoms.emplace_back(i);
     }
   }
@@ -282,8 +294,9 @@ auto Architecture::hasSiteLeft(const Point& p, bool proper, bool sameZone) const
       });
   return {it, it != sites.crend()};
 }
-auto Architecture::hasSiteRight(const Point& p, bool proper, bool sameZone)
-    const -> std::pair<std::vector<Point>::const_iterator, bool> {
+auto Architecture::hasSiteRight(const Point& p, bool proper,
+                                bool sameZone) const
+    -> std::pair<std::vector<Point>::const_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
       std::find_if(sites.cbegin(), sites.cend(), [&](const auto& s) {
@@ -374,6 +387,38 @@ auto Architecture::getNearestSiteUpLeft(const Point& p, const bool proper,
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
     if ((proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
+  }
+  return opt;
+}
+auto Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
+                                          const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) and
+        (not sameZone or getZoneAt(s) == zone)) {
+      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
+        opt = i;
+      }
+    }
+  }
+  return opt;
+}
+auto Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
+                                           const bool sameZone) const
+    -> std::optional<Index> {
+  const auto&          zone = getZoneAt(p);
+  std::optional<Index> opt;
+  for (std::size_t i = 0; i < sites.size(); ++i) {
+    const auto& s = sites[i];
+    if ((proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) and
         (not sameZone or getZoneAt(s) == zone)) {
       if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
         opt = i;
