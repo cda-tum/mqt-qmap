@@ -9,7 +9,7 @@
 
 #include "gtest/gtest.h"
 
-TEST(NeutralAtomMapper, QAOA5) {
+TEST(NAMapper, QAOA5) {
   std::istringstream archIS(R"({
       "name": "Nature",
       "initialZones": [
@@ -320,7 +320,7 @@ rz(3.9006217) q[4];)";
   // ---------------------------------------------------------------------
 }
 
-TEST(NeutralAtomMapper, QAOA5Narrow) {
+TEST(NAMapper, QAOA5Narrow) {
   std::istringstream archIS(R"({
       "name": "Nature",
       "initialZones": [
@@ -340,15 +340,15 @@ TEST(NeutralAtomMapper, QAOA5Narrow) {
               "xmin": -300,
               "xmax": 656,
               "ymin": 47,
-              "ymax": 121,
+              "ymax": 421,
               "fidelity": 1
           },
           {
               "name": "readout",
               "xmin": -300,
               "xmax": 656,
-              "ymin": 122,
-              "ymax": 156,
+              "ymin": 422,
+              "ymax": 456,
               "fidelity": 0.99
           }
       ],
@@ -423,7 +423,8 @@ TEST(NeutralAtomMapper, QAOA5Narrow) {
               }
           }
       ]
-  })");
+  }
+  )");
   std::stringstream  gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
