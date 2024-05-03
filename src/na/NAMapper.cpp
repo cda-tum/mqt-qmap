@@ -284,9 +284,8 @@ auto NAMapper::calculateMovements() -> void {
   }
 }
 
-auto NAMapper::checkApplicability(const qc::Operation*     op,
-                                  const std::vector<Atom>& placement) const
-    -> bool {
+auto NAMapper::checkApplicability(
+    const qc::Operation* op, const std::vector<Atom>& placement) const -> bool {
   if (op->isCompoundOperation()) {
     // is global gate
     return true;
@@ -327,7 +326,7 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
     // global gates are represented as compound operations
     return;
   }
-  assert(arch.isAllowedLocally({op->getType(), op->getNcontrols()}));
+  assert(arch.isAllowedLocally({op->getType(), 0}));
   assert(op->getNcontrols() == 0);
   // individual gate that can act on one or more atoms
   std::for_each(
