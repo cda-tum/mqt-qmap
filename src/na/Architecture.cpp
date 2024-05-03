@@ -200,23 +200,6 @@ auto Architecture::isAllowedGlobally(const FullOpType& t,
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
-auto Architecture::getRows() const -> std::vector<Number> {
-  std::unordered_set<Number> rows;
-  std::for_each(sites.cbegin(), sites.cend(),
-                [&](const auto& s) { rows.insert(s.y); });
-  std::vector<Number> result(rows.cbegin(), rows.cend());
-  std::sort(result.begin(), result.end());
-  return result;
-}
-auto Architecture::getCols() const -> std::vector<Number> {
-  std::unordered_set<Number> cols;
-  std::for_each(sites.cbegin(), sites.cend(),
-                [&](const auto& s) { cols.insert(s.x); });
-
-  std::vector<Number> result(cols.cbegin(), cols.cend());
-  std::sort(result.begin(), result.end());
-  return result;
-}
 auto Architecture::getRowsInZone(const Zone& z) const -> std::vector<Number> {
   std::unordered_set<Number> rows;
   std::for_each(sites.cbegin(), sites.cend(), [&](const auto& s) {
@@ -241,17 +224,8 @@ auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
   std::sort(result.begin(), result.end());
   return result;
 }
-auto Architecture::isInSameRow(const Index& i, const Index& j) const -> bool {
-  return getPositionOfSite(i).y == getPositionOfSite(j).y;
-}
-auto Architecture::isInSameCol(const Index& i, const Index& j) const -> bool {
-  return getPositionOfSite(i).x == getPositionOfSite(j).x;
-}
 auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
   return Architecture::getRowsInZone(z).size();
-}
-auto Architecture::getNcolsInZone(const Zone& z) const -> Index {
-  return Architecture::getColsInZone(z).size();
 }
 auto Architecture::getSitesInRow(const Zone&  z,
                                  const Index& row) const -> std::vector<Index> {
@@ -264,43 +238,6 @@ auto Architecture::getSitesInRow(const Zone&  z,
     }
   }
   return atoms;
-}
-
-auto Architecture::getSitesInCol(const Zone&  z,
-                                 const Index& col) const -> std::vector<Index> {
-  const auto         x = Architecture::getColsInZone(z)[col];
-  std::vector<Index> atoms;
-  for (Index i = 0; i < sites.size(); ++i) {
-    const auto& s = sites[i];
-    if (s.x == x && s.y >= zones[z].minY && s.y <= zones[z].maxY) {
-      atoms.emplace_back(i);
-    }
-  }
-  return atoms;
-}
-
-auto Architecture::getSitesInZone(const Zone& z) const -> std::vector<Index> {
-  std::vector<Index> atoms;
-  for (Index i = 0; i < sites.size(); ++i) {
-    const auto& s = sites[i];
-    if (s.x >= zones[z].minX && s.x <= zones[z].maxX && s.y >= zones[z].minY &&
-        s.y <= zones[z].maxY) {
-      atoms.emplace_back(i);
-    }
-  }
-  return atoms;
-}
-auto Architecture::getRowInZoneOf(const Index& i) const -> Index {
-  const auto& rows = Architecture::getRowsInZone(getZoneOfSite(i));
-  const auto& it   = std::find(rows.cbegin(), rows.cend(), sites[i].y);
-  assert(it != rows.cend());
-  return static_cast<Index>(std::distance(rows.cbegin(), it));
-}
-auto Architecture::getColInZoneOf(const Index& i) const -> Index {
-  const auto& cols = Architecture::getColsInZone(getZoneOfSite(i));
-  const auto& it   = std::find(cols.cbegin(), cols.cend(), sites[i].x);
-  assert(it != cols.cend());
-  return static_cast<Index>(std::distance(cols.cbegin(), it));
 }
 auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
                                    const bool proper) const -> Number {
@@ -331,40 +268,6 @@ auto Architecture::getNearestXRight(const Number& x, const Zone& z,
   for (const auto& c : cols) {
     if ((proper ? c > x : c >= x) && c < result) {
       result = c;
-    }
-  }
-  return result;
-}
-
-auto Architecture::getNearestYUp(const Number& y, const Zone& z,
-                                 const bool proper) const -> Number {
-  const auto& rows = getRowsInZone(z);
-  if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& r) { return proper ? r < y : r <= y; })) {
-    return y;
-  }
-
-  Number result = std::numeric_limits<Number>::min();
-  for (const auto& r : rows) {
-    if ((proper ? r < y : r <= y) && r > result) {
-      result = r;
-    }
-  }
-  return result;
-}
-
-auto Architecture::getNearestYDown(const Number& y, const Zone& z,
-                                   const bool proper) const -> Number {
-  const auto& rows = getRowsInZone(z);
-  if (!std::any_of(rows.cbegin(), rows.cend(),
-                   [&](const auto& r) { return proper ? r > y : r >= y; })) {
-    return y;
-  }
-
-  Number result = std::numeric_limits<Number>::max();
-  for (const auto& r : rows) {
-    if ((proper ? r > y : r >= y) && r < result) {
-      result = r;
     }
   }
   return result;
@@ -471,38 +374,6 @@ auto Architecture::getNearestSiteUpLeft(const Point& p, const bool proper,
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
     if ((proper ? s.x < p.x and s.y < p.y : s.x <= p.x and s.y <= p.y) and
-        (not sameZone or getZoneAt(s) == zone)) {
-      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
-        opt = i;
-      }
-    }
-  }
-  return opt;
-}
-auto Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
-                                          const bool sameZone) const
-    -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
-  std::optional<Index> opt;
-  for (std::size_t i = 0; i < sites.size(); ++i) {
-    const auto& s = sites[i];
-    if ((proper ? s.x < p.x and s.y > p.y : s.x <= p.x and s.y >= p.y) and
-        (not sameZone or getZoneAt(s) == zone)) {
-      if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
-        opt = i;
-      }
-    }
-  }
-  return opt;
-}
-auto Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
-                                           const bool sameZone) const
-    -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
-  std::optional<Index> opt;
-  for (std::size_t i = 0; i < sites.size(); ++i) {
-    const auto& s = sites[i];
-    if ((proper ? s.x > p.x and s.y > p.y : s.x >= p.x and s.y >= p.y) and
         (not sameZone or getZoneAt(s) == zone)) {
       if (!opt or (s - p).length() < (getPositionOfSite(*opt) - p).length()) {
         opt = i;

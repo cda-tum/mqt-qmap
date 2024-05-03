@@ -135,19 +135,20 @@ protected:
   std::vector<Zone> initialZones; // the zones where the atoms are initially
 
 public:
+  Architecture() = default;
+  
   /**
    * @brief Import a new architecture from a file.
    *
    * @param jsonFn The path to the JSON file
    * @param csvFn The path to the CSV file
    */
-  Architecture() = default;
   Architecture(const std::string& jsonFn, const std::string& csvFn) {
     fromFile(jsonFn, csvFn);
-  };
+  }
   Architecture(std::istream& jsonS, std::istream& csvS) {
     fromFileStream(jsonS, csvS);
-  };
+  }
   Architecture(const Architecture&)            = default;
   Architecture(Architecture&&)                 = default;
   virtual ~Architecture()                      = default;
@@ -230,24 +231,13 @@ public:
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t) const -> bool;
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
                                        const Zone&       zone) const -> bool;
-  [[nodiscard]] auto isInSameRow(const Index& i, const Index& j) const -> bool;
-  [[nodiscard]] auto isInSameCol(const Index& i, const Index& j) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
-  [[nodiscard]] auto getNcolsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto
   getSitesInRow(const Zone& z, const Index& row) const -> std::vector<Index>;
-  [[nodiscard]] auto
-  getSitesInCol(const Zone& z, const Index& col) const -> std::vector<Index>;
-  [[nodiscard]] auto getRowInZoneOf(const Index& i) const -> Index;
-  [[nodiscard]] auto getColInZoneOf(const Index& i) const -> Index;
   [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
                                      bool proper = true) const -> Number;
   [[nodiscard]] auto getNearestXRight(const Number& x, const Zone& z,
                                       bool proper = true) const -> Number;
-  [[nodiscard]] auto getNearestYUp(const Number& y, const Zone& z,
-                                   bool proper = true) const -> Number;
-  [[nodiscard]] auto getNearestYDown(const Number& y, const Zone& z,
-                                     bool proper = true) const -> Number;
   [[nodiscard]] auto hasSiteLeft(const Point& p, bool proper = false,
                                  bool sameZone = false) const
       -> std::pair<std::vector<Point>::const_reverse_iterator, bool>;
@@ -278,14 +268,7 @@ public:
   [[nodiscard]] auto
   getNearestSiteUpLeft(const Point& p, bool proper = false,
                        bool sameZone = false) const -> std::optional<Index>;
-  [[nodiscard]] auto
-  getNearestSiteDownLeft(const Point& p, bool proper = false,
-                         bool sameZone = false) const -> std::optional<Index>;
-  [[nodiscard]] auto
-  getNearestSiteDownRight(const Point& p, bool proper = false,
-                          bool sameZone = false) const -> std::optional<Index>;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> std::optional<Index>;
-  [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
   [[nodiscard]] auto
   withConfig(const Configuration& config) const -> Architecture;
   [[nodiscard]] auto getPositionOffsetBy(const Point& p, const Number& rows,
@@ -294,7 +277,5 @@ public:
 private:
   [[nodiscard]] auto getRowsInZone(const Zone& z) const -> std::vector<Number>;
   [[nodiscard]] auto getColsInZone(const Zone& z) const -> std::vector<Number>;
-  [[nodiscard]] auto getRows() const -> std::vector<Number>;
-  [[nodiscard]] auto getCols() const -> std::vector<Number>;
 };
 } // namespace na
