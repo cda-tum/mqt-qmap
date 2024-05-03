@@ -19,8 +19,8 @@ enum class NAMappingMethod : std::uint8_t { Naive, MaximizeParallelism };
 static const std::unordered_map<std::string, NAMappingMethod> STRING_TO_METHOD =
     {{"naive", NAMappingMethod::Naive},
      {"maximize parallelism", NAMappingMethod::MaximizeParallelism}};
-[[nodiscard]] inline auto getMethodOfString(const std::string& method)
-    -> NAMappingMethod {
+[[nodiscard]] inline auto
+getMethodOfString(const std::string& method) -> NAMappingMethod {
   std::string methodLowerCase = method;
   std::transform(methodLowerCase.begin(), methodLowerCase.end(),
                  methodLowerCase.begin(),
@@ -40,14 +40,14 @@ private:
   NAMappingMethod method    = NAMappingMethod::MaximizeParallelism;
 
 public:
-           Configuration() = default;
+  Configuration() = default;
   explicit Configuration(const NAMappingMethod mappingMethod)
-      : method(mappingMethod){};
+      : method(mappingMethod) {};
   explicit Configuration(const std::size_t rows, const std::size_t cols)
-      : patchRows(rows), patchCols(cols){};
+      : patchRows(rows), patchCols(cols) {};
   explicit Configuration(const std::size_t rows, const std::size_t cols,
                          const NAMappingMethod mappingMethod)
-      : patchRows(rows), patchCols(cols), method(mappingMethod){};
+      : patchRows(rows), patchCols(cols), method(mappingMethod) {};
   explicit Configuration(const std::string& filename);
   explicit Configuration(std::istream& fs);
   virtual ~Configuration() = default;

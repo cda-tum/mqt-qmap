@@ -52,8 +52,8 @@ public:
          << postprocessTime << '\n';
       return ss.str();
     }
-    friend auto operator<<(std::ostream& os, const Statistics& s)
-        -> std::ostream& {
+    friend auto operator<<(std::ostream&     os,
+                           const Statistics& s) -> std::ostream& {
       return os << s.toString();
     }
   };
@@ -74,7 +74,7 @@ protected:
     std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
     std::vector<Zone>      zones;
-    explicit               Atom(const std::vector<Zone>& z = {}) : zones(z){};
+    explicit Atom(const std::vector<Zone>& z = {}) : zones(z) {};
   };
   auto preprocess() -> void { validateCircuit(); }
   auto validateCircuit() -> void;
@@ -91,8 +91,8 @@ protected:
                        std::vector<Atom>&   placement) const -> void;
   [[nodiscard]] static auto
   getMisplacement(const std::vector<Atom>&      initial,
-                  const std::vector<qc::Qubit>& target, const qc::Qubit& q)
-      -> std::int64_t;
+                  const std::vector<qc::Qubit>& target,
+                  const qc::Qubit&              q) -> std::int64_t;
   /**
    *
    * @param initialFreeSites The sites that are not yet occupied from the start
@@ -128,7 +128,7 @@ public:
                     const Configuration& configuration)
       : initialArch(std::move(architecture)),
         arch(initialArch.withConfig(configuration)), config(configuration) {}
-  virtual ~          NAMapper() = default;
+  virtual ~NAMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto getResult() const -> const NAComputation& {
     if (!done) {
