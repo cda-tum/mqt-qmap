@@ -27,7 +27,7 @@
 
 namespace na {
 
-class NeutralAtomMapper {
+class NAMapper {
 public:
   struct Statistics {
     std::size_t               numInitialGates    = 0;
@@ -124,11 +124,11 @@ protected:
               const std::vector<qc::Qubit>&  qubits) -> void;
 
 public:
-  explicit NeutralAtomMapper(Architecture         architecture,
+  explicit NAMapper(Architecture         architecture,
                              const Configuration& configuration)
       : initialArch(std::move(architecture)),
         arch(initialArch.withConfig(configuration)), config(configuration) {}
-  virtual ~NeutralAtomMapper() = default;
+  virtual ~NAMapper() = default;
   auto               map(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto getResult() const -> const NAComputation& {
     if (!done) {
@@ -137,7 +137,7 @@ public:
     return mappedQc;
   }
   [[nodiscard]] auto
-  getStats() const -> const na::NeutralAtomMapper::Statistics& {
+  getStats() const -> const na::NAMapper::Statistics& {
     if (!done) {
       throw std::logic_error("No statistics available.");
     }

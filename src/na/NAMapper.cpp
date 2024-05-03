@@ -38,7 +38,7 @@
 
 namespace na {
 
-auto NeutralAtomMapper::validateCircuit() -> void {
+auto NAMapper::validateCircuit() -> void {
   for (const auto& op : initialQc) {
     if (op->isCompoundOperation() and isGlobal(*op, initialQc.getNqubits())) {
       const auto& co = dynamic_cast<qc::CompoundOperation&>(*op);
@@ -54,7 +54,8 @@ auto NeutralAtomMapper::validateCircuit() -> void {
         std::stringstream ss;
         ss << "The current implementation does not support the operation "
            << FullOpType{op->getType(), op->getNcontrols()}
-           << " acting on more " << "than two qubits.";
+           << " acting on more "
+           << "than two qubits.";
         throw std::logic_error(ss.str());
       }
       if (!arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
@@ -79,7 +80,7 @@ auto NeutralAtomMapper::validateCircuit() -> void {
   }
 }
 
-auto NeutralAtomMapper::makeLogicalArrays() -> void {
+auto NAMapper::makeLogicalArrays() -> void {
   const auto logicQC = mappedQc;
   mappedQc.clear();
   const auto rows = static_cast<std::int64_t>(config.getPatchRows());
@@ -141,7 +142,26 @@ auto NeutralAtomMapper::makeLogicalArrays() -> void {
   }
 }
 
-auto NeutralAtomMapper::calculateMovements() -> void {
+/**
+ * @brief This function computes the actual movements of atoms.
+ * @details This function is called after the circuit is mapped to the
+ * architecture. At this point, only the start and end point of each shuttling
+ * operations is specified. During shuttling the collisiion with other atoms
+ * must be prevented. This is achieved by moving atoms first in x-direction and
+ * then in y-direction with possible offsets to avoid collisions. In the example
+ * below you can see the shuttling operation before and after this function is
+ * called.
+ *            Before                                  After
+ * ===========================================================================
+ *  Atom --> o     o     o <-- End          o     o     o  ┌─ o <-- End
+ *                     /                                   |
+ *     o     o     o /   o     o            o     o     o  |  o     o
+ *                 /                                       |
+ *     o     o   / o     o     o            o     o     o  |  o     o
+ *             /                                  ┌────────┘
+ * Start --> o     o     o     o        Start --> o     o     o     o
+ */
+auto NAMapper::calculateMovements() -> void {
   const auto prelQC = mappedQc;
   mappedQc.clear();
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
@@ -246,8 +266,9 @@ auto NeutralAtomMapper::calculateMovements() -> void {
   }
 }
 
-auto NeutralAtomMapper::checkApplicability(
-    const qc::Operation* op, const std::vector<Atom>& placement) const -> bool {
+auto NAMapper::checkApplicability(const qc::Operation*     op,
+                                  const std::vector<Atom>& placement) const
+    -> bool {
   if (op->isCompoundOperation()) {
     return true;
   }
@@ -290,32 +311,33 @@ auto NeutralAtomMapper::checkApplicability(
   return false;
 }
 
-auto NeutralAtomMapper::updatePlacement(
-    const qc::Operation* op, std::vector<Atom>& placement) const -> void {
+auto NAMapper::updatePlacement(const qc::Operation* op,
+                               std::vector<Atom>&   placement) const -> void {
   if (op->isCompoundOperation()) {
     return;
   }
   if (arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
     if (op->getNcontrols() == 0) {
       // individual gate that can act on one or more atoms
-      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
-                    [&](const auto& qubit) {
-                      switch (placement[qubit].positionStatus) {
-                      case Atom::PositionStatus::UNDEFINED:
-                        // remove all zones where the gate is not applicable
-                        placement[qubit].zones.erase(
-                            std::remove_if(placement[qubit].zones.begin(),
-                                           placement[qubit].zones.end(),
-                                           [&](auto& z) {
-                                             return !arch.isAllowedLocally(
-                                                 {op->getType(), 0}, z);
-                                           }),
-                            placement[qubit].zones.end());
-                        break;
-                      case Atom::PositionStatus::DEFINED:
-                        break;
-                      }
-                    });
+      std::for_each(
+          op->getTargets().cbegin(), op->getTargets().cend(),
+          [&](const auto& qubit) {
+            switch (placement[qubit].positionStatus) {
+            case Atom::PositionStatus::UNDEFINED:
+              // remove all zones where the gate is not applicable
+              placement[qubit].zones.erase(
+                  std::remove_if(
+                      placement[qubit].zones.begin(),
+                      placement[qubit].zones.end(),
+                      [&](auto& z) {
+                        return !arch.isAllowedLocally({op->getType(), 0}, z);
+                      }),
+                  placement[qubit].zones.end());
+              break;
+            case Atom::PositionStatus::DEFINED:
+              break;
+            }
+          });
     } else {
       // TODO single controlled local gate that acts exactly on two atoms
     }
@@ -324,23 +346,24 @@ auto NeutralAtomMapper::updatePlacement(
     if (op->isSingleQubitGate()) {
       assert(isGlobal(*op, initialQc.getNqubits()));
       // purely globally gate can always be applied
-      std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
-                    [&](const auto qubit) {
-                      switch (placement[qubit].positionStatus) {
-                      case Atom::PositionStatus::UNDEFINED:
-                        placement[qubit].zones.erase(
-                            std::remove_if(placement[qubit].zones.begin(),
-                                           placement[qubit].zones.end(),
-                                           [&](auto& z) {
-                                             return !arch.isAllowedGlobally(
-                                                 {op->getType(), 0}, z);
-                                           }),
-                            placement[qubit].zones.end());
-                        break;
-                      case Atom::PositionStatus::DEFINED:
-                        break;
-                      }
-                    });
+      std::for_each(
+          op->getTargets().cbegin(), op->getTargets().cend(),
+          [&](const auto qubit) {
+            switch (placement[qubit].positionStatus) {
+            case Atom::PositionStatus::UNDEFINED:
+              placement[qubit].zones.erase(
+                  std::remove_if(
+                      placement[qubit].zones.begin(),
+                      placement[qubit].zones.end(),
+                      [&](auto& z) {
+                        return !arch.isAllowedGlobally({op->getType(), 0}, z);
+                      }),
+                  placement[qubit].zones.end());
+              break;
+            case Atom::PositionStatus::DEFINED:
+              break;
+            }
+          });
     } else {
       assert(op->getNcontrols() + op->getNtargets() == 2);
       // TODO single controlled global gate that acts exactly on two atoms
@@ -348,9 +371,9 @@ auto NeutralAtomMapper::updatePlacement(
   }
 }
 
-auto NeutralAtomMapper::getMisplacement(const std::vector<Atom>&      initial,
-                                        const std::vector<qc::Qubit>& target,
-                                        const qc::Qubit& q) -> std::int64_t {
+auto NAMapper::getMisplacement(const std::vector<Atom>&      initial,
+                               const std::vector<qc::Qubit>& target,
+                               const qc::Qubit& q) -> std::int64_t {
   if (initial.at(q).positionStatus == Atom::PositionStatus::DEFINED) {
     std::vector<std::size_t> enumerated(target.size());
     std::iota(enumerated.begin(), enumerated.end(), 0);
@@ -383,12 +406,12 @@ auto NeutralAtomMapper::getMisplacement(const std::vector<Atom>&      initial,
   return 0;
 }
 
-auto NeutralAtomMapper::store(std::vector<bool>&             initialFreeSites,
-                              std::vector<bool>&             currentFreeSites,
-                              std::vector<Atom>&             placement,
-                              std::unordered_set<qc::Qubit>& currentlyShuttling,
-                              const std::vector<qc::Qubit>&  qubits,
-                              const Zone destination) -> void {
+auto NAMapper::store(std::vector<bool>&             initialFreeSites,
+                     std::vector<bool>&             currentFreeSites,
+                     std::vector<Atom>&             placement,
+                     std::unordered_set<qc::Qubit>& currentlyShuttling,
+                     const std::vector<qc::Qubit>&  qubits,
+                     const Zone                     destination) -> void {
   // this distance is used for spacing atoms that should interact or pass
   // another atom
   const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
@@ -519,11 +542,11 @@ auto NeutralAtomMapper::store(std::vector<bool>&             initialFreeSites,
   }
 }
 
-auto NeutralAtomMapper::pickUp(
-    std::vector<bool>& initialFreeSites, std::vector<bool>& currentFreeSites,
-    std::vector<Atom>&             placement,
-    std::unordered_set<qc::Qubit>& currentlyShuttling,
-    const std::vector<qc::Qubit>&  qubitsOrdered) -> void {
+auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
+                      std::vector<bool>&             currentFreeSites,
+                      std::vector<Atom>&             placement,
+                      std::unordered_set<qc::Qubit>& currentlyShuttling,
+                      const std::vector<qc::Qubit>&  qubitsOrdered) -> void {
   // this distance is used for spacing atoms that should interact or pass
   // another atom
   const auto d  = static_cast<std::int64_t>(arch.getMinAtomDistance());
@@ -788,7 +811,7 @@ auto NeutralAtomMapper::pickUp(
   }
 }
 
-auto NeutralAtomMapper::map(const qc::QuantumComputation& qc) -> void {
+auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
   auto startPreprocess    = std::chrono::high_resolution_clock::now();
   initialQc               = qc;
   const auto  nqubits     = initialQc.getNqubits();

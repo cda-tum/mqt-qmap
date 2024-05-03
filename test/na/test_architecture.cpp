@@ -173,6 +173,11 @@ TEST_F(NAArchitecture, Import) {
     std::istringstream gridIS("x,y\n0,0");
     EXPECT_ANY_THROW(na::Architecture(archIS, gridIS));
   }
+  {
+    std::istringstream archIS("{ }");
+    std::istringstream gridIS("x,y\n0,0");
+    EXPECT_ANY_THROW(na::Architecture(archIS, gridIS));
+  }
 }
 
 TEST_F(NAArchitecture, GateApplicability) {
@@ -193,6 +198,14 @@ TEST_F(NAArchitecture, WithConfiguration) {
   na::Configuration const config(2, 3);
   const auto              modArch = arch.withConfig(config);
   EXPECT_EQ(modArch.getNSites(), 216);
+}
+
+TEST_F(NAArchitecture, SiteAt) {
+  EXPECT_FALSE(arch.getSiteAt({-1000, -1000}).has_value());
+}
+
+TEST_F(NAArchitecture, SitesInZone) {
+  EXPECT_EQ(arch.getSitesInZone(arch.getZoneAt({0, 0})).size(), 144);
 }
 
 TEST_F(NAArchitecture, SiteUp) {
@@ -228,4 +241,33 @@ TEST_F(NAArchitecture, SiteRight) {
       arch.getPositionOfSite(*arch.getNearestSiteRight({3, 0}, true, true)),
       (na::Point{13, 0}));
   EXPECT_EQ(arch.getNearestSiteRight({3, 3}, true, true), std::nullopt);
+}
+
+TEST_F(NAArchitecture, SiteDownRight) {
+  EXPECT_TRUE(arch.getNearestSiteDownRight({3, 0}, true, true).has_value());
+  EXPECT_EQ(arch.getPositionOfSite(
+                arch.getNearestSiteDownRight({3, 0}, true, true).value()),
+            (na::Point{13, 12}));
+  EXPECT_TRUE(arch.getNearestSiteDownRight({353, 36}, false, true).has_value());
+  EXPECT_FALSE(arch.getNearestSiteDownRight({353, 36}, true, true).has_value());
+}
+
+TEST_F(NAArchitecture, SiteDownLeft) {
+  EXPECT_TRUE(arch.getNearestSiteDownLeft({353, 0}, true, true).has_value());
+  EXPECT_EQ(arch.getPositionOfSite(
+                arch.getNearestSiteDownLeft({353, 0}, true, true).value()),
+            (na::Point{343, 12}));
+  EXPECT_TRUE(arch.getNearestSiteDownLeft({3, 36}, false, true).has_value());
+  EXPECT_FALSE(arch.getNearestSiteDownLeft({3, 36}, true, true).has_value());
+}
+
+TEST_F(NAArchitecture, SiteOffsetBy) {
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 0, 1), (na::Point{23, 12}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -1, 1), (na::Point{23, 0}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -1, 0), (na::Point{13, 0}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -1, -1), (na::Point{3, 0}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 0, -1), (na::Point{3, 12}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, -1), (na::Point{3, 24}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, 0), (na::Point{13, 24}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, 1), (na::Point{23, 24}));
 }

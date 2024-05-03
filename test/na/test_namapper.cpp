@@ -134,7 +134,7 @@ TEST(NeutralAtomMapper, QAOA5) {
     }
   }
   // total: 1296 sites
-  std::string qasm = R"(OPENQASM 2.0;
+  const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[5];
 rz(5.7203885) q[0];
@@ -286,8 +286,10 @@ rz(3.9006217) q[4];)";
   const auto& circ = qc::QuantumComputation::fromQASM(qasm);
   const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
-  na::NeutralAtomMapper mapper(
+  na::NAMapper mapper(
       arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelism));
+  EXPECT_THROW(std::ignore = mapper.getResult(), std::logic_error);
+  EXPECT_THROW(std::ignore = mapper.getStats(), std::logic_error);
   mapper.map(circ);
   std::ignore = mapper.getStats();
   std::ignore = mapper.getResult();
@@ -297,8 +299,13 @@ rz(3.9006217) q[4];)";
           "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nx q[0];\n")),
       std::invalid_argument);
   // ---------------------------------------------------------------------
-  na::NeutralAtomMapper mapper2(
+  EXPECT_THROW(
+      mapper.map(qc::QuantumComputation::fromQASM(
+          "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nry(pi/2) q[0];\n")),
+      std::invalid_argument);
+  // ---------------------------------------------------------------------
+  na::NAMapper mapper2(
       arch, na::Configuration(1, 1, na::NAMappingMethod::Naive));
-  mapper.map(circ);
+  mapper2.map(circ);
   // ---------------------------------------------------------------------
 }
