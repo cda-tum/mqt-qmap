@@ -283,8 +283,8 @@ rz(4.1580788) q[4];
 ry(2.1984352) q;
 rz(pi/2) q[3];
 rz(3.9006217) q[4];)";
-  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
-  const auto& arch = na::Architecture(archIS, gridSS);
+  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto&       arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelism));
@@ -299,13 +299,13 @@ rz(3.9006217) q[4];)";
           "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nx q[0];\n")),
       std::invalid_argument);
   // ---------------------------------------------------------------------
-  EXPECT_THROW(
-      mapper.map(qc::QuantumComputation::fromQASM(
-          "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[5];\nry(pi/2) q[0];\n")),
-      std::invalid_argument);
+  EXPECT_THROW(mapper.map(qc::QuantumComputation::fromQASM(
+                   "OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg "
+                   "q[5];\nry(pi/2) q[0];\n")),
+               std::invalid_argument);
   // ---------------------------------------------------------------------
-  na::NAMapper mapper2(
-      arch, na::Configuration(1, 1, na::NAMappingMethod::Naive));
+  na::NAMapper mapper2(arch,
+                       na::Configuration(1, 1, na::NAMappingMethod::Naive));
   mapper2.map(circ);
   // ---------------------------------------------------------------------
 }

@@ -125,7 +125,7 @@ protected:
 
 public:
   explicit NAMapper(Architecture         architecture,
-                             const Configuration& configuration)
+                    const Configuration& configuration)
       : initialArch(std::move(architecture)),
         arch(initialArch.withConfig(configuration)), config(configuration) {}
   virtual ~NAMapper() = default;
@@ -136,8 +136,7 @@ public:
     }
     return mappedQc;
   }
-  [[nodiscard]] auto
-  getStats() const -> const na::NAMapper::Statistics& {
+  [[nodiscard]] auto getStats() const -> const na::NAMapper::Statistics& {
     if (!done) {
       throw std::logic_error("No statistics available.");
     }
