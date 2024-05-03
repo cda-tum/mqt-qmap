@@ -433,19 +433,19 @@ TEST(NAMapper, QAOA5Narrow) {
       gridSS << x << "," << y << "\n";
     }
   }
-  // storage zone (12 x 72 = 864 sites)
-  for (std::size_t y = 56; y <= 111; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  // storage zone (72 x 12 = 864 sites)
+  for (std::size_t y = 56; y <= 411; y += 5) {
+    for (std::size_t x = 150; x <= 205; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
-  // readout zone (4 x 72 = 288 sites)
-  for (std::size_t y = 131; y <= 146; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  // readout zone (4 x 12 = 48 sites)
+  for (std::size_t y = 431; y <= 446; y += 5) {
+    for (std::size_t x = 150; x <= 205; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
-  // total: 1296 sites
+  // total: 1056 sites
   const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[5];
