@@ -175,7 +175,7 @@ auto NAMapper::makeLogicalArrays() -> void {
  */
 auto NAMapper::calculateMovements() -> void {
   const auto prelQC = mappedQc;
-  mappedQc.clear(FALSE);
+  mappedQc.clear(false);
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
   for (const auto& op : prelQC) {
     if (op->isShuttlingOperation()) {
