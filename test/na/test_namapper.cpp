@@ -291,8 +291,8 @@ rz(3.9006217) q[4];)";
   EXPECT_THROW(std::ignore = mapper.getResult(), std::logic_error);
   EXPECT_THROW(std::ignore = mapper.getStats(), std::logic_error);
   mapper.map(circ);
-  std::ignore = mapper.getStats();
   std::ignore = mapper.getResult();
+  std::ignore = mapper.getStats();
   // ---------------------------------------------------------------------
   EXPECT_THROW(
       mapper.map(qc::QuantumComputation::fromQASM(

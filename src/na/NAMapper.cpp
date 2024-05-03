@@ -82,8 +82,8 @@ auto NAMapper::validateCircuit() -> void {
             "Compound operations are only supported when they are global.");
       }
       if (op->isStandardOperation()) {
-        throw std::logic_error(
-            "Standard operations are only supported when they act on one or two qubits.");
+        throw std::logic_error("Standard operations are only supported when "
+                               "they act on one or two qubits.");
       }
       throw std::logic_error(
           "Operation class is not supported. Supported are StandardOperations "
@@ -175,7 +175,7 @@ auto NAMapper::makeLogicalArrays() -> void {
  */
 auto NAMapper::calculateMovements() -> void {
   const auto prelQC = mappedQc;
-  mappedQc.clear();
+  mappedQc.clear(FALSE);
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
   for (const auto& op : prelQC) {
     if (op->isShuttlingOperation()) {
@@ -284,8 +284,9 @@ auto NAMapper::calculateMovements() -> void {
   }
 }
 
-auto NAMapper::checkApplicability(
-    const qc::Operation* op, const std::vector<Atom>& placement) const -> bool {
+auto NAMapper::checkApplicability(const qc::Operation*     op,
+                                  const std::vector<Atom>& placement) const
+    -> bool {
   if (op->isCompoundOperation()) {
     // is global gate
     return true;
@@ -303,8 +304,8 @@ auto NAMapper::checkApplicability(
             // check whether the gate is applicable in one of the currently
             // selected zones
             return std::any_of(
-                placement[qubit].zones.cbegin(),
-                placement[qubit].zones.cend(), [&](const auto& z) {
+                placement[qubit].zones.cbegin(), placement[qubit].zones.cend(),
+                [&](const auto& z) {
                   return arch.isAllowedLocally({op->getType(), 0}, z);
                 });
           case Atom::PositionStatus::DEFINED:

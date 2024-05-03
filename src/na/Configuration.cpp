@@ -15,20 +15,6 @@ using json = nlohmann::json;
 
 namespace na {
 
-inline auto getMethodOfString(const std::string& method) -> NAMappingMethod {
-  std::string methodLowerCase = method;
-  std::transform(methodLowerCase.begin(), methodLowerCase.end(),
-                 methodLowerCase.begin(),
-                 [](const auto c) { return std::tolower(c); });
-  if (const auto it = STRING_TO_METHOD.find(methodLowerCase);
-      it != STRING_TO_METHOD.end()) {
-    return it->second;
-  }
-  std::stringstream ss;
-  ss << "The method " << method << " is not supported.";
-  throw std::invalid_argument(ss.str());
-}
-
 Configuration::Configuration(const std::string& filename) {
   std::ifstream fs(filename);
   if (!fs.good()) {
