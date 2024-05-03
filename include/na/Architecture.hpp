@@ -50,6 +50,8 @@ inline auto getScopeOfString(const std::string& s) -> Scope {
 
 /// For Indices
 using Index = std::size_t;
+/// For distance, those cannot be negative
+using Distance = std::size_t;
 /// The zones are just stored as int
 using Zone = Index;
 /// Any double-valued property
@@ -126,9 +128,9 @@ protected:
       gateSet; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
   std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
-  Index minAtomDistance = 0; // minimal distance that must be kept between atoms
-  Index interactionRadius = 0; // the Rydberg radius
-  Index noInteractionRadius =
+  Distance minAtomDistance = 0; // minimal distance that must be kept between atoms
+  Distance interactionRadius = 0; // the Rydberg radius
+  Distance noInteractionRadius =
       0; // sufficient radius to avoid Rydberg interaction
   std::vector<Zone> initialZones; // the zones where the atoms are initially
 
@@ -176,13 +178,13 @@ public:
       -> const ShuttlingProperties& {
     return shuttling[i];
   }
-  [[nodiscard]] auto getMinAtomDistance() const -> Index {
+  [[nodiscard]] auto getMinAtomDistance() const -> Distance {
     return minAtomDistance;
   }
-  [[nodiscard]] auto getInteractionRadius() const -> Index {
+  [[nodiscard]] auto getInteractionRadius() const -> Distance {
     return interactionRadius;
   }
-  [[nodiscard]] auto getNoInteractionRadius() const -> Index {
+  [[nodiscard]] auto getNoInteractionRadius() const -> Distance {
     return noInteractionRadius;
   }
   [[nodiscard]] auto
