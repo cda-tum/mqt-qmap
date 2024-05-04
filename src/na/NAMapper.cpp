@@ -590,8 +590,8 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
           std::remove_if(possibleSites.begin(), possibleSites.end(),
                          [&](const auto s) { return !initialFreeSites[s]; }),
           possibleSites.end());
-      const auto s                  = possibleSites[std::min(
-          notPickedUpLeft, freeSpotsInRow - 1)];
+      const auto s =
+          possibleSites[std::min(notPickedUpLeft, freeSpotsInRow - 1)];
       placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
       *placement[q].initialPosition = arch.getPositionOfSite(s);
       initialFreeSites[s]           = false;
