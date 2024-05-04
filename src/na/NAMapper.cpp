@@ -307,7 +307,8 @@ auto NAMapper::checkApplicability(
                 [&](const auto& z) {
                   return arch.isAllowedLocally({op->getType(), 0}, z);
                 });
-          case Atom::PositionStatus::DEFINED:
+          // case Atom::PositionStatus::DEFINED:
+          default:
             // check whether the gate is applicable at the current position
             return arch.isAllowedLocallyAt({op->getType(), 0},
                                            *placement[qubit].currentPosition);
@@ -590,7 +591,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
                          [&](const auto s) { return !initialFreeSites[s]; }),
           possibleSites.end());
       const auto s                  = possibleSites[std::min(
-          notPickedUpLeft, static_cast<std::size_t>(freeSpotsInRow - 1))];
+          notPickedUpLeft, freeSpotsInRow - 1)];
       placement[q].positionStatus   = Atom::PositionStatus::DEFINED;
       *placement[q].initialPosition = arch.getPositionOfSite(s);
       initialFreeSites[s]           = false;
