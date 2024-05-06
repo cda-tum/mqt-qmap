@@ -40,7 +40,7 @@ release = version.split("+")[0]
 project = "QMAP"
 author = "Lukas Burgholzer"
 language = "en"
-project_copyright = "Chair for Design Automation, Technical University of Munich"
+project_copyright = "2024, Chair for Design Automation, Technical University of Munich"
 
 master_doc = "index"
 
@@ -73,7 +73,7 @@ modindex_common_prefix = ["mqt.qmap."]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "typing_extensions": ("https://typing-extensions.readthedocs.io/en/latest/", None),
-    "qiskit": ("https://qiskit.org/documentation/", None),
+    "qiskit": ("https://docs.quantum.ibm.com/api/qiskit/", None),
     "mqt": ("https://mqt.readthedocs.io/en/latest/", None),
     "core": ("https://mqt.readthedocs.io/projects/core/en/latest/", None),
     "ddsim": ("https://mqt.readthedocs.io/projects/ddsim/en/latest/", None),
