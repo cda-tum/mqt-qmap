@@ -307,8 +307,7 @@ auto NAMapper::checkApplicability(
                 [&](const auto& z) {
                   return arch.isAllowedLocally({op->getType(), 0}, z);
                 });
-          // case Atom::PositionStatus::DEFINED:
-          default:
+          case Atom::PositionStatus::DEFINED:
             // check whether the gate is applicable at the current position
             return arch.isAllowedLocallyAt({op->getType(), 0},
                                            *placement[qubit].currentPosition);
