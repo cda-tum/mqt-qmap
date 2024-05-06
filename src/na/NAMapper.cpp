@@ -67,14 +67,6 @@ auto NAMapper::validateCircuit() -> void {
              << " either locally or globally.";
           throw std::invalid_argument(ss.str());
         }
-        // the gate is global: if it is a 1Q-gate it must be applied globally
-        if (op->isSingleQubitGate()) {
-          assert(op->getNcontrols() == 0);
-          std::stringstream ss;
-          ss << "The chosen architecture does not support the operation "
-             << FullOpType{op->getType(), 0} << " locally.";
-          throw std::invalid_argument(ss.str());
-        }
       }
     } else {
       if (op->isCompoundOperation()) {
