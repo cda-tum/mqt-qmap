@@ -163,12 +163,6 @@ auto Architecture::isAllowedLocally(const FullOpType& t,
   return gateZones.find(zone) != gateZones.end();
 }
 
-auto Architecture::isAllowedLocallyAtSite(const FullOpType& t,
-                                          const Index& qubit) const -> bool {
-  const auto zone = getZoneOfSite(qubit);
-  return isAllowedLocally(t, zone);
-}
-
 auto Architecture::isAllowedLocallyAt(const FullOpType& t,
                                       const Point&      p) const -> bool {
   const auto& it =

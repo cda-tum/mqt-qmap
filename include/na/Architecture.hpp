@@ -223,9 +223,6 @@ public:
   [[nodiscard]] auto isAllowedLocally(const FullOpType& t,
                                       const Zone&       zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAtSite(const FullOpType& t,
-                                            const Index& qubit) const -> bool;
-  /// Checks whether the gate can be applied (locally) on this qubit.
   [[nodiscard]] auto isAllowedLocallyAt(const FullOpType& t,
                                         const Point&      p) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.

@@ -204,6 +204,27 @@ TEST_F(NAArchitecture, SiteAt) {
   EXPECT_FALSE(arch.getSiteAt({-1000, -1000}).has_value());
 }
 
+TEST_F(NAArchitecture, ZoneAt) {
+  EXPECT_EQ(arch.getZoneAt({0, 0}), 0);
+  EXPECT_EQ(arch.getZoneAt({0, 50}), 1);
+  EXPECT_THROW(std::ignore = arch.getZoneAt({0, -1000}), std::invalid_argument);
+}
+
+TEST_F(NAArchitecture, LocallyAllowed) {
+  EXPECT_TRUE(arch.isAllowedLocally({qc::RZ, 0}));
+  EXPECT_FALSE(arch.isAllowedLocally({qc::RY, 0}));
+  EXPECT_TRUE(arch.isAllowedLocally({qc::RZ, 0}, 1));
+  EXPECT_TRUE(arch.isAllowedLocallyAt({qc::RZ, 0}, {0, 50}));
+  EXPECT_THROW(std::ignore = arch.isAllowedLocallyAt({qc::RZ, 0}, {0, -1000}),
+               std::invalid_argument);
+}
+
+TEST_F(NAArchitecture, GloballyAllowed) {
+  EXPECT_FALSE(arch.isAllowedGlobally({qc::RZ, 0}));
+  EXPECT_TRUE(arch.isAllowedGlobally({qc::RY, 0}));
+  EXPECT_TRUE(arch.isAllowedGlobally({qc::RY, 0}, 1));
+}
+
 TEST_F(NAArchitecture, SitesInZone) {
   EXPECT_EQ(arch.getSitesInZone(arch.getZoneAt({0, 0})).size(), 144);
 }
@@ -270,4 +291,16 @@ TEST_F(NAArchitecture, SiteOffsetBy) {
   EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, -1), (na::Point{3, 24}));
   EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, 0), (na::Point{13, 24}));
   EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, 1, 1), (na::Point{23, 24}));
+  EXPECT_EQ(arch.getPositionOffsetBy({3, -2}, 1, 1), (na::Point{13, 10}));
+  EXPECT_EQ(arch.getPositionOffsetBy({355, 0}, 1, -1), (na::Point{345, 12}));
+  EXPECT_EQ(arch.getPositionOffsetBy({350, -2}, 1, -1), (na::Point{340, 10}));
+  EXPECT_EQ(arch.getPositionOffsetBy({3, 25}, -1, 1), (na::Point{13, 13}));
+  EXPECT_EQ(arch.getPositionOffsetBy({0, 24}, -1, 1), (na::Point{10, 12}));
+  EXPECT_EQ(arch.getPositionOffsetBy({355, 24}, -1, -1), (na::Point{345, 12}));
+  EXPECT_EQ(arch.getPositionOffsetBy({353, 25}, -1, -1), (na::Point{343, 13}));
+  const auto d = static_cast<std::int64_t>(arch.getNoInteractionRadius());
+  EXPECT_EQ(arch.getPositionOffsetBy({-10, -10}, 1, 1),
+            (na::Point{-10 + d, -10 + d}));
+  EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -2, -2),
+            (na::Point{3 - d, 0 - d}));
 }

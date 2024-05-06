@@ -98,6 +98,12 @@ TEST_F(TestNAGraph, MaxIndepSet) {
   EXPECT_TRUE(maxIndepSet.count(7));
 }
 
+TEST_F(TestNAGraph, CoveredEdges) {
+  EXPECT_THROW(std::ignore = na::NAGraphAlgorithms::coveredEdges(
+                   graph, std::unordered_set<qc::Qubit>{8}),
+               std::invalid_argument);
+}
+
 TEST_F(TestNAGraph, Coloring) {
   const auto& maxIndepSet = na::NAGraphAlgorithms::getMaxIndependentSet(graph);
   std::vector queue(maxIndepSet.cbegin(), maxIndepSet.cend());
@@ -201,8 +207,7 @@ TEST_F(TestNAGraph, CoveredInteractions) {
   const auto& coveredEdges =
       na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
-  std::vector<std::pair<qc::Qubit, qc::Qubit>> coveredEdgesVec(
-      coveredEdges.cbegin(), coveredEdges.cend());
+  std::vector coveredEdgesVec(coveredEdges.cbegin(), coveredEdges.cend());
   const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
   const auto& moveable = sequence.first;
   const auto& fixed    = sequence.second;
