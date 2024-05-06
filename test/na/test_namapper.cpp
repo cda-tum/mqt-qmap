@@ -134,7 +134,7 @@ TEST(NAMapper, Exceptions) {
     }
   }
   // total: 1296 sites
-  const auto&       arch = na::Architecture(archIS, gridSS);
+  const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelism));
