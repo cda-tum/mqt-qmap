@@ -16,12 +16,13 @@ add_library(
 
 # set include directories
 target_include_directories(mqt-logic-blocks
-                           PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/logicblocks/>)
+                           PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/logicblocks/>
+                           $<BUILD_INTERFACE:${Z3_INCLUDE_DIR}>)
 
 # add link libraries
 target_link_libraries(
   mqt-logic-blocks
-  PUBLIC plog::plog z3::z3lib
+  PUBLIC plog::plog ${Z3_LIBRARIES}
   PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
 # add MQT alias
