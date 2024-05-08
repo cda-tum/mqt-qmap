@@ -22,3 +22,8 @@ if(TARGET MQT::LogicBlocks)
   package_add_test(mqt-logic-blocks-test MQT::LogicBlocks
                    ${CMAKE_CURRENT_SOURCE_DIR}/test_logicblocks.cpp)
 endif()
+
+if(TARGET ${PROJECT_NAME}_hybridmap_lib)
+  package_add_test(${PROJECT_NAME}_hybridmap_test ${PROJECT_NAME}_hybridmap_lib
+                   ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybridmap.cpp)
+endif()
