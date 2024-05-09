@@ -15,10 +15,10 @@
 #include <unordered_map>
 namespace na {
 
-enum class NAMappingMethod : std::uint8_t { Naive, MaximizeParallelism };
+enum class NAMappingMethod : std::uint8_t { Naive, MaximizeParallelismHeuristic };
 static const std::unordered_map<std::string, NAMappingMethod> STRING_TO_METHOD =
     {{"naive", NAMappingMethod::Naive},
-     {"maximize parallelism", NAMappingMethod::MaximizeParallelism}};
+     {"maximize parallelism", NAMappingMethod::MaximizeParallelismHeuristic}};
 [[nodiscard]] inline auto
 getMethodOfString(const std::string& method) -> NAMappingMethod {
   std::string methodLowerCase = method;
@@ -37,7 +37,7 @@ class Configuration {
 private:
   std::size_t     patchRows = 1;
   std::size_t     patchCols = 1;
-  NAMappingMethod method    = NAMappingMethod::MaximizeParallelism;
+  NAMappingMethod method    = NAMappingMethod::MaximizeParallelismHeuristic;
 
 public:
   Configuration() = default;
