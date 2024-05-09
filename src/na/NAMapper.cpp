@@ -935,7 +935,8 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       mappedQc.emplaceBack<NAShuttlingOperation>(
           STORE, std::vector{std::make_shared<Point>(start)},
           std::vector{std::make_shared<Point>(end)});
-    } else if (config.getMethod() == NAMappingMethod::MaximizeParallelismHeuristic) {
+    } else if (config.getMethod() ==
+               NAMappingMethod::MaximizeParallelismHeuristic) {
       const auto& graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
       if (graph.getNVertices() == 0) {
         throw std::logic_error(

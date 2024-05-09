@@ -137,7 +137,8 @@ TEST(NAMapper, Exceptions) {
   const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
-      arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+      arch, na::Configuration(
+                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   EXPECT_THROW(std::ignore = mapper.getResult(), std::logic_error);
   EXPECT_THROW(std::ignore = mapper.getStats(), std::logic_error);
   EXPECT_THROW(
@@ -551,7 +552,8 @@ rz(3.9927041) q[7];)";
   const auto&       arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
-      arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+      arch, na::Configuration(
+                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getResult();
   std::ignore = mapper.getStats();
@@ -791,7 +793,8 @@ ry(2.2154814) q;)";
   const auto&       arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
-      arch, na::Configuration(3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+      arch, na::Configuration(
+                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
   std::ignore = mapper.getResult();

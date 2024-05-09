@@ -15,7 +15,10 @@
 #include <unordered_map>
 namespace na {
 
-enum class NAMappingMethod : std::uint8_t { Naive, MaximizeParallelismHeuristic };
+enum class NAMappingMethod : std::uint8_t {
+  Naive,
+  MaximizeParallelismHeuristic
+};
 static const std::unordered_map<std::string, NAMappingMethod> STRING_TO_METHOD =
     {{"naive", NAMappingMethod::Naive},
      {"maximize parallelism", NAMappingMethod::MaximizeParallelismHeuristic}};
