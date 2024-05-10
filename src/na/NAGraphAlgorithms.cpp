@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <list>
 #include <numeric>
 #include <set>
 #include <sstream>
@@ -30,19 +31,16 @@ auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
     -> std::unordered_set<qc::Qubit> {
   std::unordered_set<qc::Qubit> result;
   const auto&                   vertices = g.getVertices();
-  std::vector                   queue(vertices.cbegin(), vertices.cend());
+  std::list<qc::Qubit>          queue(vertices.cbegin(), vertices.cend());
   // sort the vertices by degree in descending order
-  std::sort(queue.begin(), queue.end(), [&](const auto& u, const auto& v) {
+  queue.sort([&](const auto& u, const auto& v) {
     return g.getDegree(u) > g.getDegree(v);
   });
   while (!queue.empty()) {
     const qc::Qubit v = queue.front();
     result.emplace(v);
-    queue.erase(std::remove_if(queue.begin(), queue.end(),
-                               [&](const qc::Qubit& u) {
-                                 return u == v or g.isAdjacent(u, v);
-                               }),
-                queue.end());
+    queue.remove_if(
+        [&](const qc::Qubit& u) { return u == v or g.isAdjacent(u, v); });
   }
   return result;
 }
