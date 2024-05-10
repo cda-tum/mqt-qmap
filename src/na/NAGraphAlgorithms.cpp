@@ -551,6 +551,6 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
       }
     }
   }
-  return std::make_pair(moveablePositions, fixedPositions);
+  return {moveablePositions, fixedPositions};
 }
 } // namespace na
