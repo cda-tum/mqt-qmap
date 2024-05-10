@@ -10,6 +10,8 @@
 #include "Definitions.hpp"
 #include "na/NADefinitions.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <istream>
@@ -26,8 +28,6 @@ namespace na {
 
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
-static const std::unordered_map<std::string, Scope> STRING_TO_SCOPE = {
-    {"global", Scope::Global}, {"local", Scope::Local}};
 
 /**
  * @brief Get the Scope of a gate from a string
@@ -39,10 +39,14 @@ inline auto getScopeOfString(const std::string& s) -> Scope {
   std::string sLowerCase = s;
   std::transform(sLowerCase.begin(), sLowerCase.end(), sLowerCase.begin(),
                  ::tolower);
-  if (const auto it = STRING_TO_SCOPE.find(sLowerCase);
-      it != STRING_TO_SCOPE.end()) {
-    return it->second;
+  if (sLowerCase == "global") {
+    return Scope::Global;
   }
+
+  if (sLowerCase == "local") {
+    return Scope::Local;
+  }
+
   std::stringstream ss;
   ss << "The scope " << s << " is not supported.";
   throw std::invalid_argument(ss.str());
@@ -71,14 +75,16 @@ public:
    * - effective decoherence time [µs]
    */
   struct DecoherenceTimes {
-    Value t1                    = 0;
-    Value t2                    = 0;
-    Value tEff                  = 0;
-    DecoherenceTimes()          = default;
-    virtual ~DecoherenceTimes() = default;
-    DecoherenceTimes(const Value t1time, const Value t2time)
-        : t1(t1time), t2(t2time), tEff(t1 * t2 / (t1 + t2)) {}
-    explicit operator double() const { return tEff; }
+    Value t1 = 0;
+    Value t2 = 0;
+
+    [[nodiscard]] Value tEff() const {
+      if (t1 == 0 && t2 == 0) {
+        return 0;
+      }
+      return t1 * t2 / (t1 + t2);
+    }
+    explicit operator double() const { return tEff(); }
   };
   /**
    * @brief Struct to store the properties of an operation.
@@ -150,11 +156,6 @@ public:
   Architecture(std::istream& jsonS, std::istream& csvS) {
     fromFileStream(jsonS, csvS);
   }
-  Architecture(const Architecture&)            = default;
-  Architecture(Architecture&&)                 = default;
-  virtual ~Architecture()                      = default;
-  Architecture& operator=(const Architecture&) = default;
-  Architecture& operator=(Architecture&&)      = default;
 
   auto fromFile(const std::string& jsonFn, const std::string& csvFn) -> void;
   auto fromFileStream(std::istream& jsonS, std::istream& csvS) -> void;

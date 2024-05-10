@@ -8,11 +8,9 @@
 
 #include "Configuration.hpp"
 #include "na/NADefinitions.hpp"
-#include "nlohmann/json.hpp"
 #include "operations/OpType.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
@@ -21,7 +19,7 @@
 #include <iterator>
 #include <limits>
 #include <map>
-#include <numeric>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -112,8 +110,7 @@ auto Architecture::fromFileStream(std::istream& jsonS,
       OperationProperties const o  = {sc, zo, ti, fi};
       gateSet.emplace(ty, o);
     }
-    decoherenceTimes = Architecture::DecoherenceTimes(
-        data["decoherence"]["t1"], data["decoherence"]["t2"]);
+    decoherenceTimes = {data["decoherence"]["t1"], data["decoherence"]["t2"]};
     for (const auto& sh : data["shuttling"]) {
       const ShuttlingProperties sp{
           sh["rows"],          sh["columns"],
