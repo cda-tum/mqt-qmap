@@ -24,12 +24,14 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
 #include <ratio>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
@@ -113,6 +115,7 @@ auto NAMapper::makeLogicalArrays() -> void {
       for (const auto& [y, xs] : posPerRow) {
         for (std::int64_t r = 0; r < rows; ++r) {
           std::vector<std::shared_ptr<Point>> positions;
+          positions.reserve(xs.size() * static_cast<std::size_t>(cols));
           for (const auto x : xs) {
             for (std::int64_t c = 0; c < cols; ++c) {
               positions.emplace_back(std::make_shared<Point>(
@@ -124,10 +127,15 @@ auto NAMapper::makeLogicalArrays() -> void {
         }
       }
     } else if (op->isShuttlingOperation()) {
-      const auto& sop = dynamic_cast<NAShuttlingOperation&>(*op);
+      const auto& sop           = dynamic_cast<NAShuttlingOperation&>(*op);
+      const auto  shuttlingSize = sop.getStart().size();
+      const auto  pointCount =
+          shuttlingSize * static_cast<std::size_t>(rows * cols);
       std::vector<std::shared_ptr<Point>> start;
+      start.reserve(pointCount);
       std::vector<std::shared_ptr<Point>> end;
-      for (std::size_t i = 0; i < sop.getStart().size(); ++i) {
+      end.reserve(pointCount);
+      for (std::size_t i = 0; i < shuttlingSize; ++i) {
         const auto s = sop.getStart()[i];
         const auto e = sop.getEnd()[i];
         for (std::int64_t r = 0; r < rows; ++r) {
@@ -339,6 +347,8 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
                     break;
                   case Atom::PositionStatus::DEFINED:
                     break;
+                  default:
+                    qc::unreachable();
                   }
                 });
 }
@@ -346,36 +356,37 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
 auto NAMapper::getMisplacement(const std::vector<Atom>&      initial,
                                const std::vector<qc::Qubit>& target,
                                const qc::Qubit& q) -> std::int64_t {
-  if (initial.at(q).positionStatus == Atom::PositionStatus::DEFINED) {
-    std::vector<std::size_t> enumerated(target.size());
-    std::iota(enumerated.begin(), enumerated.end(), 0);
-    const auto indexOfQ = static_cast<std::size_t>(std::distance(
-        target.cbegin(), std::find(target.cbegin(), target.cend(), q)));
-    return std::accumulate(enumerated.cbegin(), enumerated.cend(), 0,
-                           [&](const auto& acc, const auto& i) {
-                             if (initial.at(target[i]).positionStatus ==
-                                 Atom::PositionStatus::DEFINED) {
-                               if (i < indexOfQ &&
-                                   initial.at(target[i]).currentPosition->x >
-                                       initial.at(q).currentPosition->x) {
-                                 return acc + 1;
-                               }
-                               if (i > indexOfQ &&
-                                   initial.at(target[i]).currentPosition->x <
-                                       initial.at(q).currentPosition->x) {
-                                 return acc - 1;
-                               }
-                             }
-                             return acc;
-                           }) +
-           // count the spots the atom must be moved relatively
-           static_cast<std::int64_t>(indexOfQ) -
-           std::count_if(target.cbegin(), target.cend(), [&](const auto& p) {
-             return initial[p].currentPosition->x <
-                    initial[q].currentPosition->x;
-           });
+  if (initial.at(q).positionStatus == Atom::PositionStatus::UNDEFINED) {
+    return 0;
   }
-  return 0;
+
+  std::int64_t misplacement = 0;
+  const auto   indexOfQ     = static_cast<std::size_t>(std::distance(
+      target.cbegin(), std::find(target.cbegin(), target.cend(), q)));
+
+  for (std::size_t i = 0; i < target.size(); ++i) {
+    if (initial.at(target[i]).positionStatus ==
+        Atom::PositionStatus::UNDEFINED) {
+      continue;
+    }
+
+    if (i < indexOfQ && initial.at(target[i]).currentPosition->x >
+                            initial.at(q).currentPosition->x) {
+      misplacement += 1;
+    }
+    if (i > indexOfQ && initial.at(target[i]).currentPosition->x <
+                            initial.at(q).currentPosition->x) {
+      misplacement -= 1;
+    }
+  }
+
+  for (const auto& p : target) {
+    if (initial[p].currentPosition->x < initial[q].currentPosition->x) {
+      misplacement += 1;
+    }
+  }
+
+  return misplacement + static_cast<std::int64_t>(indexOfQ);
 }
 
 auto NAMapper::store(std::vector<bool>&             initialFreeSites,
@@ -408,7 +419,9 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
     }
   }
   std::vector<std::tuple<Index, std::size_t>> freeSitesPerRow;
-  for (std::size_t r = 0; r < arch.getNrowsInZone(destination); ++r) {
+  const auto rowCount = arch.getNrowsInZone(destination);
+  freeSitesPerRow.reserve(rowCount);
+  for (std::size_t r = 0; r < rowCount; ++r) {
     const auto& sitesInRow = arch.getSitesInRow(destination, r);
     freeSitesPerRow.emplace_back(
         r, std::accumulate(sitesInRow.cbegin(), sitesInRow.cend(), 0UL,
@@ -978,8 +991,11 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       // all atoms are picked up in order, move them to the destination zone and
       // store them there
       std::vector<std::shared_ptr<Point>> start{};
+      start.reserve(fixed.size());
       std::vector<std::shared_ptr<Point>> mid{};
+      mid.reserve(fixed.size());
       std::vector<std::shared_ptr<Point>> end{};
+      end.reserve(fixed.size());
       for (const auto& [q, x] : fixed) {
         if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
           std::stringstream ss;
