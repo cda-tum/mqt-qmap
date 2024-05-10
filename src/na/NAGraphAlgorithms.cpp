@@ -9,8 +9,6 @@
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
 #include "datastructures/DisjointSet.hpp"
-#include "datastructures/Layer.hpp"
-#include "datastructures/UndirectedGraph.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -23,6 +21,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -70,10 +69,10 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
     const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                  coloring,
     const Color& maxColor, const Edge& e, const qc::Qubit& v,
-    const std::vector<qc::Qubit>&              sequence,
-    const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
-    std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>> ranks)
-    -> Color {
+    const std::vector<qc::Qubit>&                             sequence,
+    const qc::DirectedAcyclicGraph<qc::Qubit>&                partialOrder,
+    const std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
+                             qc::PairHash<qc::Qubit, Color>>& ranks) -> Color {
   // compute the minimum admissible color as the maximum color +1 of adjacent
   // edges that do not contain the vertex v
   Color minAdmissibleColor = 0;
@@ -125,12 +124,12 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
                                           f.first) == sequence.end()
                                     ? f.first
                                     : f.second;
-            rankOfU > ranks[w][k]) {
+            rankOfU > ranks.at({w, k})) {
           if (partialOrder.isReachable(w, u)) {
             isAdmissable = false;
             break;
           }
-        } else if (rankOfU < ranks[w][k]) {
+        } else if (rankOfU < ranks.at({w, k})) {
           if (partialOrder.isReachable(u, w)) {
             isAdmissable = false;
             break;
@@ -181,7 +180,9 @@ auto NAGraphAlgorithms::colorEdges(
   }
   // for every SLM trap and color, calculate its rank, i.e., the index of the
   // interaction partner in the sequence of AOD traps
-  std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>> ranks;
+  std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
+                     qc::PairHash<qc::Qubit, Color>>
+      ranks;
 
   for (const auto& v : nodesQueue) {
     std::vector<Edge> adjacentEdges{};
@@ -203,8 +204,8 @@ auto NAGraphAlgorithms::colorEdges(
       coloring[e] = getLeastAdmissibleColor(coloring, maxColor, e, v,
                                             nodesQueue, partialOrder, ranks);
       // update partial order
-      const qc::Qubit u     = e.first == v ? e.second : e.first;
-      ranks[u][coloring[e]] = static_cast<std::size_t>(
+      const qc::Qubit u       = e.first == v ? e.second : e.first;
+      ranks[{u, coloring[e]}] = static_cast<std::size_t>(
           std::distance(nodesQueue.cbegin(),
                         std::find(nodesQueue.cbegin(), nodesQueue.cend(), v)));
       for (const auto& [f, k] : coloring) {
@@ -220,9 +221,9 @@ auto NAGraphAlgorithms::colorEdges(
                                         f.first) == nodesQueue.cend()
                                   ? f.first
                                   : f.second;
-          if (ranks[u][k] < ranks[w][k]) {
+          if (ranks[{u, k}] < ranks[{w, k}]) {
             partialOrder.addEdge(w, u);
-          } else if (ranks[u][k] > ranks[w][k]) {
+          } else if (ranks[{u, k}] > ranks[{w, k}]) {
             partialOrder.addEdge(u, w);
           } else {
             throw std::logic_error("Coloring is not valid.");

@@ -9,13 +9,13 @@
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
 #include "datastructures/Layer.hpp"
-#include "datastructures/UndirectedGraph.hpp"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -64,10 +64,10 @@ public:
       const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
                    coloring,
       const Color& maxColor, const Edge& e, const qc::Qubit& v,
-      const std::vector<qc::Qubit>&              sequence,
-      const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
-      std::unordered_map<qc::Qubit, std::unordered_map<Color, std::size_t>>
-          ranks) -> Color;
+      const std::vector<qc::Qubit>&                             sequence,
+      const qc::DirectedAcyclicGraph<qc::Qubit>&                partialOrder,
+      const std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
+                               qc::PairHash<qc::Qubit, Color>>& ranks) -> Color;
 
   /**
    * @brief Colors all given edges starting with edges that are adjacent to the
