@@ -81,13 +81,12 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
           std::max(minAdmissibleColor, static_cast<Color>(k + 1));
     }
   }
-  std::set<Color> freeColors; // shall be sorted
-  for (Color k = minAdmissibleColor; k <= maxColor + 1; ++k) {
-    freeColors.emplace(k);
-  }
+
+  std::vector<bool> freeColors(maxColor + 2U - minAdmissibleColor, true);
   for (const auto& [f, k] : coloring) {
-    if (InteractionGraph::isAdjacentEdge(e, f)) {
-      freeColors.erase(k);
+    if (InteractionGraph::isAdjacentEdge(e, f) && k >= minAdmissibleColor &&
+        k <= maxColor + 1) {
+      freeColors[k - minAdmissibleColor] = false;
     }
   }
   // The minAdmissibleColor is now the minimum of the free colors
@@ -100,7 +99,12 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
   // (not contained in ranks since the edge e is not colored yet)
   const auto rankOfU = static_cast<std::size_t>(std::distance(
       sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(), v)));
-  for (const auto leastAdmissibleColor : freeColors) {
+  for (std::size_t i = 0; i < freeColors.size(); ++i) {
+    if (!freeColors[i]) {
+      continue;
+    }
+    const auto leastAdmissibleColor =
+        static_cast<Color>(i + minAdmissibleColor);
     bool isAdmissable = true;
     for (const auto& [f, k] : coloring) {
       if (f.first == v or f.second == v) {
@@ -118,22 +122,15 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
         }
       } else if (k == leastAdmissibleColor) {
         // get the SLM atom from the edge f
-        if (const qc::Qubit w = std::find(sequence.cbegin(), sequence.cend(),
-                                          f.first) == sequence.end()
-                                    ? f.first
-                                    : f.second;
-            rankOfU > ranks.at({w, k})) {
-          if (partialOrder.isReachable(w, u)) {
-            isAdmissable = false;
-            break;
-          }
-        } else if (rankOfU < ranks.at({w, k})) {
-          if (partialOrder.isReachable(u, w)) {
-            isAdmissable = false;
-            break;
-          }
-        } else {
-          throw std::logic_error("Ranks are not consistent.");
+        const qc::Qubit w = std::find(sequence.cbegin(), sequence.cend(),
+                                      f.first) == sequence.end()
+                                ? f.first
+                                : f.second;
+
+        if ((rankOfU > ranks.at({w, k}) && partialOrder.isReachable(w, u)) ||
+            (rankOfU < ranks.at({w, k}) && partialOrder.isReachable(u, w))) {
+          isAdmissable = false;
+          break;
         }
       }
     }
