@@ -94,7 +94,7 @@ protected:
                   const std::vector<qc::Qubit>& target,
                   const qc::Qubit&              q) -> std::int64_t;
   /**
-   *
+   * @brief Move atoms from the entangling zone to the destination zone.
    * @param initialFreeSites The sites that are not yet occupied from the start
    * of the circuit until the current execution step.
    * @param currentFreeSites The currently not occupied sites.
@@ -109,7 +109,8 @@ protected:
              std::unordered_set<qc::Qubit>& currentlyShuttling,
              const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
   /**
-   *
+   * @brief Picks up atom in the initial zone as a preparation for moving it to
+   * the entangling zone.
    * @param initialFreeSites The sites that are not yet occupied from the start
    * of the circuit until the current execution step.
    * @param currentFreeSites The currently not occupied sites.
