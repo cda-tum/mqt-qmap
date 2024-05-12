@@ -115,8 +115,8 @@ public:
    * fixed vertices.
    * @param moveable all moveable vertices in order
    * @param fixed all fixed vertices in order
-   * @param coloring the coloring determining the interaction of each moveable and
-   * fixed vertex in every time step
+   * @param coloring the coloring determining the interaction of each moveable
+   * and fixed vertex in every time step
    * @return the required places for the moveable vertices to rest in time steps
    * when they do not undergo an interaction
    */
