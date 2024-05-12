@@ -77,7 +77,7 @@ public:
    * @param maxColor the maximum color used so far
    * @param e the edge to be colored
    * @param v the root of the edge, i.e. the edpoint of the edge that is
-   * contained in the previously computed maximal independet set
+   * contained in the previously computed maximal independent set
    * @param sequence the sequence of vertices selected to be the moveable ones
    * @param partialOrder the partial order of the fixed vertices induced by the
    * coloring so far
@@ -115,7 +115,7 @@ public:
    * fixed vertices.
    * @param moveable all moveable vertices in order
    * @param fixed all fixed vertices in order
-   * @param coloring the coloring determing the interaction of each moveable and
+   * @param coloring the coloring determining the interaction of each moveable and
    * fixed vertex in every time step
    * @return the required places for the moveable vertices to rest in time steps
    * when they do not undergo an interaction
@@ -141,8 +141,8 @@ public:
    * position in every time step (the moveable vertices) and (2) a mapping of
    * vertices to their x position (at all time step, the fixed vertices).
    * @details The algorithm works as follows:
-   * 1. Compute a maximal independent set of vertices. This partion the vertices
-   * into moveable and fixed vertices.
+   * 1. Compute a maximal independent set of vertices. This partitions the
+   * vertices into moveable and fixed vertices.
    * 2. Color the edges of the interaction graph such that no two adjacent edges
    * have the same color.
    * 3. Find relative x-positions for the fixed vertices.
