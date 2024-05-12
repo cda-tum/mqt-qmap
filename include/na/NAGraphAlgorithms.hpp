@@ -132,10 +132,9 @@ public:
    * @param sequence the sequence of vertices
    * @return a new seuqence with the vertices grouped by connected components
    */
-  [[nodiscard]] static auto
-  groupByConnectedComponent(const InteractionGraph&       g,
-                            const std::vector<qc::Qubit>& sequence)
-      -> std::vector<qc::Qubit>;
+  [[nodiscard]] static auto groupByConnectedComponent(
+      const InteractionGraph&       g,
+      const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit>;
 
   /**
    * @brief The result will be (1) a mapping of vertices to their relative x
