@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import locale
 from pathlib import Path
 
 import pytest
@@ -90,7 +91,7 @@ def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: Arc
 
 def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
     """Test that architectures from files can be properly used."""
-    with Path("test_architecture.arch").open("w+") as f:
+    with Path("test_architecture.arch").open("w+", encoding=locale.getpreferredencoding(False)) as f:
         f.write("3\n0 1\n0 2\n1 2\n")
 
     example_circuit_mapped, results = compile(example_circuit, arch="test_architecture.arch")
@@ -114,7 +115,7 @@ def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
 
 def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
     """Test that calibrations from files can be properly used."""
-    with Path("test_calibration.cal").open("w+") as f:
+    with Path("test_calibration.cal").open("w+", encoding=locale.getpreferredencoding(False)) as f:
         f.write("Header\n")
         f.write('Q0,0,0,0,1e-2,1e-4,"0_1: 1e-2, 0_2: 1e-2"\n')
         f.write('Q1,0,0,0,1e-2,1e-4,"1_2: 1e-2"\n')

@@ -72,7 +72,8 @@ auto Architecture::fromFileStream(std::istream& jsonS,
   } catch (std::exception& e) {
     std::stringstream ss;
     ss << "While parsing the CSV file, the following error occurred in line "
-       << lineno << "(" << line << ")" << ": " << e.what();
+       << lineno << "(" << line << ")"
+       << ": " << e.what();
     throw std::runtime_error(ss.str());
   }
   // load JSON
