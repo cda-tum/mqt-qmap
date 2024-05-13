@@ -92,6 +92,8 @@ add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
 add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
 add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
 
+add_subdirectory(na)
+
 if(BUILD_MQT_QMAP_BINDINGS)
   add_subdirectory(python)
 endif()
