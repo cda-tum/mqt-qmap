@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         color2: str | None
 
 
+import locale
 import operator
 
 import networkx as nx
@@ -142,7 +143,7 @@ def _parse_search_graph(file_path: str, final_node_id: int, only_solution_path: 
     graph = nx.Graph()
     root: None | int = None
     nodes: dict[int, SearchNode] = {}
-    with Path(file_path).open() as file:
+    with Path(file_path).open(encoding=locale.getpreferredencoding(False)) as file:
         for linestr in file:
             line = linestr.strip().split(";")
             nodeid = int(line[0])
@@ -506,7 +507,7 @@ def _draw_search_graph_edges(
 
 def _parse_arch_graph(file_path: str) -> nx.Graph:
     arch = None
-    with Path(file_path).open() as file:
+    with Path(file_path).open(encoding=locale.getpreferredencoding(False)) as file:
         arch = json.load(file)
     fidelity = None
     if "fidelity" in arch:
@@ -817,7 +818,9 @@ def _load_layer_data(
         raise FileNotFoundError(msg)
 
     circuit_layer = None
-    with Path(f"{data_logging_path}layer_{layer}.json").open() as circuit_layer_file:
+    with Path(f"{data_logging_path}layer_{layer}.json").open(
+        encoding=locale.getpreferredencoding(False)
+    ) as circuit_layer_file:
         circuit_layer = json.load(circuit_layer_file)
 
     single_q_mult = circuit_layer["single_qubit_multiplicity"]
@@ -1742,7 +1745,9 @@ def visualize_search_graph(
     number_of_layers = 0
 
     # parse general mapping info
-    with Path(f"{data_logging_path}mapping_result.json").open() as result_file:
+    with Path(f"{data_logging_path}mapping_result.json").open(
+        encoding=locale.getpreferredencoding(False)
+    ) as result_file:
         number_of_layers = json.load(result_file)["statistics"]["layers"]
 
     if isinstance(layer, int) and layer >= number_of_layers:
