@@ -88,8 +88,10 @@ endif()
 add_qmap_library(heuristic HeuristicMapper)
 
 # add MQT alias targets
-add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
-add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
+if(Z3_FOUND)
+  add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
+  add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
+endif()
 add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
 
 if(BUILD_MQT_QMAP_BINDINGS)
