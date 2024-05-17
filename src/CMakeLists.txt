@@ -94,6 +94,8 @@ add_qmap_library(heuristic HeuristicMapper)
 # add MQT alias targets
 add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
 
+add_subdirectory(na)
+
 if(BUILD_MQT_QMAP_BINDINGS)
   add_subdirectory(python)
 endif()

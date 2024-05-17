@@ -7,6 +7,8 @@ if(TARGET MQT::QMapExact)
                    ${CMAKE_CURRENT_SOURCE_DIR}/test_encodings.cpp)
 endif()
 
+add_subdirectory(na)
+
 if(TARGET MQT::QMapCliffordSynthesis)
   configure_file(${PROJECT_SOURCE_DIR}/test/cliffordsynthesis/tableaus.json
                  ${CMAKE_CURRENT_BINARY_DIR}/cliffordsynthesis/tableaus.json COPYONLY)
