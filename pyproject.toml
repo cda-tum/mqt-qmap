@@ -142,6 +142,7 @@ xfail_strict = true
 filterwarnings = [
     "error",
     'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
+    'ignore:.*Qiskit with Python 3.8.*:DeprecationWarning:',
 ]
 
 [tool.coverage]
