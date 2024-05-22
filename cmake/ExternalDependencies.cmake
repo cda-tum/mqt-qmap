@@ -26,23 +26,22 @@ if(BUILD_MQT_QMAP_BINDINGS)
   find_package(pybind11 CONFIG REQUIRED)
 endif()
 
-set(MQT_CORE_VERSION
-    2.2.2
-    CACHE STRING "MQT Core version")
+set(MQT_CORE_COMMIT
+    e090e101
+    CACHE STRING "MQT Core commit")
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(
     mqt-core
     GIT_REPOSITORY https://github.com/cda-tum/mqt-core.git
-    GIT_TAG v${MQT_CORE_VERSION}
-    FIND_PACKAGE_ARGS ${MQT_CORE_VERSION})
+    GIT_TAG ${MQT_CORE_COMMIT})
   list(APPEND FETCH_PACKAGES mqt-core)
 else()
-  find_package(mqt-core ${MQT_CORE_VERSION} QUIET)
+  find_package(mqt-core QUIET)
   if(NOT mqt-core_FOUND)
     FetchContent_Declare(
       mqt-core
       GIT_REPOSITORY https://github.com/cda-tum/mqt-core.git
-      GIT_TAG v${MQT_CORE_VERSION})
+      GIT_TAG ${MQT_CORE_COMMIT})
     list(APPEND FETCH_PACKAGES mqt-core)
   endif()
 endif()
