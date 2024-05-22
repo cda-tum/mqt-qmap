@@ -27,7 +27,7 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 set(MQT_CORE_VERSION
-    2.4.3
+    2.5.0
     CACHE STRING "MQT Core version")
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(
