@@ -265,7 +265,7 @@ repair-wheel-command = [
 ]
 
 [tool.cibuildwheel.macos]
-environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
