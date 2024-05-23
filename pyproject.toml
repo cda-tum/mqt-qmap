@@ -258,7 +258,7 @@ build-frontend = "build"
 
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
-before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.11.2"
+before-all = "/opt/python/cp311-cp311/bin/pip install z3-solver==4.12.6"
 repair-wheel-command = [
     "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/python/cp311-cp311/lib/python3.11/site-packages/z3/lib",
     "auditwheel repair -w {dest_dir} {wheel}",

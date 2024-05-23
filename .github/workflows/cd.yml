@@ -13,6 +13,7 @@ jobs:
     uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-packaging.yml@v1.0.0
     with:
       setup-z3: true
+      z3-version: 4.12.6 # 4.13.0 has incorrectly tagged manylinux wheels
 
   deploy:
     if: github.event_name == 'release' && github.event.action == 'published'
