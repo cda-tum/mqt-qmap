@@ -6,7 +6,7 @@ import pytest
 
 from mqt.qmap import HybridMapperParameters, HybridNAMapper, NeutralAtomHybridArchitecture
 
-arch_file = "../hybridmap/architectures/rubidium_hybrid.json"
+arch_file = "hybridmap/architectures/rubidium_hybrid.json"
 
 
 @pytest.mark.parametrize(
@@ -15,8 +15,8 @@ arch_file = "../hybridmap/architectures/rubidium_hybrid.json"
 @pytest.mark.parametrize(
     "circuit_file",
     [
-        "../hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm",
-        "../hybridmap/circuits/modulo_2.qasm",
+        "hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm",
+        "hybridmap/circuits/modulo_2.qasm",
     ],
 )
 def test_hybrid_na_mapper(circuit_file, lookahead_weight, decay, gate_shuttling_weight):
