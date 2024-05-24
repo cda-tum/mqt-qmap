@@ -134,7 +134,7 @@ TEST(NeutralAtomMapperTest, Output) {
   // get dummy filestream to avoid output
   qcAodMapped.dumpOpenQASM(dummyFs, false);
 
-  auto scheduleResults = mapper.schedule();
+  auto scheduleResults = mapper.schedule(true, true);
   // compare to stored file
   dummyFs << scheduleResults.toCsv();
 
