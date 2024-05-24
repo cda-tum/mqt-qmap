@@ -6,7 +6,6 @@
 #pragma once
 
 #include "NeutralAtomLayer.hpp"
-#include "NeutralAtomMappingResults.hpp"
 #include "NeutralAtomScheduler.hpp"
 #include "QuantumComputation.hpp"
 #include "hybridmap/AodScheduler.hpp"

@@ -78,7 +78,6 @@ macro(ADD_HYBRIDMAP_LIBRARY libname srcfile)
     ${lib}
     ${libname}/${srcfile}.cpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
-    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomMappingResults.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomUtils.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomScheduler.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomArchitecture.hpp
@@ -87,7 +86,6 @@ macro(ADD_HYBRIDMAP_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomDefinitions.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/AodScheduler.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomLayer.hpp
-    hybridmap/NeutralAtomMappingResults.cpp
     hybridmap/NeutralAtomUtils.cpp
     hybridmap/NeutralAtomScheduler.cpp
     hybridmap/NeutralAtomArchitecture.cpp
