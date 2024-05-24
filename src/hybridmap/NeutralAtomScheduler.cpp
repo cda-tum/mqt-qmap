@@ -179,7 +179,8 @@ void qc::NeutralAtomScheduler::printSchedulerResults(
 void qc::NeutralAtomScheduler::printTotalExecutionTimes(
     std::vector<fp>&                            totalExecutionTimes,
     std::vector<std::deque<std::pair<fp, fp>>>& blockedQubitsTimes) {
-  std::cout << "ExecutionTime: " << "\n";
+  std::cout << "ExecutionTime: "
+            << "\n";
   for (size_t qubit = 0; qubit < totalExecutionTimes.size(); qubit++) {
     std::cout << "[" << qubit << "] " << totalExecutionTimes[qubit] << " \t";
     for (const auto& blockedTime : blockedQubitsTimes[qubit]) {
