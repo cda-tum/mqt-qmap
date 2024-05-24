@@ -838,20 +838,14 @@ PYBIND11_MODULE(pyqmap, m) {
       m, "HybridNAMapper",
       "Neutral Atom Hybrid Mapper that can use both SWAP gates and AOD "
       "movements to map a quantum circuit to a neutral atom quantum computer.")
-      .def(py::init<const qc::NeutralAtomArchitecture&>(),
-           "Create Hybrid NA Mapper with identity mapping and default "
-           "parameters",
-           "arch"_a)
-      .def(py::init<const qc::NeutralAtomArchitecture&,
-                    qc::InitialCoordinateMapping>(),
-           "Create Hybrid NA Mapper with a specific initial mapping and "
-           "default parameters",
-           "arch"_a, "initial_coordinate_mapping"_a)
       .def(py::init<const qc::NeutralAtomArchitecture&,
                     qc::InitialCoordinateMapping, qc::MapperParameters>(),
            "Create Hybrid NA Mapper with a specific initial mapping and "
            "parameters",
-           "arch"_a, "initial_coordinate_mapping"_a, "params"_a)
+           "arch"_a,
+           "initial_coordinate_mapping"_a =
+               qc::InitialCoordinateMapping::Trivial,
+           "params"_a = qc::MapperParameters())
       .def("set_parameters", &qc::NeutralAtomMapper::setParameters,
            "Set the parameters for the Hybrid NA Mapper", "params"_a)
       .def(
@@ -867,6 +861,16 @@ PYBIND11_MODULE(pyqmap, m) {
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "circ"_a, "initial_mapping"_a = qc::InitialMapping::Identity,
+          "verbose"_a = false)
+      .def(
+          "map_qasm_file",
+          [](qc::NeutralAtomMapper& mapper, const std::string& filename,
+             qc::InitialMapping initialMapping, bool verbose) {
+            qc::QuantumComputation qc(filename);
+            mapper.map(qc, initialMapping, verbose);
+          },
+          "Map a quantum circuit to the neutral atom quantum computer",
+          "filename"_a, "initial_mapping"_a = qc::InitialMapping::Identity,
           "verbose"_a = false)
       .def("get_mapped_qc", &qc::NeutralAtomMapper::getMappedQc,
            "Returns the mapped circuit as an extended qasm2 string")
