@@ -8,9 +8,11 @@
 
 #include <string>
 
-qc::SchedulerResults qc::NeutralAtomScheduler::schedule(
-    const qc::QuantumComputation& qc, const Permutation& initHwPos,
-    bool verbose, bool createAnimationCsv, fp shuttlingSpeedFactor) {
+qc::SchedulerResults
+qc::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
+                                   const std::map<HwQubit, HwQubit>& initHwPos,
+                                   bool verbose, bool createAnimationCsv,
+                                   fp shuttlingSpeedFactor) {
   if (verbose) {
     std::cout << "\n* schedule start!\n";
   }
@@ -138,10 +140,8 @@ qc::SchedulerResults qc::NeutralAtomScheduler::schedule(
           animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, arch);
     }
   }
-  //  if (verbose) {
-  std::cout << "\n* schedule end!\n";
-  //}
   if (verbose) {
+    std::cout << "\n* schedule end!\n";
     std::cout << "nAodActivate: " << nAodActivate << "\n";
   }
 
@@ -156,9 +156,10 @@ qc::SchedulerResults qc::NeutralAtomScheduler::schedule(
   if (createAnimationCsv) {
     animationCsv += animationAtoms.getEndString(maxExecutionTime);
   }
-  printSchedulerResults(totalExecutionTimes, totalIdleTime, totalGateFidelities,
-                        totalFidelities, nCZs);
-
+  if (verbose) {
+    printSchedulerResults(totalExecutionTimes, totalIdleTime,
+                          totalGateFidelities, totalFidelities, nCZs);
+  }
   return {maxExecutionTime, totalIdleTime, totalGateFidelities, totalFidelities,
           nCZs};
 }
@@ -187,7 +188,7 @@ void qc::NeutralAtomScheduler::printTotalExecutionTimes(
     std::cout << "\n";
   }
 }
-qc::AnimationAtoms::AnimationAtoms(const qc::Permutation&             initHwPos,
+qc::AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>&  initHwPos,
                                    const qc::NeutralAtomArchitecture& arch) {
   auto nCols = arch.getNcolumns();
 

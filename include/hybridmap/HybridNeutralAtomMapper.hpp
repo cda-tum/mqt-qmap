@@ -6,6 +6,7 @@
 
 #include "NeutralAtomLayer.hpp"
 #include "NeutralAtomMappingResults.hpp"
+#include "NeutralAtomScheduler.hpp"
 #include "QuantumComputation.hpp"
 #include "hybridmap/AodScheduler.hpp"
 #include "hybridmap/HardwareQubits.hpp"
@@ -72,6 +73,10 @@ protected:
   qc::NeutralAtomArchitecture arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
+  // The mapped quantum circuit converted to AOD movements
+  qc::QuantumComputation mappedQcAOD;
+  // The scheduler to schedule the mapped quantum circuit
+  NeutralAtomScheduler scheduler;
   // The gates that have been executed
   std::vector<const Operation*> executedCommutingGates;
   // Gates in the front layer to be executed with swap gates
@@ -354,9 +359,21 @@ protected:
 
 public:
   // Constructors
+  [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
+  [[maybe_unused]] NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch)
+      : arch(arch), mappedQc(arch.getNpositions()),
+        mappedQcAOD(arch.getNpositions()), scheduler(arch),
+        hardwareQubits(arch, qc::InitialCoordinateMapping::Trivial) {};
   NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
                     InitialCoordinateMapping           initialCoordinateMapping)
       : arch(arch), mappedQc(arch.getNpositions()),
+        mappedQcAOD(arch.getNpositions()), scheduler(arch),
+        hardwareQubits(arch, initialCoordinateMapping) {};
+  NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
+                    InitialCoordinateMapping           initialCoordinateMapping,
+                    const MapperParameters&            p)
+      : arch(arch), mappedQc(arch.getNpositions()),
+        mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
         hardwareQubits(arch, initialCoordinateMapping) {};
 
   /**
@@ -395,6 +412,96 @@ public:
                          InitialMapping initialMapping, bool verbose = true);
 
   /**
+   * @brief Maps the given quantum circuit to the given architecture and
+   * converts it to the AOD level. Used for Python bindings.
+   * @param qc  The quantum circuit to be mapped
+   * @param initialMapping The initial mapping of the circuit qubits to the
+   * hardware qubits
+   */
+  [[maybe_unused]] void mapPy(qc::QuantumComputation& qc,
+                              InitialMapping initialMapping, bool printInfo) {
+    map(qc, initialMapping, verbose = printInfo);
+    convertToAod(this->mappedQc);
+  }
+
+  /**
+   * @brief Prints the mapped circuits as an extended OpenQASM string.
+   * @return The mapped quantum circuit with abstract SWAP gates and MOVE
+   */
+  [[maybe_unused]] std::string getMappedQc() {
+    std::stringstream ss;
+    this->mappedQc.dumpOpenQASM(ss, false);
+    return ss.str();
+  }
+
+  /**
+   * @brief Saves the mapped quantum circuit to a file.
+   * @param filename The name of the file to save the mapped quantum circuit to
+   */
+  [[maybe_unused]] void saveMappedQc(const std::string& filename) {
+    std::ofstream ofs(filename);
+    this->mappedQc.dumpOpenQASM(ofs, false);
+  }
+
+  /**
+   * @brief Prints the mapped circuit with AOD operations as an extended
+   * OpenQASM
+   * @return The mapped quantum circuit with native AOD operations
+   */
+  [[maybe_unused]] std::string getMappedQcAOD() {
+    std::stringstream ss;
+    this->mappedQcAOD.dumpOpenQASM(ss, false);
+    return ss.str();
+  }
+
+  /**
+   * @brief Saves the mapped quantum circuit with AOD operations to a file.
+   * @param filename The name of the file to save the mapped quantum circuit
+   * with AOD operations to
+   */
+  [[maybe_unused]] void saveMappedQcAOD(const std::string& filename) {
+    std::ofstream ofs(filename);
+    this->mappedQcAOD.dumpOpenQASM(ofs, false);
+  }
+
+  /**
+   * @brief Schedules the mapped quantum circuit on the neutral atom
+   * architecture.
+   * @details For each gate/operation in the input circuit, the scheduler checks
+   * the earliest possible time slot for execution. If the gate is a multi qubit
+   * gate, also the blocking of other qubits is taken into consideration. The
+   * execution times are read from the neutral atom architecture.
+   * @param verbose If true, prints additional information
+   * @param createAnimationCsv If true, creates a csv file for the animation
+   * @param shuttlingSpeedFactor The factor to speed up the shuttling time
+   * @return The results of the scheduler
+   */
+  [[maybe_unused]] SchedulerResults schedule(bool verbose              = false,
+                                             bool createAnimationCsv   = false,
+                                             fp   shuttlingSpeedFactor = 1.0) {
+    scheduler = NeutralAtomScheduler(arch);
+    return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitialHwPos(),
+                              verbose, createAnimationCsv,
+                              shuttlingSpeedFactor);
+  }
+
+  /**
+   * @brief Saves the animation csv file of the scheduled quantum circuit.
+   * @return The animation csv string
+   */
+  [[maybe_unused]] std::string getAnimationCsv() {
+    return scheduler.getAnimationCsv();
+  }
+
+  /**
+   * @brief Saves the animation csv file of the scheduled quantum circuit.
+   * @param filename The name of the file to save the animation csv file to
+   */
+  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) {
+    scheduler.saveAnimationCsv(filename);
+  }
+
+  /**
    * @brief Converts a mapped circuit down to the AOD level and CZ level.
    * @details SWAP gates are decomposed into CX gates. Then CnX gates are
    * decomposed into CnZ gates. Move operations are combined if possible and
@@ -405,7 +512,8 @@ public:
    */
   QuantumComputation convertToAod(qc::QuantumComputation& qc);
 
-  [[maybe_unused]] Permutation getInitHwPos() const {
+  [[maybe_unused]] [[nodiscard]] std::map<HwQubit, HwQubit>
+  getInitHwPos() const {
     return hardwareQubits.getInitialHwPos();
   }
 };

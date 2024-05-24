@@ -461,7 +461,11 @@ public:
            this->getShuttlingTime(OpType::Move);
   }
 
-  std::string getAnimationCsv() const {
+  /**
+   * @brief Returns a csv string for the animation of the architecture
+   * @return The csv string for the animation of the architecture
+   */
+  [[nodiscard]] std::string getAnimationCsv() const {
     std::string csv = "x;y;size;color\n";
     for (auto i = 0; i < getNcolumns(); i++) {
       for (auto j = 0; j < getNrows(); j++) {
@@ -470,6 +474,15 @@ public:
       }
     }
     return csv;
+  }
+
+  /**
+   * @brief Save the animation of the architecture to a csv file
+   * @param filename The name of the csv file
+   */
+  void saveAnimationCsv(const std::string& filename) const {
+    std::ofstream file(filename);
+    file << getAnimationCsv();
   }
 };
 

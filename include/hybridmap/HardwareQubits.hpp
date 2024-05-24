@@ -71,7 +71,7 @@ public:
   // Constructors
   HardwareQubits() = delete;
   HardwareQubits(const NeutralAtomArchitecture& arch,
-                 InitialCoordinateMapping&      initialCoordinateMapping)
+                 InitialCoordinateMapping       initialCoordinateMapping)
       : arch(arch), swapDistances(arch.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:
@@ -288,6 +288,12 @@ public:
    */
   std::set<HwQubit> getBlockedQubits(const std::set<HwQubit>& qubits);
 
-  Permutation getInitialHwPos() const { return initialHwPos; }
+  std::map<HwQubit, HwQubit> getInitialHwPos() const {
+    std::map<HwQubit, HwQubit> initialHwPosMap;
+    for (auto const& pair : initialHwPos) {
+      initialHwPosMap[pair.first] = pair.second;
+    }
+    return initialHwPosMap;
+  }
 };
 } // namespace qc

@@ -16,6 +16,9 @@ namespace qc {
 QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
                                               InitialMapping initialMapping,
                                               bool           verboseArg) {
+  mappedQc = QuantumComputation(arch.getNpositions());
+  nMoves   = 0;
+  nSwaps   = 0;
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
@@ -123,9 +126,9 @@ QuantumComputation NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   CircuitOptimizer::flattenOperations(qc);
   // decompose AOD moves
   AodScheduler scheduler(this->arch);
-  auto         aodQc = scheduler.schedule(qc);
+  mappedQcAOD = scheduler.schedule(qc);
   std::cout << "nMoveGroups: " << scheduler.getNMoveGroups() << '\n';
-  return aodQc;
+  return mappedQcAOD;
 }
 
 void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,

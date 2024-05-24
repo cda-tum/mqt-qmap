@@ -57,6 +57,29 @@ public:
 enum InitialCoordinateMapping { Trivial, Random };
 enum InitialMapping { Identity };
 
+[[maybe_unused]] static InitialCoordinateMapping
+initialCoordinateMappingFromString(
+    const std::string& initialCoordinateMapping) {
+  if (initialCoordinateMapping == "trivial" ||
+      initialCoordinateMapping == "0") {
+    return InitialCoordinateMapping::Trivial;
+  }
+  if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
+    return InitialCoordinateMapping::Random;
+  }
+  throw std::invalid_argument("Invalid initial coordinate mapping value: " +
+                              initialCoordinateMapping);
+}
+
+[[maybe_unused]] static InitialMapping
+initialMappingFromString(const std::string& initialMapping) {
+  if (initialMapping == "identity" || initialMapping == "0") {
+    return InitialMapping::Identity;
+  }
+  throw std::invalid_argument("Invalid initial mapping value: " +
+                              initialMapping);
+}
+
 /**
  * @brief Helperclass to represent a direction in x and y coordinates.
  * @details The boolean value corresponds to right/left and down/up.

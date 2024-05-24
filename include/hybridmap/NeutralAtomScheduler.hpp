@@ -38,6 +38,16 @@ struct SchedulerResults {
     ss << totalExecutionTime << ", " << totalIdleTime << "," << totalFidelities;
     return ss.str();
   }
+
+  std::unordered_map<std::string, fp> toMap() const {
+    std::unordered_map<std::string, fp> result;
+    result["totalExecutionTime"]  = totalExecutionTime;
+    result["totalIdleTime"]       = totalIdleTime;
+    result["totalGateFidelities"] = totalGateFidelities;
+    result["totalFidelities"]     = totalFidelities;
+    result["nCZs"]                = nCZs;
+    return result;
+  }
 };
 
 /**
@@ -67,10 +77,10 @@ public:
    * @param verbose If true, prints additional information
    * @return SchedulerResults
    */
-  SchedulerResults schedule(const qc::QuantumComputation& qc,
-                            const Permutation& initHwPos, bool verbose,
-                            bool createAnimationCsv   = false,
-                            fp   shuttlingSpeedFactor = 1.0);
+  SchedulerResults schedule(const qc::QuantumComputation&     qc,
+                            const std::map<HwQubit, HwQubit>& initHwPos,
+                            bool verbose, bool createAnimationCsv = false,
+                            fp shuttlingSpeedFactor = 1.0);
 
   std::string getAnimationCsv() { return animationCsv; }
   void        saveAnimationCsv(const std::string& filename) {
@@ -121,8 +131,8 @@ protected:
   void     removeMargin(HwQubit id) { marginIds.erase(id); }
 
 public:
-  AnimationAtoms(const Permutation&             initHwPos,
-                 const NeutralAtomArchitecture& arch);
+  AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
+                 const NeutralAtomArchitecture&    arch);
 
   std::string getInitString();
   std::string getEndString(fp endTime);
