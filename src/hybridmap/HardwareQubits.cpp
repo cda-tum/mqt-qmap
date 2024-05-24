@@ -66,8 +66,6 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
       swapDistances(path[start], path[end]) = end - start - 1;
     }
   }
-  //
-  //  swapDistances(q1, q2) = static_cast<fp>(path.size() - 2);
 }
 
 void HardwareQubits::resetSwapDistances() {
