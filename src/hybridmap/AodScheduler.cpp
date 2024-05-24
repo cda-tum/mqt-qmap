@@ -175,8 +175,6 @@ void AodScheduler::AodActivationHelper::addActivation(
       reAssignOffsets(aodMovesX, signX);
       break;
     case ActivationMergeType::Merge:
-      //      allActivations.emplace_back(
-      //          AodActivation{Dimension::X, {x, deltaX, signX}, move});
       mergeActivationDim(Dimension::Y,
                          AodActivation{Dimension::Y, {y, deltaY, signY}, move},
                          AodActivation{Dimension::X, {x, deltaX, signX}, move});
@@ -224,7 +222,7 @@ ActivationMergeType AodScheduler::AodActivationHelper::canAddActivationDim(
   }
   // check if it can be combined with existing activations
   for (auto* aodMove : aodMoves) {
-    if (aodMove->init == x && aodMove->delta == delta &&
+    if (aodMove->init == x && std::abs(aodMove->delta - delta) < 0.0001 &&
         aodMove->offset == sign) {
       // combine activations
       return ActivationMergeType::Merge;
@@ -346,7 +344,7 @@ AodOperation AodScheduler::MoveGroup::connectAodOperations(
               for (size_t i = 0; i < startYs.size(); i++) {
                 const auto startY = startYs[i];
                 const auto endY   = endYs[i];
-                if (startY != endY) {
+                if (std::abs(startY - endY) > 0.0001) {
                   aodOperations.emplace_back(Dimension::Y, startY, endY);
                 }
               }

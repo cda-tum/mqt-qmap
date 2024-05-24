@@ -661,7 +661,7 @@ WeightedSwaps NeutralAtomMapper::getExactSwapsToPosition(const Operation* op,
           minimalDistance = distance;
           minimalDistancePosQubit.clear();
           minimalDistancePosQubit.insert(posQubit);
-        } else if (distance == minimalDistance) {
+        } else if (std::abs(distance - minimalDistance) < 1e-5) {
           minimalDistancePosQubit.insert(posQubit);
         }
       }
