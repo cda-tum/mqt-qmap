@@ -112,6 +112,10 @@ if(Z3_FOUND)
     ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis
     PUBLIC plog::plog
     PRIVATE MQT::LogicBlocks)
+
+  # add MQT alias targets
+  add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
+  add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
 endif()
 
 # heuristic mapper project library
@@ -121,10 +125,10 @@ add_qmap_library(heuristic HeuristicMapper)
 add_hybridmap_library(hybridmap HybridNeutralAtomMapper)
 
 # add MQT alias targets
-add_library(MQT::QMapExact ALIAS ${MQT_QMAP_TARGET_NAME}-exact)
-add_library(MQT::QMapCliffordSynthesis ALIAS ${MQT_QMAP_TARGET_NAME}-cliffordsynthesis)
 add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
 add_library(MQT::QMapHybrid ALIAS ${MQT_QMAP_TARGET_NAME}-hybridmap)
+
+add_subdirectory(na)
 
 if(BUILD_MQT_QMAP_BINDINGS)
   add_subdirectory(python)
