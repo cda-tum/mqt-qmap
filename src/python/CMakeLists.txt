@@ -30,4 +30,4 @@ target_link_libraries(
 install(
   TARGETS pyqmap
   DESTINATION .
-  COMPONENT mqt-qmap_PythonModule)
+  COMPONENT mqt-qmap_Python)
