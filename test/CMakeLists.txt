@@ -26,6 +26,7 @@ if(TARGET MQT::LogicBlocks)
 endif()
 
 if(TARGET MQT::QMapHybrid)
+  file(COPY ${PROJECT_SOURCE_DIR}/test/hybridmap DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
   package_add_test(${PROJECT_NAME}_hybridmap_test MQT::QMapHybrid
                    ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybridmap.cpp)
 endif()

@@ -13,12 +13,13 @@
 class NeutralAtomArchitectureTest
     : public ::testing::TestWithParam<std::string> {
 protected:
-  std::string testArchitecturePath = "../../test/namap/architectures/";
+  std::string testArchitecturePath = "hybridmap/architectures/";
 
   void SetUp() override { testArchitecturePath += GetParam() + ".json"; }
 };
 
 TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
+  std::cout << "wd" << std::filesystem::current_path() << '\n';
   auto arch = qc::NeutralAtomArchitecture(testArchitecturePath);
 
   // Test get properties
@@ -49,8 +50,8 @@ class NeutralAtomMapperTest
     : public ::testing::TestWithParam<
           std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp>> {
 protected:
-  std::string testArchitecturePath = "../../test/hybridmap/architectures/";
-  std::string testQcPath           = "../../test/hybridmap/circuits/";
+  std::string testArchitecturePath = "hybridmap/architectures/";
+  std::string testQcPath           = "hybridmap/circuits/";
   qc::fp      gateWeight           = 1;
   qc::fp      shuttlingWeight      = 1;
   qc::fp      lookAheadWeight      = 1;
@@ -104,16 +105,10 @@ INSTANTIATE_TEST_SUITE_P(
                           "qft_nativegates_rigetti_qiskit_opt3_10"),
         ::testing::Values(1, 0.), ::testing::Values(1, 0.),
         ::testing::Values(0, 0.1)));
-//    NeutralAtomMapperTestSuite, NeutralAtomMapperTest,
-//    ::testing::Combine(
-//        ::testing::Values("rubidium"),
-//        ::testing::Values("modulo_2"),
-//        ::testing::Values(1.), ::testing::Values(0.),
-//        ::testing::Values(0)));
 
-TEST(NeutralAtomMapperTest, ExactOutput) {
-  auto arch =
-      qc::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
+TEST(NeutralAtomMapperTest, Output) {
+  auto arch = qc::NeutralAtomArchitecture(
+      "hybridmap/architectures/rubidium_shuttling.json");
   qc::InitialMapping           initialMapping = qc::InitialMapping::Identity;
   qc::InitialCoordinateMapping initialCoordinateMapping =
       qc::InitialCoordinateMapping::Trivial;
@@ -128,26 +123,19 @@ TEST(NeutralAtomMapperTest, ExactOutput) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(
-      "../../test/namap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+      "hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   auto qcMapped = mapper.map(qc, initialMapping, true);
 
-  // compare to stored file
-  std::ofstream ifs("../../test/namap/circuits/"
-                    "dj_nativegates_rigetti_qiskit_opt3_10.qasm_ext");
-  qcMapped.dumpOpenQASM(ifs, false);
+  std::ofstream dummyFs;
+  qcMapped.dumpOpenQASM(dummyFs, false);
 
   auto qcAodMapped = mapper.convertToAod(qcMapped);
-  // compare to stored file
-  std::ofstream ifs_aod("../../test/namap/circuits/"
-                        "dj_nativegates_rigetti_qiskit_opt3_10.qasm_aod");
-  qcAodMapped.dumpOpenQASM(ifs_aod, false);
+  // get dummy filestream to avoid output
+  qcAodMapped.dumpOpenQASM(dummyFs, false);
 
   auto scheduleResults = mapper.schedule();
   // compare to stored file
-  std::ofstream ifs_results(
-      "../../test/namap/circuits/"
-      "dj_nativegates_rigetti_qiskit_opt3_10.qasm_results");
-  ifs_results << scheduleResults.toCsv();
+  dummyFs << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
 }
