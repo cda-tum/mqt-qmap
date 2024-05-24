@@ -106,7 +106,7 @@ protected:
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
-  bool verbose = true;
+  bool verbose = false;
 
   // Methods for mapping
   /**

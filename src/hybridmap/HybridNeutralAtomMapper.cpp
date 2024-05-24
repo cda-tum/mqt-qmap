@@ -93,8 +93,10 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
       }
     }
   }
-  std::cout << "nSwaps: " << nSwaps << '\n';
-  std::cout << "nMoves: " << nMoves << '\n';
+  if (this->verbose) {
+    std::cout << "nSwaps: " << nSwaps << '\n';
+    std::cout << "nMoves: " << nMoves << '\n';
+  }
   return mappedQc;
 }
 
@@ -127,7 +129,9 @@ QuantumComputation NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   // decompose AOD moves
   AodScheduler scheduler(this->arch);
   mappedQcAOD = scheduler.schedule(qc);
-  std::cout << "nMoveGroups: " << scheduler.getNMoveGroups() << '\n';
+  if (this->verbose) {
+    std::cout << "nMoveGroups: " << scheduler.getNMoveGroups() << '\n';
+  }
   return mappedQcAOD;
 }
 
