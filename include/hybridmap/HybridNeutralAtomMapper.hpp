@@ -360,18 +360,10 @@ protected:
 public:
   // Constructors
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
-  [[maybe_unused]] NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch)
-      : arch(arch), mappedQc(arch.getNpositions()),
-        mappedQcAOD(arch.getNpositions()), scheduler(arch),
-        hardwareQubits(arch, qc::InitialCoordinateMapping::Trivial) {};
   NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
-                    InitialCoordinateMapping           initialCoordinateMapping)
-      : arch(arch), mappedQc(arch.getNpositions()),
-        mappedQcAOD(arch.getNpositions()), scheduler(arch),
-        hardwareQubits(arch, initialCoordinateMapping) {};
-  NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
-                    InitialCoordinateMapping           initialCoordinateMapping,
-                    const MapperParameters&            p)
+                    InitialCoordinateMapping initialCoordinateMapping =
+                        InitialCoordinateMapping::Trivial,
+                    const MapperParameters& p = MapperParameters())
       : arch(arch), mappedQc(arch.getNpositions()),
         mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
         hardwareQubits(arch, initialCoordinateMapping) {};
