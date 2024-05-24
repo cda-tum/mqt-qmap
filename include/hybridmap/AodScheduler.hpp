@@ -246,7 +246,7 @@ protected:
     static bool parallelCheck(const MoveVector& v1, const MoveVector& v2);
 
     /**
-     * @brief Helperfunction to create the actual shuttling operation between
+     * @brief Helper function to create the actual shuttling operation between
      * the loading at the initial position and the unloading at the final
      * position
      * @param opsInit Loading operations

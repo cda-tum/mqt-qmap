@@ -24,9 +24,9 @@ class NeutralAtomLayer {
 protected:
   DAG                   dag;
   DAGIterators          iterators;
-  GateList              gates                  = {};
-  GateList              MappedSingleQubitGates = {};
-  std::vector<GateList> candidates             = {};
+  GateList              gates;
+  GateList              mappedSingleQubitGates;
+  std::vector<GateList> candidates;
 
   /**
    * @brief Updates the gates for the given qubits
@@ -55,7 +55,7 @@ protected:
 
 public:
   // Constructor
-  NeutralAtomLayer(DAG dag) : dag(std::move(dag)) {
+  explicit NeutralAtomLayer(DAG dag) : dag(std::move(dag)) {
     for (auto& i : this->dag) {
       auto it = i.begin();
       this->iterators.emplace_back(it);
@@ -90,7 +90,7 @@ public:
    * @brief Returns the mapped single qubit gates
    * @return The mapped single qubit gates
    */
-  GateList getMappedSingleQubitGates() { return MappedSingleQubitGates; }
+  GateList getMappedSingleQubitGates() { return mappedSingleQubitGates; }
 };
 
 } // namespace qc

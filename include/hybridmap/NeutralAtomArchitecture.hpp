@@ -73,25 +73,23 @@ class NeutralAtomArchitecture {
           interQubitDistance(interQubitDistance),
           interactionRadius(interactionRadius), blockingFactor(blockingFactor) {
     }
-    [[nodiscard]] inline std::uint16_t getNpositions() const {
+    [[nodiscard]] std::uint16_t getNpositions() const {
       return nRows * nColumns;
     }
-    [[nodiscard]] inline std::uint16_t getNrows() const { return nRows; }
-    [[nodiscard]] inline std::uint16_t getNcolumns() const { return nColumns; }
-    [[nodiscard]] inline std::uint16_t getNAods() const { return nAods; }
-    [[nodiscard]] inline std::uint16_t getNAodCoordinates() const {
+    [[nodiscard]] std::uint16_t getNrows() const { return nRows; }
+    [[nodiscard]] std::uint16_t getNcolumns() const { return nColumns; }
+    [[nodiscard]] std::uint16_t getNAods() const { return nAods; }
+    [[nodiscard]] std::uint16_t getNAodCoordinates() const {
       return nAodCoordinates;
     }
-    [[nodiscard]] inline std::uint16_t getNAodIntermediateLevels() const {
+    [[nodiscard]] std::uint16_t getNAodIntermediateLevels() const {
       return nAodIntermediateLevels;
     }
-    [[nodiscard]] inline fp getInterQubitDistance() const {
+    [[nodiscard]] fp getInterQubitDistance() const {
       return interQubitDistance;
     }
-    [[nodiscard]] inline fp getInteractionRadius() const {
-      return interactionRadius;
-    }
-    [[nodiscard]] inline fp getBlockingFactor() const { return blockingFactor; }
+    [[nodiscard]] fp getInteractionRadius() const { return interactionRadius; }
+    [[nodiscard]] fp getBlockingFactor() const { return blockingFactor; }
   };
 
   /**
@@ -126,9 +124,9 @@ class NeutralAtomArchitecture {
       fp t1;
       fp t2;
       DecoherenceTimes() = default;
-      inline DecoherenceTimes(fp t1, fp t2)
+      DecoherenceTimes(fp t1, fp t2)
           : tEff(t1 * t2 / (t1 + t2)), t1(t1), t2(t2) {}
-      [[nodiscard]] inline fp getTEff() const { return tEff; }
+      [[nodiscard]] fp getTEff() const { return tEff; }
     };
     CoordIndex                nQubits;
     std::map<std::string, fp> gateTimes;
@@ -192,49 +190,43 @@ public:
    * @brief Get the number of rows
    * @return The number of rows
    */
-  [[nodiscard]] inline std::uint16_t getNrows() const {
-    return properties.getNrows();
-  }
+  [[nodiscard]] std::uint16_t getNrows() const { return properties.getNrows(); }
   /**
    * @brief Get the number of columns
    * @return The number of columns
    */
-  [[nodiscard]] inline std::uint16_t getNcolumns() const {
+  [[nodiscard]] std::uint16_t getNcolumns() const {
     return properties.getNcolumns();
   }
   /**
    * @brief Get the number of positions
    * @return The number of positions
    */
-  [[nodiscard]] inline std::uint16_t getNpositions() const {
+  [[nodiscard]] std::uint16_t getNpositions() const {
     return properties.getNpositions();
   }
   /**
    * @brief Get the number of AODs
    * @return The number of AODs
    */
-  [[nodiscard]] inline std::uint16_t getNAods() const {
-    return properties.getNAods();
-  }
+  [[nodiscard]] std::uint16_t getNAods() const { return properties.getNAods(); }
   /**
    * @brief Get the number of AOD coordinates
    * @return The number of AOD coordinates
    */
-  [[nodiscard]] inline std::uint16_t getNAodCoordinates() const {
+  [[nodiscard]] std::uint16_t getNAodCoordinates() const {
     return properties.getNAodCoordinates();
   }
   /**
    * @brief Get the number of qubits
    * @return The number of qubits
    */
-  [[nodiscard]] inline CoordIndex getNqubits() const {
-    return parameters.nQubits;
-  }
+  [[nodiscard]] CoordIndex getNqubits() const { return parameters.nQubits; }
   /**
    * @brief Get the inter-qubit distance
    * @return The inter-qubit distance
    */
-  [[nodiscard]] inline fp getInterQubitDistance() const {
+  [[nodiscard]] fp getInterQubitDistance() const {
     return properties.getInterQubitDistance();
   }
 
@@ -242,14 +234,14 @@ public:
    * @brief Get the interaction radius
    * @return The interaction radius
    */
-  [[nodiscard]] inline fp getInteractionRadius() const {
+  [[nodiscard]] fp getInteractionRadius() const {
     return properties.getInteractionRadius();
   }
   /**
    * @brief Get the blocking factor
    * @return The blocking factor
    */
-  [[nodiscard]] inline fp getBlockingFactor() const {
+  [[nodiscard]] fp getBlockingFactor() const {
     return properties.getBlockingFactor();
   }
   /**
@@ -258,8 +250,7 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] inline fp getSwapDistance(CoordIndex idx1,
-                                          CoordIndex idx2) const {
+  [[nodiscard]] fp getSwapDistance(CoordIndex idx1, CoordIndex idx2) const {
     return swapDistances(idx1, idx2);
   }
   /**
@@ -268,8 +259,8 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] inline fp getSwapDistance(const Coordinate& c1,
-                                          const Coordinate& c2) const {
+  [[nodiscard]] fp getSwapDistance(const Coordinate& c1,
+                                   const Coordinate& c2) const {
     return swapDistances(c1.getX() + c1.getY() * properties.getNcolumns(),
                          c2.getX() + c2.getY() * properties.getNcolumns());
   }
@@ -279,7 +270,7 @@ public:
    * possible positions between two coordinates.
    * @return The number of AOD intermediate levels
    */
-  [[nodiscard]] inline uint16_t getNAodIntermediateLevels() const {
+  [[nodiscard]] uint16_t getNAodIntermediateLevels() const {
     return properties.getNAodIntermediateLevels();
   }
   /**
@@ -305,7 +296,7 @@ public:
   getBlockedCoordIndices(const Operation* op) const;
 
   // Getters for the parameters
-  [[nodiscard]] inline fp getGateTime(std::string s) const {
+  [[nodiscard]] fp getGateTime(const std::string& s) const {
     if (parameters.gateTimes.find(s) == parameters.gateTimes.end()) {
       std::cout << "Gate time for " << s << " not found\n"
                 << "Returning default value\n";
@@ -325,7 +316,7 @@ public:
    * @return The average fidelity of the specified gate or the default gate if
    * the specified gate is not found.
    */
-  [[nodiscard]] inline fp getGateAverageFidelity(const std::string& s) const {
+  [[nodiscard]] fp getGateAverageFidelity(const std::string& s) const {
     if (parameters.gateAverageFidelities.find(s) ==
         parameters.gateAverageFidelities.end()) {
       std::cout << "Gate average fidelity for " << s << " not found\n"
@@ -339,7 +330,7 @@ public:
    * @param shuttlingType The type of the shuttling operation
    * @return The shuttling time of the shuttling operation
    */
-  [[nodiscard]] inline fp getShuttlingTime(OpType shuttlingType) const {
+  [[nodiscard]] fp getShuttlingTime(OpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
@@ -347,15 +338,14 @@ public:
    * @param shuttlingType The type of the shuttling operation
    * @return The average fidelity of the shuttling operation
    */
-  [[nodiscard]] inline fp
-  getShuttlingAverageFidelity(OpType shuttlingType) const {
+  [[nodiscard]] fp getShuttlingAverageFidelity(OpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
    * @brief Get the decoherence time
    * @return The decoherence time
    */
-  [[nodiscard]] inline fp getDecoherenceTime() const {
+  [[nodiscard]] fp getDecoherenceTime() const {
     return parameters.decoherenceTimes.getTEff();
   }
 
@@ -365,7 +355,7 @@ public:
    * @param idx The index
    * @return The coordinate corresponding to the index
    */
-  [[nodiscard]] inline Coordinate getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Coordinate getCoordinate(CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
@@ -373,7 +363,7 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] inline CoordIndex getIndex(const Coordinate& c) {
+  [[nodiscard]] CoordIndex getIndex(const Coordinate& c) {
     return c.getX() + c.getY() * properties.getNcolumns();
   }
 
@@ -384,8 +374,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Euclidean distance between the two coordinate indices
    */
-  [[nodiscard]] inline fp getEuclidianDistance(CoordIndex idx1,
-                                               CoordIndex idx2) const {
+  [[nodiscard]] fp getEuclidianDistance(CoordIndex idx1,
+                                        CoordIndex idx2) const {
     return this->coordinates.at(idx1).getEuclidianDistance(
         this->coordinates.at(idx2));
   }
@@ -395,18 +385,18 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] inline static fp getEuclidianDistance(const Coordinate& c1,
-                                                      const Coordinate& c2) {
+  [[nodiscard]] static fp getEuclidianDistance(const Coordinate& c1,
+                                               const Coordinate& c2) {
     return c1.getEuclidianDistance(c2);
   }
   /**
-   * @brief Get the Manhatten distance between two coordinate indices
+   * @brief Get the Manhattan distance between two coordinate indices
    * @param idx1 The index of the first coordinate
    * @param idx2 The index of the second coordinate
-   * @return The Manhatten distance between the two coordinate indices
+   * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] inline CoordIndex getManhattanDistanceX(CoordIndex idx1,
-                                                        CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceX(CoordIndex idx1,
+                                                 CoordIndex idx2) const {
     return this->coordinates.at(idx1).getManhattanDistanceX(
         this->coordinates.at(idx2));
   }
@@ -416,8 +406,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] inline CoordIndex getManhattanDistanceY(CoordIndex idx1,
-                                                        CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceY(CoordIndex idx1,
+                                                 CoordIndex idx2) const {
     return this->coordinates.at(idx1).getManhattanDistanceY(
         this->coordinates.at(idx2));
   }
@@ -428,7 +418,7 @@ public:
    * @param idx The index of the coordinate
    * @return The precomputed nearby coordinates for the coordinate index
    */
-  [[nodiscard]] inline std::set<CoordIndex>
+  [[nodiscard]] std::set<CoordIndex>
   getNearbyCoordinates(CoordIndex idx) const {
     return nearbyCoordinates[idx];
   }
@@ -448,7 +438,7 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The MoveVector between the two coordinate indices
    */
-  [[nodiscard]] inline MoveVector getVector(CoordIndex idx1, CoordIndex idx2) {
+  [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) {
     return {this->coordinates[idx1].getXfp(), this->coordinates[idx1].getYfp(),
             this->coordinates[idx2].getXfp(), this->coordinates[idx2].getYfp()};
   }
@@ -457,7 +447,7 @@ public:
    * @param v The MoveVector
    * @return The time it takes to move a qubit along the MoveVector
    */
-  [[nodiscard]] inline fp getVectorShuttlingTime(const MoveVector& v) const {
+  [[nodiscard]] fp getVectorShuttlingTime(const MoveVector& v) const {
     return v.getLength() * this->getInterQubitDistance() /
            this->getShuttlingTime(OpType::Move);
   }

@@ -6,7 +6,7 @@
 #include "hybridmap/Mapping.hpp"
 
 namespace qc {
-void Mapping::swap(Swap swap) {
+void Mapping::applySwap(Swap swap) {
   auto q1 = swap.first;
   auto q2 = swap.second;
   if (this->isMapped(q1) && this->isMapped(q2)) {

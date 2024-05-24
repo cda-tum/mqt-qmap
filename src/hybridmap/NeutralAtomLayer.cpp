@@ -33,7 +33,7 @@ void NeutralAtomLayer::initLayerOffset(
   for (auto& candidate : this->candidates) {
     candidate.clear();
   }
-  this->MappedSingleQubitGates.clear();
+  this->mappedSingleQubitGates.clear();
   // if iteratorOffset is empty, set all iterators to begin
   if (iteratorOffset.empty()) {
     for (uint32_t i = 0; i < this->dag.size(); ++i) {
@@ -58,7 +58,7 @@ void NeutralAtomLayer::updateCandidatesByQubits(
     while (tempIter < this->dag[qubit].end()) {
       auto* op = (*tempIter)->get();
       if (op->getUsedQubits().size() == 1) {
-        MappedSingleQubitGates.push_back(op);
+        mappedSingleQubitGates.push_back(op);
         this->iterators[qubit]++;
         tempIter++;
       } else {
@@ -70,7 +70,7 @@ void NeutralAtomLayer::updateCandidatesByQubits(
                      commutesWithAtQubit(candidates[qubit], nextOp, qubit);
           if (commutes) {
             if (nextOp->getUsedQubits().size() == 1) {
-              MappedSingleQubitGates.push_back(nextOp);
+              mappedSingleQubitGates.push_back(nextOp);
             } else { // not executable but commutes
               candidates[qubit].push_back(nextOp);
             }
@@ -126,7 +126,7 @@ void NeutralAtomLayer::candidatesToGates(
 }
 
 void qc::NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
-  this->MappedSingleQubitGates.clear();
+  this->mappedSingleQubitGates.clear();
   std::set<Qubit> qubitsToUpdate;
   for (const auto& gate : gatesToRemove) {
     if (std::find(gates.begin(), gates.end(), gate) != gates.end()) {
@@ -174,7 +174,7 @@ bool qc::NeutralAtomLayer::commuteAtQubit(const Operation* op1,
 
   // for two-qubit gates, check if they commute at qubit
   // commute if both are controlled at qubit or const Operation* on qubit is
-  // same check controlles
+  // same check controls
   if (op1->getControls().find(qubit) != op1->getControls().end() &&
       op2->getControls().find(qubit) != op2->getControls().end()) {
     return true;

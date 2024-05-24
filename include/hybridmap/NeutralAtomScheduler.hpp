@@ -28,20 +28,21 @@ struct SchedulerResults {
         totalGateFidelities(totalGateFidelities),
         totalFidelities(totalFidelities), nCZs(nCZs) {}
 
-  std::string inline toString() {
+  std::string toString() {
     std::stringstream ss;
     ss << "Total execution time: " << totalExecutionTime;
     ss << "\nTotal idle time: " << totalIdleTime
        << "\nTotal fidelities: " << totalFidelities;
     return ss.str();
   }
-  std::string inline toCsv() {
+  std::string toCsv() {
     std::stringstream ss;
     ss << totalExecutionTime << ", " << totalIdleTime << "," << totalFidelities;
     return ss.str();
   }
 
-  std::unordered_map<std::string, fp> toMap() const {
+  [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, fp>
+  toMap() const {
     std::unordered_map<std::string, fp> result;
     result["totalExecutionTime"]  = totalExecutionTime;
     result["totalIdleTime"]       = totalIdleTime;
@@ -67,7 +68,8 @@ protected:
 
 public:
   // Constructor
-  NeutralAtomScheduler(const qc::NeutralAtomArchitecture& arch) : arch(arch) {}
+  explicit NeutralAtomScheduler(const qc::NeutralAtomArchitecture& arch)
+      : arch(arch) {}
 
   /**
    * @brief Schedules the given quantum circuit on the neutral atom architecture
@@ -92,7 +94,7 @@ public:
     file.close();
     // save architecture
     auto filenameWithoutExtension =
-        filename.substr(0, filename.find_last_of("."));
+        filename.substr(0, filename.find_last_of('.'));
     file.open(filenameWithoutExtension + "_architecture.csv");
     file << animationArchitectureCsv;
     file.close();
@@ -103,7 +105,7 @@ public:
                                     fp totalIdleTime, fp totalGateFidelities,
                                     fp totalFidelities, uint32_t nCZs);
   static void printTotalExecutionTimes(
-      std::vector<fp>&                            totalExectuionTimes,
+      std::vector<fp>&                            totalExecutionTimes,
       std::vector<std::deque<std::pair<fp, fp>>>& blockedQubitsTimes);
 };
 
@@ -112,11 +114,11 @@ class AnimationAtoms {
   using marginId = std::uint32_t;
 
 protected:
-  const uint32_t ColorSlm    = 0;
-  const uint32_t ColorAod    = 1;
-  const uint32_t ColorLocal  = 2;
-  const uint32_t ColorGlobal = 3;
-  const uint32_t ColorCz     = 4;
+  const uint32_t colorSlm    = 0;
+  const uint32_t colorAod    = 1;
+  const uint32_t colorLocal  = 2;
+  const uint32_t colorGlobal = 3;
+  const uint32_t colorCz     = 4;
 
   std::map<CoordIndex, HwQubit>        coordIdxToId;
   std::map<HwQubit, std::pair<fp, fp>> idToCoord;
@@ -125,8 +127,6 @@ protected:
   uint32_t                             axesIdCounter   = 0;
   uint32_t                             marginIdCounter = 0;
 
-  void     moveAtom(HwQubit id, fp x = 0, fp y = 0);
-  void     changeCoordIdx(HwQubit id, CoordIndex coordIdx);
   axesId   addAxis(HwQubit id);
   void     removeAxis(HwQubit id) { axesIds.erase(id); }
   marginId addMargin(HwQubit id);
@@ -136,13 +136,13 @@ public:
   AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
                  const NeutralAtomArchitecture&    arch);
 
-  std::string getInitString();
-  std::string getEndString(fp endTime);
-  std::string createCsvLine(fp startTime, HwQubit id, fp x, fp y,
-                            uint32_t size = 1, uint32_t color = 0,
-                            bool axes = false, axesId axId = 0,
-                            bool margin = false, marginId marginId = 0,
-                            fp marginSize = 0);
+  std::string        getInitString();
+  std::string        getEndString(fp endTime);
+  static std::string createCsvLine(fp startTime, HwQubit id, fp x, fp y,
+                                   uint32_t size = 1, uint32_t color = 0,
+                                   bool axes = false, axesId axId = 0,
+                                   bool margin = false, marginId marginId = 0,
+                                   fp marginSize = 0);
   std::string createCsvOp(const std::unique_ptr<Operation>& op, fp startTime,
                           fp endTime, const qc::NeutralAtomArchitecture& arch);
 };

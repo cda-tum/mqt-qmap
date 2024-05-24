@@ -12,14 +12,14 @@ namespace qc {
 
 void NeutralAtomArchitecture::loadJson(const std::string& filename) {
   nlohmann::json jsonData;
-  std::ifstream  architecureFile(filename);
+  std::ifstream  architectureFile(filename);
 
-  if (!architecureFile.is_open()) {
+  if (!architectureFile.is_open()) {
     throw std::runtime_error("Could not open file " + filename);
   }
   try {
-    architecureFile >> jsonData;
-    architecureFile.close();
+    architectureFile >> jsonData;
+    architectureFile.close();
 
     // Load properties
     nlohmann::json jsonDataProperties = jsonData["properties"];
@@ -200,10 +200,10 @@ fp NeutralAtomArchitecture::getOpTime(const Operation* op) const {
     return getShuttlingTime(op->getType());
   }
   if (op->getType() == OpType::AodMove) {
-    const auto  v         = this->parameters.shuttlingTimes.at(op->getType());
-    auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
-    const auto  distanceX = opAodMove->getMaxDistance(Dimension::X);
-    const auto  distanceY = opAodMove->getMaxDistance(Dimension::Y);
+    const auto        v = this->parameters.shuttlingTimes.at(op->getType());
+    const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
+    const auto        distanceX = opAodMove->getMaxDistance(Dimension::X);
+    const auto        distanceY = opAodMove->getMaxDistance(Dimension::Y);
     return (distanceX + distanceY) / v;
   }
   std::string opName;

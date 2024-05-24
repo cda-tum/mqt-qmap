@@ -72,7 +72,7 @@ void AodScheduler::initMoveGroups(QuantumComputation& qc) {
 }
 
 bool AodScheduler::MoveGroup::canAdd(const AtomMove& move) {
-  // if move wourld move a qubit that is used by a gate in this move group
+  // if move would move a qubit that is used by a gate in this move group
   // return false
   if (std::find(qubitsUsedByGates.begin(), qubitsUsedByGates.end(),
                 move.first) != qubitsUsedByGates.end()) {

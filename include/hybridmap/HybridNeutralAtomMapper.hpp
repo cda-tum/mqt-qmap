@@ -217,7 +217,7 @@ protected:
    * Only move combinations with minimal number of moves are kept.
    * @return Vector of possible move combinations for the front layer
    */
-  MoveCombs getAllMoveCombinatinos();
+  MoveCombs getAllMoveCombinations();
   /**
    * @brief Returns all possible move away combinations for a move from start to
    * target.
@@ -245,7 +245,7 @@ protected:
    */
   std::pair<Swaps, WeightedSwaps> initSwaps(const GateList& layer);
   /**
-   * @brief Helperfunction to set the two-qubit swap weight to the minimal
+   * @brief Helper function to set the two-qubit swap weight to the minimal
    * weight of all multi-qubit gates, or 1.
    * @param swapExact The exact moves from multi-qubit gates
    */
@@ -296,12 +296,12 @@ protected:
   // Cost function calculation
   /**
    * @brief Calculates the distance reduction for a swap gate given the
-   * necessary closeby swaps and exact moves.
-   * @details Closeby swaps are from two qubit gates, which only require to swap
-   * close by. The exact moves are from multi-qubit gates, that require swapping
-   * exactly to the multi-qubit gate position.
+   * necessary close by swaps and exact moves.
+   * @details Close by swaps are from two qubit gates, which only require to
+   * swap close by. The exact moves are from multi-qubit gates, that require
+   * swapping exactly to the multi-qubit gate position.
    * @param swap The swap gate to compute the distance reduction for
-   * @param swapCloseBy The closeby swaps from two-qubit gates
+   * @param swapCloseBy The close by swaps from two-qubit gates
    * @param moveExact The exact moves from multi-qubit gates
    * @return The distance reduction cost
    */
@@ -463,17 +463,17 @@ public:
    * the earliest possible time slot for execution. If the gate is a multi qubit
    * gate, also the blocking of other qubits is taken into consideration. The
    * execution times are read from the neutral atom architecture.
-   * @param verbose If true, prints additional information
+   * @param verboseArg If true, prints additional information
    * @param createAnimationCsv If true, creates a csv file for the animation
    * @param shuttlingSpeedFactor The factor to speed up the shuttling time
    * @return The results of the scheduler
    */
-  [[maybe_unused]] SchedulerResults schedule(bool verbose              = false,
+  [[maybe_unused]] SchedulerResults schedule(bool verboseArg           = false,
                                              bool createAnimationCsv   = false,
                                              fp   shuttlingSpeedFactor = 1.0) {
     scheduler = NeutralAtomScheduler(arch);
     return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitialHwPos(),
-                              verbose, createAnimationCsv,
+                              verboseArg, createAnimationCsv,
                               shuttlingSpeedFactor);
   }
 

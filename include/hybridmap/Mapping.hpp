@@ -35,7 +35,7 @@ public:
    * @param qubit The circuit qubit to be assigned
    * @param hwQubit The hardware qubit to be assigned
    */
-  void inline setCircuitQubit(Qubit qubit, HwQubit hwQubit) {
+  void setCircuitQubit(Qubit qubit, HwQubit hwQubit) {
     circToHw[qubit] = hwQubit;
   }
 
@@ -44,7 +44,7 @@ public:
    * @param qubit The circuit qubit to be queried
    * @return The hardware qubit assigned to the given circuit qubit
    */
-  [[nodiscard]] inline HwQubit getHwQubit(Qubit qubit) const {
+  [[nodiscard]] HwQubit getHwQubit(Qubit qubit) const {
     return circToHw.at(qubit);
   }
 
@@ -53,8 +53,7 @@ public:
    * @param qubits The circuit qubits to be queried
    * @return The hardware qubits assigned to the given circuit qubits
    */
-  [[nodiscard]] inline std::set<HwQubit>
-  getHwQubits(std::set<Qubit>& qubits) const {
+  [[nodiscard]] std::set<HwQubit> getHwQubits(std::set<Qubit>& qubits) const {
     std::set<HwQubit> hwQubits;
     for (const auto& qubit : qubits) {
       hwQubits.insert(this->getHwQubit(qubit));
@@ -69,7 +68,7 @@ public:
    * @param qubit The hardware qubit to be queried
    * @return The circuit qubit assigned to the given hardware qubit
    */
-  [[nodiscard]] inline Qubit getCircQubit(HwQubit qubit) const {
+  [[nodiscard]] Qubit getCircQubit(HwQubit qubit) const {
     for (const auto& [circQubit, hwQubit] : circToHw) {
       if (hwQubit == qubit) {
         return circQubit;
@@ -86,7 +85,7 @@ public:
    * @return True if any circuit qubit is assigned to the given hardware qubit,
    * false otherwise
    */
-  [[nodiscard]] inline bool isMapped(HwQubit qubit) const {
+  [[nodiscard]] bool isMapped(HwQubit qubit) const {
     return std::any_of(
         circToHw.begin(), circToHw.end(),
         [qubit](const auto& pair) { return pair.second == qubit; });
@@ -97,7 +96,7 @@ public:
    * qubits.
    * @param op The operation to be converted
    */
-  inline void mapToHwQubits(Operation* op) const {
+  void mapToHwQubits(Operation* op) const {
     op->setTargets(circToHw.apply(op->getTargets()));
     op->setControls(circToHw.apply(op->getControls()));
   }
@@ -106,8 +105,9 @@ public:
    * @brief Interchanges the mapping of two hardware qubits. At least one of it
    * must be mapped to a circuit qubit.
    * @param swap The two circuit qubits to be swapped
+   * @throws std::runtime_error if hardware qubits are not mapped
    */
-  void swap(Swap swap);
+  void applySwap(Swap swap);
 };
 
 } // namespace qc

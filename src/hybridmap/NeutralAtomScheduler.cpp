@@ -174,7 +174,7 @@ void qc::NeutralAtomScheduler::printSchedulerResults(
   std::cout << "totalIdleTime: " << totalIdleTime << "\n";
   std::cout << "totalGateFidelities: " << totalGateFidelities << "\n";
   std::cout << "totalFidelities: " << totalFidelities << "\n";
-  std::cout << "totalnCZs: " << nCZs << "\n";
+  std::cout << "totalNumCZs: " << nCZs << "\n";
 }
 
 void qc::NeutralAtomScheduler::printTotalExecutionTimes(
@@ -197,7 +197,8 @@ qc::AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>&  initHwPos,
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
     idToCoord[id]       = {coord % nCols * arch.getInterQubitDistance(),
-                           coord / nCols * arch.getInterQubitDistance()};
+                           static_cast<fp>(coord) / nCols *
+                               arch.getInterQubitDistance()};
   }
 }
 
@@ -223,17 +224,6 @@ std::string qc::AnimationAtoms::getEndString(fp endTime) {
   return initString;
 }
 
-void qc::AnimationAtoms::moveAtom(const qc::HwQubit id, qc::fp x, qc::fp y) {
-  auto coord = idToCoord[id];
-  coord.first += x;
-  coord.second += y;
-  idToCoord[id] = coord;
-}
-void qc::AnimationAtoms::changeCoordIdx(const qc::HwQubit    id,
-                                        const qc::CoordIndex coordIdx) {
-  coordIdxToId.erase(coordIdxToId.find(coordIdx));
-  coordIdxToId[coordIdx] = id;
-}
 qc::AnimationAtoms::axesId qc::AnimationAtoms::addAxis(qc::HwQubit id) {
   if (axesIds.find(id) == axesIds.end()) {
     axesIdCounter++;
@@ -271,9 +261,9 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
           if (std::abs(coord.first - coordIdx % arch.getNcolumns() *
                                          arch.getInterQubitDistance()) <
                   0.0001 &&
-              std::abs(coord.second - coordIdx / arch.getNcolumns() *
-                                          arch.getInterQubitDistance()) <
-                  0.0001) {
+              std::abs(coord.second -
+                       static_cast<fp>(coordIdx) / arch.getNcolumns() *
+                           arch.getInterQubitDistance()) < 0.0001) {
             // remove old coordIdx with same id
             for (const auto& [oldCoordIdx, oldId] : coordIdxToId) {
               if (oldId == id) {
@@ -295,14 +285,14 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
     if (op->getType() == OpType::AodActivate) {
       addAxis(id);
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
-                               ColorSlm, true, axesIds.at(id));
+                               colorSlm, true, axesIds.at(id));
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
-                               ColorAod, true, axesIds.at(id));
+                               colorAod, true, axesIds.at(id));
     } else if (op->getType() == OpType::AodDeactivate) {
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
-                               ColorAod, true, axesIds.at(id));
+                               colorAod, true, axesIds.at(id));
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
-                               ColorSlm, true, axesIds.at(id));
+                               colorSlm, true, axesIds.at(id));
       removeAxis(id);
 
     } else if (op->getType() == OpType::AodMove) {
@@ -312,7 +302,7 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
             " but there is no axis for qubit " + std::to_string(id));
       }
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
-                               ColorAod, true, axesIds.at(id));
+                               colorAod, true, axesIds.at(id));
 
       // update atom coordinates
       auto startsX =
@@ -334,29 +324,29 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
       // save new coordinates
       idToCoord[id] = coord;
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
-                               ColorAod, true, axesIds.at(id));
+                               colorAod, true, axesIds.at(id));
     } else if (op->getUsedQubits().size() > 1) { // multi qubit gates
       addMargin(id);
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
-                               ColorSlm, false, 0, false, marginIds.at(id));
+                               colorSlm, false, 0, false, marginIds.at(id));
       auto midTime = (startTime + endTime) / 2;
       csvLine +=
-          createCsvLine(midTime, id, coord.first, coord.second, 1, ColorCz,
+          createCsvLine(midTime, id, coord.first, coord.second, 1, colorCz,
                         false, 0, true, marginIds.at(id),
                         arch.getBlockingFactor() * arch.getInteractionRadius() *
                             arch.getInterQubitDistance());
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
-                               ColorSlm, false, 0, false, marginIds.at(id));
+                               colorSlm, false, 0, false, marginIds.at(id));
       removeMargin(id);
 
     } else { // single qubit gates
       csvLine +=
-          createCsvLine(startTime, id, coord.first, coord.second, 1, ColorSlm);
+          createCsvLine(startTime, id, coord.first, coord.second, 1, colorSlm);
       auto midTime = (startTime + endTime) / 2;
       csvLine +=
-          createCsvLine(midTime, id, coord.first, coord.second, 1, ColorLocal);
+          createCsvLine(midTime, id, coord.first, coord.second, 1, colorLocal);
       csvLine +=
-          createCsvLine(endTime, id, coord.first, coord.second, 1, ColorSlm);
+          createCsvLine(endTime, id, coord.first, coord.second, 1, colorSlm);
     }
   }
   return csvLine;
@@ -366,11 +356,12 @@ std::string qc::AnimationAtoms::createCsvLine(
     uint32_t color, bool axes, qc::AnimationAtoms::axesId axId, bool margin,
     qc::AnimationAtoms::marginId marginId, fp marginSize) {
   std::string csvLine;
-  csvLine += std::to_string(startTime) + ";" + std::to_string(id) + ";" +
-             std::to_string(x) + ";" + std::to_string(y) + ";" +
-             std::to_string(size) + ";" + std::to_string(color) + ";" +
-             std::to_string(color) + ";" + std::to_string(axes) + ";" +
-             std::to_string(axId) + ";" + std::to_string(margin) + ";" +
-             std::to_string(marginId) + ";" + std::to_string(marginSize) + "\n";
+  csvLine +=
+      std::to_string(startTime) + ";" + std::to_string(id) + ";" +
+      std::to_string(x) + ";" + std::to_string(y) + ";" + std::to_string(size) +
+      ";" + std::to_string(color) + ";" + std::to_string(color) + ";" +
+      std::to_string(static_cast<int>(axes)) + ";" + std::to_string(axId) +
+      ";" + std::to_string(static_cast<int>(margin)) + ";" +
+      std::to_string(marginId) + ";" + std::to_string(marginSize) + "\n";
   return csvLine;
 }

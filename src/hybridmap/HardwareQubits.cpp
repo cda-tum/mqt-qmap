@@ -5,6 +5,7 @@
 
 #include "hybridmap/HardwareQubits.hpp"
 
+#include "algorithm"
 #include "hybridmap/Mapping.hpp"
 
 namespace qc {
@@ -166,10 +167,6 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
   return blockedQubits;
 }
 
-std::set<CoordIndex> HardwareQubits::getNearbyFreeCoordinates(HwQubit q) {
-  return getNearbyFreeCoordinatesByCoord(hwToCoordIdx.at(q));
-}
-
 std::set<CoordIndex>
 HardwareQubits::getNearbyFreeCoordinatesByCoord(qc::CoordIndex idx) {
   std::set<CoordIndex> nearbyFreeCoordinates;
@@ -182,13 +179,7 @@ HardwareQubits::getNearbyFreeCoordinatesByCoord(qc::CoordIndex idx) {
 }
 
 std::set<CoordIndex>
-HardwareQubits::getNearbyOccupiedCoordinates(qc::HwQubit q) {
-  auto nearbyHwQubits = this->getNearbyQubits(q);
-  return this->getCoordIndices(nearbyHwQubits);
-}
-
-std::set<CoordIndex>
-HardwareQubits::getNearbyOccupiedCoordinatesByCoord(qc::CoordIndex idx) {
+HardwareQubits::getNearbyOccupiedCoordinatesByCoord(qc::CoordIndex idx) const {
   auto nearbyHwQubits = this->getNearbyQubits(this->getHwQubit(idx));
   return this->getCoordIndices(nearbyHwQubits);
 }
@@ -230,25 +221,6 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
     }
   }
   return closestFreeCoords;
-}
-
-[[maybe_unused]] fp HardwareQubits::getSwapDistanceMove(CoordIndex idx,
-                                                        HwQubit    target) {
-  auto nearbyCoords    = this->arch.getNearbyCoordinates(idx);
-  fp   minSwapDistance = std::numeric_limits<fp>::infinity();
-  if (nearbyCoords.find(this->getCoordIndex(target)) != nearbyCoords.end()) {
-    return 0;
-  }
-  for (const auto& nearbyCoord : nearbyCoords) {
-    if (this->isMapped(nearbyCoord)) {
-      auto swapDistance =
-          this->getSwapDistance(target, this->getHwQubit(nearbyCoord)) + 1;
-      if (swapDistance < minSwapDistance) {
-        minSwapDistance = swapDistance;
-      }
-    }
-  }
-  return minSwapDistance;
 }
 
 } // namespace qc
