@@ -23,7 +23,7 @@ if(TARGET MQT::LogicBlocks)
                    ${CMAKE_CURRENT_SOURCE_DIR}/test_logicblocks.cpp)
 endif()
 
-if(TARGET ${PROJECT_NAME}_hybridmap_lib)
-  package_add_test(${PROJECT_NAME}_hybridmap_test ${PROJECT_NAME}_hybridmap_lib
+if(TARGET MQT::QMapHybrid)
+  package_add_test(${PROJECT_NAME}_hybridmap_test MQT::QMapHybrid
                    ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybridmap.cpp)
 endif()
