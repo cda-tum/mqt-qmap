@@ -271,43 +271,63 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
   std::string csvLine;
 
   for (const auto& coordIdx : op->getUsedQubits()) {
-    if (coordIdxToId.find(coordIdx) == coordIdxToId.end()) {
-      // check if qubit was moved to coordIdx, if yes, update coordIdxToId
-      if (op->getType() == OpType::AodDeactivate) {
-        for (const auto& idAndCoord : idToCoord) {
-          auto id    = idAndCoord.first;
-          auto coord = idAndCoord.second;
-          auto col   = coordIdx % arch.getNcolumns();
-          auto row   = coordIdx / arch.getNcolumns();
-          if (std::abs(coord.first - col * arch.getInterQubitDistance()) <
-                  0.0001 &&
-              std::abs(coord.second - row * arch.getInterQubitDistance()) <
-                  0.0001) {
-            // remove old coordIdx with same id
-            for (const auto& [oldCoordIdx, oldId] : coordIdxToId) {
-              if (oldId == id) {
-                coordIdxToId.erase(oldCoordIdx);
-                break;
-              }
+    // if coordIdx unmapped -> continue except it is an AodDeactivate
+    if (OpType::AodDeactivate != op->getType() &&
+        coordIdxToId.find(coordIdx) == coordIdxToId.end()) {
+      continue;
+    }
+    if (op->getType() == OpType::AodDeactivate) {
+      // check if there is a qubit at coordIdx
+      // if yes -> update coordIdxToId with new coordIdx
+      // if not -> throw exception
+      for (const auto& idAndCoord : idToCoord) {
+        auto id    = idAndCoord.first;
+        auto coord = idAndCoord.second;
+        auto col   = coordIdx % arch.getNcolumns();
+        auto row   = coordIdx / arch.getNcolumns();
+        if (std::abs(coord.first - col * arch.getInterQubitDistance()) <
+                0.0001 &&
+            std::abs(coord.second - row * arch.getInterQubitDistance()) <
+                0.0001) {
+          // remove old coordIdx with same id
+          for (const auto& [oldCoordIdx, oldId] : coordIdxToId) {
+            if (oldId == id) {
+              coordIdxToId.erase(oldCoordIdx);
+              break;
             }
-            // add new coordIdx with id
-            coordIdxToId[coordIdx] = id;
-            break;
           }
+          // add new coordIdx with id
+          coordIdxToId[coordIdx] = id;
+          break;
         }
-      } else {
-        continue;
       }
+    }
+    if (coordIdxToId.find(coordIdx) == coordIdxToId.end() ||
+        idToCoord.find(coordIdxToId.at(coordIdx)) == idToCoord.end()) {
+      throw QMAPException("Tried to create csv line for qubit at coordIdx " +
+                          std::to_string(coordIdx) +
+                          " but there is no qubit at this coordIdx");
     }
     auto id    = coordIdxToId.at(coordIdx);
     auto coord = idToCoord.at(id);
     if (op->getType() == OpType::AodActivate) {
       addAxis(id);
+      if (axesIds.find(id) == axesIds.end()) {
+        throw QMAPException(
+            "Tried to activate qubit at coordIdx " + std::to_string(coordIdx) +
+            " but there is no axis for qubit " + std::to_string(id));
+      }
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
                                colorSlm, true, axesIds.at(id));
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
                                colorAod, true, axesIds.at(id));
     } else if (op->getType() == OpType::AodDeactivate) {
+      if (axesIds.find(id) == axesIds.end()) {
+        throw QMAPException("Tried to deactivate qubit at coordIdx " +
+                            std::to_string(coordIdx) +
+                            " but there is no axis for qubit " +
+                            std::to_string(id));
+      }
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
                                colorAod, true, axesIds.at(id));
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
