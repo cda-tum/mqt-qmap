@@ -3,13 +3,19 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
 #include "filesystem"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
-#include "hybridmap/NeutralAtomScheduler.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 
 #include "gtest/gtest.h"
+#include <cstdint>
+#include <fstream>
+#include <iostream>
 #include <string>
+#include <tuple>
 
 class NeutralAtomArchitectureTest
     : public ::testing::TestWithParam<std::string> {
@@ -76,9 +82,9 @@ protected:
 };
 
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
-  auto               arch = qc::NeutralAtomArchitecture(testArchitecturePath);
-  qc::InitialMapping initialMapping = qc::InitialMapping::Identity;
-  qc::InitialCoordinateMapping initialCoordinateMapping =
+  auto arch = qc::NeutralAtomArchitecture(testArchitecturePath);
+  qc::InitialMapping const initialMapping = qc::InitialMapping::Identity;
+  qc::InitialCoordinateMapping const initialCoordinateMapping =
       qc::InitialCoordinateMapping::Trivial;
   qc::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
   qc::MapperParameters  mapperParameters;
@@ -118,8 +124,8 @@ INSTANTIATE_TEST_SUITE_P(
 TEST(NeutralAtomMapperTest, Output) {
   auto arch = qc::NeutralAtomArchitecture(
       "hybridmap/architectures/rubidium_shuttling.json");
-  qc::InitialMapping           initialMapping = qc::InitialMapping::Identity;
-  qc::InitialCoordinateMapping initialCoordinateMapping =
+  qc::InitialMapping const initialMapping = qc::InitialMapping::Identity;
+  qc::InitialCoordinateMapping const initialCoordinateMapping =
       qc::InitialCoordinateMapping::Trivial;
   qc::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
   qc::MapperParameters  mapperParameters;
@@ -140,11 +146,9 @@ TEST(NeutralAtomMapperTest, Output) {
   qcMapped.dumpOpenQASM(dummyFs, false);
 
   auto qcAodMapped = mapper.convertToAod(qcMapped);
-  // get dummy filestream to avoid output
   qcAodMapped.dumpOpenQASM(dummyFs, false);
 
   auto scheduleResults = mapper.schedule(true, true);
-  // compare to stored file
   dummyFs << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
