@@ -47,26 +47,31 @@ INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
                                            "rubidium_shuttling"));
 class NeutralAtomMapperTest
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
-    // lookAheadWeight
+    // lookAheadWeight, initialCoordinateMapping
     : public ::testing::TestWithParam<
-          std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp>> {
+          std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp,
+                     qc::InitialCoordinateMapping>> {
 protected:
   std::string testArchitecturePath = "hybridmap/architectures/";
   std::string testQcPath           = "hybridmap/circuits/";
   qc::fp      gateWeight           = 1;
   qc::fp      shuttlingWeight      = 1;
   qc::fp      lookAheadWeight      = 1;
+  qc::InitialCoordinateMapping initialCoordinateMapping =
+      qc::InitialCoordinateMapping::Trivial;
   // fixed
-  qc::fp decay               = 0.1;
-  qc::fp shuttlingTimeWeight = 0.1;
+  qc::fp   decay               = 0.1;
+  qc::fp   shuttlingTimeWeight = 0.1;
+  uint32_t seed                = 42;
 
   void SetUp() override {
     auto params = GetParam();
     testArchitecturePath += std::get<0>(params) + ".json";
     testQcPath += std::get<1>(params) + ".qasm";
-    gateWeight      = std::get<2>(params);
-    shuttlingWeight = std::get<3>(params);
-    lookAheadWeight = std::get<4>(params);
+    gateWeight               = std::get<2>(params);
+    shuttlingWeight          = std::get<3>(params);
+    lookAheadWeight          = std::get<4>(params);
+    initialCoordinateMapping = std::get<5>(params);
   }
 };
 
@@ -83,6 +88,7 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   mapperParameters.shuttlingTimeWeight  = shuttlingTimeWeight;
   mapperParameters.gateWeight           = gateWeight;
   mapperParameters.shuttlingWeight      = shuttlingWeight;
+  mapperParameters.seed                 = seed;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
@@ -105,7 +111,9 @@ INSTANTIATE_TEST_SUITE_P(
                           "multiply_2",
                           "qft_nativegates_rigetti_qiskit_opt3_10"),
         ::testing::Values(1, 0.), ::testing::Values(1, 0.),
-        ::testing::Values(0, 0.1)));
+        ::testing::Values(0, 0.1),
+        ::testing::Values(qc::InitialCoordinateMapping::Trivial,
+                          qc::InitialCoordinateMapping::Random)));
 
 TEST(NeutralAtomMapperTest, Output) {
   auto arch = qc::NeutralAtomArchitecture(
@@ -121,6 +129,7 @@ TEST(NeutralAtomMapperTest, Output) {
   mapperParameters.shuttlingTimeWeight  = 0.1;
   mapperParameters.gateWeight           = 1;
   mapperParameters.shuttlingWeight      = 0;
+  mapperParameters.seed                 = 42;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(
