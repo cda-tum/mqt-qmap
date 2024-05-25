@@ -76,7 +76,8 @@ public:
   // Constructors
   HardwareQubits() = delete;
   HardwareQubits(const NeutralAtomArchitecture& arch,
-                 InitialCoordinateMapping       initialCoordinateMapping)
+                 InitialCoordinateMapping       initialCoordinateMapping,
+                 uint32_t                       seed)
       : arch(arch), swapDistances(arch.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:
@@ -88,8 +89,10 @@ public:
     case Random:
       std::vector<CoordIndex> indices(arch.getNpositions());
       std::iota(indices.begin(), indices.end(), 0);
-      std::random_device rd;
-      std::mt19937       g(rd());
+      if (seed == 0) {
+        seed = std::random_device()();
+      }
+      std::mt19937 g(seed);
       std::shuffle(indices.begin(), indices.end(), g);
       for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
         hwToCoordIdx.insert({i, indices[i]});

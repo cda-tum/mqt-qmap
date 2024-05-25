@@ -20,12 +20,13 @@ namespace qc {
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
-  fp lookaheadWeightSwaps = 0.1;
-  fp lookaheadWeightMoves = 0.1;
-  fp decay                = 0.1;
-  fp shuttlingTimeWeight  = 1;
-  fp gateWeight           = 1;
-  fp shuttlingWeight      = 1;
+  fp       lookaheadWeightSwaps = 0.1;
+  fp       lookaheadWeightMoves = 0.1;
+  fp       decay                = 0.1;
+  fp       shuttlingTimeWeight  = 1;
+  fp       gateWeight           = 1;
+  fp       shuttlingWeight      = 1;
+  uint32_t seed                 = 0;
 };
 
 /**
@@ -366,7 +367,7 @@ public:
                     const MapperParameters& p = MapperParameters())
       : arch(arch), mappedQc(arch.getNpositions()),
         mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
-        hardwareQubits(arch, initialCoordinateMapping) {};
+        hardwareQubits(arch, initialCoordinateMapping, parameters.seed) {};
 
   /**
    * @brief Sets the runtime parameters of the mapper.
