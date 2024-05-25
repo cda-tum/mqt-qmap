@@ -259,8 +259,8 @@ void AodScheduler::AodActivationHelper::reAssignOffsets(
             });
   int32_t offset = sign;
   for (auto* aodMove : aodMoves) {
-    if (std::signbit(aodMove->delta) ==
-        std::signbit(static_cast<double>(sign))) {
+    // same sign
+    if (aodMove->delta * sign > 0) {
       aodMove->offset = offset;
       offset += sign;
     }
@@ -401,7 +401,7 @@ uint32_t AodScheduler::AodActivationHelper::getMaxOffsetAtInit(
   uint32_t maxOffset = 0;
   for (const auto& aodMove : aodMoves) {
     auto offset = aodMove->offset;
-    if (std::signbit(offset) == std::signbit(static_cast<double>(sign))) {
+    if (offset * sign > 0) {
       maxOffset = std::max(maxOffset, static_cast<uint32_t>(std::abs(offset)));
     }
   }
