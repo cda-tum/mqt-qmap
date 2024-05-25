@@ -98,7 +98,7 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto                   qcMapped = mapper.map(qc, initialMapping, false);
+  auto                   qcMapped = mapper.map(qc, initialMapping, true);
 
   auto qcAodMapped = mapper.convertToAod(qcMapped);
 
