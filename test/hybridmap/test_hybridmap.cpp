@@ -98,20 +98,8 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto                   qcMapped = mapper.map(qc, initialMapping, true);
-
-  auto qcAodMapped = mapper.convertToAod(qcMapped);
-
-  // write to file in directory where the test is executed
-  auto filename = std::filesystem::current_path() / "test.qasm";
-  std::cout << "Writing to " << filename << '\n';
-  std::ofstream dummyFs(filename);
-  qcMapped.dumpOpenQASM(dummyFs, false);
-  dummyFs.close();
-  auto          filenameAod = std::filesystem::current_path() / "test_aod.qasm";
-  std::ofstream dummyFsAod(filenameAod);
-  qcAodMapped.dumpOpenQASM(dummyFsAod, false);
-  dummyFsAod.close();
+  auto                   qcMapped    = mapper.map(qc, initialMapping, true);
+  auto                   qcAodMapped = mapper.convertToAod(qcMapped);
 
   auto scheduleResults = mapper.schedule(true, true);
 
