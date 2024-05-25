@@ -351,7 +351,7 @@ AodOperation AodScheduler::MoveGroup::connectAodOperations(
               for (size_t i = 0; i < startXs.size(); i++) {
                 const auto startX = startXs[i];
                 const auto endX   = endXs[i];
-                if (startX != endX) {
+                if (std::abs(startX - endX) > 0.0001) {
                   aodOperations.emplace_back(Dimension::X, startX, endX);
                 }
               }
