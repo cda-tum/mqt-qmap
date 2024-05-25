@@ -213,9 +213,10 @@ qc::AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>&  initHwPos,
 
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
-    idToCoord[id]       = {coord % nCols * arch.getInterQubitDistance(),
-                           static_cast<fp>(coord) / nCols *
-                               arch.getInterQubitDistance()};
+    auto column         = coord % nCols;
+    auto row            = coord / nCols;
+    idToCoord[id]       = {column * arch.getInterQubitDistance(),
+                           row * arch.getInterQubitDistance()};
   }
 }
 
@@ -273,13 +274,15 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
     if (coordIdxToId.find(coordIdx) == coordIdxToId.end()) {
       // check if qubit was moved to coordIdx, if yes, update coordIdxToId
       if (op->getType() == OpType::AodDeactivate) {
-        for (const auto& [id, coord] : idToCoord) {
-          if (std::abs(coord.first - coordIdx % arch.getNcolumns() *
-                                         arch.getInterQubitDistance()) <
+        for (const auto& idAndCoord : idToCoord) {
+          auto id    = idAndCoord.first;
+          auto coord = idAndCoord.second;
+          auto col   = coordIdx % arch.getNcolumns();
+          auto row   = coordIdx / arch.getNcolumns();
+          if (std::abs(coord.first - col * arch.getInterQubitDistance()) <
                   0.0001 &&
-              std::abs(coord.second -
-                       static_cast<fp>(coordIdx) / arch.getNcolumns() *
-                           arch.getInterQubitDistance()) < 0.0001) {
+              std::abs(coord.second - row * arch.getInterQubitDistance()) <
+                  0.0001) {
             // remove old coordIdx with same id
             for (const auto& [oldCoordIdx, oldId] : coordIdxToId) {
               if (oldId == id) {
