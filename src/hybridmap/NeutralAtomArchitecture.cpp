@@ -52,6 +52,11 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     this->parameters                        = Parameters();
     this->parameters.nQubits                = jsonDataParameters["nQubits"];
 
+    // check if qubits can fit in the architecture
+    if (this->parameters.nQubits > this->properties.getNpositions()) {
+      throw std::runtime_error("Number of qubits exceeds number of positions");
+    }
+
     std::map<std::string, fp> gateTimes;
     for (const auto& [key, value] : jsonDataParameters["gateTimes"].items()) {
       gateTimes.insert({key, value});

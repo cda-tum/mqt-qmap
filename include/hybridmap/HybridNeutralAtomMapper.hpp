@@ -375,13 +375,25 @@ public:
                              const MapperParameters& p = MapperParameters())
       : arch(arch), mappedQc(arch.getNpositions()),
         mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
-        hardwareQubits(arch, initialCoordinateMapping, parameters.seed) {};
+        hardwareQubits(arch, initialCoordinateMapping, parameters.seed) {
+    // need at least on free coordinate to shuttle
+    if (arch.getNpositions() - arch.getNqubits() < 1) {
+      this->parameters.gateWeight      = 1;
+      this->parameters.shuttlingWeight = 0;
+    }
+  };
 
   /**
    * @brief Sets the runtime parameters of the mapper.
    * @param p The runtime parameters of the mapper
    */
-  void setParameters(const MapperParameters& p) { this->parameters = p; }
+  void setParameters(const MapperParameters& p) {
+    this->parameters = p;
+    if (arch.getNpositions() - arch.getNqubits() < 1) {
+      this->parameters.gateWeight      = 1;
+      this->parameters.shuttlingWeight = 0;
+    }
+  }
 
   // Methods
   /**

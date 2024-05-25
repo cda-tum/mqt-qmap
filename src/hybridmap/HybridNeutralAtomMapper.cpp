@@ -15,6 +15,7 @@
 #include "iterator"
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1157,6 +1158,9 @@ NeutralAtomMapper::getMoveAwayCombinations(CoordIndex          startCoord,
     const AtomMove move     = {startCoord, targetCoord};
     const AtomMove moveAway = {targetCoord, moveAwayTarget};
     moveCombinations.addMoveComb(MoveComb({moveAway, move}));
+  }
+  if (moveCombinations.empty()) {
+    throw QMAPException("No move away target found");
   }
   return moveCombinations;
 }
