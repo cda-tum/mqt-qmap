@@ -7,9 +7,14 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
 
 #include <algorithm>
+#include <cstdint>
+#include <iterator>
 #include <set>
+#include <vector>
 
 namespace qc {
 

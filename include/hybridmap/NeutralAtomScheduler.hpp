@@ -5,11 +5,21 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
-#include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
 
+#include <cstdint>
+#include <deque>
 #include <fstream>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace qc {
 /**
@@ -28,14 +38,14 @@ struct SchedulerResults {
         totalGateFidelities(totalGateFidelities),
         totalFidelities(totalFidelities), nCZs(nCZs) {}
 
-  std::string toString() {
+  [[nodiscard]] std::string toString() const {
     std::stringstream ss;
     ss << "Total execution time: " << totalExecutionTime;
     ss << "\nTotal idle time: " << totalIdleTime
        << "\nTotal fidelities: " << totalFidelities;
     return ss.str();
   }
-  std::string toCsv() {
+  [[nodiscard]] std::string toCsv() const {
     std::stringstream ss;
     ss << totalExecutionTime << ", " << totalIdleTime << "," << totalFidelities;
     return ss.str();
@@ -68,8 +78,8 @@ protected:
 
 public:
   // Constructor
-  explicit NeutralAtomScheduler(const qc::NeutralAtomArchitecture& arch)
-      : arch(arch) {}
+  explicit NeutralAtomScheduler(qc::NeutralAtomArchitecture arch)
+      : arch(std::move(arch)) {}
 
   /**
    * @brief Schedules the given quantum circuit on the neutral atom architecture
@@ -114,11 +124,11 @@ class AnimationAtoms {
   using marginId = std::uint32_t;
 
 protected:
-  const uint32_t colorSlm    = 0;
-  const uint32_t colorAod    = 1;
-  const uint32_t colorLocal  = 2;
-  const uint32_t colorGlobal = 3;
-  const uint32_t colorCz     = 4;
+  uint32_t                  colorSlm    = 0;
+  uint32_t                  colorAod    = 1;
+  uint32_t                  colorLocal  = 2;
+  [[maybe_unused]] uint32_t colorGlobal = 3;
+  uint32_t                  colorCz     = 4;
 
   std::map<CoordIndex, HwQubit>        coordIdxToId;
   std::map<HwQubit, std::pair<fp, fp>> idToCoord;

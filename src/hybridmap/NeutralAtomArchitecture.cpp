@@ -5,8 +5,24 @@
 
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 
+#include "Definitions.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "nlohmann/json.hpp"
+#include "operations/AodOperation.hpp"
 #include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <fstream>
+#include <map>
+#include <nlohmann/json_fwd.hpp>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace qc {
 

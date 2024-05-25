@@ -1,6 +1,6 @@
 # Hybrid Neutral Atom Mapper
 
-This file gives some "big picture" information about the Hybrid Neutral Atom Mapper (NAMAP) project.
+This file gives some "big picture" information about the Hybrid Neutral Atom Mapper project.
 The complete mapping process has the following structure:
 
 1. Neutral Atom Mapper
@@ -8,7 +8,7 @@ The complete mapping process has the following structure:
    2. Neutral Atom Layer: Manages the creation of the front and lookahead layer, given a circuit.
    3. Mapping Loop: The gates are assigned to gate-based or shuttling-based mapping. Then suitable swaps or shuttling moves are found and applied.
 2. AOD Scheduler: The abstract move operations are bundled into parallelize move groups and then converted into native AOD sequences (activate, move, deactivate).
-3. Neutral Atom Scheduler: Aligns gates in a as-soon-as-possible fashion, taking into account the blocking constraint of multi-qubit gates.
+3. Neutral Atom Scheduler: Aligns gates in an as-soon-as-possible fashion, taking into account the blocking constraint of multi-qubit gates.
 
 ## Neutral Atom Mapper
 
@@ -65,6 +65,6 @@ To convert the abstract move operations into native AOD sequences, the following
 
 ### Neutral Atom Scheduler
 
-The neutral atom scheduler aligns the gates in a as-soon-as-possible fashion, taking into account the blocking constraint of multi-qubit gates.
+The neutral atom scheduler aligns the gates in an as-soon-as-possible fashion, taking into account the blocking constraint of multi-qubit gates.
 It also computes the total necessary execution time of the circuit, based on the hardware information of the architecture.
 Currently, gates and shuttling moves are treated equally, and can be executed in parallel.

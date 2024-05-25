@@ -6,13 +6,30 @@
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
 #include "CircuitOptimizer.hpp"
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
+#include "hybridmap/AodScheduler.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "iterator"
-#include "utils.hpp"
+#include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <queue>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace qc {
 QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
@@ -1064,7 +1081,7 @@ NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits&     gateQubits,
   }
   // compute for each qubit the best position around it based on the cost of
   // the single move choose best one
-  MoveCombs            moveCombinations;
+  MoveCombs const      moveCombinations;
   std::set<CoordIndex> gateQubitCoords;
   for (const auto& gateQubit : gateQubits) {
     gateQubitCoords.insert(this->hardwareQubits.getCoordIndex(gateQubit));

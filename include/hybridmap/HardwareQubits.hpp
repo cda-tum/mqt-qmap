@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "Permutation.hpp"
 #include "algorithm"
 #include "cstdint"
@@ -13,8 +14,13 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "map"
 #include "numeric"
+#include "operations/Operation.hpp"
 #include "random"
 #include "vector"
+
+#include <set>
+#include <stdexcept>
+#include <string>
 
 namespace qc {
 
@@ -179,7 +185,8 @@ public:
    * @param q The hardware qubit.
    * @return The nearby coordinates of the hardware qubit.
    */
-  [[nodiscard]] std::set<CoordIndex> getNearbyCoordinates(HwQubit q) const {
+  [[nodiscard]] [[maybe_unused]] std::set<CoordIndex>
+  getNearbyCoordinates(HwQubit q) const {
     return this->arch.getNearbyCoordinates(this->getCoordIndex(q));
   }
 

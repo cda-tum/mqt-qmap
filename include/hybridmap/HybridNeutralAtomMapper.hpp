@@ -5,14 +5,27 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
-#include "NeutralAtomScheduler.hpp"
 #include "QuantumComputation.hpp"
-#include "hybridmap/AodScheduler.hpp"
+#include "cstdint"
+#include "deque"
+#include "fstream"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "map"
+#include "operations/Operation.hpp"
+#include "set"
+#include "string"
+#include "utility"
+#include "vector"
+
+#include <cstddef>
+#include <sstream>
 
 namespace qc {
 
@@ -35,19 +48,14 @@ struct MapperParameters {
  */
 struct MultiQubitMovePos {
   CoordIndices coords;
-  size_t       nMoves;
+  size_t       nMoves{0};
 
   // copy constructor
-  MultiQubitMovePos() : coords(), nMoves(0) {}
-  MultiQubitMovePos(const MultiQubitMovePos& other)
-      : coords(other.coords), nMoves(other.nMoves) {}
+  MultiQubitMovePos()                               = default;
+  MultiQubitMovePos(const MultiQubitMovePos& other) = default;
 
   // copy assignment
-  MultiQubitMovePos& operator=(const MultiQubitMovePos& other) {
-    coords = other.coords;
-    nMoves = other.nMoves;
-    return *this;
-  }
+  MultiQubitMovePos& operator=(const MultiQubitMovePos& other) = default;
 };
 
 /**
@@ -195,7 +203,7 @@ protected:
    * front layer.
    * @return All possible swap gates for the front layer
    */
-  std::set<Swap>
+  [[nodiscard]] std::set<Swap>
   getAllPossibleSwaps(const std::pair<Swaps, WeightedSwaps>& swapsFront) const;
 
   /**
@@ -361,10 +369,10 @@ protected:
 public:
   // Constructors
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
-  NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
-                    InitialCoordinateMapping initialCoordinateMapping =
-                        InitialCoordinateMapping::Trivial,
-                    const MapperParameters& p = MapperParameters())
+  explicit NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
+                             InitialCoordinateMapping initialCoordinateMapping =
+                                 InitialCoordinateMapping::Trivial,
+                             const MapperParameters& p = MapperParameters())
       : arch(arch), mappedQc(arch.getNpositions()),
         mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
         hardwareQubits(arch, initialCoordinateMapping, parameters.seed) {};

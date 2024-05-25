@@ -5,7 +5,22 @@
 
 #include "hybridmap/AodScheduler.hpp"
 
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 #include "operations/AodOperation.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <set>
+#include <utility>
+#include <vector>
 
 namespace qc {
 

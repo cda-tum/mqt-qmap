@@ -5,6 +5,13 @@
 
 #include "hybridmap/NeutralAtomUtils.hpp"
 
+#include "Definitions.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+
 namespace qc {
 
 bool MoveVector::overlap(const qc::MoveVector& other) const {

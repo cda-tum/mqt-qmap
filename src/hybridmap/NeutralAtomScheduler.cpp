@@ -5,9 +5,26 @@
 
 #include "hybridmap/NeutralAtomScheduler.hpp"
 
-#include "CircuitOptimizer.hpp"
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "operations/AodOperation.hpp"
+#include "operations/OpType.hpp"
+#include "operations/Operation.hpp"
+#include "utils.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <deque>
+#include <iostream>
+#include <map>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 qc::SchedulerResults
 qc::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
@@ -229,9 +246,8 @@ qc::AnimationAtoms::axesId qc::AnimationAtoms::addAxis(qc::HwQubit id) {
     axesIdCounter++;
     axesIds[id] = axesIdCounter;
   } else {
-    throw std::runtime_error(
-        "Tried to add axis but axis already exists for qubit " +
-        std::to_string(id));
+    throw QMAPException("Tried to add axis but axis already exists for qubit " +
+                        std::to_string(id));
   }
   return axesIds[id];
 }
@@ -240,7 +256,7 @@ qc::AnimationAtoms::marginId qc::AnimationAtoms::addMargin(qc::HwQubit id) {
     marginIdCounter++;
     marginIds[id] = marginIdCounter;
   } else {
-    throw std::runtime_error(
+    throw QMAPException(
         "Tried to add margin but margin already exists for qubit " +
         std::to_string(id));
   }

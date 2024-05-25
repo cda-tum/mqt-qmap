@@ -7,9 +7,15 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "utils.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace qc {
 
@@ -84,14 +90,14 @@ initialMappingFromString(const std::string& initialMapping) {
 }
 
 /**
- * @brief Helperclass to represent a direction in x and y coordinates.
+ * @brief Helper class to represent a direction in x and y coordinates.
  * @details The boolean value corresponds to right/left and down/up.
  */
 struct Direction {
   bool x;
   bool y;
 
-  Direction(bool x, bool y) : x(x), y(y) {}
+  [[maybe_unused]] Direction(bool x, bool y) : x(x), y(y) {}
   Direction(fp deltaX, fp deltaY) : x(deltaX >= 0), y(deltaY >= 0) {}
 
   [[nodiscard]] bool operator==(const Direction& other) const {
@@ -105,7 +111,7 @@ struct Direction {
 };
 
 /**
- * @brief Helperclass to represent a move of an atom from one position to
+ * @brief Helper class to represent a move of an atom from one position to
  * another.
  * @details Each move consists in a start and end coordinate and the direction.
  */
@@ -120,7 +126,8 @@ struct MoveVector {
       : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
         direction(xEnd - xStart, yEnd - yStart) {}
 
-  [[nodiscard]] bool sameDirection(const MoveVector& other) const {
+  [[nodiscard]] [[maybe_unused]] bool
+  sameDirection(const MoveVector& other) const {
     return direction == other.direction;
   }
   [[nodiscard]] fp getLength() const {
@@ -131,7 +138,7 @@ struct MoveVector {
 };
 
 /**
- * @brief Helperclass to manage multiple atom moves which belong together.
+ * @brief Helper class to manage multiple atom moves which belong together.
  * @details E.g. a move-away combined with the actual move. These are combined
  * in a MoveComb to facilitate the cost calculation.
  */
@@ -159,7 +166,9 @@ struct MoveComb {
    * @brief Get the last move of the combination
    * @return The last move of the combination
    */
-  [[nodiscard]] AtomMove getLastMove() const { return *moves.rbegin(); }
+  [[nodiscard]] [[maybe_unused]] AtomMove getLastMove() const {
+    return *moves.rbegin();
+  }
 
   // implement == operator for AtomMove
   [[nodiscard]] bool operator==(const MoveComb& other) const {
@@ -191,7 +200,7 @@ struct MoveComb {
 };
 
 /**
- * @brief Helperclass to manage multiple move combinations.
+ * @brief Helper class to manage multiple move combinations.
  */
 struct MoveCombs {
   std::vector<MoveComb> moveCombs;
@@ -230,7 +239,7 @@ struct MoveCombs {
 };
 
 /**
- * @brief Helperclass to facilitate the handling of x/y coordinates.
+ * @brief Helper class to facilitate the handling of x/y coordinates.
  */
 class Coordinate {
 protected:

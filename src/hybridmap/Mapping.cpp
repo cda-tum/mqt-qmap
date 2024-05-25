@@ -5,6 +5,10 @@
 
 #include "hybridmap/Mapping.hpp"
 
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+
+#include <stdexcept>
+
 namespace qc {
 void Mapping::applySwap(Swap swap) {
   auto q1 = swap.first;

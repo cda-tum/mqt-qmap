@@ -5,8 +5,17 @@
 
 #pragma once
 
+#include "Definitions.hpp"
+#include "Permutation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "operations/Operation.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <set>
+#include <stdexcept>
+#include <string>
 
 namespace qc {
 

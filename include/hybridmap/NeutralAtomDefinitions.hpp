@@ -5,8 +5,12 @@
 
 #pragma once
 
-#include "operations/AodOperation.hpp"
-#include "utils.hpp"
+#include "Definitions.hpp"
+
+#include <cstdint>
+#include <set>
+#include <utility>
+#include <vector>
 
 namespace qc {
 // A CoordIndex corresponds to node in the SLM grid, where an atom can be placed
@@ -15,9 +19,9 @@ using CoordIndex   = std::uint32_t;
 using CoordIndices = std::vector<CoordIndex>;
 // A HwQubit corresponds to an atom in the neutral atom architecture. It can be
 // used as qubit or not and occupies a certain position in the architecture.
-using HwQubit     = uint32_t;
-using HwQubits    = std::set<HwQubit>;
-using HwPositions = std::vector<HwQubits>;
+using HwQubit                      = uint32_t;
+using HwQubits                     = std::set<HwQubit>;
+using HwPositions [[maybe_unused]] = std::vector<HwQubits>;
 // A Qubit corresponds to a qubit in the quantum circuit. It can be mapped to a
 // hardware qubit.
 using Qubits = std::set<Qubit>;

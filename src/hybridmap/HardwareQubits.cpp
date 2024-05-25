@@ -5,8 +5,18 @@
 
 #include "hybridmap/HardwareQubits.hpp"
 
-#include "algorithm"
-#include "hybridmap/Mapping.hpp"
+#include "Definitions.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
+
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <limits>
+#include <queue>
+#include <set>
+#include <stdexcept>
+#include <vector>
 
 namespace qc {
 void HardwareQubits::initTrivialSwapDistances() {

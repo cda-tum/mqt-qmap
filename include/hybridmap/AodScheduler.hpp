@@ -5,14 +5,20 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "cstdint"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
-
-#include <utility>
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
+#include "operations/AodOperation.hpp"
+#include "operations/OpType.hpp"
+#include "utility"
+#include "vector"
 
 namespace qc {
 // Possible types two Move combination can be combined to
-enum class ActivationMergeType { Impossible, Trivial, Merge, Append };
+enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
 
 /**
  * @brief Class to schedule AOD movements on a neutral atom architecture
@@ -73,8 +79,7 @@ protected:
         }
       }
 
-      [[nodiscard]] std::vector<AodMove*> inline getActivates(
-          Dimension dim) const {
+      [[nodiscard]] std::vector<AodMove*> getActivates(Dimension dim) const {
         if (dim == Dimension::X) {
           return activateXs;
         }
@@ -112,7 +117,7 @@ protected:
      * @param v The move vector of the move
      * @return A pair of ActivationMerge, in x and y direction
      */
-    std::pair<ActivationMergeType, ActivationMergeType>
+    [[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
     canAddActivation(const Coordinate& origin, MoveVector v) const;
     /**
      * @brief Checks if the move can be added to the current activations in the
@@ -122,9 +127,9 @@ protected:
      * @param v The move vector of the move
      * @return The ActivationMerge type
      */
-    ActivationMergeType canAddActivationDim(Dimension         dim,
-                                            const Coordinate& origin,
-                                            MoveVector        v) const;
+    [[nodiscard]] ActivationMergeType
+    canAddActivationDim(Dimension dim, const Coordinate& origin,
+                        MoveVector v) const;
     /**
      * @brief Adds the move to the current activations
      * @details The move is merged into the current activations depending on the
@@ -215,7 +220,7 @@ protected:
     std::vector<CoordIndex>                    qubitsUsedByGates;
 
     // Constructor
-    MoveGroup(NeutralAtomArchitecture arch) : arch(std::move(arch)) {}
+    explicit MoveGroup(NeutralAtomArchitecture arch) : arch(std::move(arch)) {}
 
     // Methods
     /**
@@ -229,14 +234,12 @@ protected:
      * @param move Move to add
      * @param idx Index of the move in the original quantum circuit
      */
-    void add(const AtomMove& move, const uint32_t idx);
+    void add(const AtomMove& move, uint32_t idx);
     /**
      * @brief Returns the circuit index of the first move in the move group
      * @return Circuit index of the first move in the move group
      */
-    [[nodiscard]] inline uint32_t getFirstIdx() const {
-      return moves.front().second;
-    }
+    [[nodiscard]] uint32_t getFirstIdx() const { return moves.front().second; }
     /**
      * @brief Checks if the two moves can be executed in parallel
      * @param v1 The first move
@@ -293,7 +296,7 @@ public:
    * @brief Returns the number of move groups
    * @return Number of move groups
    */
-  [[nodiscard]] inline auto getNMoveGroups() const { return moveGroups.size(); }
+  [[nodiscard]] auto getNMoveGroups() const { return moveGroups.size(); }
 };
 
 } // namespace qc

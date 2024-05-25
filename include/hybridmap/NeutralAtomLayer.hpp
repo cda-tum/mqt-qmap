@@ -9,6 +9,8 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "vector"
 
+#include <cstdint>
+#include <set>
 #include <utility>
 
 namespace qc {

@@ -5,15 +5,18 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
-#include "utils.hpp"
 
 #include <cstdint>
+#include <fstream>
+#include <iostream>
 #include <map>
+#include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace qc {
@@ -118,11 +121,11 @@ class NeutralAtomArchitecture {
      */
     class DecoherenceTimes {
     protected:
-      fp tEff;
+      fp                  tEff;
+      [[maybe_unused]] fp t1;
+      [[maybe_unused]] fp t2;
 
     public:
-      fp t1;
-      fp t2;
       DecoherenceTimes() = default;
       DecoherenceTimes(fp t1, fp t2)
           : tEff(t1 * t2 / (t1 + t2)), t1(t1), t2(t2) {}
@@ -209,12 +212,14 @@ public:
    * @brief Get the number of AODs
    * @return The number of AODs
    */
-  [[nodiscard]] std::uint16_t getNAods() const { return properties.getNAods(); }
+  [[maybe_unused]] [[nodiscard]] std::uint16_t getNAods() const {
+    return properties.getNAods();
+  }
   /**
    * @brief Get the number of AOD coordinates
    * @return The number of AOD coordinates
    */
-  [[nodiscard]] std::uint16_t getNAodCoordinates() const {
+  [[nodiscard]] [[maybe_unused]] std::uint16_t getNAodCoordinates() const {
     return properties.getNAodCoordinates();
   }
   /**
@@ -363,7 +368,7 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] CoordIndex getIndex(const Coordinate& c) {
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Coordinate& c) {
     return c.getX() + c.getY() * properties.getNcolumns();
   }
 
@@ -471,7 +476,7 @@ public:
    * @brief Save the animation of the architecture to a csv file
    * @param filename The name of the csv file
    */
-  void saveAnimationCsv(const std::string& filename) const {
+  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) const {
     std::ofstream file(filename);
     file << getAnimationCsv();
   }
