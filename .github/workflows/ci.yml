@@ -31,6 +31,7 @@ jobs:
     uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-linter.yml@v1.2.1
     with:
       setup-z3: true
+      files-changed-only: false
 
   python-tests:
     name: 🐍 Test
