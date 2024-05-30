@@ -8,6 +8,11 @@
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomUtils.hpp"
+#include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+
+#include <cstdint>
+#include <vector>
 
 namespace qc {
 
@@ -24,6 +29,10 @@ namespace qc {
  *
  */
 class HybridSynthesisMapper : private NeutralAtomMapper {
+  using qcs = std::vector<QuantumComputation>;
+
+  AdjacencyMatrix adjacencyMatrix;
+
 public:
   // Constructors
   HybridSynthesisMapper() = delete;
@@ -35,5 +44,40 @@ public:
           InitialCoordinateMapping::Trivial,
       const MapperParameters& params = MapperParameters())
       : NeutralAtomMapper(arch, initialCoordinateMapping, params) {}
+
+  // Functions
+
+  /**
+   * @brief Remaps the whole circuit again starting from the initial mapping.
+   * @param initialMapping The initial mapping to be used.
+   * @return The remapped circuit.
+   */
+  QuantumComputation
+  completelyRemap(InitialMapping initialMapping = InitialMapping::Identity);
+
+  /**
+   * @brief Evaluates the synthesis steps proposed by the ZX extraction.
+   * @param synthesisSteps The synthesis steps proposed by the ZX extraction.
+   * @param directlyMap If true, the synthesis steps are directly mapped to the
+   * hardware.
+   * @return The index of the synthesis step with the lowest effort.
+   */
+  uint32_t evaluateSynthesisSteps(qcs& synthesisSteps,
+                                  bool directlyMap = false);
+
+  /**
+   * @brief Directly maps the given QuantumComputation to the hardware by
+   * inserting SWAP gates or shuttling move operations.
+   * @param qc The gates (QuantumComputation) to be mapped.
+   */
+  void directlyMap(const QuantumComputation& qc);
+
+  /**
+   * @brief Returns the current adjacency matrix of the neutral atom hardware.
+   * @return The current adjacency matrix of the neutral atom hardware.
+   */
+  [[nodiscard]] AdjacencyMatrix getAdjacencyMatrix() const {
+    return adjacencyMatrix;
+  }
 };
 } // namespace qc
