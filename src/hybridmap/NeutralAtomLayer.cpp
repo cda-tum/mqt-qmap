@@ -160,6 +160,9 @@ bool qc::NeutralAtomLayer::commutesWithAtQubit(const qc::GateList& layer,
 bool qc::NeutralAtomLayer::commuteAtQubit(const Operation* op1,
                                           const Operation* op2,
                                           const qc::Qubit& qubit) {
+  if (op1->isNonUnitaryOperation() || op2->isNonUnitaryOperation()) {
+    return false;
+  }
   // single qubit gates commute
   if (op1->getUsedQubits().size() == 1 && op2->getUsedQubits().size() == 1) {
     return true;

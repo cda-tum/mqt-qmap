@@ -137,7 +137,9 @@ public:
    */
   void mapToCoordIdx(Operation* op) const {
     op->setTargets(hwToCoordIdx.apply(op->getTargets()));
-    op->setControls(hwToCoordIdx.apply(op->getControls()));
+    if (op->isControlled()) {
+      op->setControls(hwToCoordIdx.apply(op->getControls()));
+    }
   }
 
   /**

@@ -107,7 +107,9 @@ public:
    */
   void mapToHwQubits(Operation* op) const {
     op->setTargets(circToHw.apply(op->getTargets()));
-    op->setControls(circToHw.apply(op->getControls()));
+    if (op->isControlled()) {
+      op->setControls(circToHw.apply(op->getControls()));
+    }
   }
 
   /**

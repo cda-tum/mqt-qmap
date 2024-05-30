@@ -39,7 +39,6 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
   mappedQc = QuantumComputation(arch.getNpositions());
   nMoves   = 0;
   nSwaps   = 0;
-  qc::CircuitOptimizer::removeFinalMeasurements(qc);
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
