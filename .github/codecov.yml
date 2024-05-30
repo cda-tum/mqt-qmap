@@ -26,11 +26,9 @@ flag_management:
       paths:
         - "include"
         - "src"
-      after_n_builds: 1
     - name: python
       paths:
         - "src/mqt/**/*.py"
-      after_n_builds: 11
       statuses:
         - type: project
           threshold: 0.5%
