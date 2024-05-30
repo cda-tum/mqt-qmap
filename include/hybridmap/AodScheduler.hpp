@@ -102,8 +102,8 @@ protected:
     OpType type;
 
     // Constructor
-    AodActivationHelper(NeutralAtomArchitecture arch, OpType type)
-        : arch(std::move(arch)), type(type) {}
+    AodActivationHelper(const NeutralAtomArchitecture& arch, OpType type)
+        : arch(arch), type(type) {}
 
     // Methods
 
@@ -228,7 +228,7 @@ protected:
     std::vector<CoordIndex>                    qubitsUsedByGates;
 
     // Constructor
-    explicit MoveGroup(NeutralAtomArchitecture arch) : arch(std::move(arch)) {}
+    explicit MoveGroup(const NeutralAtomArchitecture& arch) : arch(arch) {}
 
     // Methods
     /**
