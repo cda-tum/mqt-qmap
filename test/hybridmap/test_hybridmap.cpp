@@ -84,10 +84,8 @@ protected:
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   auto arch = qc::NeutralAtomArchitecture(testArchitecturePath);
   qc::InitialMapping const initialMapping = qc::InitialMapping::Identity;
-  qc::InitialCoordinateMapping const initialCoordinateMapping =
-      qc::InitialCoordinateMapping::Trivial;
-  qc::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
-  qc::MapperParameters  mapperParameters;
+  qc::NeutralAtomMapper    mapper(arch, initialCoordinateMapping);
+  qc::MapperParameters     mapperParameters;
   mapperParameters.lookaheadWeightSwaps = lookAheadWeight;
   mapperParameters.lookaheadWeightMoves = lookAheadWeight;
   mapperParameters.decay                = decay;
