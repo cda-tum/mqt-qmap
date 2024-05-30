@@ -236,7 +236,7 @@ ActivationMergeType AodScheduler::AodActivationHelper::canAddActivationDim(
     return ActivationMergeType::Trivial;
   }
   // check if it can be combined with existing activations
-  for (auto* aodMove : aodMoves) {
+  for (auto& aodMove : aodMoves) {
     if (aodMove->init == x && std::abs(aodMove->delta - delta) < 0.0001 &&
         aodMove->offset == sign) {
       // combine activations
@@ -252,13 +252,14 @@ ActivationMergeType AodScheduler::AodActivationHelper::canAddActivationDim(
 }
 
 void AodScheduler::AodActivationHelper::reAssignOffsets(
-    std::vector<AodMove*>& aodMoves, int32_t sign) {
-  std::sort(aodMoves.begin(), aodMoves.end(),
-            [](const AodMove* a, const AodMove* b) {
-              return std::abs(a->delta) < std::abs(b->delta);
-            });
+    std::vector<std::shared_ptr<AodMove>>& aodMoves, int32_t sign) {
+  std::sort(
+      aodMoves.begin(), aodMoves.end(),
+      [](const std::shared_ptr<AodMove>& a, const std::shared_ptr<AodMove> b) {
+        return std::abs(a->delta) < std::abs(b->delta);
+      });
   int32_t offset = sign;
-  for (auto* aodMove : aodMoves) {
+  for (auto& aodMove : aodMoves) {
     // same sign
     if (aodMove->delta * sign >= 0) {
       aodMove->offset = offset;
@@ -378,12 +379,12 @@ AodOperation AodScheduler::MoveGroup::connectAodOperations(
   return {OpType::AodMove, targetQubitsVec, aodOperations};
 }
 
-std::vector<AodScheduler::AodActivationHelper::AodMove*>
+std::vector<std::shared_ptr<AodScheduler::AodActivationHelper::AodMove>>
 AodScheduler::AodActivationHelper::getAodMovesFromInit(Dimension dim,
                                                        uint32_t  init) const {
-  std::vector<AodMove*> aodMoves;
+  std::vector<std::shared_ptr<AodMove>> aodMoves;
   for (const auto& activation : allActivations) {
-    for (auto* aodMove : activation.getActivates(dim)) {
+    for (auto& aodMove : activation.getActivates(dim)) {
       if (aodMove->init == init) {
         aodMoves.push_back(aodMove);
       }
@@ -440,7 +441,7 @@ void AodScheduler::AodActivationHelper::mergeActivationDim(
   // merge activations
   for (auto& activationCurrent : allActivations) {
     auto activates = activationDim.getActivates(dim);
-    for (auto* aodMove : activates) {
+    for (auto& aodMove : activates) {
       if (aodMove->init == activationDim.getActivates(dim)[0]->init &&
           aodMove->delta == activationDim.getActivates(dim)[0]->delta &&
           aodMove->offset == activationDim.getActivates(dim)[0]->offset) {

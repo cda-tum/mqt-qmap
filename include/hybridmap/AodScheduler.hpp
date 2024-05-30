@@ -16,6 +16,8 @@
 #include "utility"
 #include "vector"
 
+#include <memory>
+
 namespace qc {
 // Possible types two Move combination can be combined to
 enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
@@ -51,6 +53,8 @@ protected:
       // delta of the actual move
       fp delta;
 
+      AodMove() = default;
+
       AodMove(uint32_t init, fp delta, int32_t offset)
           : init(init), offset(offset), delta(delta) {}
     };
@@ -61,25 +65,28 @@ protected:
      */
     struct AodActivation {
       // first: x, second: delta x, third: offset x
-      std::vector<AodMove*> activateXs;
-      std::vector<AodMove*> activateYs;
-      std::vector<AtomMove> moves;
+      std::vector<std::shared_ptr<AodMove>> activateXs;
+      std::vector<std::shared_ptr<AodMove>> activateYs;
+      std::vector<AtomMove>                 moves;
 
-      AodActivation(const AodMove& activateXs, const AodMove& activateYs,
+      AodActivation(const AodMove& activateX, const AodMove& activateY,
                     const AtomMove& move)
-          : activateXs({new AodMove(activateXs)}),
-            activateYs({new AodMove(activateYs)}), moves({move}) {}
+          : moves({move}) {
+        activateXs.push_back(std::make_unique<AodMove>(activateX));
+        activateYs.push_back(std::make_unique<AodMove>(activateY));
+      }
       AodActivation(const Dimension dim, const AodMove& activate,
                     const AtomMove& move)
           : moves({move}) {
         if (dim == Dimension::X) {
-          activateXs = {new AodMove(activate)};
+          activateXs.push_back(std::make_unique<AodMove>(activate));
         } else {
-          activateYs = {new AodMove(activate)};
+          activateYs.push_back(std::make_unique<AodMove>(activate));
         }
       }
 
-      [[nodiscard]] std::vector<AodMove*> getActivates(Dimension dim) const {
+      [[nodiscard]] std::vector<std::shared_ptr<AodMove>>
+      getActivates(Dimension dim) const {
         if (dim == Dimension::X) {
           return activateXs;
         }
@@ -107,7 +114,7 @@ protected:
      * @param init The initial position to check
      * @return A vector of AOD moves
      */
-    [[nodiscard]] std::vector<AodMove*>
+    [[nodiscard]] std::vector<std::shared_ptr<AodMove>>
     getAodMovesFromInit(Dimension dim, uint32_t init) const;
 
     // Activation management
@@ -158,7 +165,8 @@ protected:
      * @param aodMoves The aod offset moves to order
      * @param sign The direction of the offset moves (right/left or down/up)
      */
-    static void reAssignOffsets(std::vector<AodMove*>& aodMoves, int32_t sign);
+    static void reAssignOffsets(std::vector<std::shared_ptr<AodMove>>& aodMoves,
+                                int32_t                                sign);
 
     /**
      * @brief Returns the maximum offset in the given dimension/direction from
