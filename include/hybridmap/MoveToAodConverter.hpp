@@ -97,12 +97,15 @@ protected:
 
     // AODScheduler
     // NeutralAtomArchitecture to call necessary hardware information
-    NeutralAtomArchitecture    arch;
-    std::vector<AodActivation> allActivations;
+    const NeutralAtomArchitecture& arch;
+    std::vector<AodActivation>     allActivations;
     // Differentiate between loading and unloading
     OpType type;
 
     // Constructor
+    AodActivationHelper()                           = delete;
+    AodActivationHelper(const AodActivationHelper&) = delete;
+    AodActivationHelper(AodActivationHelper&&)      = delete;
     AodActivationHelper(const NeutralAtomArchitecture& arch, OpType type)
         : arch(arch), type(type) {}
 
@@ -219,7 +222,6 @@ protected:
    * - the qubits that are used by the gates in the move group
    */
   struct MoveGroup {
-    NeutralAtomArchitecture arch;
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
@@ -229,7 +231,7 @@ protected:
     std::vector<CoordIndex>                    qubitsUsedByGates;
 
     // Constructor
-    explicit MoveGroup(const NeutralAtomArchitecture& arch) : arch(arch) {}
+    explicit MoveGroup() = default;
 
     // Methods
     /**
@@ -237,7 +239,7 @@ protected:
      * @param move Move to check
      * @return True if the move can be added, false otherwise
      */
-    bool canAdd(const AtomMove& move);
+    bool canAdd(const AtomMove& move, const NeutralAtomArchitecture& archArg);
     /**
      * @brief Adds the given move to the move group
      * @param move Move to add
@@ -271,9 +273,9 @@ protected:
                          const std::vector<AodOperation>& opsFinal);
   };
 
-  NeutralAtomArchitecture arch;
-  QuantumComputation      qcScheduled;
-  std::vector<MoveGroup>  moveGroups;
+  const NeutralAtomArchitecture& arch;
+  QuantumComputation             qcScheduled;
+  std::vector<MoveGroup>         moveGroups;
 
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
@@ -291,8 +293,11 @@ protected:
   void processMoveGroups();
 
 public:
-  explicit MoveToAodConverter(const NeutralAtomArchitecture& arch)
-      : arch(arch), qcScheduled(arch.getNpositions()) {}
+  MoveToAodConverter()                          = delete;
+  MoveToAodConverter(const MoveToAodConverter&) = delete;
+  MoveToAodConverter(MoveToAodConverter&&)      = delete;
+  explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg)
+      : arch(archArg), qcScheduled(arch.getNpositions()) {}
 
   /**
    * @brief Schedules the given quantum circuit using AODs

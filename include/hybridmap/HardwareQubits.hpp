@@ -34,11 +34,11 @@ namespace qc {
  */
 class HardwareQubits {
 protected:
-  NeutralAtomArchitecture     arch;
-  Permutation                 hwToCoordIdx;
-  SymmetricMatrix             swapDistances;
-  std::map<HwQubit, HwQubits> nearbyQubits;
-  Permutation                 initialHwPos;
+  const NeutralAtomArchitecture& arch;
+  Permutation                    hwToCoordIdx;
+  SymmetricMatrix                swapDistances;
+  std::map<HwQubit, HwQubits>    nearbyQubits;
+  Permutation                    initialHwPos;
 
   /**
    * @brief Initializes the swap distances between the hardware qubits for the
@@ -80,7 +80,9 @@ protected:
 
 public:
   // Constructors
-  HardwareQubits() = delete;
+  HardwareQubits()                      = delete;
+  HardwareQubits(const HardwareQubits&) = delete;
+  HardwareQubits(HardwareQubits&&)      = delete;
   HardwareQubits(const NeutralAtomArchitecture& arch,
                  InitialCoordinateMapping       initialCoordinateMapping,
                  uint32_t                       seed)

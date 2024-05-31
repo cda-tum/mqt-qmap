@@ -146,7 +146,7 @@ QuantumComputation NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   CircuitOptimizer::singleQubitGateFusion(qc);
   CircuitOptimizer::flattenOperations(qc);
   // decompose AOD moves
-  MoveToAodConverter aodScheduler(this->arch);
+  MoveToAodConverter aodScheduler(arch);
   mappedQcAOD = aodScheduler.schedule(qc);
   if (this->verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';

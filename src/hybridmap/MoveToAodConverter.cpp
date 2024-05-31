@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "operations/AodOperation.hpp"
@@ -57,17 +58,17 @@ QuantumComputation MoveToAodConverter::schedule(QuantumComputation& qc) {
 }
 
 void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
-  MoveGroup       currentMoveGroup{arch};
-  MoveGroup const lastMoveGroup{arch};
+  MoveGroup       currentMoveGroup;
+  MoveGroup const lastMoveGroup;
   uint32_t        idx = 0;
   for (auto& op : qc) {
     if (op->getType() == OpType::Move) {
       AtomMove const move{op->getTargets()[0], op->getTargets()[1]};
-      if (currentMoveGroup.canAdd(move)) {
+      if (currentMoveGroup.canAdd(move, arch)) {
         currentMoveGroup.add(move, idx);
       } else {
-        moveGroups.push_back(std::move(currentMoveGroup));
-        currentMoveGroup = MoveGroup{arch};
+        moveGroups.push_back(currentMoveGroup);
+        currentMoveGroup = MoveGroup();
         currentMoveGroup.add(move, idx);
       }
     } else if (op->getNqubits() > 1 && !currentMoveGroup.moves.empty()) {
@@ -86,7 +87,8 @@ void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
   }
 }
 
-bool MoveToAodConverter::MoveGroup::canAdd(const AtomMove& move) {
+bool MoveToAodConverter::MoveGroup::canAdd(
+    const AtomMove& move, const NeutralAtomArchitecture& archArg) {
   // if move would move a qubit that is used by a gate in this move group
   // return false
   if (std::find(qubitsUsedByGates.begin(), qubitsUsedByGates.end(),
@@ -94,12 +96,12 @@ bool MoveToAodConverter::MoveGroup::canAdd(const AtomMove& move) {
     return false;
   }
   // checks if the op can be executed in parallel
-  auto moveVector = arch.getVector(move.first, move.second);
+  auto moveVector = archArg.getVector(move.first, move.second);
   return std::all_of(
       moves.begin(), moves.end(),
-      [&moveVector, this](const std::pair<AtomMove, uint32_t> opPair) {
+      [&moveVector, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
-        auto opVector  = arch.getVector(moveGroup.first, moveGroup.second);
+        auto opVector  = archArg.getVector(moveGroup.first, moveGroup.second);
         return parallelCheck(moveVector, opVector);
       });
 }
@@ -257,7 +259,7 @@ void MoveToAodConverter::AodActivationHelper::reAssignOffsets(
     std::vector<std::shared_ptr<AodMove>>& aodMoves, int32_t sign) {
   std::sort(
       aodMoves.begin(), aodMoves.end(),
-      [](const std::shared_ptr<AodMove>& a, const std::shared_ptr<AodMove> b) {
+      [](const std::shared_ptr<AodMove>& a, const std::shared_ptr<AodMove>& b) {
         return std::abs(a->delta) < std::abs(b->delta);
       });
   int32_t offset = sign;
@@ -276,7 +278,7 @@ void MoveToAodConverter::processMoveGroups() {
        ++groupIt) {
     AodActivationHelper   aodActivationHelper{arch, OpType::AodActivate};
     AodActivationHelper   aodDeactivationHelper{arch, OpType::AodDeactivate};
-    MoveGroup             possibleNewMoveGroup{arch};
+    MoveGroup             possibleNewMoveGroup;
     std::vector<AtomMove> movesToRemove;
     for (auto& movePair : groupIt->moves) {
       auto& move              = movePair.first;
@@ -313,7 +315,7 @@ void MoveToAodConverter::processMoveGroups() {
     }
     if (!possibleNewMoveGroup.moves.empty()) {
       groupIt = moveGroups.insert(groupIt + 1, std::move(possibleNewMoveGroup));
-      possibleNewMoveGroup = MoveGroup{arch};
+      possibleNewMoveGroup = MoveGroup();
       groupIt--;
     }
     groupIt->processedOpsInit   = aodActivationHelper.getAodOperations();

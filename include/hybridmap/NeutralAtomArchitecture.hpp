@@ -443,7 +443,7 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The MoveVector between the two coordinate indices
    */
-  [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) {
+  [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) const {
     return {this->coordinates[idx1].getXfp(), this->coordinates[idx1].getYfp(),
             this->coordinates[idx2].getXfp(), this->coordinates[idx2].getYfp()};
   }

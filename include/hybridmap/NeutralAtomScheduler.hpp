@@ -72,14 +72,17 @@ struct SchedulerResults {
  */
 class NeutralAtomScheduler {
 protected:
-  qc::NeutralAtomArchitecture arch;
-  std::string                 animationCsv;
-  std::string                 animationArchitectureCsv;
+  const qc::NeutralAtomArchitecture& arch;
+  std::string                        animationCsv;
+  std::string                        animationArchitectureCsv;
 
 public:
   // Constructor
-  explicit NeutralAtomScheduler(qc::NeutralAtomArchitecture arch)
-      : arch(std::move(arch)) {}
+  NeutralAtomScheduler()                            = delete;
+  NeutralAtomScheduler(const NeutralAtomScheduler&) = delete;
+  NeutralAtomScheduler(NeutralAtomScheduler&&)      = delete;
+  explicit NeutralAtomScheduler(const qc::NeutralAtomArchitecture& arch)
+      : arch(arch) {}
 
   /**
    * @brief Schedules the given quantum circuit on the neutral atom architecture

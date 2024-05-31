@@ -79,7 +79,7 @@ struct MultiQubitMovePos {
 class NeutralAtomMapper {
 protected:
   // The considered architecture
-  qc::NeutralAtomArchitecture arch;
+  const qc::NeutralAtomArchitecture& arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
@@ -369,6 +369,8 @@ protected:
 public:
   // Constructors
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
+  NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
+  NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
   explicit NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
                              InitialCoordinateMapping initialCoordinateMapping =
                                  InitialCoordinateMapping::Trivial,
@@ -492,7 +494,6 @@ public:
   [[maybe_unused]] SchedulerResults schedule(bool verboseArg           = false,
                                              bool createAnimationCsv   = false,
                                              fp   shuttlingSpeedFactor = 1.0) {
-    scheduler = NeutralAtomScheduler(arch);
     return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitialHwPos(),
                               verboseArg, createAnimationCsv,
                               shuttlingSpeedFactor);
