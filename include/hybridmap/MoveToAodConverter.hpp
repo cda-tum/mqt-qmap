@@ -7,16 +7,17 @@
 
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
-#include "cstdint"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "na/NADefinitions.hpp"
 #include "operations/AodOperation.hpp"
 #include "operations/OpType.hpp"
-#include "utility"
-#include "vector"
 
+#include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace na {
 // Possible types two Move combination can be combined to
