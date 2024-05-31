@@ -40,6 +40,7 @@ struct MapperParameters {
   fp       gateWeight           = 1;
   fp       shuttlingWeight      = 1;
   uint32_t seed                 = 0;
+  bool     verbose              = false;
 };
 
 /**
@@ -114,8 +115,6 @@ protected:
   HardwareQubits hardwareQubits;
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
-
-  bool verbose = false;
 
   // Methods for mapping
   /**
@@ -424,7 +423,7 @@ public:
    * operations
    */
   QuantumComputation map(qc::QuantumComputation& qc,
-                         InitialMapping initialMapping, bool verbose = true);
+                         InitialMapping          initialMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
@@ -435,7 +434,8 @@ public:
    */
   [[maybe_unused]] void mapPy(qc::QuantumComputation& qc,
                               InitialMapping initialMapping, bool printInfo) {
-    map(qc, initialMapping, verbose = printInfo);
+    this->parameters.verbose = printInfo;
+    map(qc, initialMapping);
     convertToAod(this->mappedQc);
   }
 

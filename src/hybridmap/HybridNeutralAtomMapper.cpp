@@ -34,8 +34,7 @@
 
 namespace qc {
 QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
-                                              InitialMapping initialMapping,
-                                              bool           verboseArg) {
+                                              InitialMapping initialMapping) {
   mappedQc = QuantumComputation(arch.getNpositions());
   nMoves   = 0;
   nSwaps   = 0;
@@ -60,8 +59,6 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
     throw std::runtime_error("More qubits in circuit than in architecture");
   }
 
-  this->verbose = verboseArg;
-
   //   precompute exponential decay weights
   this->decayWeights.reserve(this->arch.getNcolumns());
   for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {
@@ -78,7 +75,7 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
       GateList gatesToExecute;
       while (gatesToExecute.empty()) {
         ++i;
-        if (this->verbose) {
+        if (this->parameters.verbose) {
           std::cout << "iteration " << i << '\n';
         }
         auto bestSwap = findBestSwap();
@@ -88,7 +85,7 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
       mapAllPossibleGates(frontLayer);
       lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
-      if (this->verbose) {
+      if (this->parameters.verbose) {
         printLayers();
       }
     }
@@ -97,7 +94,7 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
       GateList gatesToExecute;
       while (gatesToExecute.empty()) {
         ++i;
-        if (this->verbose) {
+        if (this->parameters.verbose) {
           std::cout << "iteration " << i << '\n';
         }
         auto bestMove = findBestAtomMove();
@@ -107,12 +104,12 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
       mapAllPossibleGates(frontLayer);
       lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
-      if (this->verbose) {
+      if (this->parameters.verbose) {
         printLayers();
       }
     }
   }
-  if (this->verbose) {
+  if (this->parameters.verbose) {
     std::cout << "nSwaps: " << nSwaps << '\n';
     std::cout << "nMoves: " << nMoves << '\n';
   }
@@ -148,7 +145,7 @@ QuantumComputation NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   // decompose AOD moves
   MoveToAodConverter aodScheduler(arch);
   mappedQcAOD = aodScheduler.schedule(qc);
-  if (this->verbose) {
+  if (this->parameters.verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
   }
   return mappedQcAOD;
@@ -190,7 +187,7 @@ void qc::NeutralAtomMapper::mapGate(const Operation* op) {
     return;
   }
   this->executedCommutingGates.emplace_back(op);
-  if (this->verbose) {
+  if (this->parameters.verbose) {
     std::cout << "mapped " << op->getName() << " ";
     for (auto qubit : op->getUsedQubits()) {
       std::cout << qubit << " ";
@@ -278,7 +275,7 @@ void NeutralAtomMapper::updateMappingSwap(Swap swap) {
   auto idxFirst  = this->hardwareQubits.getCoordIndex(swap.first);
   auto idxSecond = this->hardwareQubits.getCoordIndex(swap.second);
   this->mappedQc.swap(idxFirst, idxSecond);
-  if (this->verbose) {
+  if (this->parameters.verbose) {
     std::cout << "swapped " << swap.first << " " << swap.second;
     std::cout << "  logical qubits: ";
     if (this->mapping.isMapped(swap.first)) {
@@ -303,7 +300,7 @@ void NeutralAtomMapper::updateMappingMove(qc::AtomMove move) {
   mappedQc.move(move.first, move.second);
   auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.first);
   this->hardwareQubits.move(toMoveHwQubit, move.second);
-  if (verbose) {
+  if (this->parameters.verbose) {
     std::cout << "moved " << move.first << " to " << move.second;
     if (this->mapping.isMapped(toMoveHwQubit)) {
       std::cout << "  logical qubit: "
@@ -424,7 +421,7 @@ NeutralAtomMapper::initSwaps(const GateList& layer) {
     } else {
       // for multi-qubit gates, find the best position around the gate qubits
       auto bestPos = getBestMultiQubitPosition(gate);
-      if (verbose) {
+      if (this->parameters.verbose) {
         std::cout << "bestPos: ";
         for (auto qubit : bestPos) {
           std::cout << qubit << " ";

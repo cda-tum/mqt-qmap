@@ -93,10 +93,11 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   mapperParameters.gateWeight           = gateWeight;
   mapperParameters.shuttlingWeight      = shuttlingWeight;
   mapperParameters.seed                 = seed;
+  mapperParameters.verbose              = true;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto                   qcMapped    = mapper.map(qc, initialMapping, true);
+  auto                   qcMapped    = mapper.map(qc, initialMapping);
   auto                   qcAodMapped = mapper.convertToAod(qcMapped);
 
   auto scheduleResults = mapper.schedule(true, true);
@@ -133,11 +134,12 @@ TEST(NeutralAtomMapperTest, Output) {
   mapperParameters.gateWeight           = 1;
   mapperParameters.shuttlingWeight      = 0;
   mapperParameters.seed                 = 42;
+  mapperParameters.verbose              = true;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(
       "hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
-  auto qcMapped = mapper.map(qc, initialMapping, true);
+  auto qcMapped = mapper.map(qc, initialMapping);
 
   std::ofstream dummyFs;
   qcMapped.dumpOpenQASM(dummyFs, false);
