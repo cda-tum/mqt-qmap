@@ -141,14 +141,13 @@ TEST(NeutralAtomMapperTest, Output) {
       "hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   auto qcMapped = mapper.map(qc, initialMapping);
 
-  std::ofstream dummyFs;
-  qcMapped.dumpOpenQASM(dummyFs, false);
+  qcMapped.dumpOpenQASM(std::cout, false);
 
   auto qcAodMapped = mapper.convertToAod(qcMapped);
-  qcAodMapped.dumpOpenQASM(dummyFs, false);
+  qcAodMapped.dumpOpenQASM(std::cout, false);
 
   auto scheduleResults = mapper.schedule(true, true);
-  dummyFs << scheduleResults.toCsv();
+  std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
 }
