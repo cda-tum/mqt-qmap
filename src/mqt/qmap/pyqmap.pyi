@@ -560,11 +560,13 @@ class InitialCircuitMapping:
 class HybridMapperParameters:
     decay: float
     gate_weight: float
+    initial_mapping: InitialCoordinateMapping
     lookahead_weight_moves: float
     lookahead_weight_swaps: float
+    seed: int
     shuttling_time_weight: float
     shuttling_weight: float
-
+    verbose: bool
     @overload
     def __init__(self) -> None: ...
     @overload
@@ -579,12 +581,7 @@ class HybridMapperParameters:
     ) -> None: ...
 
 class HybridNAMapper:
-    def __init__(
-        self,
-        arch: NeutralAtomHybridArchitecture,
-        initial_coordinate_mapping: InitialCoordinateMapping = ...,
-        params: HybridMapperParameters = ...,
-    ) -> None: ...
+    def __init__(self, arch: NeutralAtomHybridArchitecture, params: HybridMapperParameters = ...) -> None: ...
     def get_animation_csv(self) -> str: ...
     def get_init_hw_pos(self) -> dict[int, int]: ...
     def get_mapped_qc(self) -> str: ...

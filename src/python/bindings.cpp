@@ -715,26 +715,26 @@ PYBIND11_MODULE(pyqmap, m) {
                                     "Returns the results of the synthesis.");
 
   // Neutral Atom Hybrid Mapper
-  py::enum_<qc::InitialCoordinateMapping>(
+  py::enum_<na::InitialCoordinateMapping>(
       m, "InitialCoordinateMapping",
       "Initial mapping between hardware qubits hardware coordinates.")
-      .value("trivial", qc::InitialCoordinateMapping::Trivial,
+      .value("trivial", na::InitialCoordinateMapping::Trivial,
              "Trivial identity mapping.")
-      .value("random", qc::InitialCoordinateMapping::Random, "Random mapping.")
+      .value("random", na::InitialCoordinateMapping::Random, "Random mapping.")
       .export_values()
       .def(py::init([](const std::string& name) {
-        return qc::initialCoordinateMappingFromString(name);
+        return na::initialCoordinateMappingFromString(name);
       }));
-  py::enum_<qc::InitialMapping>(
+  py::enum_<na::InitialMapping>(
       m, "InitialCircuitMapping",
       "Initial mapping between circuit qubits and hardware qubits.")
-      .value("identity", qc::InitialMapping::Identity, "Identity mapping.")
+      .value("identity", na::InitialMapping::Identity, "Identity mapping.")
       .export_values()
       .def(py::init([](const std::string& name) {
-        return qc::initialMappingFromString(name);
+        return na::initialMappingFromString(name);
       }));
 
-  py::class_<qc::MapperParameters>(
+  py::class_<na::MapperParameters>(
       m, "HybridMapperParameters",
       "Parameters for the Neutral Atom Hybrid Mapper.")
       .def(py::init<>())
@@ -743,150 +743,152 @@ PYBIND11_MODULE(pyqmap, m) {
            "decay"_a = 0.1, "shuttling_time_weight"_a = 1, "gate_weight"_a = 1,
            "shuttling_weight"_a = 1)
       .def_readwrite("lookahead_weight_swaps",
-                     &qc::MapperParameters::lookaheadWeightSwaps,
+                     &na::MapperParameters::lookaheadWeightSwaps,
                      "Weight for the lookahead for the SWAP gates. 0 means no "
                      "lookahead is considered.")
       .def_readwrite("lookahead_weight_moves",
-                     &qc::MapperParameters::lookaheadWeightMoves,
+                     &na::MapperParameters::lookaheadWeightMoves,
                      "Weight for the lookahead for the MOVE gates. 0 means no "
                      "lookahead is considered.")
-      .def_readwrite("decay", &qc::MapperParameters::decay,
+      .def_readwrite("decay", &na::MapperParameters::decay,
                      "Decay factor for the blocking constraint to avoid SWAPs "
                      "that block each other. 0 means no decay.")
       .def_readwrite(
-          "shuttling_time_weight", &qc::MapperParameters::shuttlingTimeWeight,
+          "shuttling_time_weight", &na::MapperParameters::shuttlingTimeWeight,
           "Weight how much the shuttling Times should be considered.")
       .def_readwrite(
-          "gate_weight", &qc::MapperParameters::gateWeight,
+          "gate_weight", &na::MapperParameters::gateWeight,
           "Weight for the SWAP gates. Higher means mapper will prefer SWAP "
           "gates over shuttling. 0 means only shuttling is used.")
       .def_readwrite(
-          "shuttling_weight", &qc::MapperParameters::shuttlingWeight,
+          "shuttling_weight", &na::MapperParameters::shuttlingWeight,
           "Weight for the shuttling. Higher means mapper will prefer "
           "shuttling over SWAP gates. 0 means only SWAP gates are "
-          "used.");
+          "used.")
+      .def_readwrite(
+          "seed", &na::MapperParameters::seed,
+          "Seed for the random number generator. 0 means random seed.")
+      .def_readwrite("verbose", &na::MapperParameters::verbose,
+                     "Print additional information during the mapping process.")
+      .def_readwrite("initial_mapping", &na::MapperParameters::initialMapping,
+                     "Initial mapping between circuit qubits and hardware "
+                     "qubits.");
 
-  py::class_<qc::NeutralAtomArchitecture>(m, "NeutralAtomHybridArchitecture")
+  py::class_<na::NeutralAtomArchitecture>(m, "NeutralAtomHybridArchitecture")
       .def(py::init<const std::string&>(), "filename"_a)
-      .def("load_json", &qc::NeutralAtomArchitecture::loadJson,
+      .def("load_json", &na::NeutralAtomArchitecture::loadJson,
            "json_filename"_a)
-      .def_readwrite("name", &qc::NeutralAtomArchitecture::name,
+      .def_readwrite("name", &na::NeutralAtomArchitecture::name,
                      "Name of the "
                      "architecture")
       .def_property_readonly(
-          "nrows", &qc::NeutralAtomArchitecture::getNrows,
+          "nrows", &na::NeutralAtomArchitecture::getNrows,
           "Number of rows in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "ncolumns", &qc::NeutralAtomArchitecture::getNcolumns,
+          "ncolumns", &na::NeutralAtomArchitecture::getNcolumns,
           "Number of columns in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "npositions", &qc::NeutralAtomArchitecture::getNpositions,
+          "npositions", &na::NeutralAtomArchitecture::getNpositions,
           "Total number of positions in a rectangular grid SLM arrangement")
       .def_property_readonly(
-          "naods", &qc::NeutralAtomArchitecture::getNAods,
+          "naods", &na::NeutralAtomArchitecture::getNAods,
           "Number of independent 2D acousto-optic deflectors")
       .def_property_readonly("naod_coordinates",
-                             &qc::NeutralAtomArchitecture::getNAodCoordinates,
+                             &na::NeutralAtomArchitecture::getNAodCoordinates,
                              "Maximal number of AOD rows/columns (NOT USED)")
       .def_property_readonly("nqubits",
-                             &qc::NeutralAtomArchitecture::getNqubits,
+                             &na::NeutralAtomArchitecture::getNqubits,
                              "Number of atoms in the neutral atom quantum "
                              "computer that can be used as qubits")
       .def_property_readonly(
           "inter_qubit_distance",
-          &qc::NeutralAtomArchitecture::getInterQubitDistance,
+          &na::NeutralAtomArchitecture::getInterQubitDistance,
           "Distance "
           "between "
           "SLM traps in "
           "micrometers")
       .def_property_readonly("interaction_radius",
-                             &qc::NeutralAtomArchitecture::getInteractionRadius,
+                             &na::NeutralAtomArchitecture::getInteractionRadius,
                              "Interaction radius in inter-qubit distances")
       .def_property_readonly("blocking_factor",
-                             &qc::NeutralAtomArchitecture::getBlockingFactor,
+                             &na::NeutralAtomArchitecture::getBlockingFactor,
                              "Blocking factor for parallel Rydberg gates")
       .def_property_readonly(
           "naod_intermediate_levels",
-          &qc::NeutralAtomArchitecture::getNAodIntermediateLevels,
+          &na::NeutralAtomArchitecture::getNAodIntermediateLevels,
           "Number of possible AOD positions between two SLM traps")
       .def_property_readonly("decoherence_time",
-                             &qc::NeutralAtomArchitecture::getDecoherenceTime,
+                             &na::NeutralAtomArchitecture::getDecoherenceTime,
                              "Decoherence time in microseconds")
       .def("compute_swap_distance",
-           static_cast<double (qc::NeutralAtomArchitecture::*)(
+           static_cast<double (na::NeutralAtomArchitecture::*)(
                std::uint32_t, std::uint32_t) const>(
-               &qc::NeutralAtomArchitecture::getSwapDistance),
+               &na::NeutralAtomArchitecture::getSwapDistance),
            "Number of SWAP gates required between two positions",
            py::arg("idx1"), py::arg("idx2"))
-      .def("get_gate_time", &qc::NeutralAtomArchitecture::getGateTime,
+      .def("get_gate_time", &na::NeutralAtomArchitecture::getGateTime,
            "Execution time of certain gate in microseconds", "s"_a)
       .def("get_gate_average_fidelity",
-           &qc::NeutralAtomArchitecture::getGateAverageFidelity,
+           &na::NeutralAtomArchitecture::getGateAverageFidelity,
            "Average gate fidelity from [0,1]", "s"_a)
       .def("get_nearby_coordinates",
-           &qc::NeutralAtomArchitecture::getNearbyCoordinates,
+           &na::NeutralAtomArchitecture::getNearbyCoordinates,
            "Positions that are within the interaction radius of the passed "
            "position",
            "idx"_a)
-      .def("get_animation_csv", &qc::NeutralAtomArchitecture::getAnimationCsv,
+      .def("get_animation_csv", &na::NeutralAtomArchitecture::getAnimationCsv,
            "Returns string representation of the architecture used for "
            "animation")
-      .def("save_animation_csv", &qc::NeutralAtomArchitecture::saveAnimationCsv,
+      .def("save_animation_csv", &na::NeutralAtomArchitecture::saveAnimationCsv,
            "filename"_a, "Saves the animation csv string to a file");
 
-  py::class_<qc::NeutralAtomMapper>(
+  py::class_<na::NeutralAtomMapper>(
       m, "HybridNAMapper",
       "Neutral Atom Hybrid Mapper that can use both SWAP gates and AOD "
       "movements to map a quantum circuit to a neutral atom quantum computer.")
-      .def(py::init<const qc::NeutralAtomArchitecture&,
-                    qc::InitialCoordinateMapping, qc::MapperParameters>(),
-           "Create Hybrid NA Mapper with a specific initial mapping and "
-           "parameters",
-           "arch"_a,
-           "initial_coordinate_mapping"_a =
-               qc::InitialCoordinateMapping::Trivial,
-           "params"_a = qc::MapperParameters())
-      .def("set_parameters", &qc::NeutralAtomMapper::setParameters,
+      .def(py::init<const na::NeutralAtomArchitecture&, na::MapperParameters>(),
+           "Create Hybrid NA Mapper with mapper parameters", "arch"_a,
+           "params"_a = na::MapperParameters())
+      .def("set_parameters", &na::NeutralAtomMapper::setParameters,
            "Set the parameters for the Hybrid NA Mapper", "params"_a)
       .def(
-          "get_init_hw_pos", &qc::NeutralAtomMapper::getInitHwPos,
+          "get_init_hw_pos", &na::NeutralAtomMapper::getInitHwPos,
           "Get the initial hardware positions, required to create an animation")
       .def(
           "map",
-          [](qc::NeutralAtomMapper& mapper, const py::object& circ,
-             qc::InitialMapping initialMapping, bool verbose) {
+          [](na::NeutralAtomMapper& mapper, const py::object& circ,
+             na::InitialMapping initialMapping, bool verbose) {
             qc::QuantumComputation qc{};
             loadQC(qc, circ);
             mapper.mapAndConvert(qc, initialMapping, verbose);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
-          "circ"_a, "initial_mapping"_a = qc::InitialMapping::Identity,
+          "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity,
           "verbose"_a = false)
       .def(
           "map_qasm_file",
-          [](qc::NeutralAtomMapper& mapper, const std::string& filename,
-             qc::InitialMapping initialMapping, bool verbose) {
+          [](na::NeutralAtomMapper& mapper, const std::string& filename,
+             na::InitialMapping initialMapping) {
             qc::QuantumComputation qc(filename);
-            mapper.map(qc, initialMapping, verbose);
+            mapper.map(qc, initialMapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
-          "filename"_a, "initial_mapping"_a = qc::InitialMapping::Identity,
-          "verbose"_a = false)
-      .def("get_mapped_qc", &qc::NeutralAtomMapper::getMappedQc,
+          "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
+      .def("get_mapped_qc", &na::NeutralAtomMapper::getMappedQc,
            "Returns the mapped circuit as an extended qasm2 string")
-      .def("save_mapped_qc", &qc::NeutralAtomMapper::saveMappedQc,
+      .def("save_mapped_qc", &na::NeutralAtomMapper::saveMappedQc,
            "Saves the mapped circuit as an extended qasm2 string to a file",
            "filename"_a)
-      .def("get_mapped_qc_aod", &qc::NeutralAtomMapper::getMappedQcAOD,
+      .def("get_mapped_qc_aod", &na::NeutralAtomMapper::getMappedQcAOD,
            "Returns the mapped circuit as an extended qasm2 string with native "
            "AOD movements")
-      .def("save_mapped_qc_aod", &qc::NeutralAtomMapper::saveMappedQcAOD,
+      .def("save_mapped_qc_aod", &na::NeutralAtomMapper::saveMappedQcAOD,
            "Saves the mapped circuit as an extended qasm2 string with native "
            "AOD movements to a file",
            "filename"_a)
       .def(
           "schedule",
-          [](qc::NeutralAtomMapper& mapper, bool verbose,
+          [](na::NeutralAtomMapper& mapper, bool verbose,
              bool create_animation_csv, double shuttling_speed_factor) {
             auto results = mapper.schedule(verbose, create_animation_csv,
                                            shuttling_speed_factor);
@@ -894,8 +896,8 @@ PYBIND11_MODULE(pyqmap, m) {
           },
           "Schedule the mapped circuit", "verbose"_a = false,
           "create_animation_csv"_a = false, "shuttling_speed_factor"_a = 1.0)
-      .def("get_animation_csv", &qc::NeutralAtomMapper::getAnimationCsv,
+      .def("get_animation_csv", &na::NeutralAtomMapper::getAnimationCsv,
            "Returns the animation csv string")
-      .def("save_animation_csv", &qc::NeutralAtomMapper::saveAnimationCsv,
+      .def("save_animation_csv", &na::NeutralAtomMapper::saveAnimationCsv,
            "Saves the animation csv string to a file", "filename"_a);
 }
