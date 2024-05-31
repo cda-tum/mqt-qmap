@@ -7,16 +7,16 @@
 
 #include "Definitions.hpp"
 #include "Permutation.hpp"
-#include "algorithm"
-#include "cstdint"
+#include <algorithm>
+#include <cstdint>
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "map"
-#include "numeric"
+#include <map>
+#include <numeric>
 #include "operations/Operation.hpp"
-#include "random"
-#include "vector"
+#include <random>
+#include <vector>
 
 #include <set>
 #include <stdexcept>

@@ -5,12 +5,12 @@
 
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
-#include "filesystem"
+#include <filesystem>
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
