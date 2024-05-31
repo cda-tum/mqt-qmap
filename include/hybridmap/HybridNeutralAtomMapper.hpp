@@ -362,7 +362,9 @@ protected:
    */
   fp moveCostComb(const MoveComb& moveComb);
 
-  // temp
+  /**
+   * @brief Print the current layers for debugging.
+   */
   void printLayers();
 
 public:
