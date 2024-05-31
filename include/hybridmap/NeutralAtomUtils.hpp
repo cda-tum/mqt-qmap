@@ -246,4 +246,13 @@ struct MoveCombs {
   void removeLongerMoveCombs();
 };
 
+/**
+ * @brief Helper struct to store the position of a multi qubit gate and the
+ * number of moves needed to execute it.
+ */
+struct MultiQubitMovePos {
+  CoordIndices coords;
+  size_t       nMoves{0};
+};
+
 } // namespace na

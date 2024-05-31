@@ -44,22 +44,6 @@ struct MapperParameters {
 };
 
 /**
- * @brief Helper struct to store the position of a multi qubit gate and the
- * number of moves needed to execute it.
- */
-struct MultiQubitMovePos {
-  CoordIndices coords;
-  size_t       nMoves{0};
-
-  // copy constructor
-  MultiQubitMovePos()                               = default;
-  MultiQubitMovePos(const MultiQubitMovePos& other) = default;
-
-  // copy assignment
-  MultiQubitMovePos& operator=(const MultiQubitMovePos& other) = default;
-};
-
-/**
  * @brief Class to map a quantum circuit to a neutral atom architecture.
  * @details The mapping has following important parts:
  * - initial mapping: The initial mapping of the circuit qubits to the hardware
