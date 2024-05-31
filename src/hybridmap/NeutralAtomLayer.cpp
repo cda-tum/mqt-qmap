@@ -25,8 +25,9 @@ void NeutralAtomLayer::updateByQubits(const std::set<Qubit>& qubitsToUpdate) {
 
 std::vector<uint32_t> NeutralAtomLayer::getIteratorOffset() {
   std::vector<uint32_t> offset;
+  offset.reserve(dag.size());
   for (uint32_t i = 0; i < this->dag.size(); ++i) {
-    offset.push_back(static_cast<uint32_t>(
+    offset.emplace_back(static_cast<uint32_t>(
         std::distance(this->dag[i].begin(), this->iterators[i])));
   }
   return offset;
