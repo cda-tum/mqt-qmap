@@ -67,6 +67,7 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     utils.cpp)
 
   add_internal_library(${lib})
+  target_link_libraries(${lib} PUBLIC MQT::CoreNA)
 endmacro()
 
 # macro to add hybrid neutral atom mapping libraries

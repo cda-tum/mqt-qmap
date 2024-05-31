@@ -889,12 +889,12 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) {
   for (const auto& lastMove : this->lastMoves) {
     auto lastMoveCoordInit = this->arch.getCoordinate(lastMove.first);
     auto lastMoveCoordEnd  = this->arch.getCoordinate(lastMove.second);
-    if (moveCoordInit.getX() == lastMoveCoordInit.getX() ||
-        moveCoordInit.getY() == lastMoveCoordInit.getY()) {
+    if (moveCoordInit.x == lastMoveCoordInit.x ||
+        moveCoordInit.y == lastMoveCoordInit.y) {
       parallelCost -= arch.getShuttlingTime(qc::OpType::AodActivate);
     }
-    if (moveCoordEnd.getX() == lastMoveCoordEnd.getX() ||
-        moveCoordEnd.getY() == lastMoveCoordEnd.getY()) {
+    if (moveCoordEnd.x == lastMoveCoordEnd.x ||
+        moveCoordEnd.y == lastMoveCoordEnd.y) {
       parallelCost -= arch.getShuttlingTime(qc::OpType::AodDeactivate);
     }
   }

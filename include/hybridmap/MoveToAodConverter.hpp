@@ -129,7 +129,7 @@ protected:
      * @return A pair of ActivationMerge, in x and y direction
      */
     [[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
-    canAddActivation(const Coordinate& origin, MoveVector v) const;
+    canAddActivation(const Point& origin, MoveVector v) const;
     /**
      * @brief Checks if the move can be added to the current activations in the
      * given dimension/direction
@@ -139,8 +139,7 @@ protected:
      * @return The ActivationMerge type
      */
     [[nodiscard]] ActivationMergeType
-    canAddActivationDim(Dimension dim, const Coordinate& origin,
-                        MoveVector v) const;
+    canAddActivationDim(Dimension dim, const Point& origin, MoveVector v) const;
     /**
      * @brief Adds the move to the current activations
      * @details The move is merged into the current activations depending on the
@@ -152,7 +151,7 @@ protected:
      */
     void
     addActivation(std::pair<ActivationMergeType, ActivationMergeType> merge,
-                  const Coordinate& origin, const AtomMove& move, MoveVector v);
+                  const Point& origin, const AtomMove& move, MoveVector v);
     /**
      * @brief Merges the given activation into the current activations
      * @param dim The dimension/direction of the activation

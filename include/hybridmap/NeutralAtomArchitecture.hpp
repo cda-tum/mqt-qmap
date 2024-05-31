@@ -8,6 +8,7 @@
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "na/NADefinitions.hpp"
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
 
@@ -146,7 +147,7 @@ protected:
   Properties properties{};
   Parameters parameters;
 
-  std::vector<Coordinate>           coordinates;
+  std::vector<Point>                coordinates;
   SymmetricMatrix                   swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
@@ -267,10 +268,10 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] qc::fp getSwapDistance(const Coordinate& c1,
-                                       const Coordinate& c2) const {
-    return swapDistances(c1.getX() + c1.getY() * properties.getNcolumns(),
-                         c2.getX() + c2.getY() * properties.getNcolumns());
+  [[nodiscard]] qc::fp getSwapDistance(const Point& c1, const Point& c2) const {
+    return swapDistances(
+        static_cast<uint32_t>(c1.x + c1.y) * properties.getNcolumns(),
+        static_cast<uint32_t>(c2.x + c2.y) * properties.getNcolumns());
   }
 
   /**
@@ -364,7 +365,7 @@ public:
    * @param idx The index
    * @return The coordinate corresponding to the index
    */
-  [[nodiscard]] Coordinate getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Point getCoordinate(CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
@@ -372,8 +373,8 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Coordinate& c) {
-    return c.getX() + c.getY() * properties.getNcolumns();
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Point& c) {
+    return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
   }
 
   // Distance functions
@@ -385,8 +386,8 @@ public:
    */
   [[nodiscard]] qc::fp getEuclidianDistance(CoordIndex idx1,
                                             CoordIndex idx2) const {
-    return this->coordinates.at(idx1).getEuclidianDistance(
-        this->coordinates.at(idx2));
+    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclidianDistance(
+        this->coordinates.at(idx2)));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates
@@ -394,9 +395,9 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] static qc::fp getEuclidianDistance(const Coordinate& c1,
-                                                   const Coordinate& c2) {
-    return c1.getEuclidianDistance(c2);
+  [[nodiscard]] static qc::fp getEuclidianDistance(const Point& c1,
+                                                   const Point& c2) {
+    return static_cast<qc::fp>(c1.getEuclidianDistance(c2));
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices
@@ -406,8 +407,9 @@ public:
    */
   [[nodiscard]] CoordIndex getManhattanDistanceX(CoordIndex idx1,
                                                  CoordIndex idx2) const {
-    return this->coordinates.at(idx1).getManhattanDistanceX(
-        this->coordinates.at(idx2));
+    return static_cast<CoordIndex>(
+        this->coordinates.at(idx1).getManhattanDistanceX(
+            this->coordinates.at(idx2)));
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices
@@ -417,8 +419,9 @@ public:
    */
   [[nodiscard]] CoordIndex getManhattanDistanceY(CoordIndex idx1,
                                                  CoordIndex idx2) const {
-    return this->coordinates.at(idx1).getManhattanDistanceY(
-        this->coordinates.at(idx2));
+    return static_cast<CoordIndex>(
+        this->coordinates.at(idx1).getManhattanDistanceY(
+            this->coordinates.at(idx2)));
   }
 
   // Nearby coordinates
@@ -448,8 +451,8 @@ public:
    * @return The MoveVector between the two coordinate indices
    */
   [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) const {
-    return {this->coordinates[idx1].getXfp(), this->coordinates[idx1].getYfp(),
-            this->coordinates[idx2].getXfp(), this->coordinates[idx2].getYfp()};
+    return {this->coordinates[idx1].x, this->coordinates[idx1].y,
+            this->coordinates[idx2].x, this->coordinates[idx2].y};
   }
   /**
    * @brief Computes the time it takes to move a qubit along a MoveVector

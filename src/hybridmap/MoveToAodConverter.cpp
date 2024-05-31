@@ -10,6 +10,7 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "na/NADefinitions.hpp"
 #include "operations/AodOperation.hpp"
 #include "operations/OpType.hpp"
 #include "utils.hpp"
@@ -131,9 +132,9 @@ void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
 
 void MoveToAodConverter::AodActivationHelper::addActivation(
     std::pair<ActivationMergeType, ActivationMergeType> merge,
-    const Coordinate& origin, const AtomMove& move, MoveVector v) {
-  const auto x         = origin.getX();
-  const auto y         = origin.getY();
+    const Point& origin, const AtomMove& move, MoveVector v) {
+  const auto x         = static_cast<std::uint32_t>(origin.x);
+  const auto y         = static_cast<std::uint32_t>(origin.y);
   const auto signX     = v.direction.getSignX();
   const auto signY     = v.direction.getSignY();
   const auto deltaX    = v.xEnd - v.xStart;
@@ -218,10 +219,12 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
 }
 
 std::pair<ActivationMergeType, ActivationMergeType>
-MoveToAodConverter::AodActivationHelper::canAddActivation(
-    const Coordinate& origin, MoveVector v) const {
-  auto aodMovesX = getAodMovesFromInit(Dimension::X, origin.getX());
-  auto aodMovesY = getAodMovesFromInit(Dimension::Y, origin.getY());
+MoveToAodConverter::AodActivationHelper::canAddActivation(const Point& origin,
+                                                          MoveVector v) const {
+  auto aodMovesX =
+      getAodMovesFromInit(Dimension::X, static_cast<std::uint32_t>(origin.x));
+  auto aodMovesY =
+      getAodMovesFromInit(Dimension::Y, static_cast<std::uint32_t>(origin.y));
 
   auto const canX = canAddActivationDim(Dimension::X, origin, v);
   auto const canY = canAddActivationDim(Dimension::Y, origin, v);
@@ -230,8 +233,9 @@ MoveToAodConverter::AodActivationHelper::canAddActivation(
 
 ActivationMergeType
 MoveToAodConverter::AodActivationHelper::canAddActivationDim(
-    Dimension dim, const Coordinate& origin, MoveVector v) const {
-  auto x = dim == Dimension::X ? origin.getX() : origin.getY();
+    Dimension dim, const Point& origin, MoveVector v) const {
+  auto x =
+      static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);
   auto sign =
       dim == Dimension::X ? v.direction.getSignX() : v.direction.getSignY();
   auto delta    = dim == Dimension::X ? v.xEnd - v.xStart : v.yEnd - v.yStart;

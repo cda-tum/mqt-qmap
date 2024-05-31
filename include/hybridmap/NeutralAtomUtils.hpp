@@ -126,6 +126,13 @@ struct MoveVector {
   MoveVector(qc::fp xStart, qc::fp yStart, qc::fp xEnd, qc::fp yEnd)
       : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
         direction(xEnd - xStart, yEnd - yStart) {}
+  MoveVector(std::int64_t xStart, std::int64_t yStart, std::int64_t xEnd,
+             std::int64_t yEnd)
+      : xStart(static_cast<qc::fp>(xStart)),
+        yStart(static_cast<qc::fp>(yStart)), xEnd(static_cast<qc::fp>(xEnd)),
+        yEnd(static_cast<qc::fp>(yEnd)),
+        direction(static_cast<qc::fp>(xEnd - xStart),
+                  static_cast<qc::fp>(yEnd - yStart)) {}
 
   [[nodiscard]] [[maybe_unused]] bool
   sameDirection(const MoveVector& other) const {
@@ -237,42 +244,6 @@ struct MoveCombs {
    * combination.
    */
   void removeLongerMoveCombs();
-};
-
-/**
- * @brief Helper class to facilitate the handling of x/y coordinates.
- */
-class Coordinate {
-protected:
-  std::uint32_t x;
-  std::uint32_t y;
-
-public:
-  Coordinate() = default;
-  Coordinate(CoordIndex x, CoordIndex y) : x(x), y(y) {}
-
-  [[nodiscard]] CoordIndex getX() const { return x; }
-  [[nodiscard]] CoordIndex getY() const { return y; }
-  [[nodiscard]] qc::fp     getXfp() const { return static_cast<qc::fp>(x); }
-  [[nodiscard]] qc::fp     getYfp() const { return static_cast<qc::fp>(y); }
-  [[nodiscard]] qc::fp     getEuclidianDistance(const Coordinate& c) const {
-    return std::sqrt(
-        std::pow(static_cast<qc::fp>(x) - static_cast<qc::fp>(c.x), 2) +
-        std::pow(static_cast<qc::fp>(y) - static_cast<qc::fp>(c.y), 2));
-  }
-
-  [[nodiscard]] CoordIndex getManhattanDistanceX(const Coordinate& c) const {
-    if (x > c.x) {
-      return x - c.x;
-    }
-    return c.x - x;
-  }
-  [[nodiscard]] CoordIndex getManhattanDistanceY(const Coordinate& c) const {
-    if (y > c.y) {
-      return y - c.y;
-    }
-    return c.y - y;
-  }
 };
 
 } // namespace na
