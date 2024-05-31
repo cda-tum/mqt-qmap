@@ -109,7 +109,7 @@ void HardwareQubits::move(HwQubit hwQubit, CoordIndex newCoord) {
   // add qubit to new nearby qubits
   auto newNearbyQubits = nearbyQubits.at(hwQubit);
   for (const auto& qubit : newNearbyQubits) {
-    nearbyQubits.at(qubit).insert(hwQubit);
+    nearbyQubits.at(qubit).emplace(hwQubit);
   }
 
   // update/reset swap distances
@@ -134,7 +134,7 @@ void HardwareQubits::computeNearbyQubits(qc::HwQubit q) {
     }
     if (arch.getEuclidianDistance(coordQ, coord.second) <=
         arch.getInteractionRadius()) {
-      newNearbyQubits.insert(coord.first);
+      newNearbyQubits.emplace(coord.first);
     }
   }
   nearbyQubits.insert_or_assign(q, newNearbyQubits);
@@ -170,7 +170,7 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
       auto const distance =
           arch.getEuclidianDistance(hwToCoordIdx.at(qubit), hwToCoordIdx.at(i));
       if (distance <= arch.getBlockingFactor() * arch.getInteractionRadius()) {
-        blockedQubits.insert(i);
+        blockedQubits.emplace(i);
       }
     }
   }
@@ -182,7 +182,7 @@ HardwareQubits::getNearbyFreeCoordinatesByCoord(qc::CoordIndex idx) {
   std::set<CoordIndex> nearbyFreeCoordinates;
   for (auto const& coordIndex : this->arch.getNearbyCoordinates(idx)) {
     if (!this->isMapped(coordIndex)) {
-      nearbyFreeCoordinates.insert(coordIndex);
+      nearbyFreeCoordinates.emplace(coordIndex);
     }
   }
   return nearbyFreeCoordinates;
@@ -203,7 +203,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
   std::queue<CoordIndex>  queue;
   queue.push(coord);
   std::set<CoordIndex> visited;
-  visited.insert(coord);
+  visited.emplace(coord);
   bool foundClosest = false;
   while (!queue.empty()) {
     auto currentCoord = queue.front();
@@ -212,7 +212,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
     for (const auto& nearbyCoord : nearbyCoords) {
       if (std::find(visited.rbegin(), visited.rend(), nearbyCoord) ==
           visited.rend()) {
-        visited.insert(nearbyCoord);
+        visited.emplace(nearbyCoord);
         if (!this->isMapped(nearbyCoord) &&
             std::find(excludeCoord.begin(), excludeCoord.end(), nearbyCoord) ==
                 excludeCoord.end()) {

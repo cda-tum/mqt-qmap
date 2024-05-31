@@ -34,7 +34,7 @@ public:
     switch (initialMapping) {
     case Identity:
       for (size_t i = 0; i < nQubits; ++i) {
-        circToHw.insert({i, i});
+        circToHw.emplace(i, i);
       }
       break;
     default:
@@ -67,7 +67,7 @@ public:
   [[nodiscard]] std::set<HwQubit> getHwQubits(std::set<Qubit>& qubits) const {
     std::set<HwQubit> hwQubits;
     for (const auto& qubit : qubits) {
-      hwQubits.insert(this->getHwQubit(qubit));
+      hwQubits.emplace(this->getHwQubit(qubit));
     }
     return hwQubits;
   }

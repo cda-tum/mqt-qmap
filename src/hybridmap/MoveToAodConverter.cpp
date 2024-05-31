@@ -314,7 +314,8 @@ void MoveToAodConverter::processMoveGroups() {
           groupIt->moves.end());
     }
     if (!possibleNewMoveGroup.moves.empty()) {
-      groupIt = moveGroups.insert(groupIt + 1, std::move(possibleNewMoveGroup));
+      groupIt =
+          moveGroups.emplace(groupIt + 1, std::move(possibleNewMoveGroup));
       possibleNewMoveGroup = MoveGroup();
       groupIt--;
     }

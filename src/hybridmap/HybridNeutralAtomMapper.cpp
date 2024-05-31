@@ -213,7 +213,7 @@ bool qc::NeutralAtomMapper::isExecutable(const Operation* opPointer) {
   }
   std::set<Qubit> usedHwQubits;
   for (auto qubit : usedQubits) {
-    usedHwQubits.insert(this->mapping.getHwQubit(qubit));
+    usedHwQubits.emplace(this->mapping.getHwQubit(qubit));
   }
   return this->hardwareQubits.getAllToAllSwapDistance(usedHwQubits) == 0;
 }
@@ -358,19 +358,19 @@ std::set<qc::Swap> qc::NeutralAtomMapper::getAllPossibleSwaps(
     const auto nearbySwapsFirst =
         this->hardwareQubits.getNearbySwaps(swapNearby.first);
     for (const auto& swapFirst : nearbySwapsFirst) {
-      swaps.insert(swapFirst);
+      swaps.emplace(swapFirst);
     }
     const auto nearbySwapsSecond =
         this->hardwareQubits.getNearbySwaps(swapNearby.second);
     for (const auto& swapSecond : nearbySwapsSecond) {
-      swaps.insert(swapSecond);
+      swaps.emplace(swapSecond);
     }
   }
   for (const auto& [swap, weight] : swapExactFront) {
     const auto nearbySwapsFirst =
         this->hardwareQubits.getNearbySwaps(swap.first);
     for (const auto& swapFirst : nearbySwapsFirst) {
-      swaps.insert(swapFirst);
+      swaps.emplace(swapFirst);
     }
   }
   return swaps;
@@ -537,7 +537,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPosition(const Operation* op) {
   std::set<HwQubit> visitedQubits;
   while (!qubitQueue.empty()) {
     auto qubit = qubitQueue.top().second;
-    visitedQubits.insert(qubit);
+    visitedQubits.emplace(qubit);
     qubitQueue.pop();
 
     // remove selected qubit from the gate qubits
@@ -675,9 +675,9 @@ WeightedSwaps NeutralAtomMapper::getExactSwapsToPosition(const Operation* op,
         if (distance < minimalDistance) {
           minimalDistance = distance;
           minimalDistancePosQubit.clear();
-          minimalDistancePosQubit.insert(posQubit);
+          minimalDistancePosQubit.emplace(posQubit);
         } else if (std::abs(distance - minimalDistance) < 1e-5) {
-          minimalDistancePosQubit.insert(posQubit);
+          minimalDistancePosQubit.emplace(posQubit);
         }
       }
       if (minimalDistance == std::numeric_limits<fp>::infinity()) {
@@ -1084,7 +1084,7 @@ NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits&     gateQubits,
   MoveCombs const      moveCombinations;
   std::set<CoordIndex> gateQubitCoords;
   for (const auto& gateQubit : gateQubits) {
-    gateQubitCoords.insert(this->hardwareQubits.getCoordIndex(gateQubit));
+    gateQubitCoords.emplace(this->hardwareQubits.getCoordIndex(gateQubit));
   }
 
   auto     remainingCoords = position;

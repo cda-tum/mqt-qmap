@@ -59,20 +59,20 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     std::map<std::string, fp> gateTimes;
     for (const auto& [key, value] : jsonDataParameters["gateTimes"].items()) {
-      gateTimes.insert({key, value});
+      gateTimes.emplace(key, value);
     }
     this->parameters.gateTimes = gateTimes;
     std::map<std::string, fp> gateAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["gateAverageFidelities"].items()) {
-      gateAverageFidelities.insert({key, value});
+      gateAverageFidelities.emplace(key, value);
     }
     this->parameters.gateAverageFidelities = gateAverageFidelities;
     std::map<OpType, fp> shuttlingTimes;
 
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingTimes"].items()) {
-      shuttlingTimes.insert({OP_NAME_TO_TYPE.at(key), value});
+      shuttlingTimes.emplace(OP_NAME_TO_TYPE.at(key), value);
     }
     // compute values for SWAP gate
     fp swapGateTime     = 0;
@@ -85,14 +85,14 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       swapGateTime += gateTimes.at("h");
       swapGateFidelity *= gateAverageFidelities.at("h");
     }
-    this->parameters.gateTimes.insert({"swap", swapGateTime});
-    this->parameters.gateAverageFidelities.insert({"swap", swapGateFidelity});
+    this->parameters.gateTimes.emplace("swap", swapGateTime);
+    this->parameters.gateAverageFidelities.emplace("swap", swapGateFidelity);
 
     this->parameters.shuttlingTimes = shuttlingTimes;
     std::map<OpType, fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
-      shuttlingAverageFidelities.insert({OP_NAME_TO_TYPE.at(key), value});
+      shuttlingAverageFidelities.emplace(OP_NAME_TO_TYPE.at(key), value);
     }
     this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
@@ -190,8 +190,8 @@ void NeutralAtomArchitecture::computeNearbyCoordinates() {
     for (CoordIndex otherCoordIndex = 0; otherCoordIndex < coordIndex;
          otherCoordIndex++) {
       if (this->getSwapDistance(coordIndex, otherCoordIndex) == 0) {
-        this->nearbyCoordinates.at(coordIndex).insert(otherCoordIndex);
-        this->nearbyCoordinates.at(otherCoordIndex).insert(coordIndex);
+        this->nearbyCoordinates.at(coordIndex).emplace(otherCoordIndex);
+        this->nearbyCoordinates.at(otherCoordIndex).emplace(coordIndex);
       }
     }
   }
@@ -266,7 +266,7 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const Operation* op) const {
       // now check exact difference
       auto const distance = getEuclidianDistance(coord, i);
       if (distance <= getBlockingFactor() * getInteractionRadius()) {
-        blockedCoordIndices.insert(i);
+        blockedCoordIndices.emplace(i);
       }
     }
   }

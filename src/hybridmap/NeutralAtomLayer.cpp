@@ -51,7 +51,7 @@ void NeutralAtomLayer::initLayerOffset(
   }
   std::set<Qubit> allQubits;
   for (uint32_t i = 0; i < this->dag.size(); ++i) {
-    allQubits.insert(i);
+    allQubits.emplace(i);
   }
   updateByQubits(allQubits);
 }

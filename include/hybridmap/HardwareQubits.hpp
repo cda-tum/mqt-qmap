@@ -90,7 +90,7 @@ public:
     switch (initialCoordinateMapping) {
     case Trivial:
       for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
-        hwToCoordIdx.insert({i, i});
+        hwToCoordIdx.emplace(i, i);
       }
       initTrivialSwapDistances();
       break;
@@ -103,7 +103,7 @@ public:
       std::mt19937 g(seed);
       std::shuffle(indices.begin(), indices.end(), g);
       for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
-        hwToCoordIdx.insert({i, indices[i]});
+        hwToCoordIdx.emplace(i, indices[i]);
       }
 
       swapDistances = SymmetricMatrix(arch.getNqubits(), -1);
@@ -161,7 +161,7 @@ public:
   getCoordIndices(std::set<HwQubit>& hwQubits) const {
     std::set<CoordIndex> coordIndices;
     for (auto const& hwQubit : hwQubits) {
-      coordIndices.insert(this->getCoordIndex(hwQubit));
+      coordIndices.emplace(this->getCoordIndex(hwQubit));
     }
     return coordIndices;
   }
