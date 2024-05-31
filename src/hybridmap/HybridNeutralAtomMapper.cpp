@@ -181,7 +181,6 @@ void NeutralAtomMapper::mapGate(const qc::Operation* op) {
     return;
   }
   // Safety check
-  // TODO remove
   if (std::find(this->executedCommutingGates.begin(),
                 this->executedCommutingGates.end(),
                 op) != this->executedCommutingGates.end()) {
