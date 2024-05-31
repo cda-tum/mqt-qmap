@@ -176,8 +176,6 @@ protected:
 public:
   std::string name;
 
-  // Constructors
-  NeutralAtomArchitecture() = delete;
   /**
    * @brief Construct a new Neutral Atom Architecture object
    * @details
