@@ -429,13 +429,14 @@ public:
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
-   * converts it to the AOD level. Used for Python bindings.
+   * converts it to the AOD level.
    * @param qc  The quantum circuit to be mapped
    * @param initialMapping The initial mapping of the circuit qubits to the
    * hardware qubits
    */
-  [[maybe_unused]] void mapPy(qc::QuantumComputation& qc,
-                              InitialMapping initialMapping, bool printInfo) {
+  [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
+                                      InitialMapping          initialMapping,
+                                      bool                    printInfo) {
     this->parameters.verbose = printInfo;
     map(qc, initialMapping);
     convertToAod(this->mappedQc);

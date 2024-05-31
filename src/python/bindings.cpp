@@ -857,7 +857,7 @@ PYBIND11_MODULE(pyqmap, m) {
              qc::InitialMapping initialMapping, bool verbose) {
             qc::QuantumComputation qc{};
             loadQC(qc, circ);
-            mapper.mapPy(qc, initialMapping, verbose);
+            mapper.mapAndConvert(qc, initialMapping, verbose);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "circ"_a, "initial_mapping"_a = qc::InitialMapping::Identity,
