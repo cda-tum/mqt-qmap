@@ -20,17 +20,17 @@
 
 namespace na {
 void HardwareQubits::initTrivialSwapDistances() {
-  swapDistances = SymmetricMatrix(arch.getNqubits());
-  for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
+  swapDistances = SymmetricMatrix(arch->getNqubits());
+  for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
     for (uint32_t j = 0; j < i; ++j) {
       swapDistances(i, j) =
-          arch.getSwapDistance(hwToCoordIdx.at(i), hwToCoordIdx.at(j));
+          arch->getSwapDistance(hwToCoordIdx.at(i), hwToCoordIdx.at(j));
     }
   }
 }
 
 void HardwareQubits::initNearbyQubits() {
-  for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
+  for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
     computeNearbyQubits(i);
   }
 }
@@ -82,11 +82,11 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
 void HardwareQubits::resetSwapDistances() {
   // TODO Improve to only reset the swap distances necessary (use a breadth
   // first search)
-  swapDistances = SymmetricMatrix(arch.getNqubits(), -1);
+  swapDistances = SymmetricMatrix(arch->getNqubits(), -1);
 }
 
 void HardwareQubits::move(HwQubit hwQubit, CoordIndex newCoord) {
-  if (newCoord >= arch.getNpositions()) {
+  if (newCoord >= arch->getNpositions()) {
     throw std::runtime_error("Invalid coordinate");
   }
   // check if new coordinate is already occupied
@@ -132,8 +132,8 @@ void HardwareQubits::computeNearbyQubits(HwQubit q) {
     if (coord.first == q) {
       continue;
     }
-    if (arch.getEuclidianDistance(coordQ, coord.second) <=
-        arch.getInteractionRadius()) {
+    if (arch->getEuclidianDistance(coordQ, coord.second) <=
+        arch->getInteractionRadius()) {
       newNearbyQubits.emplace(coord.first);
     }
   }
@@ -162,14 +162,15 @@ std::set<HwQubit>
 HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
   std::set<HwQubit> blockedQubits;
   for (const auto& qubit : qubits) {
-    for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
+    for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
       if (i == qubit) {
         continue;
       }
       // TODO improve by using the nearby coords as a preselection
-      auto const distance =
-          arch.getEuclidianDistance(hwToCoordIdx.at(qubit), hwToCoordIdx.at(i));
-      if (distance <= arch.getBlockingFactor() * arch.getInteractionRadius()) {
+      auto const distance = arch->getEuclidianDistance(hwToCoordIdx.at(qubit),
+                                                       hwToCoordIdx.at(i));
+      if (distance <=
+          arch->getBlockingFactor() * arch->getInteractionRadius()) {
         blockedQubits.emplace(i);
       }
     }
@@ -180,7 +181,7 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
 std::set<CoordIndex>
 HardwareQubits::getNearbyFreeCoordinatesByCoord(CoordIndex idx) {
   std::set<CoordIndex> nearbyFreeCoordinates;
-  for (auto const& coordIndex : this->arch.getNearbyCoordinates(idx)) {
+  for (auto const& coordIndex : this->arch->getNearbyCoordinates(idx)) {
     if (!this->isMapped(coordIndex)) {
       nearbyFreeCoordinates.emplace(coordIndex);
     }
@@ -208,7 +209,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
   while (!queue.empty()) {
     auto currentCoord = queue.front();
     queue.pop();
-    auto nearbyCoords = this->arch.getNN(currentCoord);
+    auto nearbyCoords = this->arch->getNN(currentCoord);
     for (const auto& nearbyCoord : nearbyCoords) {
       if (std::find(visited.rbegin(), visited.rend(), nearbyCoord) ==
           visited.rend()) {
@@ -220,7 +221,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
             closestFreeCoords.emplace_back(nearbyCoord);
           }
           foundClosest = true;
-          if (direction == arch.getVector(coord, nearbyCoord).direction) {
+          if (direction == arch->getVector(coord, nearbyCoord).direction) {
             closestFreeCoords.emplace_back(nearbyCoord);
             return closestFreeCoords;
           }

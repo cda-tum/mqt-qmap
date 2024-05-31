@@ -33,14 +33,15 @@ namespace na {
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
-  qc::fp   lookaheadWeightSwaps = 0.1;
-  qc::fp   lookaheadWeightMoves = 0.1;
-  qc::fp   decay                = 0.1;
-  qc::fp   shuttlingTimeWeight  = 1;
-  qc::fp   gateWeight           = 1;
-  qc::fp   shuttlingWeight      = 1;
-  uint32_t seed                 = 0;
-  bool     verbose              = false;
+  qc::fp                   lookaheadWeightSwaps = 0.1;
+  qc::fp                   lookaheadWeightMoves = 0.1;
+  qc::fp                   decay                = 0.1;
+  qc::fp                   shuttlingTimeWeight  = 1;
+  qc::fp                   gateWeight           = 1;
+  qc::fp                   shuttlingWeight      = 1;
+  uint32_t                 seed                 = 0;
+  bool                     verbose              = false;
+  InitialCoordinateMapping initialMapping = InitialCoordinateMapping::Trivial;
 };
 
 /**
@@ -359,12 +360,10 @@ public:
   NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
   NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& arch,
-                             InitialCoordinateMapping initialCoordinateMapping =
-                                 InitialCoordinateMapping::Trivial,
                              const MapperParameters& p = MapperParameters())
       : arch(arch), mappedQc(arch.getNpositions()),
         mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
-        hardwareQubits(arch, initialCoordinateMapping, parameters.seed) {
+        hardwareQubits(arch, parameters.initialMapping, parameters.seed) {
     // need at least on free coordinate to shuttle
     if (arch.getNpositions() - arch.getNqubits() < 1) {
       this->parameters.gateWeight      = 1;
@@ -382,6 +381,15 @@ public:
       this->parameters.gateWeight      = 1;
       this->parameters.shuttlingWeight = 0;
     }
+    this->reset();
+  }
+
+  /**
+   * @brief Resets the mapper and the hardware qubits.
+   */
+  void reset() {
+    hardwareQubits =
+        HardwareQubits(arch, parameters.initialMapping, parameters.seed);
   }
 
   // Methods

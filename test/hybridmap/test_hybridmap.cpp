@@ -84,8 +84,9 @@ protected:
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
-  na::NeutralAtomMapper    mapper(arch, initialCoordinateMapping);
+  na::NeutralAtomMapper    mapper(arch);
   na::MapperParameters     mapperParameters;
+  mapperParameters.initialMapping       = initialCoordinateMapping;
   mapperParameters.lookaheadWeightSwaps = lookAheadWeight;
   mapperParameters.lookaheadWeightMoves = lookAheadWeight;
   mapperParameters.decay                = decay;
@@ -123,10 +124,9 @@ TEST(NeutralAtomMapperTest, Output) {
   auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
-  na::InitialCoordinateMapping const initialCoordinateMapping =
-      na::InitialCoordinateMapping::Trivial;
-  na::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
-  na::MapperParameters  mapperParameters;
+  na::NeutralAtomMapper    mapper(arch);
+  na::MapperParameters     mapperParameters;
+  mapperParameters.initialMapping       = na::InitialCoordinateMapping::Trivial;
   mapperParameters.lookaheadWeightSwaps = 0.1;
   mapperParameters.lookaheadWeightMoves = 0.1;
   mapperParameters.decay                = 0;

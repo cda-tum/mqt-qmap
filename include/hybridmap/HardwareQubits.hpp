@@ -34,7 +34,7 @@ namespace na {
  */
 class HardwareQubits {
 protected:
-  const NeutralAtomArchitecture& arch;
+  const NeutralAtomArchitecture* arch;
   qc::Permutation                hwToCoordIdx;
   SymmetricMatrix                swapDistances;
   std::map<HwQubit, HwQubits>    nearbyQubits;
@@ -80,13 +80,10 @@ protected:
 
 public:
   // Constructors
-  HardwareQubits()                      = delete;
-  HardwareQubits(const HardwareQubits&) = delete;
-  HardwareQubits(HardwareQubits&&)      = delete;
   HardwareQubits(const NeutralAtomArchitecture& arch,
                  InitialCoordinateMapping       initialCoordinateMapping,
                  uint32_t                       seed)
-      : arch(arch), swapDistances(arch.getNqubits()) {
+      : arch(&arch), swapDistances(arch.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:
       for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
@@ -191,7 +188,7 @@ public:
    */
   [[nodiscard]] [[maybe_unused]] std::set<CoordIndex>
   getNearbyCoordinates(HwQubit q) const {
-    return this->arch.getNearbyCoordinates(this->getCoordIndex(q));
+    return this->arch->getNearbyCoordinates(this->getCoordIndex(q));
   }
 
   // Swap Distances and Nearby qc::Qubits
