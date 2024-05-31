@@ -114,6 +114,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
   this->computeNearbyCoordinates();
 }
 void NeutralAtomArchitecture::createCoordinates() {
+  coordinates.reserve(properties.getNpositions());
   for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
     this->coordinates.emplace_back(i % this->properties.getNcolumns(),
                                    i / this->properties.getNcolumns());
