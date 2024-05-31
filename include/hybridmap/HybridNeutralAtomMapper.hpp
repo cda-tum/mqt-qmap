@@ -483,7 +483,7 @@ public:
   [[maybe_unused]] SchedulerResults
   schedule(bool verboseArg = false, bool createAnimationCsv = false,
            qc::fp shuttlingSpeedFactor = 1.0) {
-    return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitialHwPos(),
+    return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitHwPos(),
                               verboseArg, createAnimationCsv,
                               shuttlingSpeedFactor);
   }
@@ -517,7 +517,7 @@ public:
 
   [[maybe_unused]] [[nodiscard]] std::map<HwQubit, HwQubit>
   getInitHwPos() const {
-    return hardwareQubits.getInitialHwPos();
+    return hardwareQubits.getInitHwPos();
   }
 };
 
