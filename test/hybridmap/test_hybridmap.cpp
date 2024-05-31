@@ -26,7 +26,7 @@ protected:
 };
 
 TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
-  std::cout << "wd" << std::filesystem::current_path() << '\n';
+  std::cout << "wd: " << std::filesystem::current_path() << '\n';
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
 
   // Test get properties
