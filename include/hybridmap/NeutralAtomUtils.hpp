@@ -218,8 +218,8 @@ struct MoveCombs {
   using const_iterator = std::vector<MoveComb>::const_iterator;
   iterator                     begin() { return moveCombs.begin(); }
   iterator                     end() { return moveCombs.end(); }
-  [[nodiscard]] const_iterator begin() const { return moveCombs.begin(); }
-  [[nodiscard]] const_iterator end() const { return moveCombs.end(); }
+  [[nodiscard]] const_iterator cbegin() const { return moveCombs.cbegin(); }
+  [[nodiscard]] const_iterator cend() const { return moveCombs.cend(); }
 
   /**
    * @brief Add a move combination to the list of move combinations.
