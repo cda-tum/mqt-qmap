@@ -160,14 +160,14 @@ struct MoveComb {
    * @brief Get the first move of the combination
    * @return The first move of the combination
    */
-  [[nodiscard]] AtomMove getFirstMove() const { return *moves.begin(); }
+  [[nodiscard]] AtomMove getFirstMove() const { return moves.front(); }
 
   /**
    * @brief Get the last move of the combination
    * @return The last move of the combination
    */
   [[nodiscard]] [[maybe_unused]] AtomMove getLastMove() const {
-    return *moves.rbegin();
+    return moves.back();
   }
 
   // implement == operator for AtomMove
