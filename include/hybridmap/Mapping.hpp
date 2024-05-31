@@ -37,6 +37,8 @@ public:
         circToHw.insert({i, i});
       }
       break;
+    default:
+      qc::unreachable();
     }
   }
   /**
