@@ -91,4 +91,8 @@ def test_hybrid_na_mapper(lookahead_weight, decay, gate_shuttling_weight):
     qc.cx(0, 5)
 
     mapper.map(qc)
-    mapper.schedule(create_animation_csv=False)
+    results = mapper.schedule(create_animation_csv=False)
+
+    assert results["totalExecutionTime"] > 0
+    assert results["totalIdleTime"] > 0
+    assert results["totalFidelities"] > 0
