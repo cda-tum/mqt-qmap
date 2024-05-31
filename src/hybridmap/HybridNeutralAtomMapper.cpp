@@ -41,6 +41,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
+  qc::CircuitOptimizer::removeFinalMeasurements(qc);
 
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
 
