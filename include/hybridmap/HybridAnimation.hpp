@@ -16,7 +16,7 @@
 #include <string>
 #include <utility>
 
-namespace qc {
+namespace na {
 class AnimationAtoms {
   using axesId   = std::uint32_t;
   using marginId = std::uint32_t;
@@ -28,12 +28,12 @@ protected:
   [[maybe_unused]] uint32_t colorGlobal = 3;
   uint32_t                  colorCz     = 4;
 
-  std::map<CoordIndex, HwQubit>        coordIdxToId;
-  std::map<HwQubit, std::pair<fp, fp>> idToCoord;
-  std::map<HwQubit, uint32_t>          axesIds;
-  std::map<HwQubit, uint32_t>          marginIds;
-  uint32_t                             axesIdCounter   = 0;
-  uint32_t                             marginIdCounter = 0;
+  std::map<CoordIndex, HwQubit>                coordIdxToId;
+  std::map<HwQubit, std::pair<qc::fp, qc::fp>> idToCoord;
+  std::map<HwQubit, uint32_t>                  axesIds;
+  std::map<HwQubit, uint32_t>                  marginIds;
+  uint32_t                                     axesIdCounter   = 0;
+  uint32_t                                     marginIdCounter = 0;
 
   axesId   addAxis(HwQubit id);
   void     removeAxis(HwQubit id) { axesIds.erase(id); }
@@ -45,14 +45,16 @@ public:
                  const NeutralAtomArchitecture&    arch);
 
   std::string        getInitString();
-  std::string        getEndString(fp endTime);
-  static std::string createCsvLine(fp startTime, HwQubit id, fp x, fp y,
-                                   uint32_t size = 1, uint32_t color = 0,
-                                   bool axes = false, axesId axId = 0,
-                                   bool margin = false, marginId marginId = 0,
-                                   fp marginSize = 0);
-  std::string createCsvOp(const std::unique_ptr<Operation>& op, fp startTime,
-                          fp endTime, const qc::NeutralAtomArchitecture& arch);
+  std::string        getEndString(qc::fp endTime);
+  static std::string createCsvLine(qc::fp startTime, HwQubit id, qc::fp x,
+                                   qc::fp y, uint32_t size = 1,
+                                   uint32_t color = 0, bool axes = false,
+                                   axesId axId = 0, bool margin = false,
+                                   marginId marginId   = 0,
+                                   qc::fp   marginSize = 0);
+  std::string        createCsvOp(const std::unique_ptr<qc::Operation>& op,
+                                 qc::fp startTime, qc::fp endTime,
+                                 const NeutralAtomArchitecture& arch);
 };
 
-} // namespace qc
+} // namespace na

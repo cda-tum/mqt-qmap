@@ -18,7 +18,7 @@
 
 #include <memory>
 
-namespace qc {
+namespace na {
 // Possible types two Move combination can be combined to
 enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
 
@@ -52,11 +52,11 @@ protected:
       // need offset move to avoid crossing
       int32_t offset;
       // delta of the actual move
-      fp delta;
+      qc::fp delta;
 
       AodMove() = default;
 
-      AodMove(uint32_t init, fp delta, int32_t offset)
+      AodMove(uint32_t init, qc::fp delta, int32_t offset)
           : init(init), offset(offset), delta(delta) {}
     };
     /**
@@ -100,13 +100,13 @@ protected:
     const NeutralAtomArchitecture& arch;
     std::vector<AodActivation>     allActivations;
     // Differentiate between loading and unloading
-    OpType type;
+    qc::OpType type;
 
     // Constructor
     AodActivationHelper()                           = delete;
     AodActivationHelper(const AodActivationHelper&) = delete;
     AodActivationHelper(AodActivationHelper&&)      = delete;
-    AodActivationHelper(const NeutralAtomArchitecture& arch, OpType type)
+    AodActivationHelper(const NeutralAtomArchitecture& arch, qc::OpType type)
         : arch(arch), type(type) {}
 
     // Methods
@@ -274,14 +274,14 @@ protected:
   };
 
   const NeutralAtomArchitecture& arch;
-  QuantumComputation             qcScheduled;
+  qc::QuantumComputation         qcScheduled;
   std::vector<MoveGroup>         moveGroups;
 
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
    * @param qc Quantum circuit to schedule
    */
-  void initMoveGroups(QuantumComputation& qc);
+  void initMoveGroups(qc::QuantumComputation& qc);
   /**
    * @brief Converts the move groups into the actual AOD operations
    * @details For this the following steps are performed:
@@ -304,7 +304,7 @@ public:
    * @param qc Quantum circuit to schedule
    * @return Scheduled quantum circuit, containing AOD operations
    */
-  QuantumComputation schedule(QuantumComputation& qc);
+  qc::QuantumComputation schedule(qc::QuantumComputation& qc);
 
   /**
    * @brief Returns the number of move groups
@@ -313,4 +313,4 @@ public:
   [[nodiscard]] auto getNMoveGroups() const { return moveGroups.size(); }
 };
 
-} // namespace qc
+} // namespace na

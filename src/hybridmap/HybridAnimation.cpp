@@ -6,8 +6,9 @@
 #include "hybridmap/HybridAnimation.hpp"
 
 #include "Definitions.hpp"
-#include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "operations/AodOperation.hpp"
 #include "operations/OpType.hpp"
 #include "utils.hpp"
 
@@ -18,8 +19,9 @@
 #include <memory>
 #include <string>
 
-qc::AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>&  initHwPos,
-                                   const qc::NeutralAtomArchitecture& arch) {
+namespace na {
+AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
+                               const NeutralAtomArchitecture&    arch) {
   auto nCols = arch.getNcolumns();
 
   for (const auto& [id, coord] : initHwPos) {
@@ -31,7 +33,7 @@ qc::AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>&  initHwPos,
   }
 }
 
-std::string qc::AnimationAtoms::getInitString() {
+std::string AnimationAtoms::getInitString() {
   std::string initString;
   initString +=
       "time;id;x;y;size;fill;color;axes;axesId;margin;marginId;marginSize\n";
@@ -43,7 +45,7 @@ std::string qc::AnimationAtoms::getInitString() {
   return initString;
 }
 
-std::string qc::AnimationAtoms::getEndString(fp endTime) {
+std::string AnimationAtoms::getEndString(qc::fp endTime) {
   std::string initString;
   for (const auto& [id, coord] : idToCoord) {
     initString += std::to_string(endTime) + ";" + std::to_string(id) + ";" +
@@ -53,7 +55,7 @@ std::string qc::AnimationAtoms::getEndString(fp endTime) {
   return initString;
 }
 
-qc::AnimationAtoms::axesId qc::AnimationAtoms::addAxis(qc::HwQubit id) {
+AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
   if (axesIds.find(id) == axesIds.end()) {
     axesIdCounter++;
     axesIds[id] = axesIdCounter;
@@ -63,7 +65,7 @@ qc::AnimationAtoms::axesId qc::AnimationAtoms::addAxis(qc::HwQubit id) {
   }
   return axesIds[id];
 }
-qc::AnimationAtoms::marginId qc::AnimationAtoms::addMargin(qc::HwQubit id) {
+AnimationAtoms::marginId AnimationAtoms::addMargin(HwQubit id) {
   if (marginIds.find(id) == marginIds.end()) {
     marginIdCounter++;
     marginIds[id] = marginIdCounter;
@@ -76,18 +78,18 @@ qc::AnimationAtoms::marginId qc::AnimationAtoms::addMargin(qc::HwQubit id) {
 }
 
 std::string
-qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
-                                fp startTime, fp endTime,
-                                const qc::NeutralAtomArchitecture& arch) {
+AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
+                            qc::fp startTime, qc::fp endTime,
+                            const NeutralAtomArchitecture& arch) {
   std::string csvLine;
 
   for (const auto& coordIdx : op->getUsedQubits()) {
     // if coordIdx unmapped -> continue except it is an AodDeactivate
-    if (OpType::AodDeactivate != op->getType() &&
+    if (qc::OpType::AodDeactivate != op->getType() &&
         coordIdxToId.find(coordIdx) == coordIdxToId.end()) {
       continue;
     }
-    if (op->getType() == OpType::AodDeactivate) {
+    if (op->getType() == qc::OpType::AodDeactivate) {
       // check if there is a qubit at coordIdx
       // if yes -> update coordIdxToId with new coordIdx
       // if not -> throw exception
@@ -121,7 +123,7 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
     }
     auto id    = coordIdxToId.at(coordIdx);
     auto coord = idToCoord.at(id);
-    if (op->getType() == OpType::AodActivate) {
+    if (op->getType() == qc::OpType::AodActivate) {
       addAxis(id);
       if (axesIds.find(id) == axesIds.end()) {
         throw QMAPException(
@@ -132,7 +134,7 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
                                colorSlm, true, axesIds.at(id));
       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
                                colorAod, true, axesIds.at(id));
-    } else if (op->getType() == OpType::AodDeactivate) {
+    } else if (op->getType() == qc::OpType::AodDeactivate) {
       if (axesIds.find(id) == axesIds.end()) {
         throw QMAPException("Tried to deactivate qubit at coordIdx " +
                             std::to_string(coordIdx) +
@@ -145,7 +147,7 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
                                colorSlm, true, axesIds.at(id));
       removeAxis(id);
 
-    } else if (op->getType() == OpType::AodMove) {
+    } else if (op->getType() == qc::OpType::AodMove) {
       if (axesIds.find(id) == axesIds.end()) {
         throw QMAPException(
             "Tried to move qubit at coordIdx " + std::to_string(coordIdx) +
@@ -201,10 +203,10 @@ qc::AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
   }
   return csvLine;
 }
-std::string qc::AnimationAtoms::createCsvLine(
-    qc::fp startTime, qc::HwQubit id, qc::fp x, qc::fp y, uint32_t size,
-    uint32_t color, bool axes, qc::AnimationAtoms::axesId axId, bool margin,
-    qc::AnimationAtoms::marginId marginId, fp marginSize) {
+std::string AnimationAtoms::createCsvLine(
+    qc::fp startTime, HwQubit id, qc::fp x, qc::fp y, uint32_t size,
+    uint32_t color, bool axes, AnimationAtoms::axesId axId, bool margin,
+    AnimationAtoms::marginId marginId, qc::fp marginSize) {
   std::string csvLine;
   csvLine +=
       std::to_string(startTime) + ";" + std::to_string(id) + ";" +
@@ -215,3 +217,5 @@ std::string qc::AnimationAtoms::createCsvLine(
       std::to_string(marginId) + ";" + std::to_string(marginSize) + "\n";
   return csvLine;
 }
+
+} // namespace na

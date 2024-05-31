@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace qc {
+namespace na {
 
 /**
  * @brief Symmetric matrix class with same number of rows and columns that
@@ -25,8 +25,8 @@ namespace qc {
  */
 class SymmetricMatrix {
 private:
-  std::vector<std::vector<fp>> data;
-  uint32_t                     size = 0;
+  std::vector<std::vector<qc::fp>> data;
+  uint32_t                         size = 0;
 
 public:
   // Constructors
@@ -38,21 +38,21 @@ public:
     }
   }
 
-  SymmetricMatrix(uint32_t size, fp value) : size(size) {
+  SymmetricMatrix(uint32_t size, qc::fp value) : size(size) {
     data.resize(size);
     for (uint32_t i = 0; i < size; ++i) {
       data[i].resize(i + 1, value);
     }
   }
 
-  fp& operator()(uint32_t row, uint32_t col) {
+  qc::fp& operator()(uint32_t row, uint32_t col) {
     if (row < col) {
       return data[col][row];
     }
     return data[row][col];
   }
 
-  [[nodiscard]] fp operator()(uint32_t row, uint32_t col) const {
+  [[nodiscard]] qc::fp operator()(uint32_t row, uint32_t col) const {
     if (row < col) {
       return data[col][row];
     }
@@ -98,7 +98,7 @@ struct Direction {
   bool y;
 
   [[maybe_unused]] Direction(bool x, bool y) : x(x), y(y) {}
-  Direction(fp deltaX, fp deltaY) : x(deltaX >= 0), y(deltaY >= 0) {}
+  Direction(qc::fp deltaX, qc::fp deltaY) : x(deltaX >= 0), y(deltaY >= 0) {}
 
   [[nodiscard]] bool operator==(const Direction& other) const {
     return x == other.x && y == other.y;
@@ -116,13 +116,13 @@ struct Direction {
  * @details Each move consists in a start and end coordinate and the direction.
  */
 struct MoveVector {
-  fp        xStart;
-  fp        yStart;
-  fp        xEnd;
-  fp        yEnd;
+  qc::fp    xStart;
+  qc::fp    yStart;
+  qc::fp    xEnd;
+  qc::fp    yEnd;
   Direction direction;
 
-  MoveVector(fp xStart, fp yStart, fp xEnd, fp yEnd)
+  MoveVector(qc::fp xStart, qc::fp yStart, qc::fp xEnd, qc::fp yEnd)
       : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
         direction(xEnd - xStart, yEnd - yStart) {}
 
@@ -130,7 +130,7 @@ struct MoveVector {
   sameDirection(const MoveVector& other) const {
     return direction == other.direction;
   }
-  [[nodiscard]] fp getLength() const {
+  [[nodiscard]] qc::fp getLength() const {
     return std::sqrt(std::pow(xEnd - xStart, 2) + std::pow(yEnd - yStart, 2));
   }
   [[nodiscard]] bool overlap(const MoveVector& other) const;
@@ -144,11 +144,11 @@ struct MoveVector {
  */
 struct MoveComb {
   std::vector<AtomMove> moves;
-  fp                    cost = std::numeric_limits<fp>::quiet_NaN();
+  qc::fp                cost = std::numeric_limits<qc::fp>::quiet_NaN();
 
-  MoveComb(std::vector<AtomMove> moves, fp cost)
+  MoveComb(std::vector<AtomMove> moves, qc::fp cost)
       : moves(std::move(moves)), cost(cost) {}
-  MoveComb(AtomMove move, fp cost)
+  MoveComb(AtomMove move, qc::fp cost)
       : moves(std::vector<AtomMove>{std::move(move)}), cost(cost) {}
 
   MoveComb() = default;
@@ -184,7 +184,7 @@ struct MoveComb {
    */
   void append(AtomMove addMove) {
     moves.emplace_back(addMove);
-    cost = std::numeric_limits<fp>::quiet_NaN();
+    cost = std::numeric_limits<qc::fp>::quiet_NaN();
   }
   /**
    * @brief Append all moves of another combination to the end of this one.
@@ -193,7 +193,7 @@ struct MoveComb {
   void append(const MoveComb& addMoveComb) {
     moves.insert(moves.end(), addMoveComb.moves.begin(),
                  addMoveComb.moves.end());
-    cost = std::numeric_limits<fp>::quiet_NaN();
+    cost = std::numeric_limits<qc::fp>::quiet_NaN();
   }
   [[nodiscard]] size_t size() const { return moves.size(); }
   [[nodiscard]] bool   empty() const { return moves.empty(); }
@@ -252,11 +252,12 @@ public:
 
   [[nodiscard]] CoordIndex getX() const { return x; }
   [[nodiscard]] CoordIndex getY() const { return y; }
-  [[nodiscard]] fp         getXfp() const { return static_cast<fp>(x); }
-  [[nodiscard]] fp         getYfp() const { return static_cast<fp>(y); }
-  [[nodiscard]] fp         getEuclidianDistance(const Coordinate& c) const {
-    return std::sqrt(std::pow(static_cast<fp>(x) - static_cast<fp>(c.x), 2) +
-                             std::pow(static_cast<fp>(y) - static_cast<fp>(c.y), 2));
+  [[nodiscard]] qc::fp     getXfp() const { return static_cast<qc::fp>(x); }
+  [[nodiscard]] qc::fp     getYfp() const { return static_cast<qc::fp>(y); }
+  [[nodiscard]] qc::fp     getEuclidianDistance(const Coordinate& c) const {
+    return std::sqrt(
+        std::pow(static_cast<qc::fp>(x) - static_cast<qc::fp>(c.x), 2) +
+        std::pow(static_cast<qc::fp>(y) - static_cast<qc::fp>(c.y), 2));
   }
 
   [[nodiscard]] CoordIndex getManhattanDistanceX(const Coordinate& c) const {
@@ -273,4 +274,4 @@ public:
   }
 };
 
-} // namespace qc
+} // namespace na

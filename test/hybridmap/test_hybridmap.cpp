@@ -27,7 +27,7 @@ protected:
 
 TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
   std::cout << "wd" << std::filesystem::current_path() << '\n';
-  auto arch = qc::NeutralAtomArchitecture(testArchitecturePath);
+  auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
 
   // Test get properties
   EXPECT_LE(arch.getNqubits(), arch.getNpositions());
@@ -56,15 +56,15 @@ class NeutralAtomMapperTest
     // lookAheadWeight, initialCoordinateMapping
     : public ::testing::TestWithParam<
           std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp,
-                     qc::InitialCoordinateMapping>> {
+                     na::InitialCoordinateMapping>> {
 protected:
   std::string testArchitecturePath = "hybridmap/architectures/";
   std::string testQcPath           = "hybridmap/circuits/";
   qc::fp      gateWeight           = 1;
   qc::fp      shuttlingWeight      = 1;
   qc::fp      lookAheadWeight      = 1;
-  qc::InitialCoordinateMapping initialCoordinateMapping =
-      qc::InitialCoordinateMapping::Trivial;
+  na::InitialCoordinateMapping initialCoordinateMapping =
+      na::InitialCoordinateMapping::Trivial;
   // fixed
   qc::fp   decay               = 0.1;
   qc::fp   shuttlingTimeWeight = 0.1;
@@ -82,10 +82,10 @@ protected:
 };
 
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
-  auto arch = qc::NeutralAtomArchitecture(testArchitecturePath);
-  qc::InitialMapping const initialMapping = qc::InitialMapping::Identity;
-  qc::NeutralAtomMapper    mapper(arch, initialCoordinateMapping);
-  qc::MapperParameters     mapperParameters;
+  auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
+  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  na::NeutralAtomMapper    mapper(arch, initialCoordinateMapping);
+  na::MapperParameters     mapperParameters;
   mapperParameters.lookaheadWeightSwaps = lookAheadWeight;
   mapperParameters.lookaheadWeightMoves = lookAheadWeight;
   mapperParameters.decay                = decay;
@@ -116,17 +116,17 @@ INSTANTIATE_TEST_SUITE_P(
                           "qft_nativegates_rigetti_qiskit_opt3_10"),
         ::testing::Values(1, 0.), ::testing::Values(1, 0.),
         ::testing::Values(0, 0.1),
-        ::testing::Values(qc::InitialCoordinateMapping::Trivial,
-                          qc::InitialCoordinateMapping::Random)));
+        ::testing::Values(na::InitialCoordinateMapping::Trivial,
+                          na::InitialCoordinateMapping::Random)));
 
 TEST(NeutralAtomMapperTest, Output) {
-  auto arch = qc::NeutralAtomArchitecture(
+  auto arch = na::NeutralAtomArchitecture(
       "hybridmap/architectures/rubidium_shuttling.json");
-  qc::InitialMapping const initialMapping = qc::InitialMapping::Identity;
-  qc::InitialCoordinateMapping const initialCoordinateMapping =
-      qc::InitialCoordinateMapping::Trivial;
-  qc::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
-  qc::MapperParameters  mapperParameters;
+  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  na::InitialCoordinateMapping const initialCoordinateMapping =
+      na::InitialCoordinateMapping::Trivial;
+  na::NeutralAtomMapper mapper(arch, initialCoordinateMapping);
+  na::MapperParameters  mapperParameters;
   mapperParameters.lookaheadWeightSwaps = 0.1;
   mapperParameters.lookaheadWeightMoves = 0.1;
   mapperParameters.decay                = 0;

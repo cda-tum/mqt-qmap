@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace qc {
+namespace na {
 
 /**
  * @brief Class that represents the hardware qubits of a neutral atom quantum
@@ -35,10 +35,10 @@ namespace qc {
 class HardwareQubits {
 protected:
   const NeutralAtomArchitecture& arch;
-  Permutation                    hwToCoordIdx;
+  qc::Permutation                hwToCoordIdx;
   SymmetricMatrix                swapDistances;
   std::map<HwQubit, HwQubits>    nearbyQubits;
-  Permutation                    initialHwPos;
+  qc::Permutation                initialHwPos;
 
   /**
    * @brief Initializes the swap distances between the hardware qubits for the
@@ -137,7 +137,7 @@ public:
    * @brief Converts gate qubits from hardware qubits to coordinate indices.
    * @param op The operation.
    */
-  void mapToCoordIdx(Operation* op) const {
+  void mapToCoordIdx(qc::Operation* op) const {
     op->setTargets(hwToCoordIdx.apply(op->getTargets()));
     if (op->isControlled()) {
       op->setControls(hwToCoordIdx.apply(op->getControls()));
@@ -194,7 +194,7 @@ public:
     return this->arch.getNearbyCoordinates(this->getCoordIndex(q));
   }
 
-  // Swap Distances and Nearby Qubits
+  // Swap Distances and Nearby qc::Qubits
 
   /**
    * @brief Returns the swap distance between two hardware qubits.
@@ -207,8 +207,8 @@ public:
    * or just to its vicinity.
    * @return The swap distance between the two hardware qubits.
    */
-  [[nodiscard]] fp getSwapDistance(HwQubit q1, HwQubit q2,
-                                   bool closeBy = true) {
+  [[nodiscard]] qc::fp getSwapDistance(HwQubit q1, HwQubit q2,
+                                       bool closeBy = true) {
     if (q1 == q2) {
       return 0;
     }
@@ -258,7 +258,7 @@ public:
    * @param qubits The set of hardware qubits.
    * @return The summed swap distance between all hardware qubits in the set.
    */
-  fp getAllToAllSwapDistance(std::set<HwQubit>& qubits);
+  qc::fp getAllToAllSwapDistance(std::set<HwQubit>& qubits);
 
   /**
    * @brief Computes the closest free coordinate in a given direction.
@@ -291,4 +291,4 @@ public:
     return initialHwPosMap;
   }
 };
-} // namespace qc
+} // namespace na

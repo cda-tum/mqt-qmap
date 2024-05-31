@@ -13,51 +13,52 @@
 #include <set>
 #include <utility>
 
-namespace qc {
+namespace na {
 /**
  * @brief Class to manage the creation of layers when traversing a quantum
  * circuit.
- * @details The class uses the DAG of the circuit to create layers of gates that
- * can be executed at the same time. It can be used to create the front or look
- * ahead layer.
+ * @details The class uses the qc::DAG of the circuit to create layers of gates
+ * that can be executed at the same time. It can be used to create the front or
+ * look ahead layer.
  */
 
 class NeutralAtomLayer {
 protected:
-  DAG                   dag;
-  DAGIterators          iterators;
+  qc::DAG               dag;
+  qc::DAGIterators      iterators;
   GateList              gates;
   GateList              mappedSingleQubitGates;
   std::vector<GateList> candidates;
 
   /**
    * @brief Updates the gates for the given qubits
-   * @details The function iterates over the DAG and updates the gates for the
-   * given qubits as far es possible.
+   * @details The function iterates over the qc::DAG and updates the gates for
+   * the given qubits as far es possible.
    * @param qubitsToUpdate The qubits that have been updated
    * @param commuteWith Gates the new gates should commute with
    */
-  void updateByQubits(const std::set<Qubit>& qubitsToUpdate);
+  void updateByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
   /**
    * @brief Updates the candidates for the given qubits
    */
-  void updateCandidatesByQubits(const std::set<Qubit>& qubitsToUpdate);
+  void updateCandidatesByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
   /**
    * @brief Checks the candidates and add them to the gates if possible
    * @param qubitsToUpdate The qubits that have been updated
    */
-  void candidatesToGates(const std::set<Qubit>& qubitsToUpdate);
+  void candidatesToGates(const std::set<qc::Qubit>& qubitsToUpdate);
 
   // Commutation checks
-  static bool commutesWithAtQubit(const GateList&  layer,
-                                  const Operation* opPointer,
-                                  const Qubit&     qubit);
-  static bool commuteAtQubit(const Operation* opPointer1,
-                             const Operation* opPointer2, const Qubit& qubit);
+  static bool commutesWithAtQubit(const GateList&      layer,
+                                  const qc::Operation* opPointer,
+                                  const qc::Qubit&     qubit);
+  static bool commuteAtQubit(const qc::Operation* opPointer1,
+                             const qc::Operation* opPointer2,
+                             const qc::Qubit&     qubit);
 
 public:
   // Constructor
-  explicit NeutralAtomLayer(DAG dag) : dag(std::move(dag)) {
+  explicit NeutralAtomLayer(qc::DAG dag) : dag(std::move(dag)) {
     for (auto& i : this->dag) {
       auto it = i.begin();
       this->iterators.emplace_back(it);
@@ -95,4 +96,4 @@ public:
   GateList getMappedSingleQubitGates() { return mappedSingleQubitGates; }
 };
 
-} // namespace qc
+} // namespace na

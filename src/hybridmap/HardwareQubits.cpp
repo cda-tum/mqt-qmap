@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace qc {
+namespace na {
 void HardwareQubits::initTrivialSwapDistances() {
   swapDistances = SymmetricMatrix(arch.getNqubits());
   for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
@@ -60,7 +60,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
     }
   }
   if (!found) {
-    swapDistances(q1, q2) = std::numeric_limits<fp>::infinity();
+    swapDistances(q1, q2) = std::numeric_limits<qc::fp>::infinity();
     return;
   }
   // recreate path
@@ -116,7 +116,7 @@ void HardwareQubits::move(HwQubit hwQubit, CoordIndex newCoord) {
   resetSwapDistances();
 }
 
-std::vector<Swap> HardwareQubits::getNearbySwaps(qc::HwQubit q) const {
+std::vector<Swap> HardwareQubits::getNearbySwaps(HwQubit q) const {
   std::vector<Swap> swaps;
   swaps.reserve(nearbyQubits.size());
   for (const auto& nearbyQubit : nearbyQubits.at(q)) {
@@ -125,7 +125,7 @@ std::vector<Swap> HardwareQubits::getNearbySwaps(qc::HwQubit q) const {
   return swaps;
 }
 
-void HardwareQubits::computeNearbyQubits(qc::HwQubit q) {
+void HardwareQubits::computeNearbyQubits(HwQubit q) {
   std::set<HwQubit> newNearbyQubits;
   auto              coordQ = hwToCoordIdx.at(q);
   for (const auto& coord : hwToCoordIdx) {
@@ -140,7 +140,7 @@ void HardwareQubits::computeNearbyQubits(qc::HwQubit q) {
   nearbyQubits.insert_or_assign(q, newNearbyQubits);
 }
 
-fp HardwareQubits::getAllToAllSwapDistance(std::set<HwQubit>& qubits) {
+qc::fp HardwareQubits::getAllToAllSwapDistance(std::set<HwQubit>& qubits) {
   // two qubit gates
   if (qubits.size() == 2) {
     auto it = qubits.begin();
@@ -149,7 +149,7 @@ fp HardwareQubits::getAllToAllSwapDistance(std::set<HwQubit>& qubits) {
     return getSwapDistance(q1, q2);
   }
   // for n > 2 all qubits need to be within the interaction radius of each other
-  fp totalDistance = 0;
+  qc::fp totalDistance = 0;
   for (auto it1 = qubits.begin(); it1 != qubits.end(); ++it1) {
     for (auto it2 = std::next(it1); it2 != qubits.end(); ++it2) {
       totalDistance += getSwapDistance(*it1, *it2);
@@ -178,7 +178,7 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
 }
 
 std::set<CoordIndex>
-HardwareQubits::getNearbyFreeCoordinatesByCoord(qc::CoordIndex idx) {
+HardwareQubits::getNearbyFreeCoordinatesByCoord(CoordIndex idx) {
   std::set<CoordIndex> nearbyFreeCoordinates;
   for (auto const& coordIndex : this->arch.getNearbyCoordinates(idx)) {
     if (!this->isMapped(coordIndex)) {
@@ -189,7 +189,7 @@ HardwareQubits::getNearbyFreeCoordinatesByCoord(qc::CoordIndex idx) {
 }
 
 std::set<CoordIndex>
-HardwareQubits::getNearbyOccupiedCoordinatesByCoord(qc::CoordIndex idx) const {
+HardwareQubits::getNearbyOccupiedCoordinatesByCoord(CoordIndex idx) const {
   auto nearbyHwQubits = this->getNearbyQubits(this->getHwQubit(idx));
   return this->getCoordIndices(nearbyHwQubits);
 }
@@ -233,4 +233,4 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
   return closestFreeCoords;
 }
 
-} // namespace qc
+} // namespace na

@@ -25,22 +25,22 @@
 #include <utility>
 #include <vector>
 
-qc::SchedulerResults
-qc::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
+na::SchedulerResults
+na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
                                    const std::map<HwQubit, HwQubit>& initHwPos,
                                    bool verbose, bool createAnimationCsv,
-                                   fp shuttlingSpeedFactor) {
+                                   qc::fp shuttlingSpeedFactor) {
   if (verbose) {
     std::cout << "\n* schedule start!\n";
   }
 
-  std::vector<fp> totalExecutionTimes(arch.getNpositions(), 0);
+  std::vector<qc::fp> totalExecutionTimes(arch.getNpositions(), 0);
   // saves for each coord the time slots that are blocked by a multi qubit gate
-  std::vector<std::deque<std::pair<fp, fp>>> rydbergBlockedQubitsTimes(
-      arch.getNpositions(), std::deque<std::pair<fp, fp>>());
-  fp aodLastBlockedTime  = 0;
-  fp totalGateTime       = 0;
-  fp totalGateFidelities = 1;
+  std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
+      arch.getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
+  qc::fp aodLastBlockedTime  = 0;
+  qc::fp totalGateTime       = 0;
+  qc::fp totalGateFidelities = 1;
 
   AnimationAtoms animationAtoms(initHwPos, arch);
   if (createAnimationCsv) {
@@ -80,7 +80,7 @@ qc::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
                 << "\n";
     }
 
-    fp maxTime = 0;
+    qc::fp maxTime = 0;
     if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
         op->getType() == qc::AodDeactivate) {
       // AodBlocking
@@ -181,9 +181,9 @@ qc::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
           nCZs};
 }
 
-void qc::NeutralAtomScheduler::printSchedulerResults(
-    std::vector<fp>& totalExecutionTimes, fp totalIdleTime,
-    fp totalGateFidelities, fp totalFidelities, uint32_t nCZs) {
+void na::NeutralAtomScheduler::printSchedulerResults(
+    std::vector<qc::fp>& totalExecutionTimes, qc::fp totalIdleTime,
+    qc::fp totalGateFidelities, qc::fp totalFidelities, uint32_t nCZs) {
   auto totalExecutionTime =
       *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
   std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
@@ -193,9 +193,9 @@ void qc::NeutralAtomScheduler::printSchedulerResults(
   std::cout << "totalNumCZs: " << nCZs << "\n";
 }
 
-void qc::NeutralAtomScheduler::printTotalExecutionTimes(
-    std::vector<fp>&                            totalExecutionTimes,
-    std::vector<std::deque<std::pair<fp, fp>>>& blockedQubitsTimes) {
+void na::NeutralAtomScheduler::printTotalExecutionTimes(
+    std::vector<qc::fp>&                                totalExecutionTimes,
+    std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes) {
   std::cout << "ExecutionTime: "
             << "\n";
   for (size_t qubit = 0; qubit < totalExecutionTimes.size(); qubit++) {

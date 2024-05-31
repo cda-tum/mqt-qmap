@@ -12,9 +12,9 @@
 #include <cstdint>
 #include <limits>
 
-namespace qc {
+namespace na {
 
-bool MoveVector::overlap(const qc::MoveVector& other) const {
+bool MoveVector::overlap(const MoveVector& other) const {
   // do not consider direction for overlap
   const auto firstStartX  = std::min(xStart, xEnd);
   const auto firstEndX    = std::max(xStart, xEnd);
@@ -45,7 +45,7 @@ bool MoveVector::overlap(const qc::MoveVector& other) const {
           overlapYSecondStart || overlapYSecondEnd);
 }
 
-bool MoveVector::include(const qc::MoveVector& other) const {
+bool MoveVector::include(const MoveVector& other) const {
   const auto firstStartX  = std::min(xStart, xEnd);
   const auto firstEndX    = std::max(xStart, xEnd);
   const auto secondStartX = std::min(other.xStart, other.xEnd);
@@ -63,17 +63,17 @@ bool MoveVector::include(const qc::MoveVector& other) const {
   return includeX || includeY;
 }
 
-void MoveCombs::addMoveComb(const qc::MoveComb& otherMove) {
+void MoveCombs::addMoveComb(const MoveComb& otherMove) {
   for (auto& comb : moveCombs) {
     if (comb == otherMove) {
-      comb.cost = std::numeric_limits<fp>::quiet_NaN();
+      comb.cost = std::numeric_limits<qc::fp>::quiet_NaN();
       return;
     }
   }
   moveCombs.emplace_back(otherMove);
 }
 
-void MoveCombs::addMoveCombs(const qc::MoveCombs& otherMoveCombs) {
+void MoveCombs::addMoveCombs(const MoveCombs& otherMoveCombs) {
   for (const auto& otherMove : otherMoveCombs.moveCombs) {
     addMoveComb(otherMove);
   }
@@ -93,4 +93,4 @@ void MoveCombs::removeLongerMoveCombs() {
   }
 }
 
-} // namespace qc
+} // namespace na

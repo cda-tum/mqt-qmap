@@ -16,9 +16,10 @@
 #include <set>
 #include <vector>
 
-namespace qc {
+namespace na {
 
-void NeutralAtomLayer::updateByQubits(const std::set<Qubit>& qubitsToUpdate) {
+void NeutralAtomLayer::updateByQubits(
+    const std::set<qc::Qubit>& qubitsToUpdate) {
   updateCandidatesByQubits(qubitsToUpdate);
   candidatesToGates(qubitsToUpdate);
 }
@@ -49,7 +50,7 @@ void NeutralAtomLayer::initLayerOffset(
       this->iterators[i] = this->dag[i].begin() + iteratorOffset[i];
     }
   }
-  std::set<Qubit> allQubits;
+  std::set<qc::Qubit> allQubits;
   for (uint32_t i = 0; i < this->dag.size(); ++i) {
     allQubits.emplace(i);
   }
@@ -57,7 +58,7 @@ void NeutralAtomLayer::initLayerOffset(
 }
 
 void NeutralAtomLayer::updateCandidatesByQubits(
-    const std::set<Qubit>& qubitsToUpdate) {
+    const std::set<qc::Qubit>& qubitsToUpdate) {
   for (const auto& qubit : qubitsToUpdate) {
     auto tempIter = iterators[qubit];
     while (tempIter < this->dag[qubit].end()) {
@@ -89,9 +90,9 @@ void NeutralAtomLayer::updateCandidatesByQubits(
 }
 
 void NeutralAtomLayer::candidatesToGates(
-    const std::set<Qubit>& qubitsToUpdate) {
+    const std::set<qc::Qubit>& qubitsToUpdate) {
   for (const auto& qubit : qubitsToUpdate) {
-    std::vector<const Operation*> toRemove;
+    std::vector<const qc::Operation*> toRemove;
     for (const auto* opPointer : candidates[qubit]) {
       // check if gate is candidate for all qubits it uses
       bool inFrontLayer = true;
@@ -130,9 +131,9 @@ void NeutralAtomLayer::candidatesToGates(
   }
 }
 
-void qc::NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
+void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
   this->mappedSingleQubitGates.clear();
-  std::set<Qubit> qubitsToUpdate;
+  std::set<qc::Qubit> qubitsToUpdate;
   for (const auto& gate : gatesToRemove) {
     if (std::find(gates.begin(), gates.end(), gate) != gates.end()) {
       gates.erase(std::find(gates.begin(), gates.end(), gate));
@@ -148,18 +149,18 @@ void qc::NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
 
 // Commutation
 
-bool qc::NeutralAtomLayer::commutesWithAtQubit(const qc::GateList& layer,
-                                               const Operation*    opPointer,
-                                               const Qubit&        qubit) {
+bool NeutralAtomLayer::commutesWithAtQubit(const GateList&      layer,
+                                           const qc::Operation* opPointer,
+                                           const qc::Qubit&     qubit) {
   return std::all_of(layer.begin(), layer.end(),
                      [&opPointer, &qubit](const auto& frontOpPointer) {
                        return commuteAtQubit(opPointer, frontOpPointer, qubit);
                      });
 }
 
-bool qc::NeutralAtomLayer::commuteAtQubit(const Operation* op1,
-                                          const Operation* op2,
-                                          const qc::Qubit& qubit) {
+bool NeutralAtomLayer::commuteAtQubit(const qc::Operation* op1,
+                                      const qc::Operation* op2,
+                                      const qc::Qubit&     qubit) {
   if (op1->isNonUnitaryOperation() || op2->isNonUnitaryOperation()) {
     return false;
   }
@@ -206,4 +207,4 @@ bool qc::NeutralAtomLayer::commuteAtQubit(const Operation* op1,
   return false;
 }
 
-} // namespace qc
+} // namespace na

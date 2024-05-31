@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace qc {
+namespace na {
 
 /**
  * @brief Class to manage the mapping between circuit qubits and hardware qubits
@@ -25,8 +25,8 @@ namespace qc {
  */
 class Mapping {
 protected:
-  // std::map<Qubit, HwQubit>
-  Permutation circToHw;
+  // std::map<qc::Qubit, HwQubit>
+  qc::Permutation circToHw;
 
 public:
   Mapping() = default;
@@ -46,7 +46,7 @@ public:
    * @param qubit The circuit qubit to be assigned
    * @param hwQubit The hardware qubit to be assigned
    */
-  void setCircuitQubit(Qubit qubit, HwQubit hwQubit) {
+  void setCircuitQubit(qc::Qubit qubit, HwQubit hwQubit) {
     circToHw[qubit] = hwQubit;
   }
 
@@ -55,7 +55,7 @@ public:
    * @param qubit The circuit qubit to be queried
    * @return The hardware qubit assigned to the given circuit qubit
    */
-  [[nodiscard]] HwQubit getHwQubit(Qubit qubit) const {
+  [[nodiscard]] HwQubit getHwQubit(qc::Qubit qubit) const {
     return circToHw.at(qubit);
   }
 
@@ -64,7 +64,8 @@ public:
    * @param qubits The circuit qubits to be queried
    * @return The hardware qubits assigned to the given circuit qubits
    */
-  [[nodiscard]] std::set<HwQubit> getHwQubits(std::set<Qubit>& qubits) const {
+  [[nodiscard]] std::set<HwQubit>
+  getHwQubits(std::set<qc::Qubit>& qubits) const {
     std::set<HwQubit> hwQubits;
     for (const auto& qubit : qubits) {
       hwQubits.emplace(this->getHwQubit(qubit));
@@ -79,7 +80,7 @@ public:
    * @param qubit The hardware qubit to be queried
    * @return The circuit qubit assigned to the given hardware qubit
    */
-  [[nodiscard]] Qubit getCircQubit(HwQubit qubit) const {
+  [[nodiscard]] qc::Qubit getCircQubit(HwQubit qubit) const {
     for (const auto& [circQubit, hwQubit] : circToHw) {
       if (hwQubit == qubit) {
         return circQubit;
@@ -107,7 +108,7 @@ public:
    * qubits.
    * @param op The operation to be converted
    */
-  void mapToHwQubits(Operation* op) const {
+  void mapToHwQubits(qc::Operation* op) const {
     op->setTargets(circToHw.apply(op->getTargets()));
     if (op->isControlled()) {
       op->setControls(circToHw.apply(op->getControls()));
@@ -123,4 +124,4 @@ public:
   void applySwap(Swap swap);
 };
 
-} // namespace qc
+} // namespace na

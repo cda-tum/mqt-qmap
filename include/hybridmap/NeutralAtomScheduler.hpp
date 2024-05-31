@@ -20,19 +20,20 @@
 #include <utility>
 #include <vector>
 
-namespace qc {
+namespace na {
 /**
  * @brief Struct to store the results of the scheduler
  */
 struct SchedulerResults {
-  fp       totalExecutionTime;
-  fp       totalIdleTime;
-  fp       totalGateFidelities;
-  fp       totalFidelities;
+  qc::fp   totalExecutionTime;
+  qc::fp   totalIdleTime;
+  qc::fp   totalGateFidelities;
+  qc::fp   totalFidelities;
   uint32_t nCZs = 0;
 
-  SchedulerResults(fp totalExecutionTime, fp totalIdleTime,
-                   fp totalGateFidelities, fp totalFidelities, uint32_t nCZs)
+  SchedulerResults(qc::fp totalExecutionTime, qc::fp totalIdleTime,
+                   qc::fp totalGateFidelities, qc::fp totalFidelities,
+                   uint32_t nCZs)
       : totalExecutionTime(totalExecutionTime), totalIdleTime(totalIdleTime),
         totalGateFidelities(totalGateFidelities),
         totalFidelities(totalFidelities), nCZs(nCZs) {}
@@ -50,9 +51,9 @@ struct SchedulerResults {
     return ss.str();
   }
 
-  [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, fp>
+  [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, qc::fp>
   toMap() const {
-    std::unordered_map<std::string, fp> result;
+    std::unordered_map<std::string, qc::fp> result;
     result["totalExecutionTime"]  = totalExecutionTime;
     result["totalIdleTime"]       = totalIdleTime;
     result["totalGateFidelities"] = totalGateFidelities;
@@ -71,16 +72,16 @@ struct SchedulerResults {
  */
 class NeutralAtomScheduler {
 protected:
-  const qc::NeutralAtomArchitecture& arch;
-  std::string                        animationCsv;
-  std::string                        animationArchitectureCsv;
+  const NeutralAtomArchitecture& arch;
+  std::string                    animationCsv;
+  std::string                    animationArchitectureCsv;
 
 public:
   // Constructor
   NeutralAtomScheduler()                            = delete;
   NeutralAtomScheduler(const NeutralAtomScheduler&) = delete;
   NeutralAtomScheduler(NeutralAtomScheduler&&)      = delete;
-  explicit NeutralAtomScheduler(const qc::NeutralAtomArchitecture& arch)
+  explicit NeutralAtomScheduler(const NeutralAtomArchitecture& arch)
       : arch(arch) {}
 
   /**
@@ -96,7 +97,7 @@ public:
   SchedulerResults schedule(const qc::QuantumComputation&     qc,
                             const std::map<HwQubit, HwQubit>& initHwPos,
                             bool verbose, bool createAnimationCsv = false,
-                            fp shuttlingSpeedFactor = 1.0);
+                            qc::fp shuttlingSpeedFactor = 1.0);
 
   std::string getAnimationCsv() { return animationCsv; }
   void        saveAnimationCsv(const std::string& filename) {
@@ -113,12 +114,13 @@ public:
   }
 
   // Helper Print functions
-  static void printSchedulerResults(std::vector<fp>& totalExecutionTimes,
-                                    fp totalIdleTime, fp totalGateFidelities,
-                                    fp totalFidelities, uint32_t nCZs);
+  static void printSchedulerResults(std::vector<qc::fp>& totalExecutionTimes,
+                                    qc::fp               totalIdleTime,
+                                    qc::fp               totalGateFidelities,
+                                    qc::fp totalFidelities, uint32_t nCZs);
   static void printTotalExecutionTimes(
-      std::vector<fp>&                            totalExecutionTimes,
-      std::vector<std::deque<std::pair<fp, fp>>>& blockedQubitsTimes);
+      std::vector<qc::fp>&                                totalExecutionTimes,
+      std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes);
 };
 
-} // namespace qc
+} // namespace na

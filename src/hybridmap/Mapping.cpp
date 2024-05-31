@@ -9,7 +9,7 @@
 
 #include <stdexcept>
 
-namespace qc {
+namespace na {
 void Mapping::applySwap(Swap swap) {
   auto q1 = swap.first;
   auto q2 = swap.second;
@@ -27,4 +27,4 @@ void Mapping::applySwap(Swap swap) {
   }
 }
 
-} // namespace qc
+} // namespace na

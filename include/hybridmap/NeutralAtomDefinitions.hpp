@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-namespace qc {
+namespace na {
 // A CoordIndex corresponds to node in the SLM grid, where an atom can be placed
 // (or not).
 using CoordIndex   = std::uint32_t;
@@ -22,19 +22,19 @@ using CoordIndices = std::vector<CoordIndex>;
 using HwQubit                      = uint32_t;
 using HwQubits                     = std::set<HwQubit>;
 using HwPositions [[maybe_unused]] = std::vector<HwQubits>;
-// A Qubit corresponds to a qubit in the quantum circuit. It can be mapped to a
-// hardware qubit.
-using Qubits = std::set<Qubit>;
+// A qc::Qubit corresponds to a qubit in the quantum circuit. It can be mapped
+// to a hardware qubit.
+using Qubits = std::set<qc::Qubit>;
 
-// Swaps are between hardware Qubits (one of them can be unmapped).
+// Swaps are between hardware qc::Qubits (one of them can be unmapped).
 using Swap          = std::pair<HwQubit, HwQubit>;
 using Swaps         = std::vector<Swap>;
-using WeightedSwap  = std::pair<Swap, fp>;
+using WeightedSwap  = std::pair<Swap, qc::fp>;
 using WeightedSwaps = std::vector<WeightedSwap>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
 
 // Used to represent operations
-using GateList = std::vector<const Operation*>;
+using GateList = std::vector<const qc::Operation*>;
 
-} // namespace qc
+} // namespace na

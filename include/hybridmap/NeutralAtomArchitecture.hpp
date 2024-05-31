@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace qc {
+namespace na {
 /**
  * @brief Class to store the properties of a neutral atom architecture
  * @details
@@ -60,15 +60,16 @@ class NeutralAtomArchitecture {
     std::uint16_t nAods;
     std::uint16_t nAodIntermediateLevels;
     std::uint16_t nAodCoordinates;
-    fp            interQubitDistance;
-    fp            interactionRadius;
-    fp            blockingFactor;
+    qc::fp        interQubitDistance;
+    qc::fp        interactionRadius;
+    qc::fp        blockingFactor;
 
   public:
     Properties() = default;
     Properties(std::uint16_t nRows, std::uint16_t nColumns, std::uint16_t nAods,
-               std::uint16_t nAodCoordinates, fp interQubitDistance,
-               fp interactionRadius, fp blockingFactor, fp aodDistance)
+               std::uint16_t nAodCoordinates, qc::fp interQubitDistance,
+               qc::fp interactionRadius, qc::fp blockingFactor,
+               qc::fp aodDistance)
         : nRows(nRows), nColumns(nColumns), nAods(nAods),
           nAodIntermediateLevels(
               static_cast<uint16_t>(interQubitDistance / aodDistance)),
@@ -88,11 +89,13 @@ class NeutralAtomArchitecture {
     [[nodiscard]] std::uint16_t getNAodIntermediateLevels() const {
       return nAodIntermediateLevels;
     }
-    [[nodiscard]] fp getInterQubitDistance() const {
+    [[nodiscard]] qc::fp getInterQubitDistance() const {
       return interQubitDistance;
     }
-    [[nodiscard]] fp getInteractionRadius() const { return interactionRadius; }
-    [[nodiscard]] fp getBlockingFactor() const { return blockingFactor; }
+    [[nodiscard]] qc::fp getInteractionRadius() const {
+      return interactionRadius;
+    }
+    [[nodiscard]] qc::fp getBlockingFactor() const { return blockingFactor; }
   };
 
   /**
@@ -121,22 +124,22 @@ class NeutralAtomArchitecture {
      */
     class DecoherenceTimes {
     protected:
-      fp                  tEff;
-      [[maybe_unused]] fp t1;
-      [[maybe_unused]] fp t2;
+      qc::fp                  tEff;
+      [[maybe_unused]] qc::fp t1;
+      [[maybe_unused]] qc::fp t2;
 
     public:
       DecoherenceTimes() = default;
-      DecoherenceTimes(fp t1, fp t2)
+      DecoherenceTimes(qc::fp t1, qc::fp t2)
           : tEff(t1 * t2 / (t1 + t2)), t1(t1), t2(t2) {}
-      [[nodiscard]] fp getTEff() const { return tEff; }
+      [[nodiscard]] qc::fp getTEff() const { return tEff; }
     };
-    CoordIndex                nQubits;
-    std::map<std::string, fp> gateTimes;
-    std::map<std::string, fp> gateAverageFidelities;
-    std::map<OpType, fp>      shuttlingTimes;
-    std::map<OpType, fp>      shuttlingAverageFidelities;
-    DecoherenceTimes          decoherenceTimes;
+    CoordIndex                    nQubits;
+    std::map<std::string, qc::fp> gateTimes;
+    std::map<std::string, qc::fp> gateAverageFidelities;
+    std::map<qc::OpType, qc::fp>  shuttlingTimes;
+    std::map<qc::OpType, qc::fp>  shuttlingAverageFidelities;
+    DecoherenceTimes              decoherenceTimes;
   };
 
 protected:
@@ -159,7 +162,7 @@ protected:
    * edges in the resulting connectivity graph. This can be computed
    * beforehand.
    */
-  void computeSwapDistances(fp interactionRadius);
+  void computeSwapDistances(qc::fp interactionRadius);
   /**
    * @brief Compute the nearby coordinates for each coordinate
    * @details
@@ -231,7 +234,7 @@ public:
    * @brief Get the inter-qubit distance
    * @return The inter-qubit distance
    */
-  [[nodiscard]] fp getInterQubitDistance() const {
+  [[nodiscard]] qc::fp getInterQubitDistance() const {
     return properties.getInterQubitDistance();
   }
 
@@ -239,14 +242,14 @@ public:
    * @brief Get the interaction radius
    * @return The interaction radius
    */
-  [[nodiscard]] fp getInteractionRadius() const {
+  [[nodiscard]] qc::fp getInteractionRadius() const {
     return properties.getInteractionRadius();
   }
   /**
    * @brief Get the blocking factor
    * @return The blocking factor
    */
-  [[nodiscard]] fp getBlockingFactor() const {
+  [[nodiscard]] qc::fp getBlockingFactor() const {
     return properties.getBlockingFactor();
   }
   /**
@@ -255,7 +258,7 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] fp getSwapDistance(CoordIndex idx1, CoordIndex idx2) const {
+  [[nodiscard]] qc::fp getSwapDistance(CoordIndex idx1, CoordIndex idx2) const {
     return swapDistances(idx1, idx2);
   }
   /**
@@ -264,8 +267,8 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] fp getSwapDistance(const Coordinate& c1,
-                                   const Coordinate& c2) const {
+  [[nodiscard]] qc::fp getSwapDistance(const Coordinate& c1,
+                                       const Coordinate& c2) const {
     return swapDistances(c1.getX() + c1.getY() * properties.getNcolumns(),
                          c2.getX() + c2.getY() * properties.getNcolumns());
   }
@@ -283,13 +286,13 @@ public:
    * @param op The operation
    * @return The execution time of the operation
    */
-  [[nodiscard]] fp getOpTime(const Operation* op) const;
+  [[nodiscard]] qc::fp getOpTime(const qc::Operation* op) const;
   /**
    * @brief Get the fidelity of an operation
    * @param op The operation
    * @return The fidelity of the operation
    */
-  [[nodiscard]] fp getOpFidelity(const Operation* op) const;
+  [[nodiscard]] qc::fp getOpFidelity(const qc::Operation* op) const;
   /**
    * @brief Get indices of the nearby coordinates that are blocked by an
    * operation
@@ -298,10 +301,10 @@ public:
    * operation
    */
   [[nodiscard]] std::set<CoordIndex>
-  getBlockedCoordIndices(const Operation* op) const;
+  getBlockedCoordIndices(const qc::Operation* op) const;
 
   // Getters for the parameters
-  [[nodiscard]] fp getGateTime(const std::string& s) const {
+  [[nodiscard]] qc::fp getGateTime(const std::string& s) const {
     if (parameters.gateTimes.find(s) == parameters.gateTimes.end()) {
       std::cout << "Gate time for " << s << " not found\n"
                 << "Returning default value\n";
@@ -321,7 +324,7 @@ public:
    * @return The average fidelity of the specified gate or the default gate if
    * the specified gate is not found.
    */
-  [[nodiscard]] fp getGateAverageFidelity(const std::string& s) const {
+  [[nodiscard]] qc::fp getGateAverageFidelity(const std::string& s) const {
     if (parameters.gateAverageFidelities.find(s) ==
         parameters.gateAverageFidelities.end()) {
       std::cout << "Gate average fidelity for " << s << " not found\n"
@@ -335,7 +338,7 @@ public:
    * @param shuttlingType The type of the shuttling operation
    * @return The shuttling time of the shuttling operation
    */
-  [[nodiscard]] fp getShuttlingTime(OpType shuttlingType) const {
+  [[nodiscard]] qc::fp getShuttlingTime(qc::OpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
@@ -343,14 +346,15 @@ public:
    * @param shuttlingType The type of the shuttling operation
    * @return The average fidelity of the shuttling operation
    */
-  [[nodiscard]] fp getShuttlingAverageFidelity(OpType shuttlingType) const {
+  [[nodiscard]] qc::fp
+  getShuttlingAverageFidelity(qc::OpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
    * @brief Get the decoherence time
    * @return The decoherence time
    */
-  [[nodiscard]] fp getDecoherenceTime() const {
+  [[nodiscard]] qc::fp getDecoherenceTime() const {
     return parameters.decoherenceTimes.getTEff();
   }
 
@@ -379,8 +383,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Euclidean distance between the two coordinate indices
    */
-  [[nodiscard]] fp getEuclidianDistance(CoordIndex idx1,
-                                        CoordIndex idx2) const {
+  [[nodiscard]] qc::fp getEuclidianDistance(CoordIndex idx1,
+                                            CoordIndex idx2) const {
     return this->coordinates.at(idx1).getEuclidianDistance(
         this->coordinates.at(idx2));
   }
@@ -390,8 +394,8 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] static fp getEuclidianDistance(const Coordinate& c1,
-                                               const Coordinate& c2) {
+  [[nodiscard]] static qc::fp getEuclidianDistance(const Coordinate& c1,
+                                                   const Coordinate& c2) {
     return c1.getEuclidianDistance(c2);
   }
   /**
@@ -452,9 +456,9 @@ public:
    * @param v The MoveVector
    * @return The time it takes to move a qubit along the MoveVector
    */
-  [[nodiscard]] fp getVectorShuttlingTime(const MoveVector& v) const {
+  [[nodiscard]] qc::fp getVectorShuttlingTime(const MoveVector& v) const {
     return v.getLength() * this->getInterQubitDistance() /
-           this->getShuttlingTime(OpType::Move);
+           this->getShuttlingTime(qc::OpType::Move);
   }
 
   /**
@@ -482,4 +486,4 @@ public:
   }
 };
 
-} // namespace qc
+} // namespace na

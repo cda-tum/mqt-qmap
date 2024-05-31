@@ -27,18 +27,18 @@
 #include <cstddef>
 #include <sstream>
 
-namespace qc {
+namespace na {
 
 /**
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
-  fp       lookaheadWeightSwaps = 0.1;
-  fp       lookaheadWeightMoves = 0.1;
-  fp       decay                = 0.1;
-  fp       shuttlingTimeWeight  = 1;
-  fp       gateWeight           = 1;
-  fp       shuttlingWeight      = 1;
+  qc::fp   lookaheadWeightSwaps = 0.1;
+  qc::fp   lookaheadWeightMoves = 0.1;
+  qc::fp   decay                = 0.1;
+  qc::fp   shuttlingTimeWeight  = 1;
+  qc::fp   gateWeight           = 1;
+  qc::fp   shuttlingWeight      = 1;
   uint32_t seed                 = 0;
   bool     verbose              = false;
 };
@@ -80,7 +80,7 @@ struct MultiQubitMovePos {
 class NeutralAtomMapper {
 protected:
   // The considered architecture
-  const qc::NeutralAtomArchitecture& arch;
+  const NeutralAtomArchitecture& arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
@@ -88,7 +88,7 @@ protected:
   // The scheduler to schedule the mapped quantum circuit
   NeutralAtomScheduler scheduler;
   // The gates that have been executed
-  std::vector<const Operation*> executedCommutingGates;
+  std::vector<const qc::Operation*> executedCommutingGates;
   // Gates in the front layer to be executed with swap gates
   GateList frontLayerGate;
   // Gates in the front layer to be executed with move operations
@@ -98,7 +98,7 @@ protected:
   // Gates in the lookahead layer to be executed with move operations
   GateList lookaheadLayerShuttling;
   // The minimal weight for any multi-qubit gate
-  fp twoQubitSwapWeight = 1;
+  qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
   MapperParameters parameters;
   // The qubits that are blocked by the last swap
@@ -106,7 +106,7 @@ protected:
   // The last moves that have been executed
   std::deque<AtomMove> lastMoves;
   // Precomputed decay weights
-  std::vector<fp> decayWeights;
+  std::vector<qc::fp> decayWeights;
   // Counter variables
   uint32_t nSwaps = 0;
   uint32_t nMoves = 0;
@@ -121,7 +121,7 @@ protected:
    * @brief Maps the gate to the mapped quantum circuit.
    * @param op The gate to map
    */
-  void mapGate(const Operation* op);
+  void mapGate(const qc::Operation* op);
   /**
    * @brief Maps all currently possible gates and updated until no more gates
    * can be mapped.
@@ -140,7 +140,7 @@ protected:
    * @param opPointer The gate to check
    * @return True if the gate can be executed, false otherwise
    */
-  bool isExecutable(const Operation* opPointer);
+  bool isExecutable(const qc::Operation* opPointer);
 
   /**
    * @brief Update the mapping for the given swap gate.
@@ -168,7 +168,8 @@ protected:
    * @return The minimal number of swap gates and time needed to execute the
    * given gate
    */
-  std::pair<uint32_t, fp> estimateNumSwapGates(const Operation* opPointer);
+  std::pair<uint32_t, qc::fp>
+  estimateNumSwapGates(const qc::Operation* opPointer);
   /**
    * @brief Estimates the minimal number of move operations and time needed to
    * execute the given gate.
@@ -177,7 +178,7 @@ protected:
    * @return The minimal number of move operations and time needed to execute
    * the given gate
    */
-  std::pair<uint32_t, fp> estimateNumMove(const Operation* opPointer);
+  std::pair<uint32_t, qc::fp> estimateNumMove(const qc::Operation* opPointer);
   /**
    * @brief Uses estimateNumSwapGates and estimateNumMove to decide if a swap
    * gate or move operation is better.
@@ -185,7 +186,7 @@ protected:
    * operations for
    * @return True if a swap gate is better, false if a move operation is better
    */
-  bool swapGateBetter(const Operation* opPointer);
+  bool swapGateBetter(const qc::Operation* opPointer);
 
   // Methods for swap gates mapping
   /**
@@ -288,7 +289,7 @@ protected:
    * @param opPointer The multi-qubit gate to find the best position for
    * @return The best position for the given multi-qubit gate
    */
-  HwQubits getBestMultiQubitPosition(const Operation* opPointer);
+  HwQubits getBestMultiQubitPosition(const qc::Operation* opPointer);
   HwQubits getBestMultiQubitPositionRec(HwQubits remainingGateQubits,
                                         std::vector<HwQubit> selectedQubits,
                                         HwQubits remainingNearbyQubits);
@@ -299,7 +300,8 @@ protected:
    * @param position The target position of the multi-qubit gate
    * @return The swaps needed to move the given qubits to the given multi-qubit
    */
-  WeightedSwaps getExactSwapsToPosition(const Operation* op, HwQubits position);
+  WeightedSwaps getExactSwapsToPosition(const qc::Operation* op,
+                                        HwQubits             position);
 
   // Cost function calculation
   /**
@@ -313,8 +315,8 @@ protected:
    * @param moveExact The exact moves from multi-qubit gates
    * @return The distance reduction cost
    */
-  fp swapCostPerLayer(const Swap& swap, const Swaps& swapCloseBy,
-                      const WeightedSwaps& swapExact);
+  qc::fp swapCostPerLayer(const Swap& swap, const Swaps& swapCloseBy,
+                          const WeightedSwaps& swapExact);
   /**
    * @brief Calculates the cost of a swap gate.
    * @details The cost of a swap gate is computed with the following terms:
@@ -324,9 +326,9 @@ protected:
    * @param swap The swap gate to compute the cost for
    * @return The cost of the swap gate
    */
-  fp swapCost(const Swap&                            swap,
-              const std::pair<Swaps, WeightedSwaps>& swapsFront,
-              const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
+  qc::fp swapCost(const Swap&                            swap,
+                  const std::pair<Swaps, WeightedSwaps>& swapsFront,
+                  const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
   /**
    * @brief Calculates the cost of a move operation.
    * @details Assumes the move is executed and computes the distance reduction
@@ -335,7 +337,7 @@ protected:
    * @param layer The layer to compute the distance reduction for
    * @return The distance reduction cost
    */
-  fp moveCostPerLayer(const AtomMove& move, GateList& layer);
+  qc::fp moveCostPerLayer(const AtomMove& move, GateList& layer);
 
   /**
    * @brief Calculates a parallelization cost if the move operation can be
@@ -343,7 +345,7 @@ protected:
    * @param move The move operation to compute the cost for
    * @return The parallelization cost
    */
-  fp parallelMoveCost(const AtomMove& move);
+  qc::fp parallelMoveCost(const AtomMove& move);
   /**
    * @brief Calculates the cost of a move operation.
    * @details The cost of a move operation is computed with the following terms:
@@ -353,14 +355,14 @@ protected:
    * @param move The move operation to compute the cost for
    * @return The cost of the move operation
    */
-  fp moveCost(const AtomMove& move);
+  qc::fp moveCost(const AtomMove& move);
   /**
    * @brief Calculates the cost of a series of move operations by summing up the
    * cost of each move.
    * @param moveComb The series of move operations to compute the cost for
    * @return The total cost of the series of move operations
    */
-  fp moveCostComb(const MoveComb& moveComb);
+  qc::fp moveCostComb(const MoveComb& moveComb);
 
   /**
    * @brief Print the current layers for debugging.
@@ -372,7 +374,7 @@ public:
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
   NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
   NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
-  explicit NeutralAtomMapper(const qc::NeutralAtomArchitecture& arch,
+  explicit NeutralAtomMapper(const NeutralAtomArchitecture& arch,
                              InitialCoordinateMapping initialCoordinateMapping =
                                  InitialCoordinateMapping::Trivial,
                              const MapperParameters& p = MapperParameters())
@@ -424,8 +426,8 @@ public:
    * @return The mapped quantum circuit with abstract SWAP gates and MOVE
    * operations
    */
-  QuantumComputation map(qc::QuantumComputation& qc,
-                         InitialMapping          initialMapping);
+  qc::QuantumComputation map(qc::QuantumComputation& qc,
+                             InitialMapping          initialMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
@@ -494,9 +496,9 @@ public:
    * @param shuttlingSpeedFactor The factor to speed up the shuttling time
    * @return The results of the scheduler
    */
-  [[maybe_unused]] SchedulerResults schedule(bool verboseArg           = false,
-                                             bool createAnimationCsv   = false,
-                                             fp   shuttlingSpeedFactor = 1.0) {
+  [[maybe_unused]] SchedulerResults
+  schedule(bool verboseArg = false, bool createAnimationCsv = false,
+           qc::fp shuttlingSpeedFactor = 1.0) {
     return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitialHwPos(),
                               verboseArg, createAnimationCsv,
                               shuttlingSpeedFactor);
@@ -527,7 +529,7 @@ public:
    * MOVE operations
    * @return The mapped quantum circuit with native AOD operations
    */
-  QuantumComputation convertToAod(qc::QuantumComputation& qc);
+  qc::QuantumComputation convertToAod(qc::QuantumComputation& qc);
 
   [[maybe_unused]] [[nodiscard]] std::map<HwQubit, HwQubit>
   getInitHwPos() const {
@@ -535,4 +537,4 @@ public:
   }
 };
 
-} // namespace qc
+} // namespace na

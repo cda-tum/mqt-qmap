@@ -23,9 +23,10 @@
 #include <utility>
 #include <vector>
 
-namespace qc {
+namespace na {
 
-QuantumComputation MoveToAodConverter::schedule(QuantumComputation& qc) {
+qc::QuantumComputation
+MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
   initMoveGroups(qc);
   if (moveGroups.empty()) {
     return qc;
@@ -48,7 +49,7 @@ QuantumComputation MoveToAodConverter::schedule(QuantumComputation& qc) {
         qcScheduled.emplace_back(std::make_unique<AodOperation>(aodOp));
       }
       groupIt++;
-    } else if (op->getType() != OpType::Move) {
+    } else if (op->getType() != qc::OpType::Move) {
       qcScheduled.emplace_back(op->clone());
     }
     idx++;
@@ -57,12 +58,12 @@ QuantumComputation MoveToAodConverter::schedule(QuantumComputation& qc) {
   return qcScheduled;
 }
 
-void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
+void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
   MoveGroup       currentMoveGroup;
   MoveGroup const lastMoveGroup;
   uint32_t        idx = 0;
   for (auto& op : qc) {
-    if (op->getType() == OpType::Move) {
+    if (op->getType() == qc::OpType::Move) {
       AtomMove const move{op->getTargets()[0], op->getTargets()[1]};
       if (currentMoveGroup.canAdd(move, arch)) {
         currentMoveGroup.add(move, idx);
@@ -218,7 +219,7 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
 
 std::pair<ActivationMergeType, ActivationMergeType>
 MoveToAodConverter::AodActivationHelper::canAddActivation(
-    const qc::Coordinate& origin, qc::MoveVector v) const {
+    const Coordinate& origin, MoveVector v) const {
   auto aodMovesX = getAodMovesFromInit(Dimension::X, origin.getX());
   auto aodMovesY = getAodMovesFromInit(Dimension::Y, origin.getY());
 
@@ -276,9 +277,9 @@ void MoveToAodConverter::processMoveGroups() {
   // convert the moves from MoveGroup to AodOperations
   for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end();
        ++groupIt) {
-    AodActivationHelper   aodActivationHelper{arch, OpType::AodActivate};
-    AodActivationHelper   aodDeactivationHelper{arch, OpType::AodDeactivate};
-    MoveGroup             possibleNewMoveGroup;
+    AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate};
+    AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate};
+    MoveGroup           possibleNewMoveGroup;
     std::vector<AtomMove> movesToRemove;
     for (auto& movePair : groupIt->moves) {
       auto& move              = movePair.first;
@@ -336,13 +337,14 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   std::set<CoordIndex>         targetQubits;
 
   for (const auto& opInit : opsInit) {
-    if (opInit.getType() == OpType::AodMove) {
+    if (opInit.getType() == qc::OpType::AodMove) {
       for (const auto& opFinal : opsFinal) {
-        if (opFinal.getType() == OpType::AodMove) {
+        if (opFinal.getType() == qc::OpType::AodMove) {
           if (opInit.getTargets().size() <= 1 ||
               opFinal.getTargets().size() <= 1) {
-            throw QFRException("AodScheduler::MoveGroup::connectAodOperations: "
-                               "AodMove operation with less than 2 targets");
+            throw qc::QFRException(
+                "AodScheduler::MoveGroup::connectAodOperations: "
+                "AodMove operation with less than 2 targets");
           }
           if (opInit.getTargets() == opFinal.getTargets()) {
             targetQubits.insert(opInit.getTargets().begin(),
@@ -381,7 +383,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   for (const auto& qubit : targetQubits) {
     targetQubitsVec.emplace_back(qubit);
   }
-  return {OpType::AodMove, targetQubitsVec, aodOperations};
+  return {qc::OpType::AodMove, targetQubitsVec, aodOperations};
 }
 
 std::vector<std::shared_ptr<MoveToAodConverter::AodActivationHelper::AodMove>>
@@ -472,7 +474,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<CoordIndex> qubitsActivation;
   qubitsActivation.reserve(activation.moves.size());
   for (const auto& move : activation.moves) {
-    if (type == OpType::AodActivate) {
+    if (type == qc::OpType::AodActivate) {
       qubitsActivation.emplace_back(move.first);
     } else {
       qubitsActivation.emplace_back(move.second);
@@ -500,42 +502,43 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
 
   for (const auto& aodMove : activation.activateXs) {
     initOperations.emplace_back(Dimension::X,
-                                static_cast<fp>(aodMove->init) * d,
-                                static_cast<fp>(aodMove->init) * d);
-    if (type == OpType::AodActivate) {
+                                static_cast<qc::fp>(aodMove->init) * d,
+                                static_cast<qc::fp>(aodMove->init) * d);
+    if (type == qc::OpType::AodActivate) {
       offsetOperations.emplace_back(
-          Dimension::X, static_cast<fp>(aodMove->init) * d,
-          static_cast<fp>(aodMove->init) * d +
-              static_cast<fp>(aodMove->offset) * interD);
+          Dimension::X, static_cast<qc::fp>(aodMove->init) * d,
+          static_cast<qc::fp>(aodMove->init) * d +
+              static_cast<qc::fp>(aodMove->offset) * interD);
     } else {
       offsetOperations.emplace_back(Dimension::X,
-                                    static_cast<fp>(aodMove->init) * d +
-                                        static_cast<fp>(aodMove->offset) *
+                                    static_cast<qc::fp>(aodMove->init) * d +
+                                        static_cast<qc::fp>(aodMove->offset) *
                                             interD,
-                                    static_cast<fp>(aodMove->init) * d);
+                                    static_cast<qc::fp>(aodMove->init) * d);
     }
   }
   for (const auto& aodMove : activation.activateYs) {
     initOperations.emplace_back(Dimension::Y,
-                                static_cast<fp>(aodMove->init) * d,
-                                static_cast<fp>(aodMove->init) * d);
-    if (type == OpType::AodActivate) {
+                                static_cast<qc::fp>(aodMove->init) * d,
+                                static_cast<qc::fp>(aodMove->init) * d);
+    if (type == qc::OpType::AodActivate) {
       offsetOperations.emplace_back(
-          Dimension::Y, static_cast<fp>(aodMove->init) * d,
-          static_cast<fp>(aodMove->init) * d +
-              static_cast<fp>(aodMove->offset) * interD);
+          Dimension::Y, static_cast<qc::fp>(aodMove->init) * d,
+          static_cast<qc::fp>(aodMove->init) * d +
+              static_cast<qc::fp>(aodMove->offset) * interD);
     } else {
       offsetOperations.emplace_back(Dimension::Y,
-                                    static_cast<fp>(aodMove->init) * d +
-                                        static_cast<fp>(aodMove->offset) *
+                                    static_cast<qc::fp>(aodMove->init) * d +
+                                        static_cast<qc::fp>(aodMove->offset) *
                                             interD,
-                                    static_cast<fp>(aodMove->init) * d);
+                                    static_cast<qc::fp>(aodMove->init) * d);
     }
   }
 
-  auto initOp   = AodOperation(type, qubitsActivation, initOperations);
-  auto offsetOp = AodOperation(OpType::AodMove, qubitsMove, offsetOperations);
-  if (this->type == OpType::AodActivate) {
+  auto initOp = AodOperation(type, qubitsActivation, initOperations);
+  auto offsetOp =
+      AodOperation(qc::OpType::AodMove, qubitsMove, offsetOperations);
+  if (this->type == qc::OpType::AodActivate) {
     return std::make_pair(initOp, offsetOp);
   }
   return std::make_pair(offsetOp, initOp);
@@ -552,4 +555,4 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
   return aodOperations;
 }
 
-} // namespace qc
+} // namespace na

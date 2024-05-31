@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace qc {
+namespace na {
 
 void NeutralAtomArchitecture::loadJson(const std::string& filename) {
   nlohmann::json jsonData;
@@ -57,26 +57,26 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       throw std::runtime_error("Number of qubits exceeds number of positions");
     }
 
-    std::map<std::string, fp> gateTimes;
+    std::map<std::string, qc::fp> gateTimes;
     for (const auto& [key, value] : jsonDataParameters["gateTimes"].items()) {
       gateTimes.emplace(key, value);
     }
     this->parameters.gateTimes = gateTimes;
-    std::map<std::string, fp> gateAverageFidelities;
+    std::map<std::string, qc::fp> gateAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["gateAverageFidelities"].items()) {
       gateAverageFidelities.emplace(key, value);
     }
     this->parameters.gateAverageFidelities = gateAverageFidelities;
-    std::map<OpType, fp> shuttlingTimes;
+    std::map<qc::OpType, qc::fp> shuttlingTimes;
 
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingTimes"].items()) {
-      shuttlingTimes.emplace(OP_NAME_TO_TYPE.at(key), value);
+      shuttlingTimes.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
     }
     // compute values for SWAP gate
-    fp swapGateTime     = 0;
-    fp swapGateFidelity = 1;
+    qc::fp swapGateTime     = 0;
+    qc::fp swapGateFidelity = 1;
     for (size_t i = 0; i < 3; ++i) {
       swapGateTime += gateTimes.at("cz");
       swapGateFidelity *= gateAverageFidelities.at("cz");
@@ -89,10 +89,10 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     this->parameters.gateAverageFidelities.emplace("swap", swapGateFidelity);
 
     this->parameters.shuttlingTimes = shuttlingTimes;
-    std::map<OpType, fp> shuttlingAverageFidelities;
+    std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
     for (const auto& [key, value] :
          jsonDataParameters["shuttlingAverageFidelities"].items()) {
-      shuttlingAverageFidelities.emplace(OP_NAME_TO_TYPE.at(key), value);
+      shuttlingAverageFidelities.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
     }
     this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
@@ -123,18 +123,18 @@ NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
   this->loadJson(filename);
 }
 
-void NeutralAtomArchitecture::computeSwapDistances(fp interactionRadius) {
+void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
   // compute diagonal distances
   struct DiagonalDistance {
     std::uint32_t x;
     std::uint32_t y;
-    fp            distance;
+    qc::fp        distance;
   };
   std::vector<DiagonalDistance> diagonalDistances;
 
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
-      auto const dist = qc::NeutralAtomArchitecture::getEuclidianDistance(
+      auto const dist = NeutralAtomArchitecture::getEuclidianDistance(
           Coordinate(0, 0), Coordinate(i, j));
       if (dist <= interactionRadius) {
         if (dist == 0) {
@@ -197,8 +197,7 @@ void NeutralAtomArchitecture::computeNearbyCoordinates() {
   }
 }
 
-std::vector<CoordIndex>
-NeutralAtomArchitecture::getNN(qc::CoordIndex idx) const {
+std::vector<CoordIndex> NeutralAtomArchitecture::getNN(CoordIndex idx) const {
   std::vector<CoordIndex> nn;
   if (idx % this->getNcolumns() != 0) {
     nn.emplace_back(idx - 1);
@@ -215,12 +214,12 @@ NeutralAtomArchitecture::getNN(qc::CoordIndex idx) const {
   return nn;
 }
 
-fp NeutralAtomArchitecture::getOpTime(const Operation* op) const {
-  if (op->getType() == OpType::AodActivate ||
-      op->getType() == OpType::AodDeactivate) {
+qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
+  if (op->getType() == qc::OpType::AodActivate ||
+      op->getType() == qc::OpType::AodDeactivate) {
     return getShuttlingTime(op->getType());
   }
-  if (op->getType() == OpType::AodMove) {
+  if (op->getType() == qc::OpType::AodMove) {
     const auto        v = this->parameters.shuttlingTimes.at(op->getType());
     const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
     const auto        distanceX = opAodMove->getMaxDistance(Dimension::X);
@@ -235,10 +234,10 @@ fp NeutralAtomArchitecture::getOpTime(const Operation* op) const {
   return getGateTime(opName);
 }
 
-fp NeutralAtomArchitecture::getOpFidelity(const Operation* op) const {
-  if (op->getType() == OpType::AodActivate ||
-      op->getType() == OpType::AodDeactivate ||
-      op->getType() == OpType::AodMove) {
+qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
+  if (op->getType() == qc::OpType::AodActivate ||
+      op->getType() == qc::OpType::AodDeactivate ||
+      op->getType() == qc::OpType::AodMove) {
     return getShuttlingAverageFidelity(op->getType());
   }
   std::string opName;
@@ -250,10 +249,10 @@ fp NeutralAtomArchitecture::getOpFidelity(const Operation* op) const {
 }
 
 std::set<CoordIndex>
-NeutralAtomArchitecture::getBlockedCoordIndices(const Operation* op) const {
-  if (op->getNqubits() == 1 || op->getType() == OpType::AodActivate ||
-      op->getType() == OpType::AodDeactivate ||
-      op->getType() == OpType::AodMove) {
+NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
+  if (op->getNqubits() == 1 || op->getType() == qc::OpType::AodActivate ||
+      op->getType() == qc::OpType::AodDeactivate ||
+      op->getType() == qc::OpType::AodMove) {
     return op->getUsedQubits();
   }
   std::set<CoordIndex> blockedCoordIndices;
@@ -272,4 +271,4 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const Operation* op) const {
   }
   return blockedCoordIndices;
 }
-} // namespace qc
+} // namespace na
