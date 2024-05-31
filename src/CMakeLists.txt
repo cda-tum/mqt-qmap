@@ -84,14 +84,14 @@ macro(ADD_HYBRIDMAP_LIBRARY libname srcfile)
     ${PROJECT_SOURCE_DIR}/include/${libname}/HardwareQubits.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/Mapping.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomDefinitions.hpp
-    ${PROJECT_SOURCE_DIR}/include/${libname}/AodScheduler.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/MoveToAodConverter.hpp
     ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomLayer.hpp
     hybridmap/NeutralAtomUtils.cpp
     hybridmap/NeutralAtomScheduler.cpp
     hybridmap/NeutralAtomArchitecture.cpp
     hybridmap/HardwareQubits.cpp
     hybridmap/Mapping.cpp
-    hybridmap/AodScheduler.cpp
+    hybridmap/MoveToAodConverter.cpp
     hybridmap/NeutralAtomLayer.cpp)
 
   add_internal_library(${lib})

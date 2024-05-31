@@ -3,7 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "hybridmap/AodScheduler.hpp"
+#include "hybridmap/MoveToAodConverter.hpp"
 
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
@@ -24,7 +24,7 @@
 
 namespace qc {
 
-QuantumComputation AodScheduler::schedule(QuantumComputation& qc) {
+QuantumComputation MoveToAodConverter::schedule(QuantumComputation& qc) {
   initMoveGroups(qc);
   if (moveGroups.empty()) {
     return qc;
@@ -56,7 +56,7 @@ QuantumComputation AodScheduler::schedule(QuantumComputation& qc) {
   return qcScheduled;
 }
 
-void AodScheduler::initMoveGroups(QuantumComputation& qc) {
+void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
   MoveGroup       currentMoveGroup{arch};
   MoveGroup const lastMoveGroup{arch};
   uint32_t        idx = 0;
@@ -86,7 +86,7 @@ void AodScheduler::initMoveGroups(QuantumComputation& qc) {
   }
 }
 
-bool AodScheduler::MoveGroup::canAdd(const AtomMove& move) {
+bool MoveToAodConverter::MoveGroup::canAdd(const AtomMove& move) {
   // if move would move a qubit that is used by a gate in this move group
   // return false
   if (std::find(qubitsUsedByGates.begin(), qubitsUsedByGates.end(),
@@ -104,8 +104,8 @@ bool AodScheduler::MoveGroup::canAdd(const AtomMove& move) {
       });
 }
 
-bool AodScheduler::MoveGroup::parallelCheck(const MoveVector& v1,
-                                            const MoveVector& v2) {
+bool MoveToAodConverter::MoveGroup::parallelCheck(const MoveVector& v1,
+                                                  const MoveVector& v2) {
   if (!v1.overlap(v2)) {
     return true;
   }
@@ -120,12 +120,13 @@ bool AodScheduler::MoveGroup::parallelCheck(const MoveVector& v1,
   return true;
 }
 
-void AodScheduler::MoveGroup::add(const AtomMove& move, const uint32_t idx) {
+void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
+                                        const uint32_t  idx) {
   moves.emplace_back(move, idx);
   qubitsUsedByGates.push_back(move.second);
 }
 
-void AodScheduler::AodActivationHelper::addActivation(
+void MoveToAodConverter::AodActivationHelper::addActivation(
     std::pair<ActivationMergeType, ActivationMergeType> merge,
     const Coordinate& origin, const AtomMove& move, MoveVector v) {
   const auto x         = origin.getX();
@@ -214,7 +215,7 @@ void AodScheduler::AodActivationHelper::addActivation(
 }
 
 std::pair<ActivationMergeType, ActivationMergeType>
-AodScheduler::AodActivationHelper::canAddActivation(
+MoveToAodConverter::AodActivationHelper::canAddActivation(
     const qc::Coordinate& origin, qc::MoveVector v) const {
   auto aodMovesX = getAodMovesFromInit(Dimension::X, origin.getX());
   auto aodMovesY = getAodMovesFromInit(Dimension::Y, origin.getY());
@@ -224,7 +225,8 @@ AodScheduler::AodActivationHelper::canAddActivation(
   return std::make_pair(canX, canY);
 }
 
-ActivationMergeType AodScheduler::AodActivationHelper::canAddActivationDim(
+ActivationMergeType
+MoveToAodConverter::AodActivationHelper::canAddActivationDim(
     Dimension dim, const Coordinate& origin, MoveVector v) const {
   auto x = dim == Dimension::X ? origin.getX() : origin.getY();
   auto sign =
@@ -251,7 +253,7 @@ ActivationMergeType AodScheduler::AodActivationHelper::canAddActivationDim(
   return ActivationMergeType::Impossible;
 }
 
-void AodScheduler::AodActivationHelper::reAssignOffsets(
+void MoveToAodConverter::AodActivationHelper::reAssignOffsets(
     std::vector<std::shared_ptr<AodMove>>& aodMoves, int32_t sign) {
   std::sort(
       aodMoves.begin(), aodMoves.end(),
@@ -268,7 +270,7 @@ void AodScheduler::AodActivationHelper::reAssignOffsets(
   }
 }
 
-void AodScheduler::processMoveGroups() {
+void MoveToAodConverter::processMoveGroups() {
   // convert the moves from MoveGroup to AodOperations
   for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end();
        ++groupIt) {
@@ -321,7 +323,7 @@ void AodScheduler::processMoveGroups() {
   }
 }
 
-AodOperation AodScheduler::MoveGroup::connectAodOperations(
+AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     const std::vector<AodOperation>& opsInit,
     const std::vector<AodOperation>& opsFinal) {
   // for each init operation find the corresponding final operation
@@ -379,9 +381,9 @@ AodOperation AodScheduler::MoveGroup::connectAodOperations(
   return {OpType::AodMove, targetQubitsVec, aodOperations};
 }
 
-std::vector<std::shared_ptr<AodScheduler::AodActivationHelper::AodMove>>
-AodScheduler::AodActivationHelper::getAodMovesFromInit(Dimension dim,
-                                                       uint32_t  init) const {
+std::vector<std::shared_ptr<MoveToAodConverter::AodActivationHelper::AodMove>>
+MoveToAodConverter::AodActivationHelper::getAodMovesFromInit(
+    Dimension dim, uint32_t init) const {
   std::vector<std::shared_ptr<AodMove>> aodMoves;
   for (const auto& activation : allActivations) {
     for (auto& aodMove : activation.getActivates(dim)) {
@@ -393,7 +395,7 @@ AodScheduler::AodActivationHelper::getAodMovesFromInit(Dimension dim,
   return aodMoves;
 }
 
-uint32_t AodScheduler::AodActivationHelper::getMaxOffsetAtInit(
+uint32_t MoveToAodConverter::AodActivationHelper::getMaxOffsetAtInit(
     Dimension dim, uint32_t init, int32_t sign) const {
   auto aodMoves = getAodMovesFromInit(dim, init);
   if (aodMoves.empty()) {
@@ -409,7 +411,7 @@ uint32_t AodScheduler::AodActivationHelper::getMaxOffsetAtInit(
   return maxOffset;
 }
 
-bool AodScheduler::AodActivationHelper::checkIntermediateSpaceAtInit(
+bool MoveToAodConverter::AodActivationHelper::checkIntermediateSpaceAtInit(
     Dimension dim, uint32_t init, int32_t sign) const {
   uint32_t neighborX = init;
   if (sign > 0) {
@@ -435,7 +437,7 @@ bool AodScheduler::AodActivationHelper::checkIntermediateSpaceAtInit(
          arch.getNAodIntermediateLevels();
 }
 
-void AodScheduler::AodActivationHelper::mergeActivationDim(
+void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
     Dimension dim, const AodActivation& activationDim,
     const AodActivation& activationOtherDim) {
   // merge activations
@@ -462,7 +464,7 @@ void AodScheduler::AodActivationHelper::mergeActivationDim(
 }
 
 std::pair<AodOperation, AodOperation>
-AodScheduler::AodActivationHelper::getAodOperation(
+MoveToAodConverter::AodActivationHelper::getAodOperation(
     const AodActivationHelper::AodActivation& activation) const {
   std::vector<CoordIndex> qubitsActivation;
   qubitsActivation.reserve(activation.moves.size());
@@ -537,7 +539,7 @@ AodScheduler::AodActivationHelper::getAodOperation(
 }
 
 std::vector<AodOperation>
-AodScheduler::AodActivationHelper::getAodOperations() const {
+MoveToAodConverter::AodActivationHelper::getAodOperations() const {
   std::vector<AodOperation> aodOperations;
   for (const auto& activation : allActivations) {
     auto operations = getAodOperation(activation);

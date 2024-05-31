@@ -23,13 +23,14 @@ namespace qc {
 enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
 
 /**
- * @brief Class to schedule AOD movements on a neutral atom architecture
+ * @brief Class to convert abstract move operations to AOD movements on a
+ * neutral atom architecture
  * @details The scheduler takes a quantum circuit containing abstract move
  * operations and tries to merge them into parallel AO movements. It also
  * manages the small offset movements required while loading or unloading of
  * AODs.
  */
-class AodScheduler {
+class MoveToAodConverter {
 protected:
   /**
    * @brief Struct to store information about specific AOD activations.
@@ -290,7 +291,7 @@ protected:
   void processMoveGroups();
 
 public:
-  explicit AodScheduler(const NeutralAtomArchitecture& arch)
+  explicit MoveToAodConverter(const NeutralAtomArchitecture& arch)
       : arch(arch), qcScheduled(arch.getNpositions()) {}
 
   /**

@@ -8,7 +8,7 @@
 #include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
-#include "hybridmap/AodScheduler.hpp"
+#include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
@@ -146,7 +146,7 @@ QuantumComputation NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   CircuitOptimizer::singleQubitGateFusion(qc);
   CircuitOptimizer::flattenOperations(qc);
   // decompose AOD moves
-  AodScheduler aodScheduler(this->arch);
+  MoveToAodConverter aodScheduler(this->arch);
   mappedQcAOD = aodScheduler.schedule(qc);
   if (this->verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
