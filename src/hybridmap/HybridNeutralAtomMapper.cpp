@@ -12,7 +12,6 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include <iterator>
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
 #include "utils.hpp"
@@ -23,6 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <queue>
 #include <set>
