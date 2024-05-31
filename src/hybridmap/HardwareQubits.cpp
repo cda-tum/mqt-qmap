@@ -217,11 +217,11 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
             std::find(excludeCoord.begin(), excludeCoord.end(), nearbyCoord) ==
                 excludeCoord.end()) {
           if (!foundClosest) {
-            closestFreeCoords.push_back(nearbyCoord);
+            closestFreeCoords.emplace_back(nearbyCoord);
           }
           foundClosest = true;
           if (direction == arch.getVector(coord, nearbyCoord).direction) {
-            closestFreeCoords.push_back(nearbyCoord);
+            closestFreeCoords.emplace_back(nearbyCoord);
             return closestFreeCoords;
           }
         } else {

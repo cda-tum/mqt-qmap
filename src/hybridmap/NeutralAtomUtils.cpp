@@ -70,7 +70,7 @@ void MoveCombs::addMoveComb(const qc::MoveComb& otherMove) {
       return;
     }
   }
-  moveCombs.push_back(otherMove);
+  moveCombs.emplace_back(otherMove);
 }
 
 void MoveCombs::addMoveCombs(const qc::MoveCombs& otherMoveCombs) {

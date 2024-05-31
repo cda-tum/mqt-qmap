@@ -67,7 +67,7 @@ void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
       if (currentMoveGroup.canAdd(move, arch)) {
         currentMoveGroup.add(move, idx);
       } else {
-        moveGroups.push_back(currentMoveGroup);
+        moveGroups.emplace_back(currentMoveGroup);
         currentMoveGroup = MoveGroup();
         currentMoveGroup.add(move, idx);
       }
@@ -76,14 +76,14 @@ void MoveToAodConverter::initMoveGroups(QuantumComputation& qc) {
         if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),
                       currentMoveGroup.qubitsUsedByGates.end(),
                       qubit) == currentMoveGroup.qubitsUsedByGates.end()) {
-          currentMoveGroup.qubitsUsedByGates.push_back(qubit);
+          currentMoveGroup.qubitsUsedByGates.emplace_back(qubit);
         }
       }
     }
     idx++;
   }
   if (!currentMoveGroup.moves.empty()) {
-    moveGroups.push_back(std::move(currentMoveGroup));
+    moveGroups.emplace_back(std::move(currentMoveGroup));
   }
 }
 
@@ -125,7 +125,7 @@ bool MoveToAodConverter::MoveGroup::parallelCheck(const MoveVector& v1,
 void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
                                         const uint32_t  idx) {
   moves.emplace_back(move, idx);
-  qubitsUsedByGates.push_back(move.second);
+  qubitsUsedByGates.emplace_back(move.second);
 }
 
 void MoveToAodConverter::AodActivationHelper::addActivation(
@@ -297,7 +297,7 @@ void MoveToAodConverter::processMoveGroups() {
         // move could not be added as not sufficient intermediate levels
         // add new move group and add move to it
         possibleNewMoveGroup.add(move, idx);
-        movesToRemove.push_back(move);
+        movesToRemove.emplace_back(move);
       } else {
         aodActivationHelper.addActivation(activationCanAddXY, origin, move, v);
         aodDeactivationHelper.addActivation(deactivationCanAddXY, target, move,
@@ -378,7 +378,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   std::vector<CoordIndex> targetQubitsVec;
   targetQubitsVec.reserve(targetQubits.size());
   for (const auto& qubit : targetQubits) {
-    targetQubitsVec.push_back(qubit);
+    targetQubitsVec.emplace_back(qubit);
   }
   return {OpType::AodMove, targetQubitsVec, aodOperations};
 }
@@ -390,7 +390,7 @@ MoveToAodConverter::AodActivationHelper::getAodMovesFromInit(
   for (const auto& activation : allActivations) {
     for (auto& aodMove : activation.getActivates(dim)) {
       if (aodMove->init == init) {
-        aodMoves.push_back(aodMove);
+        aodMoves.emplace_back(aodMove);
       }
     }
   }
@@ -450,13 +450,13 @@ void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
           aodMove->delta == activationDim.getActivates(dim)[0]->delta &&
           aodMove->offset == activationDim.getActivates(dim)[0]->offset) {
         // append move
-        activationCurrent.moves.push_back(activationDim.moves[0]);
+        activationCurrent.moves.emplace_back(activationDim.moves[0]);
         // add activation in the other dimension
         if (dim == Dimension::X) {
-          activationCurrent.activateYs.push_back(
+          activationCurrent.activateYs.emplace_back(
               activationOtherDim.activateYs[0]);
         } else {
-          activationCurrent.activateXs.push_back(
+          activationCurrent.activateXs.emplace_back(
               activationOtherDim.activateXs[0]);
         }
         return;
@@ -472,9 +472,9 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   qubitsActivation.reserve(activation.moves.size());
   for (const auto& move : activation.moves) {
     if (type == OpType::AodActivate) {
-      qubitsActivation.push_back(move.first);
+      qubitsActivation.emplace_back(move.first);
     } else {
-      qubitsActivation.push_back(move.second);
+      qubitsActivation.emplace_back(move.second);
     }
   }
   std::vector<CoordIndex> qubitsMove;
@@ -482,11 +482,11 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   for (const auto& move : activation.moves) {
     if (std::find(qubitsMove.begin(), qubitsMove.end(), move.first) ==
         qubitsMove.end()) {
-      qubitsMove.push_back(move.first);
+      qubitsMove.emplace_back(move.first);
     }
     if (std::find(qubitsMove.begin(), qubitsMove.end(), move.second) ==
         qubitsMove.end()) {
-      qubitsMove.push_back(move.second);
+      qubitsMove.emplace_back(move.second);
     }
   }
 

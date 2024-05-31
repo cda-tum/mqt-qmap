@@ -73,16 +73,16 @@ protected:
       AodActivation(const AodMove& activateX, const AodMove& activateY,
                     const AtomMove& move)
           : moves({move}) {
-        activateXs.push_back(std::make_unique<AodMove>(activateX));
-        activateYs.push_back(std::make_unique<AodMove>(activateY));
+        activateXs.emplace_back(std::make_unique<AodMove>(activateX));
+        activateYs.emplace_back(std::make_unique<AodMove>(activateY));
       }
       AodActivation(const Dimension dim, const AodMove& activate,
                     const AtomMove& move)
           : moves({move}) {
         if (dim == Dimension::X) {
-          activateXs.push_back(std::make_unique<AodMove>(activate));
+          activateXs.emplace_back(std::make_unique<AodMove>(activate));
         } else {
-          activateYs.push_back(std::make_unique<AodMove>(activate));
+          activateYs.emplace_back(std::make_unique<AodMove>(activate));
         }
       }
 

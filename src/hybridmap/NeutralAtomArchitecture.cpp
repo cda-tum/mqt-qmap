@@ -140,9 +140,9 @@ void NeutralAtomArchitecture::computeSwapDistances(fp interactionRadius) {
         if (dist == 0) {
           continue;
         }
-        diagonalDistances.push_back({i, j, dist});
+        diagonalDistances.emplace_back(DiagonalDistance{i, j, dist});
         if (i != j) {
-          diagonalDistances.push_back({j, i, dist});
+          diagonalDistances.emplace_back(DiagonalDistance{j, i, dist});
         }
       } else {
         break;
@@ -201,16 +201,16 @@ std::vector<CoordIndex>
 NeutralAtomArchitecture::getNN(qc::CoordIndex idx) const {
   std::vector<CoordIndex> nn;
   if (idx % this->getNcolumns() != 0) {
-    nn.push_back(idx - 1);
+    nn.emplace_back(idx - 1);
   }
   if (idx % this->getNcolumns() != this->getNcolumns() - 1) {
-    nn.push_back(idx + 1);
+    nn.emplace_back(idx + 1);
   }
   if (idx >= this->getNcolumns()) {
-    nn.push_back(idx - this->getNcolumns());
+    nn.emplace_back(idx - this->getNcolumns());
   }
   if (idx < this->getNpositions() - this->getNcolumns()) {
-    nn.push_back(idx + this->getNcolumns());
+    nn.emplace_back(idx + this->getNcolumns());
   }
   return nn;
 }

@@ -26,7 +26,7 @@ void NeutralAtomLayer::updateByQubits(const std::set<Qubit>& qubitsToUpdate) {
 std::vector<uint32_t> NeutralAtomLayer::getIteratorOffset() {
   std::vector<uint32_t> offset;
   for (uint32_t i = 0; i < this->dag.size(); ++i) {
-    offset.push_back(static_cast<uint32_t>(
+    offset.emplace_back(static_cast<uint32_t>(
         std::distance(this->dag[i].begin(), this->iterators[i])));
   }
   return offset;
@@ -63,7 +63,7 @@ void NeutralAtomLayer::updateCandidatesByQubits(
     while (tempIter < this->dag[qubit].end()) {
       auto* op = (*tempIter)->get();
       if (op->getUsedQubits().size() == 1) {
-        mappedSingleQubitGates.push_back(op);
+        mappedSingleQubitGates.emplace_back(op);
         this->iterators[qubit]++;
         tempIter++;
       } else {
@@ -75,9 +75,9 @@ void NeutralAtomLayer::updateCandidatesByQubits(
                      commutesWithAtQubit(candidates[qubit], nextOp, qubit);
           if (commutes) {
             if (nextOp->getUsedQubits().size() == 1) {
-              mappedSingleQubitGates.push_back(nextOp);
+              mappedSingleQubitGates.emplace_back(nextOp);
             } else { // not executable but commutes
-              candidates[qubit].push_back(nextOp);
+              candidates[qubit].emplace_back(nextOp);
             }
           }
           tempIter++;
@@ -106,7 +106,7 @@ void NeutralAtomLayer::candidatesToGates(
         }
       }
       if (inFrontLayer) {
-        this->gates.push_back(opPointer);
+        this->gates.emplace_back(opPointer);
         // remove from candidacy of other qubits
         for (const auto& opQubit : opPointer->getUsedQubits()) {
           if (qubit == opQubit) {
@@ -118,7 +118,7 @@ void NeutralAtomLayer::candidatesToGates(
         }
 
         // save to remove from candidacy of this qubit
-        toRemove.push_back(opPointer);
+        toRemove.emplace_back(opPointer);
       }
     }
     // remove from candidacy of this qubit

@@ -65,7 +65,7 @@ QuantumComputation qc::NeutralAtomMapper::map(qc::QuantumComputation& qc,
   //   precompute exponential decay weights
   this->decayWeights.reserve(this->arch.getNcolumns());
   for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {
-    this->decayWeights.push_back(std::exp(-this->parameters.decay * i));
+    this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
   }
 
   auto i = 0;
@@ -161,9 +161,9 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
   this->frontLayerShuttling.clear();
   for (const auto& gate : frontGates) {
     if (swapGateBetter(gate)) {
-      this->frontLayerGate.push_back(gate);
+      this->frontLayerGate.emplace_back(gate);
     } else {
-      this->frontLayerShuttling.push_back(gate);
+      this->frontLayerShuttling.emplace_back(gate);
     }
   }
 
@@ -171,9 +171,9 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
   this->lookaheadLayerShuttling.clear();
   for (const auto& gate : lookaheadGates) {
     if (swapGateBetter(gate)) {
-      this->lookaheadLayerGate.push_back(gate);
+      this->lookaheadLayerGate.emplace_back(gate);
     } else {
-      this->lookaheadLayerShuttling.push_back(gate);
+      this->lookaheadLayerShuttling.emplace_back(gate);
     }
   }
 }
@@ -189,7 +189,7 @@ void qc::NeutralAtomMapper::mapGate(const Operation* op) {
                 op) != this->executedCommutingGates.end()) {
     return;
   }
-  this->executedCommutingGates.push_back(op);
+  this->executedCommutingGates.emplace_back(op);
   if (this->verbose) {
     std::cout << "mapped " << op->getName() << " ";
     for (auto qubit : op->getUsedQubits()) {
@@ -259,7 +259,7 @@ GateList NeutralAtomMapper::getExecutableGates(const GateList& gates) {
   GateList executableGates;
   for (const auto* opPointer : gates) {
     if (isExecutable(opPointer)) {
-      executableGates.push_back(opPointer);
+      executableGates.emplace_back(opPointer);
     }
   }
   return executableGates;
@@ -268,7 +268,7 @@ GateList NeutralAtomMapper::getExecutableGates(const GateList& gates) {
 void NeutralAtomMapper::updateMappingSwap(Swap swap) {
   nSwaps++;
   // save to lastSwaps
-  this->lastBlockedQubits.push_back(
+  this->lastBlockedQubits.emplace_back(
       this->hardwareQubits.getBlockedQubits({swap.first, swap.second}));
   if (this->lastBlockedQubits.size() > this->arch.getNcolumns()) {
     this->lastBlockedQubits.pop_front();
@@ -296,7 +296,7 @@ void NeutralAtomMapper::updateMappingSwap(Swap swap) {
 }
 
 void NeutralAtomMapper::updateMappingMove(qc::AtomMove move) {
-  this->lastMoves.push_back(move);
+  this->lastMoves.emplace_back(move);
   if (this->lastMoves.size() > 4) {
     this->lastMoves.pop_front();
   }
@@ -573,14 +573,14 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPosition(const Operation* op) {
       std::find(this->frontLayerGate.begin(), this->frontLayerGate.end(), op);
   if (idxFrontGate != this->frontLayerGate.end()) {
     this->frontLayerGate.erase(idxFrontGate);
-    this->frontLayerShuttling.push_back(op);
+    this->frontLayerShuttling.emplace_back(op);
   }
   // remove from lookahead layer if there
   auto idxLookaheadGate = std::find(this->lookaheadLayerGate.begin(),
                                     this->lookaheadLayerGate.end(), op);
   if (idxLookaheadGate != this->lookaheadLayerGate.end()) {
     this->lookaheadLayerGate.erase(idxLookaheadGate);
-    this->lookaheadLayerShuttling.push_back(op);
+    this->lookaheadLayerShuttling.emplace_back(op);
   }
   return {};
 }
@@ -620,7 +620,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
     for (const auto& gateHwQubit : remainingGateQubits) {
       if (hwQubit == gateHwQubit) {
         // gate qubit is already at one of the positions -> assign it
-        selectedQubits.push_back(hwQubit);
+        selectedQubits.emplace_back(hwQubit);
         remainingGateQubits.erase(remainingGateQubits.find(gateHwQubit));
         return getBestMultiQubitPositionRec(remainingGateQubits, selectedQubits,
                                             remainingNearbyQubits);
@@ -637,7 +637,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
                          return qubit1.second < qubit2.second;
                        });
   auto nextQubit = nextQubitDist->first;
-  selectedQubits.push_back(nextQubit);
+  selectedQubits.emplace_back(nextQubit);
   // remove from remaining gate qubits the one that is closest to the next
   auto closesGateQubits = *remainingGateQubits.begin();
   auto closesDistance =
@@ -687,14 +687,14 @@ WeightedSwaps NeutralAtomMapper::getExactSwapsToPosition(const Operation* op,
                                       this->frontLayerGate.end(), op);
         if (idxFrontGate != this->frontLayerGate.end()) {
           this->frontLayerGate.erase(idxFrontGate);
-          this->frontLayerShuttling.push_back(op);
+          this->frontLayerShuttling.emplace_back(op);
         }
         // remove from lookahead layer if there
         auto idxLookaheadGate = std::find(this->lookaheadLayerGate.begin(),
                                           this->lookaheadLayerGate.end(), op);
         if (idxLookaheadGate != this->lookaheadLayerGate.end()) {
           this->lookaheadLayerGate.erase(idxLookaheadGate);
-          this->lookaheadLayerShuttling.push_back(op);
+          this->lookaheadLayerShuttling.emplace_back(op);
         }
         return {};
       }
@@ -864,7 +864,7 @@ fp NeutralAtomMapper::parallelMoveCost(const qc::AtomMove& move) {
     parallelCost += arch.getVectorShuttlingTime(moveVector);
   }
   for (const auto& lastMove : this->lastMoves) {
-    lastEndingCoords.push_back(lastMove.second);
+    lastEndingCoords.emplace_back(lastMove.second);
     // decide of shuttling can be done in parallel
     auto lastMoveVector = this->arch.getVector(lastMove.first, lastMove.second);
     if (moveVector.overlap(lastMoveVector)) {
@@ -930,7 +930,7 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
       }
     }
     if (valid) {
-      filteredNearbyCoords.push_back(coord);
+      filteredNearbyCoords.emplace_back(coord);
     }
   }
 
@@ -942,12 +942,12 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
     if (this->hardwareQubits.isMapped(coord)) {
       if (std::find(gateCoords.begin(), gateCoords.end(), coord) !=
           gateCoords.end()) {
-        occupiedGateCoords.push_back(coord);
+        occupiedGateCoords.emplace_back(coord);
       } else {
-        occupiedNearbyCoords.push_back(coord);
+        occupiedNearbyCoords.emplace_back(coord);
       }
     } else {
-      freeNearbyCoords.push_back(coord);
+      freeNearbyCoords.emplace_back(coord);
     }
   }
 
@@ -974,7 +974,7 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
 
   for (const auto& gateCoord : occupiedGateCoords) {
     MultiQubitMovePos nextPos = MultiQubitMovePos(currentPos);
-    nextPos.coords.push_back(gateCoord);
+    nextPos.coords.emplace_back(gateCoord);
     auto bestPos = getMovePositionRec(nextPos, gateCoords, maxNMoves);
     if (bestPos.coords.size() == gateCoords.size()) {
       return bestPos;
@@ -983,7 +983,7 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
 
   for (const auto& freeCoord : freeNearbyCoords) {
     MultiQubitMovePos nextPos = MultiQubitMovePos(currentPos);
-    nextPos.coords.push_back(freeCoord);
+    nextPos.coords.emplace_back(freeCoord);
     nextPos.nMoves += 1;
     auto bestPos = getMovePositionRec(nextPos, gateCoords, maxNMoves);
     if (bestPos.coords.size() == gateCoords.size()) {
@@ -993,7 +993,7 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
 
   for (const auto& occCoord : occupiedNearbyCoords) {
     MultiQubitMovePos nextPos = MultiQubitMovePos(currentPos);
-    nextPos.coords.push_back(occCoord);
+    nextPos.coords.emplace_back(occCoord);
     nextPos.nMoves += 2;
     auto bestPos = getMovePositionRec(nextPos, gateCoords, maxNMoves);
     if (bestPos.coords.size() == gateCoords.size()) {
@@ -1040,9 +1040,9 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     if (std::find(visited.begin(), visited.end(), coord) != visited.end()) {
       continue;
     }
-    visited.push_back(coord);
+    visited.emplace_back(coord);
     MultiQubitMovePos currentPos;
-    currentPos.coords.push_back(coord);
+    currentPos.coords.emplace_back(coord);
     if (this->hardwareQubits.isMapped(coord)) {
       if (std::find(gateCoords.begin(), gateCoords.end(), coord) !=
           gateCoords.end()) {

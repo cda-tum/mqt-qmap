@@ -183,7 +183,7 @@ struct MoveComb {
    * @param addMove The move to append
    */
   void append(AtomMove addMove) {
-    moves.push_back(addMove);
+    moves.emplace_back(addMove);
     cost = std::numeric_limits<fp>::quiet_NaN();
   }
   /**
