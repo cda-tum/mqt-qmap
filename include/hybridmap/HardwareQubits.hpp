@@ -7,20 +7,20 @@
 
 #include "Definitions.hpp"
 #include "Permutation.hpp"
-#include "algorithm"
-#include "cstdint"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "map"
-#include "numeric"
 #include "operations/Operation.hpp"
-#include "random"
-#include "vector"
 
+#include <algorithm>
+#include <cstdint>
+#include <map>
+#include <numeric>
+#include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace na {
 

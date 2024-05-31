@@ -8,24 +8,24 @@
 #include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
 #include "QuantumComputation.hpp"
-#include "cstdint"
-#include "deque"
-#include "fstream"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "map"
 #include "operations/Operation.hpp"
-#include "set"
-#include "string"
-#include "utility"
-#include "vector"
 
 #include <cstddef>
+#include <cstdint>
+#include <deque>
+#include <fstream>
+#include <map>
+#include <set>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace na {
 

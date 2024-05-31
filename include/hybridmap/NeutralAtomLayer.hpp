@@ -7,11 +7,11 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "vector"
 
 #include <cstdint>
 #include <set>
 #include <utility>
+#include <vector>
 
 namespace na {
 /**
