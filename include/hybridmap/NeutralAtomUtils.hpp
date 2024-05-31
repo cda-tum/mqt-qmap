@@ -144,7 +144,7 @@ struct MoveVector {
  */
 struct MoveComb {
   std::vector<AtomMove> moves;
-  qc::fp                cost = std::numeric_limits<qc::fp>::quiet_NaN();
+  qc::fp                cost = std::numeric_limits<qc::fp>::max();
 
   MoveComb(std::vector<AtomMove> moves, qc::fp cost)
       : moves(std::move(moves)), cost(cost) {}
@@ -184,7 +184,7 @@ struct MoveComb {
    */
   void append(AtomMove addMove) {
     moves.emplace_back(addMove);
-    cost = std::numeric_limits<qc::fp>::quiet_NaN();
+    cost = std::numeric_limits<qc::fp>::max();
   }
   /**
    * @brief Append all moves of another combination to the end of this one.
@@ -193,7 +193,7 @@ struct MoveComb {
   void append(const MoveComb& addMoveComb) {
     moves.insert(moves.end(), addMoveComb.moves.begin(),
                  addMoveComb.moves.end());
-    cost = std::numeric_limits<qc::fp>::quiet_NaN();
+    cost = std::numeric_limits<qc::fp>::max();
   }
   [[nodiscard]] size_t size() const { return moves.size(); }
   [[nodiscard]] bool   empty() const { return moves.empty(); }

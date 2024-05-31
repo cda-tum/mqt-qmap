@@ -66,7 +66,7 @@ bool MoveVector::include(const MoveVector& other) const {
 void MoveCombs::addMoveComb(const MoveComb& otherMove) {
   for (auto& comb : moveCombs) {
     if (comb == otherMove) {
-      comb.cost = std::numeric_limits<qc::fp>::quiet_NaN();
+      comb.cost = std::numeric_limits<qc::fp>::max();
       return;
     }
   }
