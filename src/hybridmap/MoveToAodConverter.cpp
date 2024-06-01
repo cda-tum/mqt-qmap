@@ -451,7 +451,7 @@ void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
     const AodActivation& activationOtherDim) {
   // merge activations
   for (auto& activationCurrent : allActivations) {
-    auto activates = activationDim.getActivates(dim);
+    auto activates = activationCurrent.getActivates(dim);
     for (auto& aodMove : activates) {
       if (aodMove->init == activationDim.getActivates(dim)[0]->init &&
           aodMove->delta == activationDim.getActivates(dim)[0]->delta &&
