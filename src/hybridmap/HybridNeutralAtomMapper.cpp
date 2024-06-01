@@ -71,6 +71,9 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
     // assign gates to layers
     reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
 
+    // save last swap to prevent immediate swap back
+    Swap lastSwap = {0, 0};
+
     // first do all gate based mapping gates
     while (!this->frontLayerGate.empty()) {
       GateList gatesToExecute;
@@ -79,7 +82,8 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
         if (this->parameters.verbose) {
           std::cout << "iteration " << i << '\n';
         }
-        auto bestSwap = findBestSwap();
+        auto bestSwap = findBestSwap(lastSwap);
+        lastSwap      = bestSwap;
         updateMappingSwap(bestSwap);
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
@@ -313,7 +317,7 @@ void NeutralAtomMapper::updateMappingMove(AtomMove move) {
   nMoves++;
 }
 
-Swap NeutralAtomMapper::findBestSwap() {
+Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwap) {
   // compute necessary movements
   auto swapsFront     = initSwaps(this->frontLayerGate);
   auto swapsLookahead = initSwaps(this->lookaheadLayerGate);
@@ -321,6 +325,10 @@ Swap NeutralAtomMapper::findBestSwap() {
 
   // evaluate swaps based on cost function
   auto swaps = getAllPossibleSwaps(swapsFront);
+  // remove last swap to prevent immediate swap back
+  swaps.erase(lastSwap);
+
+  // no swap possible
   if (swaps.empty()) {
     return {std::numeric_limits<qc::Qubit>::max(),
             std::numeric_limits<qc::Qubit>::max()};

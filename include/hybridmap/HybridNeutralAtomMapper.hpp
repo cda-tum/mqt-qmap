@@ -181,7 +181,7 @@ protected:
    * from multi-qubit gates.
    * @return The best swap gate for the front layer
    */
-  Swap findBestSwap();
+  Swap findBestSwap(const Swap& lastSwap);
   /**
    * @brief Returns all possible swap gates for the front layer.
    * @details The possible swap gates are all swaps starting from qubits in the
