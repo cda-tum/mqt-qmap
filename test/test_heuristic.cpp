@@ -336,24 +336,24 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
   results.config.nrLookaheads       = 1;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty, 0.75 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 2;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 3;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
                   0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 4;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (2 * COST_UNIDIRECTIONAL_SWAP) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
@@ -362,25 +362,25 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
   results.config.nrLookaheads       = 1;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 2;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 3;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
                   0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
   results.config.nrLookaheads = 4;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE) +
                   0.75 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP) +
@@ -392,14 +392,14 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
   results.config.nrLookaheads       = 1;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
               FLOAT_TOLERANCE);
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
   results.config.nrLookaheads       = 1;
-  updateLookaheadPenalty(0, node);
+  updateLookaheadPenalty(1, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (2 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
               FLOAT_TOLERANCE);
