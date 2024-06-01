@@ -22,6 +22,8 @@
 namespace na {
 // Possible types two Move combination can be combined to
 enum class ActivationMergeType : uint8_t { Impossible, Trivial, Merge, Append };
+// Used to indicate how AodOperations can be merged
+using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
 
 /**
  * @brief Class to convert abstract move operations to AOD movements on a
@@ -124,24 +126,6 @@ protected:
 
     // Activation management
     /**
-     * @brief Checks if the move can be added to the current activations
-     * @param origin The origin of the move
-     * @param v The move vector of the move
-     * @return A pair of ActivationMerge, in x and y direction
-     */
-    [[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
-    canAddActivation(const Point& origin, MoveVector v) const;
-    /**
-     * @brief Checks if the move can be added to the current activations in the
-     * given dimension/direction
-     * @param dim The dimension/direction to check
-     * @param origin The origin of the move
-     * @param v The move vector of the move
-     * @return The ActivationMerge type
-     */
-    [[nodiscard]] ActivationMergeType
-    canAddActivationDim(Dimension dim, const Point& origin, MoveVector v) const;
-    /**
      * @brief Adds the move to the current activations
      * @details The move is merged into the current activations depending on the
      * given merge types
@@ -213,6 +197,12 @@ protected:
      */
     [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
   };
+
+  [[nodiscard]] static std::pair<ActivationMergeType, ActivationMergeType>
+  canAddActivation(const AodActivationHelper& activationHelper,
+                   const AodActivationHelper& deactivationHelper,
+                   const Point& origin, const MoveVector& v, const Point& final,
+                   const MoveVector& vReverse, Dimension dim);
 
   /**
    * @brief Move operations within a move group can be executed in parallel

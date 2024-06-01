@@ -153,6 +153,8 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
       mergeActivationDim(Dimension::Y,
                          AodActivation{Dimension::Y, {y, deltaY, signY}, move},
                          AodActivation{Dimension::X, {x, deltaX, signX}, move});
+      aodMovesY = getAodMovesFromInit(Dimension::Y, y);
+      reAssignOffsets(aodMovesY, signY);
       break;
     case ActivationMergeType::Append:
       allActivations.emplace_back(
@@ -170,6 +172,8 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
       mergeActivationDim(Dimension::X,
                          AodActivation{Dimension::X, {x, deltaX, signX}, move},
                          AodActivation{Dimension::Y, {y, deltaY, signY}, move});
+      aodMovesX = getAodMovesFromInit(Dimension::X, x);
+      reAssignOffsets(aodMovesX, signX);
       break;
     case ActivationMergeType::Merge:
       throw QMAPException("Merge in both dimensions should never happen.");
@@ -177,8 +181,6 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
       mergeActivationDim(Dimension::X,
                          AodActivation{Dimension::X, {x, deltaX, signX}, move},
                          AodActivation{Dimension::Y, {y, deltaY, signY}, move});
-      //      allActivations.emplace_back(
-      //          AodActivation{Dimension::Y, {y, deltaY, signY}, move});
       aodMovesY = getAodMovesFromInit(Dimension::Y, y);
       reAssignOffsets(aodMovesY, signY);
       break;
@@ -218,46 +220,65 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
   }
 }
 
-std::pair<ActivationMergeType, ActivationMergeType>
-MoveToAodConverter::AodActivationHelper::canAddActivation(const Point& origin,
-                                                          MoveVector v) const {
-  auto aodMovesX =
-      getAodMovesFromInit(Dimension::X, static_cast<std::uint32_t>(origin.x));
-  auto aodMovesY =
-      getAodMovesFromInit(Dimension::Y, static_cast<std::uint32_t>(origin.y));
-
-  auto const canX = canAddActivationDim(Dimension::X, origin, v);
-  auto const canY = canAddActivationDim(Dimension::Y, origin, v);
-  return std::make_pair(canX, canY);
-}
-
-ActivationMergeType
-MoveToAodConverter::AodActivationHelper::canAddActivationDim(
-    Dimension dim, const Point& origin, MoveVector v) const {
-  auto x =
+[[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
+MoveToAodConverter::canAddActivation(
+    const AodActivationHelper& activationHelper,
+    const AodActivationHelper& deactivationHelper, const Point& origin,
+    const MoveVector& v, const Point& final, const MoveVector& vReverse,
+    Dimension dim) {
+  auto start =
       static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);
-  auto sign =
-      dim == Dimension::X ? v.direction.getSignX() : v.direction.getSignY();
-  auto delta    = dim == Dimension::X ? v.xEnd - v.xStart : v.yEnd - v.yStart;
-  auto aodMoves = getAodMovesFromInit(dim, x);
-  if (aodMoves.empty()) {
-    // return false as no merge is required
-    return ActivationMergeType::Trivial;
+  auto end =
+      static_cast<std::uint32_t>(dim == Dimension::X ? final.x : final.y);
+
+  // Get Moves that start/end at the same position as the current move
+  auto aodMovesActivation   = activationHelper.getAodMovesFromInit(dim, start);
+  auto aodMovesDeactivation = deactivationHelper.getAodMovesFromInit(dim, end);
+
+  // both empty
+  if (aodMovesActivation.empty() && aodMovesDeactivation.empty()) {
+    return std::make_pair(ActivationMergeType::Trivial,
+                          ActivationMergeType::Trivial);
   }
-  // check if it can be combined with existing activations
-  for (auto& aodMove : aodMoves) {
-    if (aodMove->init == x && std::abs(aodMove->delta - delta) < 0.0001 &&
-        aodMove->offset == sign) {
-      // combine activations
-      return ActivationMergeType::Merge;
+  // one empty
+  if (aodMovesActivation.empty()) {
+    if (deactivationHelper.checkIntermediateSpaceAtInit(
+            dim, end, vReverse.direction.getSign(dim))) {
+      return std::make_pair(ActivationMergeType::Trivial,
+                            ActivationMergeType::Append);
+    }
+    return std::make_pair(ActivationMergeType::Trivial,
+                          ActivationMergeType::Impossible);
+  }
+  if (aodMovesDeactivation.empty()) {
+    if (activationHelper.checkIntermediateSpaceAtInit(
+            dim, start, v.direction.getSign(dim))) {
+      return std::make_pair(ActivationMergeType::Append,
+                            ActivationMergeType::Trivial);
+    }
+    return std::make_pair(ActivationMergeType::Impossible,
+                          ActivationMergeType::Trivial);
+  }
+  // both not empty
+  // if same moves exist -> merge, else append
+  for (const auto& aodMoveActivation : aodMovesActivation) {
+    for (const auto& aodMoveDeactivation : aodMovesDeactivation) {
+      if (aodMoveActivation->init == start &&
+          aodMoveDeactivation->init == end) {
+        return std::make_pair(ActivationMergeType::Merge,
+                              ActivationMergeType::Merge);
+      }
     }
   }
-
-  // check if increase in x direction possible
-  if (checkIntermediateSpaceAtInit(dim, x, sign)) {
-    return ActivationMergeType::Append;
+  if (activationHelper.checkIntermediateSpaceAtInit(dim, start,
+                                                    v.direction.getSign(dim)) &&
+      deactivationHelper.checkIntermediateSpaceAtInit(
+          dim, end, vReverse.direction.getSign(dim))) {
+    return std::make_pair(ActivationMergeType::Append,
+                          ActivationMergeType::Append);
   }
-  return ActivationMergeType::Impossible;
+  return std::make_pair(ActivationMergeType::Impossible,
+                        ActivationMergeType::Impossible);
 }
 
 void MoveToAodConverter::AodActivationHelper::reAssignOffsets(
@@ -286,15 +307,21 @@ void MoveToAodConverter::processMoveGroups() {
     MoveGroup           possibleNewMoveGroup;
     std::vector<AtomMove> movesToRemove;
     for (auto& movePair : groupIt->moves) {
-      auto& move              = movePair.first;
-      auto  idx               = movePair.second;
-      auto  origin            = arch.getCoordinate(move.first);
-      auto  target            = arch.getCoordinate(move.second);
-      auto  v                 = arch.getVector(move.first, move.second);
-      auto  vReverse          = arch.getVector(move.second, move.first);
-      auto activationCanAddXY = aodActivationHelper.canAddActivation(origin, v);
+      auto& move     = movePair.first;
+      auto  idx      = movePair.second;
+      auto  origin   = arch.getCoordinate(move.first);
+      auto  target   = arch.getCoordinate(move.second);
+      auto  v        = arch.getVector(move.first, move.second);
+      auto  vReverse = arch.getVector(move.second, move.first);
+      auto  canAddX =
+          canAddActivation(aodActivationHelper, aodDeactivationHelper, origin,
+                           v, target, vReverse, Dimension::X);
+      auto canAddY =
+          canAddActivation(aodActivationHelper, aodDeactivationHelper, origin,
+                           v, target, vReverse, Dimension::Y);
+      auto activationCanAddXY = std::make_pair(canAddX.first, canAddY.first);
       auto deactivationCanAddXY =
-          aodDeactivationHelper.canAddActivation(target, vReverse);
+          std::make_pair(canAddX.second, canAddY.second);
       if (activationCanAddXY.first == ActivationMergeType::Impossible ||
           activationCanAddXY.second == ActivationMergeType::Impossible ||
           deactivationCanAddXY.first == ActivationMergeType::Impossible ||
@@ -454,8 +481,7 @@ void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
     auto activates = activationCurrent.getActivates(dim);
     for (auto& aodMove : activates) {
       if (aodMove->init == activationDim.getActivates(dim)[0]->init &&
-          aodMove->delta == activationDim.getActivates(dim)[0]->delta &&
-          aodMove->offset == activationDim.getActivates(dim)[0]->offset) {
+          aodMove->delta == activationDim.getActivates(dim)[0]->delta) {
         // append move
         activationCurrent.moves.emplace_back(activationDim.moves[0]);
         // add activation in the other dimension

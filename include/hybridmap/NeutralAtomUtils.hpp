@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "operations/AodOperation.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -109,6 +110,9 @@ struct Direction {
   }
   [[nodiscard]] int32_t getSignX() const { return x ? 1 : -1; }
   [[nodiscard]] int32_t getSignY() const { return y ? 1 : -1; }
+  [[nodiscard]] int32_t getSign(Dimension dim) const {
+    return dim == Dimension::X ? getSignX() : getSignY();
+  }
 };
 
 /**
