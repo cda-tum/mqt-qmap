@@ -267,7 +267,8 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] qc::fp getSwapDistance(const Point& c1, const Point& c2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(const Point& c1,
+                                             const Point& c2) const {
     return swapDistances(
         static_cast<uint32_t>(c1.x + c1.y) * properties.getNcolumns(),
         static_cast<uint32_t>(c2.x + c2.y) * properties.getNcolumns());
