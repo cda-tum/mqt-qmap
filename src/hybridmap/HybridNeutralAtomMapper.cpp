@@ -463,7 +463,7 @@ qc::fp NeutralAtomMapper::swapCostPerLayer(const Swap&          swap,
   for (const auto& [q1, q2] : swapCloseBy) {
     // distance before
     distBefore = this->hardwareQubits.getSwapDistance(q1, q2);
-    if (distBefore == std::numeric_limits<qc::fp>::infinity()) {
+    if (distBefore == std::numeric_limits<qc::fp>::max()) {
       continue;
     }
     // do swap
@@ -487,7 +487,7 @@ qc::fp NeutralAtomMapper::swapCostPerLayer(const Swap&          swap,
     auto destination = exactSwap.second;
     distBefore =
         this->hardwareQubits.getSwapDistance(origin, destination, false);
-    if (distBefore == std::numeric_limits<qc::fp>::infinity()) {
+    if (distBefore == std::numeric_limits<qc::fp>::max()) {
       continue;
     }
     if (origin == swap.first) {
@@ -676,7 +676,7 @@ NeutralAtomMapper::getExactSwapsToPosition(const qc::Operation* op,
                       minimalDistances;
     std::set<HwQubit> minimalDistancePosQubit;
     for (const auto& gateQubit : gateHwQubits) {
-      qc::fp minimalDistance = std::numeric_limits<qc::fp>::infinity();
+      qc::fp minimalDistance = std::numeric_limits<qc::fp>::max();
       for (const auto& posQubit : position) {
         auto distance =
             this->hardwareQubits.getSwapDistance(gateQubit, posQubit, false);
@@ -688,7 +688,7 @@ NeutralAtomMapper::getExactSwapsToPosition(const qc::Operation* op,
           minimalDistancePosQubit.emplace(posQubit);
         }
       }
-      if (minimalDistance == std::numeric_limits<qc::fp>::infinity()) {
+      if (minimalDistance == std::numeric_limits<qc::fp>::max()) {
         // not possible to move to position
         // move gate to shuttling layer
         auto idxFrontGate = std::find(this->frontLayerGate.begin(),
@@ -1180,7 +1180,7 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
   auto   usedHwQubits = this->mapping.getHwQubits(usedQubits);
   qc::fp minNumSwaps  = 0;
   if (usedHwQubits.size() == 2) {
-    qc::fp minDistance = std::numeric_limits<qc::fp>::infinity();
+    qc::fp minDistance = std::numeric_limits<qc::fp>::max();
     for (const auto& hwQubit : usedHwQubits) {
       for (const auto& otherHwQubit : usedHwQubits) {
         if (hwQubit == otherHwQubit) {
@@ -1196,12 +1196,12 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
     auto bestPos = getBestMultiQubitPosition(opPointer);
     if (bestPos.empty()) {
       return {std::numeric_limits<uint32_t>::max(),
-              std::numeric_limits<qc::fp>::infinity()};
+              std::numeric_limits<qc::fp>::max()};
     }
     auto exactSwaps = getExactSwapsToPosition(opPointer, bestPos);
     if (exactSwaps.empty()) {
       return {std::numeric_limits<uint32_t>::max(),
-              std::numeric_limits<qc::fp>::infinity()};
+              std::numeric_limits<qc::fp>::max()};
     }
     for (const auto& [swap, weight] : exactSwaps) {
       auto [q1, q2] = swap;
@@ -1225,7 +1225,7 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
   // distance
 
   uint32_t minMoves = std::numeric_limits<uint32_t>::max();
-  qc::fp   minTime  = std::numeric_limits<qc::fp>::infinity();
+  qc::fp   minTime  = std::numeric_limits<qc::fp>::max();
   for (const auto& coord : usedCoords) {
     qc::fp   totalTime  = 0;
     uint32_t totalMoves = 0;

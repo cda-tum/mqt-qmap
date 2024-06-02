@@ -60,7 +60,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
     }
   }
   if (!found) {
-    swapDistances(q1, q2) = std::numeric_limits<qc::fp>::infinity();
+    swapDistances(q1, q2) = std::numeric_limits<qc::fp>::max();
     return;
   }
   // recreate path
