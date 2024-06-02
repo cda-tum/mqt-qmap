@@ -257,7 +257,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] qc::fp getSwapDistance(CoordIndex idx1, CoordIndex idx2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(CoordIndex idx1,
+                                             CoordIndex idx2) const {
     return swapDistances(idx1, idx2);
   }
   /**

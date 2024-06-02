@@ -31,6 +31,8 @@ using Swap          = std::pair<HwQubit, HwQubit>;
 using Swaps         = std::vector<Swap>;
 using WeightedSwap  = std::pair<Swap, qc::fp>;
 using WeightedSwaps = std::vector<WeightedSwap>;
+// The distance between two hardware qubits using SWAP gates.
+using SwapDistance = int32_t;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
 

@@ -204,8 +204,8 @@ public:
    * or just to its vicinity.
    * @return The swap distance between the two hardware qubits.
    */
-  [[nodiscard]] qc::fp getSwapDistance(HwQubit q1, HwQubit q2,
-                                       bool closeBy = true) {
+  [[nodiscard]] SwapDistance getSwapDistance(HwQubit q1, HwQubit q2,
+                                             bool closeBy = true) {
     if (q1 == q2) {
       return 0;
     }

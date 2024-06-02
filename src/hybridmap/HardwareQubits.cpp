@@ -60,7 +60,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
     }
   }
   if (!found) {
-    swapDistances(q1, q2) = std::numeric_limits<qc::fp>::max();
+    swapDistances(q1, q2) = std::numeric_limits<SwapDistance>::max();
     return;
   }
   // recreate path
@@ -74,7 +74,8 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
   // update swap distances along path
   for (uint32_t start = 0; start < path.size() - 1; ++start) {
     for (uint32_t end = start + 1; end < path.size(); ++end) {
-      swapDistances(path[start], path[end]) = end - start - 1;
+      swapDistances(path[start], path[end]) =
+          static_cast<int>(end) - static_cast<int>(start) - 1;
     }
   }
 }

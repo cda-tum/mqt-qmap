@@ -26,8 +26,8 @@ namespace na {
  */
 class SymmetricMatrix {
 private:
-  std::vector<std::vector<qc::fp>> data;
-  uint32_t                         size = 0;
+  std::vector<std::vector<SwapDistance>> data;
+  uint32_t                               size = 0;
 
 public:
   // Constructors
@@ -39,22 +39,23 @@ public:
     }
   }
 
-  SymmetricMatrix(const uint32_t size, const qc::fp value) : size(size) {
+  SymmetricMatrix(const uint32_t size, const SwapDistance value) : size(size) {
     data.resize(size);
     for (uint32_t i = 0; i < size; ++i) {
       data[i].resize(i + 1, value);
     }
   }
 
-  [[nodiscard]] qc::fp& operator()(const uint32_t row, const uint32_t col) {
+  [[nodiscard]] SwapDistance& operator()(const uint32_t row,
+                                         const uint32_t col) {
     if (row < col) {
       return data[col][row];
     }
     return data[row][col];
   }
 
-  [[nodiscard]] qc::fp operator()(const uint32_t row,
-                                  const uint32_t col) const {
+  [[nodiscard]] SwapDistance operator()(const uint32_t row,
+                                        const uint32_t col) const {
     if (row < col) {
       return data[col][row];
     }
