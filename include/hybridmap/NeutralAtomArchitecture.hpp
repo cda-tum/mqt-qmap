@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "na/NADefinitions.hpp"
@@ -148,7 +149,7 @@ protected:
   Parameters parameters;
 
   std::vector<Point>                coordinates;
-  SymmetricMatrix                   swapDistances;
+  SymmetricMatrix<SwapDistance>     swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
   /**

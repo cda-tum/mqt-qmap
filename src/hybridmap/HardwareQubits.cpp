@@ -6,6 +6,7 @@
 #include "hybridmap/HardwareQubits.hpp"
 
 #include "Definitions.hpp"
+#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 
@@ -20,7 +21,7 @@
 
 namespace na {
 void HardwareQubits::initTrivialSwapDistances() {
-  swapDistances = SymmetricMatrix(arch->getNqubits());
+  swapDistances = SymmetricMatrix<SwapDistance>(arch->getNqubits());
   for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
     for (uint32_t j = 0; j < i; ++j) {
       swapDistances(i, j) =

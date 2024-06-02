@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "Permutation.hpp"
+#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
@@ -36,7 +37,7 @@ class HardwareQubits {
 protected:
   const NeutralAtomArchitecture* arch;
   qc::Permutation                hwToCoordIdx;
-  SymmetricMatrix                swapDistances;
+  SymmetricMatrix<SwapDistance>  swapDistances;
   std::map<HwQubit, HwQubits>    nearbyQubits;
   qc::Permutation                initialHwPos;
 

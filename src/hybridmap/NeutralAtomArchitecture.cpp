@@ -6,6 +6,7 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 
 #include "Definitions.hpp"
+#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "nlohmann/json.hpp"
 #include "operations/AodOperation.hpp"
@@ -157,7 +158,7 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
             });
 
   // compute swap distances
-  this->swapDistances = SymmetricMatrix(this->getNpositions());
+  this->swapDistances = SymmetricMatrix<SwapDistance>(this->getNpositions());
 
   for (uint32_t coordIndex1 = 0; coordIndex1 < this->getNpositions();
        coordIndex1++) {
