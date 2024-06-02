@@ -821,7 +821,7 @@ PYBIND11_MODULE(pyqmap, m) {
                              &na::NeutralAtomArchitecture::getDecoherenceTime,
                              "Decoherence time in microseconds")
       .def("compute_swap_distance",
-           static_cast<double (na::NeutralAtomArchitecture::*)(
+           static_cast<int (na::NeutralAtomArchitecture::*)(
                std::uint32_t, std::uint32_t) const>(
                &na::NeutralAtomArchitecture::getSwapDistance),
            "Number of SWAP gates required between two positions",
