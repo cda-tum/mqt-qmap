@@ -24,6 +24,7 @@ target_link_libraries(
           MQT::CorePython
           MQT::ProjectOptions
           MQT::ProjectWarnings
+          MQT::QMapHybrid
           pybind11_json)
 
 # Install directive for scikit-build-core
