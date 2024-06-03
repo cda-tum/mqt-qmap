@@ -36,14 +36,10 @@ class HybridSynthesisMapper : private NeutralAtomMapper {
 public:
   // Constructors
   HybridSynthesisMapper() = delete;
-  explicit HybridSynthesisMapper(const NeutralAtomMapper& neutralAtomMapper)
-      : NeutralAtomMapper(neutralAtomMapper) {}
   explicit HybridSynthesisMapper(
       const NeutralAtomArchitecture& arch,
-      InitialCoordinateMapping       initialCoordinateMapping =
-          InitialCoordinateMapping::Trivial,
-      const MapperParameters& params = MapperParameters())
-      : NeutralAtomMapper(arch, initialCoordinateMapping, params) {}
+      const MapperParameters&        params = MapperParameters())
+      : NeutralAtomMapper(arch, params) {}
 
   // Functions
 
