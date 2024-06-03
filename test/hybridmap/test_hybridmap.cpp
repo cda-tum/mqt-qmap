@@ -133,7 +133,7 @@ TEST(NeutralAtomMapperTest, Output) {
   mapperParameters.shuttlingTimeWeight  = 0.1;
   mapperParameters.gateWeight           = 1;
   mapperParameters.shuttlingWeight      = 0;
-  mapperParameters.seed                 = 42;
+  mapperParameters.seed                 = 43;
   mapperParameters.verbose              = true;
   mapper.setParameters(mapperParameters);
 
