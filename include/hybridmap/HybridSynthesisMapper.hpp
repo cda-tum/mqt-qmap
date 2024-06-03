@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace qc {
+namespace na {
 
 /**
  * @brief Class to manage information exchange between the neutral atom mapper
@@ -29,7 +29,7 @@ namespace qc {
  *
  */
 class HybridSynthesisMapper : private NeutralAtomMapper {
-  using qcs = std::vector<QuantumComputation>;
+  using qcs = std::vector<qc::QuantumComputation>;
 
   AdjacencyMatrix adjacencyMatrix;
 
@@ -52,7 +52,7 @@ public:
    * @param initialMapping The initial mapping to be used.
    * @return The remapped circuit.
    */
-  QuantumComputation
+  qc::QuantumComputation
   completelyRemap(InitialMapping initialMapping = InitialMapping::Identity);
 
   /**
@@ -70,7 +70,7 @@ public:
    * inserting SWAP gates or shuttling move operations.
    * @param qc The gates (QuantumComputation) to be mapped.
    */
-  void directlyMap(const QuantumComputation& qc);
+  void directlyMap(const qc::QuantumComputation& qc);
 
   /**
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
@@ -80,4 +80,4 @@ public:
     return adjacencyMatrix;
   }
 };
-} // namespace qc
+} // namespace na
