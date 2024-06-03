@@ -38,8 +38,8 @@ void HardwareQubits::initNearbyQubits() {
 
 void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
   std::queue<HwQubit>  q;
-  std::vector<bool>    visited(swapDistances.getSize(), false);
-  std::vector<HwQubit> parent(swapDistances.getSize(), q2);
+  std::vector<bool>    visited(swapDistances.size(), false);
+  std::vector<HwQubit> parent(swapDistances.size(), q2);
 
   q.push(q1);
   visited[q1] = true;
