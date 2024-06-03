@@ -55,7 +55,7 @@ struct Direction {
   bool x;
   bool y;
 
-  [[maybe_unused]] Direction(bool x, bool y) : x(x), y(y) {}
+  [[maybe_unused]] Direction(bool xDir, bool yDir) : x(xDir), y(yDir) {}
   Direction(qc::fp deltaX, qc::fp deltaY) : x(deltaX >= 0), y(deltaY >= 0) {}
 
   [[nodiscard]] bool operator==(const Direction& other) const {
@@ -83,16 +83,16 @@ struct MoveVector {
   qc::fp    yEnd;
   Direction direction;
 
-  MoveVector(qc::fp xStart, qc::fp yStart, qc::fp xEnd, qc::fp yEnd)
-      : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
-        direction(xEnd - xStart, yEnd - yStart) {}
-  MoveVector(std::int64_t xStart, std::int64_t yStart, std::int64_t xEnd,
-             std::int64_t yEnd)
-      : xStart(static_cast<qc::fp>(xStart)),
-        yStart(static_cast<qc::fp>(yStart)), xEnd(static_cast<qc::fp>(xEnd)),
-        yEnd(static_cast<qc::fp>(yEnd)),
-        direction(static_cast<qc::fp>(xEnd - xStart),
-                  static_cast<qc::fp>(yEnd - yStart)) {}
+  MoveVector(qc::fp xstart, qc::fp ystart, qc::fp xend, qc::fp yend)
+      : xStart(xstart), yStart(ystart), xEnd(xend), yEnd(yend),
+        direction(xend - xstart, yend - ystart) {}
+  MoveVector(std::int64_t xstart, std::int64_t ystart, std::int64_t xend,
+             std::int64_t yend)
+      : xStart(static_cast<qc::fp>(xstart)),
+        yStart(static_cast<qc::fp>(ystart)), xEnd(static_cast<qc::fp>(xend)),
+        yEnd(static_cast<qc::fp>(yend)),
+        direction(static_cast<qc::fp>(xend - xstart),
+                  static_cast<qc::fp>(yend - ystart)) {}
 
   [[nodiscard]] [[maybe_unused]] bool
   sameDirection(const MoveVector& other) const {
@@ -114,15 +114,13 @@ struct MoveComb {
   std::vector<AtomMove> moves;
   qc::fp                cost = std::numeric_limits<qc::fp>::max();
 
-  MoveComb(std::vector<AtomMove> moves, qc::fp cost)
-      : moves(std::move(moves)), cost(cost) {}
-  MoveComb(AtomMove move, qc::fp cost)
-      : moves(std::vector<AtomMove>{std::move(move)}), cost(cost) {}
+  MoveComb(std::vector<AtomMove> mov, const qc::fp c)
+      : moves(std::move(mov)), cost(c) {}
+  MoveComb(AtomMove mov, const qc::fp c) : moves({std::move(mov)}), cost(c) {}
 
   MoveComb() = default;
-  explicit MoveComb(std::vector<AtomMove> moves) : moves(std::move(moves)) {}
-  explicit MoveComb(AtomMove move)
-      : moves(std::vector<AtomMove>{std::move(move)}) {}
+  explicit MoveComb(std::vector<AtomMove> mov) : moves(std::move(mov)) {}
+  explicit MoveComb(AtomMove mov) : moves({std::move(mov)}) {}
 
   /**
    * @brief Get the first move of the combination
@@ -174,8 +172,8 @@ struct MoveCombs {
   std::vector<MoveComb> moveCombs;
 
   MoveCombs() = default;
-  explicit MoveCombs(std::vector<MoveComb> moveCombs)
-      : moveCombs(std::move(moveCombs)) {}
+  explicit MoveCombs(std::vector<MoveComb> combs)
+      : moveCombs(std::move(combs)) {}
 
   [[nodiscard]] bool   empty() const { return moveCombs.empty(); }
   [[nodiscard]] size_t size() const { return moveCombs.size(); }

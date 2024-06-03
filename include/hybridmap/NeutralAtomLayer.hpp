@@ -58,11 +58,13 @@ protected:
 
 public:
   // Constructor
-  explicit NeutralAtomLayer(qc::DAG dag) : dag(std::move(dag)) {
-    for (auto& i : this->dag) {
+  explicit NeutralAtomLayer(qc::DAG graph) : dag(std::move(graph)) {
+    iterators.reserve(dag.size());
+    candidates.reserve(dag.size());
+    for (auto& i : dag) {
       auto it = i.begin();
-      this->iterators.emplace_back(it);
-      this->candidates.emplace_back();
+      iterators.emplace_back(it);
+      candidates.emplace_back();
     }
   }
 

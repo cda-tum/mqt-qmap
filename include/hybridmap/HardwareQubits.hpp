@@ -81,30 +81,30 @@ protected:
 
 public:
   // Constructors
-  HardwareQubits(const NeutralAtomArchitecture& arch,
+  HardwareQubits(const NeutralAtomArchitecture& architecture,
                  InitialCoordinateMapping       initialCoordinateMapping,
                  uint32_t                       seed)
-      : arch(&arch), swapDistances(arch.getNqubits()) {
+      : arch(&architecture), swapDistances(architecture.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:
-      for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
+      for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
         hwToCoordIdx.emplace(i, i);
       }
       initTrivialSwapDistances();
       break;
     case Random:
-      std::vector<CoordIndex> indices(arch.getNpositions());
+      std::vector<CoordIndex> indices(architecture.getNpositions());
       std::iota(indices.begin(), indices.end(), 0);
       if (seed == 0) {
         seed = std::random_device()();
       }
       std::mt19937 g(seed);
       std::shuffle(indices.begin(), indices.end(), g);
-      for (uint32_t i = 0; i < arch.getNqubits(); ++i) {
+      for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
         hwToCoordIdx.emplace(i, indices[i]);
       }
 
-      swapDistances = SymmetricMatrix(arch.getNqubits(), -1);
+      swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
     }
     initNearbyQubits();
     initialHwPos = hwToCoordIdx;

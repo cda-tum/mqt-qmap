@@ -59,8 +59,8 @@ protected:
 
       AodMove() = default;
 
-      AodMove(uint32_t init, qc::fp delta, int32_t offset)
-          : init(init), offset(offset), delta(delta) {}
+      AodMove(uint32_t initMove, qc::fp deltaMove, int32_t offsetMove)
+          : init(initMove), offset(offsetMove), delta(deltaMove) {}
     };
     /**
      * @brief Manages the activation of an atom using an AOD.
@@ -109,8 +109,9 @@ protected:
     AodActivationHelper()                           = delete;
     AodActivationHelper(const AodActivationHelper&) = delete;
     AodActivationHelper(AodActivationHelper&&)      = delete;
-    AodActivationHelper(const NeutralAtomArchitecture& arch, qc::OpType type)
-        : arch(arch), type(type) {}
+    AodActivationHelper(const NeutralAtomArchitecture& architecture,
+                        qc::OpType                     opType)
+        : arch(architecture), type(opType) {}
 
     // Methods
 

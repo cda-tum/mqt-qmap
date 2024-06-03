@@ -359,13 +359,14 @@ public:
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
   NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
   NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
-  explicit NeutralAtomMapper(const NeutralAtomArchitecture& arch,
+  explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
-      : arch(arch), mappedQc(arch.getNpositions()),
-        mappedQcAOD(arch.getNpositions()), scheduler(arch), parameters(p),
-        hardwareQubits(arch, parameters.initialMapping, parameters.seed) {
+      : arch(architecture), mappedQc(architecture.getNpositions()),
+        mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
+        parameters(p), hardwareQubits(architecture, parameters.initialMapping,
+                                      parameters.seed) {
     // need at least on free coordinate to shuttle
-    if (arch.getNpositions() - arch.getNqubits() < 1) {
+    if (architecture.getNpositions() - architecture.getNqubits() < 1) {
       this->parameters.gateWeight      = 1;
       this->parameters.shuttlingWeight = 0;
     }

@@ -31,12 +31,11 @@ struct SchedulerResults {
   qc::fp   totalFidelities;
   uint32_t nCZs = 0;
 
-  SchedulerResults(qc::fp totalExecutionTime, qc::fp totalIdleTime,
-                   qc::fp totalGateFidelities, qc::fp totalFidelities,
-                   uint32_t nCZs)
-      : totalExecutionTime(totalExecutionTime), totalIdleTime(totalIdleTime),
-        totalGateFidelities(totalGateFidelities),
-        totalFidelities(totalFidelities), nCZs(nCZs) {}
+  SchedulerResults(qc::fp executionTime, qc::fp idleTime, qc::fp gateFidelities,
+                   qc::fp fidelities, uint32_t cZs)
+      : totalExecutionTime(executionTime), totalIdleTime(idleTime),
+        totalGateFidelities(gateFidelities), totalFidelities(fidelities),
+        nCZs(cZs) {}
 
   [[nodiscard]] std::string toString() const {
     std::stringstream ss;
@@ -81,8 +80,8 @@ public:
   NeutralAtomScheduler()                            = delete;
   NeutralAtomScheduler(const NeutralAtomScheduler&) = delete;
   NeutralAtomScheduler(NeutralAtomScheduler&&)      = delete;
-  explicit NeutralAtomScheduler(const NeutralAtomArchitecture& arch)
-      : arch(arch) {}
+  explicit NeutralAtomScheduler(const NeutralAtomArchitecture& architecture)
+      : arch(architecture) {}
 
   /**
    * @brief Schedules the given quantum circuit on the neutral atom architecture

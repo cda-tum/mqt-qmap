@@ -69,17 +69,14 @@ class NeutralAtomArchitecture {
 
   public:
     Properties() = default;
-    Properties(std::uint16_t nRows, std::uint16_t nColumns, std::uint16_t nAods,
-               std::uint16_t nAodCoordinates, qc::fp interQubitDistance,
-               qc::fp interactionRadius, qc::fp blockingFactor,
-               qc::fp aodDistance)
-        : nRows(nRows), nColumns(nColumns), nAods(nAods),
+    Properties(std::uint16_t rows, std::uint16_t columns, std::uint16_t aods,
+               std::uint16_t aodCoordinates, qc::fp qubitDistance,
+               qc::fp radius, qc::fp blockingFac, qc::fp aodDist)
+        : nRows(rows), nColumns(columns), nAods(aods),
           nAodIntermediateLevels(
-              static_cast<uint16_t>(interQubitDistance / aodDistance)),
-          nAodCoordinates(nAodCoordinates),
-          interQubitDistance(interQubitDistance),
-          interactionRadius(interactionRadius), blockingFactor(blockingFactor) {
-    }
+              static_cast<uint16_t>(qubitDistance / aodDist)),
+          nAodCoordinates(aodCoordinates), interQubitDistance(qubitDistance),
+          interactionRadius(radius), blockingFactor(blockingFac) {}
     [[nodiscard]] std::uint16_t getNpositions() const {
       return nRows * nColumns;
     }
@@ -357,7 +354,7 @@ public:
    * @return The decoherence time
    */
   [[nodiscard]] qc::fp getDecoherenceTime() const {
-    return parameters.decoherenceTimes.getTEff();
+    return parameters.decoherenceTimes.tEff();
   }
 
   // Converters between indices and coordinates
