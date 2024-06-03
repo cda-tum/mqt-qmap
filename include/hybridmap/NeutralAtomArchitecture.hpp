@@ -117,25 +117,24 @@ class NeutralAtomArchitecture {
    */
   struct Parameters {
     /**
-     * @brief Class to store the decoherence times of a neutral atom
+     * @brief Struct to store the decoherence times of a neutral atom
      * architecture
      * @details
      * The decoherence times of a neutral atom architecture are:
-     * - T1
-     * - T2
-     * - effective decoherence time
+     * - T1 [µs]
+     * - T2 [µs]
+     * - effective decoherence time [µs]
      */
-    class DecoherenceTimes {
-    protected:
-      qc::fp                  tEff;
-      [[maybe_unused]] qc::fp t1;
-      [[maybe_unused]] qc::fp t2;
+    struct DecoherenceTimes {
+      qc::fp t1 = 0;
+      qc::fp t2 = 0;
 
-    public:
-      DecoherenceTimes() = default;
-      DecoherenceTimes(qc::fp t1, qc::fp t2)
-          : tEff(t1 * t2 / (t1 + t2)), t1(t1), t2(t2) {}
-      [[nodiscard]] qc::fp getTEff() const { return tEff; }
+      [[nodiscard]] qc::fp tEff() const {
+        if (t1 == 0 && t2 == 0) {
+          return 0;
+        }
+        return t1 * t2 / (t1 + t2);
+      }
     };
     CoordIndex                    nQubits;
     std::map<std::string, qc::fp> gateTimes;

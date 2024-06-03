@@ -98,9 +98,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     this->parameters.shuttlingAverageFidelities = shuttlingAverageFidelities;
 
     this->parameters.decoherenceTimes =
-        NeutralAtomArchitecture::Parameters::DecoherenceTimes(
+        NeutralAtomArchitecture::Parameters::DecoherenceTimes{
             jsonDataParameters["decoherenceTimes"]["t1"],
-            jsonDataParameters["decoherenceTimes"]["t2"]);
+            jsonDataParameters["decoherenceTimes"]["t2"]};
 
   } catch (std::exception& e) {
     throw std::runtime_error("Could not parse JSON file " + filename + ": " +
@@ -204,13 +204,14 @@ std::vector<CoordIndex> NeutralAtomArchitecture::getNN(CoordIndex idx) const {
   if (idx % this->getNcolumns() != 0) {
     nn.emplace_back(idx - 1);
   }
-  if (idx % this->getNcolumns() != this->getNcolumns() - 1) {
+  if (idx % this->getNcolumns() != this->getNcolumns() - 1U) {
     nn.emplace_back(idx + 1);
   }
   if (idx >= this->getNcolumns()) {
     nn.emplace_back(idx - this->getNcolumns());
   }
-  if (idx < this->getNpositions() - this->getNcolumns()) {
+  if (idx <
+      static_cast<CoordIndex>(this->getNpositions() - this->getNcolumns())) {
     nn.emplace_back(idx + this->getNcolumns());
   }
   return nn;
