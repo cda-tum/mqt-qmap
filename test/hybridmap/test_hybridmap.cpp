@@ -19,7 +19,7 @@
 class NeutralAtomArchitectureTest
     : public ::testing::TestWithParam<std::string> {
 protected:
-  std::string testArchitecturePath = "hybridmap/architectures/";
+  std::string testArchitecturePath = "architectures/";
 
   void SetUp() override { testArchitecturePath += GetParam() + ".json"; }
 };
@@ -57,11 +57,11 @@ class NeutralAtomMapperTest
           std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp,
                      na::InitialCoordinateMapping>> {
 protected:
-  std::string testArchitecturePath = "hybridmap/architectures/";
-  std::string testQcPath           = "hybridmap/circuits/";
-  qc::fp      gateWeight           = 1;
-  qc::fp      shuttlingWeight      = 1;
-  qc::fp      lookAheadWeight      = 1;
+  std::string                  testArchitecturePath = "architectures/";
+  std::string                  testQcPath           = "circuits/";
+  qc::fp                       gateWeight           = 1;
+  qc::fp                       shuttlingWeight      = 1;
+  qc::fp                       lookAheadWeight      = 1;
   na::InitialCoordinateMapping initialCoordinateMapping =
       na::InitialCoordinateMapping::Trivial;
   // fixed
@@ -121,8 +121,8 @@ INSTANTIATE_TEST_SUITE_P(
                           na::InitialCoordinateMapping::Random)));
 
 TEST(NeutralAtomMapperTest, Output) {
-  auto arch = na::NeutralAtomArchitecture(
-      "hybridmap/architectures/rubidium_shuttling.json");
+  auto arch =
+      na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper    mapper(arch);
   na::MapperParameters     mapperParameters;
@@ -138,7 +138,7 @@ TEST(NeutralAtomMapperTest, Output) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(
-      "hybridmap/circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+      "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   auto qcMapped = mapper.map(qc, initialMapping);
 
   qcMapped.dumpOpenQASM(std::cout, false);
