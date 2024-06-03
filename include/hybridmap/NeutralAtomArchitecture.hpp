@@ -13,6 +13,7 @@
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -271,8 +272,8 @@ public:
   [[nodiscard]] SwapDistance getSwapDistance(const Point& c1,
                                              const Point& c2) const {
     return swapDistances(
-        static_cast<uint32_t>(c1.x + c1.y) * properties.getNcolumns(),
-        static_cast<uint32_t>(c2.x + c2.y) * properties.getNcolumns());
+        static_cast<size_t>(c1.x + c1.y) * properties.getNcolumns(),
+        static_cast<size_t>(c2.x + c2.y) * properties.getNcolumns());
   }
 
   /**
