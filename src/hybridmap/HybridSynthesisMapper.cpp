@@ -15,11 +15,7 @@ namespace na {
 
 qc::QuantumComputation
 HybridSynthesisMapper::completelyRemap(InitialMapping initialMapping) {
-  // copy mapped circuit, removing SWAPs and MOVEs
-  qc::QuantumComputation newCirc = this->mappedQc;
-  qc::CircuitOptimizer::removeOperation(
-      newCirc, {qc::OpType::SWAP, qc::OpType::Move}, 2);
-  this->map(newCirc, initialMapping);
+  this->map(unmappedQc, initialMapping);
   return this->mappedQc;
 }
 

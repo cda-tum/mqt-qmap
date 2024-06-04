@@ -31,7 +31,8 @@ namespace na {
 class HybridSynthesisMapper : private NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
-  AdjacencyMatrix adjacencyMatrix;
+  AdjacencyMatrix        adjacencyMatrix;
+  qc::QuantumComputation unmappedQc;
 
 public:
   // Constructors
