@@ -31,7 +31,6 @@ namespace na {
 class HybridSynthesisMapper : private NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
-  AdjacencyMatrix        adjacencyMatrix;
   qc::QuantumComputation unmappedQc;
 
 public:
@@ -73,8 +72,6 @@ public:
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
    * @return The current adjacency matrix of the neutral atom hardware.
    */
-  [[nodiscard]] AdjacencyMatrix getAdjacencyMatrix() const {
-    return adjacencyMatrix;
-  }
+  [[nodiscard]] AdjacencyMatrix getAdjacencyMatrix() const;
 };
 } // namespace na
