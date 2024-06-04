@@ -62,7 +62,7 @@ public:
                                   bool directlyMap = false);
 
   /**
-   * @brief Directly maps the given QuantumComputation to the hardware by
+   * @brief Directly maps the given QuantumComputation to the hardware NOT
    * inserting SWAP gates or shuttling move operations.
    * @param qc The gates (QuantumComputation) to be mapped.
    */

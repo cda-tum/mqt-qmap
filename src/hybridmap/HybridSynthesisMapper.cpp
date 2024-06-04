@@ -4,11 +4,10 @@
 //
 #include "hybridmap/HybridSynthesisMapper.hpp"
 
-#include "/private/var/folders/rg/sbn50h9d07577zx7p_kslps80000gn/T/clion-clang-tidy/NeutralAtomDefinitions.hpp"
 #include "CircuitOptimizer.hpp"
 #include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstdint>
 
@@ -24,7 +23,11 @@ uint32_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                                        bool directlyMap) {
   return 0;
 }
-void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {}
+void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {
+  for (const auto& op : qc) {
+    this->mapGate(op.get());
+  }
+}
 
 AdjacencyMatrix HybridSynthesisMapper::getAdjacencyMatrix() const {
   auto            numCircQubits = mappedQc.getNqubits();
