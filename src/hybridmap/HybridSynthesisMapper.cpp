@@ -58,7 +58,7 @@ AdjacencyMatrix HybridSynthesisMapper::getAdjacencyMatrix() const {
     for (uint32_t j = 0; j < i; ++j) {
       auto mappedI = this->mapping.getHwQubit(i);
       auto mappedJ = this->mapping.getHwQubit(j);
-      if (this->arch.getSwapDistance(mappedI, mappedJ) == 0) {
+      if (this->arch->getSwapDistance(mappedI, mappedJ) == 0) {
         adjMatrix(i, j) = 1;
       } else {
         adjMatrix(i, j) = 0;

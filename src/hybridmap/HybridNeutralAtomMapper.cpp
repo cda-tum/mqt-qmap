@@ -35,7 +35,7 @@
 namespace na {
 qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
                                               InitialMapping initialMapping) {
-  mappedQc = qc::QuantumComputation(arch.getNpositions());
+  mappedQc = qc::QuantumComputation(arch->getNpositions());
   nMoves   = 0;
   nSwaps   = 0;
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
@@ -56,13 +56,13 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
   lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
 
   // Checks
-  if (dag.size() > arch.getNqubits()) {
+  if (dag.size() > arch->getNqubits()) {
     throw std::runtime_error("More qubits in circuit than in architecture");
   }
 
   //   precompute exponential decay weights
-  this->decayWeights.reserve(this->arch.getNcolumns());
-  for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {
+  this->decayWeights.reserve(this->arch->getNcolumns());
+  for (uint32_t i = this->arch->getNcolumns(); i > 0; --i) {
     this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
   }
 
@@ -149,7 +149,7 @@ NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
   // decompose AOD moves
-  MoveToAodConverter aodScheduler(arch);
+  MoveToAodConverter aodScheduler(*arch);
   mappedQcAOD = aodScheduler.schedule(qc);
   if (this->parameters.verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
@@ -272,7 +272,7 @@ void NeutralAtomMapper::updateMappingSwap(Swap swap) {
   // save to lastSwaps
   this->lastBlockedQubits.emplace_back(
       this->hardwareQubits.getBlockedQubits({swap.first, swap.second}));
-  if (this->lastBlockedQubits.size() > this->arch.getNcolumns()) {
+  if (this->lastBlockedQubits.size() > this->arch->getNcolumns()) {
     this->lastBlockedQubits.pop_front();
   }
   this->mapping.applySwap(swap);
@@ -846,7 +846,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch.getEuclidianDistance(
+          auto dist    = this->arch->getEuclidianDistance(
               this->hardwareQubits.getCoordIndex(hwQubit),
               this->hardwareQubits.getCoordIndex(toMoveHwQubit));
           distanceBefore += dist;
@@ -857,7 +857,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch.getEuclidianDistance(
+          auto dist    = this->arch->getEuclidianDistance(
               this->hardwareQubits.getCoordIndex(hwQubit), move.second);
           distanceAfter += dist;
         }
@@ -870,50 +870,51 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
 
 qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) {
   qc::fp parallelCost = 0;
-  auto   moveVector   = this->arch.getVector(move.first, move.second);
+  auto   moveVector   = this->arch->getVector(move.first, move.second);
   std::vector<CoordIndex> lastEndingCoords;
   if (this->lastMoves.empty()) {
-    parallelCost += arch.getVectorShuttlingTime(moveVector);
+    parallelCost += arch->getVectorShuttlingTime(moveVector);
   }
   for (const auto& lastMove : this->lastMoves) {
     lastEndingCoords.emplace_back(lastMove.second);
     // decide of shuttling can be done in parallel
-    auto lastMoveVector = this->arch.getVector(lastMove.first, lastMove.second);
+    auto lastMoveVector =
+        this->arch->getVector(lastMove.first, lastMove.second);
     if (moveVector.overlap(lastMoveVector)) {
       if (moveVector.direction != lastMoveVector.direction) {
-        parallelCost += arch.getVectorShuttlingTime(moveVector);
+        parallelCost += arch->getVectorShuttlingTime(moveVector);
       } else {
         // check if move can be done in parallel
         if (moveVector.include(lastMoveVector)) {
-          parallelCost += arch.getVectorShuttlingTime(moveVector);
+          parallelCost += arch->getVectorShuttlingTime(moveVector);
         }
       }
     }
   }
   // check if in same row/column like last moves
   // then can may be loaded in parallel
-  auto moveCoordInit = this->arch.getCoordinate(move.first);
-  auto moveCoordEnd  = this->arch.getCoordinate(move.second);
-  parallelCost += arch.getShuttlingTime(qc::OpType::AodActivate) +
-                  arch.getShuttlingTime(qc::OpType::AodDeactivate);
+  auto moveCoordInit = this->arch->getCoordinate(move.first);
+  auto moveCoordEnd  = this->arch->getCoordinate(move.second);
+  parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
+                  arch->getShuttlingTime(qc::OpType::AodDeactivate);
   for (const auto& lastMove : this->lastMoves) {
-    auto lastMoveCoordInit = this->arch.getCoordinate(lastMove.first);
-    auto lastMoveCoordEnd  = this->arch.getCoordinate(lastMove.second);
+    auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.first);
+    auto lastMoveCoordEnd  = this->arch->getCoordinate(lastMove.second);
     if (moveCoordInit.x == lastMoveCoordInit.x ||
         moveCoordInit.y == lastMoveCoordInit.y) {
-      parallelCost -= arch.getShuttlingTime(qc::OpType::AodActivate);
+      parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
     }
     if (moveCoordEnd.x == lastMoveCoordEnd.x ||
         moveCoordEnd.y == lastMoveCoordEnd.y) {
-      parallelCost -= arch.getShuttlingTime(qc::OpType::AodDeactivate);
+      parallelCost -= arch->getShuttlingTime(qc::OpType::AodDeactivate);
     }
   }
   // check if move can use AOD atom from last moves
   //  if (std::find(lastEndingCoords.begin(), lastEndingCoords.end(),
   //  move.first) ==
   //      lastEndingCoords.end()) {
-  //    parallelCost += arch.getShuttlingTime(qc::OpType::AodActivate) +
-  //                    arch.getShuttlingTime(qc::OpType::AodDeactivate);
+  //    parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
+  //                    arch->getShuttlingTime(qc::OpType::AodDeactivate);
   //  }
   return parallelCost;
 }
@@ -929,14 +930,15 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
     return {};
   }
 
-  auto nearbyCoords = this->arch.getNearbyCoordinates(currentPos.coords.back());
+  auto nearbyCoords =
+      this->arch->getNearbyCoordinates(currentPos.coords.back());
   // filter out coords that have a SWAP distance unequal to 0 to any of the
   // current qubits. Also sort out coords that are already in the vector
   std::vector<CoordIndex> filteredNearbyCoords;
   for (const auto& coord : nearbyCoords) {
     bool valid = true;
     for (const auto& qubit : currentPos.coords) {
-      if (this->arch.getSwapDistance(qubit, coord) != 0 || coord == qubit) {
+      if (this->arch->getSwapDistance(qubit, coord) != 0 || coord == qubit) {
         valid = false;
         break;
       }
@@ -1074,7 +1076,7 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     if (!bestPos.coords.empty()) {
       nMovesGate = std::min(nMovesGate, bestPos.nMoves);
     }
-    for (const auto& nearbyCoord : this->arch.getNearbyCoordinates(coord)) {
+    for (const auto& nearbyCoord : this->arch->getNearbyCoordinates(coord)) {
       if (std::find(visited.begin(), visited.end(), nearbyCoord) ==
           visited.end()) {
         q.push(nearbyCoord);
@@ -1160,7 +1162,7 @@ NeutralAtomMapper::getMoveAwayCombinations(CoordIndex          startCoord,
                                            CoordIndex          targetCoord,
                                            const CoordIndices& excludedCoords) {
   MoveCombs  moveCombinations;
-  auto const originalVector    = this->arch.getVector(startCoord, targetCoord);
+  auto const originalVector    = this->arch->getVector(startCoord, targetCoord);
   auto const originalDirection = originalVector.direction;
   // Find move away target in the same direction as the original move
   auto moveAwayTargets = this->hardwareQubits.findClosestFreeCoord(
@@ -1210,7 +1212,7 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
       minNumSwaps += this->hardwareQubits.getSwapDistance(q1, q2, false);
     }
   }
-  const qc::fp minTime = minNumSwaps * this->arch.getGateTime("swap");
+  const qc::fp minTime = minNumSwaps * this->arch->getGateTime("swap");
   return {minNumSwaps, minTime};
 }
 
@@ -1245,18 +1247,18 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
         continue;
       }
       if (nearbyFreeIt != nearbyFreeCoords.end()) {
-        totalTime += this->arch.getVectorShuttlingTime(
-            this->arch.getVector(otherCoord, *nearbyFreeIt));
-        totalTime += this->arch.getShuttlingTime(qc::OpType::AodActivate) +
-                     this->arch.getShuttlingTime(qc::OpType::AodDeactivate);
+        totalTime += this->arch->getVectorShuttlingTime(
+            this->arch->getVector(otherCoord, *nearbyFreeIt));
+        totalTime += this->arch->getShuttlingTime(qc::OpType::AodActivate) +
+                     this->arch->getShuttlingTime(qc::OpType::AodDeactivate);
         nearbyFreeIt++;
         totalMoves++;
       } else if (nearbyOccIt != nearbyOccupiedCoords.end()) {
-        totalTime += 2 * this->arch.getVectorShuttlingTime(
-                             this->arch.getVector(otherCoord, *nearbyOccIt));
+        totalTime += 2 * this->arch->getVectorShuttlingTime(
+                             this->arch->getVector(otherCoord, *nearbyOccIt));
         totalTime +=
-            2 * (this->arch.getShuttlingTime(qc::OpType::AodActivate) +
-                 this->arch.getShuttlingTime(qc::OpType::AodDeactivate));
+            2 * (this->arch->getShuttlingTime(qc::OpType::AodActivate) +
+                 this->arch->getShuttlingTime(qc::OpType::AodDeactivate));
         nearbyOccIt++;
         totalMoves += 2;
       } else {
@@ -1286,16 +1288,17 @@ bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
   }
   auto [minMoves, minTimeMoves] = estimateNumMove(opPointer);
   auto fidSwaps =
-      std::exp(-minTimeSwaps * this->arch.getNqubits() /
-               this->arch.getDecoherenceTime()) *
-      std::pow(this->arch.getGateAverageFidelity("swap"), minNumSwaps);
+      std::exp(-minTimeSwaps * this->arch->getNqubits() /
+               this->arch->getDecoherenceTime()) *
+      std::pow(this->arch->getGateAverageFidelity("swap"), minNumSwaps);
   auto fidMoves =
-      std::exp(-minTimeMoves * this->arch.getNqubits() /
-               this->arch.getDecoherenceTime()) *
+      std::exp(-minTimeMoves * this->arch->getNqubits() /
+               this->arch->getDecoherenceTime()) *
       std::pow(
-          this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove) *
-              this->arch.getShuttlingAverageFidelity(qc::OpType::AodActivate) *
-              this->arch.getShuttlingAverageFidelity(qc::OpType::AodDeactivate),
+          this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
+              this->arch->getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+              this->arch->getShuttlingAverageFidelity(
+                  qc::OpType::AodDeactivate),
           minMoves);
 
   return fidSwaps * parameters.gateWeight >

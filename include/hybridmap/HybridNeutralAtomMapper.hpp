@@ -65,7 +65,7 @@ struct MapperParameters {
 class NeutralAtomMapper {
 protected:
   // The considered architecture
-  const NeutralAtomArchitecture& arch;
+  const NeutralAtomArchitecture* arch;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
@@ -361,7 +361,7 @@ public:
   NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
-      : arch(architecture), mappedQc(architecture.getNpositions()),
+      : arch(&architecture), mappedQc(architecture.getNpositions()),
         mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
         parameters(p), hardwareQubits(architecture, parameters.initialMapping,
                                       parameters.seed) {
@@ -378,7 +378,7 @@ public:
    */
   void setParameters(const MapperParameters& p) {
     this->parameters = p;
-    if (arch.getNpositions() - arch.getNqubits() < 1) {
+    if (arch->getNpositions() - arch->getNqubits() < 1) {
       this->parameters.gateWeight      = 1;
       this->parameters.shuttlingWeight = 0;
     }
@@ -390,7 +390,7 @@ public:
    */
   void reset() {
     hardwareQubits =
-        HardwareQubits(arch, parameters.initialMapping, parameters.seed);
+        HardwareQubits(*arch, parameters.initialMapping, parameters.seed);
   }
 
   // Methods

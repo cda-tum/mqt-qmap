@@ -462,15 +462,15 @@ bool MoveToAodConverter::AodActivationHelper::checkIntermediateSpaceAtInit(
   }
   if (aodMoves.empty()) {
     return getMaxOffsetAtInit(dim, neighborX, sign) <
-           arch.getNAodIntermediateLevels();
+           arch->getNAodIntermediateLevels();
   }
   if (aodMovesNeighbor.empty()) {
     return getMaxOffsetAtInit(dim, init, sign) <
-           arch.getNAodIntermediateLevels();
+           arch->getNAodIntermediateLevels();
   }
   return getMaxOffsetAtInit(dim, init, sign) +
              getMaxOffsetAtInit(dim, neighborX, sign) <
-         arch.getNAodIntermediateLevels();
+         arch->getNAodIntermediateLevels();
 }
 
 void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
@@ -526,9 +526,9 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<SingleOperation> initOperations;
   std::vector<SingleOperation> offsetOperations;
 
-  auto d      = this->arch.getInterQubitDistance();
-  auto interD = this->arch.getInterQubitDistance() /
-                this->arch.getNAodIntermediateLevels();
+  auto d      = this->arch->getInterQubitDistance();
+  auto interD = this->arch->getInterQubitDistance() /
+                this->arch->getNAodIntermediateLevels();
 
   for (const auto& aodMove : activation.activateXs) {
     initOperations.emplace_back(Dimension::X,

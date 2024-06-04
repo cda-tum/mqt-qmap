@@ -100,7 +100,7 @@ protected:
 
     // AODScheduler
     // NeutralAtomArchitecture to call necessary hardware information
-    const NeutralAtomArchitecture& arch;
+    const NeutralAtomArchitecture* arch;
     std::vector<AodActivation>     allActivations;
     // Differentiate between loading and unloading
     qc::OpType type;
@@ -111,7 +111,7 @@ protected:
     AodActivationHelper(AodActivationHelper&&)      = delete;
     AodActivationHelper(const NeutralAtomArchitecture& architecture,
                         qc::OpType                     opType)
-        : arch(architecture), type(opType) {}
+        : arch(&architecture), type(opType) {}
 
     // Methods
 
