@@ -28,7 +28,7 @@ size_t HybridSynthesisMapper::evaluateSynthesisSteps(const qcs& synthesisSteps,
       costs.begin(), costs.end(),
       [](const auto& a, const auto& b) { return a.second < b.second; });
   if (directlyMap) {
-    this->directlyMap(bestQc->first);
+    this->appendWithoutMapping(bestQc->first);
   }
   return static_cast<size_t>(std::distance(costs.begin(), bestQc));
 }
@@ -38,7 +38,8 @@ HybridSynthesisMapper::evaluateSynthesisStep(const qc::QuantumComputation& qc) {
   return 0;
 }
 
-void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {
+void HybridSynthesisMapper::appendWithoutMapping(
+    const qc::QuantumComputation& qc) {
   for (const auto& op : qc) {
     this->synthesizedQc.emplace_back(op->clone());
     this->mapGate(op.get());

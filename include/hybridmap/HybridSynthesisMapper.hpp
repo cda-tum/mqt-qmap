@@ -105,7 +105,7 @@ public:
    * inserting SWAP gates or shuttling move operations.
    * @param qc The gates (QuantumComputation) to be mapped.
    */
-  void directlyMap(const qc::QuantumComputation& qc);
+  void appendWithoutMapping(const qc::QuantumComputation& qc);
 
   /**
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
