@@ -5,18 +5,21 @@
 #include "hybridmap/HybridSynthesisMapper.hpp"
 
 #include "CircuitOptimizer.hpp"
+#include "QuantumComputation.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 #include "operations/OpType.hpp"
 
 #include <cstdint>
 
-namespace qc {
+namespace na {
 
-QuantumComputation
+qc::QuantumComputation
 HybridSynthesisMapper::completelyRemap(InitialMapping initialMapping) {
   // copy mapped circuit, removing SWAPs and MOVEs
-  QuantumComputation newCirc = this->mappedQc;
-  CircuitOptimizer::removeOpTypes(newCirc, {OpType::SWAP, OpType::Move});
-  this->map(newCirc, initialMapping, false);
+  qc::QuantumComputation newCirc = this->mappedQc;
+  qc::CircuitOptimizer::removeOperation(
+      newCirc, {qc::OpType::SWAP, qc::OpType::Move}, 2);
+  this->map(newCirc, initialMapping);
   return this->mappedQc;
 }
 
@@ -24,6 +27,6 @@ uint32_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                                        bool directlyMap) {
   return 0;
 }
-void HybridSynthesisMapper::directlyMap(const QuantumComputation& qc) {}
+void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {}
 
-} // namespace qc
+} // namespace na
