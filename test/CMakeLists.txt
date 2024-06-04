@@ -31,5 +31,6 @@ if(TARGET MQT::QMapHybrid)
   file(COPY ${PROJECT_SOURCE_DIR}/test/hybridmap/circuits DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
   package_add_test_with_working_dir(
     ${PROJECT_NAME}-hybridmap-test MQT::QMapHybrid ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybridmap.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybridmap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/hybridmap/test_hybrid_synthesis_map.cpp)
 endif()
