@@ -4,12 +4,17 @@
 //
 #include "hybridmap/HybridSynthesisMapper.hpp"
 
-#include "CircuitOptimizer.hpp"
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <utility>
+#include <vector>
 
 namespace na {
 
@@ -19,10 +24,26 @@ HybridSynthesisMapper::completelyRemap(InitialMapping initialMapping) {
   return this->mappedQc;
 }
 
-uint32_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
-                                                       bool directlyMap) {
+size_t HybridSynthesisMapper::evaluateSynthesisSteps(const qcs& synthesisSteps,
+                                                     bool       directlyMap) {
+  std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
+  for (const auto& qc : synthesisSteps) {
+    costs.emplace_back(qc, this->evaluateSynthesisStep(qc));
+  }
+  const auto bestQc = std::min_element(
+      costs.begin(), costs.end(),
+      [](const auto& a, const auto& b) { return a.second < b.second; });
+  if (directlyMap) {
+    this->directlyMap(bestQc->first);
+  }
+  return static_cast<size_t>(std::distance(costs.begin(), bestQc));
+}
+
+qc::fp
+HybridSynthesisMapper::evaluateSynthesisStep(const qc::QuantumComputation& qc) {
   return 0;
 }
+
 void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {
   for (const auto& op : qc) {
     this->mapGate(op.get());

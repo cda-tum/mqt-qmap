@@ -5,12 +5,14 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomUtils.hpp"
 #include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -58,8 +60,18 @@ public:
    * hardware.
    * @return The index of the synthesis step with the lowest effort.
    */
-  uint32_t evaluateSynthesisSteps(qcs& synthesisSteps,
-                                  bool directlyMap = false);
+  size_t evaluateSynthesisSteps(const qcs& synthesisSteps,
+                                bool       directlyMap = false);
+
+  /**
+   * @brief Evaluates a single synthesis step proposed by the ZX extraction.
+   * @details The effort is calculated by the NeutralAtomMapper, taking into
+   * account the number of SWAP gates or shuttling moves and the time needed to
+   * execute the mapped synthesis step.
+   * @param qc The synthesis step to be evaluated.
+   * @return The cost/effort to map the synthesis step.
+   */
+  qc::fp evaluateSynthesisStep(const qc::QuantumComputation& qc);
 
   /**
    * @brief Directly maps the given QuantumComputation to the hardware NOT
