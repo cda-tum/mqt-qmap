@@ -33,7 +33,7 @@ namespace na {
 class HybridSynthesisMapper : private NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
-  qc::QuantumComputation unmappedQc;
+  qc::QuantumComputation synthesizedQc;
 
 public:
   // Constructors
@@ -53,17 +53,32 @@ public:
    */
   void initMapping(size_t         nQubits,
                    InitialMapping initialMapping = InitialMapping::Identity) {
-    mappedQc = qc::QuantumComputation(nQubits);
-    mapping  = Mapping(nQubits, initialMapping);
+    mappedQc      = qc::QuantumComputation(arch->getNpositions());
+    synthesizedQc = qc::QuantumComputation(nQubits);
+    mapping       = Mapping(nQubits, initialMapping);
   }
 
   /**
-   * @brief Remaps the whole circuit again starting from the initial mapping.
-   * @param initialMapping The initial mapping to be used.
-   * @return The remapped circuit.
+   * @brief Returns the mapped QuantumComputation.
+   * @return The mapped QuantumComputation.
    */
-  qc::QuantumComputation
-  completelyRemap(InitialMapping initialMapping = InitialMapping::Identity);
+  [[nodiscard]] qc::QuantumComputation
+  getMappedQc(bool           completeRemap = true,
+              InitialMapping initMapping   = InitialMapping::Identity) {
+    if (completeRemap) {
+      return this->map(synthesizedQc, initMapping);
+    }
+    return mappedQc;
+  }
+
+  /**
+   * @brief Returns the synthesized QuantumComputation with all gates but not
+   * mapped to the hardware.
+   * @return The synthesized QuantumComputation.
+   */
+  [[nodiscard]] qc::QuantumComputation getSynthesizedQc() const {
+    return this->synthesizedQc;
+  }
 
   /**
    * @brief Evaluates the synthesis steps proposed by the ZX extraction.

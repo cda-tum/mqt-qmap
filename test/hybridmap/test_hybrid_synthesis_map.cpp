@@ -14,7 +14,8 @@
 #include <vector>
 
 namespace na {
-class TestHybridSynthesisMapper : public ::testing::TestWithParam<std::string> {
+class TestParametrizedHybridSynthesisMapper
+    : public ::testing::TestWithParam<std::string> {
 protected:
   std::string                         testArchitecturePath = "architectures/";
   std::vector<qc::QuantumComputation> circuits;
@@ -36,7 +37,7 @@ protected:
   // Test the HybridSynthesisMapper class
 };
 
-TEST_P(TestHybridSynthesisMapper, AdjaencyMatrix) {
+TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
   auto arch   = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
@@ -46,8 +47,43 @@ TEST_P(TestHybridSynthesisMapper, AdjaencyMatrix) {
 }
 
 INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
-                         TestHybridSynthesisMapper,
+                         TestParametrizedHybridSynthesisMapper,
                          ::testing::Values("rubidium", "rubidium_hybrid",
                                            "rubidium_shuttling"));
+
+class TestHybridSynthesisMapper : public ::testing::Test {
+protected:
+  NeutralAtomArchitecture arch =
+      NeutralAtomArchitecture("architectures/rubidium.json");
+  HybridSynthesisMapper  mapper = HybridSynthesisMapper(arch);
+  qc::QuantumComputation qc;
+
+  void SetUp() override {
+    qc = qc::QuantumComputation(3);
+    qc.x(0);
+    qc.cx(0, 1);
+    qc.cx(1, 2);
+
+    mapper.initMapping(3);
+  }
+};
+
+TEST_F(TestHybridSynthesisMapper, DirectlyMap) {
+  mapper.directlyMap(qc);
+  auto synthesizedQc = mapper.getSynthesizedQc();
+  EXPECT_EQ(synthesizedQc.getNqubits(), 3);
+  EXPECT_EQ(synthesizedQc.getNops(), 3);
+}
+
+TEST_F(TestHybridSynthesisMapper, completelyRemap) {
+  mapper.directlyMap(qc);
+  mapper.directlyMap(qc);
+  auto mappedQc = mapper.getMappedQc(false);
+  EXPECT_EQ(mappedQc.getNqubits(), arch.getNpositions());
+  EXPECT_GE(mappedQc.getNops(), 3);
+  auto mappedQcRemapped = mapper.getMappedQc();
+  EXPECT_EQ(mappedQcRemapped.getNqubits(), arch.getNpositions());
+  EXPECT_GE(mappedQcRemapped.getNops(), 3);
+}
 
 } // namespace na

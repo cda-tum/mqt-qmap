@@ -18,12 +18,6 @@
 
 namespace na {
 
-qc::QuantumComputation
-HybridSynthesisMapper::completelyRemap(InitialMapping initialMapping) {
-  this->map(unmappedQc, initialMapping);
-  return this->mappedQc;
-}
-
 size_t HybridSynthesisMapper::evaluateSynthesisSteps(const qcs& synthesisSteps,
                                                      bool       directlyMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
@@ -46,6 +40,7 @@ HybridSynthesisMapper::evaluateSynthesisStep(const qc::QuantumComputation& qc) {
 
 void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {
   for (const auto& op : qc) {
+    this->synthesizedQc.emplace_back(op->clone());
     this->mapGate(op.get());
   }
 }
