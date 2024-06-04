@@ -46,6 +46,18 @@ public:
   // Functions
 
   /**
+   * @brief Initializes the mapping with the given number of qubits and the
+   * initial mapping.
+   * @param nQubits The number of qubits to be mapped.
+   * @param initialMapping The initial mapping to be used.
+   */
+  void initMapping(size_t         nQubits,
+                   InitialMapping initialMapping = InitialMapping::Identity) {
+    mappedQc = qc::QuantumComputation(nQubits);
+    mapping  = Mapping(nQubits, initialMapping);
+  }
+
+  /**
    * @brief Remaps the whole circuit again starting from the initial mapping.
    * @param initialMapping The initial mapping to be used.
    * @return The remapped circuit.
@@ -84,6 +96,6 @@ public:
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
    * @return The current adjacency matrix of the neutral atom hardware.
    */
-  [[nodiscard]] AdjacencyMatrix getAdjacencyMatrix() const;
+  [[nodiscard]] AdjacencyMatrix getCircuitAdjacencyMatrix() const;
 };
 } // namespace na

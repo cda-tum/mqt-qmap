@@ -50,7 +50,7 @@ void HybridSynthesisMapper::directlyMap(const qc::QuantumComputation& qc) {
   }
 }
 
-AdjacencyMatrix HybridSynthesisMapper::getAdjacencyMatrix() const {
+AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
   auto            numCircQubits = mappedQc.getNqubits();
   AdjacencyMatrix adjMatrix(numCircQubits);
 
