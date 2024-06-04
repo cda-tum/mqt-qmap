@@ -15,6 +15,7 @@
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "operations/Operation.hpp"
+#include "utils.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -85,7 +86,7 @@ protected:
   // The minimal weight for any multi-qubit gate
   qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
-  MapperParameters parameters;
+  const MapperParameters* parameters;
   // The qubits that are blocked by the last swap
   std::deque<std::set<HwQubit>> lastBlockedQubits;
   // The last moves that have been executed
@@ -363,12 +364,13 @@ public:
                              const MapperParameters& p = MapperParameters())
       : arch(&architecture), mappedQc(architecture.getNpositions()),
         mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
-        parameters(p), hardwareQubits(architecture, parameters.initialMapping,
-                                      parameters.seed) {
+        parameters(&p), hardwareQubits(architecture, parameters->initialMapping,
+                                       parameters->seed) {
     // need at least on free coordinate to shuttle
-    if (architecture.getNpositions() - architecture.getNqubits() < 1) {
-      this->parameters.gateWeight      = 1;
-      this->parameters.shuttlingWeight = 0;
+    if (architecture.getNpositions() - architecture.getNqubits() < 1 &&
+        p.shuttlingWeight > 0) {
+      throw QMAPException("No free coordinates for shuttling but shuttling "
+                          "weight is greater than 0.");
     }
   };
 
@@ -377,10 +379,11 @@ public:
    * @param p The runtime parameters of the mapper
    */
   void setParameters(const MapperParameters& p) {
-    this->parameters = p;
-    if (arch->getNpositions() - arch->getNqubits() < 1) {
-      this->parameters.gateWeight      = 1;
-      this->parameters.shuttlingWeight = 0;
+    this->parameters = &p;
+    if (arch->getNpositions() - arch->getNqubits() < 1 &&
+        p.shuttlingWeight > 0) {
+      throw QMAPException("No free coordinates for shuttling but shuttling "
+                          "weight is greater than 0.");
     }
     this->reset();
   }
@@ -390,7 +393,7 @@ public:
    */
   void reset() {
     hardwareQubits =
-        HardwareQubits(*arch, parameters.initialMapping, parameters.seed);
+        HardwareQubits(*arch, parameters->initialMapping, parameters->seed);
   }
 
   // Methods
@@ -430,9 +433,7 @@ public:
    * hardware qubits
    */
   [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      InitialMapping          initialMapping,
-                                      bool                    printInfo) {
-    this->parameters.verbose = printInfo;
+                                      InitialMapping          initialMapping) {
     map(qc, initialMapping);
     convertToAod(this->mappedQc);
   }

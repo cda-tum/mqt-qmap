@@ -857,14 +857,13 @@ PYBIND11_MODULE(pyqmap, m) {
       .def(
           "map",
           [](na::NeutralAtomMapper& mapper, const py::object& circ,
-             na::InitialMapping initialMapping, bool verbose) {
+             na::InitialMapping initialMapping) {
             qc::QuantumComputation qc{};
             loadQC(qc, circ);
-            mapper.mapAndConvert(qc, initialMapping, verbose);
+            mapper.mapAndConvert(qc, initialMapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
-          "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity,
-          "verbose"_a = false)
+          "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity)
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
