@@ -136,8 +136,8 @@ auto NAMapper::makeLogicalArrays() -> void {
       std::vector<std::shared_ptr<Point>> end;
       end.reserve(pointCount);
       for (std::size_t i = 0; i < shuttlingSize; ++i) {
-        const auto s = sop.getStart().at(i);
-        const auto e = sop.getEnd().at(i);
+        const auto s = sop.getStart()[i];
+        const auto e = sop.getEnd()[i];
         for (std::int64_t r = 0; r < rows; ++r) {
           for (std::int64_t c = 0; c < cols; ++c) {
             start.emplace_back(std::make_shared<Point>(
@@ -191,8 +191,8 @@ auto NAMapper::calculateMovements() -> void {
         std::vector<std::shared_ptr<Point>> vOffsetEnd;
         bool                                vOffset = false;
         for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
-          const auto  start = *shuttlingOp.getStart().at(i);
-          const auto  end   = *shuttlingOp.getEnd().at(i);
+          const auto  start = *shuttlingOp.getStart()[i];
+          const auto  end   = *shuttlingOp.getEnd()[i];
           const auto  dx    = end.x - start.x;
           Point const mid   = {start.x, end.y};
           if (dx > 0) {
@@ -214,8 +214,8 @@ auto NAMapper::calculateMovements() -> void {
           }
         }
         for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
-          auto       start = *shuttlingOp.getStart().at(i);
-          auto       end   = *shuttlingOp.getEnd().at(i);
+          auto       start = *shuttlingOp.getStart()[i];
+          auto       end   = *shuttlingOp.getEnd()[i];
           const auto dx    = end.x - start.x;
           const auto dy    = end.y - start.y;
           if (dy > 0) {
@@ -298,19 +298,20 @@ auto NAMapper::checkApplicability(
     return std::all_of(
         op->getTargets().cbegin(), op->getTargets().cend(),
         [&](const auto& qubit) {
-          switch (placement.at(qubit).positionStatus) {
+          const auto& qubitPlacement = placement.at(qubit);
+          switch (qubitPlacement.positionStatus) {
           case Atom::PositionStatus::UNDEFINED:
             // check whether the gate is applicable in one of the currently
             // selected zones
             return std::any_of(
-                placement.at(qubit).zones.cbegin(),
-                placement.at(qubit).zones.cend(), [&](const auto& z) {
+                qubitPlacement.zones.cbegin(),
+                qubitPlacement.zones.cend(), [&](const auto& z) {
                   return arch.isAllowedLocally({op->getType(), 0}, z);
                 });
           case Atom::PositionStatus::DEFINED:
             // check whether the gate is applicable at the current position
             return arch.isAllowedLocallyAt(
-                {op->getType(), 0}, *placement.at(qubit).currentPosition);
+                {op->getType(), 0}, *qubitPlacement.currentPosition);
           default:
             qc::unreachable();
           }
@@ -365,16 +366,16 @@ auto NAMapper::getMisplacement(const std::vector<Atom>&      initial,
       target.cbegin(), std::find(target.cbegin(), target.cend(), q)));
 
   for (std::size_t i = 0; i < target.size(); ++i) {
-    if (initial.at(target.at(i)).positionStatus ==
+    if (initial.at(target[i]).positionStatus ==
         Atom::PositionStatus::UNDEFINED) {
       continue;
     }
 
-    if (i < indexOfQ && initial.at(target.at(i)).currentPosition->x >
+    if (i < indexOfQ && initial.at(target[i]).currentPosition->x >
                             initial.at(q).currentPosition->x) {
       misplacement += 1;
     }
-    if (i > indexOfQ && initial.at(target.at(i)).currentPosition->x <
+    if (i > indexOfQ && initial.at(target[i]).currentPosition->x <
                             initial.at(q).currentPosition->x) {
       misplacement -= 1;
     }
@@ -440,13 +441,13 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
   std::vector<std::tuple<Index, std::size_t>> moveableSelectedRows;
   std::size_t                                 firstIWithSameN = 0;
   for (std::size_t i = 0; i < freeSitesPerRow.size(); ++i) {
-    const auto [r, n] = freeSitesPerRow.at(i);
+    const auto [r, n] = freeSitesPerRow[i];
     if (n >= moveableSpotsNeeded) {
       if (n != std::get<1>(freeSitesPerRow.at(firstIWithSameN))) {
         firstIWithSameN = i;
       }
       if (i + 1 == freeSitesPerRow.size() or
-          std::get<1>(freeSitesPerRow.at(i + 1)) < moveableSpotsNeeded) {
+          std::get<1>(freeSitesPerRow[i + 1]) < moveableSpotsNeeded) {
         const auto [rF, nF] = freeSitesPerRow.at(firstIWithSameN);
         moveableSelectedRows.emplace_back(rF, moveableSpotsNeeded);
         freeSitesPerRow.at(firstIWithSameN) = {rF, nF - moveableSpotsNeeded};
@@ -454,7 +455,7 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
       }
     } else {
       moveableSelectedRows.emplace_back(r, n);
-      freeSitesPerRow.at(i) = {r, 0};
+      freeSitesPerRow[i] = {r, 0};
       moveableSpotsNeeded -= n;
       firstIWithSameN = i + 1;
     }
@@ -718,7 +719,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
     const auto nx1 = arch.getNearestXRight(x, arch.getZoneAt({x, y}));
     x              = nx1 == x ? x + dx : nx1 + d;
     for (std::size_t j = i + 1; j < qubitsOrdered.size(); ++j) {
-      const auto p = qubitsOrdered.at(j);
+      const auto p = qubitsOrdered[j];
       // if the atom is picked up, move it to the correct row
       if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
         start.emplace_back(placement.at(p).currentPosition);
