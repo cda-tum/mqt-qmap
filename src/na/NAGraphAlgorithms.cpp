@@ -82,11 +82,11 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
     }
   }
 
-  std::vector<bool> freeColors(maxColor + 2U - minAdmissibleColor, true);
+  std::vector freeColors(maxColor + 2U - minAdmissibleColor, true);
   for (const auto& [f, k] : coloring) {
     if (InteractionGraph::isAdjacentEdge(e, f) && k >= minAdmissibleColor &&
         k <= maxColor + 1) {
-      freeColors[k - minAdmissibleColor] = false;
+      freeColors.at(k - minAdmissibleColor) = false;
     }
   }
   // The minAdmissibleColor is now the minimum of the free colors
@@ -100,7 +100,7 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
   const auto rankOfU = static_cast<std::size_t>(std::distance(
       sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(), v)));
   for (std::size_t i = 0; i < freeColors.size(); ++i) {
-    if (!freeColors[i]) {
+    if (!freeColors.at(i)) {
       continue;
     }
     const auto leastAdmissibleColor =
@@ -234,7 +234,7 @@ auto NAGraphAlgorithms::colorEdges(
           for (const auto& h : edges) {
             if (InteractionGraph::isAdjacentEdge(f, h) and
                 coloring.find(h) != coloring.end()) {
-              usedColors[coloring[h]] = true;
+              usedColors.at(coloring[h]) = true;
             }
           }
           nAdjColors[f] = static_cast<std::size_t>(
@@ -323,8 +323,8 @@ auto NAGraphAlgorithms::computeRestingPositions(
           const auto& rightNeighbor =
               std::max_element(rightNeighbors.cbegin(), rightNeighbors.cend());
           const auto& pair = std::pair<std::int64_t, std::int64_t>(
-              moveableXs[moveable[*leftNeighbor]],
-              moveableXs[moveable[*rightNeighbor]]);
+              moveableXs[moveable.at(*leftNeighbor)],
+              moveableXs[moveable.at(*rightNeighbor)]);
           if (tResting.find(pair) == tResting.end()) {
             tResting[pair] = 1;
           } else {
@@ -445,8 +445,8 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
   // compute relative x positions of fixed vertices
   std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
   for (std::uint32_t x = 0, i = 0; x < fixed.size(); ++x) {
-    fixedPositions[fixed[x]] = static_cast<std::int64_t>(x) + i;
-    while (i < resting.size() and x == resting[i]) {
+    fixedPositions[fixed.at(x)] = static_cast<std::int64_t>(x) + i;
+    while (i < resting.size() and x == resting.at(i)) {
       ++i;
     }
   }
@@ -478,17 +478,17 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
         // get x-coordinate of u which is a fixed vertex
         const auto& it = fixedPositions.find(u);
         assert(it != fixedPositions.end());
-        moveablePositions[t][v] = it->second;
+        moveablePositions.at(t)[v] = it->second;
       }
     }
     for (std::size_t i = 0; i < sequence.size(); ++i) {
-      if (const qc::Qubit v = sequence[i];
-          moveablePositions[t].find(v) == moveablePositions[t].end()) {
+      if (const qc::Qubit v = sequence.at(i);
+          moveablePositions.at(t).find(v) == moveablePositions.at(t).end()) {
         if (i > 0) {
           // right neighbor already has a position
           const auto rightNeighbor = i - 1;
           const auto rightNeighborX =
-              moveablePositions[t][sequence[rightNeighbor]];
+              moveablePositions.at(t)[sequence.at(rightNeighbor)];
           const std::int64_t minX =
               std::min(rightNeighborX - 1, static_cast<std::int64_t>(-1));
           assert(rightNeighborX - minX >= 0);
@@ -505,11 +505,11 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
                                             });
                        });
           const auto& maxIt = std::max_element(freeX.cbegin(), freeX.cend());
-          moveablePositions[t][v] = *maxIt;
+          moveablePositions.at(t)[v] = *maxIt;
         } else {
           // it is the rightmost atom (w/o position)
           const auto leftNeighbor = std::accumulate(
-              moveablePositions[t].cbegin(), moveablePositions[t].cend(),
+              moveablePositions.at(t).cbegin(), moveablePositions.at(t).cend(),
               std::make_pair(0UL, 0LL),
               [](const std::pair<const qc::Qubit, std::int64_t>& acc,
                  const auto&                                     value) {
@@ -542,9 +542,9 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
                                             });
                        });
           if (k <= freeX.size()) {
-            moveablePositions[t][v] = freeX[k - 1];
+            moveablePositions.at(t)[v] = freeX.at(k - 1);
           } else {
-            moveablePositions[t][v] = maxX + static_cast<std::int64_t>(k) -
+            moveablePositions.at(t)[v] = maxX + static_cast<std::int64_t>(k) -
                                       static_cast<std::int64_t>(freeX.size());
           }
         }
