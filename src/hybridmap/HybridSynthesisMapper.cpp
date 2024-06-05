@@ -52,6 +52,9 @@ void HybridSynthesisMapper::appendWithoutMapping(
 }
 
 void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
+  if (mappedQc.empty()) {
+    initMapping(qc.getNqubits());
+  }
   mapAppend(qc, this->mapping);
   for (const auto& op : qc) {
     this->synthesizedQc.emplace_back(op->clone());
