@@ -544,8 +544,9 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
           if (k <= freeX.size()) {
             moveablePositions.at(t)[v] = freeX.at(k - 1);
           } else {
-            moveablePositions.at(t)[v] = maxX + static_cast<std::int64_t>(k) -
-                                      static_cast<std::int64_t>(freeX.size());
+            moveablePositions.at(t)[v] =
+                maxX + static_cast<std::int64_t>(k) -
+                static_cast<std::int64_t>(freeX.size());
           }
         }
       }
