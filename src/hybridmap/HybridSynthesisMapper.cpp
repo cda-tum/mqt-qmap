@@ -19,7 +19,7 @@
 namespace na {
 
 size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
-                                                     bool directlyMap) {
+                                                     bool alsoMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
   for (auto& qc : synthesisSteps) {
     costs.emplace_back(qc, this->evaluateSynthesisStep(qc));
@@ -27,7 +27,7 @@ size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
   const auto bestQc = std::max_element(
       costs.begin(), costs.end(),
       [](const auto& a, const auto& b) { return a.second < b.second; });
-  if (directlyMap) {
+  if (alsoMap) {
     this->appendWithoutMapping(bestQc->first);
   }
   return static_cast<size_t>(std::distance(costs.begin(), bestQc));
@@ -35,8 +35,8 @@ size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
 
 qc::fp
 HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) {
-  NeutralAtomMapper tempMapper(arch, parameters);
-  tempMapper.loadHwQubits(hardwareQubits);
+  NeutralAtomMapper tempMapper;
+  tempMapper.copyStateFrom(*this);
   auto       mappedQc    = tempMapper.map(qc, mapping);
   const auto mappedQCAOD = tempMapper.convertToAod(mappedQc);
   const auto results     = tempMapper.schedule();
@@ -50,6 +50,9 @@ void HybridSynthesisMapper::appendWithoutMapping(
     this->mapGate(op.get());
   }
 }
+
+void HybridSynthesisMapper::appendWithMapping(
+    const qc::QuantumComputation& qc) {}
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
   auto            numCircQubits = synthesizedQc.getNqubits();

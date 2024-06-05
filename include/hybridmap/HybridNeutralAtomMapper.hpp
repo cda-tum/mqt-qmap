@@ -387,15 +387,18 @@ public:
   }
 
   /**
-   * @brief Loads the current mapping and hardware qubits.
-   * @param newMapping The new mapping to be loaded
-   * @param newHwQubits The new hardware qubits to be loaded
+   * @brief Copies the state from the given mapper.
+   * @param mapper The mapper to copy the state from
    */
-  void loadHwQubits(const HardwareQubits& newHwQubits) {
-    this->hardwareQubits = newHwQubits;
+  void copyStateFrom(const NeutralAtomMapper& mapper) {
+    this->arch              = mapper.arch;
+    this->parameters        = mapper.parameters;
+    this->mapping           = mapper.mapping;
+    this->hardwareQubits    = mapper.hardwareQubits;
+    this->lastMoves         = mapper.lastMoves;
+    this->lastBlockedQubits = mapper.lastBlockedQubits;
+    this->scheduler         = mapper.scheduler;
   }
-
-  HardwareQubits& getHardwareQubits() { return hardwareQubits; }
 
   /**
    * @brief Resets the mapper and the hardware qubits.

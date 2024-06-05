@@ -92,11 +92,11 @@ public:
   /**
    * @brief Evaluates the synthesis steps proposed by the ZX extraction.
    * @param synthesisSteps The synthesis steps proposed by the ZX extraction.
-   * @param directlyMap If true, the synthesis steps are directly mapped to the
+   * @param alsoMap If true, the synthesis steps are directly mapped to the
    * hardware.
    * @return The index of the synthesis step with the lowest effort.
    */
-  size_t evaluateSynthesisSteps(qcs& synthesisSteps, bool directlyMap = false);
+  size_t evaluateSynthesisSteps(qcs& synthesisSteps, bool alsoMap = false);
 
   /**
    * @brief Directly maps the given QuantumComputation to the hardware NOT
@@ -104,6 +104,13 @@ public:
    * @param qc The gates (QuantumComputation) to be mapped.
    */
   void appendWithoutMapping(const qc::QuantumComputation& qc);
+
+  /**
+   * @brief Appends the given QuantumComputation to the synthesized
+   * QuantumComputation and maps the gates to the hardware.
+   * @param qc The gates (QuantumComputation) to be appended and mapped.
+   */
+  void appendWithMapping(const qc::QuantumComputation& qc);
 
   /**
    * @brief Returns the current adjacency matrix of the neutral atom hardware.
