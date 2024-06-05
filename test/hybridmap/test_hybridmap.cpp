@@ -50,7 +50,7 @@ INSTANTIATE_TEST_SUITE_P(NeutralAtomArchitectureTestSuite,
                          NeutralAtomArchitectureTest,
                          ::testing::Values("rubidium", "rubidium_hybrid",
                                            "rubidium_shuttling"));
-class NeutralAtomMapperTest
+class NeutralAtomMapperTestParams
     // parameters are architecture, circuit, gateWeight, shuttlingWeight,
     // lookAheadWeight, initialCoordinateMapping
     : public ::testing::TestWithParam<
@@ -80,7 +80,7 @@ protected:
   }
 };
 
-TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
+TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper    mapper(arch);
@@ -108,7 +108,7 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    NeutralAtomMapperTestSuite, NeutralAtomMapperTest,
+    NeutralAtomMapperTestSuite, NeutralAtomMapperTestParams,
     ::testing::Combine(
         ::testing::Values("rubidium", "rubidium_hybrid", "rubidium_shuttling"),
         ::testing::Values("dj_nativegates_rigetti_qiskit_opt3_10", "modulo_2",
@@ -120,25 +120,34 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::Values(na::InitialCoordinateMapping::Trivial,
                           na::InitialCoordinateMapping::Random)));
 
-TEST(NeutralAtomMapperTest, Output) {
-  auto arch =
-      na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
+class NeutralAtomMapperTest : public ::testing::Test {
+protected:
+  std::string testArchitecturePath = "architectures/rubidium_shuttling.json";
+  const na::NeutralAtomArchitecture arch =
+      na::NeutralAtomArchitecture(testArchitecturePath);
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
-  na::NeutralAtomMapper    mapper(arch);
   na::MapperParameters     mapperParameters;
-  mapperParameters.initialMapping       = na::InitialCoordinateMapping::Trivial;
-  mapperParameters.lookaheadWeightSwaps = 0.1;
-  mapperParameters.lookaheadWeightMoves = 0.1;
-  mapperParameters.decay                = 0;
-  mapperParameters.shuttlingTimeWeight  = 0.1;
-  mapperParameters.gateWeight           = 1;
-  mapperParameters.shuttlingWeight      = 0;
-  mapperParameters.seed                 = 43;
-  mapperParameters.verbose              = true;
-  mapper.setParameters(mapperParameters);
+  na::NeutralAtomMapper    mapper;
+  qc::QuantumComputation   qc;
 
-  qc::QuantumComputation qc(
-      "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+  void SetUp() override {
+    mapper                          = na::NeutralAtomMapper(arch);
+    mapperParameters.initialMapping = na::InitialCoordinateMapping::Trivial;
+    mapperParameters.lookaheadWeightSwaps = 0.1;
+    mapperParameters.lookaheadWeightMoves = 0.1;
+    mapperParameters.decay                = 0;
+    mapperParameters.shuttlingTimeWeight  = 0.1;
+    mapperParameters.gateWeight           = 1;
+    mapperParameters.shuttlingWeight      = 0;
+    mapperParameters.seed                 = 43;
+    mapperParameters.verbose              = true;
+    mapper.setParameters(mapperParameters);
+    qc = qc::QuantumComputation(
+        "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+  }
+};
+
+TEST_F(NeutralAtomMapperTest, Output) {
   auto qcMapped = mapper.map(qc, initialMapping);
 
   qcMapped.dumpOpenQASM(std::cout, false);
@@ -150,4 +159,18 @@ TEST(NeutralAtomMapperTest, Output) {
   std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
+}
+
+TEST_F(NeutralAtomMapperTest, MappingLoading) {
+  const auto            qcMapped = mapper.map(qc, initialMapping);
+  na::NeutralAtomMapper mapper2(arch);
+  mapper2.loadCurrentMapping(mapper.getMapping(), mapper.getHardwareQubits());
+  for (std::uint32_t i = 0; i < qc.getNqubits(); i++) {
+    ASSERT_EQ(mapper.getMapping().getHwQubit(i),
+              mapper2.getMapping().getHwQubit(i));
+  }
+  for (std::uint32_t i = 0; i < qcMapped.getNqubits(); i++) {
+    ASSERT_EQ(mapper.getHardwareQubits().isMapped(i),
+              mapper2.getHardwareQubits().isMapped(i));
+  }
 }
