@@ -8,6 +8,7 @@
 #include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "hybridmap/Mapping.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
@@ -35,7 +36,7 @@
 namespace na {
 qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
                                               Mapping initialMapping) {
-  mapping = initialMapping;
+  mapping = std::move(initialMapping);
 
   mappedQc = qc::QuantumComputation(arch->getNpositions());
   nMoves   = 0;

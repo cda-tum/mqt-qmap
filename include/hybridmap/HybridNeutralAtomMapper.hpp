@@ -360,7 +360,8 @@ public:
   NeutralAtomMapper() = default;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
                              const MapperParameters*        p = nullptr)
-      : arch(architecture), scheduler(*architecture), parameters(p) {
+      : arch(architecture), scheduler(*architecture), parameters(p),
+        hardwareQubits(*arch, p->initialMapping, p->seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
       throw QMAPException("No free coordinates for shuttling but shuttling "
