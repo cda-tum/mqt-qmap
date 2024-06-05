@@ -6,8 +6,13 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "NAMapper.hpp"
+#include "QuantumComputation.hpp"
 
 #include "gtest/gtest.h"
+#include <cstddef>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 
 TEST(NAMapper, Exceptions) {
   std::istringstream archIS(R"({
