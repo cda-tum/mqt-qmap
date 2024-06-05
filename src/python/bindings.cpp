@@ -873,15 +873,15 @@ PYBIND11_MODULE(pyqmap, m) {
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
-      .def("get_mapped_qc", &na::NeutralAtomMapper::getMappedQc,
+      .def("get_mapped_qc", &na::NeutralAtomMapper::getMappedQcQasm,
            "Returns the mapped circuit as an extended qasm2 string")
-      .def("save_mapped_qc", &na::NeutralAtomMapper::saveMappedQc,
+      .def("save_mapped_qc", &na::NeutralAtomMapper::saveMappedQcQasm,
            "Saves the mapped circuit as an extended qasm2 string to a file",
            "filename"_a)
-      .def("get_mapped_qc_aod", &na::NeutralAtomMapper::getMappedQcAOD,
+      .def("get_mapped_qc_aod", &na::NeutralAtomMapper::getMappedQcAodQasm,
            "Returns the mapped circuit as an extended qasm2 string with native "
            "AOD movements")
-      .def("save_mapped_qc_aod", &na::NeutralAtomMapper::saveMappedQcAOD,
+      .def("save_mapped_qc_aod", &na::NeutralAtomMapper::saveMappedQcAodQasm,
            "Saves the mapped circuit as an extended qasm2 string with native "
            "AOD movements to a file",
            "filename"_a)

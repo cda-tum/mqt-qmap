@@ -466,14 +466,20 @@ public:
   [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
                                       InitialMapping          initialMapping) {
     map(qc, initialMapping);
-    convertToAod(this->mappedQc);
+    convertToAod();
   }
+
+  /**
+   * @brief Returns the mapped quantum circuit.
+   * @return The mapped quantum circuit
+   */
+  [[nodiscard]] qc::QuantumComputation getMappedQc() const { return mappedQc; }
 
   /**
    * @brief Prints the mapped circuits as an extended OpenQASM string.
    * @return The mapped quantum circuit with abstract SWAP gates and MOVE
    */
-  [[maybe_unused]] std::string getMappedQc() {
+  [[maybe_unused]] std::string getMappedQcQasm() {
     std::stringstream ss;
     this->mappedQc.dumpOpenQASM(ss, false);
     return ss.str();
@@ -483,9 +489,16 @@ public:
    * @brief Saves the mapped quantum circuit to a file.
    * @param filename The name of the file to save the mapped quantum circuit to
    */
-  [[maybe_unused]] void saveMappedQc(const std::string& filename) {
+  [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) {
     std::ofstream ofs(filename);
     this->mappedQc.dumpOpenQASM(ofs, false);
+  }
+
+  /**
+   * @brief Returns the mapped quantum circuit with AOD operations.
+   */
+  [[nodiscard]] qc::QuantumComputation getMappedQcAod() const {
+    return mappedQcAOD;
   }
 
   /**
@@ -493,7 +506,7 @@ public:
    * OpenQASM
    * @return The mapped quantum circuit with native AOD operations
    */
-  [[maybe_unused]] std::string getMappedQcAOD() {
+  [[maybe_unused]] std::string getMappedQcAodQasm() {
     std::stringstream ss;
     this->mappedQcAOD.dumpOpenQASM(ss, false);
     return ss.str();
@@ -504,7 +517,7 @@ public:
    * @param filename The name of the file to save the mapped quantum circuit
    * with AOD operations to
    */
-  [[maybe_unused]] void saveMappedQcAOD(const std::string& filename) {
+  [[maybe_unused]] void saveMappedQcAodQasm(const std::string& filename) {
     std::ofstream ofs(filename);
     this->mappedQcAOD.dumpOpenQASM(ofs, false);
   }
@@ -550,11 +563,8 @@ public:
    * @details SWAP gates are decomposed into CX gates. Then CnX gates are
    * decomposed into CnZ gates. Move operations are combined if possible and
    * then converted into native AOD operations.
-   * @param qc The already mapped quantum circuit with abstract SWAP gates and
-   * MOVE operations
-   * @return The mapped quantum circuit with native AOD operations
    */
-  qc::QuantumComputation convertToAod(qc::QuantumComputation& qc);
+  qc::QuantumComputation convertToAod();
 
   [[maybe_unused]] [[nodiscard]] std::map<HwQubit, HwQubit>
   getInitHwPos() const {

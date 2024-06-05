@@ -97,8 +97,8 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto                   qcMapped    = mapper.map(qc, initialMapping);
-  auto                   qcAodMapped = mapper.convertToAod(qcMapped);
+  auto                   qcMapped = mapper.map(qc, initialMapping);
+  mapper.convertToAod();
 
   auto scheduleResults = mapper.schedule(true, true);
 
@@ -152,7 +152,7 @@ TEST_F(NeutralAtomMapperTest, Output) {
 
   qcMapped.dumpOpenQASM(std::cout, false);
 
-  auto qcAodMapped = mapper.convertToAod(qcMapped);
+  auto qcAodMapped = mapper.convertToAod();
   qcAodMapped.dumpOpenQASM(std::cout, false);
 
   auto scheduleResults = mapper.schedule(true, true);

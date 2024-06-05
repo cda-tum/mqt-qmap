@@ -137,16 +137,15 @@ void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {
   }
 }
 
-qc::QuantumComputation
-NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
+qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   // decompose SWAP gates
-  qc::CircuitOptimizer::decomposeSWAP(qc, false);
-  qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
-  qc::CircuitOptimizer::singleQubitGateFusion(qc);
-  qc::CircuitOptimizer::flattenOperations(qc);
+  qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
+  qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
+  qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
+  qc::CircuitOptimizer::flattenOperations(mappedQc);
   // decompose AOD moves
   MoveToAodConverter aodScheduler(*arch);
-  mappedQcAOD = aodScheduler.schedule(qc);
+  mappedQcAOD = aodScheduler.schedule(mappedQc);
   if (this->parameters->verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
   }
