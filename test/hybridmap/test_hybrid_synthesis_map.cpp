@@ -4,7 +4,6 @@
 //
 
 #include "QuantumComputation.hpp"
-#include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 
@@ -44,6 +43,14 @@ TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
   auto adjMatrix = mapper.getCircuitAdjacencyMatrix();
   EXPECT_EQ(adjMatrix.size(), 3);
   EXPECT_TRUE(adjMatrix(0, 2) == 0 || adjMatrix(0, 2) == 1);
+}
+
+TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
+  auto arch   = NeutralAtomArchitecture(testArchitecturePath);
+  auto mapper = HybridSynthesisMapper(arch);
+  mapper.initMapping(3);
+  auto best = mapper.evaluateSynthesisSteps(circuits, false);
+  EXPECT_GE(best, 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
