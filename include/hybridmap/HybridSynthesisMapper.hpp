@@ -110,7 +110,7 @@ public:
    * QuantumComputation and maps the gates to the hardware.
    * @param qc The gates (QuantumComputation) to be appended and mapped.
    */
-  void appendWithMapping(const qc::QuantumComputation& qc);
+  void appendWithMapping(qc::QuantumComputation& qc);
 
   /**
    * @brief Returns the current adjacency matrix of the neutral atom hardware.

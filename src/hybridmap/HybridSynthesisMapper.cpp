@@ -51,8 +51,12 @@ void HybridSynthesisMapper::appendWithoutMapping(
   }
 }
 
-void HybridSynthesisMapper::appendWithMapping(
-    const qc::QuantumComputation& qc) {}
+void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
+  mapAppend(qc, this->mapping);
+  for (const auto& op : qc) {
+    this->synthesizedQc.emplace_back(op->clone());
+  }
+}
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
   auto            numCircQubits = synthesizedQc.getNqubits();
