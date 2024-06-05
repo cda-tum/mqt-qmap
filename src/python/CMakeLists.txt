@@ -24,10 +24,11 @@ target_link_libraries(
           MQT::CorePython
           MQT::ProjectOptions
           MQT::ProjectWarnings
+          MQT::QMapHybrid
           pybind11_json)
 
 # Install directive for scikit-build-core
 install(
   TARGETS pyqmap
   DESTINATION .
-  COMPONENT mqt-qmap_PythonModule)
+  COMPONENT mqt-qmap_Python)
