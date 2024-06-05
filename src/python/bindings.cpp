@@ -7,6 +7,7 @@
 #include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
+#include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "nlohmann/json.hpp"
 #include "pybind11/pybind11.h"
@@ -14,6 +15,8 @@
 #include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 #include "string"
+#include "utility"
+#include "vector"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -869,7 +872,7 @@ PYBIND11_MODULE(pyqmap, m) {
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
              na::InitialMapping initialMapping) {
             qc::QuantumComputation qc(filename);
-            mapper.map(qc, initialMapping);
+            mapper.mapAndConvert(qc, initialMapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
           "filename"_a, "initial_mapping"_a = na::InitialMapping::Identity)
@@ -898,5 +901,113 @@ PYBIND11_MODULE(pyqmap, m) {
       .def("get_animation_csv", &na::NeutralAtomMapper::getAnimationCsv,
            "Returns the animation csv string")
       .def("save_animation_csv", &na::NeutralAtomMapper::saveAnimationCsv,
+           "Saves the animation csv string to a file", "filename"_a);
+
+  py::class_<na::HybridSynthesisMapper>(
+      m, "HybridSynthesisMapper",
+      "Neutral Atom Mapper that can evaluate different synthesis steps "
+      "to choose the best one.")
+      .def(py::init<const na::NeutralAtomArchitecture&, na::MapperParameters>(),
+           "Create Hybrid Synthesis Mapper with mapper parameters", "arch"_a,
+           "params"_a = na::MapperParameters())
+      .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
+           "Set the parameters for the Hybrid Synthesis Mapper", "params"_a)
+      .def("init_mapping", &na::HybridSynthesisMapper::initMapping,
+           "Initializes the mapping with the given number of qubits and the "
+           "initial mapping",
+           "n_qubits"_a, "initial_mapping"_a = na::InitialMapping::Identity)
+      .def(
+          "get_init_hw_pos", &na::HybridSynthesisMapper::getInitHwPos,
+          "Get the initial hardware positions, required to create an animation")
+      .def("get_mapped_qc", &na::HybridSynthesisMapper::getMappedQcQasm,
+           "Returns the mapped QuantumComputation")
+      .def("save_mapped_qc", &na::HybridSynthesisMapper::saveMappedQcQasm,
+           "Saves the mapped QuantumComputation to a file", "filename"_a)
+      .def(
+          "convert_to_aod", &na::HybridSynthesisMapper::convertToAod,
+          "Converts the mapped QuantumComputation to a QuantumComputation with "
+          "native AOD movements")
+      .def("get_mapped_qc_aod", &na::HybridSynthesisMapper::getMappedQcAodQasm,
+           "Returns the mapped QuantumComputation with native AOD movements")
+      .def("save_mapped_qc_aod",
+           &na::HybridSynthesisMapper::saveMappedQcAodQasm,
+           "Saves the mapped QuantumComputation with native AOD movements to a "
+           "file",
+           "filename"_a)
+      .def("get_synthesized_qc",
+           &na::HybridSynthesisMapper::getSynthesizedQcQASM,
+           "Returns the synthesized QuantumComputation with all gates but not "
+           "mapped to the hardware.")
+      .def("save_synthesized_qc", &na::HybridSynthesisMapper::saveSynthesizedQc,
+           "Saves the synthesized QuantumComputation with all gates but not "
+           "mapped to the hardware to a file",
+           "filename"_a)
+      .def("evaluate_synthesis_steps",
+           &na::HybridSynthesisMapper::evaluateSynthesisSteps,
+           "Evaluates the synthesis steps proposed by the ZX extraction. "
+           "Returns index of the best synthesis step.",
+           "synthesis_steps"_a, "also_map"_a = false)
+      .def(
+          "append_without_mapping",
+          [](na::HybridSynthesisMapper& mapper, const py::object& circ) {
+            qc::QuantumComputation qc{};
+            loadQC(qc, circ);
+            mapper.appendWithoutMapping(qc);
+          },
+          "Directly maps the given QuantumComputation to the hardware NOT "
+          "inserting SWAP gates or shuttling move operations.",
+          "qc"_a)
+      .def(
+          "append_with_mapping",
+          [](na::HybridSynthesisMapper& mapper, const py::object& circ) {
+            qc::QuantumComputation qc{};
+            loadQC(qc, circ);
+            mapper.appendWithMapping(qc);
+          },
+          "Appends the given QuantumComputation to the synthesized "
+          "QuantumComputation and maps the gates to the hardware.",
+          "qc"_a)
+      .def(
+          "get_circuit_adjacency_matrix",
+          [](na::HybridSynthesisMapper& mapper) {
+            const auto symmAdjMatrix = mapper.getCircuitAdjacencyMatrix();
+            std::vector<std::vector<int>> adjMatrix = {};
+            for (size_t i = 0; i < symmAdjMatrix.size(); ++i) {
+              adjMatrix.emplace_back();
+              for (size_t j = 0; j < symmAdjMatrix.size(); ++j) {
+                adjMatrix[i].emplace_back(symmAdjMatrix(i, j));
+              }
+            }
+            return adjMatrix;
+          },
+          "Returns the current adjacency matrix of the neutral atom hardware.")
+      .def(
+          "evaluate_synthesis_steps",
+          [](na::HybridSynthesisMapper&     mapper,
+             const std::vector<py::object>& circs, bool alsoMap) {
+            std::vector<qc::QuantumComputation> qcs;
+            for (const auto& circ : circs) {
+              qc::QuantumComputation qc{};
+              loadQC(qc, circ);
+              qcs.push_back(qc);
+            }
+            return mapper.evaluateSynthesisSteps(qcs, alsoMap);
+          },
+          "Evaluates the synthesis steps proposed by the ZX extraction. "
+          "Returns index of the best synthesis step.",
+          "synthesis_steps"_a, "also_map"_a = false)
+      .def(
+          "schedule",
+          [](na::HybridSynthesisMapper& mapper, bool verbose,
+             bool create_animation_csv, double shuttling_speed_factor) {
+            auto results = mapper.schedule(verbose, create_animation_csv,
+                                           shuttling_speed_factor);
+            return results.toMap();
+          },
+          "Schedule the mapped circuit", "verbose"_a = false,
+          "create_animation_csv"_a = false, "shuttling_speed_factor"_a = 1.0)
+      .def("get_animation_csv", &na::HybridSynthesisMapper::getAnimationCsv,
+           "Returns the animation csv string")
+      .def("save_animation_csv", &na::HybridSynthesisMapper::saveAnimationCsv,
            "Saves the animation csv string to a file", "filename"_a);
 }
