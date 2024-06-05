@@ -358,19 +358,18 @@ protected:
 public:
   // Constructors
   NeutralAtomMapper() = default;
-  explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
-                             const MapperParameters& p = MapperParameters())
-      : arch(&architecture), mappedQc(architecture.getNpositions()),
-        mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
-        parameters(&p), hardwareQubits(architecture, parameters->initialMapping,
-                                       parameters->seed) {
-    // need at least on free coordinate to shuttle
-    if (architecture.getNpositions() - architecture.getNqubits() < 1 &&
-        p.shuttlingWeight > 0) {
+  NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
+                    const MapperParameters*        p = nullptr)
+      : arch(architecture), scheduler(*architecture), parameters(p) {
+    if (arch->getNpositions() - arch->getNqubits() < 1 &&
+        p->shuttlingWeight > 0) {
       throw QMAPException("No free coordinates for shuttling but shuttling "
                           "weight is greater than 0.");
     }
   };
+  explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
+                             const MapperParameters& p = MapperParameters())
+      : NeutralAtomMapper(&architecture, &p) {}
 
   /**
    * @brief Sets the runtime parameters of the mapper.
