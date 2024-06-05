@@ -93,4 +93,11 @@ TEST_F(TestHybridSynthesisMapper, completelyRemap) {
   EXPECT_GE(mappedQcRemapped.getNops(), 3);
 }
 
+TEST_F(TestHybridSynthesisMapper, MapAppend) {
+  mapper.appendWithMapping(qc);
+  auto synthesizedQc = mapper.getSynthesizedQc();
+  EXPECT_EQ(synthesizedQc.getNqubits(), 3);
+  EXPECT_GE(synthesizedQc.getNops(), 3);
+}
+
 } // namespace na
