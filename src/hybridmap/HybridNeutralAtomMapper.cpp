@@ -34,13 +34,10 @@
 #include <vector>
 
 namespace na {
-qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
-                                              Mapping initialMapping) {
+void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
+                                  Mapping                 initialMapping) {
   mapping = std::move(initialMapping);
 
-  mappedQc = qc::QuantumComputation(arch->getNpositions());
-  nMoves   = 0;
-  nSwaps   = 0;
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
@@ -118,7 +115,6 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
     std::cout << "nSwaps: " << nSwaps << '\n';
     std::cout << "nMoves: " << nMoves << '\n';
   }
-  return mappedQc;
 }
 
 void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {

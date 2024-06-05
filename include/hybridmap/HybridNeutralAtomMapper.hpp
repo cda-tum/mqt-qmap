@@ -435,12 +435,26 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             Mapping                 initialMapping);
+                             Mapping                 initialMapping) {
+    mappedQc = qc::QuantumComputation(arch->getNpositions());
+    nMoves   = 0;
+    nSwaps   = 0;
+    mapAppend(qc, std::move(initialMapping));
+    return mappedQc;
+  }
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              InitialMapping          initialMapping) {
     return map(qc, Mapping(qc.getNqubits(), initialMapping));
   }
+
+  /**
+   * @brief Appends the given quantum circuit to the mapped quantum circuit.
+   * @param qc The quantum circuit to be mapped
+   * @param initialMapping The initial mapping of the circuit qubits to the
+   * hardware qubits
+   */
+  void mapAppend(qc::QuantumComputation& qc, Mapping initialMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
