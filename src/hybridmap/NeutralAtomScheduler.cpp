@@ -34,18 +34,18 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
     std::cout << "\n* schedule start!\n";
   }
 
-  std::vector<qc::fp> totalExecutionTimes(arch.getNpositions(), 0);
+  std::vector<qc::fp> totalExecutionTimes(arch->getNpositions(), 0);
   // saves for each coord the time slots that are blocked by a multi qubit gate
   std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
-      arch.getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
+      arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
   qc::fp aodLastBlockedTime  = 0;
   qc::fp totalGateTime       = 0;
   qc::fp totalGateFidelities = 1;
 
-  AnimationAtoms animationAtoms(initHwPos, arch);
+  AnimationAtoms animationAtoms(initHwPos, *arch);
   if (createAnimationCsv) {
     animationCsv += animationAtoms.getInitString();
-    animationArchitectureCsv = arch.getAnimationCsv();
+    animationArchitectureCsv = arch->getAnimationCsv();
   }
 
   int      index        = 0;
@@ -63,12 +63,12 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
     }
 
     auto qubits = op->getUsedQubits();
-    auto opTime = arch.getOpTime(op.get());
+    auto opTime = arch->getOpTime(op.get());
     if (op->getType() == qc::AodMove || op->getType() == qc::AodActivate ||
         op->getType() == qc::AodDeactivate) {
       opTime *= shuttlingSpeedFactor;
     }
-    auto opFidelity = arch.getOpFidelity(op.get());
+    auto opFidelity = arch->getOpFidelity(op.get());
 
     // DEBUG info
     if (verbose) {
@@ -91,7 +91,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
       aodLastBlockedTime = maxTime + opTime;
     } else if (qubits.size() > 1) {
       // multi qubit gates -> take into consideration blocking
-      auto rydbergBlockedQubits = arch.getBlockedCoordIndices(op.get());
+      auto rydbergBlockedQubits = arch->getBlockedCoordIndices(op.get());
       // get max execution time over all blocked qubits
       bool rydbergBlocked = true;
       while (rydbergBlocked) {
@@ -154,7 +154,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
     // update animation
     if (createAnimationCsv) {
       animationCsv +=
-          animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, arch);
+          animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, *arch);
     }
   }
   if (verbose) {
@@ -165,10 +165,10 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
   const auto maxExecutionTime =
       *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
   const auto totalIdleTime =
-      maxExecutionTime * arch.getNqubits() - totalGateTime;
+      maxExecutionTime * arch->getNqubits() - totalGateTime;
   const auto totalFidelities =
       totalGateFidelities *
-      std::exp(-totalIdleTime / arch.getDecoherenceTime());
+      std::exp(-totalIdleTime / arch->getDecoherenceTime());
 
   if (createAnimationCsv) {
     animationCsv += animationAtoms.getEndString(maxExecutionTime);

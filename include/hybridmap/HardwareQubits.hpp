@@ -35,7 +35,7 @@ namespace na {
  */
 class HardwareQubits {
 protected:
-  const NeutralAtomArchitecture* arch;
+  const NeutralAtomArchitecture* arch = nullptr;
   qc::Permutation                hwToCoordIdx;
   SymmetricMatrix<SwapDistance>  swapDistances;
   std::map<HwQubit, HwQubits>    nearbyQubits;
@@ -81,6 +81,7 @@ protected:
 
 public:
   // Constructors
+  HardwareQubits() = default;
   HardwareQubits(const NeutralAtomArchitecture& architecture,
                  InitialCoordinateMapping       initialCoordinateMapping,
                  uint32_t                       seed)

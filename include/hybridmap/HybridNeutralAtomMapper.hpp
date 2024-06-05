@@ -66,7 +66,7 @@ struct MapperParameters {
 class NeutralAtomMapper {
 protected:
   // The considered architecture
-  const NeutralAtomArchitecture* arch;
+  const NeutralAtomArchitecture* arch = nullptr;
   // The mapped quantum circuit
   qc::QuantumComputation mappedQc;
   // The mapped quantum circuit converted to AOD movements
@@ -86,7 +86,7 @@ protected:
   // The minimal weight for any multi-qubit gate
   qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
-  const MapperParameters* parameters;
+  const MapperParameters* parameters = nullptr;
   // The qubits that are blocked by the last swap
   std::deque<std::set<HwQubit>> lastBlockedQubits;
   // The last moves that have been executed
@@ -357,9 +357,7 @@ protected:
 
 public:
   // Constructors
-  [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
-  NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
-  NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
+  NeutralAtomMapper() = default;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
       : arch(&architecture), mappedQc(architecture.getNpositions()),
@@ -387,6 +385,20 @@ public:
     }
     this->reset();
   }
+
+  /**
+   * @brief Loads the current mapping and hardware qubits.
+   * @param newMapping The new mapping to be loaded
+   * @param newHwQubits The new hardware qubits to be loaded
+   */
+  void loadCurrentMapping(const Mapping&        newMapping,
+                          const HardwareQubits& newHwQubits) {
+    this->mapping        = newMapping;
+    this->hardwareQubits = newHwQubits;
+  }
+
+  Mapping&        getMapping() { return mapping; }
+  HardwareQubits& getHardwareQubits() { return hardwareQubits; }
 
   /**
    * @brief Resets the mapper and the hardware qubits.
