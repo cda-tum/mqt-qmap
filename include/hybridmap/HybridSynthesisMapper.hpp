@@ -13,7 +13,6 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <vector>
 
 namespace na {
@@ -87,8 +86,7 @@ public:
    * hardware.
    * @return The index of the synthesis step with the lowest effort.
    */
-  size_t evaluateSynthesisSteps(const qcs& synthesisSteps,
-                                bool       directlyMap = false);
+  size_t evaluateSynthesisSteps(qcs& synthesisSteps, bool directlyMap = false);
 
   /**
    * @brief Evaluates a single synthesis step proposed by the ZX extraction.
@@ -98,7 +96,7 @@ public:
    * @param qc The synthesis step to be evaluated.
    * @return The cost/effort to map the synthesis step.
    */
-  qc::fp evaluateSynthesisStep(const qc::QuantumComputation& qc);
+  qc::fp evaluateSynthesisStep(qc::QuantumComputation& qc);
 
   /**
    * @brief Directly maps the given QuantumComputation to the hardware NOT

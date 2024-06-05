@@ -6,8 +6,8 @@
 
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "hybridmap/NeutralAtomUtils.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -18,10 +18,10 @@
 
 namespace na {
 
-size_t HybridSynthesisMapper::evaluateSynthesisSteps(const qcs& synthesisSteps,
-                                                     bool       directlyMap) {
+size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
+                                                     bool directlyMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
-  for (const auto& qc : synthesisSteps) {
+  for (auto& qc : synthesisSteps) {
     costs.emplace_back(qc, this->evaluateSynthesisStep(qc));
   }
   const auto bestQc = std::min_element(
@@ -34,8 +34,12 @@ size_t HybridSynthesisMapper::evaluateSynthesisSteps(const qcs& synthesisSteps,
 }
 
 qc::fp
-HybridSynthesisMapper::evaluateSynthesisStep(const qc::QuantumComputation& qc) {
-  return 0;
+HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) {
+  NeutralAtomMapper tempMapper(arch, parameters);
+  tempMapper.loadHwQubits(hardwareQubits);
+  const auto mappedQc = tempMapper.map(qc, mapping);
+  const auto results  = tempMapper.schedule();
+  return results.totalFidelities;
 }
 
 void HybridSynthesisMapper::appendWithoutMapping(
