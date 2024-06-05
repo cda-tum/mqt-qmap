@@ -85,7 +85,7 @@ TEST_F(TestHybridSynthesisMapper, DirectlyMap) {
 TEST_F(TestHybridSynthesisMapper, completelyRemap) {
   mapper.appendWithoutMapping(qc);
   mapper.appendWithoutMapping(qc);
-  auto mappedQc = mapper.getMappedQc(false);
+  auto mappedQc = mapper.getMappedQc();
   EXPECT_EQ(mappedQc.getNqubits(), arch.getNpositions());
   EXPECT_GE(mappedQc.getNops(), 3);
   auto mappedQcRemapped = mapper.getMappedQc();

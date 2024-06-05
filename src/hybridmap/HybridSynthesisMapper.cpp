@@ -37,9 +37,9 @@ qc::fp
 HybridSynthesisMapper::evaluateSynthesisStep(qc::QuantumComputation& qc) {
   NeutralAtomMapper tempMapper;
   tempMapper.copyStateFrom(*this);
-  auto       mappedQc    = tempMapper.map(qc, mapping);
-  const auto mappedQCAOD = tempMapper.convertToAod(mappedQc);
-  const auto results     = tempMapper.schedule();
+  auto mappedQc = tempMapper.map(qc, mapping);
+  tempMapper.convertToAod();
+  const auto results = tempMapper.schedule();
   return results.totalFidelities;
 }
 

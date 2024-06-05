@@ -13,6 +13,9 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 
 #include <cstddef>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 namespace na {
@@ -29,7 +32,7 @@ namespace na {
  * and the HybridNeutralAtomMapper.
  *
  */
-class HybridSynthesisMapper : private NeutralAtomMapper {
+class HybridSynthesisMapper : public NeutralAtomMapper {
   using qcs = std::vector<qc::QuantumComputation>;
 
   qc::QuantumComputation synthesizedQc;
@@ -72,12 +75,8 @@ public:
    * @return The mapped QuantumComputation.
    */
   [[nodiscard]] qc::QuantumComputation
-  getMappedQc(bool           completeRemap = true,
-              InitialMapping initMapping   = InitialMapping::Identity) {
-    if (completeRemap) {
-      return this->map(synthesizedQc, initMapping);
-    }
-    return mappedQc;
+  completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
+    return this->map(synthesizedQc, initMapping);
   }
 
   /**
@@ -87,6 +86,26 @@ public:
    */
   [[nodiscard]] qc::QuantumComputation getSynthesizedQc() const {
     return this->synthesizedQc;
+  }
+
+  /**
+   * @brief Returns the synthesized QuantumComputation as a string.
+   * @return The synthesized QuantumComputation as a string.
+   */
+  [[maybe_unused]] std::string getSynthesizedQcQASM() {
+    std::stringstream ss;
+    synthesizedQc.dumpOpenQASM(ss, false);
+    return ss.str();
+  }
+
+  /**
+   * @brief Saves the synthesized QuantumComputation to the given file.
+   * @param filename The file to save the synthesized QuantumComputation to.
+   */
+  [[maybe_unused]] void saveSynthesizedQc(const std::string& filename) {
+    std::ofstream ofs(filename);
+    synthesizedQc.dumpOpenQASM(ofs, false);
+    ofs.close();
   }
 
   /**
