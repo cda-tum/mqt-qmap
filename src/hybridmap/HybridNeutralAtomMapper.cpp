@@ -34,7 +34,9 @@
 
 namespace na {
 qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
-                                              InitialMapping initialMapping) {
+                                              Mapping initialMapping) {
+  mapping = initialMapping;
+
   mappedQc = qc::QuantumComputation(arch->getNpositions());
   nMoves   = 0;
   nSwaps   = 0;
@@ -44,9 +46,6 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
-
-  // init mapping
-  this->mapping = Mapping(qc.getNqubits(), initialMapping);
 
   // init layers
   NeutralAtomLayer frontLayer(dag);

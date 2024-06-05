@@ -164,11 +164,7 @@ TEST_F(NeutralAtomMapperTest, Output) {
 TEST_F(NeutralAtomMapperTest, MappingLoading) {
   const auto            qcMapped = mapper.map(qc, initialMapping);
   na::NeutralAtomMapper mapper2(arch);
-  mapper2.loadCurrentMapping(mapper.getMapping(), mapper.getHardwareQubits());
-  for (std::uint32_t i = 0; i < qc.getNqubits(); i++) {
-    ASSERT_EQ(mapper.getMapping().getHwQubit(i),
-              mapper2.getMapping().getHwQubit(i));
-  }
+  mapper2.loadHwQubits(mapper.getHardwareQubits());
   for (std::uint32_t i = 0; i < qcMapped.getNqubits(); i++) {
     ASSERT_EQ(mapper.getHardwareQubits().isMapped(i),
               mapper2.getHardwareQubits().isMapped(i));

@@ -358,8 +358,8 @@ protected:
 public:
   // Constructors
   NeutralAtomMapper() = default;
-  NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
-                    const MapperParameters*        p = nullptr)
+  explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
+                             const MapperParameters*        p = nullptr)
       : arch(architecture), scheduler(*architecture), parameters(p) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
@@ -390,13 +390,10 @@ public:
    * @param newMapping The new mapping to be loaded
    * @param newHwQubits The new hardware qubits to be loaded
    */
-  void loadCurrentMapping(const Mapping&        newMapping,
-                          const HardwareQubits& newHwQubits) {
-    this->mapping        = newMapping;
+  void loadHwQubits(const HardwareQubits& newHwQubits) {
     this->hardwareQubits = newHwQubits;
   }
 
-  Mapping&        getMapping() { return mapping; }
   HardwareQubits& getHardwareQubits() { return hardwareQubits; }
 
   /**
@@ -434,7 +431,12 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping          initialMapping);
+                             Mapping                 initialMapping);
+
+  qc::QuantumComputation map(qc::QuantumComputation& qc,
+                             InitialMapping          initialMapping) {
+    return map(qc, Mapping(qc.getNqubits(), initialMapping));
+  }
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
