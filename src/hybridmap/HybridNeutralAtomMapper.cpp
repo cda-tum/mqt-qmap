@@ -112,8 +112,8 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     }
   }
   if (this->parameters->verbose) {
-    std::cout << "nSwaps: " << nSwaps << '\n';
-    std::cout << "nMoves: " << nMoves << '\n';
+    std::cout << "Total nSwaps: " << nSwaps << '\n';
+    std::cout << "Total nMoves: " << nMoves << '\n';
   }
 }
 

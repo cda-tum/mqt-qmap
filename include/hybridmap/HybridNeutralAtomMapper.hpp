@@ -436,9 +436,10 @@ public:
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              Mapping                 initialMapping) {
-    mappedQc = qc::QuantumComputation(arch->getNpositions());
-    nMoves   = 0;
-    nSwaps   = 0;
+    mappedQc    = qc::QuantumComputation(arch->getNpositions());
+    mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
+    nMoves      = 0;
+    nSwaps      = 0;
     mapAppend(qc, std::move(initialMapping));
     return mappedQc;
   }
