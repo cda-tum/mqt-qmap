@@ -6,8 +6,13 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "NAMapper.hpp"
+#include "QuantumComputation.hpp"
 
 #include "gtest/gtest.h"
+#include <cstddef>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 
 TEST(NAMapper, Exceptions) {
   std::istringstream archIS(R"({
@@ -794,7 +799,7 @@ ry(2.2154814) q;)";
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(
-                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+                3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
   std::ignore = mapper.getResult();
