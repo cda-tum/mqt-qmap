@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -21,8 +22,16 @@ namespace na {
 size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                                      bool alsoMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
+  size_t                                                 qcIndex = 0;
   for (auto& qc : synthesisSteps) {
+    if (this->parameters->verbose) {
+      std::cout << "Evaluating synthesis step number " << qcIndex++ << "\n";
+    }
     costs.emplace_back(qc, this->evaluateSynthesisStep(qc));
+    if (this->parameters->verbose) {
+      std::cout << "Fidelity: " << costs.back().second << "\n";
+    }
+    qcIndex++;
   }
   const auto bestQc = std::max_element(
       costs.begin(), costs.end(),
