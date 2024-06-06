@@ -997,6 +997,9 @@ PYBIND11_MODULE(pyqmap, m) {
           "Evaluates the synthesis steps proposed by the ZX extraction. "
           "Returns index of the best synthesis step.",
           "synthesis_steps"_a, "also_map"_a = false)
+      .def("complete_remap", &na::HybridSynthesisMapper::completeRemap,
+           "Remaps the QuantumComputation to the hardware.",
+           "initial_mapping"_a = na::InitialMapping::Identity)
       .def(
           "schedule",
           [](na::HybridSynthesisMapper& mapper, bool verbose,

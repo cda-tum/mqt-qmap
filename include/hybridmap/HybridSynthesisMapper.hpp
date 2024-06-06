@@ -74,9 +74,8 @@ public:
    * @brief Returns the mapped QuantumComputation.
    * @return The mapped QuantumComputation.
    */
-  [[nodiscard]] qc::QuantumComputation
-  completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
-    return this->map(synthesizedQc, initMapping);
+  void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
+    this->map(synthesizedQc, initMapping);
   }
 
   /**
