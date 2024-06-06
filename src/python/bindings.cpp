@@ -907,9 +907,10 @@ PYBIND11_MODULE(pyqmap, m) {
       m, "HybridSynthesisMapper",
       "Neutral Atom Mapper that can evaluate different synthesis steps "
       "to choose the best one.")
-      .def(py::init<const na::NeutralAtomArchitecture&, na::MapperParameters>(),
-           "Create Hybrid Synthesis Mapper with mapper parameters", "arch"_a,
-           "params"_a = na::MapperParameters())
+      .def(
+          py::init<const na::NeutralAtomArchitecture&, na::MapperParameters&>(),
+          "Create Hybrid Synthesis Mapper with mapper parameters", "arch"_a,
+          "params"_a = na::MapperParameters())
       .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
            "Set the parameters for the Hybrid Synthesis Mapper", "params"_a)
       .def("init_mapping", &na::HybridSynthesisMapper::initMapping,
