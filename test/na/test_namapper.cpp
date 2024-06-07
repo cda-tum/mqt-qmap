@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
@@ -30,7 +29,6 @@
 
 namespace na {
 auto validateAODConstraints(const NAComputation& comp) -> bool {
-  std::size_t line = 0;
   for (const auto& naOp : comp) {
     if (naOp->isShuttlingOperation()) {
       const auto& shuttlingOp =
@@ -82,7 +80,6 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
         }
       }
     }
-    ++line;
   }
   return true;
 }
