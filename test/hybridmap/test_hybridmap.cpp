@@ -40,7 +40,7 @@ TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
   EXPECT_GE(arch.getGateTime("cz"), 0);
   EXPECT_GE(arch.getGateAverageFidelity("cz"), 0);
   // Test distance functions
-  EXPECT_GE(arch.getEuclidianDistance(c1, c2), 0);
+  EXPECT_GE(arch.getEuclideanDistance(c1, c2), 0);
   // Test MoveVector functions
   auto mv = arch.getVector(0, 1);
   EXPECT_GE(arch.getVectorShuttlingTime(mv), 0);

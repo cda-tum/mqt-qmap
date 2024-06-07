@@ -382,9 +382,9 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Euclidean distance between the two coordinate indices
    */
-  [[nodiscard]] qc::fp getEuclidianDistance(CoordIndex idx1,
+  [[nodiscard]] qc::fp getEuclideanDistance(CoordIndex idx1,
                                             CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclidianDistance(
+    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
         this->coordinates.at(idx2)));
   }
   /**
@@ -393,9 +393,9 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] static qc::fp getEuclidianDistance(const Point& c1,
+  [[nodiscard]] static qc::fp getEuclideanDistance(const Point& c1,
                                                    const Point& c2) {
-    return static_cast<qc::fp>(c1.getEuclidianDistance(c2));
+    return static_cast<qc::fp>(c1.getEuclideanDistance(c2));
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices
