@@ -58,7 +58,7 @@ auto NAMapper::validateCircuit() -> void {
            << FullOpType{op->getType(), 0} << " locally.";
         throw std::invalid_argument(ss.str());
       }
-    } else if (op->isStandardOperation() and
+    } else if (op->isStandardOperation() &&
                op->getNcontrols() + op->getNtargets() == 2) {
       assert(!op->isSingleQubitGate());
       if (!arch.isAllowedLocally({op->getType(), op->getNcontrols()})) {
@@ -433,8 +433,8 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
   }
   std::sort(freeSitesPerRow.begin(), freeSitesPerRow.end(),
             [&](const auto& a, const auto& b) {
-              return (std::get<1>(a) == std::get<1>(b) and
-                      std::get<0>(a) < std::get<0>(b)) or
+              return (std::get<1>(a) == std::get<1>(b) &&
+                      std::get<0>(a) < std::get<0>(b)) ||
                      std::get<1>(a) > std::get<1>(b);
             });
   std::size_t moveableSpotsNeeded = qubits.size();
@@ -446,7 +446,7 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
       if (n != std::get<1>(freeSitesPerRow.at(firstIWithSameN))) {
         firstIWithSameN = i;
       }
-      if (i + 1 == freeSitesPerRow.size() or
+      if (i + 1 == freeSitesPerRow.size() ||
           std::get<1>(freeSitesPerRow[i + 1]) < moveableSpotsNeeded) {
         const auto [rF, nF] = freeSitesPerRow.at(firstIWithSameN);
         moveableSelectedRows.emplace_back(rF, moveableSpotsNeeded);
@@ -493,7 +493,7 @@ auto NAMapper::store(std::vector<bool>&             initialFreeSites,
           currentFreeSites.at(site) = false;
           initialFreeSites.at(site) = false;
           n -= 1;
-        } else if (j < sitesInRow.size() and
+        } else if (j < sitesInRow.size() &&
                    currentFreeSites.at(sitesInRow.at(j))) {
           const auto& s    = sitesInRow.at(j);
           const auto& sPos = arch.getPositionOfSite(s);
@@ -642,7 +642,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
           // check whether j can be
           // picked up
           if (placement.at(p).positionStatus == Atom::PositionStatus::DEFINED) {
-            if (placement.at(p).currentPosition->y == y and
+            if (placement.at(p).currentPosition->y == y &&
                 placement.at(p).currentPosition->x <= x - d) {
               // pick up p
               pickUpOrder.erase(
@@ -673,7 +673,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
               }
               const auto site = *siteOpt;
               freeX           = arch.getPositionOfSite(site).x;
-              if (initialFreeSites.at(site) and
+              if (initialFreeSites.at(site) &&
                   std::find(placement.at(p).zones.cbegin(),
                             placement.at(p).zones.cend(),
                             arch.getZoneOfSite(site)) !=
@@ -730,7 +730,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
       } else {
         // check whether j can be picked up
         if (placement.at(p).positionStatus == Atom::PositionStatus::DEFINED) {
-          if (placement.at(p).currentPosition->y == y and
+          if (placement.at(p).currentPosition->y == y &&
               placement.at(p).currentPosition->x >= x - d) {
             // pick up p
             pickUpOrder.erase(
@@ -760,7 +760,7 @@ auto NAMapper::pickUp(std::vector<bool>&             initialFreeSites,
             }
             const auto site = *siteOpt;
             freeX           = arch.getPositionOfSite(site).x;
-            if (initialFreeSites.at(site) and
+            if (initialFreeSites.at(site) &&
                 std::find(placement.at(p).zones.cbegin(),
                           placement.at(p).zones.cend(),
                           arch.getZoneOfSite(site)) !=
@@ -852,7 +852,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
           const auto* const co = dynamic_cast<const qc::CompoundOperation*>(op);
           mappedQc.emplaceBack<NAGlobalOperation>(
               FullOpType{co->at(0)->getType(), 0}, co->at(0)->getParameter());
-        } else if (isGlobal(*op, nqubits) and
+        } else if (isGlobal(*op, nqubits) &&
                    arch.isAllowedGlobally(
                        {op->getType(), op->getNcontrols()})) {
           mappedQc.emplaceBack<NAGlobalOperation>(
@@ -865,7 +865,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
           for (const auto& v :
                layer.getExecutablesOfType(op->getType(), op->getNcontrols())) {
             const auto* const op2 = v->getOperation();
-            if (checkApplicability(op2, placement) and
+            if (checkApplicability(op2, placement) &&
                 op->getParameter() == op2->getParameter() &&
                 std::find(
                     positions.cbegin(), positions.cend(),
@@ -894,7 +894,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
     //    of the same type and two targets, i.e. cz gates
     if (config.getMethod() == NAMappingMethod::Naive) {
       const qc::Operation* op = (*it)->getOperation();
-      if (op->getType() != qc::OpType::Z || op->getNtargets() != 1 or
+      if (op->getType() != qc::OpType::Z || op->getNtargets() != 1 ||
           op->getNcontrols() != 1) {
         throw std::logic_error(
             "Other gates than cz are not supported for mapping yet.");
@@ -1145,8 +1145,8 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
   stats.numInitialGates    = qc.getNops();
   stats.numEntanglingGates = static_cast<std::size_t>(
       std::count_if(qc.cbegin(), qc.cend(), [](const auto& op) {
-        return (op->getType() == qc::OpType::Z and
-                op->getType() == qc::OpType::X) or
+        return (op->getType() == qc::OpType::Z &&
+                op->getType() == qc::OpType::X) ||
                op->getNcontrols() > 0;
       }));
   stats.initialDepth   = qc.getDepth();
