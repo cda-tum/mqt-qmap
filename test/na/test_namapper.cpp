@@ -182,7 +182,7 @@ auto checkEquivalence(const qc::QuantumComputation& circ,
   }
   if (!qLayer.getExecutableSet().empty()) {
     std::cout << "Quantum computations seem not to be equal (not all "
-                 "operations have beed executed).\n";
+                 "operations have been executed).\n";
     return false;
   }
   return true;
