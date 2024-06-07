@@ -304,11 +304,11 @@ auto NAMapper::checkApplicability(const qc::Operation*     op,
           case Atom::PositionStatus::UNDEFINED:
             // check whether the gate is applicable in one of the currently
             // selected zones
-            return std::any_of(
-                qubitPlacement.zones.cbegin(), qubitPlacement.zones.cend(),
-                [&](const auto& z) {
-                  return arch.isAllowedLocally({op->getType(), 0}, z);
-                });
+            return std::any_of(qubitPlacement.zones.cbegin(),
+                               qubitPlacement.zones.cend(), [&](const auto& z) {
+                                 return arch.isAllowedLocally(
+                                     {op->getType(), 0}, z);
+                               });
           case Atom::PositionStatus::DEFINED:
             // check whether the gate is applicable at the current position
             return arch.isAllowedLocallyAt({op->getType(), 0},
