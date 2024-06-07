@@ -9,6 +9,7 @@
 #include "NAMapper.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
+#include "na/NAComputation.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
@@ -19,6 +20,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <cstddef>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -34,8 +36,6 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
       const auto& shuttlingOp =
           dynamic_cast<const NAShuttlingOperation&>(*naOp);
       if (shuttlingOp.getStart().size() != shuttlingOp.getEnd().size()) {
-        std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__ << ")"
-                  << std::endl;
         return false;
       }
       for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
@@ -45,45 +45,27 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
           const auto& e1 = shuttlingOp.getEnd()[i];
           const auto& e2 = shuttlingOp.getEnd()[j];
           if (*s1 == *s2) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (*e1 == *e2) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (s1->x == s2->x && e1->x != e2->x) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (s1->y == s2->y && e1->y != e2->y) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (s1->x < s2->x && e1->x >= e2->x) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (s1->y < s2->y && e1->y >= e2->y) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
           if (s1->x > s2->x && e1->x <= e2->x) {
-            std::cout << comp << std::endl;
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
-            std::cerr << "Error in line " << line << ": " << *naOp << std::endl;
             return false;
           }
           if (s1->y > s2->y && e1->y <= e2->y) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
         }
@@ -95,8 +77,6 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
           const auto& a = localOp.getPositions()[i];
           const auto& b = localOp.getPositions()[j];
           if (*a == *b) {
-            std::cout << __FILE__ << ":" << __LINE__ << " (" << __FUNCTION__
-                      << ")" << std::endl;
             return false;
           }
         }
@@ -185,8 +165,7 @@ auto checkEquivalence(const qc::QuantumComputation& circ,
                       const NAComputation&          nac,
                       const Architecture&           arch) -> bool {
   auto            naQComp = retrieveQuantumComputation(nac, arch);
-  auto            qComp   = circ;
-  const qc::Layer qLayer(qComp);
+  const qc::Layer qLayer(circ);
   int             line = 0;
   for (const auto& op : naQComp) {
     ++line;
