@@ -17,10 +17,11 @@
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 
-#include "gtest/gtest.h"
 #include <algorithm>
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
