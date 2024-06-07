@@ -182,10 +182,10 @@ auto retrieveQuantumComputation(const NAComputation& nac,
 }
 
 auto checkEquivalence(const qc::QuantumComputation& circ,
-                      const NAComputation& nac, const Architecture& arch)
-    -> bool {
-  auto naQComp = retrieveQuantumComputation(nac, arch);
-  auto qComp   = circ;
+                      const NAComputation&          nac,
+                      const Architecture&           arch) -> bool {
+  auto            naQComp = retrieveQuantumComputation(nac, arch);
+  auto            qComp   = circ;
   const qc::Layer qLayer(qComp);
   int             line = 0;
   for (const auto& op : naQComp) {
@@ -198,7 +198,8 @@ auto checkEquivalence(const qc::QuantumComputation& circ,
         });
     if (it == executableSet.end()) {
       std::cout << "Quantum computations seem not to be equal (operations "
-                   "might not occur in the input circuit, operation " << line << ").\n";
+                   "might not occur in the input circuit, operation "
+                << line << ").\n";
       return false;
     }
     (*it)->execute();

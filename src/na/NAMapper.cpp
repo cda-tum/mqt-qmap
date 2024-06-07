@@ -284,9 +284,8 @@ auto NAMapper::calculateMovements() -> void {
   }
 }
 
-auto NAMapper::checkApplicability(const qc::Operation*     op,
-                                  const std::vector<Atom>& placement) const
-    -> bool {
+auto NAMapper::checkApplicability(
+    const qc::Operation* op, const std::vector<Atom>& placement) const -> bool {
   if (op->isCompoundOperation()) {
     // is global gate
     return true;
@@ -333,27 +332,26 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
   assert(arch.isAllowedLocally({op->getType(), 0}));
   assert(op->getNcontrols() == 0);
   // individual gate that can act on one or more atoms
-  std::for_each(
-      op->getTargets().cbegin(), op->getTargets().cend(),
-      [&](const auto& qubit) {
-        switch (placement.at(qubit).positionStatus) {
-        case Atom::PositionStatus::UNDEFINED:
-          // remove all zones where the gate is not applicable
-          placement.at(qubit).zones.erase(
-              std::remove_if(
-                  placement.at(qubit).zones.begin(),
-                  placement.at(qubit).zones.end(),
-                  [&](auto& z) {
-                    return !arch.isAllowedLocally({op->getType(), 0}, z);
-                  }),
-              placement.at(qubit).zones.end());
-          break;
-        case Atom::PositionStatus::DEFINED:
-          break;
-        default:
-          qc::unreachable();
-        }
-      });
+  std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
+                [&](const auto& qubit) {
+                  switch (placement.at(qubit).positionStatus) {
+                  case Atom::PositionStatus::UNDEFINED:
+                    // remove all zones where the gate is not applicable
+                    placement.at(qubit).zones.erase(
+                        std::remove_if(placement.at(qubit).zones.begin(),
+                                       placement.at(qubit).zones.end(),
+                                       [&](auto& z) {
+                                         return !arch.isAllowedLocally(
+                                             {op->getType(), 0}, z);
+                                       }),
+                        placement.at(qubit).zones.end());
+                    break;
+                  case Atom::PositionStatus::DEFINED:
+                    break;
+                  default:
+                    qc::unreachable();
+                  }
+                });
 }
 
 auto NAMapper::getMisplacement(const std::vector<Atom>&      initial,
@@ -869,9 +867,10 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto* const op2 = v->getOperation();
             if (checkApplicability(op2, placement) and
                 op->getParameter() == op2->getParameter() &&
-                std::find(positions.cbegin(), positions.cend(),
-                          placement.at(op2->getTargets().front())
-                              .currentPosition) == positions.cend()) {
+                std::find(
+                    positions.cbegin(), positions.cend(),
+                    placement.at(op2->getTargets().front()).currentPosition) ==
+                    positions.cend()) {
               updatePlacement(op2, placement);
               v->execute();
               positions.emplace_back(
