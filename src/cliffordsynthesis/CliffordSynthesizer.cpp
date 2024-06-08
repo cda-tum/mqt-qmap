@@ -436,16 +436,21 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
 void gateToLayer(const qc::Operation& gate, std::size_t& i,
                  std::vector<std::size_t>& layers,
                  std::vector<std::size_t>& layerNum, std::size_t& layer) {
+  std::cout << "gateToLayer -> getUsedQubits" << std::endl;
   const auto& usedQubits = gate.getUsedQubits();
   for (const auto& qubit : usedQubits) {
+    std::cout << "Dangerous line upcoming" << std::endl;
     if (layerNum[qubit] >= layer) {
       ++layer;
       layers.emplace_back(i);
       break;
     }
+    std::cout << "Puh, did it" << std::endl;
   }
   for (const auto& qubit : usedQubits) {
+    std::cout << "Again, dangerous line upcoming" << std::endl;
     layerNum[qubit] = layer;
+    std::cout << "Puh, did it again" << std::endl;
   }
   ++i;
 }
@@ -477,6 +482,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
   PLOG_INFO << "Optimizing Circuit with Heuristic";
+  std::cout << "Optimizing Circuit with Heuristic" << std::endl;
   if (initialCircuit->getDepth() == 0) {
     return;
   }
@@ -485,8 +491,10 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   optimalConfig.target               = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;
 
+  std::cout << "Reordering Operations" << std::endl;
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
   qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
+  std::cout << "Get Layers" << std::endl;
   const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
 
   std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
@@ -501,6 +509,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
     }
 
     // launch threads
+    std::cout << "Launch threads" << std::endl;
     subCircuits.emplace_back(
         std::async(std::launch::async | std::launch::deferred,
                    [this, startIdx, endIdx, &optimalConfig]() {
@@ -508,13 +517,14 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
                          initialCircuit, startIdx, endIdx, optimalConfig);
                    }));
   }
-
+  std::cout << "Combine Circuits" << std::endl;
   for (auto& subCircuit : subCircuits) {
     const auto& circ = subCircuit.get();
     for (auto& it : *circ) {
       optCircuit.emplace_back(std::move(it));
     }
   }
+  std::cout << "Set Results" << std::endl;
   results.setDepth(optCircuit.getDepth());
 
   results.setResultCircuit(optCircuit);
