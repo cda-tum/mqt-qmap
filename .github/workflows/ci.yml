@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-latest
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 4
-      CTEST_PARALLEL_LEVEL: 4
+      CTEST_PARALLEL_LEVEL: 1
       FORCE_COLOR: 3
     steps:
       # check out the repository (including submodules and all history)
