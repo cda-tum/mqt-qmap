@@ -48,7 +48,7 @@ jobs:
           command: cmake --build build --config Release
       # run the tests
       - name: Test
-        run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 600 --tests-regex "HeuristicTest\\."
+        run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 600 --tests-regex "HeuristicTest"
 #  change-detection:
 #    name: 🔍 Change
 #    uses: cda-tum/mqt-workflows/.github/workflows/reusable-change-detection.yml@v1.0.1
