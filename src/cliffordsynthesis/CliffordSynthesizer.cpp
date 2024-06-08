@@ -204,6 +204,7 @@ void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig     config,
 void CliffordSynthesizer::depthOptimalSynthesis(
     CliffordSynthesizer::EncoderConfig config, const std::size_t lower,
     const std::size_t upper) {
+  std::cout << "Depth Optimal Synthesis" << std::endl;
   // Depth-optimal synthesis is achieved by determining a timestep limit T such
   // that there exists a solution with depth T, but no solution with depth T-1.
   // This procedure uses an encoding where multiple gates are allowed per
@@ -214,19 +215,22 @@ void CliffordSynthesizer::depthOptimalSynthesis(
   // pass is provided that additionally minimizes the number of gates.
 
   if (configuration.useMaxSAT) {
+    std::cout << "Using MaxSAT" << std::endl;
     // The MaxSAT solver can determine the optimal T with a single call by
     // minimizing over the layers of gates (=timesteps) in the resulting
     // circuit.
     runMaxSAT(config);
   } else if (configuration.linearSearch) {
+    std::cout << "Using Linear Search" << std::endl;
     runLinearSearch(config.timestepLimit, lower, upper, config);
   } else {
+    std::cout << "Using Binary Search" << std::endl;
     // The binary search approach calls the SAT solver repeatedly with varying
     // timestep (=depth) limits T until a solution with depth T is found, but no
     // solution with depth T-1 could be determined.
     runBinarySearch(config.timestepLimit, lower, upper, config);
   }
-
+  std::cout << "Retrieve results" << std::endl;
   if (configuration.minimizeGatesAfterDepthOptimization) {
     // To find a solution with fewer gates, we run the solver once more with a
     // fixed depth limit and the goal to minimize the number of gates.
@@ -424,11 +428,13 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
     }
     break;
   case TargetMetric::Depth:
+    std::cout << "Check improve depth" << std::endl;
     if ((newResults.getDepth() < currentResults.getDepth()) ||
         ((newResults.getDepth() == currentResults.getDepth()) &&
          (newResults.getGates() < currentResults.getGates()))) {
       currentResults = newResults;
     }
+    std::cout << "Accomplished improve depth" << std::endl;
     break;
   }
 }
@@ -537,8 +543,11 @@ std::shared_ptr<qc::QuantumComputation>
 CliffordSynthesizer::synthesizeSubcircuit(
     const std::shared_ptr<qc::QuantumComputation>& qc, std::size_t begin,
     std::size_t end, const Configuration& config) {
+  std::cout << "Synthesizing Subcircuit" << std::endl;
   const Tableau       subTargetTableau{*qc, begin, end, true};
+  std::cout << "Tableau created" << std::endl;
   CliffordSynthesizer synth(subTargetTableau);
+  std::cout << "Synthesizer created" << std::endl;
   synth.synthesize(config);
 
   synth.initResultCircuitFromResults();
