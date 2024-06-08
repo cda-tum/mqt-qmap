@@ -493,7 +493,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
 
   std::cout << "Reordering Operations" << std::endl;
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
-  qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
+  qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
   std::cout << "Get Layers" << std::endl;
   const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
 
