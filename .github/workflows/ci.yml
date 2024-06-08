@@ -27,6 +27,13 @@ jobs:
           fetch-depth: 0
       # set up MSVC development environment
       - uses: ilammy/msvc-dev-cmd@v1
+      # Setup Z3
+      - name: Setup Z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: "4.13.0"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       # set up ccache for faster C++ builds
       - name: Setup ccache
         uses: Chocobo1/setup-ccache-action@v1
