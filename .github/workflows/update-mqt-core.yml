@@ -31,14 +31,15 @@ jobs:
       - name: Parse MQT Core version and revision
         id: get-used-version
         run: |
-          echo "grep1=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake)"
-          echo "grep2=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake)"
-          version=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
-          revision=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
-          echo "version=$version"
-          echo "revision=$revision"
-          echo "version=$version" >> $GITHUB_OUTPUT
-          echo "revision=$revision" >> $GITHUB_OUTPUT
+          echo "Checking if cmake/ExternalDependencies.cmake exists..."
+           ls -l cmake/ExternalDependencies.cmake || true
+           echo "Attempting to parse version and revision..."
+           version=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+           revision=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+           echo "Parsed version: $version"
+           echo "Parsed revision: $revision"
+           echo "version=$version" >> $GITHUB_OUTPUT
+           echo "revision=$revision" >> $GITHUB_OUTPUT
       # Query the GitHub API to get the latest release of MQT Core.
       # We need the tag of the latest release and the commit hash of the tag.
       # Use `{github.token}` to authenticate with the GitHub API.
@@ -49,6 +50,7 @@ jobs:
           tag=$(echo $latest_release | jq -r '.tag_name')
           commit=$(echo $latest_release | jq -r '.target_commitish')
           latest_version=${tag#v}
+          echo "latest_release=$latest_release"
           echo "tag=$tag"
           echo "commit=$commit"
           echo "latest_version=$latest_version"
