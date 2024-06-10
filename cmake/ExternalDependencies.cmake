@@ -27,7 +27,7 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 set(MQT_CORE_VERSION
-    2.5.0
+    2.5.1
     CACHE STRING "MQT Core version")
 set(MQT_CORE_REV
     "0e4ff9e0521886449027b252c65913e1afa863b0"
