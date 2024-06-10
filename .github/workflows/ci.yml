@@ -12,109 +12,71 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  cpp-tests-windows:
-    name: 🏁 Release
-    runs-on: windows-latest
-    env:
-      CMAKE_BUILD_PARALLEL_LEVEL: 4
-      CTEST_PARALLEL_LEVEL: 4
-      FORCE_COLOR: 3
-    steps:
-      # check out the repository (including submodules and all history)
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-      # set up MSVC development environment
-      - uses: ilammy/msvc-dev-cmd@v1
-      # set up ccache for faster C++ builds
-      - name: Setup ccache
-        uses: Chocobo1/setup-ccache-action@v1
-        with:
-          prepend_symlinks_to_path: false
-          windows_compile_environment: msvc
-          override_cache_key: c++-tests-windows-latest-Release
-      # configure CMake in the specified mode, optionally with additional arguments
-      - name: Configure CMake
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
-      # build the project in the specified mode with retries
-      - name: Build
-        uses: nick-fields/retry@v3 # Windows builds with MSVC are flaky and frequently run out of heap space
-        with:
-          timeout_minutes: 15
-          max_attempts: 5
-          shell: bash
-          retry_on: error
-          command: cmake --build build --config Release
-      # run the tests
-      - name: Test
-        run: ctest -C Release --output-on-failure --test-dir build --repeat until-pass:3 --timeout 600 --tests-regex "HeuristicTest\."
+  change-detection:
+    name: 🔍 Change
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-change-detection.yml@v1.0.1
 
-#  change-detection:
-#    name: 🔍 Change
-#    uses: cda-tum/mqt-workflows/.github/workflows/reusable-change-detection.yml@v1.0.1
-#
-#  cpp-tests:
-#    name: 🇨‌ Test
-#    needs: change-detection
-#    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-#    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-ci.yml@v1.0.1
-#    with:
-#      setup-z3: true
-#
-#  cpp-linter:
-#    name: 🇨‌ Lint
-#    needs: change-detection
-#    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-#    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-linter.yml@v1.0.1
-#    with:
-#      setup-z3: true
-#
-#  python-tests:
-#    name: 🐍 Test
-#    needs: change-detection
-#    if: fromJSON(needs.change-detection.outputs.run-python-tests)
-#    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-ci.yml@v1.0.1
-#    with:
-#      setup-z3: true
-#
-#  code-ql:
-#    name: 📝 CodeQL
-#    needs: change-detection
-#    if: fromJSON(needs.change-detection.outputs.run-code-ql)
-#    uses: cda-tum/mqt-workflows/.github/workflows/reusable-code-ql.yml@v1.0.1
-#    with:
-#      setup-z3: true
-#
-#  required-checks-pass: # This job does nothing and is only used for branch protection
-#    name: 🚦 Check
-#    if: always()
-#    needs:
-#      - change-detection
-#      - cpp-tests
-#      - cpp-linter
-#      - python-tests
-#      - code-ql
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Decide whether the needed jobs succeeded or failed
-#        uses: re-actors/alls-green@release/v1
-#        with:
-#          allowed-skips: >-
-#            ${{
-#              fromJSON(needs.change-detection.outputs.run-cpp-tests)
-#              && '' || 'cpp-tests,'
-#            }}
-#            ${{
-#              fromJSON(needs.change-detection.outputs.run-cpp-linter)
-#              && '' || 'cpp-linter,'
-#            }}
-#            ${{
-#              fromJSON(needs.change-detection.outputs.run-python-tests)
-#              && '' || 'python-tests,'
-#            }}
-#            ${{
-#              fromJSON(needs.change-detection.outputs.run-code-ql)
-#              && '' || 'code-ql,'
-#            }}
-#          jobs: ${{ toJSON(needs) }}
+  cpp-tests:
+    name: 🇨‌ Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-ci.yml@v1.0.1
+    with:
+      setup-z3: true
+
+  cpp-linter:
+    name: 🇨‌ Lint
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-linter.yml@v1.0.1
+    with:
+      setup-z3: true
+
+  python-tests:
+    name: 🐍 Test
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-python-tests)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-ci.yml@v1.0.1
+    with:
+      setup-z3: true
+
+  code-ql:
+    name: 📝 CodeQL
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-code-ql)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-code-ql.yml@v1.0.1
+    with:
+      setup-z3: true
+
+  required-checks-pass: # This job does nothing and is only used for branch protection
+    name: 🚦 Check
+    if: always()
+    needs:
+      - change-detection
+      - cpp-tests
+      - cpp-linter
+      - python-tests
+      - code-ql
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          allowed-skips: >-
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-tests)
+              && '' || 'cpp-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cpp-linter)
+              && '' || 'cpp-linter,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-python-tests)
+              && '' || 'python-tests,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-code-ql)
+              && '' || 'code-ql,'
+            }}
+          jobs: ${{ toJSON(needs) }}
