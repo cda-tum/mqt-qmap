@@ -26,12 +26,12 @@ if(BUILD_MQT_QMAP_BINDINGS)
   find_package(pybind11 CONFIG REQUIRED)
 endif()
 
-set(MQT_CORE_VERSION
-    2.5.1
+# cmake-format: off
+set(MQT_CORE_VERSION 2.5.1
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV
-    "0e4ff9e0521886449027b252c65913e1afa863b0"
+set(MQT_CORE_REV "0e4ff9e0521886449027b252c65913e1afa863b0"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
+# cmake-format: on
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(
     mqt-core
