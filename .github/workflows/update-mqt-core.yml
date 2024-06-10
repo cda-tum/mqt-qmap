@@ -20,12 +20,8 @@ jobs:
       # Parse the MQT Core version and the revision from the `cmake/ExternalDependencies.cmake` file.
       # The relevant portions of the file have the format:
       # ```cmake
-      #   set(MQT_CORE_VERSION
-      #       <major>.<minor>.<patch>
-      #       CACHE STRING "MQT Core version")
-      #   set(MQT_CORE_REV
-      #       "<tag, branch or commit hash>"
-      #       CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
+      #   set(MQT_CORE_VERSION\n    <major>.<minor>.<patch>\n    CACHE STRING "MQT Core version")
+      #   set(MQT_CORE_REV\n    "<tag, branch or commit hash>"\n    CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
       # ```
       # where `<major>.<minor>.<patch>` is the version and `<tag, branch or commit hash>` is the revision.
       - name: Parse MQT Core version and revision
@@ -34,8 +30,8 @@ jobs:
           echo "Checking if cmake/ExternalDependencies.cmake exists..."
            ls -l cmake/ExternalDependencies.cmake || true
            echo "Attempting to parse version and revision..."
-           version=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
-           revision=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+           version=$(grep -Po 'MQT_CORE_VERSION\n    \K[0-9]+\.[0-9]+\.[0-9]+' cmake/ExternalDependencies.cmake)
+           revision=$(grep -Po 'MQT_CORE_REV\n    "\K[^"]+' cmake/ExternalDependencies.cmake)
            echo "Parsed version: $version"
            echo "Parsed revision: $revision"
            echo "version=$version" >> $GITHUB_OUTPUT
