@@ -1,0 +1,90 @@
+name: Update MQT Core
+on:
+  schedule:
+    # run once a month on the first day of the month at 00:00 UTC
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/update-mqt-core.yml
+
+jobs:
+  update-mqt-core:
+    name: ⬆️ Update MQT Core
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the repository
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Parse the MQT Core version and the revision from the `cmake/ExternalDependencies.cmake` file.
+      # The relevant portions of the file have the format:
+      # ```cmake
+      #   set(MQT_CORE_VERSION
+      #       <major>.<minor>.<patch>
+      #       CACHE STRING "MQT Core version")
+      #   set(MQT_CORE_REV
+      #       "<tag, branch or commit hash>"
+      #       CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
+      # ```
+      # where `<major>.<minor>.<patch>` is the version and `<tag, branch or commit hash>` is the revision.
+      - name: Parse MQT Core version and revision
+        id: get-used-version
+        run: |
+          version=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+          revision=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "revision=$revision" >> $GITHUB_OUTPUT
+      # Query the GitHub API to get the latest release of MQT Core.
+      # We need the tag of the latest release and the commit hash of the tag.
+      # Use `{github.token}` to authenticate with the GitHub API.
+      - name: Get latest release of MQT Core
+        id: get-latest-release
+        run: |
+          latest_release=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/cda-tum/mqt-core/releases/latest)
+          tag=$(echo $latest_release | jq -r '.tag_name')
+          commit=$(echo $latest_release | jq -r '.target_commitish')
+          latest_version=${tag#v}
+          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          echo "latest_commit=$commit" >> $GITHUB_OUTPUT
+      # Install the `semver` tool for making semantic version comparisons.
+      - name: Install semver
+        run: |
+          wget -O /usr/local/bin/semver \
+          https://raw.githubusercontent.com/fsaintjacques/semver-tool/master/src/semver
+          chmod +x /usr/local/bin/semver
+      # Compare the used version with the latest version based on SemVer.
+      # If the latest version is newer or the version is the same, but the revision
+      # is different, set the output to update the MQT Core.
+      - name: Compare versions
+        id: compare-versions
+        run: |
+          if semver compare ${{ steps.get-used-version.outputs.version }} ${{ steps.get-latest-release.outputs.latest_version }} < 0; then
+            echo "update=true" >> $GITHUB_OUTPUT
+          elif [ ${{ steps.get-used-version.outputs.version }} = ${{ steps.get-latest-release.outputs.latest_version }} ] && [ ${{ steps.get-used-version.outputs.revision }} != ${{ steps.get-latest-release.outputs.latest_commit }} ]; then
+            echo "update=true" >> $GITHUB_OUTPUT
+          else
+            echo "update=false" >> $GITHUB_OUTPUT
+          fi
+      # Update the MQT Core version and revision in the `cmake/ExternalDependencies.cmake` file.
+      - name: Update MQT Core version and revision
+        id: update-version
+        if: steps.compare-versions.outputs.update == 'true'
+        run: |
+          sed -i 's/set(MQT_CORE_VERSION.*/set(MQT_CORE_VERSION\n    '${{ steps.get-latest-release.outputs.latest_version }}'\n    CACHE STRING "MQT Core version")/' cmake/ExternalDependencies.cmake
+          sed -i 's/set(MQT_CORE_REV.*/set(MQT_CORE_REV\n    "'${{ steps.get-latest-release.outputs.latest_commit }}'"\n    CACHE STRING "MQT Core identifier (tag, branch or commit hash)")/' cmake/ExternalDependencies.cmake
+      # Create a pull request to merge the changes into the main branch.
+      - name: Create pull request
+        id: create-pull-request
+        if: steps.compare-versions.outputs.update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          commit-message: "⬆️ Update `cda-tum/mqt-core`"
+          title: "⬆️ Update `cda-tum/mqt-core` from @${{ steps.get-used-version.revision }} (version @v${{ steps.get-used-version.version }}) to @${{ steps.get-latest-release.outputs.latest_commit }} (version @v${{ steps.get-latest-release.outputs.latest_version }})"
+          body:
+            "This pull request updates [MQT Core](https://github.com/cda-tum/mqt-core) from @${{ steps.get-used-version.revision }} (version @v${{ steps.get-used-version.version }}) to @${{ steps.get-latest-release.outputs.latest_commit }} (version @v${{ steps.get-latest-release.outputs.latest_version }}).
+
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get-used-version.revision }}...${{ steps.get-latest-release.outputs.latest_commit }}"
+          branch: "update-mqt-core-${{ steps.get-latest-release.outputs.latest_commit }}"
+          labels: "dependencies,c++"
