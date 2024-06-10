@@ -363,11 +363,8 @@ TEST(HeuristicTest, basic) {
   config.heuristic = true;
   config.splitSize = 1;
   config.target    = TargetMetric::Depth;
-  std::cout << "Create CliffordSynthesizer" << std::endl;
-  auto synth = CliffordSynthesizer(qc);
-  std::cout << "Synthesize" << std::endl;
+  auto synth       = CliffordSynthesizer(qc);
   synth.synthesize(config);
-  std::cout << "Get results" << std::endl;
   EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
 
