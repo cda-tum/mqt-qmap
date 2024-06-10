@@ -51,6 +51,7 @@ jobs:
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
           # Get the list of commits on the main branch
           commits=$(curl -s -H "Authorization: token ${{ github.token }}" https://api.github.com/repos/cda-tum/mqt-core/commits)
+          echo "commits=$commits"
           # Select the commit that has the same tag name as the latest release
           commit=$(echo $commits | jq -r --arg tag "$tag" '.[] | select(.commit.message | startswith($tag)) | .sha')
           echo "commit=$commit"
