@@ -113,9 +113,7 @@ protected:
       value = (lowerBound + upperBound) / 2;
       PLOG_INFO << "Trying value " << value << " in range [" << lowerBound
                 << ", " << upperBound << ")";
-      std::cout << "Call solver" << std::endl;
       const auto r = callSolver(config);
-      std::cout << "Update results" << std::endl;
       updateResults(configuration, r, results);
       if (r.sat()) {
         upperBound = value;
