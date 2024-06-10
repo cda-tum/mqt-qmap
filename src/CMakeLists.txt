@@ -67,6 +67,37 @@ macro(ADD_SYNTHESIS_LIBRARY libname srcfile)
     utils.cpp)
 
   add_internal_library(${lib})
+  target_link_libraries(${lib} PUBLIC MQT::CoreNA)
+endmacro()
+
+# macro to add hybrid neutral atom mapping libraries
+macro(ADD_HYBRIDMAP_LIBRARY libname srcfile)
+  set(lib ${MQT_QMAP_TARGET_NAME}-${libname})
+
+  # main project library
+  add_library(
+    ${lib}
+    ${libname}/${srcfile}.cpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/${srcfile}.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomUtils.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomScheduler.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomArchitecture.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/HardwareQubits.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/Mapping.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomDefinitions.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/MoveToAodConverter.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/NeutralAtomLayer.hpp
+    ${PROJECT_SOURCE_DIR}/include/${libname}/HybridAnimation.hpp
+    hybridmap/NeutralAtomUtils.cpp
+    hybridmap/NeutralAtomScheduler.cpp
+    hybridmap/NeutralAtomArchitecture.cpp
+    hybridmap/HardwareQubits.cpp
+    hybridmap/Mapping.cpp
+    hybridmap/MoveToAodConverter.cpp
+    hybridmap/HybridAnimation.cpp
+    hybridmap/NeutralAtomLayer.cpp)
+
+  add_internal_library(${lib})
 endmacro()
 
 # exact mapper project library
@@ -91,8 +122,12 @@ endif()
 # heuristic mapper project library
 add_qmap_library(heuristic HeuristicMapper)
 
+# hybrid neutral atom mapper project library
+add_hybridmap_library(hybridmap HybridNeutralAtomMapper)
+
 # add MQT alias targets
 add_library(MQT::QMapHeuristic ALIAS ${MQT_QMAP_TARGET_NAME}-heuristic)
+add_library(MQT::QMapHybrid ALIAS ${MQT_QMAP_TARGET_NAME}-hybridmap)
 
 add_subdirectory(na)
 
