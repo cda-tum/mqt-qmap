@@ -30,9 +30,9 @@ jobs:
           echo "Checking if cmake/ExternalDependencies.cmake exists..."
            ls -l cmake/ExternalDependencies.cmake || true
            echo "Attempting to parse version and revision..."
-           version=$(grep -Po 'MQT_CORE_VERSION\\n    \\K[0-9]+\\.[0-9]+\\.[0-9]+' cmake/ExternalDependencies.cmake)
-           revision=$(grep -Po 'MQT_CORE_REV\\n    "\\K[^"]+' cmake/ExternalDependencies.cmake)
+           version=$(grep -Po 'MQT_CORE_VERSION\\s+([0-9]+\\.[0-9]+\\.[0-9]+)' cmake/ExternalDependencies.cmake)
            echo "Parsed version: $version"
+           revision=$(grep -Po 'MQT_CORE_REV\\s+\"([^\"]+)' cmake/ExternalDependencies.cmake)
            echo "Parsed revision: $revision"
            echo "version=$version" >> $GITHUB_OUTPUT
            echo "revision=$revision" >> $GITHUB_OUTPUT
