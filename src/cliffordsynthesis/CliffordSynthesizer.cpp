@@ -519,14 +519,10 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   }
   std::cout << "Combine Circuits" << std::endl;
   for (auto& subCircuit : subCircuits) {
-    std::cout << "I am still here" << std::endl;
     const auto& circ = subCircuit.get();
-    std::cout << "I am still on" << std::endl;
     for (auto& it : *circ) {
-      std::cout << "and still on" << std::endl;
       optCircuit.emplace_back(std::move(it));
     }
-    std::cout << "And done" << std::endl;
   }
   std::cout << "Set Results" << std::endl;
   results.setDepth(optCircuit.getDepth());
