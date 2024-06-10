@@ -8,12 +8,17 @@ function(check_z3_version z3_include z3_lib)
     Z3_RUN_RESULT Z3_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/try_z3.cpp
     CMAKE_FLAGS -DINCLUDE_DIRECTORIES:STRING=${z3_include} LINK_LIBRARIES ${z3_lib}
-    COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT
-    RUN_OUTPUT_VARIABLE RUN_OUTPUT)
+    COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT RUN_OUTPUT_STDOUT_VARIABLE RUN_OUTPUT
+                            RUN_OUTPUT_STDERR_VARIABLE RUN_OUTPUT_STDERR)
 
-  if(NOT Z3_COMPILE_RESULT)
-    message(STATUS "Could not compile test program for Z3 version check. Output: "
-                   ${COMPILE_OUTPUT})
+  if(NOT Z3_COMPILE_RESULT OR RUN_OUTPUT_STDERR)
+    if(NOT Z3_COMPILE_RESULT)
+      message(STATUS "Could not compile test program for Z3 version check. Compile output: "
+                     ${COMPILE_OUTPUT})
+    else()
+      message(STATUS "Could not run test program for Z3 version check. Run output: " ${RUN_OUTPUT}
+                     " RUN_OUTPUT_STDERR: " ${RUN_OUTPUT_STDERR})
+    endif()
     if(z3_include AND EXISTS "${z3_include}/z3_version.h")
       file(STRINGS "${z3_include}/z3_version.h" z3_version_str
            REGEX "^#define[\t ]+Z3_MAJOR_VERSION[\t ]+.*")
@@ -98,7 +103,8 @@ if(NOT FOUND_SUITABLE_VERSION)
     message(STATUS "Found Z3 includes and libraries from config file")
     message(VERBOSE "Z3_CXX_INCLUDE_DIRS: ${Z3_CXX_INCLUDE_DIRS}")
     message(VERBOSE "Z3_LIBRARIES: ${Z3_LIBRARIES}")
-    check_z3_version(${Z3_CXX_INCLUDE_DIRS} ${Z3_LIBRARIES})
+    set(FOUND_SUITABLE_VERSION TRUE)
+    set(Z3_VERSION_STRING ${Z3_VERSION})
   endif()
 endif()
 
