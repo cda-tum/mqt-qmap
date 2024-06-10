@@ -31,8 +31,12 @@ jobs:
       - name: Parse MQT Core version and revision
         id: get-used-version
         run: |
+          echo "grep1=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake)"
+          echo "grep2=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake)"
           version=$(grep -oP 'set\(MQT_CORE_VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
           revision=$(grep -oP 'set\(MQT_CORE_REV\s+"([^"]+)"' cmake/ExternalDependencies.cmake | cut -d' ' -f2)
+          echo "version=$version"
+          echo "revision=$revision"
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "revision=$revision" >> $GITHUB_OUTPUT
       # Query the GitHub API to get the latest release of MQT Core.
@@ -45,6 +49,9 @@ jobs:
           tag=$(echo $latest_release | jq -r '.tag_name')
           commit=$(echo $latest_release | jq -r '.target_commitish')
           latest_version=${tag#v}
+          echo "tag=$tag"
+          echo "commit=$commit"
+          echo "latest_version=$latest_version"
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
           echo "latest_commit=$commit" >> $GITHUB_OUTPUT
       # Install the `semver` tool for making semantic version comparisons.
