@@ -544,7 +544,7 @@ CliffordSynthesizer::synthesizeSubcircuit(
     const std::shared_ptr<qc::QuantumComputation>& qc, std::size_t begin,
     std::size_t end, const Configuration& config) {
   std::cout << "Synthesizing Subcircuit" << std::endl;
-  const Tableau subTargetTableau{*qc, begin, end, true};
+  const Tableau       subTargetTableau{*qc, begin, end, true};
   std::cout << "Tableau created" << std::endl;
   CliffordSynthesizer synth(subTargetTableau);
   std::cout << "Synthesizer created" << std::endl;
