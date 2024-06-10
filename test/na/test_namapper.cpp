@@ -5,14 +5,190 @@
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
+#include "Definitions.hpp"
 #include "NAMapper.hpp"
 #include "QuantumComputation.hpp"
+#include "datastructures/Layer.hpp"
+#include "na/NAComputation.hpp"
+#include "na/operations/NAGlobalOperation.hpp"
+#include "na/operations/NALocalOperation.hpp"
+#include "na/operations/NAShuttlingOperation.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/OpType.hpp"
+#include "operations/StandardOperation.hpp"
 
-#include "gtest/gtest.h"
+#include <algorithm>
 #include <cstddef>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
+#include <unordered_map>
+#include <vector>
+
+namespace na {
+auto validateAODConstraints(const NAComputation& comp) -> bool {
+  for (const auto& naOp : comp) {
+    if (naOp->isShuttlingOperation()) {
+      const auto& shuttlingOp =
+          dynamic_cast<const NAShuttlingOperation&>(*naOp);
+      if (shuttlingOp.getStart().size() != shuttlingOp.getEnd().size()) {
+        return false;
+      }
+      for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
+        for (std::size_t j = i + 1; j < shuttlingOp.getStart().size(); ++j) {
+          const auto& s1 = shuttlingOp.getStart()[i];
+          const auto& s2 = shuttlingOp.getStart()[j];
+          const auto& e1 = shuttlingOp.getEnd()[i];
+          const auto& e2 = shuttlingOp.getEnd()[j];
+          if (*s1 == *s2) {
+            return false;
+          }
+          if (*e1 == *e2) {
+            return false;
+          }
+          if (s1->x == s2->x && e1->x != e2->x) {
+            return false;
+          }
+          if (s1->y == s2->y && e1->y != e2->y) {
+            return false;
+          }
+          if (s1->x < s2->x && e1->x >= e2->x) {
+            return false;
+          }
+          if (s1->y < s2->y && e1->y >= e2->y) {
+            return false;
+          }
+          if (s1->x > s2->x && e1->x <= e2->x) {
+            return false;
+          }
+          if (s1->y > s2->y && e1->y <= e2->y) {
+            return false;
+          }
+        }
+      }
+    } else if (naOp->isLocalOperation()) {
+      const auto& localOp = dynamic_cast<const NALocalOperation&>(*naOp);
+      for (std::size_t i = 0; i < localOp.getPositions().size(); ++i) {
+        for (std::size_t j = i + 1; j < localOp.getPositions().size(); ++j) {
+          const auto& a = localOp.getPositions()[i];
+          const auto& b = localOp.getPositions()[j];
+          if (*a == *b) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+
+auto retrieveQuantumComputation(const NAComputation& nac,
+                                const Architecture&  arch)
+    -> qc::QuantumComputation {
+  qc::QuantumComputation               qComp(nac.getInitialPositions().size());
+  std::vector<Point>                   positionOfQubits;
+  std::unordered_map<Point, qc::Qubit> positionToQubit;
+  positionOfQubits.reserve(nac.getInitialPositions().size());
+  qc::Qubit n = 0;
+  for (const auto& p : nac.getInitialPositions()) {
+    positionToQubit[*p] = n++;
+    positionOfQubits.emplace_back(*p);
+  }
+  for (const auto& naOp : nac) {
+    if (naOp->isLocalOperation()) {
+      const auto& localOp = dynamic_cast<const NALocalOperation&>(*naOp);
+      if (localOp.getType().nControls != 0 ||
+          !isSingleQubitGate(localOp.getType().type)) {
+        throw std::invalid_argument("Only single qubit gates are supported.");
+      }
+      for (const auto& pos : localOp.getPositions()) {
+        qComp.emplace_back<qc::StandardOperation>(
+            positionToQubit[*pos], localOp.getType().type, localOp.getParams());
+      }
+    } else if (naOp->isShuttlingOperation()) {
+      const auto& shuttlingOp =
+          dynamic_cast<const NAShuttlingOperation&>(*naOp);
+      for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
+        positionOfQubits[positionToQubit[*shuttlingOp.getStart()[i]]] =
+            *shuttlingOp.getEnd()[i];
+      }
+      positionToQubit.clear();
+      for (qc::Qubit i = 0; i < positionOfQubits.size(); ++i) {
+        positionToQubit[positionOfQubits[i]] = i;
+      }
+    } else if (naOp->isGlobalOperation()) {
+      const auto& globalOp = dynamic_cast<const NAGlobalOperation&>(*naOp);
+      const auto& zones =
+          arch.getPropertiesOfOperation(globalOp.getType()).zones;
+      if (!isSingleQubitGate(globalOp.getType().type) ||
+          globalOp.getType().nControls > 1) {
+        throw std::invalid_argument("Only 1Q- and 2Q-gates are supported.");
+      }
+      if (globalOp.getType().nControls == 1) {
+        for (std::size_t i1 = 0; i1 < positionOfQubits.size(); ++i1) {
+          const auto& pos1 = positionOfQubits[i1];
+          for (std::size_t i2 = i1 + 1; i2 < positionOfQubits.size(); ++i2) {
+            const auto& pos2 = positionOfQubits[i2];
+            if ((pos1 - pos2).length() <= arch.getInteractionRadius() &&
+                std::any_of(zones.cbegin(), zones.cend(),
+                            [&arch, &pos1](const auto& z) {
+                              return arch.getZoneAt(pos1) == z;
+                            }) &&
+                std::any_of(zones.cbegin(), zones.cend(),
+                            [&arch, &pos2](const auto& z) {
+                              return arch.getZoneAt(pos2) == z;
+                            })) {
+              qComp.emplace_back<qc::StandardOperation>(
+                  i1, i2, globalOp.getType().type, globalOp.getParams());
+            }
+          }
+        }
+      } else {
+        qc::CompoundOperation compoundOp;
+        for (std::size_t i = 0; i < positionOfQubits.size(); ++i) {
+          compoundOp.emplace_back<qc::StandardOperation>(
+              i, globalOp.getType().type, globalOp.getParams());
+        }
+        qComp.emplace_back<qc::CompoundOperation>(compoundOp);
+      }
+    }
+  }
+  return qComp;
+}
+
+auto checkEquivalence(const qc::QuantumComputation& circ,
+                      const NAComputation&          nac,
+                      const Architecture&           arch) -> bool {
+  auto            naQComp = retrieveQuantumComputation(nac, arch);
+  const qc::Layer qLayer(circ);
+  int             line = 0;
+  for (const auto& op : naQComp) {
+    ++line;
+    const auto& executableSet = qLayer.getExecutableSet();
+    const auto& it            = std::find_if(
+        executableSet.begin(), executableSet.end(),
+        [&op](const std::shared_ptr<qc::Layer::DAGVertex>& vertex) {
+          return *vertex->getOperation() == *op;
+        });
+    if (it == executableSet.end()) {
+      std::cout << "Quantum computations seem not to be equal (operations "
+                   "might not occur in the input circuit, operation "
+                << line << ").\n";
+      return false;
+    }
+    (*it)->execute();
+  }
+  if (!qLayer.getExecutableSet().empty()) {
+    std::cout << "Quantum computations seem not to be equal (not all "
+                 "operations have been executed).\n";
+    return false;
+  }
+  return true;
+}
+} // namespace na
 
 TEST(NAMapper, Exceptions) {
   std::istringstream archIS(R"({
@@ -558,14 +734,26 @@ rz(3.9927041) q[7];)";
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(
-                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+                1, 1, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
-  std::ignore = mapper.getResult();
+  const auto& result = mapper.getResult();
+  EXPECT_TRUE(na::validateAODConstraints(result));
+  EXPECT_TRUE(na::checkEquivalence(circ, result, arch));
   std::ignore = mapper.getStats();
   // ---------------------------------------------------------------------
-  na::NAMapper mapper2(arch,
-                       na::Configuration(1, 1, na::NAMappingMethod::Naive));
+  na::NAMapper mapper2(
+      arch, na::Configuration(
+                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper2.map(circ);
+  const auto& result2 = mapper2.getResult();
+  EXPECT_TRUE(na::validateAODConstraints(result2));
+  // ---------------------------------------------------------------------
+  na::NAMapper mapper3(arch,
+                       na::Configuration(1, 1, na::NAMappingMethod::Naive));
+  mapper3.map(circ);
+  const auto& result3 = mapper3.getResult();
+  EXPECT_TRUE(na::validateAODConstraints(result3));
+  EXPECT_TRUE(na::checkEquivalence(circ, result3, arch));
   // ---------------------------------------------------------------------
 }
 
@@ -802,5 +990,5 @@ ry(2.2154814) q;)";
                 3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  std::ignore = mapper.getResult();
+  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
 }

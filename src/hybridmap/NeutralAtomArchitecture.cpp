@@ -136,7 +136,7 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
 
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
-      auto const dist = NeutralAtomArchitecture::getEuclidianDistance(
+      auto const dist = NeutralAtomArchitecture::getEuclideanDistance(
           Point(0, 0), Point(i, j));
       if (dist <= interactionRadius) {
         if (dist == 0) {
@@ -266,7 +266,7 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
       }
       // do a preselection
       // now check exact difference
-      auto const distance = getEuclidianDistance(coord, i);
+      auto const distance = getEuclideanDistance(coord, i);
       if (distance <= getBlockingFactor() * getInteractionRadius()) {
         blockedCoordIndices.emplace(i);
       }
