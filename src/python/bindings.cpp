@@ -850,7 +850,8 @@ PYBIND11_MODULE(pyqmap, m) {
       "Neutral Atom Hybrid Mapper that can use both SWAP gates and AOD "
       "movements to map a quantum circuit to a neutral atom quantum computer.")
       .def(py::init<const na::NeutralAtomArchitecture&, na::MapperParameters>(),
-           "Create Hybrid NA Mapper with mapper parameters", "arch"_a,
+           "Create Hybrid NA Mapper with mapper parameters",
+           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
            "params"_a = na::MapperParameters())
       .def("set_parameters", &na::NeutralAtomMapper::setParameters,
            "Set the parameters for the Hybrid NA Mapper", "params"_a)
