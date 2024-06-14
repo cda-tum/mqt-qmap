@@ -134,7 +134,7 @@ void HardwareQubits::computeNearbyQubits(HwQubit q) {
     if (coord.first == q) {
       continue;
     }
-    if (arch->getEuclidianDistance(coordQ, coord.second) <=
+    if (arch->getEuclideanDistance(coordQ, coord.second) <=
         arch->getInteractionRadius()) {
       newNearbyQubits.emplace(coord.first);
     }
@@ -169,7 +169,7 @@ HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
         continue;
       }
       // TODO improve by using the nearby coords as a preselection
-      auto const distance = arch->getEuclidianDistance(hwToCoordIdx.at(qubit),
+      auto const distance = arch->getEuclideanDistance(hwToCoordIdx.at(qubit),
                                                        hwToCoordIdx.at(i));
       if (distance <=
           arch->getBlockingFactor() * arch->getInteractionRadius()) {

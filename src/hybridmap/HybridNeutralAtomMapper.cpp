@@ -841,7 +841,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch->getEuclidianDistance(
+          auto dist    = this->arch->getEuclideanDistance(
               this->hardwareQubits.getCoordIndex(hwQubit),
               this->hardwareQubits.getCoordIndex(toMoveHwQubit));
           distanceBefore += dist;
@@ -852,7 +852,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch->getEuclidianDistance(
+          auto dist    = this->arch->getEuclideanDistance(
               this->hardwareQubits.getCoordIndex(hwQubit), move.second);
           distanceAfter += dist;
         }
