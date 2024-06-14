@@ -57,3 +57,24 @@ def test_hybrid_na_mapper(
     assert results["totalExecutionTime"] > 0
     assert results["totalIdleTime"] > 0
     assert results["totalFidelities"] > 0
+
+
+def _nested_mapper_create() -> HybridNAMapper:
+    """Create a nested Neutral Atom hybrid architecture."""
+    arch = NeutralAtomHybridArchitecture(str(arch_dir / "rubidium.json"))
+    params = HybridMapperParameters()
+    return HybridNAMapper(arch, params=params)
+
+
+def test_keep_alive() -> None:
+    """Test the keep alive feature of the python bindings."""
+    mapper = _nested_mapper_create()
+
+    qc = QuantumCircuit.from_qasm_file(str(circuit_dir / "dj_nativegates_rigetti_qiskit_opt3_10.qasm"))
+
+    mapper.map(qc)
+    results = mapper.schedule(create_animation_csv=False)
+
+    assert results["totalExecutionTime"] > 0
+    assert results["totalIdleTime"] > 0
+    assert results["totalFidelities"] > 0
