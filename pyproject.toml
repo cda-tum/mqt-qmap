@@ -256,7 +256,7 @@ skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
 test-skip = "cp38-macosx_arm64"
-build-frontend = "build"
+build-frontend = "build[uv]"
 
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
