@@ -270,6 +270,6 @@ repair-wheel-command = [
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 [tool.cibuildwheel.windows]
-before-build = "pip install delvewheel"
-repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel}"
+before-build = "pip install delvewheel>=1.4.0"
+repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
 environment = { CMAKE_GENERATOR = "Ninja" }
