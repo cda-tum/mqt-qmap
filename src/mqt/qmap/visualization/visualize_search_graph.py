@@ -216,8 +216,8 @@ def _layout_search_graph(
 
     layer_spacings: dict[float, float] = {}
     avg_spacing = 0.0
-    for y in layers_x:
-        layer_spacings[y] = _get_avg_min_distance(layers_x[y])
+    for y, val in layers_x.items():
+        layer_spacings[y] = _get_avg_min_distance(val)
         avg_spacing += layer_spacings[y]
     avg_spacing /= float(len(layers_x))
     layer_spacings_items = sorted(layer_spacings.items(), key=operator.itemgetter(0))
