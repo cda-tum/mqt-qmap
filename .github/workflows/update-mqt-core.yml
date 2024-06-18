@@ -36,24 +36,17 @@ jobs:
            echo "Parsed revision: $revision"
            echo "version=$version" >> $GITHUB_OUTPUT
            echo "revision=$revision" >> $GITHUB_OUTPUT
-      # Query the GitHub API to get the latest release of MQT Core.
-      # We need the tag of the latest release and the commit hash of the tag.
-      # Use `{github.token}` to authenticate with the GitHub API.
+      # Query the latest tag and its commit SHA via git
       - name: Get latest release of MQT Core
         id: get-latest-release
         run: |
-          latest_release=$(curl -s -H "Authorization: token ${{ github.token }}" https://api.github.com/repos/cda-tum/mqt-core/releases/latest)
-          tag=$(echo $latest_release | jq -r '.tag_name')
+          git fetch --tags
+          tag=$(git describe --tags $(git rev-list --tags --max-count=1))
           latest_version=${tag#v}
-          echo "latest_release=$latest_release"
           echo "tag=$tag"
           echo "latest_version=$latest_version"
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
-          # Get the list of commits on the main branch
-          commits=$(curl -s -H "Authorization: token ${{ github.token }}" https://api.github.com/repos/cda-tum/mqt-core/commits)
-          echo "commits=$commits"
-          # Select the commit that has the same tag name as the latest release
-          commit=$(echo $commits | jq -r --arg tag "$tag" '.[] | select(.commit.message | startswith($tag)) | .sha')
+          commit=$(git rev-list -1 $tag)
           echo "commit=$commit"
           echo "latest_commit=$commit" >> $GITHUB_OUTPUT
       # Install the `semver` tool for making semantic version comparisons.
