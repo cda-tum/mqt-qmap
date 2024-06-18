@@ -62,12 +62,14 @@ jobs:
         id: compare-versions
         run: |
           if semver compare ${{ steps.get-used-version.outputs.version }} ${{ steps.get-latest-release.outputs.latest_version }} < 0; then
-            echo "update=true" >> $GITHUB_OUTPUT
+            update=true
           elif [ ${{ steps.get-used-version.outputs.version }} = ${{ steps.get-latest-release.outputs.latest_version }} ] && [ ${{ steps.get-used-version.outputs.revision }} != ${{ steps.get-latest-release.outputs.latest_commit }} ]; then
-            echo "update=true" >> $GITHUB_OUTPUT
+            update=true
           else
-            echo "update=false" >> $GITHUB_OUTPUT
+            update=false
           fi
+          echo "update=$update"
+          echo "update=$update" >> $GITHUB_OUTPUT
       # Update the MQT Core version and revision in the `cmake/ExternalDependencies.cmake` file.
       - name: Update MQT Core version and revision
         id: update-version
