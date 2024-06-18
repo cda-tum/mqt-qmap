@@ -35,7 +35,8 @@ set(FETCHCONTENT_SOURCE_DIR_MQT-CORE
 set(MQT_CORE_VERSION
     2.2.2
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "ce706d2e655c3b4b43d783af25fbc8f61776e1ff"
+set(MQT_CORE_REV
+    "ce706d2e655c3b4b43d783af25fbc8f61776e1ff"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 # cmake-format: on
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
