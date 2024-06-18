@@ -93,3 +93,4 @@ jobs:
             **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get-used-version.revision }}...${{ steps.get-latest-release.outputs.latest_commit }}"
           branch: "update-mqt-core-${{ steps.get-latest-release.outputs.latest_commit }}"
           labels: "dependencies,c++"
+          base: "main"
