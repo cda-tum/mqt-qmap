@@ -93,11 +93,13 @@ jobs:
         with:
           token: ${{ github.token }}
           commit-message: "⬆️ Update `cda-tum/mqt-core`"
-          title: "⬆️ Update `cda-tum/mqt-core` cda-tum/mqt-core@${{ steps.get-used-version.outputs.revision }} (version v${{ steps.get-used-version.outputs.version }}) to cda-tum/mqt-core@${{ steps.get-latest-release.outputs.latest_commit }} (version v${{ steps.get-latest-release.outputs.latest_version }})"
-          body:
-            "This pull request updates [MQT Core](https://github.com/cda-tum/mqt-core) from cda-tum/mqt-core@${{ steps.get-used-version.outputs.revision }} (version v${{ steps.get-used-version.outputs.version }}) to cda-tum/mqt-core@${{ steps.get-latest-release.outputs.latest_commit }} (version v${{ steps.get-latest-release.outputs.latest_version }}).
+          title: "⬆️ Update `cda-tum/mqt-core`"
+          body: |
+            This pull request updates [MQT Core](https://github.com/cda-tum/mqt-core)
+            - from cda-tum/mqt-core@${{ steps.get-used-version.outputs.revision }} (version v${{ steps.get-used-version.outputs.version }})
+            - to cda-tum/mqt-core@${{ steps.get-latest-release.outputs.latest_commit }} (version v${{ steps.get-latest-release.outputs.latest_version }}).
 
-            **Full Changelog**: https://github.com/cda-tum/mqt-core/compare/${{ steps.get-used-version.outputs.revision }}...${{ steps.get-latest-release.outputs.latest_commit }}"
+            **Full Changelog**: https://github.com/cda-tum/mqt-core/compare/${{ steps.get-used-version.outputs.revision }}...${{ steps.get-latest-release.outputs.latest_commit }}
           branch: "update-mqt-core-${{ steps.get-latest-release.outputs.latest_commit }}"
           labels: "dependencies,c++"
           base: "main"
