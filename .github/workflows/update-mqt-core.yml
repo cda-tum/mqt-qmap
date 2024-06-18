@@ -77,6 +77,7 @@ jobs:
         run: |
           sed -i 's/set(MQT_CORE_VERSION.*/set(MQT_CORE_VERSION "${{ steps.get-latest-release.outputs.latest_version }}"\n    CACHE STRING "MQT Core version")/' cmake/ExternalDependencies.cmake
           sed -i 's/set(MQT_CORE_REV.*/set(MQT_CORE_REV "${{ steps.get-latest-release.outputs.latest_commit }}"\n    CACHE STRING "MQT Core identifier (tag, branch or commit hash)")/' cmake/ExternalDependencies.cmake
+          git diff
       # Create a pull request to merge the changes into the main branch.
       - name: Create pull request
         id: create-pull-request
