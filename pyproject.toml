@@ -256,7 +256,7 @@ skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
 test-skip = "cp38-macosx_arm64"
-build-frontend = "build"
+build-frontend = "build[uv]"
 
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
@@ -270,6 +270,6 @@ repair-wheel-command = [
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 [tool.cibuildwheel.windows]
-before-build = "pip install delvewheel"
-repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel}"
+before-build = "pip install delvewheel>=1.4.0"
+repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
 environment = { CMAKE_GENERATOR = "Ninja" }
