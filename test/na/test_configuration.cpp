@@ -21,7 +21,7 @@ TEST(Configuration, MethodOfString) {
 
 TEST(Configuration, Import) {
   EXPECT_THROW(na::Configuration("nonexistent.json"), std::runtime_error);
-  std::istringstream      configIS(R"(
+  std::istringstream configIS(R"(
     {
       "patch": {
         "rows": 2,

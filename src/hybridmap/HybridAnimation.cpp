@@ -21,15 +21,15 @@
 
 namespace na {
 AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
-                               const NeutralAtomArchitecture&    arch) {
+                               const NeutralAtomArchitecture& arch) {
   auto nCols = arch.getNcolumns();
 
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
-    auto column         = coord % nCols;
-    auto row            = coord / nCols;
-    idToCoord[id]       = {column * arch.getInterQubitDistance(),
-                           row * arch.getInterQubitDistance()};
+    auto column = coord % nCols;
+    auto row = coord / nCols;
+    idToCoord[id] = {column * arch.getInterQubitDistance(),
+                     row * arch.getInterQubitDistance()};
   }
 }
 
@@ -94,10 +94,10 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
       // if yes -> update coordIdxToId with new coordIdx
       // if not -> throw exception
       for (const auto& idAndCoord : idToCoord) {
-        auto id    = idAndCoord.first;
+        auto id = idAndCoord.first;
         auto coord = idAndCoord.second;
-        auto col   = coordIdx % arch.getNcolumns();
-        auto row   = coordIdx / arch.getNcolumns();
+        auto col = coordIdx % arch.getNcolumns();
+        auto row = coordIdx / arch.getNcolumns();
         if (std::abs(coord.first - col * arch.getInterQubitDistance()) <
                 0.0001 &&
             std::abs(coord.second - row * arch.getInterQubitDistance()) <
@@ -121,7 +121,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
                           std::to_string(coordIdx) +
                           " but there is no qubit at this coordIdx");
     }
-    auto id    = coordIdxToId.at(coordIdx);
+    auto id = coordIdxToId.at(coordIdx);
     auto coord = idToCoord.at(id);
     if (op->getType() == qc::OpType::AodActivate) {
       addAxis(id);

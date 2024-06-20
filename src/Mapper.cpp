@@ -15,12 +15,12 @@
 
 void Mapper::initResults() {
   countGates(qc, results.input);
-  results.input.name    = qc.getName();
-  results.input.qubits  = static_cast<std::uint16_t>(qc.getNqubits());
-  results.architecture  = architecture->getName();
-  results.output.name   = qc.getName() + "_mapped";
+  results.input.name = qc.getName();
+  results.input.qubits = static_cast<std::uint16_t>(qc.getNqubits());
+  results.architecture = architecture->getName();
+  results.output.name = qc.getName() + "_mapped";
   results.output.qubits = architecture->getNqubits();
-  results.output.gates  = std::numeric_limits<std::size_t>::max();
+  results.output.gates = std::numeric_limits<std::size_t>::max();
   qcMapped.addQubitRegister(architecture->getNqubits());
 }
 
@@ -57,7 +57,7 @@ void Mapper::processDisjointQubitLayer(
       layer = std::max(*lastLayer.at(*control), *lastLayer.at(target)) + 1;
     }
     lastLayer.at(*control) = layer;
-    lastLayer.at(target)   = layer;
+    lastLayer.at(target) = layer;
   }
 
   if (layers.size() <= layer) {
@@ -105,7 +105,7 @@ void Mapper::processDisjoint2qBlockLayer(
       }
     }
     lastLayer.at(*control) = layer;
-    lastLayer.at(target)   = layer;
+    lastLayer.at(target) = layer;
   }
 
   if (layers.size() <= layer) {
@@ -143,8 +143,8 @@ void Mapper::createLayers() {
                           "decomposed to the appropriate gate set!");
     }
 
-    const bool                   singleQubit = !gate->isControlled();
-    std::optional<std::uint16_t> control     = std::nullopt;
+    const bool singleQubit = !gate->isControlled();
+    std::optional<std::uint16_t> control = std::nullopt;
     if (!singleQubit) {
       control = static_cast<std::uint16_t>(
           qc.initialLayout.at((*gate->getControls().begin()).qubit));
@@ -286,12 +286,12 @@ void Mapper::splitLayer(std::size_t index, Architecture& arch) {
       singleQubitMultiplicities.at(index);
   const TwoQubitMultiplicity& twoQubitMultiplicity =
       twoQubitMultiplicities.at(index);
-  std::vector<Gate>       layer0{};
-  std::vector<Gate>       layer1{};
+  std::vector<Gate> layer0{};
+  std::vector<Gate> layer1{};
   SingleQubitMultiplicity singleQubitMultiplicity0(arch.getNqubits(), 0);
   SingleQubitMultiplicity singleQubitMultiplicity1(arch.getNqubits(), 0);
-  TwoQubitMultiplicity    twoQubitMultiplicity0{};
-  TwoQubitMultiplicity    twoQubitMultiplicity1{};
+  TwoQubitMultiplicity twoQubitMultiplicity0{};
+  TwoQubitMultiplicity twoQubitMultiplicity1{};
   std::set<std::uint16_t> activeQubits0{};
   std::set<std::uint16_t> activeQubits1QGates0{};
   std::set<std::uint16_t> activeQubits2QGates0{};
@@ -518,9 +518,9 @@ void Mapper::postMappingOptimizations(const Configuration& config) {
   qc::CircuitOptimizer::cancelCNOTs(qcMapped);
 }
 
-void Mapper::countGates(decltype(qcMapped.cbegin())      it,
+void Mapper::countGates(decltype(qcMapped.cbegin()) it,
                         const decltype(qcMapped.cend())& end,
-                        MappingResults::CircuitInfo&     info) {
+                        MappingResults::CircuitInfo& info) {
   for (; it != end; ++it) {
     const auto& g = *it;
     if (g->getType() == qc::Teleportation) {

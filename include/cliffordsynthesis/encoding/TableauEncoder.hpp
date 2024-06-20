@@ -18,7 +18,7 @@ class TableauEncoder {
 public:
   TableauEncoder() = default;
   TableauEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-                 const std::size_t                      timestepLimit,
+                 const std::size_t timestepLimit,
                  std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), S(tableauSize), T(timestepLimit),
         lb(std::move(logicBlock)) {}

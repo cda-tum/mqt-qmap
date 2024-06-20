@@ -12,9 +12,9 @@
 
 #pragma once
 
-constexpr int    MAX_QUEUE_SIZE               = 6000000;
-constexpr int    MAX_NODES_MARGIN             = 500000;
-constexpr int    MAX_QUEUE_COPY_LENGTH        = 1000000;
+constexpr int MAX_QUEUE_SIZE = 6000000;
+constexpr int MAX_NODES_MARGIN = 500000;
+constexpr int MAX_QUEUE_COPY_LENGTH = 1000000;
 constexpr double QUEUE_COPY_LENGTH_PERCENTAGE = 1. / 6;
 
 template <class T> struct DoNothing {
@@ -37,7 +37,7 @@ public:
  * functions.
  */
 template <class T, class CostCompare = std::greater<T>,
-          class FuncCompare          = std::less<T>,
+          class FuncCompare = std::less<T>,
           class CleanObsoleteElement = DoNothing<T>>
 class UniquePriorityQueue {
 public:
@@ -78,7 +78,7 @@ public:
   void pop() {
     assert(!queue.empty() && queue.size() == membership.size());
 
-    const auto&                 topElement   = queue.top();
+    const auto& topElement = queue.top();
     [[maybe_unused]] const auto numberErased = membership.erase(topElement);
     assert(numberErased == 1);
 
@@ -106,14 +106,14 @@ public:
          it++) {
       CleanObsoleteElement()(*it);
     }
-    queue      = OwnPriorityQueue<T, std::vector<T>, CostCompare>();
+    queue = OwnPriorityQueue<T, std::vector<T>, CostCompare>();
     membership = std::set<T, FuncCompare>();
   }
 
   // clears the queue until a certain length is reached
   void update() {
     std::array<T, MAX_QUEUE_SIZE> tempQueue;
-    unsigned int                  length =
+    unsigned int length =
         std::min(static_cast<int>(queue.size() * QUEUE_COPY_LENGTH_PERCENTAGE),
                  MAX_QUEUE_COPY_LENGTH);
 
@@ -138,6 +138,6 @@ public:
 
 private:
   OwnPriorityQueue<T, std::vector<T>, CostCompare> queue;
-  std::set<T, FuncCompare>                         membership;
-  unsigned int                                     lastNodeCopied = 0;
+  std::set<T, FuncCompare> membership;
+  unsigned int lastNodeCopied = 0;
 };

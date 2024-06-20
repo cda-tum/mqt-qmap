@@ -36,8 +36,8 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
 
   // create new quantum circuit and insert AOD operations at the correct
   // indices
-  auto     groupIt = moveGroups.begin();
-  uint32_t idx     = 0;
+  auto groupIt = moveGroups.begin();
+  uint32_t idx = 0;
   for (const auto& op : qc) {
     if (groupIt != moveGroups.end() && idx == groupIt->getFirstIdx()) {
       // add move group
@@ -60,9 +60,9 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
 }
 
 void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
-  MoveGroup       currentMoveGroup;
+  MoveGroup currentMoveGroup;
   MoveGroup const lastMoveGroup;
-  uint32_t        idx = 0;
+  uint32_t idx = 0;
   for (auto& op : qc) {
     if (op->getType() == qc::OpType::Move) {
       AtomMove const move{op->getTargets()[0], op->getTargets()[1]};
@@ -103,7 +103,7 @@ bool MoveToAodConverter::MoveGroup::canAdd(
       moves.begin(), moves.end(),
       [&moveVector, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
-        auto opVector  = archArg.getVector(moveGroup.first, moveGroup.second);
+        auto opVector = archArg.getVector(moveGroup.first, moveGroup.second);
         return parallelCheck(moveVector, opVector);
       });
 }
@@ -125,7 +125,7 @@ bool MoveToAodConverter::MoveGroup::parallelCheck(const MoveVector& v1,
 }
 
 void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
-                                        const uint32_t  idx) {
+                                        const uint32_t idx) {
   moves.emplace_back(move, idx);
   qubitsUsedByGates.emplace_back(move.second);
 }
@@ -133,14 +133,14 @@ void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
 void MoveToAodConverter::AodActivationHelper::addActivation(
     std::pair<ActivationMergeType, ActivationMergeType> merge,
     const Point& origin, const AtomMove& move, MoveVector v) {
-  const auto x         = static_cast<std::uint32_t>(origin.x);
-  const auto y         = static_cast<std::uint32_t>(origin.y);
-  const auto signX     = v.direction.getSignX();
-  const auto signY     = v.direction.getSignY();
-  const auto deltaX    = v.xEnd - v.xStart;
-  const auto deltaY    = v.yEnd - v.yStart;
-  auto       aodMovesX = getAodMovesFromInit(Dimension::X, x);
-  auto       aodMovesY = getAodMovesFromInit(Dimension::Y, y);
+  const auto x = static_cast<std::uint32_t>(origin.x);
+  const auto y = static_cast<std::uint32_t>(origin.y);
+  const auto signX = v.direction.getSignX();
+  const auto signY = v.direction.getSignY();
+  const auto deltaX = v.xEnd - v.xStart;
+  const auto deltaY = v.yEnd - v.yStart;
+  auto aodMovesX = getAodMovesFromInit(Dimension::X, x);
+  auto aodMovesY = getAodMovesFromInit(Dimension::Y, y);
 
   switch (merge.first) {
   case ActivationMergeType::Trivial:
@@ -232,7 +232,7 @@ MoveToAodConverter::canAddActivation(
       static_cast<std::uint32_t>(dim == Dimension::X ? final.x : final.y);
 
   // Get Moves that start/end at the same position as the current move
-  auto aodMovesActivation   = activationHelper.getAodMovesFromInit(dim, start);
+  auto aodMovesActivation = activationHelper.getAodMovesFromInit(dim, start);
   auto aodMovesDeactivation = deactivationHelper.getAodMovesFromInit(dim, end);
 
   // both empty
@@ -304,16 +304,16 @@ void MoveToAodConverter::processMoveGroups() {
        ++groupIt) {
     AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate};
     AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate};
-    MoveGroup           possibleNewMoveGroup;
+    MoveGroup possibleNewMoveGroup;
     std::vector<AtomMove> movesToRemove;
     for (auto& movePair : groupIt->moves) {
-      auto& move     = movePair.first;
-      auto  idx      = movePair.second;
-      auto  origin   = arch.getCoordinate(move.first);
-      auto  target   = arch.getCoordinate(move.second);
-      auto  v        = arch.getVector(move.first, move.second);
-      auto  vReverse = arch.getVector(move.second, move.first);
-      auto  canAddX =
+      auto& move = movePair.first;
+      auto idx = movePair.second;
+      auto origin = arch.getCoordinate(move.first);
+      auto target = arch.getCoordinate(move.second);
+      auto v = arch.getVector(move.first, move.second);
+      auto vReverse = arch.getVector(move.second, move.first);
+      auto canAddX =
           canAddActivation(aodActivationHelper, aodDeactivationHelper, origin,
                            v, target, vReverse, Dimension::X);
       auto canAddY =
@@ -351,8 +351,8 @@ void MoveToAodConverter::processMoveGroups() {
       possibleNewMoveGroup = MoveGroup();
       groupIt--;
     }
-    groupIt->processedOpsInit   = aodActivationHelper.getAodOperations();
-    groupIt->processedOpsFinal  = aodDeactivationHelper.getAodOperations();
+    groupIt->processedOpsInit = aodActivationHelper.getAodOperations();
+    groupIt->processedOpsFinal = aodDeactivationHelper.getAodOperations();
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
         groupIt->processedOpsInit, groupIt->processedOpsFinal);
   }
@@ -365,7 +365,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   // and connect with an aod move operations
   // all can be done in parallel in a single move
   std::vector<SingleOperation> aodOperations;
-  std::set<CoordIndex>         targetQubits;
+  std::set<CoordIndex> targetQubits;
 
   for (const auto& opInit : opsInit) {
     if (opInit.getType() == qc::OpType::AodMove) {
@@ -383,13 +383,13 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             // found corresponding final operation
             // connect with aod move
             const auto startXs = opInit.getEnds(Dimension::X);
-            const auto endXs   = opFinal.getStarts(Dimension::X);
+            const auto endXs = opFinal.getStarts(Dimension::X);
             const auto startYs = opInit.getEnds(Dimension::Y);
-            const auto endYs   = opFinal.getStarts(Dimension::Y);
+            const auto endYs = opFinal.getStarts(Dimension::Y);
             if (!startXs.empty() && !endXs.empty()) {
               for (size_t i = 0; i < startXs.size(); i++) {
                 const auto startX = startXs[i];
-                const auto endX   = endXs[i];
+                const auto endX = endXs[i];
                 if (std::abs(startX - endX) > 0.0001) {
                   aodOperations.emplace_back(Dimension::X, startX, endX);
                 }
@@ -398,7 +398,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
             if (!startYs.empty() && !endYs.empty()) {
               for (size_t i = 0; i < startYs.size(); i++) {
                 const auto startY = startYs[i];
-                const auto endY   = endYs[i];
+                const auto endY = endYs[i];
                 if (std::abs(startY - endY) > 0.0001) {
                   aodOperations.emplace_back(Dimension::Y, startY, endY);
                 }
@@ -455,7 +455,7 @@ bool MoveToAodConverter::AodActivationHelper::checkIntermediateSpaceAtInit(
   } else {
     neighborX -= 1;
   }
-  auto aodMoves         = getAodMovesFromInit(dim, init);
+  auto aodMoves = getAodMovesFromInit(dim, init);
   auto aodMovesNeighbor = getAodMovesFromInit(dim, neighborX);
   if (aodMoves.empty() && aodMovesNeighbor.empty()) {
     return true;
@@ -526,7 +526,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<SingleOperation> initOperations;
   std::vector<SingleOperation> offsetOperations;
 
-  auto d      = this->arch.getInterQubitDistance();
+  auto d = this->arch.getInterQubitDistance();
   auto interD = this->arch.getInterQubitDistance() /
                 this->arch.getNAodIntermediateLevels();
 

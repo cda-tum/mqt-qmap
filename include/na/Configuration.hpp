@@ -38,9 +38,9 @@ getMethodOfString(const std::string& method) -> NAMappingMethod {
 }
 class Configuration {
 private:
-  std::size_t     patchRows = 1;
-  std::size_t     patchCols = 1;
-  NAMappingMethod method    = NAMappingMethod::MaximizeParallelismHeuristic;
+  std::size_t patchRows = 1;
+  std::size_t patchCols = 1;
+  NAMappingMethod method = NAMappingMethod::MaximizeParallelismHeuristic;
 
 public:
   Configuration() = default;

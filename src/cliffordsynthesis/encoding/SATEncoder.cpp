@@ -22,7 +22,7 @@ using namespace logicbase;
 
 void SATEncoder::initializeSolver() {
   PLOG_DEBUG << "Initializing solver engine.";
-  bool              success = false;
+  bool success = false;
   logicutil::Params params;
   for (const auto& [key, value] : config.solverParameters) {
     if (std::holds_alternative<bool>(value)) {
@@ -108,9 +108,9 @@ void SATEncoder::createFormulation() {
 Result SATEncoder::solve() const {
   PLOG_INFO << "Solving the SAT instance.";
 
-  const auto start  = std::chrono::high_resolution_clock::now();
+  const auto start = std::chrono::high_resolution_clock::now();
   const auto result = lb->solve();
-  const auto end    = std::chrono::high_resolution_clock::now();
+  const auto end = std::chrono::high_resolution_clock::now();
   const auto runtime =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
           .count();
@@ -135,7 +135,7 @@ Results SATEncoder::run() {
   createFormulation();
   const auto solverResult = solve();
 
-  const auto end     = std::chrono::high_resolution_clock::now();
+  const auto end = std::chrono::high_resolution_clock::now();
   const auto runtime = std::chrono::duration<double>(end - start);
 
   Results res{};

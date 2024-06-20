@@ -86,7 +86,7 @@ void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
 
 LogicTerm encoding::MultiGateEncoder::createTwoQubitGateConstraint(
     std::size_t pos, std::size_t ctrl, std::size_t trgt) {
-  auto changes              = LogicTerm(true);
+  auto changes = LogicTerm(true);
   const auto [xCtrl, xTrgt] = tvars->twoQubitXChange(pos, ctrl, trgt);
   const auto [zCtrl, zTrgt] = tvars->twoQubitZChange(pos, ctrl, trgt);
 
@@ -110,7 +110,7 @@ void MultiGateEncoder::assertSingleQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNow = vars.gS[pos];
   const auto& gSNext = vars.gS[pos + 1];
 
   // once no gate is applied to the considered qubit, no single qubit gate can
@@ -134,7 +134,7 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNow = vars.gS[pos];
   const auto& gCNext = vars.gC[pos + 1];
 
   // two identical CNOTs may not be applied in a row because they would cancel.
@@ -148,15 +148,15 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
   // be conjugated with Hadamards) No Combination of Paulis on both Qubits
   // before a CNOT These gates can be just pushed through to the other side
   constexpr auto noneIndex = gateToIndex(qc::OpType::None);
-  const auto     noGate    = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
-  const auto     noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
+  const auto noGate = gSNow[noneIndex][ctrl] && gSNow[noneIndex][trgt];
+  const auto noFurtherCnot = !gCNext[ctrl][trgt] && !gCNext[trgt][ctrl];
 
   constexpr auto hIndex = gateToIndex(qc::OpType::H);
   constexpr auto xIndex = gateToIndex(qc::OpType::X);
   constexpr auto zIndex = gateToIndex(qc::OpType::Z);
   constexpr auto yIndex = gateToIndex(qc::OpType::Y);
-  const auto     hh     = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
-  const auto     gateBeforeCtrl =
+  const auto hh = gSNow[hIndex][ctrl] && gSNow[hIndex][trgt];
+  const auto gateBeforeCtrl =
       gSNow[zIndex][ctrl] || gSNow[xIndex][ctrl] || gSNow[yIndex][ctrl];
   const auto gateBeforeTarget =
       gSNow[zIndex][trgt] || gSNow[xIndex][trgt] || gSNow[yIndex][ctrl];
@@ -165,8 +165,8 @@ void MultiGateEncoder::assertTwoQubitGateOrderConstraints(
 }
 
 void MultiGateEncoder::splitXorR(const logicbase::LogicTerm& changes,
-                                 std::size_t                 pos) {
-  auto&             xorHelper = xorHelpers[pos];
+                                 std::size_t pos) {
+  auto& xorHelper = xorHelpers[pos];
   const std::string hName =
       "h_" + std::to_string(pos) + "_" + std::to_string(xorHelper.size());
   PLOG_DEBUG << "Creating helper variable for RChange XOR " << hName;

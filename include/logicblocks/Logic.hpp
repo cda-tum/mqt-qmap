@@ -272,16 +272,16 @@ inline CType getResultCType(OpType op) {
 
 class LogicTerm;
 
-using LogicVector   = std::vector<LogicTerm>;
-using LogicMatrix   = std::vector<LogicVector>;
+using LogicVector = std::vector<LogicTerm>;
+using LogicMatrix = std::vector<LogicVector>;
 using LogicMatrix3D = std::vector<LogicMatrix>;
 using LogicMatrix4D = std::vector<LogicMatrix3D>;
 
 class Logic {
 public:
-  virtual ~Logic()             = default;
+  virtual ~Logic() = default;
   virtual uint64_t getNextId() = 0;
-  virtual uint64_t getId()     = 0;
+  virtual uint64_t getId() = 0;
 };
 
 } // namespace logicbase

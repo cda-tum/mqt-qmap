@@ -17,7 +17,7 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
-  logicbase::LogicTerm   rChanges{};
+  logicbase::LogicTerm rChanges{};
   logicbase::LogicMatrix xorHelpers{};
 
   void assertConsistency() const override;

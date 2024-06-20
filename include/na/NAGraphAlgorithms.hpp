@@ -20,8 +20,8 @@
 
 namespace na {
 
-using Color            = std::uint16_t;
-using Edge             = std::pair<qc::Qubit, qc::Qubit>;
+using Color = std::uint16_t;
+using Edge = std::pair<qc::Qubit, qc::Qubit>;
 using InteractionGraph = qc::Layer::InteractionGraph;
 
 class NAGraphAlgorithms {
@@ -48,7 +48,7 @@ public:
    * @return a set of edges with at least one node in vs
    */
   [[nodiscard]] static auto
-  coveredEdges(const InteractionGraph&              g,
+  coveredEdges(const InteractionGraph& g,
                const std::unordered_set<qc::Qubit>& vs)
       -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>;
 
@@ -87,10 +87,10 @@ public:
    */
   [[nodiscard]] static auto getLeastAdmissibleColor(
       const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
-                   coloring,
+          coloring,
       const Color& maxColor, const Edge& e, const qc::Qubit& v,
-      const std::vector<qc::Qubit>&                             sequence,
-      const qc::DirectedAcyclicGraph<qc::Qubit>&                partialOrder,
+      const std::vector<qc::Qubit>& sequence,
+      const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
       const std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
                                qc::PairHash<qc::Qubit, Color>>& ranks) -> Color;
 
@@ -103,7 +103,7 @@ public:
    * @return a valid coloring of the edges
    */
   [[nodiscard]] static auto colorEdges(
-      const InteractionGraph&                                             g,
+      const InteractionGraph& g,
       const std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>& edges,
       const std::vector<qc::Qubit>& nodesQueue)
       -> std::pair<
@@ -133,7 +133,7 @@ public:
    * @return a new sequence with the vertices grouped by connected components
    */
   [[nodiscard]] static auto groupByConnectedComponent(
-      const InteractionGraph&       g,
+      const InteractionGraph& g,
       const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit>;
 
   /**
@@ -154,7 +154,7 @@ public:
    * vertices mapped to their relative x-position in every time step.
    */
   [[nodiscard]] static auto computeSequence(const InteractionGraph& g,
-                                            std::size_t             maxSites)
+                                            std::size_t maxSites)
       -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                    std::unordered_map<qc::Qubit, std::int64_t>>;
 };
