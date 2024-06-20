@@ -3,11 +3,21 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
 #include "DataLogger.hpp"
 #include "Mapper.hpp"
+#include "configuration/Configuration.hpp"
 #include "heuristic/UniquePriorityQueue.hpp"
+#include "utils.hpp"
 
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <ostream>
+#include <set>
+#include <vector>
 
 #pragma once
 
@@ -31,10 +41,10 @@ public:
    */
   struct Node {
     /** gates (pair of logical qubits) currently mapped next to each other */
-    std::set<Edge> validMappedTwoQubitGates = {};
+    std::set<Edge> validMappedTwoQubitGates;
     /** swaps used so far to get from the initial mapping of the current layer
      * to the current mapping in this node */
-    std::vector<Exchange> swaps = {};
+    std::vector<Exchange> swaps;
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `qubits[physical_qubit] = logical_qubit`

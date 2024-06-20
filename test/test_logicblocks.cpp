@@ -2,11 +2,11 @@
 #include "Encodings.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
+#include "Model.hpp"
 #include "Z3Logic.hpp"
-#include "Z3Model.hpp"
 
-#include "gtest/gtest.h"
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <memory>
 #include <sstream>
 #include <string>

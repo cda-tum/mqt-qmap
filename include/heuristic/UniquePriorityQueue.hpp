@@ -3,8 +3,10 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <queue>
 #include <set>
@@ -13,7 +15,6 @@
 #pragma once
 
 constexpr int MAX_QUEUE_SIZE = 6000000;
-constexpr int MAX_NODES_MARGIN = 500000;
 constexpr int MAX_QUEUE_COPY_LENGTH = 1000000;
 constexpr double QUEUE_COPY_LENGTH_PERCENTAGE = 1. / 6;
 

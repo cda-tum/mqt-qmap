@@ -5,12 +5,37 @@
 
 #include "exact/ExactMapper.hpp"
 
+#include "Architecture.hpp"
+#include "Definitions.hpp"
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Configuration.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/SwapReduction.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "logicblocks/Model.hpp"
 #include "logicblocks/util_logicblock.hpp"
+#include "operations/StandardOperation.hpp"
+#include "utils.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <chrono>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 void ExactMapper::map(const Configuration& settings) {
   results.config = settings;
@@ -64,8 +89,7 @@ void ExactMapper::map(const Configuration& settings) {
     const auto subgraphQubits = config.subgraph.size();
     if (subgraphQubits < qc.getNqubits()) {
       std::cerr << "The subgraph must contain at least as many qubits as the "
-                   "circuit has physical qubits."
-                << std::endl;
+                   "circuit has physical qubits.\n";
       return;
     }
 
@@ -133,7 +157,7 @@ void ExactMapper::map(const Configuration& settings) {
         }
         if (settings.verbose) {
           std::cout << "Timeout: " << timeout
-                    << "  Max-Timeout: " << settings.timeout << std::endl;
+                    << "  Max-Timeout: " << settings.timeout << '\n';
         }
       } else {
         timeout = settings.timeout;
@@ -228,7 +252,7 @@ void ExactMapper::map(const Configuration& settings) {
         std::cout << "(" << swap.first << "<->" << swap.second << ") ";
       }
       ++it;
-      std::cout << std::endl;
+      std::cout << '\n';
     }
   }
 

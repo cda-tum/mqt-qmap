@@ -5,9 +5,25 @@
 
 #include "DataLogger.hpp"
 
-#include "nlohmann/json.hpp"
+#include "Architecture.hpp"
+#include "MappingResults.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <nlohmann/json.hpp>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 void DataLogger::initLog() {
   if (dataLoggingPath.back() != '/') {
@@ -36,10 +52,10 @@ void DataLogger::logArchitecture() {
   if (!of.good()) {
     deactivated = true;
     std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
-              << "architecture.json" << std::endl;
+              << "architecture.json" << '\n';
     return;
   }
-  nlohmann::json json;
+  nlohmann::basic_json json;
   json["name"] = architecture->getName();
   json["nqubits"] = architecture->getNqubits();
   json["coupling_map"] = architecture->getCouplingMap();
@@ -71,7 +87,7 @@ void DataLogger::openNewLayer(std::size_t layerIndex) {
     if (!searchNodesLogFiles.at(i).good()) {
       deactivated = true;
       std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
-                << "layer_" << i << ".json" << std::endl;
+                << "layer_" << i << ".json" << '\n';
       return;
     }
   }
@@ -94,7 +110,7 @@ void DataLogger::logFinalizeLayer(
 
   if (!searchNodesLogFiles.at(layerIndex).is_open()) {
     std::cerr << "[data-logging] Error: layer " << layerIndex
-              << " has already been finalized" << std::endl;
+              << " has already been finalized" << '\n';
     return;
   }
   searchNodesLogFiles.at(layerIndex).close();
@@ -104,15 +120,15 @@ void DataLogger::logFinalizeLayer(
   if (!of.good()) {
     deactivated = true;
     std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
-              << "layer_" << layerIndex << ".json" << std::endl;
+              << "layer_" << layerIndex << ".json" << '\n';
     return;
   }
-  nlohmann::json json;
+  nlohmann::basic_json json;
   std::stringstream qasmStream;
   ops.dumpOpenQASM3(qasmStream, qregs, cregs);
   json["qasm"] = qasmStream.str();
   if (twoQubitMultiplicity.empty()) {
-    json["two_qubit_multiplicity"] = nlohmann::json::array();
+    json["two_qubit_multiplicity"] = nlohmann::basic_json<>::array();
   } else {
     auto& twoMultJSON = json["two_qubit_multiplicity"];
     std::size_t j = 0;
@@ -138,7 +154,7 @@ void DataLogger::logFinalizeLayer(
     finalLayoutJSON[i] = finalLayout.at(i);
   }
   if (finalSwaps.empty()) {
-    json["final_swaps"] = nlohmann::json::array();
+    json["final_swaps"] = nlohmann::basic_json<>::array();
   } else {
     auto& finalSwapsJSON = json["final_swaps"];
     std::size_t i = 0;
@@ -161,7 +177,7 @@ void DataLogger::splitLayer() {
   const std::size_t layerIndex = searchNodesLogFiles.size() - 1;
   if (searchNodesLogFiles.at(layerIndex).is_open()) {
     std::cerr << "[data-logging] Error: layer " << layerIndex
-              << " has not been finalized before splitting" << std::endl;
+              << " has not been finalized before splitting" << '\n';
     return;
   }
   searchNodesLogFiles.pop_back();
@@ -198,7 +214,7 @@ void DataLogger::logSearchNode(
   if (!of.is_open()) {
     deactivated = true;
     std::cerr << "[data-logging] Error: layer " << layerIndex
-              << " has already been finalized" << std::endl;
+              << " has already been finalized" << '\n';
     return;
   }
   of << nodeId << ";" << parentId << ";" << costFixed << ";" << costHeur << ";"
@@ -224,7 +240,7 @@ void DataLogger::logSearchNode(
   if (!swaps.empty()) {
     of.seekp(-1, std::ios_base::cur); // remove last comma
   }
-  of << std::endl;
+  of << '\n';
 };
 
 void DataLogger::logMappingResult(MappingResults& result) {
@@ -237,12 +253,12 @@ void DataLogger::logMappingResult(MappingResults& result) {
   if (!of.good()) { // if loading failed, output warning and deactivate logging
     deactivated = true;
     std::cerr << "[data-logging] Error opening file: " << dataLoggingPath
-              << "mapping_result.json" << std::endl;
+              << "mapping_result.json" << '\n';
     return;
   }
 
   // prepare json data
-  nlohmann::json json = result.json();
+  auto json = result.json();
   auto& stats = json["statistics"];
   auto& benchmark = stats["benchmark"];
   for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
@@ -258,7 +274,7 @@ void DataLogger::close() {
   for (std::size_t i = 0; i < searchNodesLogFiles.size(); ++i) {
     if (searchNodesLogFiles.at(i).is_open()) {
       std::cerr << "[data-logging] Error: layer " << i << " was not finalized"
-                << std::endl;
+                << '\n';
       searchNodesLogFiles.at(i).close();
     }
   }

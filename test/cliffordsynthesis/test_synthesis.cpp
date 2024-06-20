@@ -5,7 +5,7 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 using namespace qc::literals;
 
