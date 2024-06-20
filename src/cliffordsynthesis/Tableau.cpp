@@ -5,18 +5,26 @@
 
 #include "cliffordsynthesis/Tableau.hpp"
 
+#include "QuantumComputation.hpp"
+#include "operations/CompoundOperation.hpp"
 #include "operations/OpType.hpp"
 #include "operations/Operation.hpp"
-#include "plog/Log.h"
 #include "utils.hpp"
 
+#include <algorithm>
+#include <cassert>
+#include <cctype>
 #include <cstddef>
 #include <fstream>
 #include <istream>
+#include <optional>
 #include <ostream>
+#include <plog/Log.h>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace cs {

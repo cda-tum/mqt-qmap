@@ -6,8 +6,9 @@
 #include "Architecture.hpp"
 #include "utils.hpp"
 
-#include "gtest/gtest.h"
-#include <iostream>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <vector>
 
 TEST(General, LoadCouplingMapNonexistentFile) {
   EXPECT_THROW(Architecture("path/that/does/not/exist"), QMAPException);

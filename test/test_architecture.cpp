@@ -5,7 +5,7 @@
 
 #include "Architecture.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <random>
 
 ::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,

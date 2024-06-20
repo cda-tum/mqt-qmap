@@ -5,8 +5,15 @@
 
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 
+#include "Logic.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "plog/Log.h"
+#include "operations/OpType.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <plog/Log.h>
+#include <plog/Severity.h>
+#include <string>
 
 namespace cs::encoding {
 

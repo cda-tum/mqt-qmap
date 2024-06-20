@@ -6,10 +6,20 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 
 #include "Definitions.hpp"
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
+#include "QuantumComputation.hpp"
+#include "cliffordsynthesis/Results.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/Model.hpp"
+#include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
-#include "plog/Log.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <plog/Log.h>
+#include <string>
+#include <vector>
 
 namespace cs::encoding {
 

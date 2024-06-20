@@ -6,14 +6,16 @@
 #pragma once
 
 #include "Mapper.hpp"
+#include "MappingResults.hpp"
+#include "configuration/Configuration.hpp"
+#include "utils.hpp"
 
-#include <algorithm>
-#include <bitset>
-#include <chrono>
 #include <cmath>
-#include <functional>
+#include <cstddef>
+#include <cstdint>
 #include <set>
-#include <unordered_set>
+#include <utility>
+#include <vector>
 
 using Swap = std::pair<std::uint16_t, std::uint16_t>;
 using Swaps = std::vector<Swap>;
@@ -25,8 +27,8 @@ class ExactMapper : public Mapper {
 
 protected:
   // inputs
-  std::vector<std::size_t> reducedLayerIndices{};
-  std::vector<Swaps> mappingSwaps{};
+  std::vector<std::size_t> reducedLayerIndices;
+  std::vector<Swaps> mappingSwaps;
   void coreMappingRoutine(const QubitChoice& qubitChoice,
                           const CouplingMap& rcm, MappingResults& choiceResults,
                           std::vector<Swaps>& swaps, std::size_t limit,

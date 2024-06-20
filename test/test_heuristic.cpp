@@ -3,16 +3,27 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <sstream>
-#include <stack>
+#include <gtest/gtest.h>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <vector>
 
 constexpr qc::OpType SWAP = qc::OpType::SWAP;
 constexpr double FLOAT_TOLERANCE = 1e-6;
@@ -412,13 +423,13 @@ protected:
   std::string testArchitectureDir = "../extern/architectures/";
   std::string testCalibrationDir = "../extern/calibration/";
 
-  qc::QuantumComputation qc{};
-  std::string circuitName{};
-  Architecture ibmqYorktown{}; // 5 qubits
-  Architecture ibmqLondon{};   // 5 qubits (with calibration)
+  qc::QuantumComputation qc;
+  std::string circuitName;
+  Architecture ibmqYorktown; // 5 qubits
+  Architecture ibmqLondon;   // 5 qubits (with calibration)
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Architecture ibmQX5{}; // 16 qubits
+  Architecture ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
   Configuration settings{};
 

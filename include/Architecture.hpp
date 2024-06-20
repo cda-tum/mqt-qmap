@@ -202,12 +202,10 @@ public:
   };
 
   void loadCouplingMap(std::istream& is);
-  void loadCouplingMap(std::istream&& is);
   void loadCouplingMap(const std::string& filename);
   void loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm);
   void loadCouplingMap(AvailableArchitecture architecture);
   void loadProperties(std::istream& is);
-  void loadProperties(std::istream&& is);
   void loadProperties(const std::string& filename);
   void loadProperties(const Properties& props);
 

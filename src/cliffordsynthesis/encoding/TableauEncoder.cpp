@@ -5,8 +5,18 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
+#include "Logic.hpp"
+#include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "logicblocks/Model.hpp"
-#include "plog/Log.h"
+#include "operations/OpType.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <plog/Log.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace cs::encoding {
 

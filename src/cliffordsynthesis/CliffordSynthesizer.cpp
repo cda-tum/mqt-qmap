@@ -6,17 +6,30 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "QuantumComputation.hpp"
+#include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
-#include "logicblocks/Logic.hpp"
-#include "plog/Appenders/ColorConsoleAppender.h"
-#include "plog/Formatters/TxtFormatter.h"
-#include "plog/Init.h"
-#include "plog/Log.h"
+#include "cliffordsynthesis/TargetMetric.hpp"
+#include "cliffordsynthesis/encoding/SATEncoder.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/Operation.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <future>
 #include <memory>
+#include <plog/Appenders/ConsoleAppender.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Init.h>
+#include <plog/Log.h>
+#include <plog/Logger.h>
+#include <plog/Severity.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace cs {
 
