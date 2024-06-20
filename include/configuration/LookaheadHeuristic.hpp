@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class LookaheadHeuristic {
+enum class LookaheadHeuristic : std::uint8_t {
   /** no lookahead */
   None,
   /** maximum over all distances between any virtual qubit pair in the given

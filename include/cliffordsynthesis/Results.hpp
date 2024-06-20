@@ -6,10 +6,14 @@
 #pragma once
 
 #include "CircuitOptimizer.hpp"
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "logicblocks/Logic.hpp"
 
+#include <cstddef>
+#include <limits>
 #include <nlohmann/json.hpp>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -74,8 +78,8 @@ public:
     return getSolverResult() == logicbase::Result::UNSAT;
   }
 
-  [[nodiscard]] virtual nlohmann::json json() const {
-    nlohmann::json resultJSON{};
+  [[nodiscard]] virtual nlohmann::basic_json<> json() const {
+    nlohmann::basic_json resultJSON{};
     resultJSON["solver_result"] = toString(solverResult);
     resultJSON["single_qubit_gates"] = singleQubitGates;
     resultJSON["two_qubit_gates"] = twoQubitGates;
@@ -99,8 +103,8 @@ protected:
   double runtime = 0.0;
   std::size_t solverCalls = 0U;
 
-  std::string resultTableau{};
-  std::string resultCircuit{};
+  std::string resultTableau;
+  std::string resultCircuit;
 };
 
 } // namespace cs

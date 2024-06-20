@@ -3,12 +3,13 @@
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
 #include "Z3Model.hpp"
-#include "plog/Log.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <plog/Log.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -209,6 +210,7 @@ Result Z3LogicBlock::solve() {
   produceInstance();
   const auto res = solver->check();
   if (res == z3::sat) {
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     model = new Z3Model(ctx, std::make_shared<z3::model>(solver->get_model()));
     return Result::SAT;
   }
@@ -440,6 +442,7 @@ Result Z3LogicOptimizer::solve() {
   produceInstance();
   const auto res = optimizer->check();
   if (res == z3::sat) {
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     model =
         new Z3Model(ctx, std::make_shared<z3::model>(optimizer->get_model()));
     return Result::SAT;

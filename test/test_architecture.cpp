@@ -4,9 +4,21 @@
 //
 
 #include "Architecture.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <gtest/gtest.h>
+#include <iostream>
 #include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 ::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,
                                       double delta) {

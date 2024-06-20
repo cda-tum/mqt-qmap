@@ -6,12 +6,20 @@
 #pragma once
 
 #include "Architecture.hpp"
-#include "Mapper.hpp"
+#include "Definitions.hpp"
 #include "MappingResults.hpp"
 #include "QuantumComputation.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "utils.hpp"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 class DataLogger {
 public:
@@ -70,8 +78,8 @@ protected:
   Architecture* architecture;
   std::uint16_t nqubits;
   qc::QuantumComputation inputCircuit;
-  qc::RegisterNames qregs{};
-  qc::RegisterNames cregs{};
+  qc::RegisterNames qregs;
+  qc::RegisterNames cregs;
   std::vector<std::ofstream> searchNodesLogFiles; // 1 per layer
   bool deactivated = false;
 

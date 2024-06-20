@@ -5,13 +5,20 @@
 
 #pragma once
 
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
+#include "logicblocks/LogicTerm.hpp"
 #include "operations/OpType.hpp"
 
+#include <array>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace cs::encoding {
 
@@ -27,9 +34,9 @@ public:
 
   struct Variables {
     // variables for the single-qubit gates
-    logicbase::LogicMatrix3D gS{};
+    logicbase::LogicMatrix3D gS;
     // variables for the two-qubit gates
-    logicbase::LogicMatrix3D gC{};
+    logicbase::LogicMatrix3D gC;
 
     void
     collectSingleQubitGateVariables(std::size_t pos, std::size_t qubit,
@@ -115,7 +122,7 @@ protected:
   TableauEncoder::Variables* tvars{};
 
   // the logic block to use
-  std::shared_ptr<logicbase::LogicBlock> lb{};
+  std::shared_ptr<logicbase::LogicBlock> lb;
 
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;

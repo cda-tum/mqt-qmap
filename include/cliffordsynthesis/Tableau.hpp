@@ -6,13 +6,18 @@
 #pragma once
 
 #include "QuantumComputation.hpp"
-#include "plog/Log.h"
+#include "operations/Operation.hpp"
 
+#include <bitset>
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <fstream>
+#include <istream>
 #include <limits>
 #include <ostream>
-#include <utility>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace cs {

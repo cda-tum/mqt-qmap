@@ -50,7 +50,7 @@ auto Architecture::fromFile(const std::string& jsonFn,
 
 auto Architecture::fromFileStream(std::istream& jsonS,
                                   std::istream& csvS) -> void {
-  nlohmann::json data;
+  nlohmann::basic_json data;
   // load CSV
   // auxiliary variables
   std::string line;

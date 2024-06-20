@@ -5,12 +5,37 @@
 
 #include "heuristic/HeuristicMapper.hpp"
 
+#include "Architecture.hpp"
+#include "DataLogger.hpp"
+#include "Definitions.hpp"
+#include "Mapper.hpp"
+#include "configuration/Configuration.hpp"
+#include "configuration/EarlyTermination.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <set>
+#include <utility>
+#include <vector>
 
 void HeuristicMapper::map(const Configuration& configuration) {
   if (configuration.dataLoggingEnabled()) {

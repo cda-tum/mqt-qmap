@@ -6,9 +6,10 @@
 #pragma once
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "logicblocks/Logic.hpp"
+#include "logicblocks/LogicTerm.hpp"
 
 #include <cstddef>
-#include <optional>
 
 namespace cs::encoding {
 
@@ -17,8 +18,8 @@ public:
   using GateEncoder::GateEncoder;
 
 protected:
-  logicbase::LogicTerm rChanges{};
-  logicbase::LogicMatrix xorHelpers{};
+  logicbase::LogicTerm rChanges;
+  logicbase::LogicMatrix xorHelpers;
 
   void assertConsistency() const override;
   void assertGateConstraints() override;

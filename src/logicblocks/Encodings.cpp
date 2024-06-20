@@ -4,10 +4,12 @@
 #include "LogicBlock.hpp"
 #include "LogicTerm.hpp"
 
-#include <map>
-#include <set>
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace encodings {

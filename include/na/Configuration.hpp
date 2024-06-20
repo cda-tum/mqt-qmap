@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <istream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 namespace na {

@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class Method { None, Exact, Heuristic };
+enum class Method : std::uint8_t { None, Exact, Heuristic };
 
 [[maybe_unused]] static inline std::string toString(const Method method) {
   switch (method) {

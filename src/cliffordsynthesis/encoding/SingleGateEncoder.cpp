@@ -5,7 +5,13 @@
 
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 
-#include "plog/Log.h"
+#include "Logic.hpp"
+#include "operations/OpType.hpp"
+
+#include <cstddef>
+#include <plog/Log.h>
+#include <plog/Severity.h>
+#include <utility>
 
 namespace cs::encoding {
 

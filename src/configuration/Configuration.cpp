@@ -5,8 +5,19 @@
 
 #include "configuration/Configuration.hpp"
 
-nlohmann::json Configuration::json() const {
-  nlohmann::json config{};
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
+#include "configuration/Method.hpp"
+#include "configuration/SwapReduction.hpp"
+
+#include <nlohmann/json.hpp>
+
+nlohmann::basic_json<> Configuration::json() const {
+  nlohmann::basic_json config{};
   config["method"] = ::toString(method);
   config["layering_strategy"] = ::toString(layering);
   if (!subgraph.empty()) {

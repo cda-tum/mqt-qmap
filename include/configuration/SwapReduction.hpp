@@ -5,9 +5,16 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class SwapReduction { None, CouplingLimit, Custom, Increasing };
+enum class SwapReduction : std::uint8_t {
+  None,
+  CouplingLimit,
+  Custom,
+  Increasing
+};
 
 [[maybe_unused]] static inline std::string
 toString(const SwapReduction strategy) {

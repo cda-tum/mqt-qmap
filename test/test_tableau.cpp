@@ -5,9 +5,19 @@
 
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/Control.hpp"
+#include "operations/OpType.hpp"
+#include "operations/StandardOperation.hpp"
 #include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <bitset>
+#include <cstddef>
+#include <gtest/gtest.h>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace cs {
 

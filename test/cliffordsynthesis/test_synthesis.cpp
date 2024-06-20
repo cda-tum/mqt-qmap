@@ -3,9 +3,22 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
+#include "operations/Control.hpp"
 
-#include "gtest/gtest.h"
+#include <cstddef>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <limits>
+#include <plog/Severity.h>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace qc::literals;
 
@@ -288,7 +301,7 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
 
 TEST_P(SynthesisTest, TestDestabilizerGates) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
+    std::cout << "Testing with destabilizer\n";
     config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
@@ -299,7 +312,7 @@ TEST_P(SynthesisTest, TestDestabilizerGates) {
 
     EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
   } else {
-    std::cout << "Testing without destabilizer" << std::endl;
+    std::cout << "Testing without destabilizer\n";
     config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
@@ -310,7 +323,7 @@ TEST_P(SynthesisTest, TestDestabilizerGates) {
 
 TEST_P(SynthesisTest, TestDestabilizerDepth) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
+    std::cout << "Testing with destabilizer\n";
     config.target = TargetMetric::Depth;
     config.useMaxSAT = true;
 
@@ -321,7 +334,7 @@ TEST_P(SynthesisTest, TestDestabilizerDepth) {
 
     EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
   } else {
-    std::cout << "Testing without destabilizer" << std::endl;
+    std::cout << "Testing without destabilizer\n";
     config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
@@ -332,7 +345,7 @@ TEST_P(SynthesisTest, TestDestabilizerDepth) {
 
 TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
-    std::cout << "Testing with destabilizer" << std::endl;
+    std::cout << "Testing with destabilizer\n";
     config.target = TargetMetric::TwoQubitGates;
     config.useMaxSAT = true;
 
@@ -344,7 +357,7 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
     EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
               results.getTwoQubitGates());
   } else {
-    std::cout << "Testing without destabilizer" << std::endl;
+    std::cout << "Testing without destabilizer\n";
     config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 

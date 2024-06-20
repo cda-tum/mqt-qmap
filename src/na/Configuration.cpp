@@ -6,12 +6,15 @@
 
 #include "Configuration.hpp"
 
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 
-using json = nlohmann::json;
+using json = nlohmann::basic_json<>;
 
 namespace na {
 
@@ -31,7 +34,7 @@ Configuration::Configuration(std::istream& fs) {
     fs >> data;
   } catch (const std::exception& e) {
     std::stringstream ss;
-    ss << "Error parsing JSON: " << e.what() << std::endl;
+    ss << "Error parsing JSON: " << e.what() << '\n';
     throw std::runtime_error(ss.str());
   }
 

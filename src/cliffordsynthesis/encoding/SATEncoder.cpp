@@ -5,13 +5,20 @@
 
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
+#include "Logic.hpp"
+#include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "logicblocks/util_logicblock.hpp"
-#include "plog/Log.h"
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <plog/Log.h>
 #include <stdexcept>
 #include <string>
 #include <variant>

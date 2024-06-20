@@ -5,13 +5,25 @@
 
 #include "Mapper.hpp"
 
+#include "Architecture.hpp"
 #include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
+#include "configuration/Layering.hpp"
 #include "operations/CompoundOperation.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <set>
 #include <utility>
+#include <vector>
 
 void Mapper::initResults() {
   countGates(qc, results.input);

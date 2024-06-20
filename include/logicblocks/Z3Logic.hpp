@@ -25,7 +25,7 @@ protected:
       variables;
   std::unordered_map<LogicTerm, std::vector<std::pair<bool, z3::expr>>,
                      TermHash, TermHash>
-      cache{};
+      cache;
   std::shared_ptr<z3::context> ctx;
 
 public:

@@ -8,11 +8,12 @@
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 #include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -56,7 +57,7 @@ public:
     // an optional limit on the total number of two-qubit gates
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
 
-    SolverParameterMap solverParameters = {};
+    SolverParameterMap solverParameters;
   };
 
   SATEncoder() = default;

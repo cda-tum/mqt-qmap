@@ -14,9 +14,12 @@
 #include "LookaheadHeuristic.hpp"
 #include "Method.hpp"
 #include "SwapReduction.hpp"
-#include "nlohmann/json.hpp"
 
+#include <cstddef>
+#include <cstdint>
+#include <nlohmann/json.hpp>
 #include <set>
+#include <string>
 
 // NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 struct Configuration {
@@ -38,7 +41,7 @@ struct Configuration {
   std::string dataLoggingPath;
 
   // map to particular subgraph of architecture (in exact mapper)
-  std::set<std::uint16_t> subgraph{};
+  std::set<std::uint16_t> subgraph;
 
   // how to cluster the gates into layers
   Layering layering = Layering::IndividualGates;
@@ -103,7 +106,7 @@ struct Configuration {
   SwapReduction swapReduction = SwapReduction::CouplingLimit;
   std::size_t swapLimit = 0;
 
-  [[nodiscard]] nlohmann::json json() const;
+  [[nodiscard]] nlohmann::basic_json<> json() const;
   [[nodiscard]] std::string toString() const { return json().dump(2); }
 
   [[nodiscard]] bool dataLoggingEnabled() const {

@@ -6,9 +6,13 @@
 #pragma once
 
 #include "TargetMetric.hpp"
-#include "nlohmann/json.hpp"
 
-#include <plog/Log.h>
+#include <cstddef>
+#include <cstdint>
+#include <nlohmann/json.hpp>
+#include <ostream>
+#include <plog/Severity.h>
+#include <string>
 #include <thread>
 #include <unordered_map>
 #include <variant>
@@ -33,7 +37,7 @@ struct Configuration {
   plog::Severity verbosity = plog::Severity::warning;
 
   /// Settings for the SAT solver
-  SolverParameterMap solverParameters = {};
+  SolverParameterMap solverParameters;
 
   /// Settings for depth-optimal synthesis
   bool minimizeGatesAfterDepthOptimization = false;
@@ -48,8 +52,8 @@ struct Configuration {
   std::size_t splitSize = 5U;
   std::size_t nThreadsHeuristic = std::thread::hardware_concurrency();
 
-  [[nodiscard]] nlohmann::json json() const {
-    nlohmann::json j;
+  [[nodiscard]] nlohmann::basic_json<> json() const {
+    nlohmann::basic_json j;
     j["initial_timestep_limit"] = initialTimestepLimit;
     j["minimal_timesteps"] = minimalTimesteps;
     j["use_max_sat"] = useMaxSAT;
@@ -67,7 +71,7 @@ struct Configuration {
     j["split_size"] = splitSize;
     j["n_threads_heuristic"] = nThreadsHeuristic;
     if (!solverParameters.empty()) {
-      nlohmann::json solverParametersJson;
+      nlohmann::basic_json solverParametersJson;
       for (const auto& entry : solverParameters) {
         std::visit(
             [&solverParametersJson, &entry](const auto& v) {

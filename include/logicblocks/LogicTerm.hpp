@@ -15,7 +15,7 @@ private:
   Logic* lb = nullptr;
   uint64_t id = 0;
   uint64_t depth = 0U;
-  std::string name{};
+  std::string name;
 
   OpType opType = OpType::Variable;
   bool value = false;
@@ -23,7 +23,7 @@ private:
   double fValue = 0.;
   uint64_t bvValue = 0U;
   uint16_t bvSize = 0;
-  std::vector<LogicTerm> nodes{};
+  std::vector<LogicTerm> nodes;
   CType cType = CType::BOOL;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

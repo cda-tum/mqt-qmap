@@ -5,16 +5,18 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
-#include "plog/Log.h"
 
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <plog/Log.h>
 #include <sstream>
 #include <utility>
 
@@ -69,15 +71,15 @@ public:
   }
 
 protected:
-  Tableau initialTableau{};
-  Tableau targetTableau{};
-  std::shared_ptr<qc::QuantumComputation> initialCircuit{};
+  Tableau initialTableau;
+  Tableau targetTableau;
+  std::shared_ptr<qc::QuantumComputation> initialCircuit;
 
   Configuration configuration{};
 
-  Results results{};
-  std::shared_ptr<qc::QuantumComputation> resultCircuit{};
-  Tableau resultTableau{};
+  Results results;
+  std::shared_ptr<qc::QuantumComputation> resultCircuit;
+  Tableau resultTableau;
   std::size_t solverCalls{};
 
   static bool requiresMultiGateEncoding(const TargetMetric metric) {

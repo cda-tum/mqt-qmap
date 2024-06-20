@@ -3,19 +3,24 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
 #include "configuration/Configuration.hpp"
+#include "configuration/Method.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
+#include <type_traits>
+#include <vector>
 
 #pragma once
 
 struct MappingResults {
   struct CircuitInfo {
     // general info
-    std::string name{};
+    std::string name;
     std::uint16_t qubits = 0;
     std::size_t gates = 0;
     std::size_t singleQubitGates = 0;
@@ -39,8 +44,8 @@ struct MappingResults {
     double averageBranchingFactor = 0.;
     double effectiveBranchingFactor = 0.;
 
-    [[nodiscard]] nlohmann::json json() const {
-      nlohmann::json resultJSON{};
+    [[nodiscard]] nlohmann::basic_json<> json() const {
+      nlohmann::basic_json resultJSON{};
       resultJSON["expanded_nodes"] = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
       resultJSON["seconds_per_node"] = secondsPerNode;
@@ -63,8 +68,8 @@ struct MappingResults {
     double effectiveBranchingFactor = 0.;
     bool earlyTermination = false;
 
-    [[nodiscard]] nlohmann::json json() const {
-      nlohmann::json resultJSON{};
+    [[nodiscard]] nlohmann::basic_json<> json() const {
+      nlohmann::basic_json resultJSON{};
       resultJSON["expanded_nodes"] = expandedNodes;
       resultJSON["generated_nodes"] = generatedNodes;
       resultJSON["expanded_nodes_after_first_solution"] =
@@ -85,19 +90,19 @@ struct MappingResults {
 
   CircuitInfo input{};
 
-  std::string architecture{};
+  std::string architecture;
   Configuration config{};
 
   double time = 0.0;
   bool timeout = true;
 
   CircuitInfo output{};
-  std::string mappedCircuit{};
+  std::string mappedCircuit;
 
-  std::string wcnf{};
+  std::string wcnf;
 
   HeuristicBenchmarkInfo heuristicBenchmark{};
-  std::vector<LayerHeuristicBenchmarkInfo> layerHeuristicBenchmark{};
+  std::vector<LayerHeuristicBenchmarkInfo> layerHeuristicBenchmark;
 
   MappingResults() = default;
   virtual ~MappingResults() = default;
@@ -114,8 +119,8 @@ struct MappingResults {
 
   [[nodiscard]] std::string toString() const { return json().dump(2); }
 
-  [[nodiscard]] virtual nlohmann::json json() const {
-    nlohmann::json resultJSON{};
+  [[nodiscard]] virtual nlohmann::basic_json<> json() const {
+    nlohmann::basic_json resultJSON{};
 
     auto& circuit = resultJSON["circuit"];
     circuit["name"] = input.name;

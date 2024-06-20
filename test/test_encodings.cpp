@@ -3,17 +3,28 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "QuantumComputation.hpp"
+#include "configuration/AvailableArchitecture.hpp"
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Configuration.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/Method.hpp"
 #include "exact/ExactMapper.hpp"
+#include "operations/Control.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <utility>
 
 class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
-  qc::QuantumComputation qc{};
+  qc::QuantumComputation qc;
   Configuration settings{};
-  Architecture arch{};
-  std::unique_ptr<ExactMapper> mapper{};
+  Architecture arch;
+  std::unique_ptr<ExactMapper> mapper;
 
   void SetUp() override {
     settings.verbose = true;

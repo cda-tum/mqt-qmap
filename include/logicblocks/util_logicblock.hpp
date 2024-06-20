@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Logic.hpp"
 #include "LogicBlock.hpp"
 #include "Z3Logic.hpp"
 
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <z3++.h>
 
 namespace logicutil {
 using namespace logicbase;
 
-enum class ParamType {
+enum class ParamType : std::uint8_t {
   STR,
   BOOL,
   DOUBLE,

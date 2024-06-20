@@ -9,10 +9,10 @@
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 #include "logicblocks/LogicTerm.hpp"
 #include "operations/OpType.hpp"
-#include "plog/Log.h"
 
 #include <cstddef>
 #include <functional>
+#include <plog/Log.h>
 #include <stdexcept>
 
 namespace cs::encoding {

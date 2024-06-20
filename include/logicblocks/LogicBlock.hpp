@@ -4,7 +4,6 @@
 #include "LogicTerm.hpp"
 
 #include <cstdint>
-#include <iostream>
 #include <set>
 #include <string>
 #include <utility>
@@ -15,7 +14,7 @@ class Model;
 
 class LogicBlock : public Logic {
 protected:
-  std::set<LogicTerm, TermDepthComparator> clauses{};
+  std::set<LogicTerm, TermDepthComparator> clauses;
   Model* model{};
   bool convertWhenAssert;
   virtual void internalReset() = 0;

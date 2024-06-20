@@ -3,10 +3,12 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "../../include/configuration/Configuration.hpp"
 #include "Configuration.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 
 TEST(Configuration, MethodOfString) {
   EXPECT_EQ(na::getMethodOfString("naive"), na::NAMappingMethod::Naive);
