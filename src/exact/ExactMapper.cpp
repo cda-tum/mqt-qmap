@@ -13,7 +13,7 @@
 #include <cassert>
 
 void ExactMapper::map(const Configuration& settings) {
-  results.config     = settings;
+  results.config = settings;
   const auto& config = results.config;
 
   const std::chrono::high_resolution_clock::time_point start =
@@ -52,7 +52,7 @@ void ExactMapper::map(const Configuration& settings) {
     finalizeMappedCircuit();
 
     results.output.layers = results.input.layers;
-    results.time          = static_cast<std::chrono::duration<double>>(
+    results.time = static_cast<std::chrono::duration<double>>(
                        std::chrono::high_resolution_clock::now() - start)
                        .count();
     results.timeout = false;
@@ -99,8 +99,8 @@ void ExactMapper::map(const Configuration& settings) {
   mappingSwaps.reserve(reducedLayerIndices.size());
   std::size_t runs = 1;
   for (auto& choice : allPossibleQubitChoices) {
-    std::size_t       limit      = 0U;
-    std::size_t       maxLimit   = 0U;
+    std::size_t limit = 0U;
+    std::size_t maxLimit = 0U;
     const std::size_t upperLimit = config.swapLimit;
     if (config.useSubsets) {
       maxLimit = architecture->getCouplingLimit(choice) - 1U;
@@ -146,8 +146,8 @@ void ExactMapper::map(const Configuration& settings) {
 
       MappingResults choiceResults{};
       choiceResults.copyInput(results);
-      choiceResults.config.swapLimit        = limit;
-      choiceResults.output.swaps            = 0U;
+      choiceResults.config.swapLimit = limit;
+      choiceResults.output.swaps = 0U;
       choiceResults.output.directionReverse = 0U;
       choiceResults.output.gates = std::numeric_limits<std::size_t>::max();
 
@@ -191,7 +191,7 @@ void ExactMapper::map(const Configuration& settings) {
       // 7) Check if new optimum found
       if (!choiceResults.timeout &&
           choiceResults.output.gates < results.output.gates) {
-        results      = choiceResults;
+        results = choiceResults;
         mappingSwaps = swaps;
       }
       if (limit == 0) {
@@ -243,7 +243,7 @@ void ExactMapper::map(const Configuration& settings) {
       // no swaps but initial permutation
       for (const auto& [physical, logical] : *swapsIterator) {
         locations.at(logical) = static_cast<std::int16_t>(physical);
-        qubits.at(physical)   = static_cast<std::int16_t>(logical);
+        qubits.at(physical) = static_cast<std::int16_t>(logical);
         qcMapped.initialLayout[static_cast<qc::Qubit>(physical)] =
             static_cast<qc::Qubit>(logical);
       }
@@ -325,8 +325,8 @@ void ExactMapper::map(const Configuration& settings) {
       for (auto it = (*swapsIterator).rbegin(); it != (*swapsIterator).rend();
            ++it) {
         const auto& [q0, q1] = *it;
-        const auto logical0  = static_cast<qc::Qubit>(qubits.at(q0));
-        const auto logical1  = static_cast<qc::Qubit>(qubits.at(q1));
+        const auto logical0 = static_cast<qc::Qubit>(qubits.at(q0));
+        const auto logical1 = static_cast<qc::Qubit>(qubits.at(q1));
         qcMapped.swap(q0, q1);
         std::swap(qubits.at(q0), qubits.at(q1));
         locations.at(logical0) = static_cast<std::int16_t>(q1);
@@ -362,8 +362,8 @@ void ExactMapper::map(const Configuration& settings) {
 
   // 10) re-count gates
   results.output.singleQubitGates = 0U;
-  results.output.cnots            = 0U;
-  results.output.gates            = 0U;
+  results.output.cnots = 0U;
+  results.output.gates = 0U;
   countGates(qcMapped, results.output);
 
   // 11) final post-processing
@@ -371,7 +371,7 @@ void ExactMapper::map(const Configuration& settings) {
 
   auto end = std::chrono::high_resolution_clock::now();
   const std::chrono::duration<double> diff = end - start;
-  results.time                             = diff.count();
+  results.time = diff.count();
 }
 
 void ExactMapper::coreMappingRoutine(
@@ -382,7 +382,7 @@ void ExactMapper::coreMappingRoutine(
   const auto& config = results.config;
   using namespace logicbase;
   // LogicBlock
-  bool              success = false;
+  bool success = false;
   logicutil::Params params;
   params.addParam("timeout", static_cast<std::uint32_t>(timeout));
   params.addParam("pb.compile_equality", true);
@@ -395,12 +395,12 @@ void ExactMapper::coreMappingRoutine(
     throw QMAPException("Could not initialize Z3 logic block optimizer");
   }
 
-  std::vector<std::uint16_t>        pi(qubitChoice.begin(), qubitChoice.end());
-  std::uint64_t                     piCount{};
-  std::uint64_t                     internalPiCount{};
+  std::vector<std::uint16_t> pi(qubitChoice.begin(), qubitChoice.end());
+  std::uint64_t piCount{};
+  std::uint64_t internalPiCount{};
   std::unordered_set<std::uint64_t> skippedPi{};
   std::unordered_map<std::uint16_t, std::uint16_t> physicalQubitIndex{};
-  std::uint16_t                                    qIdx = 0;
+  std::uint16_t qIdx = 0;
   for (const auto& qubit : qubitChoice) {
     physicalQubitIndex[qubit] = qIdx;
     ++qIdx;
@@ -430,7 +430,7 @@ void ExactMapper::coreMappingRoutine(
   j	logical qubit j
   number of variables: (|L|) * m * n
   */
-  LogicMatrix3D     x{};
+  LogicMatrix3D x{};
   std::stringstream xName{};
   for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
     x.emplace_back();
@@ -451,7 +451,7 @@ k	before layer k
 pi	arbitrary permutation of the m qubits
 number of variables: (|L|-1) * m!
 */
-  LogicMatrix       y{};
+  LogicMatrix y{};
   std::stringstream yName{};
   for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
     y.emplace_back();
@@ -547,7 +547,7 @@ number of variables: (|L|-1) * m!
   } else if (config.encoding == Encoding::Bimander) {
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-        std::vector<LogicTerm>   vars;
+        std::vector<LogicTerm> vars;
         std::vector<std::size_t> varIDs;
         for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
           vars.emplace_back(x[k][i][j]);
@@ -601,7 +601,7 @@ number of variables: (|L|-1) * m!
           auto indexFC = x[k][physicalQubitIndex[edge.first]]
                           [static_cast<std::size_t>(gate.control)];
           auto indexST = x[k][physicalQubitIndex[edge.second]][gate.target];
-          coupling     = coupling || (indexFC && indexST);
+          coupling = coupling || (indexFC && indexST);
         }
       } else {
         for (const auto& edge : rcm) {
@@ -624,10 +624,10 @@ number of variables: (|L|-1) * m!
   /// 	Permutation Constraints			//
   //////////////////////////////////////////
   for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-    piCount         = 0;
+    piCount = 0;
     internalPiCount = 0;
-    auto& i         = x[k - 1];
-    auto& j         = x[k];
+    auto& i = x[k - 1];
+    auto& j = x[k];
     do {
       if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
         auto equal = LogicTerm(true);
@@ -649,8 +649,8 @@ number of variables: (|L|-1) * m!
   // Allow only 1 y_k_pi to be true
   if (config.encoding == Encoding::Naive) {
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
-      auto onlyOne    = LogicTerm(0);
-      piCount         = 0;
+      auto onlyOne = LogicTerm(0);
+      piCount = 0;
       internalPiCount = 0;
       do {
         if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
@@ -665,7 +665,7 @@ number of variables: (|L|-1) * m!
   } else {
     for (std::size_t k = 1; k < reducedLayerIndices.size(); ++k) {
       std::vector<LogicTerm> varIDs;
-      piCount         = 0;
+      piCount = 0;
       internalPiCount = 0;
       do {
         if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
@@ -696,9 +696,9 @@ number of variables: (|L|-1) * m!
   /// 	Objective Function				//
   //////////////////////////////////////////
   // cost for permutations
-  piCount         = 0;
+  piCount = 0;
   internalPiCount = 0;
-  auto cost       = LogicTerm(0);
+  auto cost = LogicTerm(0);
   do {
     if (skippedPi.count(piCount) == 0 || !config.swapLimitsEnabled()) {
       auto picost = architecture->minimumNumberOfSwaps(pi);
@@ -748,7 +748,7 @@ number of variables: (|L|-1) * m!
   lb->produceInstance();
   const auto res = lb->solve();
   if (Result::SAT == res) {
-    auto* const m         = lb->getModel();
+    auto* const m = lb->getModel();
     choiceResults.timeout = results.timeout = false;
 
     // quickly determine cost
@@ -793,7 +793,7 @@ number of variables: (|L|-1) * m!
         // used to infer the permutation of the qubits in each layer. This is
         // mainly because the additional qubits movement cannot be inferred
         // from the assignment matrices X.
-        piCount         = 0;
+        piCount = 0;
         internalPiCount = 0;
         // sort the permutation of the qubits to start fresh
         std::sort(pi.begin(), pi.end());

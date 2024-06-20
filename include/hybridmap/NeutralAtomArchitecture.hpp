@@ -63,9 +63,9 @@ class NeutralAtomArchitecture {
     std::uint16_t nAods;
     std::uint16_t nAodIntermediateLevels;
     std::uint16_t nAodCoordinates;
-    qc::fp        interQubitDistance;
-    qc::fp        interactionRadius;
-    qc::fp        blockingFactor;
+    qc::fp interQubitDistance;
+    qc::fp interactionRadius;
+    qc::fp blockingFactor;
 
   public:
     Properties() = default;
@@ -133,20 +133,20 @@ class NeutralAtomArchitecture {
         return t1 * t2 / (t1 + t2);
       }
     };
-    CoordIndex                    nQubits;
+    CoordIndex nQubits;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
-    std::map<qc::OpType, qc::fp>  shuttlingTimes;
-    std::map<qc::OpType, qc::fp>  shuttlingAverageFidelities;
-    DecoherenceTimes              decoherenceTimes;
+    std::map<qc::OpType, qc::fp> shuttlingTimes;
+    std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
+    DecoherenceTimes decoherenceTimes;
   };
 
 protected:
   Properties properties{};
   Parameters parameters;
 
-  std::vector<Point>                coordinates;
-  SymmetricMatrix<SwapDistance>     swapDistances;
+  std::vector<Point> coordinates;
+  SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
   /**

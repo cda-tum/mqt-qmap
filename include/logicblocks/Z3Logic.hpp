@@ -25,7 +25,7 @@ protected:
       variables;
   std::unordered_map<LogicTerm, std::vector<std::pair<bool, z3::expr>>,
                      TermHash, TermHash>
-                               cache{};
+      cache{};
   std::shared_ptr<z3::context> ctx;
 
 public:
@@ -33,7 +33,7 @@ public:
       : ctx(std::move(context)) {}
   virtual ~Z3Base() = default;
 
-  z3::expr     convert(const LogicTerm& a, CType toType = CType::ERRORTYPE);
+  z3::expr convert(const LogicTerm& a, CType toType = CType::ERRORTYPE);
   z3::context& getContext() { return *ctx; }
 
   static z3::expr getExprTerm(uint64_t id, CType type, Z3Base* z3base);
@@ -48,7 +48,7 @@ public:
                            z3::expr (*op)(const z3::expr&, const z3::expr&),
                            CType toType);
   z3::expr convertOperator(const LogicTerm& a, z3::expr (*op)(const z3::expr&),
-                           CType            toType);
+                           CType toType);
   z3::expr convertOperator(const LogicTerm& a, const LogicTerm& b,
                            const LogicTerm& c,
                            z3::expr (*op)(const z3::expr&, const z3::expr&,
@@ -64,7 +64,7 @@ public:
 class Z3LogicBlock : public LogicBlock, public Z3Base {
 protected:
   std::shared_ptr<z3::solver> solver;
-  void                        internalReset() override;
+  void internalReset() override;
 
 public:
   Z3LogicBlock(std::shared_ptr<z3::context> context,
@@ -75,9 +75,9 @@ public:
     variables.clear();
     cache.clear();
   }
-  void        assertFormula(const LogicTerm& a) override;
-  void        produceInstance() override;
-  Result      solve() override;
+  void assertFormula(const LogicTerm& a) override;
+  void produceInstance() override;
+  Result solve() override;
   std::string dumpInternalSolver() override {
     std::stringstream ss;
     ss << (*solver);
@@ -95,10 +95,10 @@ public:
 class Z3LogicOptimizer : public LogicBlockOptimizer, public Z3Base {
 private:
   std::shared_ptr<z3::optimize> optimizer;
-  void                          internalReset() override;
+  void internalReset() override;
 
 public:
-  Z3LogicOptimizer(std::shared_ptr<z3::context>  context,
+  Z3LogicOptimizer(std::shared_ptr<z3::context> context,
                    std::shared_ptr<z3::optimize> opt, bool convert = true)
       : LogicBlockOptimizer(convert), Z3Base(std::move(context)),
         optimizer(std::move(opt)) {}
@@ -106,14 +106,14 @@ public:
     variables.clear();
     cache.clear();
   }
-  void   assertFormula(const LogicTerm& a) override;
-  void   produceInstance() override;
+  void assertFormula(const LogicTerm& a) override;
+  void produceInstance() override;
   Result solve() override;
 
-  bool        makeMinimize() override;
-  bool        makeMaximize() override;
-  bool        maximize(const LogicTerm& term) override;
-  bool        minimize(const LogicTerm& term) override;
+  bool makeMinimize() override;
+  bool makeMaximize() override;
+  bool maximize(const LogicTerm& term) override;
+  bool minimize(const LogicTerm& term) override;
   std::string dumpInternalSolver() override {
     std::stringstream ss;
     ss << (*optimizer);

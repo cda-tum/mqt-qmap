@@ -40,10 +40,10 @@ void DataLogger::logArchitecture() {
     return;
   }
   nlohmann::json json;
-  json["name"]         = architecture->getName();
-  json["nqubits"]      = architecture->getNqubits();
+  json["name"] = architecture->getName();
+  json["nqubits"] = architecture->getNqubits();
   json["coupling_map"] = architecture->getCouplingMap();
-  json["distances"]    = architecture->getDistanceTable();
+  json["distances"] = architecture->getDistanceTable();
   if (architecture->isFidelityAvailable()) {
     auto& fidelity = json["fidelity"];
     fidelity["single_qubit_fidelities"] =
@@ -54,7 +54,7 @@ void DataLogger::logArchitecture() {
     fidelity["two_qubit_fidelity_costs"] =
         architecture->getTwoQubitFidelityCosts();
     fidelity["swap_fidelity_costs"] = architecture->getSwapFidelityCosts();
-    fidelity["fidelity_distances"]  = architecture->getFidelityDistanceTables();
+    fidelity["fidelity_distances"] = architecture->getFidelityDistanceTables();
   }
   of << json.dump(2);
   of.close();
@@ -82,10 +82,10 @@ void DataLogger::logFinalizeLayer(
     const std::vector<std::uint16_t>& singleQubitMultiplicity,
     const std::map<std::pair<std::uint16_t, std::uint16_t>,
                    std::pair<std::uint16_t, std::uint16_t>>&
-                                                       twoQubitMultiplicity,
+        twoQubitMultiplicity,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
     std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
-    double                                             finalLookaheadPenalty,
+    double finalLookaheadPenalty,
     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
     const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth) {
   if (deactivated) {
@@ -107,41 +107,41 @@ void DataLogger::logFinalizeLayer(
               << "layer_" << layerIndex << ".json" << std::endl;
     return;
   }
-  nlohmann::json    json;
+  nlohmann::json json;
   std::stringstream qasmStream;
   ops.dumpOpenQASM3(qasmStream, qregs, cregs);
   json["qasm"] = qasmStream.str();
   if (twoQubitMultiplicity.empty()) {
     json["two_qubit_multiplicity"] = nlohmann::json::array();
   } else {
-    auto&       twoMultJSON = json["two_qubit_multiplicity"];
-    std::size_t j           = 0;
+    auto& twoMultJSON = json["two_qubit_multiplicity"];
+    std::size_t j = 0;
     for (const auto& [qubits, multiplicity] : twoQubitMultiplicity) {
-      twoMultJSON[j]["q1"]       = qubits.first;
-      twoMultJSON[j]["q2"]       = qubits.second;
-      twoMultJSON[j]["forward"]  = multiplicity.first;
+      twoMultJSON[j]["q1"] = qubits.first;
+      twoMultJSON[j]["q2"] = qubits.second;
+      twoMultJSON[j]["forward"] = multiplicity.first;
       twoMultJSON[j]["backward"] = multiplicity.second;
       ++j;
     }
   }
   json["single_qubit_multiplicity"] = singleQubitMultiplicity;
-  auto& initialLayoutJSON           = json["initial_layout"];
+  auto& initialLayoutJSON = json["initial_layout"];
   for (std::size_t i = 0; i < nqubits; ++i) {
     initialLayoutJSON[i] = initialLayout.at(i);
   }
-  json["final_node_id"]           = finalNodeId;
-  json["final_cost_fixed"]        = finalCostFixed;
-  json["final_cost_heur"]         = finalCostHeur;
+  json["final_node_id"] = finalNodeId;
+  json["final_cost_fixed"] = finalCostFixed;
+  json["final_cost_heur"] = finalCostHeur;
   json["final_lookahead_penalty"] = finalLookaheadPenalty;
-  auto& finalLayoutJSON           = json["final_layout"];
+  auto& finalLayoutJSON = json["final_layout"];
   for (std::size_t i = 0; i < nqubits; ++i) {
     finalLayoutJSON[i] = finalLayout.at(i);
   }
   if (finalSwaps.empty()) {
     json["final_swaps"] = nlohmann::json::array();
   } else {
-    auto&       finalSwapsJSON = json["final_swaps"];
-    std::size_t i              = 0;
+    auto& finalSwapsJSON = json["final_swaps"];
+    std::size_t i = 0;
     for (const auto& swap : finalSwaps) {
       finalSwapsJSON[i][0] = swap.first;
       finalSwapsJSON[i][1] = swap.second;
@@ -242,9 +242,9 @@ void DataLogger::logMappingResult(MappingResults& result) {
   }
 
   // prepare json data
-  nlohmann::json json      = result.json();
-  auto&          stats     = json["statistics"];
-  auto&          benchmark = stats["benchmark"];
+  nlohmann::json json = result.json();
+  auto& stats = json["statistics"];
+  auto& benchmark = stats["benchmark"];
   for (std::size_t i = 0; i < result.layerHeuristicBenchmark.size(); ++i) {
     benchmark["layers"][i] = result.layerHeuristicBenchmark.at(i).json();
   }

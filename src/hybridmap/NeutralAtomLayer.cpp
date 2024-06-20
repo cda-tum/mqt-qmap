@@ -73,7 +73,7 @@ void NeutralAtomLayer::updateCandidatesByQubits(
         bool commutes = true;
         while (commutes && tempIter < this->dag[qubit].end()) {
           auto* nextOp = (*tempIter)->get();
-          commutes     = commutesWithAtQubit(gates, nextOp, qubit) &&
+          commutes = commutesWithAtQubit(gates, nextOp, qubit) &&
                      commutesWithAtQubit(candidates[qubit], nextOp, qubit);
           if (commutes) {
             if (nextOp->getUsedQubits().size() == 1) {
@@ -150,9 +150,9 @@ void NeutralAtomLayer::removeGatesAndUpdate(const GateList& gatesToRemove) {
 
 // Commutation
 
-bool NeutralAtomLayer::commutesWithAtQubit(const GateList&      layer,
+bool NeutralAtomLayer::commutesWithAtQubit(const GateList& layer,
                                            const qc::Operation* opPointer,
-                                           const qc::Qubit&     qubit) {
+                                           const qc::Qubit& qubit) {
   return std::all_of(layer.begin(), layer.end(),
                      [&opPointer, &qubit](const auto& frontOpPointer) {
                        return commuteAtQubit(opPointer, frontOpPointer, qubit);
@@ -161,7 +161,7 @@ bool NeutralAtomLayer::commutesWithAtQubit(const GateList&      layer,
 
 bool NeutralAtomLayer::commuteAtQubit(const qc::Operation* op1,
                                       const qc::Operation* op2,
-                                      const qc::Qubit&     qubit) {
+                                      const qc::Qubit& qubit) {
   if (op1->isNonUnitaryOperation() || op2->isNonUnitaryOperation()) {
     return false;
   }

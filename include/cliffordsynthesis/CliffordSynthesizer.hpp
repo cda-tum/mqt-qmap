@@ -37,7 +37,7 @@ public:
         initialCircuit(std::make_shared<qc::QuantumComputation>(qc)),
         results(qc, targetTableau) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
-                               const bool              useDestabilizers = false)
+                               const bool useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
@@ -69,16 +69,16 @@ public:
   }
 
 protected:
-  Tableau                                 initialTableau{};
-  Tableau                                 targetTableau{};
+  Tableau initialTableau{};
+  Tableau targetTableau{};
   std::shared_ptr<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};
 
-  Results                                 results{};
+  Results results{};
   std::shared_ptr<qc::QuantumComputation> resultCircuit{};
-  Tableau                                 resultTableau{};
-  std::size_t                             solverCalls{};
+  Tableau resultTableau{};
+  std::size_t solverCalls{};
 
   static bool requiresMultiGateEncoding(const TargetMetric metric) {
     return metric == TargetMetric::Depth;
@@ -86,8 +86,8 @@ protected:
 
   void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
-  void                                runMaxSAT(const EncoderConfig& config);
-  Results                             callSolver(const EncoderConfig& config);
+  void runMaxSAT(const EncoderConfig& config);
+  Results callSolver(const EncoderConfig& config);
 
   void minimizeGatesFixedDepth(EncoderConfig config);
 
@@ -99,7 +99,7 @@ protected:
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
 
-  void minimizeTwoQubitGatesFixedGateCount(std::size_t   gateCount,
+  void minimizeTwoQubitGatesFixedGateCount(std::size_t gateCount,
                                            EncoderConfig config);
   void minimizeGatesFixedTwoQubitGateCount(EncoderConfig config);
 
@@ -155,7 +155,7 @@ protected:
                        const Configuration& config);
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);
-  void        removeRedundantGates();
+  void removeRedundantGates();
 };
 
 } // namespace cs

@@ -88,7 +88,7 @@ TEST(General, DijkstraCNOTReversal) {
                               {0, 3, 0, 3, 0},
                               {0, 0, 3, 0, 3},
                               {0, 0, 0, 3, 0}};
-  Matrix       simpleDistanceTable{};
+  Matrix simpleDistanceTable{};
   Dijkstra::buildTable(cm, simpleDistanceTable, edgeWeights);
   Matrix fullDistanceTable{};
   Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, cm, 1.,

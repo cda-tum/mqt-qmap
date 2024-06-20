@@ -52,7 +52,7 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
 
 namespace {
 std::vector<TestConfiguration> getTests(const std::string& path) {
-  std::ifstream  input(path);
+  std::ifstream input(path);
   nlohmann::json j;
   input >> j;
   return j;
@@ -65,7 +65,7 @@ protected:
     test = GetParam();
 
     if (!test.initialCircuit.empty()) {
-      std::stringstream      ss(test.initialCircuit);
+      std::stringstream ss(test.initialCircuit);
       qc::QuantumComputation qc{};
       qc.import(ss, qc::Format::OpenQASM3);
       std::cout << "Initial circuit:\n" << qc;
@@ -73,10 +73,10 @@ protected:
       targetTableauWithDestabilizer =
           Tableau(qc, 0, std::numeric_limits<std::size_t>::max(), true);
       if (test.initialTableau.empty()) {
-        initialTableau                 = Tableau(qc.getNqubits());
+        initialTableau = Tableau(qc.getNqubits());
         initialTableauWithDestabilizer = Tableau(qc.getNqubits(), true);
-        synthesizer                    = CliffordSynthesizer(qc);
-        synthesizerWithDestabilizer    = CliffordSynthesizer(qc, true);
+        synthesizer = CliffordSynthesizer(qc);
+        synthesizerWithDestabilizer = CliffordSynthesizer(qc, true);
       } else {
         initialTableau = Tableau(test.initialTableau);
         std::cout << "Initial tableau:\n" << initialTableau;
@@ -86,7 +86,7 @@ protected:
       targetTableau = Tableau(test.targetTableau);
       if (test.initialTableau.empty()) {
         initialTableau = Tableau(targetTableau.getQubitCount());
-        synthesizer    = CliffordSynthesizer(targetTableau);
+        synthesizer = CliffordSynthesizer(targetTableau);
       } else {
         initialTableau = Tableau(test.initialTableau);
         std::cout << "Initial tableau:\n" << initialTableau;
@@ -95,10 +95,10 @@ protected:
     }
     std::cout << "Target tableau:\n" << targetTableau;
 
-    config                         = Configuration();
-    config.verbosity               = plog::Severity::verbose;
+    config = Configuration();
+    config.verbosity = plog::Severity::verbose;
     config.dumpIntermediateResults = true;
-    config.useSymmetryBreaking     = true;
+    config.useSymmetryBreaking = true;
   }
 
   void TearDown() override {
@@ -121,18 +121,18 @@ protected:
     EXPECT_EQ(resultTableau, circuitTableau);
   }
 
-  Tableau             initialTableau;
-  Tableau             initialTableauWithDestabilizer;
-  Tableau             targetTableau;
-  Tableau             targetTableauWithDestabilizer;
-  Configuration       config;
+  Tableau initialTableau;
+  Tableau initialTableauWithDestabilizer;
+  Tableau targetTableau;
+  Tableau targetTableauWithDestabilizer;
+  Configuration config;
   CliffordSynthesizer synthesizer;
   CliffordSynthesizer synthesizerWithDestabilizer;
-  Results             results;
-  Results             resultsWithDestabilizer;
-  Tableau             resultTableau;
-  Tableau             resultTableauWithDestabilizer;
-  TestConfiguration   test;
+  Results results;
+  Results resultsWithDestabilizer;
+  Tableau resultTableau;
+  Tableau resultTableauWithDestabilizer;
+  TestConfiguration test;
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -158,7 +158,7 @@ TEST_P(SynthesisTest, Gates) {
 }
 
 TEST_P(SynthesisTest, GatesMaxSAT) {
-  config.target    = TargetMetric::Gates;
+  config.target = TargetMetric::Gates;
   config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -167,7 +167,7 @@ TEST_P(SynthesisTest, GatesMaxSAT) {
 }
 
 TEST_P(SynthesisTest, GatesLinearSearch) {
-  config.target       = TargetMetric::Gates;
+  config.target = TargetMetric::Gates;
   config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -184,7 +184,7 @@ TEST_P(SynthesisTest, Depth) {
 }
 
 TEST_P(SynthesisTest, DepthMaxSAT) {
-  config.target    = TargetMetric::Depth;
+  config.target = TargetMetric::Depth;
   config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -193,7 +193,7 @@ TEST_P(SynthesisTest, DepthMaxSAT) {
 }
 
 TEST_P(SynthesisTest, DepthLinearSearch) {
-  config.target       = TargetMetric::Depth;
+  config.target = TargetMetric::Depth;
   config.linearSearch = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -202,7 +202,7 @@ TEST_P(SynthesisTest, DepthLinearSearch) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalGates) {
-  config.target                              = TargetMetric::Depth;
+  config.target = TargetMetric::Depth;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -212,7 +212,7 @@ TEST_P(SynthesisTest, DepthMinimalGates) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
-  config.target           = TargetMetric::Depth;
+  config.target = TargetMetric::Depth;
   config.minimalTimesteps = test.expectedMinimalDepth;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -221,8 +221,8 @@ TEST_P(SynthesisTest, DepthMinimalTimeSteps) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
-  config.target                              = TargetMetric::Depth;
-  config.useMaxSAT                           = true;
+  config.target = TargetMetric::Depth;
+  config.useMaxSAT = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -232,8 +232,8 @@ TEST_P(SynthesisTest, DepthMinimalGatesMaxSAT) {
 }
 
 TEST_P(SynthesisTest, DepthMinimalGatesLinearSearch) {
-  config.target                              = TargetMetric::Depth;
-  config.linearSearch                        = true;
+  config.target = TargetMetric::Depth;
+  config.linearSearch = true;
   config.minimizeGatesAfterDepthOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
@@ -254,7 +254,7 @@ TEST_P(SynthesisTest, TwoQubitGates) {
 TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
   config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.useMaxSAT                                     = true;
+  config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -264,7 +264,7 @@ TEST_P(SynthesisTest, TwoQubitGatesMaxSAT) {
 TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
   config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.minimizeGatesAfterTwoQubitGateOptimization    = true;
+  config.minimizeGatesAfterTwoQubitGateOptimization = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -276,8 +276,8 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGates) {
 TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
   config.target = TargetMetric::TwoQubitGates;
   config.tryHigherGateLimitForTwoQubitGateOptimization = true;
-  config.minimizeGatesAfterTwoQubitGateOptimization    = true;
-  config.useMaxSAT                                     = true;
+  config.minimizeGatesAfterTwoQubitGateOptimization = true;
+  config.useMaxSAT = true;
   synthesizer.synthesize(config);
   results = synthesizer.getResults();
 
@@ -289,18 +289,18 @@ TEST_P(SynthesisTest, TwoQubitGatesMinimalGatesMaxSAT) {
 TEST_P(SynthesisTest, TestDestabilizerGates) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
     std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
+    config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
     synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
+    results = synthesizer.getResults();
     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getGates(), results.getGates());
   } else {
     std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
+    config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
@@ -311,18 +311,18 @@ TEST_P(SynthesisTest, TestDestabilizerGates) {
 TEST_P(SynthesisTest, TestDestabilizerDepth) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
     std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::Depth;
+    config.target = TargetMetric::Depth;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
     synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
+    results = synthesizer.getResults();
     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getDepth(), results.getDepth());
   } else {
     std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
+    config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
@@ -333,19 +333,19 @@ TEST_P(SynthesisTest, TestDestabilizerDepth) {
 TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
   if (!initialTableauWithDestabilizer.getTableau().empty()) {
     std::cout << "Testing with destabilizer" << std::endl;
-    config.target    = TargetMetric::TwoQubitGates;
+    config.target = TargetMetric::TwoQubitGates;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
     synthesizerWithDestabilizer.synthesize(config);
-    results                 = synthesizer.getResults();
+    results = synthesizer.getResults();
     resultsWithDestabilizer = synthesizerWithDestabilizer.getResults();
 
     EXPECT_GE(resultsWithDestabilizer.getTwoQubitGates(),
               results.getTwoQubitGates());
   } else {
     std::cout << "Testing without destabilizer" << std::endl;
-    config.target    = TargetMetric::Gates;
+    config.target = TargetMetric::Gates;
     config.useMaxSAT = true;
 
     synthesizer.synthesize(config);
@@ -355,37 +355,37 @@ TEST_P(SynthesisTest, TestDestabilizerTwoQubitGates) {
 
 TEST(HeuristicTest, basic) {
   auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
+  auto qc = qc::QuantumComputation(2);
   qc.h(0);
   qc.s(1);
   qc.h(0);
   qc.s(1);
   config.heuristic = true;
   config.splitSize = 1;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
+  config.target = TargetMetric::Depth;
+  auto synth = CliffordSynthesizer(qc);
   synth.synthesize(config);
   EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
 
 TEST(HeuristicTest, identity) {
   auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
+  auto qc = qc::QuantumComputation(2);
   qc.h(0);
   qc.s(1);
   qc.h(0);
   qc.sdg(1);
   config.heuristic = true;
   config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
+  config.target = TargetMetric::Depth;
+  auto synth = CliffordSynthesizer(qc);
   synth.synthesize(config);
   EXPECT_EQ(synth.getResults().getDepth(), 0);
 }
 
 TEST(HeuristicTest, threeLayers) {
   auto config = Configuration();
-  auto qc     = qc::QuantumComputation(2);
+  auto qc = qc::QuantumComputation(2);
   qc.h(0);
   qc.h(1);
   qc.cx(0_pc, 1);
@@ -393,23 +393,23 @@ TEST(HeuristicTest, threeLayers) {
   qc.h(1);
   config.heuristic = true;
   config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
+  config.target = TargetMetric::Depth;
+  auto synth = CliffordSynthesizer(qc);
   synth.synthesize(config);
   EXPECT_EQ(synth.getResults().getDepth(), 3);
 }
 
 TEST(HeuristicTest, fourLayers) {
   auto config = Configuration();
-  auto qc     = qc::QuantumComputation(1);
+  auto qc = qc::QuantumComputation(1);
   qc.s(0);
   qc.s(0);
   qc.s(0);
   qc.s(0);
   config.heuristic = true;
   config.splitSize = 2;
-  config.target    = TargetMetric::Depth;
-  auto synth       = CliffordSynthesizer(qc);
+  config.target = TargetMetric::Depth;
+  auto synth = CliffordSynthesizer(qc);
   synth.synthesize(config);
   EXPECT_EQ(synth.getResults().getDepth(), 2);
 }
