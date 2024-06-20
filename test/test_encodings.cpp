@@ -10,14 +10,14 @@
 class TestEncodings
     : public testing::TestWithParam<std::pair<Encoding, CommanderGrouping>> {
 protected:
-  qc::QuantumComputation       qc{};
-  Configuration                settings{};
-  Architecture                 arch{};
+  qc::QuantumComputation qc{};
+  Configuration settings{};
+  Architecture arch{};
   std::unique_ptr<ExactMapper> mapper{};
 
   void SetUp() override {
-    settings.verbose    = true;
-    settings.method     = Method::Exact;
+    settings.verbose = true;
+    settings.method = Method::Exact;
     settings.useSubsets = false;
   }
 };
@@ -44,8 +44,8 @@ TEST_P(TestEncodings, ThreeToSevenQubits) {
   mapper = std::make_unique<ExactMapper>(qc, arch);
 
   const auto& [encoding, grouping] = GetParam();
-  settings.encoding                = encoding;
-  settings.commanderGrouping       = grouping;
+  settings.encoding = encoding;
+  settings.commanderGrouping = grouping;
 
   mapper->map(settings);
   mapper->printResult(std::cout);
@@ -68,8 +68,8 @@ TEST_P(TestEncodings, FiveToSevenQubits) {
   mapper = std::make_unique<ExactMapper>(qc, arch);
 
   const auto& [encoding, grouping] = GetParam();
-  settings.encoding                = encoding;
-  settings.commanderGrouping       = grouping;
+  settings.encoding = encoding;
+  settings.commanderGrouping = grouping;
 
   mapper->map(settings);
   mapper->printResult(std::cout);

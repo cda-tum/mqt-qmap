@@ -71,9 +71,9 @@ public:
      * that both qubits got closer to being validly mapped*/
     std::size_t sharedSwaps = 0;
     /** depth in search tree (starting with 0 at the root) */
-    std::size_t depth  = 0;
+    std::size_t depth = 0;
     std::size_t parent = 0;
-    std::size_t id     = 0;
+    std::size_t id = 0;
     /** true if all qubit pairs are mapped next to each other on the
      * architecture */
     bool validMapping = true;
@@ -89,12 +89,12 @@ public:
     Node(std::size_t nodeId, std::size_t parentId,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
          const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
-         const std::vector<Exchange>&                       sw            = {},
-         const std::set<Edge>&                              valid2QGates  = {},
-         const double                                       initCostFixed = 0,
-         const double      initCostFixedReversals                         = 0,
-         const std::size_t searchDepth                                    = 0,
-         const std::size_t initSharedSwaps                                = 0)
+         const std::vector<Exchange>& sw = {},
+         const std::set<Edge>& valid2QGates = {},
+         const double initCostFixed = 0,
+         const double initCostFixedReversals = 0,
+         const std::size_t searchDepth = 0,
+         const std::size_t initSharedSwaps = 0)
         : validMappedTwoQubitGates(valid2QGates), swaps(sw), qubits(q),
           locations(loc), costFixed(initCostFixed),
           costFixedReversals(initCostFixedReversals),
@@ -133,12 +133,12 @@ public:
   };
 
 protected:
-  UniquePriorityQueue<Node>   nodes{};
+  UniquePriorityQueue<Node> nodes{};
   std::unique_ptr<DataLogger> dataLogger;
-  std::size_t                 nextNodeId                = 0;
-  bool                        principallyAdmissibleHeur = true;
-  bool                        tightHeur                 = true;
-  bool                        fidelityAwareHeur         = false;
+  std::size_t nextNodeId = 0;
+  bool principallyAdmissibleHeur = true;
+  bool tightHeur = true;
+  bool fidelityAwareHeur = false;
 
   /**
    * @brief check the `results.config` for any invalid settings
@@ -348,7 +348,7 @@ protected:
    * @return heuristic cost
    */
   double heuristicGateCountSumDistanceMinusSharedSwaps(std::size_t layer,
-                                                       Node&       node);
+                                                       Node& node);
 
   /**
    * @brief calculates the heuristic using
@@ -361,7 +361,7 @@ protected:
    */
   double
   heuristicGateCountMaxDistanceOrSumDistanceMinusSharedSwaps(std::size_t layer,
-                                                             Node&       node);
+                                                             Node& node);
 
   /**
    * @brief calculates the heuristic using
@@ -408,7 +408,7 @@ protected:
    */
   double lookaheadGateCountSumDistance(std::size_t layer, Node& node);
 
-  static double computeEffectiveBranchingRate(std::size_t       nodesProcessed,
+  static double computeEffectiveBranchingRate(std::size_t nodesProcessed,
                                               const std::size_t solutionDepth) {
     // N = (b*)^d + (b*)^(d-1) + ... + (b*)^2 + b* + 1
     // no closed-form solution for b*, so we use approximation via binary search
@@ -421,7 +421,7 @@ protected:
     double lower = upper / static_cast<double>(solutionDepth);
     while (upper - lower > 2 * EFFECTIVE_BRANCH_RATE_TOLERANCE) {
       const double mid = (lower + upper) / 2.0;
-      double       sum = 0.0;
+      double sum = 0.0;
       for (std::size_t i = 1; i <= solutionDepth; ++i) {
         sum += std::pow(mid, i);
       }

@@ -60,8 +60,8 @@ auto Architecture::fromFileStream(std::istream& jsonS,
     while (csvS >> line) {
       ++lineno;
       std::stringstream lineStream(line); // make a stream of this line
-      std::string       sX;
-      std::string       sY;
+      std::string sX;
+      std::string sY;
 
       std::getline(lineStream, sX, ',');
       std::getline(lineStream, sY);
@@ -99,17 +99,17 @@ auto Architecture::fromFileStream(std::istream& jsonS,
       initialZones.emplace_back(nameToZone.find(zone)->second);
     }
     for (auto const& op : data["operations"]) {
-      const std::string        opName = op["name"];
-      const FullOpType         ty     = {qc::opTypeFromString(opName),
-                                         opName.find_first_not_of('c')};
-      const Scope              sc     = getScopeOfString(op["type"]);
-      std::unordered_set<Zone> zo     = {};
+      const std::string opName = op["name"];
+      const FullOpType ty = {qc::opTypeFromString(opName),
+                             opName.find_first_not_of('c')};
+      const Scope sc = getScopeOfString(op["type"]);
+      std::unordered_set<Zone> zo = {};
       for (auto const& zs : op["zones"]) {
         zo.emplace(nameToZone.find(zs)->second);
       }
-      const Value               fi = op["fidelity"];
-      const Value               ti = op["time"];
-      OperationProperties const o  = {sc, zo, ti, fi};
+      const Value fi = op["fidelity"];
+      const Value ti = op["time"];
+      OperationProperties const o = {sc, zo, ti, fi};
       gateSet.emplace(ty, o);
     }
     decoherenceTimes = {data["decoherence"]["t1"], data["decoherence"]["t2"]};
@@ -123,8 +123,8 @@ auto Architecture::fromFileStream(std::istream& jsonS,
           sh["store"]["time"], sh["store"]["fidelity"]};
       shuttling.emplace_back(sp);
     }
-    minAtomDistance     = data["minAtomDistance"];
-    interactionRadius   = data["interactionRadius"];
+    minAtomDistance = data["minAtomDistance"];
+    interactionRadius = data["interactionRadius"];
     noInteractionRadius = data["noInteractionRadius"];
   } catch (std::exception& e) {
     throw std::runtime_error(
@@ -152,18 +152,18 @@ auto Architecture::isAllowedLocally(const FullOpType& t) const -> bool {
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
 auto Architecture::isAllowedLocally(const FullOpType& t,
-                                    const Zone&       zone) const -> bool {
+                                    const Zone& zone) const -> bool {
   if (!isAllowedLocally(t)) {
     return false; // gate not supported at all
   }
-  const auto  it        = gateSet.find(t);
+  const auto it = gateSet.find(t);
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
 
 auto Architecture::isAllowedLocallyAt(const FullOpType& t,
-                                      const Point&      p) const -> bool {
+                                      const Point& p) const -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -184,11 +184,11 @@ auto Architecture::isAllowedGlobally(const FullOpType& t) const -> bool {
 }
 
 auto Architecture::isAllowedGlobally(const FullOpType& t,
-                                     const Zone&       zone) const -> bool {
+                                     const Zone& zone) const -> bool {
   if (!isAllowedGlobally(t)) {
     return false; // gate not supported at all
   }
-  const auto  it        = gateSet.find(t);
+  const auto it = gateSet.find(t);
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
@@ -220,9 +220,9 @@ auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
 auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
   return Architecture::getRowsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone&  z,
+auto Architecture::getSitesInRow(const Zone& z,
                                  const Index& row) const -> std::vector<Index> {
-  const auto         y = Architecture::getRowsInZone(z)[row];
+  const auto y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
   for (Index i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -357,7 +357,7 @@ auto Architecture::getNearestSiteDown(const Point& p, const bool proper,
 auto Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
                                          const bool sameZone) const
     -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
+  const auto& zone = getZoneAt(p);
   std::optional<Index> opt;
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -373,7 +373,7 @@ auto Architecture::getNearestSiteUpRight(const Point& p, const bool proper,
 auto Architecture::getNearestSiteUpLeft(const Point& p, const bool proper,
                                         const bool sameZone) const
     -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
+  const auto& zone = getZoneAt(p);
   std::optional<Index> opt;
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -389,7 +389,7 @@ auto Architecture::getNearestSiteUpLeft(const Point& p, const bool proper,
 auto Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
                                           const bool sameZone) const
     -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
+  const auto& zone = getZoneAt(p);
   std::optional<Index> opt;
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -405,7 +405,7 @@ auto Architecture::getNearestSiteDownLeft(const Point& p, const bool proper,
 auto Architecture::getNearestSiteDownRight(const Point& p, const bool proper,
                                            const bool sameZone) const
     -> std::optional<Index> {
-  const auto&          zone = getZoneAt(p);
+  const auto& zone = getZoneAt(p);
   std::optional<Index> opt;
   for (std::size_t i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -440,7 +440,7 @@ auto Architecture::withConfig(const Configuration& config) const
         if (!usedSites[i]) {
           // s is not used yet
           bool patchFittable = true;
-          auto row           = i;
+          auto row = i;
           for (std::size_t r = 1; r < config.getPatchRows(); ++r) {
             auto col = row;
             for (std::size_t c = 1; c < config.getPatchCols(); ++c) {
@@ -534,11 +534,11 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
 
   // get position of nearest site
   const auto nearestSitePos = getPositionOfSite(nearestSiteOpt.value());
-  const auto dx             = p.x - nearestSitePos.x;
-  const auto dy             = p.y - nearestSitePos.y;
-  auto       anchorSitePos  = nearestSitePos;
-  auto       r              = std::abs(rows);
-  auto       c              = std::abs(cols);
+  const auto dx = p.x - nearestSitePos.x;
+  const auto dy = p.y - nearestSitePos.y;
+  auto anchorSitePos = nearestSitePos;
+  auto r = std::abs(rows);
+  auto c = std::abs(cols);
 
   for (; r > 0; --r) {
     auto nextSiteOpt = rows >= 0 ? getNearestSiteDown(anchorSitePos, true, true)

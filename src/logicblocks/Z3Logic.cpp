@@ -71,8 +71,8 @@ z3::expr Z3Base::convert(const LogicTerm& a, CType toType) {
   } break;
 
   case OpType::AND: {
-    z3::expr s         = this->ctx->bool_val(true);
-    bool     alternate = false;
+    z3::expr s = this->ctx->bool_val(true);
+    bool alternate = false;
     for (const LogicTerm& lt : a.getNodes()) {
       if (alternate) {
         s = s && convert(lt, toType);
@@ -84,8 +84,8 @@ z3::expr Z3Base::convert(const LogicTerm& a, CType toType) {
     v[static_cast<size_t>(toType)].second = s.simplify();
   } break;
   case OpType::OR: {
-    z3::expr s         = this->ctx->bool_val(false);
-    bool     alternate = false;
+    z3::expr s = this->ctx->bool_val(false);
+    bool alternate = false;
     for (const LogicTerm& lt : a.getNodes()) {
       if (alternate) {
         s = s || convert(lt, toType);
@@ -316,7 +316,7 @@ z3::expr Z3Base::convertVariableFromRealTo(const LogicTerm& a, CType toType) {
   }
 }
 z3::expr Z3Base::convertVariableFromBitvectorTo(const LogicTerm& a,
-                                                CType            toType) {
+                                                CType toType) {
   std::stringstream ss;
   ss << a.getName() << "_" << a.getID();
   switch (toType) {

@@ -15,8 +15,8 @@
 #include <set>
 #include <unordered_set>
 
-using Swap        = std::pair<std::uint16_t, std::uint16_t>;
-using Swaps       = std::vector<Swap>;
+using Swap = std::pair<std::uint16_t, std::uint16_t>;
+using Swaps = std::vector<Swap>;
 using QubitChoice = std::set<std::uint16_t>;
 
 /// Main structure representing the circuit and mapping functionality
@@ -26,11 +26,11 @@ class ExactMapper : public Mapper {
 protected:
   // inputs
   std::vector<std::size_t> reducedLayerIndices{};
-  std::vector<Swaps>       mappingSwaps{};
-  void                     coreMappingRoutine(const QubitChoice& qubitChoice,
-                                              const CouplingMap& rcm, MappingResults& choiceResults,
-                                              std::vector<Swaps>& swaps, std::size_t limit,
-                                              std::size_t timeout);
+  std::vector<Swaps> mappingSwaps{};
+  void coreMappingRoutine(const QubitChoice& qubitChoice,
+                          const CouplingMap& rcm, MappingResults& choiceResults,
+                          std::vector<Swaps>& swaps, std::size_t limit,
+                          std::size_t timeout);
 
 public:
   void map(const Configuration& settings) override;

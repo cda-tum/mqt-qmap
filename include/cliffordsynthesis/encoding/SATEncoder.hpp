@@ -68,16 +68,16 @@ public:
   virtual Results run();
 
 protected:
-  void                            initializeSolver();
-  void                            createFormulation();
+  void initializeSolver();
+  void createFormulation();
   [[nodiscard]] logicbase::Result solve() const;
-  void                            extractResultsFromModel(Results& res) const;
-  void                            cleanup() const;
+  void extractResultsFromModel(Results& res) const;
+  void cleanup() const;
 
   std::shared_ptr<logicbase::LogicBlock> lb;
-  std::shared_ptr<TableauEncoder>        tableauEncoder;
-  std::shared_ptr<GateEncoder>           gateEncoder;
-  std::shared_ptr<ObjectiveEncoder>      objectiveEncoder;
+  std::shared_ptr<TableauEncoder> tableauEncoder;
+  std::shared_ptr<GateEncoder> gateEncoder;
+  std::shared_ptr<ObjectiveEncoder> objectiveEncoder;
 
   // all configuration options for the encoder
   Configuration config{};

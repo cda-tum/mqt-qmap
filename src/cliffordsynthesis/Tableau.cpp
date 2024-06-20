@@ -45,9 +45,9 @@ void Tableau::import(const std::string& filename) {
 void Tableau::import(std::istream& is) {
   tableau.clear();
 
-  std::string              line;
+  std::string line;
   std::vector<std::string> data{};
-  char                     delimiter = '|';
+  char delimiter = '|';
 
   while (std::getline(is, line)) {
     if (line.find('|', 0) == std::string::npos) {
@@ -154,7 +154,7 @@ void Tableau::applyGate(const qc::Operation* const gate) {
 }
 
 void Tableau::createDiagonalTableau(const std::size_t nQ,
-                                    const bool        includeDestabilizers) {
+                                    const bool includeDestabilizers) {
   nQubits = nQ;
   tableau.clear();
   if (includeDestabilizers) {
@@ -200,7 +200,7 @@ std::string Tableau::toString() const {
 
 void Tableau::fromString(const std::string& str) {
   std::stringstream ss(str);
-  std::string       line;
+  std::string line;
   std::getline(ss, line);
   if (line.empty()) {
     return;
@@ -291,7 +291,7 @@ void Tableau::applyCX(const std::size_t control, const std::size_t target) {
     const auto zb = tableau[i][target + nQubits];
     tableau[i][2 * nQubits] ^= (xa & zb) & ((xb ^ za) ^ 1);
     tableau[i][control + nQubits] = za ^ zb;
-    tableau[i][target]            = xb ^ xa;
+    tableau[i][target] = xb ^ xa;
   }
 }
 
@@ -431,7 +431,7 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
 
 void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   std::stringstream ss(string);
-  std::string       line;
+  std::string line;
   std::getline(ss, line);
   if (line.empty()) {
     return;
@@ -450,7 +450,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
   }
 
   std::optional<std::size_t> stabLength;
-  const auto&                checkStabLength = [&](const RowType& row) {
+  const auto& checkStabLength = [&](const RowType& row) {
     if (!stabLength.has_value()) {
       stabLength = row.size();
     }
@@ -459,11 +459,11 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
     }
   };
 
-  const char  delimiter = ',';
+  const char delimiter = ',';
   std::string stab;
   for (std::size_t pos = stabilizers.find(delimiter); pos != std::string::npos;
-       pos             = stabilizers.find(delimiter)) {
-    stab            = stabilizers.substr(0, pos);
+       pos = stabilizers.find(delimiter)) {
+    stab = stabilizers.substr(0, pos);
     const auto& row = parseStabilizer(stab);
     checkStabLength(row);
     tableau.push_back(row);
