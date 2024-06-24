@@ -31,11 +31,13 @@ set(MQT_CORE_VERSION 2.5.1
     CACHE STRING "MQT Core version")
 set(MQT_CORE_REV "35e06ca3067ca3cf36bda1f0c38edf5bd7456fb6"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
+set(MQT_CORE_REPO_OWNER "cda-tum"
+    CACHE STRING "MQT Core repository owner (change when using a fork)")
 # cmake-format: on
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   FetchContent_Declare(
     mqt-core
-    GIT_REPOSITORY https://github.com/cda-tum/mqt-core.git
+    GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/mqt-core.git
     GIT_TAG ${MQT_CORE_REV}
     FIND_PACKAGE_ARGS ${MQT_CORE_VERSION})
   list(APPEND FETCH_PACKAGES mqt-core)
@@ -44,7 +46,7 @@ else()
   if(NOT mqt-core_FOUND)
     FetchContent_Declare(
       mqt-core
-      GIT_REPOSITORY https://github.com/cda-tum/mqt-core.git
+      GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/mqt-core.git
       GIT_TAG ${MQT_CORE_REV})
     list(APPEND FETCH_PACKAGES mqt-core)
   endif()
