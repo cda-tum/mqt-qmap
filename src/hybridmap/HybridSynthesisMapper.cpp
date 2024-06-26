@@ -37,7 +37,7 @@ size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
       costs.begin(), costs.end(),
       [](const auto& a, const auto& b) { return a.second < b.second; });
   if (alsoMap) {
-    this->appendWithoutMapping(bestQc->first);
+    this->appendWithMapping(bestQc->first);
   }
   return static_cast<size_t>(std::distance(costs.begin(), bestQc));
 }
