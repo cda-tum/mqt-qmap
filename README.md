@@ -107,11 +107,27 @@ In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2022.
 
 [[6]](https://arxiv.org/pdf/2210.09321.pdf)
 T. Peham, L. Burgholzer, and R. Wille. On Optimal Subarchitectures for Quantum Circuit Mapping.
-_arXiv:2210.09321_, 2022.
+_ACM Transactions on Quantum Computing (TQC)_, 2023.
 
 [[7]](https://arxiv.org/pdf/2208.11713.pdf)
 S. Schneider, L. Burgholzer, and R. Wille. A SAT Encoding for Optimal Clifford Circuit Synthesis.
 In _Asia and South Pacific Design Automation Conference (ASP-DAC)_, 2023.
+
+[[8]](https://arxiv.org/pdf/2305.01674.pdf)
+T. Peham, N. Brandl, R. Kueng, R. Wille, and L. Burgholzer. Depth-Optimal Synthesis of Clifford Circuits with SAT Solvers.
+In _IEEE International Conference on Quantum Computing and Engineering (QCE)_, 2023.
+
+[[9]](https://arxiv.org/pdf/2309.08656.pdf)
+L. Schmid, D. F. Locher, M. Rispler, S. Blatt, J. Zeiher, M. Müller, and R. Wille. Computational Capabilities and Compiler Development for Neutral Atom Quantum Processors: Connecting Tool Developers and Hardware Experts.
+_Quantum Science and Technology_, 2024.
+
+[[10]](https://arxiv.org/pdf/2311.14164.pdf)
+L. Schmid, S. Park, S. Kang, and R. Wille. Hybrid Circuit Mapping: Leveraging the Full Spectrum of Computational Capabilities of Neutral Atom Quantum Computers.
+In _Design Automation Conference (DAC)_, 2024.
+
+[[11]](https://arxiv.org/pdf/2405.08068.pdf)
+Y. Stade, L. Schmid, L. Burgholzer, and R. Wille. An Abstract Model and Efficient Routing for Logical Entangling Gates on Zoned Neutral Atom Architectures.
+_arXiv:2405.08068_, 2024.
 
 ---
 
