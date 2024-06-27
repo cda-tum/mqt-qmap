@@ -74,6 +74,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/api/
 
 # PyBuilder
 .pybuilder/
@@ -137,7 +138,7 @@ _skbuild/
 
 # Any build dirs in the tests
 test/**/build/
-/src/mqt/qmap/_version.py
+/src/mqt/**/_version.py
 
 # Common editor files
 *~
@@ -170,3 +171,6 @@ Thumbs.db
 /docs/**/build
 .vs
 out/build
+
+node_modules/
+wheelhouse/
