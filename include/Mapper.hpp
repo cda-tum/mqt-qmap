@@ -53,8 +53,8 @@ protected:
    * For a single-qubit operation `control` is set to `-1`
    */
   struct Gate {
-    std::int16_t  control = -1;
-    std::uint16_t target  = 0;
+    std::int16_t control = -1;
+    std::uint16_t target = 0;
 
     qc::Operation* op = nullptr;
 
@@ -236,16 +236,16 @@ protected:
    * results in `info.gates` and `info.cnots`
    */
   virtual void countGates(const qc::QuantumComputation& circuit,
-                          MappingResults::CircuitInfo&  info) {
+                          MappingResults::CircuitInfo& info) {
     countGates(circuit.cbegin(), circuit.cend(), info);
   }
   /**
    * @brief count number of elementary gates and cnots in circuit and save the
    * results in `info.gates` and `info.cnots`
    */
-  virtual void countGates(decltype(qcMapped.cbegin())      it,
+  virtual void countGates(decltype(qcMapped.cbegin()) it,
                           const decltype(qcMapped.cend())& end,
-                          MappingResults::CircuitInfo&     info);
+                          MappingResults::CircuitInfo& info);
 
   /**
    * @brief performs optimizations on the circuit before mapping
@@ -283,8 +283,8 @@ public:
       return;
     }
 
-    const std::size_t dot       = outputFilename.find_last_of('.');
-    std::string       extension = outputFilename.substr(dot + 1);
+    const std::size_t dot = outputFilename.find_last_of('.');
+    std::string extension = outputFilename.substr(dot + 1);
     std::transform(extension.begin(), extension.end(), extension.begin(),
                    [](unsigned char c) { return ::tolower(c); });
     if (extension == "real") {
@@ -298,10 +298,10 @@ public:
   }
 
   virtual void dumpResult(const std::string& outputFilename,
-                          qc::Format         format) {
+                          qc::Format format) {
     const std::size_t slash = outputFilename.find_last_of('/');
-    const std::size_t dot   = outputFilename.find_last_of('.');
-    results.output.name     = outputFilename.substr(slash + 1, dot - slash - 1);
+    const std::size_t dot = outputFilename.find_last_of('.');
+    results.output.name = outputFilename.substr(slash + 1, dot - slash - 1);
     qcMapped.dump(outputFilename, format);
   }
 

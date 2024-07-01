@@ -18,7 +18,7 @@ namespace cs::encoding {
 class ObjectiveEncoder {
 public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                   GateEncoder::Variables*                vars,
+                   GateEncoder::Variables* vars,
                    std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), T(timestepLimit), gvars(vars), lb(std::move(logicBlock)) {}
 

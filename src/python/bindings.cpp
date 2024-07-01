@@ -672,7 +672,7 @@ PYBIND11_MODULE(pyqmap, m) {
   quantumComputation.def_static(
       "from_qasm_str",
       [](const std::string& qasm) {
-        std::stringstream      ss(qasm);
+        std::stringstream ss(qasm);
         qc::QuantumComputation qc{};
         qc.import(ss, qc::Format::OpenQASM3);
         return qc;

@@ -5,7 +5,18 @@
 
 #include "utils.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
                           const Matrix& edgeWeights) {
@@ -19,8 +30,8 @@ void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
     std::vector<Dijkstra::Node> nodes(n);
     for (std::uint16_t j = 0; j < n; ++j) {
       nodes.at(j).visited = false;
-      nodes.at(j).pos     = j;
-      nodes.at(j).cost    = -1.;
+      nodes.at(j).pos = j;
+      nodes.at(j).cost = -1.;
     }
 
     nodes.at(i).cost = 0;
@@ -43,7 +54,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
   std::priority_queue<Node*, std::vector<Node*>, NodeComparator> queue{};
   queue.push(&nodes.at(start));
   while (!queue.empty()) {
-    auto* current    = queue.top();
+    auto* current = queue.top();
     current->visited = true;
     queue.pop();
     auto pos = current->pos;
@@ -62,7 +73,7 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
 
         Node newNode;
         newNode.cost = current->cost + edgeWeights.at(*pos).at(*to);
-        newNode.pos  = to;
+        newNode.pos = to;
         if (nodes.at(*to).cost < 0 || newNode < nodes.at(*to)) {
           nodes.at(*to) = newNode;
           queue.push(&nodes.at(*to));
@@ -72,9 +83,9 @@ void Dijkstra::dijkstra(const CouplingMap& couplingMap,
   }
 }
 
-void Dijkstra::buildEdgeSkipTable(const CouplingMap&   couplingMap,
+void Dijkstra::buildEdgeSkipTable(const CouplingMap& couplingMap,
                                   std::vector<Matrix>& distanceTables,
-                                  const Matrix&        edgeWeights) {
+                                  const Matrix& edgeWeights) {
   /* to find the cheapest distance between 2 qubits skipping any 1 edge, we
   iterate over all edges, for each assume the current edge to be the one skipped
   and are thereby able to retrieve the distance by just adding the distances
@@ -128,9 +139,9 @@ void Dijkstra::buildEdgeSkipTable(const CouplingMap&   couplingMap,
   }
 }
 
-void Dijkstra::buildSingleEdgeSkipTable(const Matrix&      distanceTable,
+void Dijkstra::buildSingleEdgeSkipTable(const Matrix& distanceTable,
                                         const CouplingMap& couplingMap,
-                                        const double       reversalCost,
+                                        const double reversalCost,
                                         Matrix& edgeSkipDistanceTable) {
   const std::size_t n = distanceTable.size();
   edgeSkipDistanceTable.clear();
@@ -205,10 +216,10 @@ void dfs(std::uint16_t current, std::set<std::uint16_t>& visited,
   }
 }
 
-std::vector<QubitSubset> subsets(const QubitSubset&     input,
-                                 const std::size_t      size,
+std::vector<QubitSubset> subsets(const QubitSubset& input,
+                                 const std::size_t size,
                                  const filter_function& filter) {
-  const std::size_t        n = input.size();
+  const std::size_t n = input.size();
   std::vector<QubitSubset> result{};
 
   if (size == 0) {
@@ -231,7 +242,7 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
     while ((i >> n) == 0U) {
       assert(i != 0U);
       std::set<std::uint16_t> v{};
-      auto                    it = input.begin();
+      auto it = input.begin();
 
       for (std::size_t j = 0U; j < n; j++, ++it) {
         if ((i & (1U << j)) != 0U) {
@@ -254,12 +265,12 @@ std::vector<QubitSubset> subsets(const QubitSubset&     input,
 }
 
 void parseLine(const std::string& line, char separator,
-               const std::set<char>&     escapeChars,
-               const std::set<char>&     ignoredChars,
+               const std::set<char>& escapeChars,
+               const std::set<char>& ignoredChars,
                std::vector<std::string>& result) {
   result.clear();
   std::string word;
-  bool        inEscape = false;
+  bool inEscape = false;
   for (const char c : line) {
     if (ignoredChars.find(c) != ignoredChars.end()) {
       continue;

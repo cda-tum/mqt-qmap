@@ -30,8 +30,8 @@ namespace na {
 auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
     -> std::unordered_set<qc::Qubit> {
   std::unordered_set<qc::Qubit> result;
-  const auto&                   vertices = g.getVertices();
-  std::list<qc::Qubit>          queue(vertices.cbegin(), vertices.cend());
+  const auto& vertices = g.getVertices();
+  std::list<qc::Qubit> queue(vertices.cbegin(), vertices.cend());
   // sort the vertices by degree in descending order
   queue.sort([&](const auto& u, const auto& v) {
     return g.getDegree(u) > g.getDegree(v);
@@ -45,7 +45,7 @@ auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
   return result;
 }
 
-auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
+auto NAGraphAlgorithms::coveredEdges(const InteractionGraph& g,
                                      const std::unordered_set<qc::Qubit>& vs)
     -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> {
   std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> result;
@@ -65,10 +65,10 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
 
 auto NAGraphAlgorithms::getLeastAdmissibleColor(
     const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
-                 coloring,
+        coloring,
     const Color& maxColor, const Edge& e, const qc::Qubit& v,
-    const std::vector<qc::Qubit>&                             sequence,
-    const qc::DirectedAcyclicGraph<qc::Qubit>&                partialOrder,
+    const std::vector<qc::Qubit>& sequence,
+    const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
     const std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
                              qc::PairHash<qc::Qubit, Color>>& ranks) -> Color {
   // compute the minimum admissible color as the maximum color +1 of adjacent
@@ -142,14 +142,14 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
 }
 
 auto NAGraphAlgorithms::colorEdges(
-    const InteractionGraph&                                             g,
+    const InteractionGraph& g,
     const std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>& edges,
     const std::vector<qc::Qubit>& nodesQueue)
     -> std::pair<
         std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>,
         qc::DirectedAcyclicGraph<qc::Qubit>> {
   std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>
-        coloring{};
+      coloring{};
   Color maxColor = 0;
   // number of distinct colors of edges adjacent to an edge
   std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit, qc::Qubit>>
@@ -199,7 +199,7 @@ auto NAGraphAlgorithms::colorEdges(
       coloring[e] = getLeastAdmissibleColor(coloring, maxColor, e, v,
                                             nodesQueue, partialOrder, ranks);
       // update partial order
-      const qc::Qubit u       = e.first == v ? e.second : e.first;
+      const qc::Qubit u = e.first == v ? e.second : e.first;
       ranks[{u, coloring[e]}] = static_cast<std::size_t>(
           std::distance(nodesQueue.cbegin(),
                         std::find(nodesQueue.cbegin(), nodesQueue.cend(), v)));
@@ -303,7 +303,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
       if (moveableXs.find(v) == moveableXs.end()) {
         // index of v in moveable
         const auto& it = std::find(moveable.cbegin(), moveable.cend(), v);
-        const auto  i =
+        const auto i =
             static_cast<std::size_t>(std::distance(moveable.cbegin(), it));
         // get the index of the left neighbor in the keys of moveableXs
         std::vector<std::size_t> leftNeighbors;
@@ -403,9 +403,9 @@ auto NAGraphAlgorithms::computeRestingPositions(
 }
 
 auto NAGraphAlgorithms::groupByConnectedComponent(
-    const InteractionGraph&       g,
+    const InteractionGraph& g,
     const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit> {
-  const auto&                vertices = g.getVertices();
+  const auto& vertices = g.getVertices();
   qc::DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
   for (const qc::Qubit& v : vertices) {
     for (const qc::Qubit& u : vertices) {
@@ -440,7 +440,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
   const auto& sequence = groupByConnectedComponent(g, sequenceUngrouped);
   const auto& [coloring, partialOrder] =
       colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
-  const auto& fixed   = partialOrder.orderTopologically();
+  const auto& fixed = partialOrder.orderTopologically();
   const auto& resting = computeRestingPositions(sequence, fixed, coloring);
   // compute relative x positions of fixed vertices
   std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
@@ -512,7 +512,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
               moveablePositions.at(t).cbegin(), moveablePositions.at(t).cend(),
               std::make_pair(0UL, 0LL),
               [](const std::pair<const qc::Qubit, std::int64_t>& acc,
-                 const auto&                                     value) {
+                 const auto& value) {
                 if (value.second > acc.second) {
                   return value;
                 }
@@ -520,9 +520,9 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
               });
           // k is the number of spots between the left positioned neighbor and
           // the leftmost atom (including itself)
-          const auto         k = static_cast<std::size_t>(std::distance(
+          const auto k = static_cast<std::size_t>(std::distance(
               sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(),
-                                                   leftNeighbor.first)));
+                                           leftNeighbor.first)));
           const std::int64_t maxX =
               std::accumulate(fixedPositions.cbegin(), fixedPositions.cend(),
                               static_cast<std::int64_t>(0),

@@ -3,19 +3,30 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "nlohmann/json.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <sstream>
-#include <stack>
+#include <gtest/gtest.h>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <vector>
 
-constexpr qc::OpType SWAP            = qc::OpType::SWAP;
-constexpr double     FLOAT_TOLERANCE = 1e-6;
+constexpr qc::OpType SWAP = qc::OpType::SWAP;
+constexpr double FLOAT_TOLERANCE = 1e-6;
 
 /**
  * @brief Get id of the final node in a given layer from a data log.
@@ -126,9 +137,9 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
     }
     if (std::getline(lineStream, col, ';')) {
       std::stringstream qubitMapBuffer(col);
-      std::string       entry;
+      std::string entry;
       for (std::size_t i = 0; std::getline(qubitMapBuffer, entry, ','); ++i) {
-        auto qubit        = static_cast<std::int16_t>(std::stoi(entry));
+        auto qubit = static_cast<std::int16_t>(std::stoi(entry));
         node.qubits.at(i) = qubit;
         if (qubit >= 0) {
           node.locations.at(static_cast<std::size_t>(qubit)) =
@@ -141,11 +152,11 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
     }
     if (std::getline(lineStream, col, ';')) {
       std::stringstream swapBuffer(col);
-      std::string       entry;
+      std::string entry;
       while (std::getline(swapBuffer, entry, ',')) {
         std::uint16_t q1 = 0;
         std::uint16_t q2 = 0;
-        std::string   opTypeStr;
+        std::string opTypeStr;
         std::stringstream(entry) >> q1 >> q2 >> opTypeStr;
         qc::OpType opType = SWAP;
         if (!opTypeStr.empty()) {
@@ -200,9 +211,9 @@ protected:
 Architecture InternalsTest::defaultArch{1, {}};
 
 TEST_F(InternalsTest, NodeCostCalculation) {
-  results.config.heuristic          = Heuristic::GateCountMaxDistance;
+  results.config.heuristic = Heuristic::GateCountMaxDistance;
   results.config.lookaheadHeuristic = LookaheadHeuristic::None;
-  results.config.layering           = Layering::Disjoint2qBlocks;
+  results.config.layering = Layering::Disjoint2qBlocks;
 
   architecture->loadCouplingMap(5, {{0, 1}, {1, 2}, {3, 1}, {4, 3}});
   qc = qc::QuantumComputation{5};
@@ -284,9 +295,9 @@ TEST_F(InternalsTest, NodeCostCalculation) {
 }
 
 TEST_F(InternalsTest, NodeLookaheadCalculation) {
-  results.config.heuristic          = Heuristic::GateCountMaxDistance;
+  results.config.heuristic = Heuristic::GateCountMaxDistance;
   results.config.lookaheadHeuristic = LookaheadHeuristic::None;
-  results.config.layering           = Layering::Disjoint2qBlocks;
+  results.config.layering = Layering::Disjoint2qBlocks;
 
   architecture->loadCouplingMap(5, {{0, 1}, {1, 2}, {3, 1}, {4, 3}});
   qc = qc::QuantumComputation{5};
@@ -332,10 +343,10 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
   EXPECT_NEAR(node.lookaheadPenalty, 0., FLOAT_TOLERANCE);
 
   results.config.firstLookaheadFactor = 0.75;
-  results.config.lookaheadFactor      = 0.5;
+  results.config.lookaheadFactor = 0.5;
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
-  results.config.nrLookaheads       = 1;
+  results.config.nrLookaheads = 1;
   updateLookaheadPenalty(0, node);
   EXPECT_NEAR(node.lookaheadPenalty, 0.75 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
@@ -361,7 +372,7 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
               FLOAT_TOLERANCE);
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
-  results.config.nrLookaheads       = 1;
+  results.config.nrLookaheads = 1;
   updateLookaheadPenalty(0, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (3 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
@@ -387,18 +398,18 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
                   0.75 * 0.5 * 0.5 * (2 * COST_UNIDIRECTIONAL_SWAP),
               FLOAT_TOLERANCE);
 
-  node.qubits    = {4, 3, 1, -1, -1};
+  node.qubits = {4, 3, 1, -1, -1};
   node.locations = {-1, 2, -1, 1, 0};
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
-  results.config.nrLookaheads       = 1;
+  results.config.nrLookaheads = 1;
   updateLookaheadPenalty(0, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
               FLOAT_TOLERANCE);
 
   results.config.lookaheadHeuristic = LookaheadHeuristic::GateCountSumDistance;
-  results.config.nrLookaheads       = 1;
+  results.config.nrLookaheads = 1;
   updateLookaheadPenalty(0, node);
   EXPECT_NEAR(node.lookaheadPenalty,
               0.75 * (2 * COST_UNIDIRECTIONAL_SWAP + COST_DIRECTION_REVERSE),
@@ -408,19 +419,19 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir  = "../extern/calibration/";
+  std::string testCalibrationDir = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  std::string                      circuitName{};
-  Architecture                     ibmqYorktown{}; // 5 qubits
-  Architecture                     ibmqLondon{}; // 5 qubits (with calibration)
+  qc::QuantumComputation qc;
+  std::string circuitName;
+  Architecture ibmqYorktown; // 5 qubits
+  Architecture ibmqLondon;   // 5 qubits (with calibration)
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Architecture                     ibmQX5{}; // 16 qubits
+  Architecture ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration                    settings{};
+  Configuration settings{};
 
   static const std::unordered_map<std::string,
                                   std::vector<std::vector<std::int16_t>>>
@@ -439,15 +450,15 @@ protected:
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
-    ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
+    ibmqLondonMapper = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
     ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
-    ibmQX5Mapper   = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
     settings.debug = true;
     settings.automaticLayerSplits = false;
-    settings.initialLayout        = InitialLayout::Identity;
-    settings.layering             = Layering::Disjoint2qBlocks;
-    settings.lookaheadHeuristic   = LookaheadHeuristic::None;
-    settings.heuristic            = std::get<0>(GetParam());
+    settings.initialLayout = InitialLayout::Identity;
+    settings.layering = Layering::Disjoint2qBlocks;
+    settings.lookaheadHeuristic = LookaheadHeuristic::None;
+    settings.heuristic = std::get<0>(GetParam());
     settings.dataLoggingPath = "test_log/heur_properties_" + testName + "/";
   }
 };
@@ -776,8 +787,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
   // each node is at the position corresponding to its id; positions of unused
   // ids are filled with default values (i.e. node.id = 0)
   std::vector<std::vector<HeuristicMapper::Node>> allNodes{};
-  std::vector<std::string>                        layerNames{};
-  std::vector<std::size_t>                        finalSolutionIds{};
+  std::vector<std::string> layerNames{};
+  std::vector<std::size_t> finalSolutionIds{};
 
   // map to IBM Yorktown if possible
   if (qc.getNqubits() <= ibmqYorktown.getNqubits()) {
@@ -831,7 +842,7 @@ TEST_P(TestHeuristics, HeuristicProperties) {
   }
 
   for (std::size_t i = 0; i < allNodes.size(); ++i) {
-    auto& nodes           = allNodes.at(i);
+    auto& nodes = allNodes.at(i);
     auto& finalSolutionId = finalSolutionIds.at(i);
 
     if (finalSolutionId >= nodes.size() ||
@@ -951,7 +962,7 @@ TEST(Functionality, HeuristicBenchmark) {
     |   |
     0---1
   */
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
                           {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
   architecture.loadCouplingMap(5, cm);
@@ -966,15 +977,15 @@ TEST(Functionality, HeuristicBenchmark) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  const auto    mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+  const auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
   Configuration settings{};
-  settings.heuristic                = Heuristic::GateCountMaxDistance;
-  settings.layering                 = Layering::DisjointQubits;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.preMappingOptimizations  = false;
+  settings.heuristic = Heuristic::GateCountMaxDistance;
+  settings.layering = Layering::DisjointQubits;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.debug                    = true;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.debug = true;
   mapper->map(settings);
   auto& result = mapper->getResults();
 
@@ -1027,7 +1038,7 @@ TEST(Functionality, HeuristicBenchmark) {
 TEST(Functionality, EmptyDump) {
   qc::QuantumComputation qc{1};
   qc.x(0);
-  Architecture    arch{1, {}};
+  Architecture arch{1, {}};
   HeuristicMapper mapper(qc, arch);
   mapper.dumpResult("test.qasm");
   mapper.map({});
@@ -1047,15 +1058,15 @@ TEST(Functionality, BenchmarkGeneratedNodes) {
   auto ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
 
   Configuration settings{};
-  settings.heuristic                = Heuristic::GateCountMaxDistance;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.layering                 = Layering::IndividualGates;
-  settings.automaticLayerSplits     = false;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.preMappingOptimizations  = false;
+  settings.heuristic = Heuristic::GateCountMaxDistance;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.layering = Layering::IndividualGates;
+  settings.automaticLayerSplits = false;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.useTeleportation         = false;
-  settings.debug                    = true;
+  settings.useTeleportation = false;
+  settings.debug = true;
   ibmQX5Mapper->map(settings);
   auto results = ibmQX5Mapper->getResults();
 
@@ -1067,13 +1078,13 @@ TEST(Functionality, InvalidSettings) {
   qc::QuantumComputation qc{1};
   qc.x(0);
   Architecture arch{1, {}};
-  auto         props = Architecture::Properties();
+  auto props = Architecture::Properties();
   props.setSingleQubitErrorRate(0, "x", 0.1);
   arch.loadProperties(props);
   HeuristicMapper mapper(qc, arch);
-  auto            config    = Configuration{};
-  config.method             = Method::Heuristic;
-  config.heuristic          = Heuristic::GateCountMaxDistance;
+  auto config = Configuration{};
+  config.method = Method::Heuristic;
+  config.heuristic = Heuristic::GateCountMaxDistance;
   config.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
   // invalid layering
   config.layering = Layering::OddGates;
@@ -1109,14 +1120,14 @@ TEST(Functionality, NoMeasurmentsAdded) {
   HeuristicMapper mapper(qc, arch);
 
   // configure to not include measurements after mapping
-  auto config                           = Configuration{};
+  auto config = Configuration{};
   config.addMeasurementsToMappedCircuit = false;
 
   // perform the mapping
   mapper.map(config);
 
   // get the resulting circuit
-  auto              qcMapped = qc::QuantumComputation();
+  auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
   mapper.dumpResult(qasm, qc::Format::OpenQASM3);
   qcMapped.import(qasm, qc::Format::OpenQASM3);
@@ -1133,26 +1144,26 @@ TEST(Functionality, InvalidCircuits) {
   // architecture not connected
   qc::QuantumComputation qc{2U};
   qc.cx({0}, 1);
-  Architecture    arch{2U, {}};
+  Architecture arch{2U, {}};
   HeuristicMapper mapper(qc, arch);
   EXPECT_THROW(mapper.map(config), QMAPException);
 
   // gate with >1 control
   qc::QuantumComputation qc3{3U};
   qc3.mcx({0, 1}, 2);
-  Architecture    arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
+  Architecture arch2{3U, {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 0}, {0, 2}}};
   HeuristicMapper mapper3(qc3, arch2);
   EXPECT_THROW(mapper3.map(config), QMAPException);
 }
 
 TEST(Functionality, DataLoggerAfterClose) {
-  const std::string      dataLoggingPath = "test_log/datalogger_after_close/";
+  const std::string dataLoggingPath = "test_log/datalogger_after_close/";
   qc::QuantumComputation qc{3};
   qc.x(0);
   Architecture arch{3, {}};
   auto dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
   const qc::CompoundOperation compOp{};
-  Exchange                    teleport(0, 2, 1, qc::OpType::Teleportation);
+  Exchange teleport(0, 2, 1, qc::OpType::Teleportation);
   dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {{teleport}}, 0);
   dataLogger->logSearchNode(1, 0, 0, 0., 0., 0., {}, false, {}, 0);
   dataLogger->splitLayer();
@@ -1182,7 +1193,7 @@ TEST(Functionality, DataLoggerAfterClose) {
 
 TEST(Functionality, DataLogger) {
   // setting up example architecture and circuit
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {1, 3}, {3, 1}};
   architecture.loadCouplingMap(4, cm);
 
@@ -1208,17 +1219,17 @@ TEST(Functionality, DataLogger) {
   qc.setName("test_circ");
 
   Configuration settings{};
-  settings.heuristic                = Heuristic::GateCountMaxDistance;
-  settings.layering                 = Layering::IndividualGates;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.preMappingOptimizations  = false;
+  settings.heuristic = Heuristic::GateCountMaxDistance;
+  settings.layering = Layering::IndividualGates;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::GateCountMaxDistance;
-  settings.nrLookaheads             = 1;
-  settings.firstLookaheadFactor     = 0.5;
-  settings.lookaheadFactor          = 0.9;
-  settings.debug                    = true;
-  settings.useTeleportation         = false;
+  settings.lookaheadHeuristic = LookaheadHeuristic::GateCountMaxDistance;
+  settings.nrLookaheads = 1;
+  settings.firstLookaheadFactor = 0.5;
+  settings.lookaheadFactor = 0.9;
+  settings.debug = true;
+  settings.useTeleportation = false;
   // setting data logging path to enable data logging
   settings.dataLoggingPath = "test_log/datalogger";
 
@@ -1293,7 +1304,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/mapping_result.json";
   }
-  const auto  resultJson = nlohmann::json::parse(resultFile);
+  const auto resultJson = nlohmann::json::parse(resultFile);
   const auto& configJson = resultJson["config"];
   EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
             settings.addMeasurementsToMappedCircuit);
@@ -1413,7 +1424,7 @@ TEST(Functionality, DataLogger) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << "/layer_"
              << i << ".json";
     }
-    const auto        layerJson   = nlohmann::json::parse(layerFile);
+    const auto layerJson = nlohmann::json::parse(layerFile);
     const std::size_t finalNodeId = layerJson["final_node_id"];
     EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
@@ -1519,8 +1530,8 @@ TEST(Functionality, earlyTermination) {
     qc.measure(static_cast<qc::Qubit>(i), i);
   }
 
-  const CouplingMap        cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
-                                 {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
+  const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
+                          {3, 4}, {4, 3}, {4, 5}, {5, 4}, {5, 6}, {6, 5}};
   Architecture::Properties props{};
   props.setSingleQubitErrorRate(0, "x", 0.9);
   props.setSingleQubitErrorRate(1, "x", 0.5);
@@ -1535,23 +1546,23 @@ TEST(Functionality, earlyTermination) {
   Architecture arch{7, cm, props};
 
   Configuration config{};
-  config.method                        = Method::Heuristic;
-  config.layering                      = Layering::DisjointQubits;
-  config.initialLayout                 = InitialLayout::Identity;
-  config.automaticLayerSplits          = false;
+  config.method = Method::Heuristic;
+  config.layering = Layering::DisjointQubits;
+  config.initialLayout = InitialLayout::Identity;
+  config.automaticLayerSplits = false;
   config.iterativeBidirectionalRouting = false;
-  config.debug                         = true;
-  config.heuristic                     = Heuristic::FidelityBestLocation;
-  config.lookaheadHeuristic            = LookaheadHeuristic::None;
-  config.earlyTerminationLimit         = 4;
+  config.debug = true;
+  config.heuristic = Heuristic::FidelityBestLocation;
+  config.lookaheadHeuristic = LookaheadHeuristic::None;
+  config.earlyTerminationLimit = 4;
 
-  auto mapper             = std::make_unique<HeuristicMapper>(qc, arch);
+  auto mapper = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::None;
   mapper->map(config);
   auto results = mapper->getResults();
   EXPECT_FALSE(results.layerHeuristicBenchmark[0].earlyTermination);
 
-  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  mapper = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::ExpandedNodesAfterFirstSolution;
   mapper->map(config);
   results = mapper->getResults();
@@ -1568,14 +1579,14 @@ TEST(Functionality, earlyTermination) {
   EXPECT_EQ(
       results.layerHeuristicBenchmark[0].expandedNodesAfterOptimalSolution, 4);
 
-  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  mapper = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::ExpandedNodes;
   mapper->map(config);
   results = mapper->getResults();
   EXPECT_TRUE(results.layerHeuristicBenchmark[0].earlyTermination);
   EXPECT_EQ(results.layerHeuristicBenchmark[0].expandedNodes, 4);
 
-  mapper                  = std::make_unique<HeuristicMapper>(qc, arch);
+  mapper = std::make_unique<HeuristicMapper>(qc, arch);
   config.earlyTermination = EarlyTermination::SolutionNodes;
   mapper->map(config);
   results = mapper->getResults();
@@ -1642,7 +1653,7 @@ TEST(Functionality, InitialLayoutDump) {
                      {22, 23}, {24, 23}, {25, 24}, {26, 25}}};
 
   Configuration config{};
-  config.method   = Method::Heuristic;
+  config.method = Method::Heuristic;
   config.layering = Layering::Disjoint2qBlocks;
 
   HeuristicMapper mapper(qc, arch);
@@ -1652,17 +1663,17 @@ TEST(Functionality, InitialLayoutDump) {
   mapper.dumpResult(qasmStream, qc::Format::OpenQASM3);
   const std::string qasm = qasmStream.str();
 
-  qasmStream    = std::stringstream(qasm);
+  qasmStream = std::stringstream(qasm);
   auto qcMapped = qc::QuantumComputation();
   qcMapped.import(qasmStream, qc::Format::OpenQASM3);
 
   qasmStream = std::stringstream(qasm);
   std::string line;
-  bool        foundPermutation = false;
+  bool foundPermutation = false;
   while (std::getline(qasmStream, line)) {
     if (line.rfind("// i ", 0) == 0) {
-      std::stringstream          lineStream(line.substr(5));
-      std::string                entry;
+      std::stringstream lineStream(line.substr(5));
+      std::string entry;
       std::vector<std::uint32_t> qubits{};
       while (std::getline(lineStream, entry, ' ')) {
         EXPECT_NO_THROW(
@@ -1684,10 +1695,10 @@ TEST(Functionality, InitialLayoutDump) {
 
 class LayeringTest : public testing::Test {
 protected:
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation qc{};
+  Architecture arch{};
   std::unique_ptr<HeuristicMapper> mapper;
-  Configuration                    settings{};
+  Configuration settings{};
 
   void SetUp() override {
     qc = qc::QuantumComputation{4, 4};
@@ -1704,12 +1715,12 @@ protected:
 
     arch = Architecture{4, {{0, 1}, {1, 2}, {2, 3}}};
 
-    settings.initialLayout                  = InitialLayout::Dynamic;
-    settings.preMappingOptimizations        = false;
-    settings.postMappingOptimizations       = false;
+    settings.initialLayout = InitialLayout::Dynamic;
+    settings.preMappingOptimizations = false;
+    settings.postMappingOptimizations = false;
     settings.addMeasurementsToMappedCircuit = true;
-    settings.addBarriersBetweenLayers       = true;
-    settings.automaticLayerSplits           = false;
+    settings.addBarriersBetweenLayers = true;
+    settings.automaticLayerSplits = false;
 
     mapper = std::make_unique<HeuristicMapper>(qc, arch);
   }
@@ -1721,7 +1732,7 @@ TEST_F(LayeringTest, Disjoint2qBlocks) {
   auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 2);
   // get mapped circuit
-  auto              qcMapped = qc::QuantumComputation();
+  auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM3);
   qcMapped.import(qasm, qc::Format::OpenQASM3);
@@ -1741,7 +1752,7 @@ TEST_F(LayeringTest, DisjointQubits) {
   auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 3);
   // get mapped circuit
-  auto              qcMapped = qc::QuantumComputation();
+  auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM3);
   qcMapped.import(qasm, qc::Format::OpenQASM3);
@@ -1761,7 +1772,7 @@ TEST_F(LayeringTest, IndividualGates) {
   auto result = mapper->getResults();
   EXPECT_EQ(result.input.layers, 6);
   // get mapped circuit
-  auto              qcMapped = qc::QuantumComputation();
+  auto qcMapped = qc::QuantumComputation();
   std::stringstream qasm{};
   mapper->dumpResult(qasm, qc::Format::OpenQASM3);
   qcMapped.import(qasm, qc::Format::OpenQASM3);
@@ -1777,16 +1788,16 @@ TEST_F(LayeringTest, IndividualGates) {
 
 class HeuristicTest5Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir  = "../extern/calibration/";
+  std::string testCalibrationDir = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     ibmqYorktown{};
-  Architecture                     ibmqLondon{};
+  qc::QuantumComputation qc{};
+  Architecture ibmqYorktown{};
+  Architecture ibmqLondon{};
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Configuration                    settings{};
+  Configuration settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
@@ -1794,11 +1805,11 @@ protected:
     ibmqLondon.loadCouplingMap(testArchitectureDir + "ibmq_london.arch");
     ibmqLondon.loadProperties(testCalibrationDir + "ibmq_london.csv");
     ibmqYorktownMapper = std::make_unique<HeuristicMapper>(qc, ibmqYorktown);
-    ibmqLondonMapper   = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
-    settings.verbose   = true;
-    settings.debug     = true;
+    ibmqLondonMapper = std::make_unique<HeuristicMapper>(qc, ibmqLondon);
+    settings.verbose = true;
+    settings.debug = true;
 
-    settings.iterativeBidirectionalRouting       = true;
+    settings.iterativeBidirectionalRouting = true;
     settings.iterativeBidirectionalRoutingPasses = 3;
   }
 };
@@ -1851,18 +1862,18 @@ TEST_P(HeuristicTest5Q, Dynamic) {
 
 class HeuristicTest16Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     ibmQX5{};
+  qc::QuantumComputation qc{};
+  Architecture ibmQX5{};
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
-  Configuration                    settings{};
+  Configuration settings{};
 
   void SetUp() override {
     qc.import(testExampleDir + GetParam() + ".qasm");
     ibmQX5.loadCouplingMap(AvailableArchitecture::IbmQx5);
-    ibmQX5Mapper   = std::make_unique<HeuristicMapper>(qc, ibmQX5);
+    ibmQX5Mapper = std::make_unique<HeuristicMapper>(qc, ibmQX5);
     settings.debug = true;
   }
 };
@@ -1902,11 +1913,11 @@ TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
 
 class HeuristicTest20Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation qc{};
+  Architecture arch{};
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
@@ -1929,7 +1940,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest20Q, Dynamic) {
   Configuration settings{};
   settings.initialLayout = InitialLayout::Dynamic;
-  settings.debug         = true;
+  settings.debug = true;
   tokyoMapper->map(settings);
   tokyoMapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
   tokyoMapper->printResult(std::cout);
@@ -1939,11 +1950,11 @@ TEST_P(HeuristicTest20Q, Dynamic) {
 class HeuristicTest20QTeleport
     : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation qc{};
+  Architecture arch{};
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
@@ -1968,8 +1979,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTest20QTeleport, Teleportation) {
   Configuration settings{};
-  settings.initialLayout       = InitialLayout::Dynamic;
-  settings.debug               = true;
+  settings.initialLayout = InitialLayout::Dynamic;
+  settings.debug = true;
   settings.teleportationQubits = std::min(
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());
@@ -1982,13 +1993,13 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
 
 class HeuristicTestFidelity : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir      = "../examples/";
+  std::string testExampleDir = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir  = "../extern/calibration/";
+  std::string testCalibrationDir = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
-  Architecture                     nonFidelityArch{};
+  qc::QuantumComputation qc{};
+  Architecture arch{};
+  Architecture nonFidelityArch{};
   std::unique_ptr<HeuristicMapper> mapper;
   std::unique_ptr<HeuristicMapper> nonFidelityMapper;
 
@@ -2014,9 +2025,9 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HeuristicTestFidelity, Identity) {
   Configuration settings{};
-  settings.layering           = Layering::DisjointQubits;
-  settings.initialLayout      = InitialLayout::Identity;
-  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.layering = Layering::DisjointQubits;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
@@ -2026,9 +2037,9 @@ TEST_P(HeuristicTestFidelity, Identity) {
 
 TEST_P(HeuristicTestFidelity, Static) {
   Configuration settings{};
-  settings.layering           = Layering::DisjointQubits;
-  settings.initialLayout      = InitialLayout::Static;
-  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.layering = Layering::DisjointQubits;
+  settings.initialLayout = InitialLayout::Static;
+  settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
@@ -2038,9 +2049,9 @@ TEST_P(HeuristicTestFidelity, Static) {
 
 TEST_P(HeuristicTestFidelity, Dynamic) {
   Configuration settings{};
-  settings.layering           = Layering::DisjointQubits;
-  settings.initialLayout      = InitialLayout::Dynamic;
-  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.layering = Layering::DisjointQubits;
+  settings.initialLayout = InitialLayout::Dynamic;
+  settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
   mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
@@ -2050,15 +2061,15 @@ TEST_P(HeuristicTestFidelity, Dynamic) {
 
 TEST_P(HeuristicTestFidelity, NoFidelity) {
   Configuration settings{};
-  settings.layering           = Layering::DisjointQubits;
-  settings.initialLayout      = InitialLayout::Static;
-  settings.heuristic          = Heuristic::FidelityBestLocation;
+  settings.layering = Layering::DisjointQubits;
+  settings.initialLayout = InitialLayout::Static;
+  settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   EXPECT_THROW(nonFidelityMapper->map(settings), QMAPException);
 }
 
 TEST(HeuristicTestFidelity, RemapSingleQubit) {
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {
       {0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
       {3, 2}, {3, 4}, {4, 3}, {4, 5}, {5, 4},
@@ -2105,14 +2116,14 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.layering                 = Layering::Disjoint2qBlocks;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.heuristic                = Heuristic::FidelityBestLocation;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.preMappingOptimizations  = false;
+  settings.layering = Layering::Disjoint2qBlocks;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.heuristic = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.verbose                  = true;
-  settings.swapOnFirstLayer         = true;
+  settings.verbose = true;
+  settings.swapOnFirstLayer = true;
   mapper->map(settings);
   mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
@@ -2143,7 +2154,7 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
 }
 
 TEST(HeuristicTestFidelity, QubitRideAlong) {
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
                           {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
   architecture.loadCouplingMap(7, cm);
@@ -2190,14 +2201,14 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.layering                 = Layering::Disjoint2qBlocks;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.heuristic                = Heuristic::FidelityBestLocation;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.preMappingOptimizations  = false;
+  settings.layering = Layering::Disjoint2qBlocks;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.heuristic = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.verbose                  = true;
-  settings.swapOnFirstLayer         = true;
+  settings.verbose = true;
+  settings.swapOnFirstLayer = true;
   mapper->map(settings);
   mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
@@ -2225,7 +2236,7 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
 }
 
 TEST(HeuristicTestFidelity, SingleQubitsCompete) {
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}};
   architecture.loadCouplingMap(3, cm);
 
@@ -2252,14 +2263,14 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.layering                 = Layering::Disjoint2qBlocks;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.heuristic                = Heuristic::FidelityBestLocation;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.preMappingOptimizations  = false;
+  settings.layering = Layering::Disjoint2qBlocks;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.heuristic = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.verbose                  = true;
-  settings.swapOnFirstLayer         = true;
+  settings.verbose = true;
+  settings.swapOnFirstLayer = true;
   mapper->map(settings);
   mapper->dumpResult("single_qubits_compete.qasm");
   mapper->printResult(std::cout);
@@ -2275,7 +2286,7 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
 }
 
 TEST(HeuristicTestFidelity, LayerSplitting) {
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {
       {0, 1}, {1, 0}, {1, 2},  {2, 1},  {2, 3},   {3, 2},
 
@@ -2369,15 +2380,15 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
   auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
 
   Configuration settings{};
-  settings.verbose                  = true;
-  settings.layering                 = Layering::Disjoint2qBlocks;
-  settings.initialLayout            = InitialLayout::Identity;
-  settings.heuristic                = Heuristic::FidelityBestLocation;
-  settings.lookaheadHeuristic       = LookaheadHeuristic::None;
-  settings.preMappingOptimizations  = false;
+  settings.verbose = true;
+  settings.layering = Layering::Disjoint2qBlocks;
+  settings.initialLayout = InitialLayout::Identity;
+  settings.heuristic = Heuristic::FidelityBestLocation;
+  settings.lookaheadHeuristic = LookaheadHeuristic::None;
+  settings.preMappingOptimizations = false;
   settings.postMappingOptimizations = false;
-  settings.swapOnFirstLayer         = true;
-  settings.automaticLayerSplits     = true;
+  settings.swapOnFirstLayer = true;
+  settings.automaticLayerSplits = true;
   settings.automaticLayerSplitsNodeLimit =
       1; // force splittings after 1st expanded node until layers are
          // unsplittable
@@ -2460,7 +2471,7 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
       if (line.empty()) {
         continue;
       }
-      std::string       col;
+      std::string col;
       std::stringstream lineStream(line);
       if (!std::getline(lineStream, col, ';')) {
         FAIL() << "Missing value for node id in " << settings.dataLoggingPath
