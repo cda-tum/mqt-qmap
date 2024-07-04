@@ -82,6 +82,7 @@ repos:
           - importlib_resources
           - numpy
           - pytest
+          - rustworkx
           - mqt.qcec
 
   # Check for spelling
