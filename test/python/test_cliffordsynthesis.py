@@ -218,7 +218,7 @@ def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Confi
 # They only check for the correctness of the result for a simple circuit.
 
 
-@pytest.fixture()
+@pytest.fixture
 def bell_circuit() -> QuantumCircuit:
     """Return a Bell state circuit."""
     circ = QuantumCircuit(2)

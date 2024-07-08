@@ -10,7 +10,7 @@ from mqt import qmap
 from mqt.qcec import verify
 
 
-@pytest.fixture()
+@pytest.fixture
 def backend() -> GenericBackendV2:
     """Return a test backend."""
     return GenericBackendV2(num_qubits=5, coupling_map=[[0, 1], [1, 0], [1, 2], [2, 1], [1, 3], [3, 1], [3, 4], [4, 3]])
