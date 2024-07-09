@@ -9,7 +9,7 @@ from qiskit.providers.fake_provider import Fake5QV1, GenericBackendV2
 from mqt import qmap
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_circuit() -> QuantumCircuit:
     """Return a simple circuit."""
     qc = QuantumCircuit(3)
@@ -20,7 +20,7 @@ def example_circuit() -> QuantumCircuit:
     return qc
 
 
-@pytest.fixture()
+@pytest.fixture
 def backend() -> GenericBackendV2:
     """Return a test backend."""
     return GenericBackendV2(num_qubits=5, coupling_map=[[0, 1], [1, 0], [1, 2], [2, 1], [1, 3], [3, 1], [3, 4], [4, 3]])

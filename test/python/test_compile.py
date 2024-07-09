@@ -25,7 +25,7 @@ from mqt.qmap import (
 from mqt.qmap.visualization import SearchVisualizer
 
 
-@pytest.fixture()
+@pytest.fixture
 def example_circuit() -> QuantumCircuit:
     """Return a simple example circuit."""
     qc = QuantumCircuit(3)
