@@ -194,6 +194,11 @@ TEST_F(NAArchitecture, GateProperty) {
                std::invalid_argument);
 }
 
+TEST_F(NAArchitecture, Getter) {
+  EXPECT_EQ(arch.getNrowsInZone(0), 4);
+  EXPECT_EQ(arch.getNColsInZone(0), 36);
+}
+
 TEST_F(NAArchitecture, WithConfiguration) {
   na::Configuration const config(2, 3);
   const auto              modArch = arch.withConfig(config);

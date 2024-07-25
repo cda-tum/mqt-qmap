@@ -216,8 +216,11 @@ auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
   std::sort(result.begin(), result.end());
   return result;
 }
+auto Architecture::getNColsInZone(const Zone& z) const -> Index {
+  return getColsInZone(z).size();
+}
 auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
-  return Architecture::getRowsInZone(z).size();
+  return getRowsInZone(z).size();
 }
 auto Architecture::getSitesInRow(const Zone&  z,
                                  const Index& row) const -> std::vector<Index> {
