@@ -427,7 +427,7 @@ auto NAGraphAlgorithms::groupByConnectedComponent(
   return result;
 }
 
-auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
+auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g, const std::size_t maxSites)
     -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                  std::unordered_map<qc::Qubit, std::int64_t>> {
   const auto& maxIndepSet = getMaxIndependentSet(g);
@@ -437,11 +437,13 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
             [&](const auto& u, const auto& v) {
               return g.getDegree(u) > g.getDegree(v);
             });
-  const auto& sequence = groupByConnectedComponent(g, sequenceUngrouped);
-  const auto& [coloring, partialOrder] =
+  auto sequence = groupByConnectedComponent(g, sequenceUngrouped);
+  const auto& colorEdgesResult =
       colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
-  const auto& fixed   = partialOrder.orderTopologically();
-  const auto& resting = computeRestingPositions(sequence, fixed, coloring);
+  std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>> coloring = colorEdgesResult.first;
+  auto partialOrder = colorEdgesResult.second;
+  auto fixed   = partialOrder.orderTopologically();
+  auto resting = computeRestingPositions(sequence, fixed, coloring);
   // compute relative x positions of fixed vertices
   std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
   for (std::uint32_t x = 0, i = 0; x < fixed.size(); ++x) {
@@ -450,6 +452,40 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
       ++i;
     }
   }
+
+  const auto maxSiteUsed = std::max_element(fixedPositions.cbegin(), fixedPositions.cend(), [](const auto& a, const auto& b){ return a.second < b.second; })->second;
+  const auto maxSitesSigned = static_cast<std::int64_t>(maxSites);
+  if (maxSiteUsed >= maxSitesSigned) {
+    // Handle the situation when the entangling zone is not big enough to fit all fixed qubits
+    std::cout << "============= Sizes ===============\n";
+    std::cout << "Size of fixedPositions: " << fixedPositions.size() << "\n";
+    std::cout << "Size of fixed: " << fixed.size() << "\n";
+    std::cout << "Size of coloring: " << coloring.size() << "\n";
+    std::cout << "Size of sequence: " << sequence.size() << "\n";
+    for (auto it = fixedPositions.begin(); it != fixedPositions.end(); ) {
+      if (it->second >= maxSitesSigned) {
+        it = fixedPositions.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    std::cout << "Reduced fixedPositions to: " << fixedPositions.size() << "\n";
+    fixed.erase(std::remove_if(fixed.begin(), fixed.end(), [&fixedPositions](const auto& q){ return fixedPositions.find(q) == fixedPositions.end(); }), fixed.end());
+    std::cout << "Reduced fixed to: " << fixed.size() << "\n";
+    for (auto it = coloring.begin(); it != coloring.end(); ) {
+      if (fixedPositions.find(it->first.first) == fixedPositions.end() && fixedPositions.find(it->first.second) == fixedPositions.end()) {
+        it = coloring.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    std::cout << "Reduced coloring to: " << coloring.size() << "\n";
+    sequence.erase(std::remove_if(sequence.begin(), sequence.end(), [&coloring](const auto& q){ return !std::any_of(coloring.cbegin(), coloring.cend(), [q](const auto& elem){ return elem.first.first == q || elem.first.second == q; }); }), sequence.end());
+    std::cout << "Reduced sequence to: " << sequence.size() << "\n";
+    // recalculate resting positions
+    resting = computeRestingPositions(sequence, fixed, coloring);
+  }
+
   // compute relative x positions of moveable vertices at every timestamp
   const Color maxColor = std::accumulate(
       coloring.cbegin(), coloring.cend(), static_cast<Color>(0),

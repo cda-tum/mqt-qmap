@@ -969,7 +969,10 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             "Other gates than cz are not supported for mapping yet.");
         // TODO: support other gates than cz
       }
-      const auto& sequence = NAGraphAlgorithms::computeSequence(graph);
+      const Zone interactionZone =
+          *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
+      const auto sites = arch.getSitesInRow(interactionZone, 0);
+      const auto& sequence = NAGraphAlgorithms::computeSequence(graph, sites.size());
       const auto& moveable = sequence.first;
       const auto& fixed    = sequence.second;
       // 3. move the atoms accordingly and execute the gates
@@ -982,9 +985,6 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             assert(q.second >= 0);
             return std::max(max, static_cast<std::size_t>(q.second));
           });
-      const Zone interactionZone =
-          *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
-      const auto sites = arch.getSitesInRow(interactionZone, 0);
       if (sites.size() < maxSeqWidth) {
         std::stringstream ss;
         ss << "Target site in " << arch.getZoneLabel(interactionZone);
