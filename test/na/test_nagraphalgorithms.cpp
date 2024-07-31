@@ -159,7 +159,7 @@ TEST_F(TestNAGraph, Coloring) {
 }
 
 TEST_F(TestNAGraph, SequenceOrdering) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   // check that the order of moveable qubits is consistent
   auto order =
@@ -184,7 +184,7 @@ TEST_F(TestNAGraph, SequenceOrdering) {
 }
 
 TEST_F(TestNAGraph, InteractionExists) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   const auto& fixed    = sequence.second;
   // check that all interactions are part of the interaction graph
@@ -208,7 +208,7 @@ TEST_F(TestNAGraph, CoveredInteractions) {
       na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
   std::vector coveredEdgesVec(coveredEdges.cbegin(), coveredEdges.cend());
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   const auto& fixed    = sequence.second;
   // check that all interactions that are covered by the independent set are
