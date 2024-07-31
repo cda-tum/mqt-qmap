@@ -184,15 +184,17 @@ auto NAGraphAlgorithms::colorEdges(
     std::copy_if(edges.cbegin(), edges.cend(),
                  std::back_inserter(adjacentEdges),
                  [&](const Edge& e) { return e.first == v or e.second == v; });
-    std::sort(adjacentEdges.begin(), adjacentEdges.end(),
-              [&](const Edge& a, const Edge& b) {
+    std::sort(adjacentEdges.begin(), adjacentEdges.end(), [&](const Edge& a, const& Edge b) {
                 const auto u = a.first == v ? a.second : a.first;
                 const auto w = b.first == v ? b.second : b.first;
-                return partialOrder.isReachable(u, w) or
-                       (!partialOrder.isReachable(w, u) and
-                        (nAdjColors[a] > nAdjColors[b] or
-                         (nAdjColors[a] == nAdjColors[b] and
-                          edgeDegree[a] > edgeDegree[b])));
+                return u != w && (partialOrder.isReachable(u, w) ||
+                       (!partialOrder.isReachable(w, u) &&
+                        (nAdjColors[a] > nAdjColors[b] ||
+                         (nAdjColors[a] == nAdjColors[b] &&
+                          (edgeDegree[a] > edgeDegree[b] ||
+                          (edgeDegree[a] == edgeDegree[b] && u < w))))));
+                          // the last line together with the first clause (u != w) is necessary for a
+                          // well-defined compare function to handle edges that compare equally correctly
               });
     for (const auto& e : adjacentEdges) {
       // color the edge
