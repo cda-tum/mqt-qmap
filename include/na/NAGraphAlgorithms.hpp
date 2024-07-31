@@ -152,7 +152,8 @@ public:
    * @return A tuple of vectors containing the moveable vertices, the fixed
    * vertices mapped to their relative x-position in every time step.
    */
-  [[nodiscard]] static auto computeSequence(const InteractionGraph& g, std::size_t maxSites)
+  [[nodiscard]] static auto computeSequence(const InteractionGraph& g,
+                                            std::size_t             maxSites)
       -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                    std::unordered_map<qc::Qubit, std::int64_t>>;
 };

@@ -971,8 +971,9 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       }
       const Zone interactionZone =
           *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
-      const auto sites = arch.getSitesInRow(interactionZone, 0);
-      const auto& sequence = NAGraphAlgorithms::computeSequence(graph, sites.size());
+      const auto  sites = arch.getSitesInRow(interactionZone, 0);
+      const auto& sequence =
+          NAGraphAlgorithms::computeSequence(graph, sites.size());
       const auto& moveable = sequence.first;
       const auto& fixed    = sequence.second;
       // 3. move the atoms accordingly and execute the gates
