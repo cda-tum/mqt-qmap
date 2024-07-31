@@ -545,7 +545,14 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
     if (!nextSiteOpt.has_value()) {
       break;
     }
-    anchorSitePos = getPositionOfSite(nextSiteOpt.value());
+    const auto& newAnchorSitePos = getPositionOfSite(nextSiteOpt.value());
+    // The following check is used to decide whether the patch is located outside of the zone
+    // Patches that overlap the border of the zone are not possible with this appraoch yet
+    if (std::abs(newAnchorSitePos.y - anchorSitePos.y) < std::abs(dy)) {
+      break;
+    } else {
+      anchorSitePos = newAnchorSitePos;
+    }
   }
 
   for (; c > 0; --c) {
@@ -555,7 +562,12 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
     if (!nextSiteOpt.has_value()) {
       break;
     }
-    anchorSitePos = getPositionOfSite(nextSiteOpt.value());
+    const auto& newAnchorSitePos = getPositionOfSite(nextSiteOpt.value());
+    if (std::abs(newAnchorSitePos.x - anchorSitePos.x) < std::abs(dx)) {
+      break;
+    } else {
+      anchorSitePos = newAnchorSitePos;
+    }
   }
   anchorSitePos.x =
       cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
