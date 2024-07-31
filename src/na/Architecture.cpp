@@ -546,8 +546,9 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
       break;
     }
     const auto& newAnchorSitePos = getPositionOfSite(nextSiteOpt.value());
-    // The following check is used to decide whether the patch is located outside of the zone
-    // Patches that overlap the border of the zone are not possible with this appraoch yet
+    // The following check is used to decide whether the patch is located
+    // outside of the zone Patches that overlap the border of the zone are not
+    // possible with this appraoch yet
     if (std::abs(newAnchorSitePos.y - anchorSitePos.y) < std::abs(dy)) {
       break;
     } else {

@@ -46,35 +46,43 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
           const auto& e1 = shuttlingOp.getEnd()[i];
           const auto& e2 = shuttlingOp.getEnd()[j];
           if (*s1 == *s2) {
-            std::cout << "Error in op number " << counter << " (two start points identical)\n";
+            std::cout << "Error in op number " << counter
+                      << " (two start points identical)\n";
             return false;
           }
           if (*e1 == *e2) {
-            std::cout << "Error in op number " << counter << " (two end points identical)\n";
+            std::cout << "Error in op number " << counter
+                      << " (two end points identical)\n";
             return false;
           }
           if (s1->x == s2->x && e1->x != e2->x) {
-            std::cout << "Error in op number " << counter << " (columns not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (columns not preserved)\n";
             return false;
           }
           if (s1->y == s2->y && e1->y != e2->y) {
-            std::cout << "Error in op number " << counter << " (rows not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (rows not preserved)\n";
             return false;
           }
           if (s1->x < s2->x && e1->x >= e2->x) {
-            std::cout << "Error in op number " << counter << " (column order not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (column order not preserved)\n";
             return false;
           }
           if (s1->y < s2->y && e1->y >= e2->y) {
-            std::cout << "Error in op number " << counter << " (row order not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (row order not preserved)\n";
             return false;
           }
           if (s1->x > s2->x && e1->x <= e2->x) {
-            std::cout << "Error in op number " << counter << " (column order not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (column order not preserved)\n";
             return false;
           }
           if (s1->y > s2->y && e1->y <= e2->y) {
-            std::cout << "Error in op number " << counter << " (row order not preserved)\n";
+            std::cout << "Error in op number " << counter
+                      << " (row order not preserved)\n";
             return false;
           }
         }
@@ -86,7 +94,8 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
           const auto& a = localOp.getPositions()[i];
           const auto& b = localOp.getPositions()[j];
           if (*a == *b) {
-            std::cout << "Error in op number " << counter << " (identical positions)\n";
+            std::cout << "Error in op number " << counter
+                      << " (identical positions)\n";
             return false;
           }
         }
