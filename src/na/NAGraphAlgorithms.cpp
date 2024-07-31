@@ -459,11 +459,6 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g, const std::si
   const auto maxSitesSigned = static_cast<std::int64_t>(maxSites);
   if (maxSiteUsed >= maxSitesSigned) {
     // Handle the situation when the entangling zone is not big enough to fit all fixed qubits
-    std::cout << "============= Sizes ===============\n";
-    std::cout << "Size of fixedPositions: " << fixedPositions.size() << "\n";
-    std::cout << "Size of fixed: " << fixed.size() << "\n";
-    std::cout << "Size of coloring: " << coloring.size() << "\n";
-    std::cout << "Size of sequence: " << sequence.size() << "\n";
     for (auto it = fixedPositions.begin(); it != fixedPositions.end(); ) {
       if (it->second >= maxSitesSigned) {
         it = fixedPositions.erase(it); // erase returns the next iterator
@@ -471,9 +466,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g, const std::si
         ++it; // move to the next element
       }
     }
-    std::cout << "Reduced fixedPositions to: " << fixedPositions.size() << "\n";
     fixed.erase(std::remove_if(fixed.begin(), fixed.end(), [&fixedPositions](const auto& q){ return fixedPositions.find(q) == fixedPositions.end(); }), fixed.end());
-    std::cout << "Reduced fixed to: " << fixed.size() << "\n";
     for (auto it = coloring.begin(); it != coloring.end(); ) {
       if (fixedPositions.find(it->first.first) == fixedPositions.end() && fixedPositions.find(it->first.second) == fixedPositions.end()) {
         it = coloring.erase(it); // erase returns the next iterator
@@ -481,9 +474,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g, const std::si
         ++it; // move to the next element
       }
     }
-    std::cout << "Reduced coloring to: " << coloring.size() << "\n";
     sequence.erase(std::remove_if(sequence.begin(), sequence.end(), [&coloring](const auto& q){ return !std::any_of(coloring.cbegin(), coloring.cend(), [q](const auto& elem){ return elem.first.first == q || elem.first.second == q; }); }), sequence.end());
-    std::cout << "Reduced sequence to: " << sequence.size() << "\n";
     // recalculate resting positions
     resting = computeRestingPositions(sequence, fixed, coloring);
   }
