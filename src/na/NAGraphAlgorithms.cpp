@@ -184,7 +184,7 @@ auto NAGraphAlgorithms::colorEdges(
     std::copy_if(edges.cbegin(), edges.cend(),
                  std::back_inserter(adjacentEdges),
                  [&](const Edge& e) { return e.first == v or e.second == v; });
-    std::sort(adjacentEdges.begin(), adjacentEdges.end(), [&](const Edge& a, const& Edge b) {
+    std::sort(adjacentEdges.begin(), adjacentEdges.end(), [&](const Edge& a, const Edge& b) {
                 const auto u = a.first == v ? a.second : a.first;
                 const auto w = b.first == v ? b.second : b.first;
                 return u != w && (partialOrder.isReachable(u, w) ||
