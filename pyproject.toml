@@ -254,6 +254,12 @@ isort.required-imports = ["from __future__ import annotations"]
 convention = "google"
 
 
+[tool.repo-review]
+ignore = [
+  "PC180", # "Uses prettier" -> switched to different prettier-mirror that is not recognized by the check
+]
+
+
 [tool.cibuildwheel]
 build = "cp3*"
 skip = "*-musllinux*"
