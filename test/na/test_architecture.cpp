@@ -9,9 +9,13 @@
 
 #include "gtest/gtest.h"
 #include <cstdio>
+#include <cstdint>
 #include <fstream>
 #include <optional>
+#include <sstream>
 #include <string>
+#include <stdexcept>
+#include <tuple>
 
 class NAArchitecture : public testing::Test {
 protected:
