@@ -3,21 +3,21 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Definitions.hpp"
 #include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "operations/OpType.hpp"
-#include "Definitions.hpp"
 
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <numeric>
-#include <unordered_set>
 #include <stdexcept>
-#include <vector>
-#include <cstddef>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 class TestNAGraph : public testing::Test {
 protected:
