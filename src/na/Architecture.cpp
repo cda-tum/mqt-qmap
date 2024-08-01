@@ -20,6 +20,7 @@
 #include <limits>
 #include <map>
 #include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <sstream>
 #include <stdexcept>

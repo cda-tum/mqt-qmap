@@ -7,12 +7,17 @@
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "operations/OpType.hpp"
+#include "Definitions.hpp"
 
 #include "gtest/gtest.h"
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <numeric>
+#include <unordered_set>
+#include <stdexcept>
+#include <vector>
+#include <cstddef>
+#include <utility>
 
 class TestNAGraph : public testing::Test {
 protected:
