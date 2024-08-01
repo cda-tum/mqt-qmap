@@ -472,8 +472,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g,
   auto        sequence = groupByConnectedComponent(g, sequenceUngrouped);
   const auto& colorEdgesResult =
       colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
-  std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>> coloring =
-      colorEdgesResult.first;
+  auto coloring = colorEdgesResult.first;
   auto partialOrder = colorEdgesResult.second;
   auto fixed        = partialOrder.orderTopologically();
   auto resting      = computeRestingPositions(sequence, fixed, coloring);

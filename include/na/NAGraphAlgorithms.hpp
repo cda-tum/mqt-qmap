@@ -148,7 +148,8 @@ public:
    * 3. Find relative x-positions for the fixed vertices.
    * 4. Compute the resting positions of the moveable vertices between the fixed
    * vertices.
-   * @param g the interaction graph
+   * @param g        the interaction graph
+   * @param maxSites the number of sites horizontally in the entnagling zones
    * @return A tuple of vectors containing the moveable vertices, the fixed
    * vertices mapped to their relative x-position in every time step.
    */

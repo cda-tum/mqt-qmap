@@ -28,7 +28,7 @@ protected:
               "name": "entangling",
               "xmin": -300,
               "xmax": 656,
-              "ymin": -10,
+              "ymin": -20,
               "ymax": 46,
               "fidelity": 0.9959
           },
@@ -299,6 +299,7 @@ TEST_F(NAArchitecture, SiteOffsetBy) {
   EXPECT_EQ(arch.getPositionOffsetBy({355, 24}, -1, -1), (na::Point{345, 12}));
   EXPECT_EQ(arch.getPositionOffsetBy({353, 25}, -1, -1), (na::Point{343, 13}));
   const auto d = static_cast<std::int64_t>(arch.getNoInteractionRadius());
+  EXPECT_EQ(arch.getPositionOffsetBy({-40, -20}, 1, 1), (na::Point{-40 + d, -20 + d}));
   EXPECT_EQ(arch.getPositionOffsetBy({-10, -10}, 1, 1),
             (na::Point{-10 + d, -10 + d}));
   EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -2, -2),
