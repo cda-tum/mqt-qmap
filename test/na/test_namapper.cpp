@@ -1012,3 +1012,239 @@ ry(2.2154814) q;)";
   std::ignore = mapper.getStats();
   EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
 }
+
+TEST(NAMapper, QAOA16NarrowEntangling) {
+  std::istringstream archIS(R"({
+      "name": "Nature",
+      "initialZones": [
+          "storage"
+      ],
+      "zones": [
+          {
+              "name": "entangling",
+              "xmin": -300,
+              "xmax": 656,
+              "ymin": -10,
+              "ymax": 46,
+              "fidelity": 0.9959
+          },
+          {
+              "name": "storage",
+              "xmin": -300,
+              "xmax": 656,
+              "ymin": 47,
+              "ymax": 421,
+              "fidelity": 1
+          },
+          {
+              "name": "readout",
+              "xmin": -300,
+              "xmax": 656,
+              "ymin": 422,
+              "ymax": 456,
+              "fidelity": 0.99
+          }
+      ],
+      "operations": [
+          {
+              "name": "rz",
+              "type": "local",
+              "zones": [
+                  "entangling",
+                  "storage",
+                  "readout"
+              ],
+              "time": 0.5,
+              "fidelity": 0.999
+          },
+          {
+              "name": "ry",
+              "type": "global",
+              "zones": [
+                  "entangling",
+                  "storage",
+                  "readout"
+              ],
+              "time": 0.5,
+              "fidelity": 0.999
+          },
+          {
+              "name": "cz",
+              "type": "global",
+              "zones": [
+                  "entangling"
+              ],
+              "time": 0.2,
+              "fidelity": 0.9959
+          },
+          {
+              "name": "measure",
+              "type": "global",
+              "zones": [
+                  "readout"
+              ],
+              "time": 0.2,
+              "fidelity": 0.95
+          }
+      ],
+      "decoherence": {
+          "t1": 100000000,
+          "t2": 1500000
+      },
+      "interactionRadius": 2,
+      "noInteractionRadius": 5,
+      "minAtomDistance": 1,
+      "shuttling": [
+          {
+              "rows": 5,
+              "columns": 5,
+              "xmin": -2.5,
+              "xmax": 2.5,
+              "ymin": -2.5,
+              "ymax": 2.5,
+              "move": {
+                  "speed": 0.55,
+                  "fidelity": 1
+              },
+              "load": {
+                  "time": 20,
+                  "fidelity": 1
+              },
+              "store": {
+                  "time": 20,
+                  "fidelity": 1
+              }
+          }
+      ]
+  }
+  )");
+  std::stringstream  gridSS;
+  gridSS << "x,y\n";
+  // entangling zone (4 x 36 = 144 sites)
+  for (std::size_t y = 0; y <= 36; y += 12) {
+    for (std::size_t x = 3; x <= 53; x += 10) {
+      gridSS << x << "," << y << "\n";
+    }
+  }
+  // storage zone (72 x 12 = 864 sites)
+  for (std::size_t y = 56; y <= 411; y += 5) {
+    for (std::size_t x = 0; x <= 55; x += 5) {
+      gridSS << x << "," << y << "\n";
+    }
+  }
+  // readout zone (4 x 12 = 48 sites)
+  for (std::size_t y = 431; y <= 446; y += 5) {
+    for (std::size_t x = 0; x <= 55; x += 5) {
+      gridSS << x << "," << y << "\n";
+    }
+  }
+  // total: 1056 sites
+  // For the test, we removed all rz gates because the mapping task remains the
+  // same
+  const std::string qasm = R"(OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[16];
+ry(-pi/4) q;
+ry(pi/4) q;
+cp(pi) q[0],q[2];
+cp(pi) q[1],q[7];
+cp(pi) q[8],q[3];
+cp(pi) q[12],q[6];
+ry(-pi/2) q;
+ry(pi/2) q;
+cp(pi) q[0],q[2];
+cp(pi) q[1],q[7];
+cp(pi) q[8],q[3];
+cp(pi) q[12],q[6];
+ry(-pi/2) q;
+ry(pi/2) q;
+cp(pi) q[0],q[4];
+cp(pi) q[8],q[9];
+cp(pi) q[1],q[10];
+cp(pi) q[13],q[6];
+cp(pi) q[2],q[14];
+cp(pi) q[3],q[15];
+ry(-pi/2) q;
+ry(pi/2) q;
+cp(pi) q[0],q[4];
+cp(pi) q[8],q[9];
+cp(pi) q[1],q[10];
+cp(pi) q[13],q[6];
+cp(pi) q[2],q[14];
+cp(pi) q[3],q[15];
+ry(-pi/4) q;
+ry(pi/4) q;
+cp(pi) q[4],q[5];
+cp(pi) q[12],q[13];
+cp(pi) q[0],q[2];
+cp(pi) q[14],q[7];
+cp(pi) q[10],q[15];
+cp(pi) q[8],q[3];
+ry(-pi/2) q;
+ry(pi/2) q;
+cp(pi) q[4],q[5];
+cp(pi) q[12],q[13];
+cp(pi) q[0],q[2];
+cp(pi) q[14],q[7];
+cp(pi) q[10],q[15];
+cp(pi) q[8],q[3];
+ry(-pi/4) q;
+ry(pi/4) q;
+cp(pi) q[11],q[5];
+cp(pi) q[12],q[6];
+cp(pi) q[13],q[6];
+cp(pi) q[0],q[4];
+cp(pi) q[2],q[14];
+cp(pi) q[1],q[7];
+cp(pi) q[1],q[10];
+cp(pi) q[3],q[15];
+ry(-pi/2) q;
+ry(pi/2) q;
+cp(pi) q[11],q[5];
+cp(pi) q[12],q[6];
+cp(pi) q[13],q[6];
+cp(pi) q[0],q[4];
+cp(pi) q[2],q[14];
+cp(pi) q[1],q[7];
+cp(pi) q[1],q[10];
+cp(pi) q[3],q[15];
+ry(-pi/4) q;
+ry(pi/4) q;
+cp(pi) q[9],q[11];
+cp(pi) q[12],q[13];
+cp(pi) q[4],q[5];
+cp(pi) q[14],q[7];
+cp(pi) q[10],q[15];
+ry(-0.64469806) q;
+ry(0.64469806) q;
+cp(pi) q[9],q[11];
+cp(pi) q[12],q[13];
+cp(pi) q[4],q[5];
+cp(pi) q[14],q[7];
+cp(pi) q[10],q[15];
+ry(-2.2154814) q;
+ry(2.2154814) q;
+cp(pi) q[11],q[5];
+cp(pi) q[8],q[9];
+ry(-0.3223291) q;
+ry(0.3223291) q;
+cp(pi) q[11],q[5];
+cp(pi) q[8],q[9];
+ry(-pi/4) q;
+ry(pi/4) q;
+cp(pi) q[9],q[11];
+ry(-0.3223291) q;
+ry(0.3223291) q;
+cp(pi) q[9],q[11];
+ry(-2.2154814) q;
+ry(2.2154814) q;)";
+  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto&       arch = na::Architecture(archIS, gridSS);
+  // ---------------------------------------------------------------------
+  na::NAMapper mapper(
+      arch, na::Configuration(
+                3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  mapper.map(circ);
+  std::ignore = mapper.getStats();
+  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
+}
