@@ -188,13 +188,39 @@ auto NAGraphAlgorithms::colorEdges(
               [&](const Edge& a, const Edge& b) {
                 const auto u = a.first == v ? a.second : a.first;
                 const auto w = b.first == v ? b.second : b.first;
-                return u != w &&
-                       (partialOrder.isReachable(u, w) ||
-                        (!partialOrder.isReachable(w, u) &&
-                         (nAdjColors[a] > nAdjColors[b] ||
-                          (nAdjColors[a] == nAdjColors[b] &&
-                           (edgeDegree[a] > edgeDegree[b] ||
-                            (edgeDegree[a] == edgeDegree[b] && u < w))))));
+                if (u == w) {
+                  // the compare function defines a proper less than relation,
+                  // i.e., equal elements must return false
+                  return false;
+                }
+                if (partialOrder.isReachable(u, w)) {
+                  // if w is reachable from u, then w needs to come after u,
+                  // i.e., u < w
+                  return true;
+                }
+                if (partialOrder.isReachable(w, u)) {
+                  // if u is reachable from w, then u needs to come after w,
+                  // i.e., w < u and not u < w
+                  return false;
+                }
+                // here: neither u is reachable from w nor w is reachable from u
+                if (nAdjColors[a] > nAdjColors[b]) {
+                  // this favours nodes with higher number of distinct colors
+                  // also see the orignial implementation of DSatur
+                  return true;
+                }
+                if (nAdjColors[a] < nAdjColors[b]) {
+                  // this is just the opposite of the above case
+                  return false;
+                }
+                // Here: nAdjColors[a] == nAdjColors[b]
+                if (edgeDegree[a] > edgeDegree[b]) {
+                  return true;
+                }
+                if (edgeDegree[a] < edgeDegree[b]) {
+                  return false;
+                }
+                return u < w;
                 // the last line together with the first clause (u != w) is
                 // necessary for a well-defined compare function to handle edges
                 // that compare equally correctly
