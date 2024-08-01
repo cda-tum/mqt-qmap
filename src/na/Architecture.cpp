@@ -551,9 +551,8 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
     // possible with this appraoch yet
     if (std::abs(newAnchorSitePos.y - anchorSitePos.y) < std::abs(dy)) {
       break;
-    } else {
-      anchorSitePos = newAnchorSitePos;
     }
+    anchorSitePos = newAnchorSitePos;
   }
 
   for (; c > 0; --c) {
@@ -566,9 +565,8 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
     const auto& newAnchorSitePos = getPositionOfSite(nextSiteOpt.value());
     if (std::abs(newAnchorSitePos.x - anchorSitePos.x) < std::abs(dx)) {
       break;
-    } else {
-      anchorSitePos = newAnchorSitePos;
     }
+    anchorSitePos = newAnchorSitePos;
   }
   anchorSitePos.x =
       cols >= 0 ? anchorSitePos.x + c * d : anchorSitePos.x - c * d;
