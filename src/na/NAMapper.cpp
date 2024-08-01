@@ -1068,11 +1068,11 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
           } else if (x < 0) {
             const auto pos = arch.getPositionOfSite(sites.at(0));
             placement.at(q).currentPosition =
-                std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
+                std::make_shared<Point>(pos.x + (x * dx - d), pos.y + d);
           } else { // x >= sites.size()
             const auto pos = arch.getPositionOfSite(sites.at(sites.size() - 1));
             placement.at(q).currentPosition =
-                std::make_shared<Point>(pos.x + (x * dx), pos.y + d);
+                std::make_shared<Point>(pos.x + (x * dx + d), pos.y + d);
           }
           endMoveable.emplace_back(placement.at(q).currentPosition);
         }
