@@ -15,8 +15,8 @@
 #include <iterator>
 #include <numeric>
 #include <stdexcept>
-#include <unordered_set>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 class TestNAGraph : public testing::Test {
