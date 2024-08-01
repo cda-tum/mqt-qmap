@@ -8,13 +8,13 @@
 #include "operations/OpType.hpp"
 
 #include "gtest/gtest.h"
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <fstream>
 #include <optional>
 #include <sstream>
-#include <string>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 
 class NAArchitecture : public testing::Test {
