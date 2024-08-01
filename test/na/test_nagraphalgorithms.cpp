@@ -16,7 +16,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <unordered_set>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 class TestNAGraph : public testing::Test {
