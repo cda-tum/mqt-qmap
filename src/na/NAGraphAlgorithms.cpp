@@ -206,7 +206,7 @@ auto NAGraphAlgorithms::colorEdges(
                 // here: neither u is reachable from w nor w is reachable from u
                 if (nAdjColors[a] > nAdjColors[b]) {
                   // this favours nodes with higher number of distinct colors
-                  // also see the orignial implementation of DSatur
+                  // also see the original implementation of DSatur
                   return true;
                 }
                 if (nAdjColors[a] < nAdjColors[b]) {
