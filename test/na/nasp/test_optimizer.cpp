@@ -1,31 +1,12 @@
-#include "Architecture.hpp"
-#include "Configuration.hpp"
-#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
-#include "datastructures/Layer.hpp"
-#include "na/NAComputation.hpp"
-#include "na/operations/NAGlobalOperation.hpp"
-#include "na/operations/NALocalOperation.hpp"
-#include "na/operations/NAShuttlingOperation.hpp"
-#include "nasp/Optimizer.hpp"
-#include "nasp/Solver.hpp"
-#include "nasp/SolverFactory.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/StandardOperation.hpp"
+#include "Optimizer.hpp"
+#include "Solver.hpp"
+#include "SolverFactory.hpp"
 
-#include <algorithm>
-#include <cstddef>
 #include <gtest/gtest.h>
-#include <iostream>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <tuple>
-#include <unordered_map>
-#include <vector>
 
-TEST(NASPOptimizer, Steane) {
+
+TEST(Optimizer, Steane) {
   const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
