@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
-#include <wait.h>
 
 namespace na {
 
@@ -34,8 +33,8 @@ auto handleAlarm(int) -> void {
   }
 }
 
-auto Optimizer::forkChildProcess(const std::size_t          arg,
-                                 const std::chrono::seconds timeout) -> void {
+auto Optimizer::forkChildProcess(const std::uint16_t          arg,
+                                 const std::chrono::seconds childTimeout) -> void {
   // Create a pipe
   int pipefd[2];
   if (pipe(pipefd) == -1) {
@@ -54,7 +53,7 @@ auto Optimizer::forkChildProcess(const std::size_t          arg,
     childProcess = true;
     signal(SIGALRM, handleAlarm);
     // Set an alarm
-    alarm(timeout.count());
+    alarm(static_cast<std::uint32_t>(childTimeout.count()));
     NASolver::Result result{};
     try {
       result = objective(arg);
@@ -112,12 +111,12 @@ auto Optimizer::waitForChildProcess() -> void {
         minSat   = processData[pid].arg;
         extremum = result;
       }
-      for (const auto& [pid, data] : processData) {
+      for (const auto& [pPid, data] : processData) {
         if (data.arg > minSat) {
           if (!quiet) {
             std::cout << "k = " << data.arg << ": killing\n";
           }
-          kill(pid, SIGKILL);
+          kill(pPid, SIGKILL);
         }
       }
     } else {
@@ -127,12 +126,12 @@ auto Optimizer::waitForChildProcess() -> void {
       if (!maxUnsat.has_value() || processData[pid].arg > maxUnsat) {
         maxUnsat = processData[pid].arg;
       }
-      for (const auto& [pid, data] : processData) {
+      for (const auto& [pPid, data] : processData) {
         if (data.arg < maxUnsat) {
           if (!quiet) {
             std::cout << "k = " << data.arg << ": killing\n";
           }
-          kill(pid, SIGKILL);
+          kill(pPid, SIGKILL);
         }
       }
     }
@@ -204,7 +203,8 @@ auto Optimizer::minimize() -> void {
       timeoutTriggered = true;
       break; // only wait for running processes to terminate
     }
-    forkChildProcess(arg, delta);
+    assert(arg >= 0);
+    forkChildProcess(static_cast<std::uint16_t>(arg), delta);
     if (getNSubProcsRunning() == maxNSubProcs) {
       waitForChildProcess();
     }

@@ -22,8 +22,8 @@
 namespace na {
 context NASolver::ctx{};
 
-auto NASolver::minBitsToRepresentUInt(unsigned int num) -> unsigned int {
-  unsigned int bits = 0;
+auto NASolver::minBitsToRepresentUInt(std::int32_t num) -> std::uint32_t {
+  std::uint32_t bits = 0;
   while (num > 0) {
     num >>= 1;
     ++bits;
@@ -31,28 +31,28 @@ auto NASolver::minBitsToRepresentUInt(unsigned int num) -> unsigned int {
   return bits;
 }
 
-auto NASolver::minBitsToRepresentInt(unsigned int num) -> unsigned int {
+auto NASolver::minBitsToRepresentInt(const std::int32_t num) -> std::uint32_t {
   return minBitsToRepresentUInt(num) + 1;
 }
 
 auto NASolver::initVariables() -> void {
   stages.clear();
   stages.reserve(numStages);
-  for (unsigned int t = 0; t < numStages; ++t) {
+  for (std::uint16_t t = 0; t < numStages; ++t) {
     stages.emplace_back(t, numQubits, maxX, maxY, maxC, maxR, maxHOffset,
                         maxVOffset);
   }
   transfers.clear();
   if (numTransfers.has_value()) {
     transfers.reserve(numTransfers.value());
-    for (unsigned int t = 0; t < numTransfers.value(); ++t) {
+    for (std::uint16_t t = 0; t < numTransfers.value(); ++t) {
       transfers.emplace_back(
           ctx.bv_const(("transfer_" + std::to_string(t)).c_str(),
                        minBitsToRepresentUInt(numStages)));
     }
   } else {
     transfers.reserve(numStages);
-    for (unsigned int t = 0; t < numStages; ++t) {
+    for (std::uint16_t t = 0; t < numStages; ++t) {
       transfers.emplace_back(
           ctx.bool_const(("transfer_" + std::to_string(t)).c_str()));
     }
@@ -64,7 +64,7 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   if (numTransfers.has_value() && numTransfers.value() != 0) {
     constraints.reserve(numTransfers.value() + 1);
     // constraints.emplace_back(0 <= transfers[0]);
-    for (unsigned int t = 1; t < numTransfers.value(); ++t) {
+    for (std::uint16_t t = 1; t < numTransfers.value(); ++t) {
       constraints.emplace_back(ult(transfers[t - 1], transfers[t]));
     }
     constraints.emplace_back(
@@ -74,23 +74,23 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   return constraints;
 }
 
-auto NASolver::getHaveSamePositionConstraint(const unsigned int q0,
-                                             const unsigned int q1,
-                                             const unsigned int t) const ->
+auto NASolver::getHaveSamePositionConstraint(const std::uint16_t q0,
+                                             const std::uint16_t q1,
+                                             const std::uint16_t t) const ->
   expr {
   return stages[t].getQubit(q0).getX() == stages[t].getQubit(q1).getX() &&
          stages[t].getQubit(q0).getY() == stages[t].getQubit(q1).getY();
 }
 
 auto NASolver::getHaveDifferentPositionConstraint(
-    const unsigned int q0, const unsigned int q1,
-    const unsigned int t) const -> expr {
+    const std::uint16_t q0, const std::uint16_t q1,
+    const std::uint16_t t) const -> expr {
   return !getHaveSamePositionConstraint(q0, q1, t);
 }
 
 // NOLINTNEXTLINE (bugprone-switch-missing-default-case)
-auto NASolver::getAffectedByRydbergBeamConstraint(const unsigned int q,
-                                                  const unsigned int t) const ->
+auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
+                                                  const std::uint16_t t) const ->
   expr {
   switch (storage) {
   case Storage::None:
@@ -106,14 +106,14 @@ auto NASolver::getAffectedByRydbergBeamConstraint(const unsigned int q,
   }
 }
 
-auto NASolver::getShieldedFromRydbergBeamConstraint(const unsigned int q,
-                                                    const unsigned int t) const
+auto NASolver::getShieldedFromRydbergBeamConstraint(const std::uint16_t q,
+                                                    const std::uint16_t t) const
   -> expr {
   return !getAffectedByRydbergBeamConstraint(q, t);
 }
 
 auto NASolver::getValidRydbergTransitionConstraints(
-    const unsigned int t) const -> std::vector<expr> {
+    const std::uint16_t t) const -> std::vector<expr> {
   if (t == numStages - 1) {
     std::stringstream msg;
     msg << "There is no next stage after the last stage " << t;
@@ -121,7 +121,7 @@ auto NASolver::getValidRydbergTransitionConstraints(
   }
   std::vector<expr> constraints;
   constraints.reserve(3 * numQubits);
-  for (unsigned int i = 0; i < numQubits; ++i) {
+  for (std::uint16_t i = 0; i < numQubits; ++i) {
     // For all: AOD/SLM state is preserved
     constraints.emplace_back(
         implies(
@@ -145,7 +145,7 @@ auto NASolver::getValidRydbergTransitionConstraints(
   }
   // we set load and store variables to false because they do not carray any
   // meaning in the rydberg stage anyways
-  for (unsigned int i = 0; i <= maxC; ++i) {
+  for (std::uint16_t i = 0; i <= maxC; ++i) {
     constraints.emplace_back(
         implies(
             getRydbergStageConstraint(t),
@@ -155,7 +155,7 @@ auto NASolver::getValidRydbergTransitionConstraints(
             getRydbergStageConstraint(t),
             !stages[t].getStoreCol(i)));
   }
-  for (unsigned int i = 0; i <= maxR; ++i) {
+  for (std::uint16_t i = 0; i <= maxR; ++i) {
     constraints.emplace_back(
         implies(
             getRydbergStageConstraint(t),
@@ -169,7 +169,7 @@ auto NASolver::getValidRydbergTransitionConstraints(
 }
 
 auto NASolver::getValidTransferTransitionConstraints(
-    const unsigned int t) const -> std::vector<expr> {
+    const std::uint16_t t) const -> std::vector<expr> {
   if (t == numStages - 1) {
     std::stringstream msg;
     msg << "There is no next stage after the last stage " << t;
@@ -178,7 +178,7 @@ auto NASolver::getValidTransferTransitionConstraints(
   std::vector<expr> constraints;
   // TODO: check all reserves for the correct capacity
   constraints.reserve(3 * numQubits);
-  for (unsigned int i = 0; i < numQubits; ++i) {
+  for (std::uint16_t i = 0; i < numQubits; ++i) {
     // For SLM and Stored: stay at the same position
     constraints.emplace_back(
         implies(
@@ -199,7 +199,7 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Loaded: Entire row or column must be loaded
     {
       expr colClauses = ctx.bool_val(true);
-      for (unsigned int c = 0; c <= maxC; ++c) {
+      for (std::uint16_t c = 0; c <= maxC; ++c) {
         colClauses = colClauses &&
                      implies(
                          stages[t].getQubit(i).getC() == ctx.bv_val(
@@ -207,7 +207,7 @@ auto NASolver::getValidTransferTransitionConstraints(
                          stages[t].getLoadCol(c));
       }
       expr rowClauses = ctx.bool_val(true);
-      for (unsigned int r = 0; r <= maxR; ++r) {
+      for (std::uint16_t r = 0; r <= maxR; ++r) {
         rowClauses = rowClauses &&
                      implies(
                          stages[t].getQubit(i).getR() == ctx.bv_val(
@@ -224,7 +224,7 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Stored: Entire row or column must be stored
     {
       expr colClauses = ctx.bool_val(true);
-      for (unsigned int c = 0; c <= maxC; ++c) {
+      for (std::uint16_t c = 0; c <= maxC; ++c) {
         colClauses = colClauses &&
                      implies(
                          stages[t].getQubit(i).getC() == ctx.bv_val(
@@ -232,7 +232,7 @@ auto NASolver::getValidTransferTransitionConstraints(
                          stages[t].getStoreCol(c));
       }
       expr rowClauses = ctx.bool_val(true);
-      for (unsigned int r = 0; r <= maxR; ++r) {
+      for (std::uint16_t r = 0; r <= maxR; ++r) {
         rowClauses = rowClauses &&
                      implies(
                          stages[t].getQubit(i).getR() == ctx.bv_val(
@@ -245,7 +245,7 @@ auto NASolver::getValidTransferTransitionConstraints(
               stages[t].getQubit(i).getA(),
               !stages[t + 1].getQubit(i).getA() == (colClauses || rowClauses)));
     }
-    for (unsigned int j = 0; j < numQubits; ++j) {
+    for (std::uint16_t j = 0; j < numQubits; ++j) {
       // For Loaded: Loaded atoms remain in the relative position with respect
       // to other AOD/loaded atoms
       constraints.emplace_back(
@@ -280,16 +280,16 @@ auto NASolver::getValidTransferTransitionConstraints(
 }
 
 auto NASolver::getCircuitExecutionConstraints(
-    const std::vector<std::pair<unsigned int, unsigned int> >& ops,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit> >& ops,
     const bool mindOpsOrder, const bool shieldIdleAtoms) -> std::vector
   <expr> {
-  const unsigned int numGates = ops.size();
-  std::unordered_map<std::pair<unsigned int, unsigned int>, std::vector<expr>,
-                     qc::PairHash<unsigned int, unsigned int> > pairToGates;
+  const auto numGates = ops.size();
+  std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, std::vector<expr>,
+                     qc::PairHash<qc::Qubit, qc::Qubit> > pairToGates;
   gates.clear();
   gates.reserve(numGates);
   std::vector<std::vector<expr> > gatesForQubit(numQubits);
-  for (unsigned int i = 0; i < numGates; ++i) {
+  for (std::uint16_t i = 0; i < numGates; ++i) {
     gates.emplace_back(ctx.bv_const(("gate_" + std::to_string(i)).c_str(),
                                     minBitsToRepresentUInt(numStages)));
     const auto key = std::make_pair(std::min(ops[i].first, ops[i].second),
@@ -305,7 +305,7 @@ auto NASolver::getCircuitExecutionConstraints(
   if (mindOpsOrder) {
     std::vector<std::optional<const expr> > lastGateOnQubit(
         numQubits, std::nullopt);
-    for (unsigned int i = 0; i < numGates; ++i) {
+    for (std::uint16_t i = 0; i < numGates; ++i) {
       const auto& gate = gates[i];
       // if (!lastGateOnQubit[ops[i].first].has_value() && !lastGateOnQubit[ops[i].
       //       second].has_value()) {
@@ -342,12 +342,12 @@ auto NASolver::getCircuitExecutionConstraints(
     constraints.reserve(
         numGates * (numGates - 1) / 2 +
         4 * numGates + numStages * numQubits * (numQubits - 1) / 2);
-    for (unsigned int g = 0; g < numGates; ++g) {
+    for (std::uint16_t g = 0; g < numGates; ++g) {
       constraints.emplace_back(
           // 0 <= gates[g] &&
           ult(gates[g],
               numStages));
-      for (unsigned int h = g + 1; h < numGates; ++h) {
+      for (std::uint16_t h = g + 1; h < numGates; ++h) {
         if (ops[g].first == ops[h].first || ops[g].first == ops[h].second ||
             ops[g].second == ops[h].first || ops[g].second == ops[h].second) {
           constraints.emplace_back(gates[g] != gates[h]);
@@ -355,9 +355,9 @@ auto NASolver::getCircuitExecutionConstraints(
       }
     }
   }
-  for (unsigned int t = 0; t < numStages; ++t) {
-    for (unsigned int i = 0; i < numQubits; ++i) {
-      for (unsigned int j = i + 1; j < numQubits; ++j) {
+  for (std::uint16_t t = 0; t < numStages; ++t) {
+    for (std::uint16_t i = 0; i < numQubits; ++i) {
+      for (std::uint16_t j = i + 1; j < numQubits; ++j) {
         if (const auto& it = pairToGates.find({i, j});
           it != pairToGates.end() && !it->second.empty()) {
           const auto& gatesForPair = it->second;
@@ -429,11 +429,11 @@ auto NASolver::getCircuitExecutionConstraints(
   return constraints;
 }
 
-auto NASolver::getRydbergStageConstraint(const unsigned int t) const -> expr {
+auto NASolver::getRydbergStageConstraint(const std::uint16_t t) const -> expr {
   return !getTransferStageConstraint(t);
 }
 
-auto NASolver::getTransferStageConstraint(unsigned int t) const -> expr {
+auto NASolver::getTransferStageConstraint(const std::uint16_t t) const -> expr {
   if (numTransfers.has_value()) {
     expr clauses = ctx.bool_val(false);
     for (const auto& transfer : transfers) {
@@ -446,10 +446,10 @@ auto NASolver::getTransferStageConstraint(unsigned int t) const -> expr {
 }
 
 auto NASolver::getValidStageConstraints(
-    const unsigned int t) const -> std::vector<expr> {
+    const std::uint16_t t) const -> std::vector<expr> {
   std::vector<expr> constraints;
   constraints.reserve(numQubits * (5 * numQubits + 3));
-  for (unsigned int i = 0; i < numQubits; ++i) {
+  for (std::uint16_t i = 0; i < numQubits; ++i) {
     // 0 <= x <= maxX
     constraints.emplace_back(
         // ule(0, stages[t].getQubit(i).
@@ -510,7 +510,7 @@ auto NASolver::getValidStageConstraints(
                 0, minBitsToRepresentInt(maxHOffset)) &&
             stages[t].getQubit(i).getV() == ctx.bv_val(
                 0, minBitsToRepresentInt(maxVOffset))));
-    for (unsigned int j = 0; j < numQubits; ++j) {
+    for (std::uint16_t j = 0; j < numQubits; ++j) {
       // For AOD: (x < x' ∨ x == x' ∧ v < v') <-> r < r'
       constraints.emplace_back(
           implies(
@@ -538,7 +538,7 @@ auto NASolver::getValidStageConstraints(
               ==
               ult(stages[t].getQubit(i).getR(), stages[t].getQubit(j).getR())));
     }
-    for (unsigned int j = i + 1; j < numQubits; ++j) {
+    for (std::uint16_t j = i + 1; j < numQubits; ++j) {
       // For all: h == h' -> v == v' -> x != x' or y != y'
       constraints.emplace_back(
           implies(
@@ -550,23 +550,23 @@ auto NASolver::getValidStageConstraints(
   return constraints;
 }
 
-auto NASolver::init(const unsigned int maxX, const unsigned int maxY,
-                    const unsigned int maxC,
-                    const unsigned int maxR, const unsigned int maxHOffset,
-                    const unsigned int maxVOffset, const unsigned int maxHDist,
-                    const unsigned int maxVDist,
-                    const unsigned int minEntanglingY,
-                    const unsigned int maxEntanglingY) -> void {
-  this->maxX = maxX;
-  this->maxY = maxY;
-  this->minEntanglingY = minEntanglingY;
-  this->maxEntanglingY = maxEntanglingY;
-  this->maxC = maxC;
-  this->maxR = maxR;
-  this->maxHOffset = maxHOffset;
-  this->maxVOffset = maxVOffset;
-  this->maxHDist = maxHDist;
-  this->maxVDist = maxVDist;
+auto NASolver::init(const std::uint16_t newMaxX, const std::uint16_t newMaxY,
+                    const std::uint16_t newMaxC,
+                    const std::uint16_t newMaxR, const std::uint16_t newMaxHOffset,
+                    const std::uint16_t newMaxVOffset, const std::uint16_t newMaxHDist,
+                    const std::uint16_t newMaxVDist,
+                    const std::uint16_t newMinEntanglingY,
+                    const std::uint16_t newMaxEntanglingY) -> void {
+  maxX = newMaxX;
+  maxY = newMaxY;
+  minEntanglingY = newMinEntanglingY;
+  maxEntanglingY = newMaxEntanglingY;
+  maxC = newMaxC;
+  maxR = newMaxR;
+  maxHOffset = newMaxHOffset;
+  maxVOffset = newMaxVOffset;
+  maxHDist = newMaxHDist;
+  maxVDist = newMaxVDist;
   if (minEntanglingY == 0 && maxEntanglingY < maxY) {
     storage = Storage::Bottom;
   } else if (minEntanglingY > 0 && maxEntanglingY < maxY) {
@@ -580,10 +580,10 @@ auto NASolver::init(const unsigned int maxX, const unsigned int maxY,
 }
 
 auto NASolver::solve(
-    const std::vector<std::pair<unsigned int, unsigned int> >& ops,
-    const unsigned int numQubits,
-    const unsigned int numStages,
-    const unsigned int numTransfers,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit> >& ops,
+    const std::uint16_t newNumQubits,
+    const std::uint16_t newNumStages,
+    const std::uint16_t newNumTransfers,
     const bool mindOpsOrder,
     const bool shieldIdleQubits)
   -> Result {
@@ -593,9 +593,9 @@ auto NASolver::solve(
     }
   }
 
-  this->numQubits = numQubits;
-  this->numStages = numStages;
-  this->numTransfers = numTransfers;
+  numQubits = newNumQubits;
+  numStages = newNumStages;
+  numTransfers = newNumTransfers;
 
   // solver solver(ctx, "QF_LIA");
   solver solver(ctx, "QF_BV");
@@ -610,7 +610,7 @@ auto NASolver::solve(
            ops, mindOpsOrder, shieldIdleQubits)) {
     solver.add(c);
   }
-  for (unsigned int t = 0; t < numStages; ++t) {
+  for (std::uint16_t t = 0; t < numStages; ++t) {
     for (const auto& c : getValidStageConstraints(t)) {
       solver.add(c);
     }
@@ -629,7 +629,7 @@ auto NASolver::solve(
     return Result(false);
   }
   const auto model = solver.get_model();
-  unsigned int nTrans = 0;
+  std::uint16_t nTrans = 0;
   std::vector<Result::Stage> resultStages;
   resultStages.reserve(numStages);
   for (const auto& stage : stages) {
@@ -639,7 +639,7 @@ auto NASolver::solve(
     if (!rydberg) { ++nTrans; }
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
-    for (unsigned int i = 0; i < numQubits; ++i) {
+    for (std::uint16_t i = 0; i < numQubits; ++i) {
       resultQubits.emplace_back(
           model.eval(stage.getQubit(i).getX()).as_uint64(),
           model.eval(stage.getQubit(i).getY()).as_uint64(),
@@ -655,7 +655,7 @@ auto NASolver::solve(
           );
     }
     std::vector<Result::Gate> resultGates;
-    for (unsigned int i = 0; i < gates.size(); ++i) {
+    for (std::uint16_t i = 0; i < gates.size(); ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }
@@ -666,8 +666,8 @@ auto NASolver::solve(
 }
 
 auto NASolver::solve(
-    const std::vector<std::pair<unsigned int, unsigned int> >& ops,
-    const unsigned int numQubits, const unsigned int numStages,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
+    const std::uint16_t newNumQubits, const std::uint16_t newNumStages,
     const bool mindOpsOrder,
     const bool shieldIdleQubits) -> Result {
   // this is almost the same as the method above just that it does not fix the
@@ -678,9 +678,9 @@ auto NASolver::solve(
     }
   }
 
-  this->numQubits = numQubits;
-  this->numStages = numStages;
-  this->numTransfers = std::nullopt;
+  numQubits = newNumQubits;
+  numStages = newNumStages;
+  numTransfers = std::nullopt;
   // CHANGE: instead of a fixed number of transfers
 
   // solver solver(ctx, "QF_LIA");
@@ -694,7 +694,7 @@ auto NASolver::solve(
            ops, mindOpsOrder, shieldIdleQubits)) {
     solver.add(c);
   }
-  for (unsigned int t = 0; t < numStages; ++t) {
+  for (std::uint16_t t = 0; t < numStages; ++t) {
     for (const auto& c : getValidStageConstraints(t)) {
       solver.add(c);
     }
@@ -720,7 +720,7 @@ auto NASolver::solve(
     // CHANGE: Read boolan variable directly
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
-    for (unsigned int i = 0; i < numQubits; ++i) {
+    for (std::uint16_t i = 0; i < numQubits; ++i) {
       resultQubits.emplace_back(
           model.eval(stage.getQubit(i).getX()).get_numeral_uint(),
           model.eval(stage.getQubit(i).getY()).get_numeral_uint(),
@@ -736,7 +736,7 @@ auto NASolver::solve(
           );
     }
     std::vector<Result::Gate> resultGates;
-    for (unsigned int i = 0; i < gates.size(); ++i) {
+    for (std::uint16_t i = 0; i < gates.size(); ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }
@@ -750,16 +750,16 @@ auto NASolver::solve(
 auto NASolver::Result::Qubit::fromYAML(const YAML::Node& yaml) -> Qubit {
   Qubit qubit{};
   qubit.a = yaml["a"].as<bool>();
-  qubit.c = yaml["c"].as<unsigned int>();
+  qubit.c = yaml["c"].as<std::uint16_t>();
   qubit.h = yaml["h"].as<int>();
-  qubit.r = yaml["r"].as<unsigned int>();
+  qubit.r = yaml["r"].as<std::uint16_t>();
   qubit.v = yaml["v"].as<int>();
-  qubit.x = yaml["x"].as<unsigned int>();
-  qubit.y = yaml["y"].as<unsigned int>();
+  qubit.x = yaml["x"].as<std::uint16_t>();
+  qubit.y = yaml["y"].as<std::uint16_t>();
   return qubit;
 }
 
-auto NASolver::Result::Qubit::yaml(unsigned int indent,
+auto NASolver::Result::Qubit::yaml(std::size_t indent,
                                    const bool item,
                                    const bool compact) const -> std::string {
   std::stringstream ss;
@@ -784,7 +784,7 @@ auto NASolver::Result::Qubit::yaml(unsigned int indent,
   return ss.str();
 }
 
-auto NASolver::Result::Stage::yaml(unsigned int indent,
+auto NASolver::Result::Stage::yaml(std::size_t indent,
                                    const bool item,
                                    const bool compact) const -> std::string {
   std::stringstream ss;
@@ -819,12 +819,12 @@ auto NASolver::Result::fromYAML(const YAML::Node& yaml) -> Result {
 
 auto NASolver::Result::Gate::fromYAML(const YAML::Node& yaml) -> Gate {
   Gate gate{};
-  gate.qubits.first = yaml["qubits"][0].as<unsigned int>();
-  gate.qubits.second = yaml["qubits"][1].as<unsigned int>();
+  gate.qubits.first = yaml["qubits"][0].as<qc::Qubit>();
+  gate.qubits.second = yaml["qubits"][1].as<qc::Qubit>();
   return gate;
 }
 
-auto NASolver::Result::Gate::yaml(unsigned int indent,
+auto NASolver::Result::Gate::yaml(std::size_t indent,
                                   const bool item,
                                   const bool compact) const -> std::string {
   std::stringstream ss;
@@ -857,7 +857,7 @@ auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
   return stage;
 }
 
-auto NASolver::Result::yaml(const unsigned int indent,
+auto NASolver::Result::yaml(const std::size_t indent,
                             const bool compact) const -> std::string {
   std::stringstream ss;
   ss << std::boolalpha;
