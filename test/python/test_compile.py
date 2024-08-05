@@ -20,7 +20,7 @@ from mqt.qmap import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    compile,
+    compile,  # noqa: A004
 )
 from mqt.qmap.visualization import SearchVisualizer
 
