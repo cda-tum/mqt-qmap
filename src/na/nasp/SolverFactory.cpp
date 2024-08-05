@@ -33,7 +33,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD
   // o o o <-- AOD          o o o o <-- AOD
-  // The max number of colums and rows that can be stacked at one interaction
+  // The max number of columns and rows that can be stacked at one interaction
   // site is derived from the fact that the SLM atom must still be in the
   // Rydberg interaction radius of the lower left AOD atom. For that we first
   // assume the same value for the vertical and horizontal stacking factor

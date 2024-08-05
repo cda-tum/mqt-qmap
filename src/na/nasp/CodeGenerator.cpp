@@ -112,7 +112,7 @@ auto CodeGenerator::generate(
   code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{RY, 0},
                                                        std::vector{PI_2}));
   std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
-  // Refernce to the executable set of the input circuit
+  // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
   if (result.front().isRydberg()) {
     code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{Z, 1}));

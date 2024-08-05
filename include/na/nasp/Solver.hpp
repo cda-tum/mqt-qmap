@@ -39,7 +39,7 @@ private:
   static auto minBitsToRepresentUInt(std::int32_t num) -> std::uint32_t;
   static auto minBitsToRepresentInt(std::int32_t num) -> std::uint32_t;
 
-  /// A class to collect all varaibles associated with one qubit
+  /// A class to collect all variables associated with one qubit
   class Qubit {
   private:
     std::uint16_t id;
@@ -212,12 +212,12 @@ private:
   getShieldedFromRydbergBeamConstraint(std::uint16_t q,
                                        std::uint16_t t) const -> expr;
 
-  /// Retruns a vecotr of constraints ensuring that transition from a Rydberg
+  /// Returns a vector of constraints ensuring that transition from a Rydberg
   /// stage to the next stage is valid
   [[nodiscard]] auto getValidRydbergTransitionConstraints(std::uint16_t t) const
       -> std::vector<expr>;
 
-  /// Retruns a vecotr of constraints ensuring that transition from a Transfer
+  /// Returns a vector of constraints ensuring that transition from a Transfer
   /// stage to the next stage is valid
   [[nodiscard]] auto getValidTransferTransitionConstraints(
       std::uint16_t t) const -> std::vector<expr>;
