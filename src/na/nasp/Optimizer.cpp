@@ -1,4 +1,5 @@
 #include "nasp/Optimizer.hpp"
+
 #include "nasp/Solver.hpp"
 
 #include <algorithm>
@@ -13,17 +14,14 @@
 #include <functional>
 #include <iostream>
 #include <optional>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <string>
-#include <sys/_types/_pid_t.h>
-#include <sys/_types/_ssize_t.h>
-#include <sys/signal.h>
-#include <sys/wait.h>
 #include <tuple>
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
+#include <wait.h>
 
 namespace na {
 
@@ -36,7 +34,7 @@ auto handleAlarm(int) -> void {
   }
 }
 
-auto Optimizer::forkChildProcess(const std::size_t arg,
+auto Optimizer::forkChildProcess(const std::size_t          arg,
                                  const std::chrono::seconds timeout) -> void {
   // Create a pipe
   int pipefd[2];
@@ -63,8 +61,8 @@ auto Optimizer::forkChildProcess(const std::size_t arg,
     } catch (const std::exception& e) {
       alarm(0);
       close(pipefd[1]); // Close the write end of the pipe
-      std::cerr << "[Optimizer]: Exception in objective function: " << e.
-          what() << "\n";
+      std::cerr << "[Optimizer]: Exception in objective function: " << e.what()
+                << "\n";
       exit(1);
     }
     alarm(0); // Cancel the alarm
@@ -72,7 +70,7 @@ auto Optimizer::forkChildProcess(const std::size_t arg,
     const auto msg = result.yaml();
     write(pipefd[1], msg.c_str(), msg.size() + 1); // Write to the pipe
     close(pipefd[1]); // Close the write end of the pipe
-    exit(0); // End of child process
+    exit(0);          // End of child process
   }
   // Parent process
   close(pipefd[1]); // Close the write end of the pipe
@@ -94,8 +92,8 @@ auto Optimizer::waitForChildProcess() -> void {
   } else if (WIFEXITED(status)) {
     // Read the result from the pipe
     std::stringstream msg;
-    char buffer[4096];
-    ssize_t bytesRead;
+    char              buffer[4096];
+    ssize_t           bytesRead;
     while ((bytesRead = read(processData[pid].readPipeFd, buffer,
                              sizeof(buffer) - 1)) > 0) {
       buffer[bytesRead] = '\0'; // Null-terminate the buffer
@@ -111,7 +109,7 @@ auto Optimizer::waitForChildProcess() -> void {
         std::cout << "k = " << processData[pid].arg << ": sat\n";
       }
       if (!minSat.has_value() || processData[pid].arg < minSat) {
-        minSat = processData[pid].arg;
+        minSat   = processData[pid].arg;
         extremum = result;
       }
       for (const auto& [pid, data] : processData) {
@@ -141,7 +139,7 @@ auto Optimizer::waitForChildProcess() -> void {
   } else {
     killAllChildProcesses();
     throw std::invalid_argument(
-        "Exception occured in child process, see message above.");
+        "Exception occurred in child process, see message above.");
   }
   close(processData[pid].readPipeFd); // Close the read end of the pipe
   processData.erase(pid);
@@ -161,7 +159,7 @@ auto Optimizer::minimize() -> void {
   // Initialize auxiliary variables
   extremum = std::nullopt;
   maxUnsat = std::nullopt;
-  minSat = std::nullopt;
+  minSat   = std::nullopt;
   processData.clear();
   bool timeoutTriggered = false;
   for (std::size_t t = 10; !minSat.has_value(); t *= 10) {
@@ -186,20 +184,20 @@ auto Optimizer::minimize() -> void {
   assert(waitpid(-1, nullptr, WNOHANG) == -1 && errno == ECHILD);
   if (timeoutTriggered) {
     if (!quiet) {
-      std::cerr <<
-          "[Optimizer]: Timeout happened while scanning for SAT instance.\n";
+      std::cerr
+          << "[Optimizer]: Timeout happened while scanning for SAT instance.\n";
     }
     return;
   }
   if (!minSat.has_value()) {
     if (!quiet) {
-      std::cerr <<
-          "[Optimizer]: No SAT instance found between initial value and max value.\n";
+      std::cerr << "[Optimizer]: No SAT instance found between initial value "
+                   "and max value.\n";
     }
     return;
   }
-  for (auto arg = minSat.value() - 1;
-       maxUnsat.value_or(initialValue) < arg; --arg) {
+  for (auto arg = minSat.value() - 1; maxUnsat.value_or(initialValue) < arg;
+       --arg) {
     const auto delta = std::chrono::duration_cast<std::chrono::seconds>(
         timeout - (std::chrono::high_resolution_clock::now() - start));
     if (delta.count() <= 0) {
@@ -217,9 +215,9 @@ auto Optimizer::minimize() -> void {
   // no more child process is running
   assert(waitpid(-1, nullptr, WNOHANG) == -1 && errno == ECHILD);
   if (timeoutTriggered && !quiet) {
-    std::cerr <<
-        "[Optimizer]: Timeout happened while finding minimum SAT instance. "
-        "Result may not be optimal.\n";
+    std::cerr
+        << "[Optimizer]: Timeout happened while finding minimum SAT instance. "
+           "Result may not be optimal.\n";
   }
 }
 } // namespace na

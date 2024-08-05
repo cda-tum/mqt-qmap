@@ -5,11 +5,10 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
-#include <unordered_map>
 #include <optional>
-#include <utility>
 #include <stdexcept>
-#include <sys/_types/_pid_t.h>
+#include <unordered_map>
+#include <utility>
 
 namespace na {
 
@@ -19,21 +18,21 @@ public:
 
 private:
   struct OptimizerProcess {
-    std::size_t arg = 0;
-    int readPipeFd = 0;
+    std::size_t arg        = 0;
+    int         readPipeFd = 0;
   };
 
-  std::chrono::minutes timeout = std::chrono::minutes::zero();
-  std::size_t maxNSubProcs = 1;
-  std::size_t initialValue = 0;
-  std::size_t maxValue = 0;
-  ObjectiveFunction objective = nullptr;
-  std::optional<NASolver::Result> extremum = std::nullopt;
-  bool quiet = true;
+  std::chrono::minutes            timeout      = std::chrono::minutes::zero();
+  std::size_t                     maxNSubProcs = 1;
+  std::size_t                     initialValue = 0;
+  std::size_t                     maxValue     = 0;
+  ObjectiveFunction               objective    = nullptr;
+  std::optional<NASolver::Result> extremum     = std::nullopt;
+  bool                            quiet        = true;
 
   // auxiliary variables for minimize
-  std::optional<std::size_t> maxUnsat = std::nullopt;
-  std::optional<std::size_t> minSat = std::nullopt;
+  std::optional<std::size_t>                  maxUnsat = std::nullopt;
+  std::optional<std::size_t>                  minSat   = std::nullopt;
   std::unordered_map<pid_t, OptimizerProcess> processData;
 
   [[nodiscard]] auto getNSubProcsRunning() const -> std::size_t {
@@ -78,9 +77,7 @@ public:
     this->maxValue = maxValue;
   }
 
-  auto setQuiet(const bool quiet) -> void {
-    this->quiet = quiet;
-  }
+  auto setQuiet(const bool quiet) -> void { this->quiet = quiet; }
 
   auto setObjectiveFunction(
       const std::function<NASolver::Result(std::size_t)>& objective) -> void {
@@ -111,11 +108,10 @@ public:
  * @param i a positive integer
  * @return a pair of integers
  */
-static auto reverseUpperPairingFunction(
-    const std::size_t i) -> std::pair<std::size_t, std::size_t> {
-  const double w = floor(
-      1.0 + sqrt(1.0 + 4.0 * static_cast<double>(i)));
-  const double t = ceil((w - 2.0) * w / 4.0);
+static auto reverseUpperPairingFunction(const std::size_t i)
+    -> std::pair<std::size_t, std::size_t> {
+  const double      w = floor(1.0 + sqrt(1.0 + 4.0 * static_cast<double>(i)));
+  const double      t = ceil((w - 2.0) * w / 4.0);
   const std::size_t x = i - static_cast<std::size_t>(t);
   const std::size_t y = static_cast<std::size_t>(w) - x - 2;
   return std::pair{x, y};
@@ -143,8 +139,8 @@ static auto reverseUpperPairingFunction(
  * @param y a positive integer
  * @return a positive integer
  */
-static auto upperPairingFunction(
-    const std::size_t x, const std::size_t y) -> std::size_t {
+static auto upperPairingFunction(const std::size_t x,
+                                 const std::size_t y) -> std::size_t {
   if (x > y) {
     throw std::invalid_argument("x must be smaller or equal y.");
   }
