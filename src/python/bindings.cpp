@@ -76,7 +76,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
   return results;
 }
 
-PYBIND11_MODULE(pyqmap, m) {
+PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
 
   // Pre-defined architecture available within QMAP
