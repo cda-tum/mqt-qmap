@@ -6,11 +6,13 @@ if(NOT TARGET ${MQT_QMAP_NALAC_TARGET_NAME})
 
   add_library(${MQT_QMAP_NALAC_TARGET_NAME} ${NALAC_HEADERS} ${NALAC_SOURCES})
 
-  target_include_directories(${MQT_QMAP_NALAC_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/na/nalac>)
+  target_include_directories(${MQT_QMAP_NALAC_TARGET_NAME}
+                             PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/na/nalac>)
 
-  target_link_libraries(${MQT_QMAP_NALAC_TARGET_NAME}
-          PUBLIC MQT::QMapNA
-          PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+  target_link_libraries(
+    ${MQT_QMAP_NALAC_TARGET_NAME}
+    PUBLIC MQT::QMapNA
+    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
   add_library(MQT::NALAC ALIAS ${MQT_QMAP_NALAC_TARGET_NAME})
 endif()

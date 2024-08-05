@@ -31,8 +31,8 @@ private:
   bool                            quiet        = true;
 
   // auxiliary variables for minimize
-  std::optional<std::uint16_t>                  maxUnsat = std::nullopt;
-  std::optional<std::uint16_t>                  minSat   = std::nullopt;
+  std::optional<std::uint16_t>                maxUnsat = std::nullopt;
+  std::optional<std::uint16_t>                minSat   = std::nullopt;
   std::unordered_map<pid_t, OptimizerProcess> processData;
 
   [[nodiscard]] auto getNSubProcsRunning() const -> std::size_t {
@@ -43,7 +43,8 @@ private:
     return !processData.empty();
   }
 
-  auto forkChildProcess(std::uint16_t arg, std::chrono::seconds childTimeout) -> void;
+  auto forkChildProcess(std::uint16_t        arg,
+                        std::chrono::seconds childTimeout) -> void;
 
   auto waitForChildProcess() -> void;
 
@@ -80,7 +81,8 @@ public:
   auto setQuiet(const bool newQuiet) -> void { quiet = newQuiet; }
 
   auto setObjectiveFunction(
-      const std::function<NASolver::Result(std::uint16_t)>& newObjective) -> void {
+      const std::function<NASolver::Result(std::uint16_t)>& newObjective)
+      -> void {
     objective = newObjective;
   }
 

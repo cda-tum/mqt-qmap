@@ -43,13 +43,13 @@ private:
   class Qubit {
   private:
     std::uint16_t id;
-    expr        x;
-    expr        y;
-    expr        a;
-    expr        c;
-    expr        r;
-    expr        h;
-    expr        v;
+    expr          x;
+    expr          y;
+    expr          a;
+    expr          c;
+    expr          r;
+    expr          h;
+    expr          v;
 
   public:
     [[nodiscard]] Qubit(const std::uint16_t id, const std::uint16_t t,
@@ -109,7 +109,7 @@ private:
 
   class Stage {
   private:
-    std::uint16_t        t;
+    std::uint16_t      t;
     std::vector<Qubit> qubits;
     std::vector<expr>  loadCols;
     std::vector<expr>  loadRows;
@@ -117,11 +117,11 @@ private:
     std::vector<expr>  storeRows;
 
   public:
-    [[nodiscard]] explicit
-    Stage(const std::uint16_t t, const std::uint16_t numQubits,
-          const std::uint16_t maxX, const std::uint16_t maxY,
-          const std::uint16_t maxC, const std::uint16_t maxR,
-          const std::uint16_t maxHOffset, const std::uint16_t maxVOffset)
+    [[nodiscard]] explicit Stage(
+        const std::uint16_t t, const std::uint16_t numQubits,
+        const std::uint16_t maxX, const std::uint16_t maxY,
+        const std::uint16_t maxC, const std::uint16_t maxR,
+        const std::uint16_t maxHOffset, const std::uint16_t maxVOffset)
         : t(t) {
       qubits.reserve(numQubits);
       for (std::uint16_t id = 0; id < numQubits; ++id) {
@@ -173,7 +173,7 @@ private:
     }
   };
 
-  std::uint16_t                  numQubits    = 0;
+  std::uint16_t                numQubits    = 0;
   std::uint16_t                numStages    = 0;
   std::optional<std::uint16_t> numTransfers = std::nullopt;
   std::vector<Stage>           stages;
@@ -185,33 +185,32 @@ private:
 
   /// Return constraints ensuring that exactly @code numTransfers@endcode
   /// transfers trake place
-  [[nodiscard]] auto getExactNumTransfersConstraints() const
-      -> std::vector<expr>;
+  [[nodiscard]] auto
+  getExactNumTransfersConstraints() const -> std::vector<expr>;
 
   /// Returns the constraint @code (x_t^(q0) = x_t^(q1)) ∧ (y_t^(q0) = y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto getHaveSamePositionConstraint(std::uint16_t q0,
-                                                   std::uint16_t q1,
-                                                   std::uint16_t t) const -> expr;
+  [[nodiscard]] auto
+  getHaveSamePositionConstraint(std::uint16_t q0, std::uint16_t q1,
+                                std::uint16_t t) const -> expr;
 
   /// Returns the constraint @code (x_t^(q0) ≠ x_t^(q1)) ∨ (y_t^(q0) ≠ y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto getHaveDifferentPositionConstraint(std::uint16_t q0,
-                                                        std::uint16_t q1,
-                                                        std::uint16_t t) const
-      -> expr;
+  [[nodiscard]] auto
+  getHaveDifferentPositionConstraint(std::uint16_t q0, std::uint16_t q1,
+                                     std::uint16_t t) const -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(std::uint16_t q,
-                                                        std::uint16_t t) const
-      -> expr;
+  [[nodiscard]] auto
+  getAffectedByRydbergBeamConstraint(std::uint16_t q,
+                                     std::uint16_t t) const -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(std::uint16_t q,
-                                                          std::uint16_t t) const
-      -> expr;
+  [[nodiscard]] auto
+  getShieldedFromRydbergBeamConstraint(std::uint16_t q,
+                                       std::uint16_t t) const -> expr;
 
   /// Retruns a vecotr of constraints ensuring that transition from a Rydberg
   /// stage to the next stage is valid
@@ -220,8 +219,8 @@ private:
 
   /// Retruns a vecotr of constraints ensuring that transition from a Transfer
   /// stage to the next stage is valid
-  [[nodiscard]] auto getValidTransferTransitionConstraints(std::uint16_t t) const
-      -> std::vector<expr>;
+  [[nodiscard]] auto getValidTransferTransitionConstraints(
+      std::uint16_t t) const -> std::vector<expr>;
 
   /**
    * @brief Returns the constraints extracted from the quantum circuit to ensure
@@ -251,8 +250,8 @@ private:
   [[nodiscard]] auto getTransferStageConstraint(std::uint16_t t) const -> expr;
 
   /// Returns constraints esnuring that the state at the given stage is valid
-  [[nodiscard]] auto getValidStageConstraints(std::uint16_t t) const
-      -> std::vector<expr>;
+  [[nodiscard]] auto
+  getValidStageConstraints(std::uint16_t t) const -> std::vector<expr>;
 
 public:
   [[nodiscard]] NASolver() = default;
@@ -269,11 +268,11 @@ public:
     private:
       std::int32_t x;
       std::int32_t y;
-      bool          a;
+      bool         a;
       std::int32_t c;
       std::int32_t r;
-      std::int32_t  h;
-      std::int32_t  v;
+      std::int32_t h;
+      std::int32_t v;
 
     public:
       [[nodiscard]] Qubit() = default;
@@ -300,18 +299,18 @@ public:
 
     class Gate {
     private:
-      std::uint16_t                           stage = 0;
+      std::uint16_t                   stage = 0;
       std::pair<qc::Qubit, qc::Qubit> qubits;
 
     public:
       [[nodiscard]] Gate() = default;
 
-      [[nodiscard]] Gate(const std::uint16_t                            stage,
+      [[nodiscard]] Gate(const std::uint16_t                    stage,
                          const std::pair<qc::Qubit, qc::Qubit>& qubits)
           : stage(stage), qubits(qubits) {}
 
       [[nodiscard]]
-      Gate(const std::uint16_t                       stage,
+      Gate(const std::uint16_t               stage,
            std::pair<qc::Qubit, qc::Qubit>&& qubits) noexcept
           : stage(stage), qubits(std::move(qubits)) {}
 
@@ -319,8 +318,8 @@ public:
 
       [[nodiscard]] auto getStage() const -> std::uint16_t { return stage; }
 
-      [[nodiscard]] auto getQubits() const
-          -> const std::pair<qc::Qubit, qc::Qubit>& {
+      [[nodiscard]] auto
+      getQubits() const -> const std::pair<qc::Qubit, qc::Qubit>& {
         return qubits;
       }
 
@@ -415,8 +414,8 @@ public:
       return stages.end();
     }
 
-    [[nodiscard]] auto yaml(std::size_t indent = 0, bool compact = true) const
-        -> std::string;
+    [[nodiscard]] auto yaml(std::size_t indent  = 0,
+                            bool        compact = true) const -> std::string;
   };
 
   [[nodiscard]] auto

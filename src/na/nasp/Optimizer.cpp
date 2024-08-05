@@ -33,8 +33,8 @@ auto handleAlarm(int) -> void {
   }
 }
 
-auto Optimizer::forkChildProcess(const std::uint16_t          arg,
-                                 const std::chrono::seconds childTimeout) -> void {
+auto Optimizer::forkChildProcess(
+    const std::uint16_t arg, const std::chrono::seconds childTimeout) -> void {
   // Create a pipe
   int pipefd[2];
   if (pipe(pipefd) == -1) {
