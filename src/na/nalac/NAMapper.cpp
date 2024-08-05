@@ -1,9 +1,9 @@
-#include "nalac/NAMapper.hpp"
+#include "NAMapper.hpp"
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "nalac/NAGraphAlgorithms.hpp"
+#include "NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "na/NADefinitions.hpp"
