@@ -188,11 +188,42 @@ auto NAGraphAlgorithms::colorEdges(
               [&](const Edge& a, const Edge& b) {
                 const auto u = a.first == v ? a.second : a.first;
                 const auto w = b.first == v ? b.second : b.first;
-                return partialOrder.isReachable(u, w) or
-                       (!partialOrder.isReachable(w, u) and
-                        (nAdjColors[a] > nAdjColors[b] or
-                         (nAdjColors[a] == nAdjColors[b] and
-                          edgeDegree[a] > edgeDegree[b])));
+                if (u == w) {
+                  // the compare function defines a proper less than relation,
+                  // i.e., equal elements must return false
+                  return false;
+                }
+                if (partialOrder.isReachable(u, w)) {
+                  // if w is reachable from u, then w needs to come after u,
+                  // i.e., u < w
+                  return true;
+                }
+                if (partialOrder.isReachable(w, u)) {
+                  // if u is reachable from w, then u needs to come after w,
+                  // i.e., w < u and not u < w
+                  return false;
+                }
+                // here: neither u is reachable from w nor w is reachable from u
+                if (nAdjColors[a] > nAdjColors[b]) {
+                  // this favours nodes with higher number of distinct colors
+                  // also see the original implementation of DSatur
+                  return true;
+                }
+                if (nAdjColors[a] < nAdjColors[b]) {
+                  // this is just the opposite of the above case
+                  return false;
+                }
+                // Here: nAdjColors[a] == nAdjColors[b]
+                if (edgeDegree[a] > edgeDegree[b]) {
+                  return true;
+                }
+                if (edgeDegree[a] < edgeDegree[b]) {
+                  return false;
+                }
+                return u < w;
+                // the last line together with the first clause (u != w) is
+                // necessary for a well-defined compare function to handle edges
+                // that compare equally correctly
               });
     for (const auto& e : adjacentEdges) {
       // color the edge
@@ -427,7 +458,8 @@ auto NAGraphAlgorithms::groupByConnectedComponent(
   return result;
 }
 
-auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
+auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g,
+                                        const std::size_t       maxSites)
     -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                  std::unordered_map<qc::Qubit, std::int64_t>> {
   const auto& maxIndepSet = getMaxIndependentSet(g);
@@ -437,11 +469,13 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
             [&](const auto& u, const auto& v) {
               return g.getDegree(u) > g.getDegree(v);
             });
-  const auto& sequence = groupByConnectedComponent(g, sequenceUngrouped);
-  const auto& [coloring, partialOrder] =
+  auto        sequence = groupByConnectedComponent(g, sequenceUngrouped);
+  const auto& colorEdgesResult =
       colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
-  const auto& fixed   = partialOrder.orderTopologically();
-  const auto& resting = computeRestingPositions(sequence, fixed, coloring);
+  auto coloring     = colorEdgesResult.first;
+  auto partialOrder = colorEdgesResult.second;
+  auto fixed        = partialOrder.orderTopologically();
+  auto resting      = computeRestingPositions(sequence, fixed, coloring);
   // compute relative x positions of fixed vertices
   std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
   for (std::uint32_t x = 0, i = 0; x < fixed.size(); ++x) {
@@ -450,6 +484,51 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
       ++i;
     }
   }
+
+  const auto maxSiteUsed =
+      std::max_element(
+          fixedPositions.cbegin(), fixedPositions.cend(),
+          [](const auto& a, const auto& b) { return a.second < b.second; })
+          ->second;
+  const auto maxSitesSigned = static_cast<std::int64_t>(maxSites);
+  if (maxSiteUsed >= maxSitesSigned) {
+    // Handle the situation when the entangling zone is not big enough to fit
+    // all fixed qubits
+    for (auto it = fixedPositions.begin(); it != fixedPositions.end();) {
+      if (it->second >= maxSitesSigned) {
+        it = fixedPositions.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    fixed.erase(std::remove_if(fixed.begin(), fixed.end(),
+                               [&fixedPositions](const auto& q) {
+                                 return fixedPositions.find(q) ==
+                                        fixedPositions.end();
+                               }),
+                fixed.end());
+    for (auto it = coloring.begin(); it != coloring.end();) {
+      if (fixedPositions.find(it->first.first) == fixedPositions.end() &&
+          fixedPositions.find(it->first.second) == fixedPositions.end()) {
+        it = coloring.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    sequence.erase(std::remove_if(sequence.begin(), sequence.end(),
+                                  [&coloring](const auto& q) {
+                                    return !std::any_of(
+                                        coloring.cbegin(), coloring.cend(),
+                                        [q](const auto& elem) {
+                                          return elem.first.first == q ||
+                                                 elem.first.second == q;
+                                        });
+                                  }),
+                   sequence.end());
+    // recalculate resting positions
+    resting = computeRestingPositions(sequence, fixed, coloring);
+  }
+
   // compute relative x positions of moveable vertices at every timestamp
   const Color maxColor = std::accumulate(
       coloring.cbegin(), coloring.cend(), static_cast<Color>(0),
