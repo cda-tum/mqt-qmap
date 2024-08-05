@@ -1,7 +1,6 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "NAMapper.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "na/NAComputation.hpp"
@@ -51,12 +50,13 @@ h q[3];
 h q[4];
 h q[6];
 )";
-  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
   // create solver
   na::NASolver solver;
   solver.init(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  const auto& pairs =
+      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // Setup optimizer
   na::Optimizer optimizer;
   optimizer.setTimeout(std::chrono::minutes(1));
