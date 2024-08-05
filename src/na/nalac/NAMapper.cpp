@@ -1,15 +1,9 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
-// information.
-//
-
-#include "NAMapper.hpp"
+#include "nalac/NAMapper.hpp"
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "NAGraphAlgorithms.hpp"
+#include "nalac/NAGraphAlgorithms.hpp"
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "na/NADefinitions.hpp"
