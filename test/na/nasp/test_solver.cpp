@@ -4,10 +4,11 @@
 #include "SolverFactory.hpp"
 
 #include <chrono>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <string>
 
-TEST(Optimizer, SteaneDoubleSidedStorage) {
+TEST(Solver, SteaneDoubleSidedStorage) {
   const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
@@ -40,7 +41,8 @@ h q[6];
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(pairs, circ.getNqubits(), 4, false, true);
+  const auto result = solver.solve(
+      pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
   EXPECT_TRUE(result.isSat());
   EXPECT_EQ(result.numStages(), 4);
 }
@@ -78,10 +80,11 @@ h q[6];
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto resultUnsat =
-      solver.solve(pairs, circ.getNqubits(), 4, false, true);
+  const auto resultUnsat = solver.solve(
+      pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
   EXPECT_FALSE(resultUnsat.isSat());
-  const auto resultSat = solver.solve(pairs, circ.getNqubits(), 5, false, true);
+  const auto resultSat = solver.solve(
+      pairs, static_cast<std::uint16_t>(circ.getNqubits()), 5, false, true);
   EXPECT_TRUE(resultSat.isSat());
   EXPECT_TRUE(resultSat.front().isRydberg());
   for (const auto& q : resultSat.front().getQubits()) {
@@ -138,6 +141,7 @@ h q[6];
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(pairs, circ.getNqubits(), 3, 0, true, false);
+  const auto result = solver.solve(
+      pairs, static_cast<std::uint16_t>(circ.getNqubits()), 3, 0, true, false);
   EXPECT_TRUE(result.isSat());
 }
