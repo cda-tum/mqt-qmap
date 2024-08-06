@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-// NOLINTNEXTLINE(misc-include-cleaner)
+// NOLINTNEXTLINE (misc-include-cleaner)
 #include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
@@ -665,6 +665,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
 }
 
 /// Initialize a Qubit from a YAML string.
+// NOLINTNEXTLINE (misc-include-cleaner)
 auto NASolver::Result::Qubit::fromYAML(const YAML::Node& yaml) -> Qubit {
   Qubit qubit{};
   qubit.a = yaml["a"].as<bool>();
