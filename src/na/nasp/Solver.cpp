@@ -62,7 +62,6 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   std::vector<expr> constraints;
   if (numTransfers.has_value() && numTransfers.value() != 0) {
     constraints.reserve(numTransfers.value() + 1);
-    // constraints.emplace_back(0 <= transfers[0]);
     for (std::uint16_t t = 1; t < numTransfers.value(); ++t) {
       constraints.emplace_back(ult(transfers[t - 1], transfers[t]));
     }
@@ -95,7 +94,7 @@ auto NASolver::getAffectedByRydbergBeamConstraint(
   case Storage::Bottom:
     return ule(stages[t].getQubit(q).getY(),
                ctx.bv_val(maxEntanglingY, minBitsToRepresentUInt(maxY)));
-  case Storage::TwoSided:
+  default: // case Storage::TwoSided:
     return ule(minEntanglingY, stages[t].getQubit(q).getY()) &&
            ule(stages[t].getQubit(q).getY(),
                ctx.bv_val(maxEntanglingY, minBitsToRepresentUInt(maxY)));
@@ -522,7 +521,6 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   numStages    = newNumStages;
   numTransfers = newNumTransfers;
 
-  // solver solver(ctx, "QF_LIA");
   solver solver(ctx, "QF_BV");
 
   initVariables();
@@ -605,7 +603,6 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   numTransfers = std::nullopt;
   // CHANGE: instead of a fixed number of transfers
 
-  // solver solver(ctx, "QF_LIA");
   solver solver(ctx, "QF_BV");
 
   initVariables();
