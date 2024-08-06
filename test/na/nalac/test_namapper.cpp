@@ -677,7 +677,7 @@ rz(3.9927041) q[7];)";
                 1, 1, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   const auto& result = mapper.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result));
+  EXPECT_TRUE(result.validateAODConstraints());
   EXPECT_TRUE(na::checkEquivalence(circ, result, arch));
   std::ignore = mapper.getStats();
   // ---------------------------------------------------------------------
@@ -686,13 +686,13 @@ rz(3.9927041) q[7];)";
                 3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper2.map(circ);
   const auto& result2 = mapper2.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result2));
+  EXPECT_TRUE(result2.validateAODConstraints());
   // ---------------------------------------------------------------------
   na::NAMapper mapper3(arch,
                        na::Configuration(1, 1, na::NAMappingMethod::Naive));
   mapper3.map(circ);
   const auto& result3 = mapper3.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result3));
+  EXPECT_TRUE(result3.validateAODConstraints());
   EXPECT_TRUE(na::checkEquivalence(circ, result3, arch));
   // ---------------------------------------------------------------------
 }
@@ -930,7 +930,7 @@ ry(2.2154814) q;)";
                 3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }
 
 TEST(NAMapper, QAOA16NarrowEntangling) {
@@ -1166,5 +1166,5 @@ ry(2.2154814) q;)";
                 3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }
