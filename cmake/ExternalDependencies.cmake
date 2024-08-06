@@ -27,9 +27,9 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_VERSION 2.5.2
+set(MQT_CORE_VERSION 2.5.3
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "dcd8ac50b00d9ffef9de37d22775b12548a01871"
+set(MQT_CORE_REV "0b0152f24b01762ae0bee5fe1e62cf33719c26cd"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "cda-tum"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
