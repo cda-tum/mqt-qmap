@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
+#include <sys/wait.h>
+#include <yaml-cpp/yaml.h>
 
 namespace na {
 
@@ -92,7 +94,7 @@ auto Optimizer::waitForChildProcess() -> void {
     // Read the result from the pipe
     std::stringstream msg;
     char              buffer[4096];
-    ssize_t           bytesRead;
+    ssize_t           bytesRead = 0;
     while ((bytesRead = read(processData[pid].readPipeFd, buffer,
                              sizeof(buffer) - 1)) > 0) {
       buffer[bytesRead] = '\0'; // Null-terminate the buffer

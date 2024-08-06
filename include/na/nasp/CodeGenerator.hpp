@@ -13,17 +13,17 @@ using namespace qc;
 
 class CodeGenerator {
 private:
-  static auto coordFromDiscrete(std::size_t x, std::size_t y, std::int32_t h,
-                                std::int32_t v, std::size_t maxHOffset,
-                                std::size_t maxVOffset,
-                                std::size_t minEntanglingY,
-                                std::size_t maxEntanglingY) -> Point;
+  static auto coordFromDiscrete(std::int32_t x, std::int32_t y, std::int32_t h,
+                                std::int32_t v, std::int32_t maxHOffset,
+                                std::int32_t maxVOffset,
+                                std::int32_t minEntanglingY,
+                                std::int32_t maxEntanglingY) -> Point;
 
 public:
   [[nodiscard]] static auto
   generate(const QuantumComputation& input, const NASolver::Result& result,
-           std::size_t maxHOffset, std::size_t maxVOffset,
-           std::size_t minEntanglingY,
-           std::size_t maxEntanglingY) -> NAComputation;
+           std::uint16_t maxHOffset, std::uint16_t maxVOffset,
+           std::uint16_t minEntanglingY,
+           std::uint16_t maxEntanglingY) -> NAComputation;
 };
 } // namespace na

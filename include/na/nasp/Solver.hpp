@@ -8,9 +8,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
-#include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
 namespace na {

@@ -27,15 +27,15 @@ namespace na {
 using namespace qc;
 
 auto CodeGenerator::coordFromDiscrete(
-    const std::size_t x, const std::size_t y, const std::int32_t h,
-    const std::int32_t v, const std::size_t maxHOffset,
-    const std::size_t maxVOffset, const std::size_t minEntanglingY,
-    const std::size_t maxEntanglingY) -> Point {
+    const std::int32_t x, const std::int32_t y, const std::int32_t h,
+    const std::int32_t v, const std::int32_t maxHOffset,
+    const std::int32_t maxVOffset, const std::int32_t minEntanglingY,
+    const std::int32_t maxEntanglingY) -> Point {
   constexpr auto     minAtomDist         = 1;
   constexpr auto     noInteractionRadius = 10;
   constexpr auto     zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
-  const std::int64_t dx = noInteractionRadius + 2 * maxHOffset * minAtomDist;
-  const std::int64_t dy = noInteractionRadius + 2 * maxVOffset * minAtomDist;
+  const auto dx = static_cast<std::int64_t>(noInteractionRadius) + 2 * maxHOffset * minAtomDist;
+  const auto dy = static_cast<std::int64_t>(noInteractionRadius) + 2 * maxVOffset * minAtomDist;
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
@@ -61,9 +61,9 @@ auto CodeGenerator::coordFromDiscrete(
 
 auto CodeGenerator::generate(
     const QuantumComputation& input, const NASolver::Result& result,
-    const std::size_t maxHOffset, const std::size_t maxVOffset,
-    const std::size_t minEntanglingY,
-    const std::size_t maxEntanglingY) -> NAComputation {
+    const std::uint16_t maxHOffset, const std::uint16_t maxVOffset,
+    const std::uint16_t minEntanglingY,
+    const std::uint16_t maxEntanglingY) -> NAComputation {
   Layer const                         layer(input);
   NAComputation                       code;
   std::vector<std::shared_ptr<Point>> oldPositions;
@@ -76,8 +76,8 @@ auto CodeGenerator::generate(
     std::unordered_map<std::size_t, std::set<std::size_t>> vAODLines{};
     for (const auto& q : result.front().getQubits()) {
       if (q.isAOD()) {
-        hAODLines[q.getY()].emplace(q.getR());
-        vAODLines[q.getX()].emplace(q.getC());
+        hAODLines[static_cast<std::size_t>(q.getY())].emplace(q.getR());
+        vAODLines[static_cast<std::size_t>(q.getX())].emplace(q.getC());
       }
     }
     std::vector<std::shared_ptr<Point>> loadPositions;
@@ -135,7 +135,7 @@ auto CodeGenerator::generate(
       (*it)->execute();
     }
   }
-  for (std::size_t t = 1; t < result.numStages(); ++t) {
+  for (std::uint16_t t = 1; t < result.numStages(); ++t) {
     std::vector<std::shared_ptr<Point>> newPositions;
     newPositions.reserve(oldPositions.size());
     std::vector<std::shared_ptr<Point>> startPositions;
@@ -144,7 +144,7 @@ auto CodeGenerator::generate(
     std::vector<std::shared_ptr<Point>> loadEndPositions;
     std::vector<std::shared_ptr<Point>> storeStartPositions;
     std::vector<std::shared_ptr<Point>> storeEndPositions;
-    for (std::size_t i = 0; i < result.getStage(t).numQubits(); ++i) {
+    for (std::uint16_t i = 0; i < result.getStage(t).numQubits(); ++i) {
       const auto& q   = result.getStage(t).getQubit(i);
       auto        pos = std::make_shared<Point>(
           coordFromDiscrete(q.getX(), q.getY(), q.getH(), q.getV(), maxHOffset,

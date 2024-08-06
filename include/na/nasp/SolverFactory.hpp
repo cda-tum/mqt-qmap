@@ -5,8 +5,6 @@
 #include "Solver.hpp"
 #include "na/NADefinitions.hpp"
 
-#include <cstddef>
-#include <utility>
 #include <vector>
 
 namespace na {
