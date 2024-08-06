@@ -4,10 +4,11 @@
 #include "operations/OpType.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <string>
-#include <utility>
+#include <tuple>
 #include <yaml-cpp/node/parse.h>
 
 TEST(Solver, SteaneDoubleSidedStorage) {

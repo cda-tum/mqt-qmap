@@ -14,8 +14,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <yaml-cpp/node/detail/iterator.h>
-#include <yaml-cpp/node/node.h>
+// NOLINTNEXTLINE(misc-include-cleaner)
+#include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
 namespace na {
@@ -73,22 +73,25 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   return constraints;
 }
 
-auto NASolver::getHaveSamePositionConstraint(
-    const std::uint16_t q0, const std::uint16_t q1,
-    const std::uint16_t t) const -> expr {
+auto NASolver::getHaveSamePositionConstraint(const std::uint16_t q0,
+                                             const std::uint16_t q1,
+                                             const std::uint16_t t) const
+    -> expr {
   return stages[t].getQubit(q0).getX() == stages[t].getQubit(q1).getX() &&
          stages[t].getQubit(q0).getY() == stages[t].getQubit(q1).getY();
 }
 
-auto NASolver::getHaveDifferentPositionConstraint(
-    const std::uint16_t q0, const std::uint16_t q1,
-    const std::uint16_t t) const -> expr {
+auto NASolver::getHaveDifferentPositionConstraint(const std::uint16_t q0,
+                                                  const std::uint16_t q1,
+                                                  const std::uint16_t t) const
+    -> expr {
   return !getHaveSamePositionConstraint(q0, q1, t);
 }
 
 // NOLINTNEXTLINE (bugprone-switch-missing-default-case)
-auto NASolver::getAffectedByRydbergBeamConstraint(
-    const std::uint16_t q, const std::uint16_t t) const -> expr {
+auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
+                                                  const std::uint16_t t) const
+    -> expr {
   switch (storage) {
   case Storage::None:
     return ctx.bool_val(true);
@@ -102,8 +105,9 @@ auto NASolver::getAffectedByRydbergBeamConstraint(
   }
 }
 
-auto NASolver::getShieldedFromRydbergBeamConstraint(
-    const std::uint16_t q, const std::uint16_t t) const -> expr {
+auto NASolver::getShieldedFromRydbergBeamConstraint(const std::uint16_t q,
+                                                    const std::uint16_t t) const
+    -> expr {
   return !getAffectedByRydbergBeamConstraint(q, t);
 }
 
@@ -510,8 +514,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                      const std::uint16_t newNumQubits,
                      const std::uint16_t newNumStages,
                      const std::uint16_t newNumTransfers,
-                     const bool          mindOpsOrder,
-                     const bool          shieldIdleQubits) -> Result {
+                     const bool mindOpsOrder, const bool shieldIdleQubits)
+    -> Result {
   if (shieldIdleQubits) {
     if (storage == Storage::None) {
       throw std::invalid_argument("No storage zone is available.");
@@ -700,6 +704,10 @@ auto NASolver::Result::Qubit::yaml(std::size_t indent, const bool item,
   ss << std::string(indent, ' ') << "v: " << v << "\n";
   return ss.str();
 }
+auto NASolver::Result::Qubit::operator==(const Qubit& other) const -> bool {
+  return x == other.x && y == other.y && a == other.a && c == other.c &&
+         r == other.r && h == other.h && v == other.v;
+}
 
 auto NASolver::Result::Stage::yaml(std::size_t indent, const bool item,
                                    const bool compact) const -> std::string {
@@ -720,6 +728,10 @@ auto NASolver::Result::Stage::yaml(std::size_t indent, const bool item,
     ss << qubit.yaml(indent + 2, true, compact);
   }
   return ss.str();
+}
+auto NASolver::Result::Stage::operator==(const Stage& other) const -> bool {
+  return rydberg == other.rydberg && gates == other.gates &&
+         qubits == other.qubits;
 }
 
 auto NASolver::Result::fromYAML(const YAML::Node& yaml) -> Result {
@@ -757,6 +769,9 @@ auto NASolver::Result::Gate::yaml(std::size_t indent, const bool item,
   ss << std::string(indent, ' ') << "- " << qubits.second << "\n";
   return ss.str();
 }
+auto NASolver::Result::Gate::operator==(const Gate& other) const -> bool {
+  return qubits == other.qubits;
+}
 
 auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
   Stage stage{};
@@ -770,8 +785,8 @@ auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
   return stage;
 }
 
-auto NASolver::Result::yaml(const std::size_t indent,
-                            const bool        compact) const -> std::string {
+auto NASolver::Result::yaml(const std::size_t indent, const bool compact) const
+    -> std::string {
   std::stringstream ss;
   ss << std::boolalpha;
   ss << std::string(indent, ' ') << "sat: " << sat << "\n";
@@ -782,5 +797,8 @@ auto NASolver::Result::yaml(const std::size_t indent,
     }
   }
   return ss.str();
+}
+auto NASolver::Result::operator==(const Result& other) const -> bool {
+  return sat == other.sat && stages == other.stages;
 }
 } // namespace na

@@ -296,6 +296,7 @@ public:
 
       [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
                               bool compact = true) const -> std::string;
+      [[nodiscard]] auto operator==(const Qubit& other) const -> bool;
     };
 
     class Gate {
@@ -326,6 +327,8 @@ public:
 
       [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
                               bool compact = true) const -> std::string;
+
+      [[nodiscard]] auto operator==(const Gate& other) const -> bool;
     };
 
     class Stage {
@@ -376,6 +379,8 @@ public:
 
       [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
                               bool compact = true) const -> std::string;
+
+      [[nodiscard]] auto operator==(const Stage& other) const -> bool;
     };
 
   private:
@@ -417,6 +422,8 @@ public:
 
     [[nodiscard]] auto yaml(std::size_t indent  = 0,
                             bool        compact = true) const -> std::string;
+
+    [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };
 
   [[nodiscard]] auto
