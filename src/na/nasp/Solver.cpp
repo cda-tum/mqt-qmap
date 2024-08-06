@@ -133,13 +133,13 @@ auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
   }
   // we set load and store variables to false because they do not carray any
   // meaning in the rydberg stage anyways
-  for (std::uint16_t i = 0; i <= maxC; ++i) {
+  for (std::uint16_t i = 0; i <= static_cast<std::uint16_t>(maxC); ++i) {
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getLoadCol(i)));
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getStoreCol(i)));
   }
-  for (std::uint16_t i = 0; i <= maxR; ++i) {
+  for (std::uint16_t i = 0; i <= static_cast<std::uint16_t>(maxR); ++i) {
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getLoadRow(i)));
     constraints.emplace_back(
@@ -173,14 +173,14 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Loaded: Entire row or column must be loaded
     {
       expr colClauses = ctx.bool_val(true);
-      for (std::uint16_t c = 0; c <= maxC; ++c) {
+      for (std::uint16_t c = 0; c <= static_cast<std::uint16_t>(maxC); ++c) {
         colClauses = colClauses &&
                      implies(stages[t].getQubit(i).getC() ==
                                  ctx.bv_val(c, minBitsToRepresentUInt(maxC)),
                              stages[t].getLoadCol(c));
       }
       expr rowClauses = ctx.bool_val(true);
-      for (std::uint16_t r = 0; r <= maxR; ++r) {
+      for (std::uint16_t r = 0; r <= static_cast<std::uint16_t>(maxR); ++r) {
         rowClauses = rowClauses &&
                      implies(stages[t].getQubit(i).getR() ==
                                  ctx.bv_val(r, minBitsToRepresentUInt(maxR)),
@@ -193,14 +193,14 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Stored: Entire row or column must be stored
     {
       expr colClauses = ctx.bool_val(true);
-      for (std::uint16_t c = 0; c <= maxC; ++c) {
+      for (std::uint16_t c = 0; c <= static_cast<std::uint16_t>(maxC); ++c) {
         colClauses = colClauses &&
                      implies(stages[t].getQubit(i).getC() ==
                                  ctx.bv_val(c, minBitsToRepresentUInt(maxC)),
                              stages[t].getStoreCol(c));
       }
       expr rowClauses = ctx.bool_val(true);
-      for (std::uint16_t r = 0; r <= maxR; ++r) {
+      for (std::uint16_t r = 0; r <= static_cast<std::uint16_t>(maxR); ++r) {
         rowClauses = rowClauses &&
                      implies(stages[t].getQubit(i).getR() ==
                                  ctx.bv_val(r, minBitsToRepresentUInt(maxR)),
@@ -237,7 +237,7 @@ auto NASolver::getValidTransferTransitionConstraints(
 auto NASolver::getCircuitExecutionConstraints(
     const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     const bool mindOpsOrder, const bool shieldIdleAtoms) -> std::vector<expr> {
-  const auto numGates = ops.size();
+  const auto numGates = static_cast<std::uint16_t>(ops.size());
   std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, std::vector<expr>,
                      qc::PairHash<qc::Qubit, qc::Qubit>>
       pairToGates;

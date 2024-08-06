@@ -153,7 +153,7 @@ private:
       return qubits[i];
     }
 
-    [[nodiscard]] auto numQubits() const -> size_t { return qubits.size(); }
+    [[nodiscard]] auto numQubits() const { return static_cast<std::uint16_t>(qubits.size()); }
 
     [[nodiscard]] auto getLoadCol(const size_t i) const -> const expr& {
       return loadCols[i];
@@ -352,8 +352,8 @@ public:
         return qubits[i];
       }
 
-      [[nodiscard]] auto numQubits() const -> std::size_t {
-        return qubits.size();
+      [[nodiscard]] auto numQubits() const {
+        return static_cast<std::uint16_t>(qubits.size());
       }
 
       [[nodiscard]] auto getQubits() const -> const std::vector<Qubit>& {
@@ -364,8 +364,8 @@ public:
         return gates[i];
       }
 
-      [[nodiscard]] auto numGates() const -> std::size_t {
-        return gates.size();
+      [[nodiscard]] auto numGates() const {
+        return static_cast<std::uint16_t>(gates.size());
       }
 
       [[nodiscard]] auto getGates() const -> const std::vector<Gate>& {
@@ -397,8 +397,8 @@ public:
       return stages[i];
     }
 
-    [[nodiscard]] auto numStages() const -> std::size_t {
-      return stages.size();
+    [[nodiscard]] auto numStages() const {
+      return static_cast<std::uint16_t>(stages.size());
     }
 
     [[nodiscard]] auto isSat() const -> bool { return sat; }
