@@ -14,8 +14,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <yaml-cpp/node/node.h>
 #include <yaml-cpp/node/detail/iterator.h>
+#include <yaml-cpp/node/node.h>
 #include <z3++.h>
 
 namespace na {
