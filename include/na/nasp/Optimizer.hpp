@@ -8,9 +8,9 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <sys/types.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <sys/types.h>
 
 namespace na {
 

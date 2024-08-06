@@ -1,6 +1,5 @@
-#include "Optimizer.hpp"
-
 #include "Definitions.hpp"
+#include "Optimizer.hpp"
 #include "QuantumComputation.hpp"
 #include "Solver.hpp"
 #include "SolverFactory.hpp"

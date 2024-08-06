@@ -576,7 +576,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
           model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
     }
     std::vector<Result::Gate> resultGates;
-    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size()); ++i) {
+    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size());
+         ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }
@@ -651,7 +652,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
           model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
     }
     std::vector<Result::Gate> resultGates;
-    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size()); ++i) {
+    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size());
+         ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }

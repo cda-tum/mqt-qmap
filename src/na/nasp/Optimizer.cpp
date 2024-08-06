@@ -18,13 +18,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <tuple>
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
-#include <sys/wait.h>
-#include <sys/types.h>
 #include <yaml-cpp/node/parse.h>
 
 namespace na {
@@ -98,8 +97,8 @@ auto Optimizer::waitForChildProcess() -> void {
     // Read the result from the pipe
     std::stringstream msg;
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
-    char              buffer[4096];
-    ssize_t           bytesRead = 0;
+    char    buffer[4096];
+    ssize_t bytesRead = 0;
     while ((bytesRead = read(processData[pid].readPipeFd, buffer,
                              sizeof(buffer) - 1)) > 0) {
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
