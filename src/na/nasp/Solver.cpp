@@ -157,7 +157,7 @@ auto NASolver::getValidTransferTransitionConstraints(
   }
   std::vector<expr> constraints;
   // TODO: check all reserves for the correct capacity
-  constraints.reserve(3 * numQubits);
+  constraints.reserve(3UL * numQubits);
   for (std::uint16_t i = 0; i < numQubits; ++i) {
     // For SLM and Stored: stay at the same position
     constraints.emplace_back(implies(
@@ -395,7 +395,7 @@ auto NASolver::getTransferStageConstraint(const std::uint16_t t) const -> expr {
 auto NASolver::getValidStageConstraints(const std::uint16_t t) const
     -> std::vector<expr> {
   std::vector<expr> constraints;
-  constraints.reserve(numQubits * (5 * numQubits + 3));
+  constraints.reserve(numQubits * (5UL * numQubits + 3UL));
   for (std::uint16_t i = 0; i < numQubits; ++i) {
     // 0 <= x <= maxX
     constraints.emplace_back(

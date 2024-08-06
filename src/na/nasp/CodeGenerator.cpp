@@ -35,30 +35,30 @@ auto CodeGenerator::coordFromDiscrete(
   constexpr auto noInteractionRadius = 10;
   constexpr auto zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
   const auto     dx       = static_cast<std::int64_t>(noInteractionRadius) +
-                  2 * maxHOffset * minAtomDist;
+                  2LL * maxHOffset * minAtomDist;
   const auto dy = static_cast<std::int64_t>(noInteractionRadius) +
-                  2 * maxVOffset * minAtomDist;
+                  2LL * maxVOffset * minAtomDist;
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
-      return {static_cast<std::int64_t>(x) * dx + h * minAtomDist,
-              static_cast<std::int64_t>(y) * dy + v * minAtomDist};
+      return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+              static_cast<std::int64_t>(y) * dy + static_cast<std::int64_t>(v) * minAtomDist};
     }
-    return {static_cast<std::int64_t>(x) * dx + h * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy + v * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+            zoneDist + static_cast<std::int64_t>(y - 1) * dy + static_cast<std::int64_t>(v) * minAtomDist};
   }
   // top storage zone
   if (y < minEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx + h * minAtomDist,
-            static_cast<std::int64_t>(y) * dy + v * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+            static_cast<std::int64_t>(y) * dy + static_cast<std::int64_t>(v) * minAtomDist};
   }
   if (y <= maxEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx + h * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy + v * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+            zoneDist + static_cast<std::int64_t>(y - 1) * dy + static_cast<std::int64_t>(v) * minAtomDist};
   }
-  return {static_cast<std::int64_t>(x) * dx + h * minAtomDist,
-          2 * zoneDist + static_cast<std::int64_t>(y - 2) * dy +
-              v * minAtomDist};
+  return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+          2LL * zoneDist + static_cast<std::int64_t>(y - 2) * dy +
+              static_cast<std::int64_t>(v) * minAtomDist};
 }
 
 auto CodeGenerator::generate(
