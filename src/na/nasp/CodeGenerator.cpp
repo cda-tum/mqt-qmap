@@ -31,11 +31,13 @@ auto CodeGenerator::coordFromDiscrete(
     const std::int32_t v, const std::int32_t maxHOffset,
     const std::int32_t maxVOffset, const std::int32_t minEntanglingY,
     const std::int32_t maxEntanglingY) -> Point {
-  constexpr auto     minAtomDist         = 1;
-  constexpr auto     noInteractionRadius = 10;
-  constexpr auto     zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
-  const auto dx = static_cast<std::int64_t>(noInteractionRadius) + 2 * maxHOffset * minAtomDist;
-  const auto dy = static_cast<std::int64_t>(noInteractionRadius) + 2 * maxVOffset * minAtomDist;
+  constexpr auto minAtomDist         = 1;
+  constexpr auto noInteractionRadius = 10;
+  constexpr auto zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
+  const auto     dx       = static_cast<std::int64_t>(noInteractionRadius) +
+                  2 * maxHOffset * minAtomDist;
+  const auto dy = static_cast<std::int64_t>(noInteractionRadius) +
+                  2 * maxVOffset * minAtomDist;
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {

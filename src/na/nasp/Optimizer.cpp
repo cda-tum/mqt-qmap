@@ -17,11 +17,11 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <sys/wait.h>
 #include <tuple>
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
-#include <sys/wait.h>
 #include <yaml-cpp/yaml.h>
 
 namespace na {
