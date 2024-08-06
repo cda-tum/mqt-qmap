@@ -20,7 +20,7 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
 
 from ._version import version as __version__
 from .clifford_synthesis import optimize_clifford, synthesize_clifford
-from .compile import compile
+from .compile import compile  # noqa: A004
 from .pyqmap import (
     Arch,
     Architecture,
