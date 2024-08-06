@@ -73,25 +73,22 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   return constraints;
 }
 
-auto NASolver::getHaveSamePositionConstraint(const std::uint16_t q0,
-                                             const std::uint16_t q1,
-                                             const std::uint16_t t) const
-    -> expr {
+auto NASolver::getHaveSamePositionConstraint(
+    const std::uint16_t q0, const std::uint16_t q1,
+    const std::uint16_t t) const -> expr {
   return stages[t].getQubit(q0).getX() == stages[t].getQubit(q1).getX() &&
          stages[t].getQubit(q0).getY() == stages[t].getQubit(q1).getY();
 }
 
-auto NASolver::getHaveDifferentPositionConstraint(const std::uint16_t q0,
-                                                  const std::uint16_t q1,
-                                                  const std::uint16_t t) const
-    -> expr {
+auto NASolver::getHaveDifferentPositionConstraint(
+    const std::uint16_t q0, const std::uint16_t q1,
+    const std::uint16_t t) const -> expr {
   return !getHaveSamePositionConstraint(q0, q1, t);
 }
 
 // NOLINTNEXTLINE (bugprone-switch-missing-default-case)
-auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
-                                                  const std::uint16_t t) const
-    -> expr {
+auto NASolver::getAffectedByRydbergBeamConstraint(
+    const std::uint16_t q, const std::uint16_t t) const -> expr {
   switch (storage) {
   case Storage::None:
     return ctx.bool_val(true);
@@ -105,9 +102,8 @@ auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
   }
 }
 
-auto NASolver::getShieldedFromRydbergBeamConstraint(const std::uint16_t q,
-                                                    const std::uint16_t t) const
-    -> expr {
+auto NASolver::getShieldedFromRydbergBeamConstraint(
+    const std::uint16_t q, const std::uint16_t t) const -> expr {
   return !getAffectedByRydbergBeamConstraint(q, t);
 }
 
@@ -514,8 +510,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                      const std::uint16_t newNumQubits,
                      const std::uint16_t newNumStages,
                      const std::uint16_t newNumTransfers,
-                     const bool mindOpsOrder, const bool shieldIdleQubits)
-    -> Result {
+                     const bool          mindOpsOrder,
+                     const bool          shieldIdleQubits) -> Result {
   if (shieldIdleQubits) {
     if (storage == Storage::None) {
       throw std::invalid_argument("No storage zone is available.");
@@ -785,8 +781,8 @@ auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
   return stage;
 }
 
-auto NASolver::Result::yaml(const std::size_t indent, const bool compact) const
-    -> std::string {
+auto NASolver::Result::yaml(const std::size_t indent,
+                            const bool        compact) const -> std::string {
   std::stringstream ss;
   ss << std::boolalpha;
   ss << std::string(indent, ' ') << "sat: " << sat << "\n";

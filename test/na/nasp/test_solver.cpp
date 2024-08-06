@@ -4,9 +4,9 @@
 #include "operations/OpType.hpp"
 
 #include <algorithm>
-#include <stdexcept>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <yaml-cpp/node/parse.h>
