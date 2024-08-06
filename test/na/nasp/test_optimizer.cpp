@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
-TEST(Optimizer, Steane) {
+TEST(Optimizer, SteaneDoubleSidedStorage) {
   const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
