@@ -9,7 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <utility>
+#include <tuple>
 
 TEST(SolverFactory, Create) {
   na::Architecture arch;
