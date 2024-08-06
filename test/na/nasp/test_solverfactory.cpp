@@ -298,4 +298,16 @@ TEST(SolverFactory, CreateExceptions) {
   arch.fromFileStream(archIS, gridSS);
   EXPECT_THROW(std::ignore = na::SolverFactory::create(arch),
                std::invalid_argument);
+
+  auto circ = qc::QuantumComputation(3);
+  circ.h(0);
+  circ.cz(0, 1);
+  circ.cecr(0, 1, 2);
+  // get operations for solver
+  EXPECT_THROW(std::ignore =
+                   na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, false),
+               std::invalid_argument);
+  EXPECT_THROW(std::ignore =
+                   na::SolverFactory::getOpsForSolver(circ, {qc::ECR, 1}, true),
+               std::invalid_argument);
 }
