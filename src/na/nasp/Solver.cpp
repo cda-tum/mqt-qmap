@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 #include <yaml-cpp/node/node.h>
-#include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
 namespace na {

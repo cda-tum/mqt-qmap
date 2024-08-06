@@ -1,9 +1,16 @@
 #include "SolverFactory.hpp"
 
+#include "operations/OpType.hpp"
+#include "Architecture.hpp"
+#include "QuantumComputation.hpp"
+
+#include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
 
 TEST(SolverFactory, Create) {
   na::Architecture arch;

@@ -1,12 +1,14 @@
-#include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "Solver.hpp"
+
+#include "operations/OpType.hpp"
+#include "QuantumComputation.hpp"
 #include "SolverFactory.hpp"
 
-#include <chrono>
+#include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <string>
+#include <utility>
 #include <yaml-cpp/node/parse.h>
 
 TEST(Solver, SteaneDoubleSidedStorage) {

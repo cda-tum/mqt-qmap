@@ -5,6 +5,7 @@
 #include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "na/NAComputation.hpp"
+#include "na/NADefinitions.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"

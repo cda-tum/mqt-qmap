@@ -1,7 +1,14 @@
 #include "CodeGenerator.hpp"
+
+#include "na/NAComputation.hpp"
+#include "operations/OpType.hpp"
+#include "QuantumComputation.hpp"
+#include "Solver.hpp"
 #include "SolverFactory.hpp"
 
+#include <cstdint>
 #include <gtest/gtest.h>
+#include <string>
 
 TEST(CodeGenerator, Generate) {
   const std::string qasm = R"(OPENQASM 2.0;
