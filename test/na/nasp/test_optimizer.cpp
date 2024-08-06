@@ -1,9 +1,13 @@
 #include "Optimizer.hpp"
+
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "Solver.hpp"
 #include "SolverFactory.hpp"
 
+#include <chrono>
 #include <gtest/gtest.h>
+#include <string>
 
 TEST(Optimizer, Steane) {
   const std::string qasm = R"(OPENQASM 2.0;

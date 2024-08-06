@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 #include <yaml-cpp/node/node.h>
-#include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
 namespace na {
@@ -115,7 +114,7 @@ auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
     throw std::invalid_argument(msg.str());
   }
   std::vector<expr> constraints;
-  constraints.reserve(3 * numQubits);
+  constraints.reserve(3UL * numQubits);
   for (std::uint16_t i = 0; i < numQubits; ++i) {
     // For all: AOD/SLM state is preserved
     constraints.emplace_back(implies(getRydbergStageConstraint(t),
@@ -577,7 +576,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
           model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
     }
     std::vector<Result::Gate> resultGates;
-    for (std::uint16_t i = 0; i < gates.size(); ++i) {
+    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size()); ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }
@@ -652,7 +651,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
           model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
     }
     std::vector<Result::Gate> resultGates;
-    for (std::uint16_t i = 0; i < gates.size(); ++i) {
+    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size()); ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
         resultGates.emplace_back(stage.getT(), ops[i]);
       }

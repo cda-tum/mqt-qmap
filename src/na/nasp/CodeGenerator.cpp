@@ -137,7 +137,7 @@ auto CodeGenerator::generate(
       (*it)->execute();
     }
   }
-  for (std::uint16_t t = 1; t < result.numStages(); ++t) {
+  for (std::uint16_t t = 1; t < static_cast<std::uint16_t>(result.numStages()); ++t) {
     std::vector<std::shared_ptr<Point>> newPositions;
     newPositions.reserve(oldPositions.size());
     std::vector<std::shared_ptr<Point>> startPositions;
@@ -146,7 +146,7 @@ auto CodeGenerator::generate(
     std::vector<std::shared_ptr<Point>> loadEndPositions;
     std::vector<std::shared_ptr<Point>> storeStartPositions;
     std::vector<std::shared_ptr<Point>> storeEndPositions;
-    for (std::uint16_t i = 0; i < result.getStage(t).numQubits(); ++i) {
+    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(result.getStage(t).numQubits()); ++i) {
       const auto& q   = result.getStage(t).getQubit(i);
       auto        pos = std::make_shared<Point>(
           coordFromDiscrete(q.getX(), q.getY(), q.getH(), q.getV(), maxHOffset,

@@ -5,7 +5,6 @@
 #include "na/NAComputation.hpp"
 #include "na/NADefinitions.hpp"
 
-#include <cstddef>
 #include <cstdint>
 
 namespace na {

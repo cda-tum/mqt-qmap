@@ -4,10 +4,13 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <unistd.h>
 #include <unordered_map>
+#include <sys/types.h>
 
 namespace na {
 

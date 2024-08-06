@@ -9,6 +9,7 @@
 #include <cmath>
 #include <csignal>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <functional>
@@ -22,13 +23,16 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
-#include <yaml-cpp/yaml.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <yaml-cpp/node/parse.h>
 
 namespace na {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool childProcess = false;
 
-auto handleAlarm(int) -> void {
+auto handleAlarm(int /*unused*/) -> void {
   if (childProcess) {
     // kill the process itself
     kill(getpid(), SIGKILL);
@@ -93,10 +97,12 @@ auto Optimizer::waitForChildProcess() -> void {
   } else if (WIFEXITED(status)) {
     // Read the result from the pipe
     std::stringstream msg;
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
     char              buffer[4096];
     ssize_t           bytesRead = 0;
     while ((bytesRead = read(processData[pid].readPipeFd, buffer,
                              sizeof(buffer) - 1)) > 0) {
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       buffer[bytesRead] = '\0'; // Null-terminate the buffer
       msg << buffer;
     }
