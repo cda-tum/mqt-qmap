@@ -66,7 +66,7 @@ h q[6];
   }
 }
 
-TEST(Solver, NoShieldingFixedTransfers) {
+TEST(Solver, NoShieldingFixedTransfersFixedOrder) {
   const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
@@ -99,6 +99,6 @@ h q[6];
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(pairs, circ.getNqubits(), 3, 0, false, false);
+  const auto result = solver.solve(pairs, circ.getNqubits(), 3, 0, true, false);
   EXPECT_TRUE(result.isSat());
 }
