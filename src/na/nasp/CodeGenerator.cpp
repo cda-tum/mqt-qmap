@@ -41,22 +41,31 @@ auto CodeGenerator::coordFromDiscrete(
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
-      return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
-              static_cast<std::int64_t>(y) * dy + static_cast<std::int64_t>(v) * minAtomDist};
+      return {static_cast<std::int64_t>(x) * dx +
+                  static_cast<std::int64_t>(h) * minAtomDist,
+              static_cast<std::int64_t>(y) * dy +
+                  static_cast<std::int64_t>(v) * minAtomDist};
     }
-    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy + static_cast<std::int64_t>(v) * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx +
+                static_cast<std::int64_t>(h) * minAtomDist,
+            zoneDist + static_cast<std::int64_t>(y - 1) * dy +
+                static_cast<std::int64_t>(v) * minAtomDist};
   }
   // top storage zone
   if (y < minEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
-            static_cast<std::int64_t>(y) * dy + static_cast<std::int64_t>(v) * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx +
+                static_cast<std::int64_t>(h) * minAtomDist,
+            static_cast<std::int64_t>(y) * dy +
+                static_cast<std::int64_t>(v) * minAtomDist};
   }
   if (y <= maxEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy + static_cast<std::int64_t>(v) * minAtomDist};
+    return {static_cast<std::int64_t>(x) * dx +
+                static_cast<std::int64_t>(h) * minAtomDist,
+            zoneDist + static_cast<std::int64_t>(y - 1) * dy +
+                static_cast<std::int64_t>(v) * minAtomDist};
   }
-  return {static_cast<std::int64_t>(x) * dx + static_cast<std::int64_t>(h) * minAtomDist,
+  return {static_cast<std::int64_t>(x) * dx +
+              static_cast<std::int64_t>(h) * minAtomDist,
           2LL * zoneDist + static_cast<std::int64_t>(y - 2) * dy +
               static_cast<std::int64_t>(v) * minAtomDist};
 }

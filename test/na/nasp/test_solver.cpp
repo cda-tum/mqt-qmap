@@ -1,8 +1,7 @@
-#include "Solver.hpp"
-
-#include "operations/OpType.hpp"
 #include "QuantumComputation.hpp"
+#include "Solver.hpp"
 #include "SolverFactory.hpp"
+#include "operations/OpType.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -230,7 +229,8 @@ TEST(Solver, Exceptions) {
   EXPECT_THROW(solver.init(3, 7, 2, 3, 2, 2, 2, 2, 2, 7),
                std::invalid_argument);
   solver.init(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
-  EXPECT_THROW(std::ignore = solver.solve({{0, 1}}, 3, 1, false, true), std::invalid_argument);
+  EXPECT_THROW(std::ignore = solver.solve({{0, 1}}, 3, 1, false, true),
+               std::invalid_argument);
 }
 
 TEST(Solver, YAMLRoundTrip) {
@@ -268,6 +268,7 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
-  const auto resultRT = na::NASolver::Result::fromYAML(YAML::Load(result.yaml())); // Round-Tripped result
+  const auto resultRT = na::NASolver::Result::fromYAML(
+      YAML::Load(result.yaml())); // Round-Tripped result
   EXPECT_EQ(resultRT, result);
 }

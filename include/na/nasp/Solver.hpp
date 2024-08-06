@@ -153,7 +153,9 @@ private:
       return qubits[i];
     }
 
-    [[nodiscard]] auto numQubits() const { return static_cast<std::uint16_t>(qubits.size()); }
+    [[nodiscard]] auto numQubits() const {
+      return static_cast<std::uint16_t>(qubits.size());
+    }
 
     [[nodiscard]] auto getLoadCol(const size_t i) const -> const expr& {
       return loadCols[i];

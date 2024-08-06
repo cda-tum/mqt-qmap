@@ -1,10 +1,9 @@
 #include "CodeGenerator.hpp"
-
-#include "na/NAComputation.hpp"
-#include "operations/OpType.hpp"
 #include "QuantumComputation.hpp"
 #include "Solver.hpp"
 #include "SolverFactory.hpp"
+#include "na/NAComputation.hpp"
+#include "operations/OpType.hpp"
 
 #include <cstdint>
 #include <gtest/gtest.h>
