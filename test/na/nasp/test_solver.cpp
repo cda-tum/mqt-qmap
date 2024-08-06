@@ -1,7 +1,6 @@
-#include "Solver.hpp"
-
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
+#include "Solver.hpp"
 #include "SolverFactory.hpp"
 
 #include <chrono>
@@ -41,12 +40,13 @@ h q[6];
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto resultUnsat = solver.solve(pairs, circ.getNqubits(), 4, false, true);
+  const auto resultUnsat =
+      solver.solve(pairs, circ.getNqubits(), 4, false, true);
   EXPECT_FALSE(resultUnsat.isSat());
   const auto resultSat = solver.solve(pairs, circ.getNqubits(), 5, false, true);
   EXPECT_TRUE(resultSat.isSat());
   EXPECT_TRUE(resultSat.front().isRydberg());
-  for(const auto& q : resultSat.front().getQubits()) {
+  for (const auto& q : resultSat.front().getQubits()) {
     EXPECT_GE(q.getX(), 0);
     EXPECT_LE(q.getX(), 3);
     EXPECT_GE(q.getY(), 0);
@@ -55,14 +55,15 @@ h q[6];
     EXPECT_LE(q.getC(), 2);
     EXPECT_GE(q.getR(), 0);
     EXPECT_LE(q.getR(), 3);
-    EXPECT_GE(q.getH(),-2);
+    EXPECT_GE(q.getH(), -2);
     EXPECT_LE(q.getH(), 2);
-    EXPECT_GE(q.getV(),-2);
+    EXPECT_GE(q.getV(), -2);
     EXPECT_LE(q.getV(), 2);
     EXPECT_NO_THROW(std::ignore = q.isAOD());
   }
-  for(const auto& g : resultSat.front().getGates()) {
-    EXPECT_TRUE(std::find(pairs.cbegin(), pairs.cend(), g.getQubits()) != pairs.cend());
+  for (const auto& g : resultSat.front().getGates()) {
+    EXPECT_TRUE(std::find(pairs.cbegin(), pairs.cend(), g.getQubits()) !=
+                pairs.cend());
   }
 }
 
