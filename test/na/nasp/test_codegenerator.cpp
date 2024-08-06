@@ -38,6 +38,6 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
-  const auto & comp = na::CodeGenerator::generate(circ, result, 2, 2, 2, 4);
+  const auto& comp = na::CodeGenerator::generate(circ, result, 2, 2, 2, 4);
   EXPECT_TRUE(comp.validateAODConstraints());
 }
