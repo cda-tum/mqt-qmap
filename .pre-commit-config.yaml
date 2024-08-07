@@ -86,11 +86,10 @@ repos:
           - mqt.qcec
 
   # Check for spelling
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.23.6
     hooks:
-      - id: codespell
-        args: ["-L", "wille,linz,applys", "--skip", "*.ipynb"]
+      - id: typos
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
