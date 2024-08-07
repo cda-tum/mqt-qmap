@@ -105,13 +105,13 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
     }
     const auto leastAdmissibleColor =
         static_cast<Color>(i + minAdmissibleColor);
-    bool isAdmissable = true;
+    bool isAdmissible = true;
     for (const auto& [f, k] : coloring) {
       if (f.first == v or f.second == v) {
         const qc::Qubit w = f.first == v ? f.second : f.first;
         if (k > leastAdmissibleColor) {
           if (partialOrder.isReachable(w, u)) {
-            isAdmissable = false;
+            isAdmissible = false;
             break;
           }
         } else if (k < leastAdmissibleColor) {
@@ -129,12 +129,12 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
 
         if ((rankOfU > ranks.at({w, k}) && partialOrder.isReachable(w, u)) ||
             (rankOfU < ranks.at({w, k}) && partialOrder.isReachable(u, w))) {
-          isAdmissable = false;
+          isAdmissible = false;
           break;
         }
       }
     }
-    if (isAdmissable) {
+    if (isAdmissible) {
       return leastAdmissibleColor;
     }
   }

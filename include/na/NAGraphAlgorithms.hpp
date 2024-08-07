@@ -82,7 +82,7 @@ public:
    * @param partialOrder the partial order of the fixed vertices induced by the
    * coloring so far
    * @param ranks the ranks of the vertices in the sequence, i.e., a mapping of
-   * nodes in the sequence to their index in the seuqence, i.e., their rank
+   * nodes in the sequence to their index in the sequence, i.e., their rank
    * @return the least admissible color
    */
   [[nodiscard]] static auto getLeastAdmissibleColor(
@@ -130,7 +130,7 @@ public:
    * @brief Groups the vertices in the sequence by connected components.
    * @param g the graph with connected components
    * @param sequence the sequence of vertices
-   * @return a new seuqence with the vertices grouped by connected components
+   * @return a new sequence with the vertices grouped by connected components
    */
   [[nodiscard]] static auto groupByConnectedComponent(
       const InteractionGraph&       g,

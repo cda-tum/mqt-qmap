@@ -152,7 +152,8 @@ protected:
 
 TEST_F(NAArchitecture, ScopeString) {
   EXPECT_EQ(na::getScopeOfString("local"), na::Scope::Local);
-  EXPECT_EQ(na::getScopeOfString("gLoBaL"), na::Scope::Global);
+  EXPECT_EQ(na::getScopeOfString("gLoBaL"), // spellchecker:disable-line
+            na::Scope::Global);
   EXPECT_THROW(na::getScopeOfString(""), std::invalid_argument);
 }
 

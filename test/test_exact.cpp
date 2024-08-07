@@ -469,7 +469,7 @@ TEST_F(ExactTest, CommanderEncodingRigettiArch) {
   SUCCEED() << "Mapping successful";
 }
 
-TEST_F(ExactTest, NoMeasurmentsAdded) {
+TEST_F(ExactTest, NoMeasurementsAdded) {
   // configure to not include measurements after mapping
   settings.addMeasurementsToMappedCircuit = false;
 

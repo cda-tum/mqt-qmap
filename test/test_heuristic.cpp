@@ -1093,7 +1093,7 @@ TEST(Functionality, InvalidSettings) {
   EXPECT_NO_THROW(mapper.map(config));
 }
 
-TEST(Functionality, NoMeasurmentsAdded) {
+TEST(Functionality, NoMeasurementsAdded) {
   using namespace qc::literals;
   // construct circuit
   qc::QuantumComputation qc{4U};
