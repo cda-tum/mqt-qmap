@@ -910,7 +910,8 @@ PYBIND11_MODULE(pyqmap, m) {
       "to choose the best one.")
       .def(
           py::init<const na::NeutralAtomArchitecture&, na::MapperParameters&>(),
-          "Create Hybrid Synthesis Mapper with mapper parameters", "arch"_a,
+          "Create Hybrid Synthesis Mapper with mapper parameters",
+          py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "arch"_a,
           "params"_a = na::MapperParameters())
       .def("set_parameters", &na::HybridSynthesisMapper::setParameters,
            "Set the parameters for the Hybrid Synthesis Mapper", "params"_a)

@@ -92,3 +92,20 @@ def test_adjacency_matrix() -> None:
     for i in range(circ_size):
         for j in range(circ_size):
             assert adj_mat[i, j] == adj_mat[j, i]
+
+
+def help_create_arch(arch_filename: str) -> NeutralAtomHybridArchitecture:
+    """Helper function to create a hybrid Neutral Atom architecture."""
+    return NeutralAtomHybridArchitecture(str(arch_dir / arch_filename))
+
+def help_create_mapper(arch_filename: str) -> HybridSynthesisMapper:
+    """Helper function to create a hybrid synthesis mapper."""
+    arch = help_create_arch(arch_filename)
+    synthesis_mapper = HybridSynthesisMapper(arch)
+    synthesis_mapper.init_mapping(3)
+    return synthesis_mapper
+def test_keep_alive() -> None:
+    """Test the keep alive functionality of the hybrid Neutral Atom synthesis mapper."""
+    synthesis_mapper = help_create_mapper("rubidium.json")
+    synthesis_mapper.append_with_mapping(qc1)
+    _ = synthesis_mapper.get_circuit_adjacency_matrix()
