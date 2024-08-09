@@ -290,9 +290,9 @@ class SubarchitectureOrder:
         # init orders
         for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
-                self.subarch_order[(n, i)] = set()
-                self.desirable_subarchitectures[(n, i)] = set()
-                self.isomorphisms[(n, i)] = {}
+                self.subarch_order[n, i] = set()
+                self.desirable_subarchitectures[n, i] = set()
+                self.isomorphisms[n, i] = {}
 
     def __compute_subarch_order(self) -> None:
         """Compute subarchitecture order."""
@@ -301,23 +301,23 @@ class SubarchitectureOrder:
                 for j, parent_sg in enumerate(self.sgs[n + 1]):
                     matcher = rx.graph_vf2_mapping(parent_sg, sg, subgraph=True)
                     for iso in matcher:
-                        self.subarch_order[(n, i)].add((n + 1, j))
+                        self.subarch_order[n, i].add((n + 1, j))
                         iso_rev = {val: key for key, val in iso.items()}
-                        self.isomorphisms[(n, i)][(n + 1, j)] = iso_rev
+                        self.isomorphisms[n, i][n + 1, j] = iso_rev
                         break  # One isomorphism suffices
 
     def __complete_isos(self) -> None:
         """Complete isomorphisms."""
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
-                for _, i_prime in self.subarch_order[(n, i)]:
+                for _, i_prime in self.subarch_order[n, i]:
                     self.__combine_iso_with_parent(n, i, i_prime)
 
     def __combine_iso_with_parent(self, n: int, i: int, j: int) -> None:
         """Combine all isomorphisms from sgs[n][i] with those from sgs[n+1][j]."""
-        first = self.isomorphisms[(n, i)][(n + 1, j)]
-        for (row, k), second in self.isomorphisms[(n + 1, j)].items():
-            self.isomorphisms[(n, i)][(row, k)] = SubarchitectureOrder.__combine_isos(first, second)
+        first = self.isomorphisms[n, i][n + 1, j]
+        for (row, k), second in self.isomorphisms[n + 1, j].items():
+            self.isomorphisms[n, i][row, k] = SubarchitectureOrder.__combine_isos(first, second)
 
     @staticmethod
     def __combine_isos(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
@@ -334,11 +334,11 @@ class SubarchitectureOrder:
 
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
-                new_rel = set(po[(n, i)])
-                po_trans[(n, i)] = new_rel.copy()
-                for n_prime, i_prime in po_trans[(n, i)]:
-                    new_rel = new_rel.union(po_trans[(n_prime, i_prime)])
-                po_trans[(n, i)] = new_rel
+                new_rel = set(po[n, i])
+                po_trans[n, i] = new_rel.copy()
+                for n_prime, i_prime in po_trans[n, i]:
+                    new_rel = new_rel.union(po_trans[n_prime, i_prime])
+                po_trans[n, i] = new_rel
 
         return po_trans
 
@@ -357,7 +357,7 @@ class SubarchitectureOrder:
         po_inv = PartialOrder({})
         for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
-                po_inv[(n, i)] = set()
+                po_inv[n, i] = set()
         for k, v in po.items():
             for e in v:
                 po_inv[e].add(k)
@@ -367,7 +367,7 @@ class SubarchitectureOrder:
         """Check if sgs[n][i] is less than sgs[n_prime][i_prime] in the path order."""
         lhs = self.sgs[n][i]
         rhs = self.sgs[n_prime][i_prime]
-        iso = self.isomorphisms[(n, i)][(n_prime, i_prime)]
+        iso = self.isomorphisms[n, i][n_prime, i_prime]
         for v in range(lhs.num_nodes()):
             for w in range(lhs.num_nodes()):
                 if v is w:
@@ -384,11 +384,11 @@ class SubarchitectureOrder:
         self.__complete_isos()
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
-                val = self.isomorphisms[(n, i)]
+                val = self.isomorphisms[n, i]
                 for n_prime, i_prime in val:
                     if self.__path_order_less(n, i, n_prime, i_prime):
-                        self.desirable_subarchitectures[(n, i)].add((n_prime, i_prime))
-                des = list(self.desirable_subarchitectures[(n, i)])
+                        self.desirable_subarchitectures[n, i].add((n_prime, i_prime))
+                des = list(self.desirable_subarchitectures[n, i])
                 des.sort()
                 new_des: set[tuple[int, int]] = set()
                 for j, (n_prime, i_prime) in enumerate(reversed(des)):
@@ -396,9 +396,9 @@ class SubarchitectureOrder:
                     if not any((n_prime, i_prime) in self.subarch_order[k] for k in des[:idx]):
                         new_des.add((n_prime, i_prime))
 
-                self.desirable_subarchitectures[(n, i)] = new_des
-                if len(self.desirable_subarchitectures[(n, i)]) == 0:
-                    self.desirable_subarchitectures[(n, i)].add((n, i))
+                self.desirable_subarchitectures[n, i] = new_des
+                if len(self.desirable_subarchitectures[n, i]) == 0:
+                    self.desirable_subarchitectures[n, i].add((n, i))
         self.desirable_subarchitectures[self.arch.num_nodes(), 0] = {(self.arch.num_nodes(), 0)}
 
     def __cand(self, nqubits: int) -> set[tuple[int, int]]:
