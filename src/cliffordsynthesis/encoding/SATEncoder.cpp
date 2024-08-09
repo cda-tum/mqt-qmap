@@ -81,7 +81,7 @@ void SATEncoder::createFormulation() {
   gateEncoder->encodeGates();
 
   if (config.useSymmetryBreaking) {
-    gateEncoder->encodeSymmetryBreakingConstraints(config.couplingMap);
+    gateEncoder->encodeSymmetryBreakingConstraints();
   }
 
   objectiveEncoder =

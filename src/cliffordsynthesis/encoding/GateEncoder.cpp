@@ -68,7 +68,7 @@ void GateEncoder::Variables::collectSingleQubitGateVariables(
 
 void GateEncoder::Variables::collectTwoQubitGateVariables(
     const std::size_t pos, const std::size_t qubit, const bool target,
-    LogicVector& variables, const CouplingMap cm) const {
+    LogicVector& variables) const {
   const auto& twoQubitGates = gC[pos];
   const auto  n             = twoQubitGates.size();
   for (std::size_t q = 0; q < n; ++q) {
@@ -222,11 +222,11 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
   }
 }
 
-void GateEncoder::encodeSymmetryBreakingConstraints(const CouplingMap couplingMap) {
+void GateEncoder::encodeSymmetryBreakingConstraints() {
   PLOG_DEBUG << "Encoding symmetry breaking constraints.";
   for (std::size_t t = 0U; t < T; ++t) {
     assertSingleQubitGateSymmetryBreakingConstraints(t);
-    assertTwoQubitGateSymmetryBreakingConstraints(t, couplingMap);
+    assertTwoQubitGateSymmetryBreakingConstraints(t);
   }
 }
 
@@ -336,9 +336,13 @@ void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
 }
 
 void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
-    const std::size_t pos, const CouplingMap cm) {
+    const std::size_t pos) {
   for (std::size_t ctrl = 1U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < ctrl; ++trgt) {
+      // avoid unnecessary constraints if CNOT cannot be applied anyways
+      if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
+        continue;
+      }
       assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);
     }
   }

@@ -18,7 +18,7 @@ void SingleGateEncoder::assertConsistency() const {
   for (std::size_t t = 0U; t < T; ++t) {
     for (std::size_t q = 0U; q < N; ++q) {
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, true, gateVariables, couplingMap);
+      vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
     }
     IF_PLOG(plog::verbose) {
       PLOG_VERBOSE << "Gate variables at time " << t;
@@ -67,7 +67,7 @@ void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
       }
       if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
         PLOG_DEBUG << "Asserting no CNOT on " << ctrl << " and " << trgt;
-        lb->assertFormula(LogicTerm(!twoQubitGates[ctrl][trgt]));
+        lb->assertFormula(!twoQubitGates[ctrl][trgt]);
         continue;
       }
       const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);

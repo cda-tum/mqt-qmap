@@ -19,8 +19,8 @@ void encoding::MultiGateEncoder::assertConsistency() const {
     for (std::size_t q = 0U; q < N; ++q) {
       LogicVector gateVariables{};
       vars.collectSingleQubitGateVariables(t, q, gateVariables);
-      vars.collectTwoQubitGateVariables(t, q, true, gateVariables, couplingMap);
-      vars.collectTwoQubitGateVariables(t, q, false, gateVariables, couplingMap);
+      vars.collectTwoQubitGateVariables(t, q, true, gateVariables);
+      vars.collectTwoQubitGateVariables(t, q, false, gateVariables);
 
       IF_PLOG(plog::verbose) {
         PLOG_VERBOSE << "Gate variables at time " << t << " and qubit " << q;
@@ -79,7 +79,7 @@ void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
       // if no connection between ctrl and trgt then assert variable is false
       if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
         PLOG_DEBUG << "Asserting no CNOT on " << ctrl << " and " << trgt;
-        lb->assertFormula(LogicTerm(!twoQubitGates[ctrl][trgt]));
+        lb->assertFormula(!twoQubitGates[ctrl][trgt]);
         continue;
       }
       const auto changes = createTwoQubitGateConstraint(pos, ctrl, trgt);

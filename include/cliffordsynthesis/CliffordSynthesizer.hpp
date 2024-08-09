@@ -12,6 +12,7 @@
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 #include "plog/Log.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <memory>
@@ -26,25 +27,25 @@ class CliffordSynthesizer {
 public:
   CliffordSynthesizer() = default;
   CliffordSynthesizer(Tableau initial, Tableau target)
-      : initialTableau(std::move(initial)), targetTableau(std::move(target)), couplingMap(getFullyConnectedMap(target.getQubitCount())) {}
+      : initialTableau(std::move(initial)), targetTableau(std::move(target)), couplingMap(getFullyConnectedMap(static_cast<std::uint16_t>(target.getQubitCount()))) {}
   CliffordSynthesizer(Tableau initial, Tableau target, CouplingMap qm)
       : initialTableau(std::move(initial)), targetTableau(std::move(target)), couplingMap(std::move(qm)) {}
   explicit CliffordSynthesizer(Tableau target)
       : initialTableau(target.getQubitCount(), target.hasDestabilizers()),
         targetTableau(std::move(target)),
-        couplingMap(getFullyConnectedMap(target.getQubitCount())) {}
+        couplingMap(getFullyConnectedMap(static_cast<std::uint16_t>(target.getQubitCount()))) {}
   CliffordSynthesizer(Tableau initial, qc::QuantumComputation& qc)
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       initialTableau.hasDestabilizers()),
-        couplingMap(getFullyConnectedMap(initial.getQubitCount())),
+        couplingMap(getFullyConnectedMap(static_cast<std::uint16_t>(initial.getQubitCount()))),
         initialCircuit(std::make_shared<qc::QuantumComputation>(qc)) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
                                const bool useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
-        couplingMap(getFullyConnectedMap(qc.getNqubits())),
+        couplingMap(getFullyConnectedMap(static_cast<std::uint16_t>(qc.getNqubits()))),
         initialCircuit(std::make_shared<qc::QuantumComputation>(qc)) {}
   explicit CliffordSynthesizer(Tableau target, CouplingMap qm)
       : initialTableau(target.getQubitCount(), target.hasDestabilizers()),

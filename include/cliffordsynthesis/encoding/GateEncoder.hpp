@@ -38,7 +38,7 @@ public:
                                          logicbase::LogicVector& variables) const;
     void collectTwoQubitGateVariables(std::size_t pos, std::size_t qubit,
                                       bool                    target,
-                                      logicbase::LogicVector& variables, CouplingMap cm) const;
+                                      logicbase::LogicVector& variables) const;
   };
 
   // variable creation
@@ -51,7 +51,7 @@ public:
     assertGateConstraints();
   }
 
-  virtual void encodeSymmetryBreakingConstraints(CouplingMap couplingMap);
+  virtual void encodeSymmetryBreakingConstraints();
 
   // extracting the circuit
   void extractCircuitFromModel(Results& res, logicbase::Model& model);
@@ -157,7 +157,7 @@ protected:
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);
-  virtual void assertTwoQubitGateSymmetryBreakingConstraints(std::size_t pos, CouplingMap cm);
+  virtual void assertTwoQubitGateSymmetryBreakingConstraints(std::size_t pos);
 
   virtual void assertSingleQubitGateOrderConstraints(std::size_t pos,
                                                      std::size_t qubit) = 0;
