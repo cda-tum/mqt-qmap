@@ -22,9 +22,9 @@
 class TestNAGraph : public testing::Test {
 protected:
   qc::QuantumComputation qc;
-  qc::Layer              layer;
-  na::InteractionGraph   graph{};
-  void                   SetUp() override {
+  qc::Layer layer;
+  na::InteractionGraph graph{};
+  void SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
     qc.cz(1, 6);
@@ -191,7 +191,7 @@ TEST_F(TestNAGraph, SequenceOrdering) {
 TEST_F(TestNAGraph, InteractionExists) {
   const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
-  const auto& fixed    = sequence.second;
+  const auto& fixed = sequence.second;
   // check that all interactions are part of the interaction graph
   for (const auto& seq : moveable) {
     for (const auto& s : seq) {
@@ -215,13 +215,13 @@ TEST_F(TestNAGraph, CoveredInteractions) {
   std::vector coveredEdgesVec(coveredEdges.cbegin(), coveredEdges.cend());
   const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
-  const auto& fixed    = sequence.second;
+  const auto& fixed = sequence.second;
   // check that all interactions that are covered by the independent set are
   // part of the sequence
   for (const auto& seq : moveable) {
     for (const auto& s : seq) {
-      const auto  p = s.first;
-      const auto  x = s.second;
+      const auto p = s.first;
+      const auto x = s.second;
       const auto& qIt =
           std::find_if(fixed.cbegin(), fixed.cend(),
                        [&](const auto& q) { return q.second == x; });

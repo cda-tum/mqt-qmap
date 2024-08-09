@@ -37,14 +37,14 @@ void HardwareQubits::initNearbyQubits() {
 }
 
 void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
-  std::queue<HwQubit>  q;
-  std::vector<bool>    visited(swapDistances.size(), false);
+  std::queue<HwQubit> q;
+  std::vector<bool> visited(swapDistances.size(), false);
   std::vector<HwQubit> parent(swapDistances.size(), q2);
 
   q.push(q1);
   visited[q1] = true;
-  parent[q1]  = q1;
-  bool found  = false;
+  parent[q1] = q1;
+  bool found = false;
   while (!q.empty() && !found) {
     auto current = q.front();
     q.pop();
@@ -52,7 +52,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
       if (!visited[nearbyQubit]) {
         q.push(nearbyQubit);
         visited[nearbyQubit] = true;
-        parent[nearbyQubit]  = current;
+        parent[nearbyQubit] = current;
         if (nearbyQubit == q2) {
           found = true;
           break;
@@ -66,7 +66,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
   }
   // recreate path
   std::vector<HwQubit> path;
-  auto                 current = q2;
+  auto current = q2;
   while (current != q1) {
     path.emplace_back(current);
     current = parent[current];
@@ -129,7 +129,7 @@ std::vector<Swap> HardwareQubits::getNearbySwaps(HwQubit q) const {
 
 void HardwareQubits::computeNearbyQubits(HwQubit q) {
   std::set<HwQubit> newNearbyQubits;
-  auto              coordQ = hwToCoordIdx.at(q);
+  auto coordQ = hwToCoordIdx.at(q);
   for (const auto& coord : hwToCoordIdx) {
     if (coord.first == q) {
       continue;
@@ -203,7 +203,7 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
   // return the closest free coord in general
   // and the closest free coord in the given direction
   std::vector<CoordIndex> closestFreeCoords;
-  std::queue<CoordIndex>  queue;
+  std::queue<CoordIndex> queue;
   queue.push(coord);
   std::set<CoordIndex> visited;
   visited.emplace(coord);

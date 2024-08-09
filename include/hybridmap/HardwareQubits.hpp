@@ -36,10 +36,10 @@ namespace na {
 class HardwareQubits {
 protected:
   const NeutralAtomArchitecture* arch;
-  qc::Permutation                hwToCoordIdx;
-  SymmetricMatrix<SwapDistance>  swapDistances;
-  std::map<HwQubit, HwQubits>    nearbyQubits;
-  qc::Permutation                initialHwPos;
+  qc::Permutation hwToCoordIdx;
+  SymmetricMatrix<SwapDistance> swapDistances;
+  std::map<HwQubit, HwQubits> nearbyQubits;
+  qc::Permutation initialHwPos;
 
   /**
    * @brief Initializes the swap distances between the hardware qubits for the
@@ -82,8 +82,8 @@ protected:
 public:
   // Constructors
   HardwareQubits(const NeutralAtomArchitecture& architecture,
-                 InitialCoordinateMapping       initialCoordinateMapping,
-                 uint32_t                       seed)
+                 InitialCoordinateMapping initialCoordinateMapping,
+                 uint32_t seed)
       : arch(&architecture), swapDistances(architecture.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:

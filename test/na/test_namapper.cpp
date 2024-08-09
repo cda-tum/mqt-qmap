@@ -106,10 +106,10 @@ auto validateAODConstraints(const NAComputation& comp) -> bool {
 }
 
 auto retrieveQuantumComputation(const NAComputation& nac,
-                                const Architecture&  arch)
+                                const Architecture& arch)
     -> qc::QuantumComputation {
-  qc::QuantumComputation               qComp(nac.getInitialPositions().size());
-  std::vector<Point>                   positionOfQubits;
+  qc::QuantumComputation qComp(nac.getInitialPositions().size());
+  std::vector<Point> positionOfQubits;
   std::unordered_map<Point, qc::Qubit> positionToQubit;
   positionOfQubits.reserve(nac.getInitialPositions().size());
   qc::Qubit n = 0;
@@ -180,15 +180,15 @@ auto retrieveQuantumComputation(const NAComputation& nac,
 }
 
 auto checkEquivalence(const qc::QuantumComputation& circ,
-                      const NAComputation&          nac,
-                      const Architecture&           arch) -> bool {
-  auto            naQComp = retrieveQuantumComputation(nac, arch);
+                      const NAComputation& nac,
+                      const Architecture& arch) -> bool {
+  auto naQComp = retrieveQuantumComputation(nac, arch);
   const qc::Layer qLayer(circ);
-  int             line = 0;
+  int line = 0;
   for (const auto& op : naQComp) {
     ++line;
     const auto& executableSet = qLayer.getExecutableSet();
-    const auto& it            = std::find_if(
+    const auto& it = std::find_if(
         executableSet.begin(), executableSet.end(),
         [&op](const std::shared_ptr<qc::Layer::DAGVertex>& vertex) {
           return *vertex->getOperation() == *op;
@@ -314,7 +314,7 @@ TEST(NAMapper, Exceptions) {
           }
       ]
   })");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
   for (std::size_t y = 0; y <= 36; y += 12) {
@@ -468,7 +468,7 @@ TEST(NAMapper, QAOA10) {
           }
       ]
   })");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
   for (std::size_t y = 0; y <= 36; y += 12) {
@@ -749,8 +749,8 @@ rz(3.9927041) q[3];
 rz(3.9927041) q[4];
 rz(3.9927041) q[5];
 rz(3.9927041) q[7];)";
-  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
-  const auto&       arch = na::Architecture(archIS, gridSS);
+  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(
@@ -882,7 +882,7 @@ TEST(NAMapper, QAOA16Narrow) {
       ]
   }
   )");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
   for (std::size_t y = 0; y <= 36; y += 12) {
@@ -1002,8 +1002,8 @@ ry(0.3223291) q;
 cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
-  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
-  const auto&       arch = na::Architecture(archIS, gridSS);
+  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(
@@ -1118,7 +1118,7 @@ TEST(NAMapper, QAOA16NarrowEntangling) {
       ]
   }
   )");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
   for (std::size_t y = 0; y <= 36; y += 12) {
@@ -1238,8 +1238,8 @@ ry(0.3223291) q;
 cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
-  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
-  const auto&       arch = na::Architecture(archIS, gridSS);
+  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& arch = na::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
   na::NAMapper mapper(
       arch, na::Configuration(
