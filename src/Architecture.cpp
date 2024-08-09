@@ -5,18 +5,32 @@
 
 #include "Architecture.hpp"
 
+#include "configuration/AvailableArchitecture.hpp"
 #include "utils.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <istream>
+#include <limits>
+#include <ostream>
+#include <queue>
+#include <regex>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
   std::stringstream ss{getCouplingMapSpecification(architecture)};
   name = toString(architecture);
   loadCouplingMap(ss);
-}
-
-void Architecture::loadCouplingMap(std::istream& is) {
-  loadCouplingMap(std::move(is));
 }
 
 void Architecture::loadCouplingMap(const std::string& filename) {
@@ -31,7 +45,7 @@ void Architecture::loadCouplingMap(const std::string& filename) {
   }
 }
 
-void Architecture::loadCouplingMap(std::istream&& is) {
+void Architecture::loadCouplingMap(std::istream& is) {
   couplingMap.clear();
   properties.clear();
   std::string line;
@@ -72,10 +86,6 @@ void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
   createDistanceTable();
 }
 
-void Architecture::loadProperties(std::istream& is) {
-  loadProperties(std::move(is));
-}
-
 void Architecture::loadProperties(const std::string& filename) {
   const std::size_t slash = filename.find_last_of('/');
   const std::size_t dot   = filename.find_last_of('.');
@@ -91,7 +101,7 @@ void Architecture::loadProperties(const std::string& filename) {
   }
 }
 
-void Architecture::loadProperties(std::istream&& is) {
+void Architecture::loadProperties(std::istream& is) {
   static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
                                           "rz", "sx", "x"};
 
@@ -275,10 +285,8 @@ void Architecture::createFidelityTable() {
   }
 
   fidelityDistanceTables.clear();
-  if (fidelityAvailable) {
-    Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
-                                 swapFidelityCosts);
-  }
+  Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
+                               swapFidelityCosts);
 }
 
 std::uint64_t
@@ -749,5 +757,5 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   for (const auto& edge : cm) {
     os << "(" << edge.first << " " << edge.second << ") ";
   }
-  os << "}" << std::endl;
+  os << "}\n";
 }

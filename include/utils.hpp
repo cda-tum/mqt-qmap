@@ -5,18 +5,18 @@
 
 #pragma once
 
-#include "operations/Operation.hpp"
+#include "operations/OpType.hpp"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <optional>
-#include <queue>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using Matrix      = std::vector<std::vector<double>>;

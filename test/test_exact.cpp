@@ -17,6 +17,7 @@
 #include "exact/ExactMapper.hpp"
 #include "operations/Control.hpp"
 #include "operations/OpType.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <cstdint>

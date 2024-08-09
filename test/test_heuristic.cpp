@@ -1266,7 +1266,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/architecture.json";
   }
-  const auto archJson = nlohmann::json::parse(archFile);
+  const auto archJson = nlohmann::basic_json<>::parse(archFile);
   EXPECT_EQ(archJson["name"], architecture.getName());
   EXPECT_EQ(archJson["nqubits"], architecture.getNqubits());
   EXPECT_EQ(archJson["distances"], architecture.getDistanceTable());
@@ -1320,7 +1320,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/mapping_result.json";
   }
-  const auto  resultJson = nlohmann::json::parse(resultFile);
+  const auto  resultJson = nlohmann::basic_json<>::parse(resultFile);
   const auto& configJson = resultJson["config"];
   EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
             settings.addMeasurementsToMappedCircuit);
@@ -1440,7 +1440,7 @@ TEST(Functionality, DataLogger) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << "/layer_"
              << i << ".json";
     }
-    const auto        layerJson   = nlohmann::json::parse(layerFile);
+    const auto        layerJson   = nlohmann::basic_json<>::parse(layerFile);
     const std::size_t finalNodeId = layerJson["final_node_id"];
     EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),

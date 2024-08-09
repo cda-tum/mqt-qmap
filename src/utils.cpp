@@ -5,7 +5,18 @@
 
 #include "utils.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 void Dijkstra::buildTable(const CouplingMap& couplingMap, Matrix& distanceTable,
                           const Matrix& edgeWeights) {

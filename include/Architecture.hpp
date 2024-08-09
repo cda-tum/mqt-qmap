@@ -6,16 +6,20 @@
 #pragma once
 
 #include "configuration/AvailableArchitecture.hpp"
-#include "nlohmann/json.hpp"
+#include "operations/OpType.hpp"
 #include "utils.hpp"
 
-#include <fstream>
-#include <functional>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <map>
-#include <regex>
+#include <nlohmann/json.hpp>
+#include <set>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 constexpr std::uint8_t GATES_OF_BIDIRECTIONAL_SWAP  = 3U;
@@ -70,16 +74,15 @@ public:
     [[nodiscard]] std::uint16_t getNqubits() const { return nq; }
     void                        setNqubits(std::uint16_t nqs) { nq = nqs; }
 
-    Property<std::uint16_t, Property<qc::OpType, double>>
-        singleQubitErrorRate{};
+    Property<std::uint16_t, Property<qc::OpType, double>> singleQubitErrorRate;
     Property<std::uint16_t,
              Property<std::uint16_t, Property<qc::OpType, double>>>
-                                         twoQubitErrorRate{};
-    Property<std::uint16_t, double>      readoutErrorRate{};
-    Property<std::uint16_t, double>      t1Time{};
-    Property<std::uint16_t, double>      t2Time{};
-    Property<std::uint16_t, double>      qubitFrequency{};
-    Property<std::uint16_t, std::string> calibrationDate{};
+                                         twoQubitErrorRate;
+    Property<std::uint16_t, double>      readoutErrorRate;
+    Property<std::uint16_t, double>      t1Time;
+    Property<std::uint16_t, double>      t2Time;
+    Property<std::uint16_t, double>      qubitFrequency;
+    Property<std::uint16_t, std::string> calibrationDate;
 
     // convenience functions
     void setSingleQubitErrorRate(std::uint16_t      qubit,
@@ -142,8 +145,8 @@ public:
              qubitFrequency.empty() && calibrationDate.empty();
     }
 
-    [[nodiscard]] nlohmann::json json() const {
-      nlohmann::json json;
+    [[nodiscard]] nlohmann::basic_json<> json() const {
+      nlohmann::basic_json json;
       if (empty()) {
         return json;
       }
@@ -197,17 +200,15 @@ public:
     [[nodiscard]] std::string toString() const { return json().dump(2); }
 
   protected:
-    std::string   name{};
+    std::string   name;
     std::uint16_t nq{};
   };
 
   void loadCouplingMap(std::istream& is);
-  void loadCouplingMap(std::istream&& is);
   void loadCouplingMap(const std::string& filename);
   void loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm);
   void loadCouplingMap(AvailableArchitecture architecture);
   void loadProperties(std::istream& is);
-  void loadProperties(std::istream&& is);
   void loadProperties(const std::string& filename);
   void loadProperties(const Properties& props);
 
@@ -455,8 +456,8 @@ public:
 
   struct Node {
     std::uint64_t                                    nswaps = 0U;
-    std::vector<Edge>                                swaps{};
-    std::unordered_map<std::uint16_t, std::uint16_t> permutation{};
+    std::vector<Edge>                                swaps;
+    std::unordered_map<std::uint16_t, std::uint16_t> permutation;
 
     void print(std::ostream& out) {
       out << swaps.size() << ": ";
@@ -467,7 +468,7 @@ public:
       for (const auto& swap : swaps) {
         out << swap.first << "<->" << swap.second << " ";
       }
-      out << std::endl;
+      out << '\n';
     }
   };
 
@@ -502,9 +503,9 @@ public:
 
 protected:
   std::string   name;
-  std::uint16_t nqubits               = 0;
-  CouplingMap   couplingMap           = {};
-  CouplingMap   currentTeleportations = {};
+  std::uint16_t nqubits = 0;
+  CouplingMap   couplingMap;
+  CouplingMap   currentTeleportations;
 
   /** true if the coupling map contains no unidirectional edges */
   bool isBidirectional = true;
@@ -514,17 +515,17 @@ protected:
   // unidirectional, and coupling maps containing both bidirectional and
   // unidirectional edges are neither bidirectional nor unidirectional
 
-  Matrix distanceTable          = {};
-  Matrix distanceTableReversals = {};
-  std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits{};
-  Properties                                         properties        = {};
+  Matrix                                             distanceTable;
+  Matrix                                             distanceTableReversals;
+  std::vector<std::pair<std::int16_t, std::int16_t>> teleportationQubits;
+  Properties                                         properties;
   bool                                               fidelityAvailable = false;
-  Matrix                                             fidelityTable     = {};
-  std::vector<double>                                singleQubitFidelities = {};
-  std::vector<double> singleQubitFidelityCosts                             = {};
-  Matrix              twoQubitFidelityCosts                                = {};
-  Matrix              swapFidelityCosts                                    = {};
-  std::vector<Matrix> fidelityDistanceTables                               = {};
+  Matrix                                             fidelityTable;
+  std::vector<double>                                singleQubitFidelities;
+  std::vector<double>                                singleQubitFidelityCosts;
+  Matrix                                             twoQubitFidelityCosts;
+  Matrix                                             swapFidelityCosts;
+  std::vector<Matrix>                                fidelityDistanceTables;
 
   void createDistanceTable();
   void createFidelityTable();
