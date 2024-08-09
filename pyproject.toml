@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.8.1", "setuptools-scm>=7", "pybind11>=2.12"]
+requires = ["scikit-build-core>=0.8.1", "setuptools-scm>=7", "pybind11>=2.13"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -31,6 +31,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Development Status :: 5 - Production/Stable",
     "Typing :: Typed",
 ]
@@ -264,8 +265,9 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
-test-skip = "cp38-macosx_arm64"
+test-skip = ["cp38-macosx_arm64", "cp313*"] # skip testing on Python 3.13 until our dependencies are ready
 build-frontend = "build[uv]"
+free-threaded-support = true
 
 [tool.cibuildwheel.linux]
 environment = { Z3_ROOT="/opt/python/cp311-cp311/lib/python3.11/site-packages/z3", DEPLOY="ON" }
@@ -279,6 +281,6 @@ repair-wheel-command = [
 environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 
 [tool.cibuildwheel.windows]
-before-build = "pip install delvewheel>=1.4.0"
+before-build = "pip install delvewheel>=1.7.3"
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
 environment = { CMAKE_GENERATOR = "Ninja" }
