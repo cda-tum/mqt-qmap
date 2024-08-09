@@ -4,9 +4,21 @@
 //
 
 #include "Architecture.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <gtest/gtest.h>
+#include <iostream>
 #include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 ::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,
                                       double delta) {
@@ -35,7 +47,7 @@
 class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
   std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir  = "../extern/calibration/";
+  std::string testCalibrationDir = "../extern/calibration/";
 };
 
 INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,
@@ -44,8 +56,8 @@ INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,
                                          "ibmq_london.csv"));
 
 TEST_P(TestArchitecture, QubitMap) {
-  const auto&       archName = GetParam();
-  Architecture      arch{};
+  const auto& archName = GetParam();
+  Architecture arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
     ss << testArchitectureDir << archName;
@@ -59,8 +71,8 @@ TEST_P(TestArchitecture, QubitMap) {
             arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetAllConnectedSubsets) {
-  const auto&       archName = GetParam();
-  Architecture      arch{};
+  const auto& archName = GetParam();
+  Architecture arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
     ss << testArchitectureDir << archName;
@@ -74,8 +86,8 @@ TEST_P(TestArchitecture, GetAllConnectedSubsets) {
   EXPECT_EQ(arch.getAllConnectedSubsets(1).size(), arch.getNqubits());
 }
 TEST_P(TestArchitecture, GetHighestFidelity) {
-  const auto&       archName = GetParam();
-  Architecture      arch{};
+  const auto& archName = GetParam();
+  Architecture arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
     ss << testArchitectureDir << archName;
@@ -93,8 +105,8 @@ TEST_P(TestArchitecture, GetHighestFidelity) {
   EXPECT_TRUE(cm.empty());
 }
 TEST_P(TestArchitecture, ReducedMaps) {
-  const auto&       archName = GetParam();
-  Architecture      arch{};
+  const auto& archName = GetParam();
+  Architecture arch{};
   std::stringstream ss{};
   if (archName.find(".arch") != std::string::npos) {
     ss << testArchitectureDir << archName;
@@ -113,7 +125,7 @@ TEST_P(TestArchitecture, ReducedMaps) {
 
 TEST(TestArchitecture, ConnectedTest) {
   Architecture architecture{};
-  CouplingMap  cm{};
+  CouplingMap cm{};
 
   cm.emplace(std::make_pair(0, 1));
   cm.emplace(std::make_pair(1, 2));
@@ -138,7 +150,7 @@ TEST(TestArchitecture, ConnectedTest) {
 
 TEST(TestArchitecture, FidelityTest) {
   Architecture architecture{};
-  CouplingMap  cm{};
+  CouplingMap cm{};
 
   auto props = Architecture::Properties();
   props.setNqubits(4);
@@ -158,7 +170,7 @@ TEST(TestArchitecture, FidelityTest) {
   architecture.getHighestFidelityCouplingMap(2, cm);
 
   const std::vector<std::uint16_t> highestFidelity{2, 3};
-  auto                             qubitList = Architecture::getQubitList(cm);
+  auto qubitList = Architecture::getQubitList(cm);
 
   EXPECT_EQ(qubitList, highestFidelity);
 }
@@ -170,7 +182,7 @@ TEST(TestArchitecture, FullyConnectedTest) {
 }
 
 TEST(TestArchitecture, MinimumNumberOfSwapsError) {
-  Architecture               architecture{};
+  Architecture architecture{};
   std::vector<std::uint16_t> permutation{1, 1, 2, 3, 4};
   printPi(permutation);
   std::vector<Edge> swaps{};
@@ -179,7 +191,7 @@ TEST(TestArchitecture, MinimumNumberOfSwapsError) {
 }
 
 TEST(TestArchitecture, TestCouplingLimitRing) {
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
                           {3, 2}, {3, 4}, {4, 3}, {4, 0}, {0, 4}};
   architecture.loadCouplingMap(5, cm);
@@ -188,10 +200,10 @@ TEST(TestArchitecture, TestCouplingLimitRing) {
 
 TEST(TestArchitecture, opTypeFromString) {
   Architecture arch{2, {{0, 1}}};
-  auto&        props = arch.getProperties();
+  auto& props = arch.getProperties();
 
-  std::random_device               rd;
-  std::mt19937                     gen(rd());
+  std::random_device rd;
+  std::mt19937 gen(rd());
   std::uniform_real_distribution<> dis(0., 1.);
 
   const std::vector<std::pair<std::string, qc::OpType>> singleQubitGates = {
@@ -269,7 +281,7 @@ TEST(TestArchitecture, FidelityDistanceBidirectionalTest) {
   -[]- ... 2-qubit error rates
   []   ... 1-qubit error rates
   */
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3}, {3, 2},
                           {1, 4}, {4, 1}, {2, 5}, {5, 2}, {5, 6}, {6, 5}};
   architecture.loadCouplingMap(7, cm);
@@ -505,7 +517,7 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
 =[]= ... 2-qubit error rates of bidirectional edge
 []   ... 1-qubit error rates
 */
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {1, 2}, {2, 1}, {2, 3},
                           {3, 2}, {1, 4}, {2, 5}, {5, 2}, {6, 5}};
   architecture.loadCouplingMap(7, cm);
@@ -747,7 +759,7 @@ TEST(TestArchitecture, FidelityDistanceSemiBidirectionalTest) {
 }
 
 TEST(TestArchitecture, FidelitySwapCostTest) {
-  const double      tolerance = 1e-6;
+  const double tolerance = 1e-6;
   const CouplingMap cm = {{0, 1}, {1, 2}, {2, 1}, {2, 3}, {2, 4}, {4, 2}};
 
   auto props = Architecture::Properties();
@@ -822,7 +834,7 @@ TEST(TestArchitecture, FidelitySwapCostTest) {
 TEST(TestArchitecture, FidelityDistanceCheapestPathTest) {
   // tests if the distance measure actually finds the cheapest path and
   // not just the shortest
-  Architecture      architecture{};
+  Architecture architecture{};
   const CouplingMap cm = {{0, 1}, {1, 0}, {2, 1}, {2, 6}, {6, 2},
                           {0, 5}, {5, 0}, {5, 6}, {6, 5}, {0, 3},
                           {3, 0}, {3, 4}, {4, 3}, {4, 6}, {6, 4}};

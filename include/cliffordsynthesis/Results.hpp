@@ -6,10 +6,14 @@
 #pragma once
 
 #include "CircuitOptimizer.hpp"
+#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "logicblocks/Logic.hpp"
 
+#include <cstddef>
+#include <limits>
 #include <nlohmann/json.hpp>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -39,8 +43,8 @@ public:
   [[nodiscard]] std::size_t getSingleQubitGates() const {
     return singleQubitGates;
   }
-  [[nodiscard]] std::size_t       getDepth() const { return depth; }
-  [[nodiscard]] double            getRuntime() const { return runtime; }
+  [[nodiscard]] std::size_t getDepth() const { return depth; }
+  [[nodiscard]] double getRuntime() const { return runtime; }
   [[nodiscard]] logicbase::Result getSolverResult() const {
     return solverResult;
   }
@@ -74,14 +78,14 @@ public:
     return getSolverResult() == logicbase::Result::UNSAT;
   }
 
-  [[nodiscard]] virtual nlohmann::json json() const {
-    nlohmann::json resultJSON{};
-    resultJSON["solver_result"]      = toString(solverResult);
+  [[nodiscard]] virtual nlohmann::basic_json<> json() const {
+    nlohmann::basic_json resultJSON{};
+    resultJSON["solver_result"] = toString(solverResult);
     resultJSON["single_qubit_gates"] = singleQubitGates;
-    resultJSON["two_qubit_gates"]    = twoQubitGates;
-    resultJSON["depth"]              = depth;
-    resultJSON["runtime"]            = runtime;
-    resultJSON["solver_calls"]       = solverCalls;
+    resultJSON["two_qubit_gates"] = twoQubitGates;
+    resultJSON["depth"] = depth;
+    resultJSON["runtime"] = runtime;
+    resultJSON["solver_calls"] = solverCalls;
 
     return resultJSON;
   }
@@ -92,15 +96,15 @@ public:
   }
 
 protected:
-  logicbase::Result solverResult     = logicbase::Result::NDEF;
-  std::size_t       singleQubitGates = std::numeric_limits<std::size_t>::max();
-  std::size_t       twoQubitGates    = std::numeric_limits<std::size_t>::max();
-  std::size_t       depth            = std::numeric_limits<std::size_t>::max();
-  double            runtime          = 0.0;
-  std::size_t       solverCalls      = 0U;
+  logicbase::Result solverResult = logicbase::Result::NDEF;
+  std::size_t singleQubitGates = std::numeric_limits<std::size_t>::max();
+  std::size_t twoQubitGates = std::numeric_limits<std::size_t>::max();
+  std::size_t depth = std::numeric_limits<std::size_t>::max();
+  double runtime = 0.0;
+  std::size_t solverCalls = 0U;
 
-  std::string resultTableau{};
-  std::string resultCircuit{};
+  std::string resultTableau;
+  std::string resultCircuit;
 };
 
 } // namespace cs

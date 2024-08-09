@@ -5,12 +5,15 @@
 
 #pragma once
 
+#include <cstdint>
+#include <istream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
-enum class Encoding { Naive, Commander, Bimander };
+enum class Encoding : std::uint8_t { Naive, Commander, Bimander };
 
-static inline std::string toString(const Encoding encoding) {
+[[maybe_unused]] static inline std::string toString(const Encoding encoding) {
   switch (encoding) {
   case Encoding::Naive:
     return "naive";
@@ -22,7 +25,8 @@ static inline std::string toString(const Encoding encoding) {
   return " ";
 }
 
-static Encoding encodingFromString(const std::string& encoding) {
+[[maybe_unused]] static Encoding
+encodingFromString(const std::string& encoding) {
   if (encoding == "naive" || encoding == "0") {
     return Encoding::Naive;
   }

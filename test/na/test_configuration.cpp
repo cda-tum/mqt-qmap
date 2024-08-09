@@ -3,10 +3,12 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "../../include/configuration/Configuration.hpp"
 #include "Configuration.hpp"
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 
 TEST(Configuration, MethodOfString) {
   EXPECT_EQ(na::getMethodOfString("naive"), na::NAMappingMethod::Naive);
@@ -21,7 +23,7 @@ TEST(Configuration, MethodOfString) {
 
 TEST(Configuration, Import) {
   EXPECT_THROW(na::Configuration("nonexistent.json"), std::runtime_error);
-  std::istringstream      configIS(R"(
+  std::istringstream configIS(R"(
     {
       "patch": {
         "rows": 2,

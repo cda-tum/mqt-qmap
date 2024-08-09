@@ -16,14 +16,14 @@ namespace na {
 
 bool MoveVector::overlap(const MoveVector& other) const {
   // do not consider direction for overlap
-  const auto firstStartX  = std::min(xStart, xEnd);
-  const auto firstEndX    = std::max(xStart, xEnd);
+  const auto firstStartX = std::min(xStart, xEnd);
+  const auto firstEndX = std::max(xStart, xEnd);
   const auto secondStartX = std::min(other.xStart, other.xEnd);
-  const auto secondEndX   = std::max(other.xStart, other.xEnd);
-  const auto firstStartY  = std::min(yStart, yEnd);
-  const auto firstEndY    = std::max(yStart, yEnd);
+  const auto secondEndX = std::max(other.xStart, other.xEnd);
+  const auto firstStartY = std::min(yStart, yEnd);
+  const auto firstEndY = std::max(yStart, yEnd);
   const auto secondStartY = std::min(other.yStart, other.yEnd);
-  const auto secondEndY   = std::max(other.yStart, other.yEnd);
+  const auto secondEndY = std::max(other.yStart, other.yEnd);
 
   // need to compute all combinations, as sometimes the start and end x/y points
   // are the same
@@ -46,14 +46,14 @@ bool MoveVector::overlap(const MoveVector& other) const {
 }
 
 bool MoveVector::include(const MoveVector& other) const {
-  const auto firstStartX  = std::min(xStart, xEnd);
-  const auto firstEndX    = std::max(xStart, xEnd);
+  const auto firstStartX = std::min(xStart, xEnd);
+  const auto firstEndX = std::max(xStart, xEnd);
   const auto secondStartX = std::min(other.xStart, other.xEnd);
-  const auto secondEndX   = std::max(other.xStart, other.xEnd);
-  const auto firstStartY  = std::min(yStart, yEnd);
-  const auto firstEndY    = std::max(yStart, yEnd);
+  const auto secondEndX = std::max(other.xStart, other.xEnd);
+  const auto firstStartY = std::min(yStart, yEnd);
+  const auto firstEndY = std::max(yStart, yEnd);
   const auto secondStartY = std::min(other.yStart, other.yEnd);
-  const auto secondEndY   = std::max(other.yStart, other.yEnd);
+  const auto secondEndY = std::max(other.yStart, other.yEnd);
 
   const auto includeX =
       (secondStartX < firstStartX) && (firstEndX < secondEndX);

@@ -3,12 +3,13 @@
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
 #include "Z3Model.hpp"
-#include "plog/Log.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <plog/Log.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -71,8 +72,8 @@ z3::expr Z3Base::convert(const LogicTerm& a, CType toType) {
   } break;
 
   case OpType::AND: {
-    z3::expr s         = this->ctx->bool_val(true);
-    bool     alternate = false;
+    z3::expr s = this->ctx->bool_val(true);
+    bool alternate = false;
     for (const LogicTerm& lt : a.getNodes()) {
       if (alternate) {
         s = s && convert(lt, toType);
@@ -84,8 +85,8 @@ z3::expr Z3Base::convert(const LogicTerm& a, CType toType) {
     v[static_cast<size_t>(toType)].second = s.simplify();
   } break;
   case OpType::OR: {
-    z3::expr s         = this->ctx->bool_val(false);
-    bool     alternate = false;
+    z3::expr s = this->ctx->bool_val(false);
+    bool alternate = false;
     for (const LogicTerm& lt : a.getNodes()) {
       if (alternate) {
         s = s || convert(lt, toType);
@@ -209,6 +210,7 @@ Result Z3LogicBlock::solve() {
   produceInstance();
   const auto res = solver->check();
   if (res == z3::sat) {
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     model = new Z3Model(ctx, std::make_shared<z3::model>(solver->get_model()));
     return Result::SAT;
   }
@@ -316,7 +318,7 @@ z3::expr Z3Base::convertVariableFromRealTo(const LogicTerm& a, CType toType) {
   }
 }
 z3::expr Z3Base::convertVariableFromBitvectorTo(const LogicTerm& a,
-                                                CType            toType) {
+                                                CType toType) {
   std::stringstream ss;
   ss << a.getName() << "_" << a.getID();
   switch (toType) {
@@ -440,6 +442,7 @@ Result Z3LogicOptimizer::solve() {
   produceInstance();
   const auto res = optimizer->check();
   if (res == z3::sat) {
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     model =
         new Z3Model(ctx, std::make_shared<z3::model>(optimizer->get_model()));
     return Result::SAT;

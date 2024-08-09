@@ -5,12 +5,14 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
 /// Identity: q_i -> Q_i
 /// Static: first layer is mapped q_c -> Q_c and q_t -> Q_t
 /// Dynamic: Layout is generated on demand upon encountering a specific gate
-enum class InitialLayout { Identity, Static, Dynamic };
+enum class InitialLayout : std::uint8_t { Identity, Static, Dynamic };
 
 [[maybe_unused]] static inline std::string
 toString(const InitialLayout strategy) {

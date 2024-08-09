@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class Layering {
+enum class Layering : std::uint8_t {
   IndividualGates,
   DisjointQubits,
   OddGates,

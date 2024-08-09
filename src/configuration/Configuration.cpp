@@ -5,59 +5,70 @@
 
 #include "configuration/Configuration.hpp"
 
-nlohmann::json Configuration::json() const {
-  nlohmann::json config{};
-  config["method"]            = ::toString(method);
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
+#include "configuration/Method.hpp"
+#include "configuration/SwapReduction.hpp"
+
+#include <nlohmann/json.hpp>
+
+nlohmann::basic_json<> Configuration::json() const {
+  nlohmann::basic_json config{};
+  config["method"] = ::toString(method);
   config["layering_strategy"] = ::toString(layering);
   if (!subgraph.empty()) {
     config["subgraph"] = subgraph;
   }
-  config["pre_mapping_optimizations"]          = preMappingOptimizations;
-  config["post_mapping_optimizations"]         = postMappingOptimizations;
+  config["pre_mapping_optimizations"] = preMappingOptimizations;
+  config["post_mapping_optimizations"] = postMappingOptimizations;
   config["add_measurements_to_mapped_circuit"] = addMeasurementsToMappedCircuit;
-  config["verbose"]                            = verbose;
-  config["debug"]                              = debug;
+  config["verbose"] = verbose;
+  config["debug"] = debug;
 
   if (method == Method::Heuristic) {
-    auto& heuristicJson           = config["settings"];
-    heuristicJson["heuristic"]    = ::toString(heuristic);
+    auto& heuristicJson = config["settings"];
+    heuristicJson["heuristic"] = ::toString(heuristic);
     auto& heuristicPropertiesJson = heuristicJson["heuristic_properties"];
     heuristicPropertiesJson["admissible"] = isAdmissible(heuristic);
     heuristicPropertiesJson["principally_admissible"] =
         isPrincipallyAdmissible(heuristic);
-    heuristicPropertiesJson["tight"]          = isTight(heuristic);
+    heuristicPropertiesJson["tight"] = isTight(heuristic);
     heuristicPropertiesJson["fidelity_aware"] = isFidelityAware(heuristic);
-    heuristicJson["initial_layout"]           = ::toString(initialLayout);
+    heuristicJson["initial_layout"] = ::toString(initialLayout);
     if (lookaheadHeuristic != LookaheadHeuristic::None) {
-      auto& lookaheadSettings        = heuristicJson["lookahead"];
+      auto& lookaheadSettings = heuristicJson["lookahead"];
       lookaheadSettings["heuristic"] = ::toString(lookaheadHeuristic);
       auto& lookaheadHeuristicPropertiesJson =
           lookaheadSettings["heuristic_properties"];
       lookaheadHeuristicPropertiesJson["fidelity_aware"] =
           isFidelityAware(lookaheadHeuristic);
-      lookaheadSettings["lookaheads"]   = nrLookaheads;
+      lookaheadSettings["lookaheads"] = nrLookaheads;
       lookaheadSettings["first_factor"] = firstLookaheadFactor;
-      lookaheadSettings["factor"]       = lookaheadFactor;
+      lookaheadSettings["factor"] = lookaheadFactor;
     }
     if (useTeleportation) {
-      auto& teleportation     = heuristicJson["teleportation"];
+      auto& teleportation = heuristicJson["teleportation"];
       teleportation["qubits"] = teleportationQubits;
-      teleportation["seed"]   = teleportationSeed;
-      teleportation["fake"]   = teleportationFake;
+      teleportation["seed"] = teleportationSeed;
+      teleportation["fake"] = teleportationFake;
     }
   }
 
   if (method == Method::Exact) {
-    auto& exact       = config["settings"];
-    exact["timeout"]  = timeout;
+    auto& exact = config["settings"];
+    exact["timeout"] = timeout;
     exact["encoding"] = ::toString(encoding);
     if (encoding == Encoding::Commander || encoding == Encoding::Bimander) {
       exact["commander_grouping"] = ::toString(commanderGrouping);
     }
     exact["include_WCNF"] = includeWCNF;
-    exact["use_subsets"]  = useSubsets;
+    exact["use_subsets"] = useSubsets;
     if (enableSwapLimits) {
-      auto& limits             = exact["limits"];
+      auto& limits = exact["limits"];
       limits["swap_reduction"] = ::toString(swapReduction);
       if (swapLimit > 0) {
         limits["swap_limit"] = swapLimit;

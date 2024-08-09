@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class EarlyTermination {
+enum class EarlyTermination : std::uint8_t {
   None,
   ExpandedNodes,
   ExpandedNodesAfterFirstSolution,

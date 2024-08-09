@@ -5,10 +5,12 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
 #include <map>
+#include <stdexcept>
+#include <string>
 
-enum class AvailableArchitecture {
+enum class AvailableArchitecture : std::uint8_t {
   IbmQx4,
   IbmQx5,
   IbmqYorktown,

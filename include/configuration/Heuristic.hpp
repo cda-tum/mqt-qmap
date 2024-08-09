@@ -5,9 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
-enum class Heuristic {
+enum class Heuristic : std::uint8_t {
   /** maximum over all distances between any virtual qubit pair in the current
      layer; optimizing gate-count; admissible; tight */
   GateCountMaxDistance,
