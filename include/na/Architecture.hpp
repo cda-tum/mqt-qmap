@@ -231,6 +231,7 @@ public:
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
                                        const Zone&       zone) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
+  [[nodiscard]] auto getNColsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto
   getSitesInRow(const Zone& z, const Index& row) const -> std::vector<Index>;
   [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,

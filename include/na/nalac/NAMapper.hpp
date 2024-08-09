@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "../Configuration.hpp"
 #include "Architecture.hpp"
-#include "Configuration.hpp"
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "na/NAComputation.hpp"
