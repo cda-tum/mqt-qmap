@@ -3,16 +3,43 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "DataLogger.hpp"
+#include "Definitions.hpp"
+#include "configuration/AvailableArchitecture.hpp"
+#include "configuration/EarlyTermination.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
+#include "configuration/Method.hpp"
 #include "heuristic/HeuristicMapper.hpp"
-#include "nlohmann/json.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/Control.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <nlohmann/json.hpp>
+#include <set>
 #include <sstream>
-#include <stack>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 constexpr qc::OpType SWAP            = qc::OpType::SWAP;
 constexpr double     FLOAT_TOLERANCE = 1e-6;
@@ -31,7 +58,7 @@ std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
     throw std::runtime_error("Could not open file " + dataLoggingPath +
                              "/layer_" + std::to_string(layer) + ".json");
   }
-  const auto layerJson = nlohmann::json::parse(layerFile);
+  const auto layerJson = nlohmann::basic_json<>::parse(layerFile);
   if (layerJson.find("final_node_id") == layerJson.end()) {
     throw std::runtime_error("Missing key \"final_node_id\" in " +
                              dataLoggingPath + "/layer_" +
@@ -412,13 +439,13 @@ protected:
   std::string testArchitectureDir = "../extern/architectures/";
   std::string testCalibrationDir  = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  std::string                      circuitName{};
-  Architecture                     ibmqYorktown{}; // 5 qubits
-  Architecture                     ibmqLondon{}; // 5 qubits (with calibration)
+  qc::QuantumComputation           qc;
+  std::string                      circuitName;
+  Architecture                     ibmqYorktown; // 5 qubits
+  Architecture                     ibmqLondon;   // 5 qubits (with calibration)
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
-  Architecture                     ibmQX5{}; // 16 qubits
+  Architecture                     ibmQX5; // 16 qubits
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
   Configuration                    settings{};
 
@@ -1093,7 +1120,7 @@ TEST(Functionality, InvalidSettings) {
   EXPECT_NO_THROW(mapper.map(config));
 }
 
-TEST(Functionality, NoMeasurmentsAdded) {
+TEST(Functionality, NoMeasurementsAdded) {
   using namespace qc::literals;
   // construct circuit
   qc::QuantumComputation qc{4U};
@@ -1239,7 +1266,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/architecture.json";
   }
-  const auto archJson = nlohmann::json::parse(archFile);
+  const auto archJson = nlohmann::basic_json<>::parse(archFile);
   EXPECT_EQ(archJson["name"], architecture.getName());
   EXPECT_EQ(archJson["nqubits"], architecture.getNqubits());
   EXPECT_EQ(archJson["distances"], architecture.getDistanceTable());
@@ -1293,7 +1320,7 @@ TEST(Functionality, DataLogger) {
     FAIL() << "Could not open file " << settings.dataLoggingPath
            << "/mapping_result.json";
   }
-  const auto  resultJson = nlohmann::json::parse(resultFile);
+  const auto  resultJson = nlohmann::basic_json<>::parse(resultFile);
   const auto& configJson = resultJson["config"];
   EXPECT_EQ(configJson["add_measurements_to_mapped_circuit"],
             settings.addMeasurementsToMappedCircuit);
@@ -1413,7 +1440,7 @@ TEST(Functionality, DataLogger) {
       FAIL() << "Could not open file " << settings.dataLoggingPath << "/layer_"
              << i << ".json";
     }
-    const auto        layerJson   = nlohmann::json::parse(layerFile);
+    const auto        layerJson   = nlohmann::basic_json<>::parse(layerFile);
     const std::size_t finalNodeId = layerJson["final_node_id"];
     EXPECT_EQ(layerJson["initial_layout"].size(), architecture.getNqubits());
     EXPECT_EQ(layerJson["single_qubit_multiplicity"].size(),
@@ -1684,8 +1711,8 @@ TEST(Functionality, InitialLayoutDump) {
 
 class LayeringTest : public testing::Test {
 protected:
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation           qc;
+  Architecture                     arch;
   std::unique_ptr<HeuristicMapper> mapper;
   Configuration                    settings{};
 
@@ -1781,9 +1808,9 @@ protected:
   std::string testArchitectureDir = "../extern/architectures/";
   std::string testCalibrationDir  = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     ibmqYorktown{};
-  Architecture                     ibmqLondon{};
+  qc::QuantumComputation           qc;
+  Architecture                     ibmqYorktown;
+  Architecture                     ibmqLondon;
   std::unique_ptr<HeuristicMapper> ibmqYorktownMapper;
   std::unique_ptr<HeuristicMapper> ibmqLondonMapper;
   Configuration                    settings{};
@@ -1854,8 +1881,8 @@ protected:
   std::string testExampleDir      = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     ibmQX5{};
+  qc::QuantumComputation           qc;
+  Architecture                     ibmQX5;
   std::unique_ptr<HeuristicMapper> ibmQX5Mapper;
   Configuration                    settings{};
 
@@ -1905,8 +1932,8 @@ protected:
   std::string testExampleDir      = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation           qc;
+  Architecture                     arch;
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
@@ -1942,8 +1969,8 @@ protected:
   std::string testExampleDir      = "../examples/";
   std::string testArchitectureDir = "../extern/architectures/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
+  qc::QuantumComputation           qc;
+  Architecture                     arch;
   std::unique_ptr<HeuristicMapper> tokyoMapper;
 
   void SetUp() override {
@@ -1986,9 +2013,9 @@ protected:
   std::string testArchitectureDir = "../extern/architectures/";
   std::string testCalibrationDir  = "../extern/calibration/";
 
-  qc::QuantumComputation           qc{};
-  Architecture                     arch{};
-  Architecture                     nonFidelityArch{};
+  qc::QuantumComputation           qc;
+  Architecture                     arch;
+  Architecture                     nonFidelityArch;
   std::unique_ptr<HeuristicMapper> mapper;
   std::unique_ptr<HeuristicMapper> nonFidelityMapper;
 

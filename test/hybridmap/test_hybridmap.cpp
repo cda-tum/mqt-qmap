@@ -24,7 +24,7 @@ protected:
   void SetUp() override { testArchitecturePath += GetParam() + ".json"; }
 };
 
-TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
+TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
   std::cout << "wd: " << std::filesystem::current_path() << '\n';
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
 

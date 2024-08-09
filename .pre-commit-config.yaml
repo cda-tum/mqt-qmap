@@ -56,7 +56,7 @@ repos:
 
   # Python linting using ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.6
+    rev: v0.5.7
     hooks:
       - id: ruff
         args: ["--fix", "--show-fixes"]
@@ -86,11 +86,10 @@ repos:
           - mqt.qcec
 
   # Check for spelling
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.23.6
     hooks:
-      - id: codespell
-        args: ["-L", "wille,linz,applys", "--skip", "*.ipynb"]
+      - id: typos
 
   # Clang-format the C++ part of the code base automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
@@ -130,3 +129,17 @@ repos:
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]
+
+  # Check JSON schemata
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.1
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+      - id: check-readthedocs
+
+  # Check the pyproject.toml file
+  - repo: https://github.com/henryiii/validate-pyproject-schema-store
+    rev: 2024.08.08
+    hooks:
+      - id: validate-pyproject

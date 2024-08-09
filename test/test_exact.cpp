@@ -3,9 +3,30 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "Definitions.hpp"
+#include "QuantumComputation.hpp"
+#include "configuration/AvailableArchitecture.hpp"
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Configuration.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/Method.hpp"
+#include "configuration/SwapReduction.hpp"
 #include "exact/ExactMapper.hpp"
+#include "operations/Control.hpp"
+#include "operations/OpType.hpp"
+#include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <algorithm>
+#include <cstdint>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
 
 class ExactTest : public testing::TestWithParam<std::string> {
 protected:
@@ -13,11 +34,11 @@ protected:
   std::string testArchitectureDir = "../extern/architectures/";
   std::string testCalibrationDir  = "../extern/calibration/";
 
-  qc::QuantumComputation       qc{};
+  qc::QuantumComputation       qc;
   Configuration                settings{};
-  Architecture                 ibmqYorktown{};
-  Architecture                 ibmqLondon{};
-  Architecture                 ibmQX4{};
+  Architecture                 ibmqYorktown;
+  Architecture                 ibmqLondon;
+  Architecture                 ibmQX4;
   std::unique_ptr<ExactMapper> ibmqYorktownMapper;
   std::unique_ptr<ExactMapper> ibmqLondonMapper;
   std::unique_ptr<ExactMapper> ibmQX4Mapper;
@@ -386,7 +407,7 @@ TEST_F(ExactTest, MapToSubsetNotIncludingQ0) {
   auto               qcMapped = qc::QuantumComputation();
   std::istringstream iss{oss.str()};
   qcMapped.import(iss, qc::Format::OpenQASM3);
-  std::cout << qcMapped << std::endl;
+  std::cout << qcMapped << '\n';
   EXPECT_EQ(qcMapped.initialLayout.size(), 4U);
   EXPECT_EQ(qcMapped.initialLayout[0], 3);
   EXPECT_EQ(qcMapped.outputPermutation.size(), 3U);
@@ -469,7 +490,7 @@ TEST_F(ExactTest, CommanderEncodingRigettiArch) {
   SUCCEED() << "Mapping successful";
 }
 
-TEST_F(ExactTest, NoMeasurmentsAdded) {
+TEST_F(ExactTest, NoMeasurementsAdded) {
   // configure to not include measurements after mapping
   settings.addMeasurementsToMappedCircuit = false;
 
