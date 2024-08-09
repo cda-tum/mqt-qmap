@@ -12,6 +12,8 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace cs {
 class Results {
@@ -49,6 +51,20 @@ public:
   [[nodiscard]] std::string getResultCircuit() const { return resultCircuit; }
   [[nodiscard]] std::string getResultTableau() const { return resultTableau; }
 
+  [[nodiscard]]std::string getMapping() const {    
+    std::ostringstream oss;
+    for (const auto& row : pvector) {
+        for (bool val : row) {
+            oss << (val ? '1' : '0');
+        }
+        oss << '\n';
+    }
+    return oss.str(); 
+  }
+  [[nodiscard]] std::vector<std::vector<bool>> getMappingVector() const { 
+    return pvector;
+  }   
+
   void setSingleQubitGates(const std::size_t g) { singleQubitGates = g; }
   void setTwoQubitGates(const std::size_t g) { twoQubitGates = g; }
   void setDepth(const std::size_t d) { depth = d; }
@@ -65,6 +81,17 @@ public:
     std::stringstream ss;
     ss << tableau;
     resultTableau = ss.str();
+  }
+  void setMapping(std::vector<std::vector<bool>> p) {
+    std::ostringstream oss;
+    for (const auto& row : pvector) {
+        for (bool val : row) {
+            oss << (val ? '1' : '0');
+        }
+        oss << '\n';
+    }
+    pvals = oss.str();
+    pvector = std::move(p);
   }
 
   [[nodiscard]] bool sat() const {
@@ -99,6 +126,8 @@ protected:
   double            runtime          = 0.0;
   std::size_t       solverCalls      = 0U;
 
+  std::string pvals{};
+  std::vector<std::vector<bool>> pvector{};
   std::string resultTableau{};
   std::string resultCircuit{};
 };

@@ -39,6 +39,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   encoderConfig.initialTableau      = &initialTableau;
   encoderConfig.targetTableau       = &targetTableau;
   encoderConfig.nQubits             = initialTableau.getQubitCount();
+  encoderConfig.couplingMap         = couplingMap;
   encoderConfig.timestepLimit       = configuration.initialTimestepLimit;
   encoderConfig.targetMetric        = configuration.target;
   encoderConfig.useMaxSAT           = configuration.useMaxSAT;

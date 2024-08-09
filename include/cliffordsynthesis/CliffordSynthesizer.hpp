@@ -26,23 +26,44 @@ class CliffordSynthesizer {
 public:
   CliffordSynthesizer() = default;
   CliffordSynthesizer(Tableau initial, Tableau target)
-      : initialTableau(std::move(initial)), targetTableau(std::move(target)) {}
+      : initialTableau(std::move(initial)), targetTableau(std::move(target)), couplingMap(getFullyConnectedMap(target.getQubitCount())) {}
+  CliffordSynthesizer(Tableau initial, Tableau target, CouplingMap qm)
+      : initialTableau(std::move(initial)), targetTableau(std::move(target)), couplingMap(std::move(qm)) {}
   explicit CliffordSynthesizer(Tableau target)
       : initialTableau(target.getQubitCount(), target.hasDestabilizers()),
-        targetTableau(std::move(target)) {}
+        targetTableau(std::move(target)),
+        couplingMap(getFullyConnectedMap(target.getQubitCount())) {}
   CliffordSynthesizer(Tableau initial, qc::QuantumComputation& qc)
       : initialTableau(std::move(initial)),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       initialTableau.hasDestabilizers()),
-        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)),
-        results(qc, targetTableau) {}
+        couplingMap(getFullyConnectedMap(initial.getQubitCount())),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
-                               const bool              useDestabilizers = false)
+                               const bool useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
-        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)),
-        results(qc, targetTableau) {}
+        couplingMap(getFullyConnectedMap(qc.getNqubits())),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)) {}
+  explicit CliffordSynthesizer(Tableau target, CouplingMap qm)
+      : initialTableau(target.getQubitCount(), target.hasDestabilizers()),
+        targetTableau(std::move(target)),
+        couplingMap(std::move(qm)) {}
+  CliffordSynthesizer(Tableau initial, qc::QuantumComputation& qc, CouplingMap qm)
+      : initialTableau(std::move(initial)),
+        targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
+                      initialTableau.hasDestabilizers()),
+        couplingMap(std::move(qm)),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)){}
+  explicit CliffordSynthesizer(qc::QuantumComputation& qc,
+                               CouplingMap qm,
+                               const bool useDestabilizers = false)
+      : initialTableau(qc.getNqubits(), useDestabilizers),
+        targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
+                      useDestabilizers),
+        couplingMap(std::move(qm)),
+        initialCircuit(std::make_shared<qc::QuantumComputation>(qc)){}
 
   virtual ~CliffordSynthesizer() = default;
 
@@ -71,6 +92,7 @@ public:
 protected:
   Tableau                                 initialTableau{};
   Tableau                                 targetTableau{};
+  CouplingMap                             couplingMap{};
   std::shared_ptr<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};

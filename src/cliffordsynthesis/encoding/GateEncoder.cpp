@@ -4,6 +4,9 @@
 //
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
+#include "utils.hpp"
 
 #include "Definitions.hpp"
 #include "logicblocks/Encodings.hpp"
@@ -65,7 +68,7 @@ void GateEncoder::Variables::collectSingleQubitGateVariables(
 
 void GateEncoder::Variables::collectTwoQubitGateVariables(
     const std::size_t pos, const std::size_t qubit, const bool target,
-    LogicVector& variables) const {
+    LogicVector& variables, const CouplingMap cm) const {
   const auto& twoQubitGates = gC[pos];
   const auto  n             = twoQubitGates.size();
   for (std::size_t q = 0; q < n; ++q) {
@@ -125,12 +128,12 @@ void GateEncoder::assertZConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
   const auto& gatesToZTransformations = [this](const auto& p1, const auto& p2,
                                                const auto& p3) {
-    return tvars->singleQubitZChange(p1, p2, p3);
+    return tvars->singleQubitZChange(p1 + 1, p2, p3);
   };
   auto gateTransformations =
       collectGateTransformations(pos, qubit, gatesToZTransformations);
   for (auto& [transformation, _] : gateTransformations) {
-    transformation = tvars->z[pos + 1][qubit] == transformation;
+    transformation = tvars->z[pos + 2][qubit] == transformation;
   }
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
@@ -139,12 +142,12 @@ void GateEncoder::assertXConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
   const auto& gatesToXTransformations = [this](const auto& p1, const auto& p2,
                                                const auto& p3) {
-    return tvars->singleQubitXChange(p1, p2, p3);
+    return tvars->singleQubitXChange(p1 + 1, p2, p3);
   };
   auto gateTransformations =
       collectGateTransformations(pos, qubit, gatesToXTransformations);
   for (auto& [transformation, _] : gateTransformations) {
-    transformation = tvars->x[pos + 1][qubit] == transformation;
+    transformation = tvars->x[pos + 2][qubit] == transformation;
   }
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
@@ -153,12 +156,12 @@ void GateEncoder::assertRConstraints(const std::size_t pos,
                                      const std::size_t qubit) {
   const auto& gatesToRTransformations = [this](const auto& p1, const auto& p2,
                                                const auto& p3) {
-    return tvars->singleQubitRChange(p1, p2, p3);
+    return tvars->singleQubitRChange(p1 + 1, p2, p3);
   };
   auto gateTransformations =
       collectGateTransformations(pos, qubit, gatesToRTransformations);
   for (auto& [transformation, _] : gateTransformations) {
-    transformation = tvars->r[pos + 1] == (tvars->r[pos] ^ transformation);
+    transformation = tvars->r[pos + 2] == (tvars->r[pos + 1] ^ transformation);
   }
   assertGatesImplyTransform(pos, qubit, gateTransformations);
 }
@@ -219,11 +222,11 @@ void GateEncoder::extractTwoQubitGatesFromModel(const std::size_t       pos,
   }
 }
 
-void GateEncoder::encodeSymmetryBreakingConstraints() {
+void GateEncoder::encodeSymmetryBreakingConstraints(const CouplingMap couplingMap) {
   PLOG_DEBUG << "Encoding symmetry breaking constraints.";
   for (std::size_t t = 0U; t < T; ++t) {
     assertSingleQubitGateSymmetryBreakingConstraints(t);
-    assertTwoQubitGateSymmetryBreakingConstraints(t);
+    assertTwoQubitGateSymmetryBreakingConstraints(t, couplingMap);
   }
 }
 
@@ -333,7 +336,7 @@ void GateEncoder::assertSingleQubitGateSymmetryBreakingConstraints(
 }
 
 void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
-    const std::size_t pos) {
+    const std::size_t pos, const CouplingMap cm) {
   for (std::size_t ctrl = 1U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < ctrl; ++trgt) {
       assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);

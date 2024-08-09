@@ -9,6 +9,7 @@
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "operations/OpType.hpp"
+#include "utils.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -20,8 +21,9 @@ public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
               const std::size_t                      timestepLimit,
               TableauEncoder::Variables*             tableauVars,
-              std::shared_ptr<logicbase::LogicBlock> logicBlock)
-      : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
+              std::shared_ptr<logicbase::LogicBlock> logicBlock,
+              CouplingMap cm)
+      : N(nQubits), S(tableauSize), T(timestepLimit), couplingMap(std::move(cm)), tvars(tableauVars),
         lb(std::move(logicBlock)) {}
   virtual ~GateEncoder() = default;
 
@@ -36,7 +38,7 @@ public:
                                          logicbase::LogicVector& variables) const;
     void collectTwoQubitGateVariables(std::size_t pos, std::size_t qubit,
                                       bool                    target,
-                                      logicbase::LogicVector& variables) const;
+                                      logicbase::LogicVector& variables, CouplingMap cm) const;
   };
 
   // variable creation
@@ -49,7 +51,7 @@ public:
     assertGateConstraints();
   }
 
-  virtual void encodeSymmetryBreakingConstraints();
+  virtual void encodeSymmetryBreakingConstraints(CouplingMap couplingMap);
 
   // extracting the circuit
   void extractCircuitFromModel(Results& res, logicbase::Model& model);
@@ -108,6 +110,9 @@ protected:
   // timestep limit T
   std::size_t T{}; // NOLINT (readability-identifier-naming)
 
+  // coupling Map
+  CouplingMap couplingMap;
+
   // the gate variables
   Variables vars{};
 
@@ -152,7 +157,7 @@ protected:
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);
-  virtual void assertTwoQubitGateSymmetryBreakingConstraints(std::size_t pos);
+  virtual void assertTwoQubitGateSymmetryBreakingConstraints(std::size_t pos, CouplingMap cm);
 
   virtual void assertSingleQubitGateOrderConstraints(std::size_t pos,
                                                      std::size_t qubit) = 0;
