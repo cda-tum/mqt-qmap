@@ -5,8 +5,8 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
-#include "LogicTerm.hpp"
 #include "Logic.hpp"
+#include "LogicTerm.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "logicblocks/Model.hpp"
@@ -95,15 +95,15 @@ void TableauEncoder::assertMappingConstraints() {
   lb->assertFormula(LogicTerm::eq(vars.r[0], vars.r[1]));
   // assert that for every i and j exactly one p variable is set
   for (std::size_t i = 0U; i < N; ++i) {
-    int32_t   vr     = 0;
-    int32_t   vr1    = 1;
+    int32_t vr = 0;
+    int32_t vr1 = 1;
     LogicTerm sumRow = LogicTerm(vr);
     for (std::size_t j = 0U; j < N; ++j) {
       sumRow = sumRow + vars.p[i][j];
     }
     lb->assertFormula(sumRow == LogicTerm(vr1));
-    int32_t   vc     = 0;
-    int32_t   vc1    = 1;
+    int32_t vc = 0;
+    int32_t vc1 = 1;
     LogicTerm sumCol = LogicTerm(vc);
     for (std::size_t j = 0U; j < N; ++j) {
       sumCol = sumCol + vars.p[j][i];
@@ -137,15 +137,15 @@ void TableauEncoder::assertMappingConstraints() {
   lb->assertFormula(LogicTerm::eq(vars.r[0], vars.r[1]));
   // assert that for every i and j exactly one p variable is set
   for (std::size_t i = 0U; i < N; ++i) {
-    int32_t   vr     = 0;
-    int32_t   vr1    = 1;
+    int32_t vr = 0;
+    int32_t vr1 = 1;
     LogicTerm sumRow = LogicTerm(vr);
     for (std::size_t j = 0U; j < N; ++j) {
       sumRow = sumRow + vars.p[i][j];
     }
     lb->assertFormula(sumRow == LogicTerm(vr1));
-    int32_t   vc     = 0;
-    int32_t   vc1    = 1;
+    int32_t vc = 0;
+    int32_t vc1 = 1;
     LogicTerm sumCol = LogicTerm(vc);
     for (std::size_t j = 0U; j < N; ++j) {
       sumCol = sumCol + vars.p[j][i];
@@ -182,8 +182,8 @@ void TableauEncoder::extractTableauFromModel(Results& results,
 }
 
 void TableauEncoder::extractMappingFromModel(Results& results,
-                                             Model&   model) const {
-  std::vector<bool>              row(N, false);
+                                             Model& model) const {
+  std::vector<bool> row(N, false);
   std::vector<std::vector<bool>> pvals(N, std::vector<bool>(N, false));
   for (std::size_t i = 0; i < N; ++i) {
     for (std::size_t j = 0; j < N; ++j) {

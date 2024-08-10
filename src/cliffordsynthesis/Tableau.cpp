@@ -550,14 +550,14 @@ Tableau Tableau::reverseMapping(const std::vector<std::vector<bool>> p) {
 // number of Qubits is passed because nQubits is not set in result Tableau of
 // synthesis
 Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>> p,
-                                      size_t                               nq) {
+                                      size_t nq) {
   Tableau mapped_tableau = Tableau(nq, true);
   mapped_tableau.tableau = tableau;
   for (size_t i = 0; i < p.size(); i++) {
     for (size_t j = 0; j < p[i].size(); j++) {
       // apply mapping from row i to j if p is set
       if (p[i][j]) {
-        mapped_tableau.tableau[i]      = tableau[j];
+        mapped_tableau.tableau[i] = tableau[j];
         mapped_tableau.tableau[i + nq] = tableau[j + nq];
       }
     }

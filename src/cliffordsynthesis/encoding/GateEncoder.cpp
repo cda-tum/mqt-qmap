@@ -14,13 +14,13 @@
 #include "logicblocks/Model.hpp"
 #include "operations/OpType.hpp"
 #include "operations/StandardOperation.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <plog/Log.h>
 #include <string>
 #include <vector>
-#include "utils.hpp"
 
 namespace cs::encoding {
 

@@ -94,7 +94,7 @@ public:
       }
       oss << '\n';
     }
-    pvals   = oss.str();
+    pvals = oss.str();
     pvector = std::move(p);
   }
 
@@ -130,15 +130,15 @@ protected:
   double runtime = 0.0;
   std::size_t solverCalls = 0U;
 
-  std::string                    pvals;
+  std::string pvals;
   std::vector<std::vector<bool>> pvector;
-  std::string                    resultTableau;
-  std::string                    resultCircuit;
+  std::string resultTableau;
+  std::string resultCircuit;
 };
 
 } // namespace cs
-       solverCalls      = 0U;
+solverCalls = 0U;
 
-  std::string                    pvals{};
-  std::vector<std::vector<bool>> pvector{};
-  std::string                    resultTableau{};
+std::string pvals{};
+std::vector<std::vector<bool>> pvector{};
+std::string resultTableau{};

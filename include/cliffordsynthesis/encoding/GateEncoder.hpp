@@ -26,10 +26,9 @@ namespace cs::encoding {
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-              const std::size_t                      timestepLimit,
-              TableauEncoder::Variables*             tableauVars,
-              std::shared_ptr<logicbase::LogicBlock> logicBlock,
-              CouplingMap cm)
+              const std::size_t timestepLimit,
+              TableauEncoder::Variables* tableauVars,
+              std::shared_ptr<logicbase::LogicBlock> logicBlock, CouplingMap cm)
       : N(nQubits), S(tableauSize), T(timestepLimit),
         couplingMap(std::move(cm)), tvars(tableauVars),
         lb(std::move(logicBlock)) {}
