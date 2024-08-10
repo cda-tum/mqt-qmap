@@ -13,7 +13,6 @@
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <memory>
@@ -98,10 +97,10 @@ public:
   }
 
 protected:
-  Tableau initialTableau{};
-  Tableau targetTableau{};
-  CouplingMap couplingMap{};
-  std::shared_ptr<qc::QuantumComputation> initialCircuit{};
+  Tableau initialTableau;
+  Tableau targetTableau;
+  CouplingMap couplingMap;
+  std::shared_ptr<qc::QuantumComputation> initialCircuit;
 
   Configuration configuration{};
 

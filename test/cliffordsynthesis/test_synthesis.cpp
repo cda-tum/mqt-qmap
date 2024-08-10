@@ -86,8 +86,9 @@ CouplingMap parseEdges(const std::string& edgeString) {
   while (getline(ss, item, ';')) {
     item.erase(remove(item.begin(), item.end(), '{'), item.end());
     item.erase(remove(item.begin(), item.end(), '}'), item.end());
-    size_t pos = item.find(',');
-    std::string first, second;
+    const size_t pos = item.find(',');
+    std::string first;
+    std::string second;
 
     first = item.substr(0, pos);
     second = item.substr(pos + 1);
@@ -162,7 +163,7 @@ protected:
     std::cout << "Target tableau:\n" << targetTableau;
 
     const std::vector<std::vector<bool>> p = results.getMappingVector();
-    Tableau targetPrime = targetTableau.applyMapping(p);
+    Tableau targetPrime = targetTableau.applyMapping(&p);
     std::cout << "Target tableau with mapping:\n" << targetPrime;
     if (!targetPrime.hasDestabilizers()) {
       targetPrime.gaussianEliminationGF2();
@@ -171,9 +172,9 @@ protected:
       std::cout << "Result tableau with mapping and Gauss:\n" << resultTableau;
     } else {
       targetPrime =
-          targetPrime.reverseMappingOnRows(p, targetPrime.getQubitCount());
+          targetPrime.reverseMappingOnRows(&p, targetPrime.getQubitCount());
       resultTableau =
-          resultTableau.reverseMappingOnRows(p, targetPrime.getQubitCount());
+          resultTableau.reverseMappingOnRows(&p, targetPrime.getQubitCount());
       std::cout << "Result tableau with destab mapping reversed:\n"
                 << resultTableau;
       std::cout << "Target tableau with destab mapping reversed:\n"

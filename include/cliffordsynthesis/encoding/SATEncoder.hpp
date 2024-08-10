@@ -35,7 +35,7 @@ public:
     std::size_t nQubits{};
 
     // coupling Map of Qubits
-    CouplingMap couplingMap{};
+    CouplingMap couplingMap;
 
     // the number of timesteps to encode
     std::size_t timestepLimit{};
