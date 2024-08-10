@@ -4,7 +4,6 @@
 #include "LogicTerm.hpp"
 
 #include <cstdint>
-#include <iostream>
 #include <set>
 #include <string>
 #include <utility>
@@ -15,11 +14,11 @@ class Model;
 
 class LogicBlock : public Logic {
 protected:
-  std::set<LogicTerm, TermDepthComparator> clauses{};
-  Model*                                   model{};
-  bool                                     convertWhenAssert;
-  virtual void                             internalReset() = 0;
-  uint64_t                                 gid             = 0U;
+  std::set<LogicTerm, TermDepthComparator> clauses;
+  Model* model{};
+  bool convertWhenAssert;
+  virtual void internalReset() = 0;
+  uint64_t gid = 0U;
 
 public:
   explicit LogicBlock(bool convert = false) : convertWhenAssert(convert) {}
@@ -34,9 +33,9 @@ public:
   LogicTerm makeVariable(const std::string& name, CType type = CType::BOOL,
                          uint16_t bvSize = 32U);
 
-  virtual void   produceInstance() = 0;
-  virtual Result solve()           = 0;
-  virtual void   reset();
+  virtual void produceInstance() = 0;
+  virtual Result solve() = 0;
+  virtual void reset();
 
   virtual std::string dumpInternalSolver() { return ""; }
 };
@@ -47,11 +46,11 @@ protected:
 
 public:
   explicit LogicBlockOptimizer(bool convert) : LogicBlock(convert) {}
-  void         weightedTerm(const LogicTerm& a, double weight);
-  virtual bool makeMinimize()                  = 0;
-  virtual bool makeMaximize()                  = 0;
+  void weightedTerm(const LogicTerm& a, double weight);
+  virtual bool makeMinimize() = 0;
+  virtual bool makeMaximize() = 0;
   virtual bool maximize(const LogicTerm& term) = 0;
   virtual bool minimize(const LogicTerm& term) = 0;
-  void         reset() override;
+  void reset() override;
 };
 } // namespace logicbase

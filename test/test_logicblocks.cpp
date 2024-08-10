@@ -2,11 +2,11 @@
 #include "Encodings.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
+#include "Model.hpp"
 #include "Z3Logic.hpp"
-#include "Z3Model.hpp"
 
-#include "gtest/gtest.h"
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -19,8 +19,8 @@ class TestZ3 : public testing::TestWithParam<logicbase::OpType> {
 protected:
   void SetUp() override {}
 
-  std::shared_ptr<z3::context> ctx    = std::make_shared<z3::context>();
-  std::shared_ptr<z3::solver>  solver = std::make_shared<z3::solver>(*ctx);
+  std::shared_ptr<z3::context> ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::solver> solver = std::make_shared<z3::solver>(*ctx);
 };
 TEST_F(TestZ3, ConstructDestruct) {
   std::unique_ptr<z3logic::Z3LogicBlock> const z3logic =
@@ -104,9 +104,9 @@ TEST_F(TestZ3, SimpleTrue) {
   EXPECT_EQ(z3logic.solve(), Result::SAT);
   z3logic.reset();
 
-  a                 = z3logic.makeVariable("a", CType::BOOL);
-  b                 = z3logic.makeVariable("b", CType::BOOL);
-  c                 = z3logic.makeVariable("c", CType::BOOL);
+  a = z3logic.makeVariable("a", CType::BOOL);
+  b = z3logic.makeVariable("b", CType::BOOL);
+  c = z3logic.makeVariable("c", CType::BOOL);
   LogicTerm const d = z3logic.makeVariable("d", CType::BOOL);
   z3logic.assertFormula((a && b) || (c && d));
   z3logic.produceInstance();
@@ -318,9 +318,9 @@ TEST_F(TestZ3, IntNumbers) {
   z3logic.reset();
 
   LogicTerm boolA = z3logic.makeVariable("bool_a", CType::BOOL);
-  a               = z3logic.makeVariable("a", CType::INT);
-  b               = z3logic.makeVariable("b", CType::INT);
-  c               = z3logic.makeVariable("c", CType::INT);
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
   z3logic.assertFormula(a == LogicTerm(3));
   z3logic.assertFormula(b == LogicTerm(2));
   z3logic.assertFormula(c == LogicTerm(1));
@@ -330,9 +330,9 @@ TEST_F(TestZ3, IntNumbers) {
   z3logic.reset();
 
   boolA = z3logic.makeVariable("bool_a", CType::BOOL);
-  a     = z3logic.makeVariable("a", CType::INT);
-  b     = z3logic.makeVariable("b", CType::INT);
-  c     = z3logic.makeVariable("c", CType::INT);
+  a = z3logic.makeVariable("a", CType::INT);
+  b = z3logic.makeVariable("b", CType::INT);
+  c = z3logic.makeVariable("c", CType::INT);
   z3logic.assertFormula(a == LogicTerm(3));
   z3logic.assertFormula(b == LogicTerm(2));
   z3logic.assertFormula(c == LogicTerm(1));
@@ -557,7 +557,7 @@ class TestZ3Opt : public testing::TestWithParam<logicbase::OpType> {
 protected:
   void SetUp() override {}
 
-  std::shared_ptr<z3::context>  ctx = std::make_shared<z3::context>();
+  std::shared_ptr<z3::context> ctx = std::make_shared<z3::context>();
   std::shared_ptr<z3::optimize> opt = std::make_shared<z3::optimize>(*ctx);
 };
 
@@ -880,9 +880,9 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->reset();
 
   LogicTerm boolA = z3logic->makeVariable("bool_a", CType::BOOL);
-  a               = z3logic->makeVariable("a", CType::INT);
-  b               = z3logic->makeVariable("b", CType::INT);
-  c               = z3logic->makeVariable("c", CType::INT);
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
   z3logic->assertFormula(a == LogicTerm(3));
   z3logic->assertFormula(b == LogicTerm(2));
   z3logic->assertFormula(c == LogicTerm(1));
@@ -893,9 +893,9 @@ TEST_F(TestZ3Opt, IntNumbers) {
   z3logic->reset();
 
   boolA = z3logic->makeVariable("bool_a", CType::BOOL);
-  a     = z3logic->makeVariable("a", CType::INT);
-  b     = z3logic->makeVariable("b", CType::INT);
-  c     = z3logic->makeVariable("c", CType::INT);
+  a = z3logic->makeVariable("a", CType::INT);
+  b = z3logic->makeVariable("b", CType::INT);
+  c = z3logic->makeVariable("c", CType::INT);
   z3logic->assertFormula(a == LogicTerm(3));
   z3logic->assertFormula(b == LogicTerm(2));
   z3logic->assertFormula(c == LogicTerm(1));

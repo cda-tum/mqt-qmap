@@ -5,9 +5,19 @@
 
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/Control.hpp"
+#include "operations/OpType.hpp"
+#include "operations/StandardOperation.hpp"
 #include "utils.hpp"
 
-#include "gtest/gtest.h"
+#include <bitset>
+#include <cstddef>
+#include <gtest/gtest.h>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace cs {
 
@@ -83,12 +93,12 @@ TEST_F(TestTableau, InitialTableau) {
   const auto fullTFromStr = Tableau(fullRepresentation);
   EXPECT_EQ(fullTableau, fullTFromStr);
 
-  const std::string stabilizers      = "[+ZI, +IZ]";
-  const auto        tFromStabilizers = Tableau(stabilizers);
+  const std::string stabilizers = "[+ZI, +IZ]";
+  const auto tFromStabilizers = Tableau(stabilizers);
   EXPECT_EQ(tableau, tFromStabilizers);
 
   const std::string destabilizers = "[+XI, +IX]";
-  const auto        fullTFromStabilizersAndDestabilizers =
+  const auto fullTFromStabilizersAndDestabilizers =
       Tableau(stabilizers, destabilizers);
   EXPECT_EQ(fullTableau, fullTFromStabilizersAndDestabilizers);
 }

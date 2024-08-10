@@ -6,17 +6,30 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
 #include "QuantumComputation.hpp"
+#include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
-#include "logicblocks/Logic.hpp"
-#include "plog/Appenders/ColorConsoleAppender.h"
-#include "plog/Formatters/TxtFormatter.h"
-#include "plog/Init.h"
-#include "plog/Log.h"
+#include "cliffordsynthesis/TargetMetric.hpp"
+#include "cliffordsynthesis/encoding/SATEncoder.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "operations/Operation.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <future>
 #include <memory>
+#include <plog/Appenders/ConsoleAppender.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Init.h>
+#include <plog/Log.h>
+#include <plog/Logger.h>
+#include <plog/Severity.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace cs {
 
@@ -35,16 +48,16 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   const auto start = std::chrono::high_resolution_clock::now();
 
   // create the general configuration for the SAT encoder
-  auto encoderConfig                = EncoderConfig();
-  encoderConfig.initialTableau      = &initialTableau;
-  encoderConfig.targetTableau       = &targetTableau;
-  encoderConfig.nQubits             = initialTableau.getQubitCount();
-  encoderConfig.couplingMap         = couplingMap;
-  encoderConfig.timestepLimit       = configuration.initialTimestepLimit;
-  encoderConfig.targetMetric        = configuration.target;
-  encoderConfig.useMaxSAT           = configuration.useMaxSAT;
+  auto encoderConfig = EncoderConfig();
+  encoderConfig.initialTableau = &initialTableau;
+  encoderConfig.targetTableau = &targetTableau;
+  encoderConfig.nQubits = initialTableau.getQubitCount();
+  encoderConfig.couplingMap = couplingMap;
+  encoderConfig.timestepLimit = configuration.initialTimestepLimit;
+  encoderConfig.targetMetric = configuration.target;
+  encoderConfig.useMaxSAT = configuration.useMaxSAT;
   encoderConfig.useSymmetryBreaking = configuration.useSymmetryBreaking;
-  encoderConfig.solverParameters    = configuration.solverParameters;
+  encoderConfig.solverParameters = configuration.solverParameters;
   encoderConfig.useMultiGateEncoding =
       requiresMultiGateEncoding(encoderConfig.targetMetric);
 
@@ -71,8 +84,8 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
 
   if (!configuration.linearSearch) {
     const auto [lowerBin, upperBin] = determineUpperBound(encoderConfig);
-    lower                           = lowerBin;
-    upper                           = upperBin;
+    lower = lowerBin;
+    upper = upperBin;
 
     // if the upper bound is 0, the solution does not require any gates and the
     // synthesis is done.
@@ -180,7 +193,7 @@ CliffordSynthesizer::determineUpperBound(EncoderConfig config) {
   return {lowerBound, upperBound};
 }
 
-void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig     config,
+void CliffordSynthesizer::gateOptimalSynthesis(EncoderConfig config,
                                                const std::size_t lower,
                                                const std::size_t upper) {
   // Gate-optimal synthesis is achieved by determining a timestep limit T such
@@ -254,10 +267,10 @@ void CliffordSynthesizer::minimizeGatesFixedDepth(EncoderConfig config) {
             << " and " << results.getGates()
             << " gate(s). Trying to minimize the number of gates.";
 
-  config.targetMetric         = TargetMetric::Gates;
-  config.timestepLimit        = results.getDepth();
+  config.targetMetric = TargetMetric::Gates;
+  config.timestepLimit = results.getDepth();
   config.useMultiGateEncoding = true;
-  config.useMaxSAT            = configuration.useMaxSAT;
+  config.useMaxSAT = configuration.useMaxSAT;
 
   if (config.useMaxSAT) {
     runMaxSAT(config);
@@ -329,11 +342,11 @@ void CliffordSynthesizer::minimizeTwoQubitGatesFixedGateCount(
             << results.getTwoQubitGates() << " two-qubit gates and at most "
             << gateCount << " gates.";
 
-  config.targetMetric         = TargetMetric::TwoQubitGates;
-  config.timestepLimit        = gateCount;
+  config.targetMetric = TargetMetric::TwoQubitGates;
+  config.timestepLimit = gateCount;
   config.useMultiGateEncoding = false;
-  config.useMaxSAT            = true;
-  config.twoQubitGateLimit    = results.getTwoQubitGates() - 1U;
+  config.useMaxSAT = true;
+  config.twoQubitGateLimit = results.getTwoQubitGates() - 1U;
 
   runMaxSAT(config);
 
@@ -357,11 +370,11 @@ void CliffordSynthesizer::minimizeGatesFixedTwoQubitGateCount(
             << results.getGates()
             << " gate(s) overall. Trying to minimize the number of gates.";
 
-  config.targetMetric         = TargetMetric::Gates;
-  config.timestepLimit        = results.getGates();
+  config.targetMetric = TargetMetric::Gates;
+  config.timestepLimit = results.getGates();
   config.useMultiGateEncoding = false;
-  config.useMaxSAT            = configuration.useMaxSAT;
-  config.twoQubitGateLimit    = results.getTwoQubitGates();
+  config.useMaxSAT = configuration.useMaxSAT;
+  config.twoQubitGateLimit = results.getTwoQubitGates();
 
   if (config.useMaxSAT) {
     runMaxSAT(config);
@@ -388,8 +401,8 @@ void CliffordSynthesizer::runMaxSAT(const EncoderConfig& config) {
 
 Results CliffordSynthesizer::callSolver(const EncoderConfig& config) {
   ++solverCalls;
-  auto       encoder = encoding::SATEncoder(config);
-  const auto res     = encoder.run();
+  auto encoder = encoding::SATEncoder(config);
+  const auto res = encoder.run();
   if (configuration.dumpIntermediateResults && res.sat()) {
     const auto filename = configuration.intermediateResultsPath +
                           "intermediate_" + std::to_string(solverCalls) +
@@ -403,8 +416,8 @@ Results CliffordSynthesizer::callSolver(const EncoderConfig& config) {
 }
 
 void CliffordSynthesizer::updateResults(const Configuration& config,
-                                        const Results&       newResults,
-                                        Results&             currentResults) {
+                                        const Results& newResults,
+                                        Results& currentResults) {
   if (!newResults.sat()) {
     return;
   }
@@ -456,8 +469,8 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   std::vector<std::size_t> layerNum{};
   layerNum.resize(qc.size());
   std::vector<std::size_t> layers{};
-  std::size_t              layer = 0U;
-  std::size_t              i     = 0;
+  std::size_t layer = 0U;
+  std::size_t i = 0;
   for (const auto& gate : qc) {
     if (gate->isCompoundOperation()) {
       const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
@@ -481,19 +494,19 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   if (initialCircuit->getDepth() == 0) {
     return;
   }
-  auto optimalConfig                 = configuration;
-  optimalConfig.heuristic            = false;
-  optimalConfig.target               = TargetMetric::Depth;
+  auto optimalConfig = configuration;
+  optimalConfig.heuristic = false;
+  optimalConfig.target = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;
 
   qc::CircuitOptimizer::reorderOperations(*initialCircuit);
-  qc::QuantumComputation          optCircuit{initialCircuit->getNqubits()};
+  qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
   const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
 
   std::vector<std::future<std::shared_ptr<qc::QuantumComputation>>> subCircuits;
   for (std::size_t i = 0; i < layers.size() - 1; i += configuration.splitSize) {
     std::size_t const startIdx = layers[i];
-    std::size_t       endIdx   = 0;
+    std::size_t endIdx = 0;
 
     if (i + configuration.splitSize >= layers.size()) {
       endIdx = layers.back();
@@ -524,7 +537,7 @@ std::shared_ptr<qc::QuantumComputation>
 CliffordSynthesizer::synthesizeSubcircuit(
     const std::shared_ptr<qc::QuantumComputation>& qc, std::size_t begin,
     std::size_t end, const Configuration& config) {
-  const Tableau       subTargetTableau{*qc, begin, end, true};
+  const Tableau subTargetTableau{*qc, begin, end, true};
   CliffordSynthesizer synth(subTargetTableau);
   synth.synthesize(config);
 

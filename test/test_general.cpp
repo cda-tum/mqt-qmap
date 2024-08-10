@@ -6,8 +6,9 @@
 #include "Architecture.hpp"
 #include "utils.hpp"
 
-#include "gtest/gtest.h"
-#include <iostream>
+#include <fstream>
+#include <gtest/gtest.h>
+#include <vector>
 
 TEST(General, LoadCouplingMapNonexistentFile) {
   EXPECT_THROW(Architecture("path/that/does/not/exist"), QMAPException);
@@ -88,7 +89,7 @@ TEST(General, DijkstraCNOTReversal) {
                               {0, 3, 0, 3, 0},
                               {0, 0, 3, 0, 3},
                               {0, 0, 0, 3, 0}};
-  Matrix       simpleDistanceTable{};
+  Matrix simpleDistanceTable{};
   Dijkstra::buildTable(cm, simpleDistanceTable, edgeWeights);
   Matrix fullDistanceTable{};
   Dijkstra::buildSingleEdgeSkipTable(simpleDistanceTable, cm, 1.,

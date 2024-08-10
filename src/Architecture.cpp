@@ -5,9 +5,27 @@
 
 #include "Architecture.hpp"
 
+#include "configuration/AvailableArchitecture.hpp"
 #include "utils.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <istream>
+#include <limits>
+#include <ostream>
+#include <queue>
+#include <regex>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
   std::stringstream ss{getCouplingMapSpecification(architecture)};
@@ -15,15 +33,11 @@ void Architecture::loadCouplingMap(AvailableArchitecture architecture) {
   loadCouplingMap(ss);
 }
 
-void Architecture::loadCouplingMap(std::istream& is) {
-  loadCouplingMap(std::move(is));
-}
-
 void Architecture::loadCouplingMap(const std::string& filename) {
   const std::size_t slash = filename.find_last_of('/');
-  const std::size_t dot   = filename.find_last_of('.');
-  name                    = filename.substr(slash + 1, dot - slash - 1);
-  auto ifs                = std::ifstream(filename);
+  const std::size_t dot = filename.find_last_of('.');
+  name = filename.substr(slash + 1, dot - slash - 1);
+  auto ifs = std::ifstream(filename);
   if (ifs.good()) {
     this->loadCouplingMap(ifs);
   } else {
@@ -31,13 +45,13 @@ void Architecture::loadCouplingMap(const std::string& filename) {
   }
 }
 
-void Architecture::loadCouplingMap(std::istream&& is) {
+void Architecture::loadCouplingMap(std::istream& is) {
   couplingMap.clear();
   properties.clear();
   std::string line;
 
-  const auto  rNqubits = std::regex("([0-9]+)");
-  const auto  rEdge    = std::regex("([0-9]+) ([0-9]+)");
+  const auto rNqubits = std::regex("([0-9]+)");
+  const auto rEdge = std::regex("([0-9]+) ([0-9]+)");
   std::smatch m;
 
   // get number of qubits
@@ -65,20 +79,16 @@ void Architecture::loadCouplingMap(std::istream&& is) {
 }
 
 void Architecture::loadCouplingMap(std::uint16_t nQ, const CouplingMap& cm) {
-  nqubits     = nQ;
+  nqubits = nQ;
   couplingMap = cm;
   properties.clear();
   name = "generic_" + std::to_string(nQ);
   createDistanceTable();
 }
 
-void Architecture::loadProperties(std::istream& is) {
-  loadProperties(std::move(is));
-}
-
 void Architecture::loadProperties(const std::string& filename) {
   const std::size_t slash = filename.find_last_of('/');
-  const std::size_t dot   = filename.find_last_of('.');
+  const std::size_t dot = filename.find_last_of('.');
   properties.setName(filename.substr(slash + 1, dot - slash - 1));
   if (!isArchitectureAvailable()) {
     name = properties.getName();
@@ -91,16 +101,16 @@ void Architecture::loadProperties(const std::string& filename) {
   }
 }
 
-void Architecture::loadProperties(std::istream&& is) {
+void Architecture::loadProperties(std::istream& is) {
   static const auto SINGLE_QUBIT_GATES = {"id", "u1", "u2", "u3",
                                           "rz", "sx", "x"};
 
   properties.clear();
 
   double averageCNOTFidelity = 0.0;
-  int    numCNOTFidelities   = 0;
+  int numCNOTFidelities = 0;
 
-  std::string      line;
+  std::string line;
   const std::regex regexDoubleFidelity = std::regex(
       R"(((\d+).?(\d+):\W*?(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)))");
   std::smatch sMatch;
@@ -167,7 +177,7 @@ void Architecture::loadProperties(const Properties& props) {
       }
     }
     nqubits = props.getNqubits();
-    name    = "generic_" + std::to_string(nqubits);
+    name = "generic_" + std::to_string(nqubits);
     createDistanceTable();
   }
   properties = props;
@@ -185,19 +195,19 @@ Architecture::Architecture(const std::uint16_t nQ, const CouplingMap& cm,
 }
 
 void Architecture::createDistanceTable() {
-  isBidirectional  = true;
+  isBidirectional = true;
   isUnidirectional = true;
   Matrix edgeWeights(nqubits, std::vector<double>(
                                   nqubits, std::numeric_limits<double>::max()));
   for (const auto& edge : couplingMap) {
     if (couplingMap.find({edge.second, edge.first}) == couplingMap.end()) {
       // unidirectional edge
-      isBidirectional                            = false;
+      isBidirectional = false;
       edgeWeights.at(edge.second).at(edge.first) = COST_UNIDIRECTIONAL_SWAP;
       edgeWeights.at(edge.first).at(edge.second) = COST_UNIDIRECTIONAL_SWAP;
     } else {
       // bidirectional edge
-      isUnidirectional                           = false;
+      isUnidirectional = false;
       edgeWeights.at(edge.first).at(edge.second) = COST_BIDIRECTIONAL_SWAP;
     }
   }
@@ -275,15 +285,13 @@ void Architecture::createFidelityTable() {
   }
 
   fidelityDistanceTables.clear();
-  if (fidelityAvailable) {
-    Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
-                                 swapFidelityCosts);
-  }
+  Dijkstra::buildEdgeSkipTable(couplingMap, fidelityDistanceTables,
+                               swapFidelityCosts);
 }
 
 std::uint64_t
 Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
-                                   std::int64_t                limit) {
+                                   std::int64_t limit) {
   const bool tryToAbortEarly = (limit != -1);
 
   // consolidate used qubits
@@ -294,8 +302,8 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 
   // create map for goal permutation
   std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
-  std::uint16_t                                    count    = 0U;
-  bool                                             identity = true;
+  std::uint16_t count = 0U;
+  bool identity = true;
   for (const auto q : qubits) {
     goalPermutation.emplace(q, permutation.at(count));
     if (q != permutation.at(count)) {
@@ -373,7 +381,7 @@ Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 }
 
 void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
-                                        std::vector<Edge>&          swaps) {
+                                        std::vector<Edge>& swaps) {
   // consolidate used qubits
   QubitSubset qubits{};
   for (const auto& q : permutation) {
@@ -387,8 +395,8 @@ void Architecture::minimumNumberOfSwaps(std::vector<std::uint16_t>& permutation,
 
   // create map for goal permutation
   std::unordered_map<std::uint16_t, std::uint16_t> goalPermutation{};
-  std::uint16_t                                    count    = 0;
-  bool                                             identity = true;
+  std::uint16_t count = 0;
+  bool identity = true;
   for (const auto q : qubits) {
     goalPermutation.emplace(q, permutation.at(count));
     if (q != permutation.at(count)) {
@@ -474,11 +482,11 @@ Architecture::getCouplingLimit(const QubitSubset& qubitChoice) const {
   return findCouplingLimit(getCouplingMap(), getNqubits(), qubitChoice);
 }
 
-std::uint64_t Architecture::bfs(const std::uint16_t   start,
-                                const std::uint16_t   goal,
+std::uint64_t Architecture::bfs(const std::uint16_t start,
+                                const std::uint16_t goal,
                                 const std::set<Edge>& teleportations) const {
   std::queue<std::vector<int>> queue;
-  std::vector<int>             v;
+  std::vector<int> v;
   v.push_back(start);
   queue.push(v);
   std::vector<std::vector<int>> solutions;
@@ -544,11 +552,11 @@ std::uint64_t Architecture::bfs(const std::uint16_t   start,
   return (length - 2) * 7 + 4;
 }
 
-std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
+std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
                                             const std::uint16_t nQubits) {
   std::vector<std::unordered_set<std::uint16_t>> connections;
-  std::vector<std::uint16_t>                     d;
-  std::vector<bool>                              visited;
+  std::vector<std::uint16_t> d;
+  std::vector<bool> visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
@@ -572,12 +580,12 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
   return maxSum;
 }
 
-std::size_t Architecture::findCouplingLimit(const CouplingMap&  cm,
+std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
                                             const std::uint16_t nQubits,
-                                            const QubitSubset&  qubitChoice) {
+                                            const QubitSubset& qubitChoice) {
   std::vector<std::unordered_set<std::uint16_t>> connections;
-  std::vector<std::uint16_t>                     d;
-  std::vector<bool>                              visited;
+  std::vector<std::uint16_t> d;
+  std::vector<bool> visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
   for (const auto& edge : cm) {
@@ -644,8 +652,8 @@ void Architecture::getHighestFidelityCouplingMap(
     return;
   }
 
-  double bestFidelity        = std::numeric_limits<double>::lowest();
-  auto   allConnectedSubsets = getAllConnectedSubsets(subsetSize);
+  double bestFidelity = std::numeric_limits<double>::lowest();
+  auto allConnectedSubsets = getAllConnectedSubsets(subsetSize);
 
   for (const auto& qubitChoice : allConnectedSubsets) {
     CouplingMap map{};
@@ -653,7 +661,7 @@ void Architecture::getHighestFidelityCouplingMap(
     const auto currentFidelity =
         getAverageArchitectureFidelity(map, qubitChoice, properties);
     if (currentFidelity > bestFidelity) {
-      reducedMap   = map;
+      reducedMap = map;
       bestFidelity = currentFidelity;
     }
   }
@@ -690,7 +698,7 @@ void Architecture::getReducedCouplingMaps(
   }
 }
 void Architecture::getReducedCouplingMap(const QubitSubset& qubitChoice,
-                                         CouplingMap&       reducedMap) const {
+                                         CouplingMap& reducedMap) const {
   reducedMap.clear();
   if (!isArchitectureAvailable()) {
     reducedMap =
@@ -708,7 +716,7 @@ void Architecture::getReducedCouplingMap(const QubitSubset& qubitChoice,
 double
 Architecture::getAverageArchitectureFidelity(const CouplingMap& cm,
                                              const QubitSubset& qubitChoice,
-                                             const Properties&  props) {
+                                             const Properties& props) {
   if (props.empty()) {
     return 0.0;
   }
@@ -749,5 +757,5 @@ void Architecture::printCouplingMap(const CouplingMap& cm, std::ostream& os) {
   for (const auto& edge : cm) {
     os << "(" << edge.first << " " << edge.second << ") ";
   }
-  os << "}" << std::endl;
+  os << "}\n";
 }

@@ -6,10 +6,9 @@
 #pragma once
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "logicblocks/LogicTerm.hpp"
 
 #include <cstddef>
-#include <functional>
-#include <optional>
 
 namespace cs::encoding {
 

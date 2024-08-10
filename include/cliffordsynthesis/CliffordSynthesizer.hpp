@@ -5,17 +5,19 @@
 
 #pragma once
 
+#include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
-#include "plog/Log.h"
 
 #include <algorithm>
 #include <cstddef>
 #include <limits>
 #include <memory>
+#include <plog/Log.h>
 #include <sstream>
 #include <utility>
 
@@ -103,10 +105,10 @@ protected:
 
   Configuration configuration{};
 
-  Results                                 results{};
-  std::shared_ptr<qc::QuantumComputation> resultCircuit{};
-  Tableau                                 resultTableau{};
-  std::size_t                             solverCalls{};
+  Results results;
+  std::shared_ptr<qc::QuantumComputation> resultCircuit;
+  Tableau resultTableau;
+  std::size_t solverCalls{};
 
   static bool requiresMultiGateEncoding(const TargetMetric metric) {
     return metric == TargetMetric::Depth;
@@ -114,8 +116,8 @@ protected:
 
   void determineInitialTimestepLimit(EncoderConfig& config);
   std::pair<std::size_t, std::size_t> determineUpperBound(EncoderConfig config);
-  void                                runMaxSAT(const EncoderConfig& config);
-  Results                             callSolver(const EncoderConfig& config);
+  void runMaxSAT(const EncoderConfig& config);
+  Results callSolver(const EncoderConfig& config);
 
   void minimizeGatesFixedDepth(EncoderConfig config);
 
@@ -127,7 +129,7 @@ protected:
   void twoQubitGateOptimalSynthesis(EncoderConfig config, std::size_t lower,
                                     std::size_t upper);
 
-  void minimizeTwoQubitGatesFixedGateCount(std::size_t   gateCount,
+  void minimizeTwoQubitGatesFixedGateCount(std::size_t gateCount,
                                            EncoderConfig config);
   void minimizeGatesFixedTwoQubitGateCount(EncoderConfig config);
 
@@ -183,7 +185,7 @@ protected:
                        const Configuration& config);
   static void updateResults(const Configuration& config,
                             const Results& newResults, Results& currentResults);
-  void        removeRedundantGates();
+  void removeRedundantGates();
 };
 
 } // namespace cs

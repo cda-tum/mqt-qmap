@@ -5,7 +5,13 @@
 
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 
-#include "plog/Log.h"
+#include "Logic.hpp"
+#include "operations/OpType.hpp"
+
+#include <cstddef>
+#include <plog/Log.h>
+#include <plog/Severity.h>
+#include <utility>
 
 namespace cs::encoding {
 
@@ -44,7 +50,7 @@ void SingleGateEncoder::assertGateConstraints() {
 void SingleGateEncoder::assertNoGateNoChangeConstraint(const std::size_t pos) {
   for (std::size_t q = 0U; q < N; ++q) {
     const auto noChange = createNoChangeOnQubit(pos, q);
-    const auto noGate   = createNoGateOnQubit(pos, q);
+    const auto noGate = createNoGateOnQubit(pos, q);
     lb->assertFormula(LogicTerm::implies(noGate, noChange));
   }
 }
@@ -81,7 +87,7 @@ void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
 
 LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
     const std::size_t pos, const std::size_t ctrl, const std::size_t trgt) {
-  auto changes              = LogicTerm(true);
+  auto changes = LogicTerm(true);
   const auto [xCtrl, xTrgt] = tvars->twoQubitXChange(pos + 1, ctrl, trgt);
   const auto [zCtrl, zTrgt] = tvars->twoQubitZChange(pos + 1, ctrl, trgt);
 
@@ -99,15 +105,15 @@ LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
 LogicTerm SingleGateEncoder::createNoChangeOnQubit(const std::size_t pos,
                                                    const std::size_t q) {
   auto noChange = LogicTerm(true);
-  noChange      = noChange && (tvars->x[pos + 2][q] == tvars->x[pos + 1][q]);
-  noChange      = noChange && (tvars->z[pos + 2][q] == tvars->z[pos + 1][q]);
+  noChange = noChange && (tvars->x[pos + 2][q] == tvars->x[pos + 1][q]);
+  noChange = noChange && (tvars->z[pos + 2][q] == tvars->z[pos + 1][q]);
   return noChange;
 }
 
 LogicTerm SingleGateEncoder::createNoGateOnQubit(const std::size_t pos,
                                                  const std::size_t q) {
   const auto& singleQubitGates = vars.gS[pos];
-  auto        noGate           = LogicTerm(true);
+  auto noGate = LogicTerm(true);
   for (const auto& gate : SINGLE_QUBIT_GATES) {
     if (gate == qc::OpType::None) {
       continue;
@@ -134,7 +140,7 @@ void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
   }
 
   // gate variables of the current and the next time step
-  const auto& gSNow  = vars.gS[pos];
+  const auto& gSNow = vars.gS[pos];
   const auto& gSNext = vars.gS[pos + 1];
 
   // collect variables of single-qubit gates that could be applied to `qubit`
@@ -165,7 +171,7 @@ void SingleGateEncoder::assertSingleQubitGateOrderConstraints(
   // once no gate is applied, no other gate can be applied, i.e., in the next
   // timestep any of the `None` gate variables must be selected.
   const auto noneIndex = gateToIndex(qc::OpType::None);
-  auto       noGate    = LogicTerm(false);
+  auto noGate = LogicTerm(false);
   for (std::size_t q = 0U; q < N; ++q) {
     noGate = noGate || gSNext[noneIndex][q];
   }

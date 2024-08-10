@@ -5,12 +5,21 @@
 
 #pragma once
 
+#include <cstdint>
+#include <istream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
-enum class CommanderGrouping { Halves, Fixed2, Fixed3, Logarithm };
+enum class CommanderGrouping : std::uint8_t {
+  Halves,
+  Fixed2,
+  Fixed3,
+  Logarithm
+};
 
-static inline std::string toString(const CommanderGrouping grouping) {
+[[maybe_unused]] static inline std::string
+toString(const CommanderGrouping grouping) {
   switch (grouping) {
   case CommanderGrouping::Fixed2:
     return "fixed2";
@@ -24,7 +33,8 @@ static inline std::string toString(const CommanderGrouping grouping) {
   return " ";
 }
 
-static CommanderGrouping groupingFromString(const std::string& grouping) {
+[[maybe_unused]] static CommanderGrouping
+groupingFromString(const std::string& grouping) {
   if (grouping == "halves" || grouping == "0") {
     return CommanderGrouping::Halves;
   }

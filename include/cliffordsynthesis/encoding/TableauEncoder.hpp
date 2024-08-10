@@ -7,10 +7,13 @@
 
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
+#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 
 namespace cs::encoding {
 
@@ -18,20 +21,20 @@ class TableauEncoder {
 public:
   TableauEncoder() = default;
   TableauEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-                 const std::size_t                      timestepLimit,
+                 const std::size_t timestepLimit,
                  std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), S(tableauSize), T(timestepLimit),
         lb(std::move(logicBlock)) {}
 
   struct Variables {
     // variables for the X parts of the tableaus
-    logicbase::LogicMatrix x{};
+    logicbase::LogicMatrix x;
     // variables for the Z parts of the tableaus
-    logicbase::LogicMatrix z{};
+    logicbase::LogicMatrix z;
     // variables for the phase parts of the tableaus
-    logicbase::LogicVector r{};
+    logicbase::LogicVector r;
     // variables for mapping of qubits
-    logicbase::LogicMatrix p{};
+    logicbase::LogicMatrix p;
 
     // update rules for single-qubit gates
     [[nodiscard]] logicbase::LogicTerm
@@ -83,6 +86,6 @@ protected:
   Variables vars{};
 
   // the logic block to use
-  std::shared_ptr<logicbase::LogicBlock> lb{};
+  std::shared_ptr<logicbase::LogicBlock> lb;
 };
 } // namespace cs::encoding

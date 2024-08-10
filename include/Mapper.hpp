@@ -6,18 +6,26 @@
 #pragma once
 
 #include "Architecture.hpp"
+#include "Definitions.hpp"
 #include "MappingResults.hpp"
 #include "QuantumComputation.hpp"
 #include "configuration/Configuration.hpp"
+#include "operations/Operation.hpp"
+#include "utils.hpp"
 
+#include <algorithm>
 #include <array>
-#include <chrono>
-#include <fstream>
+#include <cctype>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <map>
-#include <memory>
+#include <nlohmann/json.hpp>
+#include <optional>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
 /**
  * number of two-qubit gates acting on pairs of logical qubits in some layer
@@ -53,8 +61,8 @@ protected:
    * For a single-qubit operation `control` is set to `-1`
    */
   struct Gate {
-    std::int16_t  control = -1;
-    std::uint16_t target  = 0;
+    std::int16_t control = -1;
+    std::uint16_t target = 0;
 
     qc::Operation* op = nullptr;
 
@@ -85,36 +93,36 @@ protected:
    * Each entry in the outer vector corresponds to 1 layer, containing all its
    * gates in an inner vector
    */
-  std::vector<std::vector<Gate>> layers{};
+  std::vector<std::vector<Gate>> layers;
 
   /**
    * @brief The number of 1Q-gates acting on each logical qubit in each layer
    */
-  std::vector<SingleQubitMultiplicity> singleQubitMultiplicities{};
+  std::vector<SingleQubitMultiplicity> singleQubitMultiplicities;
 
   /**
    * @brief The number of 2Q-gates acting on each pair of logical qubits in each
    * layer
    */
-  std::vector<TwoQubitMultiplicity> twoQubitMultiplicities{};
+  std::vector<TwoQubitMultiplicity> twoQubitMultiplicities;
 
   /**
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a gate in the layer
    */
-  std::vector<std::set<std::uint16_t>> activeQubits{};
+  std::vector<std::set<std::uint16_t>> activeQubits;
 
   /**
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a 1Q-gate in the layer
    */
-  std::vector<std::set<std::uint16_t>> activeQubits1QGates{};
+  std::vector<std::set<std::uint16_t>> activeQubits1QGates;
 
   /**
    * @brief For each layer the set of all logical qubits, which are acted on by
    * a 2Q-gate in the layer
    */
-  std::vector<std::set<std::uint16_t>> activeQubits2QGates{};
+  std::vector<std::set<std::uint16_t>> activeQubits2QGates;
 
   /**
    * @brief containing the logical qubit currently mapped to each physical
@@ -131,7 +139,7 @@ protected:
    */
   std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
 
-  MappingResults results{};
+  MappingResults results;
 
   /**
    * @brief Initialize the results structure with circuit names, registers in
@@ -236,16 +244,16 @@ protected:
    * results in `info.gates` and `info.cnots`
    */
   virtual void countGates(const qc::QuantumComputation& circuit,
-                          MappingResults::CircuitInfo&  info) {
+                          MappingResults::CircuitInfo& info) {
     countGates(circuit.cbegin(), circuit.cend(), info);
   }
   /**
    * @brief count number of elementary gates and cnots in circuit and save the
    * results in `info.gates` and `info.cnots`
    */
-  virtual void countGates(decltype(qcMapped.cbegin())      it,
+  virtual void countGates(decltype(qcMapped.cbegin()) it,
                           const decltype(qcMapped.cend())& end,
-                          MappingResults::CircuitInfo&     info);
+                          MappingResults::CircuitInfo& info);
 
   /**
    * @brief performs optimizations on the circuit before mapping
@@ -279,12 +287,12 @@ public:
 
   virtual void dumpResult(const std::string& outputFilename) {
     if (qcMapped.empty()) {
-      std::cerr << "Mapped circuit is empty." << std::endl;
+      std::cerr << "Mapped circuit is empty.\n";
       return;
     }
 
-    const std::size_t dot       = outputFilename.find_last_of('.');
-    std::string       extension = outputFilename.substr(dot + 1);
+    const std::size_t dot = outputFilename.find_last_of('.');
+    std::string extension = outputFilename.substr(dot + 1);
     std::transform(extension.begin(), extension.end(), extension.begin(),
                    [](unsigned char c) { return ::tolower(c); });
     if (extension == "real") {
@@ -298,10 +306,10 @@ public:
   }
 
   virtual void dumpResult(const std::string& outputFilename,
-                          qc::Format         format) {
+                          qc::Format format) {
     const std::size_t slash = outputFilename.find_last_of('/');
-    const std::size_t dot   = outputFilename.find_last_of('.');
-    results.output.name     = outputFilename.substr(slash + 1, dot - slash - 1);
+    const std::size_t dot = outputFilename.find_last_of('.');
+    results.output.name = outputFilename.substr(slash + 1, dot - slash - 1);
     qcMapped.dump(outputFilename, format);
   }
 
@@ -316,7 +324,7 @@ public:
 
   virtual MappingResults& getResults() { return results; }
 
-  virtual nlohmann::json json() { return results.json(); }
+  virtual nlohmann::basic_json<> json() { return results.json(); }
 
   virtual std::string csv() { return results.csv(); }
 

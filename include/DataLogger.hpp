@@ -6,12 +6,20 @@
 #pragma once
 
 #include "Architecture.hpp"
-#include "Mapper.hpp"
+#include "Definitions.hpp"
 #include "MappingResults.hpp"
 #include "QuantumComputation.hpp"
+#include "operations/CompoundOperation.hpp"
+#include "utils.hpp"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 class DataLogger {
 public:
@@ -43,10 +51,10 @@ public:
       const std::vector<std::uint16_t>& singleQubitMultiplicity,
       const std::map<std::pair<std::uint16_t, std::uint16_t>,
                      std::pair<std::uint16_t, std::uint16_t>>&
-                                                         twoQubitMultiplicity,
+          twoQubitMultiplicity,
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
       std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
-      double                                             finalLookaheadPenalty,
+      double finalLookaheadPenalty,
       const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
       const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth);
   void splitLayer();
@@ -66,14 +74,14 @@ public:
   void close();
 
 protected:
-  std::string                dataLoggingPath;
-  Architecture*              architecture;
-  std::uint16_t              nqubits;
-  qc::QuantumComputation     inputCircuit;
-  qc::RegisterNames          qregs{};
-  qc::RegisterNames          cregs{};
+  std::string dataLoggingPath;
+  Architecture* architecture;
+  std::uint16_t nqubits;
+  qc::QuantumComputation inputCircuit;
+  qc::RegisterNames qregs;
+  qc::RegisterNames cregs;
   std::vector<std::ofstream> searchNodesLogFiles; // 1 per layer
-  bool                       deactivated = false;
+  bool deactivated = false;
 
   void openNewLayer(std::size_t layer);
 };

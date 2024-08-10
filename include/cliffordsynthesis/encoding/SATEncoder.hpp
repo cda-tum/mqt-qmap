@@ -8,11 +8,12 @@
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
 #include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
-#include "operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <cstddef>
@@ -60,7 +61,7 @@ public:
     // an optional limit on the total number of two-qubit gates
     std::optional<std::size_t> twoQubitGateLimit = std::nullopt;
 
-    SolverParameterMap solverParameters = {};
+    SolverParameterMap solverParameters;
   };
 
   SATEncoder() = default;
@@ -72,16 +73,16 @@ public:
   virtual Results run();
 
 protected:
-  void                            initializeSolver();
-  void                            createFormulation();
+  void initializeSolver();
+  void createFormulation();
   [[nodiscard]] logicbase::Result solve() const;
-  void                            extractResultsFromModel(Results& res) const;
-  void                            cleanup() const;
+  void extractResultsFromModel(Results& res) const;
+  void cleanup() const;
 
   std::shared_ptr<logicbase::LogicBlock> lb;
-  std::shared_ptr<TableauEncoder>        tableauEncoder;
-  std::shared_ptr<GateEncoder>           gateEncoder;
-  std::shared_ptr<ObjectiveEncoder>      objectiveEncoder;
+  std::shared_ptr<TableauEncoder> tableauEncoder;
+  std::shared_ptr<GateEncoder> gateEncoder;
+  std::shared_ptr<ObjectiveEncoder> objectiveEncoder;
 
   // all configuration options for the encoder
   Configuration config{};

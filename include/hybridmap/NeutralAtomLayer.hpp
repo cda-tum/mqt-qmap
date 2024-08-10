@@ -24,10 +24,10 @@ namespace na {
 
 class NeutralAtomLayer {
 protected:
-  qc::DAG               dag;
-  qc::DAGIterators      iterators;
-  GateList              gates;
-  GateList              mappedSingleQubitGates;
+  qc::DAG dag;
+  qc::DAGIterators iterators;
+  GateList gates;
+  GateList mappedSingleQubitGates;
   std::vector<GateList> candidates;
 
   /**
@@ -49,12 +49,12 @@ protected:
   void candidatesToGates(const std::set<qc::Qubit>& qubitsToUpdate);
 
   // Commutation checks
-  static bool commutesWithAtQubit(const GateList&      layer,
+  static bool commutesWithAtQubit(const GateList& layer,
                                   const qc::Operation* opPointer,
-                                  const qc::Qubit&     qubit);
+                                  const qc::Qubit& qubit);
   static bool commuteAtQubit(const qc::Operation* opPointer1,
                              const qc::Operation* opPointer2,
-                             const qc::Qubit&     qubit);
+                             const qc::Qubit& qubit);
 
 public:
   // Constructor

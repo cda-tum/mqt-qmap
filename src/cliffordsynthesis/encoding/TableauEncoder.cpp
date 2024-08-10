@@ -6,8 +6,18 @@
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
 #include "LogicTerm.hpp"
+#include "Logic.hpp"
+#include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "logicblocks/Model.hpp"
-#include "plog/Log.h"
+#include "operations/OpType.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <plog/Log.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace cs::encoding {
 
@@ -53,7 +63,7 @@ void TableauEncoder::createTableauVariables() {
   }
 }
 
-void TableauEncoder::assertTableau(const Tableau&    tableau,
+void TableauEncoder::assertTableau(const Tableau& tableau,
                                    const std::size_t t) {
   const auto n = static_cast<std::uint16_t>(S);
 
@@ -113,9 +123,51 @@ void TableauEncoder::assertMappingConstraints() {
   lb->assertFormula(LogicTerm::eq(vars.r[T - 1], vars.r[T]));
 }
 
-void TableauEncoder::extractTableauFromModel(Results&          results,
+void TableauEncoder::assertMappingConstraints() {
+  // if p_i_j is set column i is mapped to column j between 0 and 1
+  for (std::size_t i = 0U; i < N; ++i) {
+    for (std::size_t j = 0U; j < N; ++j) {
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.x[1][j] == vars.x[0][i]));
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.z[1][j] == vars.z[0][i]));
+    }
+  }
+  // assert that r vals are unchanges between 0 and 1
+  lb->assertFormula(LogicTerm::eq(vars.r[0], vars.r[1]));
+  // assert that for every i and j exactly one p variable is set
+  for (std::size_t i = 0U; i < N; ++i) {
+    int32_t   vr     = 0;
+    int32_t   vr1    = 1;
+    LogicTerm sumRow = LogicTerm(vr);
+    for (std::size_t j = 0U; j < N; ++j) {
+      sumRow = sumRow + vars.p[i][j];
+    }
+    lb->assertFormula(sumRow == LogicTerm(vr1));
+    int32_t   vc     = 0;
+    int32_t   vc1    = 1;
+    LogicTerm sumCol = LogicTerm(vc);
+    for (std::size_t j = 0U; j < N; ++j) {
+      sumCol = sumCol + vars.p[j][i];
+    }
+    lb->assertFormula(sumCol == LogicTerm(vc1));
+  }
+  // if p_i_j is set undo mapping between T-1 and T
+  for (std::size_t i = 0U; i < N; ++i) {
+    for (std::size_t j = 0U; j < N; ++j) {
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.x[T][i] == vars.x[T - 1][j]));
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.z[T][i] == vars.z[T - 1][j]));
+    }
+  }
+  // assert that r vals are unchanges between T-1 and T
+  lb->assertFormula(LogicTerm::eq(vars.r[T - 1], vars.r[T]));
+}
+
+void TableauEncoder::extractTableauFromModel(Results& results,
                                              const std::size_t t,
-                                             Model&            model) const {
+                                             Model& model) const {
   Tableau tableau(N, S > N);
   for (std::size_t i = 0; i < N; ++i) {
     const auto bvx = model.getBitvectorValue(vars.x[t][i], lb.get());
@@ -144,7 +196,7 @@ void TableauEncoder::extractMappingFromModel(Results& results,
 LogicTerm
 TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None:
   case qc::OpType::X:
@@ -165,7 +217,7 @@ TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
 LogicTerm
 TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None:
   case qc::OpType::X:
@@ -187,7 +239,7 @@ TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
 LogicTerm
 TableauEncoder::Variables::singleQubitRChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None: {
     const auto bvs = r[pos].getBitVectorSize();

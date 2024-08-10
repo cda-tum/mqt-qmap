@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.8.1", "setuptools-scm>=7", "pybind11>=2.13"]
+requires = ["scikit-build-core>=0.10.1", "setuptools-scm>=7", "pybind11>=2.13"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -80,23 +80,22 @@ Discussions = "https://github.com/cda-tum/mqt-qmap/discussions"
 
 [tool.scikit-build]
 # Protect the configuration against future changes in scikit-build-core
-minimum-version = "0.8.1"
+minimum-version = "build-system.requires"
 
 # Set the wheel install directory
 wheel.install-dir = "mqt/qmap"
 
-# Set required CMake and Ninja versions
-cmake.version = ">=3.19"
+# Set required Ninja version
 ninja.version = ">=1.10"
 
 # Setuptools-style build caching in a local directory
-build-dir = "build/{wheel_tag}"
+build-dir = "build/{build_type}"
 
 # Explicitly set the package directory
 wheel.packages = ["src/mqt"]
 
 # Only build the Python bindings target
-cmake.targets = ["pyqmap"]
+build.targets = ["pyqmap"]
 
 # Only install the Python package component
 install.components = ["mqt-qmap_Python"]
@@ -254,8 +253,26 @@ isort.required-imports = ["from __future__ import annotations"]
 convention = "google"
 
 
+[tool.typos]
+files.extend-exclude = [
+  "tableaus\\.json"
+]
+default.extend-ignore-re = [
+  '"id": ".*",',
+  "(?Rm)^.*(#|//)\\s*spellchecker:disable-line$",  # ignore line
+  "(?s)(#|//)\\s*spellchecker:off.*?\\n\\s*(#|//)\\s*spellchecker:on" # ignore block
+]
+[tool.typos.default.extend-words]
+wille = "wille"
+anc = "anc"
+optin = "optin"
+aer = "aer"
+iy = "iy"
+
+
 [tool.repo-review]
 ignore = [
+  "PC160", # "Uses codespell" -> switched to https://github.com/crate-ci/typos
   "PC180", # "Uses prettier" -> switched to different prettier-mirror that is not recognized by the check
 ]
 
@@ -283,4 +300,4 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel>=1.7.3"
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
-environment = { CMAKE_GENERATOR = "Ninja" }
+environment = { CMAKE_GENERATOR = "Ninja", SKBUILD_CMAKE_ARGS="--fresh" }

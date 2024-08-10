@@ -24,7 +24,7 @@ protected:
   void SetUp() override { testArchitecturePath += GetParam() + ".json"; }
 };
 
-TEST_P(NeutralAtomArchitectureTest, LoadArchitecures) {
+TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
   std::cout << "wd: " << std::filesystem::current_path() << '\n';
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
 
@@ -57,25 +57,25 @@ class NeutralAtomMapperTest
           std::tuple<std::string, std::string, qc::fp, qc::fp, qc::fp,
                      na::InitialCoordinateMapping>> {
 protected:
-  std::string                  testArchitecturePath = "architectures/";
-  std::string                  testQcPath           = "circuits/";
-  qc::fp                       gateWeight           = 1;
-  qc::fp                       shuttlingWeight      = 1;
-  qc::fp                       lookAheadWeight      = 1;
+  std::string testArchitecturePath = "architectures/";
+  std::string testQcPath = "circuits/";
+  qc::fp gateWeight = 1;
+  qc::fp shuttlingWeight = 1;
+  qc::fp lookAheadWeight = 1;
   na::InitialCoordinateMapping initialCoordinateMapping =
       na::InitialCoordinateMapping::Trivial;
   // fixed
-  qc::fp   decay               = 0.1;
-  qc::fp   shuttlingTimeWeight = 0.1;
-  uint32_t seed                = 42;
+  qc::fp decay = 0.1;
+  qc::fp shuttlingTimeWeight = 0.1;
+  uint32_t seed = 42;
 
   void SetUp() override {
     auto params = GetParam();
     testArchitecturePath += std::get<0>(params) + ".json";
     testQcPath += std::get<1>(params) + ".qasm";
-    gateWeight               = std::get<2>(params);
-    shuttlingWeight          = std::get<3>(params);
-    lookAheadWeight          = std::get<4>(params);
+    gateWeight = std::get<2>(params);
+    shuttlingWeight = std::get<3>(params);
+    lookAheadWeight = std::get<4>(params);
     initialCoordinateMapping = std::get<5>(params);
   }
 };
@@ -83,22 +83,22 @@ protected:
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
-  na::NeutralAtomMapper    mapper(arch);
-  na::MapperParameters     mapperParameters;
-  mapperParameters.initialMapping       = initialCoordinateMapping;
+  na::NeutralAtomMapper mapper(arch);
+  na::MapperParameters mapperParameters;
+  mapperParameters.initialMapping = initialCoordinateMapping;
   mapperParameters.lookaheadWeightSwaps = lookAheadWeight;
   mapperParameters.lookaheadWeightMoves = lookAheadWeight;
-  mapperParameters.decay                = decay;
-  mapperParameters.shuttlingTimeWeight  = shuttlingTimeWeight;
-  mapperParameters.gateWeight           = gateWeight;
-  mapperParameters.shuttlingWeight      = shuttlingWeight;
-  mapperParameters.seed                 = seed;
-  mapperParameters.verbose              = true;
+  mapperParameters.decay = decay;
+  mapperParameters.shuttlingTimeWeight = shuttlingTimeWeight;
+  mapperParameters.gateWeight = gateWeight;
+  mapperParameters.shuttlingWeight = shuttlingWeight;
+  mapperParameters.seed = seed;
+  mapperParameters.verbose = true;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto                   qcMapped    = mapper.map(qc, initialMapping);
-  auto                   qcAodMapped = mapper.convertToAod(qcMapped);
+  auto qcMapped = mapper.map(qc, initialMapping);
+  auto qcAodMapped = mapper.convertToAod(qcMapped);
 
   auto scheduleResults = mapper.schedule(true, true);
 
@@ -124,17 +124,17 @@ TEST(NeutralAtomMapperTest, Output) {
   auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
   na::InitialMapping const initialMapping = na::InitialMapping::Identity;
-  na::NeutralAtomMapper    mapper(arch);
-  na::MapperParameters     mapperParameters;
-  mapperParameters.initialMapping       = na::InitialCoordinateMapping::Trivial;
+  na::NeutralAtomMapper mapper(arch);
+  na::MapperParameters mapperParameters;
+  mapperParameters.initialMapping = na::InitialCoordinateMapping::Trivial;
   mapperParameters.lookaheadWeightSwaps = 0.1;
   mapperParameters.lookaheadWeightMoves = 0.1;
-  mapperParameters.decay                = 0;
-  mapperParameters.shuttlingTimeWeight  = 0.1;
-  mapperParameters.gateWeight           = 1;
-  mapperParameters.shuttlingWeight      = 0;
-  mapperParameters.seed                 = 43;
-  mapperParameters.verbose              = true;
+  mapperParameters.decay = 0;
+  mapperParameters.shuttlingTimeWeight = 0.1;
+  mapperParameters.gateWeight = 1;
+  mapperParameters.shuttlingWeight = 0;
+  mapperParameters.seed = 43;
+  mapperParameters.verbose = true;
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(

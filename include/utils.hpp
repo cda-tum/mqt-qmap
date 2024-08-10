@@ -5,22 +5,22 @@
 
 #pragma once
 
-#include "operations/Operation.hpp"
+#include "operations/OpType.hpp"
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
-#include <iostream>
 #include <limits>
 #include <optional>
-#include <queue>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
-using Matrix      = std::vector<std::vector<double>>;
-using Edge        = std::pair<std::uint16_t, std::uint16_t>;
+using Matrix = std::vector<std::vector<double>>;
+using Edge = std::pair<std::uint16_t, std::uint16_t>;
 using CouplingMap = std::set<Edge>;
 using QubitSubset = std::set<std::uint16_t>;
 
@@ -35,7 +35,7 @@ struct Exchange {
   std::uint16_t first;
   std::uint16_t second;
   std::uint16_t middleAncilla;
-  qc::OpType    op;
+  qc::OpType op;
 };
 
 class QMAPException : public std::runtime_error {
@@ -96,9 +96,9 @@ public:
    * e.g. in the case of fidelity-aware distances or distances on
    * mixed bi/unidirectional architectures)
    */
-  static void buildEdgeSkipTable(const CouplingMap&   couplingMap,
+  static void buildEdgeSkipTable(const CouplingMap& couplingMap,
                                  std::vector<Matrix>& distanceTables,
-                                 const Matrix&        edgeWeights);
+                                 const Matrix& edgeWeights);
   /**
    * @brief builds a distance table containing the minimal costs for moving
    * logical qubits from one physical qubit to another (along the cheapest path)
@@ -113,9 +113,9 @@ public:
    * @param reversalCost cost for reversing an edge
    * @param edgeSkipDistanceTable target distance table
    */
-  static void buildSingleEdgeSkipTable(const Matrix&      distanceTable,
+  static void buildSingleEdgeSkipTable(const Matrix& distanceTable,
                                        const CouplingMap& couplingMap,
-                                       double             reversalCost,
+                                       double reversalCost,
                                        Matrix& edgeSkipDistanceTable);
 
 protected:
@@ -194,8 +194,8 @@ using filter_function = std::function<bool(const QubitSubset&)>;
 std::vector<QubitSubset> subsets(const QubitSubset& input, std::size_t size,
                                  const filter_function& filter = nullptr);
 
-void        parseLine(const std::string& line, char separator,
-                      const std::set<char>&     escapeChars,
-                      const std::set<char>&     ignoredChars,
-                      std::vector<std::string>& result);
+void parseLine(const std::string& line, char separator,
+               const std::set<char>& escapeChars,
+               const std::set<char>& ignoredChars,
+               std::vector<std::string>& result);
 CouplingMap getFullyConnectedMap(std::uint16_t nQubits);
