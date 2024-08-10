@@ -1,5 +1,5 @@
 #include <iostream>
-#include <z3_api.h> // IWYU pragma: keep
+#include <z3.h>
 
 int main() {
   std::cout << Z3_get_full_version();
