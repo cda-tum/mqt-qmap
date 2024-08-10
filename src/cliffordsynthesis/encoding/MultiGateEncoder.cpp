@@ -77,7 +77,7 @@ void encoding::MultiGateEncoder::assertTwoQubitGateConstraints(
         continue;
       }
       // if no connection between ctrl and trgt then assert variable is false
-      if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
+      if (couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
         PLOG_DEBUG << "Asserting no CNOT on " << ctrl << " and " << trgt;
         lb->assertFormula(!twoQubitGates[ctrl][trgt]);
         continue;

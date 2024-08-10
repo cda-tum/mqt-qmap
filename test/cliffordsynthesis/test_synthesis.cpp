@@ -67,29 +67,29 @@ std::vector<TestConfiguration> getTests(const std::string& path) {
 }
 } // namespace
 
-CouplingMap parseEdges(const std::string &edgeString) {
-    CouplingMap edges;
-    std::stringstream ss(edgeString);
-    std::string item;
-    
-    while (getline(ss, item, ';')) {
-        item.erase(remove(item.begin(), item.end(), '{'), item.end());
-        item.erase(remove(item.begin(), item.end(), '}'), item.end());
-        size_t pos = item.find(',');
-        std::string first, second;
-        
-        first = item.substr(0, pos);
-        second = item.substr(pos+1);
-        
-        int u = stoi(first);
-        int v = stoi(second);
-        
-        // Insert the edge into the set
-        edges.insert(Edge{u, v});
-        std::cout << "Edge " << u << "," << v << " inserted to cm\n";
-    }
-    
-    return edges;
+CouplingMap parseEdges(const std::string& edgeString) {
+  CouplingMap       edges;
+  std::stringstream ss(edgeString);
+  std::string       item;
+
+  while (getline(ss, item, ';')) {
+    item.erase(remove(item.begin(), item.end(), '{'), item.end());
+    item.erase(remove(item.begin(), item.end(), '}'), item.end());
+    size_t      pos = item.find(',');
+    std::string first, second;
+
+    first  = item.substr(0, pos);
+    second = item.substr(pos + 1);
+
+    int u = stoi(first);
+    int v = stoi(second);
+
+    // Insert the edge into the set
+    edges.insert(Edge{u, v});
+    std::cout << "Edge " << u << "," << v << " inserted to cm\n";
+  }
+
+  return edges;
 }
 class SynthesisTest : public ::testing::TestWithParam<TestConfiguration> {
 protected:
@@ -107,12 +107,13 @@ protected:
       if (test.initialTableau.empty()) {
         initialTableau                 = Tableau(qc.getNqubits());
         initialTableauWithDestabilizer = Tableau(qc.getNqubits(), true);
-        if(test.couplingMap.empty()){
-          synthesizer                    = CliffordSynthesizer(qc);
-          synthesizerWithDestabilizer    = CliffordSynthesizer(qc, true);
-        } else{
+        if (test.couplingMap.empty()) {
+          synthesizer                 = CliffordSynthesizer(qc);
+          synthesizerWithDestabilizer = CliffordSynthesizer(qc, true);
+        } else {
           synthesizer = CliffordSynthesizer(qc, parseEdges(test.couplingMap));
-          synthesizerWithDestabilizer    = CliffordSynthesizer(qc, parseEdges(test.couplingMap), true);
+          synthesizerWithDestabilizer =
+              CliffordSynthesizer(qc, parseEdges(test.couplingMap), true);
         }
       } else {
         initialTableau = Tableau(test.initialTableau);
@@ -150,19 +151,22 @@ protected:
     std::cout << "Target tableau:\n" << targetTableau;
 
     const std::vector<std::vector<bool>> p = results.getMappingVector();
-    Tableau targetPrime = targetTableau.applyMapping(p);
+    Tableau targetPrime                    = targetTableau.applyMapping(p);
     std::cout << "Target tableau with mapping:\n" << targetPrime;
-    if(!targetPrime.hasDestabilizers()){
+    if (!targetPrime.hasDestabilizers()) {
       targetPrime.gaussianEliminationGF2();
       resultTableau.gaussianEliminationGF2();
       std::cout << "Target tableau with mapping and Gauss:\n" << targetPrime;
       std::cout << "Result tableau with mapping and Gauss:\n" << resultTableau;
-    } else{
-      targetPrime = targetPrime.reverseMappingOnRows(p, targetPrime.getQubitCount());
-      resultTableau = resultTableau.reverseMappingOnRows(p, targetPrime.getQubitCount());
-      std::cout << "Result tableau with destab mapping reversed:\n" << resultTableau;
-      std::cout << "Target tableau with destab mapping reversed:\n" << targetPrime;
-
+    } else {
+      targetPrime =
+          targetPrime.reverseMappingOnRows(p, targetPrime.getQubitCount());
+      resultTableau =
+          resultTableau.reverseMappingOnRows(p, targetPrime.getQubitCount());
+      std::cout << "Result tableau with destab mapping reversed:\n"
+                << resultTableau;
+      std::cout << "Target tableau with destab mapping reversed:\n"
+                << targetPrime;
     }
 
     EXPECT_EQ(resultTableau, targetPrime);
@@ -178,7 +182,7 @@ protected:
       circuitTableau.applyGate(gate.get());
     }
     std::cout << "Circuit Tableau :\n" << circuitTableau;
-    if(!circuitTableau.hasDestabilizers()){
+    if (!circuitTableau.hasDestabilizers()) {
       circuitTableau.gaussianEliminationGF2();
       std::cout << "Circuit Tableau with Gauss" << circuitTableau;
     }

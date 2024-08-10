@@ -4,15 +4,15 @@
 //
 
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
-#include "Logic.hpp"
-#include "LogicTerm.hpp"
-#include "utils.hpp"
 
 #include "Definitions.hpp"
+#include "Logic.hpp"
+#include "LogicTerm.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/Model.hpp"
 #include "operations/StandardOperation.hpp"
 #include "plog/Log.h"
+#include "utils.hpp"
 
 namespace cs::encoding {
 
@@ -340,7 +340,7 @@ void GateEncoder::assertTwoQubitGateSymmetryBreakingConstraints(
   for (std::size_t ctrl = 1U; ctrl < N; ++ctrl) {
     for (std::size_t trgt = 0U; trgt < ctrl; ++trgt) {
       // avoid unnecessary constraints if CNOT cannot be applied anyways
-      if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
+      if (couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
         continue;
       }
       assertTwoQubitGateOrderConstraints(pos, ctrl, trgt);

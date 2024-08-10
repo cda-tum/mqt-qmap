@@ -51,19 +51,19 @@ public:
   [[nodiscard]] std::string getResultCircuit() const { return resultCircuit; }
   [[nodiscard]] std::string getResultTableau() const { return resultTableau; }
 
-  [[nodiscard]]std::string getMapping() const {    
+  [[nodiscard]] std::string getMapping() const {
     std::ostringstream oss;
     for (const auto& row : pvector) {
-        for (bool val : row) {
-            oss << (val ? '1' : '0');
-        }
-        oss << '\n';
+      for (bool val : row) {
+        oss << (val ? '1' : '0');
+      }
+      oss << '\n';
     }
-    return oss.str(); 
+    return oss.str();
   }
-  [[nodiscard]] std::vector<std::vector<bool>> getMappingVector() const { 
+  [[nodiscard]] std::vector<std::vector<bool>> getMappingVector() const {
     return pvector;
-  }   
+  }
 
   void setSingleQubitGates(const std::size_t g) { singleQubitGates = g; }
   void setTwoQubitGates(const std::size_t g) { twoQubitGates = g; }
@@ -85,12 +85,12 @@ public:
   void setMapping(std::vector<std::vector<bool>> p) {
     std::ostringstream oss;
     for (const auto& row : pvector) {
-        for (bool val : row) {
-            oss << (val ? '1' : '0');
-        }
-        oss << '\n';
+      for (bool val : row) {
+        oss << (val ? '1' : '0');
+      }
+      oss << '\n';
     }
-    pvals = oss.str();
+    pvals   = oss.str();
     pvector = std::move(p);
   }
 
@@ -126,10 +126,10 @@ protected:
   double            runtime          = 0.0;
   std::size_t       solverCalls      = 0U;
 
-  std::string pvals{};
+  std::string                    pvals{};
   std::vector<std::vector<bool>> pvector{};
-  std::string resultTableau{};
-  std::string resultCircuit{};
+  std::string                    resultTableau{};
+  std::string                    resultCircuit{};
 };
 
 } // namespace cs

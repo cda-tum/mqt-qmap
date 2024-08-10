@@ -42,14 +42,15 @@ void TableauEncoder::createTableauVariables() {
   PLOG_DEBUG << "Creating mapping variables.";
   vars.p.reserve(N);
   for (std::size_t i = 0U; i < N; ++i) {
-      auto& g = vars.p.emplace_back();
-      g.reserve(N);
-      for (std::size_t j = 0U; j < N; ++j) {
-        const std::string pName = "p_" + std::to_string(i) + "_" + std::to_string(j);
-        PLOG_VERBOSE << "Creating variable " << pName;
-        g.emplace_back(lb->makeVariable(pName));
-      }
+    auto& g = vars.p.emplace_back();
+    g.reserve(N);
+    for (std::size_t j = 0U; j < N; ++j) {
+      const std::string pName =
+          "p_" + std::to_string(i) + "_" + std::to_string(j);
+      PLOG_VERBOSE << "Creating variable " << pName;
+      g.emplace_back(lb->makeVariable(pName));
     }
+  }
 }
 
 void TableauEncoder::assertTableau(const Tableau&    tableau,
@@ -70,27 +71,29 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
   lb->assertFormula(vars.r[t] == LogicTerm(targetR, n));
 }
 
-void TableauEncoder::assertMappingConstraints(){
+void TableauEncoder::assertMappingConstraints() {
   // if p_i_j is set column i is mapped to column j between 0 and 1
   for (std::size_t i = 0U; i < N; ++i) {
     for (std::size_t j = 0U; j < N; ++j) {
-      lb->assertFormula(LogicTerm::implies(vars.p[i][j], vars.x[1][j] == vars.x[0][i]));
-      lb->assertFormula(LogicTerm::implies(vars.p[i][j], vars.z[1][j] == vars.z[0][i]));
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.x[1][j] == vars.x[0][i]));
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.z[1][j] == vars.z[0][i]));
     }
   }
   // assert that r vals are unchanges between 0 and 1
-  lb->assertFormula(LogicTerm::eq(vars.r[0],vars.r[1]));
+  lb->assertFormula(LogicTerm::eq(vars.r[0], vars.r[1]));
   // assert that for every i and j exactly one p variable is set
   for (std::size_t i = 0U; i < N; ++i) {
-    int32_t vr = 0;
-    int32_t vr1 = 1;
+    int32_t   vr     = 0;
+    int32_t   vr1    = 1;
     LogicTerm sumRow = LogicTerm(vr);
     for (std::size_t j = 0U; j < N; ++j) {
       sumRow = sumRow + vars.p[i][j];
     }
     lb->assertFormula(sumRow == LogicTerm(vr1));
-    int32_t vc = 0;
-    int32_t vc1 = 1;
+    int32_t   vc     = 0;
+    int32_t   vc1    = 1;
     LogicTerm sumCol = LogicTerm(vc);
     for (std::size_t j = 0U; j < N; ++j) {
       sumCol = sumCol + vars.p[j][i];
@@ -100,13 +103,14 @@ void TableauEncoder::assertMappingConstraints(){
   // if p_i_j is set undo mapping between T-1 and T
   for (std::size_t i = 0U; i < N; ++i) {
     for (std::size_t j = 0U; j < N; ++j) {
-      lb->assertFormula(LogicTerm::implies(vars.p[i][j] , vars.x[T][i] == vars.x[T - 1][j]));
-      lb->assertFormula(LogicTerm::implies(vars.p[i][j] , vars.z[T][i] == vars.z[T - 1][j]));
-
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.x[T][i] == vars.x[T - 1][j]));
+      lb->assertFormula(
+          LogicTerm::implies(vars.p[i][j], vars.z[T][i] == vars.z[T - 1][j]));
     }
   }
   // assert that r vals are unchanges between T-1 and T
-  lb->assertFormula(LogicTerm::eq(vars.r[T - 1],vars.r[T]));
+  lb->assertFormula(LogicTerm::eq(vars.r[T - 1], vars.r[T]));
 }
 
 void TableauEncoder::extractTableauFromModel(Results&          results,
@@ -125,12 +129,13 @@ void TableauEncoder::extractTableauFromModel(Results&          results,
   results.setResultTableau(tableau);
 }
 
-void TableauEncoder::extractMappingFromModel(Results& results, Model& model) const {
-  std::vector<bool> row(N,false);
-  std::vector<std::vector<bool>> pvals(N,std::vector<bool>(N,false));
-  for (std::size_t i = 0; i <N ; ++i) {
-    for (std::size_t j = 0; j <N ; ++j) {
-      pvals[i][j] =  model.getBoolValue(vars.p[i][j], lb.get());
+void TableauEncoder::extractMappingFromModel(Results& results,
+                                             Model&   model) const {
+  std::vector<bool>              row(N, false);
+  std::vector<std::vector<bool>> pvals(N, std::vector<bool>(N, false));
+  for (std::size_t i = 0; i < N; ++i) {
+    for (std::size_t j = 0; j < N; ++j) {
+      pvals[i][j] = model.getBoolValue(vars.p[i][j], lb.get());
     }
   }
   results.setMapping(pvals);

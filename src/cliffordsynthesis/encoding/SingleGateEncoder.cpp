@@ -65,7 +65,7 @@ void SingleGateEncoder::assertTwoQubitGateConstraints(const std::size_t pos) {
       if (ctrl == trgt) {
         continue;
       }
-      if(couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
+      if (couplingMap.find(Edge{ctrl, trgt}) == couplingMap.end()) {
         PLOG_DEBUG << "Asserting no CNOT on " << ctrl << " and " << trgt;
         lb->assertFormula(!twoQubitGates[ctrl][trgt]);
         continue;
@@ -89,9 +89,9 @@ LogicTerm SingleGateEncoder::createTwoQubitGateConstraint(
   changes = changes && (tvars->x[pos + 2][trgt] == xTrgt);
   changes = changes && (tvars->z[pos + 2][ctrl] == zCtrl);
   changes = changes && (tvars->z[pos + 2][trgt] == zTrgt);
-  changes =
-      changes && (tvars->r[pos + 2] ==
-                  (tvars->r[pos + 1] ^ tvars->twoQubitRChange(pos + 1, ctrl, trgt)));
+  changes = changes &&
+            (tvars->r[pos + 2] ==
+             (tvars->r[pos + 1] ^ tvars->twoQubitRChange(pos + 1, ctrl, trgt)));
 
   return changes;
 }
