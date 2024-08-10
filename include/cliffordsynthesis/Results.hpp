@@ -137,8 +137,3 @@ protected:
 };
 
 } // namespace cs
-solverCalls = 0U;
-
-std::string pvals{};
-std::vector<std::vector<bool>> pvector{};
-std::string resultTableau{};
