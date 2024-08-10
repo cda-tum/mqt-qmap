@@ -496,7 +496,7 @@ bool Tableau::isIdentityTableau() const {
 Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>* p) {
   Tableau mappedTableau = Tableau(nQubits, hasDestabilizers());
   for (size_t i = 0; i < mappedTableau.getTableauSize(); i++) {
-    for (unsigned char & j : mappedTableau.tableau[i]) {
+    for (unsigned char& j : mappedTableau.tableau[i]) {
       j = 0;
     }
   }
@@ -523,7 +523,7 @@ Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>* p) {
 Tableau Tableau::reverseMapping(const std::vector<std::vector<bool>>* p) {
   Tableau mappedTableau = Tableau(nQubits, hasDestabilizers());
   for (size_t i = 0; i < mappedTableau.getTableauSize(); i++) {
-    for (unsigned char & j : mappedTableau.tableau[i]) {
+    for (unsigned char& j : mappedTableau.tableau[i]) {
       j = 0;
     }
   }

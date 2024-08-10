@@ -58,7 +58,7 @@ public:
   [[nodiscard]] std::string getMapping() const {
     std::ostringstream oss;
     for (const auto& row : pvector) {
-      for (bool val : row) {
+      for (const bool val : row) {
         oss << (val ? '1' : '0');
       }
       oss << '\n';
@@ -89,7 +89,7 @@ public:
   void setMapping(std::vector<std::vector<bool>> p) {
     std::ostringstream oss;
     for (const auto& row : pvector) {
-      for (bool val : row) {
+      for (const bool val : row) {
         oss << (val ? '1' : '0');
       }
       oss << '\n';

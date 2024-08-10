@@ -7,6 +7,7 @@
 
 #include "Logic.hpp"
 #include "operations/OpType.hpp"
+#include "utils.hpp"
 
 #include <cstddef>
 #include <plog/Log.h>

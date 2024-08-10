@@ -7,6 +7,7 @@
 
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
+#include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"

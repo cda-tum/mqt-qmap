@@ -12,7 +12,6 @@
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "logicblocks/util_logicblock.hpp"
-#include "utils.hpp"
 
 #include <chrono>
 #include <cstddef>

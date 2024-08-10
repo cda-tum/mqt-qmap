@@ -60,7 +60,7 @@ public:
   void createTableauVariables();
 
   // fixing the tableau
-  void assertTableau(const Tableau& tableau, std::size_t t);
+  void assertTableau(const Tableau& tableau, std::size_t t) const;
 
   // extracting the tableau
   void extractTableauFromModel(Results& results, std::size_t t,
@@ -72,7 +72,7 @@ public:
   void extractMappingFromModel(Results& results, logicbase::Model& model) const;
 
   // assert constraints for mapping variables
-  void assertMappingConstraints();
+  void assertMappingConstraints() const;
 
 protected:
   // number of qubits N

@@ -12,6 +12,7 @@
 #include "operations/Control.hpp"
 #include "utils.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -93,8 +94,8 @@ CouplingMap parseEdges(const std::string& edgeString) {
     first = item.substr(0, pos);
     second = item.substr(pos + 1);
 
-    int u = stoi(first);
-    int v = stoi(second);
+    const int u = stoi(first);
+    const int v = stoi(second);
 
     // Insert the edge into the set
     edges.insert(Edge{u, v});
