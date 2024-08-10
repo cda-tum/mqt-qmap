@@ -48,7 +48,7 @@ public:
             static_cast<std::uint16_t>(initial.getQubitCount()))),
         initialCircuit(std::make_shared<qc::QuantumComputation>(qc)) {}
   explicit CliffordSynthesizer(qc::QuantumComputation& qc,
-                               const bool              useDestabilizers = false)
+                               const bool useDestabilizers = false)
       : initialTableau(qc.getNqubits(), useDestabilizers),
         targetTableau(qc, 0, std::numeric_limits<std::size_t>::max(),
                       useDestabilizers),
@@ -98,9 +98,9 @@ public:
   }
 
 protected:
-  Tableau                                 initialTableau{};
-  Tableau                                 targetTableau{};
-  CouplingMap                             couplingMap{};
+  Tableau initialTableau{};
+  Tableau targetTableau{};
+  CouplingMap couplingMap{};
   std::shared_ptr<qc::QuantumComputation> initialCircuit{};
 
   Configuration configuration{};

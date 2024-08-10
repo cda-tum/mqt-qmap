@@ -6,11 +6,11 @@
 #include "Definitions.hpp"
 #include "QuantumComputation.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
-#include "cliffordsynthesis/Tableau.hpp"
-#include "utils.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "operations/Control.hpp"
+#include "utils.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -79,17 +79,17 @@ std::vector<TestConfiguration> getTests(const std::string& path) {
 } // namespace
 
 CouplingMap parseEdges(const std::string& edgeString) {
-  CouplingMap       edges;
+  CouplingMap edges;
   std::stringstream ss(edgeString);
-  std::string       item;
+  std::string item;
 
   while (getline(ss, item, ';')) {
     item.erase(remove(item.begin(), item.end(), '{'), item.end());
     item.erase(remove(item.begin(), item.end(), '}'), item.end());
-    size_t      pos = item.find(',');
+    size_t pos = item.find(',');
     std::string first, second;
 
-    first  = item.substr(0, pos);
+    first = item.substr(0, pos);
     second = item.substr(pos + 1);
 
     int u = stoi(first);
@@ -123,7 +123,8 @@ protected:
           synthesizerWithDestabilizer = CliffordSynthesizer(qc, true);
         } else {
           synthesizer = CliffordSynthesizer(qc, parseEdges(test.couplingMap));
-          synthesizerWithDestabilizer = CliffordSynthesizer(qc, parseEdges(test.couplingMap), true);
+          synthesizerWithDestabilizer =
+              CliffordSynthesizer(qc, parseEdges(test.couplingMap), true);
         }
       } else {
         initialTableau = Tableau(test.initialTableau);
@@ -161,7 +162,7 @@ protected:
     std::cout << "Target tableau:\n" << targetTableau;
 
     const std::vector<std::vector<bool>> p = results.getMappingVector();
-    Tableau targetPrime                    = targetTableau.applyMapping(p);
+    Tableau targetPrime = targetTableau.applyMapping(p);
     std::cout << "Target tableau with mapping:\n" << targetPrime;
     if (!targetPrime.hasDestabilizers()) {
       targetPrime.gaussianEliminationGF2();
