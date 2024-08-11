@@ -27,6 +27,7 @@ class Configuration:
     initial_tableau: str | None = None
     target_tableau: str | None = None
     initial_circuit: str | None = None
+    coupling_map: str | None = None
 
 
 def create_circuit_tests() -> list[Configuration]:
@@ -49,8 +50,15 @@ def create_tableau_tests() -> list[Configuration]:
 @pytest.mark.parametrize("use_maxsat", [True, False], ids=["maxsat", "binary_search"])
 def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -> None:
     """Test gate-optimal Clifford synthesis."""
+    cm = None
+    if test_config.coupling_map is not None:
+        pairs = test_config.coupling_map.split(";")
+        cm = [(int(pair.strip("{}").split(",")[0]), int(pair.strip("{}").split(",")[1])) for pair in pairs]
     circ, results = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="gates"
+        circuit=test_config.initial_circuit,
+        use_maxsat=use_maxsat,
+        target_metric="gates",
+        coupling_map=cm,
     )
 
     assert results.gates == test_config.expected_minimal_gates

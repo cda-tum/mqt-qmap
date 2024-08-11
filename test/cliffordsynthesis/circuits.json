@@ -52,7 +52,7 @@
     "expected_minimal_gates_at_minimal_depth": 2,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 2,
-    "couplingMap": "{0,1};{1,0}"
+    "coupling_map": "{0,1};{1,0}"
   },
   {
     "description": "cx_coupling_test",
@@ -62,7 +62,7 @@
     "expected_minimal_gates_at_minimal_depth": 3,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 3,
-    "couplingMap": "{0,1};{1,0};{1,2};{2,1}"
+    "coupling_map": "{0,1};{1,0};{1,2};{2,1}"
   },
   {
     "description": "cx_coupling_test_init_1_final_2",
@@ -72,7 +72,7 @@
     "expected_minimal_gates_at_minimal_depth": 3,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 3,
-    "couplingMap": "{0,2};{2,0};{1,2};{2,1}"
+    "coupling_map": "{0,2};{2,0};{1,2};{2,1}"
   },
   {
     "description": "cx_coupling_test_init_1_final_0",
@@ -82,7 +82,7 @@
     "expected_minimal_gates_at_minimal_depth": 3,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 3,
-    "couplingMap": "{0,2};{2,0};{1,0};{0,1}"
+    "coupling_map": "{0,2};{2,0};{1,0};{0,1}"
   },
   {
     "description": "cx_coupling_test_init_2_final_0",
@@ -92,7 +92,7 @@
     "expected_minimal_gates_at_minimal_depth": 3,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 3,
-    "couplingMap": "{0,2};{2,0};{1,0};{0,1}"
+    "coupling_map": "{0,2};{2,0};{1,0};{0,1}"
   },
   {
     "description": "coupling_test_3qubit_cnots_at_0",
@@ -102,7 +102,7 @@
     "expected_minimal_gates_at_minimal_depth": 5,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 5,
-    "couplingMap": "{0,2};{2,0};{1,0};{0,1}"
+    "coupling_map": "{0,2};{2,0};{1,0};{0,1}"
   },
   {
     "description": "coupling_test_3qubit_cnots_at_1",
@@ -112,7 +112,7 @@
     "expected_minimal_gates_at_minimal_depth": 5,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 5,
-    "couplingMap": "{1,2};{2,1};{1,0};{0,1}"
+    "coupling_map": "{1,2};{2,1};{1,0};{0,1}"
   },
   {
     "description": "coupling_test_irred_3qubit_cnots_at_1",
@@ -122,7 +122,7 @@
     "expected_minimal_gates_at_minimal_depth": 9,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 8,
-    "couplingMap": "{1,2};{2,1};{1,0};{0,1}"
+    "coupling_map": "{1,2};{2,1};{1,0};{0,1}"
   },
   {
     "description": "coupling_test_irred_3qubit_cnots_at_2",
@@ -132,7 +132,7 @@
     "expected_minimal_gates_at_minimal_depth": 9,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 8,
-    "couplingMap": "{0,2};{2,0};{2,1};{1,2}"
+    "coupling_map": "{0,2};{2,0};{2,1};{1,2}"
   },
   {
     "description": "coupling_test_irred_3qubit_cnots_at_0",
@@ -142,6 +142,6 @@
     "expected_minimal_gates_at_minimal_depth": 9,
     "expected_minimal_two_qubit_gates": 2,
     "expected_minimal_gates_at_minimal_two_qubit_gates": 8,
-    "couplingMap": "{0,2};{2,0};{0,1};{1,0}"
+    "coupling_map": "{0,2};{2,0};{0,1};{1,0}"
   }
 ]

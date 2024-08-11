@@ -55,8 +55,8 @@ inline void from_json(const nlohmann::json& j, TestConfiguration& test) {
   if (j.contains("initial_circuit")) {
     test.initialCircuit = j.at("initial_circuit").get<std::string>();
   }
-  if (j.contains("couplingMap")) {
-    test.couplingMap = j.at("couplingMap").get<std::string>();
+  if (j.contains("coupling_map")) {
+    test.couplingMap = j.at("coupling_map").get<std::string>();
   }
 
   test.expectedMinimalGates = j.at("expected_minimal_gates").get<std::size_t>();
