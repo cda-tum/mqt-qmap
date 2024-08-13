@@ -380,6 +380,39 @@ def test_synthesize_from_string(bell_circuit: QuantumCircuit) -> None:
     assert equivalent
 
 
+def test_synthesize_with_coupling_from_tableau(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from an MQT Tableau."""
+    tableau = qmap.Tableau("['XX', 'ZZ']")
+    coupling_map = [(0, 1), (1, 0)]
+    circ, _ = qmap.synthesize_clifford(target_tableau=tableau, coupling_map=coupling_map)
+    num_qubits = circ.num_qubits
+    qubit_permutations = list(itertools.permutations(range(num_qubits)))
+    equivalent = False
+    for perm in qubit_permutations:
+        permuted_circ = permute_qubits(circ, perm)
+        if qcec.verify(permuted_circ, bell_circuit).considered_equivalent():
+            equivalent = True
+            break
+    assert equivalent
+
+
+def test_synthesize_with_coupling_with_initial_tableau_from_tableau(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from an MQT Tableau."""
+    tableau = qmap.Tableau("['XX', 'ZZ']")
+    init_tableau = qmap.Tableau("['ZI','IZ']")
+    coupling_map = [(0, 1), (1, 0)]
+    circ, _ = qmap.synthesize_clifford(target_tableau=tableau, initial_tableau=init_tableau, coupling_map=coupling_map)
+    num_qubits = circ.num_qubits
+    qubit_permutations = list(itertools.permutations(range(num_qubits)))
+    equivalent = False
+    for perm in qubit_permutations:
+        permuted_circ = permute_qubits(circ, perm)
+        if qcec.verify(permuted_circ, bell_circuit).considered_equivalent():
+            equivalent = True
+            break
+    assert equivalent
+
+
 def test_invalid_kwarg_to_synthesis() -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
     with pytest.raises(ValueError, match="Invalid keyword argument"):
