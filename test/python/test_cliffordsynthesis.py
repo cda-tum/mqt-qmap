@@ -430,25 +430,23 @@ def test_synthesize_with_coupling_with_initial_tableau_from_tableau(bell_circuit
     assert equivalent
 
 
-def test_invalid_kwarg_to_synthesis() -> None:
-    """Test that we raise an error if we pass an invalid kwarg to synthesis."""
-    with pytest.raises(ValueError, match="Invalid keyword argument"):
-        qmap.synthesize_clifford(target_tableau=qmap.Tableau("Z"), invalid_kwarg=True)
-
-
-def test_import_tableau_exception(bell_circuit: QuantumCircuit) -> None:
-    """Test that we raise an error if we pass an invalid kwarg to synthesis."""
-    cliff = Clifford(bell_circuit)
+def test_synthesize_with_coupling_with_initial_tableau_from_qc(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can synthesize a circuit from an MQT Tableau."""
     init_tableau = qmap.Tableau("['ZI','IZ']")
-    qc = qmap.QuantumComputation.from_qiskit(bell_circuit)
-    circ, _ = qmap.optimize_clifford(circuit=qc, initial_tableau=init_tableau, include_destabilizers=True)
-    circ2, _ = qmap.synthesize_clifford(target_tableau=cliff, initial_tableau=init_tableau, include_destabilizers=True)
+    coupling_map = [(0, 1), (1, 0)]
+    circ, _ = qmap.optimize_clifford(circuit=bell_circuit, initial_tableau=init_tableau, coupling_map=coupling_map)
     num_qubits = circ.num_qubits
     qubit_permutations = list(itertools.permutations(range(num_qubits)))
     equivalent = False
     for perm in qubit_permutations:
         permuted_circ = permute_qubits(circ, perm)
-        if qcec.verify(permuted_circ, circ2).considered_equivalent():
+        if qcec.verify(permuted_circ, bell_circuit).considered_equivalent():
             equivalent = True
             break
     assert equivalent
+
+
+def test_invalid_kwarg_to_synthesis() -> None:
+    """Test that we raise an error if we pass an invalid kwarg to synthesis."""
+    with pytest.raises(ValueError, match="Invalid keyword argument"):
+        qmap.synthesize_clifford(target_tableau=qmap.Tableau("Z"), invalid_kwarg=True)
