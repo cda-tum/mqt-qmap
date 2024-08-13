@@ -320,6 +320,23 @@ def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
     assert equivalent
 
 
+def test_optimize_with_initial_tableau_with_mapping(bell_circuit: QuantumCircuit) -> None:
+    """Test that we can optimize a circuit with an initial tableau."""
+    coupling_map = [(0, 1), (1, 0)]
+    circ, _ = qmap.optimize_clifford(
+        circuit=bell_circuit, initial_tableau=qmap.Tableau(bell_circuit.num_qubits), coupling_map=coupling_map
+    )
+    num_qubits = circ.num_qubits
+    qubit_permutations = list(itertools.permutations(range(num_qubits)))
+    equivalent = False
+    for perm in qubit_permutations:
+        permuted_circ = permute_qubits(circ, perm)
+        if qcec.verify(permuted_circ, bell_circuit).considered_equivalent():
+            equivalent = True
+            break
+    assert equivalent
+
+
 def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from an MQT Tableau."""
     tableau = qmap.Tableau("['XX', 'ZZ']")
@@ -417,3 +434,20 @@ def test_invalid_kwarg_to_synthesis() -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
     with pytest.raises(ValueError, match="Invalid keyword argument"):
         qmap.synthesize_clifford(target_tableau=qmap.Tableau("Z"), invalid_kwarg=True)
+
+
+def test_import_tableau_exception(bell_circuit: QuantumCircuit) -> None:
+    """Test that we raise an error if we pass an invalid kwarg to synthesis."""
+    cliff = Clifford(bell_circuit)
+    qc = qmap.QuantumComputation.from_qiskit(bell_circuit)
+    circ, _ = qmap.optimize_clifford(circuit=qc, include_destabilizers=True)
+    circ2, _ = qmap.synthesize_clifford(target_tableau=cliff, include_destabilizers=True)
+    num_qubits = circ.num_qubits
+    qubit_permutations = list(itertools.permutations(range(num_qubits)))
+    equivalent = False
+    for perm in qubit_permutations:
+        permuted_circ = permute_qubits(circ, perm)
+        if qcec.verify(permuted_circ, circ2).considered_equivalent():
+            equivalent = True
+            break
+    assert equivalent
