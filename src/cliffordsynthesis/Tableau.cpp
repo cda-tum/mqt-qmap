@@ -520,33 +520,6 @@ Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>* p) {
   return mappedTableau;
 }
 
-Tableau Tableau::reverseMapping(const std::vector<std::vector<bool>>* p) {
-  Tableau mappedTableau = Tableau(nQubits, hasDestabilizers());
-  for (size_t i = 0; i < mappedTableau.getTableauSize(); i++) {
-    for (unsigned char& j : mappedTableau.tableau[i]) {
-      j = 0;
-    }
-  }
-  for (size_t i = 0; i < p->size(); i++) {
-    for (size_t j = 0; j < (*p)[i].size(); j++) {
-      // apply mapping from column i to j if p is set
-      if ((*p)[i][j]) {
-        // in every row swap x entry and z entry
-        for (size_t n = 0; n < mappedTableau.getTableauSize(); n++) {
-          mappedTableau.tableau[n][i] = tableau[n][j];
-          mappedTableau.tableau[n][i + mappedTableau.nQubits] =
-              tableau[n][j + mappedTableau.nQubits];
-        }
-      }
-    }
-  }
-  // copy r column without changes
-  for (size_t i = 0; i < tableau.size(); i++) {
-    mappedTableau.tableau[i][2 * nQubits] = tableau[i][2 * nQubits];
-  }
-  return mappedTableau;
-}
-
 // number of Qubits is passed because nQubits is not set in result Tableau of
 // synthesis
 Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>>* p,

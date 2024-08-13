@@ -169,6 +169,7 @@ protected:
     if (!targetPrime.hasDestabilizers()) {
       targetPrime.gaussianEliminationGF2();
       resultTableau.gaussianEliminationGF2();
+      assert(targetPrime.equivalentUpToStabilizer(&resultTableau));
       std::cout << "Target tableau with mapping and Gauss:\n" << targetPrime;
       std::cout << "Result tableau with mapping and Gauss:\n" << resultTableau;
     } else {
@@ -181,7 +182,6 @@ protected:
       std::cout << "Target tableau with destab mapping reversed:\n"
                 << targetPrime;
     }
-
     EXPECT_EQ(resultTableau, targetPrime);
 
     const auto& resultCircuit = synthesizer.getResultCircuit();
