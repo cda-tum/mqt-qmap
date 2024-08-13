@@ -41,9 +41,9 @@ def _import_tableau(tableau: str | Clifford | PauliList | Tableau, include_desta
     if isinstance(tableau, Clifford):
         mode = "B" if include_destabilizers else "S"
         return Tableau(str(_reverse_paulis(tableau.to_labels(mode=mode))))
-    elif isinstance(tableau, PauliList):
+    if isinstance(tableau, PauliList):
         return Tableau(str(_reverse_paulis(tableau.to_labels())))
-    elif isinstance(tableau, str):
+    if isinstance(tableau, str):
         return Tableau(tableau)
     return tableau
 
