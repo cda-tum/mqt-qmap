@@ -40,15 +40,7 @@ def _import_tableau(tableau: str | Clifford | PauliList | Tableau, include_desta
     """Import a tableau from a string, a Clifford, a PauliList, or a Tableau."""
     if isinstance(tableau, Clifford):
         mode = "B" if include_destabilizers else "S"
-        try:
-            return Tableau(str(_reverse_paulis(tableau.to_labels(mode=mode))))
-        except AttributeError:
-            if include_destabilizers:
-                return Tableau(
-                    str(_reverse_paulis(tableau.stabilizer.to_labels())),
-                    str(_reverse_paulis(tableau.destabilizer.to_labels())),
-                )
-            return Tableau(str(_reverse_paulis(tableau.stabilizer.to_labels())))
+        return Tableau(str(_reverse_paulis(tableau.to_labels(mode=mode))))
     elif isinstance(tableau, PauliList):
         return Tableau(str(_reverse_paulis(tableau.to_labels())))
     elif isinstance(tableau, str):
