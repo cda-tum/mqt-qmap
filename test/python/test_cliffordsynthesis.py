@@ -439,9 +439,10 @@ def test_invalid_kwarg_to_synthesis() -> None:
 def test_import_tableau_exception(bell_circuit: QuantumCircuit) -> None:
     """Test that we raise an error if we pass an invalid kwarg to synthesis."""
     cliff = Clifford(bell_circuit)
+    init_tableau = qmap.Tableau("['ZI','IZ']")
     qc = qmap.QuantumComputation.from_qiskit(bell_circuit)
-    circ, _ = qmap.optimize_clifford(circuit=qc, include_destabilizers=True)
-    circ2, _ = qmap.synthesize_clifford(target_tableau=cliff, include_destabilizers=True)
+    circ, _ = qmap.optimize_clifford(circuit=qc, initial_tableau=init_tableau, include_destabilizers=True)
+    circ2, _ = qmap.synthesize_clifford(target_tableau=cliff, initial_tableau=init_tableau, include_destabilizers=True)
     num_qubits = circ.num_qubits
     qubit_permutations = list(itertools.permutations(range(num_qubits)))
     equivalent = False
