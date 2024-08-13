@@ -31,7 +31,7 @@ class Configuration:
     coupling_map: str | None = None
 
 
-def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int]) -> QuantumCircuit:
+def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int, ...]) -> QuantumCircuit:
     """Return a new circuit with qubits permuted according to the given permutation."""
     permuted_circ = QuantumCircuit(circuit.num_qubits)
     qubit_map = {qubit: i for i, qubit in enumerate(circuit.qubits)}
@@ -41,6 +41,15 @@ def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int]) -> QuantumC
         permuted_circ.append(gate, new_qubits, clbits)
 
     return permuted_circ
+
+
+def convert_coupling_map(cm: str | None = None) -> list[tuple[int, int]] | None:
+    """Convert a coupling map passed as a string to a CouplingMap."""
+    coupling_map = None
+    if cm is not None:
+        pairs = cm.split(";")
+        coupling_map = [(int(pair.strip("{}").split(",")[0]), int(pair.strip("{}").split(",")[1])) for pair in pairs]
+    return coupling_map
 
 
 def create_circuit_tests() -> list[Configuration]:
@@ -57,13 +66,6 @@ def create_tableau_tests() -> list[Configuration]:
     with path.open() as f:
         tableaus = json.load(f)
     return [Configuration(**t) for t in tableaus]
-
-
-def convert_coupling_map(cm):
-    if cm is not None:
-        pairs = cm.split(";")
-        cm = [(int(pair.strip("{}").split(",")[0]), int(pair.strip("{}").split(",")[1])) for pair in pairs]
-    return cm
 
 
 @pytest.mark.parametrize("test_config", create_circuit_tests())
