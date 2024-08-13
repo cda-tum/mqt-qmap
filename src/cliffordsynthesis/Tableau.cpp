@@ -609,4 +609,17 @@ void Tableau::gaussianEliminationGF2() {
     pivot++;
   }
 }
+// equivalence check for two Tableaus without destablilizers
+bool Tableau::equivalentUpToStabilizer(const Tableau* t) const {
+  assert(getTableauSize() == t->getTableauSize());
+
+  Tableau tEliminated = Tableau(nQubits, hasDestabilizers());
+  tEliminated.tableau = tableau;
+  tEliminated.gaussianEliminationGF2();
+
+  Tableau t2Eliminated = Tableau(nQubits, hasDestabilizers());
+  t2Eliminated.tableau = t->getTableau();
+  t2Eliminated.gaussianEliminationGF2();
+  return tEliminated == t2Eliminated;
+}
 } // namespace cs

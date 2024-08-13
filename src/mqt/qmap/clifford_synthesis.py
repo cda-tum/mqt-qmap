@@ -191,7 +191,7 @@ def optimize_clifford(
         else:
             synthesizer = CliffordSynthesizer(_import_tableau(initial_tableau, include_destabilizers), qc)
     elif coupling_map is not None:
-        synthesizer = CliffordSynthesizer(qc, include_destabilizers, set(coupling_map))
+        synthesizer = CliffordSynthesizer(qc, set(coupling_map), include_destabilizers)
     else:
         synthesizer = CliffordSynthesizer(qc, include_destabilizers)
 
