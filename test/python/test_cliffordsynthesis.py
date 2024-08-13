@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import itertools
 import json
 from dataclasses import dataclass
 from pathlib import Path
-import itertools
 
 import pytest
 from qiskit import QuantumCircuit, qasm2
@@ -30,6 +30,7 @@ class Configuration:
     initial_circuit: str | None = None
     coupling_map: str | None = None
 
+
 def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int]) -> QuantumCircuit:
     """Return a new circuit with qubits permuted according to the given permutation."""
     permuted_circ = QuantumCircuit(circuit.num_qubits)
@@ -40,6 +41,7 @@ def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int]) -> QuantumC
         permuted_circ.append(gate, new_qubits, clbits)
 
     return permuted_circ
+
 
 def create_circuit_tests() -> list[Configuration]:
     """Create test cases for Clifford synthesis."""
@@ -84,7 +86,10 @@ def test_optimize_clifford_gates(test_config: Configuration, use_maxsat: bool) -
 def test_optimize_clifford_depth(test_config: Configuration, use_maxsat: bool) -> None:
     """Test depth-optimal Clifford synthesis."""
     circ, results = qmap.optimize_clifford(
-        circuit=test_config.initial_circuit, use_maxsat=use_maxsat, target_metric="depth", coupling_map=convert_coupling_map(test_config.coupling_map)
+        circuit=test_config.initial_circuit,
+        use_maxsat=use_maxsat,
+        target_metric="depth",
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.depth == test_config.expected_minimal_depth
@@ -100,7 +105,7 @@ def test_optimize_clifford_gates_at_minimal_depth(test_config: Configuration, us
         use_maxsat=use_maxsat,
         target_metric="depth",
         minimize_gates_after_depth_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
     assert results.gates == test_config.expected_minimal_gates_at_minimal_depth
     print("\n", circ)
@@ -115,7 +120,7 @@ def test_optimize_clifford_two_qubit_gates(test_config: Configuration, use_maxsa
         use_maxsat=use_maxsat,
         target_metric="two_qubit_gates",
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.two_qubit_gates == test_config.expected_minimal_two_qubit_gates
@@ -132,7 +137,7 @@ def test_optimize_clifford_gates_at_minimal_two_qubit_gates(test_config: Configu
         target_metric="two_qubit_gates",
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
         minimize_gates_after_two_qubit_gate_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.gates == test_config.expected_minimal_gates_at_minimal_two_qubit_gates
@@ -167,7 +172,7 @@ def test_synthesize_clifford_gates(test_config: Configuration, use_maxsat: bool)
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
         target_metric="gates",
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.gates == test_config.expected_minimal_gates
@@ -183,7 +188,7 @@ def test_synthesize_clifford_depth(test_config: Configuration, use_maxsat: bool)
         initial_tableau=test_config.initial_tableau,
         use_maxsat=use_maxsat,
         target_metric="depth",
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.depth == test_config.expected_minimal_depth
@@ -200,7 +205,7 @@ def test_synthesize_clifford_gates_at_minimal_depth(test_config: Configuration, 
         use_maxsat=use_maxsat,
         target_metric="depth",
         minimize_gates_after_depth_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.gates == test_config.expected_minimal_gates_at_minimal_depth
@@ -217,7 +222,7 @@ def test_synthesize_clifford_two_qubit_gates(test_config: Configuration, use_max
         use_maxsat=use_maxsat,
         target_metric="two_qubit_gates",
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.two_qubit_gates == test_config.expected_minimal_two_qubit_gates
@@ -235,7 +240,7 @@ def test_synthesize_clifford_gates_at_minimal_two_qubit_gates(test_config: Confi
         target_metric="two_qubit_gates",
         try_higher_gate_limit_for_two_qubit_gate_optimization=True,
         minimize_gates_after_two_qubit_gate_optimization=True,
-        coupling_map=convert_coupling_map(test_config.coupling_map)
+        coupling_map=convert_coupling_map(test_config.coupling_map),
     )
 
     assert results.gates == test_config.expected_minimal_gates_at_minimal_two_qubit_gates
@@ -311,6 +316,7 @@ def test_optimize_with_initial_tableau(bell_circuit: QuantumCircuit) -> None:
             equivalent = True
             break
     assert equivalent
+
 
 def test_synthesize_from_tableau(bell_circuit: QuantumCircuit) -> None:
     """Test that we can synthesize a circuit from an MQT Tableau."""

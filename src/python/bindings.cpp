@@ -639,8 +639,9 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def_property_readonly("tableau", &cs::Results::getResultTableau,
                              "Returns a string representation of the "
                              "synthesized circuit's tableau.")
-      .def_property_readonly("mapping", &cs::Results::getMappingVector,
-                             "Returns a vector of vectors representing the mapping.")
+      .def_property_readonly(
+          "mapping", &cs::Results::getMappingVector,
+          "Returns a vector of vectors representing the mapping.")
       .def_property_readonly("mapping_string", &cs::Results::getMapping,
                              "Returns a string representation of the mapping.")
       .def("sat", &cs::Results::sat,
