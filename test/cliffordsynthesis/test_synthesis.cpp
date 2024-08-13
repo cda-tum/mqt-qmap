@@ -13,6 +13,7 @@
 #include "utils.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -22,7 +23,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cassert>
 
 using namespace qc::literals;
 
