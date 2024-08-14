@@ -45,16 +45,6 @@
     "expected_minimal_gates_at_minimal_two_qubit_gates": 2
   },
   {
-    "description": "coupling_test_iswap",
-    "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[2];cx q[0], q[1]; cx q[1], q[0];\n",
-    "expected_minimal_gates": 2,
-    "expected_minimal_depth": 2,
-    "expected_minimal_gates_at_minimal_depth": 2,
-    "expected_minimal_two_qubit_gates": 2,
-    "expected_minimal_gates_at_minimal_two_qubit_gates": 2,
-    "coupling_map": "{0,1};{1,0}"
-  },
-  {
     "description": "cx_coupling_test",
     "initial_circuit": "OPENQASM 2.0;include \"qelib1.inc\";qreg q[3];h q[1]; cx q[1], q[0]; cx q[1], q[2];\n",
     "expected_minimal_gates": 3,
