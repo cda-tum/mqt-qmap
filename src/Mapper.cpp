@@ -6,11 +6,11 @@
 #include "Mapper.hpp"
 
 #include "Architecture.hpp"
-#include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "configuration/Layering.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

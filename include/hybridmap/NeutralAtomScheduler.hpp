@@ -6,9 +6,9 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstdint>
 #include <deque>

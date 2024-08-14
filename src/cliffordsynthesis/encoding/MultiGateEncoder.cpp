@@ -6,8 +6,8 @@
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
 
 #include "Logic.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <cstdint>

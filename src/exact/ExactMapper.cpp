@@ -13,11 +13,11 @@
 #include "configuration/Configuration.hpp"
 #include "configuration/Encoding.hpp"
 #include "configuration/SwapReduction.hpp"
+#include "ir/operations/StandardOperation.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "logicblocks/Model.hpp"
 #include "logicblocks/util_logicblock.hpp"
-#include "operations/StandardOperation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

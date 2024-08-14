@@ -7,15 +7,15 @@
 #include "Configuration.hpp"
 #include "Definitions.hpp"
 #include "NAMapper.hpp"
-#include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/StandardOperation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/StandardOperation.hpp"
 
 #include <algorithm>
 #include <cstddef>

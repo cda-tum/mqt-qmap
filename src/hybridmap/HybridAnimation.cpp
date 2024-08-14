@@ -8,8 +8,8 @@
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "operations/AodOperation.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/AodOperation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <cstddef>

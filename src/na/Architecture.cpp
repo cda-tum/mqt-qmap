@@ -7,8 +7,8 @@
 #include "Architecture.hpp"
 
 #include "Configuration.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/OpType.hpp"
 
 #include <algorithm>
 #include <cstdint>

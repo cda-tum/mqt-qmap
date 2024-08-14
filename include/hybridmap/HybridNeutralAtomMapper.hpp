@@ -7,14 +7,14 @@
 
 #include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>

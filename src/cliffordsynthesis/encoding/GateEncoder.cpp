@@ -8,12 +8,12 @@
 #include "Definitions.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
-#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Results.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/StandardOperation.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/Model.hpp"
-#include "operations/OpType.hpp"
-#include "operations/StandardOperation.hpp"
 
 #include <algorithm>
 #include <cstddef>

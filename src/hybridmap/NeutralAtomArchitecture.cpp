@@ -8,10 +8,10 @@
 #include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/operations/AodOperation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "nlohmann/json.hpp"
-#include "operations/AodOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
 
 #include <algorithm>
 #include <cstddef>

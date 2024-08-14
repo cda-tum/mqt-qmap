@@ -4,11 +4,11 @@
 //
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
-#include "operations/Control.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Control.hpp"
 
 #include <cstddef>
 #include <fstream>

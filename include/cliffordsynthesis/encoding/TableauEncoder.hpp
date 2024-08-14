@@ -7,9 +7,9 @@
 
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <memory>

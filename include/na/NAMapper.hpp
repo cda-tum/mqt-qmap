@@ -9,10 +9,10 @@
 #include "Architecture.hpp"
 #include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "QuantumComputation.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <bitset>
 #include <cassert>
