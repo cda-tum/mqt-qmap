@@ -5,13 +5,13 @@
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 
-#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -498,7 +498,7 @@ void CliffordSynthesizer::depthHeuristicSynthesis() {
   optimalConfig.target = TargetMetric::Depth;
   optimalConfig.initialTimestepLimit = configuration.splitSize;
 
-  qc::CircuitOptimizer::reorderOperations(*initialCircuit);
+  initialCircuit->reorderOperations();
   qc::QuantumComputation optCircuit{initialCircuit->getNqubits()};
   const std::vector<std::size_t>& layers = getLayers(*initialCircuit);
 

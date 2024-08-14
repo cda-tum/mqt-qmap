@@ -8,8 +8,10 @@ macro(ADD_INTERNAL_LIBRARY libname)
   target_include_directories(${lib} PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
   # add MQT::qfr library
-  target_link_libraries(${lib} PUBLIC MQT::Core nlohmann_json::nlohmann_json)
-  target_link_libraries(${lib} PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+  target_link_libraries(
+    ${lib}
+    PUBLIC MQT::CoreIR MQT::CoreCircuitOptimizer nlohmann_json::nlohmann_json
+    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 endmacro()
 
 # macro to add mapping libraries

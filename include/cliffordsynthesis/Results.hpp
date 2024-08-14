@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "CircuitOptimizer.hpp"
-#include "QuantumComputation.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "logicblocks/Logic.hpp"
 
 #include <cstddef>

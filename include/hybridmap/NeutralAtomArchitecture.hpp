@@ -9,9 +9,9 @@
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>

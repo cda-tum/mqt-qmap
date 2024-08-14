@@ -5,9 +5,9 @@
 
 #include "Definitions.hpp"
 #include "NAGraphAlgorithms.hpp"
-#include "QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
-#include "operations/OpType.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 
 #include "gtest/gtest.h"
 #include <algorithm>

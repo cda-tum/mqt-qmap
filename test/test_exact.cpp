@@ -5,7 +5,6 @@
 
 #include "Architecture.hpp"
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "configuration/AvailableArchitecture.hpp"
 #include "configuration/CommanderGrouping.hpp"
 #include "configuration/Configuration.hpp"
@@ -15,8 +14,9 @@
 #include "configuration/Method.hpp"
 #include "configuration/SwapReduction.hpp"
 #include "exact/ExactMapper.hpp"
-#include "operations/Control.hpp"
-#include "operations/OpType.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Control.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

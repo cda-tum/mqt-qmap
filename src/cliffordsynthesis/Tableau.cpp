@@ -5,10 +5,10 @@
 
 #include "cliffordsynthesis/Tableau.hpp"
 
-#include "QuantumComputation.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

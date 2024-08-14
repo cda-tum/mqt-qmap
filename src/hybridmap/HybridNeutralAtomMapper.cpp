@@ -5,15 +5,15 @@
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
-#include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

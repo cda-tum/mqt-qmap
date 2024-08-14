@@ -4,14 +4,14 @@
 //
 
 #include "Architecture.hpp"
-#include "QuantumComputation.hpp"
 #include "configuration/AvailableArchitecture.hpp"
 #include "configuration/CommanderGrouping.hpp"
 #include "configuration/Configuration.hpp"
 #include "configuration/Encoding.hpp"
 #include "configuration/Method.hpp"
 #include "exact/ExactMapper.hpp"
-#include "operations/Control.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Control.hpp"
 
 #include <gtest/gtest.h>
 #include <iostream>

@@ -7,8 +7,8 @@
 
 #include "Architecture.hpp"
 #include "MappingResults.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <array>
