@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include "QuantumComputation.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <array>

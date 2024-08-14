@@ -15,9 +15,9 @@
 #include "configuration/InitialLayout.hpp"
 #include "configuration/Layering.hpp"
 #include "configuration/LookaheadHeuristic.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/StandardOperation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/StandardOperation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

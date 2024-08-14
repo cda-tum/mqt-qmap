@@ -7,8 +7,8 @@
 
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <functional>

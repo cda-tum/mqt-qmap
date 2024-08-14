@@ -4,7 +4,7 @@
 //
 
 #include "Architecture.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <cmath>

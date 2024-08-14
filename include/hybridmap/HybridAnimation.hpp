@@ -8,7 +8,7 @@
 #include "Definitions.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomDefinitions.hpp"
-#include "operations/Operation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstdint>
 #include <map>

@@ -5,12 +5,12 @@
 
 #include "Architecture.hpp"
 #include "Configuration.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/OpType.hpp"
 
-#include "gtest/gtest.h"
 #include <cstdint>
 #include <cstdio>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <optional>
 #include <sstream>
 #include <stdexcept>

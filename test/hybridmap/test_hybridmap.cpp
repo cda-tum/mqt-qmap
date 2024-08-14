@@ -4,10 +4,10 @@
 //
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstdint>
 #include <filesystem>

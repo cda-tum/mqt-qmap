@@ -8,8 +8,8 @@
 #include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "MappingResults.hpp"
-#include "QuantumComputation.hpp"
-#include "operations/CompoundOperation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/CompoundOperation.hpp"
 #include "utils.hpp"
 
 #include <array>

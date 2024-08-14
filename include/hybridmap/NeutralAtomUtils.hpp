@@ -7,7 +7,7 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "operations/AodOperation.hpp"
+#include "ir/operations/AodOperation.hpp"
 
 #include <cmath>
 #include <cstddef>

@@ -6,13 +6,13 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/AodOperation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/AodOperation.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstdint>
 #include <memory>

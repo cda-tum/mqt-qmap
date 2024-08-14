@@ -9,8 +9,8 @@
 #include "LogicTerm.hpp"
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/Model.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstddef>
 #include <cstdint>

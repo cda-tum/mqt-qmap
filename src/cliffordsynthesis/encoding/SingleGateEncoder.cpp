@@ -6,7 +6,7 @@
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
 
 #include "Logic.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <cstddef>

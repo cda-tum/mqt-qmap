@@ -14,9 +14,9 @@
 #include "configuration/LookaheadHeuristic.hpp"
 #include "configuration/Method.hpp"
 #include "heuristic/HeuristicMapper.hpp"
-#include "operations/CompoundOperation.hpp"
-#include "operations/Control.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/Control.hpp"
+#include "ir/operations/OpType.hpp"
 #include "utils.hpp"
 
 #include <algorithm>

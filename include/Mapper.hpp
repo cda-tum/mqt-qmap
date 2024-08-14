@@ -8,9 +8,9 @@
 #include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "MappingResults.hpp"
-#include "QuantumComputation.hpp"
 #include "configuration/Configuration.hpp"
-#include "operations/Operation.hpp"
+#include "ir//QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 #include "utils.hpp"
 
 #include <algorithm>
