@@ -10,6 +10,7 @@
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "ir/operations/OpType.hpp"
+#include "logicblocks/Encodings.hpp"
 #include "logicblocks/Model.hpp"
 
 #include <cstddef>
@@ -94,22 +95,22 @@ void TableauEncoder::assertMappingConstraints() const {
   }
   // assert that r vals are unchanges between 0 and 1
   lb->assertFormula(LogicTerm::eq(vars.r[0], vars.r[1]));
+
   // assert that for every i and j exactly one p variable is set
   for (std::size_t i = 0U; i < N; ++i) {
-    const int32_t vr = 0;
-    const int32_t vr1 = 1;
-    LogicTerm sumRow = LogicTerm(vr);
+    std::vector<encodings::NestedVar> rowVars;
     for (std::size_t j = 0U; j < N; ++j) {
-      sumRow = sumRow + vars.p[i][j];
+      rowVars.emplace_back(vars.p[i][j]);
     }
-    lb->assertFormula(sumRow == LogicTerm(vr1));
-    const int32_t vc = 0;
-    const int32_t vc1 = 1;
-    LogicTerm sumCol = LogicTerm(vc);
+    lb->assertFormula(
+        encodings::exactlyOneCmdr(rowVars, LogicTerm::noneTerm(), lb.get()));
+
+    std::vector<encodings::NestedVar> colVars;
     for (std::size_t j = 0U; j < N; ++j) {
-      sumCol = sumCol + vars.p[j][i];
+      colVars.emplace_back(vars.p[j][i]);
     }
-    lb->assertFormula(sumCol == LogicTerm(vc1));
+    lb->assertFormula(
+        encodings::exactlyOneCmdr(colVars, LogicTerm::noneTerm(), lb.get()));
   }
   // if p_i_j is set undo mapping between T-1 and T
   for (std::size_t i = 0U; i < N; ++i) {
@@ -143,13 +144,14 @@ void TableauEncoder::extractTableauFromModel(Results& results,
 void TableauEncoder::extractMappingFromModel(Results& results,
                                              Model& model) const {
   const std::vector<bool> row(N, false);
-  std::vector<std::vector<bool>> pvals(N, std::vector<bool>(N, false));
+  std::vector<std::vector<bool>> permutationValues(N,
+                                                   std::vector<bool>(N, false));
   for (std::size_t i = 0; i < N; ++i) {
     for (std::size_t j = 0; j < N; ++j) {
-      pvals[i][j] = model.getBoolValue(vars.p[i][j], lb.get());
+      permutationValues[i][j] = model.getBoolValue(vars.p[i][j], lb.get());
     }
   }
-  results.setMapping(pvals);
+  results.setMapping(permutationValues);
 }
 
 LogicTerm

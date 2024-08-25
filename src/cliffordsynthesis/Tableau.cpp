@@ -493,17 +493,12 @@ bool Tableau::isIdentityTableau() const {
   return true;
 }
 
-Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>* p) {
+Tableau Tableau::applyMapping(const std::vector<std::vector<bool>> p) {
   Tableau mappedTableau = Tableau(nQubits, hasDestabilizers());
-  for (size_t i = 0; i < mappedTableau.getTableauSize(); i++) {
-    for (unsigned char& j : mappedTableau.tableau[i]) {
-      j = 0;
-    }
-  }
-  for (size_t i = 0; i < p->size(); i++) {
-    for (size_t j = 0; j < (*p)[i].size(); j++) {
+  for (size_t i = 0; i < p.size(); i++) {
+    for (size_t j = 0; j < p[i].size(); j++) {
       // apply mapping from column i to j if p is set
-      if ((*p)[i][j]) {
+      if (p[i][j]) {
         // in every row swap x entry and z entry
         for (size_t n = 0; n < mappedTableau.getTableauSize(); n++) {
           mappedTableau.tableau[n][j] = tableau[n][i];
@@ -522,14 +517,14 @@ Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>* p) {
 
 // number of Qubits is passed because nQubits is not set in result Tableau of
 // synthesis
-Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>>* p,
+Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>> p,
                                       const size_t nq) {
   auto mappedTableau = Tableau(nq, true);
   mappedTableau.tableau = tableau;
-  for (size_t i = 0; i < p->size(); i++) {
-    for (size_t j = 0; j < (*p)[i].size(); j++) {
+  for (size_t i = 0; i < p.size(); i++) {
+    for (size_t j = 0; j < p[i].size(); j++) {
       // apply mapping from row i to j if p is set
-      if ((*p)[i][j]) {
+      if (p[i][j]) {
         mappedTableau.tableau[i] = tableau[j];
         mappedTableau.tableau[i + nq] = tableau[j + nq];
       }
@@ -584,7 +579,9 @@ void Tableau::gaussianEliminationGF2() {
 }
 // equivalence check for two Tableaus without destablilizers
 bool Tableau::equivalentUpToStabilizer(const Tableau* t) const {
-  assert(getTableauSize() == t->getTableauSize());
+  if (getTableauSize() != t->getTableauSize()) {
+    return false;
+  }
 
   Tableau tEliminated = Tableau(nQubits, hasDestabilizers());
   tEliminated.tableau = tableau;

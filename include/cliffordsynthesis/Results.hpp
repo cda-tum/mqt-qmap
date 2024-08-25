@@ -57,7 +57,7 @@ public:
 
   [[nodiscard]] std::string getMapping() const {
     std::ostringstream oss;
-    for (const auto& row : pvector) {
+    for (const auto& row : permutationVector) {
       for (const bool val : row) {
         oss << (val ? '1' : '0');
       }
@@ -66,7 +66,7 @@ public:
     return oss.str();
   }
   [[nodiscard]] std::vector<std::vector<bool>> getMappingVector() const {
-    return pvector;
+    return permutationVector;
   }
 
   void setSingleQubitGates(const std::size_t g) { singleQubitGates = g; }
@@ -88,14 +88,14 @@ public:
   }
   void setMapping(std::vector<std::vector<bool>> p) {
     std::ostringstream oss;
-    for (const auto& row : pvector) {
+    for (const auto& row : permutationVector) {
       for (const bool val : row) {
         oss << (val ? '1' : '0');
       }
       oss << '\n';
     }
-    pvals = oss.str();
-    pvector = std::move(p);
+    permutationString = oss.str();
+    permutationVector = std::move(p);
   }
 
   [[nodiscard]] bool sat() const {
@@ -130,8 +130,8 @@ protected:
   double runtime = 0.0;
   std::size_t solverCalls = 0U;
 
-  std::string pvals;
-  std::vector<std::vector<bool>> pvector;
+  std::string permutationString;
+  std::vector<std::vector<bool>> permutationVector;
   std::string resultTableau;
   std::string resultCircuit;
 };
