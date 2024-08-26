@@ -493,7 +493,7 @@ bool Tableau::isIdentityTableau() const {
   return true;
 }
 
-Tableau Tableau::applyMapping(const std::vector<std::vector<bool>> p) {
+Tableau Tableau::applyMapping(const std::vector<std::vector<bool>>& p) {
   Tableau mappedTableau = Tableau(nQubits, hasDestabilizers());
   for (size_t i = 0; i < p.size(); i++) {
     for (size_t j = 0; j < p[i].size(); j++) {
@@ -517,7 +517,7 @@ Tableau Tableau::applyMapping(const std::vector<std::vector<bool>> p) {
 
 // number of Qubits is passed because nQubits is not set in result Tableau of
 // synthesis
-Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>> p,
+Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>>& p,
                                       const size_t nq) {
   auto mappedTableau = Tableau(nq, true);
   mappedTableau.tableau = tableau;
