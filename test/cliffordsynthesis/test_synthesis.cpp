@@ -168,8 +168,8 @@ protected:
     Tableau targetPrime = targetTableau.applyMapping(p);
     std::cout << "Target tableau with mapping:\n" << targetPrime;
     if (!targetPrime.hasDestabilizers()) {
-      targetPrime.gaussianEliminationGF2();
-      resultTableau.gaussianEliminationGF2();
+      targetPrime.rref();
+      resultTableau.rref();
       assert(targetPrime.equivalentUpToStabilizer(&resultTableau));
       std::cout << "Target tableau with mapping and Gauss:\n" << targetPrime;
       std::cout << "Result tableau with mapping and Gauss:\n" << resultTableau;
@@ -197,7 +197,7 @@ protected:
     }
     std::cout << "Circuit Tableau :\n" << circuitTableau;
     if (!circuitTableau.hasDestabilizers()) {
-      circuitTableau.gaussianEliminationGF2();
+      circuitTableau.rref();
       std::cout << "Circuit Tableau with Gauss" << circuitTableau;
     }
     EXPECT_EQ(resultTableau, circuitTableau);

@@ -534,7 +534,7 @@ Tableau Tableau::reverseMappingOnRows(const std::vector<std::vector<bool>>& p,
 }
 
 // in place Gauss Elimination
-void Tableau::gaussianEliminationGF2() {
+void Tableau::rref() {
   const size_t rows = tableau.size();
   const size_t cols = tableau[0].size();
   if (rows == 1) {
@@ -585,11 +585,11 @@ bool Tableau::equivalentUpToStabilizer(const Tableau* t) const {
 
   Tableau tEliminated = Tableau(nQubits, hasDestabilizers());
   tEliminated.tableau = tableau;
-  tEliminated.gaussianEliminationGF2();
+  tEliminated.rref();
 
   Tableau t2Eliminated = Tableau(nQubits, hasDestabilizers());
   t2Eliminated.tableau = t->getTableau();
-  t2Eliminated.gaussianEliminationGF2();
+  t2Eliminated.rref();
   return tEliminated == t2Eliminated;
 }
 } // namespace cs

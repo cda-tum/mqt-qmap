@@ -166,7 +166,7 @@ public:
   Tableau applyMapping(const std::vector<std::vector<bool>>& p);
   Tableau reverseMappingOnRows(const std::vector<std::vector<bool>>& p,
                                size_t nq);
-  void gaussianEliminationGF2();
+  void rref();
   bool equivalentUpToStabilizer(const Tableau* t) const;
 };
 } // namespace cs
