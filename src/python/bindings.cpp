@@ -1015,5 +1015,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def("get_animation_csv", &na::HybridSynthesisMapper::getAnimationCsv,
            "Returns the animation csv string")
       .def("save_animation_csv", &na::HybridSynthesisMapper::saveAnimationCsv,
-           "Saves the animation csv string to a file", "filename"_a);
+           "Saves the animation csv string to a file", "filename"_a)
+      .def("get_max_gate_size", &na::HybridSynthesisMapper::getMaxGateSize,
+           "Returns the maximum gate size of the neutral atom hardware");
 }
