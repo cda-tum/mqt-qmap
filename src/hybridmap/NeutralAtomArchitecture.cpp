@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <map>
@@ -232,6 +233,16 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   std::string opName;
   for (size_t i = 0; i < op->getNcontrols(); ++i) {
     opName += "c";
+  }
+  if (op->getType() == qc::OpType::P) {
+    // use time of theta = pi and linearly scale
+    opName += "z";
+    auto       param = abs(op->getParameter().back());
+    const auto pi    = 3.14159265358979323846;
+    while (param > pi) {
+      param = abs(param - 2 * pi);
+    }
+    return getGateTime(opName) * param / 3.14159265358979323846;
   }
   opName += op->getName();
   return getGateTime(opName);
