@@ -76,6 +76,7 @@ public:
    */
   void completeRemap(InitialMapping initMapping = InitialMapping::Identity) {
     this->map(synthesizedQc, initMapping);
+    this->convertToAod();
   }
 
   /**

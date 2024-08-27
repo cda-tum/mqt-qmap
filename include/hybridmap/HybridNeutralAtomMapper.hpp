@@ -508,6 +508,9 @@ public:
    * @return The mapped quantum circuit with native AOD operations
    */
   [[maybe_unused]] std::string getMappedQcAodQasm() {
+    if (this->mappedQcAOD.empty()) {
+      this->convertToAod();
+    }
     std::stringstream ss;
     this->mappedQcAOD.dumpOpenQASM(ss, false);
     return ss.str();
@@ -519,6 +522,9 @@ public:
    * with AOD operations to
    */
   [[maybe_unused]] void saveMappedQcAodQasm(const std::string& filename) {
+    if (this->mappedQcAOD.empty()) {
+      this->convertToAod();
+    }
     std::ofstream ofs(filename);
     this->mappedQcAOD.dumpOpenQASM(ofs, false);
   }
@@ -538,6 +544,9 @@ public:
   [[maybe_unused]] SchedulerResults
   schedule(bool verboseArg = false, bool createAnimationCsv = false,
            qc::fp shuttlingSpeedFactor = 1.0) {
+    if (mappedQcAOD.empty()) {
+      convertToAod();
+    }
     return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitHwPos(),
                               verboseArg, createAnimationCsv,
                               shuttlingSpeedFactor);
