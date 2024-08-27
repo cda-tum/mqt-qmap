@@ -19,27 +19,35 @@
 
 namespace na {
 
-size_t HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
-                                                     bool alsoMap) {
-  std::vector<std::pair<qc::QuantumComputation, qc::fp>> costs;
+std::vector<qc::fp>
+HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
+                                              bool alsoMap) {
+  std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
   size_t                                                 qcIndex = 0;
   for (auto& qc : synthesisSteps) {
     if (this->parameters->verbose) {
       std::cout << "Evaluating synthesis step number " << qcIndex++ << "\n";
     }
-    costs.emplace_back(qc, this->evaluateSynthesisStep(qc));
+    candidates.emplace_back(qc, this->evaluateSynthesisStep(qc));
     if (this->parameters->verbose) {
-      std::cout << "Fidelity: " << costs.back().second << "\n";
+      std::cout << "Fidelity: " << candidates.back().second << "\n";
     }
     qcIndex++;
   }
-  const auto bestQc = std::max_element(
-      costs.begin(), costs.end(),
-      [](const auto& a, const auto& b) { return a.second < b.second; });
-  if (alsoMap) {
-    this->appendWithMapping(bestQc->first);
+  std::vector<qc::fp> fidelities;
+  size_t              bestIndex    = 0;
+  qc::fp              bestFidelity = 0;
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    fidelities.push_back(candidates[i].second);
+    if (candidates[i].second > bestFidelity) {
+      bestFidelity = candidates[i].second;
+      bestIndex    = i;
+    }
   }
-  return static_cast<size_t>(std::distance(costs.begin(), bestQc));
+  if (alsoMap) {
+    this->appendWithMapping(candidates[bestIndex].first);
+  }
+  return fidelities;
 }
 
 qc::fp

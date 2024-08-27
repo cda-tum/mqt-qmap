@@ -948,7 +948,7 @@ PYBIND11_MODULE(pyqmap, m) {
       .def("evaluate_synthesis_steps",
            &na::HybridSynthesisMapper::evaluateSynthesisSteps,
            "Evaluates the synthesis steps proposed by the ZX extraction. "
-           "Returns index of the best synthesis step.",
+           "Returns a list of fidelities of the mapped synthesis steps.",
            "synthesis_steps"_a, "also_map"_a = false)
       .def(
           "append_without_mapping",

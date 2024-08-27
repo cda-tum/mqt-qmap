@@ -111,11 +111,12 @@ public:
   /**
    * @brief Evaluates the synthesis steps proposed by the ZX extraction.
    * @param synthesisSteps The synthesis steps proposed by the ZX extraction.
-   * @param alsoMap If true, the synthesis steps are directly mapped to the
+   * @param alsoMap If true, the best synthesis step is directly mapped to the
    * hardware.
-   * @return The index of the synthesis step with the lowest effort.
+   * @return Returns a list of fidelities of the mapped synthesis steps.
    */
-  size_t evaluateSynthesisSteps(qcs& synthesisSteps, bool alsoMap = false);
+  std::vector<qc::fp> evaluateSynthesisSteps(qcs& synthesisSteps,
+                                             bool alsoMap = false);
 
   /**
    * @brief Directly maps the given QuantumComputation to the hardware NOT
