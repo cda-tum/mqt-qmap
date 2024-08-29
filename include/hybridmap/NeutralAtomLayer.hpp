@@ -24,11 +24,13 @@ namespace na {
 
 class NeutralAtomLayer {
 protected:
-  qc::DAG               dag;
-  qc::DAGIterators      iterators;
-  GateList              gates;
-  GateList              mappedSingleQubitGates;
-  std::vector<GateList> candidates;
+  qc::DAG          dag;
+  qc::DAGIterators iterators;
+  qc::DAGIterators ends;
+  GateList         gates;
+  GateList         newGates;
+  GateList         mappedSingleQubitGates;
+  GateLists        candidates;
 
   /**
    * @brief Updates the gates for the given qubits
@@ -38,6 +40,7 @@ protected:
    * @param commuteWith Gates the new gates should commute with
    */
   void updateByQubits(const std::set<qc::Qubit>& qubitsToUpdate);
+
   /**
    * @brief Updates the candidates for the given qubits
    */
@@ -48,14 +51,6 @@ protected:
    */
   void candidatesToGates(const std::set<qc::Qubit>& qubitsToUpdate);
 
-  // Commutation checks
-  static bool commutesWithAtQubit(const GateList&      layer,
-                                  const qc::Operation* opPointer,
-                                  const qc::Qubit&     qubit);
-  static bool commuteAtQubit(const qc::Operation* opPointer1,
-                             const qc::Operation* opPointer2,
-                             const qc::Qubit&     qubit);
-
 public:
   // Constructor
   explicit NeutralAtomLayer(qc::DAG graph) : dag(std::move(graph)) {
@@ -64,6 +59,7 @@ public:
     for (auto& i : dag) {
       auto it = i.begin();
       iterators.emplace_back(it);
+      ends.emplace_back(i.end());
       candidates.emplace_back();
     }
   }
@@ -73,17 +69,16 @@ public:
    * @return The current layer of gates
    */
   GateList getGates() { return gates; }
+  GateList getNewGates() { return newGates; }
   /**
-   * @brief Returns a vector of the iterator indices
+   * @brief Returns a vector of the iterator indices for debugging
    * @return A copy of the current iterator indices
    */
   std::vector<uint32_t> getIteratorOffset();
   /**
-   * @brief Initializes the layer by updating all qubits starting from the
-   * iterators
-   * @param The iterator offset to start from
+   * @brief Initializes the layer by updating all qubits starting
    */
-  void initLayerOffset(const std::vector<uint32_t>& iteratorOffset = {});
+  void initAllQubits();
   /**
    * @brief Removes the provided gates from the current layer and update the
    * the layer depending on the qubits of the gates.
@@ -91,6 +86,7 @@ public:
    * @param commuteWith Gates the new gates should commute with
    */
   void removeGatesAndUpdate(const GateList& gatesToRemove);
+
   /**
    * @brief Returns the mapped single qubit gates
    * @return The mapped single qubit gates
@@ -98,4 +94,9 @@ public:
   GateList getMappedSingleQubitGates() { return mappedSingleQubitGates; }
 };
 
+// Commutation checks
+bool commutesWithAtQubit(const GateList& layer, const qc::Operation* opPointer,
+                         const qc::Qubit& qubit);
+bool commuteAtQubit(const qc::Operation* opPointer1,
+                    const qc::Operation* opPointer2, const qc::Qubit& qubit);
 } // namespace na

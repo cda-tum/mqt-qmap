@@ -41,7 +41,7 @@ struct MapperParameters {
   qc::fp                   gateWeight           = 1;
   qc::fp                   shuttlingWeight      = 1;
   uint32_t                 seed                 = 0;
-  bool                     verbose              = false;
+  bool                     verbose              = true;
   InitialCoordinateMapping initialMapping = InitialCoordinateMapping::Trivial;
 };
 
@@ -113,7 +113,8 @@ protected:
    * can be mapped.
    * @param layer The layer to map all possible gates for
    */
-  void mapAllPossibleGates(NeutralAtomLayer& layer);
+  void mapAllPossibleGates(NeutralAtomLayer& frontLayer,
+                           NeutralAtomLayer& lookaheadLayer);
   /**
    * @brief Returns all gates that can be executed now
    * @param gates The gates to be checked

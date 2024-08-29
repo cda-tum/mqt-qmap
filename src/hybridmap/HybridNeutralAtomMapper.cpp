@@ -46,11 +46,12 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
 
   // init layers
-  NeutralAtomLayer frontLayer(dag);
-  frontLayer.initLayerOffset();
-  mapAllPossibleGates(frontLayer);
   NeutralAtomLayer lookaheadLayer(dag);
-  lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+  lookaheadLayer.initAllQubits();
+  NeutralAtomLayer frontLayer(dag);
+  frontLayer.initAllQubits();
+  lookaheadLayer.removeGatesAndUpdate(frontLayer.getGates());
+  mapAllPossibleGates(frontLayer, lookaheadLayer);
 
   // Checks
   if (dag.size() > arch->getNqubits()) {
@@ -84,8 +85,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
         updateMappingSwap(bestSwap);
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
-      mapAllPossibleGates(frontLayer);
-      lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+      mapAllPossibleGates(frontLayer, lookaheadLayer);
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
       if (this->parameters->verbose) {
         printLayers();
@@ -103,8 +103,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
         updateMappingMove(bestMove);
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
-      mapAllPossibleGates(frontLayer);
-      lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+      mapAllPossibleGates(frontLayer, lookaheadLayer);
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
       if (this->parameters->verbose) {
         printLayers();
@@ -117,23 +116,16 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   }
 }
 
-void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {
-  // map single qubit gates
-  for (const auto* opPointer : layer.getMappedSingleQubitGates()) {
-    mapGate(opPointer);
-  }
-  layer.removeGatesAndUpdate({});
-  // check and map multi qubit gates
-  auto executableGates = getExecutableGates(layer.getGates());
+void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& frontLayer,
+                                            NeutralAtomLayer& lookaheadLayer) {
+  auto executableGates = getExecutableGates(frontLayer.getGates());
   while (!executableGates.empty()) {
-    for (const auto* opPointer : layer.getMappedSingleQubitGates()) {
-      mapGate(opPointer);
-    }
     for (const auto* opPointer : executableGates) {
       mapGate(opPointer);
     }
-    layer.removeGatesAndUpdate(executableGates);
-    executableGates = getExecutableGates(layer.getGates());
+    frontLayer.removeGatesAndUpdate(executableGates);
+    lookaheadLayer.removeGatesAndUpdate(frontLayer.getNewGates());
+    executableGates = getExecutableGates(frontLayer.getGates());
   }
 }
 
@@ -158,6 +150,9 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
   this->frontLayerGate.clear();
   this->frontLayerShuttling.clear();
   for (const auto& gate : frontGates) {
+    if (gate->getNqubits() == 1) {
+      continue;
+    }
     if (swapGateBetter(gate)) {
       this->frontLayerGate.emplace_back(gate);
     } else {
@@ -168,6 +163,9 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
   this->lookaheadLayerGate.clear();
   this->lookaheadLayerShuttling.clear();
   for (const auto& gate : lookaheadGates) {
+    if (gate->getNqubits() == 1) {
+      continue;
+    }
     if (swapGateBetter(gate)) {
       this->lookaheadLayerGate.emplace_back(gate);
     } else {
@@ -255,7 +253,7 @@ void NeutralAtomMapper::printLayers() {
 GateList NeutralAtomMapper::getExecutableGates(const GateList& gates) {
   GateList executableGates;
   for (const auto* opPointer : gates) {
-    if (isExecutable(opPointer)) {
+    if (opPointer->getNqubits() == 1 || isExecutable(opPointer)) {
       executableGates.emplace_back(opPointer);
     }
   }

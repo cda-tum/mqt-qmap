@@ -20,6 +20,19 @@
 
 namespace na {
 
+class NeutralAtomException : public std::runtime_error {
+  std::string msg;
+
+public:
+  explicit NeutralAtomException(std::string m)
+      : std::runtime_error("Neutral Atom Mapper Exception"), msg(std::move(m)) {
+  }
+
+  [[nodiscard]] const char* what() const noexcept override {
+    return msg.c_str();
+  }
+};
+
 // Enums for the different initial mappings strategies
 enum InitialCoordinateMapping : uint8_t { Trivial, Random };
 enum InitialMapping : uint8_t { Identity };

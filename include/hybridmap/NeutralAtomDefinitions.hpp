@@ -39,6 +39,7 @@ using SwapDistance = int32_t;
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
 
 // Used to represent operations
-using GateList = std::vector<const qc::Operation*>;
+using GateList  = std::vector<const qc::Operation*>;
+using GateLists = std::vector<GateList>;
 
 } // namespace na
