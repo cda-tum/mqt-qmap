@@ -50,7 +50,9 @@ TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
   auto best = mapper.evaluateSynthesisSteps(circuits, false);
-  EXPECT_GE(best, 0);
+  EXPECT_EQ(best.size(), 2);
+  EXPECT_GE(best[0], 0);
+  EXPECT_GE(best[1], 0);
 }
 
 INSTANTIATE_TEST_SUITE_P(HybridSynthesisMapperTestSuite,
