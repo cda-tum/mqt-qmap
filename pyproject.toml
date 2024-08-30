@@ -146,9 +146,15 @@ addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = [
-    "error",
-    'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
-    'ignore:.*Qiskit with Python 3.8.*:DeprecationWarning:',
+  "error",
+  'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
+  'ignore:.*Qiskit with Python 3.8.*:DeprecationWarning:',
+  'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:qiskit.*', # Qiskit imports deprecated code (should be resolved in the 1.2.1 release)
+  'ignore:.*Treating CircuitInstruction as an iterable is deprecated.*:DeprecationWarning:mqt.qcec.*', # Needs a new release of QCEC (should be resolved in 2.7.1)
+  # we purposely maintain compatibility with the V1 backends until Qiskit removes them in 2.0
+  'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:mqt.qmap.*',
+  'ignore:.*qiskit\.providers\.fake_provider\.fake_backend\.FakeBackend.* is deprecated.*:DeprecationWarning:',
+  'ignore:.*qiskit\.providers\.backend.BackendV1.* is deprecated.*:DeprecationWarning:',
 ]
 
 [tool.coverage]
