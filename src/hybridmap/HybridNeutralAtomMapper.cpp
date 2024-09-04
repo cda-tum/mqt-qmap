@@ -1054,6 +1054,10 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     if (!bestPos.coords.empty() && bestPos.nMoves <= minMoves) {
       return bestPos.coords;
     }
+    if (!bestPos.coords.empty() && bestPos.nMoves < nMovesGate) {
+      nMovesGate   = bestPos.nMoves;
+      finalBestPos = bestPos;
+    }
 
     // min not yet reached, check nearby
     if (!bestPos.coords.empty()) {
@@ -1066,8 +1070,11 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
       }
     }
   }
-  throw qc::QFRException(
-      "No move position found (check if enough free coords are available)");
+  if (finalBestPos.coords.empty()) {
+    throw qc::QFRException(
+        "No move position found (check if enough free coords are available)");
+  }
+  return finalBestPos.coords;
 }
 
 MoveCombs
