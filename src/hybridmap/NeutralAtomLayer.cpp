@@ -163,6 +163,12 @@ bool commuteAtQubit(const qc::Operation* op1, const qc::Operation* op2,
     return true;
   }
 
+  // Swaps never commute
+  if (op1->getType() == qc::OpType::SWAP ||
+      op2->getType() == qc::OpType::SWAP) {
+    return false;
+  }
+
   // check targets
   if (std::find(op1->getTargets().begin(), op1->getTargets().end(), qubit) !=
           op1->getTargets().end() &&
