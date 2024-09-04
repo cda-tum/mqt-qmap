@@ -73,8 +73,6 @@ protected:
   qc::QuantumComputation mappedQcAOD;
   // The scheduler to schedule the mapped quantum circuit
   NeutralAtomScheduler scheduler;
-  // The gates that have been executed
-  std::vector<const qc::Operation*> executedCommutingGates;
   // Gates in the front layer to be executed with swap gates
   GateList frontLayerGate;
   // Gates in the front layer to be executed with move operations

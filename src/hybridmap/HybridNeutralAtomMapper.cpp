@@ -175,16 +175,6 @@ void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
 }
 
 void NeutralAtomMapper::mapGate(const qc::Operation* op) {
-  if (op->getType() == qc::OpType::I) {
-    return;
-  }
-  // Safety check
-  if (std::find(this->executedCommutingGates.begin(),
-                this->executedCommutingGates.end(),
-                op) != this->executedCommutingGates.end()) {
-    return;
-  }
-  this->executedCommutingGates.emplace_back(op);
   if (this->parameters->verbose) {
     std::cout << "mapped " << op->getName() << " ";
     for (auto qubit : op->getUsedQubits()) {
