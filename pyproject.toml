@@ -124,6 +124,13 @@ sdist.exclude = [
 BUILD_MQT_QMAP_TESTS = "OFF"
 BUILD_MQT_QMAP_BINDINGS = "ON"
 
+[[tool.scikit-build.overrides]]
+if.python-version = ">=3.13"
+if.abi-flags = "t"
+if.platform-system = "win32"
+inherit.cmake.define = "append"
+cmake.define.DISABLE_GIL = "1"
+
 
 [tool.check-sdist]
 sdist-only = ["src/mqt/qmap/_version.py"]
