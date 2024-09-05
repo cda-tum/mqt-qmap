@@ -186,6 +186,10 @@ module = ["qiskit.*", "matplotlib.*", "networkx.*", "plotly.*", "_plotly_utils.*
 ignore_missing_imports = true
 
 
+[tool.check-wheel-contents]
+ignore = ["W002"]  # Triggers on __init__.py's
+
+
 [tool.ruff]
 line-length = 120
 preview = true
