@@ -18,7 +18,7 @@ from mqt.qmap.subarchitectures import (
 )
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from mqt.qmap._compat.typing import TypeAlias
 
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, Optional[int]]

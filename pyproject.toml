@@ -44,7 +44,7 @@ dependencies = [
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.14.0",
     "importlib_resources>=5.0; python_version < '3.10'",
-    "typing_extensions>=4.6"
+    "typing_extensions>=4.6; python_version < '3.10'",
 ]
 dynamic = ["version"]
 
@@ -114,14 +114,6 @@ sdist.exclude = [
     "**/plots",
     "**/test",
     "**/tests",
-    "extern/mqt-core/extern/json/include",
-    "extern/mqt-core/extern/googletest",
-    "extern/mqt-core/extern/boost/config/checks",
-    "extern/mqt-core/extern/boost/config/tools",
-    "extern/mqt-core/extern/boost/multiprecision/config",
-    "extern/mqt-core/extern/boost/multiprecision/example",
-    "extern/mqt-core/extern/boost/multiprecision/performance",
-    "extern/mqt-core/extern/boost/multiprecision/tools"
 ]
 
 [tool.scikit-build.cmake.define]
@@ -194,6 +186,10 @@ module = ["qiskit.*", "matplotlib.*", "networkx.*", "plotly.*", "_plotly_utils.*
 ignore_missing_imports = true
 
 
+[tool.check-wheel-contents]
+ignore = ["W002"]  # Triggers on __init__.py's
+
+
 [tool.ruff]
 line-length = 120
 preview = true
@@ -236,7 +232,7 @@ extend-select = [
     "SIM",         # flake8-simplify
     "T20",         # flake8-print
     "TCH",         # flake8-type-checking
-    "TID",         # flake8-tidy-imports
+    "TID251",      # flake8-tidy-imports.banned-api
     "TRY",         # tryceratops
     "UP",          # pyupgrade
     "YTT",         # flake8-2020
@@ -252,18 +248,33 @@ ignore = [
     "S101",    # Use of assert detected
     "S403",    # `pickle`, `cPickle`, `dill`, and `shelve` modules are possibly insecure
 ]
+typing-modules = ["mqt.qmap._compat.typing"]
 isort.required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"typing.Callable".msg = "Use collections.abc.Callable instead."
+"typing.Iterator".msg = "Use collections.abc.Iterator instead."
+"typing.Mapping".msg = "Use collections.abc.Mapping instead."
+"typing.Sequence".msg = "Use collections.abc.Sequence instead."
+"typing.Set".msg = "Use collections.abc.Set instead."
+"typing.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
+"typing_extensions.Self".msg = "Use mqt.qmap._compat.typing.Self instead."
+"typing.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
+"typing_extensions.TypeAlias".msg = "Use mqt.qmap._compat.typing.TypeAlias instead."
+"importlib.resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
+"importlib_resources".msg = "Use mqt.qmap._compat.importlib.resources instead."
 
 [tool.ruff.lint.per-file-ignores]
 "test/python/**" = ["T20", "ANN"]
 "docs/**" = ["T20"]
 "noxfile.py" = ["T20", "TID251"]
-"*.pyi" = ["D"]  # pydocstyle
+"*.pyi" = ["D418", "PYI021"]  # pydocstyle
 "*.ipynb" = [
     "D",    # pydocstyle
     "E402", # Allow imports to appear anywhere in Jupyter notebooks
     "I002", # Allow missing `from __future__ import annotations` import
 ]
+"src/mqt/qmap/_compat/**.py" = ["TID251"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
