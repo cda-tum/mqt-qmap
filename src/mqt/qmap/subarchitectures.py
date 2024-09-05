@@ -8,7 +8,7 @@ from __future__ import annotations
 import pickle
 from itertools import combinations
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple  # noqa: TID251
+from typing import TYPE_CHECKING, Optional
 
 from ._compat.importlib import resources
 
@@ -29,7 +29,7 @@ import rustworkx.visualization as rxviz
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
 
-PartialOrder: TypeAlias = Dict[Tuple[int, int], Set[Tuple[int, int]]]
+PartialOrder: TypeAlias = dict[tuple[int, int], set[tuple[int, int]]]
 
 #: Architectures for which precomputed orderings are available
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16"]
