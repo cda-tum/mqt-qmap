@@ -114,14 +114,6 @@ sdist.exclude = [
     "**/plots",
     "**/test",
     "**/tests",
-    "extern/mqt-core/extern/json/include",
-    "extern/mqt-core/extern/googletest",
-    "extern/mqt-core/extern/boost/config/checks",
-    "extern/mqt-core/extern/boost/config/tools",
-    "extern/mqt-core/extern/boost/multiprecision/config",
-    "extern/mqt-core/extern/boost/multiprecision/example",
-    "extern/mqt-core/extern/boost/multiprecision/performance",
-    "extern/mqt-core/extern/boost/multiprecision/tools"
 ]
 
 [tool.scikit-build.cmake.define]
