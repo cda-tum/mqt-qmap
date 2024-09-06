@@ -3,15 +3,15 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
-#include "configuration/AvailableArchitecture.hpp"
-#include "configuration/CommanderGrouping.hpp"
-#include "configuration/Configuration.hpp"
-#include "configuration/Encoding.hpp"
-#include "configuration/Method.hpp"
-#include "exact/ExactMapper.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/configuration/AvailableArchitecture.hpp"
+#include "sc/configuration/CommanderGrouping.hpp"
+#include "sc/configuration/Configuration.hpp"
+#include "sc/configuration/Encoding.hpp"
+#include "sc/configuration/Method.hpp"
+#include "sc/exact/ExactMapper.hpp"
 
 #include <gtest/gtest.h>
 #include <iostream>

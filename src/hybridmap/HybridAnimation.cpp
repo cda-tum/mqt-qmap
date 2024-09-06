@@ -10,13 +10,13 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "utils.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 namespace na {
@@ -60,8 +60,9 @@ AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
     axesIdCounter++;
     axesIds[id] = axesIdCounter;
   } else {
-    throw QMAPException("Tried to add axis but axis already exists for qubit " +
-                        std::to_string(id));
+    throw std::invalid_argument(
+        "Tried to add axis but axis already exists for qubit " +
+        std::to_string(id));
   }
   return axesIds[id];
 }
@@ -70,7 +71,7 @@ AnimationAtoms::marginId AnimationAtoms::addMargin(HwQubit id) {
     marginIdCounter++;
     marginIds[id] = marginIdCounter;
   } else {
-    throw QMAPException(
+    throw std::invalid_argument(
         "Tried to add margin but margin already exists for qubit " +
         std::to_string(id));
   }
@@ -117,16 +118,16 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
     }
     if (coordIdxToId.find(coordIdx) == coordIdxToId.end() ||
         idToCoord.find(coordIdxToId.at(coordIdx)) == idToCoord.end()) {
-      throw QMAPException("Tried to create csv line for qubit at coordIdx " +
-                          std::to_string(coordIdx) +
-                          " but there is no qubit at this coordIdx");
+      throw std::invalid_argument(
+          "Tried to create csv line for qubit at coordIdx " +
+          std::to_string(coordIdx) + " but there is no qubit at this coordIdx");
     }
     auto id = coordIdxToId.at(coordIdx);
     auto coord = idToCoord.at(id);
     if (op->getType() == qc::OpType::AodActivate) {
       addAxis(id);
       if (axesIds.find(id) == axesIds.end()) {
-        throw QMAPException(
+        throw std::invalid_argument(
             "Tried to activate qubit at coordIdx " + std::to_string(coordIdx) +
             " but there is no axis for qubit " + std::to_string(id));
       }
@@ -136,10 +137,10 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
                                colorAod, true, axesIds.at(id));
     } else if (op->getType() == qc::OpType::AodDeactivate) {
       if (axesIds.find(id) == axesIds.end()) {
-        throw QMAPException("Tried to deactivate qubit at coordIdx " +
-                            std::to_string(coordIdx) +
-                            " but there is no axis for qubit " +
-                            std::to_string(id));
+        throw std::invalid_argument("Tried to deactivate qubit at coordIdx " +
+                                    std::to_string(coordIdx) +
+                                    " but there is no axis for qubit " +
+                                    std::to_string(id));
       }
       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
                                colorAod, true, axesIds.at(id));
@@ -149,7 +150,7 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
 
     } else if (op->getType() == qc::OpType::AodMove) {
       if (axesIds.find(id) == axesIds.end()) {
-        throw QMAPException(
+        throw std::invalid_argument(
             "Tried to move qubit at coordIdx " + std::to_string(coordIdx) +
             " but there is no axis for qubit " + std::to_string(id));
       }

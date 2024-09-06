@@ -3,9 +3,9 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
 #include "ir/operations/OpType.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/utils.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -46,8 +46,8 @@
 
 class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
-  std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir = "../extern/calibration/";
+  std::string testArchitectureDir = "../../extern/architectures/";
+  std::string testCalibrationDir = "../../extern/calibration/";
 };
 
 INSTANTIATE_TEST_SUITE_P(Architecture, TestArchitecture,

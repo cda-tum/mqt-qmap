@@ -3,22 +3,22 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "heuristic/HeuristicMapper.hpp"
+#include "sc/heuristic/HeuristicMapper.hpp"
 
-#include "Architecture.hpp"
-#include "DataLogger.hpp"
 #include "Definitions.hpp"
-#include "Mapper.hpp"
-#include "configuration/Configuration.hpp"
-#include "configuration/EarlyTermination.hpp"
-#include "configuration/Heuristic.hpp"
-#include "configuration/InitialLayout.hpp"
-#include "configuration/Layering.hpp"
-#include "configuration/LookaheadHeuristic.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/DataLogger.hpp"
+#include "sc/Mapper.hpp"
+#include "sc/configuration/Configuration.hpp"
+#include "sc/configuration/EarlyTermination.hpp"
+#include "sc/configuration/Heuristic.hpp"
+#include "sc/configuration/InitialLayout.hpp"
+#include "sc/configuration/Layering.hpp"
+#include "sc/configuration/LookaheadHeuristic.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <array>

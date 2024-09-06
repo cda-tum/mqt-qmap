@@ -13,7 +13,6 @@
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NADefinitions.hpp"
-#include "utils.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,6 +20,7 @@
 #include <cstdlib>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -176,7 +176,7 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
       reAssignOffsets(aodMovesX, signX);
       break;
     case ActivationMergeType::Merge:
-      throw QMAPException("Merge in both dimensions should never happen.");
+      throw std::runtime_error("Merge in both dimensions should never happen.");
     case ActivationMergeType::Append:
       mergeActivationDim(Dimension::X,
                          AodActivation{Dimension::X, {x, deltaX, signX}, move},

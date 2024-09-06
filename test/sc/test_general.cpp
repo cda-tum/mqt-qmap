@@ -3,8 +3,8 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/utils.hpp"
 
 #include <fstream>
 #include <gtest/gtest.h>

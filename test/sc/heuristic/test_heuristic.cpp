@@ -3,21 +3,21 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
-#include "DataLogger.hpp"
 #include "Definitions.hpp"
-#include "configuration/AvailableArchitecture.hpp"
-#include "configuration/EarlyTermination.hpp"
-#include "configuration/Heuristic.hpp"
-#include "configuration/InitialLayout.hpp"
-#include "configuration/Layering.hpp"
-#include "configuration/LookaheadHeuristic.hpp"
-#include "configuration/Method.hpp"
-#include "heuristic/HeuristicMapper.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/DataLogger.hpp"
+#include "sc/configuration/AvailableArchitecture.hpp"
+#include "sc/configuration/EarlyTermination.hpp"
+#include "sc/configuration/Heuristic.hpp"
+#include "sc/configuration/InitialLayout.hpp"
+#include "sc/configuration/Layering.hpp"
+#include "sc/configuration/LookaheadHeuristic.hpp"
+#include "sc/configuration/Method.hpp"
+#include "sc/heuristic/HeuristicMapper.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <array>
@@ -435,9 +435,9 @@ TEST_F(InternalsTest, NodeLookaheadCalculation) {
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir = "../extern/calibration/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
+  std::string testCalibrationDir = "../../../extern/calibration/";
 
   qc::QuantumComputation qc;
   std::string circuitName;
@@ -1804,9 +1804,9 @@ TEST_F(LayeringTest, IndividualGates) {
 
 class HeuristicTest5Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir = "../extern/calibration/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
+  std::string testCalibrationDir = "../../../extern/calibration/";
 
   qc::QuantumComputation qc;
   Architecture ibmqYorktown;
@@ -1878,8 +1878,8 @@ TEST_P(HeuristicTest5Q, Dynamic) {
 
 class HeuristicTest16Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
 
   qc::QuantumComputation qc;
   Architecture ibmQX5;
@@ -1929,8 +1929,8 @@ TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
 
 class HeuristicTest20Q : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
 
   qc::QuantumComputation qc;
   Architecture arch;
@@ -1966,8 +1966,8 @@ TEST_P(HeuristicTest20Q, Dynamic) {
 class HeuristicTest20QTeleport
     : public testing::TestWithParam<std::tuple<std::uint64_t, std::string>> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
 
   qc::QuantumComputation qc;
   Architecture arch;
@@ -2009,9 +2009,9 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
 
 class HeuristicTestFidelity : public testing::TestWithParam<std::string> {
 protected:
-  std::string testExampleDir = "../examples/";
-  std::string testArchitectureDir = "../extern/architectures/";
-  std::string testCalibrationDir = "../extern/calibration/";
+  std::string testExampleDir = "../../../examples/";
+  std::string testArchitectureDir = "../../../extern/architectures/";
+  std::string testCalibrationDir = "../../../extern/calibration/";
 
   qc::QuantumComputation qc;
   Architecture arch;
