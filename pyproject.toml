@@ -162,7 +162,10 @@ filterwarnings = [
 
 [tool.coverage]
 run.source = ["mqt.qmap"]
-run.omit = ["*/visualization/*"]
+run.omit = [
+  "*/visualization/*",
+  "*/_compat/*",
+]
 report.exclude_also = [
     '\.\.\.',
     'if TYPE_CHECKING:',
