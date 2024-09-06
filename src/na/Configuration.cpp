@@ -4,7 +4,7 @@
 // information.
 //
 
-#include "Configuration.hpp"
+#include "na/Configuration.hpp"
 
 #include <exception>
 #include <fstream>

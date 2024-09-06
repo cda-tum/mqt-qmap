@@ -3,22 +3,22 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "exact/ExactMapper.hpp"
+#include "sc/exact/ExactMapper.hpp"
 
-#include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
-#include "configuration/CommanderGrouping.hpp"
-#include "configuration/Configuration.hpp"
-#include "configuration/Encoding.hpp"
-#include "configuration/SwapReduction.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "logicblocks/Model.hpp"
 #include "logicblocks/util_logicblock.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/configuration/CommanderGrouping.hpp"
+#include "sc/configuration/Configuration.hpp"
+#include "sc/configuration/Encoding.hpp"
+#include "sc/configuration/SwapReduction.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <cassert>

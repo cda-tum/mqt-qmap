@@ -4,18 +4,18 @@
 // information.
 //
 
-#include "NAMapper.hpp"
+#include "na/NAMapper.hpp"
 
-#include "Architecture.hpp"
-#include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "NAGraphAlgorithms.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/Architecture.hpp"
+#include "na/Configuration.hpp"
 #include "na/NADefinitions.hpp"
+#include "na/NAGraphAlgorithms.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"

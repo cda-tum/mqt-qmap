@@ -149,15 +149,13 @@ protected:
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    Tableaus, SynthesisTest,
-    testing::ValuesIn(getTests("cliffordsynthesis/tableaus.json")),
+    Tableaus, SynthesisTest, testing::ValuesIn(getTests("tableaus.json")),
     [](const testing::TestParamInfo<SynthesisTest::ParamType>& inf) {
       return inf.param.description;
     });
 
 INSTANTIATE_TEST_SUITE_P(
-    Circuits, SynthesisTest,
-    testing::ValuesIn(getTests("cliffordsynthesis/circuits.json")),
+    Circuits, SynthesisTest, testing::ValuesIn(getTests("circuits.json")),
     [](const testing::TestParamInfo<SynthesisTest::ParamType>& inf) {
       return inf.param.description;
     });

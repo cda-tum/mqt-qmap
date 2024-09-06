@@ -4,7 +4,7 @@
 // information.
 //
 
-#include "NAGraphAlgorithms.hpp"
+#include "na/NAGraphAlgorithms.hpp"
 
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"

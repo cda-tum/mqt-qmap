@@ -4,16 +4,17 @@
 //
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
-#include "exact/ExactMapper.hpp"
-#include "heuristic/HeuristicMapper.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
-#include "nlohmann/json.hpp"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
-#include "string"
+#include "sc/exact/ExactMapper.hpp"
+#include "sc/heuristic/HeuristicMapper.hpp"
+
+#include <nlohmann/json.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11_json/pybind11_json.hpp>
+#include <string>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
