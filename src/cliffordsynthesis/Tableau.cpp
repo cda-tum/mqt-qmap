@@ -20,6 +20,7 @@
 #include <ostream>
 #include <plog/Log.h>
 #include <regex>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
