@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "Mapper.hpp"
-#include "MappingResults.hpp"
-#include "configuration/Configuration.hpp"
-#include "utils.hpp"
+#include "sc/Mapper.hpp"
+#include "sc/MappingResults.hpp"
+#include "sc/configuration/Configuration.hpp"
+#include "sc/utils.hpp"
 
 #include <cmath>
 #include <cstddef>

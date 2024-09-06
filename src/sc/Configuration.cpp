@@ -3,16 +3,16 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "configuration/Configuration.hpp"
+#include "sc/configuration/Configuration.hpp"
 
-#include "configuration/CommanderGrouping.hpp"
-#include "configuration/Encoding.hpp"
-#include "configuration/Heuristic.hpp"
-#include "configuration/InitialLayout.hpp"
-#include "configuration/Layering.hpp"
-#include "configuration/LookaheadHeuristic.hpp"
-#include "configuration/Method.hpp"
-#include "configuration/SwapReduction.hpp"
+#include "sc/configuration/CommanderGrouping.hpp"
+#include "sc/configuration/Encoding.hpp"
+#include "sc/configuration/Heuristic.hpp"
+#include "sc/configuration/InitialLayout.hpp"
+#include "sc/configuration/Layering.hpp"
+#include "sc/configuration/LookaheadHeuristic.hpp"
+#include "sc/configuration/Method.hpp"
+#include "sc/configuration/SwapReduction.hpp"
 
 #include <nlohmann/json.hpp>
 

@@ -11,7 +11,6 @@
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "nlohmann/json.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,7 +18,7 @@
 #include <exception>
 #include <fstream>
 #include <map>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
 #include <stdexcept>
 #include <string>

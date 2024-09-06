@@ -3,16 +3,16 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
-#include "Configuration.hpp"
 #include "Definitions.hpp"
-#include "NAMapper.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "na/Architecture.hpp"
+#include "na/Configuration.hpp"
 #include "na/NAComputation.hpp"
+#include "na/NAMapper.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"

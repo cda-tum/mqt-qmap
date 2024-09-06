@@ -3,10 +3,10 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
+#include "sc/Architecture.hpp"
 
-#include "configuration/AvailableArchitecture.hpp"
-#include "utils.hpp"
+#include "sc/configuration/AvailableArchitecture.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <cmath>

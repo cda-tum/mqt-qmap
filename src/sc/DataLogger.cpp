@@ -3,13 +3,13 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "DataLogger.hpp"
+#include "sc/DataLogger.hpp"
 
-#include "Architecture.hpp"
-#include "MappingResults.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/MappingResults.hpp"
+#include "sc/utils.hpp"
 
 #include <array>
 #include <cstddef>

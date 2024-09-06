@@ -9,7 +9,6 @@
 #include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
-#include "utils.hpp"
 
 #include <bitset>
 #include <cstddef>
@@ -647,14 +646,14 @@ TEST_F(TestTableau, TableauIO) {
 }
 
 TEST_F(TestTableau, InvalidInput) {
-  EXPECT_THROW(tableau = Tableau("[ZZX, aXy]"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("[ZZ__I, XXY]"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("[ZZI, -XY]"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("XY, XY]"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("[XY, XY"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("[XY; XY"), QMAPException);
-  EXPECT_THROW(tableau = Tableau("['XY, XY]"), QMAPException);
+  EXPECT_THROW(tableau = Tableau("[ZZX, aXy]"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("[ZZ__I, XXY]"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("[ZZI, -XY]"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("XY, XY]"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("[XY, XY"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("[XY, XY"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("[XY; XY"), std::invalid_argument);
+  EXPECT_THROW(tableau = Tableau("['XY, XY]"), std::invalid_argument);
 }
 
 TEST_F(TestTableau, ApplyCXH) {

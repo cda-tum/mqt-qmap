@@ -3,15 +3,15 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Mapper.hpp"
+#include "sc/Mapper.hpp"
 
-#include "Architecture.hpp"
 #include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
-#include "configuration/Layering.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "utils.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/configuration/Layering.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <array>
@@ -582,8 +582,8 @@ void Mapper::countGates(decltype(qcMapped.cbegin()) it,
       continue;
     }
 
-    if (g->isCompoundOperation()) {
-      const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
+    if (const auto& cg = dynamic_cast<const qc::CompoundOperation*>(g.get());
+        cg != nullptr) {
       countGates(cg->cbegin(), cg->cend(), info);
     }
   }

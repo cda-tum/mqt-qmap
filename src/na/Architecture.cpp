@@ -4,10 +4,11 @@
 // information.
 //
 
-#include "Architecture.hpp"
+#include "na/Architecture.hpp"
 
-#include "Configuration.hpp"
+#include "Definitions.hpp"
 #include "ir/operations/OpType.hpp"
+#include "na/Configuration.hpp"
 #include "na/NADefinitions.hpp"
 
 #include <algorithm>
@@ -157,6 +158,9 @@ auto Architecture::isAllowedLocally(const FullOpType& t,
     return false; // gate not supported at all
   }
   const auto it = gateSet.find(t);
+  if (it == gateSet.end()) {
+    qc::unreachable(); // please the clang-tidy null dereference checker
+  }
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
@@ -189,6 +193,9 @@ auto Architecture::isAllowedGlobally(const FullOpType& t,
     return false; // gate not supported at all
   }
   const auto it = gateSet.find(t);
+  if (it == gateSet.end()) {
+    qc::unreachable(); // please the clang-tidy null dereference checker
+  }
   const auto& gateZones = it->second.zones;
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
