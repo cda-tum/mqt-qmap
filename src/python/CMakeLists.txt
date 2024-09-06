@@ -6,6 +6,15 @@ endif()
 list(APPEND CMAKE_INSTALL_RPATH ${BASEPOINT} ${BASEPOINT}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+list(
+  APPEND
+  CMAKE_INSTALL_RPATH
+  ${BASEPOINT}/../core/${CMAKE_INSTALL_LIBDIR}
+  ${BASEPOINT}/../core/lib
+  ${BASEPOINT}/../core/lib64
+  ${BASEPOINT}/../../core/${CMAKE_INSTALL_LIBDIR}
+  ${BASEPOINT}/../../core/lib
+  ${BASEPOINT}/../../core/lib64)
 
 pybind11_add_module(
   pyqmap
@@ -21,10 +30,9 @@ target_link_libraries(
   PRIVATE MQT::QMapExact
           MQT::QMapHeuristic
           MQT::QMapCliffordSynthesis
-          MQT::CorePython
+          MQT::QMapHybrid
           MQT::ProjectOptions
           MQT::ProjectWarnings
-          MQT::QMapHybrid
           pybind11_json)
 
 # Install directive for scikit-build-core

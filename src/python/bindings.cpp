@@ -3,55 +3,67 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
+#include "Architecture.hpp"
+#include "Definitions.hpp"
+#include "Mapper.hpp"
+#include "MappingResults.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
+#include "cliffordsynthesis/Configuration.hpp"
+#include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
+#include "cliffordsynthesis/TargetMetric.hpp"
+#include "configuration/AvailableArchitecture.hpp"
+#include "configuration/CommanderGrouping.hpp"
+#include "configuration/Configuration.hpp"
+#include "configuration/EarlyTermination.hpp"
+#include "configuration/Encoding.hpp"
+#include "configuration/Heuristic.hpp"
+#include "configuration/InitialLayout.hpp"
+#include "configuration/Layering.hpp"
+#include "configuration/LookaheadHeuristic.hpp"
+#include "configuration/Method.hpp"
+#include "configuration/SwapReduction.hpp"
 #include "exact/ExactMapper.hpp"
 #include "heuristic/HeuristicMapper.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
-#include "hybridmap/NeutralAtomScheduler.hpp"
-#include "nlohmann/json.hpp"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11_json/pybind11_json.hpp"
-#include "python/qiskit/QuantumCircuit.hpp"
-#include "string"
+#include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "utils.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <exception>
+#include <memory>
+#include <plog/Severity.h>
+#include <pybind11/attr.h>
+#include <pybind11/cast.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
+#include <pybind11/stl.h>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-void loadQC(qc::QuantumComputation& qc, const py::object& circ) {
-  try {
-    if (py::isinstance<py::str>(circ)) {
-      auto&& file = circ.cast<std::string>();
-      qc.import(file);
-    } else {
-      qc::qiskit::QuantumCircuit::import(qc, circ);
-    }
-  } catch (std::exception const& e) {
-    std::stringstream ss{};
-    ss << "Could not import circuit: " << e.what();
-    throw std::invalid_argument(ss.str());
-  }
-}
-
 // c++ binding function
-MappingResults map(const py::object& circ, Architecture& arch,
+MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
                    Configuration& config) {
-  qc::QuantumComputation qc{};
-
-  loadQC(qc, circ);
-
   if (config.useTeleportation) {
     config.teleportationQubits =
-        std::min((arch.getNqubits() - qc.getNqubits()) & ~1U,
+        std::min((arch.getNqubits() - circ.getNqubits()) & ~1U,
                  static_cast<std::size_t>(8));
   }
 
   std::unique_ptr<Mapper> mapper;
   try {
     if (config.method == Method::Heuristic) {
-      mapper = std::make_unique<HeuristicMapper>(qc, arch);
+      mapper = std::make_unique<HeuristicMapper>(circ, arch);
     } else if (config.method == Method::Exact) {
-      mapper = std::make_unique<ExactMapper>(qc, arch);
+      mapper = std::make_unique<ExactMapper>(circ, arch);
     }
   } catch (std::exception const& e) {
     std::stringstream ss{};
@@ -659,35 +671,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       "Constructs a tableau from two lists of Pauli strings, the Stabilizers"
       "and Destabilizers.");
 
-  auto quantumComputation = py::class_<qc::QuantumComputation>(
-      m, "QuantumComputation",
-      "A class for the intermediate representation of quantum circuits in the "
-      "Munich Quantum Toolkit.");
-  quantumComputation.def_static(
-      "from_file",
-      [](const std::string& filename) {
-        return qc::QuantumComputation(filename);
-      },
-      "filename"_a, "Reads a quantum circuit from a file.");
-  quantumComputation.def_static(
-      "from_qasm_str",
-      [](const std::string& qasm) {
-        std::stringstream ss(qasm);
-        qc::QuantumComputation qc{};
-        qc.import(ss, qc::Format::OpenQASM3);
-        return qc;
-      },
-      "qasm"_a, "Reads a quantum circuit from a qasm string.");
-  quantumComputation.def_static(
-      "from_qiskit",
-      [](const py::object& circuit) {
-        qc::QuantumComputation qc{};
-        qc::qiskit::QuantumCircuit::import(qc, circuit);
-        return qc;
-      },
-      "circuit"_a,
-      "Reads a quantum circuit from a Qiskit :class:`QuantumCircuit`.");
-
   auto synthesizer = py::class_<cs::CliffordSynthesizer>(
       m, "CliffordSynthesizer", "A class for synthesizing Clifford circuits.");
 
@@ -855,17 +838,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def(
           "get_init_hw_pos", &na::NeutralAtomMapper::getInitHwPos,
           "Get the initial hardware positions, required to create an animation")
-      .def(
-          "map",
-          [](na::NeutralAtomMapper& mapper, const py::object& circ,
-             na::InitialMapping initialMapping, bool verbose) {
-            qc::QuantumComputation qc{};
-            loadQC(qc, circ);
-            mapper.mapAndConvert(qc, initialMapping, verbose);
-          },
-          "Map a quantum circuit to the neutral atom quantum computer",
-          "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity,
-          "verbose"_a = false)
+      .def("map", &na::NeutralAtomMapper::mapAndConvert,
+           "Map a quantum circuit to the neutral atom quantum computer",
+           "circ"_a, "initial_mapping"_a = na::InitialMapping::Identity,
+           "verbose"_a = false)
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,

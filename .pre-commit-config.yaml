@@ -83,7 +83,8 @@ repos:
           - numpy
           - pytest
           - rustworkx
-          - mqt.qcec
+          - mqt.core
+          - mqt.qcec @ git+https://github.com/cda-tum/mqt-qcec.git@use-mqt-core-package
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos
