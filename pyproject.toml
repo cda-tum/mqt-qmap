@@ -30,7 +30,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -39,7 +38,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Typing :: Typed",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.14.0",
@@ -151,7 +150,6 @@ xfail_strict = true
 filterwarnings = [
   "error",
   'ignore:.*datetime\.datetime\.utcfromtimestamp.*:DeprecationWarning:',
-  'ignore:.*Qiskit with Python 3.8.*:DeprecationWarning:',
   'ignore:.*qiskit\.providers\.models.* is deprecated.*:DeprecationWarning:qiskit.*', # Qiskit imports deprecated code (should be resolved in the 1.2.1 release)
   'ignore:.*Treating CircuitInstruction as an iterable is deprecated.*:DeprecationWarning:mqt.qcec.*', # Needs a new release of QCEC (should be resolved in 2.7.1)
   # we purposely maintain compatibility with the V1 backends until Qiskit removes them in 2.0
@@ -176,7 +174,7 @@ report.exclude_also = [
 [tool.mypy]
 files = ["src/mqt", "test/python", "noxfile.py"]
 mypy_path = ["$MYPY_CONFIG_FILE_DIR/src"]
-python_version = "3.8"
+python_version = "3.9"
 warn_unused_configs = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 strict = true
@@ -305,7 +303,7 @@ build = "cp3*"
 skip = "*-musllinux*"
 archs = "auto64"
 test-command = "python -c \"from mqt import qmap\""
-test-skip = ["cp38-macosx_arm64", "cp313*"] # skip testing on Python 3.13 until our dependencies are ready
+test-skip = ["cp313*"] # skip testing on Python 3.13 until our dependencies are ready
 build-frontend = "build[uv]"
 free-threaded-support = true
 manylinux-x86_64-image = "manylinux_2_28"
