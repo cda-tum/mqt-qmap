@@ -2528,19 +2528,19 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
 }
 
 TEST(HeuristicDebug, MoreThan128Qubits) {
-  const std::size_t num_qubits = 129;
+  const std::size_t numQubits = 129;
 
   // create a linear NN coupling map
   CouplingMap cm = {};
-  for (std::size_t i = 0; i < num_qubits - 1; ++i) {
+  for (std::size_t i = 0; i < numQubits - 1; ++i) {
     cm.emplace(i, i + 1);
     cm.emplace(i + 1, i);
   }
-  Architecture architecture{num_qubits, cm};
+  Architecture architecture{numQubits, cm};
 
   // create a simple circuit to map to the architecture
-  auto qc = qc::QuantumComputation(num_qubits);
-  for (std::size_t i = 0; i < num_qubits - 1; ++i) {
+  auto qc = qc::QuantumComputation(numQubits);
+  for (std::size_t i = 0; i < numQubits - 1; ++i) {
     qc.cx(static_cast<qc::Qubit>(i), static_cast<qc::Qubit>(i + 1));
   }
 
