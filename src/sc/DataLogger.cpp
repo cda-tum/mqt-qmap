@@ -99,10 +99,9 @@ void DataLogger::logFinalizeLayer(
     const std::map<std::pair<std::uint16_t, std::uint16_t>,
                    std::pair<std::uint16_t, std::uint16_t>>&
         twoQubitMultiplicity,
-    const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
-    std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
-    double finalLookaheadPenalty,
-    const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
+    const std::vector<std::int16_t>& initialLayout, std::size_t finalNodeId,
+    double finalCostFixed, double finalCostHeur, double finalLookaheadPenalty,
+    const std::vector<std::int16_t>& finalLayout,
     const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth) {
   if (deactivated) {
     return;
@@ -142,16 +141,28 @@ void DataLogger::logFinalizeLayer(
   }
   json["single_qubit_multiplicity"] = singleQubitMultiplicity;
   auto& initialLayoutJSON = json["initial_layout"];
-  for (std::size_t i = 0; i < nqubits; ++i) {
-    initialLayoutJSON[i] = initialLayout.at(i);
+  if (initialLayout.empty()) {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      initialLayoutJSON[i] = -1;
+    }
+  } else {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      initialLayoutJSON[i] = initialLayout.at(i);
+    }
   }
   json["final_node_id"] = finalNodeId;
   json["final_cost_fixed"] = finalCostFixed;
   json["final_cost_heur"] = finalCostHeur;
   json["final_lookahead_penalty"] = finalLookaheadPenalty;
   auto& finalLayoutJSON = json["final_layout"];
-  for (std::size_t i = 0; i < nqubits; ++i) {
-    finalLayoutJSON[i] = finalLayout.at(i);
+  if (finalLayout.empty()) {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      finalLayoutJSON[i] = -1;
+    }
+  } else {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      finalLayoutJSON[i] = finalLayout.at(i);
+    }
   }
   if (finalSwaps.empty()) {
     json["final_swaps"] = nlohmann::basic_json<>::array();
@@ -197,11 +208,13 @@ void DataLogger::splitLayer() {
           std::to_string(splitIndex) + ".json");
 }
 
-void DataLogger::logSearchNode(
-    std::size_t layerIndex, std::size_t nodeId, std::size_t parentId,
-    double costFixed, double costHeur, double lookaheadPenalty,
-    const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
-    bool validMapping, const std::vector<Exchange>& swaps, std::size_t depth) {
+void DataLogger::logSearchNode(std::size_t layerIndex, std::size_t nodeId,
+                               std::size_t parentId, double costFixed,
+                               double costHeur, double lookaheadPenalty,
+                               const std::vector<std::int16_t>& qubits,
+                               bool validMapping,
+                               const std::vector<Exchange>& swaps,
+                               std::size_t depth) {
   if (deactivated) {
     return;
   }
@@ -219,8 +232,15 @@ void DataLogger::logSearchNode(
   }
   of << nodeId << ";" << parentId << ";" << costFixed << ";" << costHeur << ";"
      << lookaheadPenalty << ";" << validMapping << ";" << depth << ";";
-  for (std::size_t i = 0; i < nqubits; ++i) {
-    of << qubits.at(i) << ",";
+
+  if (!qubits.empty()) {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      of << qubits.at(i) << ",";
+    }
+  } else {
+    for (std::size_t i = 0; i < nqubits; ++i) {
+      of << "-1,";
+    }
   }
   if (nqubits > 0) {
     of.seekp(-1, std::ios_base::cur); // remove last comma

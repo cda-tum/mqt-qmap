@@ -815,7 +815,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       auto results = ibmqYorktownMapper->getResults();
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
         allNodes.emplace_back(
-            results.layerHeuristicBenchmark.at(i).generatedNodes);
+            results.layerHeuristicBenchmark.at(i).generatedNodes,
+            HeuristicMapper::Node{ibmqYorktown.getNqubits(), 0});
         layerNames.emplace_back("on ibmq_yorktown in layer " +
                                 std::to_string(i));
         parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
@@ -831,7 +832,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     auto results = ibmqLondonMapper->getResults();
     for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
       allNodes.emplace_back(
-          results.layerHeuristicBenchmark.at(i).generatedNodes);
+          results.layerHeuristicBenchmark.at(i).generatedNodes,
+          HeuristicMapper::Node{ibmqLondon.getNqubits(), 0});
       layerNames.emplace_back("on ibmq_london in layer " + std::to_string(i));
       parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
       finalSolutionIds.push_back(
@@ -848,7 +850,8 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       auto results = ibmQX5Mapper->getResults();
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
         allNodes.emplace_back(
-            results.layerHeuristicBenchmark.at(i).generatedNodes);
+            results.layerHeuristicBenchmark.at(i).generatedNodes,
+            HeuristicMapper::Node{ibmQX5.getNqubits(), 0});
         layerNames.emplace_back("on ibmQX5 in layer " + std::to_string(i));
         parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
         finalSolutionIds.push_back(
@@ -909,7 +912,9 @@ TEST_P(TestHeuristics, HeuristicProperties) {
         }
         std::vector<std::int16_t> finalLayout{};
         std::copy(finalSolutionNode.qubits.begin(),
-                  finalSolutionNode.qubits.begin() + finalLayoutLastIndex + 1,
+                  finalSolutionNode.qubits.begin() +
+                      static_cast<std::vector<int16_t>::difference_type>(
+                          finalLayoutLastIndex + 1),
                   std::back_inserter(finalLayout));
         EXPECT_EQ(finalLayout, OPTIMAL_SOLUTIONS.at(circuitName).at(i))
             << "Heuristic " << toString(settings.heuristic)
@@ -1180,6 +1185,7 @@ TEST(Functionality, DataLoggerAfterClose) {
   auto dataLogger = std::make_unique<DataLogger>(dataLoggingPath, arch, qc);
   const qc::CompoundOperation compOp{};
   Exchange teleport(0, 2, 1, qc::OpType::Teleportation);
+
   dataLogger->logSearchNode(0, 0, 0, 0., 0., 0., {}, false, {{teleport}}, 0);
   dataLogger->logSearchNode(1, 0, 0, 0., 0., 0., {}, false, {}, 0);
   dataLogger->splitLayer();
@@ -1447,7 +1453,8 @@ TEST(Functionality, DataLogger) {
               architecture.getNqubits());
 
     std::vector<HeuristicMapper::Node> nodes{
-        results.layerHeuristicBenchmark.at(i).generatedNodes};
+        results.layerHeuristicBenchmark.at(i).generatedNodes,
+        HeuristicMapper::Node{architecture.getNqubits(), 0}};
     parseNodesFromDatalog(settings.dataLoggingPath, i, nodes);
 
     if (finalNodeId >= nodes.size() ||
@@ -2525,4 +2532,30 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
     FAIL() << "File " << settings.dataLoggingPath << "layer_3.presplit-0.json"
            << " does not exist";
   }
+}
+
+TEST(HeuristicDebug, MoreThan128Qubits) {
+  const std::size_t numQubits = 129;
+
+  // create a linear NN coupling map
+  CouplingMap cm = {};
+  for (std::size_t i = 0; i < numQubits - 1; ++i) {
+    cm.emplace(i, i + 1);
+    cm.emplace(i + 1, i);
+  }
+  Architecture architecture{numQubits, cm};
+
+  // create a simple circuit to map to the architecture
+  auto qc = qc::QuantumComputation(numQubits);
+  for (std::size_t i = 0; i < numQubits - 1; ++i) {
+    qc.cx(static_cast<qc::Qubit>(i), static_cast<qc::Qubit>(i + 1));
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+
+  settings.verbose = true;
+  mapper->map(settings);
+  mapper->printResult(std::cout);
 }

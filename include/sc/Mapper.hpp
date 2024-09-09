@@ -14,7 +14,6 @@
 #include "utils.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
@@ -130,14 +129,14 @@ protected:
    *
    * The inverse of `locations`
    */
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits{};
+  std::vector<std::int16_t> qubits;
   /**
    * @brief containing the logical qubit currently mapped to each physical
    * qubit. `locations[logical_qubit] = physical_qubit`
    *
    * The inverse of `qubits`
    */
-  std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
+  std::vector<std::int16_t> locations;
 
   MappingResults results;
 
@@ -200,10 +199,10 @@ protected:
    * @param collect2qBlocks if true, gates are collected in 2Q-blocks, and
    * layering is performed on these blocks
    */
-  void processDisjointQubitLayer(
-      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
-      const std::optional<std::uint16_t>& control, std::uint16_t target,
-      qc::Operation* gate);
+  void
+  processDisjointQubitLayer(std::vector<std::optional<std::size_t>>& lastLayer,
+                            const std::optional<std::uint16_t>& control,
+                            std::uint16_t target, qc::Operation* gate);
 
   /**
    * Similar to processDisjointQubitLayer, but instead of treating each gate
@@ -216,7 +215,7 @@ protected:
    * @param gate the gate to be added to the layer
    */
   void processDisjoint2qBlockLayer(
-      std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+      std::vector<std::optional<std::size_t>>& lastLayer,
       const std::optional<std::uint16_t>& control, std::uint16_t target,
       qc::Operation* gate);
 
@@ -365,8 +364,8 @@ public:
     architecture->reset();
     qc.reset();
     layers.clear();
-    qubits.fill(DEFAULT_POSITION);
-    locations.fill(DEFAULT_POSITION);
+    qubits.clear();
+    locations.clear();
 
     results = MappingResults();
   }

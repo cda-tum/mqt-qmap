@@ -567,8 +567,8 @@ HeuristicMapper::Node HeuristicMapper::aStarMap(size_t layer, bool reverse) {
       singleQubitMultiplicities.at(layer);
   const TwoQubitMultiplicity& twoQubitMultiplicity =
       twoQubitMultiplicities.at(layer);
-  Node node(nextNodeId++);
-  Node bestDoneNode(0);
+  Node node(architecture->getNqubits(), nextNodeId++);
+  Node bestDoneNode(architecture->getNqubits(), 0);
   bool validMapping = false;
 
   mapUnmappedGates(layer);
