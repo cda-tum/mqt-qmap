@@ -2526,3 +2526,29 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
            << " does not exist";
   }
 }
+
+TEST(HeuristicDebug, MoreThan128Qubits) {
+  const std::size_t num_qubits = 129;
+
+  // create a linear NN coupling map
+  CouplingMap cm = {};
+  for (std::size_t i = 0; i < num_qubits - 1; ++i) {
+    cm.emplace(i, i + 1);
+    cm.emplace(i + 1, i);
+  }
+  Architecture architecture{num_qubits, cm};
+
+  // create a simple circuit to map to the architecture
+  auto qc = qc::QuantumComputation(num_qubits);
+  for (std::size_t i = 0; i < num_qubits - 1; ++i) {
+    qc.cx(static_cast<qc::Qubit>(i), static_cast<qc::Qubit>(i + 1));
+  }
+
+  auto mapper = std::make_unique<HeuristicMapper>(qc, architecture);
+
+  Configuration settings{};
+
+  settings.verbose = true;
+  mapper->map(settings);
+  mapper->printResult(std::cout);
+}
