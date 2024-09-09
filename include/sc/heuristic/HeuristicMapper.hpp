@@ -3,14 +3,12 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "sc/Architecture.hpp"
 #include "sc/DataLogger.hpp"
 #include "sc/Mapper.hpp"
 #include "sc/configuration/Configuration.hpp"
 #include "sc/heuristic/UniquePriorityQueue.hpp"
 #include "sc/utils.hpp"
 
-#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>

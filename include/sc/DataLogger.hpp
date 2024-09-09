@@ -12,7 +12,6 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "utils.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
