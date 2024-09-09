@@ -51,14 +51,14 @@ public:
      *
      * The inverse of `locations`
      */
-    std::array<std::int16_t, MAX_DEVICE_QUBITS> qubits{};
+    std::vector<std::int16_t> qubits;
     /**
      * containing the logical qubit currently mapped to each physical qubit.
      * `locations[logical_qubit] = physical_qubit`
      *
      * The inverse of `qubits`
      */
-    std::array<std::int16_t, MAX_DEVICE_QUBITS> locations{};
+    std::vector<std::int16_t> locations;
     /** current fixed cost
      *
      * non-fidelity-aware: cost of all swaps used in the node
@@ -88,17 +88,14 @@ public:
      * architecture */
     bool validMapping = true;
 
-    explicit Node() {
-      qubits.fill(DEFAULT_POSITION);
-      locations.fill(DEFAULT_POSITION);
-    };
-    explicit Node(std::size_t nodeId) : id(nodeId) {
-      qubits.fill(DEFAULT_POSITION);
-      locations.fill(DEFAULT_POSITION);
+    explicit Node(std::uint16_t nqubits, const std::size_t nodeId)
+        : id(nodeId) {
+      qubits.resize(nqubits, DEFAULT_POSITION);
+      locations.resize(nqubits, DEFAULT_POSITION);
     };
     Node(std::size_t nodeId, std::size_t parentId,
-         const std::array<std::int16_t, MAX_DEVICE_QUBITS>& q,
-         const std::array<std::int16_t, MAX_DEVICE_QUBITS>& loc,
+         const std::vector<std::int16_t>& q,
+         const std::vector<std::int16_t>& loc,
          const std::vector<Exchange>& sw = {},
          const std::set<Edge>& valid2QGates = {},
          const double initCostFixed = 0,

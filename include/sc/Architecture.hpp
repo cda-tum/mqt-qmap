@@ -37,8 +37,6 @@ constexpr std::uint32_t COST_TELEPORTATION =
     2 * COST_CNOT_GATE + COST_MEASUREMENT + 4 * COST_SINGLE_QUBIT_GATE;
 constexpr std::uint32_t COST_DIRECTION_REVERSE = 4 * COST_SINGLE_QUBIT_GATE;
 
-constexpr std::uint16_t MAX_DEVICE_QUBITS = 128;
-
 class Architecture {
 public:
   class Properties {

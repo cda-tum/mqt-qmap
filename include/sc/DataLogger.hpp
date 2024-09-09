@@ -43,19 +43,17 @@ public:
   void logSearchNode(std::size_t layer, std::size_t nodeId,
                      std::size_t parentId, double costFixed, double costHeur,
                      double lookaheadPenalty,
-                     const std::array<std::int16_t, MAX_DEVICE_QUBITS>& qubits,
-                     bool validMapping, const std::vector<Exchange>& swaps,
-                     std::size_t depth);
+                     const std::vector<std::int16_t>& qubits, bool validMapping,
+                     const std::vector<Exchange>& swaps, std::size_t depth);
   void logFinalizeLayer(
       std::size_t layer, const qc::CompoundOperation& ops,
       const std::vector<std::uint16_t>& singleQubitMultiplicity,
       const std::map<std::pair<std::uint16_t, std::uint16_t>,
                      std::pair<std::uint16_t, std::uint16_t>>&
           twoQubitMultiplicity,
-      const std::array<std::int16_t, MAX_DEVICE_QUBITS>& initialLayout,
-      std::size_t finalNodeId, double finalCostFixed, double finalCostHeur,
-      double finalLookaheadPenalty,
-      const std::array<std::int16_t, MAX_DEVICE_QUBITS>& finalLayout,
+      const std::vector<std::int16_t>& initialLayout, std::size_t finalNodeId,
+      double finalCostFixed, double finalCostHeur, double finalLookaheadPenalty,
+      const std::vector<std::int16_t>& finalLayout,
       const std::vector<Exchange>& finalSwaps, std::size_t finalSearchDepth);
   void splitLayer();
   void logMappingResult(MappingResults& result);

@@ -38,8 +38,8 @@ void Mapper::initResults() {
 
 Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
     : qc(std::move(quantumComputation)), architecture(&arch) {
-  qubits.fill(DEFAULT_POSITION);
-  locations.fill(DEFAULT_POSITION);
+  qubits.resize(architecture->getNqubits(), DEFAULT_POSITION);
+  locations.resize(architecture->getNqubits(), DEFAULT_POSITION);
 
   // strip away qubits that are not used in the circuit
   qc.stripIdleQubits(true, true);
@@ -48,7 +48,7 @@ Mapper::Mapper(qc::QuantumComputation quantumComputation, Architecture& arch)
 }
 
 void Mapper::processDisjointQubitLayer(
-    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    std::vector<std::optional<std::size_t>>& lastLayer,
     const std::optional<std::uint16_t>& control, const std::uint16_t target,
     qc::Operation* gate) {
   std::size_t layer = 0;
@@ -83,7 +83,7 @@ void Mapper::processDisjointQubitLayer(
 }
 
 void Mapper::processDisjoint2qBlockLayer(
-    std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS>& lastLayer,
+    std::vector<std::optional<std::size_t>>& lastLayer,
     const std::optional<std::uint16_t>& control, const std::uint16_t target,
     qc::Operation* gate) {
   std::size_t layer = 0;
@@ -132,7 +132,8 @@ void Mapper::processDisjoint2qBlockLayer(
 
 void Mapper::createLayers() {
   const auto& config = results.config;
-  std::array<std::optional<std::size_t>, MAX_DEVICE_QUBITS> lastLayer{};
+  auto lastLayer = std::vector<std::optional<std::size_t>>(
+      architecture->getNqubits(), std::nullopt);
 
   auto qubitsInLayer = std::set<std::uint16_t>{};
 
@@ -447,28 +448,24 @@ void Mapper::finalizeMappedCircuit() {
   if (architecture->getNqubits() > qcMapped.getNqubits()) {
     for (auto logicalQubit = qcMapped.getNqubits();
          logicalQubit < architecture->getNqubits(); ++logicalQubit) {
-      std::optional<qc::Qubit> physicalQubit = std::nullopt;
+      auto physicalQubit = static_cast<qc::Qubit>(logicalQubit);
 
       // check if the corresponding physical qubit is already in use
       if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logicalQubit)) !=
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
-        for (physicalQubit = 0; *physicalQubit < architecture->getNqubits();
-             ++(*physicalQubit)) {
-          if (qcMapped.initialLayout.find(*physicalQubit) ==
+        for (physicalQubit = 0; physicalQubit < architecture->getNqubits();
+             ++(physicalQubit)) {
+          if (qcMapped.initialLayout.find(physicalQubit) ==
               qcMapped.initialLayout.end()) {
             break;
           }
         }
-      } else {
-        physicalQubit = static_cast<qc::Qubit>(logicalQubit);
       }
-
-      assert(physicalQubit.has_value());
 
       // the added logical qubits are not used in the circuit itself, so they
       // are regarded garbage
-      qcMapped.addAncillaryQubit(*physicalQubit, std::nullopt);
+      qcMapped.addAncillaryQubit(physicalQubit, std::nullopt);
     }
   }
   // unify quantum registers
@@ -484,28 +481,25 @@ void Mapper::placeRemainingArchitectureQubits() {
   if (qc.getNqubits() < architecture->getNqubits()) {
     for (auto logical = qc.getNqubits(); logical < architecture->getNqubits();
          ++logical) {
-      std::optional<qc::Qubit> physical = std::nullopt;
+      auto physical = static_cast<qc::Qubit>(logical);
 
       // check if the corresponding physical qubit is already in use
       if (qcMapped.initialLayout.find(static_cast<qc::Qubit>(logical)) !=
           qcMapped.initialLayout.end()) {
         // get the next unused physical qubit
-        for (physical = 0; *physical < architecture->getNqubits();
-             ++(*physical)) {
-          if (qcMapped.initialLayout.find(*physical) ==
+        for (physical = 0; physical < architecture->getNqubits();
+             ++(physical)) {
+          if (qcMapped.initialLayout.find(physical) ==
               qcMapped.initialLayout.end()) {
             break;
           }
         }
-      } else {
-        physical = static_cast<qc::Qubit>(logical);
       }
 
-      assert(physical.has_value());
-      qubits.at(*physical) = static_cast<std::int16_t>(logical);
+      qubits.at(physical) = static_cast<std::int16_t>(logical);
 
       // mark architecture qubit as ancillary and garbage
-      qcMapped.initialLayout[*physical] = static_cast<qc::Qubit>(logical);
+      qcMapped.initialLayout[physical] = static_cast<qc::Qubit>(logical);
       qcMapped.setLogicalQubitAncillary(static_cast<qc::Qubit>(logical));
       qcMapped.setLogicalQubitGarbage(static_cast<qc::Qubit>(logical));
     }
