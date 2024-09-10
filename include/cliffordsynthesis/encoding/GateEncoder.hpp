@@ -12,7 +12,7 @@
 #include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <array>
 #include <cstddef>

@@ -7,6 +7,10 @@ on:
     paths:
       - .github/workflows/cd.yml
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   python-packaging:
     name: 🐍 Packaging
@@ -34,7 +38,7 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Generate artifact attestation for sdist and wheel(s)
-        uses: actions/attest-build-provenance@v1.4.2
+        uses: actions/attest-build-provenance@v1.4.3
         with:
           subject-path: "dist/*"
       - uses: pypa/gh-action-pypi-publish@release/v1

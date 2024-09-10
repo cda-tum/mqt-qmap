@@ -4,10 +4,10 @@
 //
 
 #include "Definitions.hpp"
-#include "NAGraphAlgorithms.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
+#include "na/NAGraphAlgorithms.hpp"
 
 #include "gtest/gtest.h"
 #include <algorithm>

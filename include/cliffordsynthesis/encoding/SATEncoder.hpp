@@ -14,7 +14,7 @@
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <cstddef>
 #include <memory>

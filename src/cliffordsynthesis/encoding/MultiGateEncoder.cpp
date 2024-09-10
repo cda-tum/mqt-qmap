@@ -8,7 +8,7 @@
 #include "Logic.hpp"
 #include "ir/operations/OpType.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <cstddef>
 #include <cstdint>

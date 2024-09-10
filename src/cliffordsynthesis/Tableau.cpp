@@ -9,7 +9,6 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "utils.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -21,6 +20,7 @@
 #include <ostream>
 #include <plog/Log.h>
 #include <regex>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -50,6 +50,37 @@ void Tableau::import(const std::string& filename) {
   import(is);
 }
 
+void parseLine(const std::string& line, char separator,
+               const std::set<char>& escapeChars,
+               const std::set<char>& ignoredChars,
+               std::vector<std::string>& result) {
+  result.clear();
+  std::string word;
+  bool inEscape = false;
+  for (const char c : line) {
+    if (ignoredChars.find(c) != ignoredChars.end()) {
+      continue;
+    }
+    if (inEscape) {
+      if (escapeChars.find(c) != escapeChars.end()) {
+        inEscape = false;
+      } else {
+        word += c;
+      }
+    } else {
+      if (escapeChars.find(c) != escapeChars.end()) {
+        inEscape = true;
+      } else if (c == separator) {
+        result.push_back(word);
+        word = "";
+      } else {
+        word += c;
+      }
+    }
+  }
+  result.push_back(word);
+}
+
 void Tableau::import(std::istream& is) {
   tableau.clear();
 
@@ -62,7 +93,7 @@ void Tableau::import(std::istream& is) {
       delimiter = ';';
     }
     tableau.emplace_back();
-    ::parseLine(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
+    parseLine(line, delimiter, {'\"'}, {'\\', '\r', '\n', '\t'}, data);
     for (const auto& datum : data) {
       if (datum.empty()) {
         continue;
@@ -399,7 +430,7 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
     if (stabCopy[stabCopy.size() - 1] == '\'') {
       stabCopy = stabCopy.substr(1, stabCopy.size() - 2);
     } else {
-      throw QMAPException("Unmatched \"'\" in stabilizer string");
+      throw std::invalid_argument("Unmatched \"'\" in stabilizer string");
     }
   }
   if (stabCopy[0] == '+' || stabCopy[0] == '-') {
@@ -413,9 +444,10 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
     } else if (c == 'X' || c == 'Y') {
       row.push_back(1);
     } else {
-      throw QMAPException("Invalid stabilizer " + stab +
-                          ". Stabilizers must be given as a list of stabilizer "
-                          "like [XYZI, ZIXZ]");
+      throw std::invalid_argument(
+          "Invalid stabilizer " + stab +
+          ". Stabilizers must be given as a list of stabilizer "
+          "like [XYZI, ZIXZ]");
     }
   }
   for (const auto c : stabCopy) {
@@ -424,9 +456,10 @@ Tableau::RowType Tableau::parseStabilizer(const std::string& stab) {
     } else if (c == 'Y' || c == 'Z') {
       row.push_back(1);
     } else {
-      throw QMAPException("Invalid stabilizer" + stab +
-                          ". Stabilizers must be given as a list of stabilizer "
-                          "like [XYZI, ZIXZ]");
+      throw std::invalid_argument(
+          "Invalid stabilizer" + stab +
+          ". Stabilizers must be given as a list of stabilizer "
+          "like [XYZI, ZIXZ]");
     }
   }
   if (stab[0U] == '-' || (stab[0U] == '\'' && stab[1U] == '-')) {
@@ -453,7 +486,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
     if (stabilizers[stabilizers.size() - 1] == ']') {
       stabilizers = stabilizers.substr(1, stabilizers.size() - 2);
     } else {
-      throw QMAPException("Unmatched \"[\" in stabilizer string");
+      throw std::invalid_argument("Unmatched \"[\" in stabilizer string");
     }
   }
 
@@ -463,7 +496,7 @@ void Tableau::loadStabilizerDestabilizerString(const std::string& string) {
       stabLength = row.size();
     }
     if (stabLength.value() != row.size()) {
-      throw QMAPException("All Stabilizers muts have the same length");
+      throw std::invalid_argument("All Stabilizers muts have the same length");
     }
   };
 

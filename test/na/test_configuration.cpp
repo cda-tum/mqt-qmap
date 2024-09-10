@@ -3,7 +3,7 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Configuration.hpp"
+#include "na/Configuration.hpp"
 
 #include <gtest/gtest.h>
 #include <sstream>

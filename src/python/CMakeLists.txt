@@ -18,13 +18,13 @@ pybind11_add_module(
 target_compile_definitions(pyqmap PRIVATE Z3_FOUND)
 target_link_libraries(
   pyqmap
-  PRIVATE MQT::QMapExact
-          MQT::QMapHeuristic
+  PRIVATE MQT::QMapSCExact
+          MQT::QMapSCHeuristic
           MQT::QMapCliffordSynthesis
+          MQT::QMapHybrid
           MQT::CorePython
           MQT::ProjectOptions
           MQT::ProjectWarnings
-          MQT::QMapHybrid
           pybind11_json)
 
 # Install directive for scikit-build-core

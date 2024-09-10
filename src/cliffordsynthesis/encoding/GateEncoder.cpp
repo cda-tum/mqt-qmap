@@ -14,7 +14,7 @@
 #include "ir/operations/StandardOperation.hpp"
 #include "logicblocks/Encodings.hpp"
 #include "logicblocks/Model.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <cstddef>

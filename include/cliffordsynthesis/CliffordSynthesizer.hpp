@@ -12,7 +12,7 @@
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <cstddef>
 #include <cstdint>

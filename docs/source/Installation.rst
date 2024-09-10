@@ -34,7 +34,7 @@ In most practical cases (under 64-bit Linux, MacOS incl. Apple Silicon, and Wind
         (venv) $ pip install --upgrade pip setuptools wheel
 
 .. warning::
-     As of version 2.1.0, support for Python 3.7 has been officially dropped.
+     As of version 2.7.0, support for Python 3.8 has been officially dropped.
      We strongly recommend that users upgrade to a more recent version of Python to ensure compatibility and continue receiving updates and support.
      Thank you for your understanding.
 

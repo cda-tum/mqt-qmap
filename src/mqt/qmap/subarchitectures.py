@@ -6,24 +6,20 @@ This file implements the methods presented in https://arxiv.org/abs/2210.09321.
 from __future__ import annotations
 
 import pickle
-import sys
 from itertools import combinations
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, NewType, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Optional
 
-if TYPE_CHECKING or sys.version_info < (3, 10, 0):
-    import importlib_resources as resources
-else:
-    from importlib import resources
+from ._compat.importlib import resources
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from matplotlib import figure
     from qiskit.providers import BackendV1, BackendV2
-    from typing_extensions import TypeAlias
 
     from . import Architecture
+    from ._compat.typing import TypeAlias
 
 import contextlib
 
@@ -33,7 +29,7 @@ import rustworkx.visualization as rxviz
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
 
-PartialOrder = NewType("PartialOrder", Dict[Tuple[int, int], Set[Tuple[int, int]]])
+PartialOrder: TypeAlias = dict[tuple[int, int], set[tuple[int, int]]]
 
 #: Architectures for which precomputed orderings are available
 precomputed_backends = ["rigetti_16", "ibm_guadalupe_16"]
@@ -48,8 +44,8 @@ class SubarchitectureOrder:
     def __init__(self) -> None:
         """Initialize a partial order."""
         self.arch: Graph = rx.PyGraph()
-        self.subarch_order: PartialOrder = PartialOrder({})
-        self.desirable_subarchitectures: PartialOrder = PartialOrder({})
+        self.subarch_order: PartialOrder = {}
+        self.desirable_subarchitectures: PartialOrder = {}
         self.isomorphisms: dict[tuple[int, int], dict[tuple[int, int], dict[int, int]]] = {}
 
         self.__compute_subarchs()
@@ -329,8 +325,7 @@ class SubarchitectureOrder:
 
     def __transitive_closure(self, po: PartialOrder) -> PartialOrder:
         """Compute transitive closure of partial order."""
-        po_trans: PartialOrder = PartialOrder({})
-        po_trans[self.arch.num_nodes(), 0] = set()
+        po_trans: PartialOrder = {(self.arch.num_nodes(), 0): set()}
 
         for n in reversed(range(1, len(self.sgs[:-1]))):
             for i in range(len(self.sgs[n])):
@@ -345,7 +340,7 @@ class SubarchitectureOrder:
     @classmethod
     def __reflexive_closure(cls, po: PartialOrder) -> PartialOrder:
         """Compute reflexive closure of partial order."""
-        po_ref = PartialOrder({})
+        po_ref = {}
         for k, v in po.items():
             v_copy = v.copy()
             v_copy.add(k)
@@ -354,7 +349,7 @@ class SubarchitectureOrder:
 
     def __inverse_relation(self, po: PartialOrder) -> PartialOrder:
         """Compute inverse relation of partial order."""
-        po_inv = PartialOrder({})
+        po_inv: PartialOrder = {}
         for n in range(self.arch.num_nodes() + 1):
             for i in range(len(self.sgs[n])):
                 po_inv[n, i] = set()

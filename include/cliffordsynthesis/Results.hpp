@@ -5,16 +5,14 @@
 
 #pragma once
 
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "cliffordsynthesis/Tableau.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "logicblocks/Logic.hpp"
 
 #include <cstddef>
 #include <limits>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -23,18 +21,7 @@ namespace cs {
 class Results {
 public:
   Results() = default;
-  Results(qc::QuantumComputation& qc, const Tableau& tableau) {
-    // SWAP gates are not natively supported in the encoding, so we need to
-    // decompose them into sequences of three CNOTs.
-    qc::CircuitOptimizer::decomposeSWAP(qc, false);
-
-    setResultCircuit(qc);
-    setResultTableau(tableau);
-    setDepth(qc.getDepth());
-    setSingleQubitGates(qc.getNsingleQubitOps());
-    setTwoQubitGates(qc.getNindividualOps() - singleQubitGates);
-    setSolverResult(logicbase::Result::SAT);
-  }
+  Results(qc::QuantumComputation& qc, const Tableau& tableau);
 
   virtual ~Results() = default;
 
@@ -76,28 +63,20 @@ public:
   void setSolverResult(const logicbase::Result r) { solverResult = r; }
   void setSolverCalls(const std::size_t c) { solverCalls = c; }
 
-  void setResultCircuit(qc::QuantumComputation& qc) {
-    std::stringstream ss;
-    qc.dumpOpenQASM3(ss);
-    resultCircuit = ss.str();
-  }
-  void setResultTableau(const Tableau& tableau) {
-    std::stringstream ss;
-    ss << tableau;
-    resultTableau = ss.str();
-  }
+  void setResultCircuit(qc::QuantumComputation& qc);
+  void setResultTableau(const Tableau& tableau);
   void setMapping(std::vector<std::vector<bool>> p) {
-    std::ostringstream oss;
-    for (const auto& row : permutationVector) {
-      for (const bool val : row) {
-        oss << (val ? '1' : '0');
-      }
-      oss << '\n';
+  std::ostringstream oss;
+  for (const auto& row : permutationVector) {
+    for (const bool val : row) {
+      oss << (val ? '1' : '0');
     }
-    permutationString = oss.str();
-    permutationVector = std::move(p);
+    oss << '\n';
   }
-
+  permutationString = oss.str();
+  permutationVector = std::move(p);
+}
+  
   [[nodiscard]] bool sat() const {
     return getSolverResult() == logicbase::Result::SAT;
   }
@@ -105,22 +84,9 @@ public:
     return getSolverResult() == logicbase::Result::UNSAT;
   }
 
-  [[nodiscard]] virtual nlohmann::basic_json<> json() const {
-    nlohmann::basic_json resultJSON{};
-    resultJSON["solver_result"] = toString(solverResult);
-    resultJSON["single_qubit_gates"] = singleQubitGates;
-    resultJSON["two_qubit_gates"] = twoQubitGates;
-    resultJSON["depth"] = depth;
-    resultJSON["runtime"] = runtime;
-    resultJSON["solver_calls"] = solverCalls;
+  [[nodiscard]] virtual nlohmann::basic_json<> json() const;
 
-    return resultJSON;
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const Results& config) {
-    os << config.json().dump(2);
-    return os;
-  }
+  friend std::ostream& operator<<(std::ostream& os, const Results& config);
 
 protected:
   logicbase::Result solverResult = logicbase::Result::NDEF;

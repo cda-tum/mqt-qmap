@@ -14,7 +14,6 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "utils.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1171,7 +1170,7 @@ NeutralAtomMapper::getMoveAwayCombinations(CoordIndex startCoord,
     moveCombinations.addMoveComb(MoveComb({moveAway, move}));
   }
   if (moveCombinations.empty()) {
-    throw QMAPException("No move away target found");
+    throw std::runtime_error("No move away target found");
   }
   return moveCombinations;
 }
