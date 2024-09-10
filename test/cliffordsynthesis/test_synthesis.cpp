@@ -10,7 +10,7 @@
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Control.hpp"
-#include "utils.hpp"
+#include "sc/utils.hpp"
 
 #include <algorithm>
 #include <cassert>
