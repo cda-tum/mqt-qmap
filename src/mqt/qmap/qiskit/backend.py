@@ -24,6 +24,17 @@ def import_backend(backend: Backend) -> Architecture:
 
     """
     if isinstance(backend, BackendV1):
+        import warnings
+
+        warnings.warn(
+            "The class ``qiskit.providers.backend.BackendV1`` is deprecated as of qiskit 1.2. "
+            "It will be removed in the 2.0 release, scheduled for 20 March 2025. "
+            "MQT QMAP will continue to support BackendV1 instances until they are removed from Qiskit. "
+            "Please use ``qiskit.providers.backend.BackendV2`` instances instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         return import_backend_v2(BackendV2Converter(backend))
     if isinstance(backend, BackendV2):
         return import_backend_v2(backend)
