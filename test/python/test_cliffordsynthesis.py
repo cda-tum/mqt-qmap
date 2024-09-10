@@ -36,7 +36,10 @@ def permute_qubits(circuit: QuantumCircuit, permutation: tuple[int, ...]) -> Qua
     permuted_circ = QuantumCircuit(circuit.num_qubits)
     qubit_map = {qubit: i for i, qubit in enumerate(circuit.qubits)}
 
-    for gate, qubits, clbits in circuit.data:
+    for d in circuit.data:
+        gate = d.operation
+        qubits = d.qubits
+        clbits = d.clbits
         new_qubits = [circuit.qubits[permutation[qubit_map[q]]] for q in qubits]
         permuted_circ.append(gate, new_qubits, clbits)
 
