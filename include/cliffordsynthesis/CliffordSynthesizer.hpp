@@ -188,16 +188,6 @@ protected:
                             const Results& newResults, Results& currentResults);
   void removeRedundantGates();
 
-  static CouplingMap getFullyConnectedMap(const std::uint16_t nQubits) {
-    CouplingMap result{};
-    for (std::uint16_t q = 0; q < nQubits; ++q) {
-      for (std::uint16_t p = q + 1; p < nQubits; ++p) {
-        result.emplace(q, p);
-        result.emplace(p, q);
-      }
-    }
-    return result;
-  }
 };
 
 } // namespace cs

@@ -87,6 +87,7 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
     const auto [lowerBin, upperBin] = determineUpperBound(encoderConfig);
     lower = lowerBin;
     upper = upperBin;
+    PLOG_INFO << "Upper bound " << upperBin;
 
     // if the upper bound is 0, the solution does not require any gates and the
     // synthesis is done.
@@ -97,7 +98,10 @@ void CliffordSynthesizer::synthesize(const Configuration& config) {
   }
   // Otherwise, the determined upper bound is used as an initial timestep
   // limit.
+
   encoderConfig.timestepLimit = upper;
+  PLOG_INFO << "Upper bound " << encoderConfig.timestepLimit;
+
   // Once a valid upper bound is found, the SAT problem is solved again with
   // the objective function encoded.
   switch (config.target) {
