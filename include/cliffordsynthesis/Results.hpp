@@ -66,17 +66,17 @@ public:
   void setResultCircuit(qc::QuantumComputation& qc);
   void setResultTableau(const Tableau& tableau);
   void setMapping(std::vector<std::vector<bool>> p) {
-  std::ostringstream oss;
-  for (const auto& row : permutationVector) {
-    for (const bool val : row) {
-      oss << (val ? '1' : '0');
+    std::ostringstream oss;
+    for (const auto& row : permutationVector) {
+      for (const bool val : row) {
+        oss << (val ? '1' : '0');
+      }
+      oss << '\n';
     }
-    oss << '\n';
+    permutationString = oss.str();
+    permutationVector = std::move(p);
   }
-  permutationString = oss.str();
-  permutationVector = std::move(p);
-}
-  
+
   [[nodiscard]] bool sat() const {
     return getSolverResult() == logicbase::Result::SAT;
   }
