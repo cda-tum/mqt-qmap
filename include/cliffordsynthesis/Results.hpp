@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 namespace cs {
 class Results {
