@@ -13,10 +13,10 @@
 #include <limits>
 #include <nlohmann/json_fwd.hpp>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <sstream>
 
 namespace cs {
 class Results {
