@@ -236,4 +236,44 @@ HardwareQubits::findClosestFreeCoord(CoordIndex coord, Direction direction,
   return closestFreeCoords;
 }
 
+std::vector<CoordIndex>
+HardwareQubits::findClosestAncillaCoord(CoordIndex coord, Direction direction, int circQubitSize,
+                                     const CoordIndices& excludeCoord) {
+  // return the closest ancilla coord in general
+  // and the closest free ancilla in the given direction
+  std::vector<CoordIndex> closestFreeCoords;
+  std::queue<CoordIndex>  queue;
+  queue.push(coord);
+  std::set<CoordIndex> visited;
+  visited.insert(coord);
+  bool foundClosest = false;
+  while (!queue.empty()) {
+    auto currentCoord = queue.front();
+    queue.pop();
+    auto nearbyCoords = this->arch->getNN(currentCoord);
+    for (const auto& nearbyCoord : nearbyCoords) {
+      if (std::find(visited.rbegin(), visited.rend(), nearbyCoord) ==
+          visited.rend()) {
+        visited.insert(nearbyCoord);
+        if (this->isMapped(nearbyCoord) &&
+            this->getHwQubit(nearbyCoord) >= circQubitSize &&
+            std::find(excludeCoord.begin(), excludeCoord.end(), nearbyCoord) ==
+                excludeCoord.end()) {
+          if (!foundClosest) {
+            closestFreeCoords.push_back(nearbyCoord);
+          }
+          foundClosest = true;
+          if (direction == arch->getVector(coord, nearbyCoord).direction) {
+            closestFreeCoords.emplace_back(nearbyCoord);
+            return closestFreeCoords;
+          }
+        } else {
+          queue.push(nearbyCoord);
+        }
+      }
+    }
+  }
+  return closestFreeCoords;
+}
+
 } // namespace na

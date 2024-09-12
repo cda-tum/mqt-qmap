@@ -83,6 +83,8 @@ public:
   // Constructors
   HardwareQubits(const NeutralAtomArchitecture& architecture,
                  InitialCoordinateMapping       initialCoordinateMapping,
+                 const std::vector<CoordIndex>& qubitIndices, 
+                 const std::vector<CoordIndex>& hwIndices,
                  uint32_t                       seed)
       : arch(&architecture), swapDistances(architecture.getNqubits()) {
     switch (initialCoordinateMapping) {
@@ -92,6 +94,33 @@ public:
       }
       initTrivialSwapDistances();
       break;
+    case Graph:{
+      if(qubitIndices.empty()){
+        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+          hwToCoordIdx.emplace(i, i);
+        }
+        initTrivialSwapDistances();
+      }
+      else{
+        int hwIndex = 0;
+        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+          if(qubitIndices[i] == std::numeric_limits<unsigned int>::max()){
+            if(hwIndices[hwIndex] != std::numeric_limits<unsigned int>::max()){
+              do{
+                  hwIndex += 1;
+              }while(hwIndices[hwIndex] != std::numeric_limits<unsigned int>::max());
+            }
+            hwToCoordIdx.emplace(i, hwIndex);
+            hwIndex++;
+          }
+          else{
+            hwToCoordIdx.emplace(i, qubitIndices[i]);
+          }
+        }
+        swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
+      }
+      break;
+    }
     case Random:
       std::vector<CoordIndex> indices(architecture.getNpositions());
       std::iota(indices.begin(), indices.end(), 0);
@@ -111,6 +140,9 @@ public:
   }
 
   // Mapping
+  const qc::Permutation& getHwToCoordIdx() const{
+    return hwToCoordIdx;
+  }
 
   /**
    * @brief Checks if a hardware qubit is mapped to a coordinate.
@@ -270,6 +302,10 @@ public:
    */
   std::vector<CoordIndex>
   findClosestFreeCoord(HwQubit qubit, Direction direction,
+                       const CoordIndices& excludedCoords = {});
+  
+  std::vector<CoordIndex>
+  findClosestAncillaCoord(CoordIndex coord, Direction direction, int circQubitSize,
                        const CoordIndices& excludedCoords = {});
 
   // Blocking

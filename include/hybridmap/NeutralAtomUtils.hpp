@@ -21,7 +21,7 @@
 namespace na {
 
 // Enums for the different initial mappings strategies
-enum InitialCoordinateMapping : uint8_t { Trivial, Random };
+enum InitialCoordinateMapping : uint8_t { Trivial, Random, Graph };
 enum InitialMapping : uint8_t { Identity };
 
 [[maybe_unused]] static InitialCoordinateMapping
@@ -33,6 +33,10 @@ initialCoordinateMappingFromString(
   }
   if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
     return InitialCoordinateMapping::Random;
+  }
+  if (initialCoordinateMapping == "graph" ||
+      initialCoordinateMapping == "2") {
+    return InitialCoordinateMapping::Graph;
   }
   throw std::invalid_argument("Invalid initial coordinate mapping value: " +
                               initialCoordinateMapping);
