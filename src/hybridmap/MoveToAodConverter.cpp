@@ -73,6 +73,11 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
         currentMoveGroup = MoveGroup();
         currentMoveGroup.add(move, idx);
       }
+      // TODO: make AtomMove for flying ancilla -> add to moveGroup
+    } else if (op->getType() == qc::OpType::PassBy) {
+      HwQubit q_control = op->getControls().begin()->qubit;
+      qc::Targets Q_target = op->getTargets();
+      std::vector<CoordIndex> C_target;
     } else if (op->getNqubits() > 1 && !currentMoveGroup.moves.empty()) {
       for (const auto& qubit : op->getUsedQubits()) {
         if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),

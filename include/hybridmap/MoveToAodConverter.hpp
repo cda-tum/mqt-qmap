@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
@@ -267,12 +268,14 @@ protected:
   const NeutralAtomArchitecture& arch;
   qc::QuantumComputation qcScheduled;
   std::vector<MoveGroup> moveGroups;
+  const na::HardwareQubits& hardwareQubits;
 
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
    * @param qc Quantum circuit to schedule
    */
-  void initMoveGroups(qc::QuantumComputation& qc);
+  void initMoveGroups(
+      qc::QuantumComputation& qc); //, qc::Permutation& hwToCoordIdx);
   /**
    * @brief Converts the move groups into the actual AOD operations
    * @details For this the following steps are performed:
@@ -287,15 +290,18 @@ public:
   MoveToAodConverter() = delete;
   MoveToAodConverter(const MoveToAodConverter&) = delete;
   MoveToAodConverter(MoveToAodConverter&&) = delete;
-  explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg)
-      : arch(archArg), qcScheduled(arch.getNpositions()) {}
+  explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg,
+                              const na::HardwareQubits& hardwareQubitsArg)
+      : arch(archArg), qcScheduled(arch.getNpositions()),
+        hardwareQubits(hardwareQubitsArg) {}
 
   /**
    * @brief Schedules the given quantum circuit using AODs
    * @param qc Quantum circuit to schedule
    * @return Scheduled quantum circuit, containing AOD operations
    */
-  qc::QuantumComputation schedule(qc::QuantumComputation& qc);
+  qc::QuantumComputation
+  schedule(qc::QuantumComputation& qc); //, qc::Permutation hwToCoordIdx);
 
   /**
    * @brief Returns the number of move groups

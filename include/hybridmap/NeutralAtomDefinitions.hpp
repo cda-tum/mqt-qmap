@@ -17,6 +17,7 @@ namespace na {
 // (or not).
 using CoordIndex = std::uint32_t;
 using CoordIndices = std::vector<CoordIndex>;
+
 // A HwQubit corresponds to an atom in the neutral atom architecture. It can be
 // used as qubit or not and occupies a certain position in the architecture.
 using HwQubit = uint32_t;
@@ -33,8 +34,19 @@ using WeightedSwap = std::pair<Swap, qc::fp>;
 using WeightedSwaps = std::vector<WeightedSwap>;
 // The distance between two hardware qubits using SWAP gates.
 using SwapDistance = int32_t;
+// Bridges
+using Bridge =
+    std::tuple<qc::Qubit, qc::Qubit, Qubits>; // q_control, q_target, Q_between
+using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
+
+// Moves for FlyingAncilla
+struct fPoint {
+  qc::fp x;
+  qc::fp y;
+  fPoint(qc::fp x_val, qc::fp y_val) : x(x_val), y(y_val) {}
+};
 
 // Used to represent operations
 using GateList = std::vector<const qc::Operation*>;

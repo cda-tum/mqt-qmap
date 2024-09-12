@@ -41,7 +41,7 @@ struct MapperParameters {
   qc::fp shuttlingWeight = 1;
   uint32_t seed = 0;
   bool verbose = false;
-  InitialCoordinateMapping initialMapping = InitialCoordinateMapping::Trivial;
+  InitialCoordinateMapping initialMapping;
 };
 
 /**
@@ -94,6 +94,8 @@ protected:
   std::vector<qc::fp> decayWeights;
   // Counter variables
   uint32_t nSwaps = 0;
+  uint32_t nBridges = 0;
+  uint32_t nFAncillas = 0;
   uint32_t nMoves = 0;
 
   // The current placement of the hardware qubits onto the coordinates
@@ -101,7 +103,16 @@ protected:
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
+  qc::DAG dag;
+
   // Methods for mapping
+
+  /**
+   * @brief GraphMatching for initCoordMapping
+   */
+  void graphMatching(std::vector<CoordIndex>& qubitIndices,
+                     std::vector<CoordIndex>& hwIndices, const qc::DAG& dag);
+
   /**
    * @brief Maps the gate to the mapped quantum circuit.
    * @param op The gate to map
@@ -191,6 +202,17 @@ protected:
   [[nodiscard]] std::set<Swap>
   getAllPossibleSwaps(const std::pair<Swaps, WeightedSwaps>& swapsFront) const;
 
+  // Methods for bridge operations mapping
+  std::vector<std::pair<const qc::Operation*, Bridge>>
+  findAllBridges(qc::QuantumComputation& qc);
+  std::vector<std::pair<const qc::Operation*, Bridge>>
+  bridgeCostCompareWithSwap(
+      std::vector<std::pair<const qc::Operation*, Bridge>> allBridges,
+      Swap bestSwap, const qc::DAG& dag, NeutralAtomLayer& frontLayer);
+  void updateMappingBridge(
+      std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges,
+      NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
+
   /**
    * @brief Returns the next best shuttling move operation for the front layer.
    * @return The next best shuttling move operation for the front layer
@@ -205,6 +227,7 @@ protected:
    * @return The current best move operation
    */
   AtomMove findBestAtomMove();
+  std::pair<AtomMove, const qc::Operation*> findBestAtomMoveWithOp();
   /**
    * @brief Returns all possible move combinations for the front layer.
    * @details This includes direct moves, move away and multi-qubit moves.
@@ -212,6 +235,8 @@ protected:
    * @return Vector of possible move combinations for the front layer
    */
   MoveCombs getAllMoveCombinations();
+  std::pair<MoveCombs, std::vector<std::pair<MoveComb, const qc::Operation*>>>
+  getAllMoveCombinationsWithOp();
   /**
    * @brief Returns all possible move away combinations for a move from start to
    * target.
@@ -226,6 +251,24 @@ protected:
    */
   MoveCombs getMoveAwayCombinations(CoordIndex start, CoordIndex target,
                                     const CoordIndices& excludedCoords);
+
+  // Methods for flying ancilla operations mapping
+  std::pair<qc::QuantumComputation, uint32_t>
+  findBestFlyingAncilla(qc::QuantumComputation& qc,
+                        const qc::Operation* targetOp);
+  std::set<std::set<qc::Qubit>> findQtargetSet(std::set<qc::Qubit>& usedQubits);
+  CoordIndex returnClosestAncillaCoord(const CoordIndex& c_target,
+                                       const CoordIndices& excludeCoords,
+                                       qc::QuantumComputation& qc);
+  bool compareShuttlingAndFlyingancilla(AtomMove bestMove,
+                                        qc::QuantumComputation& bestFA,
+                                        const qc::DAG& dag,
+                                        NeutralAtomLayer& frontLayer);
+  void updateMappingFlyingAncilla(qc::QuantumComputation& bestFA,
+                                  const qc::Operation* targetOp,
+                                  uint32_t numPassby,
+                                  NeutralAtomLayer& frontLayer,
+                                  NeutralAtomLayer& lookaheadLayer);
 
   // Helper methods
   /**
@@ -363,8 +406,10 @@ public:
                              const MapperParameters& p = MapperParameters())
       : arch(architecture), mappedQc(architecture.getNpositions()),
         mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
-        parameters(p), hardwareQubits(architecture, parameters.initialMapping,
-                                      parameters.seed) {
+        parameters(p),
+        hardwareQubits(architecture, parameters.initialMapping,
+                       std::vector<CoordIndex>(), std::vector<CoordIndex>(),
+                       parameters.seed) {
     // need at least on free coordinate to shuttle
     if (architecture.getNpositions() - architecture.getNqubits() < 1) {
       this->parameters.gateWeight = 1;
@@ -389,8 +434,9 @@ public:
    * @brief Resets the mapper and the hardware qubits.
    */
   void reset() {
-    hardwareQubits =
-        HardwareQubits(arch, parameters.initialMapping, parameters.seed);
+    hardwareQubits = HardwareQubits(arch, parameters.initialMapping,
+                                    std::vector<CoordIndex>(),
+                                    std::vector<CoordIndex>(), parameters.seed);
   }
 
   // Methods
@@ -420,7 +466,8 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping initialMapping);
+                             InitialMapping initialMapping,
+                             InitialCoordinateMapping initialCoordinateMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
@@ -429,11 +476,12 @@ public:
    * @param initialMapping The initial mapping of the circuit qubits to the
    * hardware qubits
    */
-  [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      InitialMapping initialMapping,
-                                      bool printInfo) {
+  [[maybe_unused]] void
+  mapAndConvert(qc::QuantumComputation& qc, InitialMapping initialMapping,
+                InitialCoordinateMapping initialCoordinateMapping,
+                bool printInfo) {
     this->parameters.verbose = printInfo;
-    map(qc, initialMapping);
+    map(qc, initialMapping, initialCoordinateMapping);
     convertToAod(this->mappedQc);
   }
 
