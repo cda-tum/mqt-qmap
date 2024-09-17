@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include <iostream>
+#include <cstdint>
 #include <string>
 
 namespace cs {
-enum class TargetMetric { Gates, TwoQubitGates, Depth };
+enum class TargetMetric : std::uint8_t { Gates, TwoQubitGates, Depth };
 
 [[maybe_unused]] static inline std::string toString(const TargetMetric target) {
   switch (target) {

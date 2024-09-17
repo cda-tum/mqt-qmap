@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Logic.hpp"
 #include "LogicBlock.hpp"
 #include "Z3Logic.hpp"
 
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <z3++.h>
 
 namespace logicutil {
 using namespace logicbase;
 
-enum class ParamType {
+enum class ParamType : std::uint8_t {
   STR,
   BOOL,
   DOUBLE,
@@ -22,12 +22,12 @@ enum class ParamType {
 
 class Param {
 public:
-  ParamType   type;
+  ParamType type;
   std::string name;
   std::string strvalue;
-  bool        bvalue  = false;
-  double      dvalue  = 0.;
-  uint32_t    uivalue = 0;
+  bool bvalue = false;
+  double dvalue = 0.;
+  uint32_t uivalue = 0;
   Param(std::string n, std::string value)
       : type(ParamType::STR), name(std::move(n)), strvalue(std::move(value)) {}
 
@@ -83,8 +83,8 @@ inline void setZ3Params(z3::params& p, const Params& params) {
 inline std::unique_ptr<LogicBlock>
 getZ3LogicBlock(bool& success, bool convertWhenAssert,
                 const Params& params = Params()) {
-  auto       c   = std::make_shared<z3::context>();
-  auto       slv = std::make_shared<z3::solver>(*c);
+  auto c = std::make_shared<z3::context>();
+  auto slv = std::make_shared<z3::solver>(*c);
   z3::params p(*c);
   setZ3Params(p, params);
   slv->set(p);
@@ -95,8 +95,8 @@ getZ3LogicBlock(bool& success, bool convertWhenAssert,
 inline std::unique_ptr<LogicBlockOptimizer>
 getZ3LogicOptimizer(bool& success, bool convertWhenAssert,
                     const Params& params = Params()) {
-  auto       c   = std::make_shared<z3::context>();
-  auto       opt = std::make_shared<z3::optimize>(*c);
+  auto c = std::make_shared<z3::context>();
+  auto opt = std::make_shared<z3::optimize>(*c);
   z3::params p(*c);
   setZ3Params(p, params);
   opt->set(p);

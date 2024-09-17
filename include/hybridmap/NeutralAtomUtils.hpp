@@ -7,7 +7,7 @@
 
 #include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "operations/AodOperation.hpp"
+#include "ir/operations/AodOperation.hpp"
 
 #include <cmath>
 #include <cstddef>
@@ -77,10 +77,10 @@ struct Direction {
  * @details Each move consists in a start and end coordinate and the direction.
  */
 struct MoveVector {
-  qc::fp    xStart;
-  qc::fp    yStart;
-  qc::fp    xEnd;
-  qc::fp    yEnd;
+  qc::fp xStart;
+  qc::fp yStart;
+  qc::fp xEnd;
+  qc::fp yEnd;
   Direction direction;
 
   MoveVector(qc::fp xstart, qc::fp ystart, qc::fp xend, qc::fp yend)
@@ -112,7 +112,7 @@ struct MoveVector {
  */
 struct MoveComb {
   std::vector<AtomMove> moves;
-  qc::fp                cost = std::numeric_limits<qc::fp>::max();
+  qc::fp cost = std::numeric_limits<qc::fp>::max();
 
   MoveComb(std::vector<AtomMove> mov, const qc::fp c)
       : moves(std::move(mov)), cost(c) {}
@@ -162,7 +162,7 @@ struct MoveComb {
     cost = std::numeric_limits<qc::fp>::max();
   }
   [[nodiscard]] size_t size() const { return moves.size(); }
-  [[nodiscard]] bool   empty() const { return moves.empty(); }
+  [[nodiscard]] bool empty() const { return moves.empty(); }
 };
 
 /**
@@ -175,14 +175,14 @@ struct MoveCombs {
   explicit MoveCombs(std::vector<MoveComb> combs)
       : moveCombs(std::move(combs)) {}
 
-  [[nodiscard]] bool   empty() const { return moveCombs.empty(); }
+  [[nodiscard]] bool empty() const { return moveCombs.empty(); }
   [[nodiscard]] size_t size() const { return moveCombs.size(); }
 
   // define iterators that iterate over the moveCombs vector
-  using iterator       = std::vector<MoveComb>::iterator;
+  using iterator = std::vector<MoveComb>::iterator;
   using const_iterator = std::vector<MoveComb>::const_iterator;
-  iterator                     begin() { return moveCombs.begin(); }
-  iterator                     end() { return moveCombs.end(); }
+  iterator begin() { return moveCombs.begin(); }
+  iterator end() { return moveCombs.end(); }
   [[nodiscard]] const_iterator begin() const { return moveCombs.cbegin(); }
   [[nodiscard]] const_iterator end() const { return moveCombs.cend(); }
 
@@ -210,7 +210,7 @@ struct MoveCombs {
  */
 struct MultiQubitMovePos {
   CoordIndices coords;
-  size_t       nMoves{0};
+  size_t nMoves{0};
 };
 
 } // namespace na

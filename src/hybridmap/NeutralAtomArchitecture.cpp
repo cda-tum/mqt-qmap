@@ -8,10 +8,9 @@
 #include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "nlohmann/json.hpp"
-#include "operations/AodOperation.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
+#include "ir/operations/AodOperation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,7 +18,7 @@
 #include <exception>
 #include <fstream>
 #include <map>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -28,8 +27,8 @@
 namespace na {
 
 void NeutralAtomArchitecture::loadJson(const std::string& filename) {
-  nlohmann::json jsonData;
-  std::ifstream  architectureFile(filename);
+  nlohmann::basic_json<> jsonData;
+  std::ifstream architectureFile(filename);
 
   if (!architectureFile.is_open()) {
     throw std::runtime_error("Could not open file " + filename);
@@ -39,8 +38,8 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     architectureFile.close();
 
     // Load properties
-    nlohmann::json jsonDataProperties = jsonData["properties"];
-    this->properties                  = Properties(
+    nlohmann::basic_json<> jsonDataProperties = jsonData["properties"];
+    this->properties = Properties(
         jsonDataProperties["nRows"], jsonDataProperties["nColumns"],
         jsonDataProperties["nAods"], jsonDataProperties["nAodCoordinates"],
         jsonDataProperties["interQubitDistance"],
@@ -49,9 +48,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
         jsonDataProperties["minimalAodDistance"]);
 
     // Load parameters
-    const nlohmann::json jsonDataParameters = jsonData["parameters"];
-    this->parameters                        = Parameters();
-    this->parameters.nQubits                = jsonDataParameters["nQubits"];
+    const nlohmann::basic_json<> jsonDataParameters = jsonData["parameters"];
+    this->parameters = Parameters();
+    this->parameters.nQubits = jsonDataParameters["nQubits"];
 
     // check if qubits can fit in the architecture
     if (this->parameters.nQubits > this->properties.getNpositions()) {
@@ -76,7 +75,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       shuttlingTimes.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
     }
     // compute values for SWAP gate
-    qc::fp swapGateTime     = 0;
+    qc::fp swapGateTime = 0;
     qc::fp swapGateFidelity = 1;
     for (size_t i = 0; i < 3; ++i) {
       swapGateTime += gateTimes.at("cz");
@@ -130,7 +129,7 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
   struct DiagonalDistance {
     std::uint32_t x;
     std::uint32_t y;
-    qc::fp        distance;
+    qc::fp distance;
   };
   std::vector<DiagonalDistance> diagonalDistances;
 
@@ -223,10 +222,10 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     return getShuttlingTime(op->getType());
   }
   if (op->getType() == qc::OpType::AodMove) {
-    const auto        v = this->parameters.shuttlingTimes.at(op->getType());
+    const auto v = this->parameters.shuttlingTimes.at(op->getType());
     const auto* const opAodMove = dynamic_cast<const AodOperation*>(op);
-    const auto        distanceX = opAodMove->getMaxDistance(Dimension::X);
-    const auto        distanceY = opAodMove->getMaxDistance(Dimension::Y);
+    const auto distanceX = opAodMove->getMaxDistance(Dimension::X);
+    const auto distanceY = opAodMove->getMaxDistance(Dimension::Y);
     return (distanceX + distanceY) / v;
   }
   std::string opName;

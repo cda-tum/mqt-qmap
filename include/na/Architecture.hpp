@@ -1,12 +1,6 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
-// information.
-//
-
 #pragma once
 
-#include "Configuration.hpp"
+#include "na/Configuration.hpp"
 #include "Definitions.hpp"
 #include "na/NADefinitions.hpp"
 
@@ -91,7 +85,7 @@ public:
    * @details Times are in µs, fidelities are in [0,1].
    */
   struct OperationProperties {
-    Scope                    scope; // local or global
+    Scope scope;                    // local or global
     std::unordered_set<Zone> zones; // the zones where the gate can be applied
     Value time;     // the time the gate takes to be applied in µs
     Value fidelity; // the fidelity of the gate
@@ -103,26 +97,26 @@ public:
    * µm/µs.
    */
   struct ShuttlingProperties {
-    Index  rows          = 0; // maximum number of rows in one AOD
-    Index  cols          = 0; // maximum number of columns in one AOD
-    Number minX          = 0; // minimum x position of the AOD
-    Number maxX          = 0; // maximum x position of the AOD
-    Number minY          = 0; // minimum y position of the AOD
-    Number maxY          = 0; // maximum y position of the AOD
-    Value  speed         = 0; // speed of the AOD in µm/µs
-    Value  fidelity      = 1; // fidelity during the shuttling
-    Value  loadTime      = 0; // time to activate the AOD in µs
-    Value  loadFidelity  = 1; // fidelity of the load
-    Value  storeTime     = 0; // time to deactivate the AOD in µs
-    Value  storeFidelity = 1; // fidelity of the store
+    Index rows = 0;          // maximum number of rows in one AOD
+    Index cols = 0;          // maximum number of columns in one AOD
+    Number minX = 0;         // minimum x position of the AOD
+    Number maxX = 0;         // maximum x position of the AOD
+    Number minY = 0;         // minimum y position of the AOD
+    Number maxY = 0;         // maximum y position of the AOD
+    Value speed = 0;         // speed of the AOD in µm/µs
+    Value fidelity = 1;      // fidelity during the shuttling
+    Value loadTime = 0;      // time to activate the AOD in µs
+    Value loadFidelity = 1;  // fidelity of the load
+    Value storeTime = 0;     // time to deactivate the AOD in µs
+    Value storeFidelity = 1; // fidelity of the store
   };
   struct ZoneProperties {
-    std::string name;         // the name of the zone
-    Number      minX     = 0; // minimum x dimension
-    Number      maxX     = 0; // maximum x dimension
-    Number      minY     = 0; // minimum y dimension
-    Number      maxY     = 0; // maximum y dimension
-    Value       fidelity = 1; // fidelity during idling
+    std::string name;   // the name of the zone
+    Number minX = 0;    // minimum x dimension
+    Number maxX = 0;    // maximum x dimension
+    Number minY = 0;    // minimum y dimension
+    Number maxY = 0;    // maximum y dimension
+    Value fidelity = 1; // fidelity during idling
   };
 
 protected:
@@ -134,7 +128,7 @@ protected:
       gateSet; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
   std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
-  Distance                         minAtomDistance =
+  Distance minAtomDistance =
       0; // minimal distance that must be kept between atoms
   Distance interactionRadius = 0; // the Rydberg radius
   Distance noInteractionRadius =
@@ -222,14 +216,14 @@ public:
   [[nodiscard]] auto isAllowedLocally(const FullOpType& t) const -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
   [[nodiscard]] auto isAllowedLocally(const FullOpType& t,
-                                      const Zone&       zone) const -> bool;
+                                      const Zone& zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
   [[nodiscard]] auto isAllowedLocallyAt(const FullOpType& t,
-                                        const Point&      p) const -> bool;
+                                        const Point& p) const -> bool;
   /// Checks whether the gate is a global gate for this Zone.
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t) const -> bool;
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
-                                       const Zone&       zone) const -> bool;
+                                       const Zone& zone) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto getNColsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto

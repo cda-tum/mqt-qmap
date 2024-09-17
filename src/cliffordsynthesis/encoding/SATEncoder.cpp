@@ -5,13 +5,20 @@
 
 #include "cliffordsynthesis/encoding/SATEncoder.hpp"
 
+#include "Logic.hpp"
+#include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/MultiGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/ObjectiveEncoder.hpp"
 #include "cliffordsynthesis/encoding/SingleGateEncoder.hpp"
+#include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 #include "logicblocks/util_logicblock.hpp"
-#include "plog/Log.h"
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <plog/Log.h>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -22,7 +29,7 @@ using namespace logicbase;
 
 void SATEncoder::initializeSolver() {
   PLOG_DEBUG << "Initializing solver engine.";
-  bool              success = false;
+  bool success = false;
   logicutil::Params params;
   for (const auto& [key, value] : config.solverParameters) {
     if (std::holds_alternative<bool>(value)) {
@@ -108,9 +115,9 @@ void SATEncoder::createFormulation() {
 Result SATEncoder::solve() const {
   PLOG_INFO << "Solving the SAT instance.";
 
-  const auto start  = std::chrono::high_resolution_clock::now();
+  const auto start = std::chrono::high_resolution_clock::now();
   const auto result = lb->solve();
-  const auto end    = std::chrono::high_resolution_clock::now();
+  const auto end = std::chrono::high_resolution_clock::now();
   const auto runtime =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
           .count();
@@ -135,7 +142,7 @@ Results SATEncoder::run() {
   createFormulation();
   const auto solverResult = solve();
 
-  const auto end     = std::chrono::high_resolution_clock::now();
+  const auto end = std::chrono::high_resolution_clock::now();
   const auto runtime = std::chrono::duration<double>(end - start);
 
   Results res{};

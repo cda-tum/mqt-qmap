@@ -5,16 +5,15 @@
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
-#include "CircuitOptimizer.hpp"
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
-#include "utils.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -36,8 +35,8 @@ namespace na {
 qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
                                               InitialMapping initialMapping) {
   mappedQc = qc::QuantumComputation(arch.getNpositions());
-  nMoves   = 0;
-  nSwaps   = 0;
+  nMoves = 0;
+  nSwaps = 0;
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
@@ -83,7 +82,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
           std::cout << "iteration " << i << '\n';
         }
         auto bestSwap = findBestSwap(lastSwap);
-        lastSwap      = bestSwap;
+        lastSwap = bestSwap;
         updateMappingSwap(bestSwap);
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
@@ -200,15 +199,15 @@ void NeutralAtomMapper::mapGate(const qc::Operation* op) {
     std::cout << "\n";
   }
   // convert circuit qubits to CoordIndex and append to mappedQc
-  auto  opCopyUnique = op->clone();
-  auto* opCopy       = opCopyUnique.get();
+  auto opCopyUnique = op->clone();
+  auto* opCopy = opCopyUnique.get();
   this->mapping.mapToHwQubits(opCopy);
   this->hardwareQubits.mapToCoordIdx(opCopy);
   this->mappedQc.emplace_back(opCopy->clone());
 }
 
 bool NeutralAtomMapper::isExecutable(const qc::Operation* opPointer) {
-  auto usedQubits  = opPointer->getUsedQubits();
+  auto usedQubits = opPointer->getUsedQubits();
   auto nUsedQubits = usedQubits.size();
   if (nUsedQubits == 1) {
     return true;
@@ -277,7 +276,7 @@ void NeutralAtomMapper::updateMappingSwap(Swap swap) {
   }
   this->mapping.applySwap(swap);
   // convert circuit qubits to CoordIndex and append to mappedQc
-  auto idxFirst  = this->hardwareQubits.getCoordIndex(swap.first);
+  auto idxFirst = this->hardwareQubits.getCoordIndex(swap.first);
   auto idxSecond = this->hardwareQubits.getCoordIndex(swap.second);
   this->mappedQc.swap(idxFirst, idxSecond);
   if (this->parameters.verbose) {
@@ -319,7 +318,7 @@ void NeutralAtomMapper::updateMappingMove(AtomMove move) {
 
 Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwap) {
   // compute necessary movements
-  auto swapsFront     = initSwaps(this->frontLayerGate);
+  auto swapsFront = initSwaps(this->frontLayerGate);
   auto swapsLookahead = initSwaps(this->lookaheadLayerGate);
   setTwoQubitSwapWeight(swapsFront.second);
 
@@ -386,7 +385,7 @@ std::set<Swap> NeutralAtomMapper::getAllPossibleSwaps(
 qc::fp NeutralAtomMapper::swapCost(
     const Swap& swap, const std::pair<Swaps, WeightedSwaps>& swapsFront,
     const std::pair<Swaps, WeightedSwaps>& swapsLookahead) {
-  auto [swapCloseByFront, swapExactFront]         = swapsFront;
+  auto [swapCloseByFront, swapExactFront] = swapsFront;
   auto [swapCloseByLookahead, swapExactLookahead] = swapsLookahead;
   // compute the change in total distance
   auto distanceChangeFront =
@@ -419,11 +418,11 @@ qc::fp NeutralAtomMapper::swapCost(
 
 std::pair<Swaps, WeightedSwaps>
 NeutralAtomMapper::initSwaps(const GateList& layer) {
-  Swaps         swapCloseBy = {};
-  WeightedSwaps swapExact   = {};
+  Swaps swapCloseBy = {};
+  WeightedSwaps swapExact = {};
   // computes for each gate the necessary moves to execute it
   for (const auto& gate : layer) {
-    auto usedQubits   = gate->getUsedQubits();
+    auto usedQubits = gate->getUsedQubits();
     auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
     if (usedQubits.size() == 2) {
       // swap close by for two qubit gates
@@ -453,12 +452,12 @@ NeutralAtomMapper::initSwaps(const GateList& layer) {
   return {swapCloseBy, swapExact};
 }
 
-qc::fp NeutralAtomMapper::swapCostPerLayer(const Swap&          swap,
-                                           const Swaps&         swapCloseBy,
+qc::fp NeutralAtomMapper::swapCostPerLayer(const Swap& swap,
+                                           const Swaps& swapCloseBy,
                                            const WeightedSwaps& swapExact) {
   SwapDistance distBefore = 0;
-  SwapDistance distAfter  = 0;
-  qc::fp       distChange = 0;
+  SwapDistance distAfter = 0;
+  qc::fp distChange = 0;
   // bring close only until swap distance =0, bring exact to the exact position
   // bring qubits together to execute gate
   for (const auto& [q1, q2] : swapCloseBy) {
@@ -485,7 +484,7 @@ qc::fp NeutralAtomMapper::swapCostPerLayer(const Swap&          swap,
 
   // move qubits to the exact position for multi-qubit gates
   for (const auto& [exactSwap, weight] : swapExact) {
-    auto origin      = exactSwap.first;
+    auto origin = exactSwap.first;
     auto destination = exactSwap.second;
     distBefore =
         this->hardwareQubits.getSwapDistance(origin, destination, false);
@@ -526,7 +525,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPosition(const qc::Operation* op) {
                       std::vector<std::pair<qc::fp, HwQubit>>, std::greater<>>
       qubitQueue;
   // add the gate qubits to the priority queue
-  auto gateQubits   = op->getUsedQubits();
+  auto gateQubits = op->getUsedQubits();
   auto gateHwQubits = this->mapping.getHwQubits(gateQubits);
   // add the gate qubits to the priority queue
   for (const auto& gateQubit : gateHwQubits) {
@@ -602,7 +601,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
     return bestPos;
   }
   // update remainingNearbyQubits
-  auto newQubit        = *selectedQubits.rbegin();
+  auto newQubit = *selectedQubits.rbegin();
   auto nearbyNextQubit = this->hardwareQubits.getNearbyQubits(newQubit);
   // compute remaining qubits as the intersection with current
   Qubits newRemainingQubits;
@@ -655,7 +654,7 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
         this->hardwareQubits.getSwapDistance(gateQubit, nextQubit, true);
     if (distance < closesDistance) {
       closesGateQubits = gateQubit;
-      closesDistance   = distance;
+      closesDistance = distance;
     }
   }
   remainingGateQubits.erase(remainingGateQubits.find(closesGateQubits));
@@ -666,16 +665,16 @@ HwQubits NeutralAtomMapper::getBestMultiQubitPositionRec(
 
 WeightedSwaps
 NeutralAtomMapper::getExactSwapsToPosition(const qc::Operation* op,
-                                           HwQubits             position) {
+                                           HwQubits position) {
   if (position.empty()) {
     return {};
   }
-  auto          gateQubits   = op->getUsedQubits();
-  auto          gateHwQubits = this->mapping.getHwQubits(gateQubits);
+  auto gateQubits = op->getUsedQubits();
+  auto gateHwQubits = this->mapping.getHwQubits(gateQubits);
   WeightedSwaps swapsExact;
   while (!position.empty() && !gateHwQubits.empty()) {
     std::vector<std::tuple<HwQubit, std::set<HwQubit>, SwapDistance>>
-                      minimalDistances;
+        minimalDistances;
     std::set<HwQubit> minimalDistancePosQubit;
     for (const auto& gateQubit : gateHwQubits) {
       SwapDistance minimalDistance = std::numeric_limits<SwapDistance>::max();
@@ -808,8 +807,8 @@ qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) {
 }
 
 qc::fp NeutralAtomMapper::moveCost(const AtomMove& move) {
-  qc::fp cost      = 0;
-  auto   frontCost = moveCostPerLayer(move, this->frontLayerShuttling) /
+  qc::fp cost = 0;
+  auto frontCost = moveCostPerLayer(move, this->frontLayerShuttling) /
                    static_cast<qc::fp>(this->frontLayerShuttling.size());
   cost += frontCost;
   if (!lookaheadLayerShuttling.empty()) {
@@ -830,10 +829,10 @@ qc::fp NeutralAtomMapper::moveCost(const AtomMove& move) {
 }
 
 qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
-                                           GateList&       layer) {
+                                           GateList& layer) {
   // compute cost assuming the move was applied
-  qc::fp distChange    = 0;
-  auto   toMoveHwQubit = this->hardwareQubits.getHwQubit(move.first);
+  qc::fp distChange = 0;
+  auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.first);
   if (this->mapping.isMapped(toMoveHwQubit)) {
     auto toMoveCircuitQubit = this->mapping.getCircQubit(toMoveHwQubit);
     for (const auto& gate : layer) {
@@ -846,7 +845,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch.getEuclideanDistance(
+          auto dist = this->arch.getEuclideanDistance(
               this->hardwareQubits.getCoordIndex(hwQubit),
               this->hardwareQubits.getCoordIndex(toMoveHwQubit));
           distanceBefore += dist;
@@ -857,7 +856,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
             continue;
           }
           auto hwQubit = this->mapping.getHwQubit(qubit);
-          auto dist    = this->arch.getEuclideanDistance(
+          auto dist = this->arch.getEuclideanDistance(
               this->hardwareQubits.getCoordIndex(hwQubit), move.second);
           distanceAfter += dist;
         }
@@ -870,7 +869,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
 
 qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) {
   qc::fp parallelCost = 0;
-  auto   moveVector   = this->arch.getVector(move.first, move.second);
+  auto moveVector = this->arch.getVector(move.first, move.second);
   std::vector<CoordIndex> lastEndingCoords;
   if (this->lastMoves.empty()) {
     parallelCost += arch.getVectorShuttlingTime(moveVector);
@@ -893,12 +892,12 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) {
   // check if in same row/column like last moves
   // then can may be loaded in parallel
   auto moveCoordInit = this->arch.getCoordinate(move.first);
-  auto moveCoordEnd  = this->arch.getCoordinate(move.second);
+  auto moveCoordEnd = this->arch.getCoordinate(move.second);
   parallelCost += arch.getShuttlingTime(qc::OpType::AodActivate) +
                   arch.getShuttlingTime(qc::OpType::AodDeactivate);
   for (const auto& lastMove : this->lastMoves) {
     auto lastMoveCoordInit = this->arch.getCoordinate(lastMove.first);
-    auto lastMoveCoordEnd  = this->arch.getCoordinate(lastMove.second);
+    auto lastMoveCoordEnd = this->arch.getCoordinate(lastMove.second);
     if (moveCoordInit.x == lastMoveCoordInit.x ||
         moveCoordInit.y == lastMoveCoordInit.y) {
       parallelCost -= arch.getShuttlingTime(qc::OpType::AodActivate);
@@ -919,9 +918,9 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) {
 }
 
 MultiQubitMovePos
-NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
+NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos currentPos,
                                       const CoordIndices& gateCoords,
-                                      const size_t&       maxNMoves) {
+                                      const size_t& maxNMoves) {
   if (currentPos.coords.size() == gateCoords.size()) {
     return currentPos;
   }
@@ -964,11 +963,11 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
   }
 
   // compute minimal possible moves
-  size_t       minPossibleMoves = currentPos.nMoves;
-  size_t const nMissingQubits   = gateCoords.size() - currentPos.coords.size();
-  auto         itGate           = occupiedGateCoords.begin();
-  auto         itFree           = freeNearbyCoords.begin();
-  auto         itOcc            = occupiedNearbyCoords.begin();
+  size_t minPossibleMoves = currentPos.nMoves;
+  size_t const nMissingQubits = gateCoords.size() - currentPos.coords.size();
+  auto itGate = occupiedGateCoords.begin();
+  auto itFree = freeNearbyCoords.begin();
+  auto itOcc = occupiedNearbyCoords.begin();
   for (size_t i = 0; i < nMissingQubits; ++i) {
     if (itGate != occupiedGateCoords.end()) {
       ++itGate;
@@ -1020,13 +1019,13 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos   currentPos,
 MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
   MoveCombs allMoves;
   for (const auto& op : this->frontLayerShuttling) {
-    auto usedQubits    = op->getUsedQubits();
-    auto usedHwQubits  = this->mapping.getHwQubits(usedQubits);
+    auto usedQubits = op->getUsedQubits();
+    auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
     auto usedCoordsSet = this->hardwareQubits.getCoordIndices(usedHwQubits);
     auto usedCoords =
         std::vector<CoordIndex>(usedCoordsSet.begin(), usedCoordsSet.end());
     auto bestPos = getBestMovePos(usedCoords);
-    auto moves   = getMoveCombinationsToPosition(usedHwQubits, bestPos);
+    auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
     allMoves.addMoveCombs(moves);
   }
   allMoves.removeLongerMoveCombs();
@@ -1034,9 +1033,9 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
 }
 
 CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
-  size_t const maxMoves   = gateCoords.size() * 2;
-  size_t const minMoves   = gateCoords.size();
-  size_t       nMovesGate = maxMoves;
+  size_t const maxMoves = gateCoords.size() * 2;
+  size_t const minMoves = gateCoords.size();
+  size_t nMovesGate = maxMoves;
   // do a breadth first search for the best position
   // start with the used coords
   std::queue<CoordIndex> q;
@@ -1086,20 +1085,20 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
 }
 
 MoveCombs
-NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits&     gateQubits,
+NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits& gateQubits,
                                                  CoordIndices& position) {
   if (position.empty()) {
     throw qc::QFRException("No position given");
   }
   // compute for each qubit the best position around it based on the cost of
   // the single move choose best one
-  MoveCombs const      moveCombinations;
+  MoveCombs const moveCombinations;
   std::set<CoordIndex> gateQubitCoords;
   for (const auto& gateQubit : gateQubits) {
     gateQubitCoords.emplace(this->hardwareQubits.getCoordIndex(gateQubit));
   }
 
-  auto     remainingCoords = position;
+  auto remainingCoords = position;
   MoveComb moveComb;
   // compute cost for each candidate and each gateQubit
   auto remainingGateCoords = gateQubitCoords;
@@ -1134,8 +1133,8 @@ NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits&     gateQubits,
       }
     }
     // find minimal cost
-    auto bestCost  = std::min_element(costs.begin(), costs.end(),
-                                      [](const auto& cost1, const auto& cost2) {
+    auto bestCost = std::min_element(costs.begin(), costs.end(),
+                                     [](const auto& cost1, const auto& cost2) {
                                        return cost1.second < cost2.second;
                                      });
     auto bestCoord = bestCost->first;
@@ -1156,31 +1155,31 @@ NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits&     gateQubits,
 }
 
 MoveCombs
-NeutralAtomMapper::getMoveAwayCombinations(CoordIndex          startCoord,
-                                           CoordIndex          targetCoord,
+NeutralAtomMapper::getMoveAwayCombinations(CoordIndex startCoord,
+                                           CoordIndex targetCoord,
                                            const CoordIndices& excludedCoords) {
-  MoveCombs  moveCombinations;
-  auto const originalVector    = this->arch.getVector(startCoord, targetCoord);
+  MoveCombs moveCombinations;
+  auto const originalVector = this->arch.getVector(startCoord, targetCoord);
   auto const originalDirection = originalVector.direction;
   // Find move away target in the same direction as the original move
   auto moveAwayTargets = this->hardwareQubits.findClosestFreeCoord(
       targetCoord, originalDirection, excludedCoords);
   for (const auto& moveAwayTarget : moveAwayTargets) {
-    const AtomMove move     = {startCoord, targetCoord};
+    const AtomMove move = {startCoord, targetCoord};
     const AtomMove moveAway = {targetCoord, moveAwayTarget};
     moveCombinations.addMoveComb(MoveComb({moveAway, move}));
   }
   if (moveCombinations.empty()) {
-    throw QMAPException("No move away target found");
+    throw std::runtime_error("No move away target found");
   }
   return moveCombinations;
 }
 
 std::pair<uint32_t, qc::fp>
 NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
-  auto   usedQubits   = opPointer->getUsedQubits();
-  auto   usedHwQubits = this->mapping.getHwQubits(usedQubits);
-  qc::fp minNumSwaps  = 0;
+  auto usedQubits = opPointer->getUsedQubits();
+  auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
+  qc::fp minNumSwaps = 0;
   if (usedHwQubits.size() == 2) {
     SwapDistance minDistance = std::numeric_limits<SwapDistance>::max();
     for (const auto& hwQubit : usedHwQubits) {
@@ -1216,9 +1215,9 @@ NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
 
 std::pair<uint32_t, qc::fp>
 NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
-  auto usedQubits   = opPointer->getUsedQubits();
+  auto usedQubits = opPointer->getUsedQubits();
   auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
-  auto usedCoords   = this->hardwareQubits.getCoordIndices(usedHwQubits);
+  auto usedCoords = this->hardwareQubits.getCoordIndices(usedHwQubits);
   // estimate the number of moves as:
   // compute distance between qubits
   // 1. for each free coord in the vicinity = 1 move with corresponding
@@ -1227,17 +1226,17 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
   // distance
 
   uint32_t minMoves = std::numeric_limits<uint32_t>::max();
-  qc::fp   minTime  = std::numeric_limits<qc::fp>::max();
+  qc::fp minTime = std::numeric_limits<qc::fp>::max();
   for (const auto& coord : usedCoords) {
-    qc::fp   totalTime  = 0;
+    qc::fp totalTime = 0;
     uint32_t totalMoves = 0;
-    auto     nearbyFreeCoords =
+    auto nearbyFreeCoords =
         this->hardwareQubits.getNearbyFreeCoordinatesByCoord(coord);
     auto nearbyOccupiedCoords =
         this->hardwareQubits.getNearbyOccupiedCoordinatesByCoord(coord);
     auto otherQubitsIt = usedCoords.begin();
-    auto nearbyFreeIt  = nearbyFreeCoords.begin();
-    auto nearbyOccIt   = nearbyOccupiedCoords.begin();
+    auto nearbyFreeIt = nearbyFreeCoords.begin();
+    auto nearbyOccIt = nearbyOccupiedCoords.begin();
     while (otherQubitsIt != usedCoords.end()) {
       auto otherCoord = *otherQubitsIt;
       if (otherCoord == coord) {
@@ -1271,7 +1270,7 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
     }
 
     if (totalTime < minTime) {
-      minTime  = totalTime;
+      minTime = totalTime;
       minMoves = totalMoves;
     }
   }

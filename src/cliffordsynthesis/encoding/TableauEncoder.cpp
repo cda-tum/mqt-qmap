@@ -5,8 +5,18 @@
 
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
 
+#include "Logic.hpp"
+#include "cliffordsynthesis/Results.hpp"
+#include "cliffordsynthesis/Tableau.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/Model.hpp"
-#include "plog/Log.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <plog/Log.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace cs::encoding {
 
@@ -40,7 +50,7 @@ void TableauEncoder::createTableauVariables() {
   }
 }
 
-void TableauEncoder::assertTableau(const Tableau&    tableau,
+void TableauEncoder::assertTableau(const Tableau& tableau,
                                    const std::size_t t) {
   const auto n = static_cast<std::uint16_t>(S);
 
@@ -58,9 +68,9 @@ void TableauEncoder::assertTableau(const Tableau&    tableau,
   lb->assertFormula(vars.r[t] == LogicTerm(targetR, n));
 }
 
-void TableauEncoder::extractTableauFromModel(Results&          results,
+void TableauEncoder::extractTableauFromModel(Results& results,
                                              const std::size_t t,
-                                             Model&            model) const {
+                                             Model& model) const {
   Tableau tableau(N, S > N);
   for (std::size_t i = 0; i < N; ++i) {
     const auto bvx = model.getBitvectorValue(vars.x[t][i], lb.get());
@@ -77,7 +87,7 @@ void TableauEncoder::extractTableauFromModel(Results&          results,
 LogicTerm
 TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None:
   case qc::OpType::X:
@@ -98,7 +108,7 @@ TableauEncoder::Variables::singleQubitXChange(const std::size_t pos,
 LogicTerm
 TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None:
   case qc::OpType::X:
@@ -120,7 +130,7 @@ TableauEncoder::Variables::singleQubitZChange(const std::size_t pos,
 LogicTerm
 TableauEncoder::Variables::singleQubitRChange(const std::size_t pos,
                                               const std::size_t qubit,
-                                              const qc::OpType  gate) const {
+                                              const qc::OpType gate) const {
   switch (gate) {
   case qc::OpType::None: {
     const auto bvs = r[pos].getBitVectorSize();

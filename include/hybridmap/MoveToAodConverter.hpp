@@ -6,13 +6,13 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/AodOperation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/AodOperation.hpp"
-#include "operations/OpType.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -71,7 +71,7 @@ protected:
       // first: x, second: delta x, third: offset x
       std::vector<std::shared_ptr<AodMove>> activateXs;
       std::vector<std::shared_ptr<AodMove>> activateYs;
-      std::vector<AtomMove>                 moves;
+      std::vector<AtomMove> moves;
 
       AodActivation(const AodMove& activateX, const AodMove& activateY,
                     const AtomMove& move)
@@ -101,16 +101,16 @@ protected:
     // AODScheduler
     // NeutralAtomArchitecture to call necessary hardware information
     const NeutralAtomArchitecture& arch;
-    std::vector<AodActivation>     allActivations;
+    std::vector<AodActivation> allActivations;
     // Differentiate between loading and unloading
     qc::OpType type;
 
     // Constructor
-    AodActivationHelper()                           = delete;
+    AodActivationHelper() = delete;
     AodActivationHelper(const AodActivationHelper&) = delete;
-    AodActivationHelper(AodActivationHelper&&)      = delete;
+    AodActivationHelper(AodActivationHelper&&) = delete;
     AodActivationHelper(const NeutralAtomArchitecture& architecture,
-                        qc::OpType                     opType)
+                        qc::OpType opType)
         : arch(architecture), type(opType) {}
 
     // Methods
@@ -155,7 +155,7 @@ protected:
      * @param sign The direction of the offset moves (right/left or down/up)
      */
     static void reAssignOffsets(std::vector<std::shared_ptr<AodMove>>& aodMoves,
-                                int32_t                                sign);
+                                int32_t sign);
 
     /**
      * @brief Returns the maximum offset in the given dimension/direction from
@@ -177,8 +177,8 @@ protected:
      * @return True if there is still space, false otherwise
      */
     [[nodiscard]] bool checkIntermediateSpaceAtInit(Dimension dim,
-                                                    uint32_t  init,
-                                                    int32_t   sign) const;
+                                                    uint32_t init,
+                                                    int32_t sign) const;
 
     // Convert activation to AOD operations
     /**
@@ -216,10 +216,10 @@ protected:
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
-    std::vector<AodOperation>                  processedOpsInit;
-    std::vector<AodOperation>                  processedOpsFinal;
-    AodOperation                               processedOpShuttle;
-    std::vector<CoordIndex>                    qubitsUsedByGates;
+    std::vector<AodOperation> processedOpsInit;
+    std::vector<AodOperation> processedOpsFinal;
+    AodOperation processedOpShuttle;
+    std::vector<CoordIndex> qubitsUsedByGates;
 
     // Constructor
     explicit MoveGroup() = default;
@@ -265,8 +265,8 @@ protected:
   };
 
   const NeutralAtomArchitecture& arch;
-  qc::QuantumComputation         qcScheduled;
-  std::vector<MoveGroup>         moveGroups;
+  qc::QuantumComputation qcScheduled;
+  std::vector<MoveGroup> moveGroups;
 
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
@@ -284,9 +284,9 @@ protected:
   void processMoveGroups();
 
 public:
-  MoveToAodConverter()                          = delete;
+  MoveToAodConverter() = delete;
   MoveToAodConverter(const MoveToAodConverter&) = delete;
-  MoveToAodConverter(MoveToAodConverter&&)      = delete;
+  MoveToAodConverter(MoveToAodConverter&&) = delete;
   explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg)
       : arch(archArg), qcScheduled(arch.getNpositions()) {}
 

@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from random import shuffle
-from typing import TYPE_CHECKING, Callable, Iterable, Literal, MutableMapping, Sequence, Tuple, TypedDict, Union
+from typing import TYPE_CHECKING, Literal, TypedDict, Union
 
 if TYPE_CHECKING:
-    Position = Tuple[float, float]
-    Colorscale = Union[str, Sequence[str], Sequence[Tuple[float, str]]]
+    from .._compat.typing import TypeAlias
+
+    Position: TypeAlias = tuple[float, float]
+    Colorscale: TypeAlias = Union[str, Sequence[str], Sequence[tuple[float, str]]]
 
     class _ActiveTraceIndices(TypedDict):
         search_edges: list[int]

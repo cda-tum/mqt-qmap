@@ -2,7 +2,7 @@
 
 #include "Logic.hpp"
 #include "LogicTerm.hpp"
-#include "Z3Model.hpp"
+#include "Z3Model.hpp" // IWYU pragma: keep
 
 #include <cstdint>
 #include <stdexcept>

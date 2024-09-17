@@ -2,7 +2,9 @@
 
 #include "Logic.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <limits>

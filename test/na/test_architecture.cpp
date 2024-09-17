@@ -1,11 +1,11 @@
-#include "Architecture.hpp"
-#include "Configuration.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/OpType.hpp"
+#include "na/Architecture.hpp"
+#include "na/Configuration.hpp"
 
-#include "gtest/gtest.h"
 #include <cstdint>
 #include <cstdio>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -15,7 +15,7 @@
 class NAArchitecture : public testing::Test {
 protected:
   na::Architecture arch;
-  void             SetUp() override {
+  void SetUp() override {
     // write content to a file
     std::istringstream archIS(R"({
       "name": "Nature",
@@ -120,7 +120,7 @@ protected:
           }
       ]
   })");
-    std::stringstream  gridSS;
+    std::stringstream gridSS;
     gridSS << "x,y\n";
     // entangling zone (4 x 36 = 144 sites)
     for (std::size_t y = 0; y <= 36; y += 12) {
@@ -147,7 +147,8 @@ protected:
 
 TEST_F(NAArchitecture, ScopeString) {
   EXPECT_EQ(na::getScopeOfString("local"), na::Scope::Local);
-  EXPECT_EQ(na::getScopeOfString("gLoBaL"), na::Scope::Global);
+  EXPECT_EQ(na::getScopeOfString("gLoBaL"), // spellchecker:disable-line
+            na::Scope::Global);
   EXPECT_THROW(na::getScopeOfString(""), std::invalid_argument);
 }
 
@@ -200,7 +201,7 @@ TEST_F(NAArchitecture, Getter) {
 
 TEST_F(NAArchitecture, WithConfiguration) {
   na::Configuration const config(2, 3);
-  const auto              modArch = arch.withConfig(config);
+  const auto modArch = arch.withConfig(config);
   EXPECT_EQ(modArch.getNSites(), 216);
 }
 

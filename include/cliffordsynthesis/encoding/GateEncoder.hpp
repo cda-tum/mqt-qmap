@@ -7,19 +7,26 @@
 
 #include "cliffordsynthesis/Results.hpp"
 #include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "logicblocks/Logic.hpp"
 #include "logicblocks/LogicBlock.hpp"
-#include "operations/OpType.hpp"
+#include "logicblocks/LogicTerm.hpp"
 
+#include <array>
 #include <cstddef>
+#include <functional>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace cs::encoding {
 
 class GateEncoder {
 public:
   GateEncoder(const std::size_t nQubits, const std::size_t tableauSize,
-              const std::size_t                      timestepLimit,
-              TableauEncoder::Variables*             tableauVars,
+              const std::size_t timestepLimit,
+              TableauEncoder::Variables* tableauVars,
               std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), S(tableauSize), T(timestepLimit), tvars(tableauVars),
         lb(std::move(logicBlock)) {}
@@ -27,15 +34,15 @@ public:
 
   struct Variables {
     // variables for the single-qubit gates
-    logicbase::LogicMatrix3D gS{};
+    logicbase::LogicMatrix3D gS;
     // variables for the two-qubit gates
-    logicbase::LogicMatrix3D gC{};
+    logicbase::LogicMatrix3D gC;
 
     void
-         collectSingleQubitGateVariables(std::size_t pos, std::size_t qubit,
-                                         logicbase::LogicVector& variables) const;
+    collectSingleQubitGateVariables(std::size_t pos, std::size_t qubit,
+                                    logicbase::LogicVector& variables) const;
     void collectTwoQubitGateVariables(std::size_t pos, std::size_t qubit,
-                                      bool                    target,
+                                      bool target,
                                       logicbase::LogicVector& variables) const;
   };
 
@@ -115,7 +122,7 @@ protected:
   TableauEncoder::Variables* tvars{};
 
   // the logic block to use
-  std::shared_ptr<logicbase::LogicBlock> lb{};
+  std::shared_ptr<logicbase::LogicBlock> lb;
 
   using TransformationFamily =
       std::pair<logicbase::LogicTerm, std::vector<qc::OpType>>;
@@ -126,12 +133,12 @@ protected:
 
   virtual void assertConsistency() const = 0;
 
-  virtual void assertGateConstraints()                           = 0;
+  virtual void assertGateConstraints() = 0;
   virtual void assertSingleQubitGateConstraints(std::size_t pos) = 0;
-  virtual void assertTwoQubitGateConstraints(std::size_t pos)    = 0;
+  virtual void assertTwoQubitGateConstraints(std::size_t pos) = 0;
   [[nodiscard]] static std::vector<TransformationFamily>
-       collectGateTransformations(std::size_t pos, std::size_t qubit,
-                                  const GateToTransformation& gateToTransformation);
+  collectGateTransformations(std::size_t pos, std::size_t qubit,
+                             const GateToTransformation& gateToTransformation);
   void assertGatesImplyTransform(
       std::size_t pos, std::size_t qubit,
       const std::vector<TransformationFamily>& transformations);
@@ -142,13 +149,13 @@ protected:
   createTwoQubitGateConstraint(std::size_t pos, std::size_t ctrl,
                                std::size_t trgt) = 0;
 
-  void extractSingleQubitGatesFromModel(std::size_t             pos,
-                                        logicbase::Model&       model,
+  void extractSingleQubitGatesFromModel(std::size_t pos,
+                                        logicbase::Model& model,
                                         qc::QuantumComputation& qc,
                                         std::size_t& nSingleQubitGates);
   void extractTwoQubitGatesFromModel(std::size_t pos, logicbase::Model& model,
                                      qc::QuantumComputation& qc,
-                                     std::size_t&            nTwoQubitGates);
+                                     std::size_t& nTwoQubitGates);
 
   virtual void
   assertSingleQubitGateSymmetryBreakingConstraints(std::size_t pos);

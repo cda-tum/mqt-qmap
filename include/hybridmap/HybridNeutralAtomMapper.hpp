@@ -7,14 +7,14 @@
 
 #include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -33,14 +33,14 @@ namespace na {
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
-  qc::fp                   lookaheadWeightSwaps = 0.1;
-  qc::fp                   lookaheadWeightMoves = 0.1;
-  qc::fp                   decay                = 0.1;
-  qc::fp                   shuttlingTimeWeight  = 1;
-  qc::fp                   gateWeight           = 1;
-  qc::fp                   shuttlingWeight      = 1;
-  uint32_t                 seed                 = 0;
-  bool                     verbose              = false;
+  qc::fp lookaheadWeightSwaps = 0.1;
+  qc::fp lookaheadWeightMoves = 0.1;
+  qc::fp decay = 0.1;
+  qc::fp shuttlingTimeWeight = 1;
+  qc::fp gateWeight = 1;
+  qc::fp shuttlingWeight = 1;
+  uint32_t seed = 0;
+  bool verbose = false;
   InitialCoordinateMapping initialMapping = InitialCoordinateMapping::Trivial;
 };
 
@@ -251,10 +251,10 @@ protected:
    * @param gateCoords The coordinates of the gate to find the best position for
    * @return The best position for the given gate coordinates
    */
-  CoordIndices      getBestMovePos(const CoordIndices& gateCoords);
-  MultiQubitMovePos getMovePositionRec(MultiQubitMovePos   currentPos,
+  CoordIndices getBestMovePos(const CoordIndices& gateCoords);
+  MultiQubitMovePos getMovePositionRec(MultiQubitMovePos currentPos,
                                        const CoordIndices& gateCoords,
-                                       const size_t&       maxNMoves);
+                                       const size_t& maxNMoves);
   /**
    * @brief Returns possible move combinations to move the gate qubits to the
    * given position.
@@ -263,7 +263,7 @@ protected:
    * @return Possible move combinations to move the gate qubits to the given
    * position
    */
-  MoveCombs getMoveCombinationsToPosition(HwQubits&     gateQubits,
+  MoveCombs getMoveCombinationsToPosition(HwQubits& gateQubits,
                                           CoordIndices& position);
 
   // Multi-qubit gate based methods
@@ -286,7 +286,7 @@ protected:
    * @return The swaps needed to move the given qubits to the given multi-qubit
    */
   WeightedSwaps getExactSwapsToPosition(const qc::Operation* op,
-                                        HwQubits             position);
+                                        HwQubits position);
 
   // Cost function calculation
   /**
@@ -311,7 +311,7 @@ protected:
    * @param swap The swap gate to compute the cost for
    * @return The cost of the swap gate
    */
-  qc::fp swapCost(const Swap&                            swap,
+  qc::fp swapCost(const Swap& swap,
                   const std::pair<Swaps, WeightedSwaps>& swapsFront,
                   const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
   /**
@@ -357,8 +357,8 @@ protected:
 public:
   // Constructors
   [[maybe_unused]] NeutralAtomMapper(const NeutralAtomMapper&) = delete;
-  NeutralAtomMapper& operator=(const NeutralAtomMapper&)       = delete;
-  NeutralAtomMapper(NeutralAtomMapper&&)                       = delete;
+  NeutralAtomMapper& operator=(const NeutralAtomMapper&) = delete;
+  NeutralAtomMapper(NeutralAtomMapper&&) = delete;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
                              const MapperParameters& p = MapperParameters())
       : arch(architecture), mappedQc(architecture.getNpositions()),
@@ -367,7 +367,7 @@ public:
                                       parameters.seed) {
     // need at least on free coordinate to shuttle
     if (architecture.getNpositions() - architecture.getNqubits() < 1) {
-      this->parameters.gateWeight      = 1;
+      this->parameters.gateWeight = 1;
       this->parameters.shuttlingWeight = 0;
     }
   };
@@ -379,7 +379,7 @@ public:
   void setParameters(const MapperParameters& p) {
     this->parameters = p;
     if (arch.getNpositions() - arch.getNqubits() < 1) {
-      this->parameters.gateWeight      = 1;
+      this->parameters.gateWeight = 1;
       this->parameters.shuttlingWeight = 0;
     }
     this->reset();
@@ -420,7 +420,7 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping          initialMapping);
+                             InitialMapping initialMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
@@ -430,8 +430,8 @@ public:
    * hardware qubits
    */
   [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      InitialMapping          initialMapping,
-                                      bool                    printInfo) {
+                                      InitialMapping initialMapping,
+                                      bool printInfo) {
     this->parameters.verbose = printInfo;
     map(qc, initialMapping);
     convertToAod(this->mappedQc);

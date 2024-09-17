@@ -7,18 +7,21 @@
 
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
-#include "cliffordsynthesis/encoding/TableauEncoder.hpp"
+#include "ir/operations/OpType.hpp"
+#include "logicblocks/LogicBlock.hpp"
+#include "logicblocks/LogicTerm.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
+#include <plog/Log.h>
+#include <utility>
 
 namespace cs::encoding {
 
 class ObjectiveEncoder {
 public:
   ObjectiveEncoder(const std::size_t nQubits, const std::size_t timestepLimit,
-                   GateEncoder::Variables*                vars,
+                   GateEncoder::Variables* vars,
                    std::shared_ptr<logicbase::LogicBlock> logicBlock)
       : N(nQubits), T(timestepLimit), gvars(vars), lb(std::move(logicBlock)) {}
 
