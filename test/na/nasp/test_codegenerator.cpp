@@ -34,7 +34,7 @@ h q[3];
 h q[4];
 h q[6];
 )";
-  const auto&       circ = qc::QuantumComputation::fromQASM(qasm);
+  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
   // create solver
   na::NASolver solver;
   solver.init(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);

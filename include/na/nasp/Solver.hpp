@@ -20,16 +20,16 @@ protected:
   static context ctx;
 
 private:
-  std::int32_t maxX           = 0;
-  std::int32_t maxY           = 0;
+  std::int32_t maxX = 0;
+  std::int32_t maxY = 0;
   std::int32_t minEntanglingY = 0;
   std::int32_t maxEntanglingY = 0;
-  std::int32_t maxC           = 0;
-  std::int32_t maxR           = 0;
-  std::int32_t maxHOffset     = 0;
-  std::int32_t maxVOffset     = 0;
-  std::int32_t maxHDist       = 0;
-  std::int32_t maxVDist       = 0;
+  std::int32_t maxC = 0;
+  std::int32_t maxR = 0;
+  std::int32_t maxHOffset = 0;
+  std::int32_t maxVOffset = 0;
+  std::int32_t maxHDist = 0;
+  std::int32_t maxVDist = 0;
 
   enum class Storage : std::uint8_t { None, Bottom, TwoSided };
 
@@ -42,13 +42,13 @@ private:
   class Qubit {
   private:
     std::uint16_t id;
-    expr          x;
-    expr          y;
-    expr          a;
-    expr          c;
-    expr          r;
-    expr          h;
-    expr          v;
+    expr x;
+    expr y;
+    expr a;
+    expr c;
+    expr r;
+    expr h;
+    expr v;
 
   public:
     [[nodiscard]] Qubit(const std::uint16_t id, const std::uint16_t t,
@@ -108,12 +108,12 @@ private:
 
   class Stage {
   private:
-    std::uint16_t      t;
+    std::uint16_t t;
     std::vector<Qubit> qubits;
-    std::vector<expr>  loadCols;
-    std::vector<expr>  loadRows;
-    std::vector<expr>  storeCols;
-    std::vector<expr>  storeRows;
+    std::vector<expr> loadCols;
+    std::vector<expr> loadRows;
+    std::vector<expr> storeCols;
+    std::vector<expr> storeRows;
 
   public:
     [[nodiscard]] explicit Stage(
@@ -174,12 +174,12 @@ private:
     }
   };
 
-  std::uint16_t                numQubits    = 0;
-  std::uint16_t                numStages    = 0;
+  std::uint16_t numQubits = 0;
+  std::uint16_t numStages = 0;
   std::optional<std::uint16_t> numTransfers = std::nullopt;
-  std::vector<Stage>           stages;
-  std::vector<expr>            transfers;
-  std::vector<expr>            gates;
+  std::vector<Stage> stages;
+  std::vector<expr> transfers;
+  std::vector<expr> gates;
 
   /// Initializes the variables for all stages and all qubits
   auto initVariables() -> void;
@@ -269,7 +269,7 @@ public:
     private:
       std::int32_t x;
       std::int32_t y;
-      bool         a;
+      bool a;
       std::int32_t c;
       std::int32_t r;
       std::int32_t h;
@@ -301,18 +301,18 @@ public:
 
     class Gate {
     private:
-      std::uint16_t                   stage = 0;
+      std::uint16_t stage = 0;
       std::pair<qc::Qubit, qc::Qubit> qubits;
 
     public:
       [[nodiscard]] Gate() = default;
 
-      [[nodiscard]] Gate(const std::uint16_t                    stage,
+      [[nodiscard]] Gate(const std::uint16_t stage,
                          const std::pair<qc::Qubit, qc::Qubit>& qubits)
           : stage(stage), qubits(qubits) {}
 
       [[nodiscard]]
-      Gate(const std::uint16_t               stage,
+      Gate(const std::uint16_t stage,
            std::pair<qc::Qubit, qc::Qubit>&& qubits) noexcept
           : stage(stage), qubits(std::move(qubits)) {}
 
@@ -333,9 +333,9 @@ public:
 
     class Stage {
     private:
-      bool               rydberg = true;
+      bool rydberg = true;
       std::vector<Qubit> qubits;
-      std::vector<Gate>  gates;
+      std::vector<Gate> gates;
 
     public:
       [[nodiscard]] Stage() = default;
@@ -384,7 +384,7 @@ public:
     };
 
   private:
-    bool               sat = false;
+    bool sat = false;
     std::vector<Stage> stages;
 
   public:
@@ -420,8 +420,8 @@ public:
       return stages.end();
     }
 
-    [[nodiscard]] auto yaml(std::size_t indent  = 0,
-                            bool        compact = true) const -> std::string;
+    [[nodiscard]] auto yaml(std::size_t indent = 0,
+                            bool compact = true) const -> std::string;
 
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };

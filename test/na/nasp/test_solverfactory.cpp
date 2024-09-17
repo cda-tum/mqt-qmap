@@ -117,7 +117,7 @@ TEST(SolverFactory, Create) {
         }
     ]
 })");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
   for (std::size_t y = 0; y <= 36; y += 12) {
@@ -140,8 +140,8 @@ TEST(SolverFactory, Create) {
   // total: 1296 sites
   arch.fromFileStream(archIS, gridSS);
   // create solver
-  auto              solver = na::SolverFactory::create(arch);
-  const std::string qasm   = R"(OPENQASM 2.0;
+  auto solver = na::SolverFactory::create(arch);
+  const std::string qasm = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
 h q[0];
@@ -165,7 +165,7 @@ h q[3];
 h q[4];
 h q[6];
 )";
-  const auto&       circ   = qc::QuantumComputation::fromQASM(qasm);
+  const auto& circ = qc::QuantumComputation::fromQASM(qasm);
   // get operations for solver
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
@@ -281,7 +281,7 @@ TEST(SolverFactory, CreateExceptions) {
         }
     ]
 })");
-  std::stringstream  gridSS;
+  std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (1 x 36 = 36 sites)
   for (std::size_t y = 0; y <= 0; y += 12) {

@@ -483,16 +483,16 @@ auto NASolver::init(const std::uint16_t newMaxX, const std::uint16_t newMaxY,
                     const std::uint16_t newMaxVDist,
                     const std::uint16_t newMinEntanglingY,
                     const std::uint16_t newMaxEntanglingY) -> void {
-  maxX           = newMaxX;
-  maxY           = newMaxY;
+  maxX = newMaxX;
+  maxY = newMaxY;
   minEntanglingY = newMinEntanglingY;
   maxEntanglingY = newMaxEntanglingY;
-  maxC           = newMaxC;
-  maxR           = newMaxR;
-  maxHOffset     = newMaxHOffset;
-  maxVOffset     = newMaxVOffset;
-  maxHDist       = newMaxHDist;
-  maxVDist       = newMaxVDist;
+  maxC = newMaxC;
+  maxR = newMaxR;
+  maxHOffset = newMaxHOffset;
+  maxVOffset = newMaxVOffset;
+  maxHDist = newMaxHDist;
+  maxVDist = newMaxVDist;
   if (minEntanglingY == 0 && maxEntanglingY < maxY) {
     storage = Storage::Bottom;
   } else if (minEntanglingY > 0 && maxEntanglingY < maxY) {
@@ -509,16 +509,16 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                      const std::uint16_t newNumQubits,
                      const std::uint16_t newNumStages,
                      const std::uint16_t newNumTransfers,
-                     const bool          mindOpsOrder,
-                     const bool          shieldIdleQubits) -> Result {
+                     const bool mindOpsOrder,
+                     const bool shieldIdleQubits) -> Result {
   if (shieldIdleQubits) {
     if (storage == Storage::None) {
       throw std::invalid_argument("No storage zone is available.");
     }
   }
 
-  numQubits    = newNumQubits;
-  numStages    = newNumStages;
+  numQubits = newNumQubits;
+  numStages = newNumStages;
   numTransfers = newNumTransfers;
 
   solver solver(ctx, "QF_BV");
@@ -551,8 +551,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   if (solver.check() == unsat) {
     return Result(false);
   }
-  const auto                 model  = solver.get_model();
-  std::uint16_t              nTrans = 0;
+  const auto model = solver.get_model();
+  std::uint16_t nTrans = 0;
   std::vector<Result::Stage> resultStages;
   resultStages.reserve(numStages);
   for (const auto& stage : stages) {
@@ -598,8 +598,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     }
   }
 
-  numQubits    = newNumQubits;
-  numStages    = newNumStages;
+  numQubits = newNumQubits;
+  numStages = newNumStages;
   numTransfers = std::nullopt;
   // CHANGE: instead of a fixed number of transfers
 
@@ -631,12 +631,12 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   if (solver.check() == unsat) {
     return Result(false);
   }
-  const auto                 model = solver.get_model();
+  const auto model = solver.get_model();
   std::vector<Result::Stage> resultStages;
   resultStages.reserve(numStages);
   for (const auto& stage : stages) {
     const bool rydberg = model.eval(transfers[stage.getT()]).is_false();
-    // CHANGE: Read boolan variable directly
+    // CHANGE: Read boolean variable directly
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
     for (std::uint16_t i = 0; i < numQubits; ++i) {
@@ -741,7 +741,7 @@ auto NASolver::Result::fromYAML(const YAML::Node& yaml) -> Result {
 
 auto NASolver::Result::Gate::fromYAML(const YAML::Node& yaml) -> Gate {
   Gate gate{};
-  gate.qubits.first  = yaml["qubits"][0].as<qc::Qubit>();
+  gate.qubits.first = yaml["qubits"][0].as<qc::Qubit>();
   gate.qubits.second = yaml["qubits"][1].as<qc::Qubit>();
   return gate;
 }
@@ -780,7 +780,7 @@ auto NASolver::Result::Stage::fromYAML(const YAML::Node& yaml) -> Stage {
 }
 
 auto NASolver::Result::yaml(const std::size_t indent,
-                            const bool        compact) const -> std::string {
+                            const bool compact) const -> std::string {
   std::stringstream ss;
   ss << std::boolalpha;
   ss << std::string(indent, ' ') << "sat: " << sat << "\n";

@@ -27,7 +27,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto maxR =
       static_cast<std::uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
   const auto storageZone = arch.getInitialZones().front();
-  const auto maxY        = static_cast<std::uint16_t>(
+  const auto maxY = static_cast<std::uint16_t>(
       maxEntanglingY + arch.getNrowsInZone(storageZone));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
@@ -40,18 +40,18 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   // and solve the resulting quadratic equation. For the solution we take the
   // flooring of the positive solution. If the equation allows the horizontal
   // stacking factor to be one larger, we take that value.
-  const auto minAtomDistance          = arch.getMinAtomDistance();
-  const auto interactionRadius        = arch.getInteractionRadius();
-  const auto minAtomDistanceSquared   = std::pow(minAtomDistance, 2);
+  const auto minAtomDistance = arch.getMinAtomDistance();
+  const auto interactionRadius = arch.getInteractionRadius();
+  const auto minAtomDistanceSquared = std::pow(minAtomDistance, 2);
   const auto interactionRadiusSquared = std::pow(interactionRadius, 2);
-  const auto maxVDist                 = static_cast<std::uint16_t>(
+  const auto maxVDist = static_cast<std::uint16_t>(
       std::min(std::floor(.2 + std::sqrt(.8 * interactionRadiusSquared /
-                                                             minAtomDistanceSquared -
-                                                         .16)),
-                               std::floor(0.7071067811865475244 *
-                                              static_cast<double>(interactionRadius) /
-                                              static_cast<double>(minAtomDistance) +
-                                          1.)));
+                                             minAtomDistanceSquared -
+                                         .16)),
+               std::floor(0.7071067811865475244 *
+                              static_cast<double>(interactionRadius) /
+                              static_cast<double>(minAtomDistance) +
+                          1.)));
   const auto maxHDist =
       std::pow(maxVDist * minAtomDistance, 2) +
                       std::pow(maxVDist / 2 * minAtomDistance, 2) <=
@@ -62,7 +62,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
           ? static_cast<std::uint16_t>(maxVDist + 1)
           : maxVDist;
   const auto noInteractionRadius = arch.getNoInteractionRadius();
-  const auto firstSite           = arch.getSitesInZone(interactionZone)[0];
+  const auto firstSite = arch.getSitesInZone(interactionZone)[0];
   const auto siteRight =
       arch.getNearestSiteRight(arch.getPositionOfSite(firstSite), true, true);
   const auto siteBelow =

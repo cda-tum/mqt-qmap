@@ -31,10 +31,10 @@ auto CodeGenerator::coordFromDiscrete(
     const std::int32_t v, const std::int32_t maxHOffset,
     const std::int32_t maxVOffset, const std::int32_t minEntanglingY,
     const std::int32_t maxEntanglingY) -> Point {
-  constexpr auto minAtomDist         = 1;
+  constexpr auto minAtomDist = 1;
   constexpr auto noInteractionRadius = 10;
   constexpr auto zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
-  const auto     dx       = static_cast<std::int64_t>(noInteractionRadius) +
+  const auto dx = static_cast<std::int64_t>(noInteractionRadius) +
                   2LL * maxHOffset * minAtomDist;
   const auto dy = static_cast<std::int64_t>(noInteractionRadius) +
                   2LL * maxVOffset * minAtomDist;
@@ -75,10 +75,10 @@ auto CodeGenerator::generate(
     const std::uint16_t maxHOffset, const std::uint16_t maxVOffset,
     const std::uint16_t minEntanglingY,
     const std::uint16_t maxEntanglingY) -> NAComputation {
-  Layer const                         layer(input);
-  NAComputation                       code;
+  Layer const layer(input);
+  NAComputation code;
   std::vector<std::shared_ptr<Point>> oldPositions;
-  std::vector<bool>                   wasAOD;
+  std::vector<bool> wasAOD;
   oldPositions.reserve(result.front().numQubits());
   wasAOD.reserve(result.front().numQubits());
   // initialize atoms in SLM and load required ones into AOD
@@ -109,7 +109,7 @@ auto CodeGenerator::generate(
                                              loadPositions);
     }
   }
-  const auto                ops = layer.getExecutablesOfType(H, 0);
+  const auto ops = layer.getExecutablesOfType(H, 0);
   std::unordered_set<Qubit> affectedQubits;
   std::transform(
       ops.cbegin(), ops.cend(),
@@ -133,7 +133,7 @@ auto CodeGenerator::generate(
           executableSet.begin(), executableSet.end(), [g](const auto& v) {
             if (v->getOperation()->getType() == Z &&
                 v->getOperation()->getNcontrols() == 1) {
-              const auto& usedQubits     = v->getOperation()->getUsedQubits();
+              const auto& usedQubits = v->getOperation()->getUsedQubits();
               const auto [first, second] = g.getQubits();
               return std::set{first, second} == usedQubits;
             }
@@ -158,10 +158,10 @@ auto CodeGenerator::generate(
     std::vector<std::shared_ptr<Point>> storeEndPositions;
     for (std::uint16_t i = 0;
          i < static_cast<std::uint16_t>(result.getStage(t).numQubits()); ++i) {
-      const auto& q   = result.getStage(t).getQubit(i);
-      auto        pos = std::make_shared<Point>(
+      const auto& q = result.getStage(t).getQubit(i);
+      auto pos = std::make_shared<Point>(
           coordFromDiscrete(q.getX(), q.getY(), q.getH(), q.getV(), maxHOffset,
-                                   maxVOffset, minEntanglingY, maxEntanglingY));
+                            maxVOffset, minEntanglingY, maxEntanglingY));
       if (wasAOD[i] && q.isAOD()) {
         startPositions.emplace_back(oldPositions[i]);
         endPositions.emplace_back(pos);
@@ -199,7 +199,7 @@ auto CodeGenerator::generate(
           executableSet.begin(), executableSet.end(), [g](const auto& v) {
             if (v->getOperation()->getType() == Z &&
                 v->getOperation()->getNcontrols() == 1) {
-              const auto& usedQubits     = v->getOperation()->getUsedQubits();
+              const auto& usedQubits = v->getOperation()->getUsedQubits();
               const auto [first, second] = g.getQubits();
               return std::set{first, second} == usedQubits;
             }
@@ -221,7 +221,7 @@ auto CodeGenerator::generate(
         throw std::invalid_argument(
             "Not all non CZ-gates in input circuit are executed.");
       }
-      const auto  q   = v->getOperation()->getTargets().front();
+      const auto q = v->getOperation()->getTargets().front();
       const auto& pos = oldPositions[q];
       code.emplaceBack(std::make_unique<NALocalOperation>(
           FullOpType{RZ, 0}, std::vector{PI}, pos));

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "na/Configuration.hpp"
 #include "Definitions.hpp"
+#include "na/Configuration.hpp"
 #include "na/NADefinitions.hpp"
 
 #include <algorithm>
