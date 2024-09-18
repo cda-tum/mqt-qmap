@@ -1,4 +1,4 @@
-#include "NAGraphAlgorithms.hpp"
+#include "na/nalac/NAGraphAlgorithms.hpp"
 
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"

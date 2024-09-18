@@ -1,15 +1,15 @@
-#include "nasp/CodeGenerator.hpp"
+#include "na/nasp/CodeGenerator.hpp"
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "datastructures/Layer.hpp"
 #include "na/NAComputation.hpp"
 #include "na/NADefinitions.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
-#include "nasp/Solver.hpp"
-#include "operations/OpType.hpp"
+#include "na/nasp/Solver.hpp"
+#include "ir/operations/OpType.hpp"
 
 #include <algorithm>
 #include <cstddef>

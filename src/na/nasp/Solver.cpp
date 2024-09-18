@@ -1,4 +1,4 @@
-#include "nasp/Solver.hpp"
+#include "na/nasp/Solver.hpp"
 
 #include "Definitions.hpp"
 

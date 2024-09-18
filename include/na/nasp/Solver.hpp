@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "yaml-cpp/node/node.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -10,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <yaml-cpp/node/node.h>
 #include <z3++.h>
 
 namespace na {

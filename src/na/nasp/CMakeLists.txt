@@ -7,7 +7,7 @@ if(NOT TARGET ${MQT_QMAP_NASP_TARGET_NAME})
   add_library(${MQT_QMAP_NASP_TARGET_NAME} ${NASP_HEADERS} ${NASP_SOURCES})
 
   target_include_directories(${MQT_QMAP_NASP_TARGET_NAME}
-                             PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/na/nasp>)
+                             PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
   target_link_libraries(
     ${MQT_QMAP_NASP_TARGET_NAME}

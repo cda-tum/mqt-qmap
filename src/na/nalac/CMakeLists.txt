@@ -7,7 +7,7 @@ if(NOT TARGET ${MQT_QMAP_NALAC_TARGET_NAME})
   add_library(${MQT_QMAP_NALAC_TARGET_NAME} ${NALAC_HEADERS} ${NALAC_SOURCES})
 
   target_include_directories(${MQT_QMAP_NALAC_TARGET_NAME}
-                             PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}/na/nalac>)
+                             PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
   target_link_libraries(
     ${MQT_QMAP_NALAC_TARGET_NAME}

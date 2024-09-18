@@ -1,4 +1,4 @@
-#include "na/NAMapper.hpp"
+#include "na/nalac/NAMapper.hpp"
 
 #include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
@@ -9,7 +9,7 @@
 #include "na/Architecture.hpp"
 #include "na/Configuration.hpp"
 #include "na/NADefinitions.hpp"
-#include "na/NAGraphAlgorithms.hpp"
+#include "na/nalac/NAGraphAlgorithms.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
