@@ -1,7 +1,7 @@
-#include "Architecture.hpp"
-#include "QuantumComputation.hpp"
-#include "SolverFactory.hpp"
-#include "operations/OpType.hpp"
+#include "na/Architecture.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "na/nasp/SolverFactory.hpp"
+#include "ir/operations/OpType.hpp"
 
 #include <cstddef>
 #include <cstdint>
