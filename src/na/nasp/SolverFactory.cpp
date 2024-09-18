@@ -1,10 +1,10 @@
 #include "na/nasp/SolverFactory.hpp"
 
-#include "na/Architecture.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/nasp/Solver.hpp"
-#include "na/NADefinitions.hpp"
 #include "ir/operations/OpType.hpp"
+#include "na/Architecture.hpp"
+#include "na/NADefinitions.hpp"
+#include "na/nasp/Solver.hpp"
 
 #include <algorithm>
 #include <cmath>

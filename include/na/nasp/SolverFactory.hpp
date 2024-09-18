@@ -1,8 +1,8 @@
 #pragma once
 
-#include "na/Architecture.hpp"
-#include "ir/QuantumComputation.hpp"
 #include "Solver.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "na/Architecture.hpp"
 #include "na/NADefinitions.hpp"
 
 #include <utility>

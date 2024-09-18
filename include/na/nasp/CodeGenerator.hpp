@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ir/QuantumComputation.hpp"
 #include "Solver.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/NADefinitions.hpp"
 
