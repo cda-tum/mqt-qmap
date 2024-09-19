@@ -4,9 +4,9 @@
 #include "ir/operations/OpType.hpp"
 #include "na/nalac/NAGraphAlgorithms.hpp"
 
-#include <gtest/gtest.h>
 #include <algorithm>
 #include <cstddef>
+#include <gtest/gtest.h>
 #include <iterator>
 #include <numeric>
 #include <stdexcept>

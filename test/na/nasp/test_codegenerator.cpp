@@ -1,9 +1,9 @@
-#include "na/nasp/CodeGenerator.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "na/NAComputation.hpp"
+#include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
-#include "na/NAComputation.hpp"
-#include "ir/operations/OpType.hpp"
 
 #include <cstdint>
 #include <gtest/gtest.h>
