@@ -23,8 +23,8 @@ enum class NAMappingMethod : std::uint8_t {
 static const std::unordered_map<std::string, NAMappingMethod> STRING_TO_METHOD =
     {{"naive", NAMappingMethod::Naive},
      {"maximize parallelism", NAMappingMethod::MaximizeParallelismHeuristic}};
-[[nodiscard]] inline auto
-getMethodOfString(const std::string& method) -> NAMappingMethod {
+[[nodiscard]] inline auto getMethodOfString(const std::string& method)
+    -> NAMappingMethod {
   std::string methodLowerCase = method;
   std::transform(methodLowerCase.begin(), methodLowerCase.end(),
                  methodLowerCase.begin(),

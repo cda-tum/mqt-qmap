@@ -284,8 +284,9 @@ auto NAMapper::calculateMovements() -> void {
   }
 }
 
-auto NAMapper::checkApplicability(
-    const qc::Operation* op, const std::vector<Atom>& placement) const -> bool {
+auto NAMapper::checkApplicability(const qc::Operation* op,
+                                  const std::vector<Atom>& placement) const
+    -> bool {
   if (op->isCompoundOperation()) {
     // is global gate
     return true;
