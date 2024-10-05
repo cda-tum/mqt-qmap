@@ -104,5 +104,21 @@ if(BUILD_MQT_QMAP_BINDINGS)
   endif()
 endif()
 
+# Add YAML-CPP as a dependency.
+set(YAML_VERSION
+    0.8.0
+    CACHE STRING "YAML-CPP version")
+set(YAML_URL https://github.com/jbeder/yaml-cpp/archive/refs/tags/${YAML_VERSION}.tar.gz)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  FetchContent_Declare(yaml-cpp URL ${YAML_URL} FIND_PACKAGE_ARGS ${YAML_VERSION})
+  list(APPEND FETCH_PACKAGES yaml-cpp)
+else()
+  find_package(yaml-cpp ${YAML_VERSION} QUIET)
+  if(NOT yaml-cpp_FOUND)
+    FetchContent_Declare(yaml-cpp URL ${YAML_URL})
+    list(APPEND FETCH_PACKAGES yaml-cpp)
+  endif()
+endif()
+
 # Make all declared dependencies available.
 FetchContent_MakeAvailable(${FETCH_PACKAGES})

@@ -1,10 +1,4 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
-// information.
-//
-
-#include "na/NAGraphAlgorithms.hpp"
+#include "na/nalac/NAGraphAlgorithms.hpp"
 
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"

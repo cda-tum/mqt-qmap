@@ -1,8 +1,3 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
-
 #include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/QuantumComputation.hpp"
@@ -12,7 +7,8 @@
 #include "na/Architecture.hpp"
 #include "na/Configuration.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NAMapper.hpp"
+#include "na/NADefinitions.hpp"
+#include "na/nalac/NAMapper.hpp"
 #include "na/operations/NAGlobalOperation.hpp"
 #include "na/operations/NALocalOperation.hpp"
 #include "na/operations/NAShuttlingOperation.hpp"
@@ -29,81 +25,6 @@
 #include <vector>
 
 namespace na {
-auto validateAODConstraints(const NAComputation& comp) -> bool {
-  std::size_t counter = 1; // the first operation is `init at ...;`
-  for (const auto& naOp : comp) {
-    ++counter;
-    if (naOp->isShuttlingOperation()) {
-      const auto& shuttlingOp =
-          dynamic_cast<const NAShuttlingOperation&>(*naOp);
-      if (shuttlingOp.getStart().size() != shuttlingOp.getEnd().size()) {
-        return false;
-      }
-      for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
-        for (std::size_t j = i + 1; j < shuttlingOp.getStart().size(); ++j) {
-          const auto& s1 = shuttlingOp.getStart()[i];
-          const auto& s2 = shuttlingOp.getStart()[j];
-          const auto& e1 = shuttlingOp.getEnd()[i];
-          const auto& e2 = shuttlingOp.getEnd()[j];
-          if (*s1 == *s2) {
-            std::cout << "Error in op number " << counter
-                      << " (two start points identical)\n";
-            return false;
-          }
-          if (*e1 == *e2) {
-            std::cout << "Error in op number " << counter
-                      << " (two end points identical)\n";
-            return false;
-          }
-          if (s1->x == s2->x && e1->x != e2->x) {
-            std::cout << "Error in op number " << counter
-                      << " (columns not preserved)\n";
-            return false;
-          }
-          if (s1->y == s2->y && e1->y != e2->y) {
-            std::cout << "Error in op number " << counter
-                      << " (rows not preserved)\n";
-            return false;
-          }
-          if (s1->x < s2->x && e1->x >= e2->x) {
-            std::cout << "Error in op number " << counter
-                      << " (column order not preserved)\n";
-            return false;
-          }
-          if (s1->y < s2->y && e1->y >= e2->y) {
-            std::cout << "Error in op number " << counter
-                      << " (row order not preserved)\n";
-            return false;
-          }
-          if (s1->x > s2->x && e1->x <= e2->x) {
-            std::cout << "Error in op number " << counter
-                      << " (column order not preserved)\n";
-            return false;
-          }
-          if (s1->y > s2->y && e1->y <= e2->y) {
-            std::cout << "Error in op number " << counter
-                      << " (row order not preserved)\n";
-            return false;
-          }
-        }
-      }
-    } else if (naOp->isLocalOperation()) {
-      const auto& localOp = dynamic_cast<const NALocalOperation&>(*naOp);
-      for (std::size_t i = 0; i < localOp.getPositions().size(); ++i) {
-        for (std::size_t j = i + 1; j < localOp.getPositions().size(); ++j) {
-          const auto& a = localOp.getPositions()[i];
-          const auto& b = localOp.getPositions()[j];
-          if (*a == *b) {
-            std::cout << "Error in op number " << counter
-                      << " (identical positions)\n";
-            return false;
-          }
-        }
-      }
-    }
-  }
-  return true;
-}
 
 auto retrieveQuantumComputation(const NAComputation& nac,
                                 const Architecture& arch)
@@ -757,7 +678,7 @@ rz(3.9927041) q[7];)";
                 1, 1, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   const auto& result = mapper.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result));
+  EXPECT_TRUE(result.validateAODConstraints());
   EXPECT_TRUE(na::checkEquivalence(circ, result, arch));
   std::ignore = mapper.getStats();
   // ---------------------------------------------------------------------
@@ -766,13 +687,13 @@ rz(3.9927041) q[7];)";
                 3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper2.map(circ);
   const auto& result2 = mapper2.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result2));
+  EXPECT_TRUE(result2.validateAODConstraints());
   // ---------------------------------------------------------------------
   na::NAMapper mapper3(arch,
                        na::Configuration(1, 1, na::NAMappingMethod::Naive));
   mapper3.map(circ);
   const auto& result3 = mapper3.getResult();
-  EXPECT_TRUE(na::validateAODConstraints(result3));
+  EXPECT_TRUE(result3.validateAODConstraints());
   EXPECT_TRUE(na::checkEquivalence(circ, result3, arch));
   // ---------------------------------------------------------------------
 }
@@ -1010,7 +931,7 @@ ry(2.2154814) q;)";
                 3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }
 
 TEST(NAMapper, QAOA16NarrowEntangling) {
@@ -1246,5 +1167,5 @@ ry(2.2154814) q;)";
                 3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(na::validateAODConstraints(mapper.getResult()));
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }

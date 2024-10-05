@@ -1,8 +1,3 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
-
 #include "ir/operations/OpType.hpp"
 #include "na/Architecture.hpp"
 #include "na/Configuration.hpp"
@@ -197,6 +192,11 @@ TEST_F(NAArchitecture, GateProperty) {
   EXPECT_EQ(arch.getPropertiesOfOperation({qc::OpType::Z, 1}).fidelity, 0.9959);
   EXPECT_THROW(std::ignore = arch.getPropertiesOfOperation({qc::OpType::RX, 0}),
                std::invalid_argument);
+}
+
+TEST_F(NAArchitecture, Getter) {
+  EXPECT_EQ(arch.getNrowsInZone(0), 4);
+  EXPECT_EQ(arch.getNColsInZone(0), 36);
 }
 
 TEST_F(NAArchitecture, WithConfiguration) {

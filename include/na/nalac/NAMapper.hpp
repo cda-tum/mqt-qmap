@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "Architecture.hpp"
-#include "Configuration.hpp"
 #include "Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/Architecture.hpp"
+#include "na/Configuration.hpp"
 #include "na/NAComputation.hpp"
 #include "na/NADefinitions.hpp"
 
