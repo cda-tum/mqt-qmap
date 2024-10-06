@@ -52,8 +52,8 @@ public:
          << postprocessTime << '\n';
       return ss.str();
     }
-    friend auto operator<<(std::ostream& os,
-                           const Statistics& s) -> std::ostream& {
+    friend auto operator<<(std::ostream& os, const Statistics& s)
+        -> std::ostream& {
       return os << s.toString();
     }
   };
@@ -91,8 +91,8 @@ protected:
                        std::vector<Atom>& placement) const -> void;
   [[nodiscard]] static auto
   getMisplacement(const std::vector<Atom>& initial,
-                  const std::vector<qc::Qubit>& target,
-                  const qc::Qubit& q) -> std::int64_t;
+                  const std::vector<qc::Qubit>& target, const qc::Qubit& q)
+      -> std::int64_t;
   /**
    * @brief Move atoms from the entangling zone to the destination zone.
    * @param initialFreeSites The sites that are not yet occupied from the start
