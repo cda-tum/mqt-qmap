@@ -294,6 +294,10 @@ aer = "aer"
 iy = "iy"
 
 
+[tool.repo-review]
+ignore = ["GH200"]
+
+
 [tool.cibuildwheel]
 build = "cp3*"
 skip = "*-musllinux*"
