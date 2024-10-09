@@ -48,6 +48,16 @@ jobs:
     with:
       setup-z3: true
 
+  cd:
+    name: 🚀 CD
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cd)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-packaging.yml@v1.4
+    with:
+      setup-z3: true
+      # 4.13.0 has incorrectly tagged manylinux wheels
+      z3-version: 4.12.6
+
   required-checks-pass: # This job does nothing and is only used for branch protection
     name: 🚦 Check
     if: always()
@@ -57,6 +67,7 @@ jobs:
       - cpp-linter
       - python-tests
       - code-ql
+      - cd
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -78,5 +89,9 @@ jobs:
             ${{
               fromJSON(needs.change-detection.outputs.run-code-ql)
               && '' || 'code-ql,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cd)
+              && '' || 'cd,'
             }}
           jobs: ${{ toJSON(needs) }}
