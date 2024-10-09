@@ -18,6 +18,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <set>
@@ -442,6 +443,8 @@ std::size_t Mapper::getNextLayer(std::size_t idx) {
 }
 
 void Mapper::finalizeMappedCircuit() {
+  std::cout << "Starting finalization of mapped circuit\n";
+
   // add additional qubits if the architecture contains more qubits than the
   // circuit
   if (architecture->getNqubits() > qcMapped.getNqubits()) {
@@ -467,13 +470,20 @@ void Mapper::finalizeMappedCircuit() {
       qcMapped.addAncillaryQubit(physicalQubit, std::nullopt);
     }
   }
+
+  std::cout << "Unifiying quantum registers\n";
+
   // unify quantum registers
   qcMapped.unifyQuantumRegisters();
+
+  std::cout << "Optionally adding measurements\n";
 
   // append measurements according to output permutation
   if (results.config.addMeasurementsToMappedCircuit) {
     qcMapped.appendMeasurementsAccordingToOutputPermutation();
   }
+
+  std::cout << "Finalization of mapped circuit finished\n";
 }
 
 void Mapper::placeRemainingArchitectureQubits() {

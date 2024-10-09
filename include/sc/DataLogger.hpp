@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <string>
 #include <utility>
@@ -66,7 +67,9 @@ public:
     if (deactivated) {
       return;
     }
+    std::cout << "Logging output circuit\n";
     qc.dump(dataLoggingPath + "/output.qasm", qc::Format::OpenQASM3);
+    std::cout << "Done logging output circuit\n";
   }
   void close();
 
