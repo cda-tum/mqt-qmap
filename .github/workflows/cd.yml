@@ -23,6 +23,10 @@ jobs:
       no-local-version: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
       # Do not build emulated wheels on pushes to main to reduce runner load for CD.
       build-emulated-wheels: ${{ github.ref != 'refs/heads/main' || github.event_name != 'push' }}
+      # Make sure Z3 is available
+      setup-z3: true
+      # 4.13.0 has incorrectly tagged manylinux wheels
+      z3-version: 4.12.6
 
   # Downloads the previously generated artifacts and deploys to TestPyPI on pushes to main
   deploy-test-pypi:
