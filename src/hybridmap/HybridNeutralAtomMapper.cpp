@@ -34,6 +34,7 @@
 #include <iomanip>
 
 namespace na {
+
 qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
                                               InitialMapping initialMapping,
                                               InitialCoordinateMapping initialCoordinateMapping) {
@@ -42,12 +43,14 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
   nSwaps     = 0;
   nBridges   = 0;
   nFAncillas = 0;
+  nFQubits   = 0;
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
+  qc::DAG dagUpdate = dag;
 
   // init mapping
   this->mapping = Mapping(arch.getNqubits(), initialMapping);
@@ -78,7 +81,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
   // init layers
   NeutralAtomLayer frontLayer(dag);
   frontLayer.initLayerOffset();
-  mapAllPossibleGates(frontLayer);
+  mapAllPossibleGates(frontLayer, dagUpdate);
   NeutralAtomLayer lookaheadLayer(dag);
   lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
 
@@ -110,27 +113,29 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
       while (gatesToExecute.empty() && !this->frontLayerGate.empty()) {
         ++i;
         if (this->parameters.verbose) {
-          std::cout << "iteration " << i << '\n';
+          std::cout << "\niteration " << i << '\n';
         }
 
         // find swap
         auto bestSwap = findBestSwap(lastSwap);
         
         // find bridge
-        auto allBridges = findAllBridges(qc);
-        auto ExecutableBridges = bridgeCostCompareWithSwap(allBridges, bestSwap, dag, frontLayer);
+        auto allBridges = findAllBridges(qc, bestSwap);
+        std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges;
+        if(!allBridges.empty()){
+          ExecutableBridges = compareCostBridgeSwap(allBridges, bestSwap, dagUpdate, frontLayer, qc);
+        }
 
         // execute bridge gate
         if(!ExecutableBridges.empty()){
-          updateMappingBridge(ExecutableBridges, frontLayer, lookaheadLayer);
-          mapAllPossibleGates(frontLayer);
+          updateMappingBridge(ExecutableBridges, frontLayer, lookaheadLayer, dagUpdate);
+          mapAllPossibleGates(frontLayer, dagUpdate);
           lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
           reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
           if (this->parameters.verbose) {
             printLayers();
           }
         }
-
         // execute swap gate
         else{
           lastSwap      = bestSwap;
@@ -138,7 +143,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
         }
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
-      mapAllPossibleGates(frontLayer);
+      mapAllPossibleGates(frontLayer, dagUpdate);
       lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
       if (this->parameters.verbose) {
@@ -151,26 +156,33 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
       while (gatesToExecute.empty() && !this->frontLayerShuttling.empty()) {
         ++i;
         if (this->parameters.verbose) {
-          std::cout << "iteration " << i << '\n';
+          std::cout << "\niteration " << i << '\n';
         }
 
         // find best move
-        auto [bestMove, opForMove] = findBestAtomMoveWithOp();
+        auto [bestMove, bestMoveComb, opForMove] = findBestAtomMoveWithOp();
 
         // find flying ancilla
-        auto [bestFA, numPassby] = findBestFlyingAncilla(qc, opForMove);
+        auto bestFA = findBestFlyingAncilla(qc, opForMove);
 
-        // TODO: compare shuttling vs f.a.
-        auto useShuttling = compareShuttlingAndFlyingancilla(bestMove, bestFA, dag, frontLayer);
+        // find best flying qubit
+        auto bestFQ = findBestFlyingQubit(qc, opForMove);
+
+        // compare shuttling vs f.a.
+        auto [useShuttling, useFlyingAncilla] = compareCostMoveFAandFQ(bestMoveComb, bestFA, bestFQ, opForMove, dagUpdate, frontLayer, qc);
 
         // execute shuttling
         if(useShuttling){
           updateMappingMove(bestMove);
         } 
-        // execute flying ancilla
+        // execute flying ancilla / qubit
         else{
-          updateMappingFlyingAncilla(bestFA, opForMove, numPassby, frontLayer, lookaheadLayer);
-          mapAllPossibleGates(frontLayer);
+          if(useFlyingAncilla){
+            updateMappingFlyingAncilla(bestFA, opForMove, frontLayer, lookaheadLayer);
+          } else{
+            updateMappingFlyingQubit(bestFQ, opForMove, frontLayer, lookaheadLayer);
+          }
+          mapAllPossibleGates(frontLayer, dagUpdate);
           lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
           reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
           if(this->parameters.verbose){
@@ -180,7 +192,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
 
         gatesToExecute = getExecutableGates(frontLayer.getGates());
       }
-      mapAllPossibleGates(frontLayer);
+      mapAllPossibleGates(frontLayer, dagUpdate);
       lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
       reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
       if (this->parameters.verbose) {
@@ -192,6 +204,7 @@ qc::QuantumComputation NeutralAtomMapper::map(qc::QuantumComputation& qc,
     std::cout << "nSwaps: "     << nSwaps     << '\n';
     std::cout << "nBridges: "   << nBridges   << '\n';
     std::cout << "nFAncillas: " << nFAncillas << '\n';
+    std::cout << "nFQubits: "   << nFQubits   << '\n';
     std::cout << "nMoves: "     << nMoves     << '\n';
   }
   return mappedQc;
@@ -209,8 +222,9 @@ void NeutralAtomMapper::graphMatching(std::vector<CoordIndex>& qubitIndices, std
   for(uint32_t qubit=0; qubit<dag.size(); ++qubit){
     for(auto opPtr : dag[qubit]){
       auto* op = opPtr->get();
-      if(op->getUsedQubits().size() > 1){
-        for(auto i : op->getUsedQubits()){
+      auto usedQubits = op->getUsedQubits();
+      if(usedQubits.size() > 1){
+        for(auto i : usedQubits){
           if(i!=qubit){
             circGraph[qubit][i] += 1;
           }
@@ -345,10 +359,20 @@ void NeutralAtomMapper::graphMatching(std::vector<CoordIndex>& qubitIndices, std
 }
 
 
-void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {
+void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer, qc::DAG& dag) {
   // map single qubit gates
   for (const auto* opPointer : layer.getMappedSingleQubitGates()) {
     mapGate(opPointer);
+    // update dag
+    auto qubits = opPointer->getUsedQubits();
+    auto q = *qubits.begin();
+    auto it = std::find_if( dag[q].begin(), dag[q].end(),
+                            [opPointer](const std::unique_ptr<qc::Operation>* op){
+                                return op->get() == opPointer;
+                                });
+    if(it!=dag[q].end()){
+      dag[q].erase(it);
+    }
   }
   layer.removeGatesAndUpdate({});
   // check and map multi qubit gates
@@ -356,9 +380,30 @@ void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {
   while (!executableGates.empty()) {
     for (const auto* opPointer : layer.getMappedSingleQubitGates()) {
       mapGate(opPointer);
+      // update dag
+      auto qubits = opPointer->getUsedQubits();
+      auto q = *qubits.begin();
+      auto it = std::find_if( dag[q].begin(), dag[q].end(),
+                              [opPointer](const std::unique_ptr<qc::Operation>* op){
+                                  return op->get() == opPointer;
+                                  });
+      if(it!=dag[q].end()){
+        dag[q].erase(it);
+      }
     }
     for (const auto* opPointer : executableGates) {
       mapGate(opPointer);
+      // update dag
+      auto qubits = opPointer->getUsedQubits();
+      for(auto q : qubits){
+        auto it = std::find_if( dag[q].begin(), dag[q].end(),
+                                [opPointer](const std::unique_ptr<qc::Operation>* op){
+                                    return op->get() == opPointer;
+                                    });
+        if(it!=dag[q].end()){
+          dag[q].erase(it);
+        }
+      }
     }
     layer.removeGatesAndUpdate(executableGates);
     executableGates = getExecutableGates(layer.getGates());
@@ -471,7 +516,7 @@ void NeutralAtomMapper::printLayers() {
     std::cout << '\n';
   }
   std::cout << '\n';
-  std::cout << "l,g: ";
+  std::cout << "l,s: ";
   for (const auto* op : this->lookaheadLayerShuttling) {
     std::cout << op->getName() << " ";
     for (auto qubit : op->getUsedQubits()) {
@@ -1024,7 +1069,7 @@ AtomMove NeutralAtomMapper::findBestAtomMove() {
   return bestMove->first.getFirstMove();
 }
 
-std::pair<AtomMove, const qc::Operation*> NeutralAtomMapper::findBestAtomMoveWithOp() {
+std::tuple<AtomMove, MoveComb, const qc::Operation*> NeutralAtomMapper::findBestAtomMoveWithOp() {
   auto [moveCombs, moveCombsWithOp] = getAllMoveCombinationsWithOp();
 
   // compute cost for each move combination
@@ -1052,7 +1097,7 @@ std::pair<AtomMove, const qc::Operation*> NeutralAtomMapper::findBestAtomMoveWit
       break;
     }
   }
-  return make_pair(bestAtomMove.getFirstMove(), corresOp);
+  return make_tuple(bestAtomMove.getFirstMove(), bestAtomMove, corresOp);
 }
 
 qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) {
@@ -1555,6 +1600,7 @@ NeutralAtomMapper::estimateNumMove(const qc::Operation* opPointer) {
 
   return {minMoves, minTime};
 }
+      
 
 bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
   auto [minNumSwaps, minTimeSwaps] = estimateNumSwapGates(opPointer);
@@ -1579,40 +1625,199 @@ bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
          fidMoves * parameters.shuttlingWeight;
 }
 
-std::vector<std::pair<const qc::Operation*, Bridge>> NeutralAtomMapper::findAllBridges(qc::QuantumComputation& qc){
+std::vector<std::pair<const qc::Operation*, Bridge>> NeutralAtomMapper::findAllBridges(qc::QuantumComputation& qc, Swap bestSwap){
   std::vector<std::pair<const qc::Operation*, Bridge>> allBridges;
   for (const auto* op : this->frontLayerGate) {
-    size_t usedQubitSize = op->getUsedQubits().size();
-    Qubits nearbyQubits;
+    auto usedQubits = op->getUsedQubits();
+    size_t usedQubitSize = usedQubits.size();
     if(usedQubitSize == 2){
       // logical qubits
-      qc::Qubit q1 = *(op->getUsedQubits().begin());
-      qc::Qubit q2 = *(std::next( op->getUsedQubits().begin(), 1));
+      qc::Qubit q1 = *(usedQubits.begin());
+      qc::Qubit q2 = *(std::next( usedQubits.begin(), 1));
       // hardware qubits
       HwQubit h1 = this->mapping.getHwQubit(q1);
       HwQubit h2 = this->mapping.getHwQubit(q2);
-      qc::fp    dist = this->hardwareQubits.getSwapDistance(h1, h2);
+      qc::fp  dist = this->hardwareQubits.getSwapDistance(h1, h2);
+      qc::fp  distswap;
       if(dist == 1){
-        // get nearby
-        HwQubits h1Near = this->hardwareQubits.getNearbyQubits(h1);
-        HwQubits h2Near = this->hardwareQubits.getNearbyQubits(h2);
-        for(const auto& h : h1Near){
-          if(h2Near.find(h) != h2Near.end()){
-            qc::Qubit qBtw = this->mapping.getCircQubit(h);
-            if(qBtw < qc.getNqubits() && qBtw!=-1){
-              nearbyQubits.insert(qBtw);
+        //only consider the case that bestSwap can reduce the swap distance of targetOp
+        if (h1 == bestSwap.first) {
+          distswap = this->hardwareQubits.getSwapDistance(bestSwap.second, h2);
+        } else if (h1 == bestSwap.second) {
+          distswap = this->hardwareQubits.getSwapDistance(bestSwap.first, h2);
+        } else if (h2 == bestSwap.first) {
+          distswap = this->hardwareQubits.getSwapDistance(h1, bestSwap.second);
+        } else if (h2 == bestSwap.second) {
+          distswap = this->hardwareQubits.getSwapDistance(h1, bestSwap.first);
+        } 
+
+        if(distswap==0){
+          // get nearby
+          HwQubits h1Near = this->hardwareQubits.getNearbyQubits(h1);
+          HwQubits h2Near = this->hardwareQubits.getNearbyQubits(h2);
+          Qubits Qbtw;
+          for(const auto& h : h1Near){
+            if(h2Near.find(h) != h2Near.end()){
+              qc::Qubit qBtw = this->mapping.getCircQubit(h);
+              if(qBtw < qc.getNqubits() && qBtw!=-1){
+                Qbtw.insert( qBtw );
+              }
             }
           }
+          allBridges.emplace_back(op, Bridge(q1, q2, Qbtw));
         }
       }
-      allBridges.emplace_back(op, Bridge(q1,q2,nearbyQubits));
     }
   }
   return allBridges;
 }
 
+std::vector<std::pair<const qc::Operation*, Bridge>> NeutralAtomMapper::compareCostBridgeSwap(
+  std::vector<std::pair<const qc::Operation*, Bridge>> allBridges, Swap bestSwap,
+  const qc::DAG& dag, NeutralAtomLayer& frontLayer, qc::QuantumComputation& qc){
+
+  std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges;
+  std::vector< std::tuple<qc::fp, qc::fp, const qc::Operation*, Bridge> > bridgePairCost;
+  std::vector< std::tuple<qc::fp, qc::fp, const qc::Operation*, Bridge> > finalBridgePairCost;
+  qc::Qubit qs1 = this->mapping.getCircQubit(bestSwap.first);
+  qc::Qubit qs2 = this->mapping.getCircQubit(bestSwap.second);
+
+  int i=0;
+  for(auto bridgePair : allBridges){
+    auto op = bridgePair.first;
+    auto bridge = bridgePair.second;
+    qc::Qubit q1 = std::get<0>(bridge);
+    qc::Qubit q2 = std::get<1>(bridge);
+    Qubits    Qb = std::get<2>(bridge);
+
+    qc::fp requiredCNOTbridge = 0;
+    qc::fp requiredCNOTswap   = 0;
+    qc::fp bridgeCost = 0;
+    qc::fp swapCost = 0;
+    std::set<qc::Qubit> qGroup = {qs1, qs2};
+    for(auto q : qGroup){
+      if(q >= qc.getNqubits()) continue; 
+      auto tempIter = dag[q].begin();
+      qc::fp discountFactor = 1;
+      bool isFirstBridge = true;
+      while(tempIter < dag[q].end() && discountFactor > 0.5){
+        auto* dagOp = (*tempIter)->get();
+        auto dagOpUsedQubits = dagOp->getUsedQubits();
+        if(dagOpUsedQubits.size() != 1){
+          qc::fp distbefore = 0;
+          qc::fp distswap   = 0;
+          // if bridged gate -> ignore in calculating the cost
+          if(isFirstBridge && dagOpUsedQubits.size()==2 && *dagOpUsedQubits.begin()==q1 && *(std::next(dagOpUsedQubits.begin(), 1))==q2){
+            isFirstBridge = false;
+          }
+          else{
+            for(auto it1 = dagOpUsedQubits.begin(); it1 != dagOpUsedQubits.end(); ++it1){
+              qc::Qubit qi = *it1;
+              HwQubit pi = this->mapping.getHwQubit(qi);
+              for(auto it2 = std::next(it1); it2 != dagOpUsedQubits.end(); ++it2){
+                qc::Qubit qj = *it2;
+                HwQubit pj = this->mapping.getHwQubit(qj);
+
+                qc::fp dist = this->hardwareQubits.getSwapDistance(pi, pj);
+                distbefore += dist;
+                if (pi == bestSwap.first) {
+                  distswap += this->hardwareQubits.getSwapDistance(bestSwap.second, pj);
+                } else if (pi == bestSwap.second) {
+                  distswap += this->hardwareQubits.getSwapDistance(bestSwap.first, pj);
+                } else if (pj == bestSwap.first) {
+                  distswap += this->hardwareQubits.getSwapDistance(pi, bestSwap.second);
+                } else if (pj == bestSwap.second) {
+                  distswap += this->hardwareQubits.getSwapDistance(pi, bestSwap.first);
+                } else {
+                  distswap += dist;
+                }
+              }
+            }
+            requiredCNOTbridge += distbefore * discountFactor;
+            requiredCNOTswap   += distswap   * discountFactor;
+          }
+        }
+        else{
+          discountFactor *= (1-this->parameters.decay);
+        }
+        tempIter++;
+      }
+    }
+    // cost calculation
+    qc::fp bridgeFidelOp = std::pow(this->arch.getGateAverageFidelity("cz"), 3*allBridges.size());
+                              //std::pow(this->arch.getGateAverageFidelity("h"), 6*allBridges.size());
+    qc::fp swapFidelOp   = std::pow(this->arch.getGateAverageFidelity("cz"), 3);
+                              //std::pow(this->arch.getGateAverageFidelity("h"), 8);
+    qc::fp bridgeFidelRequired = std::pow(this->arch.getGateAverageFidelity("cz"), requiredCNOTbridge);
+    qc::fp swapFidelRequired   = std::pow(this->arch.getGateAverageFidelity("cz"), requiredCNOTswap);
+    qc::fp bridgeTime = std::exp(-requiredCNOTbridge * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    qc::fp swapTime   = std::exp(-requiredCNOTswap   * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+
+    bridgeCost = bridgeFidelOp * bridgeFidelRequired * bridgeTime;
+    swapCost   = swapFidelOp   * swapFidelRequired   * swapTime;
+    bridgePairCost.emplace_back( bridgeCost, swapCost, op, Bridge(q1, q2, Qb) );
+    //}
+  }
+
+  // if other bridgePair shares the same control or same target -> remove larger cost 
+  std::sort( bridgePairCost.begin(), bridgePairCost.end(),
+            [](const auto& lhs, const auto& rhs){
+              return std::get<0>(lhs) < std::get<0>(rhs);
+            });
+  std::vector<qc::Qubit> usedQubitsInBridge;
+  for(auto bridgePair : bridgePairCost){
+    auto bridge = std::get<3>(bridgePair);
+    auto q1 = std::get<0>(bridge);
+    auto q2 = std::get<1>(bridge);
+    auto Qb = std::get<2>(bridge);
+
+    auto itQ1 = std::find( usedQubitsInBridge.begin(), usedQubitsInBridge.end(), q1 );
+    auto itQ2 = std::find( usedQubitsInBridge.begin(), usedQubitsInBridge.end(), q2 );
+    for(auto qb : Qb){
+      auto itQb = std::find( usedQubitsInBridge.begin(), usedQubitsInBridge.end(), qb );
+      if( itQ1==usedQubitsInBridge.end() && itQ2==usedQubitsInBridge.end() && itQb==usedQubitsInBridge.end() ){
+        auto bridgeCost = std::get<0>(bridgePair);
+        auto swapCost   = std::get<1>(bridgePair);
+        auto op     = std::get<2>(bridgePair);
+        finalBridgePairCost.emplace_back( bridgeCost, swapCost, op, Bridge(q1, q2, {qb}) );
+        usedQubitsInBridge.push_back( q1 );
+        usedQubitsInBridge.push_back( q2 );
+        usedQubitsInBridge.push_back( qb );
+      }
+    }
+  }
+
+  // calculate the swap cost and bridge cost
+  qc::fp finalBridgeCost = 1;
+  qc::fp finalSwapCost   = 1;
+  for(auto bridgePair : finalBridgePairCost){
+    auto bridgeCost = std::get<0>(bridgePair);
+    auto swapCost   = std::get<1>(bridgePair);
+    auto op     = std::get<2>(bridgePair);
+    auto bridge = std::get<3>(bridgePair);
+     
+    auto q1 = std::get<0>(bridge);
+    auto q2 = std::get<1>(bridge);
+    auto Qb = std::get<2>(bridge);
+    finalBridgeCost *= bridgeCost;
+    finalSwapCost   *= swapCost;
+  }
+
+  // return ExecutableBridges
+  finalSwapCost = std::pow(finalSwapCost, 1.0/bridgePairCost.size());
+  if( finalBridgeCost >= finalSwapCost ){
+    for(auto bridgePair : bridgePairCost){
+      auto op     = std::get<2>(bridgePair);
+      auto bridge = std::get<3>(bridgePair);
+      ExecutableBridges.emplace_back(op, bridge);
+    }
+  }
+
+  return ExecutableBridges;
+}
+
 void NeutralAtomMapper::updateMappingBridge(std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges,
-    NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer){
+    NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer, qc::DAG& dag){
   // CX to Bridge
   //[q1] ---c--- = ---------c-----------c---
   //[qb]    |    = ---c---H-Z-H---c---H-Z-H-
@@ -1621,7 +1826,7 @@ void NeutralAtomMapper::updateMappingBridge(std::vector<std::pair<const qc::Oper
   //-> CZ to Bridge w/ QCO
   //[q1] -c- = -------c-----------c---
   //[qb]  |  = -c---H-Z-H---c---H-Z-H-
-  //[q2] -Z- = -Z-----------Z---------
+  //[q2] -Z- = -Z-----------Z--------
 
   GateList removeGates;
   for(auto bridgePair : ExecutableBridges){
@@ -1631,8 +1836,7 @@ void NeutralAtomMapper::updateMappingBridge(std::vector<std::pair<const qc::Oper
     qc::Qubit  q1 = std::get<0>(bridge);
     qc::Qubit  q2 = std::get<1>(bridge);
     Qubits Qb = std::get<2>(bridge);
-    auto it = Qb.begin();
-    qc::Qubit  qb = *it;
+    qc::Qubit qb = *Qb.begin();
     if (this->parameters.verbose) {
       std::cout << "bridged " << q1 << " " << q2 << " by using " << qb;
       std::cout << "  physical qubits: ";
@@ -1666,92 +1870,21 @@ void NeutralAtomMapper::updateMappingBridge(std::vector<std::pair<const qc::Oper
     if (std::find(lookaheadLayerGate.begin(), lookaheadLayerGate.end(), gate) != lookaheadLayerGate.end()) {
       lookaheadLayerGate.erase(std::find(lookaheadLayerGate.begin(), lookaheadLayerGate.end(), gate));
     }
-  }
-}
-
-std::vector<std::pair<const qc::Operation*, Bridge>> NeutralAtomMapper::bridgeCostCompareWithSwap(
-  std::vector<std::pair<const qc::Operation*, Bridge>> allBridges, Swap bestSwap,
-  const qc::DAG& dag, NeutralAtomLayer& frontLayer){
-  std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges;
-        
-  for(auto bridgePair : allBridges){
-    auto op = bridgePair.first;
-    auto bridge = bridgePair.second;
-    qc::Qubit  q1 = std::get<0>(bridge);
-    qc::Qubit  q2 = std::get<1>(bridge);
-    Qubits Qb = std::get<2>(bridge);
-    auto it = Qb.begin();
-    qc::Qubit  qb = *it;
-
-    // cost for front layer
-    qc::fp distbefore = 0;
-    qc::fp distswap   = 0;
-    HwQubit p1 = this->mapping.getHwQubit(q1);
-    HwQubit p2 = this->mapping.getHwQubit(q2);
-    distbefore += this->hardwareQubits.getSwapDistance(p1, p2);
-    if (p1 == bestSwap.first) {
-      distswap += this->hardwareQubits.getSwapDistance(bestSwap.second, p2);
-    } else if (p1 == bestSwap.second) {
-      distswap += this->hardwareQubits.getSwapDistance(bestSwap.first, p2);
-    } else if (p2 == bestSwap.first) {
-      distswap += this->hardwareQubits.getSwapDistance(p1, bestSwap.second);
-    } else if (p2 == bestSwap.second) {
-      distswap += this->hardwareQubits.getSwapDistance(p1, bestSwap.first);
-    } else {
-      distswap += this->hardwareQubits.getSwapDistance(p1, p2);
-    }
-    if(distbefore-distswap > 0) return ExecutableBridges;
-    
-    // cost for look-ahead window
-    qc::fp costBridge   = 0;
-    qc::fp costBestSwap = 0;
-    for (auto& q : {q1,q2}){
-      HwQubit  p = this->mapping.getHwQubit(q);
-      auto tempIter = dag[q].begin() + frontLayer.getIteratorOffset()[q] +1;
-      qc::fp discountFactor = 0.9;
-      while (tempIter < dag[q].end() && discountFactor> 0.1){
-        auto* dagOp = (*tempIter)->get();
-        if (dagOp->getUsedQubits().size() != 1){
-          Qubits usedQubits = dagOp->getUsedQubits();
-          qc::fp distbefore = 0;
-          qc::fp distswap   = 0;
-          for(auto it1 = usedQubits.begin(); it1 != usedQubits.end(); ++it1){
-            for(auto it2 = std::next(it1); it2 != usedQubits.end(); ++it2){
-              qc::Qubit qi = *it1;
-              qc::Qubit qj = *it2;
-              HwQubit pi = this->mapping.getHwQubit(qi);
-              HwQubit pj = this->mapping.getHwQubit(qj);
-
-              distbefore += this->hardwareQubits.getSwapDistance(pi, pj);
-              if (pi == bestSwap.first) {
-                distswap += this->hardwareQubits.getSwapDistance(bestSwap.second, pj);
-              } else if (pi == bestSwap.second) {
-                distswap += this->hardwareQubits.getSwapDistance(bestSwap.first, pj);
-              } else if (pj == bestSwap.first) {
-                distswap += this->hardwareQubits.getSwapDistance(pi, bestSwap.second);
-              } else if (pj == bestSwap.second) {
-                distswap += this->hardwareQubits.getSwapDistance(pi, bestSwap.first);
-              } else {
-                distswap += this->hardwareQubits.getSwapDistance(pi, pj);
-              }
-            }
-          }
-          costBridge   += distbefore * discountFactor;
-          costBestSwap += distswap   * discountFactor;
-          discountFactor *= 0.9;
-        }
-        tempIter++;
+    // update dag
+    auto qubits = gate->getUsedQubits();
+    for(auto q : qubits){
+      auto it = std::find_if( dag[q].begin(), dag[q].end(),
+                              [gate](const std::unique_ptr<qc::Operation>* op){
+                                  return op->get() == gate;
+                                  });
+      if(it!=dag[q].end()){
+        dag[q].erase(it);
       }
     }
-
-    if(costBridge <= costBestSwap && costBridge!=0){
-      ExecutableBridges.emplace_back( op, Bridge(q1,q2,Qb) );
-    }
   }
-  return ExecutableBridges;
 }
 
-std::pair<qc::QuantumComputation, uint32_t> NeutralAtomMapper::findBestFlyingAncilla(qc::QuantumComputation& qc, const qc::Operation* targetOp){
+qc::QuantumComputation NeutralAtomMapper::findBestFlyingAncilla(qc::QuantumComputation& qc, const qc::Operation* targetOp){
   // information of operation
   qc::QuantumComputation bestAddedQc;
   uint32_t bestNumPassby = 0;
@@ -1800,8 +1933,8 @@ std::pair<qc::QuantumComputation, uint32_t> NeutralAtomMapper::findBestFlyingAnc
         std::copy(Ctarget.begin(), Ctarget.end(), std::back_inserter(excludeCoords));
         std::copy(Csource.begin(), Csource.end(), std::back_inserter(excludeCoords));
 
-        std::vector<qc::Qubit> passbyQtarget;
-        std::copy(Qtarget.begin(), Qtarget.end(), std::back_inserter(passbyQtarget));
+        std::vector<CoordIndex> passbyCtarget;
+        std::copy(Ctarget.begin(), Ctarget.end(), std::back_inserter(passbyCtarget));
 
         std::vector<bool> needPassby(QsourceVec.size(), false);
         for(uint32_t i=0; i<QsourceVec.size(); i++){
@@ -1819,21 +1952,24 @@ std::pair<qc::QuantumComputation, uint32_t> NeutralAtomMapper::findBestFlyingAnc
           // 1. compare qs, qA 
           if(arch.getEuclideanDistance( this->arch.getCoordinate(ci), this->arch.getCoordinate(cA) ) > r_int ){
             // -> 1-1. passby (qA -> qi) 
-            addedQc.passby( qA, {qi} );
+            addedQc.passby( cA, {ci} );
             needPassby[i] = true;
             NumPassby++;
           }
-
           //-> cx (qi, qA)
           addedQc.cx(qi, qA);
 
           // 2. compare qA, {Qtarget, previous qAs}
           // -> 2-1. passby (cA -> Ct)
-          addedQc.passby(qA, passbyQtarget);
+          if(needPassby[i]){
+            addedQc.passby(ci, passbyCtarget);
+          }
+          else{
+            addedQc.passby(cA, passbyCtarget);
+          }
           NumPassby++;
-          passbyQtarget.push_back(qA);
+          passbyCtarget.push_back(cA);
         }  
-
         // 2-2. mcz(Qtarget, Qancilla)
         qc::Controls mczControl;
         mczControl.insert( Qtarget.begin(), Qtarget.end() );
@@ -1843,18 +1979,23 @@ std::pair<qc::QuantumComputation, uint32_t> NeutralAtomMapper::findBestFlyingAnc
 
         // 3. passby -> cx
         for(uint32_t i=0; i<QsourceVec.size(); i++){
+          auto qA = Qancilla[i];
+          auto qi = QsourceVec[i];
+          auto cA = Cancilla[i];
+          auto ci = Csource[i];
           if(needPassby[i]){
-            auto qA = Qancilla[i];
-            auto qi = QsourceVec[i];
-            auto cA = Cancilla[i];
-            auto ci = Csource[i];
-            addedQc.passby( qA, {qi} );
+            addedQc.passby( passbyCtarget[0], {ci} );
             NumPassby++;
           }
-          //else{ //TODO: where q_ancilla is moved?
-          //  addedQc.move( Qancilla[i], Cancilla[i] );
-          //}
+          else{
+            addedQc.move(passbyCtarget[0], cA);
+          }
           addedQc.cx(QsourceVec[i], Qancilla[i]);
+
+          // 4. move to original coordIdx
+          if(needPassby[i]){
+            addedQc.move(ci, cA);
+          }
         }
 
         // find bestAddedQc
@@ -1874,19 +2015,7 @@ std::pair<qc::QuantumComputation, uint32_t> NeutralAtomMapper::findBestFlyingAnc
       } while( std::next_permutation(QsourceVec.begin(), QsourceVec.end()) );
 
     }
-    // return the best result
-    if (this->parameters.verbose) {
-      std::cout << "best FA: " << bestIdx << "th) Qtarget: {";
-      for(auto i : bestQtarget){
-        std::cout << i << ", ";
-      }
-      std::cout << "} <- bestQsource: {";
-      for(auto i : bestQsource){
-        std::cout << i << ", ";
-      }
-      std::cout << "} w/ numFA: " << bestQsource.size() << "\n";
-    }
-    return std::make_pair(bestAddedQc, bestNumPassby);
+    return bestAddedQc;
   }
 }
 
@@ -1949,27 +2078,281 @@ CoordIndex NeutralAtomMapper::returnClosestAncillaCoord(const CoordIndex& c_targ
   return AncillaTargets[0];
 }
 
-bool NeutralAtomMapper::compareShuttlingAndFlyingancilla(AtomMove bestMove, qc::QuantumComputation& bestFA, const qc::DAG& dag, NeutralAtomLayer& frontLayer){
-  //TODO: implement cost function
-  return false;
+std::pair<bool, bool> NeutralAtomMapper::compareCostMoveFAandFQ(MoveComb bestMoveComb, qc::QuantumComputation& bestFA, qc::QuantumComputation& bestFQ,
+  const qc::Operation* targetOp, const qc::DAG& dag, NeutralAtomLayer& frontLayer, qc::QuantumComputation& qc){
+  
+  //make circuit using the bestMoveComb
+  qc::QuantumComputation bestMove;
+  bestMove = qc::QuantumComputation(arch.getNpositions());
+  std::vector<HwQubit> usedCoordsInMoveComb1, usedCoordsInMoveComb2;
+  // layout save
+  qc::Permutation layoutBefore = this->hardwareQubits.getHwToCoordIdx();
+  qc::Permutation layoutAfter  = layoutBefore;
+  std::vector<qc::Qubit> Qmoved;
+  for(auto move : bestMoveComb.moves){
+    auto c1 = move.first;
+    auto c2 = move.second;
+    auto itC1 = std::find( usedCoordsInMoveComb1.begin(), usedCoordsInMoveComb1.end(), c1 );
+    auto itC2 = std::find( usedCoordsInMoveComb2.begin(), usedCoordsInMoveComb2.end(), c2 );
+    if(itC1==usedCoordsInMoveComb1.end() && itC2==usedCoordsInMoveComb2.end()){
+      bestMove.move(c1, c2);
+      usedCoordsInMoveComb1.push_back( c1 );
+      usedCoordsInMoveComb2.push_back( c2 );
+      auto h1 = this->hardwareQubits.getHwQubit(c1);
+      auto h2 = this->hardwareQubits.getHwQubit(c2);
+      auto q1 = this->mapping.getCircQubit(h1);
+      //layout update
+      layoutAfter[h1] = c2;
+      Qmoved.push_back(q1);
+    }
+  }
+  bestMove.mcz( targetOp->getControls(), *targetOp->getTargets().begin() );
+  
+  // (1) calculate the Fidelity_requiredOp
+  qc::fp beforeFidelOp = 1;
+  qc::fp afterFidelOp  = 1;
+  // check the fidelity of required op (SWAP? or MOVE?)
+  int i=0;
+  for(auto q : Qmoved){
+    auto h = this->mapping.getHwQubit(q);
+    qc::fp discountFactor = 1;
+    if(q>=qc.getNqubits()) continue;
+    auto tempIter = dag[q].begin();
+    bool isTargetOp = true;
+    while(tempIter < dag[q].end() && discountFactor > 0.5){
+      auto* dagOp = (*tempIter)->get();
+      auto dagOpUsedQubits = dagOp->getUsedQubits();
+      if(dagOpUsedQubits.size() != 1){
+        qc::fp distbefore = 0;
+        qc::fp distafter  = 0;
+        qc::fp numMoveRequired = 0;
+        // if target op -> ignore in calculating the cost
+        if(isTargetOp && dagOp == targetOp){
+          isTargetOp = false;
+        }
+        else{
+          for(auto it1 = dagOpUsedQubits.begin(); it1 != dagOpUsedQubits.end(); ++it1){
+            qc::Qubit qi = *it1;
+            HwQubit hi = this->mapping.getHwQubit(qi);
+            for(auto it2 = std::next(it1); it2 != dagOpUsedQubits.end(); ++it2){
+              qc::Qubit qj = *it2;
+              HwQubit hj = this->mapping.getHwQubit(qj);
+
+              qc::fp dist = this->hardwareQubits.getSwapDistance(hi, hj);
+              distbefore += dist;
+
+              auto itQi = std::find(Qmoved.begin(), Qmoved.end(), qi);
+              auto itQj = std::find(Qmoved.begin(), Qmoved.end(), qj);
+              if(itQi == Qmoved.end()){
+                if(itQj == Qmoved.end()){
+                  //qi, qj is not moved
+                  distafter += dist;
+                }
+                else{
+                  //qj is moved to layoutAfter[hj]
+                  auto hMoved = this->hardwareQubits.getHwQubit(layoutAfter[hj]);
+                  if( hMoved < this->arch.getNqubits()){
+                    distafter += this->hardwareQubits.getSwapDistance( hMoved, hi );
+                  }
+                  else{
+                    // shuttling is required
+                    numMoveRequired++;
+                  }
+                }
+              }
+              else{
+                if(itQj == Qmoved.end()){
+                  //qi is moved to layoutAfter[hi]
+                  auto hMoved = this->hardwareQubits.getHwQubit(layoutAfter[hi]);
+                  if( hMoved < this->arch.getNqubits()){
+                    distafter += this->hardwareQubits.getSwapDistance( hMoved, hj );
+                  }
+                  else{
+                    // shuttling is required
+                    numMoveRequired++;
+                  }
+                }
+                else{
+                  //qi, qj is moved to layoutAfter[hi] and layoutAfter[hj] each.
+                  auto hiMoved = this->hardwareQubits.getHwQubit(layoutAfter[hi]);
+                  auto hjMoved = this->hardwareQubits.getHwQubit(layoutAfter[hj]);
+                  if( hiMoved < this->arch.getNqubits() ){
+                    if( hjMoved < this->arch.getNqubits() ){
+                      //hi and hj are both in the coordinate
+                      distafter += this->hardwareQubits.getSwapDistance( hiMoved, hjMoved );
+                    }
+                    else{
+                      //hj is far away
+                      numMoveRequired++;
+                    }
+                  }
+                  else{
+                    if( hjMoved < this->arch.getNqubits() ){
+                      //hi is far away
+                      numMoveRequired++;
+                    }
+                    else{
+                      //hi & hj are far away
+                      distafter += this->hardwareQubits.getSwapDistance( hiMoved, hjMoved );
+                    }
+                  }
+                }
+              }
+            }
+          }
+          beforeFidelOp *= std::pow( this->arch.getGateAverageFidelity("swap"), distbefore*discountFactor )
+                         * std::exp(-distbefore*discountFactor*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+          qc::fp afterFidelOpSwap = 1;
+          qc::fp afterFidelOpMove = 1;
+          if(distafter!=0){
+            afterFidelOpSwap *= std::pow( this->arch.getGateAverageFidelity("swap"), distafter*discountFactor )
+                             * std::exp(-distafter*discountFactor*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+          }
+          if(numMoveRequired!=0){
+            afterFidelOpMove *= std::pow( this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove) *
+                                          this->arch.getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+                                          this->arch.getShuttlingAverageFidelity(qc::OpType::AodDeactivate),
+                                          numMoveRequired*discountFactor)
+                                    * std::exp(-numMoveRequired*discountFactor * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+          }
+          afterFidelOp *= afterFidelOpSwap * afterFidelOpMove;
+        }
+      }
+      else{
+        discountFactor *= (1-this->parameters.decay);
+      }
+      tempIter++;
+    }
+  }
+ 
+  // (2) calculate the Fidelity_op @addedQc
+  qc::fp moveFidelOp = 1;
+  qc::fp FaFidelOp = 1;
+  qc::fp FqFidelOp = 1;
+  //-----------------------------------------------------
+  for(const auto& opPtr : bestMove){
+    const auto* op = opPtr.get();
+    if(op->getType() == qc::OpType::Move){
+      moveFidelOp *= this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove) *
+                     this->arch.getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+                     this->arch.getShuttlingAverageFidelity(qc::OpType::AodDeactivate)
+                  * std::exp(-0 * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    }
+    else{
+      auto usedQubits = op->getUsedQubits();
+      if(op->getType() == qc::OpType::Z){
+        std::string gateName;
+        if(usedQubits.size()==2) gateName = "cz";
+        else if(usedQubits.size()==3) gateName = "ccz";
+        else if(usedQubits.size()==4) gateName = "cccz";
+        else gateName = "ccccz";
+        moveFidelOp *= this->arch.getGateAverageFidelity(gateName)
+                    * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+      else{
+        moveFidelOp *= this->arch.getGateAverageFidelity(toString(op->getType()))
+                    * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+    }
+  }
+  //-----------------------------------------------------
+  for(const auto& opPtr : bestFA){
+    const auto* op = opPtr.get();
+    if(op->getType() == qc::OpType::PassBy){
+      FaFidelOp *= this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove) *
+                   this->arch.getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+                   this->arch.getShuttlingAverageFidelity(qc::OpType::AodDeactivate)
+                * std::exp(-0 * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    }  
+    else if(op->getType() == qc::OpType::Move){
+      FaFidelOp *= this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove)
+                * std::exp(-0 * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    }
+    else{
+      auto usedQubits = op->getUsedQubits();
+      if(op->getType() == qc::OpType::Z){
+        std::string gateName;
+        if(usedQubits.size()==2) gateName = "cz";
+        else if(usedQubits.size()==3) gateName = "ccz";
+        else if(usedQubits.size()==4) gateName = "cccz";
+        else gateName = "ccccz";
+        FaFidelOp *= this->arch.getGateAverageFidelity(gateName)
+                  * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+      else{
+        FaFidelOp *= this->arch.getGateAverageFidelity(toString(op->getType()))
+                  * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+    }
+  }
+  //-----------------------------------------------------
+  for(const auto& opPtr : bestFQ){
+    const auto* op = opPtr.get();
+    if(op->getType() == qc::OpType::PassBy){
+      FqFidelOp *= this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove) *
+                   this->arch.getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+                   this->arch.getShuttlingAverageFidelity(qc::OpType::AodDeactivate)
+                * std::exp(-0 * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    }  
+    else if(op->getType() == qc::OpType::Move){
+      FqFidelOp *= this->arch.getShuttlingAverageFidelity(qc::OpType::AodMove)
+                * std::exp(-0 * this->arch.getNqubits() / this->arch.getDecoherenceTime());
+    }
+    else{
+      auto usedQubits = op->getUsedQubits();
+      if(op->getType() == qc::OpType::Z){
+        std::string gateName;
+        if(usedQubits.size()==2) gateName = "cz";
+        else if(usedQubits.size()==3) gateName = "ccz";
+        else if(usedQubits.size()==4) gateName = "cccz";
+        else gateName = "ccccz";
+        FqFidelOp *= this->arch.getGateAverageFidelity(gateName)
+                  * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+      else{
+        FqFidelOp *= this->arch.getGateAverageFidelity(toString(op->getType()))
+                  * std::exp(-0*this->arch.getNqubits() / this->arch.getDecoherenceTime());
+      }
+    }
+  }
+
+  // compare final fidelity -> update Mapping
+  moveFidelOp *= afterFidelOp;
+  FaFidelOp *= beforeFidelOp;
+  FqFidelOp *= beforeFidelOp;
+
+  if(FaFidelOp > moveFidelOp || FqFidelOp > moveFidelOp){
+    if(FaFidelOp > FqFidelOp){
+      nFAncillas++;
+      return std::make_pair(false, true); //useShuttling, useFlyingAncilla;
+    }
+    else{
+      nFQubits++;
+      return std::make_pair(false, false); //useShuttling, useFlyingAncilla;
+    }
+  }
+  else{
+    return std::make_pair(true, false); //useShuttling, useFlyingAncilla;
+  }
 }
 
-void NeutralAtomMapper::updateMappingFlyingAncilla(qc::QuantumComputation& bestFA, const qc::Operation* targetOp, uint32_t numPassby,
+void NeutralAtomMapper::updateMappingFlyingAncilla(qc::QuantumComputation& bestFA, const qc::Operation* targetOp, 
   NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer){
   // add bestFA to mappedQc
   // TODO: solve the error (gate type pass_by could not be converted to OpenQASM)
 
   for(const auto& opPtr : bestFA){
     const auto* op = opPtr.get();
+    auto usedQubits = op->getUsedQubits();
     if(op->getType() == qc::OpType::H){
-      mappedQc.h(*op->getUsedQubits().begin());
+      mappedQc.h(*usedQubits.begin());
     }
     if(op->getType() == qc::OpType::Z){
-      if(op->getUsedQubits().size() > 1){
+      if(usedQubits.size() > 1){
         mappedQc.mcz(op->getControls(), op->getTargets()[0]);
       }
       else{
-        mappedQc.z(*op->getUsedQubits().begin());
+        mappedQc.z(*usedQubits.begin());
       }
     }
     if(op->getType() == qc::OpType::PassBy){
@@ -1991,9 +2374,146 @@ void NeutralAtomMapper::updateMappingFlyingAncilla(qc::QuantumComputation& bestF
   if(std::find( lookaheadLayerShuttling.begin(), lookaheadLayerShuttling.end(), targetOp ) != lookaheadLayerShuttling.end()){
     lookaheadLayerShuttling.erase( std::find( lookaheadLayerShuttling.begin(), lookaheadLayerShuttling.end(), targetOp ) );
   }
-  
-  nFAncillas += numPassby;
 }
 
+void NeutralAtomMapper::updateMappingFlyingQubit(qc::QuantumComputation& bestFQ, const qc::Operation* targetOp, 
+  NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer){
+  // add bestFQ to mappedQc
+  // TODO: solve the error (gate type pass_by could not be converted to OpenQASM)
+
+  for(const auto& opPtr : bestFQ){
+    const auto* op = opPtr.get();
+    auto usedQubits = op->getUsedQubits();
+    if(op->getType() == qc::OpType::H){
+      mappedQc.h(*usedQubits.begin());
+    }
+    if(op->getType() == qc::OpType::Z){
+      if(usedQubits.size() > 1){
+        mappedQc.mcz(op->getControls(), op->getTargets()[0]);
+      }
+      else{
+        mappedQc.z(*usedQubits.begin());
+      }
+    }
+    if(op->getType() == qc::OpType::PassBy){
+      mappedQc.passby(*op->getControls().begin(), op->getTargets());
+    }
+    if(op->getType() == qc::OpType::Move){
+      mappedQc.move(op->getTargets()[0], op->getTargets()[1]);
+    }
+  }
+
+  // remove original gate
+  GateList removeGates;
+  removeGates.push_back(targetOp);
+  frontLayer.removeGatesAndUpdate(removeGates);
+  lookaheadLayer.removeGatesAndUpdate(removeGates);
+  if(std::find( frontLayerShuttling.begin(), frontLayerShuttling.end(), targetOp ) != frontLayerShuttling.end()){
+    frontLayerShuttling.erase( std::find( frontLayerShuttling.begin(), frontLayerShuttling.end(), targetOp ) );
+  }
+  if(std::find( lookaheadLayerShuttling.begin(), lookaheadLayerShuttling.end(), targetOp ) != lookaheadLayerShuttling.end()){
+    lookaheadLayerShuttling.erase( std::find( lookaheadLayerShuttling.begin(), lookaheadLayerShuttling.end(), targetOp ) );
+  }
+}
+
+qc::QuantumComputation NeutralAtomMapper::findBestFlyingQubit(qc::QuantumComputation& qc, const qc::Operation* targetOp){
+  qc::QuantumComputation bestAddedQc;
+  uint32_t bestNumPassby = std::numeric_limits<int>::max();
+  int32_t bestNumParallel = std::numeric_limits<int>::min();
+ 
+  auto usedQubits    = targetOp->getUsedQubits();
+  auto QtargetSet = findQtargetSet( usedQubits );
+  if(!QtargetSet.empty()){
+    int idx = 0;
+    int bestNumMoves = std::numeric_limits<int>::max();
+
+    int bestIdx;
+    std::set<qc::Qubit> bestQtarget;
+    std::vector<qc::Qubit> bestQsource;
+    // #F.A. => (Q_source, Q_target) iteration
+    for(auto Qtarget : QtargetSet){
+      int numFQ = usedQubits.size() - Qtarget.size();
+      uint32_t NumPassby = 0;
+      std::set<qc::Qubit> Qsource;
+      std::set_difference(
+        usedQubits.begin(), usedQubits.end(),
+        Qtarget.begin(), Qtarget.end(),
+        std::inserter(Qsource, Qsource.end())
+      );
+
+      // permutate Qtarget & Qsource
+      std::vector<qc::Qubit> QsourceVec( Qsource.begin(), Qsource.end() );
+      do{
+        qc::QuantumComputation addedQc;
+        addedQc = qc::QuantumComputation(arch.getNpositions());
+        int32_t NumParallel = 0;
+        // generate MoveVector Group
+        std::vector<MoveVector> MoveVectorGroup;
+
+        // hardware qubits & coord inices
+        auto Htarget = this->mapping.getHwQubits( Qtarget );
+        auto Ctarget = this->hardwareQubits.getCoordIndices( Htarget );
+        std::vector<HwQubit> Hsource;
+        std::vector<CoordIndex> Csource;
+        for(auto qs : QsourceVec){
+          auto hs = this->mapping.getHwQubit(qs);
+          Hsource.push_back(hs);
+          auto cs = this->hardwareQubits.getCoordIndex(hs);
+          Csource.push_back(cs);
+        }
+        // 1. passby
+        std::vector<qc::Qubit> passbyCtarget;
+        std::copy(Ctarget.begin(), Ctarget.end(), std::back_inserter(passbyCtarget));
+        for(uint32_t i=0; i<QsourceVec.size(); i++){
+          auto qi = QsourceVec[i];
+          auto ci = Csource[i];
+
+          addedQc.passby(ci, passbyCtarget);
+          auto const Vector_i = this->arch.getVector(ci, *(Ctarget.begin()) );
+          MoveVectorGroup.push_back(Vector_i);
+          NumPassby++;
+          passbyCtarget.push_back(ci);
+        }  
+        // 2. mcz
+        addedQc.mcz(targetOp->getControls(), *targetOp->getTargets().begin()); 
+
+        // 3 move to original coordIdx
+        for(uint32_t i=0; i<QsourceVec.size(); i++){
+          auto qi = QsourceVec[i];
+          auto ci = Csource[i];
+          addedQc.move(*(Ctarget.begin()), ci);
+        }  
+
+        // find bestAddedQc based on the paralellism
+        qc::CircuitOptimizer::replaceMCXWithMCZ(addedQc);
+        if(MoveVectorGroup.size() >=2){
+          for(int i=1; i<MoveVectorGroup.size()-1 ; i++){
+            bool notOverlap = !MoveVectorGroup[0].overlap( MoveVectorGroup[i] );
+            bool sameDirection = (MoveVectorGroup[0].direction == MoveVectorGroup[i].direction);
+            bool include = (MoveVectorGroup[0].include(MoveVectorGroup[i]) || MoveVectorGroup[i].include(MoveVectorGroup[0]));
+            bool parallel = notOverlap || sameDirection || include;
+            if(parallel) NumParallel++;
+          }
+          if(bestNumParallel < NumParallel){
+            bestNumPassby = NumPassby;
+            bestNumParallel = NumParallel;
+            bestAddedQc = addedQc;
+          }
+        }
+        else{
+          if(bestNumPassby > NumPassby){
+            bestNumPassby = NumPassby;
+            bestNumParallel = NumParallel;
+            bestAddedQc = addedQc;
+          }
+        }
+
+      } while( std::next_permutation(QsourceVec.begin(), QsourceVec.end()) );
+
+    }
+    // return the best result
+    return bestAddedQc;
+  }
+}
 
 } // namespace na

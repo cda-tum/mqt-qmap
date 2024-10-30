@@ -36,6 +36,7 @@ using WeightedSwaps = std::vector<WeightedSwap>;
 using SwapDistance  = int32_t;
 // Bridges
 using Bridge        = std::tuple<qc::Qubit, qc::Qubit, Qubits>; //q_control, q_target, Q_between
+//using Bridge        = std::tuple<qc::Qubit, qc::Qubit, qc::Qubit>; //q_control, q_target, q_between
 using Bridges       = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;

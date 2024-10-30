@@ -208,10 +208,12 @@ public:
         return hwQubit;
       }
     }
-    throw std::runtime_error("There is no qubit at this coordinate " +
-                             std::to_string(coordIndex));
+    //throw std::runtime_error("There is no qubit at this coordinate " +
+    //                         std::to_string(coordIndex));
+    std::cout << "There is no qubit at this coordinate " << std::to_string(coordIndex) << "\n";
+    return -1;
   }
-
+  
   // Forwards from architecture class
 
   /**

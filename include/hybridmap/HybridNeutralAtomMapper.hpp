@@ -96,7 +96,11 @@ protected:
   uint32_t nSwaps     = 0;
   uint32_t nBridges   = 0;
   uint32_t nFAncillas = 0;
+  uint32_t nFQubits   = 0;
   uint32_t nMoves     = 0;
+
+  /////////////////////////////
+  std::vector<std::vector<qc::fp>> distanceCache;
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;
@@ -122,7 +126,7 @@ protected:
    * can be mapped.
    * @param layer The layer to map all possible gates for
    */
-  void mapAllPossibleGates(NeutralAtomLayer& layer);
+  void mapAllPossibleGates(NeutralAtomLayer& layer, qc::DAG& dag);
   /**
    * @brief Returns all gates that can be executed now
    * @param gates The gates to be checked
@@ -202,11 +206,15 @@ protected:
   getAllPossibleSwaps(const std::pair<Swaps, WeightedSwaps>& swapsFront) const;
   
   // Methods for bridge operations mapping
-  std::vector<std::pair<const qc::Operation*, Bridge>> findAllBridges(qc::QuantumComputation& qc);
-  std::vector<std::pair<const qc::Operation*, Bridge>> bridgeCostCompareWithSwap(
-    std::vector<std::pair<const qc::Operation*, Bridge>> allBridges, Swap bestSwap, const qc::DAG& dag, NeutralAtomLayer& frontLayer);
+  std::vector<std::pair<const qc::Operation*, Bridge>> findAllBridges(qc::QuantumComputation& qc, Swap bestSwap);
+  //std::vector<std::pair<const qc::Operation*, Bridge>> bridgeCostCompareWithSwap(
+  //  std::vector<std::pair<const qc::Operation*, Bridge>> allBridges, Swap bestSwap, 
+  //  const qc::DAG& dag, NeutralAtomLayer& frontLayer, qc::QuantumComputation& qc);
+  std::vector<std::pair<const qc::Operation*, Bridge>> compareCostBridgeSwap(
+    std::vector<std::pair<const qc::Operation*, Bridge>> allBridges, Swap bestSwap, 
+    const qc::DAG& dag, NeutralAtomLayer& frontLayer, qc::QuantumComputation& qc);
   void updateMappingBridge(std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges,
-    NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
+    NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer, qc::DAG& dag);
 
   /**
    * @brief Returns the next best shuttling move operation for the front layer.
@@ -222,7 +230,7 @@ protected:
    * @return The current best move operation
    */
   AtomMove findBestAtomMove();
-  std::pair<AtomMove, const qc::Operation*> findBestAtomMoveWithOp();
+  std::tuple<AtomMove, MoveComb, const qc::Operation*> findBestAtomMoveWithOp();
   /**
    * @brief Returns all possible move combinations for the front layer.
    * @details This includes direct moves, move away and multi-qubit moves.
@@ -247,12 +255,17 @@ protected:
                                     const CoordIndices& excludedCoords);
 
   // Methods for flying ancilla operations mapping
-  std::pair<qc::QuantumComputation, uint32_t> findBestFlyingAncilla(qc::QuantumComputation& qc, const qc::Operation* targetOp);
+  qc::QuantumComputation findBestFlyingAncilla(qc::QuantumComputation& qc, const qc::Operation* targetOp);
   std::set<std::set<qc::Qubit>> findQtargetSet( std::set<qc::Qubit>& usedQubits );
   CoordIndex returnClosestAncillaCoord(const CoordIndex& c_target, const CoordIndices& excludeCoords, qc::QuantumComputation& qc);
-  bool compareShuttlingAndFlyingancilla(AtomMove bestMove, qc::QuantumComputation& bestFA, const qc::DAG& dag, NeutralAtomLayer& frontLayer);
-  void updateMappingFlyingAncilla(qc::QuantumComputation& bestFA, const qc::Operation* targetOp, uint32_t numPassby,
+  std::pair<bool, bool> compareCostMoveFAandFQ(MoveComb bestMoveComb, qc::QuantumComputation& bestFA, qc::QuantumComputation& bestFQ,
+    const qc::Operation* targetOp, const qc::DAG& dag, NeutralAtomLayer& frontLayer, qc::QuantumComputation& qc);
+  void updateMappingFlyingAncilla(qc::QuantumComputation& bestFA, const qc::Operation* targetOp, 
     NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
+  void updateMappingFlyingQubit(qc::QuantumComputation& bestFQ, const qc::Operation* targetOp, 
+    NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
+  
+  qc::QuantumComputation findBestFlyingQubit(qc::QuantumComputation& qc, const qc::Operation* targetOp);
 
   // Helper methods
   /**
@@ -399,6 +412,7 @@ public:
       this->parameters.shuttlingWeight = 0;
     }
   };
+
 
   /**
    * @brief Sets the runtime parameters of the mapper.

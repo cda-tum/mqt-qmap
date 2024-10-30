@@ -86,8 +86,15 @@ public:
         return circQubit;
       }
     }
-    throw std::runtime_error("Hardware qubit: " + std::to_string(qubit) +
-                             " not found in mapping");
+    //throw std::runtime_error("Hardware qubit: " + std::to_string(qubit) +
+    //                         " not found in mapping");
+    std::cout << "Hardware qubit: " << std::to_string(qubit) << " not found in mapping\n";
+    return -1;
+  }
+
+  ////////////////////
+  const qc::Permutation& getCircToHw() const{
+    return circToHw;
   }
 
   /**
