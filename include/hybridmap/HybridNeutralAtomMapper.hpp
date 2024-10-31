@@ -7,7 +7,6 @@
 
 #include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
@@ -24,6 +23,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -363,8 +363,9 @@ public:
         hardwareQubits(*arch, p->initialMapping, p->seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
-      throw QMAPException("No free coordinates for shuttling but shuttling "
-                          "weight is greater than 0.");
+      throw std::runtime_error(
+          "No free coordinates for shuttling but shuttling "
+          "weight is greater than 0.");
     }
   };
   explicit NeutralAtomMapper(const NeutralAtomArchitecture& architecture,
@@ -379,8 +380,9 @@ public:
     this->parameters = &p;
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p.shuttlingWeight > 0) {
-      throw QMAPException("No free coordinates for shuttling but shuttling "
-                          "weight is greater than 0.");
+      throw std::runtime_error(
+          "No free coordinates for shuttling but shuttling "
+          "weight is greater than 0.");
     }
     this->reset();
   }

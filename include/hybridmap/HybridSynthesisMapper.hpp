@@ -9,8 +9,8 @@
 #include "HybridNeutralAtomMapper.hpp"
 #include "NeutralAtomArchitecture.hpp"
 #include "NeutralAtomUtils.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
 #include <fstream>
@@ -52,7 +52,7 @@ public:
   HybridSynthesisMapper() = delete;
   explicit HybridSynthesisMapper(
       const NeutralAtomArchitecture& arch,
-      const MapperParameters&        params = MapperParameters())
+      const MapperParameters& params = MapperParameters())
       : NeutralAtomMapper(arch, params) {}
 
   // Functions
@@ -63,11 +63,11 @@ public:
    * @param nQubits The number of qubits to be mapped.
    * @param initialMapping The initial mapping to be used.
    */
-  void initMapping(size_t         nQubits,
+  void initMapping(size_t nQubits,
                    InitialMapping initialMapping = InitialMapping::Identity) {
-    mappedQc      = qc::QuantumComputation(arch->getNpositions());
+    mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
-    mapping       = Mapping(nQubits, initialMapping);
+    mapping = Mapping(nQubits, initialMapping);
   }
 
   /**

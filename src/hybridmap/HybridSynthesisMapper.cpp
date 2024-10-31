@@ -5,9 +5,9 @@
 #include "hybridmap/HybridSynthesisMapper.hpp"
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -21,7 +21,7 @@ std::vector<qc::fp>
 HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
                                               bool alsoMap) {
   std::vector<std::pair<qc::QuantumComputation, qc::fp>> candidates;
-  size_t                                                 qcIndex = 0;
+  size_t qcIndex = 0;
   for (auto& qc : synthesisSteps) {
     if (this->parameters->verbose) {
       std::cout << "Evaluating synthesis step number " << qcIndex++ << "\n";
@@ -33,13 +33,13 @@ HybridSynthesisMapper::evaluateSynthesisSteps(qcs& synthesisSteps,
     qcIndex++;
   }
   std::vector<qc::fp> fidelities;
-  size_t              bestIndex    = 0;
-  qc::fp              bestFidelity = 0;
+  size_t bestIndex = 0;
+  qc::fp bestFidelity = 0;
   for (size_t i = 0; i < candidates.size(); ++i) {
     fidelities.push_back(candidates[i].second);
     if (candidates[i].second > bestFidelity) {
       bestFidelity = candidates[i].second;
-      bestIndex    = i;
+      bestIndex = i;
     }
   }
   if (alsoMap) {
@@ -77,7 +77,7 @@ void HybridSynthesisMapper::appendWithMapping(qc::QuantumComputation& qc) {
 }
 
 AdjacencyMatrix HybridSynthesisMapper::getCircuitAdjacencyMatrix() const {
-  auto            numCircQubits = synthesizedQc.getNqubits();
+  auto numCircQubits = synthesizedQc.getNqubits();
   AdjacencyMatrix adjMatrix(numCircQubits);
 
   for (uint32_t i = 0; i < numCircQubits; ++i) {

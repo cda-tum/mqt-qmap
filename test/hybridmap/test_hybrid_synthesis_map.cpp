@@ -3,9 +3,9 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "QuantumComputation.hpp"
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -16,7 +16,7 @@ namespace na {
 class TestParametrizedHybridSynthesisMapper
     : public ::testing::TestWithParam<std::string> {
 protected:
-  std::string                         testArchitecturePath = "architectures/";
+  std::string testArchitecturePath = "architectures/";
   std::vector<qc::QuantumComputation> circuits;
 
   void SetUp() override {
@@ -37,7 +37,7 @@ protected:
 };
 
 TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
-  auto arch   = NeutralAtomArchitecture(testArchitecturePath);
+  auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
   auto adjMatrix = mapper.getCircuitAdjacencyMatrix();
@@ -46,7 +46,7 @@ TEST_P(TestParametrizedHybridSynthesisMapper, AdjaencyMatrix) {
 }
 
 TEST_P(TestParametrizedHybridSynthesisMapper, EvaluateSynthesisStep) {
-  auto arch   = NeutralAtomArchitecture(testArchitecturePath);
+  auto arch = NeutralAtomArchitecture(testArchitecturePath);
   auto mapper = HybridSynthesisMapper(arch);
   mapper.initMapping(3);
   auto best = mapper.evaluateSynthesisSteps(circuits, false);
@@ -64,7 +64,7 @@ class TestHybridSynthesisMapper : public ::testing::Test {
 protected:
   NeutralAtomArchitecture arch =
       NeutralAtomArchitecture("architectures/rubidium.json");
-  HybridSynthesisMapper  mapper = HybridSynthesisMapper(arch);
+  HybridSynthesisMapper mapper = HybridSynthesisMapper(arch);
   qc::QuantumComputation qc;
 
   void SetUp() override {

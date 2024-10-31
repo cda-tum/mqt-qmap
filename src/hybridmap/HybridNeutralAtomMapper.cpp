@@ -6,7 +6,6 @@
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
