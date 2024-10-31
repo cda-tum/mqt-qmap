@@ -12,19 +12,19 @@
 namespace logicbase {
 class LogicTerm {
 private:
-  Logic*      lb    = nullptr;
-  uint64_t    id    = 0;
-  uint64_t    depth = 0U;
-  std::string name{};
+  Logic* lb = nullptr;
+  uint64_t id = 0;
+  uint64_t depth = 0U;
+  std::string name;
 
-  OpType                 opType  = OpType::Variable;
-  bool                   value   = false;
-  int                    iValue  = 0;
-  double                 fValue  = 0.;
-  uint64_t               bvValue = 0U;
-  uint16_t               bvSize  = 0;
-  std::vector<LogicTerm> nodes{};
-  CType                  cType = CType::BOOL;
+  OpType opType = OpType::Variable;
+  bool value = false;
+  int iValue = 0;
+  double fValue = 0.;
+  uint64_t bvValue = 0U;
+  uint16_t bvSize = 0;
+  std::vector<LogicTerm> nodes;
+  CType cType = CType::BOOL;
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   static inline uint64_t gid = 1;
@@ -122,17 +122,17 @@ public:
 
   [[nodiscard]] bool isConst() const;
 
-  [[nodiscard]] uint64_t                      getID() const { return id; }
+  [[nodiscard]] uint64_t getID() const { return id; }
   [[nodiscard]] const std::vector<LogicTerm>& getNodes() const { return nodes; }
-  [[nodiscard]] OpType             getOpType() const { return opType; }
-  [[nodiscard]] CType              getCType() const { return cType; }
+  [[nodiscard]] OpType getOpType() const { return opType; }
+  [[nodiscard]] CType getCType() const { return cType; }
   [[nodiscard]] const std::string& getName() const { return name; }
-  [[nodiscard]] Logic*             getLogic() const { return lb; }
-  [[nodiscard]] uint64_t           getDepth() const { return depth; }
+  [[nodiscard]] Logic* getLogic() const { return lb; }
+  [[nodiscard]] uint64_t getDepth() const { return depth; }
 
-  [[nodiscard]] bool     getBoolValue() const;
-  [[nodiscard]] int      getIntValue() const;
-  [[nodiscard]] double   getFloatValue() const;
+  [[nodiscard]] bool getBoolValue() const;
+  [[nodiscard]] int getIntValue() const;
+  [[nodiscard]] double getFloatValue() const;
   [[nodiscard]] uint64_t getBitVectorValue() const;
   [[nodiscard]] uint16_t getBitVectorSize() const;
 
@@ -159,14 +159,14 @@ public:
                                                  OpType op, Logic* logic);
 
   [[nodiscard]] static LogicTerm negateTerm(const LogicTerm& term,
-                                            Logic*           logic);
+                                            Logic* logic);
 
   [[nodiscard]] LogicTerm getBoolConversion() const;
 
   [[nodiscard]] static CType getTargetCType(const LogicTerm& a,
                                             const LogicTerm& b, OpType op);
 
-  [[nodiscard]] static CType getTargetCType(CType            targetType,
+  [[nodiscard]] static CType getTargetCType(CType targetType,
                                             const LogicTerm& b);
 
   [[nodiscard]] static std::vector<LogicTerm>
@@ -182,7 +182,7 @@ public:
 
 struct TermHash {
   std::size_t operator()(const LogicTerm& t) const;
-  bool        operator()(const LogicTerm& t1, const LogicTerm& t2) const;
+  bool operator()(const LogicTerm& t1, const LogicTerm& t2) const;
 };
 
 struct TermDepthComparator {

@@ -4,7 +4,7 @@
 // information.
 //
 
-#include "NAGraphAlgorithms.hpp"
+#include "na/NAGraphAlgorithms.hpp"
 
 #include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
@@ -30,8 +30,8 @@ namespace na {
 auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
     -> std::unordered_set<qc::Qubit> {
   std::unordered_set<qc::Qubit> result;
-  const auto&                   vertices = g.getVertices();
-  std::list<qc::Qubit>          queue(vertices.cbegin(), vertices.cend());
+  const auto& vertices = g.getVertices();
+  std::list<qc::Qubit> queue(vertices.cbegin(), vertices.cend());
   // sort the vertices by degree in descending order
   queue.sort([&](const auto& u, const auto& v) {
     return g.getDegree(u) > g.getDegree(v);
@@ -45,7 +45,7 @@ auto NAGraphAlgorithms::getMaxIndependentSet(const InteractionGraph& g)
   return result;
 }
 
-auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
+auto NAGraphAlgorithms::coveredEdges(const InteractionGraph& g,
                                      const std::unordered_set<qc::Qubit>& vs)
     -> std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> {
   std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>> result;
@@ -65,10 +65,10 @@ auto NAGraphAlgorithms::coveredEdges(const InteractionGraph&              g,
 
 auto NAGraphAlgorithms::getLeastAdmissibleColor(
     const std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>&
-                 coloring,
+        coloring,
     const Color& maxColor, const Edge& e, const qc::Qubit& v,
-    const std::vector<qc::Qubit>&                             sequence,
-    const qc::DirectedAcyclicGraph<qc::Qubit>&                partialOrder,
+    const std::vector<qc::Qubit>& sequence,
+    const qc::DirectedAcyclicGraph<qc::Qubit>& partialOrder,
     const std::unordered_map<std::pair<qc::Qubit, Color>, std::size_t,
                              qc::PairHash<qc::Qubit, Color>>& ranks) -> Color {
   // compute the minimum admissible color as the maximum color +1 of adjacent
@@ -105,13 +105,13 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
     }
     const auto leastAdmissibleColor =
         static_cast<Color>(i + minAdmissibleColor);
-    bool isAdmissable = true;
+    bool isAdmissible = true;
     for (const auto& [f, k] : coloring) {
       if (f.first == v or f.second == v) {
         const qc::Qubit w = f.first == v ? f.second : f.first;
         if (k > leastAdmissibleColor) {
           if (partialOrder.isReachable(w, u)) {
-            isAdmissable = false;
+            isAdmissible = false;
             break;
           }
         } else if (k < leastAdmissibleColor) {
@@ -129,12 +129,12 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
 
         if ((rankOfU > ranks.at({w, k}) && partialOrder.isReachable(w, u)) ||
             (rankOfU < ranks.at({w, k}) && partialOrder.isReachable(u, w))) {
-          isAdmissable = false;
+          isAdmissible = false;
           break;
         }
       }
     }
-    if (isAdmissable) {
+    if (isAdmissible) {
       return leastAdmissibleColor;
     }
   }
@@ -142,14 +142,14 @@ auto NAGraphAlgorithms::getLeastAdmissibleColor(
 }
 
 auto NAGraphAlgorithms::colorEdges(
-    const InteractionGraph&                                             g,
+    const InteractionGraph& g,
     const std::unordered_set<Edge, qc::PairHash<qc::Qubit, qc::Qubit>>& edges,
     const std::vector<qc::Qubit>& nodesQueue)
     -> std::pair<
         std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>,
         qc::DirectedAcyclicGraph<qc::Qubit>> {
   std::unordered_map<Edge, Color, qc::PairHash<qc::Qubit, qc::Qubit>>
-        coloring{};
+      coloring{};
   Color maxColor = 0;
   // number of distinct colors of edges adjacent to an edge
   std::unordered_map<Edge, std::size_t, qc::PairHash<qc::Qubit, qc::Qubit>>
@@ -188,18 +188,49 @@ auto NAGraphAlgorithms::colorEdges(
               [&](const Edge& a, const Edge& b) {
                 const auto u = a.first == v ? a.second : a.first;
                 const auto w = b.first == v ? b.second : b.first;
-                return partialOrder.isReachable(u, w) or
-                       (!partialOrder.isReachable(w, u) and
-                        (nAdjColors[a] > nAdjColors[b] or
-                         (nAdjColors[a] == nAdjColors[b] and
-                          edgeDegree[a] > edgeDegree[b])));
+                if (u == w) {
+                  // the compare function defines a proper less than relation,
+                  // i.e., equal elements must return false
+                  return false;
+                }
+                if (partialOrder.isReachable(u, w)) {
+                  // if w is reachable from u, then w needs to come after u,
+                  // i.e., u < w
+                  return true;
+                }
+                if (partialOrder.isReachable(w, u)) {
+                  // if u is reachable from w, then u needs to come after w,
+                  // i.e., w < u and not u < w
+                  return false;
+                }
+                // here: neither u is reachable from w nor w is reachable from u
+                if (nAdjColors[a] > nAdjColors[b]) {
+                  // this favours nodes with higher number of distinct colors
+                  // also see the original implementation of DSatur
+                  return true;
+                }
+                if (nAdjColors[a] < nAdjColors[b]) {
+                  // this is just the opposite of the above case
+                  return false;
+                }
+                // Here: nAdjColors[a] == nAdjColors[b]
+                if (edgeDegree[a] > edgeDegree[b]) {
+                  return true;
+                }
+                if (edgeDegree[a] < edgeDegree[b]) {
+                  return false;
+                }
+                return u < w;
+                // the last line together with the first clause (u != w) is
+                // necessary for a well-defined compare function to handle edges
+                // that compare equally correctly
               });
     for (const auto& e : adjacentEdges) {
       // color the edge
       coloring[e] = getLeastAdmissibleColor(coloring, maxColor, e, v,
                                             nodesQueue, partialOrder, ranks);
       // update partial order
-      const qc::Qubit u       = e.first == v ? e.second : e.first;
+      const qc::Qubit u = e.first == v ? e.second : e.first;
       ranks[{u, coloring[e]}] = static_cast<std::size_t>(
           std::distance(nodesQueue.cbegin(),
                         std::find(nodesQueue.cbegin(), nodesQueue.cend(), v)));
@@ -303,7 +334,7 @@ auto NAGraphAlgorithms::computeRestingPositions(
       if (moveableXs.find(v) == moveableXs.end()) {
         // index of v in moveable
         const auto& it = std::find(moveable.cbegin(), moveable.cend(), v);
-        const auto  i =
+        const auto i =
             static_cast<std::size_t>(std::distance(moveable.cbegin(), it));
         // get the index of the left neighbor in the keys of moveableXs
         std::vector<std::size_t> leftNeighbors;
@@ -403,9 +434,9 @@ auto NAGraphAlgorithms::computeRestingPositions(
 }
 
 auto NAGraphAlgorithms::groupByConnectedComponent(
-    const InteractionGraph&       g,
-    const std::vector<qc::Qubit>& sequence) -> std::vector<qc::Qubit> {
-  const auto&                vertices = g.getVertices();
+    const InteractionGraph& g, const std::vector<qc::Qubit>& sequence)
+    -> std::vector<qc::Qubit> {
+  const auto& vertices = g.getVertices();
   qc::DisjointSet<qc::Qubit> ds(vertices.cbegin(), vertices.cend());
   for (const qc::Qubit& v : vertices) {
     for (const qc::Qubit& u : vertices) {
@@ -427,7 +458,8 @@ auto NAGraphAlgorithms::groupByConnectedComponent(
   return result;
 }
 
-auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
+auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g,
+                                        const std::size_t maxSites)
     -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                  std::unordered_map<qc::Qubit, std::int64_t>> {
   const auto& maxIndepSet = getMaxIndependentSet(g);
@@ -437,11 +469,13 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
             [&](const auto& u, const auto& v) {
               return g.getDegree(u) > g.getDegree(v);
             });
-  const auto& sequence = groupByConnectedComponent(g, sequenceUngrouped);
-  const auto& [coloring, partialOrder] =
+  auto sequence = groupByConnectedComponent(g, sequenceUngrouped);
+  const auto& colorEdgesResult =
       colorEdges(g, coveredEdges(g, maxIndepSet), sequence);
-  const auto& fixed   = partialOrder.orderTopologically();
-  const auto& resting = computeRestingPositions(sequence, fixed, coloring);
+  auto coloring = colorEdgesResult.first;
+  auto partialOrder = colorEdgesResult.second;
+  auto fixed = partialOrder.orderTopologically();
+  auto resting = computeRestingPositions(sequence, fixed, coloring);
   // compute relative x positions of fixed vertices
   std::unordered_map<qc::Qubit, std::int64_t> fixedPositions{};
   for (std::uint32_t x = 0, i = 0; x < fixed.size(); ++x) {
@@ -450,6 +484,51 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
       ++i;
     }
   }
+
+  const auto maxSiteUsed =
+      std::max_element(
+          fixedPositions.cbegin(), fixedPositions.cend(),
+          [](const auto& a, const auto& b) { return a.second < b.second; })
+          ->second;
+  const auto maxSitesSigned = static_cast<std::int64_t>(maxSites);
+  if (maxSiteUsed >= maxSitesSigned) {
+    // Handle the situation when the entangling zone is not big enough to fit
+    // all fixed qubits
+    for (auto it = fixedPositions.begin(); it != fixedPositions.end();) {
+      if (it->second >= maxSitesSigned) {
+        it = fixedPositions.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    fixed.erase(std::remove_if(fixed.begin(), fixed.end(),
+                               [&fixedPositions](const auto& q) {
+                                 return fixedPositions.find(q) ==
+                                        fixedPositions.end();
+                               }),
+                fixed.end());
+    for (auto it = coloring.begin(); it != coloring.end();) {
+      if (fixedPositions.find(it->first.first) == fixedPositions.end() &&
+          fixedPositions.find(it->first.second) == fixedPositions.end()) {
+        it = coloring.erase(it); // erase returns the next iterator
+      } else {
+        ++it; // move to the next element
+      }
+    }
+    sequence.erase(std::remove_if(sequence.begin(), sequence.end(),
+                                  [&coloring](const auto& q) {
+                                    return !std::any_of(
+                                        coloring.cbegin(), coloring.cend(),
+                                        [q](const auto& elem) {
+                                          return elem.first.first == q ||
+                                                 elem.first.second == q;
+                                        });
+                                  }),
+                   sequence.end());
+    // recalculate resting positions
+    resting = computeRestingPositions(sequence, fixed, coloring);
+  }
+
   // compute relative x positions of moveable vertices at every timestamp
   const Color maxColor = std::accumulate(
       coloring.cbegin(), coloring.cend(), static_cast<Color>(0),
@@ -512,7 +591,7 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
               moveablePositions.at(t).cbegin(), moveablePositions.at(t).cend(),
               std::make_pair(0UL, 0LL),
               [](const std::pair<const qc::Qubit, std::int64_t>& acc,
-                 const auto&                                     value) {
+                 const auto& value) {
                 if (value.second > acc.second) {
                   return value;
                 }
@@ -520,9 +599,9 @@ auto NAGraphAlgorithms::computeSequence(const InteractionGraph& g)
               });
           // k is the number of spots between the left positioned neighbor and
           // the leftmost atom (including itself)
-          const auto         k = static_cast<std::size_t>(std::distance(
+          const auto k = static_cast<std::size_t>(std::distance(
               sequence.cbegin(), std::find(sequence.cbegin(), sequence.cend(),
-                                                   leftNeighbor.first)));
+                                           leftNeighbor.first)));
           const std::int64_t maxX =
               std::accumulate(fixedPositions.cbegin(), fixedPositions.cend(),
                               static_cast<std::int64_t>(0),

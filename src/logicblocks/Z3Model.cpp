@@ -1,7 +1,11 @@
 #include "Z3Model.hpp"
 
+#include "LogicBlock.hpp"
+#include "LogicTerm.hpp"
 #include "Z3Logic.hpp"
 
+#include <cstdint>
+#include <string>
 #include <z3++.h>
 
 namespace z3logic {

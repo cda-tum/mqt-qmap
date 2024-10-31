@@ -30,7 +30,7 @@ from .pyqmap import (
     MappingResults,
     Method,
     SwapReduction,
-    map,
+    map,  # noqa: A004
 )
 
 

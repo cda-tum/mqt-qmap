@@ -3,23 +3,28 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "NAGraphAlgorithms.hpp"
-#include "QuantumComputation.hpp"
+#include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
-#include "operations/OpType.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "na/NAGraphAlgorithms.hpp"
 
 #include "gtest/gtest.h"
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
-#include <memory>
 #include <numeric>
+#include <stdexcept>
+#include <tuple>
+#include <unordered_set>
+#include <vector>
 
 class TestNAGraph : public testing::Test {
 protected:
   qc::QuantumComputation qc;
-  qc::Layer              layer;
-  na::InteractionGraph   graph{};
-  void                   SetUp() override {
+  qc::Layer layer;
+  na::InteractionGraph graph{};
+  void SetUp() override {
     qc = qc::QuantumComputation(8);
     qc.cz(1, 2);
     qc.cz(1, 6);
@@ -159,7 +164,7 @@ TEST_F(TestNAGraph, Coloring) {
 }
 
 TEST_F(TestNAGraph, SequenceOrdering) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
   // check that the order of moveable qubits is consistent
   auto order =
@@ -184,9 +189,9 @@ TEST_F(TestNAGraph, SequenceOrdering) {
 }
 
 TEST_F(TestNAGraph, InteractionExists) {
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
-  const auto& fixed    = sequence.second;
+  const auto& fixed = sequence.second;
   // check that all interactions are part of the interaction graph
   for (const auto& seq : moveable) {
     for (const auto& s : seq) {
@@ -208,15 +213,15 @@ TEST_F(TestNAGraph, CoveredInteractions) {
       na::NAGraphAlgorithms::coveredEdges(graph, maxIndepSet);
   // TODO for some reason this must be a vector, set gives an error
   std::vector coveredEdgesVec(coveredEdges.cbegin(), coveredEdges.cend());
-  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph);
+  const auto& sequence = na::NAGraphAlgorithms::computeSequence(graph, 20);
   const auto& moveable = sequence.first;
-  const auto& fixed    = sequence.second;
+  const auto& fixed = sequence.second;
   // check that all interactions that are covered by the independent set are
   // part of the sequence
   for (const auto& seq : moveable) {
     for (const auto& s : seq) {
-      const auto  p = s.first;
-      const auto  x = s.second;
+      const auto p = s.first;
+      const auto x = s.second;
       const auto& qIt =
           std::find_if(fixed.cbegin(), fixed.cend(),
                        [&](const auto& q) { return q.second == x; });

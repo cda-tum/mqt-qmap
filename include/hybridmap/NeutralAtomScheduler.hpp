@@ -6,9 +6,9 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstdint>
 #include <deque>
@@ -25,10 +25,10 @@ namespace na {
  * @brief Struct to store the results of the scheduler
  */
 struct SchedulerResults {
-  qc::fp   totalExecutionTime;
-  qc::fp   totalIdleTime;
-  qc::fp   totalGateFidelities;
-  qc::fp   totalFidelities;
+  qc::fp totalExecutionTime;
+  qc::fp totalIdleTime;
+  qc::fp totalGateFidelities;
+  qc::fp totalFidelities;
   uint32_t nCZs = 0;
 
   SchedulerResults(qc::fp executionTime, qc::fp idleTime, qc::fp gateFidelities,
@@ -53,11 +53,11 @@ struct SchedulerResults {
   [[maybe_unused]] [[nodiscard]] std::unordered_map<std::string, qc::fp>
   toMap() const {
     std::unordered_map<std::string, qc::fp> result;
-    result["totalExecutionTime"]  = totalExecutionTime;
-    result["totalIdleTime"]       = totalIdleTime;
+    result["totalExecutionTime"] = totalExecutionTime;
+    result["totalIdleTime"] = totalIdleTime;
     result["totalGateFidelities"] = totalGateFidelities;
-    result["totalFidelities"]     = totalFidelities;
-    result["nCZs"]                = nCZs;
+    result["totalFidelities"] = totalFidelities;
+    result["nCZs"] = nCZs;
     return result;
   }
 };
@@ -72,8 +72,8 @@ struct SchedulerResults {
 class NeutralAtomScheduler {
 protected:
   const NeutralAtomArchitecture* arch = nullptr;
-  std::string                    animationCsv;
-  std::string                    animationArchitectureCsv;
+  std::string animationCsv;
+  std::string animationArchitectureCsv;
 
 public:
   // Constructor
@@ -91,13 +91,13 @@ public:
    * @param verbose If true, prints additional information
    * @return SchedulerResults
    */
-  SchedulerResults schedule(const qc::QuantumComputation&     qc,
+  SchedulerResults schedule(const qc::QuantumComputation& qc,
                             const std::map<HwQubit, HwQubit>& initHwPos,
                             bool verbose, bool createAnimationCsv = false,
                             qc::fp shuttlingSpeedFactor = 1.0);
 
   std::string getAnimationCsv() { return animationCsv; }
-  void        saveAnimationCsv(const std::string& filename) {
+  void saveAnimationCsv(const std::string& filename) {
     // save animation
     std::ofstream file(filename);
     file << animationCsv;
@@ -112,11 +112,11 @@ public:
 
   // Helper Print functions
   static void printSchedulerResults(std::vector<qc::fp>& totalExecutionTimes,
-                                    qc::fp               totalIdleTime,
-                                    qc::fp               totalGateFidelities,
+                                    qc::fp totalIdleTime,
+                                    qc::fp totalGateFidelities,
                                     qc::fp totalFidelities, uint32_t nCZs);
   static void printTotalExecutionTimes(
-      std::vector<qc::fp>&                                totalExecutionTimes,
+      std::vector<qc::fp>& totalExecutionTimes,
       std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes);
 };
 

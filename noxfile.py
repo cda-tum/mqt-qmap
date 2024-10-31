@@ -16,9 +16,9 @@ if TYPE_CHECKING:
 nox.needs_version = ">=2024.3.2"
 nox.options.default_venv_backend = "uv|virtualenv"
 
-nox.options.sessions = ["lint", "tests"]
+nox.options.sessions = ["lint", "tests", "minimums"]
 
-PYTHON_ALL_VERSIONS = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+PYTHON_ALL_VERSIONS = ["3.9", "3.10", "3.11", "3.12"]
 
 # The following lists all the build requirements for building the package.
 # Note that this includes transitive build dependencies of package dependencies,
@@ -26,10 +26,9 @@ PYTHON_ALL_VERSIONS = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 # and get better caching performance. This only concerns dependencies that are
 # not available via wheels on PyPI (i.e., only as source distributions).
 BUILD_REQUIREMENTS = [
-    "scikit-build-core[pyproject]>=0.8.1",
-    "setuptools_scm>=7",
-    "pybind11>=2.12",
-    "wheel>=0.40",  # transitive dependency of pytest on Windows
+    "scikit-build-core>=0.10.1",
+    "setuptools_scm>=8.1",
+    "pybind11>=2.13.5",
 ]
 
 if os.environ.get("CI", None):
@@ -39,8 +38,10 @@ if os.environ.get("CI", None):
 @nox.session(reuse_venv=True)
 def lint(session: nox.Session) -> None:
     """Run the linter."""
-    session.install("pre-commit")
-    session.run("pre-commit", "run", "--all-files", *session.posargs)
+    if shutil.which("pre-commit") is None:
+        session.install("pre-commit")
+
+    session.run("pre-commit", "run", "--all-files", *session.posargs, external=True)
 
 
 def _run_tests(
@@ -51,8 +52,7 @@ def _run_tests(
     extras: Sequence[str] = (),
 ) -> None:
     posargs = list(session.posargs)
-    env = {"PIP_DISABLE_PIP_VERSION_CHECK": "1"}
-
+    env = {}
     if os.environ.get("CI", None) and sys.platform == "win32":
         env["SKBUILD_CMAKE_ARGS"] = "-T ClangCL"
 
@@ -100,18 +100,17 @@ def docs(session: nox.Session) -> None:
     extra_installs = ["sphinx-autobuild"] if serve else []
     session.install(*BUILD_REQUIREMENTS, *extra_installs)
     session.install("--no-build-isolation", "-ve.[docs]")
-    session.chdir("docs")
 
     if args.builder == "linkcheck":
-        session.run("sphinx-build", "-b", "linkcheck", "source", "_build/linkcheck", *posargs)
+        session.run("sphinx-build", "-b", "linkcheck", "docs", "docs/_build/linkcheck", *posargs)
         return
 
     shared_args = (
         "-n",  # nitpicky mode
         "-T",  # full tracebacks
         f"-b={args.builder}",
-        "source",
-        f"_build/{args.builder}",
+        "docs",
+        f"docs/_build/{args.builder}",
         *posargs,
     )
 

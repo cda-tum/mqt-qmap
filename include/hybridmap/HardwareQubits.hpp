@@ -6,12 +6,12 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "Permutation.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/Operation.hpp"
+#include "ir/Permutation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -36,10 +36,10 @@ namespace na {
 class HardwareQubits {
 protected:
   const NeutralAtomArchitecture* arch = nullptr;
-  qc::Permutation                hwToCoordIdx;
-  SymmetricMatrix<SwapDistance>  swapDistances;
-  std::map<HwQubit, HwQubits>    nearbyQubits;
-  qc::Permutation                initialHwPos;
+  qc::Permutation hwToCoordIdx;
+  SymmetricMatrix<SwapDistance> swapDistances;
+  std::map<HwQubit, HwQubits> nearbyQubits;
+  qc::Permutation initialHwPos;
 
   /**
    * @brief Initializes the swap distances between the hardware qubits for the
@@ -83,8 +83,8 @@ public:
   // Constructors
   HardwareQubits() = default;
   HardwareQubits(const NeutralAtomArchitecture& architecture,
-                 InitialCoordinateMapping       initialCoordinateMapping,
-                 uint32_t                       seed)
+                 InitialCoordinateMapping initialCoordinateMapping,
+                 uint32_t seed)
       : arch(&architecture), swapDistances(architecture.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:

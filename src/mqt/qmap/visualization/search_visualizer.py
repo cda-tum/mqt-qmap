@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Callable, Literal, MutableMapping
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     import types
+    from collections.abc import Callable, MutableMapping
 
-    from typing_extensions import Self
+    from .._compat.typing import Self
 
 from .visualize_search_graph import SearchNode, visualize_search_graph
 

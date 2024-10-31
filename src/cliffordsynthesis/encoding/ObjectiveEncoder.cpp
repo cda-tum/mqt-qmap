@@ -7,12 +7,12 @@
 
 #include "cliffordsynthesis/TargetMetric.hpp"
 #include "cliffordsynthesis/encoding/GateEncoder.hpp"
+#include "ir/operations/OpType.hpp"
 #include "logicblocks/LogicTerm.hpp"
-#include "operations/OpType.hpp"
-#include "plog/Log.h"
 
 #include <cstddef>
 #include <functional>
+#include <plog/Log.h>
 #include <stdexcept>
 
 namespace cs::encoding {
@@ -45,8 +45,8 @@ void ObjectiveEncoder::optimizeDepth() const {
 
   constexpr auto noGateIndex = GateEncoder::gateToIndex(qc::OpType::None);
   for (std::size_t t = 0U; t < T; ++t) {
-    const auto& gS     = gvars->gS[t];
-    auto        noGate = LogicTerm(true);
+    const auto& gS = gvars->gS[t];
+    auto noGate = LogicTerm(true);
     for (std::size_t q = 0U; q < N; ++q) {
       noGate = noGate && gS[noGateIndex][q];
     }

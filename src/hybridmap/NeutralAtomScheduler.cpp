@@ -6,11 +6,11 @@
 #include "hybridmap/NeutralAtomScheduler.hpp"
 
 #include "Definitions.hpp"
-#include "QuantumComputation.hpp"
 #include "hybridmap/HybridAnimation.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -26,7 +26,7 @@
 #include <vector>
 
 na::SchedulerResults
-na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
+na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
                                    const std::map<HwQubit, HwQubit>& initHwPos,
                                    bool verbose, bool createAnimationCsv,
                                    qc::fp shuttlingSpeedFactor) {
@@ -38,8 +38,8 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
   // saves for each coord the time slots that are blocked by a multi qubit gate
   std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
       arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
-  qc::fp aodLastBlockedTime  = 0;
-  qc::fp totalGateTime       = 0;
+  qc::fp aodLastBlockedTime = 0;
+  qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
 
   AnimationAtoms animationAtoms(initHwPos, *arch);
@@ -48,9 +48,9 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
     animationArchitectureCsv = arch->getAnimationCsv();
   }
 
-  int      index        = 0;
-  int      nAodActivate = 0;
-  uint32_t nCZs         = 0;
+  int index = 0;
+  int nAodActivate = 0;
+  uint32_t nCZs = 0;
   for (const auto& op : qc) {
     index++;
     if (verbose) {
@@ -105,7 +105,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation&     qc,
           // check if qubit is blocked at maxTime
           for (const auto& startEnd : rydbergBlockedQubitsTimes[qubit]) {
             auto start = startEnd.first;
-            auto end   = startEnd.second;
+            auto end = startEnd.second;
             if ((start <= maxTime && end > maxTime) ||
                 (start <= maxTime + opTime && end > maxTime + opTime)) {
               rydbergBlocked = true;
@@ -194,7 +194,7 @@ void na::NeutralAtomScheduler::printSchedulerResults(
 }
 
 void na::NeutralAtomScheduler::printTotalExecutionTimes(
-    std::vector<qc::fp>&                                totalExecutionTimes,
+    std::vector<qc::fp>& totalExecutionTimes,
     std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes) {
   std::cout << "ExecutionTime: "
             << "\n";

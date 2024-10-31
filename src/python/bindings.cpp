@@ -4,19 +4,20 @@
 //
 
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
-#include "exact/ExactMapper.hpp"
-#include "heuristic/HeuristicMapper.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/HybridSynthesisMapper.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
-#include "nlohmann/json.hpp"
-#include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
-#include "pybind11_json/pybind11_json.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
-#include "string"
-#include "utility"
-#include "vector"
+#include "sc/exact/ExactMapper.hpp"
+#include "sc/heuristic/HeuristicMapper.hpp"
+
+#include <nlohmann/json.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11_json/pybind11_json.hpp>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -79,7 +80,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
   return results;
 }
 
-PYBIND11_MODULE(pyqmap, m) {
+PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   m.doc() = "pybind11 for the MQT QMAP quantum circuit mapping tool";
 
   // Pre-defined architecture available within QMAP
@@ -675,7 +676,7 @@ PYBIND11_MODULE(pyqmap, m) {
   quantumComputation.def_static(
       "from_qasm_str",
       [](const std::string& qasm) {
-        std::stringstream      ss(qasm);
+        std::stringstream ss(qasm);
         qc::QuantumComputation qc{};
         qc.import(ss, qc::Format::OpenQASM3);
         return qc;
@@ -986,7 +987,7 @@ PYBIND11_MODULE(pyqmap, m) {
           "Returns the current adjacency matrix of the neutral atom hardware.")
       .def(
           "evaluate_synthesis_steps",
-          [](na::HybridSynthesisMapper&     mapper,
+          [](na::HybridSynthesisMapper& mapper,
              const std::vector<py::object>& circs, bool alsoMap) {
             std::vector<qc::QuantumComputation> qcs;
             for (const auto& circ : circs) {

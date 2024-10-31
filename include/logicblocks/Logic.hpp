@@ -2,21 +2,15 @@
 
 #include <cassert>
 #include <cstdarg>
-#include <cstddef>
 #include <cstdint>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 namespace logicbase {
 
-enum class Result { SAT, UNSAT, NDEF };
-enum class OpType {
+enum class Result : std::uint8_t { SAT, UNSAT, NDEF };
+enum class OpType : std::uint8_t {
   None,
   Constant,
   Variable,
@@ -44,7 +38,7 @@ enum class OpType {
   BitXor
 };
 
-enum class CType {
+enum class CType : std::uint8_t {
   BOOL,
   INT,
   REAL,
@@ -272,16 +266,16 @@ inline CType getResultCType(OpType op) {
 
 class LogicTerm;
 
-using LogicVector   = std::vector<LogicTerm>;
-using LogicMatrix   = std::vector<LogicVector>;
+using LogicVector = std::vector<LogicTerm>;
+using LogicMatrix = std::vector<LogicVector>;
 using LogicMatrix3D = std::vector<LogicMatrix>;
 using LogicMatrix4D = std::vector<LogicMatrix3D>;
 
 class Logic {
 public:
-  virtual ~Logic()             = default;
+  virtual ~Logic() = default;
   virtual uint64_t getNextId() = 0;
-  virtual uint64_t getId()     = 0;
+  virtual uint64_t getId() = 0;
 };
 
 } // namespace logicbase

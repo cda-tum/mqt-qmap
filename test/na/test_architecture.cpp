@@ -3,20 +3,24 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Architecture.hpp"
-#include "Configuration.hpp"
-#include "operations/OpType.hpp"
+#include "ir/operations/OpType.hpp"
+#include "na/Architecture.hpp"
+#include "na/Configuration.hpp"
 
-#include "gtest/gtest.h"
+#include <cstdint>
 #include <cstdio>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <optional>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 
 class NAArchitecture : public testing::Test {
 protected:
   na::Architecture arch;
-  void             SetUp() override {
+  void SetUp() override {
     // write content to a file
     std::istringstream archIS(R"({
       "name": "Nature",
@@ -28,7 +32,7 @@ protected:
               "name": "entangling",
               "xmin": -300,
               "xmax": 656,
-              "ymin": -10,
+              "ymin": -20,
               "ymax": 46,
               "fidelity": 0.9959
           },
@@ -121,7 +125,7 @@ protected:
           }
       ]
   })");
-    std::stringstream  gridSS;
+    std::stringstream gridSS;
     gridSS << "x,y\n";
     // entangling zone (4 x 36 = 144 sites)
     for (std::size_t y = 0; y <= 36; y += 12) {
@@ -148,7 +152,8 @@ protected:
 
 TEST_F(NAArchitecture, ScopeString) {
   EXPECT_EQ(na::getScopeOfString("local"), na::Scope::Local);
-  EXPECT_EQ(na::getScopeOfString("gLoBaL"), na::Scope::Global);
+  EXPECT_EQ(na::getScopeOfString("gLoBaL"), // spellchecker:disable-line
+            na::Scope::Global);
   EXPECT_THROW(na::getScopeOfString(""), std::invalid_argument);
 }
 
@@ -196,7 +201,7 @@ TEST_F(NAArchitecture, GateProperty) {
 
 TEST_F(NAArchitecture, WithConfiguration) {
   na::Configuration const config(2, 3);
-  const auto              modArch = arch.withConfig(config);
+  const auto modArch = arch.withConfig(config);
   EXPECT_EQ(modArch.getNSites(), 216);
 }
 
@@ -299,6 +304,8 @@ TEST_F(NAArchitecture, SiteOffsetBy) {
   EXPECT_EQ(arch.getPositionOffsetBy({355, 24}, -1, -1), (na::Point{345, 12}));
   EXPECT_EQ(arch.getPositionOffsetBy({353, 25}, -1, -1), (na::Point{343, 13}));
   const auto d = static_cast<std::int64_t>(arch.getNoInteractionRadius());
+  EXPECT_EQ(arch.getPositionOffsetBy({-40, -20}, 1, 1),
+            (na::Point{-40 + d, -20 + d}));
   EXPECT_EQ(arch.getPositionOffsetBy({-10, -10}, 1, 1),
             (na::Point{-10 + d, -10 + d}));
   EXPECT_EQ(arch.getPositionOffsetBy({13, 12}, -2, -2),

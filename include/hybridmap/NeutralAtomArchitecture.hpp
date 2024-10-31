@@ -9,9 +9,9 @@
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/operations/OpType.hpp"
+#include "ir/operations/Operation.hpp"
 #include "na/NADefinitions.hpp"
-#include "operations/OpType.hpp"
-#include "operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -63,9 +63,9 @@ class NeutralAtomArchitecture {
     std::uint16_t nAods;
     std::uint16_t nAodIntermediateLevels;
     std::uint16_t nAodCoordinates;
-    qc::fp        interQubitDistance;
-    qc::fp        interactionRadius;
-    qc::fp        blockingFactor;
+    qc::fp interQubitDistance;
+    qc::fp interactionRadius;
+    qc::fp blockingFactor;
 
   public:
     Properties() = default;
@@ -133,20 +133,20 @@ class NeutralAtomArchitecture {
         return t1 * t2 / (t1 + t2);
       }
     };
-    CoordIndex                    nQubits;
+    CoordIndex nQubits;
     std::map<std::string, qc::fp> gateTimes;
     std::map<std::string, qc::fp> gateAverageFidelities;
-    std::map<qc::OpType, qc::fp>  shuttlingTimes;
-    std::map<qc::OpType, qc::fp>  shuttlingAverageFidelities;
-    DecoherenceTimes              decoherenceTimes;
+    std::map<qc::OpType, qc::fp> shuttlingTimes;
+    std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
+    DecoherenceTimes decoherenceTimes;
   };
 
 protected:
   Properties properties{};
   Parameters parameters;
 
-  std::vector<Point>                coordinates;
-  SymmetricMatrix<SwapDistance>     swapDistances;
+  std::vector<Point> coordinates;
+  SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
   /**
@@ -447,11 +447,11 @@ public:
    * @return The maximum gate size for multi-qubit size
    */
   [[nodiscard]] size_t getMaxGateSize() const {
-    size_t     maxGateSize = 0;
-    const auto intRad      = getInteractionRadius();
-    const auto xMax        = static_cast<size_t>(intRad);
-    auto       y           = static_cast<size_t>(intRad);
-    size_t     x           = 0;
+    size_t maxGateSize = 0;
+    const auto intRad = getInteractionRadius();
+    const auto xMax = static_cast<size_t>(intRad);
+    auto y = static_cast<size_t>(intRad);
+    size_t x = 0;
     while (x <= xMax) {
       if (static_cast<double>(x * x + y * y) > intRad * intRad) {
         y--;

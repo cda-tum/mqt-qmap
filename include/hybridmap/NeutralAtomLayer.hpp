@@ -24,13 +24,13 @@ namespace na {
 
 class NeutralAtomLayer {
 protected:
-  qc::DAG          dag;
+  qc::DAG dag;
   qc::DAGIterators iterators;
   qc::DAGIterators ends;
-  GateList         gates;
-  GateList         newGates;
-  GateList         mappedSingleQubitGates;
-  GateLists        candidates;
+  GateList gates;
+  GateList newGates;
+  GateList mappedSingleQubitGates;
+  GateLists candidates;
 
   /**
    * @brief Updates the gates for the given qubits

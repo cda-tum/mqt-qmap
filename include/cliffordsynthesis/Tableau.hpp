@@ -5,35 +5,40 @@
 
 #pragma once
 
-#include "QuantumComputation.hpp"
-#include "plog/Log.h"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 
+#include <bitset>
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <fstream>
+#include <istream>
 #include <limits>
 #include <ostream>
-#include <utility>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace cs {
 class Tableau {
-  using EntryType   = std::uint8_t;
-  using RowType     = std::vector<EntryType>;
+  using EntryType = std::uint8_t;
+  using RowType = std::vector<EntryType>;
   using TableauType = std::vector<RowType>;
   std::size_t nQubits{};
   TableauType tableau;
 
 private:
-  void           loadStabilizerDestabilizerString(const std::string& string);
+  void loadStabilizerDestabilizerString(const std::string& string);
   static RowType parseStabilizer(const std::string& stab);
 
 public:
   Tableau() = default;
   explicit Tableau(const qc::QuantumComputation& qc, std::size_t begin = 0,
                    std::size_t end = std::numeric_limits<std::size_t>::max(),
-                   bool        includeDestabilizers = false);
+                   bool includeDestabilizers = false);
   explicit Tableau(const std::size_t nq,
-                   const bool        includeDestabilizers = false)
+                   const bool includeDestabilizers = false)
       : nQubits(nq) {
     createDiagonalTableau(nq, includeDestabilizers);
   }
@@ -139,7 +144,7 @@ public:
   }
 
   [[nodiscard]] std::string toString() const;
-  void                      fromString(const std::string& str);
+  void fromString(const std::string& str);
 
   void fromString(const std::string& stabilizers,
                   const std::string& destabilizers);

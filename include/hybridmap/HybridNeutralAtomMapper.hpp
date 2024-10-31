@@ -14,8 +14,8 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "operations/Operation.hpp"
-#include "utils.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -34,14 +34,14 @@ namespace na {
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
-  qc::fp                   lookaheadWeightSwaps = 0.1;
-  qc::fp                   lookaheadWeightMoves = 0.1;
-  qc::fp                   decay                = 0.1;
-  qc::fp                   shuttlingTimeWeight  = 1;
-  qc::fp                   gateWeight           = 1;
-  qc::fp                   shuttlingWeight      = 1;
-  uint32_t                 seed                 = 0;
-  bool                     verbose              = true;
+  qc::fp lookaheadWeightSwaps = 0.1;
+  qc::fp lookaheadWeightMoves = 0.1;
+  qc::fp decay = 0.1;
+  qc::fp shuttlingTimeWeight = 1;
+  qc::fp gateWeight = 1;
+  qc::fp shuttlingWeight = 1;
+  uint32_t seed = 0;
+  bool verbose = false;
   InitialCoordinateMapping initialMapping = InitialCoordinateMapping::Trivial;
 };
 
@@ -251,10 +251,10 @@ protected:
    * @param gateCoords The coordinates of the gate to find the best position for
    * @return The best position for the given gate coordinates
    */
-  CoordIndices      getBestMovePos(const CoordIndices& gateCoords);
-  MultiQubitMovePos getMovePositionRec(MultiQubitMovePos   currentPos,
+  CoordIndices getBestMovePos(const CoordIndices& gateCoords);
+  MultiQubitMovePos getMovePositionRec(MultiQubitMovePos currentPos,
                                        const CoordIndices& gateCoords,
-                                       const size_t&       maxNMoves);
+                                       const size_t& maxNMoves);
   /**
    * @brief Returns possible move combinations to move the gate qubits to the
    * given position.
@@ -263,7 +263,7 @@ protected:
    * @return Possible move combinations to move the gate qubits to the given
    * position
    */
-  MoveCombs getMoveCombinationsToPosition(HwQubits&     gateQubits,
+  MoveCombs getMoveCombinationsToPosition(HwQubits& gateQubits,
                                           CoordIndices& position);
 
   // Multi-qubit gate based methods
@@ -286,7 +286,7 @@ protected:
    * @return The swaps needed to move the given qubits to the given multi-qubit
    */
   WeightedSwaps getExactSwapsToPosition(const qc::Operation* op,
-                                        HwQubits             position);
+                                        HwQubits position);
 
   // Cost function calculation
   /**
@@ -311,7 +311,7 @@ protected:
    * @param swap The swap gate to compute the cost for
    * @return The cost of the swap gate
    */
-  qc::fp swapCost(const Swap&                            swap,
+  qc::fp swapCost(const Swap& swap,
                   const std::pair<Swaps, WeightedSwaps>& swapsFront,
                   const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
   /**
@@ -358,7 +358,7 @@ public:
   // Constructors
   NeutralAtomMapper() = default;
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
-                             const MapperParameters*        p = nullptr)
+                             const MapperParameters* p = nullptr)
       : arch(architecture), scheduler(*architecture), parameters(p),
         hardwareQubits(*arch, p->initialMapping, p->seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
@@ -390,13 +390,13 @@ public:
    * @param mapper The mapper to copy the state from
    */
   void copyStateFrom(const NeutralAtomMapper& mapper) {
-    this->arch              = mapper.arch;
-    this->parameters        = mapper.parameters;
-    this->mapping           = mapper.mapping;
-    this->hardwareQubits    = mapper.hardwareQubits;
-    this->lastMoves         = mapper.lastMoves;
+    this->arch = mapper.arch;
+    this->parameters = mapper.parameters;
+    this->mapping = mapper.mapping;
+    this->hardwareQubits = mapper.hardwareQubits;
+    this->lastMoves = mapper.lastMoves;
     this->lastBlockedQubits = mapper.lastBlockedQubits;
-    this->scheduler         = mapper.scheduler;
+    this->scheduler = mapper.scheduler;
   }
 
   /**
@@ -434,17 +434,17 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             Mapping                 initialMapping) {
-    mappedQc    = qc::QuantumComputation(arch->getNpositions());
+                             Mapping initialMapping) {
+    mappedQc = qc::QuantumComputation(arch->getNpositions());
     mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
-    nMoves      = 0;
-    nSwaps      = 0;
+    nMoves = 0;
+    nSwaps = 0;
     mapAppend(qc, std::move(initialMapping));
     return mappedQc;
   }
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping          initialMapping) {
+                             InitialMapping initialMapping) {
     return map(qc, Mapping(qc.getNqubits(), initialMapping));
   }
 
@@ -464,7 +464,7 @@ public:
    * hardware qubits
    */
   [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      InitialMapping          initialMapping) {
+                                      InitialMapping initialMapping) {
     map(qc, initialMapping);
     convertToAod();
   }

@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
+if sys.platform == "win32" and "Z3_ROOT" in os.environ:
     lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
     if lib_path.exists():
         os.add_dll_directory(str(lib_path))
@@ -20,13 +20,14 @@ if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.
 
 from ._version import version as __version__
 from .clifford_synthesis import optimize_clifford, synthesize_clifford
-from .compile import compile
+from .compile import compile  # noqa: A004
 from .pyqmap import (
     Arch,
     Architecture,
     CliffordSynthesizer,
     CommanderGrouping,
     Configuration,
+    EarlyTermination,
     Encoding,
     Heuristic,
     HybridMapperParameters,
@@ -56,6 +57,7 @@ __all__ = [
     "CliffordSynthesizer",
     "CommanderGrouping",
     "Configuration",
+    "EarlyTermination",
     "Encoding",
     "Heuristic",
     "HybridMapperParameters",

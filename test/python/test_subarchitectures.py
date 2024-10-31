@@ -18,13 +18,13 @@ from mqt.qmap.subarchitectures import (
 )
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
+    from mqt.qmap._compat.typing import TypeAlias
 
 with contextlib.suppress(TypeError):
     Graph: TypeAlias = rx.PyGraph[int, Optional[int]]
 
 
-@pytest.fixture()
+@pytest.fixture
 def ibm_guadalupe() -> SubarchitectureOrder:
     """Return the SubarchitectureOrder for the IBM Guadalupe architecture."""
     return SubarchitectureOrder.from_coupling_map([
@@ -47,7 +47,7 @@ def ibm_guadalupe() -> SubarchitectureOrder:
     ])
 
 
-@pytest.fixture()
+@pytest.fixture
 def rigetti16() -> SubarchitectureOrder:
     """Return the SubarchitectureOrder for the Rigetti 16Q architecture."""
     return SubarchitectureOrder.from_coupling_map([
@@ -72,7 +72,7 @@ def rigetti16() -> SubarchitectureOrder:
     ])
 
 
-@pytest.fixture()
+@pytest.fixture
 def rigetti16_opt() -> Graph:
     """Return the optimal subarchitecture candidate for the Rigetti 16Q architecture."""
     cm = [
@@ -100,7 +100,7 @@ def rigetti16_opt() -> Graph:
     return graph
 
 
-@pytest.fixture()
+@pytest.fixture
 def singleton_graph() -> Graph:
     """Return a graph with a single node."""
     g: Graph = rx.PyGraph()
