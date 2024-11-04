@@ -1131,7 +1131,7 @@ wheels = [
 
 [[package]]
 name = "mqt-qmap"
-version = "2.7.1.dev17+g018f5f7"
+version = "2.7.1.dev18+g3340f6f"
 source = { editable = "." }
 dependencies = [
     { name = "importlib-resources", marker = "python_full_version < '3.10'" },
