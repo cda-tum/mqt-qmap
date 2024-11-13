@@ -101,8 +101,8 @@ auto retrieveQuantumComputation(const NAComputation& nac,
 }
 
 auto checkEquivalence(const qc::QuantumComputation& circ,
-                      const NAComputation& nac,
-                      const Architecture& arch) -> bool {
+                      const NAComputation& nac, const Architecture& arch)
+    -> bool {
   auto naQComp = retrieveQuantumComputation(nac, arch);
   const qc::Layer qLayer(circ);
   int line = 0;

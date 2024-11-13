@@ -1,7 +1,7 @@
 [build-system]
 requires = [
   "scikit-build-core>=0.10.1",
-  "setuptools-scm>=7",
+  "setuptools-scm>=8.1",
   "pybind11>=2.13.5",
 ]
 build-backend = "scikit_build_core.build"
@@ -48,20 +48,16 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-test = ["pytest>=7", "mqt.qcec>=2.4.5", "mqt.qmap[visualization]"]
+test = ["pytest>=7.2", "mqt.qcec>=2.4.5", "mqt.qmap[visualization]"]
 coverage = ["mqt.qmap[test]", "pytest-cov>=4"]
 docs = [
-    "furo>=2023.08.17",
-    "sphinx",
-    "setuptools-scm>=7",
+    "furo>=2023.9.10",
+    "setuptools-scm>=8.1",
     "sphinxcontrib-bibtex>=2.4.2",
-    "sphinx-copybutton",
-    "sphinx-hoverxref",
-    "pybtex>=0.24",
-    "ipython",
+    "sphinx-copybutton>=0.5",
     "ipykernel",
     "nbsphinx",
-    "sphinxext-opengraph",
+    "sphinxext-opengraph>=0.9",
     "sphinx-autodoc-typehints",
     "qiskit[visualization]",
     "mqt.qmap[visualization]"
@@ -92,7 +88,7 @@ wheel.install-dir = "mqt/qmap"
 ninja.version = ">=1.10"
 
 # Setuptools-style build caching in a local directory
-build-dir = "build/{build_type}"
+build-dir = "build/{wheel_tag}/{build_type}"
 
 # Explicitly set the package directory
 wheel.packages = ["src/mqt"]
@@ -142,7 +138,7 @@ write_to = "src/mqt/qmap/_version.py"
 
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "7.2"
 testpaths = ["test/python"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "--showlocals"]
 log_cli_level = "INFO"
@@ -298,6 +294,10 @@ aer = "aer"
 iy = "iy"
 
 
+[tool.repo-review]
+ignore = ["GH200"]
+
+
 [tool.cibuildwheel]
 build = "cp3*"
 skip = "*-musllinux*"
@@ -325,4 +325,12 @@ environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel>=1.7.3"
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel} --namespace-pkg mqt"
-environment = { CMAKE_GENERATOR = "Ninja", SKBUILD_CMAKE_ARGS="--fresh" }
+environment = { CMAKE_GENERATOR = "Ninja" }
+
+[[tool.cibuildwheel.overrides]]
+select = "*-macosx_arm64"
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+
+
+[tool.uv]
+reinstall-package = ["mqt.qmap"]

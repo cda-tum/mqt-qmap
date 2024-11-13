@@ -10,7 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-if sys.platform == "win32" and sys.version_info > (3, 8, 0) and "Z3_ROOT" in os.environ:
+if sys.platform == "win32" and "Z3_ROOT" in os.environ:
     lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
     if lib_path.exists():
         os.add_dll_directory(str(lib_path))
@@ -27,6 +27,7 @@ from .pyqmap import (
     CliffordSynthesizer,
     CommanderGrouping,
     Configuration,
+    EarlyTermination,
     Encoding,
     Heuristic,
     HybridMapperParameters,
@@ -55,6 +56,7 @@ __all__ = [
     "CliffordSynthesizer",
     "CommanderGrouping",
     "Configuration",
+    "EarlyTermination",
     "Encoding",
     "Heuristic",
     "HybridMapperParameters",

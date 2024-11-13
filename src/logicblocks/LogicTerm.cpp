@@ -712,6 +712,8 @@ bool TermDepthComparator::operator()(const LogicTerm& t1,
       t1.getDepth() == t2.getDepth()) {
     return t1.getID() > t2.getID();
   }
-  { return t1.getDepth() > t2.getDepth(); }
+  {
+    return t1.getDepth() > t2.getDepth();
+  }
 }
 } // namespace logicbase

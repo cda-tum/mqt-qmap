@@ -14,13 +14,13 @@ concurrency:
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: cda-tum/mqt-workflows/.github/workflows/reusable-change-detection.yml@v1.3
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-change-detection.yml@v1.4
 
   cpp-tests:
     name: 🇨‌ Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-ci.yml@v1.3
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-ci.yml@v1.4
     with:
       setup-z3: true
 
@@ -28,7 +28,7 @@ jobs:
     name: 🇨‌ Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-linter.yml@v1.3
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-cpp-linter.yml@v1.4
     with:
       setup-z3: true
 
@@ -36,18 +36,27 @@ jobs:
     name: 🐍 Test
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-ci.yml@v1.3
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-ci.yml@v1.4
     with:
-      skip-testing-latest-python: true
       setup-z3: true
 
   code-ql:
     name: 📝 CodeQL
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-code-ql)
-    uses: cda-tum/mqt-workflows/.github/workflows/reusable-code-ql.yml@v1.3
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-code-ql.yml@v1.4
     with:
       setup-z3: true
+
+  cd:
+    name: 🚀 CD
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cd)
+    uses: cda-tum/mqt-workflows/.github/workflows/reusable-python-packaging.yml@v1.4
+    with:
+      setup-z3: true
+      # 4.13.0 has incorrectly tagged manylinux wheels
+      z3-version: 4.12.6
 
   required-checks-pass: # This job does nothing and is only used for branch protection
     name: 🚦 Check
@@ -58,6 +67,7 @@ jobs:
       - cpp-linter
       - python-tests
       - code-ql
+      - cd
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -79,5 +89,9 @@ jobs:
             ${{
               fromJSON(needs.change-detection.outputs.run-code-ql)
               && '' || 'code-ql,'
+            }}
+            ${{
+              fromJSON(needs.change-detection.outputs.run-cd)
+              && '' || 'cd,'
             }}
           jobs: ${{ toJSON(needs) }}
