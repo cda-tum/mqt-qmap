@@ -186,32 +186,34 @@ private:
 
   /// Return constraints ensuring that exactly @code numTransfers@endcode
   /// transfers trake place
-  [[nodiscard]] auto
-  getExactNumTransfersConstraints() const -> std::vector<expr>;
+  [[nodiscard]] auto getExactNumTransfersConstraints() const
+      -> std::vector<expr>;
 
   /// Returns the constraint @code (x_t^(q0) = x_t^(q1)) ∧ (y_t^(q0) = y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto
-  getHaveSamePositionConstraint(std::uint16_t q0, std::uint16_t q1,
-                                std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getHaveSamePositionConstraint(std::uint16_t q0,
+                                                   std::uint16_t q1,
+                                                   std::uint16_t t) const
+      -> expr;
 
   /// Returns the constraint @code (x_t^(q0) ≠ x_t^(q1)) ∨ (y_t^(q0) ≠ y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto
-  getHaveDifferentPositionConstraint(std::uint16_t q0, std::uint16_t q1,
-                                     std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getHaveDifferentPositionConstraint(std::uint16_t q0,
+                                                        std::uint16_t q1,
+                                                        std::uint16_t t) const
+      -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto
-  getAffectedByRydbergBeamConstraint(std::uint16_t q,
-                                     std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(std::uint16_t q,
+                                                        std::uint16_t t) const
+      -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto
-  getShieldedFromRydbergBeamConstraint(std::uint16_t q,
-                                       std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(std::uint16_t q,
+                                                          std::uint16_t t) const
+      -> expr;
 
   /// Returns a vector of constraints ensuring that transition from a Rydberg
   /// stage to the next stage is valid
@@ -220,8 +222,9 @@ private:
 
   /// Returns a vector of constraints ensuring that transition from a Transfer
   /// stage to the next stage is valid
-  [[nodiscard]] auto getValidTransferTransitionConstraints(
-      std::uint16_t t) const -> std::vector<expr>;
+  [[nodiscard]] auto
+  getValidTransferTransitionConstraints(std::uint16_t t) const
+      -> std::vector<expr>;
 
   /**
    * @brief Returns the constraints extracted from the quantum circuit to ensure
@@ -251,8 +254,8 @@ private:
   [[nodiscard]] auto getTransferStageConstraint(std::uint16_t t) const -> expr;
 
   /// Returns constraints esnuring that the state at the given stage is valid
-  [[nodiscard]] auto
-  getValidStageConstraints(std::uint16_t t) const -> std::vector<expr>;
+  [[nodiscard]] auto getValidStageConstraints(std::uint16_t t) const
+      -> std::vector<expr>;
 
 public:
   [[nodiscard]] NASolver() = default;
@@ -320,8 +323,8 @@ public:
 
       [[nodiscard]] auto getStage() const -> std::uint16_t { return stage; }
 
-      [[nodiscard]] auto
-      getQubits() const -> const std::pair<qc::Qubit, qc::Qubit>& {
+      [[nodiscard]] auto getQubits() const
+          -> const std::pair<qc::Qubit, qc::Qubit>& {
         return qubits;
       }
 
@@ -420,8 +423,8 @@ public:
       return stages.end();
     }
 
-    [[nodiscard]] auto yaml(std::size_t indent = 0,
-                            bool compact = true) const -> std::string;
+    [[nodiscard]] auto yaml(std::size_t indent = 0, bool compact = true) const
+        -> std::string;
 
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };

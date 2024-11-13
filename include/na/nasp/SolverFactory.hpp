@@ -13,8 +13,9 @@ class SolverFactory {
 public:
   [[nodiscard]] static auto create(const Architecture& arch) -> NASolver;
 
-  [[nodiscard]] static auto getOpsForSolver(
-      const qc::QuantumComputation& circ, FullOpType opType,
-      bool quiet = false) -> std::vector<std::pair<unsigned int, unsigned int>>;
+  [[nodiscard]] static auto getOpsForSolver(const qc::QuantumComputation& circ,
+                                            FullOpType opType,
+                                            bool quiet = false)
+      -> std::vector<std::pair<unsigned int, unsigned int>>;
 };
 } // namespace na

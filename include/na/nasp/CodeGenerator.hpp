@@ -22,7 +22,7 @@ public:
   [[nodiscard]] static auto
   generate(const QuantumComputation& input, const NASolver::Result& result,
            std::uint16_t maxHOffset, std::uint16_t maxVOffset,
-           std::uint16_t minEntanglingY,
-           std::uint16_t maxEntanglingY) -> NAComputation;
+           std::uint16_t minEntanglingY, std::uint16_t maxEntanglingY)
+      -> NAComputation;
 };
 } // namespace na

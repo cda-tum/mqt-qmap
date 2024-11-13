@@ -70,11 +70,13 @@ auto CodeGenerator::coordFromDiscrete(
               static_cast<std::int64_t>(v) * minAtomDist};
 }
 
-auto CodeGenerator::generate(
-    const QuantumComputation& input, const NASolver::Result& result,
-    const std::uint16_t maxHOffset, const std::uint16_t maxVOffset,
-    const std::uint16_t minEntanglingY,
-    const std::uint16_t maxEntanglingY) -> NAComputation {
+auto CodeGenerator::generate(const QuantumComputation& input,
+                             const NASolver::Result& result,
+                             const std::uint16_t maxHOffset,
+                             const std::uint16_t maxVOffset,
+                             const std::uint16_t minEntanglingY,
+                             const std::uint16_t maxEntanglingY)
+    -> NAComputation {
   Layer const layer(input);
   NAComputation code;
   std::vector<std::shared_ptr<Point>> oldPositions;
