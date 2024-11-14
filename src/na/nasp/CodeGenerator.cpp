@@ -27,57 +27,43 @@ namespace na {
 using namespace qc;
 
 auto CodeGenerator::coordFromDiscrete(
-    const std::int32_t x, const std::int32_t y, const std::int32_t h,
-    const std::int32_t v, const std::int32_t maxHOffset,
-    const std::int32_t maxVOffset, const std::int32_t minEntanglingY,
-    const std::int32_t maxEntanglingY) -> Point {
-  constexpr auto minAtomDist = 1;
-  constexpr auto noInteractionRadius = 10;
-  constexpr auto zoneDist = 24; // incl., 2 * maxHOffset * minAtomDist
-  const auto dx = static_cast<std::int64_t>(noInteractionRadius) +
-                  2LL * maxHOffset * minAtomDist;
-  const auto dy = static_cast<std::int64_t>(noInteractionRadius) +
-                  2LL * maxVOffset * minAtomDist;
+    const NASolver::Result::Qubit q, const int64_t maxHOffset,
+    const int64_t maxVOffset, const int64_t minEntanglingY,
+    const int64_t maxEntanglingY, const int64_t minAtomDist,
+    const int64_t noInteractionRadius, const int64_t zoneDist) -> Point {
+  const auto dx = noInteractionRadius + (2LL * maxHOffset * minAtomDist);
+  const auto dy = noInteractionRadius + (2LL * maxVOffset * minAtomDist);
+  const auto x = q.getX();
+  const auto y = q.getY();
+  const auto h = q.getH();
+  const auto v = q.getV();
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
-      return {static_cast<std::int64_t>(x) * dx +
-                  static_cast<std::int64_t>(h) * minAtomDist,
-              static_cast<std::int64_t>(y) * dy +
-                  static_cast<std::int64_t>(v) * minAtomDist};
+      return {(x * dx) + (h * minAtomDist), (y * dy) + (v * minAtomDist)};
     }
-    return {static_cast<std::int64_t>(x) * dx +
-                static_cast<std::int64_t>(h) * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy +
-                static_cast<std::int64_t>(v) * minAtomDist};
+    return {(x * dx) + (h * minAtomDist),
+            zoneDist + ((y - 1) * dy) + (v * minAtomDist)};
   }
   // top storage zone
   if (y < minEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx +
-                static_cast<std::int64_t>(h) * minAtomDist,
-            static_cast<std::int64_t>(y) * dy +
-                static_cast<std::int64_t>(v) * minAtomDist};
+    return {(x * dx) + (h * minAtomDist), (y * dy) + (v * minAtomDist)};
   }
   if (y <= maxEntanglingY) {
-    return {static_cast<std::int64_t>(x) * dx +
-                static_cast<std::int64_t>(h) * minAtomDist,
-            zoneDist + static_cast<std::int64_t>(y - 1) * dy +
-                static_cast<std::int64_t>(v) * minAtomDist};
+    return {(x * dx) + (h * minAtomDist),
+            zoneDist + ((y - 1) * dy) + (v * minAtomDist)};
   }
-  return {static_cast<std::int64_t>(x) * dx +
-              static_cast<std::int64_t>(h) * minAtomDist,
-          2LL * zoneDist + static_cast<std::int64_t>(y - 2) * dy +
-              static_cast<std::int64_t>(v) * minAtomDist};
+  return {(x * dx) + (h * minAtomDist),
+          (2LL * zoneDist) + ((y - 2) * dy) + (v * minAtomDist)};
 }
 
-auto CodeGenerator::generate(const QuantumComputation& input,
-                             const NASolver::Result& result,
-                             const std::uint16_t maxHOffset,
-                             const std::uint16_t maxVOffset,
-                             const std::uint16_t minEntanglingY,
-                             const std::uint16_t maxEntanglingY)
-    -> NAComputation {
-  Layer const layer(input);
+auto CodeGenerator::generate(
+    const QuantumComputation& input, const NASolver::Result& result,
+    const uint16_t maxHOffset, const uint16_t maxVOffset,
+    const uint16_t minEntanglingY, const uint16_t maxEntanglingY,
+    const uint16_t minAtomDist, const uint16_t noInteractionRadius,
+    const uint16_t zoneDist) -> NAComputation {
+  const Layer layer(input);
   NAComputation code;
   std::vector<std::shared_ptr<Point>> oldPositions;
   std::vector<bool> wasAOD;
@@ -95,9 +81,9 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
     std::vector<std::shared_ptr<Point>> loadPositions;
     for (const auto& q : result.front().getQubits()) {
-      auto pos = std::make_shared<Point>(
-          coordFromDiscrete(q.getX(), q.getY(), q.getH(), q.getV(), maxHOffset,
-                            maxVOffset, minEntanglingY, maxEntanglingY));
+      auto pos = std::make_shared<Point>(coordFromDiscrete(
+          q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
+          minAtomDist, noInteractionRadius, zoneDist));
       wasAOD.emplace_back(q.isAOD());
       if (q.isAOD()) {
         loadPositions.emplace_back(pos);
@@ -105,7 +91,6 @@ auto CodeGenerator::generate(const QuantumComputation& input,
       oldPositions.emplace_back(pos);
       code.emplaceInitialPosition(pos);
     }
-    // TODO properly load atoms into AOD with offset
     if (!loadPositions.empty()) {
       code.emplaceBack<NAShuttlingOperation>(LOAD, loadPositions,
                                              loadPositions);
@@ -158,12 +143,11 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     std::vector<std::shared_ptr<Point>> loadEndPositions;
     std::vector<std::shared_ptr<Point>> storeStartPositions;
     std::vector<std::shared_ptr<Point>> storeEndPositions;
-    for (std::uint16_t i = 0;
-         i < static_cast<std::uint16_t>(result.getStage(t).numQubits()); ++i) {
+    for (uint16_t i = 0; i < result.getStage(t).numQubits(); ++i) {
       const auto& q = result.getStage(t).getQubit(i);
-      auto pos = std::make_shared<Point>(
-          coordFromDiscrete(q.getX(), q.getY(), q.getH(), q.getV(), maxHOffset,
-                            maxVOffset, minEntanglingY, maxEntanglingY));
+      auto pos = std::make_shared<Point>(coordFromDiscrete(
+          q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
+          minAtomDist, noInteractionRadius, zoneDist));
       if (wasAOD[i] && q.isAOD()) {
         startPositions.emplace_back(oldPositions[i]);
         endPositions.emplace_back(pos);
