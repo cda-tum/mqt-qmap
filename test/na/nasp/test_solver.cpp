@@ -46,8 +46,8 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
-  EXPECT_TRUE(result.isSat());
-  EXPECT_EQ(result.numStages(), 4);
+  EXPECT_TRUE(result.sat);
+  EXPECT_EQ(result.stages.size(), 4);
 }
 
 TEST(Solver, SteaneBottomStorage) {
@@ -85,28 +85,28 @@ h q[6];
   // solve
   const auto resultUnsat = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 4, false, true);
-  EXPECT_FALSE(resultUnsat.isSat());
+  EXPECT_FALSE(resultUnsat.sat);
   const auto resultSat = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 5, false, true);
-  EXPECT_TRUE(resultSat.isSat());
-  EXPECT_TRUE(resultSat.front().isRydberg());
-  for (const auto& q : resultSat.front().getQubits()) {
-    EXPECT_GE(q.getX(), 0);
-    EXPECT_LE(q.getX(), 3);
-    EXPECT_GE(q.getY(), 0);
-    EXPECT_LE(q.getY(), 7);
-    EXPECT_GE(q.getC(), 0);
-    EXPECT_LE(q.getC(), 2);
-    EXPECT_GE(q.getR(), 0);
-    EXPECT_LE(q.getR(), 3);
-    EXPECT_GE(q.getH(), -2);
-    EXPECT_LE(q.getH(), 2);
-    EXPECT_GE(q.getV(), -2);
-    EXPECT_LE(q.getV(), 2);
-    EXPECT_NO_THROW(std::ignore = q.isAOD());
+  EXPECT_TRUE(resultSat.sat);
+  EXPECT_TRUE(resultSat.stages.front().rydberg);
+  for (const auto& q : resultSat.stages.front().qubits) {
+    EXPECT_GE(q.x, 0);
+    EXPECT_LE(q.x, 3);
+    EXPECT_GE(q.y, 0);
+    EXPECT_LE(q.y, 7);
+    EXPECT_GE(q.c, 0);
+    EXPECT_LE(q.c, 2);
+    EXPECT_GE(q.r, 0);
+    EXPECT_LE(q.r, 3);
+    EXPECT_GE(q.h, -2);
+    EXPECT_LE(q.h, 2);
+    EXPECT_GE(q.v, -2);
+    EXPECT_LE(q.v, 2);
+    EXPECT_NO_THROW(std::ignore = q.a);
   }
-  for (const auto& g : resultSat.front().getGates()) {
-    EXPECT_TRUE(std::find(pairs.cbegin(), pairs.cend(), g.getQubits()) !=
+  for (const auto& g : resultSat.stages.front().gates) {
+    EXPECT_TRUE(std::find(pairs.cbegin(), pairs.cend(), g.qubits) !=
                 pairs.cend());
   }
 }
@@ -146,7 +146,7 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 3, true, false);
-  EXPECT_TRUE(result.isSat());
+  EXPECT_TRUE(result.sat);
 }
 
 TEST(Solver, FixedTransfer) {
@@ -184,7 +184,7 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 5, 2, false, true);
-  EXPECT_TRUE(result.isSat());
+  EXPECT_TRUE(result.sat);
 }
 
 TEST(Solver, Unsat) {
@@ -222,7 +222,7 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 3, false, true);
-  EXPECT_FALSE(result.isSat());
+  EXPECT_FALSE(result.sat);
 }
 
 TEST(Solver, Exceptions) {

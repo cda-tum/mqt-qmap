@@ -172,7 +172,7 @@ h q[6];
   // solve
   const auto result = solver.solve(
       pairs, static_cast<std::uint16_t>(circ.getNqubits()), 5, false, true);
-  EXPECT_TRUE(result.isSat());
+  EXPECT_TRUE(result.sat);
 }
 
 TEST(SolverFactory, CreateExceptions) {

@@ -19,9 +19,63 @@
 #include <z3++.h>
 
 namespace na {
-context NASolver::ctx{};
+context NASolver::ctx;
+NASolver::Qubit::Qubit(uint16_t id, const uint16_t t, const uint16_t maxX,
+                       const uint16_t maxY, const uint16_t maxC,
+                       const uint16_t maxR, const uint16_t maxHOffset,
+                       const uint16_t maxVOffset)
+    : id(id), x(ctx.bv_const(
+                  ("x" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+                  minBitsToRepresentUInt(maxX))),
+      y(ctx.bv_const(
+          ("y" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          minBitsToRepresentUInt(maxY))),
+      a(ctx.bool_const(
+          ("a" + std::to_string(t) + "^" + std::to_string(id)).c_str())),
+      c(ctx.bv_const(
+          ("c" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          minBitsToRepresentUInt(maxC))),
+      r(ctx.bv_const(
+          ("r" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          minBitsToRepresentUInt(maxR))),
+      h(ctx.bv_const(
+          ("h" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          minBitsToRepresentInt(maxHOffset))),
+      v(ctx.bv_const(
+          ("v" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
+          minBitsToRepresentInt(maxVOffset))) {}
 
-auto NASolver::minBitsToRepresentUInt(std::int32_t num) -> std::uint32_t {
+NASolver::Stage::Stage(const uint16_t t, const std::uint16_t numQubits,
+                       const std::uint16_t maxX, const std::uint16_t maxY,
+                       const std::uint16_t maxC, const std::uint16_t maxR,
+                       const std::uint16_t maxHOffset,
+                       const std::uint16_t maxVOffset)
+    : t(t) {
+  qubits.reserve(numQubits);
+  for (std::uint16_t id = 0; id < numQubits; ++id) {
+    qubits.emplace_back(id, t, maxX, maxY, maxC, maxR, maxHOffset, maxVOffset);
+  }
+  loadCols.reserve(maxC);
+  storeCols.reserve(maxC);
+  for (std::uint16_t c = 0; c <= maxC; ++c) {
+    std::stringstream suffixStream;
+    suffixStream << "_" << t << "^c" << c;
+    const auto& suffix = suffixStream.str();
+    loadCols.emplace_back(ctx.bool_const(("load" + suffix).c_str()));
+    storeCols.emplace_back(ctx.bool_const(("store" + suffix).c_str()));
+  }
+  loadRows.reserve(maxR);
+  storeRows.reserve(maxR);
+  for (std::uint16_t r = 0; r <= maxR; ++r) {
+    std::stringstream suffixStream;
+    suffixStream << "_" << t << "^r" << r;
+    const auto& suffix = suffixStream.str();
+    loadRows.emplace_back(ctx.bool_const(("load" + suffix).c_str()));
+    storeRows.emplace_back(ctx.bool_const(("store" + suffix).c_str()));
+  }
+}
+
+auto NASolver::minBitsToRepresentUInt(std::uint16_t num) -> std::uint32_t {
   std::uint32_t bits = 0;
   while (num > 0) {
     num >>= 1;
@@ -31,7 +85,7 @@ auto NASolver::minBitsToRepresentUInt(std::int32_t num) -> std::uint32_t {
 }
 
 auto NASolver::minBitsToRepresentInt(const std::int32_t num) -> std::uint32_t {
-  return minBitsToRepresentUInt(num) + 1;
+  return minBitsToRepresentUInt(static_cast<std::uint16_t>(std::abs(num))) + 1;
 }
 
 auto NASolver::initVariables() -> void {
@@ -553,7 +607,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
 
   // Check satisfiability
   if (solver.check() == unsat) {
-    return Result(false);
+    return Result{false, {}};
   }
   const auto model = solver.get_model();
   std::uint16_t nTrans = 0;
@@ -569,25 +623,27 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
     for (std::uint16_t i = 0; i < numQubits; ++i) {
-      resultQubits.emplace_back(
-          model.eval(stage.getQubit(i).getX()).as_uint64(),
-          model.eval(stage.getQubit(i).getY()).as_uint64(),
-          model.eval(stage.getQubit(i).getA()).is_true(),
-          model.eval(stage.getQubit(i).getC()).as_uint64(),
-          model.eval(stage.getQubit(i).getR()).as_uint64(),
-          model.eval(bv2int(stage.getQubit(i).getH(), true)).get_numeral_int(),
-          model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
+      resultQubits.emplace_back<Result::Qubit>(
+          {model.eval(stage.getQubit(i).getX()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getY()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getA()).is_true(),
+           model.eval(stage.getQubit(i).getC()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getR()).get_numeral_uint(),
+           model.eval(bv2int(stage.getQubit(i).getH(), true)).get_numeral_int(),
+           model.eval(bv2int(stage.getQubit(i).getV(), true))
+               .get_numeral_int()});
     }
     std::vector<Result::Gate> resultGates;
     for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size());
          ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
-        resultGates.emplace_back(stage.getT(), ops[i]);
+        resultGates.emplace_back<Result::Gate>({stage.getT(), ops[i]});
       }
     }
-    resultStages.emplace_back(rydberg, resultQubits, resultGates);
+    resultStages.emplace_back<Result::Stage>(
+        {rydberg, resultQubits, resultGates});
   }
-  return {true, resultStages};
+  return Result{true, resultStages};
 }
 
 auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
@@ -633,7 +689,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
 
   // Check satisfiability
   if (solver.check() == unsat) {
-    return Result(false);
+    return Result{false, {}};
   }
   const auto model = solver.get_model();
   std::vector<Result::Stage> resultStages;
@@ -644,25 +700,27 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
     for (std::uint16_t i = 0; i < numQubits; ++i) {
-      resultQubits.emplace_back(
-          model.eval(stage.getQubit(i).getX()).get_numeral_uint(),
-          model.eval(stage.getQubit(i).getY()).get_numeral_uint(),
-          model.eval(stage.getQubit(i).getA()).is_true(),
-          model.eval(stage.getQubit(i).getC()).get_numeral_uint(),
-          model.eval(stage.getQubit(i).getR()).get_numeral_uint(),
-          model.eval(bv2int(stage.getQubit(i).getH(), true)).get_numeral_int(),
-          model.eval(bv2int(stage.getQubit(i).getV(), true)).get_numeral_int());
+      resultQubits.emplace_back<Result::Qubit>(
+          {model.eval(stage.getQubit(i).getX()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getY()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getA()).is_true(),
+           model.eval(stage.getQubit(i).getC()).get_numeral_uint(),
+           model.eval(stage.getQubit(i).getR()).get_numeral_uint(),
+           model.eval(bv2int(stage.getQubit(i).getH(), true)).get_numeral_int(),
+           model.eval(bv2int(stage.getQubit(i).getV(), true))
+               .get_numeral_int()});
     }
     std::vector<Result::Gate> resultGates;
     for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size());
          ++i) {
       if (model.eval(gates[i]).as_uint64() == stage.getT()) {
-        resultGates.emplace_back(stage.getT(), ops[i]);
+        resultGates.emplace_back<Result::Gate>({stage.getT(), ops[i]});
       }
     }
-    resultStages.emplace_back(rydberg, resultQubits, resultGates);
+    resultStages.emplace_back<Result::Stage>(
+        {rydberg, resultQubits, resultGates});
   }
-  return {true, resultStages};
+  return Result{true, resultStages};
 }
 
 /// Initialize a Qubit from a YAML string.

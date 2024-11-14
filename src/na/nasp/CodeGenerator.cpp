@@ -33,10 +33,10 @@ auto CodeGenerator::coordFromDiscrete(
     const int64_t noInteractionRadius, const int64_t zoneDist) -> Point {
   const auto dx = noInteractionRadius + (2LL * maxHOffset * minAtomDist);
   const auto dy = noInteractionRadius + (2LL * maxVOffset * minAtomDist);
-  const auto x = q.getX();
-  const auto y = q.getY();
-  const auto h = q.getH();
-  const auto v = q.getV();
+  const auto x = q.x;
+  const auto y = q.y;
+  const auto h = q.h;
+  const auto v = q.v;
   if (minEntanglingY == 0) {
     // no top storage zone
     if (y <= maxEntanglingY) {
@@ -67,25 +67,25 @@ auto CodeGenerator::generate(
   NAComputation code;
   std::vector<std::shared_ptr<Point>> oldPositions;
   std::vector<bool> wasAOD;
-  oldPositions.reserve(result.front().numQubits());
-  wasAOD.reserve(result.front().numQubits());
+  oldPositions.reserve(result.stages.front().qubits.size());
+  wasAOD.reserve(result.stages.front().qubits.size());
   // initialize atoms in SLM and load required ones into AOD
   {
     std::unordered_map<std::size_t, std::set<std::size_t>> hAODLines{};
     std::unordered_map<std::size_t, std::set<std::size_t>> vAODLines{};
-    for (const auto& q : result.front().getQubits()) {
-      if (q.isAOD()) {
-        hAODLines[static_cast<std::size_t>(q.getY())].emplace(q.getR());
-        vAODLines[static_cast<std::size_t>(q.getX())].emplace(q.getC());
+    for (const auto& q : result.stages.front().qubits) {
+      if (q.a) {
+        hAODLines[static_cast<std::size_t>(q.y)].emplace(q.r);
+        vAODLines[static_cast<std::size_t>(q.x)].emplace(q.c);
       }
     }
     std::vector<std::shared_ptr<Point>> loadPositions;
-    for (const auto& q : result.front().getQubits()) {
+    for (const auto& q : result.stages.front().qubits) {
       auto pos = std::make_shared<Point>(coordFromDiscrete(
           q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
           minAtomDist, noInteractionRadius, zoneDist));
-      wasAOD.emplace_back(q.isAOD());
-      if (q.isAOD()) {
+      wasAOD.emplace_back(q.a);
+      if (q.a) {
         loadPositions.emplace_back(pos);
       }
       oldPositions.emplace_back(pos);
@@ -112,16 +112,16 @@ auto CodeGenerator::generate(
   std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
   // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
-  if (result.front().isRydberg()) {
+  if (result.stages.front().rydberg) {
     code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{Z, 1}));
     // find and execute corresponding gates in input circuit
-    for (const auto& g : result.front().getGates()) {
+    for (const auto& g : result.stages.front().gates) {
       const auto& it = std::find_if(
           executableSet.begin(), executableSet.end(), [g](const auto& v) {
             if (v->getOperation()->getType() == Z &&
                 v->getOperation()->getNcontrols() == 1) {
               const auto& usedQubits = v->getOperation()->getUsedQubits();
-              const auto [first, second] = g.getQubits();
+              const auto [first, second] = g.qubits;
               return std::set{first, second} == usedQubits;
             }
             return false;
@@ -133,8 +133,7 @@ auto CodeGenerator::generate(
       (*it)->execute();
     }
   }
-  for (std::uint16_t t = 1; t < static_cast<std::uint16_t>(result.numStages());
-       ++t) {
+  for (uint16_t t = 1; t < static_cast<uint16_t>(result.stages.size()); ++t) {
     std::vector<std::shared_ptr<Point>> newPositions;
     newPositions.reserve(oldPositions.size());
     std::vector<std::shared_ptr<Point>> startPositions;
@@ -143,25 +142,25 @@ auto CodeGenerator::generate(
     std::vector<std::shared_ptr<Point>> loadEndPositions;
     std::vector<std::shared_ptr<Point>> storeStartPositions;
     std::vector<std::shared_ptr<Point>> storeEndPositions;
-    for (uint16_t i = 0; i < result.getStage(t).numQubits(); ++i) {
-      const auto& q = result.getStage(t).getQubit(i);
+    for (uint16_t i = 0; i < result.stages.at(t).qubits.size(); ++i) {
+      const auto& q = result.stages.at(t).qubits.at(i);
       auto pos = std::make_shared<Point>(coordFromDiscrete(
           q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
           minAtomDist, noInteractionRadius, zoneDist));
-      if (wasAOD[i] && q.isAOD()) {
+      if (wasAOD[i] && q.a) {
         startPositions.emplace_back(oldPositions[i]);
         endPositions.emplace_back(pos);
-      } else if (wasAOD[i] && !q.isAOD()) {
+      } else if (wasAOD[i] && !q.a) {
         storeStartPositions.emplace_back(oldPositions[i]);
         storeEndPositions.emplace_back(pos);
-      } else if (!wasAOD[i] && q.isAOD()) {
+      } else if (!wasAOD[i] && q.a) {
         loadStartPositions.emplace_back(oldPositions[i]);
         loadEndPositions.emplace_back(loadStartPositions.back());
         startPositions.emplace_back(loadEndPositions.back());
         endPositions.emplace_back(pos);
       }
       newPositions.emplace_back(pos);
-      wasAOD[i] = q.isAOD();
+      wasAOD[i] = q.a;
     }
     if (!storeEndPositions.empty()) {
       code.emplaceBack<NAShuttlingOperation>(STORE, storeStartPositions,
@@ -175,18 +174,18 @@ auto CodeGenerator::generate(
       code.emplaceBack<NAShuttlingOperation>(MOVE, startPositions,
                                              endPositions);
     }
-    if (result.getStage(t).isRydberg()) {
+    if (result.stages.at(t).rydberg) {
       code.emplaceBack(std::make_unique<NAGlobalOperation>(FullOpType{Z, 1}));
     }
     oldPositions = std::move(newPositions);
     // find and execute corresponding gates in input circuit
-    for (const auto& g : result.getStage(t).getGates()) {
+    for (const auto& g : result.stages.at(t).gates) {
       const auto& it = std::find_if(
           executableSet.begin(), executableSet.end(), [g](const auto& v) {
             if (v->getOperation()->getType() == Z &&
                 v->getOperation()->getNcontrols() == 1) {
               const auto& usedQubits = v->getOperation()->getUsedQubits();
-              const auto [first, second] = g.getQubits();
+              const auto [first, second] = g.qubits;
               return std::set{first, second} == usedQubits;
             }
             return false;

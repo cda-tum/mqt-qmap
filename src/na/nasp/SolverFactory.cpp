@@ -44,7 +44,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto interactionRadius = arch.getInteractionRadius();
   const auto minAtomDistanceSquared = std::pow(minAtomDistance, 2);
   const auto interactionRadiusSquared = std::pow(interactionRadius, 2);
-  const auto maxVDist = static_cast<std::uint16_t>(
+  const auto maxVDist = static_cast<uint16_t>(
       std::min(std::floor(.2 + std::sqrt(.8 * interactionRadiusSquared /
                                              minAtomDistanceSquared -
                                          .16)),
@@ -59,7 +59,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
               std::pow((maxVDist - 1) * minAtomDistance, 2) +
                       std::pow(maxVDist * minAtomDistance, 2) <=
                   interactionRadiusSquared
-          ? static_cast<std::uint16_t>(maxVDist + 1)
+          ? static_cast<uint16_t>(maxVDist + 1)
           : maxVDist;
   const auto noInteractionRadius = arch.getNoInteractionRadius();
   const auto firstSite = arch.getSitesInZone(interactionZone)[0];
@@ -72,15 +72,15 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
         "Unexpected architecture: There is no site to the right or below the "
         "first site in the interaction zone.");
   }
-  const auto maxHOffset = static_cast<std::uint16_t>(
+  const auto maxHOffset = static_cast<uint16_t>(
       (arch.getPositionOfSite(*siteRight) - arch.getPositionOfSite(firstSite))
           .length() -
       noInteractionRadius / 2 / minAtomDistance);
-  const auto maxVOffset = static_cast<std::uint16_t>(
+  const auto maxVOffset = static_cast<uint16_t>(
       (arch.getPositionOfSite(*siteBelow) - arch.getPositionOfSite(firstSite))
           .length() -
       noInteractionRadius / 2 / minAtomDistance);
-  NASolver solver;
+  NASolver solver{};
   solver.init(maxX, maxY, maxC, maxR, maxHOffset, maxVOffset, maxHDist,
               maxVDist, 0, maxEntanglingY);
   return solver;
