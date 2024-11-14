@@ -80,10 +80,8 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
       (arch.getPositionOfSite(*siteBelow) - arch.getPositionOfSite(firstSite))
           .length() -
       noInteractionRadius / 2 / minAtomDistance);
-  NASolver solver{};
-  solver.init(maxX, maxY, maxC, maxR, maxHOffset, maxVOffset, maxHDist,
-              maxVDist, 0, maxEntanglingY);
-  return solver;
+  return {maxX,       maxY,     maxC,     maxR, maxHOffset,
+          maxVOffset, maxHDist, maxVDist, 0,    maxEntanglingY};
 }
 
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
