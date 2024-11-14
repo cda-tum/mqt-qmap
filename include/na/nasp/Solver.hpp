@@ -17,7 +17,7 @@ using namespace z3;
 
 class NASolver {
 protected:
-  static context ctx;
+  std::shared_ptr<context> ctxPtr;
 
 private:
   uint16_t maxX = 0; ///< maximum x-coordinate of an interaction site
@@ -199,7 +199,7 @@ private:
 
   public:
     [[nodiscard]] explicit Stage(
-        const std::uint16_t t, const std::uint16_t numQubits,
+        context& ctx, const uint16_t t, const uint16_t numQubits,
         const std::uint16_t maxX, const std::uint16_t maxY,
         const std::uint16_t maxC, const std::uint16_t maxR,
         const std::uint16_t maxHOffset, const std::uint16_t maxVOffset);
@@ -239,11 +239,11 @@ private:
   std::vector<expr> gates;
 
   /// Initializes the variables for all stages and all qubits
-  auto initVariables() -> void;
+  auto initVariables(context& ctx) -> void;
 
   /// Return constraints ensuring that exactly @code numTransfers@endcode
-  /// transfers trake place
-  [[nodiscard]] auto getExactNumTransfersConstraints() const
+  /// transfers take place
+  [[nodiscard]] auto getExactNumTransfersConstraints(context& ctx) const
       -> std::vector<expr>;
 
   /// Returns the constraint @code (x_t^(q0) = x_t^(q1)) ∧ (y_t^(q0) = y_t^(q1))
@@ -262,25 +262,28 @@ private:
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(std::uint16_t q,
+  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(context& ctx,
+                                                        std::uint16_t q,
                                                         std::uint16_t t) const
       -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(std::uint16_t q,
+  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(context& ctx,
+                                                          std::uint16_t q,
                                                           std::uint16_t t) const
       -> expr;
 
   /// Returns a vector of constraints ensuring that transition from a Rydberg
   /// stage to the next stage is valid
-  [[nodiscard]] auto getValidRydbergTransitionConstraints(std::uint16_t t) const
+  [[nodiscard]] auto getValidRydbergTransitionConstraints(context& ctx,
+                                                          std::uint16_t t) const
       -> std::vector<expr>;
 
   /// Returns a vector of constraints ensuring that transition from a Transfer
   /// stage to the next stage is valid
   [[nodiscard]] auto
-  getValidTransferTransitionConstraints(std::uint16_t t) const
+  getValidTransferTransitionConstraints(context& ctx, std::uint16_t t) const
       -> std::vector<expr>;
 
   /**
@@ -300,32 +303,43 @@ private:
    * @return a vector of the constraints described above
    */
   [[nodiscard]] auto getCircuitExecutionConstraints(
-      const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
+      context& ctx, const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
       bool mindOpsOrder, bool shieldIdleAtoms) -> std::vector<expr>;
 
   /// Returns a constraint expressing that this stage is a Rydberg stage, that
   /// is if
   /// @code numTransfers_{t-1} = numTransfers_t @endcode
-  [[nodiscard]] auto getRydbergStageConstraint(std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getRydbergStageConstraint(context& ctx,
+                                               std::uint16_t t) const -> expr;
 
   /// Returns a constraint expressing that this stage is a Transfer stage, that
   /// is if
   /// @code numTransfers_{t-1} + 1 = numTransfers_t @endcode
-  [[nodiscard]] auto getTransferStageConstraint(std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getTransferStageConstraint(context& ctx,
+                                                std::uint16_t t) const -> expr;
 
-  /// Returns constraints esnuring that the state at the given stage is valid
-  [[nodiscard]] auto getValidStageConstraints(std::uint16_t t) const
+  /// Returns constraints ensuring that the state at the given stage is valid
+  [[nodiscard]] auto getValidStageConstraints(context& ctx,
+                                              std::uint16_t t) const
       -> std::vector<expr>;
 
 public:
-  [[nodiscard]] NASolver() = default;
+  [[nodiscard]] NASolver(std::uint16_t newMaxX, std::uint16_t newMaxY,
+                         std::uint16_t newMaxC, std::uint16_t newMaxR,
+                         std::uint16_t newMaxHOffset,
+                         std::uint16_t newMaxVOffset, std::uint16_t newMaxHDist,
+                         std::uint16_t newMaxVDist,
+                         std::uint16_t newMinEntanglingY,
+                         std::uint16_t newMaxEntanglingY);
+  [[nodiscard]] NASolver(const NASolver& other) = default;
+  [[nodiscard]] NASolver& operator=(const NASolver& other) = default;
+  ~NASolver() {
+    if (ctxPtr.use_count() == 1) {
+      ctxPtr.reset();
+    }
+  }
 
-  auto init(std::uint16_t newMaxX, std::uint16_t newMaxY, std::uint16_t newMaxC,
-            std::uint16_t newMaxR, std::uint16_t newMaxHOffset,
-            std::uint16_t newMaxVOffset, std::uint16_t newMaxHDist,
-            std::uint16_t newMaxVDist, std::uint16_t newMinEntanglingY,
-            std::uint16_t newMaxEntanglingY) -> void;
-
+  /// This struct wraps the result of the solver
   struct Result {
   public:
     /// The types for the members of the result is chosen to be compatible with

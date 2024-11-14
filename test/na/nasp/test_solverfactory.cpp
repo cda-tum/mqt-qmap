@@ -171,7 +171,7 @@ h q[6];
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
   const auto result = solver.solve(
-      pairs, static_cast<std::uint16_t>(circ.getNqubits()), 5, false, true);
+      pairs, static_cast<uint16_t>(circ.getNqubits()), 5, false, true);
   EXPECT_TRUE(result.sat);
 }
 

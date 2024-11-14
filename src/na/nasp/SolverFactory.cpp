@@ -19,16 +19,16 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto interactionZone =
       *arch.getPropertiesOfOperation({qc::Z, 1}).zones.cbegin();
   const auto maxX =
-      static_cast<std::uint16_t>(arch.getNColsInZone(interactionZone) - 1);
+      static_cast<uint16_t>(arch.getNColsInZone(interactionZone) - 1);
   const auto maxEntanglingY =
-      static_cast<std::uint16_t>(arch.getNrowsInZone(interactionZone) - 1);
+      static_cast<uint16_t>(arch.getNrowsInZone(interactionZone) - 1);
   const auto maxC =
-      static_cast<std::uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
+      static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
   const auto maxR =
-      static_cast<std::uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
+      static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
   const auto storageZone = arch.getInitialZones().front();
-  const auto maxY = static_cast<std::uint16_t>(
-      maxEntanglingY + arch.getNrowsInZone(storageZone));
+  const auto maxY =
+      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZone));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD
