@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <stdexcept>
-#include <string>
 #include <tuple>
 #include <yaml-cpp/node/parse.h>
 

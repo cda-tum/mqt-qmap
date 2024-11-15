@@ -6,9 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 #include <tuple>
 
 TEST(SolverFactory, Create) {

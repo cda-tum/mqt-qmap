@@ -6,10 +6,8 @@
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
 
-#include <__filesystem/operations.h>
 #include <cstdint>
 #include <gtest/gtest.h>
-#include <string>
 
 TEST(CodeGenerator, Generate) {
   const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
