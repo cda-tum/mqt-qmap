@@ -1,4 +1,3 @@
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
@@ -8,6 +7,7 @@
 
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <optional>
 
 TEST(CodeGenerator, Generate) {
   const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
