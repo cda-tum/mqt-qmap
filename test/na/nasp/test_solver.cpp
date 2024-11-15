@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <optional>
 #include <stdexcept>
 #include <tuple>
 #include <yaml-cpp/node/parse.h>

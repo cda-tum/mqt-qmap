@@ -46,12 +46,12 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto minAtomDistanceSquared = std::pow(minAtomDistance, 2);
   const auto interactionRadiusSquared = std::pow(interactionRadius, 2);
   const auto maxVDist = static_cast<uint16_t>(
-      std::min(std::floor(.2 + std::sqrt(.8 * interactionRadiusSquared /
-                                             minAtomDistanceSquared -
+      std::min(std::floor(.2 + std::sqrt((.8 * interactionRadiusSquared /
+                                          minAtomDistanceSquared) -
                                          .16)),
-               std::floor(0.7071067811865475244 *
-                              static_cast<double>(interactionRadius) /
-                              static_cast<double>(minAtomDistance) +
+               std::floor((0.7071067811865475244 *
+                           static_cast<double>(interactionRadius) /
+                           static_cast<double>(minAtomDistance)) +
                           1.)));
   const auto maxHDist =
       std::pow(maxVDist * minAtomDistance, 2) +
@@ -76,11 +76,11 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto maxHOffset = static_cast<uint16_t>(
       (arch.getPositionOfSite(*siteRight) - arch.getPositionOfSite(firstSite))
           .length() -
-      noInteractionRadius / 2 / minAtomDistance);
+      (noInteractionRadius / 2 / minAtomDistance));
   const auto maxVOffset = static_cast<uint16_t>(
       (arch.getPositionOfSite(*siteBelow) - arch.getPositionOfSite(firstSite))
           .length() -
-      noInteractionRadius / 2 / minAtomDistance);
+      (noInteractionRadius / 2 / minAtomDistance));
   return {maxX,       maxY,     maxC,     maxR, maxHOffset,
           maxVOffset, maxHDist, maxVDist, 0,    maxEntanglingY};
 }
