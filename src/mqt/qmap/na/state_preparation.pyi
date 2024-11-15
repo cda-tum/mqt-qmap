@@ -1,7 +1,8 @@
 from qiskit import QuantumCircuit
 
 class NAComputation:
-    def __init__(self) -> None: ...
+    def __init__(self) -> None:
+        """This class represents a neutral atom computation. The code can be retrieved as a string."""
 
 class NAStatePreparationSolver:
     def __init__(self) -> None: ...
