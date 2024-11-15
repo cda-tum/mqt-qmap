@@ -6,6 +6,10 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
+#include "na/NAComputation.hpp"
+#include "na/nasp/CodeGenerator.hpp"
+#include "na/nasp/Solver.hpp"
+#include "na/nasp/SolverFactory.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 #include "sc/exact/ExactMapper.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
@@ -906,10 +910,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   // Neutral Atom State Preparation
   py::class_<na::NAComputation>(m, "NAComputation", "Neutral Atom Computation")
       .def(py::init<>())
-      .def("__str__", &na::NAComputation::toString)
+      .def("__str__", &na::NAComputation::toString);
 
-          py::class_<na::NASolver>(m, "NAStatePreparationSolver",
-                                   "Neutral Atom State Preparation Solver")
+  py::class_<na::NASolver>(m, "NAStatePreparationSolver",
+                           "Neutral Atom State Preparation Solver")
       .def(py::init<uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t,
                     uint16_t, uint16_t, uint16_t, uint16_t>(),
            "Create a solver instance for the neutral atom state preparation "
@@ -920,23 +924,22 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def("solve", &na::NASolver::solve,
            "Solve the neutral atom state preparation problem", "ops"_a,
            "num_qubits"_a, "num_stages"_a, "num_transfers"_a,
-           "mind_ops_order"_a, "shield_idle_qubits"_a)
+           "mind_ops_order"_a, "shield_idle_qubits"_a);
 
-          m.def(
-              "generate_code",
-              [](const py::object& circ, const na::NASolver::Result& result,
-                 uint16_t maxHOffset, uint16_t maxVOffset,
-                 uint16_t minEntanglingY, uint16_t maxEntanglingY,
-                 uint16_t minAtomDist, uint16_t noInteractionRadius,
-                 uint16_t zoneDist) {
-                qc::QuantumComputation qc{};
-                loadQC(qc, circ);
-                return na::CodeGenerator::generate(
-                    qc, result, maxHOffset, maxVOffset, minEntanglingY,
-                    maxEntanglingY, minAtomDist, noInteractionRadius, zoneDist);
-              },
-              "Generate code for the given circuit using the solver's result",
-              "circ"_a, "result"_a, "max_h_offset"_a, "max_v_offset"_a,
-              "min_entangling_y"_a, "max_entangling_y"_a, "min_atom_dist"_a = 1,
-              "no_interaction_radius"_a = 10, "zone_dist"_a = 24)
+  m.def(
+      "generate_code",
+      [](const py::object& circ, const na::NASolver::Result& result,
+         uint16_t maxHOffset, uint16_t maxVOffset, uint16_t minEntanglingY,
+         uint16_t maxEntanglingY, uint16_t minAtomDist,
+         uint16_t noInteractionRadius, uint16_t zoneDist) {
+        qc::QuantumComputation qc{};
+        loadQC(qc, circ);
+        return na::CodeGenerator::generate(
+            qc, result, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
+            minAtomDist, noInteractionRadius, zoneDist);
+      },
+      "Generate code for the given circuit using the solver's result", "circ"_a,
+      "result"_a, "max_h_offset"_a, "max_v_offset"_a, "min_entangling_y"_a,
+      "max_entangling_y"_a, "min_atom_dist"_a = 1,
+      "no_interaction_radius"_a = 10, "zone_dist"_a = 24);
 }

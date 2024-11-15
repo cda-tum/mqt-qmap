@@ -6,6 +6,6 @@ See README.md or go to https://github.com/cda-tum/qmap for more information.
 
 from __future__ import annotations
 
-from .state_preparation import NAComputation, NAStatePreparationSolver
+from .state_preparation import NAComputation, NAStatePreparationSolver, generate_code, get_ops_for_solver
 
-__all__ = ["NAComputation", "NAStatePreparationSolver"]
+__all__ = ["NAComputation", "NAStatePreparationSolver", "generate_code", "get_ops_for_solver"]
