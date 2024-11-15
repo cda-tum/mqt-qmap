@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <format>
+#include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -349,16 +350,16 @@ auto NASolver::getCircuitExecutionConstraints(
     for (const auto& lastGate : lastGates) {
       constraints.emplace_back(ult(lastGate, numStages));
     }
-    constraints.reserve(3 * numGates +
-                        numStages * numQubits * (numQubits - 1) / 2);
+    constraints.reserve((3 * numGates) +
+                        (numStages * numQubits * (numQubits - 1) / 2));
   } else {
-    constraints.reserve(numGates * (numGates - 1) / 2 + 4 * numGates +
-                        numStages * numQubits * (numQubits - 1) / 2);
-    for (std::uint16_t g = 0; g < numGates; ++g) {
+    constraints.reserve((numGates * (numGates - 1) / 2) + 4 * numGates +
+                        (numStages * numQubits * (numQubits - 1) / 2));
+    for (std::uint16_t g = 0; static_cast<size_t>(g) < numGates; ++g) {
       constraints.emplace_back(
           // 0 <= gates[g] &&
           ult(gates[g], numStages));
-      for (std::uint16_t h = g + 1; h < numGates; ++h) {
+      for (std::uint16_t h = g + 1; static_cast<size_t>(h) < numGates; ++h) {
         if (ops[g].first == ops[h].first || ops[g].first == ops[h].second ||
             ops[g].second == ops[h].first || ops[g].second == ops[h].second) {
           constraints.emplace_back(gates[g] != gates[h]);
