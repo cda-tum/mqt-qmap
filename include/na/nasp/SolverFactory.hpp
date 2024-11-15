@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Definitions.hpp"
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/Architecture.hpp"
