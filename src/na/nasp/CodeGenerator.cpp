@@ -1,6 +1,7 @@
 #include "na/nasp/CodeGenerator.hpp"
 
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/Layer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -63,7 +64,9 @@ auto CodeGenerator::generate(
     const uint16_t minEntanglingY, const uint16_t maxEntanglingY,
     const uint16_t minAtomDist, const uint16_t noInteractionRadius,
     const uint16_t zoneDist) -> NAComputation {
-  const Layer layer(input);
+  auto flattened = input;
+  CircuitOptimizer::flattenOperations(flattened);
+  const Layer layer(flattened);
   NAComputation code;
   std::vector<std::shared_ptr<Point>> oldPositions;
   std::vector<bool> wasAOD;
@@ -102,7 +105,7 @@ auto CodeGenerator::generate(
       ops.cbegin(), ops.cend(),
       std::inserter(affectedQubits, affectedQubits.end()),
       [](const auto& v) { return v->getOperation()->getTargets().front(); });
-  if (affectedQubits.size() != input.getNqubits() ||
+  if (affectedQubits.size() != flattened.getNqubits() ||
       ops.size() != affectedQubits.size()) {
     throw std::invalid_argument("Not all atoms are initialized to plus state.");
   }

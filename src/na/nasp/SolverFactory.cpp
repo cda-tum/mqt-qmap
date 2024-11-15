@@ -1,5 +1,6 @@
 #include "na/nasp/SolverFactory.hpp"
 
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/Architecture.hpp"
@@ -87,9 +88,11 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
                                     const FullOpType opType, const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
+  auto flattened = circ;
+  qc::CircuitOptimizer::flattenOperations(flattened);
   std::vector<std::pair<unsigned int, unsigned int>> ops;
-  ops.reserve(circ.size());
-  for (const auto& op : circ) {
+  ops.reserve(flattened.size());
+  for (const auto& op : flattened) {
     if (op->getType() == opType.type &&
         op->getNcontrols() == opType.nControls) {
       const auto& operands = op->getUsedQubits();
