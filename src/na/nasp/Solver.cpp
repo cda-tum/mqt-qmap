@@ -46,20 +46,19 @@ NASolver::Qubit::Qubit(context& ctx, uint16_t id, const uint16_t t,
           ("v" + std::to_string(t) + "^" + std::to_string(id)).c_str(),
           minBitsToRepresentInt(maxVOffset))) {}
 
-NASolver::Stage::Stage(context& ctx, const uint16_t t,
-                       const std::uint16_t numQubits, const std::uint16_t maxX,
-                       const std::uint16_t maxY, const std::uint16_t maxC,
-                       const std::uint16_t maxR, const std::uint16_t maxHOffset,
-                       const std::uint16_t maxVOffset)
+NASolver::Stage::Stage(context& ctx, const uint16_t t, const uint16_t numQubits,
+                       const uint16_t maxX, const uint16_t maxY,
+                       const uint16_t maxC, const uint16_t maxR,
+                       const uint16_t maxHOffset, const uint16_t maxVOffset)
     : t(t) {
   qubits.reserve(numQubits);
-  for (std::uint16_t id = 0; id < numQubits; ++id) {
+  for (uint16_t id = 0; id < numQubits; ++id) {
     qubits.emplace_back(ctx, id, t, maxX, maxY, maxC, maxR, maxHOffset,
                         maxVOffset);
   }
   loadCols.reserve(maxC);
   storeCols.reserve(maxC);
-  for (std::uint16_t c = 0; c <= maxC; ++c) {
+  for (uint16_t c = 0; c <= maxC; ++c) {
     std::stringstream suffixStream;
     suffixStream << "_" << t << "^c" << c;
     const auto& suffix = suffixStream.str();
@@ -68,7 +67,7 @@ NASolver::Stage::Stage(context& ctx, const uint16_t t,
   }
   loadRows.reserve(maxR);
   storeRows.reserve(maxR);
-  for (std::uint16_t r = 0; r <= maxR; ++r) {
+  for (uint16_t r = 0; r <= maxR; ++r) {
     std::stringstream suffixStream;
     suffixStream << "_" << t << "^r" << r;
     const auto& suffix = suffixStream.str();
@@ -77,8 +76,8 @@ NASolver::Stage::Stage(context& ctx, const uint16_t t,
   }
 }
 
-auto NASolver::minBitsToRepresentUInt(std::uint16_t num) -> std::uint32_t {
-  std::uint32_t bits = 0;
+auto NASolver::minBitsToRepresentUInt(uint16_t num) -> uint32_t {
+  uint32_t bits = 0;
   while (num > 0) {
     num >>= 1;
     ++bits;
@@ -86,28 +85,28 @@ auto NASolver::minBitsToRepresentUInt(std::uint16_t num) -> std::uint32_t {
   return bits;
 }
 
-auto NASolver::minBitsToRepresentInt(const std::int32_t num) -> std::uint32_t {
-  return minBitsToRepresentUInt(static_cast<std::uint16_t>(std::abs(num))) + 1;
+auto NASolver::minBitsToRepresentInt(const int32_t num) -> uint32_t {
+  return minBitsToRepresentUInt(static_cast<uint16_t>(std::abs(num))) + 1;
 }
 
 auto NASolver::initVariables() -> void {
   stages.clear();
   stages.reserve(numStages);
-  for (std::uint16_t t = 0; t < numStages; ++t) {
+  for (uint16_t t = 0; t < numStages; ++t) {
     stages.emplace_back(*ctx, t, numQubits, maxX, maxY, maxC, maxR, maxHOffset,
                         maxVOffset);
   }
   transfers.clear();
   if (numTransfers.has_value()) {
     transfers.reserve(numTransfers.value());
-    for (std::uint16_t t = 0; t < numTransfers.value(); ++t) {
+    for (uint16_t t = 0; t < numTransfers.value(); ++t) {
       transfers.emplace_back(
           ctx->bv_const(("transfer_" + std::to_string(t)).c_str(),
                         minBitsToRepresentUInt(numStages)));
     }
   } else {
     transfers.reserve(numStages);
-    for (std::uint16_t t = 0; t < numStages; ++t) {
+    for (uint16_t t = 0; t < numStages; ++t) {
       transfers.emplace_back(
           ctx->bool_const(("transfer_" + std::to_string(t)).c_str()));
     }
@@ -118,7 +117,7 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   std::vector<expr> constraints;
   if (numTransfers.has_value() && numTransfers.value() != 0) {
     constraints.reserve(numTransfers.value() + 1);
-    for (std::uint16_t t = 1; t < numTransfers.value(); ++t) {
+    for (uint16_t t = 1; t < numTransfers.value(); ++t) {
       constraints.emplace_back(ult(transfers[t - 1], transfers[t]));
     }
     constraints.emplace_back(
@@ -128,24 +127,23 @@ auto NASolver::getExactNumTransfersConstraints() const -> std::vector<expr> {
   return constraints;
 }
 
-auto NASolver::getHaveSamePositionConstraint(const std::uint16_t q0,
-                                             const std::uint16_t q1,
-                                             const std::uint16_t t) const
-    -> expr {
+auto NASolver::getHaveSamePositionConstraint(const uint16_t q0,
+                                             const uint16_t q1,
+                                             const uint16_t t) const -> expr {
   return stages[t].getQubit(q0).getX() == stages[t].getQubit(q1).getX() &&
          stages[t].getQubit(q0).getY() == stages[t].getQubit(q1).getY();
 }
 
-auto NASolver::getHaveDifferentPositionConstraint(const std::uint16_t q0,
-                                                  const std::uint16_t q1,
-                                                  const std::uint16_t t) const
+auto NASolver::getHaveDifferentPositionConstraint(const uint16_t q0,
+                                                  const uint16_t q1,
+                                                  const uint16_t t) const
     -> expr {
   return !getHaveSamePositionConstraint(q0, q1, t);
 }
 
 // NOLINTNEXTLINE (bugprone-switch-missing-default-case)
-auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
-                                                  const std::uint16_t t) const
+auto NASolver::getAffectedByRydbergBeamConstraint(const uint16_t q,
+                                                  const uint16_t t) const
     -> expr {
   switch (storage) {
   case Storage::None:
@@ -161,13 +159,13 @@ auto NASolver::getAffectedByRydbergBeamConstraint(const std::uint16_t q,
   }
 }
 
-auto NASolver::getShieldedFromRydbergBeamConstraint(const std::uint16_t q,
-                                                    const std::uint16_t t) const
+auto NASolver::getShieldedFromRydbergBeamConstraint(const uint16_t q,
+                                                    const uint16_t t) const
     -> expr {
   return !getAffectedByRydbergBeamConstraint(q, t);
 }
 
-auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
+auto NASolver::getValidRydbergTransitionConstraints(const uint16_t t) const
     -> std::vector<expr> {
   if (t == numStages - 1) {
     std::stringstream msg;
@@ -176,7 +174,7 @@ auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
   }
   std::vector<expr> constraints;
   constraints.reserve(3UL * numQubits);
-  for (std::uint16_t i = 0; i < numQubits; ++i) {
+  for (uint16_t i = 0; i < numQubits; ++i) {
     // For all: AOD/SLM state is preserved
     constraints.emplace_back(implies(getRydbergStageConstraint(t),
                                      stages[t].getQubit(i).getA() ==
@@ -194,13 +192,13 @@ auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
   }
   // we set load and store variables to false because they do not carray any
   // meaning in the rydberg stage anyway
-  for (std::uint16_t i = 0; i <= static_cast<std::uint16_t>(maxC); ++i) {
+  for (uint16_t i = 0; i <= static_cast<uint16_t>(maxC); ++i) {
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getLoadCol(i)));
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getStoreCol(i)));
   }
-  for (std::uint16_t i = 0; i <= static_cast<std::uint16_t>(maxR); ++i) {
+  for (uint16_t i = 0; i <= static_cast<uint16_t>(maxR); ++i) {
     constraints.emplace_back(
         implies(getRydbergStageConstraint(t), !stages[t].getLoadRow(i)));
     constraints.emplace_back(
@@ -209,8 +207,8 @@ auto NASolver::getValidRydbergTransitionConstraints(const std::uint16_t t) const
   return constraints;
 }
 
-auto NASolver::getValidTransferTransitionConstraints(
-    const std::uint16_t t) const -> std::vector<expr> {
+auto NASolver::getValidTransferTransitionConstraints(const uint16_t t) const
+    -> std::vector<expr> {
   if (t == numStages - 1) {
     std::stringstream msg;
     msg << "There is no next stage after the last stage " << t;
@@ -219,7 +217,7 @@ auto NASolver::getValidTransferTransitionConstraints(
   std::vector<expr> constraints;
   // TODO: check all reserves for the correct capacity
   constraints.reserve(3UL * numQubits);
-  for (std::uint16_t i = 0; i < numQubits; ++i) {
+  for (uint16_t i = 0; i < numQubits; ++i) {
     // For SLM and Stored: stay at the same position
     constraints.emplace_back(implies(
         getTransferStageConstraint(t) && !stages[t + 1].getQubit(i).getA(),
@@ -234,14 +232,14 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Loaded: Entire row or column must be loaded
     {
       expr colClauses = ctx->bool_val(true);
-      for (std::uint16_t c = 0; c <= static_cast<std::uint16_t>(maxC); ++c) {
+      for (uint16_t c = 0; c <= static_cast<uint16_t>(maxC); ++c) {
         colClauses = colClauses &&
                      implies(stages[t].getQubit(i).getC() ==
                                  ctx->bv_val(c, minBitsToRepresentUInt(maxC)),
                              stages[t].getLoadCol(c));
       }
       expr rowClauses = ctx->bool_val(true);
-      for (std::uint16_t r = 0; r <= static_cast<std::uint16_t>(maxR); ++r) {
+      for (uint16_t r = 0; r <= static_cast<uint16_t>(maxR); ++r) {
         rowClauses = rowClauses &&
                      implies(stages[t].getQubit(i).getR() ==
                                  ctx->bv_val(r, minBitsToRepresentUInt(maxR)),
@@ -254,7 +252,7 @@ auto NASolver::getValidTransferTransitionConstraints(
     // For Stored: Entire row or column must be stored
     {
       expr colClauses = ctx->bool_val(true);
-      for (std::uint16_t c = 0; c <= static_cast<std::uint16_t>(maxC); ++c) {
+      for (uint16_t c = 0; c <= static_cast<uint16_t>(maxC); ++c) {
         colClauses = colClauses &&
                      implies(stages[t].getQubit(i).getC() ==
                                  ctx->bv_val(c, minBitsToRepresentUInt(maxC)),

@@ -199,19 +199,18 @@ private:
 
   public:
     [[nodiscard]] explicit Stage(context& ctx, uint16_t t, uint16_t numQubits,
-                                 std::uint16_t maxX, std::uint16_t maxY,
-                                 std::uint16_t maxC, std::uint16_t maxR,
-                                 std::uint16_t maxHOffset,
-                                 std::uint16_t maxVOffset);
+                                 uint16_t maxX, uint16_t maxY, uint16_t maxC,
+                                 uint16_t maxR, uint16_t maxHOffset,
+                                 uint16_t maxVOffset);
 
-    [[nodiscard]] std::uint16_t getT() const { return t; }
+    [[nodiscard]] uint16_t getT() const { return t; }
 
     [[nodiscard]] auto getQubit(const size_t i) const -> const Qubit& {
       return qubits[i];
     }
 
     [[nodiscard]] auto numQubits() const {
-      return static_cast<std::uint16_t>(qubits.size());
+      return static_cast<uint16_t>(qubits.size());
     }
 
     [[nodiscard]] auto getLoadCol(const size_t i) const -> const expr& {
@@ -231,9 +230,9 @@ private:
     }
   };
 
-  std::uint16_t numQubits = 0;
-  std::uint16_t numStages = 0;
-  std::optional<std::uint16_t> numTransfers = std::nullopt;
+  uint16_t numQubits = 0;
+  uint16_t numStages = 0;
+  std::optional<uint16_t> numTransfers = std::nullopt;
   std::vector<Stage> stages;
   std::vector<expr> transfers;
   std::vector<expr> gates;
@@ -248,39 +247,35 @@ private:
 
   /// Returns the constraint @code (x_t^(q0) = x_t^(q1)) ∧ (y_t^(q0) = y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto getHaveSamePositionConstraint(std::uint16_t q0,
-                                                   std::uint16_t q1,
-                                                   std::uint16_t t) const
-      -> expr;
+  [[nodiscard]] auto getHaveSamePositionConstraint(uint16_t q0, uint16_t q1,
+                                                   uint16_t t) const -> expr;
 
   /// Returns the constraint @code (x_t^(q0) ≠ x_t^(q1)) ∨ (y_t^(q0) ≠ y_t^(q1))
   /// @endcode
-  [[nodiscard]] auto getHaveDifferentPositionConstraint(std::uint16_t q0,
-                                                        std::uint16_t q1,
-                                                        std::uint16_t t) const
+  [[nodiscard]] auto
+  getHaveDifferentPositionConstraint(uint16_t q0, uint16_t q1, uint16_t t) const
       -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(std::uint16_t q,
-                                                        std::uint16_t t) const
+  [[nodiscard]] auto getAffectedByRydbergBeamConstraint(uint16_t q,
+                                                        uint16_t t) const
       -> expr;
 
   /// Return constraints ensuring that the qubits is in the entangling zone at
   /// stage t
-  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(std::uint16_t q,
-                                                          std::uint16_t t) const
+  [[nodiscard]] auto getShieldedFromRydbergBeamConstraint(uint16_t q,
+                                                          uint16_t t) const
       -> expr;
 
   /// Returns a vector of constraints ensuring that transition from a Rydberg
   /// stage to the next stage is valid
-  [[nodiscard]] auto getValidRydbergTransitionConstraints(std::uint16_t t) const
+  [[nodiscard]] auto getValidRydbergTransitionConstraints(uint16_t t) const
       -> std::vector<expr>;
 
   /// Returns a vector of constraints ensuring that transition from a Transfer
   /// stage to the next stage is valid
-  [[nodiscard]] auto
-  getValidTransferTransitionConstraints(std::uint16_t t) const
+  [[nodiscard]] auto getValidTransferTransitionConstraints(uint16_t t) const
       -> std::vector<expr>;
 
   /**
@@ -306,25 +301,23 @@ private:
   /// Returns a constraint expressing that this stage is a Rydberg stage, that
   /// is if
   /// @code numTransfers_{t-1} = numTransfers_t @endcode
-  [[nodiscard]] auto getRydbergStageConstraint(std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getRydbergStageConstraint(uint16_t t) const -> expr;
 
   /// Returns a constraint expressing that this stage is a Transfer stage, that
   /// is if
   /// @code numTransfers_{t-1} + 1 = numTransfers_t @endcode
-  [[nodiscard]] auto getTransferStageConstraint(std::uint16_t t) const -> expr;
+  [[nodiscard]] auto getTransferStageConstraint(uint16_t t) const -> expr;
 
   /// Returns constraints ensuring that the state at the given stage is valid
-  [[nodiscard]] auto getValidStageConstraints(std::uint16_t t) const
+  [[nodiscard]] auto getValidStageConstraints(uint16_t t) const
       -> std::vector<expr>;
 
 public:
-  [[nodiscard]] NASolver(std::uint16_t newMaxX, std::uint16_t newMaxY,
-                         std::uint16_t newMaxC, std::uint16_t newMaxR,
-                         std::uint16_t newMaxHOffset,
-                         std::uint16_t newMaxVOffset, std::uint16_t newMaxHDist,
-                         std::uint16_t newMaxVDist,
-                         std::uint16_t newMinEntanglingY,
-                         std::uint16_t newMaxEntanglingY);
+  [[nodiscard]] NASolver(uint16_t newMaxX, uint16_t newMaxY, uint16_t newMaxC,
+                         uint16_t newMaxR, uint16_t newMaxHOffset,
+                         uint16_t newMaxVOffset, uint16_t newMaxHDist,
+                         uint16_t newMaxVDist, uint16_t newMinEntanglingY,
+                         uint16_t newMaxEntanglingY);
   [[nodiscard]] NASolver(const NASolver& other) = default;
   [[nodiscard]] NASolver& operator=(const NASolver& other) = default;
   virtual ~NASolver() = default;
@@ -337,24 +330,24 @@ public:
     struct Qubit {
     public:
       /// discrete x-coordinate of the site the atom is located in
-      std::uint32_t x;
+      uint32_t x;
       /// discrete y-coordinate of the site the atom is located in
-      std::uint32_t y;
+      uint32_t y;
       /// boolean variable to indicate whether the atom is loaded in an AOD,
       /// SLM otherwise
       bool a;
       /// if the atom is loaded in an AOD, this is the index of the AOD column,
       /// otherwise it has no meaning
-      std::uint32_t c;
+      uint32_t c;
       /// if the atom is loaded in an AOD, this is the index of the AOD row,
       /// otherwise it has no meaning
-      std::uint32_t r;
+      uint32_t r;
       /// denotes the horizontal offset from the SLM trap if the atom is loaded
       /// in an AOD
-      std::int32_t h;
+      int32_t h;
       /// denotes the vertical offset from the SLM trap if the atom is loaded in
       /// an AOD
-      std::int32_t v;
+      int32_t v;
 
       [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Qubit;
 
@@ -365,7 +358,7 @@ public:
 
     struct Gate {
     public:
-      std::uint16_t stage = 0;
+      uint16_t stage = 0;
       std::pair<qc::Qubit, qc::Qubit> qubits;
 
       [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Gate;
@@ -403,17 +396,17 @@ public:
 
   [[nodiscard]] auto
   solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
-        std::uint16_t newNumQubits, std::uint16_t newNumStages,
-        std::uint16_t newNumTransfers = 0, bool mindOpsOrder = false,
+        uint16_t newNumQubits, uint16_t newNumStages,
+        uint16_t newNumTransfers = 0, bool mindOpsOrder = false,
         bool shieldIdleQubits = true) -> Result;
 
   [[nodiscard]] auto
   solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
-        std::uint16_t newNumQubits, std::uint16_t newNumStages,
-        bool mindOpsOrder = false, bool shieldIdleQubits = true) -> Result;
+        uint16_t newNumQubits, uint16_t newNumStages, bool mindOpsOrder = false,
+        bool shieldIdleQubits = true) -> Result;
 };
 
 struct ExprHash {
-  std::uint32_t operator()(const expr& e) const { return e.hash(); }
+  uint32_t operator()(const expr& e) const { return e.hash(); }
 };
 } // namespace na
