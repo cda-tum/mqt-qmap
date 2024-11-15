@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 
 # get root directory of the project
-circ_dir = Path(__file__).resolve().parent.parent.parent / "examples" / "na" / "nasp"
+circ_dir = Path(__file__).resolve() / "circuits"
 
 @pytest.fixture
 def solver() -> Solver:

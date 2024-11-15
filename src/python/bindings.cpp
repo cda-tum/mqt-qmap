@@ -902,4 +902,16 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "Returns the animation csv string")
       .def("save_animation_csv", &na::NeutralAtomMapper::saveAnimationCsv,
            "Saves the animation csv string to a file", "filename"_a);
+
+  // Neutral Atom State Preparation
+  py::class_<na::NAComputation>(m, "NAComputation", "Neutral Atom Computation")
+      .def(py::init<>())
+      .def("__str__", &na::NAComputation::toString)
+
+  py::class_<na::NASolver>(m, "NAStatePreparationSolver",
+                           "Neutral Atom State Preparation Solver")
+      .def(py::init<uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t>(), "Create a solver instance for the neutral atom state preparation problem",
+           "max_x"_a, "max_y"_a, "max_c"_a, "max_r"_a, "max_h_offset"_a, "max_v_offset"_a, "max_h_dist"_a, "max_v_dist"_a, "min_entangling_y"_a, "max_entangling_y"_a)
+      .def("solve", &na::NASolver::solve, "Solve the neutral atom state preparation problem", "ops"_a, "num_qubits"_a, "num_stages"_a, "num_transfers"_a, "mind_ops_order"_a, "shield_idle_qubits"_a)
+
 }

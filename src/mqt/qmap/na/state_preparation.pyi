@@ -2,13 +2,18 @@ from typing import overload
 
 from qiskit import QuantumCircuit
 
-from mqt.core.na import NAComputation
+Gate = NAStatePreparationSolver.Result.Gate
+Qubit = NAStatePreparationSolver.Result.Qubit
+Result = NAStatePreparationSolver.Result
 
-Gate = Solver.Result.Gate
-Qubit = Solver.Result.Qubit
-Result = Solver.Result
+class NAComputation:
+    @overload
+    def __init__(self) -> None: ...
 
-class Solver:
+    @overload
+    def __str__(self) -> str: ...
+
+class NAStatePreparationSolver:
     @overload
     def __init__(self) -> None: ...
 
