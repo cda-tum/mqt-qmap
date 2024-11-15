@@ -145,7 +145,8 @@ auto CodeGenerator::generate(
     std::vector<std::shared_ptr<Point>> loadEndPositions;
     std::vector<std::shared_ptr<Point>> storeStartPositions;
     std::vector<std::shared_ptr<Point>> storeEndPositions;
-    for (uint16_t i = 0; i < result.stages.at(t).qubits.size(); ++i) {
+    for (uint16_t i = 0;
+         static_cast<size_t>(i) < result.stages.at(t).qubits.size(); ++i) {
       const auto& q = result.stages.at(t).qubits.at(i);
       auto pos = std::make_shared<Point>(coordFromDiscrete(
           q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,

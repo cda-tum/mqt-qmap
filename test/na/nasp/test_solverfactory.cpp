@@ -120,20 +120,20 @@ TEST(SolverFactory, Create) {
   std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (4 x 36 = 144 sites)
-  for (std::size_t y = 0; y <= 36; y += 12) {
-    for (std::size_t x = 3; x <= 353; x += 10) {
+  for (size_t y = 0; y <= 36; y += 12) {
+    for (size_t x = 3; x <= 353; x += 10) {
       gridSS << x << "," << y << "\n";
     }
   }
   // storage zone (12 x 72 = 864 sites)
-  for (std::size_t y = 56; y <= 111; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  for (size_t y = 56; y <= 111; y += 5) {
+    for (size_t x = 0; x <= 355; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
   // readout zone (4 x 72 = 288 sites)
-  for (std::size_t y = 131; y <= 146; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  for (size_t y = 131; y <= 146; y += 5) {
+    for (size_t x = 0; x <= 355; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
@@ -260,20 +260,20 @@ TEST(SolverFactory, CreateExceptions) {
   std::stringstream gridSS;
   gridSS << "x,y\n";
   // entangling zone (1 x 36 = 36 sites)
-  for (std::size_t y = 0; y <= 0; y += 12) {
-    for (std::size_t x = 3; x <= 353; x += 10) {
+  for (size_t y = 0; y <= 0; y += 12) {
+    for (size_t x = 3; x <= 353; x += 10) {
       gridSS << x << "," << y << "\n";
     }
   }
   // storage zone (12 x 72 = 864 sites)
-  for (std::size_t y = 56; y <= 111; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  for (size_t y = 56; y <= 111; y += 5) {
+    for (size_t x = 0; x <= 355; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
   // readout zone (4 x 72 = 288 sites)
-  for (std::size_t y = 131; y <= 146; y += 5) {
-    for (std::size_t x = 0; x <= 355; x += 5) {
+  for (size_t y = 131; y <= 146; y += 5) {
+    for (size_t x = 0; x <= 355; x += 5) {
       gridSS << x << "," << y << "\n";
     }
   }
