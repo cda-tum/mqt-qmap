@@ -1,21 +1,33 @@
 """Test the state preparation for zoned neutral atom architectures."""
 
-from mqt.qmap.na import Solver
+from __future__ import annotations
 
-import pytest
 from pathlib import Path
 
+import pytest
+
+from mqt.qmap.na import NAStatePreparationSolver, get_ops_for_solver
+
 # get root directory of the project
-circ_dir = Path(__file__).resolve() / "circuits"
+circ_dir = Path(__file__).resolve() / "../../na/nasp/circuits"
+
 
 @pytest.fixture
-def solver() -> Solver:
+def solver() -> NAStatePreparationSolver:
+    """Return a NAStatePreparationSolver instance with both sided storage zone."""
+    return NAStatePreparationSolver()  # 3, 7, 2, 3, 2, 2, 2, 2, 2, 4)
+
+
 @pytest.mark.parametrize(
     "circuit_filename",
     [
-        "shor.qasm", "steane.qasm", "surface_3.qasm",
+        "shor.qasm",
+        "steane.qasm",
+        "surface_3.qasm",
     ],
 )
-def test_na_state_prep(solver: Solver, circuit_filename: str) -> None:
+def test_na_state_prep(solver: NAStatePreparationSolver, circuit_filename: str) -> None:
     """Test the state preparation for the zoned neutral atom architecture."""
-    solver.solve(circ_dir / circuit_filename)
+    ops = get_ops_for_solver(circ_dir / circuit_filename)
+    solver.solve(ops, 7, 4, None, False, True)
+    # todo check result
