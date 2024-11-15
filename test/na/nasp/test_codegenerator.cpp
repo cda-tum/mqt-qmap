@@ -29,8 +29,9 @@ TEST(CodeGenerator, Generate) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 4, false, true);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
   const auto& comp = na::CodeGenerator::generate(circ, result, 2, 2, 2, 4);
   const auto valid = comp.validateAODConstraints();
   EXPECT_TRUE(valid);

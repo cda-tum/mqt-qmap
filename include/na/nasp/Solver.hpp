@@ -313,6 +313,31 @@ private:
       -> std::vector<expr>;
 
 public:
+  /**
+   * @brief Construct a new NASolver object with the given parameters that
+   * define the abstraction of the 2D grid used by the solver.
+   * @param newMaxX is the maximal discrete x-coordinate of an interaction site
+   * @param newMaxY is the maximal discrete y-coordinate of an interaction site
+   * @param newMaxC is the maximal index of an AOD column, i.e., it limits the
+   * number of AOD columns
+   * @param newMaxR is the maximal index of an AOD row, i.e., it limits the
+   * number of AOD rows
+   * @param newMaxHOffset is the maximal horizontal offset from the SLM trap
+   * @param newMaxVOffset is the maximal vertical offset from the SLM trap
+   * @param newMaxHDist is the maximal horizontal distance between two atoms in
+   * order to interact
+   * @param newMaxVDist is the maximal vertical distance between two atoms in
+   * order to interact
+   * @param newMinEntanglingY is the minimal y-coordinate of the entangling
+   * zone, i.e., all discrete y-coordinates smaller than this value are
+   * considered to be in the top storage zone. If this value is 0, there is no
+   * top storage zone.
+   * @param newMaxEntanglingY is the maximal y-coordinate of the entangling
+   * zone, i.e., all discrete y-coordinates greater than this value are
+   * considered to be in the bottom storage zone. If this value is maxY, there
+   * is no bottom storage zone.
+   * @throws illegal_argument if newMinEntanglingY > newMaxEntanglingY
+   */
   [[nodiscard]] NASolver(uint16_t newMaxX, uint16_t newMaxY, uint16_t newMaxC,
                          uint16_t newMaxR, uint16_t newMaxHOffset,
                          uint16_t newMaxVOffset, uint16_t newMaxHDist,

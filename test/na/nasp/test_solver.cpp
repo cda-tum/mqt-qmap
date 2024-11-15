@@ -19,8 +19,9 @@ TEST(Solver, SteaneDoubleSidedStorage) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 4, false, true);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
   EXPECT_TRUE(result.sat);
   EXPECT_EQ(result.stages.size(), 4);
 }
@@ -33,11 +34,13 @@ TEST(Solver, SteaneBottomStorage) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto resultUnsat = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 4, false, true);
+  const auto resultUnsat =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
   EXPECT_FALSE(resultUnsat.sat);
-  const auto resultSat = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 5, false, true);
+  const auto resultSat =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 5,
+                   std::nullopt, false, true);
   EXPECT_TRUE(resultSat.sat);
   EXPECT_TRUE(resultSat.stages.front().rydberg);
   for (const auto& q : resultSat.stages.front().qubits) {
@@ -69,8 +72,9 @@ TEST(Solver, NoShieldingFixedOrder) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 3, false, false);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
+                   std::nullopt, false, false);
   EXPECT_TRUE(result.sat);
 }
 
@@ -95,16 +99,22 @@ TEST(Solver, Unsat) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 3, false, true);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
+                   std::nullopt, false, true);
   EXPECT_FALSE(result.sat);
 }
 
 TEST(Solver, Exceptions) {
+  // One sided storage zone is only supported below the entangling zone (higher
+  // Y), i.e., minEntanglingY must be 0 or maxEntanglingY must less than maxY.
   EXPECT_THROW(std::ignore = na::NASolver(3, 7, 2, 3, 2, 2, 2, 2, 2, 7),
                std::invalid_argument);
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
-  EXPECT_THROW(std::ignore = solver.solve({{0, 1}}, 3, 1, false, true),
+  // In order to shield qubits, there must be a storage zone, i.e.,
+  // maxEntanglingY must be less than maxY.
+  EXPECT_THROW(std::ignore =
+                   solver.solve({{0, 1}}, 3, 1, std::nullopt, false, true),
                std::invalid_argument);
 }
 
@@ -116,8 +126,9 @@ TEST(Solver, YAMLRoundTrip) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 4, false, true);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
   const auto resultRT = na::NASolver::Result::fromYAML(
       YAML::Load(result.yaml())); // Round-Tripped result
   EXPECT_EQ(resultRT, result);

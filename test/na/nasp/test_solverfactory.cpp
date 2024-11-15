@@ -146,8 +146,9 @@ TEST(SolverFactory, Create) {
   const auto& pairs =
       na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
   // solve
-  const auto result = solver.solve(
-      pairs, static_cast<uint16_t>(circ.getNqubits()), 5, false, true);
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 5,
+                   std::nullopt, false, true);
   EXPECT_TRUE(result.sat);
 }
 
