@@ -287,9 +287,13 @@ TEST(SolverFactory, CreateExceptions) {
   circ.cz(0, 1);
   circ.cecr(0, 1, 2);
   // get operations for solver
+  // when the parameter quiet is false and the circuit contains an operation
+  // that is not of type Z and does not have 1 control, an exception is thrown
   EXPECT_THROW(std::ignore =
                    na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, false),
                std::invalid_argument);
+  // At the moment the function can only handle operation types that lead to two
+  // operands, in this example the operation has three operands.
   EXPECT_THROW(std::ignore =
                    na::SolverFactory::getOpsForSolver(circ, {qc::ECR, 1}, true),
                std::invalid_argument);
