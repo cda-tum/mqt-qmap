@@ -563,7 +563,7 @@ NASolver::NASolver(const std::uint16_t newMaxX, const std::uint16_t newMaxY,
 auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                      const std::uint16_t newNumQubits,
                      const std::uint16_t newNumStages,
-                     const std::uint16_t newNumTransfers,
+                     const std::optional<std::uint16_t> newNumTransfers,
                      const bool mindOpsOrder, const bool shieldIdleQubits)
     -> Result {
   if (shieldIdleQubits) {
@@ -581,8 +581,10 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   initVariables();
 
   // Now we assert the constraints to the solver.
-  for (const auto& c : getExactNumTransfersConstraints()) {
-    solver.add(c);
+  if (numTransfers.has_value()) {
+    for (const auto& c : getExactNumTransfersConstraints()) {
+      solver.add(c);
+    }
   }
   for (const auto& c :
        getCircuitExecutionConstraints(ops, mindOpsOrder, shieldIdleQubits)) {
@@ -612,88 +614,13 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
   resultStages.reserve(numStages);
   for (const auto& stage : stages) {
     const bool rydberg =
-        nTrans == numTransfers ||
-        model.eval(transfers[nTrans]).as_uint64() != stage.getT();
-    if (!rydberg) {
+        numTransfers.has_value()
+            ? (nTrans == numTransfers ||
+               model.eval(transfers[nTrans]).as_uint64() != stage.getT())
+            : model.eval(transfers[stage.getT()]).is_false();
+    if (numTransfers.has_value() && !rydberg) {
       ++nTrans;
     }
-    std::vector<Result::Qubit> resultQubits;
-    resultQubits.reserve(numQubits);
-    for (std::uint16_t i = 0; i < numQubits; ++i) {
-      resultQubits.emplace_back<Result::Qubit>(
-          {model.eval(stage.getQubit(i).getX()).get_numeral_uint(),
-           model.eval(stage.getQubit(i).getY()).get_numeral_uint(),
-           model.eval(stage.getQubit(i).getA()).is_true(),
-           model.eval(stage.getQubit(i).getC()).get_numeral_uint(),
-           model.eval(stage.getQubit(i).getR()).get_numeral_uint(),
-           model.eval(bv2int(stage.getQubit(i).getH(), true)).get_numeral_int(),
-           model.eval(bv2int(stage.getQubit(i).getV(), true))
-               .get_numeral_int()});
-    }
-    std::vector<Result::Gate> resultGates;
-    for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(gates.size());
-         ++i) {
-      if (model.eval(gates[i]).as_uint64() == stage.getT()) {
-        resultGates.emplace_back<Result::Gate>({stage.getT(), ops[i]});
-      }
-    }
-    resultStages.emplace_back<Result::Stage>(
-        {rydberg, resultQubits, resultGates});
-  }
-  return Result{true, resultStages};
-}
-
-auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
-                     const std::uint16_t newNumQubits,
-                     const std::uint16_t newNumStages, const bool mindOpsOrder,
-                     const bool shieldIdleQubits) -> Result {
-  // this is almost the same as the method above just that it does not fix the
-  // number of transfers which implies few minor changes marked in the following
-  if (shieldIdleQubits) {
-    if (storage == Storage::None) {
-      throw std::invalid_argument("No storage zone is available.");
-    }
-  }
-
-  numQubits = newNumQubits;
-  numStages = newNumStages;
-  numTransfers = std::nullopt;
-  // CHANGE: instead of a fixed number of transfers
-
-  solver solver(*ctx, "QF_BV");
-
-  initVariables();
-
-  // Now we assert the constraints to the solver.
-  // CHANGE: no exact number of transfers constraint
-  for (const auto& c :
-       getCircuitExecutionConstraints(ops, mindOpsOrder, shieldIdleQubits)) {
-    solver.add(c);
-  }
-  for (std::uint16_t t = 0; t < numStages; ++t) {
-    for (const auto& c : getValidStageConstraints(t)) {
-      solver.add(c);
-    }
-    if (t < numStages - 1) {
-      for (const auto& c : getValidRydbergTransitionConstraints(t)) {
-        solver.add(c);
-      }
-      for (const auto& c : getValidTransferTransitionConstraints(t)) {
-        solver.add(c);
-      }
-    }
-  }
-
-  // Check satisfiability
-  if (solver.check() == unsat) {
-    return Result{false, {}};
-  }
-  const auto model = solver.get_model();
-  std::vector<Result::Stage> resultStages;
-  resultStages.reserve(numStages);
-  for (const auto& stage : stages) {
-    const bool rydberg = model.eval(transfers[stage.getT()]).is_false();
-    // CHANGE: Read boolean variable directly
     std::vector<Result::Qubit> resultQubits;
     resultQubits.reserve(numQubits);
     for (std::uint16_t i = 0; i < numQubits; ++i) {

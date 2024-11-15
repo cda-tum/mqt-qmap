@@ -394,16 +394,36 @@ public:
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };
 
+  /**
+   * @brief The core function of the solver that solves one instance of the
+   * problem.
+   * @details The solver takes a list of operations and returns a list of stages
+   * where each stage contains the location of all atoms and the gates that
+   * should be executed in this stage. The solver takes several parameters to
+   * configure the problem that are explained in the following.
+   * @param ops a list of entangling operations represented as a list of qubit
+   * pairs
+   * @param newNumQubits the overall number of qubits in the quantum circuit
+   * @param newNumStages the exact number of stages the computation should be
+   * divided into
+   * @param newNumTransfers the number of stages that are transfer stages. This
+   * is an optional parameter and if not set, the number of transfer stages is
+   * variable and not fixed.
+   * @param mindOpsOrder if true, the solver schedules the operations in the
+   * order they are given in the list. If false, the solver is free to choose
+   * the order of the operations.
+   * @param shieldIdleQubits if true, the solver ensures that qubits that are
+   * not involved in an operation are shielded from the Rydberg beam, i.e.,
+   * moved to one storage zone. If there is no storage zone and this parameter
+   * is true, the solver will return an exception.
+   * @throws illegal_argument if there is no storage zone and shieldIdleQubits
+   * is true
+   */
   [[nodiscard]] auto
   solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
         uint16_t newNumQubits, uint16_t newNumStages,
-        uint16_t newNumTransfers = 0, bool mindOpsOrder = false,
-        bool shieldIdleQubits = true) -> Result;
-
-  [[nodiscard]] auto
-  solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
-        uint16_t newNumQubits, uint16_t newNumStages, bool mindOpsOrder = false,
-        bool shieldIdleQubits = true) -> Result;
+        std::optional<uint16_t> newNumTransfers = std::nullopt,
+        bool mindOpsOrder = false, bool shieldIdleQubits = true) -> Result;
 };
 
 struct ExprHash {
