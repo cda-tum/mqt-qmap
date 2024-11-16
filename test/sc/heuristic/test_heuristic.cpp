@@ -31,6 +31,7 @@
 #include <iterator>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <random>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -474,7 +475,8 @@ protected:
     settings.layering = Layering::Disjoint2qBlocks;
     settings.lookaheadHeuristic = LookaheadHeuristic::None;
     settings.heuristic = std::get<0>(GetParam());
-    settings.dataLoggingPath = "test_log/heur_properties_" + testName + "/";
+    settings.dataLoggingPath = "test_log/heur_properties_" + testName + "_" +
+                               std::to_string(std::random_device{}());
   }
 
   void TearDown() override {
@@ -772,15 +774,15 @@ INSTANTIATE_TEST_SUITE_P(
             Heuristic::GateCountSumDistanceMinusSharedSwaps,
             Heuristic::GateCountMaxDistanceOrSumDistanceMinusSharedSwaps,
             Heuristic::FidelityBestLocation),
-        testing::Values("3_17_13",       // 5q
-                        "ex-1_166",      // 5q
-                        "ham3_102",      // 5q
-                        "miller_11",     // 5q
-                        "4gt11_84",      // 5q
-                        "4mod5-v0_20",   // 5q
-                        "mod5d1_63",     // 5q
-                        "ising_model_10" // 16q
-                        //                        "rd73_140"        // 16q
+        testing::Values("3_17_13",        // 5q
+                        "ex-1_166",       // 5q
+                        "ham3_102",       // 5q
+                        "miller_11",      // 5q
+                        "4gt11_84",       // 5q
+                        "4mod5-v0_20",    // 5q
+                        "mod5d1_63",      // 5q
+                        "ising_model_10", // 16q
+                        "rd73_140"        // 16q
                         )),
     [](const testing::TestParamInfo<TestHeuristics::ParamType>& inf) {
       std::string name = std::get<1>(inf.param);
