@@ -1,13 +1,7 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
-// information.
-//
-
 #pragma once
 
-#include "Configuration.hpp"
 #include "Definitions.hpp"
+#include "na/Configuration.hpp"
 #include "na/NADefinitions.hpp"
 
 #include <algorithm>
@@ -231,6 +225,7 @@ public:
   [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
                                        const Zone& zone) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
+  [[nodiscard]] auto getNColsInZone(const Zone& z) const -> Index;
   [[nodiscard]] auto getSitesInRow(const Zone& z, const Index& row) const
       -> std::vector<Index>;
   [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
