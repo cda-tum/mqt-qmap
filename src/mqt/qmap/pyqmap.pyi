@@ -633,8 +633,6 @@ class NeutralAtomHybridArchitecture:
     def nrows(self) -> int: ...
 
 class NAStatePreparationSolver:
-    """The neutral atom state preparation solver generates an optimal sequence of operations for a given state preparation circuit."""
-
     def init(
         self,
         new_max_x: int,
@@ -668,22 +666,7 @@ def get_ops_for_solver(
     operation_type: str,
     num_controls: int,
     quiet: bool = ...,
-) -> list[tuple[int, int]]:
-    """Extract entangling operations as list of qubit pairs from the circuit.
-
-    .. warning::
-        This function can only extract qubit pairs of two-qubit operations.
-        I.e., the operands of the operation plus the controls must be equal to two.
-
-    :param circ: is the quantum circuit
-    :param operation_type: is the type of operation to extract, e.g., "z" for CZ gates
-    :param num_controls: is the number of controls the operation acts on, e.g., 1 for CZ gates
-    :param quiet: if True, suppresses warning when the circuit contains operations other than the specified operation type
-    :return: list of qubit pairs
-    :raises ValueError: if the circuit contains operations other than the specified operation type and quiet is False
-    :raises ValueError: if the operation has more than two operands including controls
-    """
-
+) -> list[tuple[int, int]]: ...
 def generate_code(
     circ: QuantumCircuit | QuantumComputation,
     result: NAStatePreparationSolver.Result,
