@@ -929,6 +929,15 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "num_qubits"_a, "num_stages"_a, "num_transfers"_a,
            "mind_ops_order"_a, "shield_idle_qubits"_a);
 
+  py::class_<na::NASolver::Result>(
+      m, "NAStatePreparationSolver.Result",
+      "Neutral Atom State Preparation Solver Result")
+      .def(py::init<>(), "Create a result object")
+      .def(
+          "yaml",
+          [](const na::NASolver::Result& result) { return result.yaml(); },
+          "Returns the result as a YAML string");
+
   m.def(
       "generate_code",
       [](const py::object& circ, const na::NASolver::Result& result,
@@ -952,11 +961,15 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
          const uint64_t numOperands, const bool quiet) {
         qc::QuantumComputation qc{};
         loadQC(qc, circ);
+        auto opTypeLowerStr = operationType;
+        std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
+                       opTypeLowerStr.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
         const auto fullOpType =
             na::FullOpType{qc::opTypeFromString(operationType), numOperands};
         return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
       },
       "Extract entangling operations as list of qubit pairs from the circuit",
       "circ"_a, "operation_type"_a = "Z", "num_operands"_a = 1,
-      "quiet"_a = false);
+      "quiet"_a = true);
 }
