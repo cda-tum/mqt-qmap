@@ -14,6 +14,7 @@ authors = [
     { name = "Lukas Burgholzer", email = "lukas.burgholzer@tum.de" },
     { name = "Stefan Hillmich", email = "stefan.hillmich@jku.at" },
     { name = "Tom Peham", email = "tom.peham@tum.de" },
+    { name = "Ludwig Schmid", email = "ludwig.s.schmid@tum.de" },
     { name = "Yannick Stade", email = "yannick.stade@tum.de" }
 ]
 keywords = ["MQT", "quantum-computing", "design-automation", "compiler", "clifford-synthesis"]
