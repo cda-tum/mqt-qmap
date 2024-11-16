@@ -864,9 +864,14 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     auto& nodes = allNodes.at(i);
     auto& finalSolutionId = finalSolutionIds.at(i);
 
-    if (finalSolutionId >= nodes.size() ||
-        nodes.at(finalSolutionId).id != finalSolutionId) {
-      FAIL() << "Final solution node " << finalSolutionId << " not found "
+    if (finalSolutionId >= nodes.size()) {
+      FAIL() << "Final solution id " << finalSolutionId << " out of bounds "
+             << layerNames.at(i) << " (number of nodes: " << nodes.size()
+             << ")";
+    }
+    if (nodes.at(finalSolutionId).id != finalSolutionId) {
+      FAIL() << "Node id " << nodes.at(finalSolutionId).id
+             << " does not match final solution id " << finalSolutionId << " "
              << layerNames.at(i);
     }
     auto& finalSolutionNode = nodes.at(finalSolutionId);
