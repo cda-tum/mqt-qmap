@@ -669,9 +669,14 @@ class NAStatePreparationSolver:
         shield_idle_qubits: bool = ...,
     ) -> Result: ...
 
-def get_ops_for_solver(circ: QuantumCircuit) -> list[tuple[int, int]]: ...
+def get_ops_for_solver(
+    circ: QuantumCircuit | QuantumComputation,
+    operation_type: str,
+    num_operands: int,
+    quiet: bool = ...,
+) -> list[tuple[int, int]]: ...
 def generate_code(
-    circ: object,
+    circ: QuantumCircuit | QuantumComputation,
     result: NAStatePreparationSolver.Result,
     max_hoffset: int,
     max_v_offset: int,

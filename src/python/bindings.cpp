@@ -14,6 +14,7 @@
 #include "sc/exact/ExactMapper.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
 
+#include <cstddef>
 #include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -942,4 +943,18 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       "result"_a, "max_h_offset"_a, "max_v_offset"_a, "min_entangling_y"_a,
       "max_entangling_y"_a, "min_atom_dist"_a = 1,
       "no_interaction_radius"_a = 10, "zone_dist"_a = 24);
+
+  m.def(
+      "get_ops_for_solver",
+      [](const py::object& circ, const std::string& operationType,
+         const int numOperands, const bool quiet) {
+        qc::QuantumComputation qc{};
+        loadQC(qc, circ);
+        const auto fullOpType = {qc::opTypeFromString(operationType),
+                                 numOperands};
+        return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
+      },
+      "Extract entangling operations as list of qubit pairs from the circuit",
+      "circ"_a, "operation_type"_a = "Z", "num_operands"_a = 1,
+      "quiet"_a = false);
 }
