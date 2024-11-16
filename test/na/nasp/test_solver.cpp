@@ -26,6 +26,36 @@ TEST(Solver, SteaneDoubleSidedStorage) {
   EXPECT_EQ(result.stages.size(), 4);
 }
 
+TEST(Solver, ShorDoubleSidedStorage) {
+  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/shor.qasm");
+  // create solver
+  na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // get operations for solver
+  const auto& pairs =
+      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  // solve
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
+  EXPECT_FALSE(result.sat);
+}
+
+TEST(Solver, Surface3DoubleSidedStorage) {
+  const auto& circ =
+      qc::QuantumComputation(TEST_CIRCUITS_PATH "/surface_3.qasm");
+  // create solver
+  na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // get operations for solver
+  const auto& pairs =
+      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  // solve
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
+  EXPECT_TRUE(result.sat);
+  EXPECT_EQ(result.stages.size(), 4);
+}
+
 TEST(Solver, SteaneBottomStorage) {
   const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
