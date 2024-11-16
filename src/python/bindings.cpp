@@ -911,10 +911,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
            "Saves the animation csv string to a file", "filename"_a);
 
   // Neutral Atom State Preparation
-  py::class_<na::NAComputation>(m, "NAComputation", "Neutral Atom Computation")
-      .def(py::init<>())
-      .def("__str__", &na::NAComputation::toString);
-
   py::class_<na::NASolver>(m, "NAStatePreparationSolver",
                            "Neutral Atom State Preparation Solver")
       .def(py::init<uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t,
@@ -935,8 +931,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def(py::init<>(), "Create a result object")
       .def(
           "yaml",
-          [](const na::NASolver::Result& result) { return result.yaml(); },
-          "Returns the result as a YAML string");
+          [](const na::NASolver::Result& result, const bool compact) {
+            return result.yaml(0, compact);
+          },
+          "Returns the result as a YAML string", "compact"_a = true);
 
   m.def(
       "generate_code",
@@ -947,8 +945,9 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
         qc::QuantumComputation qc{};
         loadQC(qc, circ);
         return na::CodeGenerator::generate(
-            qc, result, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
-            minAtomDist, noInteractionRadius, zoneDist);
+                   qc, result, maxHOffset, maxVOffset, minEntanglingY,
+                   maxEntanglingY, minAtomDist, noInteractionRadius, zoneDist)
+            .toString();
       },
       "Generate code for the given circuit using the solver's result", "circ"_a,
       "result"_a, "max_h_offset"_a, "max_v_offset"_a, "min_entangling_y"_a,
@@ -958,7 +957,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   m.def(
       "get_ops_for_solver",
       [](const py::object& circ, const std::string& operationType,
-         const uint64_t numOperands, const bool quiet) {
+         const uint64_t numControls, const bool quiet) {
         qc::QuantumComputation qc{};
         loadQC(qc, circ);
         auto opTypeLowerStr = operationType;
@@ -966,10 +965,9 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                        opTypeLowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
         const auto fullOpType =
-            na::FullOpType{qc::opTypeFromString(operationType), numOperands};
+            na::FullOpType{qc::opTypeFromString(operationType), numControls};
         return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
       },
-      "Extract entangling operations as list of qubit pairs from the circuit",
       "circ"_a, "operation_type"_a = "Z", "num_operands"_a = 1,
       "quiet"_a = true);
 }
