@@ -6,7 +6,9 @@
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
+#include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
+#include "na/NADefinitions.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
@@ -14,7 +16,7 @@
 #include "sc/exact/ExactMapper.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -947,11 +949,11 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   m.def(
       "get_ops_for_solver",
       [](const py::object& circ, const std::string& operationType,
-         const int numOperands, const bool quiet) {
+         const uint64_t numOperands, const bool quiet) {
         qc::QuantumComputation qc{};
         loadQC(qc, circ);
-        const auto fullOpType = {qc::opTypeFromString(operationType),
-                                 numOperands};
+        const auto fullOpType =
+            na::FullOpType{qc::opTypeFromString(operationType), numOperands};
         return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
       },
       "Extract entangling operations as list of qubit pairs from the circuit",
