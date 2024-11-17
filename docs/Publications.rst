@@ -9,7 +9,8 @@ If you use *QMAP* in your work, we would appreciate if you cited
 - :cite:labelpar:`zulehnerEfficientMethodologyMapping2019` when using the heuristic mapper,
 - :cite:labelpar:`willeMappingQuantumCircuits2019` when using the exact mapper,
 - :cite:labelpar:`peham2023DepthOptimalSynthesis` when using the Clifford circuit synthesis approach, and
-- :cite:labelpar:`schmid2024HybridCircuitMapping` when using the hybrid mapper for neutral atom quantum computers.
+- :cite:labelpar:`schmid2024HybridCircuitMapping` when using the hybrid mapper for neutral atom quantum computers, and
+- :cite:labelpar:`stadeOptimalStatePreparation2024` when using the optimal state preparation for neutral atoms.
 
 Furthermore, if you use any of the particular algorithms such as
 
