@@ -63,10 +63,10 @@ auto CodeGenerator::generate(const QuantumComputation& input,
                              const uint16_t minAtomDist,
                              const uint16_t noInteractionRadius,
                              const uint16_t zoneDist) -> NAComputation {
-  auto minEntanglingY = result.solver->min_entangling_y();
-  auto maxEntanglingY = result.solver->max_entangling_y();
-  auto maxHOffset = result.solver->max_h_offset();
-  auto maxVOffset = result.solver->max_v_offset();
+  auto minEntanglingY = result.minEntanglingY;
+  auto maxEntanglingY = result.maxEntanglingY;
+  auto maxHOffset = result.maxHOffset;
+  auto maxVOffset = result.maxVOffset;
   auto flattened = input;
   CircuitOptimizer::flattenOperations(flattened);
   const Layer layer(flattened);

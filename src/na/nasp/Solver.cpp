@@ -619,7 +619,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
 
   // Check satisfiability
   if (solver.check() == unsat) {
-    return Result{false, {}, shared_from_this()};
+    return Result{false,          {},         minEntanglingY,
+                  maxEntanglingY, maxHOffset, maxVOffset};
   }
   const auto model = solver.get_model();
   std::uint16_t nTrans = 0;
@@ -657,7 +658,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     resultStages.emplace_back<Result::Stage>(
         {rydberg, resultQubits, resultGates});
   }
-  return Result{true, resultStages, shared_from_this()};
+  return Result{true,           resultStages, minEntanglingY,
+                maxEntanglingY, maxHOffset,   maxVOffset};
 }
 
 /// Initialize a Qubit from a YAML string.
