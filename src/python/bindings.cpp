@@ -956,6 +956,8 @@ the storage zone.
 :param max_v_dist: is the maximum vertical distance between two atoms
 :param min_entangling_y: is the minimum y-coordinate for entangling operations
 :param max_entangling_y: is the maximum y-coordinate for entangling operations
+:raises ValueError: if one of the parameters is invalid, e.g., is a negative
+value
 )")
       .def("solve", &na::NASolver::solve, "ops"_a, "num_qubits"_a,
            "num_stages"_a, "num_transfers"_a, "mind_ops_order"_a,
@@ -994,6 +996,8 @@ whether idle qubits should be shielded from the entangling operations.
 preserved
 :param shield_idle_qubits: is True if idle qubits should be shielded
 :returns: the result of the solver
+:raises ValueError: if one of the numeral parameters is invalid, e.g., is a
+negative value
 )");
 
   py::class_<na::NASolver::Result>(
@@ -1037,6 +1041,8 @@ can be placed during an entangling operation that should not interact with the
 atom
 :param zone_dist: is the distance between zones, i.e., the minimal distance
         between two atoms in different zones
+:raises ValueError: if one of the numeral parameters is invalid, e.g., is a
+negative value
 )");
 
   m.def(
