@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 // NOLINTNEXTLINE (misc-include-cleaner)
+#include <numeric>
 #include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
@@ -571,6 +572,17 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     if (storage == Storage::None) {
       throw std::invalid_argument("No storage zone is available.");
     }
+  }
+  // get maximum index appearing in the operations with std::aaccumulate
+  const auto maxIndex = std::accumulate(
+      ops.begin(), ops.end(), 0,
+      [](const auto acc, const std::pair<qc::Qubit, qc::Qubit>& op) {
+        return std::max(acc, std::max(op.first, op.second));
+      });
+  if (maxIndex >= static_cast<qc::Qubit>(numQubits)) {
+    throw std::invalid_argument(
+        "The operations reference qubits with an index larger or equal to the "
+        "given number of qubits.");
   }
 
   numQubits = newNumQubits;
