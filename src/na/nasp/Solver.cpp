@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -17,7 +18,6 @@
 #include <utility>
 #include <vector>
 // NOLINTNEXTLINE (misc-include-cleaner)
-#include <numeric>
 #include <yaml-cpp/yaml.h>
 #include <z3++.h>
 
