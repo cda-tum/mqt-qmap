@@ -15,7 +15,7 @@
 namespace na {
 using namespace z3;
 
-class NASolver {
+class NASolver final : std::enable_shared_from_this<NASolver> {
 private:
   /// Z3 context used throughout the solver instance
   std::shared_ptr<context> ctx;
