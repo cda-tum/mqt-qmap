@@ -35,7 +35,7 @@ def test_na_state_prep_sat(solver: NAStatePreparationSolver, circuit_filename: s
     result = solver.solve(ops, n_qubits, 4, None, False, True)
     assert result is not None
     assert result.yaml().startswith("sat: true")
-    code = generate_code(qc, result, 2, 2, 2, 4, 1, 10, 24)
+    code = generate_code(qc, result, 1, 10, 24)
     assert code is not None
     assert len(code.splitlines()) >= 7  # for each stage there is at least one line
 
