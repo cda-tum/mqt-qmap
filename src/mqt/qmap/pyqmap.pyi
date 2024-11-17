@@ -633,7 +633,7 @@ class NeutralAtomHybridArchitecture:
     def nrows(self) -> int: ...
 
 class NAStatePreparationSolver:
-    def init(
+    def __init__(
         self,
         new_max_x: int,
         new_max_y: int,
