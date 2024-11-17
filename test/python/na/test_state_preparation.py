@@ -20,19 +20,19 @@ def solver() -> NAStatePreparationSolver:
 
 
 @pytest.mark.parametrize(
-    "circuit_filename",
+    ("circuit_filename", "n_qubits"),
     [
-        "steane.qasm",
-        "surface_3.qasm",
+        ("steane.qasm", 7),
+        ("surface_3.qasm", 9),
     ],
 )
-def test_na_state_prep_sat(solver: NAStatePreparationSolver, circuit_filename: str) -> None:
+def test_na_state_prep_sat(solver: NAStatePreparationSolver, circuit_filename: str, n_qubits: int) -> None:
     """Test the state preparation for the zoned neutral atom architecture."""
     qc = QuantumCircuit.from_qasm_file(circ_dir / circuit_filename)
     ops = get_ops_for_solver(qc, "z", 1)
     assert ops is not None
     assert len(ops) > 0
-    result = solver.solve(ops, 7, 4, None, False, True)
+    result = solver.solve(ops, n_qubits, 4, None, False, True)
     assert result is not None
     assert result.yaml().startswith("sat: true")
     code = generate_code(qc, result, 2, 2, 2, 4, 1, 10, 24)
@@ -41,17 +41,17 @@ def test_na_state_prep_sat(solver: NAStatePreparationSolver, circuit_filename: s
 
 
 @pytest.mark.parametrize(
-    "circuit_filename",
+    ("circuit_filename", "n_qubits"),
     [
-        "shor.qasm",
+        ("shor.qasm", 9),
     ],
 )
-def test_na_state_prep_unsat(solver: NAStatePreparationSolver, circuit_filename: str) -> None:
+def test_na_state_prep_unsat(solver: NAStatePreparationSolver, circuit_filename: str, n_qubits: int) -> None:
     """Test the state preparation for the zoned neutral atom architecture."""
     qc = QuantumCircuit.from_qasm_file(circ_dir / circuit_filename)
     ops = get_ops_for_solver(qc, "z", 1)
     assert ops is not None
     assert len(ops) > 0
-    result = solver.solve(ops, 7, 4, None, False, True)
+    result = solver.solve(ops, n_qubits, 4, None, False, True)
     assert result is not None
     assert result.yaml().startswith("sat: false")
