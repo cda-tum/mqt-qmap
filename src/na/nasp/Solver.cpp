@@ -573,12 +573,12 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
       throw std::invalid_argument("No storage zone is available.");
     }
   }
-  // get maximum index appearing in the operations with std::aaccumulate
-  const auto maxIndex = std::accumulate(
+  // get maximum index appearing in the operations
+  const auto maxIndex = static_cast<qc::Qubit>(std::accumulate(
       ops.begin(), ops.end(), 0,
-      [](const auto acc, const std::pair<qc::Qubit, qc::Qubit>& op) {
+      [](const qc::Qubit acc, const std::pair<qc::Qubit, qc::Qubit>& op) {
         return std::max(acc, std::max(op.first, op.second));
-      });
+      }));
   if (maxIndex >= static_cast<qc::Qubit>(numQubits)) {
     throw std::invalid_argument(
         "The operations reference qubits with an index larger or equal to the "
