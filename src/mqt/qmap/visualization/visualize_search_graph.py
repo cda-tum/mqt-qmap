@@ -144,7 +144,7 @@ class FinalNodeNotFoundError(Exception):
 
 def _parse_search_graph(file_path: str, final_node_id: int, only_solution_path: bool) -> tuple[nx.Graph, int]:
     graph = nx.Graph()
-    root: None | int = None
+    root: int | None = None
     nodes: dict[int, SearchNode] = {}
     with Path(file_path).open(encoding=locale.getpreferredencoding(False)) as file:
         for linestr in file:

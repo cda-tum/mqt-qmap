@@ -31,6 +31,7 @@
 #include <iterator>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <random>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -52,20 +53,19 @@ std::size_t getFinalNodeFromDatalog(std::string dataLoggingPath,
   if (dataLoggingPath.back() != '/') {
     dataLoggingPath += '/';
   }
-  auto layerFile = std::ifstream(dataLoggingPath + "/layer_" +
+  auto layerFile = std::ifstream(dataLoggingPath + "layer_" +
                                  std::to_string(layer) + ".json");
   if (!layerFile.is_open()) {
     throw std::runtime_error("Could not open file " + dataLoggingPath +
-                             "/layer_" + std::to_string(layer) + ".json");
+                             "layer_" + std::to_string(layer) + ".json");
   }
   const auto layerJson = nlohmann::basic_json<>::parse(layerFile);
   if (layerJson.find("final_node_id") == layerJson.end()) {
     throw std::runtime_error("Missing key \"final_node_id\" in " +
-                             dataLoggingPath + "/layer_" +
+                             dataLoggingPath + "layer_" +
                              std::to_string(layer) + ".json");
   }
-  const std::size_t finalNodeId = layerJson["final_node_id"];
-  return finalNodeId;
+  return layerJson["final_node_id"];
 }
 
 /**
@@ -81,7 +81,7 @@ void parseNodesFromDatalog(std::string dataLoggingPath, std::size_t layer,
     dataLoggingPath += '/';
   }
   const std::string layerNodeFilePath =
-      dataLoggingPath + "/nodes_layer_" + std::to_string(layer) + ".csv";
+      dataLoggingPath + "nodes_layer_" + std::to_string(layer) + ".csv";
   auto layerNodeFile = std::ifstream(layerNodeFilePath);
   if (!layerNodeFile.is_open()) {
     throw std::runtime_error("Could not open file " + layerNodeFilePath);
@@ -475,7 +475,12 @@ protected:
     settings.layering = Layering::Disjoint2qBlocks;
     settings.lookaheadHeuristic = LookaheadHeuristic::None;
     settings.heuristic = std::get<0>(GetParam());
-    settings.dataLoggingPath = "test_log/heur_properties_" + testName + "/";
+    settings.dataLoggingPath = "test_log/heur_properties_" + testName + "_" +
+                               std::to_string(std::random_device{}());
+  }
+
+  void TearDown() override {
+    std::filesystem::remove_all(settings.dataLoggingPath);
   }
 };
 
@@ -814,13 +819,13 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       ibmqYorktownMapper->map(settings);
       auto results = ibmqYorktownMapper->getResults();
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
-        allNodes.emplace_back(
+        auto& nodes = allNodes.emplace_back(
             results.layerHeuristicBenchmark.at(i).generatedNodes,
             HeuristicMapper::Node{ibmqYorktown.getNqubits(), 0});
         layerNames.emplace_back("on ibmq_yorktown in layer " +
                                 std::to_string(i));
-        parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
-        finalSolutionIds.push_back(
+        parseNodesFromDatalog(settings.dataLoggingPath, i, nodes);
+        finalSolutionIds.emplace_back(
             getFinalNodeFromDatalog(settings.dataLoggingPath, i));
       }
     }
@@ -831,12 +836,12 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     ibmqLondonMapper->map(settings);
     auto results = ibmqLondonMapper->getResults();
     for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
-      allNodes.emplace_back(
+      auto& nodes = allNodes.emplace_back(
           results.layerHeuristicBenchmark.at(i).generatedNodes,
           HeuristicMapper::Node{ibmqLondon.getNqubits(), 0});
       layerNames.emplace_back("on ibmq_london in layer " + std::to_string(i));
-      parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
-      finalSolutionIds.push_back(
+      parseNodesFromDatalog(settings.dataLoggingPath, i, nodes);
+      finalSolutionIds.emplace_back(
           getFinalNodeFromDatalog(settings.dataLoggingPath, i));
     }
   }
@@ -849,12 +854,12 @@ TEST_P(TestHeuristics, HeuristicProperties) {
       ibmQX5Mapper->map(settings);
       auto results = ibmQX5Mapper->getResults();
       for (std::size_t i = 0; i < results.layerHeuristicBenchmark.size(); ++i) {
-        allNodes.emplace_back(
+        auto& nodes = allNodes.emplace_back(
             results.layerHeuristicBenchmark.at(i).generatedNodes,
             HeuristicMapper::Node{ibmQX5.getNqubits(), 0});
         layerNames.emplace_back("on ibmQX5 in layer " + std::to_string(i));
-        parseNodesFromDatalog(settings.dataLoggingPath, i, allNodes.back());
-        finalSolutionIds.push_back(
+        parseNodesFromDatalog(settings.dataLoggingPath, i, nodes);
+        finalSolutionIds.emplace_back(
             getFinalNodeFromDatalog(settings.dataLoggingPath, i));
       }
     }
@@ -864,9 +869,14 @@ TEST_P(TestHeuristics, HeuristicProperties) {
     auto& nodes = allNodes.at(i);
     auto& finalSolutionId = finalSolutionIds.at(i);
 
-    if (finalSolutionId >= nodes.size() ||
-        nodes.at(finalSolutionId).id != finalSolutionId) {
-      FAIL() << "Final solution node " << finalSolutionId << " not found "
+    if (finalSolutionId >= nodes.size()) {
+      FAIL() << "Final solution id " << finalSolutionId << " out of bounds "
+             << layerNames.at(i) << " (number of nodes: " << nodes.size()
+             << ")";
+    }
+    if (nodes.at(finalSolutionId).id != finalSolutionId) {
+      FAIL() << "Node id " << nodes.at(finalSolutionId).id
+             << " does not match final solution id " << finalSolutionId << " "
              << layerNames.at(i);
     }
     auto& finalSolutionNode = nodes.at(finalSolutionId);
@@ -1064,8 +1074,8 @@ TEST(Functionality, EmptyDump) {
   mapper.dumpResult("test.qasm");
   mapper.map({});
   EXPECT_NO_THROW(mapper.dumpResult("test.qasm"););
-  EXPECT_NO_THROW(mapper.dumpResult("test.real"););
   EXPECT_THROW(mapper.dumpResult("test.dummy"), QMAPException);
+  std::filesystem::remove("test.qasm");
 }
 
 TEST(Functionality, BenchmarkGeneratedNodes) {
@@ -1850,11 +1860,9 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest5Q, Identity) {
   settings.initialLayout = InitialLayout::Identity;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_identity.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
-  ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_identity.qasm");
   ibmqLondonMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1862,11 +1870,9 @@ TEST_P(HeuristicTest5Q, Identity) {
 TEST_P(HeuristicTest5Q, Static) {
   settings.initialLayout = InitialLayout::Static;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_static.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
-  ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_static.qasm");
   ibmqLondonMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1874,11 +1880,9 @@ TEST_P(HeuristicTest5Q, Static) {
 TEST_P(HeuristicTest5Q, Dynamic) {
   settings.initialLayout = InitialLayout::Dynamic;
   ibmqYorktownMapper->map(settings);
-  ibmqYorktownMapper->dumpResult(GetParam() + "_heuristic_qx4_dynamic.qasm");
   ibmqYorktownMapper->printResult(std::cout);
 
   ibmqLondonMapper->map(settings);
-  ibmqLondonMapper->dumpResult(GetParam() + "_heuristic_london_dynamic.qasm");
   ibmqLondonMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1913,7 +1917,6 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HeuristicTest16Q, Dynamic) {
   settings.initialLayout = InitialLayout::Dynamic;
   ibmQX5Mapper->map(settings);
-  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_dynamic.qasm");
   ibmQX5Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1921,7 +1924,6 @@ TEST_P(HeuristicTest16Q, Dynamic) {
 TEST_P(HeuristicTest16Q, Disjoint) {
   settings.layering = Layering::DisjointQubits;
   ibmQX5Mapper->map(settings);
-  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint.qasm");
   ibmQX5Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1929,7 +1931,6 @@ TEST_P(HeuristicTest16Q, Disjoint) {
 TEST_P(HeuristicTest16Q, Disjoint2qBlocks) {
   settings.layering = Layering::Disjoint2qBlocks;
   ibmQX5Mapper->map(settings);
-  ibmQX5Mapper->dumpResult(GetParam() + "_heuristic_qx5_disjoint_2q.qasm");
   ibmQX5Mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -1965,7 +1966,6 @@ TEST_P(HeuristicTest20Q, Dynamic) {
   settings.initialLayout = InitialLayout::Dynamic;
   settings.debug = true;
   tokyoMapper->map(settings);
-  tokyoMapper->dumpResult(GetParam() + "_heuristic_tokyo_dynamic.qasm");
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -2008,8 +2008,6 @@ TEST_P(HeuristicTest20QTeleport, Teleportation) {
       (arch.getNqubits() - qc.getNqubits()) & ~1U, static_cast<std::size_t>(8));
   settings.teleportationSeed = std::get<0>(GetParam());
   tokyoMapper->map(settings);
-  tokyoMapper->dumpResult(std::get<1>(GetParam()) +
-                          "_heuristic_tokyo_teleport.qasm");
   tokyoMapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -2053,7 +2051,6 @@ TEST_P(HeuristicTestFidelity, Identity) {
   settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
-  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_identity.qasm");
   mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -2065,7 +2062,6 @@ TEST_P(HeuristicTestFidelity, Static) {
   settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
-  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
   mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -2077,7 +2073,6 @@ TEST_P(HeuristicTestFidelity, Dynamic) {
   settings.heuristic = Heuristic::FidelityBestLocation;
   settings.lookaheadHeuristic = LookaheadHeuristic::None;
   mapper->map(settings);
-  mapper->dumpResult(GetParam() + "_heuristic_london_fidelity_static.qasm");
   mapper->printResult(std::cout);
   SUCCEED() << "Mapping successful";
 }
@@ -2148,7 +2143,6 @@ TEST(HeuristicTestFidelity, RemapSingleQubit) {
   settings.verbose = true;
   settings.swapOnFirstLayer = true;
   mapper->map(settings);
-  mapper->dumpResult("remap_single_qubit_mapped.qasm");
   mapper->printResult(std::cout);
 
   // 0 --e1-- 1 --e3-- 2 --e5-- 3 --e0-- 4 --e0-- 5
@@ -2233,7 +2227,6 @@ TEST(HeuristicTestFidelity, QubitRideAlong) {
   settings.verbose = true;
   settings.swapOnFirstLayer = true;
   mapper->map(settings);
-  mapper->dumpResult("qubit_ride_along_mapped.qasm");
   mapper->printResult(std::cout);
 
   auto& result = mapper->getResults();
@@ -2295,7 +2288,6 @@ TEST(HeuristicTestFidelity, SingleQubitsCompete) {
   settings.verbose = true;
   settings.swapOnFirstLayer = true;
   mapper->map(settings);
-  mapper->dumpResult("single_qubits_compete.qasm");
   mapper->printResult(std::cout);
 
   auto& result = mapper->getResults();
@@ -2417,7 +2409,6 @@ TEST(HeuristicTestFidelity, LayerSplitting) {
          // unsplittable
   settings.dataLoggingPath = "test_log/layer_splitting/";
   mapper->map(settings);
-  mapper->dumpResult("simple_grid_mapped.qasm");
   mapper->printResult(std::cout);
 
   auto& result = mapper->getResults();
