@@ -58,12 +58,15 @@ auto CodeGenerator::coordFromDiscrete(
           (2LL * zoneDist) + ((y - 2) * dy) + (v * minAtomDist)};
 }
 
-auto CodeGenerator::generate(
-    const QuantumComputation& input, const NASolver::Result& result,
-    const uint16_t maxHOffset, const uint16_t maxVOffset,
-    const uint16_t minEntanglingY, const uint16_t maxEntanglingY,
-    const uint16_t minAtomDist, const uint16_t noInteractionRadius,
-    const uint16_t zoneDist) -> NAComputation {
+auto CodeGenerator::generate(const QuantumComputation& input,
+                             const NASolver::Result& result,
+                             const uint16_t minAtomDist,
+                             const uint16_t noInteractionRadius,
+                             const uint16_t zoneDist) -> NAComputation {
+  auto minEntanglingY = result.solver->min_entangling_y();
+  auto maxEntanglingY = result.solver->max_entangling_y();
+  auto maxHOffset = result.solver->max_h_offset();
+  auto maxVOffset = result.solver->max_v_offset();
   auto flattened = input;
   CircuitOptimizer::flattenOperations(flattened);
   const Layer layer(flattened);

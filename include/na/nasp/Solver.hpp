@@ -410,6 +410,7 @@ public:
 
     bool sat = false;
     std::vector<Stage> stages;
+    std::shared_ptr<NASolver> solver;
 
     [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Result;
 
@@ -418,6 +419,37 @@ public:
 
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };
+
+  /* * * * Public Getters  * * * * * * * * * * * * * * * * * * * * * * * * * *
+   * Getters required for the CodeGenerator to reconstruct the abstraction used
+   * in the solver
+   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+  /**
+   * @brief Get the minimum y-coordinate of the entangling zone
+   * @return the minimum y-coordinate of the entangling zone
+   */
+  [[nodiscard]] auto min_entangling_y() const -> uint16_t {
+    return minEntanglingY;
+  }
+  /**
+   * @brief Get the maximum y-coordinate of the entangling zone
+   * @return the maximum y-coordinate of the entangling zone
+   */
+  [[nodiscard]] auto max_entangling_y() const -> uint16_t {
+    return maxEntanglingY;
+  }
+  /**
+   * @brief Get the maximum absolute value of the horizontal offset from the SLM
+   * trap
+   * @return the maximum absolute value of the horizontal offset from the SLM
+   */
+  [[nodiscard]] auto max_h_offset() const -> uint16_t { return maxHOffset; }
+  /**
+   * @brief Get the maximum absolute value of the vertical offset from the SLM
+   * trap
+   * @return the maximum absolute value of the vertical offset from the SLM
+   */
+  [[nodiscard]] auto max_v_offset() const -> uint16_t { return maxVOffset; }
 
   /**
    * @brief The core function of the solver that solves one instance of the

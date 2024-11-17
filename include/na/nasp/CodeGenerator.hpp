@@ -100,11 +100,10 @@ public:
    * atoms in different zones.
    * @return The generated NAComputation.
    */
-  [[nodiscard]] static auto
-  generate(const QuantumComputation& input, const NASolver::Result& result,
-           uint16_t maxHOffset, uint16_t maxVOffset, uint16_t minEntanglingY,
-           uint16_t maxEntanglingY, uint16_t minAtomDist = 1,
-           uint16_t noInteractionRadius = 10, uint16_t zoneDist = 24)
-      -> NAComputation;
+  [[nodiscard]] static auto generate(const QuantumComputation& input,
+                                     const NASolver::Result& result,
+                                     uint16_t minAtomDist = 1,
+                                     uint16_t noInteractionRadius = 10,
+                                     uint16_t zoneDist = 24) -> NAComputation;
 };
 } // namespace na
