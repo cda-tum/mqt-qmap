@@ -218,7 +218,7 @@ To speed up subsequent runs, the installation step can be skipped by adding the 
 
     .. code-block:: console
 
-        (venv) $ nox -rs tests -- skip-install
+        (venv) $ nox -rs tests --no-install
 
 .. note::
     If you don't want to use :code:`nox`, you can also run the tests directly using :code:`pytest`.
@@ -291,7 +291,7 @@ To build the documentation without (re-)installing the Python package, you can u
 
     .. code-block:: console
 
-        (venv) $ nox -rs docs -- skip-install
+        (venv) $ nox -rs docs --no-install
 
     .. note::
         If you don't want to use :code:`nox`, you can also build the documentation directly using :code:`sphinx-build`.
