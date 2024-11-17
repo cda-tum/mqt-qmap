@@ -214,6 +214,7 @@ This installs all dependencies for running the tests in an isolated environment,
     If you don't want to use :code:`nox`, you can also run the tests directly using :code:`pytest`.
 
     .. code-block:: console
+
         (venv) $ pytest test/python
 
 Python Code Formatting and Linting
@@ -230,6 +231,7 @@ There are two ways of using these hooks:
 - You can install the hooks manually by running
 
      .. code-block:: console
+
          (venv) $ pre-commit install
 
   in the project root directory.
@@ -239,12 +241,14 @@ There are two ways of using these hooks:
 - You can use the :code:`nox` session :code:`lint` to run the hooks manually.
 
     .. code-block:: console
+
         (venv) $ nox -s lint
 
     .. note::
         If you don't want to use :code:`nox`, you can also run the hooks directly using :code:`pre-commit`.
 
     .. code-block:: console
+
         (venv) $ pre-commit run --all-files
 
 Working on the Documentation
@@ -255,23 +259,20 @@ The documentation source files can be found in the :code:`docs/source` directory
 You can build the documentation using the :code:`nox` session :code:`docs`.
 
     .. code-block:: console
+
         (venv) $ nox -s docs
 
 .. note::
     In order to properly build the jupyter notebooks in the documentation, you need to have :code:`pandoc` installed. See `the pandoc documentation <https://pandoc.org/installing.html>`_ for installation instructions.
 
 This will install all dependencies for building the documentation in an isolated environment, build the Python package, and then build the documentation.
-The session also provides a convenient option to automatically serve the docs on a local web server. Running
-
-    .. code-block:: console
-        (venv) $ nox -s docs -- --serve
-
-will start a local web server on port 8000 and provide a link to open the documentation in your browser.
+Additionally, the session will automatically serve the docs on a local web server.
 
     .. note::
         If you don't want to use :code:`nox`, you can also build the documentation directly using :code:`sphinx-build`.
 
         .. code-block:: console
+
             (venv) $ sphinx-build -b html docs/ docs/_build
 
         The docs can then be found in the :code:`docs/_build` directory.
