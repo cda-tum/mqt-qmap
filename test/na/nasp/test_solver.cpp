@@ -136,7 +136,7 @@ TEST(Solver, Unsat) {
 }
 
 TEST(Solver, Exceptions) {
-  // One sided storage zone is only supported below the entangling zone (higher
+  // One-sided storage zone is only supported below the entangling zone (higher
   // Y), i.e., minEntanglingY must be 0 or maxEntanglingY must less than maxY.
   EXPECT_THROW(std::ignore = na::NASolver(3, 7, 2, 3, 2, 2, 2, 2, 2, 7),
                std::invalid_argument);
@@ -145,6 +145,12 @@ TEST(Solver, Exceptions) {
   // maxEntanglingY must be less than maxY.
   EXPECT_THROW(std::ignore =
                    solver.solve({{0, 1}}, 3, 1, std::nullopt, false, true),
+               std::invalid_argument);
+  na::NASolver solver2(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // In order to shield qubits, there must be a storage zone, i.e.,
+  // maxEntanglingY must be less than maxY.
+  EXPECT_THROW(std::ignore =
+                   solver2.solve({{0, 1}}, 1, 1, std::nullopt, false, true),
                std::invalid_argument);
 }
 
