@@ -579,7 +579,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
       [](const qc::Qubit acc, const std::pair<qc::Qubit, qc::Qubit>& op) {
         return std::max(acc, std::max(op.first, op.second));
       }));
-  if (maxIndex >= static_cast<qc::Qubit>(numQubits)) {
+  if (maxIndex >= static_cast<qc::Qubit>(newNumQubits)) {
     throw std::invalid_argument(
         "The operations reference qubits with an index larger or equal to the "
         "given number of qubits.");
