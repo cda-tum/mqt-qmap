@@ -670,8 +670,7 @@ def get_ops_for_solver(
 def generate_code(
     circ: QuantumCircuit | QuantumComputation,
     result: NAStatePreparationSolver.Result,
-    max_hoffset: int,
-    max_v_offset: int,
-    min_entangling_y: int,
-    max_entangling: int,
+    min_atom_dist: int = ...,
+    no_interaction_radius: int = ...,
+    zone_dist: int = ...,
 ) -> str: ...

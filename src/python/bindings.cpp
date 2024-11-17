@@ -1016,32 +1016,21 @@ compact
   m.def(
       "generate_code",
       [](const py::object& circ, const na::NASolver::Result& result,
-         uint16_t maxHOffset, uint16_t maxVOffset, uint16_t minEntanglingY,
-         uint16_t maxEntanglingY, uint16_t minAtomDist,
-         uint16_t noInteractionRadius, uint16_t zoneDist) {
+         uint16_t minAtomDist, uint16_t noInteractionRadius,
+         uint16_t zoneDist) {
         qc::QuantumComputation qc{};
         loadQC(qc, circ);
-        return na::CodeGenerator::generate(
-                   qc, result, maxHOffset, maxVOffset, minEntanglingY,
-                   maxEntanglingY, minAtomDist, noInteractionRadius, zoneDist)
+        return na::CodeGenerator::generate(qc, result, minAtomDist,
+                                           noInteractionRadius, zoneDist)
             .toString();
       },
-      "circ"_a, "result"_a, "max_h_offset"_a, "max_v_offset"_a,
-      "min_entangling_y"_a, "max_entangling_y"_a, "min_atom_dist"_a = 1,
+      "circ"_a, "result"_a, "min_atom_dist"_a = 1,
       "no_interaction_radius"_a = 10, "zone_dist"_a = 24, R"(
 Generate code for the given circuit using the solver's result. Some parameters
 of the abstraction from the 2D grid used for the solver must be provided again.
 
-.. warning::
-    The result is only consistent, when the same parameters corresponding to
-    them used for the solver.
-
 :param circ: is the quantum circuit
 :param result: is the result of the solver
-:param max_h_offset: is the maximum horizontal offset of the atoms
-:param max_v_offset: is the maximum vertical offset of the atoms
-:param min_entangling_y: is the minimum y-coordinate for entangling operations
-:param max_entangling_y: is the maximum y-coordinate for entangling operations
 :param min_atom_dist: is the minimum distance between atoms
 :param no_interaction_radius: is the radius around an atom where no other atom
 can be placed during an entangling operation that should not interact with the
