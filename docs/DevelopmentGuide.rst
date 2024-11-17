@@ -182,7 +182,7 @@ Working on the Python module
 `Pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ is used for providing bindings of the C++ core library to Python.
 This allows to keep the performance critical parts of the code in C++ while providing a convenient interface for Python users.
 All of the bindings code is contained in the :code:`src/python` directory.
-The Python package itself lives in the :code:`src/mqt/core` directory.
+The Python package itself lives in the :code:`src/mqt/qmap` directory.
 
 Building the Python module
 --------------------------
