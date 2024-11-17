@@ -11,7 +11,8 @@ The process is divided into three steps:
     .. currentmodule:: mqt.qmap.na
     .. autofunction:: get_ops_for_solver
 
-2. Supply the list of entangling operations to the solver and generate the optimal operation sequence with the :code:`NAStatePreparationSolver`
+2. Supply the list of entangling operations to the solver and generate the optimal operation sequence with the :code:`NAStatePreparationSolver`.
+   For further details on the employed abstraction of the 2D plane in the solver, please refer to the corresponding article :cite:labelpar:`stadeOptimalStatePreparation2024`.
 
     .. currentmodule:: mqt.qmap.na
     .. autoclass:: NAStatePreparationSolver
