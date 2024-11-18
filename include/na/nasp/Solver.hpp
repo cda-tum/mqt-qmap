@@ -176,7 +176,7 @@ private:
      * corresponding article "Optimal State Preparation for Logical Arrays on
      * Zoned Neutral Atom Quantum Computers" that can be obtained under the
      * following link:
-     * https://www.cda.cit.tum.de/files/eda/2024_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
+     * https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
      */
     std::vector<expr> loadCols;
     /**
@@ -254,7 +254,7 @@ private:
    * corresponding article "Optimal State Preparation for Logical Arrays on
    * Zoned Neutral Atom Quantum Computers" that can be obtained under the
    * following link:
-   * https://www.cda.cit.tum.de/files/eda/2024_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
+   * https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
    * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
   /// Return constraints ensuring that exactly @code numTransfers@endcode
   /// transfers take place
