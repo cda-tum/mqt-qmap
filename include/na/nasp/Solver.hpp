@@ -170,6 +170,13 @@ private:
      * @details The index of the vector corresponds to the column index.
      * When a column is loaded at a certain stage, then all atoms on this column
      * must be loaded at this stage.
+     *
+     * @note For an in-detail explanation of the purpose of this member and the
+     * members @p loadRows, @p storeCols, @p storeRows, please refer to the
+     * corresponding article "Optimal State Preparation for Logical Arrays on
+     * Zoned Neutral Atom Quantum Computers" that can be obtained under the
+     * following link:
+     * https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
      */
     std::vector<expr> loadCols;
     /**
@@ -240,6 +247,15 @@ private:
   /// Initializes the variables for all stages and all qubits
   auto initVariables() -> void;
 
+  /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+   * EXPLANATION OF CONSTRAINTS
+   *
+   * For a detailed explanation of all constraints, please refer to the
+   * corresponding article "Optimal State Preparation for Logical Arrays on
+   * Zoned Neutral Atom Quantum Computers" that can be obtained under the
+   * following link:
+   * https://www.cda.cit.tum.de/files/eda/2025_date_optimal_state_preparation_for_logical_arrays_on_zoned_neutral_atom_quantum_computers.pdf
+   * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
   /// Return constraints ensuring that exactly @code numTransfers@endcode
   /// transfers take place
   [[nodiscard]] auto getExactNumTransfersConstraints() const
@@ -410,6 +426,12 @@ public:
 
     bool sat = false;
     std::vector<Stage> stages;
+    // Attributes required for the CodeGenerator to reconstruct the abstraction
+    // used by the solver
+    uint16_t minEntanglingY = 0;
+    uint16_t maxEntanglingY = 0;
+    uint16_t maxHOffset = 0;
+    uint16_t maxVOffset = 0;
 
     [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Result;
 

@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -572,6 +573,17 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
       throw std::invalid_argument("No storage zone is available.");
     }
   }
+  // get maximum index appearing in the operations
+  const auto maxIndex = static_cast<qc::Qubit>(std::accumulate(
+      ops.begin(), ops.end(), 0,
+      [](const qc::Qubit acc, const std::pair<qc::Qubit, qc::Qubit>& op) {
+        return std::max(acc, std::max(op.first, op.second));
+      }));
+  if (maxIndex >= static_cast<qc::Qubit>(newNumQubits)) {
+    throw std::invalid_argument(
+        "The operations reference qubits with an index larger or equal to the "
+        "given number of qubits.");
+  }
 
   numQubits = newNumQubits;
   numStages = newNumStages;
@@ -607,7 +619,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
 
   // Check satisfiability
   if (solver.check() == unsat) {
-    return Result{false, {}};
+    return Result{false,          {},         minEntanglingY,
+                  maxEntanglingY, maxHOffset, maxVOffset};
   }
   const auto model = solver.get_model();
   std::uint16_t nTrans = 0;
@@ -645,7 +658,8 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     resultStages.emplace_back<Result::Stage>(
         {rydberg, resultQubits, resultGates});
   }
-  return Result{true, resultStages};
+  return Result{true,           resultStages, minEntanglingY,
+                maxEntanglingY, maxHOffset,   maxVOffset};
 }
 
 /// Initialize a Qubit from a YAML string.

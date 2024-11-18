@@ -26,6 +26,36 @@ TEST(Solver, SteaneDoubleSidedStorage) {
   EXPECT_EQ(result.stages.size(), 4);
 }
 
+TEST(Solver, ShorDoubleSidedStorage) {
+  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/shor.qasm");
+  // create solver
+  na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // get operations for solver
+  const auto& pairs =
+      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  // solve
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
+  EXPECT_FALSE(result.sat);
+}
+
+TEST(Solver, Surface3DoubleSidedStorage) {
+  const auto& circ =
+      qc::QuantumComputation(TEST_CIRCUITS_PATH "/surface_3.qasm");
+  // create solver
+  na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // get operations for solver
+  const auto& pairs =
+      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+  // solve
+  const auto result =
+      solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
+                   std::nullopt, false, true);
+  EXPECT_TRUE(result.sat);
+  EXPECT_EQ(result.stages.size(), 4);
+}
+
 TEST(Solver, SteaneBottomStorage) {
   const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
@@ -106,7 +136,7 @@ TEST(Solver, Unsat) {
 }
 
 TEST(Solver, Exceptions) {
-  // One sided storage zone is only supported below the entangling zone (higher
+  // One-sided storage zone is only supported below the entangling zone (higher
   // Y), i.e., minEntanglingY must be 0 or maxEntanglingY must less than maxY.
   EXPECT_THROW(std::ignore = na::NASolver(3, 7, 2, 3, 2, 2, 2, 2, 2, 7),
                std::invalid_argument);
@@ -115,6 +145,12 @@ TEST(Solver, Exceptions) {
   // maxEntanglingY must be less than maxY.
   EXPECT_THROW(std::ignore =
                    solver.solve({{0, 1}}, 3, 1, std::nullopt, false, true),
+               std::invalid_argument);
+  na::NASolver solver2(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
+  // In order to shield qubits, there must be a storage zone, i.e.,
+  // maxEntanglingY must be less than maxY.
+  EXPECT_THROW(std::ignore =
+                   solver2.solve({{0, 1}}, 1, 1, std::nullopt, false, true),
                std::invalid_argument);
 }
 
