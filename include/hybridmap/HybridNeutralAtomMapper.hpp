@@ -465,9 +465,9 @@ public:
    * @return The mapped quantum circuit with abstract SWAP gates and MOVE
    * operations
    */
-  qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping initialMapping,
-                             InitialCoordinateMapping initialCoordinateMapping);
+  qc::QuantumComputation
+  map(qc::QuantumComputation& qc, InitialMapping initialMapping,
+      InitialCoordinateMapping initialCoordinateMapping = Trivial);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
