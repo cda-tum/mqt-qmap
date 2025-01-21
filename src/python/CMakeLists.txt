@@ -24,6 +24,7 @@ target_link_libraries(
           MQT::QMapHybrid
           MQT::CorePython
           MQT::NASP
+          MQT::CoreQASM
           MQT::ProjectOptions
           MQT::ProjectWarnings
           pybind11_json)

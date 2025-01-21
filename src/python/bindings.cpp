@@ -12,6 +12,21 @@
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
+#include "qasm3/Importer.hpp"
+#include "sc/Architecture.hpp"
+#include "sc/Mapper.hpp"
+#include "sc/MappingResults.hpp"
+#include "sc/configuration/AvailableArchitecture.hpp"
+#include "sc/configuration/CommanderGrouping.hpp"
+#include "sc/configuration/Configuration.hpp"
+#include "sc/configuration/EarlyTermination.hpp"
+#include "sc/configuration/Encoding.hpp"
+#include "sc/configuration/Heuristic.hpp"
+#include "sc/configuration/InitialLayout.hpp"
+#include "sc/configuration/Layering.hpp"
+#include "sc/configuration/LookaheadHeuristic.hpp"
+#include "sc/configuration/Method.hpp"
+#include "sc/configuration/SwapReduction.hpp"
 #include "python/qiskit/QuantumCircuit.hpp"
 #include "sc/exact/ExactMapper.hpp"
 #include "sc/heuristic/HeuristicMapper.hpp"
@@ -78,7 +93,7 @@ MappingResults map(const py::object& circ, Architecture& arch,
   auto& results = mapper->getResults();
 
   std::stringstream qasm{};
-  mapper->dumpResult(qasm, qc::Format::OpenQASM3);
+  mapper->dumpResult(qasm);
   results.mappedCircuit = qasm.str();
 
   return results;
@@ -877,8 +892,8 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def(
           "map_qasm_file",
           [](na::NeutralAtomMapper& mapper, const std::string& filename,
-             na::InitialMapping initialMapping) {
-            qc::QuantumComputation qc(filename);
+             const na::InitialMapping initialMapping) {
+            auto qc = qasm3::Importer::importf(filename);
             mapper.map(qc, initialMapping);
           },
           "Map a quantum circuit to the neutral atom quantum computer",
