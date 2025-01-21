@@ -13,6 +13,7 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Permutation.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 
@@ -42,6 +43,14 @@ struct MapperParameters {
   uint32_t seed = 0;
   bool verbose = false;
   InitialCoordinateMapping initialMapping;
+};
+
+enum RoutingType {
+  SwapType,
+  BridgeType,
+  MoveType,
+  PassByType,
+  FlyingAncillaType
 };
 
 /**
@@ -74,14 +83,10 @@ protected:
   NeutralAtomScheduler scheduler;
   // The gates that have been executed
   std::vector<const qc::Operation*> executedCommutingGates;
-  // Gates in the front layer to be executed with swap gates
-  GateList frontLayerGate;
-  // Gates in the front layer to be executed with move operations
-  GateList frontLayerShuttling;
-  // Gates in the lookahead layer to be executed with swap gates
-  GateList lookaheadLayerGate;
-  // Gates in the lookahead layer to be executed with move operations
-  GateList lookaheadLayerShuttling;
+  // Gates in the front layer to be executed
+  NeutralAtomLayer frontLayer;
+  // Gates in the lookahead layer to be executed
+  NeutralAtomLayer lookaheadLayer;
   // The minimal weight for any multi-qubit gate
   qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
@@ -100,6 +105,7 @@ protected:
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;
+  qc::Permutation flyingAncillas;
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
@@ -226,8 +232,8 @@ protected:
    * based on the cost function.
    * @return The current best move operation
    */
-  AtomMove findBestAtomMove();
-  std::pair<AtomMove, const qc::Operation*> findBestAtomMoveWithOp();
+  MoveComb findBestAtomMove();
+  std::pair<MoveComb, const qc::Operation*> findBestAtomMoveWithOp();
   /**
    * @brief Returns all possible move combinations for the front layer.
    * @details This includes direct moves, move away and multi-qubit moves.
@@ -365,7 +371,7 @@ protected:
    * @param layer The layer to compute the distance reduction for
    * @return The distance reduction cost
    */
-  qc::fp moveCostPerLayer(const AtomMove& move, GateList& layer);
+  qc::fp moveCostPerLayer(const AtomMove& move, const GateList& layer);
 
   /**
    * @brief Calculates a parallelization cost if the move operation can be
@@ -406,7 +412,8 @@ public:
                              const MapperParameters& p = MapperParameters())
       : arch(architecture), mappedQc(architecture.getNpositions()),
         mappedQcAOD(architecture.getNpositions()), scheduler(architecture),
-        parameters(p),
+        frontLayer(NeutralAtomLayer(qc::DAG())),
+        lookaheadLayer(NeutralAtomLayer(qc::DAG())), parameters(p),
         hardwareQubits(architecture, parameters.initialMapping,
                        std::vector<CoordIndex>(), std::vector<CoordIndex>(),
                        parameters.seed) {
