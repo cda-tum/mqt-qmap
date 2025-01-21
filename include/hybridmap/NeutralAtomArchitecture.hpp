@@ -384,8 +384,8 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2)));
+    return this->coordinates.at(idx1).getEuclideanDistance(
+        this->coordinates.at(idx2));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates

@@ -160,6 +160,20 @@ public:
    */
   void move(HwQubit hwQubit, CoordIndex newCoord);
 
+  void removeHwQubit(HwQubit hwQubit) {
+    hwToCoordIdx.erase(hwQubit);
+    initialHwPos.erase(hwQubit);
+    // set swap distances to -1
+    for (uint32_t i = 0; i < swapDistances.size(); ++i) {
+      swapDistances(hwQubit, i) = -1;
+      swapDistances(i, hwQubit) = -1;
+    }
+    nearbyQubits.erase(hwQubit);
+    for (auto& [qubit, nearby] : nearbyQubits) {
+      nearby.erase(hwQubit);
+    }
+  }
+
   /**
    * @brief Converts gate qubits from hardware qubits to coordinate indices.
    * @param op The operation.
