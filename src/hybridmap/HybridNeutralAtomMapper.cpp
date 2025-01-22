@@ -51,10 +51,14 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
   auto nQubits = qc.getNqubits();
 
   mappedQc = qc::QuantumComputation(qc.getNqubits());
-  mappedQc.addQubitRegister(nAncillas, "a");
+  mappedQc.addAncillaryRegister(nAncillas, "a");
   // remove ancillas from hardware qubit mapping
   for (auto i = nQubits; i < arch.getNqubits(); ++i) {
     hardwareQubits.removeHwQubit(i);
+  }
+  // remove qubits from flying ancillas
+  for (auto i = 0; i < nQubits; ++i) {
+    flyingAncillas.removeHwQubit(i);
   }
 
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
@@ -122,9 +126,9 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
     auto bestBridge = findBestBridge();
 
     // find best move
-    auto bestCombAndOp = findBestAtomMoveWithOp();
-    auto bestMove = bestCombAndOp.first;
-    auto opForMove = bestCombAndOp.second;
+    auto bestComb = findBestAtomMove();
+
+    auto bestFA = convertMoveCombToFlyingAncilla(bestComb);
 
     // // find flying ancilla
     // auto [bestFA, numPassby] = findBestFlyingAncilla(qc, opForMove);
@@ -602,6 +606,51 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
   }
   return coordUsages;
 }
+FlyingAncillas
+NeutralAtomMapper::convertMoveCombToFlyingAncilla(const MoveComb& moveComb) {
+  auto usedQubits = moveComb.op->getUsedQubits();
+  auto hwQubits = this->mapping.getHwQubits(usedQubits);
+  const auto usedCoords = this->hardwareQubits.getCoordIndices(hwQubits);
+  // not enough qubits for a flying ancilla
+  if (usedCoords.size() - 1 > mappedQc.getNancillae()) {
+    return {};
+  }
+
+  // multi-qubit gate -> only one direction
+  FlyingAncillas bestFAs;
+  FlyingAncilla bestFA;
+  HwQubits usedFA;
+  for (const auto move : moveComb.moves) {
+    if (std::find(usedCoords.begin(), usedCoords.end(), move.first) !=
+        usedCoords.end()) {
+      bestFA.op = moveComb.op;
+      auto nearFirstIdx =
+          this->flyingAncillas.getClosestQubit(move.first, usedFA);
+      auto nearFirst = this->flyingAncillas.getCoordIndex(nearFirstIdx);
+      auto nearSecondIdx =
+          this->flyingAncillas.getClosestQubit(move.second, usedFA);
+      auto nearSecond = this->flyingAncillas.getCoordIndex(nearSecondIdx);
+      if (usedQubits.size() == 2) {
+        // both directions possible, check if reversed is better
+        if (this->arch.getEuclideanDistance(nearFirstIdx, move.first) <
+            this->arch.getEuclideanDistance(nearSecondIdx, move.second)) {
+          bestFA.q1 = move.second;
+          bestFA.q2 = move.first;
+          bestFA.origin = nearSecond;
+          bestFA.index = nearSecondIdx;
+        }
+      }
+      bestFA.q1 = move.first;
+      bestFA.q2 = move.second;
+      bestFA.origin = nearFirst;
+      bestFA.index = nearFirstIdx;
+
+      usedFA.emplace(bestFA.index);
+      bestFAs.emplace_back(bestFA);
+    }
+  }
+  return bestFAs;
+}
 
 qc::fp NeutralAtomMapper::swapCost(
     const Swap& swap, const std::pair<Swaps, WeightedSwaps>& swapsFront,
@@ -991,37 +1040,25 @@ MoveComb NeutralAtomMapper::findBestAtomMove() {
   return bestMove->first;
 }
 
-std::pair<MoveComb, const qc::Operation*>
-NeutralAtomMapper::findBestAtomMoveWithOp() {
-  auto [moveCombs, moveCombsWithOp] = getAllMoveCombinationsWithOp();
-
-  // compute cost for each move combination
-  std::vector<std::pair<MoveComb, qc::fp>> moveCosts;
-  moveCosts.reserve(moveCombs.size());
-  for (const auto& moveComb : moveCombs) {
-    moveCosts.emplace_back(moveComb, moveCostComb(moveComb));
-  }
-
-  std::sort(moveCosts.begin(), moveCosts.end(),
-            [](const auto& move1, const auto& move2) {
-              return move1.second < move2.second;
-            });
-
-  // get move of minimal cost
-  auto bestMove = std::min_element(moveCosts.begin(), moveCosts.end(),
-                                   [](const auto& move1, const auto& move2) {
-                                     return move1.second < move2.second;
-                                   });
-  MoveComb bestAtomMove = bestMove->first;
-  const qc::Operation* corresOp = nullptr;
-  for (const auto& pair : moveCombsWithOp) {
-    if (pair.first == bestAtomMove) {
-      corresOp = pair.second;
-      break;
-    }
-  }
-  return {bestAtomMove, corresOp};
-}
+// std::pair<MoveComb, MoveInfo>
+// NeutralAtomMapper::findBestAtomMoveWithOp() {
+//   auto moveCombsWithOp = getAllMoveCombinationsWithOp();
+//
+//   // compute cost for each move combination
+//   std::vector<std::pair<std::pair<MoveComb, MoveInfo>, qc::fp>> moveCosts;
+//   moveCosts.reserve(moveCombsWithOp.size());
+//   for (const auto& moveCombWithOp : moveCombsWithOp) {
+//     moveCosts.emplace_back(moveCombWithOp,
+//     moveCostComb(moveCombWithOp.first));
+//   }
+//
+//   std::sort(moveCosts.begin(), moveCosts.end(),
+//             [](const auto& move1, const auto& move2) {
+//               return move1.second < move2.second;
+//             });
+//
+//   return moveCosts.front().first;
+// }
 
 qc::fp NeutralAtomMapper::moveCostComb(const MoveComb& moveComb) {
   qc::fp costComb = 0;
@@ -1258,33 +1295,33 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
       std::cout << '\n';
     }
     auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
+    moves.setOperation(op, bestPos);
     allMoves.addMoveCombs(moves);
   }
   allMoves.removeLongerMoveCombs();
   return allMoves;
 }
 
-std::pair<MoveCombs, std::vector<std::pair<MoveComb, const qc::Operation*>>>
-NeutralAtomMapper::getAllMoveCombinationsWithOp() {
-  MoveCombs allMoves;
-  std::vector<std::pair<MoveComb, const qc::Operation*>> allMovesWithOp;
-  int i = 1;
-  for (const auto& op : this->frontLayer.getGates()) {
-    auto usedQubits = op->getUsedQubits();
-    auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
-    auto usedCoordsSet = this->hardwareQubits.getCoordIndices(usedHwQubits);
-    auto usedCoords =
-        std::vector<CoordIndex>(usedCoordsSet.begin(), usedCoordsSet.end());
-    auto bestPos = getBestMovePos(usedCoords);
-    auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
-    allMoves.addMoveCombs(moves);
-    for (auto move : moves) {
-      allMovesWithOp.push_back(std::make_pair(move, op));
-    }
-  }
-  allMoves.removeLongerMoveCombs();
-  return make_pair(allMoves, allMovesWithOp);
-}
+// std::vector<std::pair<MoveComb, MoveInfo>>
+// NeutralAtomMapper::getAllMoveCombinationsWithOp() {
+//   MoveCombs allMoves;
+//   int i = 1;
+//   for (const auto& op : this->frontLayer.getGates()) {
+//     auto usedQubits = op->getUsedQubits();
+//     auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
+//     auto usedCoordsSet = this->hardwareQubits.getCoordIndices(usedHwQubits);
+//     auto usedCoords =
+//         std::vector<CoordIndex>(usedCoordsSet.begin(), usedCoordsSet.end());
+//     auto bestPos = getBestMovePos(usedCoords);
+//     auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
+//     allMoves.addMoveCombs(moves);
+//     for (auto move : moves) {
+//       allMovesWithOp.push_back(std::make_pair(move, MoveInfo{op, bestPos}));
+//     }
+//   }
+//   allMoves.removeLongerMoveCombs();
+//   return make_pair(allMoves, allMovesWithOp);
+// }
 
 CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
   size_t const maxMoves = gateCoords.size() * 2;
@@ -1427,6 +1464,11 @@ NeutralAtomMapper::getMoveAwayCombinations(CoordIndex startCoord,
     throw std::runtime_error("No move away target found");
   }
   return moveCombinations;
+}
+std::vector<CoordIndices>
+NeutralAtomMapper::findBestFlyingAncillaComb(const qc::Operation* targetOp) {
+  std::vector<CoordIndices> bestFlyingAncillaCombs;
+  auto usedQubits = targetOp->getUsedQubits();
 }
 
 std::pair<uint32_t, qc::fp>

@@ -105,7 +105,7 @@ protected:
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;
-  qc::Permutation flyingAncillas;
+  HardwareQubits flyingAncillas;
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
@@ -215,6 +215,8 @@ protected:
 
   CoordIndices computeCurrentCoordUsages() const;
 
+  FlyingAncillas convertMoveCombToFlyingAncilla(const MoveComb& move_comb);
+
   // std::vector<std::pair<const qc::Operation*, Bridge>>
   // findAllBridges(qc::QuantumComputation& qc);
   // std::vector<std::pair<const qc::Operation*, Bridge>>
@@ -239,7 +241,7 @@ protected:
    * @return The current best move operation
    */
   MoveComb findBestAtomMove();
-  std::pair<MoveComb, const qc::Operation*> findBestAtomMoveWithOp();
+  // std::pair<MoveComb, MoveInfo> findBestAtomMoveWithOp();
   /**
    * @brief Returns all possible move combinations for the front layer.
    * @details This includes direct moves, move away and multi-qubit moves.
@@ -247,8 +249,8 @@ protected:
    * @return Vector of possible move combinations for the front layer
    */
   MoveCombs getAllMoveCombinations();
-  std::pair<MoveCombs, std::vector<std::pair<MoveComb, const qc::Operation*>>>
-  getAllMoveCombinationsWithOp();
+  // std::vector<std::pair<MoveComb, MoveInfo>>
+  // getAllMoveCombinationsWithOp();
   /**
    * @brief Returns all possible move away combinations for a move from start to
    * target.
@@ -265,9 +267,8 @@ protected:
                                     const CoordIndices& excludedCoords);
 
   // Methods for flying ancilla operations mapping
-  std::pair<qc::QuantumComputation, uint32_t>
-  findBestFlyingAncilla(qc::QuantumComputation& qc,
-                        const qc::Operation* targetOp);
+  std::vector<CoordIndices>
+  findBestFlyingAncillaComb(const qc::Operation* targetOp);
   std::set<std::set<qc::Qubit>> findQtargetSet(std::set<qc::Qubit>& usedQubits);
   CoordIndex returnClosestAncillaCoord(const CoordIndex& c_target,
                                        const CoordIndices& excludeCoords,
@@ -422,7 +423,10 @@ public:
         lookaheadLayer(NeutralAtomLayer(qc::DAG())), parameters(p),
         hardwareQubits(architecture, parameters.initialMapping,
                        std::vector<CoordIndex>(), std::vector<CoordIndex>(),
-                       parameters.seed) {
+                       parameters.seed),
+        flyingAncillas(architecture, InitialCoordinateMapping::Trivial,
+                       std::vector<CoordIndex>(), std::vector<CoordIndex>(),
+                       0) {
     // need at least on free coordinate to shuttle
     if (architecture.getNpositions() - architecture.getNqubits() < 1) {
       this->parameters.gateWeight = 1;

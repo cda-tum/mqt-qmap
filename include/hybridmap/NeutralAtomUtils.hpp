@@ -107,6 +107,16 @@ struct MoveVector {
   [[nodiscard]] bool include(const MoveVector& other) const;
 };
 
+struct FlyingAncilla {
+  CoordIndex origin;
+  CoordIndex q1;
+  CoordIndex q2;
+  size_t index;
+  const qc::Operation* op;
+};
+
+using FlyingAncillas = std::vector<FlyingAncilla>;
+
 /**
  * @brief Helper class to manage multiple atom moves which belong together.
  * @details E.g. a move-away combined with the actual move. These are combined
@@ -115,10 +125,15 @@ struct MoveVector {
 struct MoveComb {
   std::vector<AtomMove> moves;
   qc::fp cost = std::numeric_limits<qc::fp>::max();
+  const qc::Operation* op = nullptr;
+  CoordIndices bestPos;
 
-  MoveComb(std::vector<AtomMove> mov, const qc::fp c)
-      : moves(std::move(mov)), cost(c) {}
-  MoveComb(AtomMove mov, const qc::fp c) : moves({std::move(mov)}), cost(c) {}
+  MoveComb(std::vector<AtomMove> mov, const qc::fp c, const qc::Operation* o,
+           CoordIndices pos)
+      : moves(std::move(mov)), cost(c), op(o), bestPos(std::move(pos)) {}
+  MoveComb(AtomMove mov, const qc::fp c, const qc::Operation* o,
+           CoordIndices pos)
+      : moves({std::move(mov)}), cost(c), op(o), bestPos(std::move(pos)) {}
 
   MoveComb() = default;
   explicit MoveComb(std::vector<AtomMove> mov) : moves(std::move(mov)) {}
@@ -187,6 +202,13 @@ struct MoveCombs {
   iterator end() { return moveCombs.end(); }
   [[nodiscard]] const_iterator begin() const { return moveCombs.cbegin(); }
   [[nodiscard]] const_iterator end() const { return moveCombs.cend(); }
+
+  void setOperation(const qc::Operation* op, CoordIndices pos) {
+    for (auto& moveComb : moveCombs) {
+      moveComb.op = op;
+      moveComb.bestPos = pos;
+    }
+  }
 
   /**
    * @brief Add a move combination to the list of move combinations.
