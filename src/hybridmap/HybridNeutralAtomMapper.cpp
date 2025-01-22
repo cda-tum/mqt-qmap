@@ -119,7 +119,7 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
     auto bestSwap = findBestSwap(lastSwap);
 
     // find bridge
-    auto allBridges = findAllBridges(qc);
+    auto bestBridge = findBestBridge();
 
     // find best move
     auto bestCombAndOp = findBestAtomMoveWithOp();
@@ -538,6 +538,7 @@ std::set<Swap> NeutralAtomMapper::getAllPossibleSwaps(
 }
 Bridge NeutralAtomMapper::findBestBridge() const {
   auto allBridges = getAllBridges();
+  auto qubitUsages = computeCurrentCoordUsages();
 }
 
 Bridges NeutralAtomMapper::getAllBridges() const {
@@ -554,6 +555,28 @@ Bridges NeutralAtomMapper::getAllBridges() const {
     }
   }
   return allBridges;
+}
+CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
+  CoordIndices coordUsages(mappedQc.getNqubits(), 0);
+  // in front layer
+  for (const auto* const op : this->frontLayer.getGates()) {
+    for (const auto qubit : op->getUsedQubits()) {
+      coordUsages[hardwareQubits.getCoordIndex(
+          hardwareQubits.getHwQubit(qubit))]++;
+    }
+  }
+  // in mapped qc, go backwards same length as front layer
+  auto nFrontLayerGates = this->frontLayer.getGates().size();
+  auto it = this->mappedQc.rbegin();
+  while (it != this->mappedQc.rend() && nFrontLayerGates > 0) {
+    for (const auto qubit : (*it)->getUsedQubits()) {
+      coordUsages[hardwareQubits.getCoordIndex(
+          hardwareQubits.getHwQubit(qubit))]++;
+    }
+    ++it;
+    nFrontLayerGates--;
+  }
+  return coordUsages;
 }
 
 qc::fp NeutralAtomMapper::swapCost(

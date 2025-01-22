@@ -209,18 +209,11 @@ protected:
   getAllPossibleSwaps(const std::pair<Swaps, WeightedSwaps>& swapsFront) const;
 
   // Methods for bridge operations mapping
-  std::vector<std::pair<const qc::Operation*, Bridge>>
-  findAllBridges(qc::QuantumComputation& qc);
-  std::vector<std::pair<const qc::Operation*, Bridge>>
-  bridgeCostCompareWithSwap(
-      std::vector<std::pair<const qc::Operation*, Bridge>> allBridges,
-      Swap bestSwap, const qc::DAG& dag, NeutralAtomLayer& frontLayer);
-  void updateMappingBridge(
-      std::vector<std::pair<const qc::Operation*, Bridge>> ExecutableBridges,
-      NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer);
 
   Bridge findBestBridge() const;
   Bridges getAllBridges() const;
+
+  CoordIndices computeCurrentCoordUsages() const;
 
   // std::vector<std::pair<const qc::Operation*, Bridge>>
   // findAllBridges(qc::QuantumComputation& qc);
