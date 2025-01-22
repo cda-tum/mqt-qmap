@@ -322,5 +322,21 @@ HardwareQubits::findClosestAncillaCoord(CoordIndex coord, Direction direction,
   }
   return closestFreeCoords;
 }
+HwQubit HardwareQubits::getClosestQubit(CoordIndex coord,
+                                        HwQubits ignored) const {
+  HwQubit closestQubit = 0;
+  auto minDistance = std::numeric_limits<qc::fp>::max();
+  for (auto const& [qubit, idx] : hwToCoordIdx) {
+    if (ignored.find(qubit) != ignored.end()) {
+      continue;
+    }
+    auto distance = arch->getEuclideanDistance(coord, idx);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestQubit = qubit;
+    }
+  }
+  return closestQubit;
+}
 
 } // namespace na

@@ -323,6 +323,8 @@ public:
                           int circQubitSize,
                           const CoordIndices& excludedCoords = {});
 
+  HwQubit getClosestQubit(CoordIndex coord, HwQubits ignored) const;
+
   // Blocking
   /**
    * @brief Computes all hardware qubits that are blocked by a set of hardware
