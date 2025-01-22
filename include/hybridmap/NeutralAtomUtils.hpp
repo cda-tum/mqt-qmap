@@ -19,7 +19,6 @@
 #include <vector>
 
 namespace na {
-
 // Enums for the different initial mappings strategies
 enum InitialCoordinateMapping : uint8_t { Trivial, Random, Graph };
 enum InitialMapping : uint8_t { Identity };
@@ -215,5 +214,34 @@ struct MultiQubitMovePos {
   CoordIndices coords;
   size_t nMoves{0};
 };
+
+inline std::pair<size_t, size_t> computeCzHforBridge(size_t length) {
+  // ignore the first and last qubit
+  length = length - 2;
+
+  uint h = 0;
+  uint cz = 1;
+
+  size_t addMultiplier = 1;
+  size_t addCounter = 0;
+  for (size_t i = 0; i < length; ++i) {
+    h += 4 * addMultiplier;
+    cz += 3 * addMultiplier;
+    addCounter++;
+    if (addCounter == addMultiplier) {
+      addMultiplier = addMultiplier * 2;
+      addCounter = 0;
+    }
+  }
+  return {h, cz};
+}
+
+inline std::vector<std::pair<size_t, size_t>> getCzH(size_t maxSize) {
+  std::vector<std::pair<size_t, size_t>> gates;
+  for (size_t i = 3; i <= maxSize; ++i) {
+    gates.emplace_back(computeCzHforBridge(i));
+  }
+  return gates;
+}
 
 } // namespace na
