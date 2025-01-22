@@ -73,9 +73,6 @@ protected:
    */
   void computeSwapDistance(HwQubit q1, HwQubit q2);
 
-  std::vector<HwQubitsVector> computeAllShortestPaths(HwQubit q1,
-                                                      HwQubit q2) const;
-
   /**
    * @brief Resets the swap distances between the hardware qubits.
    * @details Used after each shuttling operation to reset the swap distances.
@@ -140,6 +137,9 @@ public:
     initNearbyQubits();
     initialHwPos = hwToCoordIdx;
   }
+
+  std::vector<HwQubitsVector> computeAllShortestPaths(HwQubit q1,
+                                                      HwQubit q2) const;
 
   // Mapping
   const qc::Permutation& getHwToCoordIdx() const { return hwToCoordIdx; }

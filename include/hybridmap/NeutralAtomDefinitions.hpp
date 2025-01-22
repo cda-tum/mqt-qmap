@@ -22,6 +22,9 @@ using CoordIndices = std::vector<CoordIndex>;
 // used as qubit or not and occupies a certain position in the architecture.
 using HwQubit = uint32_t;
 using HwQubits = std::set<HwQubit>;
+using HwQubitsVector = std::vector<HwQubit>;
+using Bridge = std::vector<HwQubit>;
+using Bridges = std::vector<Bridge>;
 using HwPositions [[maybe_unused]] = std::vector<HwQubits>;
 // A qc::Qubit corresponds to a qubit in the quantum circuit. It can be mapped
 // to a hardware qubit.
@@ -35,9 +38,10 @@ using WeightedSwaps = std::vector<WeightedSwap>;
 // The distance between two hardware qubits using SWAP gates.
 using SwapDistance = int32_t;
 // Bridges
-using Bridge =
-    std::tuple<qc::Qubit, qc::Qubit, Qubits>; // q_control, q_target, Q_between
-using Bridges = std::vector<Bridge>;
+// using Bridge =
+//     std::tuple<qc::Qubit, qc::Qubit, Qubits>; // q_control, q_target,
+//     Q_between
+// using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
 
