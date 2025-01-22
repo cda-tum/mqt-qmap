@@ -641,6 +641,14 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
     ++it;
     nFrontLayerGates--;
   }
+  // add last blocked qubits
+  if (this->lastBlockedQubits.empty()) {
+    return coordUsages;
+  }
+  const auto lastBlockedQubits = this->lastBlockedQubits.back();
+  for (const auto qubit : lastBlockedQubits) {
+    coordUsages[hardwareQubits.getCoordIndex(qubit)]++;
+  }
   return coordUsages;
 }
 FlyingAncillas
