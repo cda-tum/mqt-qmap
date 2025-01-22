@@ -537,12 +537,32 @@ std::set<Swap> NeutralAtomMapper::getAllPossibleSwaps(
   return swaps;
 }
 Bridge NeutralAtomMapper::findBestBridge() const {
-  auto allBridges = getAllBridges();
+  auto allBridges = getShortestBridges();
+  if (allBridges.empty()) {
+    return {};
+  } else if (allBridges.size() == 1) {
+    return allBridges.front();
+  }
+  // use bridge along less used qubits
   auto qubitUsages = computeCurrentCoordUsages();
+  size_t bestBridgeIdx = 0;
+  size_t minUsage = std::numeric_limits<size_t>::max();
+  for (size_t i = 0; i < allBridges.size(); ++i) {
+    size_t usage = 0;
+    for (auto qubit : allBridges[i]) {
+      usage += qubitUsages[qubit];
+    }
+    if (usage < minUsage) {
+      minUsage = usage;
+      bestBridgeIdx = i;
+    }
+  }
+  return allBridges[bestBridgeIdx];
 }
 
-Bridges NeutralAtomMapper::getAllBridges() const {
+Bridges NeutralAtomMapper::getShortestBridges() const {
   Bridges allBridges;
+  size_t minBridgeLength = std::numeric_limits<size_t>::max();
   for (const auto* const op : this->frontLayer.getGates()) {
     if (op->getUsedQubits().size() == 2) {
       auto usedQuBits = op->getUsedQubits();
@@ -551,6 +571,10 @@ Bridges NeutralAtomMapper::getAllBridges() const {
           *usedHwQubits.begin(), *usedHwQubits.rbegin());
       for (const auto& bridge : bridges) {
         allBridges.emplace_back(bridge);
+        if (bridge.size() < minBridgeLength) {
+          minBridgeLength = bridge.size();
+          allBridges.clear();
+        }
       }
     }
   }

@@ -211,7 +211,7 @@ protected:
   // Methods for bridge operations mapping
 
   Bridge findBestBridge() const;
-  Bridges getAllBridges() const;
+  Bridges getShortestBridges() const;
 
   CoordIndices computeCurrentCoordUsages() const;
 
