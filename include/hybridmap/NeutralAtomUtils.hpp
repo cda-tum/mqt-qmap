@@ -22,6 +22,13 @@ namespace na {
 // Enums for the different initial mappings strategies
 enum InitialCoordinateMapping : uint8_t { Trivial, Random, Graph };
 enum InitialMapping : uint8_t { Identity };
+enum MappingMethod : uint8_t {
+  SwapMethod,
+  BridgeMethod,
+  MoveMethod,
+  FlyingAncillaMethod,
+  PassByMethod
+};
 
 [[maybe_unused]] static InitialCoordinateMapping
 initialCoordinateMappingFromString(

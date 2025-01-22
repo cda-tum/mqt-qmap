@@ -144,16 +144,26 @@ protected:
    */
   bool isExecutable(const qc::Operation* opPointer);
 
+  void updateBlockedQubits(Swap swap) {
+    HwQubits qubits = {swap.first, swap.second};
+    updateBlockedQubits(qubits);
+  }
+  void updateBlockedQubits(HwQubits qubits);
+
   /**
    * @brief Update the mapping for the given swap gate.
    * @param swap The swap gate to update the mapping for
    */
-  void updateMappingSwap(Swap swap);
+  void applySwap(Swap swap);
   /**
    * @brief Update the mapping for the given move operation.
    * @param move The move operation to update the mapping for
    */
-  void updateMappingMove(AtomMove move);
+  void applyMove(AtomMove move);
+
+  void applyBridge(const Bridge& bridge);
+  void applyFlyingAncilla(FlyingAncilla fa);
+  void applyPassBy(FlyingAncilla fa);
 
   // Methods for gate vs. shuttling
   /**

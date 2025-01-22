@@ -210,7 +210,7 @@ std::set<HwQubit>
 HardwareQubits::getBlockedQubits(const std::set<HwQubit>& qubits) {
   std::set<HwQubit> blockedQubits;
   for (const auto& qubit : qubits) {
-    for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
+    for (uint32_t i = 0; i < hwToCoordIdx.maxKey(); ++i) {
       if (i == qubit) {
         continue;
       }

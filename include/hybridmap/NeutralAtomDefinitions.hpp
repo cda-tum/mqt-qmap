@@ -6,6 +6,7 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstdint>
 #include <set>
@@ -23,7 +24,7 @@ using CoordIndices = std::vector<CoordIndex>;
 using HwQubit = uint32_t;
 using HwQubits = std::set<HwQubit>;
 using HwQubitsVector = std::vector<HwQubit>;
-using Bridge = std::vector<HwQubit>;
+using Bridge = std::pair<const qc::Operation*, std::vector<HwQubit>>;
 using Bridges = std::vector<Bridge>;
 using HwPositions [[maybe_unused]] = std::vector<HwQubits>;
 // A qc::Qubit corresponds to a qubit in the quantum circuit. It can be mapped

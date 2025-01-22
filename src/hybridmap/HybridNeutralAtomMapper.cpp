@@ -130,18 +130,36 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
 
     auto bestFA = convertMoveCombToFlyingAncilla(bestComb);
 
-    // // find flying ancilla
-    // auto [bestFA, numPassby] = findBestFlyingAncilla(qc, opForMove);
-    //
-    // execute swap gate
-    // if (false) {
-    //   lastSwap = bestSwap;
-    //   updateMappingSwap(bestSwap);
-    // } else if (false) {
-    //   updateMappingMove(bestMove);
-    // } else {
-    //   // update mapping for flying ancilla
-    // }
+    // compare methods
+    // auto bestMethod = MappingMethod::SwapMethod;
+    // auto bestMethod = MappingMethod::MoveMethod;
+    auto bestMethod = MappingMethod::BridgeMethod;
+
+    switch (bestMethod) {
+    case MappingMethod::SwapMethod:
+      lastSwap = bestSwap;
+      updateBlockedQubits(bestSwap);
+      applySwap(bestSwap);
+      break;
+    case MappingMethod::BridgeMethod:
+      updateBlockedQubits({bestBridge.second.begin(), bestBridge.second.end()});
+      applyBridge(bestBridge);
+      break;
+    case MappingMethod::MoveMethod:
+      // apply whole move combination at once
+      // for (auto& move : bestComb.moves) {
+      //   applyMove(move);
+      // }
+      applyMove(bestComb.moves[0]);
+      break;
+    case MappingMethod::FlyingAncillaMethod:
+      // applyFlyingAncilla(bestFA);
+      break;
+    case MappingMethod::PassByMethod:
+      // applyPassBy(bestFA);
+      break;
+    }
+
     mapAllPossibleGates(frontLayer);
     lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
   }
@@ -425,14 +443,17 @@ GateList NeutralAtomMapper::getExecutableGates(const GateList& gates) {
   return executableGates;
 }
 
-void NeutralAtomMapper::updateMappingSwap(Swap swap) {
-  nSwaps++;
+void NeutralAtomMapper::updateBlockedQubits(HwQubits qubits) {
   // save to lastSwaps
   this->lastBlockedQubits.emplace_back(
-      this->hardwareQubits.getBlockedQubits({swap.first, swap.second}));
+      this->hardwareQubits.getBlockedQubits(qubits));
   if (this->lastBlockedQubits.size() > this->arch.getNcolumns()) {
     this->lastBlockedQubits.pop_front();
   }
+}
+
+void NeutralAtomMapper::applySwap(Swap swap) {
+  nSwaps++;
   this->mapping.applySwap(swap);
   // convert circuit qubits to CoordIndex and append to mappedQc
   auto idxFirst = this->hardwareQubits.getCoordIndex(swap.first);
@@ -455,7 +476,7 @@ void NeutralAtomMapper::updateMappingSwap(Swap swap) {
   }
 }
 
-void NeutralAtomMapper::updateMappingMove(AtomMove move) {
+void NeutralAtomMapper::applyMove(AtomMove move) {
   this->lastMoves.emplace_back(move);
   if (this->lastMoves.size() > 4) {
     this->lastMoves.pop_front();
@@ -473,6 +494,24 @@ void NeutralAtomMapper::updateMappingMove(AtomMove move) {
     }
   }
   nMoves++;
+}
+void NeutralAtomMapper::applyBridge(const Bridge& bridge) {
+  // add gates to mappedQc
+  // TODO: implement
+
+  if (this->parameters.verbose) {
+    std::cout << "bridged " << bridge.first->getName() << " ";
+    for (auto qubit : bridge.second) {
+      std::cout << qubit << " ";
+    }
+    std::cout << '\n';
+  }
+
+  // remove gate from frontLayer
+  const auto* op = bridge.first;
+  frontLayer.removeGatesAndUpdate({op});
+
+  nBridges++;
 }
 
 Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwap) {
@@ -553,7 +592,7 @@ Bridge NeutralAtomMapper::findBestBridge() const {
   size_t minUsage = std::numeric_limits<size_t>::max();
   for (size_t i = 0; i < allBridges.size(); ++i) {
     size_t usage = 0;
-    for (auto qubit : allBridges[i]) {
+    for (auto qubit : allBridges[i].second) {
       usage += qubitUsages[qubit];
     }
     if (usage < minUsage) {
@@ -574,7 +613,7 @@ Bridges NeutralAtomMapper::getShortestBridges() const {
       const auto bridges = this->hardwareQubits.computeAllShortestPaths(
           *usedHwQubits.begin(), *usedHwQubits.rbegin());
       for (const auto& bridge : bridges) {
-        allBridges.emplace_back(bridge);
+        allBridges.emplace_back(op, bridge);
         if (bridge.size() < minBridgeLength) {
           minBridgeLength = bridge.size();
           allBridges.clear();
@@ -589,17 +628,15 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
   // in front layer
   for (const auto* const op : this->frontLayer.getGates()) {
     for (const auto qubit : op->getUsedQubits()) {
-      coordUsages[hardwareQubits.getCoordIndex(
-          hardwareQubits.getHwQubit(qubit))]++;
+      coordUsages[hardwareQubits.getCoordIndex(mapping.getHwQubit(qubit))]++;
     }
   }
   // in mapped qc, go backwards same length as front layer
   auto nFrontLayerGates = this->frontLayer.getGates().size();
   auto it = this->mappedQc.rbegin();
   while (it != this->mappedQc.rend() && nFrontLayerGates > 0) {
-    for (const auto qubit : (*it)->getUsedQubits()) {
-      coordUsages[hardwareQubits.getCoordIndex(
-          hardwareQubits.getHwQubit(qubit))]++;
+    for (const auto coordIdx : (*it)->getUsedQubits()) {
+      coordUsages[coordIdx]++;
     }
     ++it;
     nFrontLayerGates--;
