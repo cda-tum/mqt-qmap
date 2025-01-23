@@ -104,7 +104,6 @@ qc::QuantumComputation getBridgeCircuit(size_t length) {
   qcBridge.cx(1, 2);
   qcBridge.cx(0, 1);
   qcBridge.cx(1, 2);
-  qcBridge.print(std::cout);
 
   qcBridge = recursiveBridgeIncrease(qcBridge, length - 3);
   // convert to CZ on qubit 0
@@ -114,7 +113,6 @@ qc::QuantumComputation getBridgeCircuit(size_t length) {
 
   qc::CircuitOptimizer::replaceMCXWithMCZ(qcBridge);
   qc::CircuitOptimizer::singleQubitGateFusion(qcBridge);
-  qcBridge.print(std::cout);
   return qcBridge;
 }
 qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
@@ -130,7 +128,6 @@ qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
   auto minIndex = std::min_element(gates.begin(), gates.end()) - gates.begin();
 
   qcBridge = bridgeExpand(qcBridge, minIndex);
-  qcBridge.print(std::cout);
 
   return recursiveBridgeIncrease(qcBridge, length - 1);
 }
