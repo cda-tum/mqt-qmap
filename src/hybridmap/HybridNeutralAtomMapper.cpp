@@ -47,20 +47,8 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
   qc::CircuitOptimizer::flattenOperations(qc);
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
 
-  // Compute number of flying ancillas
-  auto nAncillas = arch.getNqubits() - qc.getNqubits();
-  auto nQubits = qc.getNqubits();
-
-  mappedQc = qc::QuantumComputation(qc.getNqubits());
-  mappedQc.addAncillaryRegister(nAncillas, "a");
-  // remove ancillas from hardware qubit mapping
-  for (auto i = nQubits; i < arch.getNqubits(); ++i) {
-    hardwareQubits.removeHwQubit(i);
-  }
-  // remove qubits from flying ancillas
-  for (auto i = 0; i < nQubits; ++i) {
-    flyingAncillas.removeHwQubit(i);
-  }
+  const auto nQubits = qc.getNqubits();
+  prepareAncillas(nQubits);
 
   auto dag = qc::CircuitOptimizer::constructDAG(qc);
 
@@ -104,60 +92,14 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
     throw std::runtime_error("More qubits in circuit than in architecture");
   }
 
-  // save last swap to prevent immediate swap back
-  Swap lastSwap = {0, 0};
-
-  auto i = 0;
+  // Mapping Loop
+  size_t i = 0;
   while (!frontLayer.getGates().empty()) {
     // assign gates to layers
-    ++i;
-    if (this->parameters.verbose) {
-      std::cout << "iteration " << i << '\n';
-      printLayers();
-    }
-    // find swap
-    auto bestSwap = findBestSwap(lastSwap);
+    reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
 
-    // find bridge
-    auto bestBridge = findBestBridge();
-
-    // find best move
-    auto bestComb = findBestAtomMove();
-
-    auto bestFA = convertMoveCombToFlyingAncilla(bestComb);
-
-    // compare methods
-    // auto bestMethod = MappingMethod::SwapMethod;
-    // auto bestMethod = MappingMethod::MoveMethod;
-    auto bestMethod = MappingMethod::BridgeMethod;
-
-    switch (bestMethod) {
-    case MappingMethod::SwapMethod:
-      lastSwap = bestSwap;
-      updateBlockedQubits(bestSwap);
-      applySwap(bestSwap);
-      break;
-    case MappingMethod::BridgeMethod:
-      updateBlockedQubits({bestBridge.second.begin(), bestBridge.second.end()});
-      applyBridge(bestBridge);
-      break;
-    case MappingMethod::MoveMethod:
-      // apply whole move combination at once
-      // for (auto& move : bestComb.moves) {
-      //   applyMove(move);
-      // }
-      applyMove(bestComb.moves[0]);
-      break;
-    case MappingMethod::FlyingAncillaMethod:
-      // applyFlyingAncilla(bestFA);
-      break;
-    case MappingMethod::PassByMethod:
-      // applyPassBy(bestFA);
-      break;
-    }
-
-    mapAllPossibleGates(frontLayer);
-    lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+    i = gateBasedMapping(i);
+    i = shuttlingBasedMapping(i);
   }
 
   if (this->parameters.verbose) {
@@ -1535,6 +1477,46 @@ NeutralAtomMapper::findBestFlyingAncillaComb(const qc::Operation* targetOp) {
   auto usedQubits = targetOp->getUsedQubits();
 }
 
+size_t NeutralAtomMapper::shuttlingBasedMapping(size_t i) {
+  while (!this->frontLayerShuttling.empty()) {
+    GateList gatesToExecute;
+    while (gatesToExecute.empty()) {
+      ++i;
+      if (this->parameters.verbose) {
+        std::cout << "iteration " << i << '\n';
+      }
+      auto bestComb = findBestAtomMove();
+      auto bestFA = convertMoveCombToFlyingAncilla(bestComb);
+
+      MappingMethod compareShuttling = MappingMethod::MoveMethod;
+
+      switch (compareShuttling) {
+      case MappingMethod::MoveMethod:
+        // apply whole move combination at once
+        // for (auto& move : bestComb.moves) {
+        //   applyMove(move);
+        // }
+        applyMove(bestComb.moves[0]);
+        break;
+      case MappingMethod::FlyingAncillaMethod:
+        // applyFlyingAncilla(bestFA);
+        break;
+      case MappingMethod::PassByMethod:
+        // applyPassBy(bestFA);
+        break;
+      }
+      gatesToExecute = getExecutableGates(frontLayer.getGates());
+    }
+    mapAllPossibleGates(frontLayer);
+    lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+    reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
+    if (this->parameters.verbose) {
+      printLayers();
+    }
+  }
+  return i;
+}
+
 std::pair<uint32_t, qc::fp>
 NeutralAtomMapper::estimateNumSwapGates(const qc::Operation* opPointer) {
   auto usedQubits = opPointer->getUsedQubits();
@@ -1660,6 +1642,83 @@ bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
   return fidSwaps * parameters.gateWeight >
          fidMoves * parameters.shuttlingWeight;
 }
+
+void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
+                                              const GateList& lookaheadGates) {
+  // assign gates to gates or shuttling
+  this->frontLayerGate.clear();
+  this->frontLayerShuttling.clear();
+  for (const auto& gate : frontGates) {
+    if (swapGateBetter(gate)) {
+      this->frontLayerGate.emplace_back(gate);
+    } else {
+      this->frontLayerShuttling.emplace_back(gate);
+    }
+  }
+
+  this->lookaheadLayerGate.clear();
+  this->lookaheadLayerShuttling.clear();
+  for (const auto& gate : lookaheadGates) {
+    if (swapGateBetter(gate)) {
+      this->lookaheadLayerGate.emplace_back(gate);
+    } else {
+      this->lookaheadLayerShuttling.emplace_back(gate);
+    }
+  }
+}
+void NeutralAtomMapper::prepareAncillas(size_t nQubits) {
+  // Compute number of flying ancillas
+  auto nAncillas = arch.getNqubits() - nQubits;
+
+  mappedQc = qc::QuantumComputation(nQubits);
+  mappedQc.addAncillaryRegister(nAncillas, "a");
+  // remove ancillas from hardware qubit mapping
+  for (auto i = nQubits; i < arch.getNqubits(); ++i) {
+    hardwareQubits.removeHwQubit(i);
+  }
+  // remove qubits from flying ancillas
+  for (auto i = 0; i < nQubits; ++i) {
+    flyingAncillas.removeHwQubit(i);
+  }
+}
+
+size_t NeutralAtomMapper::gateBasedMapping(size_t i) {
+  // first do all gate based mapping gates
+  while (!this->frontLayerGate.empty()) {
+    GateList gatesToExecute;
+    while (gatesToExecute.empty()) {
+      ++i;
+      if (this->parameters.verbose) {
+        std::cout << "iteration " << i << '\n';
+      }
+
+      auto bestSwap = findBestSwap(lastSwap);
+      auto bestBridge = findBestBridge();
+
+      MappingMethod swapOrBridge = MappingMethod::SwapMethod;
+
+      if (swapOrBridge == MappingMethod::SwapMethod) {
+        lastSwap = bestSwap;
+        updateBlockedQubits(bestSwap);
+        applySwap(bestSwap);
+      } else {
+        updateBlockedQubits(
+            {bestBridge.second.begin(), bestBridge.second.end()});
+        applyBridge(bestBridge);
+      }
+
+      gatesToExecute = getExecutableGates(frontLayer.getGates());
+    }
+    mapAllPossibleGates(frontLayer);
+    lookaheadLayer.initLayerOffset(frontLayer.getIteratorOffset());
+    reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
+    if (this->parameters.verbose) {
+      printLayers();
+    }
+  }
+  return i;
+}
+
 //
 // std::vector<std::pair<const qc::Operation*, Bridge>>
 // NeutralAtomMapper::findAllBridges(qc::QuantumComputation& qc) {

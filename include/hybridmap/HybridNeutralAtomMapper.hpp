@@ -87,12 +87,22 @@ protected:
   NeutralAtomLayer frontLayer;
   // Gates in the lookahead layer to be executed
   NeutralAtomLayer lookaheadLayer;
+  // Gates in the front layer to be executed with swap gates
+  GateList frontLayerGate;
+  // Gates in the front layer to be executed with move operations
+  GateList frontLayerShuttling;
+  // Gates in the lookahead layer to be executed with swap gates
+  GateList lookaheadLayerGate;
+  // Gates in the lookahead layer to be executed with move operations
+  GateList lookaheadLayerShuttling;
   // The minimal weight for any multi-qubit gate
   qc::fp twoQubitSwapWeight = 1;
   // The runtime parameters of the mapper
   MapperParameters parameters;
   // The qubits that are blocked by the last swap
   std::deque<std::set<HwQubit>> lastBlockedQubits;
+  // The last swap that has been executed
+  Swap lastSwap = {0, 0};
   // The last moves that have been executed
   std::deque<AtomMove> lastMoves;
   // Precomputed decay weights
@@ -183,6 +193,12 @@ protected:
    * @return The minimal number of swap gates and time needed to execute the
    * given gate
    */
+
+  void prepareAncillas(size_t nQcQubits);
+
+  size_t gateBasedMapping(size_t i);
+  size_t shuttlingBasedMapping(size_t i);
+
   std::pair<uint32_t, qc::fp>
   estimateNumSwapGates(const qc::Operation* opPointer);
   /**
