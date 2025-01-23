@@ -450,6 +450,11 @@ public:
       bridgeCircuits[i] = getBridgeCircuit(i);
       czH[i] = getCzH(bridgeCircuits[i]);
     }
+    //   precompute exponential decay weights
+    this->decayWeights.reserve(this->arch.getNcolumns());
+    for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {
+      this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
+    }
   };
 
   /**

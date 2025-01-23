@@ -104,11 +104,6 @@ NeutralAtomMapper::map(qc::QuantumComputation& qc,
     throw std::runtime_error("More qubits in circuit than in architecture");
   }
 
-  //   precompute exponential decay weights
-  this->decayWeights.reserve(this->arch.getNcolumns());
-  for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {
-    this->decayWeights.emplace_back(std::exp(-this->parameters.decay * i));
-  }
   // save last swap to prevent immediate swap back
   Swap lastSwap = {0, 0};
 
