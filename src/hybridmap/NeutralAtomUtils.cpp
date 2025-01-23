@@ -6,11 +6,17 @@
 #include "hybridmap/NeutralAtomUtils.hpp"
 
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "ir/operations/StandardOperation.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <limits>
+#include <memory>
+#include <vector>
 
 namespace na {
 
@@ -91,6 +97,63 @@ void MoveCombs::removeLongerMoveCombs() {
       ++it;
     }
   }
+}
+qc::QuantumComputation getBridgeCircuit(size_t length) {
+  qc::QuantumComputation qcBridge(3);
+  qcBridge.cx(0, 1);
+  qcBridge.cx(1, 2);
+  qcBridge.cx(0, 1);
+  qcBridge.cx(1, 2);
+  qcBridge.print(std::cout);
+
+  qcBridge = recursiveBridgeIncrease(qcBridge, length - 3);
+  // convert to CZ on qubit 0
+  qcBridge.h(qcBridge.getNqubits() - 1);
+  qcBridge.insert(qcBridge.begin(), std::make_unique<qc::StandardOperation>(
+                                        qcBridge.getNqubits() - 1, qc::H));
+
+  qc::CircuitOptimizer::replaceMCXWithMCZ(qcBridge);
+  qc::CircuitOptimizer::singleQubitGateFusion(qcBridge);
+  qcBridge.print(std::cout);
+  return qcBridge;
+}
+qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
+                                               size_t length) {
+  if (length == 0) {
+    return qcBridge;
+  }
+  // determine qubit pair with least amount of gates
+  std::vector<size_t> gates(qcBridge.getNqubits() - 1, 0);
+  for (const auto& gate : qcBridge) {
+    gates[*gate->getUsedQubits().begin()]++;
+  }
+  auto minIndex = std::min_element(gates.begin(), gates.end()) - gates.begin();
+
+  qcBridge = bridgeExpand(qcBridge, minIndex);
+  qcBridge.print(std::cout);
+
+  return recursiveBridgeIncrease(qcBridge, length - 1);
+}
+qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
+                                    size_t qubit) {
+  qc::QuantumComputation qcBridgeNew(qcBridge.getNqubits() + 1);
+  for (auto& gate : qcBridge) {
+    const auto usedQubits = gate->getUsedQubits();
+    const auto q1 = *usedQubits.begin();
+    const auto q2 = *usedQubits.rbegin();
+    if (q1 == qubit && q2 == qubit + 1) {
+      qcBridgeNew.cx(q1, q2);
+      qcBridgeNew.cx(q1 + 1, q2 + 1);
+      qcBridgeNew.cx(q1, q2);
+      qcBridgeNew.cx(q1 + 1, q2 + 1);
+    } else if (*usedQubits.begin() > qubit) {
+      // shift qubits by one
+      qcBridgeNew.cx(q1 + 1, q2 + 1);
+    } else {
+      qcBridgeNew.cx(q1, q2);
+    }
+  }
+  return qcBridgeNew;
 }
 
 } // namespace na

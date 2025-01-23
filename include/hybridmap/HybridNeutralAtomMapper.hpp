@@ -109,6 +109,9 @@ protected:
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
+  std::array<qc::QuantumComputation, 10> bridgeCircuits;
+  std::array<std::pair<size_t, size_t>, 10> czH;
+
   qc::DAG dag;
 
   // Methods for mapping
@@ -441,6 +444,11 @@ public:
     if (architecture.getNpositions() - architecture.getNqubits() < 1) {
       this->parameters.gateWeight = 1;
       this->parameters.shuttlingWeight = 0;
+    }
+    // precompute bridge circuits
+    for (size_t i = 0; i < 10; i++) {
+      bridgeCircuits[i] = qc::QuantumComputation(architecture.getNpositions());
+      czH[i] = getCzH(bridgeCircuits[i]);
     }
   };
 

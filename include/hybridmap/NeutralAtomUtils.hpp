@@ -6,7 +6,9 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 
 #include <cmath>
@@ -244,33 +246,24 @@ struct MultiQubitMovePos {
   size_t nMoves{0};
 };
 
-inline std::pair<size_t, size_t> computeCzHforBridge(size_t length) {
-  // ignore the first and last qubit
-  length = length - 2;
-
-  uint h = 0;
-  uint cz = 1;
-
-  size_t addMultiplier = 1;
-  size_t addCounter = 0;
-  for (size_t i = 0; i < length; ++i) {
-    h += 4 * addMultiplier;
-    cz += 3 * addMultiplier;
-    addCounter++;
-    if (addCounter == addMultiplier) {
-      addMultiplier = addMultiplier * 2;
-      addCounter = 0;
+inline std::pair<size_t, size_t> getCzH(const qc::QuantumComputation& qc) {
+  size_t cz = 0;
+  size_t h = 0;
+  for (const auto& op : qc) {
+    if (op->getType() == qc::OpType::H) {
+      h++;
+    } else if (op->getType() == qc::OpType::Z) {
+      cz++;
     }
   }
-  return {h, cz};
+  return {cz, h};
 }
 
-inline std::vector<std::pair<size_t, size_t>> getCzH(size_t maxSize) {
-  std::vector<std::pair<size_t, size_t>> gates;
-  for (size_t i = 3; i <= maxSize; ++i) {
-    gates.emplace_back(computeCzHforBridge(i));
-  }
-  return gates;
-}
+qc::QuantumComputation getBridgeCircuit(size_t length);
 
+qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
+                                               size_t length);
+
+qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
+                                    size_t qubit);
 } // namespace na
