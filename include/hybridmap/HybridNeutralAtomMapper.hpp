@@ -446,8 +446,8 @@ public:
       this->parameters.shuttlingWeight = 0;
     }
     // precompute bridge circuits
-    for (size_t i = 0; i < 10; i++) {
-      bridgeCircuits[i] = qc::QuantumComputation(architecture.getNpositions());
+    for (size_t i = 3; i < 10; i++) {
+      bridgeCircuits[i] = getBridgeCircuit(i);
       czH[i] = getCzH(bridgeCircuits[i]);
     }
   };
@@ -595,6 +595,8 @@ public:
   [[maybe_unused]] void saveAnimationCsv(const std::string& filename) {
     scheduler.saveAnimationCsv(filename);
   }
+
+  void decomposeBridgeGates(qc::QuantumComputation& qc);
 
   /**
    * @brief Converts a mapped circuit down to the AOD level and CZ level.

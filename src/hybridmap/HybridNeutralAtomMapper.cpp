@@ -14,6 +14,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "ir/operations/StandardOperation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -357,10 +358,34 @@ void NeutralAtomMapper::mapAllPossibleGates(NeutralAtomLayer& layer) {
   }
 }
 
+void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) {
+  auto it = qc.begin();
+  while (it != qc.end()) {
+    if ((*it)->isStandardOperation() && (*it)->getType() == qc::Bridge) {
+      const auto targets = (*it)->getTargets();
+      it = qc.erase(it);
+      for (const auto& bridgeOp : bridgeCircuits[targets.size()]) {
+        const auto bridgeQubits = bridgeOp->getUsedQubits();
+        if (bridgeOp->getType() == qc::OpType::H) {
+          it = qc.insert(it, std::make_unique<qc::StandardOperation>(
+                                 targets[*bridgeQubits.begin()], qc::H));
+        } else {
+          it = qc.insert(it, std::make_unique<qc::StandardOperation>(
+                                 qc::Control{targets[*bridgeQubits.begin()]},
+                                 targets[*bridgeQubits.rbegin()], qc::Z));
+        }
+      }
+    } else {
+      ++it;
+    }
+  }
+}
+
 qc::QuantumComputation
 NeutralAtomMapper::convertToAod(qc::QuantumComputation& qc) {
   // decompose SWAP gates
   qc::CircuitOptimizer::decomposeSWAP(qc, false);
+  decomposeBridgeGates(qc);
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
@@ -496,8 +521,7 @@ void NeutralAtomMapper::applyMove(AtomMove move) {
   nMoves++;
 }
 void NeutralAtomMapper::applyBridge(const Bridge& bridge) {
-  // add gates to mappedQc
-  // TODO: implement
+  mappedQc.bridge(bridge.second);
 
   if (this->parameters.verbose) {
     std::cout << "bridged " << bridge.first->getName() << " ";
