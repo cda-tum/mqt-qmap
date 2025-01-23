@@ -209,6 +209,17 @@ public:
     }
     return coordIndices;
   }
+
+  [[nodiscard]] std::vector<CoordIndex>
+  getCoordIndices(std::vector<HwQubit>& hwQubits) const {
+    std::vector<CoordIndex> coordIndices;
+    coordIndices.reserve(hwQubits.size());
+    for (auto const& hwQubit : hwQubits) {
+      coordIndices.emplace_back(this->getCoordIndex(hwQubit));
+    }
+    return coordIndices;
+  }
+
   /**
    * @brief Returns the hardware qubit at a coordinate.
    * @details Returns the hardware qubit at a coordinate. Throws an exception if
