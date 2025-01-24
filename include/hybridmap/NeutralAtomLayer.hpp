@@ -68,8 +68,8 @@ public:
    * @brief Returns the current layer of gates
    * @return The current layer of gates
    */
-  GateList getGates() { return gates; }
-  GateList getNewGates() { return newGates; }
+  GateList getGates() const { return gates; }
+  GateList getNewGates() const { return newGates; }
   /**
    * @brief Returns a vector of the iterator indices for debugging
    * @return A copy of the current iterator indices

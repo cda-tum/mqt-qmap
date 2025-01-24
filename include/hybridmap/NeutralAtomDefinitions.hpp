@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
+#include "ir/operations/Operation.hpp"
 
 #include <cstdint>
 #include <set>
@@ -19,10 +20,14 @@ namespace na {
 using CoordIndex = std::uint32_t;
 using CoordIndices = std::vector<CoordIndex>;
 using AdjacencyMatrix = SymmetricMatrix<std::uint8_t>;
+
 // A HwQubit corresponds to an atom in the neutral atom architecture. It can be
 // used as qubit or not and occupies a certain position in the architecture.
 using HwQubit = uint32_t;
 using HwQubits = std::set<HwQubit>;
+using HwQubitsVector = std::vector<HwQubit>;
+using Bridge = std::pair<const qc::Operation*, std::vector<HwQubit>>;
+using Bridges = std::vector<Bridge>;
 using HwPositions [[maybe_unused]] = std::vector<HwQubits>;
 // A qc::Qubit corresponds to a qubit in the quantum circuit. It can be mapped
 // to a hardware qubit.
@@ -35,8 +40,20 @@ using WeightedSwap = std::pair<Swap, qc::fp>;
 using WeightedSwaps = std::vector<WeightedSwap>;
 // The distance between two hardware qubits using SWAP gates.
 using SwapDistance = int32_t;
+// Bridges
+// using Bridge =
+//     std::tuple<qc::Qubit, qc::Qubit, Qubits>; // q_control, q_target,
+//     Q_between
+// using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
+
+// Moves for FlyingAncilla
+struct fPoint {
+  qc::fp x;
+  qc::fp y;
+  fPoint(qc::fp x_val, qc::fp y_val) : x(x_val), y(y_val) {}
+};
 
 // Used to represent operations
 using GateList = std::vector<const qc::Operation*>;

@@ -144,6 +144,7 @@ protected:
     mapperParameters.verbose = true;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(
+        // "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
         "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   }
 };
@@ -151,12 +152,12 @@ protected:
 TEST_F(NeutralAtomMapperTest, Output) {
   auto qcMapped = mapper.map(qc, initialMapping);
 
-  qcMapped.dumpOpenQASM(std::cout, false);
+  // qcMapped.dumpOpenQASM(std::cout, false);
 
   auto qcAodMapped = mapper.convertToAod();
-  qcAodMapped.dumpOpenQASM(std::cout, false);
+  // qcAodMapped.dumpOpenQASM(std::cout, false);
 
-  auto scheduleResults = mapper.schedule(true, true);
+  auto scheduleResults = mapper.schedule(false, true);
   std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);

@@ -6,7 +6,9 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 
 #include <cmath>
@@ -34,8 +36,15 @@ public:
 };
 
 // Enums for the different initial mappings strategies
-enum InitialCoordinateMapping : uint8_t { Trivial, Random };
+enum InitialCoordinateMapping : uint8_t { Trivial, Random, Graph };
 enum InitialMapping : uint8_t { Identity };
+enum MappingMethod : uint8_t {
+  SwapMethod,
+  BridgeMethod,
+  MoveMethod,
+  FlyingAncillaMethod,
+  PassByMethod
+};
 
 [[maybe_unused]] static InitialCoordinateMapping
 initialCoordinateMappingFromString(
@@ -46,6 +55,9 @@ initialCoordinateMappingFromString(
   }
   if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
     return InitialCoordinateMapping::Random;
+  }
+  if (initialCoordinateMapping == "graph" || initialCoordinateMapping == "2") {
+    return InitialCoordinateMapping::Graph;
   }
   throw std::invalid_argument("Invalid initial coordinate mapping value: " +
                               initialCoordinateMapping);
@@ -118,6 +130,16 @@ struct MoveVector {
   [[nodiscard]] bool include(const MoveVector& other) const;
 };
 
+struct FlyingAncilla {
+  CoordIndex origin;
+  CoordIndex q1;
+  CoordIndex q2;
+  size_t index;
+  const qc::Operation* op;
+};
+
+using FlyingAncillas = std::vector<FlyingAncilla>;
+
 /**
  * @brief Helper class to manage multiple atom moves which belong together.
  * @details E.g. a move-away combined with the actual move. These are combined
@@ -126,10 +148,15 @@ struct MoveVector {
 struct MoveComb {
   std::vector<AtomMove> moves;
   qc::fp cost = std::numeric_limits<qc::fp>::max();
+  const qc::Operation* op = nullptr;
+  CoordIndices bestPos;
 
-  MoveComb(std::vector<AtomMove> mov, const qc::fp c)
-      : moves(std::move(mov)), cost(c) {}
-  MoveComb(AtomMove mov, const qc::fp c) : moves({std::move(mov)}), cost(c) {}
+  MoveComb(std::vector<AtomMove> mov, const qc::fp c, const qc::Operation* o,
+           CoordIndices pos)
+      : moves(std::move(mov)), cost(c), op(o), bestPos(std::move(pos)) {}
+  MoveComb(AtomMove mov, const qc::fp c, const qc::Operation* o,
+           CoordIndices pos)
+      : moves({std::move(mov)}), cost(c), op(o), bestPos(std::move(pos)) {}
 
   MoveComb() = default;
   explicit MoveComb(std::vector<AtomMove> mov) : moves(std::move(mov)) {}
@@ -199,6 +226,13 @@ struct MoveCombs {
   [[nodiscard]] const_iterator begin() const { return moveCombs.cbegin(); }
   [[nodiscard]] const_iterator end() const { return moveCombs.cend(); }
 
+  void setOperation(const qc::Operation* op, CoordIndices pos) {
+    for (auto& moveComb : moveCombs) {
+      moveComb.op = op;
+      moveComb.bestPos = pos;
+    }
+  }
+
   /**
    * @brief Add a move combination to the list of move combinations.
    * @param moveComb The move combination to add.
@@ -226,4 +260,34 @@ struct MultiQubitMovePos {
   size_t nMoves{0};
 };
 
+class BridgeCircuits {
+public:
+  std::vector<qc::QuantumComputation> bridgeCircuits;
+  std::vector<size_t> hs;
+  std::vector<size_t> czs;
+  std::vector<size_t> hDepth;
+  std::vector<size_t> czDepth;
+
+  explicit BridgeCircuits(const size_t maxLength) {
+    bridgeCircuits.resize(maxLength, qc::QuantumComputation());
+    hs.resize(maxLength, 0);
+    czs.resize(maxLength, 0);
+    hDepth.resize(maxLength, 0);
+    czDepth.resize(maxLength, 0);
+    for (size_t i = 3; i < maxLength; ++i) {
+      computeBridgeCircuit(i);
+      computeGates(i);
+    }
+  }
+
+protected:
+  void computeGates(size_t length);
+  void computeBridgeCircuit(size_t length);
+
+  static qc::QuantumComputation
+  recursiveBridgeIncrease(qc::QuantumComputation qcBridge, size_t length);
+
+  static qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
+                                             size_t qubit);
+};
 } // namespace na

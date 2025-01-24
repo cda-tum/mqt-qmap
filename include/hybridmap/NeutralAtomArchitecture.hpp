@@ -9,10 +9,13 @@
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NADefinitions.hpp"
 
+#include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
@@ -20,6 +23,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -148,6 +152,8 @@ protected:
   std::vector<Point> coordinates;
   SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
+
+  BridgeCircuits bridgeCircuits = BridgeCircuits(10);
 
   /**
    * @brief Create the coordinates.
@@ -375,6 +381,11 @@ public:
     return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
   }
 
+  [[nodiscard]] [[maybe_unused]] qc::QuantumComputation
+  getBridgeCircuit(size_t length) const {
+    return bridgeCircuits.bridgeCircuits[length];
+  }
+
   // Distance functions
   /**
    * @brief Get the Euclidean distance between two coordinate indices
@@ -384,8 +395,8 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2)));
+    return this->coordinates.at(idx1).getEuclideanDistance(
+        this->coordinates.at(idx2));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates

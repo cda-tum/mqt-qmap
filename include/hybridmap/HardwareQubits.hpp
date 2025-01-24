@@ -84,7 +84,8 @@ public:
   HardwareQubits() = default;
   HardwareQubits(const NeutralAtomArchitecture& architecture,
                  InitialCoordinateMapping initialCoordinateMapping,
-                 uint32_t seed)
+                 const std::vector<CoordIndex>& qubitIndices,
+                 const std::vector<CoordIndex>& hwIndices, uint32_t seed)
       : arch(&architecture), swapDistances(architecture.getNqubits()) {
     switch (initialCoordinateMapping) {
     case Trivial:
@@ -93,6 +94,33 @@ public:
       }
       initTrivialSwapDistances();
       break;
+    case Graph: {
+      if (qubitIndices.empty()) {
+        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+          hwToCoordIdx.emplace(i, i);
+        }
+        initTrivialSwapDistances();
+      } else {
+        int hwIndex = 0;
+        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+          if (qubitIndices[i] == std::numeric_limits<unsigned int>::max()) {
+            if (hwIndices[hwIndex] !=
+                std::numeric_limits<unsigned int>::max()) {
+              do {
+                hwIndex += 1;
+              } while (hwIndices[hwIndex] !=
+                       std::numeric_limits<unsigned int>::max());
+            }
+            hwToCoordIdx.emplace(i, hwIndex);
+            hwIndex++;
+          } else {
+            hwToCoordIdx.emplace(i, qubitIndices[i]);
+          }
+        }
+        swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
+      }
+      break;
+    }
     case Random:
       std::vector<CoordIndex> indices(architecture.getNpositions());
       std::iota(indices.begin(), indices.end(), 0);
@@ -111,7 +139,11 @@ public:
     initialHwPos = hwToCoordIdx;
   }
 
+  std::vector<HwQubitsVector> computeAllShortestPaths(HwQubit q1,
+                                                      HwQubit q2) const;
+
   // Mapping
+  const qc::Permutation& getHwToCoordIdx() const { return hwToCoordIdx; }
 
   /**
    * @brief Checks if a hardware qubit is mapped to a coordinate.
@@ -131,6 +163,20 @@ public:
    * @param newCoord The new coordinate of the hardware qubit.
    */
   void move(HwQubit hwQubit, CoordIndex newCoord);
+
+  void removeHwQubit(HwQubit hwQubit) {
+    hwToCoordIdx.erase(hwQubit);
+    initialHwPos.erase(hwQubit);
+    // set swap distances to -1
+    for (uint32_t i = 0; i < swapDistances.size(); ++i) {
+      swapDistances(hwQubit, i) = -1;
+      swapDistances(i, hwQubit) = -1;
+    }
+    nearbyQubits.erase(hwQubit);
+    for (auto& [qubit, nearby] : nearbyQubits) {
+      nearby.erase(hwQubit);
+    }
+  }
 
   /**
    * @brief Converts gate qubits from hardware qubits to coordinate indices.
@@ -157,13 +203,24 @@ public:
    * @return The coordinate indices of the hardware qubits.
    */
   [[nodiscard]] std::set<CoordIndex>
-  getCoordIndices(std::set<HwQubit>& hwQubits) const {
+  getCoordIndices(const std::set<HwQubit>& hwQubits) const {
     std::set<CoordIndex> coordIndices;
     for (auto const& hwQubit : hwQubits) {
       coordIndices.emplace(this->getCoordIndex(hwQubit));
     }
     return coordIndices;
   }
+
+  [[nodiscard]] std::vector<CoordIndex>
+  getCoordIndices(const std::vector<HwQubit>& hwQubits) const {
+    std::vector<CoordIndex> coordIndices;
+    coordIndices.reserve(hwQubits.size());
+    for (auto const& hwQubit : hwQubits) {
+      coordIndices.emplace_back(this->getCoordIndex(hwQubit));
+    }
+    return coordIndices;
+  }
+
   /**
    * @brief Returns the hardware qubit at a coordinate.
    * @details Returns the hardware qubit at a coordinate. Throws an exception if
@@ -272,6 +329,13 @@ public:
   std::vector<CoordIndex>
   findClosestFreeCoord(HwQubit qubit, Direction direction,
                        const CoordIndices& excludedCoords = {});
+
+  std::vector<CoordIndex>
+  findClosestAncillaCoord(CoordIndex coord, Direction direction,
+                          int circQubitSize,
+                          const CoordIndices& excludedCoords = {});
+
+  HwQubit getClosestQubit(CoordIndex coord, HwQubits ignored) const;
 
   // Blocking
   /**
