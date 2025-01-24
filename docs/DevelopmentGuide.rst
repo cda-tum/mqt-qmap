@@ -179,27 +179,23 @@ Furthermore, they provide a command to automatically format your code according 
 Working on the Python module
 ############################
 
-`Pybind11 <https://pybind11.readthedocs.io/>`_ is used for providing bindings of the C++ core library to Python.
+`Pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ is used for providing bindings of the C++ core library to Python.
 This allows to keep the performance critical parts of the code in C++ while providing a convenient interface for Python users.
-All of the bindings code as well as the Python module itself is contained in the :code:`mqt/qmap` directory.
+All of the bindings code is contained in the :code:`src/python` directory.
+The Python package itself lives in the :code:`src/mqt/qmap` directory.
 
 Building the Python module
 --------------------------
 
-The recommended way of building the Python module is to perform an editable install using `pip <https://pip.pypa.io/en/stable/>`_.
+It is usually most efficient to install the build dependencies in your environment once and use the following command that avoids a costly creation of a new virtual environment at every compilation:
 
     .. code-block:: console
 
-        (venv) $ pip install --editable .[dev]
+        (venv) $ pip install 'scikit-build-core[pyproject]' setuptools_scm pybind11
+        (venv) $ pip install --no-build-isolation -ve ".[dev]"
 
-The :code:`--editable` flag ensures that changes in the Python code are instantly available without re-running the command.
-The :code:`[dev]` extra makes sure that all dependencies for running the Python tests and building the documentation are available.
-
-.. note::
-    When using the :code:`zsh` shell it might be necessary to add double quotes around the :code:`.[dev]` part of the command.
-
-.. warning::
-    Do not forget to run the above command again after any changes to the C++ core library or bindings to make the changes available in the Python module.
+You may optionally add :code:`-Ceditable.rebuild=true` to auto-rebuild when the package is imported.
+Otherwise, you need to re-run the above after editing C++ files.
 
 Running Python Tests
 --------------------
@@ -210,15 +206,9 @@ A :code:`nox` session is provided to conveniently run the Python tests.
 
     .. code-block:: console
 
-        (venv) $ nox -rs tests
+        (venv) $ nox -s tests
 
 This installs all dependencies for running the tests in an isolated environment, builds the Python package, and then runs the tests.
-The :code:`-r` flag ensures that the environment is reused for subsequent runs.
-To speed up subsequent runs, the installation step can be skipped by adding the :code:`skip-install` flag.
-
-    .. code-block:: console
-
-        (venv) $ nox -rs tests -- skip-install
 
 .. note::
     If you don't want to use :code:`nox`, you can also run the tests directly using :code:`pytest`.
@@ -233,36 +223,33 @@ Python Code Formatting and Linting
 The Python code is formatted and linted using a collection of `pre-commit hooks <https://pre-commit.com/>`_.
 This collection includes:
 
-- `black <https://black.readthedocs.io/en/stable/>`_ -- a code formatter that automatically formats Python code according to the `PEP 8 style guide <https://www.python.org/dev/peps/pep-0008/>`_
-- `flake8 <https://flake8.pycqa.org/en/latest/>`_ -- a linter that checks for common mistakes in Python code
-- `isort <https://pycqa.github.io/isort/>`_ -- a tool that automatically sorts Python imports according to the `PEP 8 style guide <https://www.python.org/dev/peps/pep-0008/>`_
-- `mypy <http://mypy-lang.org/>`_ -- a static type checker for Python code
-- `pyupgrade <https://github.com/asottile/pyupgrade>`_ -- a tool that automatically upgrades Python syntax to a newer version
+- `ruff <https://docs.astral.sh/ruff/>`_ -- an extremely fast Python linter and formatter, written in Rust.
+- `mypy <https://mypy-lang.org/>`_ -- a static type checker for Python code
 
 There are two ways of using these hooks:
 
-- You can install the hooks manually by running :code:`pre-commit install` in the project root directory.
+- You can install the hooks manually by running
+
+     .. code-block:: console
+
+         (venv) $ pre-commit install
+
+  in the project root directory.
   This will install the hooks in the :code:`.git/hooks` directory of the repository.
   The hooks will then be executed automatically when committing changes.
+
 - You can use the :code:`nox` session :code:`lint` to run the hooks manually.
 
     .. code-block:: console
 
-        (venv) $ nox -rs lint
+        (venv) $ nox -s lint
 
     .. note::
         If you don't want to use :code:`nox`, you can also run the hooks directly using :code:`pre-commit`.
 
-        .. code-block:: console
-
-            (venv) $ pre-commit run --all-files
-
-In addition to the pre-commit hooks, the Python code is also type checked by `mypy <http://mypy-lang.org/>`_.
-This is done by the :code:`nox` session :code:`mypy`.
-
     .. code-block:: console
 
-        (venv) $ nox -rs mypy
+        (venv) $ pre-commit run --all-files
 
 Working on the Documentation
 ############################
@@ -273,31 +260,19 @@ You can build the documentation using the :code:`nox` session :code:`docs`.
 
     .. code-block:: console
 
-        (venv) $ nox -rs docs
+        (venv) $ nox -s docs
 
 .. note::
     In order to properly build the jupyter notebooks in the documentation, you need to have :code:`pandoc` installed. See `the pandoc documentation <https://pandoc.org/installing.html>`_ for installation instructions.
 
 This will install all dependencies for building the documentation in an isolated environment, build the Python package, and then build the documentation.
-The session also provides a convenient option to automatically serve the docs on a local web server. Running
-
-    .. code-block:: console
-
-        (venv) $ nox -rs docs -- serve
-
-will start a local web server on port 8000 and provide a link to open the documentation in your browser.
-
-To build the documentation without (re-)installing the Python package, you can use the :code:`skip-install` flag.
-
-    .. code-block:: console
-
-        (venv) $ nox -rs docs -- skip-install
+Additionally, the session will automatically serve the docs on a local web server.
 
     .. note::
         If you don't want to use :code:`nox`, you can also build the documentation directly using :code:`sphinx-build`.
 
         .. code-block:: console
 
-            (venv) $ sphinx-build -b html docs/source docs/build
+            (venv) $ sphinx-build -b html docs/ docs/_build
 
-        The docs can then be found in the :code:`docs/build` directory.
+        The docs can then be found in the :code:`docs/_build` directory.

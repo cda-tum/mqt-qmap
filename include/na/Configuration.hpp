@@ -1,9 +1,3 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/mqt-qmap for more
-// information.
-//
-
 #pragma once
 
 #include <algorithm>
@@ -14,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+
 namespace na {
 
 enum class NAMappingMethod : std::uint8_t {
