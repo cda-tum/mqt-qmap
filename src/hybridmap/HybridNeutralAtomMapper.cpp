@@ -716,6 +716,33 @@ qc::fp NeutralAtomMapper::swapCost(
   }
   return cost;
 }
+qc::fp NeutralAtomMapper::swapDistanceReduction(const Swap& swap,
+                                                const GateList& layer) {
+  qc::fp swapDistReduction = 0;
+  for (const auto& op : layer) {
+    auto usedQubits = op->getUsedQubits();
+    auto hwQubits = this->mapping.getHwQubits(usedQubits);
+    const auto& distBefore =
+        this->hardwareQubits.getAllToAllSwapDistance(hwQubits);
+    const auto firstPos = hwQubits.find(swap.first);
+    const auto secondPos = hwQubits.find(swap.second);
+    if (firstPos != hwQubits.end() && secondPos != hwQubits.end()) {
+      continue;
+    }
+    if (firstPos != hwQubits.end()) {
+      hwQubits.erase(firstPos);
+      hwQubits.insert(swap.second);
+    }
+    if (secondPos != hwQubits.end()) {
+      hwQubits.erase(secondPos);
+      hwQubits.insert(swap.first);
+    }
+    const auto& distAfter =
+        this->hardwareQubits.getAllToAllSwapDistance(hwQubits);
+    swapDistReduction += distBefore - distAfter;
+  }
+  return swapDistReduction;
+}
 
 std::pair<Swaps, WeightedSwaps>
 NeutralAtomMapper::initSwaps(const GateList& layer) {
@@ -1720,8 +1747,8 @@ size_t NeutralAtomMapper::gateBasedMapping(size_t i) {
     auto bestSwap = findBestSwap(lastSwap);
     auto bestBridge = findBestBridge();
 
-    const auto swapOrBridge = compareSwapAndBridge(bestSwap, bestBridge);
-    // MappingMethod swapOrBridge = MappingMethod::SwapMethod;
+    // const auto swapOrBridge = compareSwapAndBridge(bestSwap, bestBridge);
+    MappingMethod swapOrBridge = MappingMethod::SwapMethod;
 
     if (swapOrBridge == MappingMethod::SwapMethod) {
       lastSwap = bestSwap;
@@ -2134,29 +2161,11 @@ MappingMethod
 NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                                         const Bridge& bestBridge) {
   // swap distance reduction
-  qc::fp swapDistReduction = 0;
-  for (const auto& op : this->frontLayerGate) {
-    auto usedQubits = op->getUsedQubits();
-    auto hwQubits = this->mapping.getHwQubits(usedQubits);
-    const auto& distBefore =
-        this->hardwareQubits.getAllToAllSwapDistance(hwQubits);
-    const auto firstPos = hwQubits.find(bestSwap.first);
-    const auto secondPos = hwQubits.find(bestSwap.second);
-    if (firstPos != hwQubits.end() && secondPos != hwQubits.end()) {
-      continue;
-    }
-    if (firstPos != hwQubits.end()) {
-      hwQubits.erase(firstPos);
-      hwQubits.insert(bestSwap.second);
-    }
-    if (secondPos != hwQubits.end()) {
-      hwQubits.erase(secondPos);
-      hwQubits.insert(bestSwap.first);
-    }
-    const auto& distAfter =
-        this->hardwareQubits.getAllToAllSwapDistance(hwQubits);
-    swapDistReduction += distBefore - distAfter;
-  }
+  qc::fp const swapDistReduction =
+      swapDistanceReduction(bestSwap, this->frontLayerGate) +
+      this->parameters.lookaheadWeightSwaps *
+          swapDistanceReduction(bestSwap, this->lookaheadLayerGate);
+
   // bridge distance reduction
   qc::fp const bridgeDistReduction = bestBridge.second.size() - 2;
 

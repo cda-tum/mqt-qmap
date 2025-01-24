@@ -16,6 +16,7 @@
 #include "ir/Permutation.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
+#include "sc/exact/ExactMapper.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -390,6 +391,7 @@ protected:
   qc::fp swapCost(const Swap& swap,
                   const std::pair<Swaps, WeightedSwaps>& swapsFront,
                   const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
+  qc::fp swapDistanceReduction(const Swap& swap, const GateList& layer);
   /**
    * @brief Calculates the cost of a move operation.
    * @details Assumes the move is executed and computes the distance reduction
