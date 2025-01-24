@@ -246,24 +246,34 @@ struct MultiQubitMovePos {
   size_t nMoves{0};
 };
 
-inline std::pair<size_t, size_t> getCzH(const qc::QuantumComputation& qc) {
-  size_t cz = 0;
-  size_t h = 0;
-  for (const auto& op : qc) {
-    if (op->getType() == qc::OpType::H) {
-      h++;
-    } else if (op->getType() == qc::OpType::Z) {
-      cz++;
+class BridgeCircuits {
+public:
+  std::vector<qc::QuantumComputation> bridgeCircuits;
+  std::vector<size_t> hs;
+  std::vector<size_t> czs;
+  std::vector<size_t> hDepth;
+  std::vector<size_t> czDepth;
+
+  explicit BridgeCircuits(const size_t maxLength) {
+    bridgeCircuits.resize(maxLength, qc::QuantumComputation());
+    hs.resize(maxLength, 0);
+    czs.resize(maxLength, 0);
+    hDepth.resize(maxLength, 0);
+    czDepth.resize(maxLength, 0);
+    for (size_t i = 3; i < maxLength; ++i) {
+      computeBridgeCircuit(i);
+      computeGates(i);
     }
   }
-  return {cz, h};
-}
 
-qc::QuantumComputation getBridgeCircuit(size_t length);
+protected:
+  void computeGates(size_t length);
+  void computeBridgeCircuit(size_t length);
 
-qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
-                                               size_t length);
+  static qc::QuantumComputation
+  recursiveBridgeIncrease(qc::QuantumComputation qcBridge, size_t length);
 
-qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
-                                    size_t qubit);
+  static qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
+                                             size_t qubit);
+};
 } // namespace na

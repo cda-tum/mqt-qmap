@@ -8,6 +8,7 @@
 #include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
 
 #include <algorithm>
@@ -98,7 +99,31 @@ void MoveCombs::removeLongerMoveCombs() {
     }
   }
 }
-qc::QuantumComputation getBridgeCircuit(size_t length) {
+
+void BridgeCircuits::computeGates(const size_t length) {
+  std::vector<std::pair<size_t, size_t>> hsCzsPerQubit(
+      bridgeCircuits[length].getNqubits(), {0, 0});
+  for (const auto& op : bridgeCircuits[length]) {
+    if (op->getType() == qc::OpType::H) {
+      hs[length]++;
+      hsCzsPerQubit[*op->getTargets().begin()].first++;
+    } else if (op->getType() == qc::OpType::Z) {
+      czs[length]++;
+      hsCzsPerQubit[*op->getUsedQubits().begin()].second++;
+      hsCzsPerQubit[*op->getUsedQubits().rbegin()].second++;
+    }
+  }
+  // find max depth
+  auto maxHcZ =
+      std::max_element(hsCzsPerQubit.begin(), hsCzsPerQubit.end(),
+                       [](const auto& a, const auto& b) {
+                         return a.first + a.second < b.first + b.second;
+                       });
+  hDepth[length] = maxHcZ->first;
+  czDepth[length] = maxHcZ->second;
+}
+
+void BridgeCircuits::computeBridgeCircuit(const size_t length) {
   qc::QuantumComputation qcBridge(3);
   qcBridge.cx(0, 1);
   qcBridge.cx(1, 2);
@@ -113,14 +138,16 @@ qc::QuantumComputation getBridgeCircuit(size_t length) {
 
   qc::CircuitOptimizer::replaceMCXWithMCZ(qcBridge);
   qc::CircuitOptimizer::singleQubitGateFusion(qcBridge);
-  return qcBridge;
+  bridgeCircuits[length] = qcBridge;
 }
-qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
-                                               size_t length) {
+
+qc::QuantumComputation
+BridgeCircuits::recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
+                                        const size_t length) {
   if (length == 0) {
     return qcBridge;
   }
-  // determine qubit pair with least amount of gates
+  // determine qubit pair with the least amount of gates
   std::vector<size_t> gates(qcBridge.getNqubits() - 1, 0);
   for (const auto& gate : qcBridge) {
     gates[*gate->getUsedQubits().begin()]++;
@@ -131,8 +158,8 @@ qc::QuantumComputation recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
 
   return recursiveBridgeIncrease(qcBridge, length - 1);
 }
-qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
-                                    size_t qubit) {
+qc::QuantumComputation
+BridgeCircuits::bridgeExpand(qc::QuantumComputation qcBridge, size_t qubit) {
   qc::QuantumComputation qcBridgeNew(qcBridge.getNqubits() + 1);
   for (auto& gate : qcBridge) {
     const auto usedQubits = gate->getUsedQubits();

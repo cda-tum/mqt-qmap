@@ -8,11 +8,13 @@
 #include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <exception>
@@ -75,18 +77,28 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
       shuttlingTimes.emplace(qc::OP_NAME_TO_TYPE.at(key), value);
     }
     // compute values for SWAP gate
-    qc::fp swapGateTime = 0;
-    qc::fp swapGateFidelity = 1;
-    for (size_t i = 0; i < 3; ++i) {
-      swapGateTime += gateTimes.at("cz");
-      swapGateFidelity *= gateAverageFidelities.at("cz");
-    }
-    for (size_t i = 0; i < 6; ++i) {
-      swapGateTime += gateTimes.at("h");
-      swapGateFidelity *= gateAverageFidelities.at("h");
-    }
+    qc::fp const swapGateTime =
+        (gateTimes.at("cz") * 3) + (gateTimes.at("h") * 4);
+    qc::fp const swapGateFidelity =
+        std::pow(gateAverageFidelities.at("cz"), 3) *
+        std::pow(gateAverageFidelities.at("h"), 6);
     this->parameters.gateTimes.emplace("swap", swapGateTime);
     this->parameters.gateAverageFidelities.emplace("swap", swapGateFidelity);
+
+    // compute values for Bridge gate
+    // precompute bridge circuits
+    for (size_t i = 3; i <= 10; i++) {
+      qc::fp const bridgeGateTime =
+          (bridgeCircuits.czDepth[i] * gateTimes.at("cz")) +
+          (bridgeCircuits.hDepth[i] * gateTimes.at("h"));
+      qc::fp const bridgeFidelity =
+          std::pow(gateAverageFidelities.at("cz"), bridgeCircuits.czs[i]) *
+          std::pow(gateAverageFidelities.at("h"), bridgeCircuits.hs[i]);
+      this->parameters.gateTimes.emplace("bridge" + std::to_string(i),
+                                         bridgeGateTime);
+      this->parameters.gateAverageFidelities.emplace(
+          "bridge" + std::to_string(i), bridgeFidelity);
+    }
 
     this->parameters.shuttlingTimes = shuttlingTimes;
     std::map<qc::OpType, qc::fp> shuttlingAverageFidelities;
