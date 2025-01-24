@@ -119,9 +119,6 @@ protected:
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
-  std::array<qc::QuantumComputation, 10> bridgeCircuits;
-  std::array<std::pair<size_t, size_t>, 10> czH;
-
   qc::DAG dag;
 
   // Methods for mapping
@@ -302,15 +299,9 @@ protected:
   CoordIndex returnClosestAncillaCoord(const CoordIndex& c_target,
                                        const CoordIndices& excludeCoords,
                                        qc::QuantumComputation& qc);
-  bool compareShuttlingAndFlyingancilla(AtomMove bestMove,
-                                        qc::QuantumComputation& bestFA,
-                                        const qc::DAG& dag,
-                                        NeutralAtomLayer& frontLayer);
-  void updateMappingFlyingAncilla(qc::QuantumComputation& bestFA,
-                                  const qc::Operation* targetOp,
-                                  uint32_t numPassby,
-                                  NeutralAtomLayer& frontLayer,
-                                  NeutralAtomLayer& lookaheadLayer);
+  MappingMethod compareSwapAndBridge(const Swap& bestSwap,
+                                     const Bridge& bestBridge);
+  MappingMethod compareShuttlingAndFlyingAncilla(MoveComb bestComb);
 
   // Helper methods
   /**
@@ -461,11 +452,7 @@ public:
       this->parameters.gateWeight = 1;
       this->parameters.shuttlingWeight = 0;
     }
-    // precompute bridge circuits
-    for (size_t i = 3; i < 10; i++) {
-      bridgeCircuits[i] = getBridgeCircuit(i);
-      czH[i] = getCzH(bridgeCircuits[i]);
-    }
+
     //   precompute exponential decay weights
     this->decayWeights.reserve(this->arch.getNcolumns());
     for (uint32_t i = this->arch.getNcolumns(); i > 0; --i) {

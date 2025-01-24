@@ -202,7 +202,7 @@ public:
    * @return The coordinate indices of the hardware qubits.
    */
   [[nodiscard]] std::set<CoordIndex>
-  getCoordIndices(std::set<HwQubit>& hwQubits) const {
+  getCoordIndices(const std::set<HwQubit>& hwQubits) const {
     std::set<CoordIndex> coordIndices;
     for (auto const& hwQubit : hwQubits) {
       coordIndices.emplace(this->getCoordIndex(hwQubit));
@@ -211,7 +211,7 @@ public:
   }
 
   [[nodiscard]] std::vector<CoordIndex>
-  getCoordIndices(std::vector<HwQubit>& hwQubits) const {
+  getCoordIndices(const std::vector<HwQubit>& hwQubits) const {
     std::vector<CoordIndex> coordIndices;
     coordIndices.reserve(hwQubits.size());
     for (auto const& hwQubit : hwQubits) {
