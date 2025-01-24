@@ -31,8 +31,9 @@ struct SchedulerResults {
   qc::fp totalFidelities;
   uint32_t nCZs = 0;
 
-  SchedulerResults(qc::fp executionTime, qc::fp idleTime, qc::fp gateFidelities,
-                   qc::fp fidelities, uint32_t cZs)
+  SchedulerResults(const qc::fp executionTime, const qc::fp idleTime,
+                   const qc::fp gateFidelities, const qc::fp fidelities,
+                   const uint32_t cZs)
       : totalExecutionTime(executionTime), totalIdleTime(idleTime),
         totalGateFidelities(gateFidelities), totalFidelities(fidelities),
         nCZs(cZs) {}
@@ -97,13 +98,13 @@ public:
                             qc::fp shuttlingSpeedFactor = 1.0);
 
   std::string getAnimationCsv() { return animationCsv; }
-  void saveAnimationCsv(const std::string& filename) {
+  void saveAnimationCsv(const std::string& filename) const {
     // save animation
     std::ofstream file(filename);
     file << animationCsv;
     file.close();
     // save architecture
-    auto filenameWithoutExtension =
+    const auto filenameWithoutExtension =
         filename.substr(0, filename.find_last_of('.'));
     file.open(filenameWithoutExtension + "_architecture.csv");
     file << animationArchitectureCsv;
@@ -116,8 +117,9 @@ public:
                                     qc::fp totalGateFidelities,
                                     qc::fp totalFidelities, uint32_t nCZs);
   static void printTotalExecutionTimes(
-      std::vector<qc::fp>& totalExecutionTimes,
-      std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes);
+      const std::vector<qc::fp>& totalExecutionTimes,
+      const std::vector<std::deque<std::pair<qc::fp, qc::fp>>>&
+          blockedQubitsTimes);
 };
 
 } // namespace na

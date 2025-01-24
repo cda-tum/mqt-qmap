@@ -73,9 +73,10 @@ class NeutralAtomArchitecture {
 
   public:
     Properties() = default;
-    Properties(std::uint16_t rows, std::uint16_t columns, std::uint16_t aods,
-               std::uint16_t aodCoordinates, qc::fp qubitDistance,
-               qc::fp radius, qc::fp blockingFac, qc::fp aodDist)
+    Properties(const std::uint16_t rows, const std::uint16_t columns,
+               const std::uint16_t aods, const std::uint16_t aodCoordinates,
+               const qc::fp qubitDistance, const qc::fp radius,
+               const qc::fp blockingFac, const qc::fp aodDist)
         : nRows(rows), nColumns(columns), nAods(aods),
           nAodIntermediateLevels(
               static_cast<uint16_t>(qubitDistance / aodDist)),
@@ -261,8 +262,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] SwapDistance getSwapDistance(CoordIndex idx1,
-                                             CoordIndex idx2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(const CoordIndex idx1,
+                                             const CoordIndex idx2) const {
     return swapDistances(idx1, idx2);
   }
   /**
@@ -343,7 +344,7 @@ public:
    * @param shuttlingType The type of the shuttling operation
    * @return The shuttling time of the shuttling operation
    */
-  [[nodiscard]] qc::fp getShuttlingTime(qc::OpType shuttlingType) const {
+  [[nodiscard]] qc::fp getShuttlingTime(const qc::OpType shuttlingType) const {
     return parameters.shuttlingTimes.at(shuttlingType);
   }
   /**
@@ -352,7 +353,7 @@ public:
    * @return The average fidelity of the shuttling operation
    */
   [[nodiscard]] qc::fp
-  getShuttlingAverageFidelity(qc::OpType shuttlingType) const {
+  getShuttlingAverageFidelity(const qc::OpType shuttlingType) const {
     return parameters.shuttlingAverageFidelities.at(shuttlingType);
   }
   /**
@@ -369,7 +370,7 @@ public:
    * @param idx The index
    * @return The coordinate corresponding to the index
    */
-  [[nodiscard]] Point getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Point getCoordinate(const CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
@@ -377,12 +378,12 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Point& c) {
-    return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Point& c) const {
+    return static_cast<CoordIndex>(c.x + (c.y * properties.getNcolumns()));
   }
 
   [[nodiscard]] [[maybe_unused]] qc::QuantumComputation
-  getBridgeCircuit(size_t length) const {
+  getBridgeCircuit(const size_t length) const {
     return bridgeCircuits.bridgeCircuits[length];
   }
 
@@ -395,8 +396,8 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2));
+    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
+        this->coordinates.at(idx2)));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates
@@ -414,8 +415,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceX(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceX(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
         this->coordinates.at(idx1).getManhattanDistanceX(
             this->coordinates.at(idx2)));
@@ -426,8 +427,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceY(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceY(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
         this->coordinates.at(idx1).getManhattanDistanceY(
             this->coordinates.at(idx2)));
@@ -440,7 +441,7 @@ public:
    * @return The precomputed nearby coordinates for the coordinate index
    */
   [[nodiscard]] std::set<CoordIndex>
-  getNearbyCoordinates(CoordIndex idx) const {
+  getNearbyCoordinates(const CoordIndex idx) const {
     return nearbyCoordinates[idx];
   }
   /**
@@ -464,7 +465,7 @@ public:
     auto y = static_cast<size_t>(intRad);
     size_t x = 0;
     while (x <= xMax) {
-      if (static_cast<double>(x * x + y * y) > intRad * intRad) {
+      if (static_cast<double>((x * x) + (y * y)) > intRad * intRad) {
         y--;
       } else {
         maxGateSize += y + 1;
@@ -481,7 +482,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The MoveVector between the two coordinate indices
    */
-  [[nodiscard]] MoveVector getVector(CoordIndex idx1, CoordIndex idx2) const {
+  [[nodiscard]] MoveVector getVector(const CoordIndex idx1,
+                                     const CoordIndex idx2) const {
     return {this->coordinates[idx1].x, this->coordinates[idx1].y,
             this->coordinates[idx2].x, this->coordinates[idx2].y};
   }

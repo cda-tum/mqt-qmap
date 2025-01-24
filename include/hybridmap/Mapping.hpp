@@ -30,7 +30,7 @@ protected:
 
 public:
   Mapping() = default;
-  Mapping(size_t nQubits, InitialMapping initialMapping) {
+  Mapping(const size_t nQubits, const InitialMapping initialMapping) {
     switch (initialMapping) {
     case Identity:
       for (size_t i = 0; i < nQubits; ++i) {
@@ -46,7 +46,7 @@ public:
    * @param qubit The circuit qubit to be assigned
    * @param hwQubit The hardware qubit to be assigned
    */
-  void setCircuitQubit(qc::Qubit qubit, HwQubit hwQubit) {
+  void setCircuitQubit(const qc::Qubit qubit, const HwQubit hwQubit) {
     circToHw[qubit] = hwQubit;
   }
 
@@ -55,7 +55,7 @@ public:
    * @param qubit The circuit qubit to be queried
    * @return The hardware qubit assigned to the given circuit qubit
    */
-  [[nodiscard]] HwQubit getHwQubit(qc::Qubit qubit) const {
+  [[nodiscard]] HwQubit getHwQubit(const qc::Qubit qubit) const {
     return circToHw.at(qubit);
   }
 
@@ -65,7 +65,7 @@ public:
    * @return The hardware qubits assigned to the given circuit qubits
    */
   [[nodiscard]] std::set<HwQubit>
-  getHwQubits(std::set<qc::Qubit>& qubits) const {
+  getHwQubits(const std::set<qc::Qubit>& qubits) const {
     std::set<HwQubit> hwQubits;
     for (const auto& qubit : qubits) {
       hwQubits.emplace(this->getHwQubit(qubit));
@@ -80,7 +80,7 @@ public:
    * @param qubit The hardware qubit to be queried
    * @return The circuit qubit assigned to the given hardware qubit
    */
-  [[nodiscard]] qc::Qubit getCircQubit(HwQubit qubit) const {
+  [[nodiscard]] qc::Qubit getCircQubit(const HwQubit qubit) const {
     for (const auto& [circQubit, hwQubit] : circToHw) {
       if (hwQubit == qubit) {
         return circQubit;

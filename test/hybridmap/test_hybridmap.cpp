@@ -26,14 +26,14 @@ protected:
 
 TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
   std::cout << "wd: " << std::filesystem::current_path() << '\n';
-  auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
+  const auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
 
   // Test get properties
   EXPECT_LE(arch.getNqubits(), arch.getNpositions());
   EXPECT_EQ(arch.getNpositions(), arch.getNrows() * arch.getNcolumns());
   // Test precomputed values
-  auto c1 = arch.getCoordinate(0);
-  auto c2 = arch.getCoordinate(1);
+  const auto c1 = arch.getCoordinate(0);
+  const auto c2 = arch.getCoordinate(1);
   EXPECT_GE(arch.getSwapDistance(c1, c2), 0);
   EXPECT_GE(arch.getNAodIntermediateLevels(), 1);
   // Test get parameters
@@ -42,7 +42,7 @@ TEST_P(NeutralAtomArchitectureTest, LoadArchitectures) {
   // Test distance functions
   EXPECT_GE(arch.getEuclideanDistance(c1, c2), 0);
   // Test MoveVector functions
-  auto mv = arch.getVector(0, 1);
+  const auto mv = arch.getVector(0, 1);
   EXPECT_GE(arch.getVectorShuttlingTime(mv), 0);
 }
 
@@ -70,7 +70,7 @@ protected:
   uint32_t seed = 42;
 
   void SetUp() override {
-    auto params = GetParam();
+    const auto params = GetParam();
     testArchitecturePath += std::get<0>(params) + ".json";
     testQcPath += std::get<1>(params) + ".qasm";
     gateWeight = std::get<2>(params);
@@ -81,8 +81,8 @@ protected:
 };
 
 TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
-  auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
-  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  const auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
+  constexpr na::InitialMapping initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper mapper(arch);
   na::MapperParameters mapperParameters;
   mapperParameters.initialMapping = initialCoordinateMapping;
@@ -97,11 +97,11 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   mapper.setParameters(mapperParameters);
 
   qc::QuantumComputation qc(testQcPath);
-  auto qcMapped = mapper.map(qc, initialMapping);
+  const auto qcMapped = mapper.map(qc, initialMapping);
   ASSERT_GT(qcMapped.size(), qc.size());
   mapper.convertToAod();
 
-  auto scheduleResults = mapper.schedule(true, true);
+  const auto scheduleResults = mapper.schedule(true, true);
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
   ASSERT_GT(scheduleResults.totalIdleTime, 0);
@@ -157,7 +157,8 @@ TEST_F(NeutralAtomMapperTest, Output) {
   auto qcAodMapped = mapper.convertToAod();
   // qcAodMapped.dumpOpenQASM(std::cout, false);
 
-  auto scheduleResults = mapper.schedule(false, true);
+  // const auto scheduleResults = mapper.schedule(false, true);
+  const auto scheduleResults = mapper.schedule(true, true);
   std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);

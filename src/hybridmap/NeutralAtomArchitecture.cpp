@@ -90,8 +90,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
     // precompute bridge circuits
     for (size_t i = 3; i <= 10; i++) {
       qc::fp const bridgeGateTime =
-          (bridgeCircuits.czDepth[i] * gateTimes.at("cz")) +
-          (bridgeCircuits.hDepth[i] * gateTimes.at("h"));
+          (static_cast<qc::fp>(bridgeCircuits.czDepth[i]) *
+           gateTimes.at("cz")) +
+          (static_cast<qc::fp>(bridgeCircuits.hDepth[i]) * gateTimes.at("h"));
       qc::fp const bridgeFidelity =
           std::pow(gateAverageFidelities.at("cz"), bridgeCircuits.czs[i]) *
           std::pow(gateAverageFidelities.at("h"), bridgeCircuits.hs[i]);
@@ -137,7 +138,8 @@ NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
   this->loadJson(filename);
 }
 
-void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
+void NeutralAtomArchitecture::computeSwapDistances(
+    const qc::fp interactionRadius) {
   // compute diagonal distances
   struct DiagonalDistance {
     std::uint32_t x;
@@ -197,8 +199,8 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
 }
 
 void NeutralAtomArchitecture::computeNearbyCoordinates() {
-  this->nearbyCoordinates = std::vector<std::set<CoordIndex>>(
-      this->getNpositions(), std::set<CoordIndex>());
+  this->nearbyCoordinates =
+      std::vector(this->getNpositions(), std::set<CoordIndex>());
   for (CoordIndex coordIndex = 0; coordIndex < this->getNpositions();
        coordIndex++) {
     for (CoordIndex otherCoordIndex = 0; otherCoordIndex < coordIndex;
@@ -211,7 +213,8 @@ void NeutralAtomArchitecture::computeNearbyCoordinates() {
   }
 }
 
-std::vector<CoordIndex> NeutralAtomArchitecture::getNN(CoordIndex idx) const {
+std::vector<CoordIndex>
+NeutralAtomArchitecture::getNN(const CoordIndex idx) const {
   std::vector<CoordIndex> nn;
   if (idx % this->getNcolumns() != 0) {
     nn.emplace_back(idx - 1);
@@ -249,9 +252,9 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     // use time of theta = pi and linearly scale
     opName += "z";
     auto param = abs(op->getParameter().back());
-    const auto pi = 3.14159265358979323846;
+    constexpr auto pi = 3.14159265358979323846;
     while (param > pi) {
-      param = abs(param - 2 * pi);
+      param = abs(param - (2 * pi));
     }
     return getGateTime(opName) * param / 3.14159265358979323846;
   }

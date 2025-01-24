@@ -22,12 +22,12 @@
 namespace na {
 AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
                                const NeutralAtomArchitecture& arch) {
-  auto nCols = arch.getNcolumns();
+  const auto nCols = arch.getNcolumns();
 
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
-    auto column = coord % nCols;
-    auto row = coord / nCols;
+    const auto column = coord % nCols;
+    const auto row = coord / nCols;
     idToCoord[id] = {column * arch.getInterQubitDistance(),
                      row * arch.getInterQubitDistance()};
   }
@@ -45,7 +45,7 @@ std::string AnimationAtoms::getInitString() {
   return initString;
 }
 
-std::string AnimationAtoms::getEndString(qc::fp endTime) {
+std::string AnimationAtoms::getEndString(const qc::fp endTime) {
   std::string initString;
   for (const auto& [id, coord] : idToCoord) {
     initString += std::to_string(endTime) + ";" + std::to_string(id) + ";" +
@@ -55,7 +55,7 @@ std::string AnimationAtoms::getEndString(qc::fp endTime) {
   return initString;
 }
 
-AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
+AnimationAtoms::axesId AnimationAtoms::addAxis(const HwQubit id) {
   if (axesIds.find(id) == axesIds.end()) {
     axesIdCounter++;
     axesIds[id] = axesIdCounter;
@@ -66,7 +66,7 @@ AnimationAtoms::axesId AnimationAtoms::addAxis(HwQubit id) {
   }
   return axesIds[id];
 }
-AnimationAtoms::marginId AnimationAtoms::addMargin(HwQubit id) {
+AnimationAtoms::marginId AnimationAtoms::addMargin(const HwQubit id) {
   if (marginIds.find(id) == marginIds.end()) {
     marginIdCounter++;
     marginIds[id] = marginIdCounter;
@@ -99,9 +99,9 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
         auto coord = idAndCoord.second;
         auto col = coordIdx % arch.getNcolumns();
         auto row = coordIdx / arch.getNcolumns();
-        if (std::abs(coord.first - col * arch.getInterQubitDistance()) <
+        if (std::abs(coord.first - (col * arch.getInterQubitDistance())) <
                 0.0001 &&
-            std::abs(coord.second - row * arch.getInterQubitDistance()) <
+            std::abs(coord.second - (row * arch.getInterQubitDistance())) <
                 0.0001) {
           // remove old coordIdx with same id
           for (const auto& [oldCoordIdx, oldId] : coordIdxToId) {
@@ -204,10 +204,13 @@ AnimationAtoms::createCsvOp(const std::unique_ptr<qc::Operation>& op,
   }
   return csvLine;
 }
-std::string AnimationAtoms::createCsvLine(
-    qc::fp startTime, HwQubit id, qc::fp x, qc::fp y, uint32_t size,
-    uint32_t color, bool axes, AnimationAtoms::axesId axId, bool margin,
-    AnimationAtoms::marginId marginId, qc::fp marginSize) {
+std::string AnimationAtoms::createCsvLine(const qc::fp startTime,
+                                          const HwQubit id, const qc::fp x,
+                                          const qc::fp y, const uint32_t size,
+                                          const uint32_t color, const bool axes,
+                                          const axesId axId, const bool margin,
+                                          const marginId marginId,
+                                          const qc::fp marginSize) {
   std::string csvLine;
   csvLine +=
       std::to_string(startTime) + ";" + std::to_string(id) + ";" +

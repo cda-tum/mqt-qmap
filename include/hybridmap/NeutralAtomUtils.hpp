@@ -22,7 +22,7 @@
 
 namespace na {
 
-class NeutralAtomException : public std::runtime_error {
+class NeutralAtomException final : public std::runtime_error {
   std::string msg;
 
 public:
@@ -80,8 +80,10 @@ struct Direction {
   bool x;
   bool y;
 
-  [[maybe_unused]] Direction(bool xDir, bool yDir) : x(xDir), y(yDir) {}
-  Direction(qc::fp deltaX, qc::fp deltaY) : x(deltaX >= 0), y(deltaY >= 0) {}
+  [[maybe_unused]] Direction(const bool xDir, const bool yDir)
+      : x(xDir), y(yDir) {}
+  Direction(const qc::fp deltaX, const qc::fp deltaY)
+      : x(deltaX >= 0), y(deltaY >= 0) {}
 
   [[nodiscard]] bool operator==(const Direction& other) const {
     return x == other.x && y == other.y;
@@ -91,7 +93,7 @@ struct Direction {
   }
   [[nodiscard]] int32_t getSignX() const { return x ? 1 : -1; }
   [[nodiscard]] int32_t getSignY() const { return y ? 1 : -1; }
-  [[nodiscard]] int32_t getSign(Dimension dim) const {
+  [[nodiscard]] int32_t getSign(const Dimension dim) const {
     return dim == Dimension::X ? getSignX() : getSignY();
   }
 };
@@ -108,16 +110,17 @@ struct MoveVector {
   qc::fp yEnd;
   Direction direction;
 
-  MoveVector(qc::fp xstart, qc::fp ystart, qc::fp xend, qc::fp yend)
-      : xStart(xstart), yStart(ystart), xEnd(xend), yEnd(yend),
-        direction(xend - xstart, yend - ystart) {}
-  MoveVector(std::int64_t xstart, std::int64_t ystart, std::int64_t xend,
-             std::int64_t yend)
-      : xStart(static_cast<qc::fp>(xstart)),
-        yStart(static_cast<qc::fp>(ystart)), xEnd(static_cast<qc::fp>(xend)),
-        yEnd(static_cast<qc::fp>(yend)),
-        direction(static_cast<qc::fp>(xend - xstart),
-                  static_cast<qc::fp>(yend - ystart)) {}
+  MoveVector(const qc::fp xStart, const qc::fp yStart, const qc::fp xEnd,
+             const qc::fp yEnd)
+      : xStart(xStart), yStart(yStart), xEnd(xEnd), yEnd(yEnd),
+        direction(xEnd - xStart, yEnd - yStart) {}
+  MoveVector(const std::int64_t xStart, const std::int64_t yStart,
+             const std::int64_t xEnd, const std::int64_t yEnd)
+      : xStart(static_cast<qc::fp>(xStart)),
+        yStart(static_cast<qc::fp>(yStart)), xEnd(static_cast<qc::fp>(xEnd)),
+        yEnd(static_cast<qc::fp>(yEnd)),
+        direction(static_cast<qc::fp>(xEnd - xStart),
+                  static_cast<qc::fp>(yEnd - yStart)) {}
 
   [[nodiscard]] [[maybe_unused]] bool
   sameDirection(const MoveVector& other) const {
@@ -226,7 +229,7 @@ struct MoveCombs {
   [[nodiscard]] const_iterator begin() const { return moveCombs.cbegin(); }
   [[nodiscard]] const_iterator end() const { return moveCombs.cend(); }
 
-  void setOperation(const qc::Operation* op, CoordIndices pos) {
+  void setOperation(const qc::Operation* op, const CoordIndices& pos) {
     for (auto& moveComb : moveCombs) {
       moveComb.op = op;
       moveComb.bestPos = pos;
@@ -287,7 +290,7 @@ protected:
   static qc::QuantumComputation
   recursiveBridgeIncrease(qc::QuantumComputation qcBridge, size_t length);
 
-  static qc::QuantumComputation bridgeExpand(qc::QuantumComputation qcBridge,
-                                             size_t qubit);
+  static qc::QuantumComputation
+  bridgeExpand(const qc::QuantumComputation& qcBridge, size_t qubit);
 };
 } // namespace na

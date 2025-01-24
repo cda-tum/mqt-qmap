@@ -13,10 +13,7 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "ir/Permutation.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "ir/operations/Operation.hpp"
-#include "sc/exact/ExactMapper.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -27,7 +24,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace na {
@@ -47,7 +43,7 @@ struct MapperParameters {
   InitialCoordinateMapping initialMapping;
 };
 
-enum RoutingType {
+enum RoutingType : uint8_t {
   SwapType,
   BridgeType,
   MoveType,
@@ -133,7 +129,8 @@ protected:
   /**
    * @brief Maps all currently possible gates and updated until no more gates
    * can be mapped.
-   * @param layer The layer to map all possible gates for
+   * @param frontLayer The front layer to map all possible gates for
+   * @param lookaheadLayer The lookahead layer to map all possible gates for
    */
   void mapAllPossibleGates(NeutralAtomLayer& frontLayer,
                            NeutralAtomLayer& lookaheadLayer);
@@ -151,17 +148,17 @@ protected:
    */
   bool isExecutable(const qc::Operation* opPointer);
 
-  void updateBlockedQubits(Swap swap) {
-    HwQubits qubits = {swap.first, swap.second};
+  void updateBlockedQubits(const Swap& swap) {
+    const HwQubits qubits = {swap.first, swap.second};
     updateBlockedQubits(qubits);
   }
-  void updateBlockedQubits(HwQubits qubits);
+  void updateBlockedQubits(const HwQubits& qubits);
 
   /**
    * @brief Update the mapping for the given swap gate.
    * @param swap The swap gate to update the mapping for
    */
-  void applySwap(Swap swap);
+  void applySwap(const Swap& swap);
   /**
    * @brief Update the mapping for the given move operation.
    * @param move The move operation to update the mapping for
@@ -205,7 +202,8 @@ protected:
    * @return The minimal number of move operations and time needed to execute
    * the given gate
    */
-  std::pair<uint32_t, qc::fp> estimateNumMove(const qc::Operation* opPointer);
+  std::pair<uint32_t, qc::fp>
+  estimateNumMove(const qc::Operation* opPointer) const;
   /**
    * @brief Uses estimateNumSwapGates and estimateNumMove to decide if a swap
    * gate or move operation is better.
@@ -235,12 +233,13 @@ protected:
 
   // Methods for bridge operations mapping
 
-  Bridge findBestBridge() const;
-  Bridges getShortestBridges() const;
+  [[nodiscard]] Bridge findBestBridge() const;
+  [[nodiscard]] Bridges getShortestBridges() const;
 
-  CoordIndices computeCurrentCoordUsages() const;
+  [[nodiscard]] CoordIndices computeCurrentCoordUsages() const;
 
-  FlyingAncillas convertMoveCombToFlyingAncilla(const MoveComb& move_comb);
+  [[nodiscard]] FlyingAncillas
+  convertMoveCombToFlyingAncilla(const MoveComb& moveComb) const;
 
   // std::vector<std::pair<const qc::Operation*, Bridge>>
   // findAllBridges(qc::QuantumComputation& qc);
@@ -283,24 +282,27 @@ protected:
    * operations that move qubits away and then the performs the actual move
    * operation. The move away is chosen such that it is in the same direction as
    * the second move operation.
-   * @param start The start position of the actual move operation
-   * @param target The target position of the actual move operation
+   * @param startCoord The start position of the actual move operation
+   * @param targetCoord The target position of the actual move operation
    * @param excludedCoords Coordinates the qubits should not be moved to
    * @return All possible move away combinations for a move from start to target
    */
-  MoveCombs getMoveAwayCombinations(CoordIndex start, CoordIndex target,
-                                    const CoordIndices& excludedCoords);
+  [[nodiscard]] MoveCombs
+  getMoveAwayCombinations(CoordIndex startCoord, CoordIndex targetCoord,
+                          const CoordIndices& excludedCoords) const;
 
   // Methods for flying ancilla operations mapping
   std::vector<CoordIndices>
   findBestFlyingAncillaComb(const qc::Operation* targetOp);
   std::set<std::set<qc::Qubit>> findQtargetSet(std::set<qc::Qubit>& usedQubits);
-  CoordIndex returnClosestAncillaCoord(const CoordIndex& c_target,
-                                       const CoordIndices& excludeCoords,
-                                       qc::QuantumComputation& qc);
-  MappingMethod compareSwapAndBridge(const Swap& bestSwap,
-                                     const Bridge& bestBridge);
-  MappingMethod compareShuttlingAndFlyingAncilla(MoveComb bestComb);
+  [[nodiscard]] CoordIndex
+  returnClosestAncillaCoord(const CoordIndex& cTarget,
+                            const CoordIndices& excludeCoords,
+                            const qc::QuantumComputation& qc) const;
+  [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
+                                                   const Bridge& bestBridge);
+  [[nodiscard]] MappingMethod
+  compareShuttlingAndFlyingAncilla(MoveComb bestComb);
 
   // Helper methods
   /**
@@ -338,8 +340,9 @@ protected:
    * @return Possible move combinations to move the gate qubits to the given
    * position
    */
-  MoveCombs getMoveCombinationsToPosition(HwQubits& gateQubits,
-                                          CoordIndices& position);
+  [[nodiscard]] MoveCombs
+  getMoveCombinationsToPosition(const HwQubits& gateQubits,
+                                const CoordIndices& position) const;
 
   // Multi-qubit gate based methods
   /**
@@ -398,7 +401,8 @@ protected:
    * @param layer The layer to compute the distance reduction for
    * @return The distance reduction cost
    */
-  qc::fp moveCostPerLayer(const AtomMove& move, const GateList& layer);
+  [[nodiscard]] qc::fp moveCostPerLayer(const AtomMove& move,
+                                        const GateList& layer) const;
 
   /**
    * @brief Calculates a parallelization cost if the move operation can be
@@ -406,7 +410,7 @@ protected:
    * @param move The move operation to compute the cost for
    * @return The parallelization cost
    */
-  qc::fp parallelMoveCost(const AtomMove& move);
+  [[nodiscard]] qc::fp parallelMoveCost(const AtomMove& move) const;
   /**
    * @brief Calculates the cost of a move operation.
    * @details The cost of a move operation is computed with the following terms:
@@ -416,19 +420,19 @@ protected:
    * @param move The move operation to compute the cost for
    * @return The cost of the move operation
    */
-  qc::fp moveCost(const AtomMove& move);
+  [[nodiscard]] qc::fp moveCost(const AtomMove& move) const;
   /**
    * @brief Calculates the cost of a series of move operations by summing up the
    * cost of each move.
    * @param moveComb The series of move operations to compute the cost for
    * @return The total cost of the series of move operations
    */
-  qc::fp moveCostComb(const MoveComb& moveComb);
+  [[nodiscard]] qc::fp moveCostComb(const MoveComb& moveComb) const;
 
   /**
    * @brief Print the current layers for debugging.
    */
-  void printLayers();
+  void printLayers() const;
 
 public:
   // Constructors
@@ -529,7 +533,7 @@ public:
   }
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             InitialMapping initialMapping) {
+                             const InitialMapping initialMapping) {
     return map(qc, Mapping(qc.getNqubits(), initialMapping));
   }
 
@@ -549,8 +553,7 @@ public:
    * hardware qubits
    */
   [[maybe_unused]] void mapAndConvert(qc::QuantumComputation& qc,
-                                      InitialMapping initialMapping,
-                                      bool printInfo) {
+                                      const InitialMapping initialMapping) {
     map(qc, initialMapping);
     convertToAod();
   }
@@ -565,7 +568,7 @@ public:
    * @brief Prints the mapped circuits as an extended OpenQASM string.
    * @return The mapped quantum circuit with abstract SWAP gates and MOVE
    */
-  [[maybe_unused]] std::string getMappedQcQasm() {
+  [[nodiscard]] [[maybe_unused]] std::string getMappedQcQasm() const {
     std::stringstream ss;
     this->mappedQc.dumpOpenQASM(ss, false);
     return ss.str();
@@ -575,7 +578,7 @@ public:
    * @brief Saves the mapped quantum circuit to a file.
    * @param filename The name of the file to save the mapped quantum circuit to
    */
-  [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) {
+  [[maybe_unused]] void saveMappedQcQasm(const std::string& filename) const {
     std::ofstream ofs(filename);
     this->mappedQc.dumpOpenQASM(ofs, false);
   }
@@ -627,8 +630,8 @@ public:
    * @return The results of the scheduler
    */
   [[maybe_unused]] SchedulerResults
-  schedule(bool verboseArg = false, bool createAnimationCsv = false,
-           qc::fp shuttlingSpeedFactor = 1.0) {
+  schedule(const bool verboseArg = false, const bool createAnimationCsv = false,
+           const qc::fp shuttlingSpeedFactor = 1.0) {
     if (mappedQcAOD.empty()) {
       convertToAod();
     }
@@ -649,11 +652,11 @@ public:
    * @brief Saves the animation csv file of the scheduled quantum circuit.
    * @param filename The name of the file to save the animation csv file to
    */
-  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) {
+  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) const {
     scheduler.saveAnimationCsv(filename);
   }
 
-  void decomposeBridgeGates(qc::QuantumComputation& qc);
+  void decomposeBridgeGates(qc::QuantumComputation& qc) const;
 
   /**
    * @brief Converts a mapped circuit down to the AOD level and CZ level.

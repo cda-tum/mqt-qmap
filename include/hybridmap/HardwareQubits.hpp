@@ -83,7 +83,7 @@ public:
   // Constructors
   HardwareQubits() = default;
   HardwareQubits(const NeutralAtomArchitecture& architecture,
-                 InitialCoordinateMapping initialCoordinateMapping,
+                 const InitialCoordinateMapping initialCoordinateMapping,
                  const std::vector<CoordIndex>& qubitIndices,
                  const std::vector<CoordIndex>& hwIndices, uint32_t seed)
       : arch(&architecture), swapDistances(architecture.getNqubits()) {
@@ -139,11 +139,13 @@ public:
     initialHwPos = hwToCoordIdx;
   }
 
-  std::vector<HwQubitsVector> computeAllShortestPaths(HwQubit q1,
-                                                      HwQubit q2) const;
+  [[nodiscard]] std::vector<HwQubitsVector>
+  computeAllShortestPaths(HwQubit q1, HwQubit q2) const;
 
   // Mapping
-  const qc::Permutation& getHwToCoordIdx() const { return hwToCoordIdx; }
+  [[nodiscard]] const qc::Permutation& getHwToCoordIdx() const {
+    return hwToCoordIdx;
+  }
 
   /**
    * @brief Checks if a hardware qubit is mapped to a coordinate.
@@ -164,7 +166,7 @@ public:
    */
   void move(HwQubit hwQubit, CoordIndex newCoord);
 
-  void removeHwQubit(HwQubit hwQubit) {
+  void removeHwQubit(const HwQubit hwQubit) {
     hwToCoordIdx.erase(hwQubit);
     initialHwPos.erase(hwQubit);
     // set swap distances to -1
@@ -194,7 +196,7 @@ public:
    * @param qubit The hardware qubit.
    * @return The coordinate index of the hardware qubit.
    */
-  [[nodiscard]] CoordIndex getCoordIndex(HwQubit qubit) const {
+  [[nodiscard]] CoordIndex getCoordIndex(const HwQubit qubit) const {
     return hwToCoordIdx.at(qubit);
   }
   /**
@@ -228,7 +230,7 @@ public:
    * @param coordIndex The coordinate index.
    * @return The hardware qubit at the coordinate.
    */
-  [[nodiscard]] HwQubit getHwQubit(CoordIndex coordIndex) const {
+  [[nodiscard]] HwQubit getHwQubit(const CoordIndex coordIndex) const {
     for (auto const& [hwQubit, index] : hwToCoordIdx) {
       if (index == coordIndex) {
         return hwQubit;
@@ -246,7 +248,7 @@ public:
    * @return The nearby coordinates of the hardware qubit.
    */
   [[nodiscard]] [[maybe_unused]] std::set<CoordIndex>
-  getNearbyCoordinates(HwQubit q) const {
+  getNearbyCoordinates(const HwQubit q) const {
     return this->arch->getNearbyCoordinates(this->getCoordIndex(q));
   }
 
@@ -263,8 +265,8 @@ public:
    * or just to its vicinity.
    * @return The swap distance between the two hardware qubits.
    */
-  [[nodiscard]] SwapDistance getSwapDistance(HwQubit q1, HwQubit q2,
-                                             bool closeBy = true) {
+  [[nodiscard]] SwapDistance getSwapDistance(const HwQubit q1, const HwQubit q2,
+                                             const bool closeBy = true) {
     if (q1 == q2) {
       return 0;
     }
@@ -282,7 +284,7 @@ public:
    * @param q The hardware qubit.
    * @return The nearby hardware qubits of the hardware qubit.
    */
-  [[nodiscard]] HwQubits getNearbyQubits(HwQubit q) const {
+  [[nodiscard]] HwQubits getNearbyQubits(const HwQubit q) const {
     return nearbyQubits.at(q);
   }
 
@@ -298,7 +300,8 @@ public:
    * @param idx The coordinate index.
    * @return The unoccupied coordinates in the vicinity of the coordinate.
    */
-  std::set<CoordIndex> getNearbyFreeCoordinatesByCoord(CoordIndex idx);
+  [[nodiscard]] std::set<CoordIndex>
+  getNearbyFreeCoordinatesByCoord(CoordIndex idx) const;
 
   /**
    * @brief Returns the occupied coordinates in the vicinity of a coordinate.
@@ -320,22 +323,23 @@ public:
    * @brief Computes the closest free coordinate in a given direction.
    * @details Uses a breadth-first search to find the closest free coordinate in
    * a given direction.
-   * @param qubit The hardware qubit to start the search from.
+   * @param coord The hardware qubit to start the search from.
    * @param direction The direction in which the search is performed
    * (Left/Right, Down/Up)
    * @param excludedCoords Coordinates to be ignored in the search.
    * @return The closest free coordinate in the given direction.
    */
-  std::vector<CoordIndex>
-  findClosestFreeCoord(HwQubit qubit, Direction direction,
-                       const CoordIndices& excludedCoords = {});
+  [[nodiscard]] std::vector<CoordIndex>
+  findClosestFreeCoord(HwQubit coord, Direction direction,
+                       const CoordIndices& excludedCoords = {}) const;
 
-  std::vector<CoordIndex>
+  [[nodiscard]] std::vector<CoordIndex>
   findClosestAncillaCoord(CoordIndex coord, Direction direction,
                           int circQubitSize,
-                          const CoordIndices& excludedCoords = {});
+                          const CoordIndices& excludedCoords = {}) const;
 
-  HwQubit getClosestQubit(CoordIndex coord, HwQubits ignored) const;
+  [[nodiscard]] HwQubit getClosestQubit(CoordIndex coord,
+                                        HwQubits ignored) const;
 
   // Blocking
   /**
@@ -344,7 +348,8 @@ public:
    * @param qubits The input hardware qubits.
    * @return The blocked hardware qubits.
    */
-  std::set<HwQubit> getBlockedQubits(const std::set<HwQubit>& qubits);
+  [[nodiscard]] std::set<HwQubit>
+  getBlockedQubits(const std::set<HwQubit>& qubits) const;
 
   [[nodiscard]] std::map<HwQubit, HwQubit> getInitHwPos() const {
     std::map<HwQubit, HwQubit> initialHwPosMap;

@@ -14,9 +14,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -34,18 +34,22 @@ bool MoveVector::overlap(const MoveVector& other) const {
 
   // need to compute all combinations, as sometimes the start and end x/y points
   // are the same
-  auto overlapXFirstStart =
+  const auto overlapXFirstStart =
       firstStartX >= secondStartX && firstStartX <= secondEndX;
-  auto overlapXFirstEnd = firstEndX >= secondStartX && firstEndX <= secondEndX;
-  auto overlapXSecondStart =
+  const auto overlapXFirstEnd =
+      firstEndX >= secondStartX && firstEndX <= secondEndX;
+  const auto overlapXSecondStart =
       secondStartX >= firstStartX && secondStartX <= firstEndX;
-  auto overlapXSecondEnd = secondEndX >= firstStartX && secondEndX <= firstEndX;
-  auto overlapYFirstStart =
+  const auto overlapXSecondEnd =
+      secondEndX >= firstStartX && secondEndX <= firstEndX;
+  const auto overlapYFirstStart =
       firstStartY >= secondStartY && firstStartY <= secondEndY;
-  auto overlapYFirstEnd = firstEndY >= secondStartY && firstEndY <= secondEndY;
-  auto overlapYSecondStart =
+  const auto overlapYFirstEnd =
+      firstEndY >= secondStartY && firstEndY <= secondEndY;
+  const auto overlapYSecondStart =
       secondStartY >= firstStartY && secondStartY <= firstEndY;
-  auto overlapYSecondEnd = secondEndY >= firstStartY && secondEndY <= firstEndY;
+  const auto overlapYSecondEnd =
+      secondEndY >= firstStartY && secondEndY <= firstEndY;
 
   return (overlapXFirstStart || overlapXFirstEnd || overlapXSecondStart ||
           overlapXSecondEnd || overlapYFirstStart || overlapYFirstEnd ||
@@ -70,14 +74,14 @@ bool MoveVector::include(const MoveVector& other) const {
   return includeX || includeY;
 }
 
-void MoveCombs::addMoveComb(const MoveComb& otherMove) {
+void MoveCombs::addMoveComb(const MoveComb& moveComb) {
   for (auto& comb : moveCombs) {
-    if (comb == otherMove) {
+    if (comb == moveComb) {
       comb.cost = std::numeric_limits<qc::fp>::max();
       return;
     }
   }
-  moveCombs.emplace_back(otherMove);
+  moveCombs.emplace_back(moveComb);
 }
 
 void MoveCombs::addMoveCombs(const MoveCombs& otherMoveCombs) {
@@ -114,7 +118,7 @@ void BridgeCircuits::computeGates(const size_t length) {
     }
   }
   // find max depth
-  auto maxHcZ =
+  const auto maxHcZ =
       std::max_element(hsCzsPerQubit.begin(), hsCzsPerQubit.end(),
                        [](const auto& a, const auto& b) {
                          return a.first + a.second < b.first + b.second;
@@ -152,16 +156,18 @@ BridgeCircuits::recursiveBridgeIncrease(qc::QuantumComputation qcBridge,
   for (const auto& gate : qcBridge) {
     gates[*gate->getUsedQubits().begin()]++;
   }
-  auto minIndex = std::min_element(gates.begin(), gates.end()) - gates.begin();
+  const auto minIndex =
+      std::min_element(gates.begin(), gates.end()) - gates.begin();
 
   qcBridge = bridgeExpand(qcBridge, minIndex);
 
   return recursiveBridgeIncrease(qcBridge, length - 1);
 }
 qc::QuantumComputation
-BridgeCircuits::bridgeExpand(qc::QuantumComputation qcBridge, size_t qubit) {
+BridgeCircuits::bridgeExpand(const qc::QuantumComputation& qcBridge,
+                             const size_t qubit) {
   qc::QuantumComputation qcBridgeNew(qcBridge.getNqubits() + 1);
-  for (auto& gate : qcBridge) {
+  for (const auto& gate : qcBridge) {
     const auto usedQubits = gate->getUsedQubits();
     const auto q1 = *usedQubits.begin();
     const auto q2 = *usedQubits.rbegin();

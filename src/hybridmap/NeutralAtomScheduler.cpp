@@ -25,18 +25,17 @@
 #include <utility>
 #include <vector>
 
-na::SchedulerResults
-na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
-                                   const std::map<HwQubit, HwQubit>& initHwPos,
-                                   bool verbose, bool createAnimationCsv,
-                                   qc::fp shuttlingSpeedFactor) {
+na::SchedulerResults na::NeutralAtomScheduler::schedule(
+    const qc::QuantumComputation& qc,
+    const std::map<HwQubit, HwQubit>& initHwPos, const bool verbose,
+    const bool createAnimationCsv, const qc::fp shuttlingSpeedFactor) {
   if (verbose) {
     std::cout << "\n* schedule start!\n";
   }
 
   std::vector<qc::fp> totalExecutionTimes(arch->getNpositions(), 0);
   // saves for each coord the time slots that are blocked by a multi qubit gate
-  std::vector<std::deque<std::pair<qc::fp, qc::fp>>> rydbergBlockedQubitsTimes(
+  std::vector rydbergBlockedQubitsTimes(
       arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
   qc::fp aodLastBlockedTime = 0;
   qc::fp totalGateTime = 0;
@@ -68,7 +67,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
         op->getType() == qc::AodDeactivate) {
       opTime *= shuttlingSpeedFactor;
     }
-    auto opFidelity = arch->getOpFidelity(op.get());
+    const auto opFidelity = arch->getOpFidelity(op.get());
 
     // DEBUG info
     if (verbose) {
@@ -104,8 +103,8 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
         for (const auto& qubit : rydbergBlockedQubits) {
           // check if qubit is blocked at maxTime
           for (const auto& startEnd : rydbergBlockedQubitsTimes[qubit]) {
-            auto start = startEnd.first;
-            auto end = startEnd.second;
+            const auto start = startEnd.first;
+            const auto end = startEnd.second;
             if ((start <= maxTime && end > maxTime) ||
                 (start <= maxTime + opTime && end > maxTime + opTime)) {
               rydbergBlocked = true;
@@ -165,7 +164,7 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
   const auto maxExecutionTime =
       *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
   const auto totalIdleTime =
-      maxExecutionTime * arch->getNqubits() - totalGateTime;
+      (maxExecutionTime * arch->getNqubits()) - totalGateTime;
   const auto totalFidelities =
       totalGateFidelities *
       std::exp(-totalIdleTime / arch->getDecoherenceTime());
@@ -182,9 +181,10 @@ na::NeutralAtomScheduler::schedule(const qc::QuantumComputation& qc,
 }
 
 void na::NeutralAtomScheduler::printSchedulerResults(
-    std::vector<qc::fp>& totalExecutionTimes, qc::fp totalIdleTime,
-    qc::fp totalGateFidelities, qc::fp totalFidelities, uint32_t nCZs) {
-  auto totalExecutionTime =
+    std::vector<qc::fp>& totalExecutionTimes, const qc::fp totalIdleTime,
+    const qc::fp totalGateFidelities, const qc::fp totalFidelities,
+    const uint32_t nCZs) {
+  const auto totalExecutionTime =
       *std::max_element(totalExecutionTimes.begin(), totalExecutionTimes.end());
   std::cout << "\ntotalExecutionTimes: " << totalExecutionTime << "\n";
   std::cout << "totalIdleTime: " << totalIdleTime << "\n";
@@ -194,8 +194,9 @@ void na::NeutralAtomScheduler::printSchedulerResults(
 }
 
 void na::NeutralAtomScheduler::printTotalExecutionTimes(
-    std::vector<qc::fp>& totalExecutionTimes,
-    std::vector<std::deque<std::pair<qc::fp, qc::fp>>>& blockedQubitsTimes) {
+    const std::vector<qc::fp>& totalExecutionTimes,
+    const std::vector<std::deque<std::pair<qc::fp, qc::fp>>>&
+        blockedQubitsTimes) {
   std::cout << "ExecutionTime: "
             << "\n";
   for (size_t qubit = 0; qubit < totalExecutionTimes.size(); qubit++) {
