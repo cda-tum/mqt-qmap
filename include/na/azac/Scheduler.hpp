@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Architecture.hpp"
+#include "na/azac/Architecture.hpp"
 #include "na/azac/CompilerBase.hpp"
 
 #include <type_traits>
@@ -12,9 +12,9 @@ template <typename T> class Scheduler {
                 "T must be a subclass of CompilerBase");
 
 private:
-  std::vector<std::unordered_set<const std::pair<qc::Qubit, qc::Qubit>*>>
+  std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
       gate_scheduling{};
-  std::vector<std::unordered_set<const qc::StandardOperation*>>
+  std::vector<std::vector<const qc::StandardOperation*>>
       gate_1q_scheduling{};
   /// as soon as possible algorithm for g_q
   auto asap() -> std::vector<
@@ -82,18 +82,14 @@ protected:
     }
     // create a new scheduling where each group of gates has at most
     // max_gate_num
-    std::vector<std::unordered_set<const std::pair<qc::Qubit, qc::Qubit>*>>
+    std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
         gate_scheduling_split{};
     for (auto gates : gate_scheduling) {
       if (gates.size() < max_gate_num) {
         gate_scheduling_split.emplace_back(gates);
       } else {
         while (!gates.empty()) {
-          auto& split_gates = gate_scheduling_split.emplace_back();
-          for (std::size_t i = 0; i < max_gate_num; ++i) {
-            split_gates.emplace(*gates.begin());
-            gates.erase(*gates.begin());
-          }
+          auto& split_gates = gate_scheduling_split.emplace_back(gates);
         }
       }
     }
@@ -115,13 +111,13 @@ protected:
       }
     }
 
-    static_cast<T*>(this)->runtime_analysis.duration =
+    static_cast<T*>(this)->runtime_analysis.scheduling =
         std::chrono::system_clock::now() - t_s;
 
     std::cout << "[INFO]               Time for scheduling: " << std::fixed
               << std::setprecision(2)
               << static_cast<double>(
-                     static_cast<T*>(this)->runtime_analysis.duration.count())
+                     static_cast<T*>(this)->runtime_analysis.scheduling.count())
               << "µs\n";
   }
 };
