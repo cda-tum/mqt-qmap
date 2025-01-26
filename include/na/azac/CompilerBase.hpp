@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../../../../mqt-core/include/mqt-core/ir/QuantumComputation.hpp"
 #include "Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "na/azac/Architecture.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -26,9 +27,9 @@ namespace na {
 class CompilerBase {
 protected:
   std::filesystem::path dir = "./result/";
-  std::size_t n_q = 0; /// number of qubits
-  std::size_t n_g = 0; /// number of gates
-  // architecture = None
+  std::size_t n_q = 0; ///< number of qubits
+  std::size_t n_g = 0; ///< number of gates
+  Architecture architecture;
   struct Result {
     std::string name{};
     std::filesystem::path architecture_spec_path{};
@@ -38,10 +39,15 @@ protected:
   Result result{};
   struct RuntimeAnalysis {
     std::chrono::microseconds scheduling;
+    std::chrono::microseconds initial_placement;
+    std::chrono::microseconds intermediate_placement;
   };
   RuntimeAnalysis runtime_analysis{};
   bool to_verify = true;
-  bool trivial_placement = false;
+  /// trivial placement, i.e., place qubits in the order they appear in the
+  /// circuit if false, a simulated annealing-based placement is chosen
+  /// @see place_trivial
+  bool trivial_placement = true;
 
 public:
   enum class RoutingStrategy : std::uint8_t { MAXIMAL_IS_SORT };
@@ -87,7 +93,10 @@ public:
 protected:
   SchedulingStrategy scheduling_strategy = SchedulingStrategy::ASAP;
   bool dynamic_placement = true;
-  std::optional<std::unordered_map<std::size_t, std::size_t>>
+  /// initial mapping of qubits to SLM sites, if this is not given either a
+  /// trivial placement is chosen, see @ref trivial_placement, or a simulated
+  /// annealing-based placement is chosen
+  std::optional<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
       given_initial_mapping = std::nullopt;
   /// Mind the dependency between gates, i.e., do not allow changing there order
   /// if they are commutative
@@ -104,6 +113,11 @@ protected:
   std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                      std::unordered_set<qc::StandardOperation>>
       dict_g_1q_parent{};
+  /// list of qubit placements for all layers
+  std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
+      qubit_mapping{};
+  /// list of qubit lists that are reused in each layer
+  std::vector<std::vector<qc::Qubit>> reuse_qubits;
 
 public:
   explicit CompilerBase(std::ifstream& settingsIfs) {
@@ -149,7 +163,7 @@ public:
       result.architecture_spec_path =
           std::filesystem::path(settings_json["arch_spec"]);
     }
-    // todo: set architecture
+    architecture = Architecture(result.architecture_spec_path);
   }
   explicit CompilerBase(std::ifstream&& settingsIfs)
       : CompilerBase(std::move(settingsIfs)) {}
@@ -214,8 +228,8 @@ public:
     n_q = qc.getNqubits();
     /// array that stores the index of the last 2-qubit gate acting on each
     /// qubit
-    std::vector<const std::pair<qc::Qubit, qc::Qubit>*>
-        list_qubit_last_2q_gate(n_q, nullptr);
+    std::vector<const std::pair<qc::Qubit, qc::Qubit>*> list_qubit_last_2q_gate(
+        n_q, nullptr);
 
     for (const auto& op : qc) {
       if (op->isStandardOperation()) {

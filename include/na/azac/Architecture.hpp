@@ -1,8 +1,10 @@
 #pragma once
+#include <filesystem>
 #include <fstream>
 #include <list>
 #include <nlohmann/json.hpp>
 #include <unordered_set>
+#include <utility>
 
 namespace na {
 /// An 2D-Array of AOD traps
@@ -50,8 +52,10 @@ struct SLM {
   std::size_t n_c = 0;
   std::size_t location_x = 0; ///< x-coordinate of the left uppermost SLM
   std::size_t location_y = 0; ///< y-coordinate of the left uppermost SLM
+  bool storage = true;
 
-  explicit SLM(nlohmann::json slm_spec) {
+  explicit SLM(nlohmann::json slm_spec, bool storage = true)
+      : storage(storage) {
     if (slm_spec.contains("id")) {
       id = slm_spec["id"];
     } else {
@@ -90,9 +94,9 @@ struct SLM {
 struct Architecture {
   std::string name;
   std::unordered_map<std::string, double> operation_duration;
-  std::vector<SLM> storage_zone;
-  std::vector<std::vector<SLM>> entanglement_zone;
-  std::unordered_set<AOD> dict_AOD;
+  std::vector<std::unique_ptr<SLM>> storage_zone;
+  std::vector<std::vector<std::unique_ptr<SLM>>> entanglement_zone;
+  std::vector<std::unique_ptr<AOD>> dict_AOD;
   double time_atom_transfer = 15; ///< µs
   double time_rydberg = 0.36;     ///< µs
   double time_1qGate = 0.625;     ///< µs
@@ -105,14 +109,23 @@ struct Architecture {
   std::size_t rydberg_range_min_y = 0;
   std::size_t rydberg_range_max_y = 0;
 
+  Architecture() = default;
   explicit Architecture(const std::string& filename)
       : Architecture(std::filesystem::path(filename)) {}
-  explicit Architecture(const std::filesystem::path filepath)
+  explicit Architecture(const std::filesystem::path& filepath)
       : Architecture(std::ifstream(filepath)) {}
-  explicit Architecture(std::ifstream&& ifs) : Architecture(std::move(ifs)) {}
-  explicit Architecture(std::ifstream& ifs) {
+  explicit Architecture(std::ifstream& ifs) : Architecture(std::move(ifs)) {}
+  explicit Architecture(std::ifstream&& ifs) { load(std::move(ifs)); }
+  auto load(const std::string& filename) -> void {
+    load(std::filesystem::path(filename));
+  }
+  auto load(const std::filesystem::path& filepath) -> void {
+    load(std::ifstream(filepath));
+  }
+  auto load(std::ifstream& ifs) -> void { load(std::move(ifs)); }
+  auto load(std::ifstream&& ifs) -> void {
     nlohmann::json architecture_spec{};
-    ifs >> architecture_spec;
+    std::move(ifs) >> architecture_spec;
     if (architecture_spec.contains("name")) {
       name = architecture_spec["name"];
     }
@@ -155,7 +168,7 @@ struct Architecture {
     if (architecture_spec.contains("storage_zones")) {
       for (const auto& zone : architecture_spec["storage_zones"]) {
         for (const auto& slm_spec : zone["slms"]) {
-          storage_zone.emplace_back(slm_spec);
+          storage_zone.emplace_back(std::make_unique<SLM>(slm_spec));
         }
       }
     } else {
@@ -163,15 +176,14 @@ struct Architecture {
           "storage zone configuration is missed in architecture spec");
     }
     if (architecture_spec.contains("entanglement_zones")) {
-      std::unordered_map<std::size_t, std::vector<SLM>&> y_slm{};
+      std::unordered_map<std::size_t, std::vector<std::unique_ptr<SLM>>&> y_slm{};
       for (const auto& zone : architecture_spec["entanglement_zones"]) {
         for (const auto& slm_spec : zone["slms"]) {
-          const SLM slm(slm_spec);
-          if (y_slm.find(slm.location_y) != y_slm.end()) {
-            y_slm[slm.location_y].push_back(slm);
-          } else {
-            y_slm[slm.location_y] = entanglement_zone.emplace_back(std::vector{slm});
+          const auto slm = std::make_unique<SLM>(slm_spec, false);
+          if (y_slm.find(slm->location_y) == y_slm.end()) {
+            y_slm[slm->location_y] = entanglement_zone.emplace_back();
           }
+          y_slm[slm->location_y].emplace_back(slm);
         }
       }
     } else {
@@ -180,33 +192,43 @@ struct Architecture {
     }
     if (architecture_spec.contains("aods")) {
       for (const auto& aod_spec : architecture_spec["aods"]) {
-        dict_AOD.emplace(aod_spec);
+        dict_AOD.emplace_back(std::make_unique<AOD>(aod_spec));
       }
     } else {
       throw std::invalid_argument("AOD is missed in architecture spec");
     }
   }
 
-  auto is_valid_SLM_position(const SLM& slm, const std::size_t r, const std::size_t c)
-      -> bool {
+  auto is_valid_SLM_position(const SLM* slm, const std::size_t r,
+                             const std::size_t c) -> bool {
+    return is_valid_SLM_position(*slm, r, c);
+  }
+
+  auto is_valid_SLM_position(const SLM& slm, const std::size_t r,
+                             const std::size_t c) -> bool {
     return r < slm.n_r && c < slm.n_c;
   }
 
-  auto exact_SLM_location(const SLM& slm, const std::size_t r, const std::size_t c)
+  auto exact_SLM_location(const SLM* slm, const std::size_t r,
+                          const std::size_t c)
+      -> std::pair<std::size_t, std::size_t> {
+    return exact_SLM_location(*slm, r, c);
+  }
+
+  auto exact_SLM_location(const SLM& slm, const std::size_t r,
+                          const std::size_t c)
       -> std::pair<std::size_t, std::size_t> {
     assert(is_valid_SLM_position(slm, r, c));
-    return {slm.site_seperation_x * c + slm.location_x,
-            slm.site_seperation_y * r + slm.location_y};
+    return {(slm.site_seperation_x * c) + slm.location_x,
+            (slm.site_seperation_y * r) + slm.location_y};
   }
 
   /// Compute the site region for entanglement zone and the nearest Rydberg site
   /// for each storage site. We assume, we only have one storage zone or one
   /// entanglement zone per row
-  auto preprocessing() -> void {
+  auto preprocessing() -> void {}
 
-  }
-};
-
+/*
 #split the row area for SLM sites
         self.entanglement_site_row_space = [] // 2d array. [[y, idx]] => if y' < y, the nearest row to y is the row in zone idx
         self.entanglement_site_col_space = dict()
@@ -368,7 +390,8 @@ struct Architecture {
         return self.storage_site_nearest_Rydberg_site[idx][r][c]
 
     def nearest_entanglement_site_distance(self, idx, r, c):
-#return the distance nearest Rydberg site for a qubit in the storage zone
+#return the distance nearest Rydberg site for a qubit in the           \
+            storage zone
         return self.storage_site_nearest_Rydberg_site_dis[idx][r][c]
 
     def nearest_entanglement_site(self, idx1, r1, c1, idx2, r2, c2):
@@ -418,8 +441,8 @@ struct Architecture {
         dis = sys.maxsize
         for site in list_site:
             exact_site = self.exact_SLM_location(site[0], site[1], site[2])
-#return math.dist(storage_site1, exact_site) +                                 \
-    math.dist(storage_site2, exact_site)
+#return math.dist(storage_site1, exact_site) +                         \
+            math.dist(storage_site2, exact_site)
             if r1 == r2 and idx1 == idx2:
                 dis = min(max(math.dist(storage_site1, exact_site), math.dist(storage_site2, exact_site)), dis)
             else:
@@ -434,5 +457,6 @@ struct Architecture {
 #d = 15
         t = math.sqrt(d/a)
         return t
+        */
 };
 } // namespace
