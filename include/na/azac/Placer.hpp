@@ -3,6 +3,7 @@
 #include "na/azac/Architecture.hpp"
 #include "na/azac/CompilerBase.hpp"
 
+#include <algorithm>
 #include <type_traits>
 
 namespace na {
@@ -397,157 +398,296 @@ private:
         for (const auto* gate : list_gate[layer + 1]) {
           if (dict_qubit_interaction.find(gate->first) != dict_qubit_interaction.end() &&
               ((!test_reuse) || (list_reuse_qubits[layer].find(gate->second) == list_reuse_qubits[layer].end()))) {
-              dict_qubit_interaction[gate->first].emplace_back(gate->second);
-          }
+            dict_qubit_interaction[gate->first].emplace_back(gate->second);
+              }
           if (dict_qubit_interaction.find(gate->second) != dict_qubit_interaction.end() &&
               ((!test_reuse) || (list_reuse_qubits[layer].find(gate->first) == list_reuse_qubits[layer].end()))) {
-              dict_qubit_interaction[gate->second].emplace_back(gate->first);
-          }
+            dict_qubit_interaction[gate->second].emplace_back(gate->first);
+              }
         }
       }
       const std::size_t expand_factor = 1;
 
       std::unordered_map<std::tuple<const SLM*, std::size_t, std::size_t>, std::size_t> site_storage_to_idx{};
       std::vector<std::tuple<const SLM*, std::size_t, std::size_t>> list_storage{};
-      std::vector<> list_row_coo{};
-      std::vector<> list_col_coo{};
-      std::vector<> list_data{};
+      std::vector<std::size_t> list_col_coo{};
+      std::vector<std::size_t> list_row_coo{};
+      std::vector<double> list_data{};
 
       for (std::size_t i = 0; i < qubit_to_place.size(); ++i) {
         const auto q = qubit_to_place[i];
-          std::unordered_map<const SLM*, std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> dict_bouding_box{};
-          const auto* slm = std::get<0>(qubit_mapping[q]);
-          auto lower_row = std::get<1>(qubit_mapping[q]);
-          auto upper_row = lower_row;
-          auto left_col = std::get<2>(qubit_mapping[q]);
-          auto right_col = left_col;
-          const std::pair<size_t, size_t>& exact_loc_q = std::apply(architecture.exact_SLM_location, qubit_mapping[q]);
-          const std::pair<size_t, size_t>& exact_loc_gate = std::apply(architecture.exact_SLM_location, mapping[0][q]);
-          if (exact_loc_gate.second < exact_loc_q.second) {
-            lower_row = 0;
-          } else {
-            upper_row = slm->n_r;
-          }
+        std::unordered_map<const SLM*, std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> dict_bouding_box{};
+        const auto* slm = std::get<0>(qubit_mapping[q]);
+        auto lower_row = std::get<1>(qubit_mapping[q]);
+        auto upper_row = lower_row;
+        auto left_col = std::get<2>(qubit_mapping[q]);
+        auto right_col = left_col;
+        const std::pair<size_t, size_t>& exact_loc_q = std::apply(architecture.exact_SLM_location, qubit_mapping[q]);
+        const std::pair<size_t, size_t>& exact_loc_gate = std::apply(architecture.exact_SLM_location, mapping[0][q]);
+        if (exact_loc_gate.second < exact_loc_q.second) {
+          lower_row = 0;
+        } else {
+          upper_row = slm->n_r;
+        }
 
-          dict_bouding_box.emplace(
-              std::get<0>(qubit_mapping[q]),
-              std::tuple{lower_row, upper_row, left_col, right_col});
-          for (const qc::Qubit neighbor_q : dict_qubit_interaction[q]) {
-            const SLM* tmp_slm_idx = std::get<0>(last_gate_mapping[neighbor_q]);
-            const std::tuple<const SLM*, size_t, size_t>& neighbor_q_location =
-                tmp_slm_idx->storage
-                    ? last_gate_mapping[neighbor_q]
-                    : std::apply(architecture.nearest_storage_site,
-                                 last_gate_mapping[neighbor_q]);
-            if (const auto& it =
-                    dict_bouding_box.find(std::get<0>(neighbor_q_location));
-                it != dict_bouding_box.end()) {
-              dict_bouding_box.emplace(
-                  std::get<0>(neighbor_q_location),
-                  std::tuple{std::min(std::get<1>(neighbor_q_location),
-                                      std::get<0>(it->second)),
-                             std::max(std::get<1>(neighbor_q_location),
-                                      std::get<1>(it->second)),
-                             std::min(std::get<2>(neighbor_q_location),
-                                      std::get<2>(it->second)),
-                             std::max(std::get<2>(neighbor_q_location),
-                                      std::get<3>(it->second))});
-            } else {
-              const auto* slm_id = std::get<0>(neighbor_q_location);
-              lower_row = std::get<1>(neighbor_q_location);
-              upper_row = std::get<1>(neighbor_q_location);
-              left_col = std::get<2>(neighbor_q_location);
-              right_col = std::get<2>(neighbor_q_location);
-              const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q =
-                  std::apply(architecture.exact_SLM_location,
-                             neighbor_q_location);
-              if (exact_loc_gate.second < exact_loc_neightbor_q.second) {
-                lower_row = 0;
+        dict_bouding_box.emplace(
+            std::get<0>(qubit_mapping[q]),
+            std::tuple{lower_row, upper_row, left_col, right_col});
+        for (const qc::Qubit neighbor_q : dict_qubit_interaction[q]) {
+          const SLM* tmp_slm_idx = std::get<0>(last_gate_mapping[neighbor_q]);
+          const std::tuple<const SLM*, size_t, size_t>& neighbor_q_location =
+              tmp_slm_idx->storage
+                  ? last_gate_mapping[neighbor_q]
+                  : std::apply(architecture.nearest_storage_site,
+                               last_gate_mapping[neighbor_q]);
+          if (const auto& it =
+                  dict_bouding_box.find(std::get<0>(neighbor_q_location));
+              it != dict_bouding_box.end()) {
+            dict_bouding_box.emplace(
+                std::get<0>(neighbor_q_location),
+                std::tuple{std::min(std::get<1>(neighbor_q_location),
+                                    std::get<0>(it->second)),
+                           std::max(std::get<1>(neighbor_q_location),
+                                    std::get<1>(it->second)),
+                           std::min(std::get<2>(neighbor_q_location),
+                                    std::get<2>(it->second)),
+                           std::max(std::get<2>(neighbor_q_location),
+                                    std::get<3>(it->second))});
               } else {
-                upper_row = slm_id->n_r;
-              }
-              dict_bouding_box.emplace(
-                  std::get<0>(neighbor_q_location),
-                  std::tuple{lower_row, upper_row, left_col, right_col});
-            }
-          }
-          const auto& gate_location = last_gate_mapping[q];
-          const std::tuple<const SLM*, std::size_t, std::size_t> nearest_storage_site = std::apply(architecture.nearest_storage_site, gate_location);
-          // todo: what is ratio?
-          const std::size_t ratio = 3;
-          if (const auto it = dict_bouding_box.find(std::get<0>(nearest_storage_site)); it != dict_bouding_box.end()) {
-            dict_bouding_box.emplace(std::get<0>(nearest_storage_site), std::tuple{
-              std::min(std::get<1>(nearest_storage_site) - ratio, std::get<0>(it->second)),
-              std::max(std::get<1>(nearest_storage_site) + ratio, std::get<1>(it->second)),
-              std::min(std::get<2>(nearest_storage_site) - ratio, std::get<2>(it->second)),
-              std::max(std::get<2>(nearest_storage_site) + ratio, std::get<3>(it->second))
-              });
-          } else {
-            dict_bouding_box.emplace(std::get<0>(nearest_storage_site), std::tuple{
-              std::get<1>(nearest_storage_site) - ratio,
-              std::get<1>(nearest_storage_site) + ratio,
-              std::get<2>(nearest_storage_site) - ratio,
-              std::get<2>(nearest_storage_site) + ratio});
-          }
-          auto set_nearby_site = common_site;
-          if (is_empty_storage_site[std::get<0>(qubit_mapping[q])][std::get<1>(
-                  qubit_mapping[q])][std::get<2>(qubit_mapping[q])]) {
-            set_nearby_site.emplace(qubit_mapping[q]);
-          }
-
-          for (const auto& [slm_id, _] : dict_bouding_box) {
-            auto& bounding_box = dict_bouding_box[slm_id];
-            bounding_box = {
-              std::get<0>(bounding_box) > expand_factor ? static_cast<std::size_t>(std::get<0>(bounding_box) - expand_factor) : 0,
-              std::min(std::get<1>(bounding_box) + expand_factor + 1, slm_id->n_r),
-              std::get<2>(bounding_box) > expand_factor ? static_cast<std::size_t>(std::get<2>(bounding_box) - expand_factor) : 0,
-              std::min(std::get<3>(bounding_box) + expand_factor + 1, slm_id->n_c)};
-            for (auto r = std::get<0>(bounding_box); r < std::get<1>(bounding_box); ++r) {
-              for (auto c = std::get<2>(bounding_box); c < std::get<3>(bounding_box); ++c) {
-                if (is_empty_storage_site.find(slm_id) == is_empty_storage_site.end() || is_empty_storage_site[slm_id][r][c]) {
-                  set_nearby_site.emplace(slm_id, r, c);
+                const auto* slm_id = std::get<0>(neighbor_q_location);
+                lower_row = std::get<1>(neighbor_q_location);
+                upper_row = std::get<1>(neighbor_q_location);
+                left_col = std::get<2>(neighbor_q_location);
+                right_col = std::get<2>(neighbor_q_location);
+                const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q =
+                    std::apply(architecture.exact_SLM_location,
+                               neighbor_q_location);
+                if (exact_loc_gate.second < exact_loc_neightbor_q.second) {
+                  lower_row = 0;
+                } else {
+                  upper_row = slm_id->n_r;
                 }
+                dict_bouding_box.emplace(
+                    std::get<0>(neighbor_q_location),
+                    std::tuple{lower_row, upper_row, left_col, right_col});
+              }
+        }
+        const auto& gate_location = last_gate_mapping[q];
+        const std::tuple<const SLM*, std::size_t, std::size_t> nearest_storage_site = std::apply(architecture.nearest_storage_site, gate_location);
+        // todo: what is ratio?
+        const std::size_t ratio = 3;
+        if (const auto it = dict_bouding_box.find(std::get<0>(nearest_storage_site)); it != dict_bouding_box.end()) {
+          dict_bouding_box.emplace(std::get<0>(nearest_storage_site), std::tuple{
+            std::min(std::get<1>(nearest_storage_site) - ratio, std::get<0>(it->second)),
+            std::max(std::get<1>(nearest_storage_site) + ratio, std::get<1>(it->second)),
+            std::min(std::get<2>(nearest_storage_site) - ratio, std::get<2>(it->second)),
+            std::max(std::get<2>(nearest_storage_site) + ratio, std::get<3>(it->second))
+            });
+        } else {
+          dict_bouding_box.emplace(std::get<0>(nearest_storage_site), std::tuple{
+            std::get<1>(nearest_storage_site) - ratio,
+            std::get<1>(nearest_storage_site) + ratio,
+            std::get<2>(nearest_storage_site) - ratio,
+            std::get<2>(nearest_storage_site) + ratio});
+        }
+        auto set_nearby_site = common_site;
+        if (is_empty_storage_site[std::get<0>(qubit_mapping[q])][std::get<1>(
+                qubit_mapping[q])][std::get<2>(qubit_mapping[q])]) {
+          set_nearby_site.emplace(qubit_mapping[q]);
+                }
+
+        for (const auto& [slm_id, _] : dict_bouding_box) {
+          auto& bounding_box = dict_bouding_box[slm_id];
+          bounding_box = {
+            std::get<0>(bounding_box) > expand_factor ? static_cast<std::size_t>(std::get<0>(bounding_box) - expand_factor) : 0,
+            std::min(std::get<1>(bounding_box) + expand_factor + 1, slm_id->n_r),
+            std::get<2>(bounding_box) > expand_factor ? static_cast<std::size_t>(std::get<2>(bounding_box) - expand_factor) : 0,
+            std::min(std::get<3>(bounding_box) + expand_factor + 1, slm_id->n_c)};
+          for (auto r = std::get<0>(bounding_box); r < std::get<1>(bounding_box); ++r) {
+            for (auto c = std::get<2>(bounding_box); c < std::get<3>(bounding_box); ++c) {
+              if (is_empty_storage_site.find(slm_id) == is_empty_storage_site.end() || is_empty_storage_site[slm_id][r][c]) {
+                set_nearby_site.emplace(slm_id, r, c);
               }
             }
           }
+        }
 
-          for (const auto& site : set_nearby_site) {
-            if (site_storage_to_idx.find(site) == site_storage_to_idx.end()) {
-              site_storage_to_idx.emplace(site, list_storage.size());
-              list_storage.emplace_back(site);
-            }
-            const auto idx_storage = site_storage_to_idx[site];
-            const double dis = architecture.distance(std::get<0>(gate_location), std::get<1>(gate_location), std::get<2>(gate_location), std::get<0>(site), std::get<1>(site), std::get<2>(site));
-            double lookahead_cost = 0;
-            for (const auto& neighbor_q : dict_qubit_interaction[q]) {
-              const auto& site_neighbor_q = last_gate_mapping[neighbor_q];
-              if (std::get<0>(site_neighbor_q)->storage) {
-                lookahead_cost += architecture.nearest_entanglement_site_dis(std::get<0>(site), std::get<1>(site), std::get<2>(site), std::get<0>(site_neighbor_q), std::get<1>(site_neighbor_q), std::get<2>(site_neighbor_q));
-              } else {
-                const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q = std::apply(architecture.exact_SLM_location, last_gate_mapping[neighbor_q]);
-                const auto dx = static_cast<std::int64_t>(exact_loc_neightbor_q.first) - static_cast<std::int64_t>(exact_loc_q.first);
-                const auto dy = static_cast<std::int64_t>(exact_loc_neightbor_q.second) - static_cast<std::int64_t>(exact_loc_q.second);
-                lookahead_cost += std::sqrt(std::sqrt(dx * dx + dy * dy));
-              }
-            }
-            const double cost = std::sqrt(dis) + 0.1 * lookahead_cost;
-            list_row_coo.emplace_back(idx_storage);
-            list_col_coo.emplace_back(i);
-            list_data.emplace_back(cost);
+        for (const auto& site : set_nearby_site) {
+          if (site_storage_to_idx.find(site) == site_storage_to_idx.end()) {
+            site_storage_to_idx.emplace(site, list_storage.size());
+            list_storage.emplace_back(site);
           }
+          const auto idx_storage = site_storage_to_idx[site];
+          const double dis = architecture.distance(std::get<0>(gate_location), std::get<1>(gate_location), std::get<2>(gate_location), std::get<0>(site), std::get<1>(site), std::get<2>(site));
+          double lookahead_cost = 0;
+          for (const auto& neighbor_q : dict_qubit_interaction[q]) {
+            const auto& site_neighbor_q = last_gate_mapping[neighbor_q];
+            if (std::get<0>(site_neighbor_q)->storage) {
+              lookahead_cost += architecture.nearest_entanglement_site_dis(std::get<0>(site), std::get<1>(site), std::get<2>(site), std::get<0>(site_neighbor_q), std::get<1>(site_neighbor_q), std::get<2>(site_neighbor_q));
+            } else {
+              const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q = std::apply(architecture.exact_SLM_location, last_gate_mapping[neighbor_q]);
+              const auto dx = static_cast<std::int64_t>(exact_loc_neightbor_q.first) - static_cast<std::int64_t>(exact_loc_q.first);
+              const auto dy = static_cast<std::int64_t>(exact_loc_neightbor_q.second) - static_cast<std::int64_t>(exact_loc_q.second);
+              lookahead_cost += std::sqrt(std::sqrt((dx * dx) + (dy * dy)));
+            }
+          }
+          const double cost = std::sqrt(dis) + (0.1 * lookahead_cost);
+          list_col_coo.emplace_back(idx_storage);
+          list_row_coo.emplace_back(i);
+          list_data.emplace_back(cost);
+        }
 
-      np_data = np.array(list_data)
-      np_col_coo = np.array(list_col_coo)
-      np_row_coo = np.array(list_row_coo)
-      matrix = coo_matrix((np_data, (np_row_coo, np_col_coo)), shape=(len(list_storage), len(qubit_to_place)))
-      site_ind, qubit_ind = min_weight_full_bipartite_matching(matrix)
-      cost = matrix.toarray()[site_ind, qubit_ind].sum()
-      tmp_mapping = deepcopy(last_gate_mapping)
-      assert(len(qubit_to_place) == len(site_ind))
-      for idx_storage, idx_qubit in zip(site_ind, qubit_ind):
-          tmp_mapping[qubit_to_place[idx_qubit]] = list_storage[idx_storage]
-      mapping.emplace_back(tmp_mapping);
+        // to construct from three arrays:
+        // - list_data the entries of the matrix, in any order
+        // - list_row_coo the row indices of the matrix entries
+        // - list_col_coo the column indices of the matrix entries
+        // Where A[list_row_coo[k], list_col_coo[k]] = list_data[k].
+        std::vector cost_matrix(qubit_to_place.size(),
+                                std::vector<std::optional<double>>(
+                                    list_storage.size(), std::nullopt));
+        for (std::size_t k = 0; k < list_data.size(); ++k) {
+          cost_matrix[list_row_coo[k]][list_col_coo[k]] = list_data[k];
+        }
+        const auto& matching = minWeightFullBipartiteMatching(cost_matrix);
+        auto tmp_mapping = last_gate_mapping;
+        for (std::size_t j = 0; j < matching.size(); ++j) {
+          tmp_mapping[qubit_to_place[j]] = list_storage[matching[j]];
+        }
+        mapping.emplace_back(tmp_mapping);
+      }
     }
+
+  private:
+    /// @note implemented following pseudocode in
+    /// https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
+    auto minWeightFullBipartiteMatching(
+        const std::vector<std::vector<std::optional<double>>>& cost_matrix)
+        -> std::vector<std::size_t> {
+      const std::size_t sizeX = cost_matrix.size();
+      auto it = cost_matrix.cbegin();
+      const std::size_t sizeY = it->size();
+      // check the rectangular shape of input matrix, i.e., check whether all
+      // consecutive rows have the same size
+      for (++it; it != cost_matrix.cend(); ++it) {
+        if (it->size() != sizeY) {
+          throw std::invalid_argument("Input matrix must be rectangular");
+        }
+      }
+      // for all x lists all neighbors y in increasing order of c(x, y)
+      std::vector list(sizeX, std::vector<std::size_t>{});
+      for (std::size_t x = 0; x < sizeX; ++x) {
+        for (std::size_t y = 0; y < sizeY; ++y) {
+          list[x].emplace_back(y);
+        }
+        std::sort(list[x].begin(), list[x].end(),
+                  [x, &cost_matrix](const std::size_t a, const std::size_t b) {
+                    return cost_matrix[x][a] < cost_matrix[x][b];
+                  });
+      }
+      // initialize the set of free sources
+      std::vector freeSources(sizeX, true);
+      // initialize the set of free targets
+      std::vector freeDestinations(sizeY, true);
+      // initialize the matching
+      std::vector<std::optional<std::size_t>> invMatching(sizeY, std::nullopt);
+      std::size_t sizeMatching = 0;
+      std::vector quantitiesX(sizeX, 0.0);
+      std::vector quantitiesY(sizeY, 0.0);
+      std::vector potentialsX(sizeX, 0.0);
+      std::vector potentialsY(sizeY, 0.0);
+      double maxPotential = 0.0;
+      while (sizeMatching < sizeX) {
+        std::vector<std::size_t> pathSetX(sizeX, 0);
+        std::vector<std::size_t> pathSetY(sizeY, 0);
+        // items have the form (<special>, <x>, <y>, <cost>)
+        // if special, the iterator to the edge in list is stored in the optional
+        std::priority_queue<
+            std::tuple<std::optional<std::vector<std::size_t>::const_iterator>,
+                       std::size_t, std::size_t, double>>
+            queue{};
+        std::vector residueSetX = freeSources;
+        std::vector residueSetY(sizeY, false);
+        for (std::size_t x = 0; x < sizeX; ++x) {
+          if (residueSetX[x]) {
+            quantitiesX[x] = 0.0;
+            const auto listIt = list[x].cbegin();
+            const auto y = *listIt;
+            queue.emplace(listIt, x, y,
+                          quantitiesX[x] + *cost_matrix[x][y] + potentialsX[x] -
+                              maxPotential);
+          }
+        }
+        // intersection of `remainder_set` and `freeDestinations` is empty
+        std::vector intersection(sizeY, false);
+        std::size_t x = 0;
+        std::size_t y = 0;
+        while (std::all_of(intersection.cbegin(), intersection.cend(), [](const bool b) { return !b; })) {
+          // select regular item from queue
+          bool special = true;
+          do {
+            const auto& itm = queue.top();
+            auto optIt = std::get<0>(itm);
+            special = optIt.has_value();
+            x = std::get<1>(itm);
+            y = std::get<2>(itm);
+            queue.pop();
+            if (special) {
+              if (list[x].back() != y) {
+                const auto itW = ++(*optIt);
+                const auto w = *itW;
+                queue.emplace(itW, x, w, quantitiesX[x] + *cost_matrix[x][w] + potentialsX[x] - maxPotential);
+              }
+              queue.emplace(std::nullopt, x, y, quantitiesX[x] + *cost_matrix[x][y] + potentialsX[x] - potentialsY[y]);
+            }
+          } while (!special && invMatching[y] != x);
+          // select regular item from queue - done
+          if (!residueSetY[y]) {
+            pathSetY[y] = x;
+            residueSetY[y] = true;
+            intersection[y] = freeDestinations[y];
+            quantitiesY[y] = quantitiesX[x] + *cost_matrix[x][y] + potentialsX[x] - potentialsY[y];
+            if (!freeDestinations[y]) {
+              const auto v = *invMatching[y];
+              pathSetX[v] = y;
+              residueSetX[v] = true;
+              quantitiesX[v] = quantitiesY[y];
+              const auto itW = list[v].cbegin();
+              const auto w = *itW;
+              queue.emplace(itW, v, w, quantitiesX[v] + *cost_matrix[v][w] + potentialsX[v] - maxPotential);
+            }
+          }
+        }
+        for (std::size_t v = 0; v < sizeX + sizeY; ++v) {
+          if (residueSetX[v]) {
+            potentialsX[v] = quantitiesY[y];
+          } else {
+            potentialsX[v] += potentialsY[y];
+          }
+          maxPotential = std::max(potentialsX[v], maxPotential);
+        }
+        bool freeSourceFound = false;
+        while (!freeSourceFound) {
+          x = pathSetY[y];
+          freeSourceFound = freeSources[x];
+          invMatching[y] = x;
+          ++sizeMatching;
+          freeSources[x] = false;
+          freeDestinations[y] = false;
+          intersection[y] = false;
+          if (!freeSourceFound) {
+            y = pathSetX[x];
+          }
+        }
+      }
+      std::vector<std::size_t> matching(sizeX, 0);
+      for (std::size_t y = 0; y < sizeY; ++y) {
+        if (const auto optX = invMatching[y]) {
+          matching[*optX] = y;
+        }
+      }
+      return matching;
+    }
+  };
 };
 
 } // namespace na
