@@ -130,73 +130,110 @@ private:
     }
 
     auto filter_mapping(const std::size_t layer) -> void {
-      /*
-      last_gate_mapping = self.mapping[-5]
-      qubit_mapping = self.mapping[-4]
-      gate_mapping = self.mapping[-3]
-      cost_no_reuse = 0
-      movement_parallel_movement_1 = dict()
-      movement_parallel_movement_2 = dict()
+      const auto& last_gate_mapping = mapping[mapping.size() - 5];
+      auto& qubit_mapping = mapping[mapping.size() - 4];
+      auto& gate_mapping = mapping[mapping.size() - 3];
+      double cost_no_reuse = 0;
+      std::unordered_map<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>, double> movement_parallel_movement_1;
+      std::unordered_map<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>, double> movement_parallel_movement_2;
 
-      for q in range(len(last_gate_mapping)):
-          if last_gate_mapping[q] != gate_mapping[q]:
-              slm_idx1 = self.architecture.dict_SLM[last_gate_mapping[q][0]].entanglement_id
-              slm_idx2 = self.architecture.dict_SLM[qubit_mapping[q][0]].entanglement_id
-              key = (slm_idx1, last_gate_mapping[q][1], slm_idx2, qubit_mapping[q][1])
-              dis = self.architecture.distance(last_gate_mapping[q][0], last_gate_mapping[q][1], last_gate_mapping[q][2], qubit_mapping[q][0], qubit_mapping[q][1], qubit_mapping[q][2])
-              if key in movement_parallel_movement_1:
-                  movement_parallel_movement_1[key] = max(movement_parallel_movement_1[key], dis)
-              else:
-                  movement_parallel_movement_1[key] = dis
-          if qubit_mapping[q] != gate_mapping[q]:
-              slm_idx1 = self.architecture.dict_SLM[gate_mapping[q][0]].entanglement_id
-              slm_idx2 = self.architecture.dict_SLM[qubit_mapping[q][0]].entanglement_id
-              key = (slm_idx2, qubit_mapping[q][1], slm_idx1, gate_mapping[q][1])
-              dis = self.architecture.distance(qubit_mapping[q][0], qubit_mapping[q][1], qubit_mapping[q][2], gate_mapping[q][0], gate_mapping[q][1], gate_mapping[q][2])
-              if key in movement_parallel_movement_2:
-                  movement_parallel_movement_2[key] = max(movement_parallel_movement_2[key], dis)
-              else:
-                  movement_parallel_movement_2[key] = dis
-      for key in movement_parallel_movement_1:
-          cost_no_reuse += math.sqrt(movement_parallel_movement_1[key])
-      for key in movement_parallel_movement_2:
-          cost_no_reuse += math.sqrt(movement_parallel_movement_2[key])
-      gate_mapping = self.mapping[-1]
-      qubit_mapping = self.mapping[-2]
-      cost_reuse = 0
-      movement_parallel_movement_1 = dict()
-      movement_parallel_movement_2 = dict()
-      for q in range(len(last_gate_mapping)):
-          if last_gate_mapping[q] != gate_mapping[q]:
-              slm_idx1 = self.architecture.dict_SLM[last_gate_mapping[q][0]].entanglement_id
-              slm_idx2 = self.architecture.dict_SLM[qubit_mapping[q][0]].entanglement_id
-              key = (slm_idx1, last_gate_mapping[q][1], slm_idx2, qubit_mapping[q][1])
-              dis = self.architecture.distance(last_gate_mapping[q][0], last_gate_mapping[q][1], last_gate_mapping[q][2], qubit_mapping[q][0], qubit_mapping[q][1], qubit_mapping[q][2])
-              if key in movement_parallel_movement_1:
-                  movement_parallel_movement_1[key] = max(movement_parallel_movement_1[key], dis)
-              else:
-                  movement_parallel_movement_1[key] = dis
-          if qubit_mapping[q] != gate_mapping[q]:
-              slm_idx1 = self.architecture.dict_SLM[gate_mapping[q][0]].entanglement_id
-              slm_idx2 = self.architecture.dict_SLM[qubit_mapping[q][0]].entanglement_id
-              key = (slm_idx2, qubit_mapping[q][1], slm_idx1, gate_mapping[q][1])
-              dis = self.architecture.distance(qubit_mapping[q][0], qubit_mapping[q][1], qubit_mapping[q][2], gate_mapping[q][0], gate_mapping[q][1], gate_mapping[q][2])
-              if key in movement_parallel_movement_2:
-                  movement_parallel_movement_2[key] = max(movement_parallel_movement_2[key], dis)
-              else:
-                  movement_parallel_movement_2[key] = dis
-      for key in movement_parallel_movement_1:
-          cost_reuse += math.sqrt(movement_parallel_movement_1[key])
-      for key in movement_parallel_movement_2:
-          cost_reuse += math.sqrt(movement_parallel_movement_2[key])
-      if self.cost_atom_transfer * pow((1 - cost_no_reuse/1.5e6), self.n_qubit) >  pow((1 - cost_reuse/1.5e6), self.n_qubit):
-          self.list_reuse_qubit[layer] = []
-          self.mapping.pop(-1)
-          self.mapping.pop(-1)
-      else:
-          self.mapping.pop(-3)
-          self.mapping.pop(-3)
-      */
+      for (std::size_t q = 0; q < last_gate_mapping.size(); ++q) {
+        if (last_gate_mapping[q] != gate_mapping[q]) {
+          const auto slm_idx1 = *std::get<0>(last_gate_mapping[q])->entanglement_id;
+          const auto slm_idx2 = *std::get<0>(qubit_mapping[q])->entanglement_id;
+          const std::tuple key{slm_idx1, std::get<1>(last_gate_mapping[q]), slm_idx2, std::get<1>(qubit_mapping[q])};
+          const double dis = self.architecture.distance(
+            std::get<0>(last_gate_mapping[q]),
+            std::get<1>(last_gate_mapping[q]),
+            std::get<2>(last_gate_mapping[q]),
+        std::get<0>(qubit_mapping[q]),
+        std::get<1>(qubit_mapping[q]),
+        std::get<2>(qubit_mapping[q]));
+          if (const auto it = movement_parallel_movement_1.find(key); it != movement_parallel_movement_1.end()) {
+            movement_parallel_movement_1[key] = std::max(it->second, dis);
+          } else {
+            movement_parallel_movement_1[key] = dis;
+          }
+        }
+        if (qubit_mapping[q] != gate_mapping[q]) {
+          const auto slm_idx1 = *std::get<0>(gate_mapping[q])->entanglement_id;
+          const auto slm_idx2 = *std::get<0>(qubit_mapping[q])->entanglement_id;
+          const std::tuple key{slm_idx2, std::get<1>(qubit_mapping[q]), slm_idx1, std::get<1>(gate_mapping[q])};
+          const double dis = architecture.distance(
+            std::get<0>(qubit_mapping[q]),
+            std::get<1>(qubit_mapping[q]),
+            std::get<2>(qubit_mapping[q]),
+            std::get<0>(gate_mapping[q]),
+            std::get<1>(gate_mapping[q]),
+            std::get<2>(gate_mapping[q]));
+          if (const auto it = movement_parallel_movement_2.find(key); it != movement_parallel_movement_2.end()) {
+            movement_parallel_movement_2[key] = std::max(it->second, dis);
+          } else {
+            movement_parallel_movement_2[key] = dis;
+          }
+        }
+      }
+      for (const auto& [_, value] : movement_parallel_movement_1) {
+        cost_no_reuse += std::sqrt(value);
+      }
+      for (const auto& [_, value] : movement_parallel_movement_2) {
+        cost_no_reuse += std::sqrt(value);
+      }
+      // now calculate cost with reuse
+      gate_mapping = mapping[mapping.size() - 1];
+      qubit_mapping = mapping[mapping.size() - 2];
+      double cost_reuse = 0;
+      movement_parallel_movement_1.clear();
+      movement_parallel_movement_2.clear();
+      for (std::size_t q = 0; q < last_gate_mapping.size(); ++q) {
+        if (last_gate_mapping[q] != gate_mapping[q]) {
+          const auto slm_idx1 = *std::get<0>(last_gate_mapping[q])->entanglement_id;
+          const auto slm_idx2 = *std::get<0>(qubit_mapping[q])->entanglement_id;
+          const std::tuple key{slm_idx1, std::get<1>(last_gate_mapping[q]), slm_idx2, std::get<1>(qubit_mapping[q])};
+          double dis = architecture.distance(
+              std::get<0>(last_gate_mapping[q]),
+              std::get<1>(last_gate_mapping[q]),
+              std::get<2>(last_gate_mapping[q]), std::get<0>(qubit_mapping[q]),
+              std::get<1>(qubit_mapping[q]),
+              std::get<2>(qubit_mapping[q]));
+          if (const auto it = movement_parallel_movement_1.find(key); it != movement_parallel_movement_1.end()) {
+            movement_parallel_movement_1[key] = std::max(movement_parallel_movement_1[key], dis);
+          } else {
+            movement_parallel_movement_1[key] = dis;
+          }
+        }
+        if (qubit_mapping[q] != gate_mapping[q]) {
+          const auto slm_idx1 = *std::get<0>(gate_mapping[q])->entanglement_id;
+          const auto slm_idx2 = *std::get<0>(qubit_mapping[q])->entanglement_id;
+          const std::tuple key{slm_idx2, std::get<1>(qubit_mapping[q]), slm_idx1, std::get<1>(gate_mapping[q])};
+          const double dis = architecture.distance(
+            std::get<0>(qubit_mapping[q]),
+            std::get<1>(qubit_mapping[q]),
+            std::get<2>(qubit_mapping[q]),
+            std::get<0>(gate_mapping[q]),
+            std::get<1>(gate_mapping[q]),
+            std::get<2>(gate_mapping[q]));
+          if (const auto it = movement_parallel_movement_2.find(key); it != movement_parallel_movement_2.end()) {
+            movement_parallel_movement_2[key] = std::max(movement_parallel_movement_2[key], dis);
+          } else {
+            movement_parallel_movement_2[key] = dis;
+          }
+        }
+      }
+      for (const auto [_, value] : movement_parallel_movement_1) {
+        cost_reuse += std::sqrt(value);
+      }
+      for (const auto [_, value] : movement_parallel_movement_2) {
+        cost_reuse += std::sqrt(value);
+      }
+      if (cost_atom_transfer * pow((1 - cost_no_reuse/1.5e6), n_qubit) >  pow((1 - cost_reuse/1.5e6), n_qubit)) {
+        list_reuse_qubits[layer] = {};
+        mapping.pop_back();
+        mapping.pop_back();
+      } else {
+        mapping.erase(mapping.end() - 3);
+        mapping.erase(mapping.end() - 3);
+      }
     }
     /// generate gate mapping based on minimum weight matching
     /// @param list_qubit_mapping the initial mapping before the Rydberg stage
@@ -436,10 +473,10 @@ private:
         for (const qc::Qubit neighbor_q : dict_qubit_interaction[q]) {
           const SLM* tmp_slm_idx = std::get<0>(last_gate_mapping[neighbor_q]);
           const std::tuple<const SLM*, size_t, size_t>& neighbor_q_location =
-              tmp_slm_idx->storage
-                  ? last_gate_mapping[neighbor_q]
-                  : std::apply(architecture.nearest_storage_site,
-                               last_gate_mapping[neighbor_q]);
+              tmp_slm_idx->entanglement_id
+                  ? std::apply(architecture.nearest_storage_site,
+                               last_gate_mapping[neighbor_q])
+                  : last_gate_mapping[neighbor_q];
           if (const auto& it =
                   dict_bouding_box.find(std::get<0>(neighbor_q_location));
               it != dict_bouding_box.end()) {
@@ -522,7 +559,7 @@ private:
           double lookahead_cost = 0;
           for (const auto& neighbor_q : dict_qubit_interaction[q]) {
             const auto& site_neighbor_q = last_gate_mapping[neighbor_q];
-            if (std::get<0>(site_neighbor_q)->storage) {
+            if (!std::get<0>(site_neighbor_q)->entanglement_id) {
               lookahead_cost += architecture.nearest_entanglement_site_dis(std::get<0>(site), std::get<1>(site), std::get<2>(site), std::get<0>(site_neighbor_q), std::get<1>(site_neighbor_q), std::get<2>(site_neighbor_q));
             } else {
               const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q = std::apply(architecture.exact_SLM_location, last_gate_mapping[neighbor_q]);
