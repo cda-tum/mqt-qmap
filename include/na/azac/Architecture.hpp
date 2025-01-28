@@ -52,9 +52,10 @@ struct SLM {
   std::size_t n_c = 0;
   std::size_t location_x = 0; ///< x-coordinate of the left uppermost SLM
   std::size_t location_y = 0; ///< y-coordinate of the left uppermost SLM
-  std::optional<std::size_t> entanglement_id = std::nullopt;
+  std::optional<std::vector<std::unique_ptr<SLM>>&> entanglement_id = std::nullopt;
 
-  explicit SLM(nlohmann::json slm_spec, bool storage = true) {
+  explicit SLM(nlohmann::json slm_spec, decltype(entanglement_id) entanglement_id = std::nullopt)
+      : entanglement_id(entanglement_id) {
     if (slm_spec.contains("id")) {
       id = slm_spec["id"];
     } else {
@@ -85,14 +86,6 @@ struct SLM {
     } else {
       throw std::invalid_argument(
           "SLM location is missed in architecture spec");
-    }
-    if (!storage) {
-      if (slm_spec.contains("entanglement_id")) {
-        entanglement_id = slm_spec["entanglement_id"];
-      } else {
-        throw std::invalid_argument(
-            "SLM entanglement id is missed in architecture spec");
-      }
     }
   }
 };
@@ -187,11 +180,12 @@ struct Architecture {
           y_slm{};
       for (const auto& zone : architecture_spec["entanglement_zones"]) {
         for (const auto& slm_spec : zone["slms"]) {
-          const auto slm = std::make_unique<SLM>(slm_spec, false);
-          if (y_slm.find(slm->location_y) == y_slm.end()) {
-            y_slm[slm->location_y] = entanglement_zone.emplace_back();
+          const std::size_t y = slm_spec["location"][1];
+          auto it = y_slm.find(y);
+          if (it == y_slm.end()) {
+            y_slm[y] = entanglement_zone.emplace_back();
           }
-          y_slm[slm->location_y].emplace_back(slm);
+          y_slm[y].emplace_back(std::make_unique<SLM>(slm_spec, y_slm[y]));
         }
       }
     } else {
