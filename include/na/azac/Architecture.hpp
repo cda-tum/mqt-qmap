@@ -2,9 +2,12 @@
 #include <filesystem>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace na {
 /// An 2D-Array of AOD traps
@@ -108,6 +111,9 @@ struct Architecture {
   std::size_t rydberg_range_max_x = 0;
   std::size_t rydberg_range_min_y = 0;
   std::size_t rydberg_range_max_y = 0;
+  std::unordered_map<const SLM*, std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>> Rydberg_site_nearest_storage_site{};
+  std::unordered_map<const SLM*, std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>> storage_site_nearest_Rydberg_site{};
+  std::unordered_map<const SLM*, std::vector<std::vector<double>>> storage_site_nearest_Rydberg_site_dis{};
 
   Architecture() = default;
   explicit Architecture(const std::string& filename)
@@ -228,230 +234,262 @@ struct Architecture {
   /// Compute the site region for entanglement zone and the nearest Rydberg site
   /// for each storage site. We assume, we only have one storage zone or one
   /// entanglement zone per row
-  auto preprocessing() -> void {}
+  auto preprocessing() -> void {
+    std::vector<std::pair<std::size_t, const SLM*>> entanglement_site_row_space; // 2d array. [[y, idx]] => if y' < y, the nearest row to y is the row in zone idx
+    std::unordered_map<const SLM*, std::vector<std::size_t>> entanglement_site_col_space;
+    std::vector<std::pair<std::size_t, std::size_t>> y_site;
+    for (std::size_t i = 0; i < entanglement_zone.size(); ++i) {
+      const auto& slm = *entanglement_zone[i].front();
+      y_site.emplace_back(slm.location_y, i);
+    }
+    std::sort(y_site.begin(), y_site.end(),
+              [](const std::pair<std::size_t, std::size_t>& a,
+                 const std::pair<std::size_t, std::size_t>& b) {
+                return a.first < b.first;
+              });
 
-  /*
-  #split the row area for SLM sites
-          self.entanglement_site_row_space = [] // 2d array. [[y, idx]] => if y'
-  < y, the nearest row to y is the row in zone idx
-          self.entanglement_site_col_space = dict()
-  #print("self.entanglement_zone")
-  #print(self.entanglement_zone)
-          y_site = []
-          for i, idx in enumerate(self.entanglement_zone):
-              slm = self.dict_SLM[idx[0]]
-              y_site.append((slm.location[1], i))
-          y_site = sorted(y_site, key=lambda site: site[0])
+    for (std::size_t i = 0; i < y_site.size() - 1; ++i) {
+      const auto* slm = entanglement_zone[y_site[i].second].front().get();
+      const auto low_y = y_site[i].first + slm->site_seperation_y * (slm->n_r - 1);
+      const auto high_y = y_site[i + 1].first;
+      entanglement_site_row_space.emplace_back((high_y + low_y) / 2, slm);
+    }
+    entanglement_site_row_space.emplace_back(std::numeric_limits<std::size_t>::max(), entanglement_zone[y_site[-1].second].front().get());
+    // split the column area for SLM sites
+    for (const auto& list_idx: entanglement_zone) {
+      const auto* idx = list_idx[0].get();
+      entanglement_site_col_space.emplace(idx, std::vector<std::size_t>{});
+      const auto x = idx->location_x + idx->site_seperation_x / 2;
+      for (std::size_t c = 0; c < idx->n_c - 1; ++c) {
+        entanglement_site_col_space[idx].emplace_back(x + c * idx->site_seperation_x);
+      }
+      entanglement_site_col_space[idx].emplace_back(std::numeric_limits<std::size_t>::max());
+    }
+    // compute the nearest Rydberg site for each storage site
+    storage_site_nearest_Rydberg_site.clear();
+    storage_site_nearest_Rydberg_site_dis.clear();
 
-          for i in range(len(y_site) - 1):
-              slm = self.dict_SLM[self.entanglement_zone[y_site[i][1]][0]]
-              low_y = y_site[i][0] + slm.site_seperation[1] * (slm.n_r - 1)
-              high_y = y_site[i+1][0]
-              self.entanglement_site_row_space.append(((high_y + low_y) / 2,
-  slm.idx)) self.entanglement_site_row_space.append((sys.maxsize,
-  self.dict_SLM[self.entanglement_zone[y_site[-1][1]][0]].idx)) #split the
-  column area for SLM sites for list_idx in self.entanglement_zone: idx =
-  list_idx[0] self.entanglement_site_col_space[idx] = [] slm =
-  self.dict_SLM[idx] x = slm.location[0] + slm.site_seperation[0] / 2
-              self.entanglement_site_col_space[idx] = [x + c *
-  slm.site_seperation[0] for c in range(slm.n_c - 1)]
-              self.entanglement_site_col_space[idx].append(sys.maxsize)
-  #print("self.entanglement_site_row_space")
-  #print(self.entanglement_site_row_space)
-  #print("self.entanglement_site_col_space")
-  #print(self.entanglement_site_col_space)
-  #compute the nearest Rydberg site for each storage site
-          self.storage_site_nearest_Rydberg_site = dict()
-          self.storage_site_nearest_Rydberg_site_dis = dict()
-
-          self.Rydberg_site_nearest_storage_site = dict()
-          for list_idx in self.entanglement_zone:
-              idx = list_idx[0]
-              slm = self.dict_SLM[idx]
-              self.Rydberg_site_nearest_storage_site[idx] = [[-1 for j in
-  range(slm.n_c)] for i in range(2)]
+    Rydberg_site_nearest_storage_site.clear();
+    for (const auto& list_idx : entanglement_zone) {
+      const auto* idx = list_idx.front().get();
+      Rydberg_site_nearest_storage_site.emplace(idx, std::vector(2, std::vector(idx->n_c, std::tuple<const SLM*, std::size_t, std::size_t>{nullptr, 0, 0})));
+    }
 
 
+  for (const auto& idx : storage_zone) {
+    storage_site_nearest_Rydberg_site.emplace(idx.get(), std::vector(idx->n_r, std::vector(idx->n_c, std::tuple<const SLM*, std::size_t, std::size_t>{nullptr, 0, 0})));
+    storage_site_nearest_Rydberg_site_dis.emplace(idx.get(), std::vector(idx->n_r, std::vector(idx->n_c, 0.0)));
+    const auto x = idx->location_x;
+    auto y = idx->location_y;
+    const auto* nearest_slm = entanglement_site_row_space.back().second;
+    const auto nearest_slm_half_r = nearest_slm->n_r / 2;
+    const SLM* next_nearest_slm = nullptr;
+    auto y_lim = entanglement_site_row_space.back().first;
+    const auto row_y_l = nearest_slm->location_y;
+    const auto row_y = row_y_l + (nearest_slm->n_r - 1) * nearest_slm->site_seperation_y;
+    std::size_t row = (y > row_y_l ? y - row_y_l : row_y_l - y) < (y > row_y ? y - row_y : row_y - y) ? 0 : nearest_slm->n_r - 1;
+    bool has_increase_y = false;
+    // find the entanglement slm for the row
+    for (std::size_t i = 0; entanglement_site_row_space.size() - 1; ++i) {
+      if (y < entanglement_site_row_space[i].first) {
+        nearest_slm = entanglement_site_row_space[i].second;
+        next_nearest_slm = entanglement_site_row_space[i+1].second;
+        y_lim = entanglement_site_row_space[i].first;
+        row = nearest_slm->n_r - 1;
+        has_increase_y = true;
+        break;
+      }
+    }
+    const auto init_x = x;
+    auto init_x_lim = entanglement_site_col_space[nearest_slm].back();
+    auto init_col = nearest_slm->n_c - 1;
+    for (std::size_t i = 0; i < entanglement_site_col_space[nearest_slm].size(); ++i) {
+      if (x < entanglement_site_col_space[nearest_slm][i]) {
+        init_x_lim = entanglement_site_col_space[nearest_slm][i];
+        init_col = i;
+        break;
+      }
+    }
+    for (std::size_t r = 0; r < idx->n_r; ++r) {
+      auto x_lim = init_x_lim;
+      auto col = init_col;
+      auto x = init_x;
+      for (std::size_t c = 0; c < idx->n_c; ++c) {
+        storage_site_nearest_Rydberg_site[idx.get()][r][c] = {nearest_slm, row, col};
+        storage_site_nearest_Rydberg_site_dis[idx.get()][r][c] = distance(idx.get(), r, c, nearest_slm, row, col);
+        const auto r_idx = r < nearest_slm_half_r ? 0 : 1;
+        if (std::get<0>(Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col]) == nullptr) {
+          Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col] = {idx.get(), r, c};
+        } else {
+          const auto& [prev_idx, prev_r, prev_c] = Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col];
+          const auto prev_dis = storage_site_nearest_Rydberg_site_dis[prev_idx][prev_r][prev_c];
+          if (prev_dis > storage_site_nearest_Rydberg_site_dis[idx.get()][r][c]) {
+            Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col] = {idx.get(), r, c};
+          }
+        }
 
-          for idx in self.storage_zone:
-              slm = self.dict_SLM[idx]
-              self.storage_site_nearest_Rydberg_site[idx] = [[0 for j in
-  range(slm.n_c)] for i in range(slm.n_r)]
-              self.storage_site_nearest_Rydberg_site_dis[idx] = [[0 for j in
-  range(slm.n_c)] for i in range(slm.n_r)] x, y = slm.location nearest_slm =
-  self.entanglement_site_row_space[-1][1] nearest_slm_half_r =
-  self.dict_SLM[nearest_slm].n_r // 2 next_nearest_slm = -1 y_lim =
-  self.entanglement_site_row_space[-1][0] row_y_l =
-  self.dict_SLM[nearest_slm].location[1] row_y = row_y_l +
-  (self.dict_SLM[nearest_slm].n_r - 1) * slm.site_seperation[1] if abs(y -
-  row_y_l) < abs(y - row_y): row = 0 else: row = self.dict_SLM[nearest_slm].n_r
-  - 1 has_increase_y = False #find the entanglement slm for the row for i in
-  range(len(self.entanglement_site_row_space) - 1): if y <
-  self.entanglement_site_row_space[i][0]: nearest_slm =
-  self.entanglement_site_row_space[i][1] next_nearest_slm =
-  self.entanglement_site_row_space[i+1][1] y_lim =
-  self.entanglement_site_row_space[i][0] row = self.dict_SLM[nearest_slm].n_r -
-  1 has_increase_y = True break init_x = x init_x_lim =
-  self.entanglement_site_col_space[nearest_slm][-1] init_col =
-  self.dict_SLM[nearest_slm].n_c - 1 for i in
-  range(len(self.entanglement_site_col_space[nearest_slm])): if x <
-  self.entanglement_site_col_space[nearest_slm][i]: init_x_lim =
-  self.entanglement_site_col_space[nearest_slm][i] init_col = i break
+        x += idx->site_seperation_x;
+        if (x > x_lim && col + 1 < nearest_slm->n_c) {
+          col += 1;
+          x_lim = entanglement_site_col_space[nearest_slm][col];
+        }
+      }
+      y += idx->site_seperation_y;
+      if (has_increase_y && y > y_lim && next_nearest_slm != nullptr) {
+        has_increase_y = false;
+        nearest_slm = next_nearest_slm;
+        row = 0;
+      }
+    }
+  }
 
-              for r in range(slm.n_r):
-                  x_lim = init_x_lim
-                  col = init_col
-                  x = init_x
-                  for c in range(slm.n_c):
-                      self.storage_site_nearest_Rydberg_site[idx][r][c] =
-  (nearest_slm, row, col) self.storage_site_nearest_Rydberg_site_dis[idx][r][c]
-  = self.distance(idx, r, c, nearest_slm, row, col)
+  for (const auto& [key, _] : Rydberg_site_nearest_storage_site) {
+      // check if row_0 is all -1:
+      std::vector<std::optional<std::size_t>> idx_first_none_empty{std::nullopt, std::nullopt};
+      std::vector<std::optional<std::size_t>> idx_last_none_empty{std::nullopt, std::nullopt};
+      for (std::size_t i = 0; i < Rydberg_site_nearest_storage_site[key].size(); ++i) {
+        const auto& row = Rydberg_site_nearest_storage_site[key][i];
+        for (std::size_t j = 0; j < row.size(); ++j) {
+          const auto& [site, r, c] = row[j];
+          if (site != nullptr) {
+            if (!idx_first_none_empty[i]) {
+              idx_first_none_empty[i] = j;
+            }
+            idx_last_none_empty[i] = j;
+          }
+        }
+      }
+      // assume at least one row is non empty
+      if (idx_first_none_empty[0] == -1 and idx_last_none_empty[0] == -1 and
+          idx_first_none_empty[1] == -1 and idx_last_none_empty[1] == -1) {
+        throw std::runtime_error("[ERROR] Both rows are empty");
+      }
+      for (std::size_t i = 0; i< Rydberg_site_nearest_storage_site[key].size(); ++i) {
+        if (idx_first_none_empty[i] && idx_first_none_empty[i] > 0) {
+          for (std::size_t j = *idx_first_none_empty[i] - 1; j >= 0; --j) {
+            Rydberg_site_nearest_storage_site[key][i][j] = Rydberg_site_nearest_storage_site[key][i][*idx_first_none_empty[i]];
+          }
+        }
+        if (idx_last_none_empty[i]) {
+          for (std::size_t j = *idx_last_none_empty[i] + 1; j < Rydberg_site_nearest_storage_site[key][i].size(); ++j) {
+            Rydberg_site_nearest_storage_site[key][i][j] = Rydberg_site_nearest_storage_site[key][i][*idx_last_none_empty[i]];
+          }
+        }
+      }
+      if (!idx_first_none_empty[0] && !idx_last_none_empty[0]) {
+        Rydberg_site_nearest_storage_site[key][0] = Rydberg_site_nearest_storage_site[key][1];
+      } else if (!idx_first_none_empty[1] && !idx_last_none_empty[1]) {
+        Rydberg_site_nearest_storage_site[key][1] = Rydberg_site_nearest_storage_site[key][0];
+      }
+    }
+  }
 
-                      if row < nearest_slm_half_r:
-                          r_idx = 0
-                      else:
-                          r_idx = 1
-                      if
-  self.Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col] == -1:
-                          self.Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col]
-  = (idx, r, c) else: (prev_idx, prev_r, prev_c) =
-  self.Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col] prev_dis =
-  self.storage_site_nearest_Rydberg_site_dis[prev_idx][prev_r][prev_c] if
-  prev_dis > self.storage_site_nearest_Rydberg_site_dis[idx][r][c]:
-                              self.Rydberg_site_nearest_storage_site[nearest_slm][r_idx][col]
-  = (idx, r, c)
+  auto distance(const SLM* idx1, std::size_t r1, std::size_t c1,
+                const SLM* idx2, std::size_t r2, std::size_t c2) -> double {
+    const auto& p1 = exact_SLM_location(idx1, r1, c1);
+    const auto& p2 = exact_SLM_location(idx2, r2, c2);
+    const auto dx =
+        static_cast<double>(p1.first) - static_cast<double>(p2.first);
+    const auto dy =
+        static_cast<double>(p1.second) - static_cast<double>(p2.second);
+    return std::sqrt((dx * dx) + (dy * dy));
+  }
 
-                      x += slm.site_seperation[0]
-                      if x > x_lim and col + 1 < self.dict_SLM[nearest_slm].n_c:
-                          col += 1
-                          x_lim =
-  self.entanglement_site_col_space[nearest_slm][col] y += slm.site_seperation[1]
-                  if has_increase_y and y > y_lim and next_nearest_slm > -1:
-                      has_increase_y = False
-                      nearest_slm = next_nearest_slm
-                      row = 0
+  auto nearest_storage_site(const SLM* idx, std::size_t r, std::size_t c)
+      -> std::tuple<const SLM*, std::size_t, std::size_t> {
+    const auto* slm = idx->entanglement_id->front().get();
+    const auto nearest_slm_half_r = slm->n_r / 2;
+    if (r < nearest_slm_half_r) {
+      return Rydberg_site_nearest_storage_site[slm][0][c];
+    }
+    return Rydberg_site_nearest_storage_site[slm][1][c];
+  }
 
-          for key in self.Rydberg_site_nearest_storage_site:
-  #check if row_0 is all - 1:
-              idx_first_none_empty = [-1, -1]
-              idx_last_none_empty = [-1, -1]
-              for i, row in
-  enumerate(self.Rydberg_site_nearest_storage_site[key]): for j, site in
-  enumerate(row): if site != -1: if idx_first_none_empty[i] == -1:
-                              idx_first_none_empty[i] = j
-                          idx_last_none_empty[i] = j
-  #assume at least one row is non empty
-              if idx_first_none_empty[0] == -1 and idx_last_none_empty[0] == -1\
-                  and idx_first_none_empty[1] == -1 and idx_last_none_empty[1]
-  == -1: assert(0) for i in
-  range(len(self.Rydberg_site_nearest_storage_site[key])): if
-  idx_first_none_empty[i] != -1: for j in range(idx_first_none_empty[i] - 1, -1,
-  -1): self.Rydberg_site_nearest_storage_site[key][i][j] =
-  self.Rydberg_site_nearest_storage_site[key][i][idx_first_none_empty[i]] if
-  idx_last_none_empty[i] != -1: for j in range(idx_last_none_empty[i] + 1,
-  len(self.Rydberg_site_nearest_storage_site[key][i])):
-                          self.Rydberg_site_nearest_storage_site[key][i][j] =
-  self.Rydberg_site_nearest_storage_site[key][i][idx_last_none_empty[i]] if
-  idx_first_none_empty[0] == -1 and idx_last_none_empty[0] == -1:
-                  self.Rydberg_site_nearest_storage_site[key][0] =
-  self.Rydberg_site_nearest_storage_site[key][1] elif idx_first_none_empty[1] ==
-  -1 and idx_last_none_empty[1] == -1:
-                  self.Rydberg_site_nearest_storage_site[key][1] =
-  self.Rydberg_site_nearest_storage_site[key][0]
+  /// return the nearest Rydberg site for a qubit in the storage zone
+  auto nearest_entanglement_site(const SLM* idx, std::size_t r, std::size_t c)
+      -> std::tuple<const SLM*, std::size_t, std::size_t> {
+    return storage_site_nearest_Rydberg_site[idx][r][c];
+  }
 
-  #print("self.storage_site_nearest_Rydberg_site")
-  #for key in self.storage_site_nearest_Rydberg_site:
-  #print(key)
-  #for site in self.storage_site_nearest_Rydberg_site[key]:
-  #print(site)
-  #print("self.storage_site_nearest_Rydberg_site_dis")
-  #print(self.storage_site_nearest_Rydberg_site_dis)
-  #print("self.Rydberg_site_nearest_storage_site")
-  #print(self.Rydberg_site_nearest_storage_site)
+  /// return the distance nearest Rydberg site for a qubit in the storage zone
+  auto nearest_entanglement_site_distance(const SLM* idx, std::size_t r,
+                                          std::size_t c) -> double {
+    return storage_site_nearest_Rydberg_site_dis[idx][r][c];
+  }
 
-      def distance(self, idx1, r1, c1, idx2, r2, c2):
-          p1 = self.exact_SLM_location(idx1, r1, c1)
-          p2 = self.exact_SLM_location(idx2, r2, c2)
-          return math.dist(p1, p2) # Euclidean distance
+  /// return the nearest Rydberg site for two qubit in the storage zone
+  /// based on the position of two qubits
+  auto nearest_entanglement_site(const SLM* idx1, std::size_t r1,
+                                 std::size_t c1, const SLM* idx2,
+                                 std::size_t r2, std::size_t c2)
+      -> std::tuple<const SLM*, std::size_t, std::size_t> {
+    const auto& storage_site1 = exact_SLM_location(idx1, r1, c1);
+    const auto& storage_site2 = exact_SLM_location(idx2, r2, c2);
+    const auto& site1 = storage_site_nearest_Rydberg_site[idx1][r1][c1];
+    const auto& site2 = storage_site_nearest_Rydberg_site[idx2][r2][c2];
+    // the nearest zone for both qubits are in the same entanglement zone
+    if (site1 == site2) {
+      return site1;
+    }
+    if (std::get<0>(site1) == std::get<0>(site2)) {
+      const auto middle_site_c = (std::get<2>(site1) + std::get<2>(site2)) / 2;
+      return {std::get<0>(site1), std::get<1>(site1), middle_site_c};
+    }
+    throw std::invalid_argument(
+        "[ERROR] The nearest entanglement site is not in the same entanglement "
+        "zone. This feature is not supported yet.");
+  }
 
-      def nearest_storage_site(self, idx, r, c):
-          slm = self.dict_SLM[idx]
-          slm_idx = self.entanglement_zone[slm.entanglement_id][0]
-          slm = self.dict_SLM[slm_idx]
-          nearest_slm_half_r = slm.n_r // 2
-          if r < nearest_slm_half_r:
-              return self.Rydberg_site_nearest_storage_site[slm_idx][0][c]
-          else:
-              return self.Rydberg_site_nearest_storage_site[slm_idx][1][c]
+  /// return the sum of the distance to move two qubits to one rydberg site
+  auto nearest_entanglement_site_dis(const SLM* idx1, std::size_t r1,
+                                     std::size_t c1, const SLM* idx2,
+                                     std::size_t r2, std::size_t c2) -> double {
+    const auto& storage_site1 = exact_SLM_location(idx1, r1, c1);
+    const auto& storage_site2 = exact_SLM_location(idx2, r2, c2);
+    const auto& list_site =
+        nearest_entanglement_site(idx1, r1, c1, idx2, r2, c2);
+    const auto& dis = std::numeric_limits<double>::max();
+    for (const auto site : list_site) {
+      const std::pair<size_t, size_t>& exact_site =
+          std::apply(exact_SLM_location, site);
+      if (r1 == r2 and idx1 == idx2) {
+        const auto dx1 = static_cast<double>(storage_site1.first) -
+                         static_cast<double>(exact_site.first);
+        const auto dy1 = static_cast<double>(storage_site1.second) -
+                         static_cast<double>(exact_site.second);
+        const auto dx2 = static_cast<double>(storage_site2.first) -
+                         static_cast<double>(exact_site.first);
+        const auto dy2 = static_cast<double>(storage_site2.second) -
+                         static_cast<double>(exact_site.second);
+        dis = std::min(std::max(std::sqrt((dx1 * dx1) + (dy1 * dy1)),
+                                std::sqrt((dx2 * dx2) + (dy2 * dy2))),
+                       dis);
+      } else {
+        const auto dx1 = static_cast<double>(storage_site1.first) -
+                         static_cast<double>(exact_site.first);
+        const auto dy1 = static_cast<double>(storage_site1.second) -
+                         static_cast<double>(exact_site.second);
+        const auto dx2 = static_cast<double>(storage_site2.first) -
+                         static_cast<double>(exact_site.first);
+        const auto dy2 = static_cast<double>(storage_site2.second) -
+                         static_cast<double>(exact_site.second);
+        dis = std::min(std::sqrt((dx1 * dx1) + (dy1 * dy1)) +
+                           std::sqrt((dx2 * dx2) + (dy2 * dy2)),
+                       dis);
+      }
+    }
+    return dis;
+  }
 
-      def nearest_entanglement_site(self, idx, r, c):
-  #return the nearest Rydberg site for a qubit in the storage zone
-          return self.storage_site_nearest_Rydberg_site[idx][r][c]
-
-      def nearest_entanglement_site_distance(self, idx, r, c):
-  #return the distance nearest Rydberg site for a qubit in the           \
-              storage zone
-          return self.storage_site_nearest_Rydberg_site_dis[idx][r][c]
-
-      def nearest_entanglement_site(self, idx1, r1, c1, idx2, r2, c2):
-  #return the nearest Rydberg site for two qubit in the storage zone
-  #based on the position of two qubits
-          storage_site1 = self.exact_SLM_location(idx1, r1, c1)
-          storage_site2 = self.exact_SLM_location(idx2, r2, c2)
-          site1 = self.storage_site_nearest_Rydberg_site[idx1][r1][c1]
-          site2 = self.storage_site_nearest_Rydberg_site[idx2][r2][c2]
-  #the nearest zone for both qubits are in the same entanglement zone
-          if site1 == site2:
-              return [site1]
-          elif site1[0] == site2[0]:
-              near_x = (storage_site1[0] + storage_site1[1]) // 2
-              middle_site_c = (site1[2] + site2[2])// 2
-              middle_site_x = self.exact_SLM_location(site1[0], site1[1],
-  middle_site_c)[0] near_site_idx = middle_site_c #near_site_dis =
-  abs(middle_site_x - near_x) #slm = self.dict_SLM[site1[0]] #next_dis =
-  abs(middle_site_x + slm.seperation[0] - near_x) #if near_site_idx < slm.n_c -
-  1 and next_dis < near_site_dis: #near_site_idx += 1 #elif near_site_idx > 0:
-  #next_dis = abs(middle_site_x - slm.seperation[0] - near_x)
-  #if next_dis < near_site_dis:
-  #near_site_idx -= 1
-
-              return [(site1[0], site1[1], near_site_idx)]
-          else:
-              return [site1, site2]
-              slm1 = self.dict_SLM[site1[0]]
-              slm2 = self.dict_SLM[site2[0]]
-              row_y_1 = slm1.location[1] + site1[1] * slm1.site_seperation[1]
-              row_y_2 = slm2.location[1] + site2[1] * slm2.site_seperation[1]
-              diff_y_1 = abs(row_y_1 - storage_site1[1]) + abs(row_y_1 -
-  storage_site2[1]) diff_y_2 = abs(row_y_2 - storage_site1[1]) + abs(row_y_2 -
-  storage_site2[1]) if diff_y_1 < diff_y_2: return (site1[0], site1[1],
-  (site1[2] + site2[2])// 2) else: return (site2[0], site2[1], (site1[2] +
-  site2[2])// 2)
-
-      def nearest_entanglement_site_dis(self, idx1, r1, c1, idx2, r2, c2):
-  #return the sum of the distance to move two qubits to one rydberg site
-          storage_site1 = self.exact_SLM_location(idx1, r1, c1)
-          storage_site2 = self.exact_SLM_location(idx2, r2, c2)
-          list_site = self.nearest_entanglement_site(idx1, r1, c1, idx2, r2, c2)
-          dis = sys.maxsize
-          for site in list_site:
-              exact_site = self.exact_SLM_location(site[0], site[1], site[2])
-  #return math.dist(storage_site1, exact_site) +                         \
-              math.dist(storage_site2, exact_site)
-              if r1 == r2 and idx1 == idx2:
-                  dis = min(max(math.dist(storage_site1, exact_site),
-  math.dist(storage_site2, exact_site)), dis) else: dis = min(
-  math.dist(storage_site1, exact_site) + math.dist(storage_site2, exact_site),
-  dis ) return dis
-
-
-      def movement_duration(self, x1, y1, x2, y2):
-  #d / t ^ 2 = a = 2750m / s
-          a = 0.00275
-          d = math.dist((x1, y1), (x2, y2))
-  #d = 15
-          t = math.sqrt(d/a)
-          return t
-          */
+  auto movement_duration(std::size_t x1, std::size_t y1, std::size_t x2,
+                         std::size_t y2) -> double {
+    // todo: add reference for constant
+    constexpr double a = 0.00275;
+    const auto dx = static_cast<double>(x1) - static_cast<double>(x2);
+    const auto dy = static_cast<double>(y1) - static_cast<double>(y2);
+    const auto d = std::sqrt((dx * dx) + (dy * dy));
+    const auto t = std::sqrt(d / a);
+    return t;
+  }
 };
 } // namespace na
