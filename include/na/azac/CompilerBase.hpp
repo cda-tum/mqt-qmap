@@ -3,18 +3,23 @@
 #include "Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
+#include <deque>
 #include <filesystem>
 #include <fstream>
-#include <list>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <ostream>
+#include <queue>
 #include <sstream>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -24,16 +29,19 @@
 
 namespace na {
 
-class CompilerBase {
+template <typename T> class CompilerBase {
+  static_assert(std::is_base_of_v<CompilerBase, T>,
+                "T must be a subclass of CompilerBase");
+
 protected:
   std::filesystem::path dir = "./result/";
   std::size_t n_q = 0; ///< number of qubits
   std::size_t n_g = 0; ///< number of gates
   Architecture architecture;
   struct Result {
-    std::string name{};
-    std::filesystem::path architecture_spec_path{};
-    std::vector<std::string> instructions{};
+    std::string name;
+    std::filesystem::path architecture_spec_path;
+    NAComputation instructions;
     double runtime = 0;
   };
   Result result{};
@@ -41,6 +49,8 @@ protected:
     std::chrono::microseconds scheduling;
     std::chrono::microseconds initial_placement;
     std::chrono::microseconds intermediate_placement;
+    std::chrono::microseconds routing;
+    std::chrono::microseconds total;
   };
   RuntimeAnalysis runtime_analysis{};
   bool to_verify = true;
@@ -50,12 +60,22 @@ protected:
   bool trivial_placement = true;
 
 public:
-  enum class RoutingStrategy : std::uint8_t { MAXIMAL_IS_SORT };
+  enum class RoutingStrategy : std::uint8_t { MAXIMAL_IS, MAXIMAL_IS_SORT };
   static std::string toString(const RoutingStrategy strategy) {
-    static const std::map<RoutingStrategy, std::string> strategyToString{
-        {RoutingStrategy::MAXIMAL_IS_SORT, "maximal_is_sort"}};
-    const auto it = strategyToString.find(strategy);
-    if (it == strategyToString.end()) {
+    switch (strategy) {
+    case RoutingStrategy::MAXIMAL_IS:
+      return "maximal_is";
+    case RoutingStrategy::MAXIMAL_IS_SORT:
+    default:
+      return "maximal_is_sort";
+    }
+  }
+  static RoutingStrategy toRoutingStrategy(const std::string& strategy) {
+    static const std::unordered_map<std::string, RoutingStrategy>
+        stringToStrategy{{"maximal_is_sort", RoutingStrategy::MAXIMAL_IS_SORT},
+                         {"maximal_is", RoutingStrategy::MAXIMAL_IS}};
+    const auto it = stringToStrategy.find(strategy);
+    if (it == stringToStrategy.end()) {
       throw std::invalid_argument("Unknown routing strategy");
     }
     return it->second;
@@ -75,11 +95,20 @@ public:
             ///< every group contains only one gate
   };
   static std::string toString(const SchedulingStrategy strategy) {
-    static const std::map<SchedulingStrategy, std::string> strategyToString{
-        {SchedulingStrategy::ASAP, "asap"},
-        {SchedulingStrategy::TRIVIAL, "trivial"}};
-    const auto it = strategyToString.find(strategy);
-    if (it == strategyToString.end()) {
+    switch (strategy) {
+    case SchedulingStrategy::ASAP:
+      return "asap";
+    case SchedulingStrategy::TRIVIAL:
+    default:
+      return "trivial";
+    }
+  }
+  static SchedulingStrategy toSchedulingStrategy(const std::string& strategy) {
+    static const std::unordered_map<std::string, SchedulingStrategy>
+        stringToStrategy{{"asap", SchedulingStrategy::ASAP},
+                         {"trivial", SchedulingStrategy::TRIVIAL}};
+    const auto it = stringToStrategy.find(strategy);
+    if (it == stringToStrategy.end()) {
       throw std::invalid_argument("Unknown scheduling strategy");
     }
     return it->second;
@@ -111,13 +140,21 @@ protected:
   /// map that stores the 1-qubit gates that act on a qubit after the
   /// respective 2-qubit gate
   std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
-                     std::unordered_set<qc::StandardOperation>>
+                     std::vector<qc::StandardOperation>>
       dict_g_1q_parent{};
   /// list of qubit placements for all layers
   std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
       qubit_mapping{};
   /// list of qubit lists that are reused in each layer
   std::vector<std::vector<qc::Qubit>> reuse_qubits;
+  /// list of 2-qubit gates that are executed in each layer
+  /// @note Computed by the scheduler
+  std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
+      gate_scheduling{};
+  /// list of 1-qubit gates that are executed in each layer
+  /// @note Computed by the scheduler
+  std::vector<std::vector<const qc::StandardOperation*>> gate_1q_scheduling{};
+  std::vector<std::vector<std::size_t>> reuse_qubit{};
 
 public:
   explicit CompilerBase(std::ifstream& settingsIfs) {
@@ -133,7 +170,7 @@ public:
       hasDependency = settings_json["dependency"];
     }
     if (settings_json.contains("routing_strategy")) {
-      routing_strategy = settings_json["routing_strategy"];
+      routing_strategy = toRoutingStrategy(settings_json["routing_strategy"]);
     }
     if (settings_json.contains("trivial_placement")) {
       trivial_placement = settings_json["trivial_placement"];
@@ -157,7 +194,7 @@ public:
       reuse = settings_json["reuse"];
     }
     if (settings_json.contains("scheduling")) {
-      scheduling_strategy = settings_json["scheduling"];
+      scheduling_strategy = toSchedulingStrategy(settings_json["scheduling"]);
     }
     if (settings_json.contains("arch_spec")) {
       result.architecture_spec_path =
@@ -225,12 +262,14 @@ public:
   }
 
   auto setProgram(const qc::QuantumComputation& qc) {
+    g_q.clear();
     n_q = qc.getNqubits();
+    dict_g_1q_parent.emplace(nullptr, std::vector<qc::StandardOperation>{});
     /// array that stores the index of the last 2-qubit gate acting on each
     /// qubit
     std::vector<const std::pair<qc::Qubit, qc::Qubit>*> list_qubit_last_2q_gate(
         n_q, nullptr);
-
+    std::size_t n_single_qubit_gate = 0;
     for (const auto& op : qc) {
       if (op->isStandardOperation()) {
         const auto& stdop = dynamic_cast<qc::StandardOperation&>(*op);
@@ -248,9 +287,10 @@ public:
           if (dict_g_1q_parent.find(list_qubit_last_2q_gate[qubit]) ==
               dict_g_1q_parent.cend()) {
             dict_g_1q_parent[list_qubit_last_2q_gate[qubit]] =
-                std::unordered_set<qc::StandardOperation>{};
+                std::vector<qc::StandardOperation>{};
           }
-          dict_g_1q_parent.at(list_qubit_last_2q_gate[qubit]).insert(stdop);
+          dict_g_1q_parent[list_qubit_last_2q_gate[qubit]].emplace_back(stdop);
+          ++n_single_qubit_gate;
         } else {
           std::stringstream ss{};
           ss << "Standard operation ";
@@ -263,41 +303,236 @@ public:
       }
     }
     n_g = g_q.size();
+    std::cout << "[INFO]           number of qubits: " << n_q << "\n";
+    std::cout << "[INFO]           number of two-qubit gates: " << n_g << "\n";
+    std::cout << "[INFO]           number of single-qubit gates: "
+              << n_single_qubit_gate << "\n";
+  }
 
-        selfg_q = []
-        dict_g_1q_parent = {-1: []}
-            n_single_qubit_gate = 0
+  auto solve(bool save_file = true) -> Result {
+    // member to hold intermediate results
+    gate_scheduling.clear();
+    gate_1q_scheduling.clear();
+    qubit_mapping.clear();
+    reuse_qubit.clear();
+    qubit_mapping.clear();
 
-            list_qubit_last_2q_gate = [-1 for i in range(0, self.n_q)]
-            instruction = cz_circuit.data
-            for ins in instruction:
-                if ins.operation.num_qubits == 2:
-                    offset = 0
-                    if ins.qubits[0]._register != None:
-                        offset = register_idx[ins.qubits[0]._register]
-                    q0 = offset + ins.qubits[0]._index
-                    offset = 0
-                    if ins.qubits[1]._register != None:
-                        offset = register_idx[ins.qubits[1]._register]
-                    q1 = offset + ins.qubits[1]._index
-                    list_qubit_last_2q_gate[q0] = len(self.g_q)
-                    list_qubit_last_2q_gate[q1] = len(self.g_q)
-                    if q0 < q1:
-                        self.g_q.append([q0, q1])
-                    else:
-                        self.g_q.append([q1, q0])
-                elif ins.operation.name != "measure" and ins.operation.name != "barrier":
-                    offset = 0
-                    if ins.qubits[0]._register != None:
-                        offset = register_idx[ins.qubits[0]._register]
-                    q0 = offset + ins.qubits[0]._index
-                    if list_qubit_last_2q_gate[q0] not in self.dict_g_1q_parent:
-                        self.dict_g_1q_parent[list_qubit_last_2q_gate[q0]] = []
-                    self.dict_g_1q_parent[list_qubit_last_2q_gate[q0]].append((ins.operation.name, q0))
-                    n_single_qubit_gate += 1
+    std::cout << "[INFO] ZAC: A compiler for neutral atom-based compute-store "
+                 "architecture\n";
+    std::cout << *this;
+    // todo: check if the program input is valid, i.e., #q < #p
+    const auto t_s = std::chrono::system_clock::now();
+    // gate scheduling with graph coloring
+    std::cout << "[INFO] ZAC: Run scheduling\n";
+    static_cast<T*>(this)->scheduling();
 
-        self.n_g = len(self.g_q)
-        self.g_s = tuple(['CRZ' for _ in range(self.n_g)])
-  };
+    if (reuse) {
+      collect_reuse_qubit();
+    } else {
+      reuse_qubit.reserve(gate_scheduling.size());
+      for (std::size_t i = 0; i < gate_scheduling.size(); ++i) {
+        reuse_qubit.emplace_back(std::vector<std::size_t>{});
+      }
+    }
+
+    static_cast<T*>(this)->place_qubit_initial();
+    std::cout << "[INFO]               Time for initial placement: "
+              << runtime_analysis.initial_placement << "s\n";
+    static_cast<T*>(this)->place_qubit_intermedeiate();
+    std::cout << "[INFO]               Time for intermediate placement: "
+              << runtime_analysis.intermediate_placement << "s\n";
+    static_cast<T*>(this)->route_qubit();
+    runtime_analysis.total = std::chrono::system_clock::now() - t_s;
+    std::cout << "[INFO]               Time for routing: "
+              << runtime_analysis.routing << "s\n";
+    std::cout << "[INFO] ZAC: Toal Time: " << runtime_analysis.total << "s\n";
+    if (save_file) {
+      if (dir.empty()) {
+        dir = "./result/";
+      }
+      const auto code_filename = dir / "code" / (result.name + "_code.na");
+      std::ofstream code_ofs(code_filename);
+      code_ofs << result.instructions;
+
+      const auto result_json_filename =
+          dir / "time" / (result.name + "_time.json");
+      std::ofstream result_json_ofs(result_json_filename);
+      nlohmann::json result_json{};
+      result_json["scheduling"] = runtime_analysis.scheduling;
+      result_json["initial_placement"] = runtime_analysis.initial_placement;
+      result_json["intermediate_placement"] =
+          runtime_analysis.intermediate_placement;
+      result_json["routing"] = runtime_analysis.routing;
+      result_json["total"] = runtime_analysis.total;
+      result_json_ofs << result_json;
+    }
+
+    if (to_verify) {
+      std::cout << "[INFO] ZAC: Start Verification\n";
+      throw std::invalid_argument("Verification is not implemented yet");
+    }
+
+    return result;
+  }
+
+  /// collect qubits that will remain in Rydberg zone between two Rydberg stages
+  auto collect_reuse_qubit() -> void {
+    reuse_qubit.clear();
+    std::vector qubit_is_used(gate_scheduling.size(),
+                              std::vector<std::size_t>(n_q, -1));
+    for (std::size_t gate_idx = 0; gate_idx < gate_scheduling.front().size();
+         ++gate_idx) {
+      const auto& gate = gate_scheduling.front()[gate_idx];
+      qubit_is_used[0][gate->first] = gate_idx;
+      qubit_is_used[0][gate->second] = gate_idx;
+    }
+    for (std::size_t i = 1; i < gate_scheduling.size(); ++i) {
+      reuse_qubit.emplace_back();
+      std::vector matrix(
+          gate_scheduling[i].size(),
+          std::vector<std::size_t>(gate_scheduling[i - 1].size(), 0));
+      for (std::size_t gate_idx = 0; gate_idx < gate_scheduling[i].size();
+           ++gate_idx) {
+        const auto& gate = gate_scheduling[i][gate_idx];
+        if (qubit_is_used[i - 1][gate->first] != -1 &&
+            qubit_is_used[i - 1][gate->first] ==
+                qubit_is_used[i - 1][gate->second]) {
+          reuse_qubit.back().emplace_back(gate->first);
+          reuse_qubit.back().emplace_back(gate->second);
+        } else {
+          if (qubit_is_used[i - 1][gate->first] > -1) {
+            matrix[gate_idx][qubit_is_used[i - 1][gate->first]] = 1;
+          }
+          if (qubit_is_used[i - 1][gate->second] > -1) {
+            matrix[gate_idx][qubit_is_used[i - 1][gate->second]] = 1;
+          }
+        }
+        qubit_is_used[i][gate->first] = gate_idx;
+        qubit_is_used[i][gate->second] = gate_idx;
+      }
+      sparse_matrix = csr_matrix(matrix);
+      const auto& matching =
+          maximumBipartiteMatching(sparse_matrix, perm_type = 'column');
+      for (std::size_t gate_idx = 0; gate_idx < matching.size(); ++gate_idx) {
+        const auto reuse_gate = matching[gate_idx];
+        if (reuse_gate != -1) {
+          const auto& gate = gate_scheduling[i][gate_idx];
+          if (qubit_is_used[i - 1][gate->first] == reuse_gate) {
+            reuse_qubit.back().emplace_back(gate->first);
+          }
+          if (qubit_is_used[i - 1][gate->second] == reuse_gate) {
+            reuse_qubit.back().emplace_back(gate->second);
+          }
+        }
+      }
+    }
+    reuse_qubit.emplace_back();
+  }
+
+private:
+  /// Computes a maximum matching in a bipartite graph
+  /// @note implemented pseudocode from
+  /// https://epubs.siam.org/doi/pdf/10.1137/0202019?download=true
+  auto maximumBipartiteMatching(
+      const std::vector<std::vector<std::size_t>>& sparseMatrix,
+      bool inverted = false) -> std::vector<std::optional<std::size_t>> {
+    const auto maxSink = std::accumulate(
+        sparseMatrix.cbegin(), sparseMatrix.cend(), static_cast<std::size_t>(0),
+        [](const std::size_t max, const std::vector<std::size_t>& row) {
+          return std::max(max, *std::max_element(row.cbegin(), row.cend()));
+        });
+    std::vector<std::size_t> freeSources(sparseMatrix.size());
+    std::iota(freeSources.begin(), freeSources.end(), 0);
+    std::vector<std::optional<std::size_t>> invMatching(maxSink, std::nullopt);
+    while (true) {
+      // find the reachable free sinks on shortest augmenting paths via bfs
+      // for all distances, std::nullopt means "not visited yet", i.e., infinite
+      // distance
+      std::vector<std::optional<std::size_t>> distance(sparseMatrix.size(),
+                                                       std::nullopt);
+      for (const auto s : freeSources) {
+        distance[s] = 0;
+      }
+      std::queue queue(std::deque(freeSources.cbegin(), freeSources.cend()));
+      std::optional<std::size_t> maxDistance = std::nullopt;
+      while (!queue.empty()) {
+        const auto source = queue.front();
+        queue.pop();
+        if (!maxDistance || *distance[source] < *maxDistance) {
+          for (const auto sink : sparseMatrix[source]) {
+            if (invMatching[sink]) { // a matched sink is found
+              const auto nextSource = *invMatching[sink];
+              if (!distance[nextSource]) { // nextSource is not visited yet
+                distance[nextSource] = *distance[source] + 1;
+                queue.push(nextSource);
+              }
+            } else { // a free sink is found
+              maxDistance = distance[source];
+            }
+          }
+        }
+      }
+      if (!maxDistance) { // no augmenting path exists
+        break;
+      }
+      // find the augmenting paths via dfs and update the matching
+      for (const auto freeSource : freeSources) {
+        std::stack stack(std::deque{freeSource});
+        // this vector tracks the predecessors of each source, i.e., the sink
+        // AND the source coming before the source in the augmenting path
+        std::vector<std::optional<std::pair<std::size_t, std::size_t>>> parents(
+            sparseMatrix.size(), std::nullopt);
+        std::optional<std::pair<std::size_t, std::size_t>> freeSinkFound =
+            std::nullopt;
+        while (!freeSinkFound && !stack.empty()) {
+          const auto source = stack.top();
+          stack.pop();
+          for (const auto sink : sparseMatrix[source]) {
+            if (invMatching[sink]) { // a matched sink is found
+              const auto nextSource = *invMatching[sink];
+              if (distance[nextSource] &&
+                  *distance[nextSource] == *distance[source] + 1) {
+                // the edge from source to sink is a valid edge that was
+                // encountered during the bfs
+                parents[nextSource] = {source, sink};
+                stack.push(nextSource);
+              }
+            } else { // a free sink is found
+              freeSinkFound = {source, sink};
+            }
+          }
+          distance[source] = std::nullopt; // mark source as visited
+        }
+        if (freeSinkFound) {
+          // augment the matching
+          auto source = freeSinkFound->first;
+          auto sink = freeSinkFound->second;
+          invMatching[sink] =
+              source; // that is the additional edge in the matching
+          while (source != freeSource) {
+            sink = parents[source]->first;
+            source = parents[source]->second;
+            invMatching[sink] =
+                source; // update the matching, i.e., flip the edge from the
+                        // successor to the predecessor
+          }
+        }
+      }
+    }
+    // ===-------------------------------===
+    if (inverted) {
+      return invMatching;
+    }
+    // invert the matching
+    std::vector<std::optional<std::size_t>> matching(sparseMatrix.size(),
+                                                     std::nullopt);
+    for (std::size_t i = 0; i < invMatching.size(); ++i) {
+      if (invMatching[i]) {
+        matching[*invMatching[i]] = i;
+      }
+    }
+    return matching;
+  }
+};
 
 } // namespace na

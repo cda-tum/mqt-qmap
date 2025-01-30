@@ -10,7 +10,7 @@ namespace na {
 
 /// class to find a qubit layout
 template <typename T> class Placer {
-  static_assert(std::is_base_of_v<CompilerBase, T>,
+  static_assert(std::is_base_of_v<CompilerBase<T>, T>,
                 "T must be a subclass of CompilerBase");
 
 protected:
@@ -119,7 +119,7 @@ private:
       this->architecture = architecture;
       this->list_reuse_qubits = list_reuse_qubits;
       std::cout << "[INFO] ZAC: Minimum-weight-full-matching-based "
-                   "intermediate placement: Start";
+                   "intermediate placement: Start\n";
       place_gate(qubit_mapping, list_gate, 0, false);
       for (std::size_t layer = 0; layer < list_gate.size(); ++layer) {
         if (dynamic_placement) {
@@ -146,7 +146,7 @@ private:
         }
       }
       std::cout << "[INFO] ZAC: Minimum-weight-full-matching-based "
-                   "intermediate placement: Finish";
+                   "intermediate placement: Finish\n";
     }
 
     auto filter_mapping(const std::size_t layer) -> void {
@@ -880,18 +880,18 @@ private:
           }
           maxPotential = std::max(potentialsX[v], maxPotential);
         }
-        bool freeSourceFound = false;
-        while (!freeSourceFound) {
+        while (true) {
           x = pathSetY[y];
-          freeSourceFound = freeSources[x];
+          bool freeSourceFound = freeSources[x];
           invMatching[y] = x;
           ++sizeMatching;
           freeSources[x] = false;
           freeDestinations[y] = false;
           intersection[y] = false;
-          if (!freeSourceFound) {
-            y = pathSetX[x];
+          if (freeSourceFound) {
+            break;
           }
+          y = pathSetX[x];
         }
       }
       std::vector<std::size_t> matching(sizeX, 0);
