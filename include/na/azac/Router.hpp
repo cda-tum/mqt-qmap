@@ -328,6 +328,45 @@ template <typename T> class Router {
           gate_info.getParameter(),
           current_qubit_pos[q]});
     }
+    /*
+    self.result_json['instructions'].clear()
+        self.result_json['instructions'].append(
+            {
+                "type": "init",
+                "id": 0,
+                "begin_time": 0,
+                "end_time": 0,
+                "init_locs": [ [i, self.qubit_mapping[0][i][0], self.qubit_mapping[0][i][1], self.qubit_mapping[0][i][2]]
+                 for i in range(self.n_q)]
+                # "init_locs": [{
+                #     "id": i,
+                #     "a": self.qubit_mapping[0][i][0],
+                #     "c": self.qubit_mapping[0][i][2],
+                #     "r": self.qubit_mapping[0][i][1],
+                # } for i in range(self.n_q)]
+            }
+        )
+
+        # process single-qubit gates
+        set_qubit_dependency = set()
+        inst_idx = len(self.result_json['instructions'])
+        list_1q_gate = [gate_1q for gate_1q in self.dict_g_1q_parent[-1]]
+        result_gate = []
+        for gate_info in list_1q_gate:
+            # collect qubit dependency
+            set_qubit_dependency.add(self.qubit_dependency[gate_info[1]])
+            self.qubit_dependency[gate_info[1]] = inst_idx
+            result_gate.append({
+                "name": gate_info[0],
+                "q": gate_info[1]
+            })
+        dependency = { "qubit": []}
+    dependency["qubit"] = list(set_qubit_dependency)
+    if len(result_gate) > 0:
+        self.write_1q_gate_instruction(inst_idx, result_gate, dependency, self.qubit_mapping[0])
+        self.result_json['instructions'][-1]["begin_time"] = 0
+        self.result_json['instructions'][-1]["end_time"] = (self.architecture.time_1qGate * len(result_gate)) # due to sequential execution
+    */
   }
 
         /// generate layers for row-by-row based atom transfer
@@ -366,14 +405,94 @@ template <typename T> class Router {
         list_end_location.emplace_back(std::move(row_end_location));
       }
       write_rearrangement_instruction(inst_idx, list_aod_qubits, list_begin_location, list_end_location);
+    /*
+     pickup_dict = dict() # key: array and row, value: a list of qubit in the same row
+        for q in set_aod_qubit:
+            x, y = self.architecture.exact_SLM_location_tuple(initial_mapping[q])
+            if y in pickup_dict:
+                pickup_dict[y].append(q)
+            else:
+                pickup_dict[y] = [q]
+        list_aod_qubits = []
+        list_end_location = []
+        list_begin_location = []
+        dependency = {
+            "qubit": [],
+            "site": [],
+        }
+        # process aod dependency
+        inst_idx = len(self.result_json['instructions'])
+
+        set_qubit_dependency = set()
+        set_site_dependency = set()
+        for dict_key in pickup_dict:
+            # collect set of aod qubits to pick up
+            list_aod_qubits.append(pickup_dict[dict_key])
+            row_begin_location = []
+            row_end_location = []
+            for q in pickup_dict[dict_key]:
+                # collect qubit begin location
+                row_begin_location.append([q, initial_mapping[q][0], initial_mapping[q][1], initial_mapping[q][2]])
+                # row_begin_location.append({
+                #     "id": q,
+                #     "a": initial_mapping[q][0],
+                #     "c": initial_mapping[q][2],
+                #     "r": initial_mapping[q][1]
+                # })
+
+                # collect qubit end location
+                row_end_location.append([q, final_mapping[q][0], final_mapping[q][1], final_mapping[q][2]])
+                # row_end_location.append({
+                #     "id": q,
+                #     "a": final_mapping[q][0],
+                #     "c": final_mapping[q][2],
+                #     "r": final_mapping[q][1]
+                # })
+                # process site dependency
+                site_key = (final_mapping[q][0], final_mapping[q][1], final_mapping[q][2])
+                if site_key in self.site_dependency:
+                    set_site_dependency.add(self.site_dependency[site_key])
+                site_key = (initial_mapping[q][0], initial_mapping[q][1], initial_mapping[q][2])
+                self.site_dependency[site_key] = inst_idx
+
+                # collect qubit dependency
+                set_qubit_dependency.add(self.qubit_dependency[q])
+                self.qubit_dependency[q] = inst_idx
+            list_begin_location.append(row_begin_location)
+            list_end_location.append(row_end_location)
+        dependency["qubit"] = list(set_qubit_dependency)
+        dependency["site"] = list(set_site_dependency)
+        self.write_rearrangement_instruction(inst_idx, list_aod_qubits, list_begin_location, list_end_location, dependency)
+        */
     }
 
     auto write_rearrangement_instruction(const std::size_t inst_idx, const std::vector<const std::vector<size_t>&>& aod_qubits,
       const std::vector<std::vector<std::tuple<size_t, const SLM*, size_t, size_t>>>& begin_location,
       const std::vector<std::vector<std::tuple<size_t, const SLM*, size_t, size_t>>>& end_location) -> void {
       expand_arrangement(inst_idx, aod_qubits, begin_location, end_location);
+    /*
+      inst = {
+                "type": "rearrangeJob",
+                "id": inst_idx,
+                "aod_id": -1,
+                "aod_qubits": aod_qubits,
+                "begin_locs": begin_location,
+                "end_locs": end_location,
+                "dependency": dependency
+            }
+        inst["insts"] = self.expand_arrangement(inst)
+        # inst["aod_qubits"] = list(chain.from_iterable(inst["aod_qubits"]))
+        # inst["begin_locs"] = list(chain.from_iterable(inst["begin_locs"]))
+        # inst["end_locs"] = list(chain.from_iterable(inst["end_locs"]))
+        self.result_json['instructions'].append(inst)
     }
 /*
+  def flatten_rearrangment_instruction(self):
+          for inst in self.result_json['instructions']:
+              if inst["type"] == "rearrangeJob":
+                  inst["aod_qubits"] = list(chain.from_iterable(inst["aod_qubits"]))
+                  inst["begin_locs"] = list(chain.from_iterable(inst["begin_locs"]))
+                  inst["end_locs"] = list(chain.from_iterable(inst["end_locs"]))
         /// generate a layer for gate execution
     auto process_gate_layer(layer: int, gate_mapping: list) -> void {
       list_gate_idx = self.gate_scheduling_idx[layer]
@@ -658,6 +777,73 @@ template <typename T> class Router {
           std::get<3>(locs.front())
       ).second;
       const std::pair row_loc{std::get<1>(locs.front()), std::get<2>(locs.front())};
+      /*
+       details = []  # all detailed instructions
+
+        # ---------------------- find out number of cols ----------------------
+        all_col_x = [] # all the x coord of qubits
+        coords = [] # coords of qubits, shape is same as "begin_locs"
+        # these coords are going to be updated as we construct the detail insts
+
+        for locs in inst["begin_locs"]:
+            coords_row = []
+            for loc in locs:
+                # coords_row.append({
+                #     "id": loc["id"],
+                #     "x":
+                #         self.architecture.exact_SLM_location(
+                #             loc["a"],
+                #             loc["r"],
+                #             loc["c"],
+                #         )[0],
+                #     "y":
+                #         self.architecture.exact_SLM_location(
+                #             loc["a"],
+                #             loc["r"],
+                #             loc["c"],
+                #         )[1],
+                # })
+
+                # all_col_x.append(self.architecture.exact_SLM_location(
+                #     loc["a"],
+                #     loc["r"],
+                #     loc["c"],
+                # )[0])
+                exact_location = self.architecture.exact_SLM_location(loc[1], loc[2], loc[3])
+                coords_row.append({
+                    "id": loc[0],
+                    "x": exact_location[0],
+                    "y": exact_location[1],
+                })
+
+                all_col_x.append(exact_location[0])
+
+            coords.append(coords_row)
+
+        init_coords = deepcopy(coords)
+
+        all_col_x = sorted(all_col_x)
+
+        # assign AOD column ids based on all x coords needed
+        col_x_to_id = {all_col_x[i]: i for i in range(len(all_col_x))}
+        # ---------------------------------------------------------------------
+
+        # -------------------- activation and parking -------------------------
+        all_col_idx_sofar = [] # which col has been activated
+        for row_id, locs in enumerate(inst["begin_locs"]): # each row
+
+            # row_y = self.architecture.exact_SLM_location(
+            #     locs[0]["a"],
+            #     locs[0]["r"],
+            #     locs[0]["c"],
+            # )[1]
+            row_y = self.architecture.exact_SLM_location(
+                locs[0][1],
+                locs[0][2],
+                locs[0][3],
+            )[1]
+            row_loc = [locs[0][1], locs[0][2]]
+            */
       /*
                 // before activation, adjust column position. This is necessary
                 // whenever cols are parked (the `parking` movement below).
