@@ -404,6 +404,7 @@ void NeutralAtomMapper::printLayers() const {
     }
     std::cout << '\n';
   }
+  std::cout << '\n';
   std::cout << "f,s: ";
   for (const auto* op : this->frontLayerShuttling) {
     std::cout << op->getName() << " ";
@@ -412,6 +413,7 @@ void NeutralAtomMapper::printLayers() const {
     }
     std::cout << '\n';
   }
+  std::cout << '\n';
   std::cout << "l,g: ";
   for (const auto* op : this->lookaheadLayerGate) {
     std::cout << op->getName() << " ";
@@ -421,7 +423,7 @@ void NeutralAtomMapper::printLayers() const {
     std::cout << '\n';
   }
   std::cout << '\n';
-  std::cout << "l,g: ";
+  std::cout << "l,s: ";
   for (const auto* op : this->lookaheadLayerShuttling) {
     std::cout << op->getName() << " ";
     for (const auto qubit : op->getUsedQubits()) {
