@@ -8,14 +8,8 @@
 namespace na {
 
 template <typename T> class Scheduler {
-  static_assert(std::is_base_of_v<CompilerBase, T>,
+  static_assert(std::is_base_of_v<CompilerBase<T>, T>,
                 "T must be a subclass of CompilerBase");
-
-private:
-  std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
-      gate_scheduling{};
-  std::vector<std::vector<const qc::StandardOperation*>>
-      gate_1q_scheduling{};
   /// as soon as possible algorithm for g_q
   auto asap() -> std::vector<
       std::unordered_set<const std::pair<qc::Qubit, qc::Qubit>*>> {
@@ -53,12 +47,12 @@ protected:
     const auto t_s = std::chrono::system_clock::now();
     if (static_cast<T*>(this)->hasDependency) {
       switch (static_cast<T*>(this)->scheduling_strategy) {
-      case CompilerBase::SchedulingStrategy::ASAP:
-        gate_scheduling = asap();
+      case CompilerBase<T>::SchedulingStrategy::ASAP:
+        static_cast<T*>(this)->gate_scheduling = asap();
         break;
-      case CompilerBase::SchedulingStrategy::TRIVIAL:
+      case CompilerBase<T>::SchedulingStrategy::TRIVIAL:
       default:
-        gate_scheduling = std::accumulate(
+        static_cast<T*>(this)->gate_scheduling = std::accumulate(
             static_cast<T*>(this)->g_q.begin(),
             static_cast<T*>(this)->g_q.end(),
             std::vector<
@@ -71,7 +65,7 @@ protected:
             });
       }
     } else {
-      gate_scheduling = graph_coloring();
+      static_cast<T*>(this)->gate_scheduling = graph_coloring();
     }
     // handle the case that the number of gates in one layer exceed the capacity
     // of rydberg zone
@@ -84,7 +78,7 @@ protected:
     // max_gate_num
     std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
         gate_scheduling_split{};
-    for (auto gates : gate_scheduling) {
+    for (auto gates : static_cast<T*>(this)->gate_scheduling) {
       if (gates.size() < max_gate_num) {
         gate_scheduling_split.emplace_back(gates);
       } else {
@@ -94,13 +88,13 @@ protected:
       }
     }
     // clear old gate_scheduling and gate_1q_scheduling
-    gate_scheduling.clear();
-    gate_1q_scheduling.clear();
+    static_cast<T*>(this)->gate_scheduling.clear();
+    static_cast<T*>(this)->gate_1q_scheduling.clear();
     // Re-construct valid gate_scheduling and gate_1q_scheduling after splitting
     // gate groups that exceed the capacity of rydberg zone
     for (const auto& gates : gate_scheduling_split) {
-      gate_scheduling.emplace_back(gates);
-      auto& current_gate_1q = gate_1q_scheduling.emplace_back();
+      static_cast<T*>(this)->gate_scheduling.emplace_back(gates);
+      auto& current_gate_1q = static_cast<T*>(this)->gate_1q_scheduling.emplace_back();
       for (const auto& gate : gates) {
         if (static_cast<T*>(this)->dict_g_1q_parent.contains(gate)) {
           for (const auto& gate_1q :
