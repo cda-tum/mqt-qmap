@@ -41,7 +41,7 @@ protected:
   struct Result {
     std::string name;
     std::filesystem::path architecture_spec_path;
-    NAComputation instructions;
+    nlohmann::json instructions;
     double runtime = 0;
   };
   Result result{};
@@ -388,9 +388,8 @@ public:
     }
     for (std::size_t i = 1; i < gate_scheduling.size(); ++i) {
       reuse_qubit.emplace_back();
-      std::vector matrix(
-          gate_scheduling[i].size(),
-          std::vector<std::size_t>(gate_scheduling[i - 1].size(), 0));
+      std::vector matrix(gate_scheduling[i].size(),
+                         std::vector(gate_scheduling[i - 1].size(), false));
       for (std::size_t gate_idx = 0; gate_idx < gate_scheduling[i].size();
            ++gate_idx) {
         const auto& gate = gate_scheduling[i][gate_idx];
@@ -401,18 +400,24 @@ public:
           reuse_qubit.back().emplace_back(gate->second);
         } else {
           if (qubit_is_used[i - 1][gate->first] > -1) {
-            matrix[gate_idx][qubit_is_used[i - 1][gate->first]] = 1;
+            matrix[gate_idx][qubit_is_used[i - 1][gate->first]] = true;
           }
           if (qubit_is_used[i - 1][gate->second] > -1) {
-            matrix[gate_idx][qubit_is_used[i - 1][gate->second]] = 1;
+            matrix[gate_idx][qubit_is_used[i - 1][gate->second]] = true;
           }
         }
         qubit_is_used[i][gate->first] = gate_idx;
         qubit_is_used[i][gate->second] = gate_idx;
       }
-      sparse_matrix = csr_matrix(matrix);
-      const auto& matching =
-          maximumBipartiteMatching(sparse_matrix, perm_type = 'column');
+      std::vector sparse_matrix(matrix.size(), std::vector<std::size_t>{});
+      for (std::size_t i = 0; i < matrix.size(); ++i) {
+        for (std::size_t j = 0; j < matrix[i].size(); ++j) {
+          if (matrix[i][j]) {
+            sparse_matrix[i].emplace_back(j);
+          }
+        }
+      }
+      const auto& matching = maximumBipartiteMatching(sparse_matrix, true);
       for (std::size_t gate_idx = 0; gate_idx < matching.size(); ++gate_idx) {
         const auto reuse_gate = matching[gate_idx];
         if (reuse_gate != -1) {
