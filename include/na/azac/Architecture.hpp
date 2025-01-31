@@ -16,7 +16,7 @@ namespace na {
 /// An 2D-Array of AOD traps
 struct AOD {
   std::size_t id = 0;
-  std::pair<std::size_t, std::size_t> site_separation{0, 0};
+  std::size_t site_separation = 0;
   std::size_t n_r = 0;
   std::size_t n_c = 0;
 
@@ -67,10 +67,10 @@ struct Architecture {
   std::size_t arch_range_max_x = 0;
   std::size_t arch_range_min_y = 0;
   std::size_t arch_range_max_y = 0;
-  std::size_t rydberg_range_min_x = 0;
-  std::size_t rydberg_range_max_x = 0;
-  std::size_t rydberg_range_min_y = 0;
-  std::size_t rydberg_range_max_y = 0;
+  std::vector<std::size_t> rydberg_range_min_x;
+  std::vector<std::size_t> rydberg_range_max_x;
+  std::vector<std::size_t> rydberg_range_min_y;
+  std::vector<std::size_t> rydberg_range_max_y;
   /// A map from an entanglement site to the nearest storage site.
   /// To get the storage site that is expressed as a triple of
   /// (SLM*, row, column), use the following code:
