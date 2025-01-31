@@ -1,6 +1,6 @@
 #include "na/azac/Architecture.hpp"
 
-#include "na/azac/Util.hpp"
+#include "na/azac/Utils.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -128,15 +128,15 @@ auto Architecture::load(std::ifstream&& ifs) -> void {
         "storage zone configuration is missed in architecture spec");
   }
   if (architecture_spec.contains("entanglement_zones")) {
-    std::unordered_map<std::size_t, std::vector<std::unique_ptr<SLM>>&> ySlm{};
+    std::unordered_map<std::size_t, std::vector<std::unique_ptr<SLM>>*> ySlm{};
     for (const auto& zone : architecture_spec["entanglement_zones"]) {
       for (const auto& slmSpec : zone["slms"]) {
         const std::size_t y = slmSpec["location"][1];
         auto it = ySlm.find(y);
         if (it == ySlm.end()) {
-          ySlm[y] = entanglement_zone.emplace_back();
+          ySlm.emplace(y, &entanglement_zone.emplace_back());
         }
-        ySlm[y].emplace_back(std::make_unique<SLM>(slmSpec, &ySlm[y]));
+        ySlm[y]->emplace_back(std::make_unique<SLM>(slmSpec, ySlm[y]));
       }
     }
   } else {
@@ -362,10 +362,7 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
 auto Architecture::nearest_storage_site(const SLM& slm, const std::size_t r,
                                         const std::size_t c) const
     -> std::tuple<const SLM* const, std::size_t, std::size_t> {
-  // get the unique first slm in the group of entanglement slms
-  const auto& uniqueSlm = *slm.entanglement_id->front();
-  return entanglementToNearestStorageSite.at(
-      &uniqueSlm)[r < uniqueSlm.n_r / 2 ? 0 : 1][c];
+  return entanglementToNearestStorageSite.at(&slm)[r][c];
 }
 auto Architecture::nearest_entanglement_site(const SLM* const idx,
                                              const std::size_t r,
