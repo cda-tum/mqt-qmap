@@ -70,18 +70,18 @@ struct Architecture {
       const SLM* const,
       std::vector<
           std::vector<std::tuple<const SLM* const, std::size_t, std::size_t>>>>
-      Rydberg_site_nearest_storage_site;
+      entanglementToNearestStorageSite;
   /// A map from a storage site to the nearest Rydberg site.
   /// @see Rydberg_site_nearest_storage_site
   std::unordered_map<
       const SLM* const,
       std::vector<
           std::vector<std::tuple<const SLM* const, std::size_t, std::size_t>>>>
-      storage_site_nearest_Rydberg_site;
+      storageToNearestEntanglementSite;
   /// A map from a storage site to the distance to the nearest Rydberg site.
   /// @see Rydberg_site_nearest_storage_site
   std::unordered_map<const SLM* const, std::vector<std::vector<double>>>
-      storage_site_nearest_Rydberg_site_dis;
+      storageToNearestEntanglementSiteDistance;
 
   Architecture() = default;
   explicit Architecture(const std::string& filename)
