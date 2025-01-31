@@ -38,6 +38,20 @@ struct SLM {
   explicit SLM(nlohmann::json slmSpec,
                decltype(entanglement_id) entanglementId = nullptr);
 };
+} // namespace na
+
+template<>
+struct std::hash<const na::SLM* const>
+{
+  std::size_t operator()(const na::SLM* const slm) const noexcept
+  {
+    const std::size_t h1 = std::hash<std::size_t>{}(slm->location.first);
+    const std::size_t h2 = std::hash<std::size_t>{}(slm->location.second);
+    return h1 ^ (h2 << 1);
+  }
+};
+
+namespace na {
 
 /// Class to define zone architecture
 struct Architecture {
@@ -269,3 +283,4 @@ struct Architecture {
   }
 };
 } // namespace na
+
