@@ -720,7 +720,7 @@ private:
           for (const auto& neighbor_q : dict_qubit_interaction[q]) {
             const auto& site_neighbor_q = last_gate_mapping[neighbor_q];
             if (!std::get<0>(site_neighbor_q)->entanglement_id) {
-              lookahead_cost += architecture.nearest_entanglement_site_dis(
+              lookahead_cost += architecture.nearest_entanglement_site_distance(
                   std::get<0>(site), std::get<1>(site), std::get<2>(site),
                   std::get<0>(site_neighbor_q), std::get<1>(site_neighbor_q),
                   std::get<2>(site_neighbor_q));

@@ -7,7 +7,7 @@
 
 namespace na {
 
-class Compiler : public CompilerBase,
+class Compiler : public CompilerBase<Compiler>,
                  Scheduler<Compiler>,
                  Placer<Compiler>,
                  Router<Compiler> {
