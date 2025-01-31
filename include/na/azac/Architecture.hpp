@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <istream>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
 #include <string>
@@ -56,7 +57,6 @@ namespace na {
 /// Class to define zone architecture
 struct Architecture {
   std::string name;
-  std::unordered_map<std::string, double> operation_duration;
   std::vector<std::unique_ptr<SLM>> storage_zone;
   std::vector<std::vector<std::unique_ptr<SLM>>> entanglement_zone;
   std::vector<std::unique_ptr<AOD>> dict_AOD;
@@ -102,16 +102,16 @@ struct Architecture {
       : Architecture(std::filesystem::path(filename)) {}
   explicit Architecture(const std::filesystem::path& filepath)
       : Architecture(std::ifstream(filepath)) {}
-  explicit Architecture(std::ifstream& ifs) : Architecture(std::move(ifs)) {}
-  explicit Architecture(std::ifstream&& ifs) { load(std::move(ifs)); }
+  explicit Architecture(std::istream& is) : Architecture(std::move(is)) {}
+  explicit Architecture(std::istream&& is) { load(std::move(is)); }
   auto load(const std::string& filename) -> void {
     load(std::filesystem::path(filename));
   }
   auto load(const std::filesystem::path& filepath) -> void {
     load(std::ifstream(filepath));
   }
-  auto load(std::ifstream& ifs) -> void { load(std::move(ifs)); }
-  auto load(std::ifstream&& ifs) -> void;
+  auto load(std::istream& is) -> void { load(std::move(is)); }
+  auto load(std::istream&& is) -> void;
   //===--------------------------------------------------------------------===//
   /// @see is_valid_SLM_position
   /// Check if the given position is a valid SLM position, i.e., whether the
