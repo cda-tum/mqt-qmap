@@ -31,15 +31,11 @@ AOD::AOD(nlohmann::json aodSpec) {
     throw std::invalid_argument("AOD id is missed in architecture spec");
   }
   if (aodSpec.contains("site_seperation")) {
-    if (aodSpec["site_seperation"].is_array() &&
-        aodSpec["site_seperation"].size() == 2 &&
-        aodSpec["site_seperation"][0].is_number() &&
-        aodSpec["site_seperation"][1].is_number()) {
+    if (aodSpec["site_seperation"].is_number()) {
       site_separation = aodSpec["site_seperation"];
     } else {
       throw std::invalid_argument(
-          "AOD site separation must be a 2D number array in architecture "
-          "spec");
+          "AOD site separation must be a number in architecture spec");
     }
   } else {
     throw std::invalid_argument(
@@ -208,22 +204,27 @@ auto Architecture::load(std::istream&& is) -> void {
   }
   if (architectureSpec.contains("rydberg_range")) {
     if (architectureSpec["rydberg_range"].is_array() &&
-        architectureSpec["rydberg_range"].size() == 2 &&
-        architectureSpec["rydberg_range"][0].is_array() &&
-        architectureSpec["rydberg_range"][0].size() == 2 &&
-        architectureSpec["rydberg_range"][1].is_array() &&
-        architectureSpec["rydberg_range"][1].size() == 2 &&
-        architectureSpec["rydberg_range"][0][0].is_number() &&
-        architectureSpec["rydberg_range"][0][1].is_number() &&
-        architectureSpec["rydberg_range"][1][0].is_number() &&
-        architectureSpec["rydberg_range"][1][1].is_number()) {
-      rydberg_range_min_x = architectureSpec["rydberg_range"][0][0];
-      rydberg_range_max_x = architectureSpec["rydberg_range"][0][1];
-      rydberg_range_min_y = architectureSpec["rydberg_range"][1][0];
-      rydberg_range_max_y = architectureSpec["rydberg_range"][1][1];
+        !architectureSpec["rydberg_range"].empty()) {
+      for (const auto& rydberg_range : architectureSpec["rydberg_range"]) {
+        if (rydberg_range.is_array() && rydberg_range.size() == 2 &&
+            rydberg_range[0].is_array() && rydberg_range[0].size() == 2 &&
+            rydberg_range[1].is_array() && rydberg_range[1].size() == 2 &&
+            rydberg_range[0][0].is_number() &&
+            rydberg_range[0][1].is_number() &&
+            rydberg_range[1][0].is_number() &&
+            rydberg_range[1][1].is_number()) {
+          rydberg_range_min_x.emplace_back(rydberg_range[0][0]);
+          rydberg_range_max_x.emplace_back(rydberg_range[0][1]);
+          rydberg_range_min_y.emplace_back(rydberg_range[1][0]);
+          rydberg_range_max_y.emplace_back(rydberg_range[1][1]);
+        } else {
+          throw std::invalid_argument("rydberg range must be a Nx2x2 number "
+                                      "array in architecture spec, N > 1");
+        }
+      }
     } else {
-      throw std::invalid_argument(
-          "rydberg range must be a 2x2 number array in architecture spec");
+      throw std::invalid_argument("rydberg range must be a Nx2x2 number array "
+                                  "in architecture spec, N > 1");
     }
   } else {
     throw std::invalid_argument(
