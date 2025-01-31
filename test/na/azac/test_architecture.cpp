@@ -1,5 +1,7 @@
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Utils.hpp"
 
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <sstream>
 
@@ -64,6 +66,61 @@ TEST_F(TestArchitecture, Storage) {
   EXPECT_EQ(arch.storage_zone.size(), 1);
   EXPECT_EQ(arch.storage_zone.front()->n_r, 100);
   EXPECT_EQ(arch.storage_zone.front()->n_c, 100);
+}
+
+TEST_F(TestArchitecture, Distance) {
+  const auto* slmPtr = arch.storage_zone.front().get();
+  EXPECT_EQ(arch.distance(slmPtr, 0, 0, slmPtr, 0, 1),
+            slmPtr->site_separation.first);
+  EXPECT_EQ(arch.distance(slmPtr, 0, 0, slmPtr, 1, 0),
+            slmPtr->site_separation.second);
+
+  const auto& slm1 = *slmPtr;
+  EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 0, 1), slm1.site_separation.first);
+  EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 1, 0), slm1.site_separation.second);
+
+  const auto& slm2 = *arch.entanglement_zone.front().front();
+  EXPECT_EQ(arch.distance(slm1, 0, 0, slm2, 0, 0),
+            distance(slm1.location, slm2.location));
+}
+
+TEST_F(TestArchitecture, NearestSite) {
+  const auto& storageSlm = *arch.storage_zone.front();
+  const auto& entanglementSLM = *arch.entanglement_zone.front().front();
+  {
+    const auto nearestStorageSite =
+        arch.nearest_storage_site(&entanglementSLM, 0, 0);
+    const auto minDistance =
+        arch.distance({&entanglementSLM, 0, 0}, nearestStorageSite);
+    for (const auto& slm : arch.storage_zone) {
+      for (std::size_t r = 0; r < slm->n_r; ++r) {
+        for (std::size_t c = 0; c < slm->n_c; ++c) {
+          const auto distance = arch.distance(
+              {&entanglementSLM, 0, 0}, {slm.get(), r, c});
+          EXPECT_GE(distance, minDistance);
+        }
+      }
+    }
+  }
+  {
+    const auto nearestEntanglementSite =
+        arch.nearest_entanglement_site(&storageSlm, 0, 0);
+    const auto minDistance =
+        arch.distance({&storageSlm, 0, 0}, nearestEntanglementSite);
+    for (const auto& slms : arch.entanglement_zone) {
+      for (const auto& slm : slms) {
+        for (std::size_t r = 0; r < slm->n_r; ++r) {
+          for (std::size_t c = 0; c < slm->n_c; ++c) {
+            const auto distance = arch.distance(
+                {&storageSlm, 0, 0}, {slm.get(), r, c});
+            EXPECT_GE(distance, minDistance);
+          }
+        }
+      }
+    }
+    EXPECT_DOUBLE_EQ(arch.nearest_entanglement_site_distance(&storageSlm, 0, 0),
+                     minDistance);
+  }
 }
 
 } // namespace na
