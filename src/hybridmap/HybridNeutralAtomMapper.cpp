@@ -36,15 +36,19 @@
 namespace na {
 void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
                                   Mapping initialMapping) {
+  if (qc.getNqubits() + this->parameters->numFlyingAncillas >
+      arch->getNqubits()) {
+    throw std::runtime_error(
+        "Not enough qubits in architecture for circuit and flying ancillas");
+  }
+  mappedQc.addAncillaryRegister(this->parameters->numFlyingAncillas);
+
   mapping = std::move(initialMapping);
 
   qc::CircuitOptimizer::replaceMCXWithMCZ(qc);
   qc::CircuitOptimizer::singleQubitGateFusion(qc);
   qc::CircuitOptimizer::flattenOperations(qc);
   qc::CircuitOptimizer::removeFinalMeasurements(qc);
-
-  const auto nQubits = qc.getNqubits();
-  prepareAncillas(nQubits);
 
   const auto dag = qc::CircuitOptimizer::constructDAG(qc);
 
@@ -658,6 +662,9 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
 }
 FlyingAncillas NeutralAtomMapper::convertMoveCombToFlyingAncilla(
     const MoveComb& moveComb) const {
+  if (this->flyingAncillas.getNumQubits() == 0) {
+    return {};
+  }
   const auto usedQubits = moveComb.op->getUsedQubits();
   const auto hwQubits = this->mapping.getHwQubits(usedQubits);
   const auto usedCoords = this->hardwareQubits.getCoordIndices(hwQubits);
@@ -1777,22 +1784,6 @@ bool NeutralAtomMapper::swapGateBetter(const qc::Operation* opPointer) {
 //     }
 //   }
 // }
-
-void NeutralAtomMapper::prepareAncillas(const size_t nQcQubits) {
-  // Compute number of flying ancillas
-  const auto nAncillas = arch->getNqubits() - nQcQubits;
-
-  mappedQc = qc::QuantumComputation(nQcQubits);
-  mappedQc.addAncillaryRegister(nAncillas, "a");
-  // remove ancillas from hardware qubit mapping
-  for (auto i = nQcQubits; i < arch->getNqubits(); ++i) {
-    hardwareQubits.removeHwQubit(i);
-  }
-  // remove qubits from flying ancillas
-  for (auto i = 0; i < nQcQubits; ++i) {
-    flyingAncillas.removeHwQubit(i);
-  }
-}
 
 size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
                                            NeutralAtomLayer& lookaheadLayer,

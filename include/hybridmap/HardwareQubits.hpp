@@ -36,6 +36,7 @@ namespace na {
 class HardwareQubits {
 protected:
   const NeutralAtomArchitecture* arch = nullptr;
+  CoordIndex nQubits = 0;
   qc::Permutation hwToCoordIdx;
   SymmetricMatrix<SwapDistance> swapDistances;
   std::map<HwQubit, HwQubits> nearbyQubits;
@@ -82,45 +83,27 @@ protected:
 public:
   // Constructors
   HardwareQubits() = default;
-  HardwareQubits(const NeutralAtomArchitecture& architecture,
-                 const InitialCoordinateMapping initialCoordinateMapping,
-                 const std::vector<CoordIndex>& qubitIndices,
-                 const std::vector<CoordIndex>& hwIndices, uint32_t seed)
-      : arch(&architecture), swapDistances(architecture.getNqubits()) {
+  explicit HardwareQubits(
+      const NeutralAtomArchitecture& architecture, const CoordIndex nQubits = 0,
+      const InitialCoordinateMapping initialCoordinateMapping =
+          InitialCoordinateMapping::Trivial,
+      uint32_t seed = 0)
+      : arch(&architecture) {
+    if (nQubits == 0) {
+      this->nQubits = architecture.getNqubits();
+    } else {
+      this->nQubits = nQubits;
+    }
+    swapDistances = SymmetricMatrix<SwapDistance>(this->nQubits);
+
     switch (initialCoordinateMapping) {
     case Trivial:
-      for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+    case Graph:
+      for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, i);
       }
       initTrivialSwapDistances();
       break;
-    case Graph: {
-      if (qubitIndices.empty()) {
-        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
-          hwToCoordIdx.emplace(i, i);
-        }
-        initTrivialSwapDistances();
-      } else {
-        int hwIndex = 0;
-        for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
-          if (qubitIndices[i] == std::numeric_limits<unsigned int>::max()) {
-            if (hwIndices[hwIndex] !=
-                std::numeric_limits<unsigned int>::max()) {
-              do {
-                hwIndex += 1;
-              } while (hwIndices[hwIndex] !=
-                       std::numeric_limits<unsigned int>::max());
-            }
-            hwToCoordIdx.emplace(i, hwIndex);
-            hwIndex++;
-          } else {
-            hwToCoordIdx.emplace(i, qubitIndices[i]);
-          }
-        }
-        swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
-      }
-      break;
-    }
     case Random:
       std::vector<CoordIndex> indices(architecture.getNpositions());
       std::iota(indices.begin(), indices.end(), 0);
@@ -129,11 +112,11 @@ public:
       }
       std::mt19937 g(seed);
       std::shuffle(indices.begin(), indices.end(), g);
-      for (uint32_t i = 0; i < architecture.getNqubits(); ++i) {
+      for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, indices[i]);
       }
 
-      swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
+      swapDistances = SymmetricMatrix(this->nQubits, -1);
     }
     initNearbyQubits();
     initialHwPos = hwToCoordIdx;
@@ -146,6 +129,8 @@ public:
   [[nodiscard]] const qc::Permutation& getHwToCoordIdx() const {
     return hwToCoordIdx;
   }
+
+  [[nodiscard]] CoordIndex getNumQubits() const { return nQubits; }
 
   /**
    * @brief Checks if a hardware qubit is mapped to a coordinate.

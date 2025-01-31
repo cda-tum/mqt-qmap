@@ -39,8 +39,9 @@ struct MapperParameters {
   qc::fp gateWeight = 1;
   qc::fp shuttlingWeight = 1;
   uint32_t seed = 0;
+  uint32_t numFlyingAncillas = 0;
   bool verbose = false;
-  InitialCoordinateMapping initialMapping;
+  InitialCoordinateMapping initialCoordMapping;
 };
 
 enum RoutingType : uint8_t {
@@ -184,8 +185,6 @@ protected:
    * @return The minimal number of swap gates and time needed to execute the
    * given gate
    */
-
-  void prepareAncillas(size_t nQcQubits);
 
   size_t gateBasedMapping(NeutralAtomLayer& frontLayer,
                           NeutralAtomLayer& lookaheadLayer, size_t i);
@@ -440,7 +439,10 @@ public:
   explicit NeutralAtomMapper(const NeutralAtomArchitecture* architecture,
                              const MapperParameters* p = nullptr)
       : arch(architecture), scheduler(*architecture), parameters(p),
-        hardwareQubits(*arch, p->initialMapping, {}, {}, p->seed) {
+        hardwareQubits(*arch, arch->getNqubits() - p->numFlyingAncillas,
+                       p->initialCoordMapping, p->seed),
+        flyingAncillas(*arch, p->numFlyingAncillas,
+                       InitialCoordinateMapping::Trivial, p->seed) {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
       throw std::runtime_error(
@@ -490,8 +492,12 @@ public:
    * @brief Resets the mapper and the hardware qubits.
    */
   void reset() {
-    hardwareQubits = HardwareQubits(*arch, parameters->initialMapping, {}, {},
-                                    parameters->seed);
+    hardwareQubits = HardwareQubits(
+        *arch, arch->getNqubits() - parameters->numFlyingAncillas,
+        parameters->initialCoordMapping, parameters->seed);
+    flyingAncillas =
+        HardwareQubits(*arch, parameters->numFlyingAncillas,
+                       InitialCoordinateMapping::Trivial, parameters->seed);
   }
 
   // Methods

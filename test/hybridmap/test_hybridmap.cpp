@@ -85,7 +85,7 @@ TEST_P(NeutralAtomMapperTestParams, MapCircuitsIdentity) {
   constexpr na::InitialMapping initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper mapper(arch);
   na::MapperParameters mapperParameters;
-  mapperParameters.initialMapping = initialCoordinateMapping;
+  mapperParameters.initialCoordMapping = initialCoordinateMapping;
   mapperParameters.lookaheadWeightSwaps = lookAheadWeight;
   mapperParameters.lookaheadWeightMoves = lookAheadWeight;
   mapperParameters.decay = decay;
@@ -133,15 +133,17 @@ protected:
 
   void SetUp() override {
     mapper = na::NeutralAtomMapper(arch);
-    mapperParameters.initialMapping = na::InitialCoordinateMapping::Trivial;
+    mapperParameters.initialCoordMapping =
+        na::InitialCoordinateMapping::Trivial;
     mapperParameters.lookaheadWeightSwaps = 0.1;
     mapperParameters.lookaheadWeightMoves = 0.1;
     mapperParameters.decay = 0;
     mapperParameters.shuttlingTimeWeight = 0.1;
-    mapperParameters.gateWeight = 1;
-    mapperParameters.shuttlingWeight = 0;
+    mapperParameters.gateWeight = 0;
+    mapperParameters.shuttlingWeight = 1;
     mapperParameters.seed = 43;
     mapperParameters.verbose = true;
+    mapperParameters.numFlyingAncillas = 1;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(
         // "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
