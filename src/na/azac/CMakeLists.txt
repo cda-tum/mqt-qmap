@@ -8,6 +8,7 @@ if(NOT TARGET ${MQT_QMAP_AZAC_TARGET_NAME})
   add_library(${MQT_QMAP_AZAC_TARGET_NAME}
           ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/azac/Utils.hpp
           ${MQT_QMAP_INCLUDE_BUILD_DIR}/na/azac/Architecture.hpp
+          Utils.cpp
           Architecture.cpp
   )
 
