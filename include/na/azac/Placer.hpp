@@ -2,6 +2,7 @@
 
 #include "na/azac/Architecture.hpp"
 #include "na/azac/CompilerBase.hpp"
+#include "na/azac/Utils.hpp"
 
 #include <algorithm>
 #include <type_traits>
@@ -435,7 +436,7 @@ private:
       for (std::size_t i = 0; i < list_row_coo.size(); ++i) {
         matrix[list_row_coo[i]][list_col_coo[i]] = list_data[i];
       }
-      const auto& matching = minWeightFullBipartiteMatching(matrix);
+      const auto& matching = minimumWeightFullBipartiteMatching(matrix);
       double cost = 0;
       for (std::size_t i = 0; i < matching.size(); ++i) {
         cost += matrix[i][matching[i]].value();
@@ -754,153 +755,13 @@ private:
         for (std::size_t k = 0; k < list_data.size(); ++k) {
           cost_matrix[list_row_coo[k]][list_col_coo[k]] = list_data[k];
         }
-        const auto& matching = minWeightFullBipartiteMatching(cost_matrix);
+        const auto& matching = minimumWeightFullBipartiteMatching(cost_matrix);
         auto tmp_mapping = last_gate_mapping;
         for (std::size_t j = 0; j < matching.size(); ++j) {
           tmp_mapping[qubit_to_place[j]] = list_storage[matching[j]];
         }
         mapping.emplace_back(tmp_mapping);
       }
-    }
-
-  private:
-    /// @note implemented following pseudocode in
-    /// https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
-    auto minWeightFullBipartiteMatching(
-        const std::vector<std::vector<std::optional<double>>>& cost_matrix)
-        -> std::vector<std::size_t> {
-      const std::size_t sizeX = cost_matrix.size();
-      auto it = cost_matrix.cbegin();
-      const std::size_t sizeY = it->size();
-      // check the rectangular shape of input matrix, i.e., check whether all
-      // consecutive rows have the same size
-      for (++it; it != cost_matrix.cend(); ++it) {
-        if (it->size() != sizeY) {
-          throw std::invalid_argument("Input matrix must be rectangular");
-        }
-      }
-      // for all x lists all neighbors y in increasing order of c(x, y)
-      std::vector list(sizeX, std::vector<std::size_t>{});
-      for (std::size_t x = 0; x < sizeX; ++x) {
-        for (std::size_t y = 0; y < sizeY; ++y) {
-          list[x].emplace_back(y);
-        }
-        std::sort(list[x].begin(), list[x].end(),
-                  [x, &cost_matrix](const std::size_t a, const std::size_t b) {
-                    return cost_matrix[x][a] < cost_matrix[x][b];
-                  });
-      }
-      // initialize the set of free sources
-      std::vector freeSources(sizeX, true);
-      // initialize the set of free targets
-      std::vector freeDestinations(sizeY, true);
-      // initialize the matching
-      std::vector<std::optional<std::size_t>> invMatching(sizeY, std::nullopt);
-      std::size_t sizeMatching = 0;
-      std::vector quantitiesX(sizeX, 0.0);
-      std::vector quantitiesY(sizeY, 0.0);
-      std::vector potentialsX(sizeX, 0.0);
-      std::vector potentialsY(sizeY, 0.0);
-      double maxPotential = 0.0;
-      while (sizeMatching < sizeX) {
-        std::vector<std::size_t> pathSetX(sizeX, 0);
-        std::vector<std::size_t> pathSetY(sizeY, 0);
-        // items have the form (<special>, <x>, <y>, <cost>)
-        // if special, the iterator to the edge in list is stored in the
-        // optional
-        std::priority_queue<
-            std::tuple<std::optional<std::vector<std::size_t>::const_iterator>,
-                       std::size_t, std::size_t, double>>
-            queue{};
-        std::vector residueSetX = freeSources;
-        std::vector residueSetY(sizeY, false);
-        for (std::size_t x = 0; x < sizeX; ++x) {
-          if (residueSetX[x]) {
-            quantitiesX[x] = 0.0;
-            const auto listIt = list[x].cbegin();
-            const auto y = *listIt;
-            queue.emplace(listIt, x, y,
-                          quantitiesX[x] + *cost_matrix[x][y] + potentialsX[x] -
-                              maxPotential);
-          }
-        }
-        // intersection of `remainder_set` and `freeDestinations` is empty
-        std::vector intersection(sizeY, false);
-        std::size_t x = 0;
-        std::size_t y = 0;
-        while (std::all_of(intersection.cbegin(), intersection.cend(),
-                           [](const bool b) { return !b; })) {
-          // select regular item from queue
-          bool special = true;
-          do {
-            const auto& itm = queue.top();
-            auto optIt = std::get<0>(itm);
-            special = optIt.has_value();
-            x = std::get<1>(itm);
-            y = std::get<2>(itm);
-            queue.pop();
-            if (special) {
-              if (list[x].back() != y) {
-                const auto itW = ++(*optIt);
-                const auto w = *itW;
-                queue.emplace(itW, x, w,
-                              quantitiesX[x] + *cost_matrix[x][w] +
-                                  potentialsX[x] - maxPotential);
-              }
-              queue.emplace(std::nullopt, x, y,
-                            quantitiesX[x] + *cost_matrix[x][y] +
-                                potentialsX[x] - potentialsY[y]);
-            }
-          } while (!special && invMatching[y] != x);
-          // select regular item from queue - done
-          if (!residueSetY[y]) {
-            pathSetY[y] = x;
-            residueSetY[y] = true;
-            intersection[y] = freeDestinations[y];
-            quantitiesY[y] = quantitiesX[x] + *cost_matrix[x][y] +
-                             potentialsX[x] - potentialsY[y];
-            if (!freeDestinations[y]) {
-              const auto v = *invMatching[y];
-              pathSetX[v] = y;
-              residueSetX[v] = true;
-              quantitiesX[v] = quantitiesY[y];
-              const auto itW = list[v].cbegin();
-              const auto w = *itW;
-              queue.emplace(itW, v, w,
-                            quantitiesX[v] + *cost_matrix[v][w] +
-                                potentialsX[v] - maxPotential);
-            }
-          }
-        }
-        for (std::size_t v = 0; v < sizeX + sizeY; ++v) {
-          if (residueSetX[v]) {
-            potentialsX[v] = quantitiesY[y];
-          } else {
-            potentialsX[v] += potentialsY[y];
-          }
-          maxPotential = std::max(potentialsX[v], maxPotential);
-        }
-        while (true) {
-          x = pathSetY[y];
-          bool freeSourceFound = freeSources[x];
-          invMatching[y] = x;
-          ++sizeMatching;
-          freeSources[x] = false;
-          freeDestinations[y] = false;
-          intersection[y] = false;
-          if (freeSourceFound) {
-            break;
-          }
-          y = pathSetX[x];
-        }
-      }
-      std::vector<std::size_t> matching(sizeX, 0);
-      for (std::size_t y = 0; y < sizeY; ++y) {
-        if (const auto optX = invMatching[y]) {
-          matching[*optX] = y;
-        }
-      }
-      return matching;
     }
   };
 };

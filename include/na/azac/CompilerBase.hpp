@@ -5,6 +5,7 @@
 #include "ir/operations/StandardOperation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Utils.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -410,10 +411,10 @@ public:
         qubit_is_used[i][gate->second] = gate_idx;
       }
       std::vector sparse_matrix(matrix.size(), std::vector<std::size_t>{});
-      for (std::size_t i = 0; i < matrix.size(); ++i) {
-        for (std::size_t j = 0; j < matrix[i].size(); ++j) {
-          if (matrix[i][j]) {
-            sparse_matrix[i].emplace_back(j);
+      for (std::size_t r = 0; r < matrix.size(); ++r) {
+        for (std::size_t c = 0; c < matrix[r].size(); ++c) {
+          if (matrix[r][c]) {
+            sparse_matrix[r].emplace_back(c);
           }
         }
       }
@@ -432,111 +433,6 @@ public:
       }
     }
     reuse_qubit.emplace_back();
-  }
-
-private:
-  /// Computes a maximum matching in a bipartite graph
-  /// @note implemented pseudocode from
-  /// https://epubs.siam.org/doi/pdf/10.1137/0202019?download=true
-  auto maximumBipartiteMatching(
-      const std::vector<std::vector<std::size_t>>& sparseMatrix,
-      bool inverted = false) -> std::vector<std::optional<std::size_t>> {
-    const auto maxSink = std::accumulate(
-        sparseMatrix.cbegin(), sparseMatrix.cend(), static_cast<std::size_t>(0),
-        [](const std::size_t max, const std::vector<std::size_t>& row) {
-          return std::max(max, *std::max_element(row.cbegin(), row.cend()));
-        });
-    std::vector<std::size_t> freeSources(sparseMatrix.size());
-    std::iota(freeSources.begin(), freeSources.end(), 0);
-    std::vector<std::optional<std::size_t>> invMatching(maxSink, std::nullopt);
-    while (true) {
-      // find the reachable free sinks on shortest augmenting paths via bfs
-      // for all distances, std::nullopt means "not visited yet", i.e., infinite
-      // distance
-      std::vector<std::optional<std::size_t>> distance(sparseMatrix.size(),
-                                                       std::nullopt);
-      for (const auto s : freeSources) {
-        distance[s] = 0;
-      }
-      std::queue queue(std::deque(freeSources.cbegin(), freeSources.cend()));
-      std::optional<std::size_t> maxDistance = std::nullopt;
-      while (!queue.empty()) {
-        const auto source = queue.front();
-        queue.pop();
-        if (!maxDistance || *distance[source] < *maxDistance) {
-          for (const auto sink : sparseMatrix[source]) {
-            if (invMatching[sink]) { // a matched sink is found
-              const auto nextSource = *invMatching[sink];
-              if (!distance[nextSource]) { // nextSource is not visited yet
-                distance[nextSource] = *distance[source] + 1;
-                queue.push(nextSource);
-              }
-            } else { // a free sink is found
-              maxDistance = distance[source];
-            }
-          }
-        }
-      }
-      if (!maxDistance) { // no augmenting path exists
-        break;
-      }
-      // find the augmenting paths via dfs and update the matching
-      for (const auto freeSource : freeSources) {
-        std::stack stack(std::deque{freeSource});
-        // this vector tracks the predecessors of each source, i.e., the sink
-        // AND the source coming before the source in the augmenting path
-        std::vector<std::optional<std::pair<std::size_t, std::size_t>>> parents(
-            sparseMatrix.size(), std::nullopt);
-        std::optional<std::pair<std::size_t, std::size_t>> freeSinkFound =
-            std::nullopt;
-        while (!freeSinkFound && !stack.empty()) {
-          const auto source = stack.top();
-          stack.pop();
-          for (const auto sink : sparseMatrix[source]) {
-            if (invMatching[sink]) { // a matched sink is found
-              const auto nextSource = *invMatching[sink];
-              if (distance[nextSource] &&
-                  *distance[nextSource] == *distance[source] + 1) {
-                // the edge from source to sink is a valid edge that was
-                // encountered during the bfs
-                parents[nextSource] = {source, sink};
-                stack.push(nextSource);
-              }
-            } else { // a free sink is found
-              freeSinkFound = {source, sink};
-            }
-          }
-          distance[source] = std::nullopt; // mark source as visited
-        }
-        if (freeSinkFound) {
-          // augment the matching
-          auto source = freeSinkFound->first;
-          auto sink = freeSinkFound->second;
-          invMatching[sink] =
-              source; // that is the additional edge in the matching
-          while (source != freeSource) {
-            sink = parents[source]->first;
-            source = parents[source]->second;
-            invMatching[sink] =
-                source; // update the matching, i.e., flip the edge from the
-                        // successor to the predecessor
-          }
-        }
-      }
-    }
-    // ===-------------------------------===
-    if (inverted) {
-      return invMatching;
-    }
-    // invert the matching
-    std::vector<std::optional<std::size_t>> matching(sparseMatrix.size(),
-                                                     std::nullopt);
-    for (std::size_t i = 0; i < invMatching.size(); ++i) {
-      if (invMatching[i]) {
-        matching[*invMatching[i]] = i;
-      }
-    }
-    return matching;
   }
 };
 
