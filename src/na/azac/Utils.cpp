@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <deque>
+#include <functional>
 #include <numeric>
 #include <optional>
 #include <queue>
@@ -19,7 +20,7 @@ auto maximumBipartiteMatching(
   // Conversely, to other implementations and the literature, we do NOT
   // introduce two extra nodes, one connected to all free sources and one
   // connected to all free sinks. Instead, we start the search directly from
-  // free sources and end as soon we encountered a free sink.
+  // free sources and end as soon as we encountered a free sink.
   const auto maxSink = std::accumulate(
       sparseMatrix.cbegin(), sparseMatrix.cend(), static_cast<std::size_t>(0),
       [](const std::size_t max, const std::vector<std::size_t>& row) {
