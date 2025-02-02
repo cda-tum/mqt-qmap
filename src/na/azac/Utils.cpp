@@ -7,8 +7,8 @@
 #include <optional>
 #include <queue>
 #include <stack>
-#include <tuple>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -16,13 +16,18 @@ namespace na {
 auto maximumBipartiteMatching(
     const std::vector<std::vector<std::size_t>>& sparseMatrix,
     const bool inverted) -> std::vector<std::optional<std::size_t>> {
+  // Conversely, to other implementations and the literature, we do NOT
+  // introduce two extra nodes, one connected to all free sources and one
+  // connected to all free sinks. Instead, we start the search directly from
+  // free sources and end as soon we encountered a free sink.
   const auto maxSink = std::accumulate(
       sparseMatrix.cbegin(), sparseMatrix.cend(), static_cast<std::size_t>(0),
       [](const std::size_t max, const std::vector<std::size_t>& row) {
         return std::max(max, *std::max_element(row.cbegin(), row.cend()));
       });
   std::vector freeSources(sparseMatrix.size(), true);
-  std::vector<std::optional<std::size_t>> invMatching(maxSink + 1, std::nullopt);
+  std::vector<std::optional<std::size_t>> invMatching(maxSink + 1,
+                                                      std::nullopt);
   while (true) {
     // find the reachable free sinks on shortest augmenting paths via bfs
     // for all distances, std::nullopt means "not visited yet", i.e., infinite
@@ -62,7 +67,8 @@ auto maximumBipartiteMatching(
       break;
     }
     // find the augmenting paths via dfs and update the matching
-    for (std::size_t freeSource = 0; freeSource < freeSources.size(); ++freeSource) {
+    for (std::size_t freeSource = 0; freeSource < freeSources.size();
+         ++freeSource) {
       if (freeSources[freeSource]) {
         std::stack stack(std::deque{freeSource});
         // this vector tracks the predecessors of each source, i.e., the sink
@@ -83,7 +89,7 @@ auto maximumBipartiteMatching(
                 // encountered during the bfs
                 parents[nextSource] = {source, sink};
                 stack.push(nextSource);
-                  }
+              }
             } else { // a free sink is found
               freeSinkFound = {source, sink};
               break;
@@ -125,14 +131,14 @@ auto maximumBipartiteMatching(
 }
 
 auto minimumWeightFullBipartiteMatching(
-    const std::vector<std::vector<std::optional<double>>>& cost_matrix)
+    const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t> {
-  const std::size_t sizeX = cost_matrix.size();
-  auto it = cost_matrix.cbegin();
+  const std::size_t sizeX = costMatrix.size();
+  auto it = costMatrix.cbegin();
   const std::size_t sizeY = it->size();
   // check the rectangular shape of input matrix, i.e., check whether all
   // consecutive rows have the same size
-  for (++it; it != cost_matrix.cend(); ++it) {
+  for (++it; it != costMatrix.cend(); ++it) {
     if (it->size() != sizeY) {
       throw std::invalid_argument("Input matrix must be rectangular");
     }
@@ -141,11 +147,13 @@ auto minimumWeightFullBipartiteMatching(
   std::vector list(sizeX, std::vector<std::size_t>{});
   for (std::size_t x = 0; x < sizeX; ++x) {
     for (std::size_t y = 0; y < sizeY; ++y) {
-      list[x].emplace_back(y);
+      if (costMatrix[x][y]) {
+        list[x].emplace_back(y);
+      }
     }
     std::sort(list[x].begin(), list[x].end(),
-              [x, &cost_matrix](const std::size_t a, const std::size_t b) {
-                return cost_matrix[x][a] < cost_matrix[x][b];
+              [x, &costMatrix](const std::size_t a, const std::size_t b) {
+                return costMatrix[x][a] < costMatrix[x][b];
               });
   }
   // initialize the set of free sources
@@ -167,8 +175,14 @@ auto minimumWeightFullBipartiteMatching(
     // if special, the iterator to the edge in list is stored in the
     // optional
     std::priority_queue<
-        std::tuple<std::optional<std::vector<std::size_t>::const_iterator>,
-                   std::size_t, std::size_t, double>>
+        std::tuple<double, std::size_t, std::size_t,
+                   std::optional<std::vector<std::size_t>::const_iterator>>,
+        std::vector<std::tuple<
+            double, std::size_t, std::size_t,
+            std::optional<std::vector<std::size_t>::const_iterator>>>,
+        std::greater<std::tuple<
+            double, std::size_t, std::size_t,
+            std::optional<std::vector<std::size_t>::const_iterator>>>>
         queue{};
     std::vector residueSetX = freeSources;
     std::vector residueSetY(sizeY, false);
@@ -177,9 +191,9 @@ auto minimumWeightFullBipartiteMatching(
         quantitiesX[x] = 0.0;
         const auto listIt = list[x].cbegin();
         const auto y = *listIt;
-        queue.emplace(listIt, x, y,
-                      quantitiesX[x] + *cost_matrix[x][y] + potentialsX[x] -
-                          maxPotential);
+        queue.emplace(quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                          maxPotential,
+                      x, y, listIt);
       }
     }
     // intersection of `remainder_set` and `freeDestinations` is empty
@@ -192,31 +206,30 @@ auto minimumWeightFullBipartiteMatching(
       bool special = false;
       do {
         const auto& itm = queue.top();
-        auto optIt = std::get<0>(itm);
+        auto optIt = std::get<3>(itm);
         special = optIt.has_value();
         x = std::get<1>(itm);
         y = std::get<2>(itm);
         queue.pop();
         if (special) {
           if (list[x].back() != y) {
-            const auto itW = ++(*optIt);
-            const auto w = *itW;
-            queue.emplace(itW, x, w,
-                          quantitiesX[x] + *cost_matrix[x][w] +
-                              potentialsX[x] - maxPotential);
+            const auto w = *(++(*optIt));
+            queue.emplace(quantitiesX[x] + *costMatrix[x][w] + potentialsX[x] -
+                              maxPotential,
+                          x, w, *optIt);
           }
-          queue.emplace(std::nullopt, x, y,
-                        quantitiesX[x] + *cost_matrix[x][y] +
-                            potentialsX[x] - potentialsY[y]);
+          queue.emplace(quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                            potentialsY[y],
+                        x, y, std::nullopt);
         }
-      } while (!special && invMatching[y] != x);
+      } while (special || invMatching[y] == x);
       // select regular item from queue - done
       if (!residueSetY[y]) {
         pathSetY[y] = x;
         residueSetY[y] = true;
         intersection[y] = freeDestinations[y];
-        quantitiesY[y] = quantitiesX[x] + *cost_matrix[x][y] +
-                         potentialsX[x] - potentialsY[y];
+        quantitiesY[y] = quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                         potentialsY[y];
         if (!freeDestinations[y]) {
           const auto v = *invMatching[y];
           pathSetX[v] = y;
@@ -224,18 +237,21 @@ auto minimumWeightFullBipartiteMatching(
           quantitiesX[v] = quantitiesY[y];
           const auto itW = list[v].cbegin();
           const auto w = *itW;
-          queue.emplace(itW, v, w,
-                        quantitiesX[v] + *cost_matrix[v][w] +
-                            potentialsX[v] - maxPotential);
+          queue.emplace(quantitiesX[v] + *costMatrix[v][w] + potentialsX[v] -
+                            maxPotential,
+                        v, w, itW);
         }
       }
     }
-    for (std::size_t v = 0; v < sizeX + sizeY; ++v) {
-      if (residueSetX[v]) {
-        potentialsX[v] = quantitiesY[y];
-      } else {
-        potentialsX[v] += potentialsY[y];
+    for (std::size_t v = 0; v < sizeY; ++v) {
+      if (!residueSetY[v]) {
+        quantitiesY[v] = quantitiesY[y];
       }
+      potentialsY[v] += quantitiesY[v];
+      maxPotential = std::max(potentialsY[v], maxPotential);
+    }
+    for (std::size_t v = 0; v < sizeX; ++v) {
+      potentialsX[v] += quantitiesX[v];
       maxPotential = std::max(potentialsX[v], maxPotential);
     }
     while (true) {
@@ -245,7 +261,6 @@ auto minimumWeightFullBipartiteMatching(
       ++sizeMatching;
       freeSources[x] = false;
       freeDestinations[y] = false;
-      intersection[y] = false;
       if (freeSourceFound) {
         break;
       }
