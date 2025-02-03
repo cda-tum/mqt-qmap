@@ -431,6 +431,15 @@ public:
     return dist;
   }
 
+  [[nodiscard]] qc::fp
+  getPassByEuclideanDistance(const FlyingAncillaComb& faComb) const {
+    qc::fp dist = 0;
+    for (const auto& fa : faComb.moves) {
+      dist += getEuclideanDistance(fa.q1, fa.q2) * 2;
+    }
+    return dist;
+  }
+
   /**
    * @brief Get the Euclidean distance between two coordinates
    * @param c1 The first coordinate

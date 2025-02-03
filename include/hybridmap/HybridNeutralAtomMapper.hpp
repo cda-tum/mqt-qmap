@@ -105,6 +105,7 @@ protected:
   uint32_t nBridges = 0;
   uint32_t nFAncillas = 0;
   uint32_t nMoves = 0;
+  uint32_t nPassBy = 0;
 
   // The current placement of the hardware qubits onto the coordinates
   HardwareQubits hardwareQubits;
@@ -167,8 +168,10 @@ protected:
   void applyMove(AtomMove move);
 
   void applyBridge(NeutralAtomLayer& frontLayer, const Bridge& bridge);
-  void applyFlyingAncilla(FlyingAncilla fa);
-  void applyPassBy(FlyingAncilla fa);
+  void applyFlyingAncilla(NeutralAtomLayer& frontLayer,
+                          const FlyingAncillaComb& faComb);
+  void applyPassBy(NeutralAtomLayer& frontLayer,
+                   const FlyingAncillaComb& faComb);
 
   // Methods for gate vs. shuttling
   /**

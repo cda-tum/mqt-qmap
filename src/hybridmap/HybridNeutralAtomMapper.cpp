@@ -341,6 +341,26 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   return mappedQcAOD;
 }
 
+void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
+                                    const FlyingAncillaComb& faComb) {
+  for (const auto& passBy : faComb.moves) {
+    mappedQc.passby(passBy.q1, passBy.q2);
+    if (this->parameters->verbose) {
+      std::cout << "passby " << passBy.q1 << " " << passBy.q2 << '\n';
+    }
+  }
+  mapGate(faComb.op);
+  for (const auto& passBy : faComb.moves) {
+    mappedQc.passby(passBy.q2, passBy.q1);
+    if (this->parameters->verbose) {
+      std::cout << "passby " << passBy.q2 << " " << passBy.q1 << '\n';
+    }
+  }
+
+  frontLayer.removeGatesAndUpdate({faComb.op});
+  nPassBy += faComb.moves.size();
+}
+
 void NeutralAtomMapper::reassignGatesToLayers(const GateList& frontGates,
                                               const GateList& lookaheadGates) {
   // assign gates to gates or shuttling
@@ -519,6 +539,35 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
   frontLayer.removeGatesAndUpdate({op});
 
   nBridges++;
+}
+void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
+                                           const FlyingAncillaComb& faComb) {
+  for (const auto& passBy : faComb.moves) {
+    mappedQc.passby(passBy.origin, passBy.q1);
+    mappedQc.h(passBy.origin);
+    mappedQc.cz(passBy.origin, passBy.q1);
+    mappedQc.h(passBy.origin);
+    mappedQc.passby(passBy.origin, passBy.q2);
+    if (this->parameters->verbose) {
+      std::cout << "passby (flying ancilla) " << passBy.origin << " "
+                << passBy.q1 << " " << passBy.q2 << '\n';
+    }
+  }
+  mapGate(faComb.op);
+  for (const auto& passBy : faComb.moves) {
+    mappedQc.passby(passBy.origin, passBy.q1);
+    mappedQc.h(passBy.origin);
+    mappedQc.cz(passBy.origin, passBy.q1);
+    mappedQc.h(passBy.origin);
+
+    if (this->parameters->verbose) {
+      std::cout << "passby (flying ancilla)" << passBy.origin << " "
+                << passBy.q2 << " " << passBy.q1 << '\n';
+    }
+  }
+
+  frontLayer.removeGatesAndUpdate({faComb.op});
+  nFAncillas += faComb.moves.size();
 }
 
 Swap NeutralAtomMapper::findBestSwap(const Swap& lastSwap) {
@@ -1630,16 +1679,16 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
       switch (compareShuttlingAndFlyingAncilla(bestComb, bestFaComb)) {
       case MappingMethod::MoveMethod:
         // apply whole move combination at once
-        // for (auto& move : bestComb.moves) {
-        //   applyMove(move);
-        // }
-        applyMove(bestComb.moves[0]);
+        for (const auto& move : bestComb.moves) {
+          applyMove(move);
+        }
+        // applyMove(bestComb.moves[0]);
         break;
       case MappingMethod::FlyingAncillaMethod:
-        // applyFlyingAncilla(bestFA);
+        applyFlyingAncilla(frontLayer, bestFaComb);
         break;
       case MappingMethod::PassByMethod:
-        // applyPassBy(bestFA);
+        applyPassBy(frontLayer, bestFaComb);
         break;
       default:
         break;
@@ -2272,6 +2321,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
       this->arch->getAllToAllEuclideanDistance(faCoords);
 
   // fidelity comparison
+  // move
   auto const moveDist = this->arch->getMoveCombEuclideanDistance(bestMoveComb);
   auto const moveCombSize = bestMoveComb.size();
   auto const moveOpFidelity = std::pow(
@@ -2280,29 +2330,56 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
           this->arch->getShuttlingAverageFidelity(qc::OpType::AodDeactivate),
       moveCombSize);
   auto const moveTime =
-      moveDist / this->arch->getShuttlingTime(qc::OpType::AodMove) +
-      this->arch->getShuttlingTime(qc::OpType::AodActivate) * moveCombSize +
-      this->arch->getShuttlingTime(qc::OpType::AodDeactivate) * moveCombSize;
+      (moveDist / this->arch->getShuttlingTime(qc::OpType::AodMove)) +
+      (this->arch->getShuttlingTime(qc::OpType::AodActivate) *
+       static_cast<qc::fp>(moveCombSize)) +
+      (this->arch->getShuttlingTime(qc::OpType::AodDeactivate) *
+       static_cast<qc::fp>(moveCombSize));
   auto const moveDecoherence =
       std::exp(-moveTime / this->arch->getDecoherenceTime());
   auto const moveFidelity = moveOpFidelity * moveDecoherence;
 
+  // flying ancilla
   auto const faDist = this->arch->getFaEuclideanDistance(bestFaComb);
   auto const faCombSize = bestFaComb.moves.size();
   auto const faOpFidelity =
       std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
-                   std::pow(this->arch->getGateAverageFidelity("CZ"), 2) *
-                   std::pow(this->arch->getGateAverageFidelity("H"), 4),
+                   std::pow(this->arch->getGateAverageFidelity("cz"), 2) *
+                   std::pow(this->arch->getGateAverageFidelity("h"), 4),
                faCombSize);
   auto const faDecoherence =
       std::exp(-faDist / this->arch->getShuttlingTime(qc::OpType::AodMove) /
                this->arch->getDecoherenceTime());
   auto const faFidelity = faOpFidelity * faDecoherence;
 
-  if (moveDistReduction * moveFidelity > faDistReduction * faFidelity) {
+  // passby
+  auto const passByDist = this->arch->getPassByEuclideanDistance(bestFaComb);
+  auto const passByTime =
+      (passByDist / this->arch->getShuttlingTime(qc::OpType::AodMove)) +
+      (this->arch->getShuttlingTime(qc::OpType::AodActivate) *
+       static_cast<qc::fp>(faCombSize)) +
+      (this->arch->getShuttlingTime(qc::OpType::AodDeactivate) *
+       static_cast<qc::fp>(faCombSize));
+  auto const passByFidelity =
+      std::pow(
+          this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
+              this->arch->getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+              this->arch->getShuttlingAverageFidelity(
+                  qc::OpType::AodDeactivate),
+          faCombSize) *
+      std::exp(-passByTime / this->arch->getDecoherenceTime());
+
+  const auto move = moveDistReduction * moveFidelity;
+  const auto fa = faDistReduction * faFidelity;
+  const auto passBy = faDistReduction * passByFidelity;
+
+  if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
   }
-  return MappingMethod::FlyingAncillaMethod;
+  if (fa > move && fa > passBy) {
+    return MappingMethod::FlyingAncillaMethod;
+  }
+  return MappingMethod::PassByMethod;
 }
 
 // void NeutralAtomMapper::updateMappingFlyingAncilla(
