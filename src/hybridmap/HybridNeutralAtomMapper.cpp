@@ -328,12 +328,17 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
 
 qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   // decompose SWAP gates
+  mappedQc.dumpOpenQASM(std::cout, false);
   qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
+  mappedQc.dumpOpenQASM(std::cout, false);
+  // decompose bridge gates
   decomposeBridgeGates(mappedQc);
+  mappedQc.dumpOpenQASM(std::cout, false);
   qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
   qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
   qc::CircuitOptimizer::flattenOperations(mappedQc);
   // decompose AOD moves
+  mappedQc.dumpOpenQASM(std::cout, false);
   MoveToAodConverter aodScheduler(*arch, hardwareQubits);
   mappedQcAOD = aodScheduler.schedule(mappedQc);
   if (this->parameters->verbose) {
@@ -543,27 +548,42 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
 }
 void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                                            const FlyingAncillaComb& faComb) {
+  auto usedQubits = faComb.op->getUsedQubits();
   for (const auto& passBy : faComb.moves) {
-    mappedQc.passby(passBy.origin, passBy.q1);
-    mappedQc.h(passBy.origin);
-    mappedQc.cz(passBy.origin, passBy.q1);
-    mappedQc.h(passBy.origin);
-    mappedQc.passby(passBy.origin, passBy.q2);
-    if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla) " << passBy.origin << " "
-                << passBy.q1 << " " << passBy.q2 << '\n';
+    const auto faCoordIdx = passBy.index + this->arch->getNpositions();
+    mappedQc.passby(faCoordIdx, passBy.q1);
+    mappedQc.h(faCoordIdx);
+    mappedQc.cz(faCoordIdx, passBy.q1);
+    mappedQc.h(faCoordIdx);
+    mappedQc.passby(faCoordIdx, passBy.q2);
+
+    if (usedQubits.find(passBy.q1) != usedQubits.end()) {
+      usedQubits.erase(passBy.q1);
+      usedQubits.insert(faCoordIdx);
     }
-  }
-  mapGate(faComb.op);
-  for (const auto& passBy : faComb.moves) {
-    mappedQc.passby(passBy.origin, passBy.q1);
-    mappedQc.h(passBy.origin);
-    mappedQc.cz(passBy.origin, passBy.q1);
-    mappedQc.h(passBy.origin);
 
     if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla)" << passBy.origin << " "
-                << passBy.q2 << " " << passBy.q1 << '\n';
+      std::cout << "passby (flying ancilla) " << faCoordIdx << " " << passBy.q1
+                << " " << passBy.q2 << '\n';
+    }
+  }
+  const auto opCopy = faComb.op->clone();
+  const std::vector<CoordIndex> usedQubitsVec = {usedQubits.begin(),
+                                                 usedQubits.end()};
+  opCopy->setTargets(usedQubitsVec);
+  opCopy->setControls({});
+  mappedQc.emplace_back(opCopy->clone());
+
+  for (const auto& passBy : faComb.moves) {
+    const auto faCoordIdx = passBy.index + this->arch->getNpositions();
+    mappedQc.passby(faCoordIdx, passBy.q1);
+    mappedQc.h(faCoordIdx);
+    mappedQc.cz(faCoordIdx, passBy.q1);
+    mappedQc.h(faCoordIdx);
+
+    if (this->parameters->verbose) {
+      std::cout << "passby (flying ancilla)" << faCoordIdx << " " << passBy.q2
+                << " " << passBy.q1 << '\n';
     }
   }
 
@@ -2374,6 +2394,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
+  return MappingMethod::FlyingAncillaMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
