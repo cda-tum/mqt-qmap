@@ -399,6 +399,38 @@ public:
     return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
         this->coordinates.at(idx2)));
   }
+  [[nodiscard]] qc::fp
+  getAllToAllEuclideanDistance(const std::set<CoordIndex>& coords) const {
+    qc::fp dist = 0;
+    for (auto const c1 : coords) {
+      for (auto const c2 : coords) {
+        if (c1 == c2) {
+          continue;
+        }
+        dist += getSwapDistance(c1, c2);
+      }
+    }
+    return dist;
+  }
+  [[nodiscard]] qc::fp
+  getMoveCombEuclideanDistance(const MoveComb& moveComb) const {
+    qc::fp dist = 0;
+    for (const auto& move : moveComb.moves) {
+      dist += getEuclideanDistance(move.first, move.second);
+    }
+    return dist;
+  }
+
+  [[nodiscard]] qc::fp
+  getFaEuclideanDistance(const FlyingAncillaComb& faComb) const {
+    qc::fp dist = 0;
+    for (const auto& fa : faComb.moves) {
+      dist += getEuclideanDistance(fa.origin, fa.q1);
+      dist += getEuclideanDistance(fa.q1, fa.q2) * 2;
+    }
+    return dist;
+  }
+
   /**
    * @brief Get the Euclidean distance between two coordinates
    * @param c1 The first coordinate

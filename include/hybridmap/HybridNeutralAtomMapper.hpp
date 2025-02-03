@@ -237,8 +237,8 @@ protected:
 
   [[nodiscard]] CoordIndices computeCurrentCoordUsages() const;
 
-  [[nodiscard]] FlyingAncillas
-  convertMoveCombToFlyingAncilla(const MoveComb& moveComb) const;
+  [[nodiscard]] FlyingAncillaComb
+  convertMoveCombToFlyingAncillaComb(const MoveComb& moveComb) const;
 
   // std::vector<std::pair<const qc::Operation*, Bridge>>
   // findAllBridges(qc::QuantumComputation& qc);
@@ -301,7 +301,8 @@ protected:
   [[nodiscard]] MappingMethod compareSwapAndBridge(const Swap& bestSwap,
                                                    const Bridge& bestBridge);
   [[nodiscard]] MappingMethod
-  compareShuttlingAndFlyingAncilla(MoveComb bestComb);
+  compareShuttlingAndFlyingAncilla(const MoveComb& bestMoveComb,
+                                   const FlyingAncillaComb& bestFaComb) const;
 
   // Helper methods
   /**
@@ -391,6 +392,8 @@ protected:
   qc::fp swapCost(const Swap& swap,
                   const std::pair<Swaps, WeightedSwaps>& swapsFront,
                   const std::pair<Swaps, WeightedSwaps>& swapsLookahead);
+  qc::fp moveCombDistanceReduction(const MoveComb& moveComb,
+                                   const GateList& layer) const;
   qc::fp swapDistanceReduction(const Swap& swap, const GateList& layer);
   /**
    * @brief Calculates the cost of a move operation.

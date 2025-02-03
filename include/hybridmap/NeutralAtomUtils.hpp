@@ -138,10 +138,12 @@ struct FlyingAncilla {
   CoordIndex q1;
   CoordIndex q2;
   size_t index;
-  const qc::Operation* op;
 };
 
-using FlyingAncillas = std::vector<FlyingAncilla>;
+struct FlyingAncillaComb {
+  std::vector<FlyingAncilla> moves;
+  const qc::Operation* op;
+};
 
 /**
  * @brief Helper class to manage multiple atom moves which belong together.

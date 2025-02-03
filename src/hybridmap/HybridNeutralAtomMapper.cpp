@@ -660,7 +660,7 @@ CoordIndices NeutralAtomMapper::computeCurrentCoordUsages() const {
   }
   return coordUsages;
 }
-FlyingAncillas NeutralAtomMapper::convertMoveCombToFlyingAncilla(
+FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
     const MoveComb& moveComb) const {
   if (this->flyingAncillas.getNumQubits() == 0) {
     return {};
@@ -674,12 +674,11 @@ FlyingAncillas NeutralAtomMapper::convertMoveCombToFlyingAncilla(
   }
 
   // multi-qubit gate -> only one direction
-  FlyingAncillas bestFAs;
+  std::vector<FlyingAncilla> bestFAs;
   FlyingAncilla bestFA{};
   HwQubits usedFA;
   for (const auto move : moveComb.moves) {
     if (usedCoords.find(move.first) != usedCoords.end()) {
-      bestFA.op = moveComb.op;
       const auto nearFirstIdx =
           this->flyingAncillas.getClosestQubit(move.first, usedFA);
       const auto nearFirst = this->flyingAncillas.getCoordIndex(nearFirstIdx);
@@ -705,7 +704,7 @@ FlyingAncillas NeutralAtomMapper::convertMoveCombToFlyingAncilla(
       bestFAs.emplace_back(bestFA);
     }
   }
-  return bestFAs;
+  return {bestFAs, moveComb.op};
 }
 
 qc::fp NeutralAtomMapper::swapCost(
@@ -767,6 +766,29 @@ qc::fp NeutralAtomMapper::swapDistanceReduction(const Swap& swap,
     swapDistReduction += distBefore - distAfter;
   }
   return swapDistReduction;
+}
+
+qc::fp
+NeutralAtomMapper::moveCombDistanceReduction(const MoveComb& moveComb,
+                                             const GateList& layer) const {
+  qc::fp moveDistReduction = 0;
+  for (const auto& op : layer) {
+    auto usedQubits = op->getUsedQubits();
+    auto hwQubits = this->mapping.getHwQubits(usedQubits);
+    auto coordIndices = this->hardwareQubits.getCoordIndices(hwQubits);
+    const auto& distBefore =
+        this->arch->getAllToAllEuclideanDistance(coordIndices);
+    for (const auto& move : moveComb.moves) {
+      if (coordIndices.find(move.first) != coordIndices.end()) {
+        coordIndices.erase(move.first);
+        coordIndices.insert(move.second);
+      }
+    }
+    const auto& distAfter =
+        this->arch->getAllToAllEuclideanDistance(coordIndices);
+    moveDistReduction += distBefore - distAfter;
+  }
+  return moveDistReduction;
 }
 
 std::pair<Swaps, WeightedSwaps>
@@ -1603,9 +1625,9 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
         std::cout << "iteration " << i << '\n';
       }
       auto bestComb = findBestAtomMove();
-      auto bestFA = convertMoveCombToFlyingAncilla(bestComb);
+      auto bestFaComb = convertMoveCombToFlyingAncillaComb(bestComb);
 
-      switch (compareShuttlingAndFlyingAncilla(bestComb)) {
+      switch (compareShuttlingAndFlyingAncilla(bestComb, bestFaComb)) {
       case MappingMethod::MoveMethod:
         // apply whole move combination at once
         // for (auto& move : bestComb.moves) {
@@ -2235,9 +2257,52 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   return MappingMethod::BridgeMethod;
 }
 
-MappingMethod
-NeutralAtomMapper::compareShuttlingAndFlyingAncilla(MoveComb bestComb) {
-  return MappingMethod::MoveMethod;
+MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
+    const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb) const {
+  // move distance reduction
+  auto const moveDistReduction =
+      moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +
+      (this->parameters->lookaheadWeightMoves *
+       moveCombDistanceReduction(bestMoveComb, this->lookaheadLayerShuttling));
+
+  // flying ancilla distance reduction
+  auto const faCoords = this->hardwareQubits.getCoordIndices(
+      this->mapping.getHwQubits(bestFaComb.op->getUsedQubits()));
+  auto const faDistReduction =
+      this->arch->getAllToAllEuclideanDistance(faCoords);
+
+  // fidelity comparison
+  auto const moveDist = this->arch->getMoveCombEuclideanDistance(bestMoveComb);
+  auto const moveCombSize = bestMoveComb.size();
+  auto const moveOpFidelity = std::pow(
+      this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
+          this->arch->getShuttlingAverageFidelity(qc::OpType::AodActivate) *
+          this->arch->getShuttlingAverageFidelity(qc::OpType::AodDeactivate),
+      moveCombSize);
+  auto const moveTime =
+      moveDist / this->arch->getShuttlingTime(qc::OpType::AodMove) +
+      this->arch->getShuttlingTime(qc::OpType::AodActivate) * moveCombSize +
+      this->arch->getShuttlingTime(qc::OpType::AodDeactivate) * moveCombSize;
+  auto const moveDecoherence =
+      std::exp(-moveTime / this->arch->getDecoherenceTime());
+  auto const moveFidelity = moveOpFidelity * moveDecoherence;
+
+  auto const faDist = this->arch->getFaEuclideanDistance(bestFaComb);
+  auto const faCombSize = bestFaComb.moves.size();
+  auto const faOpFidelity =
+      std::pow(this->arch->getShuttlingAverageFidelity(qc::OpType::AodMove) *
+                   std::pow(this->arch->getGateAverageFidelity("CZ"), 2) *
+                   std::pow(this->arch->getGateAverageFidelity("H"), 4),
+               faCombSize);
+  auto const faDecoherence =
+      std::exp(-faDist / this->arch->getShuttlingTime(qc::OpType::AodMove) /
+               this->arch->getDecoherenceTime());
+  auto const faFidelity = faOpFidelity * faDecoherence;
+
+  if (moveDistReduction * moveFidelity > faDistReduction * faFidelity) {
+    return MappingMethod::MoveMethod;
+  }
+  return MappingMethod::FlyingAncillaMethod;
 }
 
 // void NeutralAtomMapper::updateMappingFlyingAncilla(
