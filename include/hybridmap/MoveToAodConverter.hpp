@@ -231,13 +231,14 @@ protected:
      * @param move Move to check
      * @return True if the move can be added, false otherwise
      */
-    bool canAdd(const AtomMove& move, const NeutralAtomArchitecture& archArg);
+    bool canAddMove(const AtomMove& move,
+                    const NeutralAtomArchitecture& archArg);
     /**
      * @brief Adds the given move to the move group
      * @param move Move to add
      * @param idx Index of the move in the original quantum circuit
      */
-    void add(const AtomMove& move, uint32_t idx);
+    void addMove(const AtomMove& move, uint32_t idx);
     /**
      * @brief Returns the circuit index of the first move in the move group
      * @return Circuit index of the first move in the move group

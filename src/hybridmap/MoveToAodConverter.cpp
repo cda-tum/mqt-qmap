@@ -66,12 +66,12 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
   for (auto& op : qc) {
     if (op->getType() == qc::OpType::Move) {
       AtomMove const move{op->getTargets()[0], op->getTargets()[1]};
-      if (currentMoveGroup.canAdd(move, arch)) {
-        currentMoveGroup.add(move, idx);
+      if (currentMoveGroup.canAddMove(move, arch)) {
+        currentMoveGroup.addMove(move, idx);
       } else {
         moveGroups.emplace_back(currentMoveGroup);
         currentMoveGroup = MoveGroup();
-        currentMoveGroup.add(move, idx);
+        currentMoveGroup.addMove(move, idx);
       }
       // TODO: make AtomMove for flying ancilla -> add to moveGroup
     } else if (op->getType() == qc::OpType::PassBy) {
@@ -94,7 +94,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
   }
 }
 
-bool MoveToAodConverter::MoveGroup::canAdd(
+bool MoveToAodConverter::MoveGroup::canAddMove(
     const AtomMove& move, const NeutralAtomArchitecture& archArg) {
   // if move would move a qubit that is used by a gate in this move group
   // return false
@@ -129,8 +129,8 @@ bool MoveToAodConverter::MoveGroup::parallelCheck(const MoveVector& v1,
   return true;
 }
 
-void MoveToAodConverter::MoveGroup::add(const AtomMove& move,
-                                        const uint32_t idx) {
+void MoveToAodConverter::MoveGroup::addMove(const AtomMove& move,
+                                            const uint32_t idx) {
   moves.emplace_back(move, idx);
   qubitsUsedByGates.emplace_back(move.second);
 }
@@ -333,7 +333,7 @@ void MoveToAodConverter::processMoveGroups() {
           deactivationCanAddXY.second == ActivationMergeType::Impossible) {
         // move could not be added as not sufficient intermediate levels
         // add new move group and add move to it
-        possibleNewMoveGroup.add(move, idx);
+        possibleNewMoveGroup.addMove(move, idx);
         movesToRemove.emplace_back(move);
       } else {
         aodActivationHelper.addActivation(activationCanAddXY, origin, move, v);
