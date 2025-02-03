@@ -112,6 +112,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     std::cout << "nBridges: " << nBridges << '\n';
     std::cout << "nFAncillas: " << nFAncillas << '\n';
     std::cout << "nMoves: " << nMoves << '\n';
+    std::cout << "nPassBy: " << nPassBy << '\n';
 
     mappedQc.print(std::cout);
   }
