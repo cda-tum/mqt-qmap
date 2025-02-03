@@ -1625,9 +1625,10 @@ MoveCombs NeutralAtomMapper::getMoveCombinationsToPosition(
     if (this->hardwareQubits.isMapped(bestCoord)) {
       auto moveAwayComb =
           getMoveAwayCombinations(currentGateQubit, bestCoord, remainingCoords);
-      for (const auto& moveAway : moveAwayComb) {
-        moveComb.append(moveAway);
-      }
+      // for (const auto& moveAway : moveAwayComb) {
+      //   moveComb.append(moveAway);
+      // }
+      moveComb.append(moveAwayComb.moveCombs[0]);
     } else {
       moveComb.append(AtomMove{currentGateQubit, bestCoord});
     }
