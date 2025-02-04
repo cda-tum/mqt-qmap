@@ -320,7 +320,9 @@ public:
                               const na::HardwareQubits& hardwareQubitsArg)
       : arch(archArg), qcScheduled(arch.getNpositions()),
         hardwareQubits(hardwareQubitsArg),
-        ancillaAtoms(AncillaAtoms(arch.getNpositions(), AncillaAtom())) {}
+        ancillaAtoms(AncillaAtoms(arch.getNpositions(), AncillaAtom())) {
+    qcScheduled.addAncillaryRegister(arch.getNpositions());
+  }
 
   /**
    * @brief Schedules the given quantum circuit using AODs
