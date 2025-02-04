@@ -1690,32 +1690,29 @@ size_t NeutralAtomMapper::shuttlingBasedMapping(
     NeutralAtomLayer& frontLayer, NeutralAtomLayer& lookaheadLayer, size_t i) {
   while (!this->frontLayerShuttling.empty()) {
     GateList gatesToExecute;
-    while (gatesToExecute.empty()) {
-      ++i;
-      if (this->parameters->verbose) {
-        std::cout << "iteration " << i << '\n';
-      }
-      auto bestComb = findBestAtomMove();
-      auto bestFaComb = convertMoveCombToFlyingAncillaComb(bestComb);
+    ++i;
+    if (this->parameters->verbose) {
+      std::cout << "iteration " << i << '\n';
+    }
+    auto bestComb = findBestAtomMove();
+    auto bestFaComb = convertMoveCombToFlyingAncillaComb(bestComb);
 
-      switch (compareShuttlingAndFlyingAncilla(bestComb, bestFaComb)) {
-      case MappingMethod::MoveMethod:
-        // apply whole move combination at once
-        for (const auto& move : bestComb.moves) {
-          applyMove(move);
-        }
-        // applyMove(bestComb.moves[0]);
-        break;
-      case MappingMethod::FlyingAncillaMethod:
-        applyFlyingAncilla(frontLayer, bestFaComb);
-        break;
-      case MappingMethod::PassByMethod:
-        applyPassBy(frontLayer, bestFaComb);
-        break;
-      default:
-        break;
+    switch (compareShuttlingAndFlyingAncilla(bestComb, bestFaComb)) {
+    case MappingMethod::MoveMethod:
+      // apply whole move combination at once
+      for (const auto& move : bestComb.moves) {
+        applyMove(move);
       }
-      gatesToExecute = getExecutableGates(frontLayer.getGates());
+      // applyMove(bestComb.moves[0]);
+      break;
+    case MappingMethod::FlyingAncillaMethod:
+      applyFlyingAncilla(frontLayer, bestFaComb);
+      break;
+    case MappingMethod::PassByMethod:
+      applyPassBy(frontLayer, bestFaComb);
+      break;
+    default:
+      break;
     }
     mapAllPossibleGates(frontLayer, lookaheadLayer);
     reassignGatesToLayers(frontLayer.getGates(), lookaheadLayer.getGates());
@@ -2394,7 +2391,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
-  return MappingMethod::MoveMethod;
+  return MappingMethod::PassByMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
