@@ -553,7 +553,9 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + nPos;
     const auto ancQ2 = passBy.q2 + nPos;
-    mappedQc.move(passBy.origin + nPos, ancQ1);
+    if (passBy.origin + nPos != ancQ1) {
+      mappedQc.move(passBy.origin + nPos, ancQ1);
+    }
     mappedQc.h(ancQ1);
     mappedQc.cz(passBy.q1, ancQ1);
     mappedQc.h(ancQ1);
@@ -565,7 +567,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     }
 
     if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla) " << ancQ1 << " " << ancQ2 << '\n';
+      std::cout << "passby (flying ancilla) " << passBy.origin << " "
+                << passBy.q1 << " " << passBy.q2 << '\n';
     }
   }
   const auto opCopy = faComb.op->clone();
@@ -584,7 +587,16 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     mappedQc.h(ancQ1);
 
     // update position of flying ancillas
-    this->flyingAncillas.move(passBy.index, passBy.q1);
+    if (this->flyingAncillas.isMapped(passBy.q1)) {
+      // move away
+      const auto& freeCoords =
+          this->flyingAncillas.getNearbyFreeCoordinatesByCoord(passBy.q1);
+      const auto& freeCoord = *freeCoords.begin();
+      mappedQc.move(passBy.q1 + nPos, freeCoord + nPos);
+      this->flyingAncillas.move(passBy.q1, freeCoord);
+    } else {
+      this->flyingAncillas.move(passBy.index, passBy.q1);
+    }
 
     if (this->parameters->verbose) {
       std::cout << "passby (flying ancilla)" << ancQ2 << " " << ancQ1 << '\n';
@@ -2391,7 +2403,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
-  return MappingMethod::PassByMethod;
+  return MappingMethod::FlyingAncillaMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
