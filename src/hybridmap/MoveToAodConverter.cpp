@@ -409,8 +409,21 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   for (const auto& activation : aodActivationHelper.allActivations) {
     for (const auto& deactivation : aodDeactivationHelper.allActivations) {
       if (activation.moves == deactivation.moves) {
-        targetQubits.insert(activation.moves[0].c1);
-        targetQubits.insert(activation.moves[0].c2);
+        // get target qubits
+        for (const auto& move : activation.moves) {
+          if (move.load1) {
+            targetQubits.insert(move.c1);
+          } else {
+            targetQubits.insert(move.c1 +
+                                aodActivationHelper.arch->getNpositions());
+          }
+          if (move.load2) {
+            targetQubits.insert(move.c2);
+          } else {
+            targetQubits.insert(move.c2 +
+                                aodActivationHelper.arch->getNpositions());
+          }
+        }
 
         for (const auto& dim : dimensions) {
           const auto& activationDim = activation.getActivates(dim);
