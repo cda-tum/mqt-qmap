@@ -57,6 +57,7 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
   }
 
   return qcScheduled;
+  qcScheduled.print(std::cout);
 }
 
 AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
@@ -346,7 +347,7 @@ void MoveToAodConverter::processMoveGroups() {
     groupIt->processedOpsInit = aodActivationHelper.getAodOperations();
     groupIt->processedOpsFinal = aodDeactivationHelper.getAodOperations();
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
-        groupIt->processedOpsInit, groupIt->processedOpsFinal);
+        aodActivationHelper, aodDeactivationHelper);
   }
 }
 std::pair<std::vector<AtomMove>, MoveToAodConverter::MoveGroup>
@@ -390,61 +391,46 @@ MoveToAodConverter::processMoves(
 }
 
 AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
-    const std::vector<AodOperation>& opsInit,
-    const std::vector<AodOperation>& opsFinal) {
+    const AodActivationHelper& aodActivationHelper,
+    const AodActivationHelper& aodDeactivationHelper) {
   // for each init operation find the corresponding final operation
   // and connect with an aod move operations
   // all can be done in parallel in a single move
   std::vector<SingleOperation> aodOperations;
   std::set<CoordIndex> targetQubits;
 
-  for (const auto& opInit : opsInit) {
-    if (opInit.getType() == qc::OpType::AodMove) {
-      for (const auto& opFinal : opsFinal) {
-        if (opFinal.getType() == qc::OpType::AodMove) {
-          if (opInit.getTargets().size() <= 1 ||
-              opFinal.getTargets().size() <= 1) {
-            throw qc::QFRException(
-                "AodScheduler::MoveGroup::connectAodOperations: "
-                "AodMove operation with less than 2 targets");
-          }
-          if (opInit.getTargets() == opFinal.getTargets()) {
-            targetQubits.insert(opInit.getTargets().begin(),
-                                opInit.getTargets().end());
-            // found corresponding final operation
-            // connect with aod move
-            const auto startXs = opInit.getEnds(Dimension::X);
-            const auto endXs = opFinal.getStarts(Dimension::X);
-            const auto startYs = opInit.getEnds(Dimension::Y);
-            const auto endYs = opFinal.getStarts(Dimension::Y);
-            if (!startXs.empty() && !endXs.empty()) {
-              for (size_t i = 0; i < startXs.size(); i++) {
-                const auto startX = startXs[i];
-                const auto endX = endXs[i];
-                if (std::abs(startX - endX) > 0.0001) {
-                  aodOperations.emplace_back(Dimension::X, startX, endX);
-                }
-              }
-            }
-            if (!startYs.empty() && !endYs.empty()) {
-              for (size_t i = 0; i < startYs.size(); i++) {
-                const auto startY = startYs[i];
-                const auto endY = endYs[i];
-                if (std::abs(startY - endY) > 0.0001) {
-                  aodOperations.emplace_back(Dimension::Y, startY, endY);
-                }
-              }
+  auto d = aodActivationHelper.arch->getInterQubitDistance();
+  auto interD = aodActivationHelper.arch->getInterQubitDistance() /
+                aodActivationHelper.arch->getNAodIntermediateLevels();
+
+  std::vector<na::Dimension> dimensions = {na::Dimension::X, na::Dimension::Y};
+
+  // connect move operations
+  for (const auto& activation : aodActivationHelper.allActivations) {
+    for (const auto& deactivation : aodDeactivationHelper.allActivations) {
+      if (activation.moves == deactivation.moves) {
+        targetQubits.insert(activation.moves[0].c1);
+        targetQubits.insert(activation.moves[0].c2);
+
+        for (const auto& dim : dimensions) {
+          const auto& activationDim = activation.getActivates(dim);
+          const auto& deactivationDim = deactivation.getActivates(dim);
+          for (size_t i = 0; i < activationDim.size(); i++) {
+            const auto& start =
+                activationDim[i]->init * d + activationDim[i]->offset * interD;
+            const auto& end = deactivationDim[i]->init * d +
+                              deactivationDim[i]->offset * interD;
+            if (std::abs(start - end) > 0.0001) {
+              aodOperations.emplace_back(dim, start, end);
             }
           }
         }
       }
     }
   }
-  std::vector<CoordIndex> targetQubitsVec;
-  targetQubitsVec.reserve(targetQubits.size());
-  for (const auto& qubit : targetQubits) {
-    targetQubitsVec.emplace_back(qubit);
-  }
+
+  std::vector<CoordIndex> targetQubitsVec = {targetQubits.begin(),
+                                             targetQubits.end()};
   return {qc::OpType::AodMove, targetQubitsVec, aodOperations};
 }
 
@@ -581,16 +567,16 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<SingleOperation> offsetOperations;
 
   for (const auto& aodMove : activation.activateXs) {
-    if (aodMove->load) {
-      computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
-                                     offsetOperations);
-    }
+    // if (aodMove->load) {
+    computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
+                                   offsetOperations);
+    // }
   }
   for (const auto& aodMove : activation.activateYs) {
-    if (aodMove->load) {
-      computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
-                                     offsetOperations);
-    }
+    // if (aodMove->load) {
+    computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
+                                   offsetOperations);
+    // }
   }
   if (initOperations.empty() && offsetOperations.empty()) {
     return {};

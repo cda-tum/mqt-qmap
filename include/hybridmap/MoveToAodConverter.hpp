@@ -273,14 +273,22 @@ protected:
      * operations
      */
     static AodOperation
-    connectAodOperations(const std::vector<AodOperation>& opsInit,
-                         const std::vector<AodOperation>& opsFinal);
+    connectAodOperations(const AodActivationHelper& aodActivationHelper,
+                         const AodActivationHelper& aodDeactivationHelper);
   };
+  struct AncillaAtom {
+    bool occupied = false;
+    uint32_t xOffset = 1;
+    uint32_t yOffset = 1;
+  };
+
+  using AncillaAtoms = std::vector<AncillaAtom>;
 
   const NeutralAtomArchitecture& arch;
   qc::QuantumComputation qcScheduled;
   std::vector<MoveGroup> moveGroups;
   const na::HardwareQubits& hardwareQubits;
+  AncillaAtoms ancillaAtoms;
 
   AtomMove convertOpToMove(qc::Operation* get);
   /**
@@ -311,7 +319,8 @@ public:
   explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg,
                               const na::HardwareQubits& hardwareQubitsArg)
       : arch(archArg), qcScheduled(arch.getNpositions()),
-        hardwareQubits(hardwareQubitsArg) {}
+        hardwareQubits(hardwareQubitsArg),
+        ancillaAtoms(AncillaAtoms(arch.getNpositions(), AncillaAtom())) {}
 
   /**
    * @brief Schedules the given quantum circuit using AODs
