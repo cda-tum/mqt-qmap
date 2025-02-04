@@ -599,7 +599,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     }
 
     if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla)" << ancQ2 << " " << ancQ1 << '\n';
+      std::cout << "passby (flying ancilla) " << passBy.q2 << " " << passBy.q1
+                << '\n';
     }
   }
 
