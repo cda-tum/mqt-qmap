@@ -187,6 +187,10 @@ protected:
                                                     uint32_t init,
                                                     int32_t sign) const;
 
+    void computeInitAndOffsetOperations(
+        Dimension dimension, const std::shared_ptr<AodMove>& move,
+        std::vector<SingleOperation>& initOperations,
+        std::vector<SingleOperation>& offsetOperations) const;
     // Convert activation to AOD operations
     /**
      * @brief Converts activation into AOD operation (activate, move,
@@ -197,7 +201,7 @@ protected:
      * @param type The type of the activation (loading or unloading)
      * @return The activation as AOD operation
      */
-    [[nodiscard]] std::pair<AodOperation, AodOperation>
+    [[nodiscard]] std::vector<AodOperation>
     getAodOperation(const AodActivation& activation) const;
     /**
      * @brief Converts all activations into AOD operations

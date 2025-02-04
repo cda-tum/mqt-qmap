@@ -503,6 +503,30 @@ bool MoveToAodConverter::AodActivationHelper::checkIntermediateSpaceAtInit(
              getMaxOffsetAtInit(dim, neighborX, sign) <
          arch->getNAodIntermediateLevels();
 }
+void MoveToAodConverter::AodActivationHelper::computeInitAndOffsetOperations(
+    Dimension dimension, const std::shared_ptr<AodMove>& aodMove,
+    std::vector<SingleOperation>& initOperations,
+    std::vector<SingleOperation>& offsetOperations) const {
+
+  auto d = this->arch->getInterQubitDistance();
+  auto interD = this->arch->getInterQubitDistance() /
+                this->arch->getNAodIntermediateLevels();
+
+  initOperations.emplace_back(dimension, static_cast<qc::fp>(aodMove->init) * d,
+                              static_cast<qc::fp>(aodMove->init) * d);
+  if (type == qc::OpType::AodActivate) {
+    offsetOperations.emplace_back(
+        dimension, static_cast<qc::fp>(aodMove->init) * d,
+        static_cast<qc::fp>(aodMove->init) * d +
+            static_cast<qc::fp>(aodMove->offset) * interD);
+  } else {
+    offsetOperations.emplace_back(dimension,
+                                  static_cast<qc::fp>(aodMove->init) * d +
+                                      static_cast<qc::fp>(aodMove->offset) *
+                                          interD,
+                                  static_cast<qc::fp>(aodMove->init) * d);
+  }
+}
 
 void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
     Dimension dim, const AodActivation& activationDim,
@@ -529,7 +553,7 @@ void MoveToAodConverter::AodActivationHelper::mergeActivationDim(
   }
 }
 
-std::pair<AodOperation, AodOperation>
+std::vector<AodOperation>
 MoveToAodConverter::AodActivationHelper::getAodOperation(
     const AodActivationHelper::AodActivation& activation) const {
   std::vector<CoordIndex> qubitsActivation;
@@ -557,42 +581,16 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<SingleOperation> initOperations;
   std::vector<SingleOperation> offsetOperations;
 
-  auto d = this->arch->getInterQubitDistance();
-  auto interD = this->arch->getInterQubitDistance() /
-                this->arch->getNAodIntermediateLevels();
-
   for (const auto& aodMove : activation.activateXs) {
-    initOperations.emplace_back(Dimension::X,
-                                static_cast<qc::fp>(aodMove->init) * d,
-                                static_cast<qc::fp>(aodMove->init) * d);
-    if (type == qc::OpType::AodActivate) {
-      offsetOperations.emplace_back(
-          Dimension::X, static_cast<qc::fp>(aodMove->init) * d,
-          static_cast<qc::fp>(aodMove->init) * d +
-              static_cast<qc::fp>(aodMove->offset) * interD);
-    } else {
-      offsetOperations.emplace_back(Dimension::X,
-                                    static_cast<qc::fp>(aodMove->init) * d +
-                                        static_cast<qc::fp>(aodMove->offset) *
-                                            interD,
-                                    static_cast<qc::fp>(aodMove->init) * d);
+    if (aodMove->load) {
+      computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
+                                     offsetOperations);
     }
   }
   for (const auto& aodMove : activation.activateYs) {
-    initOperations.emplace_back(Dimension::Y,
-                                static_cast<qc::fp>(aodMove->init) * d,
-                                static_cast<qc::fp>(aodMove->init) * d);
-    if (type == qc::OpType::AodActivate) {
-      offsetOperations.emplace_back(
-          Dimension::Y, static_cast<qc::fp>(aodMove->init) * d,
-          static_cast<qc::fp>(aodMove->init) * d +
-              static_cast<qc::fp>(aodMove->offset) * interD);
-    } else {
-      offsetOperations.emplace_back(Dimension::Y,
-                                    static_cast<qc::fp>(aodMove->init) * d +
-                                        static_cast<qc::fp>(aodMove->offset) *
-                                            interD,
-                                    static_cast<qc::fp>(aodMove->init) * d);
+    if (aodMove->load) {
+      computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
+                                     offsetOperations);
     }
   }
 
@@ -600,9 +598,9 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   auto offsetOp =
       AodOperation(qc::OpType::AodMove, qubitsMove, offsetOperations);
   if (this->type == qc::OpType::AodActivate) {
-    return std::make_pair(initOp, offsetOp);
+    return {initOp, offsetOp};
   }
-  return std::make_pair(offsetOp, initOp);
+  return {offsetOp, initOp};
 }
 
 std::vector<AodOperation>
@@ -610,8 +608,8 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
   std::vector<AodOperation> aodOperations;
   for (const auto& activation : allActivations) {
     auto operations = getAodOperation(activation);
-    aodOperations.emplace_back(std::move(operations.first));
-    aodOperations.emplace_back(std::move(operations.second));
+    aodOperations.insert(aodOperations.end(), operations.begin(),
+                         operations.end());
   }
   return aodOperations;
 }
