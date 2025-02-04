@@ -291,6 +291,11 @@ protected:
    */
   void processMoveGroups();
 
+  std::pair<std::vector<AtomMove>, MoveGroup>
+  processMoves(const std::vector<std::pair<AtomMove, uint32_t>>& moves,
+               AodActivationHelper& aodActivationHelper,
+               AodActivationHelper& aodDeactivationHelper);
+
 public:
   MoveToAodConverter() = delete;
   MoveToAodConverter(const MoveToAodConverter&) = delete;

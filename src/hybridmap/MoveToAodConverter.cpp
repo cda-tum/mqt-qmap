@@ -322,38 +322,12 @@ void MoveToAodConverter::processMoveGroups() {
        ++groupIt) {
     AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate};
     AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate};
-    MoveGroup possibleNewMoveGroup;
-    std::vector<AtomMove> movesToRemove;
-    for (auto& movePair : groupIt->moves) {
-      auto& move = movePair.first;
-      auto idx = movePair.second;
-      auto origin = arch.getCoordinate(move.first);
-      auto target = arch.getCoordinate(move.second);
-      auto v = arch.getVector(move.first, move.second);
-      auto vReverse = arch.getVector(move.second, move.first);
-      auto canAddX =
-          canAddActivation(aodActivationHelper, aodDeactivationHelper, origin,
-                           v, target, vReverse, Dimension::X);
-      auto canAddY =
-          canAddActivation(aodActivationHelper, aodDeactivationHelper, origin,
-                           v, target, vReverse, Dimension::Y);
-      auto activationCanAddXY = std::make_pair(canAddX.first, canAddY.first);
-      auto deactivationCanAddXY =
-          std::make_pair(canAddX.second, canAddY.second);
-      if (activationCanAddXY.first == ActivationMergeType::Impossible ||
-          activationCanAddXY.second == ActivationMergeType::Impossible ||
-          deactivationCanAddXY.first == ActivationMergeType::Impossible ||
-          deactivationCanAddXY.second == ActivationMergeType::Impossible) {
-        // move could not be added as not sufficient intermediate levels
-        // add new move group and add move to it
-        possibleNewMoveGroup.addMove(move, idx);
-        movesToRemove.emplace_back(move);
-      } else {
-        aodActivationHelper.addActivation(activationCanAddXY, origin, move, v);
-        aodDeactivationHelper.addActivation(deactivationCanAddXY, target, move,
-                                            vReverse);
-      }
-    }
+
+    const auto resultMoves = processMoves(groupIt->moves, aodActivationHelper,
+                                          aodDeactivationHelper);
+    auto movesToRemove = resultMoves.first;
+    auto possibleNewMoveGroup = resultMoves.second;
+
     // remove from current move group
     for (const auto& moveToRemove : movesToRemove) {
       groupIt->moves.erase(
@@ -363,7 +337,8 @@ void MoveToAodConverter::processMoveGroups() {
                          }),
           groupIt->moves.end());
     }
-    if (!possibleNewMoveGroup.moves.empty()) {
+    if (!possibleNewMoveGroup.moves.empty() ||
+        !possibleNewMoveGroup.passBys.empty()) {
       groupIt =
           moveGroups.emplace(groupIt + 1, std::move(possibleNewMoveGroup));
       possibleNewMoveGroup = MoveGroup();
@@ -374,6 +349,44 @@ void MoveToAodConverter::processMoveGroups() {
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
         groupIt->processedOpsInit, groupIt->processedOpsFinal);
   }
+}
+std::pair<std::vector<AtomMove>, MoveToAodConverter::MoveGroup>
+MoveToAodConverter::processMoves(
+    const std::vector<std::pair<AtomMove, uint32_t>>& moves,
+    AodActivationHelper& aodActivationHelper,
+    AodActivationHelper& aodDeactivationHelper) {
+
+  MoveGroup possibleNewMoveGroup;
+  std::vector<AtomMove> movesToRemove;
+  for (auto& movePair : moves) {
+    auto& move = movePair.first;
+    auto idx = movePair.second;
+    auto origin = arch.getCoordinate(move.first);
+    auto target = arch.getCoordinate(move.second);
+    auto v = arch.getVector(move.first, move.second);
+    auto vReverse = arch.getVector(move.second, move.first);
+    auto canAddX = canAddActivation(aodActivationHelper, aodDeactivationHelper,
+                                    origin, v, target, vReverse, Dimension::X);
+    auto canAddY = canAddActivation(aodActivationHelper, aodDeactivationHelper,
+                                    origin, v, target, vReverse, Dimension::Y);
+    auto activationCanAddXY = std::make_pair(canAddX.first, canAddY.first);
+    auto deactivationCanAddXY = std::make_pair(canAddX.second, canAddY.second);
+    if (activationCanAddXY.first == ActivationMergeType::Impossible ||
+        activationCanAddXY.second == ActivationMergeType::Impossible ||
+        deactivationCanAddXY.first == ActivationMergeType::Impossible ||
+        deactivationCanAddXY.second == ActivationMergeType::Impossible) {
+      // move could not be added as not sufficient intermediate levels
+      // add new move group and add move to it
+      possibleNewMoveGroup.addMove(move, idx);
+      movesToRemove.emplace_back(move);
+    } else {
+      aodActivationHelper.addActivation(activationCanAddXY, origin, move, v);
+      aodDeactivationHelper.addActivation(deactivationCanAddXY, target, move,
+                                          vReverse);
+    }
+  }
+
+  return {movesToRemove, possibleNewMoveGroup};
 }
 
 AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
