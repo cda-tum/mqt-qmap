@@ -1567,9 +1567,6 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
       currentPos.nMoves = 1;
     }
     auto bestPos = getMovePositionRec(currentPos, gateCoords, nMovesGate);
-    if (!bestPos.coords.empty() && bestPos.nMoves <= minMoves) {
-      return bestPos.coords;
-    }
     if (!bestPos.coords.empty() && bestPos.nMoves < nMovesGate) {
       nMovesGate = bestPos.nMoves;
       finalBestPos = bestPos;
@@ -2397,7 +2394,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
-  return MappingMethod::PassByMethod;
+  return MappingMethod::MoveMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
