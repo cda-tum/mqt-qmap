@@ -396,8 +396,8 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2)));
+    return this->coordinates.at(idx1).getEuclideanDistanceFp(
+        this->coordinates.at(idx2));
   }
   [[nodiscard]] qc::fp
   getAllToAllEuclideanDistance(const std::set<CoordIndex>& coords) const {
@@ -448,7 +448,7 @@ public:
    */
   [[nodiscard]] static qc::fp getEuclideanDistance(const Point& c1,
                                                    const Point& c2) {
-    return static_cast<qc::fp>(c1.getEuclideanDistance(c2));
+    return c1.getEuclideanDistanceFp(c2);
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices

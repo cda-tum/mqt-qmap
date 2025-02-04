@@ -88,7 +88,7 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 
     // compute values for Bridge gate
     // precompute bridge circuits
-    for (size_t i = 3; i <= 10; i++) {
+    for (size_t i = 3; i < 10; i++) {
       qc::fp const bridgeGateTime =
           (static_cast<qc::fp>(bridgeCircuits.czDepth[i]) *
            gateTimes.at("cz")) +

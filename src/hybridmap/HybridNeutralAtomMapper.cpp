@@ -708,11 +708,16 @@ Bridges NeutralAtomMapper::getShortestBridges() const {
       auto usedHwQubits = this->mapping.getHwQubits(usedQuBits);
       const auto bridges = this->hardwareQubits.computeAllShortestPaths(
           *usedHwQubits.begin(), *usedHwQubits.rbegin());
+      if (bridges.empty()) {
+        continue;
+      }
+      if (bridges.front().size() < minBridgeLength) {
+        minBridgeLength = bridges.front().size();
+        allBridges.clear();
+      }
       for (const auto& bridge : bridges) {
-        allBridges.emplace_back(op, bridge);
-        if (bridge.size() < minBridgeLength) {
-          minBridgeLength = bridge.size();
-          allBridges.clear();
+        if (bridge.size() == minBridgeLength) {
+          allBridges.emplace_back(op, bridge);
         }
       }
     }
