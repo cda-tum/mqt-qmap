@@ -59,6 +59,12 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
   return qcScheduled;
 }
 
+void MoveToAodConverter::MoveGroup::addPassBy(const AtomPassBy& passBy,
+                                              uint32_t idx) {
+  passBys.emplace_back(passBy, idx);
+  qubitsUsedByGates.emplace_back(passBy.second);
+}
+
 void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
   MoveGroup currentMoveGroup;
   MoveGroup const lastMoveGroup;
@@ -73,12 +79,19 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
         currentMoveGroup = MoveGroup();
         currentMoveGroup.addMove(move, idx);
       }
-      // TODO: make AtomMove for flying ancilla -> add to moveGroup
     } else if (op->getType() == qc::OpType::PassBy) {
-      HwQubit q_control = op->getControls().begin()->qubit;
-      qc::Targets Q_target = op->getTargets();
-      std::vector<CoordIndex> C_target;
-    } else if (op->getNqubits() > 1 && !currentMoveGroup.moves.empty()) {
+      AtomPassBy const passBy{op->getTargets()[0], op->getTargets()[1]};
+      const AtomMove passByConverted = {passBy.first - arch.getNpositions(),
+                                        passBy.second - arch.getNpositions()};
+      if (currentMoveGroup.canAddMove(passByConverted, arch)) {
+        currentMoveGroup.addPassBy(passBy, idx);
+      } else {
+        moveGroups.emplace_back(currentMoveGroup);
+        currentMoveGroup = MoveGroup();
+        currentMoveGroup.addPassBy(passBy, idx);
+      }
+    } else if (op->getNqubits() > 1 && (!currentMoveGroup.moves.empty() ||
+                                        !currentMoveGroup.passBys.empty())) {
       for (const auto& qubit : op->getUsedQubits()) {
         if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),
                       currentMoveGroup.qubitsUsedByGates.end(),
@@ -89,7 +102,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
     }
     idx++;
   }
-  if (!currentMoveGroup.moves.empty()) {
+  if (!currentMoveGroup.moves.empty() || !currentMoveGroup.passBys.empty()) {
     moveGroups.emplace_back(std::move(currentMoveGroup));
   }
 }

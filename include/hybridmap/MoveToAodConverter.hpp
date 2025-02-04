@@ -217,6 +217,7 @@ protected:
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
+    std::vector<std::pair<AtomPassBy, uint32_t>> passBys;
     std::vector<AodOperation> processedOpsInit;
     std::vector<AodOperation> processedOpsFinal;
     AodOperation processedOpShuttle;
@@ -243,6 +244,9 @@ protected:
      * @brief Returns the circuit index of the first move in the move group
      * @return Circuit index of the first move in the move group
      */
+
+    void addPassBy(const AtomPassBy& passBy, uint32_t idx);
+
     [[nodiscard]] uint32_t getFirstIdx() const { return moves.front().second; }
     /**
      * @brief Checks if the two moves can be executed in parallel

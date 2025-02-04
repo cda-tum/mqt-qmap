@@ -47,6 +47,7 @@ using SwapDistance = int32_t;
 // using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
 using AtomMove = std::pair<CoordIndex, CoordIndex>;
+using AtomPassBy = std::pair<CoordIndex, CoordIndex>;
 
 // Moves for FlyingAncilla
 struct fPoint {
