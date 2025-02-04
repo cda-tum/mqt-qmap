@@ -560,23 +560,22 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   qubitsActivation.reserve(activation.moves.size());
   for (const auto& move : activation.moves) {
     if (type == qc::OpType::AodActivate) {
-      qubitsActivation.emplace_back(move.c1);
+      if (move.load1) {
+        qubitsActivation.emplace_back(move.c1);
+      }
     } else {
-      qubitsActivation.emplace_back(move.c2);
+      if (move.load2) {
+        qubitsActivation.emplace_back(move.c2);
+      }
     }
   }
-  std::vector<CoordIndex> qubitsMove;
-  qubitsMove.reserve(activation.moves.size() * 2);
+  std::set<CoordIndex> qubitsMoveSet;
   for (const auto& move : activation.moves) {
-    if (std::find(qubitsMove.begin(), qubitsMove.end(), move.c1) ==
-        qubitsMove.end()) {
-      qubitsMove.emplace_back(move.c1);
-    }
-    if (std::find(qubitsMove.begin(), qubitsMove.end(), move.c2) ==
-        qubitsMove.end()) {
-      qubitsMove.emplace_back(move.c2);
-    }
+    qubitsMoveSet.insert(move.c1);
+    qubitsMoveSet.insert(move.c2);
   }
+  std::vector<CoordIndex> const qubitsMove(qubitsMoveSet.begin(),
+                                           qubitsMoveSet.end());
 
   std::vector<SingleOperation> initOperations;
   std::vector<SingleOperation> offsetOperations;
@@ -592,6 +591,9 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
       computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
                                      offsetOperations);
     }
+  }
+  if (initOperations.empty() && offsetOperations.empty()) {
+    return {};
   }
 
   auto initOp = AodOperation(type, qubitsActivation, initOperations);
