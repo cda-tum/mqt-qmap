@@ -567,16 +567,16 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   std::vector<SingleOperation> offsetOperations;
 
   for (const auto& aodMove : activation.activateXs) {
-    // if (aodMove->load) {
-    computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
-                                   offsetOperations);
-    // }
+    if (aodMove->load) {
+      computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
+                                     offsetOperations);
+    }
   }
   for (const auto& aodMove : activation.activateYs) {
-    // if (aodMove->load) {
-    computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
-                                   offsetOperations);
-    // }
+    if (aodMove->load) {
+      computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
+                                     offsetOperations);
+    }
   }
   if (initOperations.empty() && offsetOperations.empty()) {
     return {};
