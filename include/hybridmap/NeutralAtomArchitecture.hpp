@@ -416,7 +416,7 @@ public:
   getMoveCombEuclideanDistance(const MoveComb& moveComb) const {
     qc::fp dist = 0;
     for (const auto& move : moveComb.moves) {
-      dist += getEuclideanDistance(move.first, move.second);
+      dist += getEuclideanDistance(move.c1, move.c2);
     }
     return dist;
   }

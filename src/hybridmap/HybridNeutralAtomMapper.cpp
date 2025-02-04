@@ -350,14 +350,14 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
 void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
                                     const FlyingAncillaComb& faComb) {
   for (const auto& passBy : faComb.moves) {
-    mappedQc.passby(passBy.q1, passBy.q2);
+    mappedQc.move(passBy.q1, passBy.q2 + arch->getNpositions());
     if (this->parameters->verbose) {
       std::cout << "passby " << passBy.q1 << " " << passBy.q2 << '\n';
     }
   }
   mapGate(faComb.op);
   for (const auto& passBy : faComb.moves) {
-    mappedQc.passby(passBy.q2, passBy.q1);
+    mappedQc.move(passBy.q2 + arch->getNpositions(), passBy.q1);
     if (this->parameters->verbose) {
       std::cout << "passby " << passBy.q2 << " " << passBy.q1 << '\n';
     }
@@ -513,11 +513,11 @@ void NeutralAtomMapper::applyMove(AtomMove move) {
   if (this->lastMoves.size() > 4) {
     this->lastMoves.pop_front();
   }
-  mappedQc.move(move.first, move.second);
-  const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.first);
-  this->hardwareQubits.move(toMoveHwQubit, move.second);
+  mappedQc.move(move.c1, move.c2);
+  const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.c1);
+  this->hardwareQubits.move(toMoveHwQubit, move.c2);
   if (this->parameters->verbose) {
-    std::cout << "moved " << move.first << " to " << move.second;
+    std::cout << "moved " << move.c1 << " to " << move.c2;
     if (this->mapping.isMapped(toMoveHwQubit)) {
       std::cout << "  logical qubit: "
                 << this->mapping.getCircQubit(toMoveHwQubit) << '\n';
@@ -553,11 +553,11 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + nPos;
     const auto ancQ2 = passBy.q2 + nPos;
-    mappedQc.passby(passBy.origin + nPos, ancQ1);
+    mappedQc.move(passBy.origin + nPos, ancQ1);
     mappedQc.h(ancQ1);
     mappedQc.cz(passBy.q1, ancQ1);
     mappedQc.h(ancQ1);
-    mappedQc.passby(ancQ1, ancQ2);
+    mappedQc.move(ancQ1, ancQ2);
 
     if (usedQubits.find(passBy.q1) != usedQubits.end()) {
       usedQubits.erase(passBy.q1);
@@ -578,7 +578,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + nPos;
     const auto ancQ2 = passBy.q2 + nPos;
-    mappedQc.passby(ancQ2, ancQ1);
+    mappedQc.move(ancQ2, ancQ1);
     mappedQc.h(ancQ1);
     mappedQc.cz(passBy.q2, ancQ1);
     mappedQc.h(ancQ1);
@@ -752,25 +752,25 @@ FlyingAncillaComb NeutralAtomMapper::convertMoveCombToFlyingAncillaComb(
   FlyingAncilla bestFA{};
   HwQubits usedFA;
   for (const auto move : moveComb.moves) {
-    if (usedCoords.find(move.first) != usedCoords.end()) {
+    if (usedCoords.find(move.c1) != usedCoords.end()) {
       const auto nearFirstIdx =
-          this->flyingAncillas.getClosestQubit(move.first, usedFA);
+          this->flyingAncillas.getClosestQubit(move.c1, usedFA);
       const auto nearFirst = this->flyingAncillas.getCoordIndex(nearFirstIdx);
       const auto nearSecondIdx =
-          this->flyingAncillas.getClosestQubit(move.second, usedFA);
+          this->flyingAncillas.getClosestQubit(move.c2, usedFA);
       const auto nearSecond = this->flyingAncillas.getCoordIndex(nearSecondIdx);
       if (usedQubits.size() == 2) {
         // both directions possible, check if reversed is better
-        if (this->arch->getEuclideanDistance(nearFirstIdx, move.first) <
-            this->arch->getEuclideanDistance(nearSecondIdx, move.second)) {
-          bestFA.q1 = move.second;
-          bestFA.q2 = move.first;
+        if (this->arch->getEuclideanDistance(nearFirstIdx, move.c1) <
+            this->arch->getEuclideanDistance(nearSecondIdx, move.c2)) {
+          bestFA.q1 = move.c2;
+          bestFA.q2 = move.c1;
           bestFA.origin = nearSecond;
           bestFA.index = nearSecondIdx;
         }
       }
-      bestFA.q1 = move.first;
-      bestFA.q2 = move.second;
+      bestFA.q1 = move.c1;
+      bestFA.q2 = move.c2;
       bestFA.origin = nearFirst;
       bestFA.index = nearFirstIdx;
 
@@ -853,9 +853,9 @@ NeutralAtomMapper::moveCombDistanceReduction(const MoveComb& moveComb,
     const auto& distBefore =
         this->arch->getAllToAllEuclideanDistance(coordIndices);
     for (const auto& move : moveComb.moves) {
-      if (coordIndices.find(move.first) != coordIndices.end()) {
-        coordIndices.erase(move.first);
-        coordIndices.insert(move.second);
+      if (coordIndices.find(move.c1) != coordIndices.end()) {
+        coordIndices.erase(move.c1);
+        coordIndices.insert(move.c2);
       }
     }
     const auto& distAfter =
@@ -1305,7 +1305,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
                                            const GateList& layer) const {
   // compute cost assuming the move was applied
   qc::fp distChange = 0;
-  if (const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.first);
+  if (const auto toMoveHwQubit = this->hardwareQubits.getHwQubit(move.c1);
       this->mapping.isMapped(toMoveHwQubit)) {
     const auto toMoveCircuitQubit = this->mapping.getCircQubit(toMoveHwQubit);
     for (const auto& gate : layer) {
@@ -1330,7 +1330,7 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
           }
           const auto hwQubit = this->mapping.getHwQubit(qubit);
           const auto dist = this->arch->getEuclideanDistance(
-              this->hardwareQubits.getCoordIndex(hwQubit), move.second);
+              this->hardwareQubits.getCoordIndex(hwQubit), move.c2);
           distanceAfter += dist;
         }
         distChange += distanceAfter - distanceBefore;
@@ -1342,16 +1342,15 @@ qc::fp NeutralAtomMapper::moveCostPerLayer(const AtomMove& move,
 
 qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) const {
   qc::fp parallelCost = 0;
-  const auto moveVector = this->arch->getVector(move.first, move.second);
+  const auto moveVector = this->arch->getVector(move.c1, move.c2);
   std::vector<CoordIndex> lastEndingCoords;
   if (this->lastMoves.empty()) {
     parallelCost += arch->getVectorShuttlingTime(moveVector);
   }
   for (const auto& lastMove : this->lastMoves) {
-    lastEndingCoords.emplace_back(lastMove.second);
+    lastEndingCoords.emplace_back(lastMove.c2);
     // decide of shuttling can be done in parallel
-    auto lastMoveVector =
-        this->arch->getVector(lastMove.first, lastMove.second);
+    auto lastMoveVector = this->arch->getVector(lastMove.c1, lastMove.c2);
     if (moveVector.overlap(lastMoveVector)) {
       if (moveVector.direction != lastMoveVector.direction) {
         parallelCost += arch->getVectorShuttlingTime(moveVector);
@@ -1365,13 +1364,13 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) const {
   }
   // check if in same row/column like last moves
   // then can may be loaded in parallel
-  const auto moveCoordInit = this->arch->getCoordinate(move.first);
-  const auto moveCoordEnd = this->arch->getCoordinate(move.second);
+  const auto moveCoordInit = this->arch->getCoordinate(move.c1);
+  const auto moveCoordEnd = this->arch->getCoordinate(move.c2);
   parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
                   arch->getShuttlingTime(qc::OpType::AodDeactivate);
   for (const auto& lastMove : this->lastMoves) {
-    const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.first);
-    const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.second);
+    const auto lastMoveCoordInit = this->arch->getCoordinate(lastMove.c1);
+    const auto lastMoveCoordEnd = this->arch->getCoordinate(lastMove.c2);
     if (moveCoordInit.x == lastMoveCoordInit.x ||
         moveCoordInit.y == lastMoveCoordInit.y) {
       parallelCost -= arch->getShuttlingTime(qc::OpType::AodActivate);
@@ -1383,7 +1382,7 @@ qc::fp NeutralAtomMapper::parallelMoveCost(const AtomMove& move) const {
   }
   // check if move can use AOD atom from last moves
   //  if (std::find(lastEndingCoords.begin(), lastEndingCoords.end(),
-  //  move.first) ==
+  //  move.c1) ==
   //      lastEndingCoords.end()) {
   //    parallelCost += arch->getShuttlingTime(qc::OpType::AodActivate) +
   //                    arch->getShuttlingTime(qc::OpType::AodDeactivate);
@@ -2398,7 +2397,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
-  return MappingMethod::FlyingAncillaMethod;
+  return MappingMethod::PassByMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;

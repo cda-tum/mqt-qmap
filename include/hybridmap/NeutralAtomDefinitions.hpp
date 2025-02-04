@@ -46,8 +46,19 @@ using SwapDistance = int32_t;
 //     Q_between
 // using Bridges = std::vector<Bridge>;
 // Moves are between coordinates (the first is occupied, the second is not).
-using AtomMove = std::pair<CoordIndex, CoordIndex>;
-using AtomPassBy = std::pair<CoordIndex, CoordIndex>;
+struct AtomMove {
+  CoordIndex c1;
+  CoordIndex c2;
+  bool load1;
+  bool load2;
+
+  // implement operator==
+  bool operator==(const AtomMove& other) const {
+    return c1 == other.c1 && c2 == other.c2 && load1 == other.load1 &&
+           load2 == other.load2;
+  }
+  bool operator!=(const AtomMove& other) const { return !(*this == other); }
+};
 
 // Moves for FlyingAncilla
 struct fPoint {

@@ -53,6 +53,8 @@ protected:
     struct AodMove {
       // start of the move
       uint32_t init;
+      // need load/unload or not
+      bool load;
       // need offset move to avoid crossing
       int32_t offset;
       // delta of the actual move
@@ -60,8 +62,10 @@ protected:
 
       AodMove() = default;
 
-      AodMove(uint32_t initMove, qc::fp deltaMove, int32_t offsetMove)
-          : init(initMove), offset(offsetMove), delta(deltaMove) {}
+      AodMove(uint32_t initMove, qc::fp deltaMove, int32_t offsetMove,
+              bool loadMove)
+          : init(initMove), offset(offsetMove), delta(deltaMove),
+            load(loadMove) {}
     };
     /**
      * @brief Manages the activation of an atom using an AOD.
@@ -135,10 +139,12 @@ protected:
      * @param origin The origin of the move
      * @param move The move to add
      * @param v The move vector of the move
+     * @param needLoad
      */
     void
     addActivation(std::pair<ActivationMergeType, ActivationMergeType> merge,
-                  const Point& origin, const AtomMove& move, MoveVector v);
+                  const Point& origin, const AtomMove& move, MoveVector v,
+                  bool needLoad);
     /**
      * @brief Merges the given activation into the current activations
      * @param dim The dimension/direction of the activation
@@ -217,7 +223,6 @@ protected:
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
-    std::vector<std::pair<AtomPassBy, uint32_t>> passBys;
     std::vector<AodOperation> processedOpsInit;
     std::vector<AodOperation> processedOpsFinal;
     AodOperation processedOpShuttle;
@@ -244,8 +249,6 @@ protected:
      * @brief Returns the circuit index of the first move in the move group
      * @return Circuit index of the first move in the move group
      */
-
-    void addPassBy(const AtomPassBy& passBy, uint32_t idx);
 
     [[nodiscard]] uint32_t getFirstIdx() const { return moves.front().second; }
     /**
@@ -275,6 +278,7 @@ protected:
   std::vector<MoveGroup> moveGroups;
   const na::HardwareQubits& hardwareQubits;
 
+  AtomMove convertOpToMove(qc::Operation* get);
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
    * @param qc Quantum circuit to schedule
