@@ -41,7 +41,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
     throw std::runtime_error(
         "Not enough qubits in architecture for circuit and flying ancillas");
   }
-  mappedQc.addAncillaryRegister(this->parameters->numFlyingAncillas);
+  mappedQc.addAncillaryRegister(this->arch->getNpositions());
 
   mapping = std::move(initialMapping);
 
@@ -549,22 +549,23 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
 void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                                            const FlyingAncillaComb& faComb) {
   auto usedQubits = faComb.op->getUsedQubits();
+  const auto nPos = this->arch->getNpositions();
   for (const auto& passBy : faComb.moves) {
-    const auto faCoordIdx = passBy.index + this->arch->getNpositions();
-    mappedQc.passby(faCoordIdx, passBy.q1);
-    mappedQc.h(faCoordIdx);
-    mappedQc.cz(faCoordIdx, passBy.q1);
-    mappedQc.h(faCoordIdx);
-    mappedQc.passby(faCoordIdx, passBy.q2);
+    const auto ancQ1 = passBy.q1 + nPos;
+    const auto ancQ2 = passBy.q2 + nPos;
+    mappedQc.passby(passBy.origin + nPos, ancQ1);
+    mappedQc.h(ancQ1);
+    mappedQc.cz(passBy.q1, ancQ1);
+    mappedQc.h(ancQ1);
+    mappedQc.passby(ancQ1, ancQ2);
 
     if (usedQubits.find(passBy.q1) != usedQubits.end()) {
       usedQubits.erase(passBy.q1);
-      usedQubits.insert(faCoordIdx);
+      usedQubits.insert(ancQ1);
     }
 
     if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla) " << faCoordIdx << " " << passBy.q1
-                << " " << passBy.q2 << '\n';
+      std::cout << "passby (flying ancilla) " << ancQ1 << " " << ancQ2 << '\n';
     }
   }
   const auto opCopy = faComb.op->clone();
@@ -575,15 +576,18 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   mappedQc.emplace_back(opCopy->clone());
 
   for (const auto& passBy : faComb.moves) {
-    const auto faCoordIdx = passBy.index + this->arch->getNpositions();
-    mappedQc.passby(faCoordIdx, passBy.q1);
-    mappedQc.h(faCoordIdx);
-    mappedQc.cz(faCoordIdx, passBy.q1);
-    mappedQc.h(faCoordIdx);
+    const auto ancQ1 = passBy.q1 + nPos;
+    const auto ancQ2 = passBy.q2 + nPos;
+    mappedQc.passby(ancQ2, ancQ1);
+    mappedQc.h(ancQ1);
+    mappedQc.cz(passBy.q2, ancQ1);
+    mappedQc.h(ancQ1);
+
+    // update position of flying ancillas
+    this->flyingAncillas.move(passBy.index, passBy.q1);
 
     if (this->parameters->verbose) {
-      std::cout << "passby (flying ancilla)" << faCoordIdx << " " << passBy.q2
-                << " " << passBy.q1 << '\n';
+      std::cout << "passby (flying ancilla)" << ancQ2 << " " << ancQ1 << '\n';
     }
   }
 
