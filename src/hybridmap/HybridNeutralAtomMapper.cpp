@@ -1602,8 +1602,15 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
     }
   }
   if (finalBestPos.coords.empty()) {
-    throw qc::QFRException(
-        "No move position found (check if enough free coords are available)");
+    // check if interaction radius too small
+    if (std::sqrt(gateCoords.size()) > this->arch->getInteractionRadius()) {
+      throw qc::QFRException(
+          "Interaction radius too small for the given gate size of " +
+          std::to_string(gateCoords.size()));
+    } else {
+      throw qc::QFRException(
+          "No move position found (check if enough free coords are available)");
+    }
   }
   return finalBestPos.coords;
 }
@@ -2319,6 +2326,9 @@ CoordIndex NeutralAtomMapper::returnClosestAncillaCoord(
 MappingMethod
 NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
                                         const Bridge& bestBridge) {
+  if (bestBridge == Bridge()) {
+    return MappingMethod::SwapMethod;
+  }
   // swap distance reduction
   qc::fp const swapDistReduction =
       swapDistanceReduction(bestSwap, this->frontLayerGate) +
