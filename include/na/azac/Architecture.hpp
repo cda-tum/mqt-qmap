@@ -6,6 +6,7 @@
 #include <istream>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -103,7 +104,15 @@ struct Architecture {
   explicit Architecture(const std::filesystem::path& filepath)
       : Architecture(std::ifstream(filepath)) {}
   explicit Architecture(std::istream& is) : Architecture(std::move(is)) {}
-  explicit Architecture(std::istream&& is) { load(std::move(is)); }
+  explicit Architecture(std::istream&& is) {
+    load(std::move(is));
+    preprocessing();
+  }
+  explicit Architecture(nlohmann::json& json) : Architecture(std::move(json)) {}
+  explicit Architecture(nlohmann::json&& json) {
+    load(std::move(json));
+    preprocessing();
+  }
   auto load(const std::string& filename) -> void {
     load(std::filesystem::path(filename));
   }
@@ -111,7 +120,15 @@ struct Architecture {
     load(std::ifstream(filepath));
   }
   auto load(std::istream& is) -> void { load(std::move(is)); }
-  auto load(std::istream&& is) -> void;
+  auto load(std::istream&& is) -> void {
+    nlohmann::json architectureSpec{};
+    std::move(is) >> architectureSpec;
+    load(std::move(architectureSpec));
+  }
+  auto load(const nlohmann::json& architectureSpec) -> void {
+    load(std::move(architectureSpec));
+  }
+  auto load(const nlohmann::json&& architectureSpec) -> void;
   //===--------------------------------------------------------------------===//
   /// @see is_valid_SLM_position
   /// Check if the given position is a valid SLM position, i.e., whether the

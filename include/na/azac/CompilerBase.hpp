@@ -31,17 +31,14 @@
 namespace na {
 
 template <typename T> class CompilerBase {
-  static_assert(std::is_base_of_v<CompilerBase, T>,
-                "T must be a subclass of CompilerBase");
-
 protected:
   std::filesystem::path dir = "./result/";
   std::size_t n_q = 0; ///< number of qubits
   std::size_t n_g = 0; ///< number of gates
   Architecture architecture;
   struct Result {
-    std::string name;
-    std::filesystem::path architecture_spec_path;
+    std::string name = "Untitled";
+    std::string architecture_spec_path = "inline";
     nlohmann::json instructions;
     double runtime = 0;
   };
@@ -158,9 +155,28 @@ protected:
   std::vector<std::vector<std::size_t>> reuse_qubit{};
 
 public:
-  explicit CompilerBase(std::ifstream& settingsIfs) {
+  CompilerBase() = default;
+  explicit CompilerBase(const std::string& filename)
+      : CompilerBase(std::filesystem::path(filename)) {}
+  explicit CompilerBase(const std::filesystem::path& path)
+      : CompilerBase(std::ifstream(path)) {}
+  explicit CompilerBase(std::istream& is)
+      : CompilerBase(std::move(is)) {}
+  explicit CompilerBase(std::ifstream&& is) {
+    loadSettings(is);
+  }
+  auto loadSettings(const std::string& filename) -> void {
+    loadSettings(std::filesystem::path(filename));
+  }
+  auto loadSettings(const std::filesystem::path& filepath) -> void {
+    loadSettings(std::ifstream(filepath));
+  }
+  auto loadSettings(std::istream& is) -> void {
+    loadSettings(std::move(is));
+  }
+  auto loadSettings(std::istream&& is) -> void {
     nlohmann::json settings_json{};
-    settingsIfs >> settings_json;
+    is >> settings_json;
     if (settings_json.contains("name")) {
       result.name = settings_json["name"];
     }
@@ -198,17 +214,23 @@ public:
       scheduling_strategy = toSchedulingStrategy(settings_json["scheduling"]);
     }
     if (settings_json.contains("arch_spec")) {
-      result.architecture_spec_path =
-          std::filesystem::path(settings_json["arch_spec"]);
+      if (settings_json["arch_spec"].is_string()) {
+        if (std::filesystem::exists(settings_json["arch_spec"])) {
+          result.architecture_spec_path =
+              std::filesystem::path(settings_json["arch_spec"]);
+          architecture = Architecture(result.architecture_spec_path);
+        } else {
+          throw std::invalid_argument("Architecture specification is missing");
+        }
+      } else if (settings_json["arch_spec"].is_object()) {
+        architecture = Architecture(settings_json["arch_spec"]);
+      } else {
+        throw std::invalid_argument("Architecture specification is invalid");
+      }
+    } else {
+      throw std::invalid_argument("Architecture specification is missing");
     }
-    architecture = Architecture(result.architecture_spec_path);
   }
-  explicit CompilerBase(std::ifstream&& settingsIfs)
-      : CompilerBase(std::move(settingsIfs)) {}
-  explicit CompilerBase(const std::filesystem::path& settingsPath)
-      : CompilerBase(std::ifstream(settingsPath)) {}
-  explicit CompilerBase(const std::string& settingsFilename)
-      : CompilerBase(std::filesystem::path(settingsFilename)) {}
   [[nodiscard]] std::string toString() const {
     std::stringstream ss{};
     ss << "[INFO] ZAC: Setting\n";

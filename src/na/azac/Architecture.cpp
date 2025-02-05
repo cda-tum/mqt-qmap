@@ -126,9 +126,7 @@ SLM::SLM(nlohmann::json slmSpec, const decltype(entanglement_id) entanglementId)
     throw std::invalid_argument("SLM location is missed in architecture spec");
   }
 }
-auto Architecture::load(std::istream&& is) -> void {
-  nlohmann::json architectureSpec{};
-  std::move(is) >> architectureSpec;
+auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
   if (architectureSpec.contains("name")) {
     if (architectureSpec["name"].is_string()) {
       name = architectureSpec["name"];
