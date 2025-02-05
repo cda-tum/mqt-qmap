@@ -5,15 +5,14 @@
 #include "na/azac/Utils.hpp"
 
 #include <algorithm>
+#include <cstdint>
+#include <tuple>
 #include <type_traits>
 
 namespace na {
 
 /// class to find a qubit layout
 template <typename T> class Placer {
-  static_assert(std::is_base_of_v<CompilerBase<T>, T>,
-                "T must be a subclass of CompilerBase");
-
 protected:
   /// generate qubit initial layout
   auto place_qubit_initial() -> void {
@@ -46,12 +45,12 @@ private:
     const double dis2 =
         static_cast<T*>(this)->architecture.nearest_entanglement_site_distance(
             slm, slm->n_r - 1, c);
-    std::size_t r = dis1 < dis2 ? 0 : slm->n_r - 1;
+    std::int64_t r = dis1 < dis2 ? 0 : static_cast<std::int64_t>(slm->n_r) - 1;
     const std::int64_t step = dis1 < dis2 ? 1 : -1;
     std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>
-        list_possible_position{};
+        listPossiblePosition{};
     for (std::size_t i = 0; i < static_cast<T*>(this)->n_q; ++i) {
-      list_possible_position.emplace_back(slm, r, c);
+      listPossiblePosition.emplace_back(slm, r, c);
       ++c;
       if (c % slm->n_c == 0) {
         r += step;
@@ -60,28 +59,28 @@ private:
           ++slm_it;
           slm = slm_it->get();
           if (step > 0) {
-            r = slm->n_r - 1;
+            r = static_cast<std::int64_t>(slm->n_r) - 1;
           } else {
             r = 0;
           }
         }
       }
     }
-    static_cast<T*>(this)->qubit_mapping.emplace_back(list_possible_position);
+    static_cast<T*>(this)->qubit_mapping.emplace_back(listPossiblePosition);
   }
 
 protected:
   /// generate qubit initial layout
   auto place_qubit_intermedeiate() -> void {
     const auto t_p = std::chrono::system_clock::now();
-    VertexMatchingPlacer intermediate_placer(
+    VertexMatchingPlacer intermediatePlacer(
         static_cast<T*>(this)->qubit_mapping[0]);
-    intermediate_placer.run(static_cast<T*>(this)->architecture,
-                            static_cast<T*>(this)->qubit_mapping,
-                            static_cast<T*>(this)->gate_scheduling,
-                            static_cast<T*>(this)->dynamic_placement,
-                            static_cast<T*>(this)->reuse_qubit);
-    static_cast<T*>(this)->qubit_mapping = intermediate_placer.mapping;
+    intermediatePlacer.run(static_cast<T*>(this)->architecture,
+                           static_cast<T*>(this)->qubit_mapping,
+                           static_cast<T*>(this)->gate_scheduling,
+                           static_cast<T*>(this)->dynamic_placement,
+                           static_cast<T*>(this)->reuse_qubit);
+    static_cast<T*>(this)->qubit_mapping = intermediatePlacer.mapping;
 
     static_cast<T*>(this)->runtime_analysis.intermediate_placement =
         std::chrono::system_clock::now() - t_p;
@@ -96,8 +95,8 @@ private:
     bool l2 = false;
     double cost_atom_transfer = 0.9999;
     std::size_t n_qubit = 0;
-    Architecture architecture{};
-    std::vector<std::unordered_set<qc::Qubit>> list_reuse_qubits{};
+    Architecture architecture;
+    std::vector<std::unordered_set<qc::Qubit>> listReuseQubits{};
 
   public:
     VertexMatchingPlacer(
@@ -109,16 +108,16 @@ private:
       n_qubit = initial_mapping.size();
     }
 
-    auto run(const Architecture& architecture,
+    auto run(const Architecture& arch,
              std::vector<
                  std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>&
                  qubit_mapping,
              std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>&
                  list_gate,
              bool dynamic_placement,
-             std::vector<std::vector<qc::Qubit>>& list_reuse_qubits) -> void {
-      this->architecture = architecture;
-      this->list_reuse_qubits = list_reuse_qubits;
+             std::vector<std::vector<qc::Qubit>>& reuse_qubits) -> void {
+      this->architecture = arch;
+      this->listReuseQubits = reuse_qubits;
       std::cout << "[INFO] ZAC: Minimum-weight-full-matching-based "
                    "intermediate placement: Start\n";
       place_gate(qubit_mapping, list_gate, 0, false);
@@ -131,12 +130,12 @@ private:
         if (layer + 1 < list_gate.size()) {
           place_gate(mapping, list_gate, layer + 1, false);
         }
-        if (!list_reuse_qubits[layer].empty()) {
+        if (!reuse_qubits[layer].empty()) {
           if (dynamic_placement) {
             place_qubit(list_gate, layer, true);
           } else {
             mapping.emplace_back(qubit_mapping[0]);
-            for (const auto q : list_reuse_qubits[layer]) {
+            for (const auto q : reuse_qubits[layer]) {
               mapping[-1][q] = mapping[-4][q]; // todo: check if this is correct
             }
           }
@@ -254,15 +253,15 @@ private:
           }
         }
       }
-      for (const auto [_, value] : movement_parallel_movement_1) {
+      for (const auto& [_, value] : movement_parallel_movement_1) {
         cost_reuse += std::sqrt(value);
       }
-      for (const auto [_, value] : movement_parallel_movement_2) {
+      for (const auto& [_, value] : movement_parallel_movement_2) {
         cost_reuse += std::sqrt(value);
       }
       if (cost_atom_transfer * pow((1 - cost_no_reuse / 1.5e6), n_qubit) >
           pow((1 - cost_reuse / 1.5e6), n_qubit)) {
-        list_reuse_qubits[layer] = {};
+        listReuseQubits[layer] = {};
         mapping.pop_back();
         mapping.pop_back();
       } else {
@@ -283,7 +282,7 @@ private:
       const auto& list_gate = list_two_gate_layer[layer];
       std::unordered_map<std::size_t, std::size_t> dict_reuse_qubit_neighbor;
       if (list_two_gate_layer.size() > layer + 1 and test_reuse) {
-        for (const auto q : list_reuse_qubits[layer]) {
+        for (const auto q : listReuseQubits[layer]) {
           for (const auto gate : list_two_gate_layer[layer + 1]) {
             if (q == gate->first) {
               dict_reuse_qubit_neighbor[q] = gate->second;
@@ -309,21 +308,22 @@ private:
       std::vector<std::size_t> list_row_coo;
       std::vector<std::size_t> list_col_coo;
       std::vector<std::size_t> list_data;
-      const double expand_factor = std::ceil(std::sqrt(list_gate.size() / 2));
+      const auto expand_factor =
+          static_cast<std::size_t>(std::ceil(std::sqrt(list_gate.size() / 2)));
       for (std::size_t i = 0; i < list_gate.size(); ++i) {
         const auto& [q1, q2] = *list_gate[i];
         std::unordered_set<std::tuple<const SLM*, std::size_t, std::size_t>>
             set_nearby_site;
 
-        if (test_reuse && (list_reuse_qubits[layer - 1].find(q1) !=
-                           list_reuse_qubits[layer - 1].end())) {
+        if (test_reuse && (listReuseQubits[layer - 1].find(q1) !=
+                           listReuseQubits[layer - 1].end())) {
           const auto location = gate_mapping[q1];
           const auto slm_idx =
               std::get<0>(location)->entanglement_id->front().get();
           set_nearby_site.emplace(slm_idx, std::get<1>(location),
                                   std::get<2>(location));
-        } else if (test_reuse && (list_reuse_qubits[layer - 1].find(q2) !=
-                                  list_reuse_qubits[layer - 1].end())) {
+        } else if (test_reuse && (listReuseQubits[layer - 1].find(q2) !=
+                                  listReuseQubits[layer - 1].end())) {
           const auto location = gate_mapping[q2];
           const auto slm_idx =
               std::get<0>(location)->entanglement_id->front().get();
@@ -348,27 +348,23 @@ private:
           for (const auto& nearest_site : list_nearest_site) {
             set_nearby_site.emplace(nearest_site);
             const auto& [slm_idx, slm_r, slm_c] = nearest_site;
-            auto low_r = std::max(0., slm_r - expand_factor);
-            auto high_r = std::min(static_cast<double>(slm->n_r),
-                                   slm_r + expand_factor + 1);
-            auto low_c = std::max(0., slm_c - expand_factor);
-            auto high_c = std::min(static_cast<double>(slm->n_c),
-                                   slm_c + expand_factor + 1);
+            auto low_r = slm_r > expand_factor ? slm_r - expand_factor : 0;
+            auto high_r = std::min(slm->n_r, slm_r + expand_factor + 1);
+            auto low_c = slm_c > expand_factor ? slm_c - expand_factor : 0;
+            auto high_c = std::min(slm->n_c, slm_c + expand_factor + 1);
             if (high_c - low_c < 2 * expand_factor) {
-              const auto height_gap =
+              const auto height_gap = static_cast<std::size_t>(
                   std::ceil(list_gate.size() / (high_c - low_c)) -
-                  expand_factor;
-              low_r = std::max(0., low_r - height_gap / 2);
-              high_r = std::min(static_cast<double>(slm->n_r),
-                                low_r + height_gap + expand_factor);
+                  expand_factor);
+              low_r = low_r > (height_gap / 2) ? low_r - (height_gap / 2) : 0;
+              high_r = std::min(slm->n_r, low_r + height_gap + expand_factor);
             }
             if (high_r - low_r < 2 * expand_factor) {
-              const auto width_gap =
+              const auto width_gap = static_cast<std::size_t>(
                   std::ceil(list_gate.size() / (high_r - low_r)) -
-                  expand_factor;
-              low_c = std::max(0., low_c - width_gap / 2);
-              high_c = std::min(static_cast<double>(slm->n_c),
-                                low_c + width_gap + expand_factor);
+                  expand_factor);
+              low_c = low_c > (width_gap / 2) ? low_c - (width_gap / 2) : 0;
+              high_c = std::min(slm->n_c, low_c + width_gap + expand_factor);
             }
             for (std::size_t r = low_r; r < high_r; ++r) {
               for (std::size_t c = low_c; c < high_c; ++c) {
@@ -439,7 +435,7 @@ private:
       const auto& matching = minimumWeightFullBipartiteMatching(matrix);
       double cost = 0;
       for (std::size_t i = 0; i < matching.size(); ++i) {
-        cost += matrix[i][matching[i]].value();
+        cost = cost +  matrix[i][matching[i]].value();
       }
       auto tmp_mapping = qubit_mapping;
       for (std::size_t idx_rydberg = 0; idx_rydberg < matching.size();
@@ -447,8 +443,8 @@ private:
         const auto q0 = list_gate[matching[idx_rydberg]]->first;
         const auto q1 = list_gate[matching[idx_rydberg]]->second;
         const auto& site = list_Rydberg[idx_rydberg];
-        if (test_reuse && (list_reuse_qubits[layer - 1].find(q0) !=
-                           list_reuse_qubits[layer - 1].end())) {
+        if (test_reuse && (listReuseQubits[layer - 1].find(q0) !=
+                           listReuseQubits[layer - 1].end())) {
           tmp_mapping[q0] = gate_mapping[q0];
           if (site == gate_mapping[q0]) {
             tmp_mapping[q1] = {std::get<0>(site)->entanglement_id->back().get(),
@@ -456,8 +452,8 @@ private:
           } else {
             tmp_mapping[q1] = site;
           }
-        } else if (test_reuse && (list_reuse_qubits[layer - 1].find(q1) !=
-                                  list_reuse_qubits[layer - 1].end())) {
+        } else if (test_reuse && (listReuseQubits[layer - 1].find(q1) !=
+                                  listReuseQubits[layer - 1].end())) {
           tmp_mapping[q1] = gate_mapping[q1];
           if (site == gate_mapping[q1]) {
             tmp_mapping[q0] = {std::get<0>(site)->entanglement_id->back().get(),
@@ -515,15 +511,15 @@ private:
       std::vector<qc::Qubit> qubit_to_place{};
       // go through the placement of qubits after the last gate
       for (std::size_t q = 0; q < last_gate_mapping.size(); ++q) {
-        const auto& mapping = last_gate_mapping[q];
-        const auto array_id = std::get<0>(mapping);
+        const auto& last_mapping = last_gate_mapping[q];
+        const auto array_id = std::get<0>(last_mapping);
         if (is_empty_storage_site.find(array_id) !=
             is_empty_storage_site.end()) {
           // the mapped qubit is in the storage zone, set the site as occupied
-          is_empty_storage_site[array_id][std::get<1>(mapping)]
-                               [std::get<2>(mapping)] = false;
-        } else if (!test_reuse || list_reuse_qubits[layer].find(q) ==
-                                      list_reuse_qubits[layer].end()) {
+          is_empty_storage_site[array_id][std::get<1>(last_mapping)]
+                               [std::get<2>(last_mapping)] = false;
+        } else if (!test_reuse || listReuseQubits[layer].find(q) ==
+                                      listReuseQubits[layer].end()) {
           // the mapped qubit is in the entangling zone and must be placed (if
           // not reused)
           qubit_to_place.emplace_back(q);
@@ -561,14 +557,14 @@ private:
         for (const auto* gate : list_gate[layer + 1]) {
           if (dict_qubit_interaction.find(gate->first) !=
                   dict_qubit_interaction.end() &&
-              ((!test_reuse) || (list_reuse_qubits[layer].find(gate->second) ==
-                                 list_reuse_qubits[layer].end()))) {
+              ((!test_reuse) || (listReuseQubits[layer].find(gate->second) ==
+                                 listReuseQubits[layer].end()))) {
             dict_qubit_interaction[gate->first].emplace_back(gate->second);
           }
           if (dict_qubit_interaction.find(gate->second) !=
                   dict_qubit_interaction.end() &&
-              ((!test_reuse) || (list_reuse_qubits[layer].find(gate->first) ==
-                                 list_reuse_qubits[layer].end()))) {
+              ((!test_reuse) || (listReuseQubits[layer].find(gate->first) ==
+                                 listReuseQubits[layer].end()))) {
             dict_qubit_interaction[gate->second].emplace_back(gate->first);
           }
         }
@@ -594,10 +590,17 @@ private:
         auto upper_row = lower_row;
         auto left_col = std::get<2>(qubit_mapping[q]);
         auto right_col = left_col;
-        const std::pair<size_t, size_t>& exact_loc_q =
-            std::apply(architecture.exact_SLM_location, qubit_mapping[q]);
+        const std::pair<size_t, size_t>& exact_loc_q = std::apply(
+            [&](auto&&... args) {
+              architecture.exact_SLM_location(
+                  std::forward<decltype(args)>(args)...);
+            },
+            qubit_mapping[q]);
         const std::pair<size_t, size_t>& exact_loc_gate =
-            std::apply(architecture.exact_SLM_location, mapping[0][q]);
+          std::apply([&](auto&&... args) {
+            architecture.exact_SLM_location(
+                std::forward<decltype(args)>(args)...);
+          }, mapping[0][q]);
         if (exact_loc_gate.second < exact_loc_q.second) {
           lower_row = 0;
         } else {
@@ -611,7 +614,10 @@ private:
           const SLM* tmp_slm_idx = std::get<0>(last_gate_mapping[neighbor_q]);
           const std::tuple<const SLM*, size_t, size_t>& neighbor_q_location =
               tmp_slm_idx->entanglement_id
-                  ? std::apply(architecture.nearest_storage_site,
+          ? std::apply([&](auto&&... args) {
+      architecture.nearest_storage_site(
+          std::forward<decltype(args)>(args)...);
+    },
                                last_gate_mapping[neighbor_q])
                   : last_gate_mapping[neighbor_q];
           if (const auto& it =
@@ -634,7 +640,10 @@ private:
             left_col = std::get<2>(neighbor_q_location);
             right_col = std::get<2>(neighbor_q_location);
             const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q =
-                std::apply(architecture.exact_SLM_location,
+              std::apply([&](auto&&... args) {
+    architecture.exact_SLM_location(
+        std::forward<decltype(args)>(args)...);
+  },
                            neighbor_q_location);
             if (exact_loc_gate.second < exact_loc_neightbor_q.second) {
               lower_row = 0;
@@ -649,7 +658,10 @@ private:
         const auto& gate_location = last_gate_mapping[q];
         const std::tuple<const SLM*, std::size_t, std::size_t>
             nearest_storage_site =
-                std::apply(architecture.nearest_storage_site, gate_location);
+              std::apply([&](auto&&... args) {
+  architecture.nearest_storage_site(
+      std::forward<decltype(args)>(args)...);
+}, gate_location);
         // todo: what is ratio?
         const std::size_t ratio = 3;
         if (const auto it =
@@ -727,7 +739,10 @@ private:
                   std::get<2>(site_neighbor_q));
             } else {
               const std::pair<std::size_t, std::size_t>& exact_loc_neightbor_q =
-                  std::apply(architecture.exact_SLM_location,
+                std::apply([&](auto&&... args) {
+  architecture.exact_SLM_location(
+      std::forward<decltype(args)>(args)...);
+},
                              last_gate_mapping[neighbor_q]);
               const auto dx =
                   static_cast<std::int64_t>(exact_loc_neightbor_q.first) -

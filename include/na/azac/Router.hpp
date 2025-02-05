@@ -14,11 +14,9 @@
 namespace na {
 
 template <typename T> class Router {
-  static_assert(std::is_base_of_v<CompilerBase<T>, T>,
-                "T must be a subclass of CompilerBase");
-
+private:
   /// constant, the distance of AOD row and col to some trap. We use 1um here.
-  constexpr std::size_t PARKING_DIST = 1;
+  static constexpr std::size_t PARKING_DIST = 1;
 
   std::priority_queue<std::pair<std::size_t, std::size_t>, std::vector<std::pair<std::size_t, std::size_t>>, std::greater<std::pair<std::size_t, std::size_t>>>
       aod_end_time;
@@ -134,7 +132,7 @@ protected:
         }
       }
       remain_graph = tmp;
-      ++batch;
+      batch = batch + 1;
     }
 
     // append a layer for gate execution
@@ -156,8 +154,7 @@ protected:
 
         if (static_cast<T*>(this)->routing_strategy !=
                 CompilerBase<T>::RoutingStrategy::MAXIMAL_IS) {
-        std:
-          sort(remain_graph.begin(), remain_graph.end(),
+        std::sort(remain_graph.begin(), remain_graph.end(),
                [&](const std::size_t a, const std::size_t b) {
                  const auto [a_final_x, a_final_y] = std::apply(
                      static_cast<T*>(this)->architecture.exact_SLM_location,
@@ -484,7 +481,7 @@ protected:
       }
       dict_gate_zone[zone_idx].emplace_back(i);
     }
-    for (const auto [rydberg_idx, gate_idxs] : dict_gate_zone) {
+    for (const auto& [rydberg_idx, gate_idxs] : dict_gate_zone) {
       std::vector<nlohmann::json> result_gate{};
       for (const auto i : gate_idxs) {
         result_gate.emplace_back(nlohmann::json{{"id", list_gate_idx[i]},
@@ -655,8 +652,8 @@ protected:
           std::sort(list_instruction_duration[0].begin(), list_instruction_duration[0].end(), std::greater<std::pair<double, std::size_t>>());
           std::sort(list_instruction_duration[1].begin(), list_instruction_duration[1].end(), std::greater<std::pair<double, std::size_t>>());
           // assign instruction according to the duration in descending order
-          for (const std::size_t i : {0, 1}) {
-            for (const auto item : list_instruction_duration[i]) {
+          for (const std::size_t i : {0UL, 1UL}) {
+            for (const auto& item : list_instruction_duration[i]) {
               const double duration = item.first;
               const auto inst = static_cast<T*>(this)->result.instructions[item.second];
               const auto& [begin_time, aod_id] = aod_end_time.top();
@@ -941,7 +938,7 @@ protected:
             {"col_loc_end", std::vector<std::size_t>{}},
             {"begin_coord", coords},
             {"end_coord", std::vector<std::size_t>{}}};
-        for (std::size_t j = 0; locs.size(); ++j) {
+        for (std::size_t j = 0; j < locs.size(); ++j) {
           const auto& [q, slm, r, c] = locs[j];
           const std::size_t col_x =
               static_cast<T*>(this)
@@ -955,8 +952,8 @@ protected:
           parking["col_x_end"].emplace_back(col_x + PARKING_DIST);
           parking["col_loc_begin"].emplace_back(col_loc);
           parking["col_loc_end"].emplace_back(std::pair{-1, -1});
-          coords[row_id][j]["x"] = parking["col_x_end"][-1];
-          coords[row_id][j]["y"] = parking["row_y_end"][0];
+          coords[row_id][j]["x"] = parking["col_x_end"].back();
+          coords[row_id][j]["y"] = parking["row_y_end"].front();
         }
         parking["end_coord"] = coords;
         details.emplace_back(parking);

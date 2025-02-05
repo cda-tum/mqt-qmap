@@ -8,15 +8,13 @@
 namespace na {
 
 template <typename T> class Scheduler {
-  static_assert(std::is_base_of_v<CompilerBase<T>, T>,
-                "T must be a subclass of CompilerBase");
+private:
   /// as soon as possible algorithm for g_q
   auto asap() -> std::vector<
       std::unordered_set<const std::pair<qc::Qubit, qc::Qubit>*>> {
     std::vector<std::unordered_set<const std::pair<qc::Qubit, qc::Qubit>*>>
         gate_scheduling{};
     std::vector<std::size_t> list_qubit_time(static_cast<T*>(this)->n_q, 0);
-    std::size_t i = 0;
     for (const std::pair<qc::Qubit, qc::Qubit>& gate :
          static_cast<T*>(this)->g_q) {
       const auto tq0 = list_qubit_time[gate.first];
