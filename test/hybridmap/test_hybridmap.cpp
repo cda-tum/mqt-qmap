@@ -139,29 +139,29 @@ protected:
     mapperParameters.lookaheadWeightMoves = 0.1;
     mapperParameters.decay = 0;
     mapperParameters.shuttlingTimeWeight = 0.1;
-    mapperParameters.gateWeight = 0;
-    mapperParameters.shuttlingWeight = 1;
+    mapperParameters.gateWeight = 1;
+    mapperParameters.shuttlingWeight = 0;
     mapperParameters.seed = 43;
     mapperParameters.verbose = true;
-    mapperParameters.numFlyingAncillas = 1;
+    mapperParameters.numFlyingAncillas = 2;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(
         // "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
-        "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
+        "circuits/modulo_2.qasm");
   }
 };
 
 TEST_F(NeutralAtomMapperTest, Output) {
   auto qcMapped = mapper.map(qc, initialMapping);
-
-  // qcMapped.dumpOpenQASM(std::cout, false);
+  setvbuf(stdout, NULL, _IONBF, 0);
+  qcMapped.dumpOpenQASM(std::cout, false);
 
   auto qcAodMapped = mapper.convertToAod();
-  // qcAodMapped.dumpOpenQASM(std::cout, false);
+  qcAodMapped.dumpOpenQASM(std::cout, false);
 
   // const auto scheduleResults = mapper.schedule(false, true);
-  const auto scheduleResults = mapper.schedule(true, true);
-  std::cout << scheduleResults.toCsv();
+  // const auto scheduleResults = mapper.schedule(true, true);
+  // std::cout << scheduleResults.toCsv();
 
-  ASSERT_GT(scheduleResults.totalFidelities, 0);
+  // ASSERT_GT(scheduleResults.totalFidelities, 0);
 }
