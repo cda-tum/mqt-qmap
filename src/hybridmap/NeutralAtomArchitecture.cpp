@@ -289,7 +289,7 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
     if (coord >= getNpositions()) {
       coord -= getNpositions();
     }
-    for (uint32_t i = 0; i < getNqubits(); ++i) {
+    for (uint32_t i = 0; i < getNpositions(); ++i) {
       if (i == coord) {
         continue;
       }
