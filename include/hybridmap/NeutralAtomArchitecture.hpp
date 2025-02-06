@@ -548,8 +548,22 @@ public:
   [[nodiscard]] std::string
   getAnimationMachine(qc::fp shuttlingSpeedFactor) const;
 
-  [[nodiscard]] std::string getAnimationStyle() const {
+  [[nodiscard]] std::string
+  getAnimationStyle(const std::string& stylePath) const {
     std::string style(defaultStyle);
+    if (!stylePath.empty()) {
+      std::ifstream file(stylePath);
+      if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+          style += line + "\n";
+        }
+        file.close();
+      } else {
+        std::cerr << "Could not open file " << stylePath
+                  << "! Using default style.\n";
+      }
+    }
     const std::string toReplace = "XXX";
     const std::string replaceWith = std::to_string(getInteractionRadius());
 
@@ -572,9 +586,11 @@ public:
     file << getAnimationMachine(shuttlingSpeedFactor);
   }
 
-  [[maybe_unused]] void saveAnimationStyle(const std::string& filename) const {
+  [[maybe_unused]] void
+  saveAnimationStyle(const std::string& filename,
+                     const std::string& stylePath = "") const {
     std::ofstream file(filename);
-    file << getAnimationStyle();
+    file << getAnimationStyle(stylePath);
   }
 };
 
