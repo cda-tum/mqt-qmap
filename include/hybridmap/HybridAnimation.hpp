@@ -21,11 +21,18 @@ class AnimationAtoms {
 protected:
   std::map<CoordIndex, HwQubit> coordIdxToId;
   std::map<HwQubit, std::pair<qc::fp, qc::fp>> idToCoord;
+  const NeutralAtomArchitecture& arch;
+
+  void initPositions(const std::map<HwQubit, CoordIndex>& initHwPos,
+                     const std::map<HwQubit, CoordIndex>& initFaPos);
 
 public:
   AnimationAtoms(const std::map<HwQubit, CoordIndex>& initHwPos,
                  const std::map<HwQubit, CoordIndex>& initFaPos,
-                 const NeutralAtomArchitecture& arch);
+                 const NeutralAtomArchitecture& arch)
+      : arch(arch) {
+    initPositions(initHwPos, initFaPos);
+  }
 
   std::string placeInitAtoms();
   std::string opToNaViz(const std::unique_ptr<qc::Operation>& op,

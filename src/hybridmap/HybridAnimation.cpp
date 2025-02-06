@@ -20,11 +20,10 @@
 #include <string>
 
 namespace na {
-AnimationAtoms::AnimationAtoms(const std::map<HwQubit, HwQubit>& initHwPos,
-                               const std::map<HwQubit, CoordIndex>& initFaPos,
-                               const NeutralAtomArchitecture& arch) {
+void AnimationAtoms::initPositions(
+    const std::map<HwQubit, CoordIndex>& initHwPos,
+    const std::map<HwQubit, CoordIndex>& initFaPos) {
   const auto nCols = arch.getNcolumns();
-
   for (const auto& [id, coord] : initHwPos) {
     coordIdxToId[coord] = id;
     const auto column = coord % nCols;
@@ -54,11 +53,63 @@ std::string AnimationAtoms::placeInitAtoms() {
   }
   return initString;
 }
+std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
+                                      qc::fp startTime) {
+  std::string opString = "";
+
+  if (op->getType() == qc::OpType::AodActivate) {
+    int a = 0;
+  } else if (op->getType() == qc::OpType::AodMove) {
+    // update atom coordinates
+    const auto startsX =
+        dynamic_cast<AodOperation*>(op.get())->getStarts(Dimension::X);
+    const auto endsX =
+        dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::X);
+    const auto startsY =
+        dynamic_cast<AodOperation*>(op.get())->getStarts(Dimension::Y);
+    const auto endsY =
+        dynamic_cast<AodOperation*>(op.get())->getEnds(Dimension::Y);
+    const auto CoordIndices = op->getTargets();
+    // use that coord indices are pairs of origin and target indices
+    for (size_t i = 0; i < CoordIndices.size(); i++) {
+      if (i % 2 == 0) {
+        const auto coordIdx = CoordIndices[i];
+        const auto id = coordIdxToId.at(coordIdx);
+        auto newX = 0.0;
+        auto newY = 0.0;
+        for (size_t i = 0; i < startsX.size(); i++) {
+          if (std::abs(startsX[i] - idToCoord.at(id).first) < 0.0001) {
+            newX = endsX[i];
+            break;
+          }
+        }
+        for (size_t i = 0; i < startsY.size(); i++) {
+          if (std::abs(startsY[i] - idToCoord.at(id).second) < 0.0001) {
+            newY = endsY[i];
+            break;
+          }
+        }
+        opString += "@" + std::to_string(startTime) + " move (" +
+                    std::to_string(newX) + ", " + std::to_string(newY) +
+                    ") atom" + std::to_string(coordIdx) + "\n";
+        idToCoord.at(id) = {newX, newY};
+      } else {
+        // this is the target index -> update coordIdxToId
+        const auto coordIdx = CoordIndices[i];
+        const auto id = coordIdxToId.at(CoordIndices[i - 1]);
+        coordIdxToId.erase(CoordIndices[i - 1]);
+        coordIdxToId[coordIdx] = id;
+      }
+    }
+  }
+  return opString;
+}
 
 // std::string AnimationAtoms::getEndString(const qc::fp endTime) {
 //   std::string initString;
 //   for (const auto& [id, coord] : idToCoord) {
-//     initString += std::to_string(endTime) + ";" + std::to_string(id) + ";" +
+//     initString += std::to_string(endTime) + ";" + std::to_string(id) + ";"
+//     +
 //                   std::to_string(coord.first) + ";" +
 //                   std::to_string(coord.second) + ";1;0;0;0;0;0;0;0\n";
 //   }
@@ -139,7 +190,8 @@ std::string AnimationAtoms::placeInitAtoms() {
 //       addAxis(id);
 //       if (axesIds.find(id) == axesIds.end()) {
 //         throw std::invalid_argument(
-//             "Tried to activate qubit at coordIdx " + std::to_string(coordIdx)
+//             "Tried to activate qubit at coordIdx " +
+//             std::to_string(coordIdx)
 //             + " but there is no axis for qubit " + std::to_string(id));
 //       }
 //       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
@@ -148,7 +200,8 @@ std::string AnimationAtoms::placeInitAtoms() {
 //                                colorAod, true, axesIds.at(id));
 //     } else if (op->getType() == qc::OpType::AodDeactivate) {
 //       if (axesIds.find(id) == axesIds.end()) {
-//         throw std::invalid_argument("Tried to deactivate qubit at coordIdx "
+//         throw std::invalid_argument("Tried to deactivate qubit at coordIdx
+//         "
 //         +
 //                                     std::to_string(coordIdx) +
 //                                     " but there is no axis for qubit " +
@@ -195,7 +248,8 @@ std::string AnimationAtoms::placeInitAtoms() {
 //     } else if (op->getUsedQubits().size() > 1) { // multi qubit gates
 //       addMargin(id);
 //       csvLine += createCsvLine(startTime, id, coord.first, coord.second, 1,
-//                                colorSlm, false, 0, false, marginIds.at(id));
+//                                colorSlm, false, 0, false,
+//                                marginIds.at(id));
 //       auto midTime = (startTime + endTime) / 2;
 //       csvLine +=
 //           createCsvLine(midTime, id, coord.first, coord.second, 1, colorCz,
@@ -204,7 +258,8 @@ std::string AnimationAtoms::placeInitAtoms() {
 //                         arch.getInteractionRadius() *
 //                             arch.getInterQubitDistance());
 //       csvLine += createCsvLine(endTime, id, coord.first, coord.second, 1,
-//                                colorSlm, false, 0, false, marginIds.at(id));
+//                                colorSlm, false, 0, false,
+//                                marginIds.at(id));
 //       removeMargin(id);
 //
 //     } else { // single qubit gates
@@ -216,7 +271,8 @@ std::string AnimationAtoms::placeInitAtoms() {
 //           createCsvLine(midTime, id, coord.first, coord.second, 1,
 //           colorLocal);
 //       csvLine +=
-//           createCsvLine(endTime, id, coord.first, coord.second, 1, colorSlm);
+//           createCsvLine(endTime, id, coord.first, coord.second, 1,
+//           colorSlm);
 //     }
 //   }
 //   return csvLine;
@@ -225,9 +281,10 @@ std::string AnimationAtoms::placeInitAtoms() {
 //                                           const HwQubit id, const qc::fp x,
 //                                           const qc::fp y, const uint32_t
 //                                           size, const uint32_t color, const
-//                                           bool axes, const axesId axId, const
-//                                           bool margin, const marginId
-//                                           marginId, const qc::fp marginSize)
+//                                           bool axes, const axesId axId,
+//                                           const bool margin, const marginId
+//                                           marginId, const qc::fp
+//                                           marginSize)
 //                                           {
 //   std::string csvLine;
 //   csvLine +=

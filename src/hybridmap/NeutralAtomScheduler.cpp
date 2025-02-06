@@ -154,7 +154,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     // update animation
     if (createAnimationCsv) {
-      animation += "";
+      animation += animationAtoms.opToNaViz(op, maxTime);
     }
   }
   if (verbose) {

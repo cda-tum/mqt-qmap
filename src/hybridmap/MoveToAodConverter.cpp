@@ -397,7 +397,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
   // and connect with an aod move operations
   // all can be done in parallel in a single move
   std::vector<SingleOperation> aodOperations;
-  std::set<CoordIndex> targetQubits;
+  std::vector<CoordIndex> targetQubits;
 
   auto d = aodActivationHelper.arch->getInterQubitDistance();
   auto interD = aodActivationHelper.arch->getInterQubitDistance() /
@@ -412,16 +412,16 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
         // get target qubits
         for (const auto& move : activation.moves) {
           if (move.load1) {
-            targetQubits.insert(move.c1);
+            targetQubits.emplace_back(move.c1);
           } else {
-            targetQubits.insert(move.c1 +
-                                aodActivationHelper.arch->getNpositions());
+            targetQubits.emplace_back(
+                move.c1 + aodActivationHelper.arch->getNpositions());
           }
           if (move.load2) {
-            targetQubits.insert(move.c2);
+            targetQubits.emplace_back(move.c2);
           } else {
-            targetQubits.insert(move.c2 +
-                                aodActivationHelper.arch->getNpositions());
+            targetQubits.emplace_back(
+                move.c2 + aodActivationHelper.arch->getNpositions());
           }
         }
 
@@ -442,9 +442,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     }
   }
 
-  std::vector<CoordIndex> targetQubitsVec = {targetQubits.begin(),
-                                             targetQubits.end()};
-  return {qc::OpType::AodMove, targetQubitsVec, aodOperations};
+  return {qc::OpType::AodMove, targetQubits, aodOperations};
 }
 
 std::vector<std::shared_ptr<MoveToAodConverter::AodActivationHelper::AodMove>>
