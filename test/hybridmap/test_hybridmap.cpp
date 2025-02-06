@@ -140,7 +140,7 @@ protected:
     mapperParameters.decay = 0;
     mapperParameters.shuttlingTimeWeight = 0.1;
     mapperParameters.gateWeight = 1;
-    mapperParameters.shuttlingWeight = 1;
+    mapperParameters.shuttlingWeight = 0;
     mapperParameters.seed = 43;
     mapperParameters.verbose = true;
     mapperParameters.numFlyingAncillas = 2;
@@ -159,7 +159,21 @@ TEST_F(NeutralAtomMapperTest, Output) {
   auto qcAodMapped = mapper.convertToAod();
   qcAodMapped.dumpOpenQASM(std::cout, false);
 
-  const auto scheduleResults = mapper.schedule(false, false);
+  const auto scheduleResults = mapper.schedule(false, true);
+  const auto animation = mapper.getAnimationViz();
+  // save to file
+  std::ofstream outFile("circuit.csv");
+  if (outFile.is_open()) {
+    outFile << animation;
+    outFile.close();
+  }
+  const auto archCsv = arch.getAnimationMachine();
+  std::ofstream outFile2("arch.csv");
+  if (outFile2.is_open()) {
+    outFile2 << animation;
+    outFile2.close();
+  }
+
   // const auto scheduleResults = mapper.schedule(true, true);
   std::cout << scheduleResults.toCsv();
 

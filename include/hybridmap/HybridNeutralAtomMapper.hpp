@@ -656,16 +656,16 @@ public:
    * @brief Saves the animation csv file of the scheduled quantum circuit.
    * @return The animation csv string
    */
-  [[maybe_unused]] std::string getAnimationCsv() {
-    return scheduler.getAnimationCsv();
+  [[maybe_unused]] std::string getAnimationViz() const {
+    return scheduler.getAnimationViz();
   }
 
   /**
    * @brief Saves the animation csv file of the scheduled quantum circuit.
    * @param filename The name of the file to save the animation csv file to
    */
-  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) const {
-    scheduler.saveAnimationCsv(filename);
+  [[maybe_unused]] void saveAnimationFiles(const std::string& filename) const {
+    scheduler.saveAnimationFiles(filename);
   }
 
   void decomposeBridgeGates(qc::QuantumComputation& qc) const;

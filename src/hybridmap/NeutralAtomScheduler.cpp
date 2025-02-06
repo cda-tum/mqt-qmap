@@ -43,8 +43,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
   AnimationAtoms animationAtoms(initHwPos, *arch);
   if (createAnimationCsv) {
-    animationCsv += animationAtoms.getInitString();
-    animationArchitectureCsv = arch->getAnimationCsv();
+    animation += animationAtoms.getInitString();
+    animationMachine = arch->getAnimationMachine();
+    animationStyle = arch->getAnimationStyle();
   }
 
   int index = 0;
@@ -152,7 +153,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     // update animation
     if (createAnimationCsv) {
-      animationCsv +=
+      animation +=
           animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, *arch);
     }
   }
@@ -170,7 +171,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
       std::exp(-totalIdleTime / arch->getDecoherenceTime());
 
   if (createAnimationCsv) {
-    animationCsv += animationAtoms.getEndString(maxExecutionTime);
+    animation += animationAtoms.getEndString(maxExecutionTime);
   }
   if (verbose) {
     printSchedulerResults(totalExecutionTimes, totalIdleTime,

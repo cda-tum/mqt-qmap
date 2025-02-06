@@ -73,8 +73,9 @@ struct SchedulerResults {
 class NeutralAtomScheduler {
 protected:
   const NeutralAtomArchitecture* arch = nullptr;
-  std::string animationCsv;
-  std::string animationArchitectureCsv;
+  std::string animation;
+  std::string animationMachine;
+  std::string animationStyle;
 
 public:
   // Constructor
@@ -97,17 +98,28 @@ public:
                             bool verbose, bool createAnimationCsv = false,
                             qc::fp shuttlingSpeedFactor = 1.0);
 
-  std::string getAnimationCsv() { return animationCsv; }
-  void saveAnimationCsv(const std::string& filename) const {
-    // save animation
-    std::ofstream file(filename);
-    file << animationCsv;
-    file.close();
-    // save architecture
+  std::string getAnimationMachine() const { return animationMachine; }
+  std::string getAnimationViz() const { return animation; }
+  std::string getAnimationStyle() const { return animationStyle; }
+
+  void saveAnimationFiles(const std::string& filename) const {
     const auto filenameWithoutExtension =
         filename.substr(0, filename.find_last_of('.'));
-    file.open(filenameWithoutExtension + "_architecture.csv");
-    file << animationArchitectureCsv;
+    const auto filenameViz = filenameWithoutExtension + ".naviz";
+    const auto filenameMachine = filenameWithoutExtension + ".namachine";
+    const auto filenameStyle = filenameWithoutExtension + ".nastyle";
+
+    // save animation
+    std::ofstream file = std::ofstream(filenameViz);
+    file << getAnimationViz();
+    file.close();
+    // save machine
+    file.open(filenameMachine);
+    file << getAnimationMachine();
+    file.close();
+    // save style
+    file.open(filenameStyle);
+    file << getAnimationStyle();
     file.close();
   }
 

@@ -9,6 +9,7 @@
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "hybridmap/default_style.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -20,8 +21,10 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -542,7 +545,7 @@ public:
    * @brief Returns a csv string for the animation of the architecture
    * @return The csv string for the animation of the architecture
    */
-  [[nodiscard]] std::string getAnimationCsv() const {
+  [[nodiscard]] std::string getAnimationMachine() const {
     std::string csv = "x;y;size;color\n";
     for (auto i = 0; i < getNcolumns(); i++) {
       for (auto j = 0; j < getNrows(); j++) {
@@ -553,13 +556,32 @@ public:
     return csv;
   }
 
+  [[nodiscard]] std::string getAnimationStyle() const {
+    std::string style(defaultStyle);
+    const std::string toReplace = "XXX";
+    const std::string replaceWith = std::to_string(getInteractionRadius());
+
+    size_t pos = 0;
+    while ((pos = style.find(toReplace, pos)) != std::string::npos) {
+      style.replace(pos, toReplace.length(), replaceWith);
+      pos += replaceWith.length();
+    }
+    return style;
+  }
+
   /**
    * @brief Save the animation of the architecture to a csv file
    * @param filename The name of the csv file
    */
-  [[maybe_unused]] void saveAnimationCsv(const std::string& filename) const {
+  [[maybe_unused]] void
+  saveAnimationMachine(const std::string& filename) const {
     std::ofstream file(filename);
-    file << getAnimationCsv();
+    file << getAnimationMachine();
+  }
+
+  [[maybe_unused]] void saveAnimationStyle(const std::string& filename) const {
+    std::ofstream file(filename);
+    file << getAnimationStyle();
   }
 };
 
