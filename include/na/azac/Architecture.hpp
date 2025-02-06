@@ -42,6 +42,7 @@ struct SLM {
 };
 } // namespace na
 
+namespace std {
 template<>
 struct std::hash<const na::SLM* const>
 {
@@ -52,6 +53,18 @@ struct std::hash<const na::SLM* const>
     return h1 ^ (h2 << 1);
   }
 };
+
+template <>
+struct hash<std::tuple<const na::SLM*, std::size_t, std::size_t>> {
+  std::size_t operator()(const std::tuple<const na::SLM*, std::size_t, std::size_t>& t) const noexcept {
+    const auto& [slm, a, b] = t;
+    const std::size_t h1 = hash<const na::SLM*>{}(slm);
+    const std::size_t h2 = hash<std::size_t>{}(a);
+    const std::size_t h3 = hash<std::size_t>{}(b);
+    return h1 ^ (h2 << 1) ^ (h3 << 2);
+  }
+};
+} // namespace std
 
 namespace na {
 
@@ -300,4 +313,3 @@ struct Architecture {
   }
 };
 } // namespace na
-
