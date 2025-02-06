@@ -231,6 +231,52 @@ NeutralAtomArchitecture::getNN(const CoordIndex idx) const {
   }
   return nn;
 }
+std::string NeutralAtomArchitecture::getAnimationMachine(
+    const qc::fp shuttlingSpeedFactor) const {
+  std::string animationMachine = "name: \"Hyrbid_" + this->name + "\"\n";
+
+  animationMachine +=
+      "movement {\n\tmax_speed: " +
+      std::to_string(this->getShuttlingTime(qc::OpType::AodMove) *
+                     shuttlingSpeedFactor) +
+      "\n}\n";
+
+  animationMachine +=
+      "time {\n\tload: " +
+      std::to_string(this->getShuttlingTime(qc::OpType::AodActivate) *
+                     shuttlingSpeedFactor) +
+      "\n\tstore: " +
+      std::to_string(this->getShuttlingTime(qc::OpType::AodDeactivate) *
+                     shuttlingSpeedFactor) +
+      "\n\trz: " + std::to_string(this->getGateTime("x")) +
+      "\n\tcz: " + std::to_string(this->getGateTime("cz")) +
+      "\n\tunit: \"us\"\n}\n";
+
+  animationMachine += "distance {\n\tinteraction: " +
+                      std::to_string(this->getInteractionRadius()) +
+                      "\n\tunit: \"um\"\n}\n";
+  const auto zoneStart = -this->getInterQubitDistance();
+  const auto zoneEndX = this->getNcolumns() * this->getInterQubitDistance() +
+                        this->getInterQubitDistance();
+  const auto zoneEndY = this->getNrows() * this->getInterQubitDistance() +
+                        this->getInterQubitDistance();
+  animationMachine += "zone hybrid {\n\tfrom: (" + std::to_string(zoneStart) +
+                      ", " + std::to_string(zoneStart) + ")\n\tto: (" +
+                      std::to_string(zoneEndX) + ", " +
+                      std::to_string(zoneEndY) + ") \n}\n";
+
+  for (size_t colIdx = 0; colIdx < this->getNcolumns(); colIdx++) {
+    for (size_t rowIdx = 0; rowIdx < this->getNrows(); rowIdx++) {
+      const auto coordIdx = colIdx + (rowIdx * this->getNcolumns());
+      animationMachine +=
+          "trap trap" + std::to_string(coordIdx) + " {\n\tposition: (" +
+          std::to_string(colIdx * this->getInterQubitDistance()) + ", " +
+          std::to_string(rowIdx * this->getInterQubitDistance()) + ")\n}\n";
+    }
+  }
+
+  return animationMachine;
+}
 
 qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
   if (op->getType() == qc::OpType::AodActivate ||

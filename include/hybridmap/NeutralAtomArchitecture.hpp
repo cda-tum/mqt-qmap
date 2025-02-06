@@ -545,16 +545,8 @@ public:
    * @brief Returns a csv string for the animation of the architecture
    * @return The csv string for the animation of the architecture
    */
-  [[nodiscard]] std::string getAnimationMachine() const {
-    std::string csv = "x;y;size;color\n";
-    for (auto i = 0; i < getNcolumns(); i++) {
-      for (auto j = 0; j < getNrows(); j++) {
-        csv += std::to_string(i * getInterQubitDistance()) + ";" +
-               std::to_string(j * getInterQubitDistance()) + ";1;2\n";
-      }
-    }
-    return csv;
-  }
+  [[nodiscard]] std::string
+  getAnimationMachine(qc::fp shuttlingSpeedFactor) const;
 
   [[nodiscard]] std::string getAnimationStyle() const {
     std::string style(defaultStyle);
@@ -574,9 +566,10 @@ public:
    * @param filename The name of the csv file
    */
   [[maybe_unused]] void
-  saveAnimationMachine(const std::string& filename) const {
+  saveAnimationMachine(const std::string& filename,
+                       const qc::fp shuttlingSpeedFactor) const {
     std::ofstream file(filename);
-    file << getAnimationMachine();
+    file << getAnimationMachine(shuttlingSpeedFactor);
   }
 
   [[maybe_unused]] void saveAnimationStyle(const std::string& filename) const {
