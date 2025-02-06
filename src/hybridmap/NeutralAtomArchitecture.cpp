@@ -284,7 +284,11 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
     return op->getUsedQubits();
   }
   std::set<CoordIndex> blockedCoordIndices;
-  for (const auto& coord : op->getUsedQubits()) {
+  for (auto coord : op->getUsedQubits()) {
+    // qubits in ancilla register
+    if (coord >= getNpositions()) {
+      coord -= getNpositions();
+    }
     for (uint32_t i = 0; i < getNqubits(); ++i) {
       if (i == coord) {
         continue;
