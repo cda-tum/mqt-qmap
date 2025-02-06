@@ -10,8 +10,6 @@ namespace na {
 class Compiler : public CompilerBase<Compiler>,
                  Scheduler<Compiler>,
                  Placer<Compiler>,
-                 Router<Compiler> {
-  Compiler() = delete;
-};
+                 Router<Compiler> {};
 
 } // namespace na

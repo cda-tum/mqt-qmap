@@ -23,6 +23,7 @@
 #include <stack>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -62,16 +63,16 @@ public:
   static std::string toString(const RoutingStrategy strategy) {
     switch (strategy) {
     case RoutingStrategy::MAXIMAL_IS:
-      return "maximal_is";
+      return "maximalis";
     case RoutingStrategy::MAXIMAL_IS_SORT:
     default:
-      return "maximal_is_sort";
+      return "maximalis_sort";
     }
   }
   static RoutingStrategy toRoutingStrategy(const std::string& strategy) {
     static const std::unordered_map<std::string, RoutingStrategy>
-        stringToStrategy{{"maximal_is_sort", RoutingStrategy::MAXIMAL_IS_SORT},
-                         {"maximal_is", RoutingStrategy::MAXIMAL_IS}};
+        stringToStrategy{{"maximalis_sort", RoutingStrategy::MAXIMAL_IS_SORT},
+                         {"maximalis", RoutingStrategy::MAXIMAL_IS}};
     const auto it = stringToStrategy.find(strategy);
     if (it == stringToStrategy.end()) {
       throw std::invalid_argument("Unknown routing strategy");
@@ -215,12 +216,12 @@ public:
     }
     if (settings_json.contains("arch_spec")) {
       if (settings_json["arch_spec"].is_string()) {
-        if (std::filesystem::exists(settings_json["arch_spec"])) {
-          result.architecture_spec_path =
-              std::filesystem::path(settings_json["arch_spec"]);
+        const auto& path = std::filesystem::path(settings_json["arch_spec"]);
+        if (exists(path)) {
+          result.architecture_spec_path = path;
           architecture = Architecture(result.architecture_spec_path);
         } else {
-          throw std::invalid_argument("Architecture specification is missing");
+          throw std::filesystem::filesystem_error("File with architecture specification not found", path, std::make_error_code(std::errc::no_such_file_or_directory));
         }
       } else if (settings_json["arch_spec"].is_object()) {
         architecture = Architecture(settings_json["arch_spec"]);
@@ -261,9 +262,9 @@ public:
             "intial mapping\n";
     }
     if (reuse) {
-      ss << "[INFO]                                         : reuse aware\n";
+      ss << "[INFO]                                            reuse aware\n";
     } else {
-      ss << "[INFO]                                         : no reuse\n";
+      ss << "[INFO]                                            no reuse\n";
     }
     ss << "[INFO]           Routing strategy: " << routing_strategy;
     if (use_window) {
@@ -290,9 +291,9 @@ public:
     dict_g_1q_parent.emplace(nullptr, std::vector<qc::StandardOperation>{});
     /// array that stores the index of the last 2-qubit gate acting on each
     /// qubit
-    std::vector<const std::pair<qc::Qubit, qc::Qubit>*> list_qubit_last_2q_gate(
+    std::vector<const std::pair<qc::Qubit, qc::Qubit>*> listQubitLast2qGate(
         n_q, nullptr);
-    std::size_t n_single_qubit_gate = 0;
+    std::size_t nSingleQubitGate = 0;
     for (const auto& op : qc) {
       if (op->isStandardOperation()) {
         const auto& stdop = dynamic_cast<qc::StandardOperation&>(*op);
@@ -307,13 +308,13 @@ public:
           }
         } else if (stdop.getNcontrols() == 0 && stdop.getNtargets() == 1) {
           const auto& qubit = *stdop.getTargets().cbegin();
-          if (dict_g_1q_parent.find(list_qubit_last_2q_gate[qubit]) ==
+          if (dict_g_1q_parent.find(listQubitLast2qGate[qubit]) ==
               dict_g_1q_parent.cend()) {
-            dict_g_1q_parent[list_qubit_last_2q_gate[qubit]] =
+            dict_g_1q_parent[listQubitLast2qGate[qubit]] =
                 std::vector<qc::StandardOperation>{};
           }
-          dict_g_1q_parent[list_qubit_last_2q_gate[qubit]].emplace_back(stdop);
-          ++n_single_qubit_gate;
+          dict_g_1q_parent[listQubitLast2qGate[qubit]].emplace_back(stdop);
+          ++nSingleQubitGate;
         } else {
           std::stringstream ss{};
           ss << "Standard operation ";
@@ -329,7 +330,7 @@ public:
     std::cout << "[INFO]           number of qubits: " << n_q << "\n";
     std::cout << "[INFO]           number of two-qubit gates: " << n_g << "\n";
     std::cout << "[INFO]           number of single-qubit gates: "
-              << n_single_qubit_gate << "\n";
+              << nSingleQubitGate << "\n";
   }
 
   auto solve(bool save_file = true) -> Result {
