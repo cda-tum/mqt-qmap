@@ -587,14 +587,15 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     mappedQc.h(ancQ1);
 
     // update position of flying ancillas
-    if (this->flyingAncillas.isMapped(passBy.q1)) {
+    if (this->flyingAncillas.isMapped(passBy.q1) &&
+        passBy.q1 != passBy.origin) {
       // move away
       const auto& freeCoords =
           this->flyingAncillas.getNearbyFreeCoordinatesByCoord(passBy.q1);
       const auto& freeCoord = *freeCoords.begin();
       mappedQc.move(passBy.q1 + nPos, freeCoord + nPos);
       this->flyingAncillas.move(passBy.q1, freeCoord);
-    } else {
+    } else if (passBy.q1 != passBy.origin) {
       this->flyingAncillas.move(passBy.index, passBy.q1);
     }
 
@@ -2419,7 +2420,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto move = moveDistReduction * moveFidelity;
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
-  // return MappingMethod::FlyingAncillaMethod;
+  return MappingMethod::FlyingAncillaMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
