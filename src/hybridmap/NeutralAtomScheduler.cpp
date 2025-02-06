@@ -27,7 +27,8 @@
 
 na::SchedulerResults na::NeutralAtomScheduler::schedule(
     const qc::QuantumComputation& qc,
-    const std::map<HwQubit, HwQubit>& initHwPos, const bool verbose,
+    const std::map<HwQubit, CoordIndex>& initHwPos,
+    const std::map<HwQubit, CoordIndex>& initFaPos, const bool verbose,
     const bool createAnimationCsv, const qc::fp shuttlingSpeedFactor) {
   if (verbose) {
     std::cout << "\n* schedule start!\n";
@@ -41,9 +42,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
 
-  AnimationAtoms animationAtoms(initHwPos, *arch);
+  AnimationAtoms animationAtoms(initHwPos, initFaPos, *arch);
   if (createAnimationCsv) {
-    animation += animationAtoms.getInitString();
+    animation += animationAtoms.placeInitAtoms();
     animationMachine = arch->getAnimationMachine(shuttlingSpeedFactor);
     animationStyle = arch->getAnimationStyle("");
   }
@@ -153,8 +154,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
 
     // update animation
     if (createAnimationCsv) {
-      animation +=
-          animationAtoms.createCsvOp(op, maxTime, maxTime + opTime, *arch);
+      animation += "";
     }
   }
   if (verbose) {
@@ -170,9 +170,6 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
       totalGateFidelities *
       std::exp(-totalIdleTime / arch->getDecoherenceTime());
 
-  if (createAnimationCsv) {
-    animation += animationAtoms.getEndString(maxExecutionTime);
-  }
   if (verbose) {
     printSchedulerResults(totalExecutionTimes, totalIdleTime,
                           totalGateFidelities, totalFidelities, nCZs);

@@ -648,8 +648,8 @@ public:
       convertToAod();
     }
     return scheduler.schedule(mappedQcAOD, hardwareQubits.getInitHwPos(),
-                              verboseArg, createAnimationCsv,
-                              shuttlingSpeedFactor);
+                              flyingAncillas.getInitHwPos(), verboseArg,
+                              createAnimationCsv, shuttlingSpeedFactor);
   }
 
   /**

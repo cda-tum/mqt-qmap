@@ -94,7 +94,8 @@ public:
    * @return SchedulerResults
    */
   SchedulerResults schedule(const qc::QuantumComputation& qc,
-                            const std::map<HwQubit, HwQubit>& initHwPos,
+                            const std::map<HwQubit, CoordIndex>& initHwPos,
+                            const std::map<HwQubit, CoordIndex>& initFaPos,
                             bool verbose, bool createAnimationCsv = false,
                             qc::fp shuttlingSpeedFactor = 1.0);
 
