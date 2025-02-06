@@ -2,6 +2,7 @@
 
 #include "Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
@@ -58,7 +59,6 @@ protected:
   /// @see place_trivial
   bool trivial_placement = true;
 
-public:
   enum class RoutingStrategy : std::uint8_t { MAXIMAL_IS, MAXIMAL_IS_SORT };
   static std::string toString(const RoutingStrategy strategy) {
     switch (strategy) {
@@ -355,7 +355,7 @@ public:
     } else {
       reuse_qubit.reserve(gate_scheduling.size());
       for (std::size_t i = 0; i < gate_scheduling.size(); ++i) {
-        reuse_qubit.emplace_back(std::vector<std::size_t>{});
+        reuse_qubit.emplace_back();
       }
     }
 
@@ -399,57 +399,57 @@ public:
     return result;
   }
 
+private:
   /// collect qubits that will remain in Rydberg zone between two Rydberg stages
   auto collect_reuse_qubit() -> void {
     reuse_qubit.clear();
-    std::vector qubit_is_used(gate_scheduling.size(),
-                              std::vector<std::size_t>(n_q, -1));
-    for (std::size_t gate_idx = 0; gate_idx < gate_scheduling.front().size();
-         ++gate_idx) {
-      const auto& gate = gate_scheduling.front()[gate_idx];
-      qubit_is_used[0][gate->first] = gate_idx;
-      qubit_is_used[0][gate->second] = gate_idx;
+    std::vector qubitIsUsed(gate_scheduling.size(),
+                              std::vector<std::optional<std::size_t>>(n_q, std::nullopt));
+    for (std::size_t gateIdx = 0; gateIdx < gate_scheduling.front().size();
+         ++gateIdx) {
+      const auto& gate = gate_scheduling.front()[gateIdx];
+      qubitIsUsed[0][gate->first] = gateIdx;
+      qubitIsUsed[0][gate->second] = gateIdx;
     }
     for (std::size_t i = 1; i < gate_scheduling.size(); ++i) {
       reuse_qubit.emplace_back();
       std::vector matrix(gate_scheduling[i].size(),
                          std::vector(gate_scheduling[i - 1].size(), false));
-      for (std::size_t gate_idx = 0; gate_idx < gate_scheduling[i].size();
-           ++gate_idx) {
-        const auto& gate = gate_scheduling[i][gate_idx];
-        if (qubit_is_used[i - 1][gate->first] != -1 &&
-            qubit_is_used[i - 1][gate->first] ==
-                qubit_is_used[i - 1][gate->second]) {
+      for (std::size_t gateIdx = 0; gateIdx < gate_scheduling[i].size();
+           ++gateIdx) {
+        const auto& gate = gate_scheduling[i][gateIdx];
+        if (qubitIsUsed[i - 1][gate->first] != -1 &&
+            qubitIsUsed[i - 1][gate->first] ==
+                qubitIsUsed[i - 1][gate->second]) {
           reuse_qubit.back().emplace_back(gate->first);
           reuse_qubit.back().emplace_back(gate->second);
         } else {
-          if (qubit_is_used[i - 1][gate->first] > -1) {
-            matrix[gate_idx][qubit_is_used[i - 1][gate->first]] = true;
+          if (qubitIsUsed[i - 1][gate->first]) {
+            matrix[gateIdx][*qubitIsUsed[i - 1][gate->first]] = true;
           }
-          if (qubit_is_used[i - 1][gate->second] > -1) {
-            matrix[gate_idx][qubit_is_used[i - 1][gate->second]] = true;
+          if (qubitIsUsed[i - 1][gate->second]) {
+            matrix[gateIdx][*qubitIsUsed[i - 1][gate->second]] = true;
           }
         }
-        qubit_is_used[i][gate->first] = gate_idx;
-        qubit_is_used[i][gate->second] = gate_idx;
+        qubitIsUsed[i][gate->first] = gateIdx;
+        qubitIsUsed[i][gate->second] = gateIdx;
       }
-      std::vector sparse_matrix(matrix.size(), std::vector<std::size_t>{});
+      std::vector sparseMatrix(matrix.size(), std::vector<std::size_t>{});
       for (std::size_t r = 0; r < matrix.size(); ++r) {
         for (std::size_t c = 0; c < matrix[r].size(); ++c) {
           if (matrix[r][c]) {
-            sparse_matrix[r].emplace_back(c);
+            sparseMatrix[r].emplace_back(c);
           }
         }
       }
-      const auto& matching = maximumBipartiteMatching(sparse_matrix, true);
-      for (std::size_t gate_idx = 0; gate_idx < matching.size(); ++gate_idx) {
-        const auto reuse_gate = matching[gate_idx];
-        if (reuse_gate != -1) {
-          const auto& gate = gate_scheduling[i][gate_idx];
-          if (qubit_is_used[i - 1][gate->first] == reuse_gate) {
+      const auto& matching = maximumBipartiteMatching(sparseMatrix, true);
+      for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
+        if (const auto reuseGate = matching[gateIdx]; reuseGate != -1) {
+          const auto& gate = gate_scheduling[i][gateIdx];
+          if (qubitIsUsed[i - 1][gate->first] == reuseGate) {
             reuse_qubit.back().emplace_back(gate->first);
           }
-          if (qubit_is_used[i - 1][gate->second] == reuse_gate) {
+          if (qubitIsUsed[i - 1][gate->second] == reuseGate) {
             reuse_qubit.back().emplace_back(gate->second);
           }
         }

@@ -11,11 +11,40 @@
 
 namespace na {
 
-class TestAZACompiler : public testing::Test {
-protected:
-  Compiler compiler;
-  void SetUp() override {
-    std::istringstream settings(R"({
+constexpr std::string_view steaneWithourOneQubitgates = R"(OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[7];
+cz q[0],q[3];
+cz q[0],q[4];
+cz q[1],q[2];
+cz q[1],q[5];
+cz q[1],q[6];
+cz q[2],q[3];
+cz q[2],q[4];
+cz q[3],q[5];
+cz q[4],q[6];
+)";
+
+constexpr std::string_view steane = R"(OPENQASM 2.0;
+include "qelib1.inc";
+qreg q[7];
+h q;
+cz q[0],q[3];
+cz q[0],q[4];
+cz q[1],q[2];
+cz q[1],q[5];
+cz q[1],q[6];
+cz q[2],q[3];
+cz q[2],q[4];
+cz q[3],q[5];
+cz q[4],q[6];
+h q[0];
+h q[2];
+h q[5];
+h q[6];
+)";
+
+constexpr std::string_view settings = R"({
   "arch_spec": {
     "name": "full_compute_store_architecture",
     "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
@@ -54,16 +83,26 @@ protected:
   "window_size": 1000,
   "reuse": true,
   "use_verifier": false
-})");
-    ASSERT_NO_THROW(compiler.loadSettings(settings));
+})";
+
+class TestAZACompiler : public testing::Test {
+protected:
+  Compiler compiler;
+  void SetUp() override {
+    std::istringstream settingsStream{std::string{settings}};
+    ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
   }
 };
 
-TEST_F(TestAZACompiler, LoadSettings) {}
+TEST_F(TestAZACompiler, LoadSettingsNoThrow) {}
 
-TEST_F(TestAZACompiler, Settings) {
+TEST_F(TestAZACompiler, PrintSettingsNonEmpty) {
   std::cout << compiler.toString() << '\n';
   EXPECT_FALSE(compiler.toString().empty());
 }
+
+// TEST_F(TestAZACompiler, SolveNoThrow) {
+//   EXPECT_NO_THROW(compiler.solve());
+// }
 
 } // namespace na
