@@ -87,7 +87,7 @@ constexpr std::string_view settings = R"({
 
 class TestAZACompiler : public testing::Test {
 protected:
-  Compiler compiler;
+  ZACompiler compiler;
   void SetUp() override {
     std::istringstream settingsStream{std::string{settings}};
     ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
@@ -101,8 +101,8 @@ TEST_F(TestAZACompiler, PrintSettingsNonEmpty) {
   EXPECT_FALSE(compiler.toString().empty());
 }
 
-// TEST_F(TestAZACompiler, SolveNoThrow) {
-//   EXPECT_NO_THROW(compiler.solve());
-// }
+TEST_F(TestAZACompiler, SolveNoThrow) {
+  EXPECT_NO_THROW(compiler.solve());
+}
 
 } // namespace na
