@@ -328,17 +328,13 @@ void NeutralAtomMapper::decomposeBridgeGates(qc::QuantumComputation& qc) const {
 
 qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   // decompose SWAP gates
-  mappedQc.dumpOpenQASM(std::cout, false);
   qc::CircuitOptimizer::decomposeSWAP(mappedQc, false);
-  mappedQc.dumpOpenQASM(std::cout, false);
   // decompose bridge gates
   decomposeBridgeGates(mappedQc);
-  mappedQc.dumpOpenQASM(std::cout, false);
   qc::CircuitOptimizer::replaceMCXWithMCZ(mappedQc);
   qc::CircuitOptimizer::singleQubitGateFusion(mappedQc);
   qc::CircuitOptimizer::flattenOperations(mappedQc);
   // decompose AOD moves
-  mappedQc.dumpOpenQASM(std::cout, false);
   MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
   mappedQcAOD = aodScheduler.schedule(mappedQc);
   if (this->parameters->verbose) {

@@ -58,7 +58,6 @@ MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
   }
 
   return qcScheduled;
-  qcScheduled.print(std::cout);
 }
 
 AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
