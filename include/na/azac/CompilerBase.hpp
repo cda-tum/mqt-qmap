@@ -33,67 +33,67 @@ public:
   };
   struct Result {
     std::string name = "Untitled";
-    std::string architecture_spec_path = "inline";
+    std::string architectureSpecPath = "inline";
     nlohmann::json instructions;
     double runtime = 0;
   };
   struct RuntimeAnalysis {
     std::chrono::microseconds scheduling;
-    std::chrono::microseconds initial_placement;
-    std::chrono::microseconds intermediate_placement;
+    std::chrono::microseconds initialPlacement;
+    std::chrono::microseconds intermediatePlacement;
     std::chrono::microseconds routing;
     std::chrono::microseconds total;
   };
 
 protected:
   std::filesystem::path dir = "./result/";
-  std::size_t n_q = 0; ///< number of qubits
-  std::size_t n_g = 0; ///< number of gates
+  std::size_t nQubits = 0; ///< number of qubits
+  std::size_t nTwoQubitGates = 0; ///< number of 2-qubit gates
   Architecture architecture;
   Result result{};
-  RuntimeAnalysis runtime_analysis{};
-  bool to_verify = true;
+  RuntimeAnalysis runtimeAnalysis{};
+  bool toVerify = true;
   /// trivial placement, i.e., place qubits in the order they appear in the
   /// circuit if false, a simulated annealing-based placement is chosen
-  /// @see place_trivial
-  bool trivial_placement = true;
-  RoutingStrategy routing_strategy = RoutingStrategy::MaximalIsSort;
-  SchedulingStrategy scheduling_strategy = SchedulingStrategy::ASAP;
-  bool dynamic_placement = true;
+  /// @see placeTrivial
+  bool trivialPlacement = true;
+  RoutingStrategy routingStrategy = RoutingStrategy::MaximalIsSort;
+  SchedulingStrategy schedulingStrategy = SchedulingStrategy::ASAP;
+  bool dynamicPlacement = true;
   /// initial mapping of qubits to SLM sites, if this is not given either a
-  /// trivial placement is chosen, see @ref trivial_placement, or a simulated
+  /// trivial placement is chosen, see @ref trivialPlacement, or a simulated
   /// annealing-based placement is chosen
   std::optional<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
-      given_initial_mapping = std::nullopt;
+      givenInitialMapping = std::nullopt;
   /// Mind the dependency between gates, i.e., do not allow changing there order
   /// if they are commutative
   bool hasDependency = true;
   bool l2 = false;
-  bool use_window = true;
-  std::size_t window_size = 0;
+  bool useWindow = true;
+  std::size_t windowSize = 0;
   bool reuse = true;
-  std::size_t common1q = 0;
+  std::size_t common1Q = 0;
   /// list of 2-qubit CZ gates as a list of pairs of qubits
-  std::vector<std::pair<qc::Qubit, qc::Qubit>> g_q{};
+  std::vector<std::pair<qc::Qubit, qc::Qubit>> twoQubitGates{};
   /// map that stores the 1-qubit gates that act on a qubit after the
   /// respective 2-qubit gate
   std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                      std::vector<qc::StandardOperation>>
-      dict_g_1q_parent{};
+      dictG1QParent{};
   /// list of qubit placements for all layers
   std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
-      qubit_mapping{};
+      qubitMapping{};
   /// list of qubit lists that are reused in each layer
-  std::vector<std::unordered_set<std::size_t>> reuse_qubits{};
+  std::vector<std::unordered_set<std::size_t>> reuseQubits{};
   /// list of 2-qubit gates that are executed in each layer
   /// @note Computed by the scheduler
   std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
-      gate_scheduling{};
+      gateScheduling{};
   std::vector<std::vector<std::size_t>>
-      gate_scheduling_idx{};
+      gateSchedulingIdx{};
   /// list of 1-qubit gates that are executed in each layer
   /// @note Computed by the scheduler
-  std::vector<std::vector<const qc::StandardOperation*>> gate_1q_scheduling{};
+  std::vector<std::vector<const qc::StandardOperation*>> gate1QScheduling{};
 
 public:
   CompilerBase() = default;
@@ -109,8 +109,8 @@ public:
   auto loadSettings(const std::string& filename) -> void {
     loadSettings(std::filesystem::path(filename));
   }
-  auto loadSettings(const std::filesystem::path& filepath) -> void {
-    loadSettings(std::ifstream(filepath));
+  auto loadSettings(const std::filesystem::path& path) -> void {
+    loadSettings(std::ifstream(path));
   }
   auto loadSettings(std::istream& is) -> void {
     loadSettings(std::move(is));
@@ -125,7 +125,7 @@ public:
 
 protected:
   /// collect qubits that will remain in Rydberg zone between two Rydberg stages
-  auto collect_reuse_qubit() -> void;
+  auto collectReuseQubit() -> void;
   static auto toString(RoutingStrategy strategy) -> std::string;
   static auto toRoutingStrategy(const std::string& strategy) -> RoutingStrategy;
   friend auto operator<<(std::ostream& os, const RoutingStrategy rs) -> std::ostream& {
@@ -140,85 +140,85 @@ protected:
     return os;
   }
 public:
-  [[nodiscard]] auto get_dir() const -> const std::filesystem::path& { return dir; }
-  [[nodiscard]] auto get_n_q() const -> std::size_t { return n_q; }
-  [[nodiscard]] auto get_n_g() const -> std::size_t { return n_g; }
-  [[nodiscard]] auto get_architecture() const -> const Architecture& {
+  [[nodiscard]] auto getDir() const -> const std::filesystem::path& { return dir; }
+  [[nodiscard]] auto getNQubits() const -> std::size_t { return nQubits; }
+  [[nodiscard]] auto getNTwoQubitGates() const -> std::size_t { return nTwoQubitGates; }
+  [[nodiscard]] auto getArchitecture() const -> const Architecture& {
     return architecture;
   }
-  [[nodiscard]] auto get_result() -> Result& { return result; }
-  [[nodiscard]] auto get_runtime_analysis() -> RuntimeAnalysis& {
-    return runtime_analysis;
+  [[nodiscard]] auto getResult() -> Result& { return result; }
+  [[nodiscard]] auto getRuntimeAnalysis() -> RuntimeAnalysis& {
+    return runtimeAnalysis;
   }
-  [[nodiscard]] auto is_to_verify() const -> bool { return to_verify; }
-  [[nodiscard]] auto is_trivial_placement() const -> bool { return trivial_placement; }
-  [[nodiscard]] auto get_routing_strategy() const -> RoutingStrategy {
-    return routing_strategy;
+  [[nodiscard]] auto isToVerify() const -> bool { return toVerify; }
+  [[nodiscard]] auto isTrivialPlacement() const -> bool { return trivialPlacement; }
+  [[nodiscard]] auto getRoutingStrategy() const -> RoutingStrategy {
+    return routingStrategy;
   }
-  [[nodiscard]] auto get_scheduling_strategy() const -> SchedulingStrategy {
-    return scheduling_strategy;
+  [[nodiscard]] auto getSchedulingStrategy() const -> SchedulingStrategy {
+    return schedulingStrategy;
   }
-  [[nodiscard]] auto is_dynamic_placement() const -> bool { return dynamic_placement; }
-  [[nodiscard]] auto get_given_initial_mapping() const -> const std::optional<
+  [[nodiscard]] auto isDynamicPlacement() const -> bool { return dynamicPlacement; }
+  [[nodiscard]] auto getGivenInitialMapping() const -> const std::optional<
       std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>& {
-    return given_initial_mapping;
+    return givenInitialMapping;
   }
-  [[nodiscard]] auto is_has_dependency() const -> bool { return hasDependency; }
-  [[nodiscard]] auto is_l2() const -> bool { return l2; }
-  [[nodiscard]] auto is_use_window() const -> bool { return use_window; }
-  [[nodiscard]] auto get_window_size() const -> std::size_t { return window_size; }
-  [[nodiscard]] auto is_reuse() const -> bool { return reuse; }
-  [[nodiscard]] auto get_common1_q() const -> std::size_t { return common1q; }
-  [[nodiscard]] auto get_g_q() const
+  [[nodiscard]] auto isHasDependency() const -> bool { return hasDependency; }
+  [[nodiscard]] auto isL2() const -> bool { return l2; }
+  [[nodiscard]] auto isUseWindow() const -> bool { return useWindow; }
+  [[nodiscard]] auto getWindowSize() const -> std::size_t { return windowSize; }
+  [[nodiscard]] auto isReuse() const -> bool { return reuse; }
+  [[nodiscard]] auto getCommon1Q() const -> std::size_t { return common1Q; }
+  [[nodiscard]] auto getTwoQubitGates() const
       -> const std::vector<std::pair<qc::Qubit, qc::Qubit>>& {
-    return g_q;
+    return twoQubitGates;
   }
-  [[nodiscard]] auto get_dict_g_1q_parent() const
+  [[nodiscard]] auto getDictG1QParent() const
       -> const std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                                   std::vector<qc::StandardOperation>>& {
-    return dict_g_1q_parent;
+    return dictG1QParent;
   }
-  [[nodiscard]] auto get_qubit_mapping() -> std::vector<
+  [[nodiscard]] auto getQubitMapping() -> std::vector<
       std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>& {
-    return qubit_mapping;
+    return qubitMapping;
   }
-  [[nodiscard]] auto get_reuse_qubits() const
+  [[nodiscard]] auto getReuseQubits() const
       -> const std::vector<std::unordered_set<std::size_t>>& {
-    return reuse_qubits;
+    return reuseQubits;
   }
-  [[nodiscard]] auto get_gate_scheduling()
+  [[nodiscard]] auto getGateScheduling()
       -> std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>& {
-    return gate_scheduling;
+    return gateScheduling;
   }
-  [[nodiscard]] auto get_gate_scheduling_idx() const
+  [[nodiscard]] auto getGateSchedulingIdx() const
       -> const std::vector<std::vector<std::size_t>>& {
-    return gate_scheduling_idx;
+    return gateSchedulingIdx;
   }
-  [[nodiscard]] auto get_gate_1q_scheduling()
+  [[nodiscard]] auto getGate1QScheduling()
       -> std::vector<std::vector<const qc::StandardOperation*>>& {
-    return gate_1q_scheduling;
+    return gate1QScheduling;
   }
-  auto set_dict_g_1q_parent(
+  auto setDictg1QParent(
       const std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                                std::vector<qc::StandardOperation>>&
-          new_dict_g_1q_parent) -> void {
-    dict_g_1q_parent = new_dict_g_1q_parent;
+          newDictg1QParent) -> void {
+    dictG1QParent = newDictg1QParent;
   }
-  auto set_qubit_mapping(
+  auto setQubitMapping(
       const std::vector<
           std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>&
-          new_qubit_mapping) -> void {
-    qubit_mapping = new_qubit_mapping;
+          newQubitMapping) -> void {
+    qubitMapping = newQubitMapping;
   }
-  auto set_gate_scheduling_idx(
+  auto setGateSchedulingIdx(
       const std::vector<std::vector<std::size_t>>&
-          new_gate_scheduling_idx) -> void {
-    gate_scheduling_idx = new_gate_scheduling_idx;
+          newGateSchedulingIdx) -> void {
+    gateSchedulingIdx = newGateSchedulingIdx;
   }
-  auto set_gate_1_q_scheduling(
+  auto setGate1QScheduling(
       const std::vector<std::vector<const qc::StandardOperation*>>&
-          new_gate_1q_scheduling) -> void {
-    gate_1q_scheduling = new_gate_1q_scheduling;
+          newGate1QScheduling) -> void {
+    gate1QScheduling = newGate1QScheduling;
   }
 };
 

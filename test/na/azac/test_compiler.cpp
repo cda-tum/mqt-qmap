@@ -102,7 +102,7 @@ TEST_F(TestAZACompiler, PrintSettingsNonEmpty) {
 }
 
 TEST_F(TestAZACompiler, SolveNoThrow) {
-  EXPECT_NO_THROW(compiler.solve());
+  ASSERT_NO_THROW(compiler.solve());
 }
 
 } // namespace na

@@ -21,22 +21,22 @@ auto CompilerBase::loadSettings(std::istream&& is) -> void {
     hasDependency = settingsJson["dependency"];
   }
   if (settingsJson.contains("routing_strategy")) {
-    routing_strategy = toRoutingStrategy(settingsJson["routing_strategy"]);
+    routingStrategy = toRoutingStrategy(settingsJson["routing_strategy"]);
   }
   if (settingsJson.contains("trivial_placement")) {
-    trivial_placement = settingsJson["trivial_placement"];
+    trivialPlacement = settingsJson["trivial_placement"];
   }
   if (settingsJson.contains("dynamic_placement")) {
-    dynamic_placement = settingsJson["dynamic_placement"];
+    dynamicPlacement = settingsJson["dynamic_placement"];
   }
   if (settingsJson.contains("use_window")) {
-    use_window = settingsJson["use_window"];
+    useWindow = settingsJson["use_window"];
   }
   if (settingsJson.contains("use_verifier")) {
-    to_verify = settingsJson["use_verifier"];
+    toVerify = settingsJson["use_verifier"];
   }
   if (settingsJson.contains("window_size")) {
-    window_size = settingsJson["window_size"];
+    windowSize = settingsJson["window_size"];
   }
   if (settingsJson.contains("l2")) {
     l2 = settingsJson["l2"];
@@ -45,14 +45,14 @@ auto CompilerBase::loadSettings(std::istream&& is) -> void {
     reuse = settingsJson["reuse"];
   }
   if (settingsJson.contains("scheduling")) {
-    scheduling_strategy = toSchedulingStrategy(settingsJson["scheduling"]);
+    schedulingStrategy = toSchedulingStrategy(settingsJson["scheduling"]);
   }
   if (settingsJson.contains("arch_spec")) {
     if (settingsJson["arch_spec"].is_string()) {
       const auto& path = std::filesystem::path(settingsJson["arch_spec"]);
       if (exists(path)) {
-        result.architecture_spec_path = path;
-        architecture = Architecture(result.architecture_spec_path);
+        result.architectureSpecPath = path;
+        architecture = Architecture(result.architectureSpecPath);
       } else {
         throw std::filesystem::filesystem_error(
             "File with architecture specification not found", path,
@@ -72,14 +72,14 @@ std::string CompilerBase::toString() const {
   ss << "[INFO] ZAC: Setting\n";
   ss << "[INFO]           Result directory: " << dir << "\n";
   if (hasDependency) {
-    ss << "[INFO]           Scheduling strategy: " << scheduling_strategy
+    ss << "[INFO]           Scheduling strategy: " << schedulingStrategy
        << "\n";
   } else {
     ss << "[INFO]           Scheduling strategy: edge coloring\n";
   }
-  if (trivial_placement) {
+  if  (trivialPlacement) {
     ss << "[INFO]           Placement strategy: trivial placement\n";
-  } else if (given_initial_mapping) {
+  } else if  (givenInitialMapping) {
     ss << "[INFO]           Initial placement strategy: user-defined "
           "placement\n";
   } else if (l2) {
@@ -89,7 +89,7 @@ std::string CompilerBase::toString() const {
     ss << "[INFO]           Initial placement strategy: SA-based placement "
           "with Euclidean distance model\n";
   }
-  if (dynamic_placement) {
+  if  (dynamicPlacement) {
     ss << "[INFO]           Intermediate placement strategy: minimal "
           "weighted matching\n";
   } else {
@@ -101,41 +101,41 @@ std::string CompilerBase::toString() const {
   } else {
     ss << "[INFO]                                            no reuse\n";
   }
-  ss << "[INFO]           Routing strategy: " << routing_strategy;
-  if (use_window) {
-    ss << " with window size " << window_size << "\n";
+  ss << "[INFO]           Routing strategy: " << routingStrategy;
+  if  (useWindow) {
+    ss << " with window size " << windowSize << "\n";
   } else {
     ss << " without window\n";
   }
-  if (to_verify) {
+  if  (toVerify) {
     ss << "[INFO]           Verifier: enable\n";
   } else {
     ss << "[INFO]           Verifier: disable\n";
   }
   return ss.str();
 }
-auto CompilerBase::collect_reuse_qubit() -> void {
-  reuse_qubits.clear();
+auto CompilerBase::collectReuseQubit() -> void {
+  reuseQubits.clear();
   std::vector qubitIsUsed(
-      gate_scheduling.size(),
-      std::vector<std::optional<std::size_t>>(n_q, std::nullopt));
-  for (std::size_t gateIdx = 0; gateIdx < gate_scheduling.front().size();
+      gateScheduling.size(),
+      std::vector<std::optional<std::size_t>>(nQubits, std::nullopt));
+  for (std::size_t gateIdx = 0; gateIdx < gateScheduling.front().size();
        ++gateIdx) {
-    const auto& gate = gate_scheduling.front()[gateIdx];
+    const auto& gate = gateScheduling.front()[gateIdx];
     qubitIsUsed[0][gate->first] = gateIdx;
     qubitIsUsed[0][gate->second] = gateIdx;
   }
-  for (std::size_t i = 1; i < gate_scheduling.size(); ++i) {
-    reuse_qubits.emplace_back();
-    std::vector matrix(gate_scheduling[i].size(),
-                       std::vector(gate_scheduling[i - 1].size(), false));
-    for (std::size_t gateIdx = 0; gateIdx < gate_scheduling[i].size();
+  for (std::size_t i = 1; i < gateScheduling.size(); ++i) {
+    reuseQubits.emplace_back();
+    std::vector matrix (gateScheduling[i].size(),
+                       std::vector (gateScheduling[i - 1].size(), false));
+    for (std::size_t gateIdx = 0; gateIdx < gateScheduling[i].size();
          ++gateIdx) {
-      const auto& gate = gate_scheduling[i][gateIdx];
+      const auto& gate = gateScheduling[i][gateIdx];
       if (qubitIsUsed[i - 1][gate->first] != -1 &&
           qubitIsUsed[i - 1][gate->first] == qubitIsUsed[i - 1][gate->second]) {
-        reuse_qubits.back().emplace(gate->first);
-        reuse_qubits.back().emplace(gate->second);
+        reuseQubits.back().emplace(gate->first);
+        reuseQubits.back().emplace(gate->second);
       } else {
         if (qubitIsUsed[i - 1][gate->first]) {
           matrix[gateIdx][*qubitIsUsed[i - 1][gate->first]] = true;
@@ -158,17 +158,17 @@ auto CompilerBase::collect_reuse_qubit() -> void {
     const auto& matching = maximumBipartiteMatching(sparseMatrix, true);
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
       if (const auto reuseGate = matching[gateIdx]; reuseGate != -1) {
-        const auto& gate = gate_scheduling[i][gateIdx];
+        const auto& gate = gateScheduling[i][gateIdx];
         if (qubitIsUsed[i - 1][gate->first] == reuseGate) {
-          reuse_qubits.back().emplace(gate->first);
+          reuseQubits.back().emplace(gate->first);
         }
         if (qubitIsUsed[i - 1][gate->second] == reuseGate) {
-          reuse_qubits.back().emplace(gate->second);
+          reuseQubits.back().emplace(gate->second);
         }
       }
     }
   }
-  reuse_qubits.emplace_back();
+  reuseQubits.emplace_back();
 }
 std::string CompilerBase::toString(const RoutingStrategy strategy) {
   switch (strategy) {
@@ -182,10 +182,10 @@ std::string CompilerBase::toString(const RoutingStrategy strategy) {
 CompilerBase::RoutingStrategy
 CompilerBase::toRoutingStrategy(const std::string& strategy) {
   static const std::unordered_map<std::string, RoutingStrategy>
-      STRING_TO_STRATEGY{{"maximalis_sort", RoutingStrategy::MaximalIsSort},
+      STRINGTostrategy{{"maximalis_sort", RoutingStrategy::MaximalIsSort},
                        {"maximalis", RoutingStrategy::MaximalIs}};
-  const auto it = STRING_TO_STRATEGY.find(strategy);
-  if (it == STRING_TO_STRATEGY.end()) {
+  const auto it = STRINGTostrategy.find(strategy);
+  if (it == STRINGTostrategy.end()) {
     throw std::invalid_argument("Unknown routing strategy");
   }
   return it->second;
@@ -202,22 +202,22 @@ std::string CompilerBase::toString(const SchedulingStrategy strategy) {
 auto
 CompilerBase::toSchedulingStrategy(const std::string& strategy) -> CompilerBase::SchedulingStrategy {
   static const std::unordered_map<std::string, SchedulingStrategy>
-      STRING_TO_STRATEGY{{"asap", SchedulingStrategy::ASAP},
+      STRINGTostrategy{{"asap", SchedulingStrategy::ASAP},
                        {"trivial", SchedulingStrategy::TRIVIAL}};
-  const auto it = STRING_TO_STRATEGY.find(strategy);
-  if (it == STRING_TO_STRATEGY.end()) {
+  const auto it = STRINGTostrategy.find(strategy);
+  if (it == STRINGTostrategy.end()) {
     throw std::invalid_argument("Unknown scheduling strategy");
   }
   return it->second;
 }
 auto CompilerBase::setProgram(const qc::QuantumComputation& qc) {
-  g_q.clear();
-  n_q = qc.getNqubits();
-  dict_g_1q_parent.emplace(nullptr, std::vector<qc::StandardOperation>{});
+  twoQubitGates.clear();
+  nQubits = qc.getNqubits();
+  dictG1QParent.emplace(nullptr, std::vector<qc::StandardOperation>{});
   /// array that stores the index of the last 2-qubit gate acting on each
   /// qubit
   std::vector<const std::pair<qc::Qubit, qc::Qubit>*> listQubitLast2qGate(
-      n_q, nullptr);
+      nQubits, nullptr);
   std::size_t nSingleQubitGate = 0;
   for (const auto& op : qc) {
     if (op->isStandardOperation()) {
@@ -227,18 +227,18 @@ auto CompilerBase::setProgram(const qc::QuantumComputation& qc) {
         const auto& usedQubits = stdop.getUsedQubits();
         const std::vector qubits(usedQubits.cbegin(), usedQubits.cend());
         if (qubits[0] < qubits[1]) {
-          g_q.emplace_back(qubits[0], qubits[1]);
+          twoQubitGates.emplace_back(qubits[0], qubits[1]);
         } else {
-          g_q.emplace_back(qubits[1], qubits[0]);
+          twoQubitGates.emplace_back(qubits[1], qubits[0]);
         }
       } else if (stdop.getNcontrols() == 0 && stdop.getNtargets() == 1) {
         const auto& qubit = *stdop.getTargets().cbegin();
-        if (dict_g_1q_parent.find(listQubitLast2qGate[qubit]) ==
-            dict_g_1q_parent.cend()) {
-          dict_g_1q_parent[listQubitLast2qGate[qubit]] =
+        if  (dictG1QParent.find(listQubitLast2qGate[qubit]) ==
+            dictG1QParent.cend()) {
+          dictG1QParent[listQubitLast2qGate[qubit]] =
               std::vector<qc::StandardOperation>{};
         }
-        dict_g_1q_parent[listQubitLast2qGate[qubit]].emplace_back(stdop);
+        dictG1QParent[listQubitLast2qGate[qubit]].emplace_back(stdop);
         ++nSingleQubitGate;
       } else {
         std::stringstream ss{};
@@ -251,9 +251,9 @@ auto CompilerBase::setProgram(const qc::QuantumComputation& qc) {
       throw std::invalid_argument("Non-standard operation is not supported");
     }
   }
-  n_g = g_q.size();
-  std::cout << "[INFO]           number of qubits: " << n_q << "\n";
-  std::cout << "[INFO]           number of two-qubit gates: " << n_g << "\n";
+  nTwoQubitGates = twoQubitGates.size();
+  std::cout << "[INFO]           number of qubits: " << nQubits << "\n";
+  std::cout << "[INFO]           number of two-qubit gates: " << nTwoQubitGates << "\n";
   std::cout << "[INFO]           number of single-qubit gates: "
             << nSingleQubitGate << "\n";
 }
