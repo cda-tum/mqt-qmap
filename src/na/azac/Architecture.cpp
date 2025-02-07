@@ -32,7 +32,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("site_seperation")) {
     if (aodSpec["site_seperation"].is_number()) {
-      site_separation = aodSpec["site_seperation"];
+      siteSeparation = aodSpec["site_seperation"];
     } else {
       throw std::invalid_argument(
           "AOD site separation must be a number in architecture spec");
@@ -43,7 +43,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("r")) {
     if (aodSpec["r"].is_number()) {
-      n_r = aodSpec["r"];
+      nRows = aodSpec["r"];
     } else {
       throw std::invalid_argument(
           "AOD row number must be a number in architecture spec");
@@ -54,7 +54,7 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
   if (aodSpec.contains("c")) {
     if (aodSpec["c"].is_number()) {
-      n_c = aodSpec["c"];
+      nCols = aodSpec["c"];
     } else {
       throw std::invalid_argument(
           "AOD column number must be a number in architecture spec");
@@ -65,8 +65,8 @@ AOD::AOD(nlohmann::json aodSpec) {
   }
 }
 
-SLM::SLM(nlohmann::json slmSpec, const decltype(entanglement_id) entanglementId)
-    : entanglement_id(entanglementId) {
+SLM::SLM(nlohmann::json slmSpec, const decltype(entanglementId) entanglementId)
+    : entanglementId(entanglementId) {
   if (slmSpec.contains("id")) {
     if (slmSpec["id"].is_number()) {
       id = slmSpec["id"];
@@ -82,7 +82,7 @@ SLM::SLM(nlohmann::json slmSpec, const decltype(entanglement_id) entanglementId)
         slmSpec["site_seperation"].size() == 2 &&
         slmSpec["site_seperation"][0].is_number() &&
         slmSpec["site_seperation"][1].is_number()) {
-      site_separation = slmSpec["site_seperation"];
+      siteSeparation = slmSpec["site_seperation"];
     } else {
       throw std::invalid_argument(
           "SLM site separation must be a 2D number array in architecture spec");
@@ -93,7 +93,7 @@ SLM::SLM(nlohmann::json slmSpec, const decltype(entanglement_id) entanglementId)
   }
   if (slmSpec.contains("r")) {
     if (slmSpec["r"].is_number()) {
-      n_r = slmSpec["r"];
+      nRows = slmSpec["r"];
     } else {
       throw std::invalid_argument(
           "SLM row number must be a number in architecture spec");
@@ -104,7 +104,7 @@ SLM::SLM(nlohmann::json slmSpec, const decltype(entanglement_id) entanglementId)
   }
   if (slmSpec.contains("c")) {
     if (slmSpec["c"].is_number()) {
-      n_c = slmSpec["c"];
+      nCols = slmSpec["c"];
     } else {
       throw std::invalid_argument(
           "SLM column number must be a number in architecture spec");
@@ -141,7 +141,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
     if (architectureSpec["operation_duration"].is_object()) {
       if (architectureSpec["operation_duration"].contains("rydberg")) {
         if (architectureSpec["operation_duration"]["rydberg"].is_number()) {
-          time_rydberg = architectureSpec["operation_duration"]["rydberg"];
+          timeRydberg = architectureSpec["operation_duration"]["rydberg"];
         } else {
           throw std::invalid_argument(
               "rydberg duration must be a number in architecture spec");
@@ -153,7 +153,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
       if (architectureSpec["operation_duration"].contains("atom_transfer")) {
         if (architectureSpec["operation_duration"]["atom_transfer"]
                 .is_number()) {
-          time_atom_transfer =
+          timeAtomTransfer =
               architectureSpec["operation_duration"]["atom_transfer"];
         } else {
           throw std::invalid_argument(
@@ -164,7 +164,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
             "operation duration must contain atom transfer duration");
       }
       if (architectureSpec["operation_duration"].contains("1qGate")) {
-        time_1qGate = architectureSpec["operation_duration"]["1qGate"];
+        time1QGate = architectureSpec["operation_duration"]["1qGate"];
       } else {
         throw std::invalid_argument(
             "operation duration must contain 1qGate duration");
@@ -188,10 +188,10 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
         architectureSpec["arch_range"][0][1].is_number() &&
         architectureSpec["arch_range"][1][0].is_number() &&
         architectureSpec["arch_range"][1][1].is_number()) {
-      arch_range_min_x = architectureSpec["arch_range"][0][0];
-      arch_range_max_x = architectureSpec["arch_range"][0][1];
-      arch_range_min_y = architectureSpec["arch_range"][1][0];
-      arch_range_max_y = architectureSpec["arch_range"][1][1];
+      archRangeMinX = architectureSpec["arch_range"][0][0];
+      archRangeMaxX = architectureSpec["arch_range"][0][1];
+      archRangeMinY = architectureSpec["arch_range"][1][0];
+      archRangeMaxY = architectureSpec["arch_range"][1][1];
     } else {
       throw std::invalid_argument(
           "architecture range must be a 2x2 number array in architecture spec");
@@ -203,18 +203,18 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
   if (architectureSpec.contains("rydberg_range")) {
     if (architectureSpec["rydberg_range"].is_array() &&
         !architectureSpec["rydberg_range"].empty()) {
-      for (const auto& rydberg_range : architectureSpec["rydberg_range"]) {
-        if (rydberg_range.is_array() && rydberg_range.size() == 2 &&
-            rydberg_range[0].is_array() && rydberg_range[0].size() == 2 &&
-            rydberg_range[1].is_array() && rydberg_range[1].size() == 2 &&
-            rydberg_range[0][0].is_number() &&
-            rydberg_range[0][1].is_number() &&
-            rydberg_range[1][0].is_number() &&
-            rydberg_range[1][1].is_number()) {
-          rydberg_range_min_x.emplace_back(rydberg_range[0][0]);
-          rydberg_range_max_x.emplace_back(rydberg_range[0][1]);
-          rydberg_range_min_y.emplace_back(rydberg_range[1][0]);
-          rydberg_range_max_y.emplace_back(rydberg_range[1][1]);
+      for (const auto& rydbergRange : architectureSpec["rydberg_range"]) {
+        if  (rydbergRange.is_array() && rydbergRange.size() == 2 &&
+            rydbergRange[0].is_array() && rydbergRange[0].size() == 2 &&
+            rydbergRange[1].is_array() && rydbergRange[1].size() == 2 &&
+            rydbergRange[0][0].is_number() &&
+            rydbergRange[0][1].is_number() &&
+            rydbergRange[1][0].is_number() &&
+            rydbergRange[1][1].is_number()) {
+          rydbergRangeMinX.emplace_back (rydbergRange[0][0]);
+          rydbergRangeMaxX.emplace_back (rydbergRange[0][1]);
+          rydbergRangeMinY.emplace_back (rydbergRange[1][0]);
+          rydbergRangeMaxY.emplace_back (rydbergRange[1][1]);
         } else {
           throw std::invalid_argument("rydberg range must be a Nx2x2 number "
                                       "array in architecture spec, N > 1");
@@ -232,8 +232,8 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
     if (architectureSpec["storage_zones"].is_array()) {
       for (const auto& zone : architectureSpec["storage_zones"]) {
         if (zone.contains("slms") && zone["slms"].is_array()) {
-          for (const auto& slm_spec : zone["slms"]) {
-            storage_zone.emplace_back(std::make_unique<SLM>(slm_spec));
+          for (const auto& slmSpec : zone["slms"]) {
+            storageZone.emplace_back(std::make_unique<SLM>(slmSpec));
           }
         } else {
           throw std::invalid_argument(
@@ -267,7 +267,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
             const std::size_t y = slmSpec["location"][1];
             auto it = ySlm.find(y);
             if (it == ySlm.end()) {
-              ySlm.emplace(y, &entanglement_zone.emplace_back());
+              ySlm.emplace(y, &entanglementZone.emplace_back());
             }
             ySlm[y]->emplace_back(std::make_unique<SLM>(slmSpec, ySlm[y]));
           }
@@ -288,7 +288,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
   if (architectureSpec.contains("aods")) {
     if (architectureSpec["aods"].is_array()) {
       for (const auto& aodSpec : architectureSpec["aods"]) {
-        dict_AOD.emplace_back(std::make_unique<AOD>(aodSpec));
+        dictAod.emplace_back(std::make_unique<AOD>(aodSpec));
       }
     } else {
       throw std::invalid_argument(
@@ -298,34 +298,34 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {;
     throw std::invalid_argument("AOD is missed in architecture spec");
   }
 }
-auto Architecture::is_valid_SLM_position(const SLM& slm, const std::size_t r,
+auto Architecture::isValidSlmPosition(const SLM& slm, const std::size_t r,
                                          const std::size_t c) const -> bool {
-  return r < slm.n_r && c < slm.n_c;
+  return r < slm.nRows && c < slm.nCols;
 }
-auto Architecture::exact_SLM_location(const SLM& slm, const std::size_t r,
+auto Architecture::exactSlmLocation(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const
     -> std::pair<std::size_t, std::size_t> {
-  assert(is_valid_SLM_position(slm, r, c));
-  return {(slm.site_separation.first * c) + slm.location.first,
-          (slm.site_separation.second * r) + slm.location.second};
+  assert (isValidSlmPosition(slm, r, c));
+  return {(slm.siteSeparation.first * c) + slm.location.first,
+          (slm.siteSeparation.second * r) + slm.location.second};
 }
 auto Architecture::preprocessing() -> void {
   //===--------------------------------------------------------------------===//
   // calculate the nearest storage site for each entanglement site
   //===--------------------------------------------------------------------===//
   entanglementToNearestStorageSite.clear();
-  for (const auto& slms : entanglement_zone) {
+  for (const auto& slms : entanglementZone) {
     for (const auto& slm : slms) {
       entanglementToNearestStorageSite.emplace(
           slm.get(),
           std::vector<std::vector<
               std::tuple<const SLM*, std::size_t, std::size_t>>>{});
-      entanglementToNearestStorageSite[slm.get()].reserve(slm->n_r);
-      for (std::size_t row = 0; row < slm->n_r; ++row) {
+      entanglementToNearestStorageSite[slm.get()].reserve(slm->nRows);
+      for (std::size_t row = 0; row < slm->nRows; ++row) {
         entanglementToNearestStorageSite[slm.get()].emplace_back();
-        entanglementToNearestStorageSite[slm.get()].back().reserve(slm->n_c);
-        for (std::size_t col = 0; col < slm->n_c; ++col) {
-          const auto& [x, y] = exact_SLM_location(*slm, row, col);
+        entanglementToNearestStorageSite[slm.get()].back().reserve(slm->nCols);
+        for (std::size_t col = 0; col < slm->nCols; ++col) {
+          const auto& [x, y] = exactSlmLocation(*slm, row, col);
           //===------------------------------------------------------------===//
           // In the first step, find the nearest storage SLM (not the specific
           // site in the storage SLM yet)
@@ -338,13 +338,13 @@ auto Architecture::preprocessing() -> void {
           // distance to the entanglement site, the @c minimumDistance.
           double minimumDistance = std::numeric_limits<double>::max();
           const SLM* nearestStorageSLM = nullptr;
-          for (const auto& storageSLM : storage_zone) {
+          for (const auto& storageSLM : storageZone) {
             std::size_t minimalXDistance = 0;
             if (x < storageSLM->location.first) {
               minimalXDistance = storageSLM->location.first - x;
             } else if (const auto maxX = storageSLM->location.first +
-                                         ((storageSLM->n_c - 1) *
-                                          storageSLM->site_separation.first);
+                                         ((storageSLM->nCols - 1) *
+                                          storageSLM->siteSeparation.first);
                        x > maxX) {
               minimalXDistance = x - maxX;
             }
@@ -352,8 +352,8 @@ auto Architecture::preprocessing() -> void {
             if (y < storageSLM->location.second) {
               minimalYDistance = storageSLM->location.second - y;
             } else if (const auto maxY = storageSLM->location.second +
-                                         ((storageSLM->n_r - 1) *
-                                          storageSLM->site_separation.second);
+                                         ((storageSLM->nRows - 1) *
+                                          storageSLM->siteSeparation.second);
                        y > maxY) {
               minimalYDistance = y - maxY;
             }
@@ -370,25 +370,25 @@ auto Architecture::preprocessing() -> void {
           //===------------------------------------------------------------===//
           std::size_t storageCol = 0;
           if (const auto maxX = nearestStorageSLM->location.first +
-                                ((nearestStorageSLM->n_c - 1) *
-                                 nearestStorageSLM->site_separation.first);
+                                ((nearestStorageSLM->nCols - 1) *
+                                 nearestStorageSLM->siteSeparation.first);
               x > maxX) {
-            storageCol = nearestStorageSLM->n_c - 1;
+            storageCol = nearestStorageSLM->nCols - 1;
           } else if (x >= nearestStorageSLM->location.first) {
             storageCol = (x - nearestStorageSLM->location.first +
-                          (nearestStorageSLM->site_separation.first / 2)) /
-                         nearestStorageSLM->site_separation.first;
+                          (nearestStorageSLM->siteSeparation.first / 2)) /
+                         nearestStorageSLM->siteSeparation.first;
           }
           std::size_t storageRow = 0;
           if (const auto maxY = nearestStorageSLM->location.second +
-                                ((nearestStorageSLM->n_r - 1) *
-                                 nearestStorageSLM->site_separation.second);
+                                ((nearestStorageSLM->nRows - 1) *
+                                 nearestStorageSLM->siteSeparation.second);
               y > maxY) {
-            storageRow = nearestStorageSLM->n_r - 1;
+            storageRow = nearestStorageSLM->nRows - 1;
           } else if (y >= nearestStorageSLM->location.second) {
             storageRow = (y - nearestStorageSLM->location.second +
-                          (nearestStorageSLM->site_separation.second / 2)) /
-                         nearestStorageSLM->site_separation.second;
+                          (nearestStorageSLM->siteSeparation.second / 2)) /
+                         nearestStorageSLM->siteSeparation.second;
           }
           entanglementToNearestStorageSite[slm.get()].back().emplace_back(
               nearestStorageSLM, storageRow, storageCol);
@@ -401,23 +401,23 @@ auto Architecture::preprocessing() -> void {
   //===--------------------------------------------------------------------===//
   storageToNearestEntanglementSite.clear();
   storageToNearestEntanglementSiteDistance.clear();
-  for (const auto& slm : storage_zone) {
+  for (const auto& slm : storageZone) {
     storageToNearestEntanglementSite.emplace(
         slm.get(),
         std::vector<std::vector<
             std::tuple<const SLM*, std::size_t, std::size_t>>>{});
-    storageToNearestEntanglementSite[slm.get()].reserve(slm->n_r);
+    storageToNearestEntanglementSite[slm.get()].reserve(slm->nRows);
     storageToNearestEntanglementSiteDistance.emplace(
         slm.get(), std::vector<std::vector<double>>{});
-    storageToNearestEntanglementSiteDistance[slm.get()].reserve(slm->n_r);
-    for (std::size_t row = 0; row < slm->n_r; ++row) {
+    storageToNearestEntanglementSiteDistance[slm.get()].reserve(slm->nRows);
+    for (std::size_t row = 0; row < slm->nRows; ++row) {
       storageToNearestEntanglementSite[slm.get()].emplace_back();
-      storageToNearestEntanglementSite[slm.get()].back().reserve(slm->n_c);
+      storageToNearestEntanglementSite[slm.get()].back().reserve(slm->nCols);
       storageToNearestEntanglementSiteDistance[slm.get()].emplace_back();
       storageToNearestEntanglementSiteDistance[slm.get()].back().reserve(
-          slm->n_c);
-      for (std::size_t col = 0; col < slm->n_c; ++col) {
-        const auto& [x, y] = exact_SLM_location(*slm, row, col);
+          slm->nCols);
+      for (std::size_t col = 0; col < slm->nCols; ++col) {
+        const auto& [x, y] = exactSlmLocation(*slm, row, col);
         //===--------------------------------------------------------------===//
         // in the first step, find the nearest storage SLM (not the specific
         // site in the storage SLM yet)
@@ -430,15 +430,15 @@ auto Architecture::preprocessing() -> void {
         // minimum distance to the storage site, the @c minimumDistance.
         double minimumDistance = std::numeric_limits<double>::max();
         const SLM* nearestEntanglementSLM = nullptr;
-        for (const auto& entanglementSLMs : entanglement_zone) {
+        for (const auto& entanglementSLMs : entanglementZone) {
           for (const auto& entanglementSLM : entanglementSLMs) {
             std::size_t minimalXDistance = 0;
             if (x < entanglementSLM->location.first) {
               minimalXDistance = entanglementSLM->location.first - x;
             } else if (const auto maxX =
                            entanglementSLM->location.first +
-                           ((entanglementSLM->n_c - 1) *
-                            entanglementSLM->site_separation.first);
+                           ((entanglementSLM->nCols - 1) *
+                            entanglementSLM->siteSeparation.first);
                        x > maxX) {
               minimalXDistance = x - maxX;
             }
@@ -447,8 +447,8 @@ auto Architecture::preprocessing() -> void {
               minimalYDistance = entanglementSLM->location.second - y;
             } else if (const auto maxY =
                            entanglementSLM->location.second +
-                           ((entanglementSLM->n_r - 1) *
-                            entanglementSLM->site_separation.second);
+                           ((entanglementSLM->nRows - 1) *
+                            entanglementSLM->siteSeparation.second);
                        y > maxY) {
               minimalYDistance = y - maxY;
             }
@@ -465,27 +465,27 @@ auto Architecture::preprocessing() -> void {
           //===------------------------------------------------------------===//
           std::size_t storageCol = 0;
           if (const auto maxX = nearestEntanglementSLM->location.first +
-                                ((nearestEntanglementSLM->n_c - 1) *
-                                 nearestEntanglementSLM->site_separation.first);
+                                ((nearestEntanglementSLM->nCols - 1) *
+                                 nearestEntanglementSLM->siteSeparation.first);
               x > maxX) {
-            storageCol = nearestEntanglementSLM->n_c - 1;
+            storageCol = nearestEntanglementSLM->nCols - 1;
           } else if (x >= nearestEntanglementSLM->location.first) {
             storageCol = (x - nearestEntanglementSLM->location.first +
-                          (nearestEntanglementSLM->site_separation.first / 2)) /
-                         nearestEntanglementSLM->site_separation.first;
+                          (nearestEntanglementSLM->siteSeparation.first / 2)) /
+                         nearestEntanglementSLM->siteSeparation.first;
           }
           std::size_t storageRow = 0;
           if (const auto maxY =
                   nearestEntanglementSLM->location.second +
-                  ((nearestEntanglementSLM->n_r - 1) *
-                   nearestEntanglementSLM->site_separation.second);
+                  ((nearestEntanglementSLM->nRows - 1) *
+                   nearestEntanglementSLM->siteSeparation.second);
               y > maxY) {
-            storageRow = nearestEntanglementSLM->n_r - 1;
+            storageRow = nearestEntanglementSLM->nRows - 1;
           } else if (y >= nearestEntanglementSLM->location.second) {
             storageRow =
                 (y - nearestEntanglementSLM->location.second +
-                 (nearestEntanglementSLM->site_separation.second / 2)) /
-                nearestEntanglementSLM->site_separation.second;
+                 (nearestEntanglementSLM->siteSeparation.second / 2)) /
+                nearestEntanglementSLM->siteSeparation.second;
           }
           storageToNearestEntanglementSite[slm.get()].back().emplace_back(
               nearestEntanglementSLM, storageRow, storageCol);
@@ -503,27 +503,27 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
                             const std::size_t c1, const SLM& idx2,
                             const std::size_t r2, const std::size_t c2) const
     -> double {
-  return na::distance(exact_SLM_location(idx1, r1, c1),
-                      exact_SLM_location(idx2, r2, c2));
+  return na::distance (exactSlmLocation(idx1, r1, c1),
+                      exactSlmLocation(idx2, r2, c2));
 }
-auto Architecture::nearest_storage_site(const SLM& slm, const std::size_t r,
+auto Architecture::nearestStorageSite(const SLM& slm, const std::size_t r,
                                         const std::size_t c) const
     -> std::tuple<const SLM*, std::size_t, std::size_t> {
   return entanglementToNearestStorageSite.at(&slm)[r][c];
 }
-auto Architecture::nearest_entanglement_site(const SLM* const idx,
+auto Architecture::nearestEntanglementSite(const SLM* const idx,
                                              const std::size_t r,
                                              const std::size_t c) const
     -> std::tuple<const SLM*, std::size_t, std::size_t> {
   return storageToNearestEntanglementSite.at(idx)[r][c];
 }
-auto Architecture::nearest_entanglement_site_distance(const SLM* const idx,
+auto Architecture::nearestEntanglementSiteDistance(const SLM* const idx,
                                                       const std::size_t r,
                                                       const std::size_t c) const
     -> double {
   return storageToNearestEntanglementSiteDistance.at(idx)[r][c];
 }
-auto Architecture::nearest_entanglement_site(
+auto Architecture::nearestEntanglementSite(
     const SLM* const idx1, const std::size_t r1, const std::size_t c1,
     const SLM* const idx2, const std::size_t r2, const std::size_t c2) const
     -> std::tuple<const SLM*, std::size_t, std::size_t> {
@@ -534,21 +534,21 @@ auto Architecture::nearest_entanglement_site(
     return site1;
   }
   if (std::get<0>(site1) == std::get<0>(site2)) {
-    const auto middle_site_c = (std::get<2>(site1) + std::get<2>(site2)) / 2;
-    return {std::get<0>(site1), std::get<1>(site1), middle_site_c};
+    const auto middleSite_c = (std::get<2>(site1) + std::get<2>(site2)) / 2;
+    return {std::get<0>(site1), std::get<1>(site1), middleSite_c};
   }
   throw std::invalid_argument(
       "[ERROR] The nearest entanglement site is not in the same entanglement "
       "zone. This feature is not supported yet.");
 }
-auto Architecture::nearest_entanglement_site_distance(
+auto Architecture::nearestEntanglementSiteDistance(
     const SLM* const slm1, const std::size_t r1, const std::size_t c1,
     const SLM* const slm2, const std::size_t r2, const std::size_t c2) const
     -> double {
-  const auto& storageSite1 = exact_SLM_location(slm1, r1, c1);
-  const auto& storageSite2 = exact_SLM_location(slm2, r2, c2);
+  const auto& storageSite1 = exactSlmLocation(slm1, r1, c1);
+  const auto& storageSite2 = exactSlmLocation(slm2, r2, c2);
   const auto& entanglementSite =
-      exact_SLM_location(nearest_entanglement_site(slm1, r1, c1, slm2, r2, c2));
+      exactSlmLocation (nearestEntanglementSite(slm1, r1, c1, slm2, r2, c2));
   auto dis = std::numeric_limits<double>::max();
   if (r1 == r2 and slm1 == slm2) {
     dis = std::min(std::max(na::distance(storageSite1, entanglementSite),
@@ -561,7 +561,7 @@ auto Architecture::nearest_entanglement_site_distance(
   }
   return dis;
 }
-auto Architecture::movement_duration(const std::size_t x1, const std::size_t y1,
+auto Architecture::movementDuration(const std::size_t x1, const std::size_t y1,
                                      const std::size_t x2, const std::size_t y2)
     -> double {
   // todo: add reference for constant

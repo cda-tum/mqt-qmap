@@ -27,7 +27,7 @@ auto maximumBipartiteMatching(
 /// @note implemented following pseudocode in
 /// https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
 auto minimumWeightFullBipartiteMatching(
-    const std::vector<std::vector<std::optional<double>>>& cost_matrix)
+    const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t>;
 
 } // namespace na

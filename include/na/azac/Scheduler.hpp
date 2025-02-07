@@ -13,30 +13,30 @@ template <typename T> class Scheduler {
 private:
   /// as soon as possible algorithm for g_q
   auto asap() -> std::vector<std::vector<std::size_t>> {
-    std::vector<std::vector<std::size_t>> gate_scheduling{};
-    std::vector<std::size_t> list_qubit_time(static_cast<T*>(this)->get_n_q(),
+    std::vector<std::vector<std::size_t>> gateScheduling{};
+    std::vector<std::size_t> listQubittime(static_cast<T*>(this)->getNQubits(),
                                              0);
-    for (std::size_t i = 0; i < static_cast<T*>(this)->get_n_g(); ++i) {
+    for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates(); ++i) {
       const std::pair<qc::Qubit, qc::Qubit>& gate =
-          static_cast<T*>(this)->get_g_q()[i];
-      const auto tq0 = list_qubit_time[gate.first];
-      const auto tq1 = list_qubit_time[gate.second];
+          static_cast<T*>(this)->getTwoQubitGates()[i];
+      const auto tq0 = listQubittime[gate.first];
+      const auto tq1 = listQubittime[gate.second];
       const auto tg = std::max(tq0, tq1);
-      if (tg >= gate_scheduling.size()) {
-        gate_scheduling.emplace_back();
+      if (tg >= gateScheduling.size()) {
+        gateScheduling.emplace_back();
       }
-      gate_scheduling[tg].emplace_back(i);
-      list_qubit_time[gate.first] = tg + 1;
-      list_qubit_time[gate.second] = tg + 1;
+      gateScheduling[tg].emplace_back(i);
+      listQubittime[gate.first] = tg + 1;
+      listQubittime[gate.second] = tg + 1;
     }
-    return gate_scheduling;
+    return gateScheduling;
   }
 
-  auto graph_coloring() -> std::vector<std::vector<std::size_t>> {
-    std::vector<std::vector<std::size_t>> gate_scheduling{};
+  auto graphColoring() -> std::vector<std::vector<std::size_t>> {
+    std::vector<std::vector<std::size_t>> gateScheduling{};
     // todo: implement graph coloring algorithm
     throw std::runtime_error("Graph coloring algorithm is not implemented");
-    return gate_scheduling;
+    return gateScheduling;
   }
 
 protected:
@@ -44,35 +44,35 @@ protected:
   /// coloring algorithm
   auto schedule() -> void {
     const auto t_s = std::chrono::system_clock::now();
-    if (static_cast<T*>(this)->is_has_dependency()) {
-      switch (static_cast<T*>(this)->get_scheduling_strategy()) {
+    if (static_cast<T*>(this)->isHasDependency()) {
+      switch (static_cast<T*>(this)->getSchedulingStrategy()) {
       case CompilerBase::SchedulingStrategy::ASAP:
-        static_cast<T*>(this)->set_gate_scheduling_idx(asap());
+        static_cast<T*>(this)->setGateSchedulingIdx(asap());
         break;
       case CompilerBase::SchedulingStrategy::TRIVIAL:
       default:
-        std::vector<std::vector<std::size_t>> scheduling{};
-        scheduling.reserve(static_cast<T*>(this)->get_n_g());
-        for (std::size_t i = 0; i < static_cast<T*>(this)->get_n_g(); ++i) {
-          scheduling.emplace_back(std::vector{i});
+        std::vector<std::vector<std::size_t>> schedule{};
+        schedule.reserve(static_cast<T*>(this)->getNTwoQubitGates());
+        for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates(); ++i) {
+          schedule.emplace_back(std::vector{i});
         }
-        static_cast<T*>(this)->set_gate_scheduling_idx(scheduling);
+        static_cast<T*>(this)->setGateSchedulingIdx(schedule);
       }
     } else {
-      static_cast<T*>(this)->set_gate_scheduling_idx(graph_coloring());
+      static_cast<T*>(this)->setGateSchedulingIdx(graphColoring());
     }
     // handle the case that the number of gates in one layer exceed the capacity
     // of rydberg zone
     std::size_t maxGateNum = 0;
     for (const std::vector<std::unique_ptr<SLM>>& zone :
-         static_cast<T*>(this)->get_architecture().entanglement_zone) {
-      maxGateNum += zone.front()->n_r * zone.front()->n_c;
+         static_cast<T*>(this)->getArchitecture().entanglementZone) {
+      maxGateNum += zone.front()->nRows * zone.front()->nCols;
     }
     // create a new scheduling where each group of gates has at most
-    // max_gate_num
+    // maxGatenum
     std::vector<std::vector<std::size_t>> gateSchedulingSplit{};
     for (const std::vector<std::size_t>& gates :
-         static_cast<T*>(this)->get_gate_scheduling_idx()) {
+         static_cast<T*>(this)->getGateSchedulingIdx()) {
       if (gates.size() < maxGateNum) {
         gateSchedulingSplit.emplace_back(gates);
       } else {
@@ -86,42 +86,42 @@ protected:
         }
       }
     }
-    static_cast<T*>(this)->set_gate_scheduling_idx(
+    static_cast<T*>(this)->setGateSchedulingIdx(
         std::move(gateSchedulingSplit));
-    // clear old gate_scheduling and gate_1q_scheduling
-    static_cast<T*>(this)->get_gate_scheduling().clear();
-    static_cast<T*>(this)->get_gate_1q_scheduling().clear();
-    // Re-construct valid gate_scheduling and gate_1q_scheduling after splitting
+    // clear old gateScheduling and gate1qscheduling
+    static_cast<T*>(this)->getGateScheduling().clear();
+    static_cast<T*>(this)->getGate1QScheduling().clear();
+    // Re-construct valid gateScheduling and gate1qscheduling after splitting
     // gate groups that exceed the capacity of rydberg zone
     for (const std::vector<std::size_t>& gates :
-         static_cast<T*>(this)->get_gate_scheduling_idx()) {
-      static_cast<T*>(this)->get_gate_scheduling().emplace_back();
+         static_cast<T*>(this)->getGateSchedulingIdx()) {
+      static_cast<T*>(this)->getGateScheduling().emplace_back();
       for (const std::size_t gateIdx : gates) {
-        static_cast<T*>(this)->get_gate_scheduling().back().emplace_back(
-            &static_cast<T*>(this)->get_g_q()[gateIdx]);
+        static_cast<T*>(this)->getGateScheduling().back().emplace_back(
+            &static_cast<T*>(this)->getTwoQubitGates()[gateIdx]);
       }
-      std::vector<const qc::StandardOperation*>& current_gate_1q =
-          static_cast<T*>(this)->get_gate_1q_scheduling().emplace_back();
+      std::vector<const qc::StandardOperation*>& currentGate1q =
+          static_cast<T*>(this)->getGate1QScheduling().emplace_back();
       for (const auto& gateIdx : gates) {
         const std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                                  std::vector<qc::StandardOperation>>& map =
-            static_cast<T*>(this)->get_dict_g_1q_parent();
-        const auto* gate = &static_cast<T*>(this)->get_g_q()[gateIdx];
+            static_cast<T*>(this)->getDictG1QParent();
+        const auto* gate = &static_cast<T*>(this)->getTwoQubitGates()[gateIdx];
         if (map.find(gate) != map.end()) {
-          for (const auto& gate_1q : map.at(gate)) {
-            current_gate_1q.emplace_back(&gate_1q);
+          for (const auto& gate1Q : map.at(gate)) {
+            currentGate1q.emplace_back(&gate1Q);
           }
         }
       }
     }
 
-    static_cast<T*>(this)->get_runtime_analysis().scheduling =
+    static_cast<T*>(this)->getRuntimeAnalysis().scheduling =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - t_s);
 
     std::cout
         << "[INFO]               Time for scheduling: "
-        << static_cast<T*>(this)->get_runtime_analysis().scheduling.count()
+        << static_cast<T*>(this)->getRuntimeAnalysis().scheduling.count()
         << "µs\n";
   }
 };
