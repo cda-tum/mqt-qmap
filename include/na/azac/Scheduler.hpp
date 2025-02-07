@@ -14,20 +14,20 @@ private:
   /// as soon as possible algorithm for g_q
   auto asap() -> std::vector<std::vector<std::size_t>> {
     std::vector<std::vector<std::size_t>> gateScheduling{};
-    std::vector<std::size_t> listQubittime(static_cast<T*>(this)->getNQubits(),
+    std::vector<std::size_t> listQubitTime(static_cast<T*>(this)->getNQubits(),
                                              0);
     for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates(); ++i) {
       const std::pair<qc::Qubit, qc::Qubit>& gate =
           static_cast<T*>(this)->getTwoQubitGates()[i];
-      const auto tq0 = listQubittime[gate.first];
-      const auto tq1 = listQubittime[gate.second];
+      const auto tq0 = listQubitTime[gate.first];
+      const auto tq1 = listQubitTime[gate.second];
       const auto tg = std::max(tq0, tq1);
       if (tg >= gateScheduling.size()) {
         gateScheduling.emplace_back();
       }
       gateScheduling[tg].emplace_back(i);
-      listQubittime[gate.first] = tg + 1;
-      listQubittime[gate.second] = tg + 1;
+      listQubitTime[gate.first] = tg + 1;
+      listQubitTime[gate.second] = tg + 1;
     }
     return gateScheduling;
   }
@@ -120,7 +120,7 @@ protected:
             std::chrono::system_clock::now() - t_s);
 
     std::cout
-        << "[INFO]               Time for scheduling: "
+        << "[INFO]           Time for scheduling: "
         << static_cast<T*>(this)->getRuntimeAnalysis().scheduling.count()
         << "µs\n";
   }

@@ -7,6 +7,7 @@
 #include <numeric>
 #include <optional>
 #include <queue>
+#include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <tuple>
@@ -135,13 +136,30 @@ auto minimumWeightFullBipartiteMatching(
     const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t> {
   const std::size_t sizeX = costMatrix.size();
+  if (sizeX == 0) {
+    return {};
+  }
   auto it = costMatrix.cbegin();
   const std::size_t sizeY = it->size();
+  if (sizeX > sizeY) {
+    throw std::invalid_argument(
+        "Input matrix must have more columns than rows");
+  }
+  if (std::all_of(it->cbegin(), it->cend(), [](const std::optional<double>& o) {
+        return o == std::nullopt;
+      })) {
+    throw std::invalid_argument("Input matrix must not contain empty rows");
+  }
   // check the rectangular shape of input matrix, i.e., check whether all
   // consecutive rows have the same size
   for (++it; it != costMatrix.cend(); ++it) {
     if (it->size() != sizeY) {
       throw std::invalid_argument("Input matrix must be rectangular");
+    }
+    if (std::all_of(
+            it->cbegin(), it->cend(),
+            [](const std::optional<double>& o) { return o == std::nullopt; })) {
+      throw std::invalid_argument("Input matrix must not contain empty rows");
     }
   }
   // for all x lists all neighbors y in increasing order of c(x, y)

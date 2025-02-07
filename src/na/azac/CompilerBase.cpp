@@ -69,7 +69,7 @@ auto CompilerBase::loadSettings(std::istream&& is) -> void {
 }
 std::string CompilerBase::toString() const {
   std::stringstream ss{};
-  ss << "[INFO] ZAC: Setting\n";
+  ss << "[INFO] AZAC: Settings\n";
   ss << "[INFO]           Result directory: " << dir << "\n";
   if (hasDependency) {
     ss << "[INFO]           Scheduling strategy: " << schedulingStrategy
@@ -157,7 +157,7 @@ auto CompilerBase::collectReuseQubit() -> void {
     }
     const auto& matching = maximumBipartiteMatching(sparseMatrix, true);
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
-      if (const auto reuseGate = matching[gateIdx]; reuseGate != -1) {
+      if (const auto reuseGate = matching[gateIdx]; reuseGate) {
         const auto& gate = gateScheduling[i][gateIdx];
         if (qubitIsUsed[i - 1][gate->first] == reuseGate) {
           reuseQubits.back().emplace(gate->first);
@@ -210,10 +210,11 @@ CompilerBase::toSchedulingStrategy(const std::string& strategy) -> CompilerBase:
   }
   return it->second;
 }
-auto CompilerBase::setProgram(const qc::QuantumComputation& qc) {
+auto CompilerBase::setProgram(const qc::QuantumComputation& qc) -> void {
   twoQubitGates.clear();
-  nQubits = qc.getNqubits();
   dictG1QParent.emplace(nullptr, std::vector<qc::StandardOperation>{});
+  std::cout << "[INFO] AZAC: Read in Circuit\n";
+  nQubits = qc.getNqubits();
   /// array that stores the index of the last 2-qubit gate acting on each
   /// qubit
   std::vector<const std::pair<qc::Qubit, qc::Qubit>*> listQubitLast2qGate(
@@ -252,9 +253,9 @@ auto CompilerBase::setProgram(const qc::QuantumComputation& qc) {
     }
   }
   nTwoQubitGates = twoQubitGates.size();
-  std::cout << "[INFO]           number of qubits: " << nQubits << "\n";
-  std::cout << "[INFO]           number of two-qubit gates: " << nTwoQubitGates << "\n";
-  std::cout << "[INFO]           number of single-qubit gates: "
+  std::cout << "[INFO]           Number of qubits: " << nQubits << "\n";
+  std::cout << "[INFO]           Number of two-qubit gates: " << nTwoQubitGates << "\n";
+  std::cout << "[INFO]           Number of single-qubit gates: "
             << nSingleQubitGate << "\n";
 }
 } // namespace na

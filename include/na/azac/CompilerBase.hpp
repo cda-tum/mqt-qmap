@@ -116,7 +116,7 @@ public:
     loadSettings(std::move(is));
   }
   auto loadSettings(std::istream&& is) -> void;
-  auto setProgram(const qc::QuantumComputation& qc);
+  auto setProgram(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto toString() const -> std::string;
   friend auto operator<<(std::ostream& os, const CompilerBase& cb) -> std::ostream& {
     os << cb.toString();

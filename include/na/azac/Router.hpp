@@ -44,7 +44,7 @@ protected:
       const auto t_s = std::chrono::system_clock::now();
       routeQubitMis(layer);
       timeMis += (std::chrono::system_clock::now() - t_s);
-      std::cout << "[INFO] ZAC: Solve for Rydberg stage " << (layer + 1) << "/"
+      std::cout << "[INFO] AZAC: Solve for Rydberg stage " << (layer + 1) << "/"
                 << static_cast<T*>(this)->getGateScheduling().size()
                 << ". mis time="
                 << std::chrono::duration_cast<std::chrono::microseconds>(
@@ -382,7 +382,7 @@ private:
                        {"init_locs", initialLocs}});
 
     // process single-qubit gates
-    std::unordered_set<std::size_t> setQubitdependency{};
+    std::unordered_set<std::size_t> setQubitDependency{};
     const std::size_t instIdx =
         static_cast<T*>(this)->getResult().instructions.size();
     const std::vector<qc::StandardOperation>& list1qgate =
@@ -391,13 +391,13 @@ private:
     for (const auto& gateInfo : list1qgate) {
       // collect qubit dependency
       const auto qubit = gateInfo.getTargets().front();
-      setQubitdependency.emplace(qubitDependency[qubit]);
+      setQubitDependency.emplace(qubitDependency[qubit]);
       qubitDependency[qubit] = instIdx;
       resultGate.emplace_back(
           nlohmann::json{{"name", gateInfo.getName()}, {"q", qubit}});
     }
-    nlohmann::json dependency = {"qubit", std::vector<std::size_t>()};
-    dependency["qubit"] = setQubitdependency;
+    nlohmann::json dependency;
+    dependency["qubit"] = setQubitDependency;
     if (!resultGate.empty()) {
       write1QGateInstruction(
           instIdx, resultGate, dependency,
@@ -411,7 +411,7 @@ private:
 
   /// generate layers for row-by-row based atom transfer
   auto processMovementLayer(
-      const std::unordered_set<std::size_t>& setAodqubit,
+      const std::unordered_set<std::size_t>& setAodQubit,
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& initialMapping,
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& finalMapping)
       -> void {
@@ -419,7 +419,7 @@ private:
     // list can pick up simultaneously we use row-based pick up
     std::unordered_map<std::size_t, std::vector<std::size_t>>
         pickupDict; // key: row, value: a list of qubit in the same row
-    for (const auto q : setAodqubit) {
+    for (const auto q : setAodQubit) {
       const auto& [x, y] = std::apply(
           [&](auto&&... args) {
             return static_cast<T*>(this)->getArchitecture().exactSlmLocation(
@@ -443,7 +443,7 @@ private:
         static_cast<T*>(this)->getResult().instructions.size();
 
     std::unordered_set<std::size_t> setQubitdependency;
-    std::unordered_set<std::size_t> setSitedependency;
+    std::unordered_set<std::size_t> setSiteDependency;
     for (const auto& [dictKey, dictValue] : pickupDict) {
       // collect set of aod qubits to pick up
       listAodqubits.emplace_back(dictValue);
@@ -462,7 +462,7 @@ private:
                                     std::get<2>(finalMapping[q]));
         const auto& siteKey = finalMapping[q];
         if (siteDependency.find(siteKey) != siteDependency.end()) {
-          setSitedependency.emplace(siteDependency[siteKey]);
+          setSiteDependency.emplace(siteDependency[siteKey]);
         }
         siteDependency[initialMapping[q]] = instIdx;
 
@@ -474,7 +474,7 @@ private:
       listendLocation.emplace_back(std::move(rowendLocation));
     }
     dependency["qubit"] = setQubitdependency;
-    dependency["site"] = setSitedependency;
+    dependency["site"] = setSiteDependency;
     writeRearrangementInstruction(instIdx, listAodqubits, listBeginlocation,
                                   listendLocation, dependency);
   }
@@ -642,7 +642,7 @@ private:
                         std::get<2>(gateMapping[gate["q"]]));
     }
 
-    static_cast<T*>(this)->getResult().instructions.emplace(
+    static_cast<T*>(this)->getResult().instructions.emplace_back(
         nlohmann::json{{"type", "1qGate"},
                        {"unitary", "u3"},
                        {"id", instIdx},
@@ -725,13 +725,13 @@ private:
 
   /// processs the aod assignment between two Rydberg stages
   auto aodAssignment(const std::size_t idLayerstart) -> void {
-    std::vector listInstructionduration(
+    std::vector listInstructionDuration(
         2, std::vector<std::pair<double, std::size_t>>{});
-    const std::size_t idLayerend =
+    const std::size_t idLayerEnd =
         static_cast<T*>(this)->getResult().instructions.size();
     std::size_t durationIdx = 0;
     std::vector<std::size_t> listGatelayeridx{};
-    for (std::size_t idx = idLayerstart; idx < idLayerend; ++idx) {
+    for (std::size_t idx = idLayerstart; idx < idLayerEnd; ++idx) {
       if (static_cast<T*>(this)->getResult().instructions[idx]["type"] !=
           "rearrangeJob") {
         durationIdx = 1;
@@ -740,17 +740,17 @@ private:
       }
       const double duration =
           getDuration(static_cast<T*>(this)->getResult().instructions[idx]);
-      listInstructionduration[durationIdx].emplace_back(duration, idx);
+      listInstructionDuration[durationIdx].emplace_back(duration, idx);
     }
-    std::sort(listInstructionduration[0].begin(),
-              listInstructionduration[0].end(),
+    std::sort(listInstructionDuration[0].begin(),
+              listInstructionDuration[0].end(),
               std::greater<std::pair<double, std::size_t>>());
-    std::sort(listInstructionduration[1].begin(),
-              listInstructionduration[1].end(),
+    std::sort(listInstructionDuration[1].begin(),
+              listInstructionDuration[1].end(),
               std::greater<std::pair<double, std::size_t>>());
     // assign instruction according to the duration in descending order
     for (const std::size_t i : {0UL, 1UL}) {
-      for (const auto& item : listInstructionduration[i]) {
+      for (const auto& item : listInstructionDuration[i]) {
         const double duration = item.first;
         nlohmann::json inst =
             static_cast<T*>(this)->getResult().instructions[item.second];
@@ -766,8 +766,8 @@ private:
         inst["aod_id"] = aodId;
         aodEndTime.emplace(endTime, aodId);
         for (auto& detailInst : inst["insts"]) {
-          detailInst["begin_time"] += beginTime;
-          detailInst["end_time"] += beginTime;
+          detailInst["begin_time"] = detailInst["begin_time"].get<double>() + beginTime;
+          detailInst["end_time"] = detailInst["end_time"].get<double>() + beginTime;
         }
         if (static_cast<T*>(this)->getResult().runtime < endTime) {
           static_cast<T*>(this)->getResult().runtime = endTime;
@@ -944,10 +944,10 @@ private:
     std::sort(allColX.begin(), allColX.end());
 
     // assign AOD column ids based on all x coords needed
-    std::unordered_map<std::size_t, std::size_t> colXtoid{};
-    colXtoid.reserve(allColX.size());
+    std::unordered_map<std::size_t, std::size_t> colXToId{};
+    colXToId.reserve(allColX.size());
     for (std::size_t i = 0; i < allColX.size(); ++i) {
-      colXtoid.emplace(allColX[i], i);
+      colXToId.emplace(allColX[i], i);
     }
     // ---------------------------------------------------------------------
 
@@ -1002,7 +1002,7 @@ private:
                                       .exactSlmLocation(slm, r, c)
                                       .first;
         const std::pair colLoc{slm->id, c};
-        const auto colId = colXtoid[col_x];
+        const auto colId = colXToId[col_x];
         if (std::find(allColIdxSoFar.cbegin(), allColIdxSoFar.cend(), colId) ==
             allColIdxSoFar.end()) {
           // the col hasn't been activated, so there's no shift back
@@ -1059,7 +1059,7 @@ private:
                                         .exactSlmLocation(slm, r, c)
                                         .first;
           const std::pair colLoc{slm, c};
-          const auto colId = colXtoid[col_x];
+          const auto colId = colXToId[col_x];
           // all columns used in this row are parked after the activation
           parking["col_id"].emplace_back(colId);
           parking["col_x_begin"].emplace_back(col_x);
@@ -1125,7 +1125,7 @@ private:
                                                    std::get<2>(beginLoc),
                                                    std::get<3>(beginLoc))
                                .first;
-        const std::size_t colId = colXtoid[col_x];
+        const std::size_t colId = colXToId[col_x];
 
         if (std::find(bigMove["col_id"].cbegin(), bigMove["col_id"].cend(),
                       colId) == bigMove["col_id"].cend()) {
