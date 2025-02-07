@@ -75,23 +75,36 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
       if (i % 2 == 0) {
         const auto coordIdx = CoordIndices[i];
         const auto id = coordIdxToId.at(coordIdx);
-        auto newX = 0.0;
-        auto newY = 0.0;
-        for (size_t i = 0; i < startsX.size(); i++) {
-          if (std::abs(startsX[i] - idToCoord.at(id).first) < 0.0001) {
-            newX = endsX[i];
+        bool foundX = false;
+        auto newX = std::numeric_limits<qc::fp>::max();
+        bool foundY = false;
+        auto newY = std::numeric_limits<qc::fp>::max();
+        for (size_t j = 0; j < startsX.size(); j++) {
+          if (std::abs(startsX[j] - idToCoord.at(id).first) < 0.0001) {
+            newX = endsX[j];
+            foundX = true;
             break;
           }
         }
-        for (size_t i = 0; i < startsY.size(); i++) {
-          if (std::abs(startsY[i] - idToCoord.at(id).second) < 0.0001) {
-            newY = endsY[i];
+        if (!foundX) {
+          // X coord is the same as before
+          newX = idToCoord.at(id).first;
+        }
+
+        for (size_t j = 0; j < startsY.size(); j++) {
+          if (std::abs(startsY[j] - idToCoord.at(id).second) < 0.0001) {
+            newY = endsY[j];
+            foundY = true;
             break;
           }
+        }
+        if (!foundY) {
+          // Y coord is the same as before
+          newY = idToCoord.at(id).second;
         }
         opString += "@" + std::to_string(startTime) + " move (" +
                     std::to_string(newX) + ", " + std::to_string(newY) +
-                    ") atom" + std::to_string(coordIdx) + "\n";
+                    ") atom" + std::to_string(id) + "\n";
         idToCoord.at(id) = {newX, newY};
       } else {
         // this is the target index -> update coordIdxToId
