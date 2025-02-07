@@ -319,7 +319,7 @@ auto Architecture::preprocessing() -> void {
       entanglementToNearestStorageSite.emplace(
           slm.get(),
           std::vector<std::vector<
-              std::tuple<const SLM* const, std::size_t, std::size_t>>>{});
+              std::tuple<const SLM*, std::size_t, std::size_t>>>{});
       entanglementToNearestStorageSite[slm.get()].reserve(slm->n_r);
       for (std::size_t row = 0; row < slm->n_r; ++row) {
         entanglementToNearestStorageSite[slm.get()].emplace_back();
@@ -405,7 +405,7 @@ auto Architecture::preprocessing() -> void {
     storageToNearestEntanglementSite.emplace(
         slm.get(),
         std::vector<std::vector<
-            std::tuple<const SLM* const, std::size_t, std::size_t>>>{});
+            std::tuple<const SLM*, std::size_t, std::size_t>>>{});
     storageToNearestEntanglementSite[slm.get()].reserve(slm->n_r);
     storageToNearestEntanglementSiteDistance.emplace(
         slm.get(), std::vector<std::vector<double>>{});
@@ -508,13 +508,13 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
 }
 auto Architecture::nearest_storage_site(const SLM& slm, const std::size_t r,
                                         const std::size_t c) const
-    -> std::tuple<const SLM* const, std::size_t, std::size_t> {
+    -> std::tuple<const SLM*, std::size_t, std::size_t> {
   return entanglementToNearestStorageSite.at(&slm)[r][c];
 }
 auto Architecture::nearest_entanglement_site(const SLM* const idx,
                                              const std::size_t r,
                                              const std::size_t c) const
-    -> std::tuple<const SLM* const, std::size_t, std::size_t> {
+    -> std::tuple<const SLM*, std::size_t, std::size_t> {
   return storageToNearestEntanglementSite.at(idx)[r][c];
 }
 auto Architecture::nearest_entanglement_site_distance(const SLM* const idx,
@@ -526,7 +526,7 @@ auto Architecture::nearest_entanglement_site_distance(const SLM* const idx,
 auto Architecture::nearest_entanglement_site(
     const SLM* const idx1, const std::size_t r1, const std::size_t c1,
     const SLM* const idx2, const std::size_t r2, const std::size_t c2) const
-    -> std::tuple<const SLM* const, std::size_t, std::size_t> {
+    -> std::tuple<const SLM*, std::size_t, std::size_t> {
   const auto& site1 = storageToNearestEntanglementSite.at(idx1)[r1][c1];
   const auto& site2 = storageToNearestEntanglementSite.at(idx2)[r2][c2];
   // the nearest entanglement zone for both qubits is the same
