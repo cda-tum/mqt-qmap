@@ -336,7 +336,7 @@ public:
   [[nodiscard]] std::set<HwQubit>
   getBlockedQubits(const std::set<HwQubit>& qubits) const;
 
-  [[nodiscard]] std::map<HwQubit, HwQubit> getInitHwPos() const {
+  [[nodiscard]] std::map<HwQubit, CoordIndex> getInitHwPos() const {
     std::map<HwQubit, HwQubit> initialHwPosMap;
     for (auto const& pair : initialHwPos) {
       initialHwPosMap[pair.first] = pair.second;

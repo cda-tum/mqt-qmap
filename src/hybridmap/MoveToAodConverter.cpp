@@ -28,6 +28,7 @@ namespace na {
 
 qc::QuantumComputation
 MoveToAodConverter::schedule(qc::QuantumComputation& qc) {
+  initFlyingAncillas();
   initMoveGroups(qc);
   if (moveGroups.empty()) {
     return qc;
@@ -72,6 +73,41 @@ AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
     q2 -= arch.getNpositions();
   }
   return {q1, q2, load1, load2};
+}
+void MoveToAodConverter::initFlyingAncillas() {
+  std::vector<CoordIndex> coords;
+  std::vector<Dimension> dirs;
+  std::vector<qc::fp> starts;
+  std::vector<qc::fp> ends;
+  std::set<std::uint32_t> rowsActivated;
+  std::set<std::uint32_t> columnsActivated;
+  for (const auto& [coord, offsets] : ancillaAtoms) {
+    coords.emplace_back(coord);
+    const auto column = (coord % arch.getNcolumns());
+    const auto row = (coord / arch.getNcolumns());
+
+    const auto offset =
+        arch.getInterQubitDistance() / arch.getNAodIntermediateLevels();
+    if (columnsActivated.find(column) == columnsActivated.end()) {
+      columnsActivated.insert(column);
+      const auto x =
+          column * arch.getInterQubitDistance() + (offsets.first * offset);
+      dirs.emplace_back(Dimension::X);
+      starts.emplace_back(x);
+      ends.emplace_back(x);
+    }
+    if (rowsActivated.find(row) == rowsActivated.end()) {
+      rowsActivated.insert(row);
+      const auto y =
+          row * arch.getInterQubitDistance() + (offsets.second * offset);
+      dirs.emplace_back(Dimension::Y);
+      starts.emplace_back(y);
+      ends.emplace_back(y);
+    }
+  }
+  const AodOperation aodInit(qc::OpType::AodActivate, coords, dirs, starts,
+                             ends);
+  qcScheduled.emplace_back(std::make_unique<AodOperation>(aodInit));
 }
 
 void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {

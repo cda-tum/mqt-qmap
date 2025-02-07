@@ -16,6 +16,7 @@
 #include "na/NADefinitions.hpp"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -276,13 +277,9 @@ protected:
     connectAodOperations(const AodActivationHelper& aodActivationHelper,
                          const AodActivationHelper& aodDeactivationHelper);
   };
-  struct AncillaAtom {
-    bool occupied = false;
-    uint32_t xOffset = 1;
-    uint32_t yOffset = 1;
-  };
 
-  using AncillaAtoms = std::vector<AncillaAtom>;
+  using AncillaAtoms =
+      std::map<CoordIndex, std::pair<std::uint32_t, std::uint32_t>>;
 
   const NeutralAtomArchitecture& arch;
   qc::QuantumComputation qcScheduled;
@@ -291,6 +288,9 @@ protected:
   AncillaAtoms ancillaAtoms;
 
   AtomMove convertOpToMove(qc::Operation* get);
+
+  void initFlyingAncillas();
+
   /**
    * @brief Assigns move operations into groups that can be executed in parallel
    * @param qc Quantum circuit to schedule
@@ -317,11 +317,14 @@ public:
   MoveToAodConverter(const MoveToAodConverter&) = delete;
   MoveToAodConverter(MoveToAodConverter&&) = delete;
   explicit MoveToAodConverter(const NeutralAtomArchitecture& archArg,
-                              const na::HardwareQubits& hardwareQubitsArg)
+                              const na::HardwareQubits& hardwareQubitsArg,
+                              const HardwareQubits& flyingAncillas)
       : arch(archArg), qcScheduled(arch.getNpositions()),
-        hardwareQubits(hardwareQubitsArg),
-        ancillaAtoms(AncillaAtoms(arch.getNpositions(), AncillaAtom())) {
+        hardwareQubits(hardwareQubitsArg) {
     qcScheduled.addAncillaryRegister(arch.getNpositions());
+    for (const auto& [hwQubit, coord] : flyingAncillas.getInitHwPos()) {
+      ancillaAtoms.insert({coord + arch.getNpositions(), {1, 1}});
+    }
   }
 
   /**

@@ -339,7 +339,7 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
   qc::CircuitOptimizer::flattenOperations(mappedQc);
   // decompose AOD moves
   mappedQc.dumpOpenQASM(std::cout, false);
-  MoveToAodConverter aodScheduler(*arch, hardwareQubits);
+  MoveToAodConverter aodScheduler(*arch, hardwareQubits, flyingAncillas);
   mappedQcAOD = aodScheduler.schedule(mappedQc);
   if (this->parameters->verbose) {
     std::cout << "nMoveGroups: " << aodScheduler.getNMoveGroups() << '\n';
