@@ -152,17 +152,16 @@ protected:
 };
 
 TEST_F(NeutralAtomMapperTest, Output) {
-  auto qcMapped = mapper.map(qc, initialMapping);
   setvbuf(stdout, NULL, _IONBF, 0);
+  auto qcMapped = mapper.map(qc, initialMapping);
   qcMapped.dumpOpenQASM(std::cout, false);
 
   auto qcAodMapped = mapper.convertToAod();
   qcAodMapped.dumpOpenQASM(std::cout, false);
 
-  const auto scheduleResults = mapper.schedule(false, true);
+  const auto scheduleResults = mapper.schedule(true, true);
   mapper.saveAnimationFiles("test");
 
-  // const auto scheduleResults = mapper.schedule(true, true);
   std::cout << scheduleResults.toCsv();
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
