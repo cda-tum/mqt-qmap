@@ -563,7 +563,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
 
     if (usedQubits.find(passBy.q1) != usedQubits.end()) {
       usedQubits.erase(passBy.q1);
-      usedQubits.insert(ancQ1);
+      usedQubits.insert(ancQ2);
     }
 
     if (this->parameters->verbose) {
@@ -583,7 +583,7 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     const auto ancQ2 = passBy.q2 + nPos;
     mappedQc.move(ancQ2, ancQ1);
     mappedQc.h(ancQ1);
-    mappedQc.cz(passBy.q2, ancQ1);
+    mappedQc.cz(passBy.q1, ancQ1);
     mappedQc.h(ancQ1);
 
     // update position of flying ancillas
