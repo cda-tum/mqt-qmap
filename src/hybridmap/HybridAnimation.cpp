@@ -55,10 +55,21 @@ std::string AnimationAtoms::placeInitAtoms() {
 }
 std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
                                       qc::fp startTime) {
-  std::string opString = "";
+  std::string opString;
 
   if (op->getType() == qc::OpType::AodActivate) {
-    int a = 0;
+    opString += "@" + std::to_string(startTime) + " load [\n";
+    for (const auto& coordIdx : op->getTargets()) {
+      const auto id = coordIdxToId.at(coordIdx);
+      opString += "\t atom" + std::to_string(id) + "\n";
+    }
+    opString += "]\n";
+  } else if (op->getType() == qc::OpType::AodDeactivate) {
+    opString += "@" + std::to_string(startTime) + " store [\n";
+    for (const auto& coordIdx : op->getTargets()) {
+      const auto id = coordIdxToId.at(coordIdx);
+      opString += "\t atom" + std::to_string(id) + "\n";
+    }
   } else if (op->getType() == qc::OpType::AodMove) {
     // update atom coordinates
     const auto startsX =
