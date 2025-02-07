@@ -125,7 +125,21 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
         coordIdxToId[coordIdx] = id;
       }
     }
+    // must be a gate
+  } else if (op->getNqubits() > 1) {
+    for (const auto& coordIdx : op->getUsedQubits()) {
+      const auto id = coordIdxToId.at(coordIdx);
+      opString += "@" + std::to_string(startTime) + " cz 1" + " atom" +
+                  std::to_string(id) + "\n";
+    }
+  } else {
+    // single qubit gate
+    const auto coordIdx = op->getTargets().front();
+    const auto id = coordIdxToId.at(coordIdx);
+    opString += "@" + std::to_string(startTime) + " rz 1" + " atom" +
+                std::to_string(id) + "\n";
   }
+
   return opString;
 }
 
