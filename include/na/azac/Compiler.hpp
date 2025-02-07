@@ -26,13 +26,13 @@ auto solve(bool saveFile = true) -> Result {
     reuseQubits.clear();
     qubitMapping.clear();
 
-    std::cout << "[INFO] ZAC: A compiler for neutral atom-based compute-store "
+    std::cout << "[INFO] AZAC: An advanced compiler for neutral atom-based compute-store "
                  "architecture\n";
     std::cout << *this;
     // todo: check if the program input is valid, i.e., #q < #p
     const auto tS = std::chrono::system_clock::now();
     // gate scheduling with graph coloring
-    std::cout << "[INFO] ZAC: Run scheduling\n";
+    std::cout << "[INFO] AZAC: Run scheduling\n";
     static_cast<T*>(this)->schedule();
 
     if (reuse) {
@@ -45,16 +45,16 @@ auto solve(bool saveFile = true) -> Result {
     }
 
     static_cast<T*>(this)->placeQubitInitial();
-    std::cout << "[INFO]               Time for initial placement: "
-              << runtimeAnalysis.initialPlacement.count() << "s\n";
+    std::cout << "[INFO]           Time for initial placement: "
+              << runtimeAnalysis.initialPlacement.count() << "µs\n";
     static_cast<T*>(this)->placeQubitIntermediate();
-    std::cout << "[INFO]               Time for intermediate placement: ";
-    std::cout << runtimeAnalysis.intermediatePlacement.count() << "s\n";
+    std::cout << "[INFO]           Time for intermediate placement: ";
+    std::cout << runtimeAnalysis.intermediatePlacement.count() << "µs\n";
     static_cast<T*>(this)->routeQubit();
     runtimeAnalysis.total = std::chrono::system_clock::now() - tS;
-    std::cout << "[INFO]               Time for routing: "
-              << runtimeAnalysis.routing.count() << "s\n";
-    std::cout << "[INFO] ZAC: Toal Time: " << runtimeAnalysis.total.count() << "s\n";
+    std::cout << "[INFO]           Time for routing: "
+              << runtimeAnalysis.routing.count() << "µs\n";
+    std::cout << "[INFO] AZAC: Toal Time: " << runtimeAnalysis.total.count() << "µs\n";
     if  (saveFile) {
       if (dir.empty()) {
         dir = "./result/";
@@ -77,7 +77,7 @@ auto solve(bool saveFile = true) -> Result {
     }
 
     if  (toVerify) {
-      std::cout << "[INFO] ZAC: Start Verification\n";
+      std::cout << "[INFO] AZAC: Start Verification\n";
       throw std::invalid_argument("Verification is not implemented yet");
     }
 

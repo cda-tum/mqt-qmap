@@ -140,6 +140,11 @@ TEST(TestUtils, MinimumWeightFullBipartiteMatching) {
     EXPECT_EQ(matching[1], 1);
     EXPECT_EQ(matching[2], 3);
   }
+  {
+    EXPECT_THROW(minimumWeightFullBipartiteMatching({{0}, {0}}), std::invalid_argument);
+    EXPECT_THROW(minimumWeightFullBipartiteMatching({{std::nullopt}}), std::invalid_argument);
+    EXPECT_THROW(minimumWeightFullBipartiteMatching({{0, 0}, {std::nullopt, std::nullopt}}), std::invalid_argument);
+  }
 }
 
 } // namespace na
