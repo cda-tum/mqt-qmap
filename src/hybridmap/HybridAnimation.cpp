@@ -129,7 +129,7 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
   } else if (op->getNqubits() > 1) {
     for (const auto& coordIdx : op->getUsedQubits()) {
       const auto id = coordIdxToId.at(coordIdx);
-      opString += "@" + std::to_string(startTime) + " cz 1" + " atom" +
+      opString += "@" + std::to_string(startTime) + " cz atom" +
                   std::to_string(id) + "\n";
     }
   } else {

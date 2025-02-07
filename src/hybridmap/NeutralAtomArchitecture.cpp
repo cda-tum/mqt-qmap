@@ -249,6 +249,7 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
       std::to_string(this->getShuttlingTime(qc::OpType::AodDeactivate) *
                      shuttlingSpeedFactor) +
       "\n\trz: " + std::to_string(this->getGateTime("x")) +
+      "\n\try: " + std::to_string(this->getGateTime("x")) +
       "\n\tcz: " + std::to_string(this->getGateTime("cz")) +
       "\n\tunit: \"us\"\n}\n";
 
