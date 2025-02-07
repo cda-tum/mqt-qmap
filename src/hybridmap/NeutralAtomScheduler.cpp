@@ -37,7 +37,8 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
   std::vector<qc::fp> totalExecutionTimes(arch->getNpositions(), 0);
   // saves for each coord the time slots that are blocked by a multi qubit gate
   std::vector rydbergBlockedQubitsTimes(
-      arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
+      arch->getNpositions() + arch->getNpositions(),
+      std::deque<std::pair<qc::fp, qc::fp>>());
   qc::fp aodLastBlockedTime = 0;
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
