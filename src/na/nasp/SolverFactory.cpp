@@ -4,7 +4,6 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/Architecture.hpp"
-#include "na/NADefinitions.hpp"
 #include "na/nasp/Solver.hpp"
 
 #include <algorithm>
@@ -18,7 +17,7 @@
 namespace na {
 auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto interactionZone =
-      *arch.getPropertiesOfOperation({qc::Z, 1}).zones.cbegin();
+      *arch.getPropertiesOfOperation(qc::Z, 1).zones.cbegin();
   const auto maxX =
       static_cast<uint16_t>(arch.getNColsInZone(interactionZone) - 1);
   const auto maxEntanglingY =
@@ -65,20 +64,20 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto noInteractionRadius = arch.getNoInteractionRadius();
   const auto firstSite = arch.getSitesInZone(interactionZone)[0];
   const auto siteRight =
-      arch.getNearestSiteRight(arch.getPositionOfSite(firstSite), true, true);
+      arch.getNearestSiteRight(arch.getLocationOfSite(firstSite), true, true);
   const auto siteBelow =
-      arch.getNearestSiteDown(arch.getPositionOfSite(firstSite), true, true);
+      arch.getNearestSiteDown(arch.getLocationOfSite(firstSite), true, true);
   if (!siteRight || !siteBelow) {
     throw std::invalid_argument(
         "Unexpected architecture: There is no site to the right or below the "
         "first site in the interaction zone.");
   }
   const auto maxHOffset = static_cast<uint16_t>(
-      (arch.getPositionOfSite(*siteRight) - arch.getPositionOfSite(firstSite))
+      (arch.getLocationOfSite(*siteRight) - arch.getLocationOfSite(firstSite))
           .length() -
       (noInteractionRadius / 2 / minAtomDistance));
   const auto maxVOffset = static_cast<uint16_t>(
-      (arch.getPositionOfSite(*siteBelow) - arch.getPositionOfSite(firstSite))
+      (arch.getLocationOfSite(*siteBelow) - arch.getLocationOfSite(firstSite))
           .length() -
       (noInteractionRadius / 2 / minAtomDistance));
   return {maxX,       maxY,     maxC,     maxR, maxHOffset,
@@ -86,15 +85,15 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
 }
 
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
-                                    const FullOpType opType, const bool quiet)
+                                    const qc::OpType opType, const std::size_t ctrls, const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
   auto flattened = circ;
   qc::CircuitOptimizer::flattenOperations(flattened);
   std::vector<std::pair<unsigned int, unsigned int>> ops;
   ops.reserve(flattened.size());
   for (const auto& op : flattened) {
-    if (op->getType() == opType.type &&
-        op->getNcontrols() == opType.nControls) {
+    if (op->getType() == opType &&
+        op->getNcontrols() == ctrls) {
       const auto& operands = op->getUsedQubits();
       if (operands.size() != 2) {
         std::stringstream ss;
@@ -104,8 +103,8 @@ auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
       ops.emplace_back(*operands.cbegin(), *operands.rbegin());
     } else if (!quiet) {
       std::stringstream ss;
-      ss << "Operation " << op->getName() << " is not of type " << opType.type
-         << " or does not have " << opType.nControls << " controls.";
+      ss << "Operation " << op->getName() << " is not of type " << opType
+         << " or does not have " << ctrls << " controls.";
       throw std::invalid_argument(ss.str());
     }
   }

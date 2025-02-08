@@ -73,8 +73,8 @@ protected:
     PositionStatus positionStatus = PositionStatus::UNDEFINED;
     std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
     std::shared_ptr<Point> currentPosition = initialPosition;
-    std::vector<Zone> zones;
-    explicit Atom(const std::vector<Zone>& z = {}) : zones(z) {};
+    std::vector<ZoneId> zones;
+    explicit Atom(const std::vector<ZoneId>& z = {}) : zones(z) {};
   };
   auto preprocess() -> void { validateCircuit(); }
   auto validateCircuit() -> void;
@@ -107,7 +107,7 @@ protected:
   auto store(std::vector<bool>& initialFreeSites,
              std::vector<bool>& currentFreeSites, std::vector<Atom>& placement,
              std::unordered_set<qc::Qubit>& currentlyShuttling,
-             const std::vector<qc::Qubit>& qubits, Zone destination) -> void;
+             const std::vector<qc::Qubit>& qubits, ZoneId destination) -> void;
   /**
    * @brief Picks up atom in the initial zone as a preparation for moving it to
    * the entangling zone.
