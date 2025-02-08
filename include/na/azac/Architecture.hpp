@@ -26,7 +26,7 @@ struct AOD {
 
 /// An 2D-array of SLM traps
 struct SLM {
-  std::size_t id = 0; ///< SLM id
+  std::size_t id = 0; ///< SLM id, used only in output
   /// separation of individual sites in x and y direction
   std::pair<std::size_t, std::size_t> siteSeparation{0, 0};
   std::size_t nRows = 0; ///< number of rows
@@ -35,12 +35,14 @@ struct SLM {
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
   /// SLMs in the same group
-  std::vector<std::unique_ptr<SLM>>* entanglementId = nullptr;
+  std::vector<std::unique_ptr<SLM>>* entanglementZone = nullptr;
+  std::optional<std::size_t> entanglementId = std::nullopt;
 
+  explicit SLM(nlohmann::json slmSpec);
   explicit SLM(nlohmann::json slmSpec,
-               decltype (entanglementId) entanglementId = nullptr);
+               decltype (entanglementZone) entanglementZone, std::size_t entanglementId);
   [[nodiscard]] auto isStorage() const -> bool {
-    return entanglementId == nullptr;
+    return entanglementZone == nullptr;
   }
   [[nodiscard]] auto isEntanglement() const -> bool { return !isStorage(); }
 };
@@ -90,9 +92,9 @@ namespace na {
 /// Class to define zone architecture
 struct Architecture {
   std::string name;
-  std::vector<std::unique_ptr<SLM>> storageZone;
-  std::vector<std::vector<std::unique_ptr<SLM>>> entanglementZone;
-  std::vector<std::unique_ptr<AOD>> dictAod;
+  std::vector<std::unique_ptr<SLM>> storageZones;
+  std::vector<std::vector<std::unique_ptr<SLM>>> entanglementZones;
+  std::vector<std::unique_ptr<AOD>> aods;
   double timeAtomTransfer = 15; ///< µs
   double timeRydberg = 0.36;     ///< µs
   double time1QGate = 0.625;     ///< µs

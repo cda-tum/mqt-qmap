@@ -1126,9 +1126,9 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> std::pair <
       if (initialZones.size() != 1) {
         throw std::logic_error("Currently only one storage zone is supported.");
       }
-      const auto storageZone = initialZones.front();
+      const auto storageZones = initialZones.front();
       store(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
-            moveableOrdered, storageZone);
+            moveableOrdered, storageZones);
       // -------------------------------------------------------------
       std::vector<qc::Qubit> fixedVector;
       fixedVector.reserve(fixed.size());
@@ -1140,7 +1140,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> std::pair <
                   return fixed.at(a) < fixed.at(b);
                 });
       store(initialFreeSites, currentFreeSites, placement, currentlyShuttling,
-            fixedVector, storageZone);
+            fixedVector, storageZones);
     } else {
       throw std::logic_error("NA mapping method not implemented.");
     }

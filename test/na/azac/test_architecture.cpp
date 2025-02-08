@@ -63,13 +63,13 @@ protected:
 TEST_F(TestArchitecture, Load) {}
 
 TEST_F(TestArchitecture, Storage) {
-  EXPECT_EQ(arch.storageZone.size(), 1);
-  EXPECT_EQ(arch.storageZone.front()->nRows, 100);
-  EXPECT_EQ(arch.storageZone.front()->nCols, 100);
+  EXPECT_EQ(arch.storageZones.size(), 1);
+  EXPECT_EQ(arch.storageZones.front()->nRows, 100);
+  EXPECT_EQ(arch.storageZones.front()->nCols, 100);
 }
 
 TEST_F(TestArchitecture, Distance) {
-  const auto* slmPtr = arch.storageZone.front().get();
+  const auto* slmPtr = arch.storageZones.front().get();
   EXPECT_EQ(arch.distance(slmPtr, 0, 0, slmPtr, 0, 1),
             slmPtr->siteSeparation.first);
   EXPECT_EQ(arch.distance(slmPtr, 0, 0, slmPtr, 1, 0),
@@ -79,20 +79,20 @@ TEST_F(TestArchitecture, Distance) {
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 0, 1), slm1.siteSeparation.first);
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 1, 0), slm1.siteSeparation.second);
 
-  const auto& slm2 = *arch.entanglementZone.front().front();
+  const auto& slm2 = *arch.entanglementZones.front().front();
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm2, 0, 0),
             distance(slm1.location, slm2.location));
 }
 
 TEST_F(TestArchitecture, NearestSite) {
-  const auto& storageSlm = *arch.storageZone.front();
-  const auto& entanglementSLM = *arch.entanglementZone.front().front();
+  const auto& storageSlm = *arch.storageZones.front();
+  const auto& entanglementSLM = *arch.entanglementZones.front().front();
   {
     const auto nearestStorageSite =
         arch.nearestStorageSite(&entanglementSLM, 0, 0);
     const auto minDistance =
         arch.distance({&entanglementSLM, 0, 0}, nearestStorageSite);
-    for (const auto& slm : arch.storageZone) {
+    for (const auto& slm : arch.storageZones) {
       for (std::size_t r = 0; r < slm->nRows; ++r) {
         for (std::size_t c = 0; c < slm->nCols; ++c) {
           const auto distance = arch.distance(
@@ -107,7 +107,7 @@ TEST_F(TestArchitecture, NearestSite) {
         arch.nearestEntanglementSite(&storageSlm, 0, 0);
     const auto minDistance =
         arch.distance({&storageSlm, 0, 0}, nearestEntanglementSite);
-    for (const auto& slms : arch.entanglementZone) {
+    for (const auto& slms : arch.entanglementZones) {
       for (const auto& slm : slms) {
         for (std::size_t r = 0; r < slm->nRows; ++r) {
           for (std::size_t c = 0; c < slm->nCols; ++c) {
