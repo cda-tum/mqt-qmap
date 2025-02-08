@@ -146,7 +146,7 @@ TEST(SolverFactory, Create) {
       qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 5,
@@ -292,11 +292,11 @@ TEST(SolverFactory, CreateExceptions) {
   // when the parameter quiet is false and the circuit contains an operation
   // that is not of type Z and does not have 1 control, an exception is thrown
   EXPECT_THROW(std::ignore =
-                   na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, false),
+                   na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, false),
                std::invalid_argument);
   // At the moment the function can only handle operation types that lead to two
   // operands, in this example the operation has three operands.
   EXPECT_THROW(std::ignore =
-                   na::SolverFactory::getOpsForSolver(circ, {qc::ECR, 1}, true),
+                   na::SolverFactory::getOpsForSolver(circ, qc::ECR, 1, true),
                std::invalid_argument);
 }
