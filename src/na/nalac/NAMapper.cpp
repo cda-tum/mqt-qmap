@@ -390,7 +390,7 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
                      std::vector<Atom>& placement,
                      std::unordered_set<qc::Qubit>& currentlyShuttling,
                      const std::vector<qc::Qubit>& qubits,
-                     const Zone destination) -> void {
+                     const ZoneId destination) -> void {
   // this distance is used for spacing atoms that should interact or pass
   // another atom
   const auto d = static_cast<std::int64_t>(arch.getMinAtomDistance());
@@ -569,7 +569,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
         }
       }
       const auto spotsNeeded = pickUpOrder.size();
-      Zone zone = 0;
+      ZoneId zone = 0;
       Index row = 0;
       std::size_t freeSpotsInRow = 0;
       for (const auto& z : placement.at(q).zones) {
@@ -964,7 +964,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             "Other gates than cz are not supported for mapping yet.");
         // TODO: support other gates than cz
       }
-      const Zone interactionZone =
+      const ZoneId interactionZone =
           *arch.getPropertiesOfOperation({qc::OpType::Z, 1}).zones.begin();
       const auto sites = arch.getSitesInRow(interactionZone, 0);
       const auto& sequence =
