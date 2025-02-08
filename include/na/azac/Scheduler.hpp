@@ -65,7 +65,7 @@ protected:
     // of rydberg zone
     std::size_t maxGateNum = 0;
     for (const std::vector<std::unique_ptr<SLM>>& zone :
-         static_cast<T*>(this)->getArchitecture().entanglementZone) {
+         static_cast<T*>(this)->getArchitecture().entanglementZones) {
       maxGateNum += zone.front()->nRows * zone.front()->nCols;
     }
     // create a new scheduling where each group of gates has at most

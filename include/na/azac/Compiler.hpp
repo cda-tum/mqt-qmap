@@ -4,11 +4,12 @@
 #include "na/azac/Placer.hpp"
 #include "na/azac/Router.hpp"
 #include "na/azac/Scheduler.hpp"
-#include <iostream>
+
 #include <chrono>
-#include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json_fwd.hpp>
+#include <stdexcept>
 
 namespace na {
 
@@ -17,8 +18,9 @@ class Compiler : public CompilerBase, public Mixins<T>... {
 private:
   Compiler() = default;
   friend T;
+
 public:
-auto solve(bool saveFile = true) -> Result {
+  auto solve(bool saveFile = true) -> Result {
     // member to hold intermediate results
     gateScheduling.clear();
     gate1QScheduling.clear();
@@ -26,7 +28,8 @@ auto solve(bool saveFile = true) -> Result {
     reuseQubits.clear();
     qubitMapping.clear();
 
-    std::cout << "[INFO] AZAC: An advanced compiler for neutral atom-based compute-store "
+    std::cout << "[INFO] AZAC: An advanced compiler for neutral atom-based "
+                 "compute-store "
                  "architecture\n";
     std::cout << *this;
     // todo: check if the program input is valid, i.e., #q < #p
@@ -38,7 +41,7 @@ auto solve(bool saveFile = true) -> Result {
     if (reuse) {
       collectReuseQubit();
     } else {
-      reuseQubits.reserve (gateScheduling.size());
+      reuseQubits.reserve(gateScheduling.size());
       for (std::size_t i = 0; i < gateScheduling.size(); ++i) {
         reuseQubits.emplace_back();
       }
@@ -54,29 +57,52 @@ auto solve(bool saveFile = true) -> Result {
     runtimeAnalysis.total = std::chrono::system_clock::now() - tS;
     std::cout << "[INFO]           Time for routing: "
               << runtimeAnalysis.routing.count() << "µs\n";
-    std::cout << "[INFO] AZAC: Toal Time: " << runtimeAnalysis.total.count() << "µs\n";
-    if  (saveFile) {
+    std::cout << "[INFO] AZAC: Total Time: " << runtimeAnalysis.total.count()
+              << "µs\n";
+    if (saveFile) {
       if (dir.empty()) {
         dir = "./result/";
       }
-      const auto codeFilename = dir / "code" / (result.name + "_code.na");
-      std::ofstream codeOfs (codeFilename);
-      codeOfs << result.instructions;
+      const auto codeFilename = dir / "code" / (result.name + "_code.json");
+      create_directories(codeFilename.parent_path());
+      std::ofstream codeOfs(codeFilename);
+      if (!codeOfs) {
+        std::stringstream ss{};
+        ss << "Cannot open file " << absolute(codeFilename);
+        throw std::runtime_error(ss.str());
+      }
+      nlohmann::json resultJson;
+      resultJson["instructions"] = result.instructions;
+      resultJson["runtime"] = result.runtime;
+      resultJson["name"] = result.name;
+      resultJson["architecture_spec_path"] = result.architectureSpecPath;
+      codeOfs << resultJson;
+      std::cout << "[INFO]           Saved code to " << absolute(codeFilename)
+                << "\n";
 
-      const auto resultJsonFilename =
+      const auto timingJsonFilename =
           dir / "time" / (result.name + "_time.json");
-      std::ofstream resultJsonOfs (resultJsonFilename);
-      nlohmann::json resultJson{};
-      resultJson["scheduling"] = runtimeAnalysis.scheduling.count();
-      resultJson["initial_placement"] = runtimeAnalysis.initialPlacement.count();
-      resultJson["intermediate_placement"] =
+      create_directories(timingJsonFilename.parent_path());
+      std::ofstream timingtJsonOfs(timingJsonFilename);
+      if (!timingtJsonOfs) {
+        std::stringstream ss{};
+        ss << "Cannot open file " << absolute(timingJsonFilename);
+        throw std::runtime_error(ss.str());
+      }
+      nlohmann::json timingJson{};
+      timingJson["scheduling"] = runtimeAnalysis.scheduling.count();
+      timingJson["initial_placement"] =
+          runtimeAnalysis.initialPlacement.count();
+      timingJson["intermediate_placement"] =
           runtimeAnalysis.intermediatePlacement.count();
-      resultJson["routing"] = runtimeAnalysis.routing.count();
-      resultJson["total"] = runtimeAnalysis.total.count();
-      resultJsonOfs << resultJson;
+      timingJson["routing"] = runtimeAnalysis.routing.count();
+      timingJson["total"] = runtimeAnalysis.total.count();
+      timingtJsonOfs << timingJson;
+      std::cout << "[INFO]           Saved results to "
+                << absolute(timingJsonFilename) << "\n";
     }
 
-    if  (toVerify) {
+    if (toVerify) {
       std::cout << "[INFO] AZAC: Start Verification\n";
       throw std::invalid_argument("Verification is not implemented yet");
     }
@@ -85,6 +111,7 @@ auto solve(bool saveFile = true) -> Result {
   }
 };
 
-class ZACompiler final : public Compiler<ZACompiler, Placer, Router, Scheduler> {};
+class ZACompiler final
+    : public Compiler<ZACompiler, Placer, Router, Scheduler> {};
 
 } // namespace na

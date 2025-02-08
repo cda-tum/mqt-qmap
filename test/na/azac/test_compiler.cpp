@@ -127,6 +127,7 @@ protected:
     qc::CircuitOptimizer::flattenOperations(circ);
     std::istringstream settingsStream{std::string{settings}};
     ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
+    compiler.getResult().name = name;
     ASSERT_NO_THROW(compiler.setProgram(circ));
   }
 };

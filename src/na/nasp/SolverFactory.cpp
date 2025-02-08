@@ -26,9 +26,9 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
   const auto maxR =
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
-  const auto storageZone = arch.getInitialZones().front();
+  const auto storageZones = arch.getInitialZones().front();
   const auto maxY =
-      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZone));
+      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZones));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD

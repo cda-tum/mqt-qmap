@@ -26,13 +26,13 @@ protected:
   /// generate rearrangement layers between two Rydberg layers
   auto routeQubit() -> void {
     for (std::size_t i = 0;
-         i < static_cast<T*>(this)->getArchitecture().dictAod.size(); ++i) {
+         i < static_cast<T*>(this)->getArchitecture().aods.size(); ++i) {
       aodEndTime.emplace(0, i);
     }
     aodDependency = std::vector<std::size_t>(
-        static_cast<T*>(this)->getArchitecture().dictAod.size(), 0);
+        static_cast<T*>(this)->getArchitecture().aods.size(), 0);
     rydbergDependency = std::vector<std::size_t>(
-        static_cast<T*>(this)->getArchitecture().entanglementZone.size(), 0);
+        static_cast<T*>(this)->getArchitecture().entanglementZones.size(), 0);
     std::chrono::microseconds timeMis{};
     qubitDependency =
         std::vector<std::size_t>(static_cast<T*>(this)->getNQubits(), 0);
@@ -335,28 +335,28 @@ private:
                std::tuple<std::size_t, std::size_t, std::size_t, std::size_t> b)
       -> bool {
     if (std::get<0>(a) == std::get<0>(b) && std::get<1>(a) != std::get<1>(b)) {
-      return true;
+      return false;
     }
     if (std::get<1>(a) == std::get<1>(b) && std::get<0>(a) != std::get<0>(b)) {
-      return true;
+      return false;
     }
     if (std::get<0>(a) < std::get<0>(b) && std::get<1>(a) >= std::get<1>(b)) {
-      return true;
+      return false;
     }
     if (std::get<0>(a) > std::get<0>(b) && std::get<1>(a) <= std::get<1>(b)) {
-      return true;
+      return false;
     }
     if (std::get<2>(a) == std::get<2>(b) && std::get<3>(a) != std::get<3>(b)) {
-      return true;
+      return false;
     }
     if (std::get<3>(a) == std::get<3>(b) && std::get<2>(a) != std::get<2>(b)) {
-      return true;
+      return false;
     }
     if (std::get<2>(a) < std::get<2>(b) && std::get<3>(a) >= std::get<3>(b)) {
-      return true;
+      return false;
     }
     if (std::get<2>(a) > std::get<2>(b) && std::get<3>(a) <= std::get<3>(b)) {
-      return true;
+      return false;
     }
     return true;
   }
@@ -377,8 +377,8 @@ private:
     static_cast<T*>(this)->getResult().instructions.emplace_back(
         nlohmann::json{{"type", "init"},
                        {"id", 0},
-                       {"begin_time", 0},
-                       {"end_time", 0},
+                       {"begin_time", 0.},
+                       {"end_time", 0.},
                        {"init_locs", initialLocs}});
 
     // process single-qubit gates
@@ -402,10 +402,10 @@ private:
       write1QGateInstruction(
           instIdx, resultGate, dependency,
           static_cast<T*>(this)->getQubitMapping().front());
-      static_cast<T*>(this)->getResult().instructions.back()["begin_time"] = 0;
+      static_cast<T*>(this)->getResult().instructions.back()["begin_time"] = 0.;
       static_cast<T*>(this)->getResult().instructions.back()["end_time"] =
           static_cast<T*>(this)->getArchitecture().time1QGate *
-          resultGate.size(); // due to sequential execution
+          static_cast<double>(resultGate.size()); // due to sequential execution
     }
   }
 
@@ -426,9 +426,7 @@ private:
                 std::forward<decltype(args)>(args)...);
           },
           initialMapping[q]);
-      if (pickupDict.find(y) == pickupDict.end()) {
-        pickupDict.emplace(y, std::vector<std::size_t>{});
-      }
+      pickupDict.try_emplace(y, std::vector<std::size_t>{});
       pickupDict[y].emplace_back(q);
     }
     std::vector<std::vector<std::size_t>> listAodqubits{};
@@ -491,8 +489,8 @@ private:
       nlohmann::json dependency) -> void {
     std::vector<std::vector<
         std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>>
-        beginLocationid{};
-    beginLocationid.reserve(beginLocation.size());
+        beginLocationId{};
+    beginLocationId.reserve(beginLocation.size());
     for (const auto& row : beginLocation) {
       std::vector<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>
@@ -502,12 +500,12 @@ private:
         rowTuples.emplace_back(std::get<0>(qubit), std::get<1>(qubit)->id,
                                std::get<2>(qubit), std::get<3>(qubit));
       }
-      beginLocationid.emplace_back(std::move(rowTuples));
+      beginLocationId.emplace_back(std::move(rowTuples));
     }
     std::vector<std::vector<
         std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>>
-        endLocationid{};
-    endLocationid.reserve(endLocation.size());
+        endLocationId{};
+    endLocationId.reserve(endLocation.size());
     for (const auto& row : endLocation) {
       std::vector<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>>
@@ -517,14 +515,14 @@ private:
         rowTuples.emplace_back(std::get<0>(qubit), std::get<1>(qubit)->id,
                                std::get<2>(qubit), std::get<3>(qubit));
       }
-      endLocationid.emplace_back(std::move(rowTuples));
+      endLocationId.emplace_back(std::move(rowTuples));
     }
     nlohmann::json inst = {{"type", "rearrangeJob"},
                            {"id", instIdx},
                            {"aod_id", -1},
                            {"aod_qubits", aodQubits},
-                           {"begin_locs", beginLocationid},
-                           {"end_locs", endLocationid},
+                           {"begin_locs", beginLocationId},
+                           {"end_locs", endLocationId},
                            {"dependency", dependency}};
     inst["insts"] = expandArrangement(inst, beginLocation, endLocation);
     static_cast<T*>(this)->getResult().instructions.emplace_back(inst);
@@ -567,10 +565,8 @@ private:
     std::unordered_map<std::size_t, std::vector<std::size_t>> dictGateZone{};
     for (std::size_t i = 0; i < listGate.size(); ++i) {
       const auto* slmIdx = std::get<0>(gateMapping[listGate[i]->first]);
-      const auto zoneIdx = slmIdx->entanglementId->front()->id;
-      if (dictGateZone.find(zoneIdx) == dictGateZone.end()) {
-        dictGateZone.emplace(zoneIdx, std::vector<std::size_t>{});
-      }
+      const auto zoneIdx = *slmIdx->entanglementId;
+      dictGateZone.try_emplace(zoneIdx, std::vector<std::size_t>{});
       dictGateZone[zoneIdx].emplace_back(i);
     }
     for (const auto& [rydbergIdx, gateIdxs] : dictGateZone) {
@@ -583,7 +579,7 @@ private:
       std::unordered_set<std::size_t> setQubitdependency{};
       const std::size_t instIdx =
           static_cast<T*>(this)->getResult().instructions.size();
-      for (const auto gateIdx : dictGateZone[rydbergIdx]) {
+      for (const auto gateIdx : gateIdxs) {
         const auto gate = listGate[gateIdx];
         // collect qubit dependency
         setQubitdependency.emplace(qubitDependency[gate->first]);
@@ -653,13 +649,13 @@ private:
 
   /// construct reverse movement layer by processing the forward movement
   auto constructReverseLayer(
-      const std::size_t idLayerstart,
+      const std::size_t idLayerStart,
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& initialMapping,
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& finalMapping)
       -> void {
     const std::size_t idLayerend =
         static_cast<T*>(this)->getResult().instructions.size();
-    for (std::size_t layer = idLayerstart; layer < idLayerend; ++layer) {
+    for (std::size_t layer = idLayerStart; layer < idLayerend; ++layer) {
       if (static_cast<T*>(this)->getResult().instructions[layer]["type"] ==
           "rydberg") {
         break;
@@ -672,23 +668,23 @@ private:
         // process aod dependency
         std::unordered_set<std::size_t> setQubitdependency{};
         std::unordered_set<std::size_t> setSitedependency{};
-        nlohmann::json listAodqubits = static_cast<T*>(this)
+        nlohmann::json listAodQubits = static_cast<T*>(this)
                                            ->getResult()
                                            .instructions[layer]["aod_qubits"];
         std::vector<std::vector<
             std::tuple<std::size_t, const SLM*, std::size_t, std::size_t>>>
-            listendLocation{};
+            listEndLocation{};
         std::vector<std::vector<
             std::tuple<std::size_t, const SLM*, std::size_t, std::size_t>>>
-            listBeginlocation{};
-        for (const auto& subListqubits : listAodqubits) {
+            listBeginLocation{};
+        for (const auto& subListQubits : listAodQubits) {
           std::vector<
               std::tuple<std::size_t, const SLM*, std::size_t, std::size_t>>
               rowBeginLocation{};
           std::vector<
               std::tuple<std::size_t, const SLM*, std::size_t, std::size_t>>
               rowendLocation{};
-          for (const auto& q : subListqubits) {
+          for (const auto& q : subListQubits) {
             rowBeginLocation.emplace_back(q, std::get<0>(initialMapping[q]),
                                           std::get<1>(initialMapping[q]),
                                           std::get<2>(initialMapping[q]));
@@ -712,30 +708,30 @@ private:
             qubitDependency[q] = instIdx;
           }
 
-          listBeginlocation.emplace_back(rowBeginLocation);
-          listendLocation.emplace_back(rowendLocation);
+          listBeginLocation.emplace_back(rowBeginLocation);
+          listEndLocation.emplace_back(rowendLocation);
         }
         dependency["qubit"] = setQubitdependency;
         dependency["site"] = setSitedependency;
-        writeRearrangementInstruction(instIdx, listAodqubits, listBeginlocation,
-                                      listendLocation, dependency);
+        writeRearrangementInstruction(instIdx, listAodQubits, listBeginLocation,
+                                      listEndLocation, dependency);
       }
     }
   }
 
   /// processs the aod assignment between two Rydberg stages
-  auto aodAssignment(const std::size_t idLayerstart) -> void {
+  auto aodAssignment(const std::size_t idLayerStart) -> void {
     std::vector listInstructionDuration(
         2, std::vector<std::pair<double, std::size_t>>{});
     const std::size_t idLayerEnd =
         static_cast<T*>(this)->getResult().instructions.size();
     std::size_t durationIdx = 0;
-    std::vector<std::size_t> listGatelayeridx{};
-    for (std::size_t idx = idLayerstart; idx < idLayerEnd; ++idx) {
+    std::vector<std::size_t> listGateLayerIdx{};
+    for (std::size_t idx = idLayerStart; idx < idLayerEnd; ++idx) {
       if (static_cast<T*>(this)->getResult().instructions[idx]["type"] !=
           "rearrangeJob") {
         durationIdx = 1;
-        listGatelayeridx.emplace_back(idx);
+        listGateLayerIdx.emplace_back(idx);
         continue;
       }
       const double duration =
@@ -752,7 +748,7 @@ private:
     for (const std::size_t i : {0UL, 1UL}) {
       for (const auto& item : listInstructionDuration[i]) {
         const double duration = item.first;
-        nlohmann::json inst =
+        nlohmann::json& inst =
             static_cast<T*>(this)->getResult().instructions[item.second];
         auto [beginTime, aodId] = aodEndTime.top();
         aodEndTime.pop();
@@ -774,7 +770,7 @@ private:
         }
       }
       if (i == 0) {
-        for (const auto gateLayeridx : listGatelayeridx) {
+        for (const auto gateLayeridx : listGateLayerIdx) {
           // laser scheduling
           nlohmann::json& inst =
               static_cast<T*>(this)->getResult().instructions[gateLayeridx];
@@ -796,7 +792,7 @@ private:
     }
   }
 
-  auto getBeginTime(const std::size_t curInstIdx, nlohmann::json dependency)
+  auto getBeginTime(const std::size_t curInstIdx, const nlohmann::json& dependency)
       -> double {
     double beginTime = 0;
     for (const auto& dependencyType : dependency.items()) {
@@ -804,7 +800,8 @@ private:
         const auto instIdx = dependencyType.value().get<std::size_t>();
         if (beginTime < static_cast<T*>(this)
                             ->getResult()
-                            .instructions[instIdx]["end_time"]) {
+                            .instructions[instIdx]["end_time"]
+                            .template get<double>()) {
           beginTime = static_cast<T*>(this)
                           ->getResult()
                           .instructions[instIdx]["end_time"];
@@ -816,41 +813,42 @@ private:
                     ->getResult()
                     .instructions[instIdx]["type"] == "rearrangeJob") {
               // find the time that the instruction finish atom transfer
-              double atomTransferfinishtime = 0;
+              double atomTransferFinishTime = 0;
               for (const nlohmann::json& detailInst :
                    static_cast<T*>(this)->getResult().instructions[instIdx]
                                                                    ["insts"]) {
                 std::string instType = detailInst["type"];
                 instType = instType.substr(0, instType.find(":"));
                 if (instType == "activate") {
-                  atomTransferfinishtime =
+                  atomTransferFinishTime =
                       std::max(detailInst["end_time"].get<double>(),
-                               atomTransferfinishtime);
+                               atomTransferFinishTime);
                 }
               }
               // find the time until dropping of the qubits
-              double atomTransferbegintime = 0;
+              double atomTransferBeginTime = 0;
               for (const auto& detailInst :
                    static_cast<T*>(this)->getResult().instructions[curInstIdx]
                                                                    ["insts"]) {
                 std::string instType = detailInst["type"];
                 instType = instType.substr(0, instType.find(":"));
                 if (instType == "deactivate") {
-                  atomTransferbegintime =
+                  atomTransferBeginTime =
                       std::max(detailInst["begin_time"].template get<double>(),
-                               atomTransferbegintime);
+                               atomTransferBeginTime);
                   break;
                 }
               }
               const double tmpBegintime =
-                  atomTransferfinishtime - atomTransferbegintime;
+                  atomTransferFinishTime - atomTransferBeginTime;
               if (beginTime < tmpBegintime) {
                 beginTime = tmpBegintime;
               }
             } else {
               if (beginTime < static_cast<T*>(this)
                                   ->getResult()
-                                  .instructions[instIdx]["end_time"]) {
+                                  .instructions[instIdx]["end_time"]
+                                  .template get<double>()) {
                 beginTime = static_cast<T*>(this)
                                 ->getResult()
                                 .instructions[instIdx]["end_time"];
@@ -861,7 +859,7 @@ private:
           for (const std::size_t instIdx : dependencyType.value()) {
             if (beginTime < static_cast<T*>(this)
                                 ->getResult()
-                                .instructions[instIdx]["end_time"]) {
+                                .instructions[instIdx]["end_time"].template get<double>()) {
               beginTime = static_cast<T*>(this)
                               ->getResult()
                               .instructions[instIdx]["end_time"];
@@ -932,10 +930,9 @@ private:
       std::vector<nlohmann::json> coordsRow{};
       for (const auto& [q, slm, r, c] : locs) {
         const auto& [x, y] =
-            static_cast<T*>(this)->getArchitecture().exactSlmLocation(slm, c,
-                                                                         r);
+            static_cast<T*>(this)->getArchitecture().exactSlmLocation(slm, r, c);
         coordsRow.emplace_back(nlohmann::json{{"id", q}, {"x", x}, {"y", y}});
-        allColX.emplace_back(q);
+        allColX.emplace_back(x);
       }
       coords.emplace_back(std::move(coordsRow));
     }
@@ -952,7 +949,7 @@ private:
     // ---------------------------------------------------------------------
 
     // -------------------- activation and parking -------------------------
-    std::vector<std::size_t> allColIdxSoFar{}; // which col has been activated
+    std::unordered_set<std::size_t> allColIdxSoFar{}; // which col has been activated
     for (std::size_t rowId = 0; rowId < beginLocation.size(); ++rowId) {
       // for each row
       const auto& locs = beginLocation[rowId];
@@ -970,7 +967,7 @@ private:
       nlohmann::json shiftBack = {
           {"type", "move"},
           {"move_type", "before"},
-          {"rowId", std::vector<std::size_t>{}},
+          {"row_id", std::vector<std::size_t>{}},
           {"row_y_begin", std::vector<std::size_t>{}},
           {"row_y_end", std::vector<std::size_t>{}},
           {"row_loc_begin", std::vector<std::size_t>{}},
@@ -981,13 +978,13 @@ private:
           {"col_loc_begin",
            std::vector<std::pair<std::int64_t, std::int64_t>>{}},
           {"col_loc_end", std::vector<std::pair<std::int64_t, std::int64_t>>{}},
-          {"beginColsoord", coords},
+          {"begin_coord", coords},
           {"end_coord", std::vector<std::size_t>{}}};
 
       // activate one row and some columns
       nlohmann::json activate = {
           {"type", "activate"},
-          {"rowId", std::vector{rowId}},
+          {"row_id", std::vector{rowId}},
           {"row_y", std::vector{row_y}},
           {"row_loc", std::vector{rowLoc}},
           {"col_id", std::vector<std::size_t>{}},
@@ -997,30 +994,29 @@ private:
 
       for (std::size_t j = 0; j < locs.size(); ++j) {
         const auto& [q, slm, r, c] = locs[j];
-        const std::size_t col_x = static_cast<T*>(this)
+        const std::size_t colX = static_cast<T*>(this)
                                       ->getArchitecture()
                                       .exactSlmLocation(slm, r, c)
                                       .first;
         const std::pair colLoc{slm->id, c};
-        const auto colId = colXToId[col_x];
-        if (std::find(allColIdxSoFar.cbegin(), allColIdxSoFar.cend(), colId) ==
-            allColIdxSoFar.end()) {
+        const auto colId = colXToId[colX];
+        if (allColIdxSoFar.find(colId) == allColIdxSoFar.end()) {
           // the col hasn't been activated, so there's no shift back
           // and we need to activate it at `col_x`.`
-          allColIdxSoFar.emplace_back(colId);
+          allColIdxSoFar.emplace(colId);
           activate["col_id"].emplace_back(colId);
-          activate["col_x"].emplace_back(col_x);
+          activate["col_x"].emplace_back(colX);
           activate["col_loc"].emplace_back(colLoc);
         } else {
           // the col has been activated, thus parked previously and we
           // need the shift back, but we do not activate again.
           shiftBack["col_id"].emplace_back(colId);
-          shiftBack["col_x_begin"].emplace_back(col_x + parkingDist);
-          shiftBack["col_x_end"].emplace_back(col_x);
+          shiftBack["col_x_begin"].emplace_back(colX + parkingDist);
+          shiftBack["col_x_end"].emplace_back(colX);
           shiftBack["col_loc_begin"].emplace_back(std::pair{-1, -1});
           shiftBack["col_loc_end"].emplace_back(colLoc);
           // since there's a shift, update the coords of the qubit
-          coords[rowId][j]["x"] = col_x;
+          coords[rowId][j]["x"] = colX;
         }
       }
 
@@ -1040,7 +1036,7 @@ private:
         nlohmann::json parking = {
             {"type", "move"},
             {"move_type", "after"},
-            {"rowId", std::vector{rowId}},
+            {"row_id", std::vector{rowId}},
             {"row_y_begin", std::vector{row_y}},
             {"row_y_end", std::vector{row_y + parkingDist}},
             {"row_loc_begin", std::vector{rowLoc}},
@@ -1050,7 +1046,7 @@ private:
             {"col_x_end", std::vector<std::size_t>{}},
             {"col_loc_begin", std::vector<std::size_t>{}},
             {"col_loc_end", std::vector<std::size_t>{}},
-            {"beginColsoord", coords},
+            {"begin_coord", coords},
             {"end_coord", std::vector<std::size_t>{}}};
         for (std::size_t j = 0; j < locs.size(); ++j) {
           const auto& [q, slm, r, c] = locs[j];
@@ -1080,7 +1076,7 @@ private:
     nlohmann::json bigMove = {
         {"type", "move:big"},
         {"move_type", "big"},
-        {"rowId", std::vector<std::size_t>{}},
+        {"row_id", std::vector<std::size_t>{}},
         {"row_y_begin", std::vector<std::size_t>{}},
         {"row_y_end", std::vector<std::size_t>{}},
         {"row_loc_begin", std::vector<std::size_t>{}},
@@ -1090,14 +1086,14 @@ private:
         {"col_x_end", std::vector<std::size_t>{}},
         {"col_loc_begin", std::vector<std::size_t>{}},
         {"col_loc_end", std::vector<std::size_t>{}},
-        {"beginColsoord", coords},
+        {"begin_coord", coords},
         {"end_coord", std::vector<std::size_t>{}},
     };
 
     for (std::size_t rowId = 0; rowId < beginLocation.size(); ++rowId) {
       const auto& beginLocs = beginLocation[rowId];
       const auto& endLocs = endLocation[rowId];
-      bigMove["rowId"].emplace_back(rowId);
+      bigMove["row_id"].emplace_back(rowId);
       bigMove["row_y_begin"].emplace_back(coords[rowId][0]["y"]);
       if (initCoords[rowId][0]["y"] == coords[rowId][0]["y"]) {
         // AOD row is align with SLM row
@@ -1172,10 +1168,10 @@ private:
     // --------------------------- deactivation ----------------------------
     details.emplace_back(
         nlohmann::json{{"type", "deactivate"},
-                       {"rowId", std::vector<std::size_t>{}},
+                       {"row_id", std::vector<std::size_t>{}},
                        {"col_id", std::vector<std::size_t>{}}});
     for (std::size_t i = 0; i < beginLocation.size(); ++i) {
-      details.back()["rowId"].emplace_back(i);
+      details.back()["row_id"].emplace_back(i);
     }
     for (std::size_t i = 0; i < allColX.size(); ++i) {
       details.back()["col_id"].emplace_back(i);

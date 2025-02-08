@@ -49,7 +49,7 @@ protected:
 private:
   auto placeTrivial() -> void {
     std::vector<std::unique_ptr<SLM>>::const_iterator slmIt =
-        static_cast<T*>(this)->getArchitecture().storageZone.cbegin();
+        static_cast<T*>(this)->getArchitecture().storageZones.cbegin();
     const SLM* slm = slmIt->get();
     // decide whether to begin with row 0 or row n
     const double dis1 = static_cast<T*>(this)
@@ -168,11 +168,11 @@ private:
         if (lastGateMapping[q] != gateMapping[q]) {
           const auto* slm1 = std::get<0>(lastGateMapping[q]);
           if (slm1->isEntanglement()) {
-            slm1 = slm1->entanglementId->front().get();
+            slm1 = slm1->entanglementZone->front().get();
           }
           const auto* slm2 = std::get<0>(qubitMapping[q]);
           if (slm2->isEntanglement()) {
-            slm2 = slm2->entanglementId->front().get();
+            slm2 = slm2->entanglementZone->front().get();
           }
           const std::tuple key{slm1, std::get<1>(lastGateMapping[q]), slm2,
                                std::get<1>(qubitMapping[q])};
@@ -190,11 +190,11 @@ private:
         if (qubitMapping[q] != gateMapping[q]) {
           const auto* slm1 = std::get<0>(gateMapping[q]);
           if (slm1->isEntanglement()) {
-            slm1 = slm1->entanglementId->front().get();
+            slm1 = slm1->entanglementZone->front().get();
           }
           const auto* slm2 = std::get<0>(qubitMapping[q]);
           if (slm2->isEntanglement()) {
-            slm2 = slm2->entanglementId->front().get();
+            slm2 = slm2->entanglementZone->front().get();
           }
           const std::tuple key{slm2, std::get<1>(qubitMapping[q]), slm1,
                                std::get<1>(gateMapping[q])};
@@ -226,11 +226,11 @@ private:
         if (lastGateMapping[q] != gateMapping[q]) {
           const auto* slm1 = std::get<0>(lastGateMapping[q]);
           if (slm1->isEntanglement()) {
-            slm1 = slm1->entanglementId->front().get();
+            slm1 = slm1->entanglementZone->front().get();
           }
           const auto* slm2 = std::get<0>(qubitMapping[q]);
           if (slm2->isEntanglement()) {
-            slm2 = slm2->entanglementId->front().get();
+            slm2 = slm2->entanglementZone->front().get();
           }
           const std::tuple key{slm1, std::get<1>(lastGateMapping[q]), slm2,
                                std::get<1>(qubitMapping[q])};
@@ -249,11 +249,11 @@ private:
         if (qubitMapping[q] != gateMapping[q]) {
           const auto* slm1 = std::get<0>(gateMapping[q]);
           if (slm1->isEntanglement()) {
-            slm1 = slm1->entanglementId->front().get();
+            slm1 = slm1->entanglementZone->front().get();
           }
           const auto* slm2 = std::get<0>(qubitMapping[q]);
           if (slm2->isEntanglement()) {
-            slm2 = slm2->entanglementId->front().get();
+            slm2 = slm2->entanglementZone->front().get();
           }
           const std::tuple key{slm2, std::get<1>(qubitMapping[q]), slm1,
                                std::get<1>(gateMapping[q])};
@@ -432,10 +432,10 @@ private:
         const auto& site = listRydberg[matching[idxGate]];
         if (std::get<2>(qubitMapping[q0]) < std::get<2>(qubitMapping[q1])) {
           tmpMapping[q0] = site;
-          tmpMapping[q1] = {std::get<0>(site)->entanglementId->back().get(),
+          tmpMapping[q1] = {std::get<0>(site)->entanglementZone->back().get(),
                             std::get<1>(site), std::get<2>(site)};
         } else {
-          tmpMapping[q0] = {std::get<0>(site)->entanglementId->back().get(),
+          tmpMapping[q0] = {std::get<0>(site)->entanglementZone->back().get(),
                             std::get<1>(site), std::get<2>(site)};
           tmpMapping[q1] = site;
         }
@@ -489,14 +489,14 @@ private:
                           listReuseQubits[layer - 1].end())) {
           const auto location = gateMapping[q1];
           const auto slmIdx =
-              std::get<0>(location)->entanglementId->front().get();
+              std::get<0>(location)->entanglementZone->front().get();
           setNearbySite.emplace(slmIdx, std::get<1>(location),
                                 std::get<2>(location));
         } else if (testReuse && (listReuseQubits[layer - 1].find(q2) !=
                                  listReuseQubits[layer - 1].end())) {
           const auto location = gateMapping[q2];
           const auto slmIdx =
-              std::get<0>(location)->entanglementId->front().get();
+              std::get<0>(location)->entanglementZone->front().get();
           setNearbySite.emplace(slmIdx, std::get<1>(location),
                                 std::get<2>(location));
         } else {
@@ -609,7 +609,7 @@ private:
                           listReuseQubits[layer - 1].end())) {
           tmpMapping[q0] = gateMapping[q0];
           if (site == gateMapping[q0]) {
-            tmpMapping[q1] = {std::get<0>(site)->entanglementId->back().get(),
+            tmpMapping[q1] = {std::get<0>(site)->entanglementZone->back().get(),
                               std::get<1>(site), std::get<2>(site)};
           } else {
             tmpMapping[q1] = site;
@@ -618,7 +618,7 @@ private:
                                  listReuseQubits[layer - 1].end())) {
           tmpMapping[q1] = gateMapping[q1];
           if (site == gateMapping[q1]) {
-            tmpMapping[q0] = {std::get<0>(site)->entanglementId->back().get(),
+            tmpMapping[q0] = {std::get<0>(site)->entanglementZone->back().get(),
                               std::get<1>(site), std::get<2>(site)};
           } else {
             tmpMapping[q0] = site;
@@ -626,10 +626,10 @@ private:
         } else {
           if (std::get<2>(qubitMapping[q0]) < std::get<2>(qubitMapping[q1])) {
             tmpMapping[q0] = site;
-            tmpMapping[q1] = {std::get<0>(site)->entanglementId->back().get(),
+            tmpMapping[q1] = {std::get<0>(site)->entanglementZone->back().get(),
                               std::get<1>(site), std::get<2>(site)};
           } else {
-            tmpMapping[q0] = {std::get<0>(site)->entanglementId->back().get(),
+            tmpMapping[q0] = {std::get<0>(site)->entanglementZone->back().get(),
                               std::get<1>(site), std::get<2>(site)};
             tmpMapping[q1] = site;
           }
@@ -660,7 +660,7 @@ private:
       std::unordered_map<const SLM*, std::vector<std::vector<bool>>>
           isEmptyStorageSite{};
       // for each SLM array, initialize the site as empty
-      for (const std::unique_ptr<SLM>& slmId : architecture.storageZone) {
+      for (const std::unique_ptr<SLM>& slmId : architecture.storageZones) {
         isEmptyStorageSite.emplace(
             slmId.get(),
             std::vector(slmId->nRows, std::vector(slmId->nCols, true)));
@@ -894,7 +894,7 @@ private:
           double lookaheadCost = 0;
           for (const auto& neighborQ : dictQubitInteraction[q]) {
             const auto& siteNeighborQ = lastGateMapping[neighborQ];
-            if (!std::get<0>(siteNeighborQ)->entanglementId) {
+            if (!std::get<0>(siteNeighborQ)->entanglementZone) {
               lookaheadCost += architecture.nearestEntanglementSiteDistance(
                   std::get<0>(site), std::get<1>(site), std::get<2>(site),
                   std::get<0>(siteNeighborQ), std::get<1>(siteNeighborQ),
