@@ -2,6 +2,7 @@
 #include "ir/operations/OpType.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -12,12 +13,13 @@
 #include <yaml-cpp/node/parse.h>
 
 TEST(Solver, SteaneDoubleSidedStorage) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -27,12 +29,12 @@ TEST(Solver, SteaneDoubleSidedStorage) {
 }
 
 TEST(Solver, ShorDoubleSidedStorage) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/shor.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/shor.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -42,12 +44,12 @@ TEST(Solver, ShorDoubleSidedStorage) {
 
 TEST(Solver, Surface3DoubleSidedStorage) {
   const auto& circ =
-      qc::QuantumComputation(TEST_CIRCUITS_PATH "/surface_3.qasm");
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/surface_3.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -57,12 +59,12 @@ TEST(Solver, Surface3DoubleSidedStorage) {
 }
 
 TEST(Solver, SteaneBottomStorage) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto resultUnsat =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -95,12 +97,12 @@ TEST(Solver, SteaneBottomStorage) {
 }
 
 TEST(Solver, NoShieldingFixedOrder) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -109,12 +111,12 @@ TEST(Solver, NoShieldingFixedOrder) {
 }
 
 TEST(Solver, FixedTransfer) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result = solver.solve(
       pairs, static_cast<uint16_t>(circ.getNqubits()), 5, 2, false, true);
@@ -122,12 +124,12 @@ TEST(Solver, FixedTransfer) {
 }
 
 TEST(Solver, Unsat) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -155,12 +157,12 @@ TEST(Solver, Exceptions) {
 }
 
 TEST(Solver, YAMLRoundTrip) {
-  const auto& circ = qc::QuantumComputation(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
   const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, {qc::Z, 1}, true);
+      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,

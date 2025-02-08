@@ -4,7 +4,6 @@
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/Architecture.hpp"
-#include "na/NADefinitions.hpp"
 
 #include <utility>
 #include <vector>
@@ -46,11 +45,12 @@ public:
    *
    * @param circ
    * @param opType
+   * @param ctrls
    * @param quiet
    * @return
    */
   [[nodiscard]] static auto getOpsForSolver(const qc::QuantumComputation& circ,
-                                            FullOpType opType,
+                                            qc::OpType opType, std::size_t ctrls,
                                             bool quiet = false)
       -> std::vector<std::pair<qc::Qubit, qc::Qubit>>;
 };
