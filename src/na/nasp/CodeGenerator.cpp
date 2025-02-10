@@ -105,7 +105,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
       if (q.a) {
         loadAtoms.emplace_back(atom);
       }
-      code.emplaceBackInitialLocation(atom, pos);
+      code.emplaceInitialLocation(atom, pos);
     }
     if (!loadAtoms.empty()) {
       code.emplaceBack<LoadOp>(loadAtoms);
