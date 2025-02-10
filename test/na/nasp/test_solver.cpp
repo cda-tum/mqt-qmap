@@ -59,7 +59,8 @@ TEST(Solver, Surface3DoubleSidedStorage) {
 }
 
 TEST(Solver, SteaneBottomStorage) {
-  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 4);
   // get operations for solver
@@ -97,7 +98,8 @@ TEST(Solver, SteaneBottomStorage) {
 }
 
 TEST(Solver, NoShieldingFixedOrder) {
-  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
   // get operations for solver
@@ -111,7 +113,8 @@ TEST(Solver, NoShieldingFixedOrder) {
 }
 
 TEST(Solver, FixedTransfer) {
-  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
@@ -124,7 +127,8 @@ TEST(Solver, FixedTransfer) {
 }
 
 TEST(Solver, Unsat) {
-  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
@@ -157,7 +161,8 @@ TEST(Solver, Exceptions) {
 }
 
 TEST(Solver, YAMLRoundTrip) {
-  const auto& circ = qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
+  const auto& circ =
+      qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
