@@ -96,9 +96,9 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     std::vector<const Atom*> loadAtoms;
     std::size_t c = 0;
     for (const auto& q : result.stages.front().qubits) {
-      auto pos = coordFromDiscrete(
-          q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
-          minAtomDist, noInteractionRadius, zoneDist);
+      auto pos = coordFromDiscrete(q, maxHOffset, maxVOffset, minEntanglingY,
+                                   maxEntanglingY, minAtomDist,
+                                   noInteractionRadius, zoneDist);
       wasAOD.emplace_back(q.a);
       const auto& atom = atoms.emplace_back(
           code.emplaceBackAtom("atom" + std::to_string(c++)));

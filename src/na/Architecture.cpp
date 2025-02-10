@@ -95,7 +95,7 @@ auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
     for (auto const& op : data["operations"]) {
       const std::string opName = op["name"];
       const std::pair ty = {qc::opTypeFromString(opName),
-                             opName.find_first_not_of('c')};
+                            opName.find_first_not_of('c')};
       const Scope sc = getScopeOfString(op["type"]);
       std::unordered_set<ZoneId> zo = {};
       for (auto const& zs : op["zones"]) {
@@ -141,12 +141,13 @@ auto Architecture::getZoneAt(const Location& p) const -> ZoneId {
   return static_cast<ZoneId>(std::distance(zones.cbegin(), it));
 }
 
-auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls) const -> bool {
+auto Architecture::isAllowedLocally(const qc::OpType t,
+                                    const std::size_t ctrls) const -> bool {
   const auto it = gateSet.find({t, ctrls});
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls, const ZoneId& zone) const
-    -> bool {
+auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls,
+                                    const ZoneId& zone) const -> bool {
   if (!isAllowedLocally(t, ctrls)) {
     return false; // gate not supported at all
   }
@@ -159,8 +160,9 @@ auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls,
   return gateZones.find(zone) != gateZones.end();
 }
 
-auto Architecture::isAllowedLocallyAt(const qc::OpType t, const std::size_t ctrls, const Location& p) const
-    -> bool {
+auto Architecture::isAllowedLocallyAt(const qc::OpType t,
+                                      const std::size_t ctrls,
+                                      const Location& p) const -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -171,16 +173,18 @@ auto Architecture::isAllowedLocallyAt(const qc::OpType t, const std::size_t ctrl
     ss << "The point " << p << " is not in any zone.";
     throw std::invalid_argument(ss.str());
   }
-  return isAllowedLocally(t, ctrls,
-                          static_cast<ZoneId>(std::distance(zones.cbegin(), it)));
+  return isAllowedLocally(
+      t, ctrls, static_cast<ZoneId>(std::distance(zones.cbegin(), it)));
 }
 
-auto Architecture::isAllowedGlobally(const qc::OpType t, const std::size_t ctrls) const -> bool {
+auto Architecture::isAllowedGlobally(const qc::OpType t,
+                                     const std::size_t ctrls) const -> bool {
   const auto it = gateSet.find({t, ctrls});
   return it != gateSet.end() && it->second.scope == Scope::Global;
 }
 
-auto Architecture::isAllowedGlobally(const qc::OpType t, const std::size_t ctrls,
+auto Architecture::isAllowedGlobally(const qc::OpType t,
+                                     const std::size_t ctrls,
                                      const ZoneId& zone) const -> bool {
   if (!isAllowedGlobally(t, ctrls)) {
     return false; // gate not supported at all
@@ -279,7 +283,8 @@ auto Architecture::getNearestXRight(const Number& x, const ZoneId& z,
   }
   return result;
 }
-auto Architecture::hasSiteLeft(const Location& p, bool proper, bool sameZone) const
+auto Architecture::hasSiteLeft(const Location& p, bool proper,
+                               bool sameZone) const
     -> std::pair<std::vector<Location>::const_reverse_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
@@ -300,7 +305,8 @@ auto Architecture::hasSiteRight(const Location& p, bool proper,
       });
   return {it, it != sites.cend()};
 }
-auto Architecture::hasSiteUp(const Location& p, bool proper, bool sameZone) const
+auto Architecture::hasSiteUp(const Location& p, bool proper,
+                             bool sameZone) const
     -> std::pair<std::vector<Location>::const_reverse_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =
@@ -310,7 +316,8 @@ auto Architecture::hasSiteUp(const Location& p, bool proper, bool sameZone) cons
       });
   return {it, it != sites.crend()};
 }
-auto Architecture::hasSiteDown(const Location& p, bool proper, bool sameZone) const
+auto Architecture::hasSiteDown(const Location& p, bool proper,
+                               bool sameZone) const
     -> std::pair<std::vector<Location>::const_iterator, bool> {
   const auto& zone = getZoneAt(p);
   const auto& it =

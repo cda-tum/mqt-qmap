@@ -85,15 +85,15 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
 }
 
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
-                                    const qc::OpType opType, const std::size_t ctrls, const bool quiet)
+                                    const qc::OpType opType,
+                                    const std::size_t ctrls, const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
   auto flattened = circ;
   qc::CircuitOptimizer::flattenOperations(flattened);
   std::vector<std::pair<unsigned int, unsigned int>> ops;
   ops.reserve(flattened.size());
   for (const auto& op : flattened) {
-    if (op->getType() == opType &&
-        op->getNcontrols() == ctrls) {
+    if (op->getType() == opType && op->getNcontrols() == ctrls) {
       const auto& operands = op->getUsedQubits();
       if (operands.size() != 2) {
         std::stringstream ss;
