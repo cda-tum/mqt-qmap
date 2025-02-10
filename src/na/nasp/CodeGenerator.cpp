@@ -149,7 +149,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
   }
   for (uint16_t t = 1; t < static_cast<uint16_t>(result.stages.size()); ++t) {
     std::vector<const Atom*> moveAtoms;
-    std::vector<Location> endPositions;
+    std::vector<Location> targetLocations;
     std::vector<const Atom*> loadAtoms;
     std::vector<const Atom*> storeAtoms;
     for (uint16_t i = 0;
@@ -160,13 +160,13 @@ auto CodeGenerator::generate(const QuantumComputation& input,
                                    noInteractionRadius, zoneDist);
       if (wasAOD[i] && q.a) {
         moveAtoms.emplace_back(atoms[i]);
-        endPositions.emplace_back(pos);
+        targetLocations.emplace_back(pos);
       } else if (wasAOD[i] && !q.a) {
         storeAtoms.emplace_back(atoms[i]);
       } else if (!wasAOD[i] && q.a) {
         loadAtoms.emplace_back(atoms[i]);
         moveAtoms.emplace_back(atoms[i]);
-        endPositions.emplace_back(pos);
+        targetLocations.emplace_back(pos);
       }
       wasAOD[i] = q.a;
     }
@@ -177,7 +177,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
       code.emplaceBack<LoadOp>(loadAtoms);
     }
     if (!moveAtoms.empty()) {
-      code.emplaceBack<MoveOp>(moveAtoms, endPositions);
+      code.emplaceBack<MoveOp>(moveAtoms, targetLocations);
     }
     if (result.stages.at(t).rydberg) {
       code.emplaceBack<GlobalCZOp>(interactionZone);

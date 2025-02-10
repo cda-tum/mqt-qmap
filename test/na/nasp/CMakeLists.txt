@@ -4,4 +4,5 @@ if(TARGET MQT::NASP)
   target_link_libraries(mqt-qmap-nasp-test PRIVATE MQT::CoreQASM)
   target_compile_definitions(mqt-qmap-nasp-test
                              PRIVATE TEST_CIRCUITS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/circuits")
+  target_link_libraries(mqt-qmap-nasp-test PRIVATE MQT::CoreQASM)
 endif()
