@@ -190,7 +190,7 @@ public:
       -> const ZoneProperties& {
     return zones[zone];
   }
-  [[nodiscard]] auto getPropertiesOfOperation(const qc::OpType t, std::size_t ctrls) const
+  [[nodiscard]] auto getPropertiesOfOperation(const qc::OpType t, const std::size_t ctrls) const
       -> const OperationProperties& {
     if (const auto& it = gateSet.find({t, ctrls}); it != gateSet.end()) {
       return it->second;
@@ -235,41 +235,41 @@ public:
   [[nodiscard]] auto getNearestXRight(const Number& x, const ZoneId& z,
                                       bool proper = true) const -> Number;
   [[nodiscard]] auto hasSiteLeft(const Location& p, bool proper = false,
-                                 bool sameZone = false) const
+                                 bool sameZoneId = false) const
       -> std::pair<std::vector<Location>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteRight(const Location& p, bool proper = false,
-                                  bool sameZone = false) const
+                                  bool sameZoneId = false) const
       -> std::pair<std::vector<Location>::const_iterator, bool>;
   [[nodiscard]] auto hasSiteUp(const Location& p, bool proper = false,
-                               bool sameZone = false) const
+                               bool sameZoneId = false) const
       -> std::pair<std::vector<Location>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteDown(const Location& p, bool proper = false,
-                                 bool sameZone = false) const
+                                 bool sameZoneId = false) const
       -> std::pair<std::vector<Location>::const_iterator, bool>;
   [[nodiscard]] auto getNearestSiteLeft(const Location& p, bool proper = false,
-                                        bool sameZone = false) const
+                                        bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteRight(const Location& p, bool proper = false,
-                                         bool sameZone = false) const
+                                         bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUp(const Location& p, bool proper = false,
-                                      bool sameZone = false) const
+                                      bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDown(const Location& p, bool proper = false,
-                                        bool sameZone = false) const
+                                        bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUpRight(const Location& p, bool proper = false,
-                                           bool sameZone = false) const
+                                           bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUpLeft(const Location& p, bool proper = false,
-                                          bool sameZone = false) const
+                                          bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDownLeft(const Location& p, bool proper = false,
-                                            bool sameZone = false) const
+                                            bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDownRight(const Location& p,
                                              bool proper = false,
-                                             bool sameZone = false) const
+                                             bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getSiteAt(const Location& p) const -> std::optional<Index>;
   [[nodiscard]] auto getSitesInZone(const ZoneId& z) const -> std::vector<Index>;
