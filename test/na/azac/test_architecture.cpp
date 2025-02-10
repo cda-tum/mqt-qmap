@@ -24,26 +24,26 @@ protected:
     "zone_id": 0,
     "slms": [{
       "id": 0,
-      "site_seperation": [3, 3],
+      "site_separation": [3, 3],
       "r": 100,
       "c": 100,
       "location": [0, 0]}],
     "offset": [0, 0],
-    "dimenstion": [300, 300]
+    "dimension": [300, 300]
   }],
   "entanglement_zones": [{
     "zone_id": 0,
     "slms": [
       {
         "id": 1,
-        "site_seperation": [12, 10],
+        "site_separation": [12, 10],
         "r": 7,
         "c": 20,
         "location": [35, 307]
       },
       {
         "id": 2,
-        "site_seperation": [12, 10],
+        "site_separation": [12, 10],
         "r": 7,
         "c": 20,
         "location": [37, 307]
@@ -51,7 +51,7 @@ protected:
     "offset": [35, 307],
     "dimension": [240, 70]
   }],
-  "aods":[{"id": 0, "site_seperation": 2, "r": 100, "c": 100}],
+  "aods":[{"id": 0, "site_separation": 2, "r": 100, "c": 100}],
   "arch_range": [[0, 0], [297, 402]],
   "rydberg_range": [[[5, 305], [292, 402]]]
 })");
@@ -95,8 +95,8 @@ TEST_F(TestArchitecture, NearestSite) {
     for (const auto& slm : arch.storageZones) {
       for (std::size_t r = 0; r < slm->nRows; ++r) {
         for (std::size_t c = 0; c < slm->nCols; ++c) {
-          const auto distance = arch.distance(
-              {&entanglementSLM, 0, 0}, {slm.get(), r, c});
+          const auto distance =
+              arch.distance({&entanglementSLM, 0, 0}, {slm.get(), r, c});
           EXPECT_GE(distance, minDistance);
         }
       }
@@ -111,8 +111,8 @@ TEST_F(TestArchitecture, NearestSite) {
       for (const auto& slm : slms) {
         for (std::size_t r = 0; r < slm->nRows; ++r) {
           for (std::size_t c = 0; c < slm->nCols; ++c) {
-            const auto distance = arch.distance(
-                {&storageSlm, 0, 0}, {slm.get(), r, c});
+            const auto distance =
+                arch.distance({&storageSlm, 0, 0}, {slm.get(), r, c});
             EXPECT_GE(distance, minDistance);
           }
         }

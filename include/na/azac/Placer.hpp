@@ -125,7 +125,8 @@ private:
         if (dynamicPlacement) {
           placeQubit(listGate, layer, false);
         } else {
-          mapping.emplace_back(mapping[0]);
+          mapping.emplace_back(
+              mapping[0]); // keep the initial mapping for static placement
         }
         if (layer + 1 < listGate.size()) {
           placeGate(mapping[mapping.size() - 2], mapping.back(), listGate,
@@ -135,7 +136,8 @@ private:
           if (dynamicPlacement) {
             placeQubit(listGate, layer, true);
           } else {
-            mapping.emplace_back(mapping[0]);
+            mapping.emplace_back(
+                mapping[0]); // keep the initial mapping for static placement
             for (const auto q : reuseQubits[layer]) {
               // todo: check if this is correct
               mapping.back()[q] = mapping[mapping.size() - 4][q];
@@ -144,6 +146,7 @@ private:
           if (layer + 1 < listGate.size()) {
             placeGate(mapping[mapping.size() - 4], mapping.back(), listGate,
                       layer + 1, true);
+            // keep the mapping with shorter distance
             filterMapping(layer);
           }
         }
@@ -570,11 +573,15 @@ private:
           }
           listColCoo.emplace_back(idxRydberg);
           listRowCoo.emplace_back(i);
+          // if row and slm of both qubits coinicde, then the distance is the
+          // maximum of the two distances
           if (std::get<1>(qubitMapping[q1]) == std::get<1>(qubitMapping[q2]) &&
               std::get<0>(qubitMapping[q1]) == std::get<0>(qubitMapping[q2])) {
             listData.emplace_back(std::sqrt(std::max(dis1, dis2)) +
                                   std::sqrt(dis3));
-          } else {
+          }
+          // otherwise, the distance is the sum
+          else {
             listData.emplace_back(std::sqrt(dis1) + std::sqrt(dis2) +
                                   std::sqrt(dis3));
           }
@@ -801,14 +808,14 @@ private:
             upperRow = std::get<1>(neighborQLocation);
             leftCol = std::get<2>(neighborQLocation);
             rightCol = std::get<2>(neighborQLocation);
-            const std::pair<std::size_t, std::size_t>& exactLocNeightborQ =
+            const std::pair<std::size_t, std::size_t>& exactLocNeighborQ =
                 std::apply(
                     [&](auto&&... args) {
                       return architecture.exactSlmLocation(
                           std::forward<decltype(args)>(args)...);
                     },
                     neighborQLocation);
-            if (exactLocGate.second < exactLocNeightborQ.second) {
+            if (exactLocGate.second < exactLocNeighborQ.second) {
               lowerRow = 0;
             } else {
               upperRow = slmId->nRows;
@@ -900,7 +907,7 @@ private:
                   std::get<0>(siteNeighborQ), std::get<1>(siteNeighborQ),
                   std::get<2>(siteNeighborQ));
             } else {
-              const std::pair<std::size_t, std::size_t>& exactLocNeightborQ =
+              const std::pair<std::size_t, std::size_t>& exactLocNeighborQ =
                   std::apply(
                       [&](auto&&... args) {
                         return architecture.exactSlmLocation(
@@ -908,10 +915,10 @@ private:
                       },
                       lastGateMapping[neighborQ]);
               const auto dx =
-                  static_cast<std::int64_t>(exactLocNeightborQ.first) -
+                  static_cast<std::int64_t>(exactLocNeighborQ.first) -
                   static_cast<std::int64_t>(exactLocQ.first);
               const auto dy =
-                  static_cast<std::int64_t>(exactLocNeightborQ.second) -
+                  static_cast<std::int64_t>(exactLocNeighborQ.second) -
                   static_cast<std::int64_t>(exactLocQ.second);
               lookaheadCost += std::sqrt(std::sqrt((dx * dx) + (dy * dy)));
             }
