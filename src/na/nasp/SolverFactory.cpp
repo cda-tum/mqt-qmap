@@ -85,8 +85,7 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
 }
 
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
-                                    const qc::OpType opType,
-                                    const std::size_t ctrls, const bool quiet)
+                                    const qc::OpType opType, const std::size_t ctrls, const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
   auto flattened = circ;
   qc::CircuitOptimizer::flattenOperations(flattened);

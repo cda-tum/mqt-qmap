@@ -141,13 +141,11 @@ auto Architecture::getZoneAt(const Location& p) const -> ZoneId {
   return static_cast<ZoneId>(std::distance(zones.cbegin(), it));
 }
 
-auto Architecture::isAllowedLocally(const qc::OpType t,
-                                    const std::size_t ctrls) const -> bool {
+auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls) const -> bool {
   const auto it = gateSet.find({t, ctrls});
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls,
-                                    const ZoneId& zone) const -> bool {
+auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls, const ZoneId& zone) const -> bool {
   if (!isAllowedLocally(t, ctrls)) {
     return false; // gate not supported at all
   }
