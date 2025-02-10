@@ -37,8 +37,22 @@ using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
  * AODs.
  */
 class MoveToAodConverter {
-  using AncillaAtoms =
-      std::map<CoordIndex, std::pair<std::uint32_t, std::uint32_t>>;
+  struct AncillaAtom {
+    struct xAndY {
+      int x;
+      int y;
+      xAndY(std::uint32_t x, std::uint32_t y) : x(x), y(y) {}
+    };
+
+    xAndY coord;
+    xAndY coordDodged;
+    xAndY offset;
+    xAndY offsetDodged;
+    AncillaAtom() = delete;
+    AncillaAtom(xAndY c, xAndY o)
+        : coord(c), coordDodged(c), offset(o), offsetDodged(o) {}
+  };
+  using AncillaAtoms = std::vector<AncillaAtom>;
 
 protected:
   /**
@@ -114,14 +128,15 @@ protected:
     std::vector<AodActivation> allActivations;
     // Differentiate between loading and unloading
     qc::OpType type;
+    AncillaAtoms* ancillas;
 
     // Constructor
     AodActivationHelper() = delete;
     AodActivationHelper(const AodActivationHelper&) = delete;
     AodActivationHelper(AodActivationHelper&&) = delete;
     AodActivationHelper(const NeutralAtomArchitecture& architecture,
-                        qc::OpType opType)
-        : arch(&architecture), type(opType) {}
+                        qc::OpType opType, AncillaAtoms* ancillas)
+        : arch(&architecture), type(opType), ancillas(ancillas) {}
 
     // Methods
 
@@ -212,12 +227,14 @@ protected:
      * @brief Converts all activations into AOD operations
      * @return All activations of the AOD activation helper as AOD operations
      */
-    [[nodiscard]] std::vector<AodOperation>
-    getAodOperations(const AncillaAtoms& ancillas) const;
+    [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
 
     [[nodiscard]] AodOperation
-    getDodgingOperation(const AodActivation& aodActivation,
-                        AncillaAtoms ancillas) const;
+    getDodgingOperation(const AodActivation& aodActivation) const;
+    [[nodiscard]] std::vector<AodOperation> getDodgingOperations() const;
+
+    [[nodiscard]] static std::vector<AodOperation>
+    reverseActivations(const std::vector<AodOperation>& ops);
   };
 
   [[nodiscard]] static std::pair<ActivationMergeType, ActivationMergeType>
@@ -291,7 +308,7 @@ protected:
   qc::QuantumComputation qcScheduled;
   std::vector<MoveGroup> moveGroups;
   const na::HardwareQubits& hardwareQubits;
-  AncillaAtoms ancillaAtomOffsets;
+  AncillaAtoms ancillas;
 
   AtomMove convertOpToMove(qc::Operation* get);
 
@@ -336,7 +353,12 @@ public:
     }
     for (auto i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
       const auto coord = flyingAncillas.getInitHwPos().at(i);
-      ancillaAtomOffsets.insert({coord + arch.getNpositions(), {i + 1, i + 1}});
+      const auto col = coord % arch.getNcolumns();
+      const auto row = coord / arch.getNcolumns();
+      const AncillaAtom ancillaAtom({col, row},
+                                    {static_cast<std::uint32_t>(i + 1),
+                                     static_cast<std::uint32_t>(i + 1)});
+      ancillas.emplace_back(ancillaAtom);
     }
   }
 
@@ -354,5 +376,14 @@ public:
    */
   [[nodiscard]] auto getNMoveGroups() const { return moveGroups.size(); }
 };
+inline std::vector<AodOperation>
+MoveToAodConverter::AodActivationHelper::reverseActivations(
+    const std::vector<AodOperation>& ops) {
+  std::vector<AodOperation> reversedOps;
+  for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
+    reversedOps.emplace_back(it->getInverted());
+  }
+  return reversedOps;
+}
 
 } // namespace na

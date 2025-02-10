@@ -80,9 +80,9 @@ void MoveToAodConverter::initFlyingAncillas() {
   std::vector<qc::fp> ends;
   std::set<std::uint32_t> rowsActivated;
   std::set<std::uint32_t> columnsActivated;
-  for (const auto& ancilla : ancillaAtomOffsets) {
-    auto coord = ancilla.first;
-    const auto offsets = ancilla.second;
+  for (const auto& ancilla : ancillas) {
+    auto coord = ancilla.coord.x + (ancilla.coord.y * arch.getNcolumns());
+    const auto offsets = ancilla.offset;
     coords.emplace_back(coord);
     coord -= arch.getNpositions();
     const auto column = (coord % arch.getNcolumns());
@@ -91,14 +91,12 @@ void MoveToAodConverter::initFlyingAncillas() {
     const auto offset =
         arch.getInterQubitDistance() / arch.getNAodIntermediateLevels();
     columnsActivated.insert(column);
-    const auto x =
-        column * arch.getInterQubitDistance() + (offsets.first * offset);
+    const auto x = column * arch.getInterQubitDistance() + (offsets.x * offset);
     dirs.emplace_back(Dimension::X);
     starts.emplace_back(x);
     ends.emplace_back(x);
     rowsActivated.insert(row);
-    const auto y =
-        row * arch.getInterQubitDistance() + (offsets.second * offset);
+    const auto y = row * arch.getInterQubitDistance() + (offsets.y * offset);
     dirs.emplace_back(Dimension::Y);
     starts.emplace_back(y);
     ends.emplace_back(y);
@@ -355,8 +353,10 @@ void MoveToAodConverter::processMoveGroups() {
   // convert the moves from MoveGroup to AodOperations
   for (auto groupIt = moveGroups.begin(); groupIt != moveGroups.end();
        ++groupIt) {
-    AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate};
-    AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate};
+    AodActivationHelper aodActivationHelper{arch, qc::OpType::AodActivate,
+                                            (&ancillas)};
+    AodActivationHelper aodDeactivationHelper{arch, qc::OpType::AodDeactivate,
+                                              (&ancillas)};
 
     const auto resultMoves = processMoves(groupIt->moves, aodActivationHelper,
                                           aodDeactivationHelper);
@@ -378,12 +378,26 @@ void MoveToAodConverter::processMoveGroups() {
       possibleNewMoveGroup = MoveGroup();
       groupIt--;
     }
-    groupIt->processedOpsInit =
-        aodActivationHelper.getAodOperations(ancillaAtomOffsets);
-    groupIt->processedOpsFinal =
-        aodDeactivationHelper.getAodOperations(ancillaAtomOffsets);
+    // const auto initFaDodgeOps = aodActivationHelper.getDodgingOperations();
+    const auto initActivations = aodActivationHelper.getAodOperations();
+    const auto finalFaDodgeOps = aodDeactivationHelper.getDodgingOperations();
+
+    // append to init ops
+    // groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
+    //                                  initFaDodgeOps.begin(),
+    //                                  initFaDodgeOps.end());
+    groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
+                                     initActivations.begin(),
+                                     initActivations.end());
+    groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
+                                     finalFaDodgeOps.begin(),
+                                     finalFaDodgeOps.end());
+
+    groupIt->processedOpsFinal = aodDeactivationHelper.getAodOperations();
+
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
         aodActivationHelper, aodDeactivationHelper);
+    int a;
   }
 }
 std::pair<std::vector<AtomMove>, MoveToAodConverter::MoveGroup>
@@ -632,52 +646,108 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
     if (aodMove->load) {
       computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
                                      offsetOperations);
+    } else if (type == qc::OpType::AodActivate) { // flying ancilla
+      // need to move back if dodged
+      for (auto& ancilla : *ancillas) {
+        if (ancilla.coord.x == aodMove->init) {
+          const auto start =
+              ancilla.coordDodged.x * arch->getInterQubitDistance() +
+              ancilla.offsetDodged.x * arch->getOffsetDistance();
+          const auto end = ancilla.coord.x * arch->getInterQubitDistance() +
+                           ancilla.offset.x * arch->getOffsetDistance();
+          offsetOperations.emplace_back(Dimension::X, start, end);
+          ancilla.coordDodged.x = aodMove->init;
+          ancilla.offsetDodged.x = aodMove->offset;
+          const auto coord =
+              (ancilla.coord.x + (ancilla.coord.y * arch->getNcolumns())) +
+              arch->getNpositions();
+          if (std::find(qubitsOffset.begin(), qubitsOffset.end(),
+                        coord + arch->getNpositions()) == qubitsOffset.end()) {
+            qubitsOffset.emplace_back(coord + arch->getNpositions());
+            qubitsOffset.emplace_back(coord);
+          }
+        }
+      }
     }
   }
   for (const auto& aodMove : activation.activateYs) {
     if (aodMove->load) {
       computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
                                      offsetOperations);
+    } else if (type == qc::OpType::AodActivate) { // flying ancilla
+      // need to move back if dodged
+      for (auto& ancilla : *ancillas) {
+        if (ancilla.coord.y == aodMove->init) {
+          const auto start =
+              ancilla.coordDodged.y * arch->getInterQubitDistance() +
+              ancilla.offsetDodged.y * arch->getOffsetDistance();
+          const auto end = ancilla.coord.y * arch->getInterQubitDistance() +
+                           ancilla.offset.y * arch->getOffsetDistance();
+          offsetOperations.emplace_back(Dimension::Y, start, end);
+          ancilla.coordDodged.y = aodMove->init;
+          ancilla.offsetDodged.y = aodMove->offset;
+          const auto coord =
+              (ancilla.coord.x + (ancilla.coord.y * arch->getNcolumns())) +
+              arch->getNpositions();
+          if (std::find(qubitsOffset.begin(), qubitsOffset.end(),
+                        coord + arch->getNpositions()) == qubitsOffset.end()) {
+            qubitsOffset.emplace_back(coord + arch->getNpositions());
+            qubitsOffset.emplace_back(coord);
+          }
+        }
+      }
     }
   }
   if (initOperations.empty() && offsetOperations.empty()) {
     return {};
   }
+  std::vector<AodOperation> aodOperations;
 
-  auto initOp = AodOperation(type, qubitsActivation, initOperations);
-  auto offsetOp =
-      AodOperation(qc::OpType::AodMove, qubitsActivation, offsetOperations);
-  if (this->type == qc::OpType::AodActivate) {
-    return {initOp, offsetOp};
+  if (initOperations.empty()) {
+    return {AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
   }
-  return {offsetOp, initOp};
+  if (offsetOperations.empty()) {
+    return {AodOperation(type, qubitsActivation, initOperations)};
+  }
+  if (this->type == qc::OpType::AodActivate) {
+    return {AodOperation(type, qubitsActivation, initOperations),
+            AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
+  }
+  return {AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations),
+          AodOperation(type, qubitsActivation, initOperations)};
 }
 
 std::vector<AodOperation>
-MoveToAodConverter::AodActivationHelper::getAodOperations(
-    const AncillaAtoms& ancillas) const {
+MoveToAodConverter::AodActivationHelper::getAodOperations() const {
   std::vector<AodOperation> aodOperations;
   for (const auto& activation : allActivations) {
     auto operations = getAodOperation(activation);
     // insert ancilla dodging operations
-    auto dodgingOperation = getDodgingOperation(activation, ancillas);
-    if (dodgingOperation.getNqubits() != 0) {
-      aodOperations.emplace_back(dodgingOperation);
-    }
     aodOperations.insert(aodOperations.end(), operations.begin(),
                          operations.end());
-    if (dodgingOperation.getNqubits() != 0) {
-      aodOperations.emplace_back(dodgingOperation.getInverted());
-    }
   }
   return aodOperations;
 }
+
+std::vector<AodOperation>
+MoveToAodConverter::AodActivationHelper::getDodgingOperations() const {
+  std::vector<AodOperation> aodOperations;
+  for (const auto& activation : allActivations) {
+    auto dodgingOperation = getDodgingOperation(activation);
+    if (dodgingOperation.getNqubits() != 0) {
+      aodOperations.emplace_back(dodgingOperation);
+    }
+  }
+  if (type == qc::OpType::AodDeactivate) {
+    std::reverse(aodOperations.begin(), aodOperations.end());
+  }
+  return aodOperations;
+}
+
 AodOperation MoveToAodConverter::AodActivationHelper::getDodgingOperation(
-    const AodActivation& aodActivation, AncillaAtoms ancillas) const {
+    const AodActivation& aodActivation) const {
   std::vector<SingleOperation> dodgingOperations;
   CoordIndices usedQubits;
-  // invert order of ancillas to avoid aod crossings of flying Ancillas
-  // std::reverse(ancillas.begin(), ancillas.end());
 
   const std::vector<Dimension> dims = {Dimension::X, Dimension::Y};
   const std::vector<std::vector<std::shared_ptr<AodMove>>> activations = {
@@ -688,16 +758,11 @@ AodOperation MoveToAodConverter::AodActivationHelper::getDodgingOperation(
     const auto& aodActivations = activations[i];
     std::set<std::uint32_t> usedOffsets;
 
-    for (auto it = ancillas.rbegin(); it != ancillas.rend(); ++it) {
-      const auto ancillaOffset = *it;
+    for (auto it = ancillas->rbegin(); it != ancillas->rend(); ++it) {
+      auto& ancillaOffset = *it;
       CoordIndex rowOrColumn = 0;
-      if (dim == Dimension::X) {
-        rowOrColumn =
-            (ancillaOffset.first - arch->getNpositions()) % arch->getNcolumns();
-      } else {
-        rowOrColumn =
-            (ancillaOffset.first - arch->getNpositions()) / arch->getNcolumns();
-      }
+      rowOrColumn =
+          dim == Dimension::X ? ancillaOffset.coord.x : ancillaOffset.coord.y;
       for (const auto& aodMove : aodActivations) {
         if (aodMove->init == rowOrColumn) {
           // ancilla is in the same row/column as the activation
@@ -718,8 +783,8 @@ AodOperation MoveToAodConverter::AodActivationHelper::getDodgingOperation(
 
           // make AodOperation
           const auto ancillaOffsetDim = dim == Dimension::X
-                                            ? ancillaOffset.second.first
-                                            : ancillaOffset.second.second;
+                                            ? ancillaOffset.offset.x
+                                            : ancillaOffset.offset.y;
           const auto start = (rowOrColumn * arch->getInterQubitDistance()) +
                              (ancillaOffsetDim * arch->getInterQubitDistance() /
                               arch->getNAodIntermediateLevels());
@@ -728,13 +793,21 @@ AodOperation MoveToAodConverter::AodActivationHelper::getDodgingOperation(
                             arch->getNAodIntermediateLevels());
           if (std::abs(start - end) > 0.0001) {
             dodgingOperations.emplace_back(dim, start, end);
-            if (std::find(usedQubits.begin(), usedQubits.end(),
-                          ancillaOffset.first) == usedQubits.end()) {
-              usedQubits.emplace_back(ancillaOffset.first);
-              usedQubits.emplace_back(ancillaOffset.first +
-                                      arch->getNpositions());
+            const auto coord = (ancillaOffset.coord.x +
+                                (ancillaOffset.coord.y * arch->getNcolumns())) +
+                               arch->getNpositions();
+            if (std::find(usedQubits.begin(), usedQubits.end(), coord) ==
+                usedQubits.end()) {
+              usedQubits.emplace_back(coord);
+              usedQubits.emplace_back(coord + arch->getNpositions());
             }
             usedOffsets.insert(newOffset);
+
+            if (dim == Dimension::X) {
+              ancillaOffset.offsetDodged.x = newOffset;
+            } else {
+              ancillaOffset.offsetDodged.y = newOffset;
+            }
           }
         }
       }
