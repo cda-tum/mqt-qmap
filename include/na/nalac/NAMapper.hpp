@@ -12,7 +12,6 @@
 #include "na/Architecture.hpp"
 #include "na/Configuration.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -71,8 +70,8 @@ protected:
   public:
     enum class PositionStatus : std::uint8_t { UNDEFINED, DEFINED };
     PositionStatus positionStatus = PositionStatus::UNDEFINED;
-    std::shared_ptr<Point> initialPosition = std::make_shared<Point>(0, 0);
-    std::shared_ptr<Point> currentPosition = initialPosition;
+    Location initialPosition{0, 0};
+    Location currentPosition = initialPosition;
     std::vector<ZoneId> zones;
     explicit Atom(const std::vector<ZoneId>& z = {}) : zones(z) {};
   };
