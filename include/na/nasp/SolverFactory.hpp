@@ -51,7 +51,7 @@ public:
    */
   [[nodiscard]] static auto
   getOpsForSolver(const qc::QuantumComputation& circ, qc::OpType opType,
-                  std::size_t ctrls, std::size_t ctrls, bool quiet = false)
+                  std::size_t ctrls, bool quiet = false)
       -> std::vector<std::pair<qc::Qubit, qc::Qubit>>;
 };
 } // namespace na
