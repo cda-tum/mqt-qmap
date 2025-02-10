@@ -18,8 +18,7 @@ TEST(Solver, SteaneDoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -33,8 +32,7 @@ TEST(Solver, ShorDoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -48,8 +46,7 @@ TEST(Solver, Surface3DoubleSidedStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -64,8 +61,7 @@ TEST(Solver, SteaneBottomStorage) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto resultUnsat =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
@@ -103,8 +99,7 @@ TEST(Solver, NoShieldingFixedOrder) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 0, 7);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -118,8 +113,7 @@ TEST(Solver, FixedTransfer) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result = solver.solve(
       pairs, static_cast<uint16_t>(circ.getNqubits()), 5, 2, false, true);
@@ -132,8 +126,7 @@ TEST(Solver, Unsat) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 3,
@@ -166,8 +159,7 @@ TEST(Solver, YAMLRoundTrip) {
   // create solver
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,

@@ -145,8 +145,7 @@ TEST(SolverFactory, Create) {
   const auto& circ =
       qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 5,

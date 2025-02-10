@@ -26,8 +26,7 @@ TEST(CodeGenerator, Generate) {
   //    storage zone at the top and at the bottom
   na::NASolver solver(3, 7, 2, 3, 2, 2, 2, 2, 2, 4);
   // get operations for solver
-  const auto& pairs =
-      na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
+  const auto& pairs = na::SolverFactory::getOpsForSolver(circ, qc::Z, 1, true);
   // solve
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
