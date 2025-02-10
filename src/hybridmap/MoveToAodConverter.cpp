@@ -659,9 +659,6 @@ MoveToAodConverter::AodActivationHelper::getAodOperations(
   std::vector<AodOperation> aodOperations;
   for (const auto& activation : allActivations) {
     auto operations = getAodOperation(activation);
-    if (operations.empty()) {
-      continue;
-    }
     // insert ancilla dodging operations
     auto dodgingOperation = getDodgingOperation(activation, ancillas);
     if (dodgingOperation.getNqubits() != 0) {
