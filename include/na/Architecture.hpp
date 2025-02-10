@@ -3,8 +3,8 @@
 #include "Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/Configuration.hpp"
-#include "na/entities/Location.hpp"
 #include "na/NAUtils.hpp"
+#include "na/entities/Location.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -87,7 +87,7 @@ public:
    * @details Times are in µs, fidelities are in [0,1].
    */
   struct OperationProperties {
-    Scope scope;                    // local or global
+    Scope scope;                      // local or global
     std::unordered_set<ZoneId> zones; // the zones where the gate can be applied
     Value time;     // the time the gate takes to be applied in µs
     Value fidelity; // the fidelity of the gate
@@ -164,7 +164,8 @@ public:
     return initialZones;
   }
   [[nodiscard]] auto getNSites() const -> Index { return sites.size(); }
-  [[nodiscard]] auto getLocationOfSite(const Index& i) const -> const Location& {
+  [[nodiscard]] auto getLocationOfSite(const Index& i) const
+      -> const Location& {
     return sites[i];
   }
   [[nodiscard]] auto getDecoherenceTimes() const -> const DecoherenceTimes& {
@@ -190,7 +191,8 @@ public:
       -> const ZoneProperties& {
     return zones[zone];
   }
-  [[nodiscard]] auto getPropertiesOfOperation(const qc::OpType t, const std::size_t ctrls) const
+  [[nodiscard]] auto getPropertiesOfOperation(const qc::OpType t,
+                                              const std::size_t ctrls) const
       -> const OperationProperties& {
     if (const auto& it = gateSet.find({t, ctrls}); it != gateSet.end()) {
       return it->second;
@@ -215,7 +217,8 @@ public:
     return getZoneAt(getLocationOfSite(i));
   }
   /// Checks whether the gate can be applied at all.
-  [[nodiscard]] auto isAllowedLocally(qc::OpType t, std::size_t ctrls) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(qc::OpType t, std::size_t ctrls) const
+      -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
   [[nodiscard]] auto isAllowedLocally(qc::OpType t, std::size_t ctrls,
                                       const ZoneId& zone) const -> bool;
@@ -223,7 +226,8 @@ public:
   [[nodiscard]] auto isAllowedLocallyAt(qc::OpType t, std::size_t ctrls,
                                         const Location& p) const -> bool;
   /// Checks whether the gate is a global gate for this ZoneId.
-  [[nodiscard]] auto isAllowedGlobally(qc::OpType t, std::size_t ctrls) const -> bool;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType t, std::size_t ctrls) const
+      -> bool;
   [[nodiscard]] auto isAllowedGlobally(qc::OpType t, std::size_t ctrls,
                                        const ZoneId& zone) const -> bool;
   [[nodiscard]] auto getNrowsInZone(const ZoneId& z) const -> Index;
@@ -258,13 +262,16 @@ public:
   [[nodiscard]] auto getNearestSiteDown(const Location& p, bool proper = false,
                                         bool sameZoneId = false) const
       -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteUpRight(const Location& p, bool proper = false,
+  [[nodiscard]] auto getNearestSiteUpRight(const Location& p,
+                                           bool proper = false,
                                            bool sameZoneId = false) const
       -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteUpLeft(const Location& p, bool proper = false,
+  [[nodiscard]] auto getNearestSiteUpLeft(const Location& p,
+                                          bool proper = false,
                                           bool sameZoneId = false) const
       -> std::optional<Index>;
-  [[nodiscard]] auto getNearestSiteDownLeft(const Location& p, bool proper = false,
+  [[nodiscard]] auto getNearestSiteDownLeft(const Location& p,
+                                            bool proper = false,
                                             bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDownRight(const Location& p,
@@ -272,14 +279,17 @@ public:
                                              bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getSiteAt(const Location& p) const -> std::optional<Index>;
-  [[nodiscard]] auto getSitesInZone(const ZoneId& z) const -> std::vector<Index>;
+  [[nodiscard]] auto getSitesInZone(const ZoneId& z) const
+      -> std::vector<Index>;
   [[nodiscard]] auto withConfig(const Configuration& config) const
       -> Architecture;
   [[nodiscard]] auto getLocationOffsetBy(const Location& p, const Number& rows,
                                          const Number& cols) const -> Location;
 
 private:
-  [[nodiscard]] auto getRowsInZone(const ZoneId& z) const -> std::vector<Number>;
-  [[nodiscard]] auto getColsInZone(const ZoneId& z) const -> std::vector<Number>;
+  [[nodiscard]] auto getRowsInZone(const ZoneId& z) const
+      -> std::vector<Number>;
+  [[nodiscard]] auto getColsInZone(const ZoneId& z) const
+      -> std::vector<Number>;
 };
 } // namespace na
