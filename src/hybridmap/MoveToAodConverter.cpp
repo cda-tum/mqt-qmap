@@ -616,13 +616,6 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
       }
     }
   }
-  std::set<CoordIndex> qubitsMoveSet;
-  for (const auto& move : activation.moves) {
-    qubitsMoveSet.insert(move.c1);
-    qubitsMoveSet.insert(move.c2);
-  }
-  std::vector<CoordIndex> const qubitsMove(qubitsMoveSet.begin(),
-                                           qubitsMoveSet.end());
 
   std::vector<SingleOperation> initOperations;
   std::vector<SingleOperation> offsetOperations;
@@ -645,7 +638,7 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
 
   auto initOp = AodOperation(type, qubitsActivation, initOperations);
   auto offsetOp =
-      AodOperation(qc::OpType::AodMove, qubitsMove, offsetOperations);
+      AodOperation(qc::OpType::AodMove, qubitsActivation, offsetOperations);
   if (this->type == qc::OpType::AodActivate) {
     return {initOp, offsetOp};
   }
