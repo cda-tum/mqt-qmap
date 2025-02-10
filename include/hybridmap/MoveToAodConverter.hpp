@@ -37,6 +37,9 @@ using MergeTypeXY = std::pair<ActivationMergeType, ActivationMergeType>;
  * AODs.
  */
 class MoveToAodConverter {
+  using AncillaAtoms =
+      std::map<CoordIndex, std::pair<std::uint32_t, std::uint32_t>>;
+
 protected:
   /**
    * @brief Struct to store information about specific AOD activations.
@@ -209,7 +212,12 @@ protected:
      * @brief Converts all activations into AOD operations
      * @return All activations of the AOD activation helper as AOD operations
      */
-    [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
+    [[nodiscard]] std::vector<AodOperation>
+    getAodOperations(const AncillaAtoms& ancillas) const;
+
+    [[nodiscard]] AodOperation
+    getDodgingOperation(const AodActivation& aodActivation,
+                        AncillaAtoms ancillas) const;
   };
 
   [[nodiscard]] static std::pair<ActivationMergeType, ActivationMergeType>
@@ -278,9 +286,6 @@ protected:
     connectAodOperations(const AodActivationHelper& aodActivationHelper,
                          const AodActivationHelper& aodDeactivationHelper);
   };
-
-  using AncillaAtoms =
-      std::map<CoordIndex, std::pair<std::uint32_t, std::uint32_t>>;
 
   const NeutralAtomArchitecture& arch;
   qc::QuantumComputation qcScheduled;

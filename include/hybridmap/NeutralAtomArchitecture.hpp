@@ -245,6 +245,10 @@ public:
     return properties.getInterQubitDistance();
   }
 
+  [[nodiscard]] qc::fp getOffsetDistance() const {
+    return getInterQubitDistance() / getNAodIntermediateLevels();
+  }
+
   /**
    * @brief Get the interaction radius
    * @return The interaction radius
