@@ -32,15 +32,19 @@ void AnimationAtoms::initPositions(
                      row * arch.getInterQubitDistance()};
   }
 
+  auto flyingAncillaidxPlusOne = 0;
   for (const auto& [id, coord] : initFaPos) {
+    flyingAncillaidxPlusOne++;
     coordIdxToId[coord + arch.getNpositions()] = id + initHwPos.size();
     const auto column = coord % nCols;
     const auto row = coord / nCols;
     const auto offset =
         arch.getInterQubitDistance() / arch.getNAodIntermediateLevels();
     idToCoord[id + initHwPos.size()] = {
-        (column * arch.getInterQubitDistance()) + offset,
-        (row * arch.getInterQubitDistance()) + offset};
+        (column * arch.getInterQubitDistance()) +
+            flyingAncillaidxPlusOne * offset,
+        (row * arch.getInterQubitDistance()) +
+            flyingAncillaidxPlusOne * offset};
   }
 }
 

@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -285,7 +286,7 @@ protected:
   qc::QuantumComputation qcScheduled;
   std::vector<MoveGroup> moveGroups;
   const na::HardwareQubits& hardwareQubits;
-  AncillaAtoms ancillaAtoms;
+  AncillaAtoms ancillaAtomOffsets;
 
   AtomMove convertOpToMove(qc::Operation* get);
 
@@ -322,8 +323,15 @@ public:
       : arch(archArg), qcScheduled(arch.getNpositions()),
         hardwareQubits(hardwareQubitsArg) {
     qcScheduled.addAncillaryRegister(arch.getNpositions());
-    for (const auto& [hwQubit, coord] : flyingAncillas.getInitHwPos()) {
-      ancillaAtoms.insert({coord + arch.getNpositions(), {1, 1}});
+    if (flyingAncillas.getNumQubits() > arch.getNcolumns() ||
+        flyingAncillas.getNumQubits() > arch.getNrows()) {
+      throw std::invalid_argument(
+          "Number of flying ancillas must be smaller than the number of "
+          "columns and rows of the neutral atom architecture.");
+    }
+    for (auto i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
+      const auto coord = flyingAncillas.getInitHwPos().at(i);
+      ancillaAtomOffsets.insert({coord + arch.getNpositions(), {i + 1, i + 1}});
     }
   }
 

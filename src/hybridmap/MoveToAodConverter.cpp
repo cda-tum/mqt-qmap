@@ -80,29 +80,28 @@ void MoveToAodConverter::initFlyingAncillas() {
   std::vector<qc::fp> ends;
   std::set<std::uint32_t> rowsActivated;
   std::set<std::uint32_t> columnsActivated;
-  for (const auto& [coord, offsets] : ancillaAtoms) {
+  for (const auto& ancilla : ancillaAtomOffsets) {
+    auto coord = ancilla.first;
+    const auto offsets = ancilla.second;
     coords.emplace_back(coord);
+    coord -= arch.getNpositions();
     const auto column = (coord % arch.getNcolumns());
     const auto row = (coord / arch.getNcolumns());
 
     const auto offset =
         arch.getInterQubitDistance() / arch.getNAodIntermediateLevels();
-    if (columnsActivated.find(column) == columnsActivated.end()) {
-      columnsActivated.insert(column);
-      const auto x =
-          column * arch.getInterQubitDistance() + (offsets.first * offset);
-      dirs.emplace_back(Dimension::X);
-      starts.emplace_back(x);
-      ends.emplace_back(x);
-    }
-    if (rowsActivated.find(row) == rowsActivated.end()) {
-      rowsActivated.insert(row);
-      const auto y =
-          row * arch.getInterQubitDistance() + (offsets.second * offset);
-      dirs.emplace_back(Dimension::Y);
-      starts.emplace_back(y);
-      ends.emplace_back(y);
-    }
+    columnsActivated.insert(column);
+    const auto x =
+        column * arch.getInterQubitDistance() + (offsets.first * offset);
+    dirs.emplace_back(Dimension::X);
+    starts.emplace_back(x);
+    ends.emplace_back(x);
+    rowsActivated.insert(row);
+    const auto y =
+        row * arch.getInterQubitDistance() + (offsets.second * offset);
+    dirs.emplace_back(Dimension::Y);
+    starts.emplace_back(y);
+    ends.emplace_back(y);
   }
   const AodOperation aodInit(qc::OpType::AodActivate, coords, dirs, starts,
                              ends);
@@ -404,6 +403,22 @@ MoveToAodConverter::processMoves(
                                     origin, v, target, vReverse, Dimension::X);
     auto canAddY = canAddActivation(aodActivationHelper, aodDeactivationHelper,
                                     origin, v, target, vReverse, Dimension::Y);
+    const bool isFa = !move.load1 && !move.load2;
+    if (isFa) {
+      // convert Merge to append for FA
+      if (canAddX.first == ActivationMergeType::Merge) {
+        canAddX.first = ActivationMergeType::Append;
+      }
+      if (canAddY.first == ActivationMergeType::Merge) {
+        canAddY.first = ActivationMergeType::Append;
+      }
+      if (canAddX.second == ActivationMergeType::Merge) {
+        canAddX.second = ActivationMergeType::Append;
+      }
+      if (canAddY.second == ActivationMergeType::Merge) {
+        canAddY.second = ActivationMergeType::Append;
+      }
+    }
     auto activationCanAddXY = std::make_pair(canAddX.first, canAddY.first);
     auto deactivationCanAddXY = std::make_pair(canAddX.second, canAddY.second);
     if (activationCanAddXY.first == ActivationMergeType::Impossible ||
