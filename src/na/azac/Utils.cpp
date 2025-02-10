@@ -262,6 +262,9 @@ auto minimumWeightFullBipartiteMatching(
         }
       }
     }
+    // reset maxPotential and update quantities and potentials
+    // afterward maxPotential will have the correct value again
+    maxPotential = std::numeric_limits<double>::min();
     for (std::size_t v = 0; v < sizeY; ++v) {
       if (!residueSetY[v]) {
         quantitiesY[v] = quantitiesY[y];
@@ -270,6 +273,9 @@ auto minimumWeightFullBipartiteMatching(
       maxPotential = std::max(potentialsY[v], maxPotential);
     }
     for (std::size_t v = 0; v < sizeX; ++v) {
+      if (!residueSetX[v]) {
+        quantitiesX[v] = quantitiesY[y];
+      }
       potentialsX[v] += quantitiesX[v];
       maxPotential = std::max(potentialsX[v], maxPotential);
     }

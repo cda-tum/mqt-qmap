@@ -1,6 +1,7 @@
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "na/azac/Compiler.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -23,20 +24,20 @@ constexpr std::string_view settings = R"({
     "qubit_spec": {"T": 1.5e6},
     "storage_zones": [{
       "zone_id": 0,
-      "slms": [{"id": 0, "site_seperation": [3, 3], "r": 100, "c": 100, "location": [0, 0]}],
+      "slms": [{"id": 0, "site_separation": [3, 3], "r": 100, "c": 100, "location": [0, 0]}],
       "offset": [0, 0],
-      "dimenstion": [300, 300]
+      "dimension": [300, 300]
     }],
     "entanglement_zones": [{
       "zone_id": 0,
       "slms": [
-        {"id": 1, "site_seperation": [12, 10], "r": 7, "c": 20, "location": [35, 307]},
-        {"id": 2, "site_seperation": [12, 10], "r": 7, "c": 20, "location": [37, 307]}
+        {"id": 1, "site_separation": [12, 10], "r": 7, "c": 20, "location": [35, 307]},
+        {"id": 2, "site_separation": [12, 10], "r": 7, "c": 20, "location": [37, 307]}
       ],
       "offset": [35, 307],
       "dimension": [240, 70]
     }],
-    "aods":[{"id": 0, "site_seperation": 2, "r": 100, "c": 100}],
+    "aods":[{"id": 0, "site_separation": 2, "r": 100, "c": 100}],
     "arch_range": [[0, 0], [297, 402]],
     "rydberg_range": [[[5, 305], [292, 402]]]
   },
@@ -123,7 +124,7 @@ protected:
   ZACompiler compiler;
   void SetUp() override {
     const auto& [name, qasm] = GetParam();
-    circ = qc::QuantumComputation::fromQASM(qasm);
+    circ = qasm3::Importer::imports(qasm);
     qc::CircuitOptimizer::flattenOperations(circ);
     std::istringstream settingsStream{std::string{settings}};
     ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
@@ -146,9 +147,7 @@ TEST_P(TestAZACompiler, GetNTwoQubitGates) {
   EXPECT_EQ(compiler.getNTwoQubitGates(), twoQubitOps);
 }
 
-TEST_P(TestAZACompiler, SolveNoThrow) {
-  ASSERT_NO_THROW(compiler.solve());
-}
+TEST_P(TestAZACompiler, SolveNoThrow) { ASSERT_NO_THROW(compiler.solve()); }
 
 INSTANTIATE_TEST_SUITE_P(
     SteanStatePreps, // Custom instantiation name
