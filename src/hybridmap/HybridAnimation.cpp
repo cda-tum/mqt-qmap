@@ -74,6 +74,7 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
       const auto id = coordIdxToId.at(coordIdx);
       opString += "\t atom" + std::to_string(id) + "\n";
     }
+    opString += "]\n";
   } else if (op->getType() == qc::OpType::AodMove) {
     // update atom coordinates
     const auto startsX =
