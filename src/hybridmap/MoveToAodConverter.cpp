@@ -132,7 +132,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
     }
     idx++;
   }
-  if (!currentMoveGroup.moves.empty()) {
+  if (!currentMoveGroup.moves.empty() || !currentMoveGroup.movesFa.empty()) {
     moveGroups.emplace_back(std::move(currentMoveGroup));
   }
 }
