@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../nalac/Architecture.hpp"
 #include "Definitions.hpp"
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/Architecture.hpp"
 
 #include <utility>
 #include <vector>

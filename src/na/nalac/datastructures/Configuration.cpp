@@ -1,4 +1,4 @@
-#include "na/Configuration.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
 
 #include <exception>
 #include <fstream>
@@ -10,7 +10,7 @@
 
 using json = nlohmann::basic_json<>;
 
-namespace na {
+namespace na::nalac {
 
 Configuration::Configuration(const std::string& filename) {
   std::ifstream fs(filename);
@@ -45,4 +45,4 @@ Configuration::Configuration(std::istream& fs) {
     method = getMethodOfString(data["method"]);
   }
 }
-} // namespace na
+} // namespace na::nalac

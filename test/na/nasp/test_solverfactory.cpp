@@ -1,6 +1,6 @@
+#include "../../../include/na/nalac/Architecture.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/Architecture.hpp"
 #include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 
