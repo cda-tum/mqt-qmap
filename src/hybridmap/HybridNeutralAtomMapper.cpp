@@ -42,6 +42,7 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
         "Not enough qubits in architecture for circuit and flying ancillas");
   }
   mappedQc.addAncillaryRegister(this->arch->getNpositions());
+  mappedQc.addAncillaryRegister(this->arch->getNpositions(), "fa");
 
   mapping = std::move(initialMapping);
 
@@ -559,8 +560,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   auto usedQubits = faComb.op->getUsedQubits();
   const auto nPos = this->arch->getNpositions();
   for (const auto& passBy : faComb.moves) {
-    const auto ancQ1 = passBy.q1 + nPos;
-    const auto ancQ2 = passBy.q2 + nPos;
+    const auto ancQ1 = passBy.q1 + (nPos * 2);
+    const auto ancQ2 = passBy.q2 + (nPos * 2);
     if (passBy.origin + nPos != ancQ1) {
       mappedQc.move(passBy.origin + nPos, ancQ1);
     }
@@ -587,8 +588,8 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
   mappedQc.emplace_back(opCopy->clone());
 
   for (const auto& passBy : faComb.moves) {
-    const auto ancQ1 = passBy.q1 + nPos;
-    const auto ancQ2 = passBy.q2 + nPos;
+    const auto ancQ1 = passBy.q1 + (nPos * 2);
+    const auto ancQ2 = passBy.q2 + (nPos * 2);
     mappedQc.move(ancQ2, ancQ1);
     mappedQc.h(ancQ1);
     mappedQc.cz(passBy.q1, ancQ1);

@@ -84,7 +84,7 @@ void MoveToAodConverter::initFlyingAncillas() {
     auto coord = ancilla.coord.x + (ancilla.coord.y * arch.getNcolumns());
     const auto offsets = ancilla.offset;
     coords.emplace_back(coord);
-    coord -= arch.getNpositions();
+    coord -= 2 * arch.getNpositions();
     const auto column = (coord % arch.getNcolumns());
     const auto row = (coord / arch.getNcolumns());
 
@@ -378,23 +378,8 @@ void MoveToAodConverter::processMoveGroups() {
       possibleNewMoveGroup = MoveGroup();
       groupIt--;
     }
-    // const auto initFaDodgeOps = aodActivationHelper.getDodgingOperations();
-    const auto initActivations = aodActivationHelper.getAodOperations();
-    const auto finalFaDodgeOps = aodDeactivationHelper.getDodgingOperations();
-
-    // append to init ops
-    // groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
-    //                                  initFaDodgeOps.begin(),
-    //                                  initFaDodgeOps.end());
-    groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
-                                     initActivations.begin(),
-                                     initActivations.end());
-    groupIt->processedOpsInit.insert(groupIt->processedOpsInit.end(),
-                                     finalFaDodgeOps.begin(),
-                                     finalFaDodgeOps.end());
-
+    groupIt->processedOpsInit = aodActivationHelper.getAodOperations();
     groupIt->processedOpsFinal = aodDeactivationHelper.getAodOperations();
-
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
         aodActivationHelper, aodDeactivationHelper);
     int a;
@@ -419,22 +404,6 @@ MoveToAodConverter::processMoves(
                                     origin, v, target, vReverse, Dimension::X);
     auto canAddY = canAddActivation(aodActivationHelper, aodDeactivationHelper,
                                     origin, v, target, vReverse, Dimension::Y);
-    const bool isFa = !move.load1 && !move.load2;
-    if (isFa) {
-      // convert Merge to append for FA
-      if (canAddX.first == ActivationMergeType::Merge) {
-        canAddX.first = ActivationMergeType::Append;
-      }
-      if (canAddY.first == ActivationMergeType::Merge) {
-        canAddY.first = ActivationMergeType::Append;
-      }
-      if (canAddX.second == ActivationMergeType::Merge) {
-        canAddX.second = ActivationMergeType::Append;
-      }
-      if (canAddY.second == ActivationMergeType::Merge) {
-        canAddY.second = ActivationMergeType::Append;
-      }
-    }
     auto activationCanAddXY = std::make_pair(canAddX.first, canAddY.first);
     auto deactivationCanAddXY = std::make_pair(canAddX.second, canAddY.second);
     if (activationCanAddXY.first == ActivationMergeType::Impossible ||
@@ -646,56 +615,12 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
     if (aodMove->load) {
       computeInitAndOffsetOperations(Dimension::X, aodMove, initOperations,
                                      offsetOperations);
-    } else if (type == qc::OpType::AodActivate) { // flying ancilla
-      // need to move back if dodged
-      for (auto& ancilla : *ancillas) {
-        if (ancilla.coord.x == aodMove->init) {
-          const auto start =
-              ancilla.coordDodged.x * arch->getInterQubitDistance() +
-              ancilla.offsetDodged.x * arch->getOffsetDistance();
-          const auto end = ancilla.coord.x * arch->getInterQubitDistance() +
-                           ancilla.offset.x * arch->getOffsetDistance();
-          offsetOperations.emplace_back(Dimension::X, start, end);
-          ancilla.coordDodged.x = aodMove->init;
-          ancilla.offsetDodged.x = aodMove->offset;
-          const auto coord =
-              (ancilla.coord.x + (ancilla.coord.y * arch->getNcolumns())) +
-              arch->getNpositions();
-          if (std::find(qubitsOffset.begin(), qubitsOffset.end(),
-                        coord + arch->getNpositions()) == qubitsOffset.end()) {
-            qubitsOffset.emplace_back(coord + arch->getNpositions());
-            qubitsOffset.emplace_back(coord);
-          }
-        }
-      }
     }
   }
   for (const auto& aodMove : activation.activateYs) {
     if (aodMove->load) {
       computeInitAndOffsetOperations(Dimension::Y, aodMove, initOperations,
                                      offsetOperations);
-    } else if (type == qc::OpType::AodActivate) { // flying ancilla
-      // need to move back if dodged
-      for (auto& ancilla : *ancillas) {
-        if (ancilla.coord.y == aodMove->init) {
-          const auto start =
-              ancilla.coordDodged.y * arch->getInterQubitDistance() +
-              ancilla.offsetDodged.y * arch->getOffsetDistance();
-          const auto end = ancilla.coord.y * arch->getInterQubitDistance() +
-                           ancilla.offset.y * arch->getOffsetDistance();
-          offsetOperations.emplace_back(Dimension::Y, start, end);
-          ancilla.coordDodged.y = aodMove->init;
-          ancilla.offsetDodged.y = aodMove->offset;
-          const auto coord =
-              (ancilla.coord.x + (ancilla.coord.y * arch->getNcolumns())) +
-              arch->getNpositions();
-          if (std::find(qubitsOffset.begin(), qubitsOffset.end(),
-                        coord + arch->getNpositions()) == qubitsOffset.end()) {
-            qubitsOffset.emplace_back(coord + arch->getNpositions());
-            qubitsOffset.emplace_back(coord);
-          }
-        }
-      }
     }
   }
   if (initOperations.empty() && offsetOperations.empty()) {
@@ -727,92 +652,5 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
                          operations.end());
   }
   return aodOperations;
-}
-
-std::vector<AodOperation>
-MoveToAodConverter::AodActivationHelper::getDodgingOperations() const {
-  std::vector<AodOperation> aodOperations;
-  for (const auto& activation : allActivations) {
-    auto dodgingOperation = getDodgingOperation(activation);
-    if (dodgingOperation.getNqubits() != 0) {
-      aodOperations.emplace_back(dodgingOperation);
-    }
-  }
-  if (type == qc::OpType::AodDeactivate) {
-    std::reverse(aodOperations.begin(), aodOperations.end());
-  }
-  return aodOperations;
-}
-
-AodOperation MoveToAodConverter::AodActivationHelper::getDodgingOperation(
-    const AodActivation& aodActivation) const {
-  std::vector<SingleOperation> dodgingOperations;
-  CoordIndices usedQubits;
-
-  const std::vector<Dimension> dims = {Dimension::X, Dimension::Y};
-  const std::vector<std::vector<std::shared_ptr<AodMove>>> activations = {
-      aodActivation.activateXs, aodActivation.activateYs};
-  // iterate in parallel over both pairs
-  for (size_t i = 0; i < dims.size(); i++) {
-    const auto& dim = dims[i];
-    const auto& aodActivations = activations[i];
-    std::set<std::uint32_t> usedOffsets;
-
-    for (auto it = ancillas->rbegin(); it != ancillas->rend(); ++it) {
-      auto& ancillaOffset = *it;
-      CoordIndex rowOrColumn = 0;
-      rowOrColumn =
-          dim == Dimension::X ? ancillaOffset.coord.x : ancillaOffset.coord.y;
-      for (const auto& aodMove : aodActivations) {
-        if (aodMove->init == rowOrColumn) {
-          // ancilla is in the same row/column as the activation
-          // move ancilla away
-          auto sign = aodMove->delta > 0 ? 1 : -1;
-          if (type == qc::OpType::AodDeactivate) {
-            sign *= -1;
-          }
-          auto newOffset = aodMove->offset + sign;
-          if (newOffset == 0) {
-            newOffset += sign; // always stay in between the atoms
-          }
-          // check if same offset is used by other dodging operation in same
-          // row/column
-          while (usedOffsets.find(newOffset) != usedOffsets.end()) {
-            newOffset += sign;
-          }
-
-          // make AodOperation
-          const auto ancillaOffsetDim = dim == Dimension::X
-                                            ? ancillaOffset.offset.x
-                                            : ancillaOffset.offset.y;
-          const auto start = (rowOrColumn * arch->getInterQubitDistance()) +
-                             (ancillaOffsetDim * arch->getInterQubitDistance() /
-                              arch->getNAodIntermediateLevels());
-          const auto end = (rowOrColumn * arch->getInterQubitDistance()) +
-                           (newOffset * arch->getInterQubitDistance() /
-                            arch->getNAodIntermediateLevels());
-          if (std::abs(start - end) > 0.0001) {
-            dodgingOperations.emplace_back(dim, start, end);
-            const auto coord = (ancillaOffset.coord.x +
-                                (ancillaOffset.coord.y * arch->getNcolumns())) +
-                               arch->getNpositions();
-            if (std::find(usedQubits.begin(), usedQubits.end(), coord) ==
-                usedQubits.end()) {
-              usedQubits.emplace_back(coord);
-              usedQubits.emplace_back(coord + arch->getNpositions());
-            }
-            usedOffsets.insert(newOffset);
-
-            if (dim == Dimension::X) {
-              ancillaOffset.offsetDodged.x = newOffset;
-            } else {
-              ancillaOffset.offsetDodged.y = newOffset;
-            }
-          }
-        }
-      }
-    }
-  }
-  return {qc::OpType::AodMove, usedQubits, dodgingOperations};
 }
 } // namespace na

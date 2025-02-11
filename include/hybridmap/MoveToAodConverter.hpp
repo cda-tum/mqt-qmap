@@ -229,10 +229,6 @@ protected:
      */
     [[nodiscard]] std::vector<AodOperation> getAodOperations() const;
 
-    [[nodiscard]] AodOperation
-    getDodgingOperation(const AodActivation& aodActivation) const;
-    [[nodiscard]] std::vector<AodOperation> getDodgingOperations() const;
-
     [[nodiscard]] static std::vector<AodOperation>
     reverseActivations(const std::vector<AodOperation>& ops);
   };
@@ -376,14 +372,5 @@ public:
    */
   [[nodiscard]] auto getNMoveGroups() const { return moveGroups.size(); }
 };
-inline std::vector<AodOperation>
-MoveToAodConverter::AodActivationHelper::reverseActivations(
-    const std::vector<AodOperation>& ops) {
-  std::vector<AodOperation> reversedOps;
-  for (auto it = ops.rbegin(); it != ops.rend(); ++it) {
-    reversedOps.emplace_back(it->getInverted());
-  }
-  return reversedOps;
-}
 
 } // namespace na
