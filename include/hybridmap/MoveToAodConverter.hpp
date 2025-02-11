@@ -165,6 +165,9 @@ protected:
     addActivation(std::pair<ActivationMergeType, ActivationMergeType> merge,
                   const Point& origin, const AtomMove& move, MoveVector v,
                   bool needLoad);
+
+    void addActivationFa(const Point& origin, const AtomMove& move,
+                         MoveVector v, bool needLoad);
     /**
      * @brief Merges the given activation into the current activations
      * @param dim The dimension/direction of the activation
@@ -250,6 +253,7 @@ protected:
     // the moves and the index they appear in the original quantum circuit (to
     // insert them back later)
     std::vector<std::pair<AtomMove, uint32_t>> moves;
+    std::vector<std::pair<AtomMove, uint32_t>> movesFa;
     std::vector<AodOperation> processedOpsInit;
     std::vector<AodOperation> processedOpsFinal;
     AodOperation processedOpShuttle;
@@ -277,7 +281,15 @@ protected:
      * @return Circuit index of the first move in the move group
      */
 
-    [[nodiscard]] uint32_t getFirstIdx() const { return moves.front().second; }
+    [[nodiscard]] uint32_t getFirstIdx() const {
+      if (moves.size() == 0) {
+        return movesFa.front().second;
+      }
+      if (movesFa.size() == 0) {
+        return moves.front().second;
+      }
+      return std::min(moves.front().second, movesFa.front().second);
+    }
     /**
      * @brief Checks if the two moves can be executed in parallel
      * @param v1 The first move
@@ -331,6 +343,9 @@ protected:
   processMoves(const std::vector<std::pair<AtomMove, uint32_t>>& moves,
                AodActivationHelper& aodActivationHelper,
                AodActivationHelper& aodDeactivationHelper);
+  void processMovesFa(const std::vector<std::pair<AtomMove, uint32_t>>& movesFa,
+                      AodActivationHelper& aodActivationHelper,
+                      AodActivationHelper& aodDeactivationHelper) const;
 
 public:
   MoveToAodConverter() = delete;
@@ -342,6 +357,7 @@ public:
       : arch(archArg), qcScheduled(arch.getNpositions()),
         hardwareQubits(hardwareQubitsArg) {
     qcScheduled.addAncillaryRegister(arch.getNpositions());
+    qcScheduled.addAncillaryRegister(arch.getNpositions(), "fa");
     if (flyingAncillas.getNumQubits() > arch.getNcolumns() ||
         flyingAncillas.getNumQubits() > arch.getNrows()) {
       throw std::invalid_argument(

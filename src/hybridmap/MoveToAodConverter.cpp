@@ -66,10 +66,10 @@ AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
   auto q2 = get->getTargets().back();
   const auto load1 = q1 < arch.getNpositions();
   const auto load2 = q2 < arch.getNpositions();
-  if (!load1) {
+  while (q1 > arch.getNpositions()) {
     q1 -= arch.getNpositions();
   }
-  if (!load2) {
+  while (q2 > arch.getNpositions()) {
     q2 -= arch.getNpositions();
   }
   return {q1, q2, load1, load2};
@@ -147,8 +147,14 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
   }
   // checks if the op can be executed in parallel
   auto moveVector = archArg.getVector(move.c1, move.c2);
+  std::vector<std::pair<AtomMove, uint32_t>>* movesToCheck;
+  if (move.load1 || move.load2) {
+    movesToCheck = &moves;
+  } else {
+    movesToCheck = &movesFa;
+  }
   return std::all_of(
-      moves.begin(), moves.end(),
+      movesToCheck->begin(), movesToCheck->end(),
       [&moveVector, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
         auto opVector = archArg.getVector(moveGroup.c1, moveGroup.c2);
@@ -174,7 +180,11 @@ bool MoveToAodConverter::MoveGroup::parallelCheck(const MoveVector& v1,
 
 void MoveToAodConverter::MoveGroup::addMove(const AtomMove& move,
                                             const uint32_t idx) {
-  moves.emplace_back(move, idx);
+  if (move.load1 || move.load2) {
+    moves.emplace_back(move, idx);
+  } else {
+    movesFa.emplace_back(move, idx);
+  }
   qubitsUsedByGates.emplace_back(move.c2);
 }
 
@@ -271,6 +281,18 @@ void MoveToAodConverter::AodActivationHelper::addActivation(
     break;
   }
 }
+void MoveToAodConverter::AodActivationHelper::addActivationFa(
+    const Point& origin, const AtomMove& move, MoveVector v, bool needLoad) {
+  const auto x = static_cast<std::uint32_t>(origin.x);
+  const auto y = static_cast<std::uint32_t>(origin.y);
+  const auto signX = v.direction.getSignX();
+  const auto signY = v.direction.getSignY();
+  const auto deltaX = v.xEnd - v.xStart;
+  const auto deltaY = v.yEnd - v.yStart;
+
+  allActivations.emplace_back(AodActivation{
+      {x, deltaX, signX, needLoad}, {y, deltaY, signY, needLoad}, move});
+}
 
 [[nodiscard]] std::pair<ActivationMergeType, ActivationMergeType>
 MoveToAodConverter::canAddActivation(
@@ -364,6 +386,9 @@ void MoveToAodConverter::processMoveGroups() {
     auto movesToRemove = resultMoves.first;
     auto possibleNewMoveGroup = resultMoves.second;
 
+    processMovesFa(groupIt->movesFa, aodActivationHelper,
+                   aodDeactivationHelper);
+
     // remove from current move group
     for (const auto& moveToRemove : movesToRemove) {
       groupIt->moves.erase(
@@ -447,6 +472,23 @@ MoveToAodConverter::processMoves(
 
   return {movesToRemove, possibleNewMoveGroup};
 }
+void MoveToAodConverter::processMovesFa(
+    const std::vector<std::pair<AtomMove, uint32_t>>& movesFa,
+    AodActivationHelper& aodActivationHelper,
+    AodActivationHelper& aodDeactivationHelper) const {
+  for (const auto& moveFaPair : movesFa) {
+    const auto& moveFa = moveFaPair.first;
+    const auto idx = moveFaPair.second;
+    auto origin = arch.getCoordinate(moveFa.c1);
+    auto target = arch.getCoordinate(moveFa.c2);
+    const auto v = arch.getVector(moveFa.c1, moveFa.c2);
+    const auto vReverse = arch.getVector(moveFa.c2, moveFa.c1);
+
+    aodActivationHelper.addActivationFa(origin, moveFa, v, moveFa.load1);
+    aodDeactivationHelper.addActivationFa(target, moveFa, vReverse,
+                                          moveFa.load2);
+  }
+}
 
 AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     const AodActivationHelper& aodActivationHelper,
@@ -468,18 +510,21 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     for (const auto& deactivation : aodDeactivationHelper.allActivations) {
       if (activation.moves == deactivation.moves) {
         // get target qubits
+        const auto nPos = aodActivationHelper.arch->getNpositions();
         for (const auto& move : activation.moves) {
           if (move.load1) {
             targetQubits.emplace_back(move.c1);
+          } else if (move.load2) {
+            targetQubits.emplace_back(move.c1 + nPos);
           } else {
-            targetQubits.emplace_back(
-                move.c1 + aodActivationHelper.arch->getNpositions());
+            targetQubits.emplace_back(move.c1 + (2 * nPos));
           }
           if (move.load2) {
             targetQubits.emplace_back(move.c2);
+          } else if (move.load1) {
+            targetQubits.emplace_back(move.c2 + nPos);
           } else {
-            targetQubits.emplace_back(
-                move.c2 + aodActivationHelper.arch->getNpositions());
+            targetQubits.emplace_back(move.c2 + (2 * nPos));
           }
         }
 
