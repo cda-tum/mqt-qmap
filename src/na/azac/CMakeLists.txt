@@ -9,9 +9,10 @@ if(NOT TARGET ${MQT_QMAP_AZAC_TARGET_NAME})
   target_include_directories(${MQT_QMAP_AZAC_TARGET_NAME}
                              PUBLIC $<BUILD_INTERFACE:${MQT_QMAP_INCLUDE_BUILD_DIR}>)
 
-  target_link_libraries(${MQT_QMAP_AZAC_TARGET_NAME}
-          PUBLIC MQT::CoreIR nlohmann_json::nlohmann_json
-          PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
+  target_link_libraries(
+    ${MQT_QMAP_AZAC_TARGET_NAME}
+    PUBLIC MQT::CoreIR MQT::CoreNA nlohmann_json::nlohmann_json
+    PRIVATE MQT::ProjectOptions MQT::ProjectWarnings)
 
   add_library(MQT::AZAC ALIAS ${MQT_QMAP_AZAC_TARGET_NAME})
 endif()

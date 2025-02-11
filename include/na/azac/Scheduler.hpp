@@ -15,19 +15,19 @@ private:
   auto asap() -> std::vector<std::vector<std::size_t>> {
     std::vector<std::vector<std::size_t>> gateScheduling{};
     std::vector<std::size_t> listQubitTime(static_cast<T*>(this)->getNQubits(),
-                                             0);
-    for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates(); ++i) {
-      const std::pair<qc::Qubit, qc::Qubit>& gate =
-          static_cast<T*>(this)->getTwoQubitGates()[i];
-      const auto tq0 = listQubitTime[gate.first];
-      const auto tq1 = listQubitTime[gate.second];
+                                           0);
+    for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates();
+         ++i) {
+      const auto& gate = static_cast<T*>(this)->getTwoQubitGates()[i];
+      const auto tq0 = listQubitTime[gate->first];
+      const auto tq1 = listQubitTime[gate->second];
       const auto tg = std::max(tq0, tq1);
       if (tg >= gateScheduling.size()) {
         gateScheduling.emplace_back();
       }
       gateScheduling[tg].emplace_back(i);
-      listQubitTime[gate.first] = tg + 1;
-      listQubitTime[gate.second] = tg + 1;
+      listQubitTime[gate->first] = tg + 1;
+      listQubitTime[gate->second] = tg + 1;
     }
     return gateScheduling;
   }
@@ -53,7 +53,8 @@ protected:
       default:
         std::vector<std::vector<std::size_t>> schedule{};
         schedule.reserve(static_cast<T*>(this)->getNTwoQubitGates());
-        for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates(); ++i) {
+        for (std::size_t i = 0; i < static_cast<T*>(this)->getNTwoQubitGates();
+             ++i) {
           schedule.emplace_back(std::vector{i});
         }
         static_cast<T*>(this)->setGateSchedulingIdx(schedule);
@@ -86,8 +87,7 @@ protected:
         }
       }
     }
-    static_cast<T*>(this)->setGateSchedulingIdx(
-        std::move(gateSchedulingSplit));
+    static_cast<T*>(this)->setGateSchedulingIdx(std::move(gateSchedulingSplit));
     // clear old gateScheduling and gate1qscheduling
     static_cast<T*>(this)->getGateScheduling().clear();
     static_cast<T*>(this)->getGate1QScheduling().clear();
@@ -98,7 +98,7 @@ protected:
       static_cast<T*>(this)->getGateScheduling().emplace_back();
       for (const std::size_t gateIdx : gates) {
         static_cast<T*>(this)->getGateScheduling().back().emplace_back(
-            &static_cast<T*>(this)->getTwoQubitGates()[gateIdx]);
+            static_cast<T*>(this)->getTwoQubitGates()[gateIdx].get());
       }
       std::vector<const qc::StandardOperation*>& currentGate1q =
           static_cast<T*>(this)->getGate1QScheduling().emplace_back();
@@ -106,9 +106,9 @@ protected:
         const std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                                  std::vector<qc::StandardOperation>>& map =
             static_cast<T*>(this)->getDictG1QParent();
-        const auto* gate = &static_cast<T*>(this)->getTwoQubitGates()[gateIdx];
-        if (map.find(gate) != map.end()) {
-          for (const auto& gate1Q : map.at(gate)) {
+        const auto& gate = static_cast<T*>(this)->getTwoQubitGates()[gateIdx];
+        if (map.find(gate.get()) != map.end()) {
+          for (const auto& gate1Q : map.at(gate.get())) {
             currentGate1q.emplace_back(&gate1Q);
           }
         }
@@ -119,10 +119,9 @@ protected:
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - t_s);
 
-    std::cout
-        << "[INFO]           Time for scheduling: "
-        << static_cast<T*>(this)->getRuntimeAnalysis().scheduling.count()
-        << "µs\n";
+    std::cout << "[INFO]           Time for scheduling: "
+              << static_cast<T*>(this)->getRuntimeAnalysis().scheduling.count()
+              << "µs\n";
   }
 };
 

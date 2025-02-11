@@ -55,7 +55,7 @@ constexpr std::string_view settings = R"({
 
 class TestAZACSettings : public testing::Test {
 protected:
-  ZACompiler compiler;
+  AZACompiler compiler;
   void SetUp() override {
     std::istringstream settingsStream{std::string{settings}};
     ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
@@ -121,7 +121,7 @@ class TestAZACompiler
     : public ::testing::TestWithParam<std::pair<std::string, std::string>> {
 protected:
   qc::QuantumComputation circ;
-  ZACompiler compiler;
+  AZACompiler compiler;
   void SetUp() override {
     const auto& [name, qasm] = GetParam();
     circ = qasm3::Importer::imports(qasm);
@@ -148,6 +148,12 @@ TEST_P(TestAZACompiler, GetNTwoQubitGates) {
 }
 
 TEST_P(TestAZACompiler, SolveNoThrow) { ASSERT_NO_THROW(compiler.solve()); }
+
+TEST_P(TestAZACompiler, ResultValid) {
+  ASSERT_NO_THROW(compiler.solve());
+  const auto& result = compiler.getResult();
+  EXPECT_TRUE(result.naComputation.validate());
+}
 
 INSTANTIATE_TEST_SUITE_P(
     SteanStatePreps, // Custom instantiation name

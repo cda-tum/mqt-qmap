@@ -12,6 +12,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -307,6 +308,55 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
   } else {
     throw std::invalid_argument("AOD is missed in architecture spec");
   }
+}
+auto Architecture::exportNAVizMachine() const -> std::string {
+  std::stringstream ss;
+  ss << "name: \"" << name << "\"\n";
+  ss << "movement {\n    max_speed: 30\n}\n";
+  ss << "time {\n    load: 1\n    store: 1\n    ry: 1\n    rz: 1\n    cz: 1\n  "
+        "  unit: \"us\"\n}\n";
+  ss << "distance {\n    interaction: 10\n    unit: \"um\"\n}\n";
+  if (entanglementZones.size() != 1) {
+    throw std::runtime_error(
+        "Right now, only one entanglement zone is supported");
+  }
+  const auto& slm1 = entanglementZones.front().front();
+  const auto& slm2 = entanglementZones.front().back();
+  const auto minX = std::min(slm1->location.first, slm2->location.first);
+  const auto minY = std::min(slm1->location.second, slm2->location.second);
+  const auto maxX = std::max(
+      slm1->location.first + (slm1->nCols - 1) * slm1->siteSeparation.first,
+      slm2->location.first + (slm2->nCols - 1) * slm2->siteSeparation.first);
+  const auto maxY = std::max(
+      slm1->location.second + (slm1->nRows - 1) * slm1->siteSeparation.second,
+      slm2->location.second + (slm2->nRows - 1) * slm2->siteSeparation.second);
+  ss << "zone zone_cz0 {\n    from: (" << minX - 10 << ", " << minY - 10
+     << ")\n    to: (" << maxX + 10 << ", " << maxY + 10 << ")\n}\n";
+  // Generate traps for storage slms
+  for (const auto& slm : storageZones) {
+    for (std::size_t row = 0; row < slm->nRows; ++row) {
+      for (std::size_t col = 0; col < slm->nCols; ++col) {
+        const auto& [x, y] = exactSlmLocation(*slm, row, col);
+        ss << "trap trap" << slm->id << "_" << row << "_" << col << " {\n";
+        ss << "    position: (" << x << ", " << y << ")\n";
+        ss << "}\n";
+      }
+    }
+  }
+  // do the same for entanglement slms
+  for (const auto& zone : entanglementZones) {
+    for (const auto& slm : zone) {
+      for (std::size_t row = 0; row < slm->nRows; ++row) {
+        for (std::size_t col = 0; col < slm->nCols; ++col) {
+          const auto& [x, y] = exactSlmLocation(*slm, row, col);
+          ss << "trap trap" << slm->id << "_" << row << "_" << col << " {\n";
+          ss << "    position: (" << x << ", " << y << ")\n";
+          ss << "}\n";
+        }
+      }
+    }
+  }
+  return ss.str();
 }
 auto Architecture::isValidSlmPosition(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const -> bool {

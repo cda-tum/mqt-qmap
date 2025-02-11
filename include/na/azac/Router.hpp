@@ -1,6 +1,11 @@
 #pragma once
 
 #include "na/azac/CompilerBase.hpp"
+#include "na/operations/GlobalCZOp.hpp"
+#include "na/operations/LoadOp.hpp"
+#include "na/operations/LocalRZOp.hpp"
+#include "na/operations/MoveOp.hpp"
+#include "na/operations/StoreOp.hpp"
 
 #include <algorithm>
 
@@ -33,7 +38,7 @@ protected:
         static_cast<T*>(this)->getArchitecture().aods.size(), 0);
     rydbergDependency = std::vector<std::size_t>(
         static_cast<T*>(this)->getArchitecture().entanglementZones.size(), 0);
-    std::chrono::microseconds timeMis{};
+    std::chrono::microseconds timeMaximalIndependentSet{};
     qubitDependency =
         std::vector<std::size_t>(static_cast<T*>(this)->getNQubits(), 0);
     writeInitialInstruction();
@@ -42,23 +47,24 @@ protected:
          layer < static_cast<T*>(this)->getGateScheduling().size(); ++layer) {
       // extract sets of movement that can be performed simultaneously
       const auto t_s = std::chrono::system_clock::now();
-      routeQubitMis(layer);
-      timeMis += (std::chrono::system_clock::now() - t_s);
+      routeQubitMaximalIndependentSet(layer);
+      timeMaximalIndependentSet += (std::chrono::system_clock::now() - t_s);
       std::cout << "[INFO] AZAC: Solve for Rydberg stage " << (layer + 1) << "/"
                 << static_cast<T*>(this)->getGateScheduling().size()
-                << ". mis time="
+                << ". maximal independent set time="
                 << std::chrono::duration_cast<std::chrono::microseconds>(
-                       timeMis)
+                       timeMaximalIndependentSet)
                        .count()
                 << "\n";
     }
-    static_cast<T*>(this)->getRuntimeAnalysis().routing = timeMis;
+    static_cast<T*>(this)->getRuntimeAnalysis().routing =
+        timeMaximalIndependentSet;
   }
 
 private:
   /// process layers of movement from storage zone to Rydberg and back to
   /// storage zone
-  auto routeQubitMis(const std::size_t layer) -> void {
+  auto routeQubitMaximalIndependentSet(const std::size_t layer) -> void {
     const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
         initialMapping = static_cast<T*>(this)->getQubitMapping()[2 * layer];
     const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
@@ -85,50 +91,47 @@ private:
 
     if (static_cast<T*>(this)->getRoutingStrategy() !=
         CompilerBase::RoutingStrategy::MaximalIs) {
-      std::sort(remainGraph.begin(), remainGraph.end(),
-                [&](const std::size_t a, const std::size_t b) {
-                  const auto [aInitX, aInitY] = std::apply(
-                      [&](auto&&... args) {
-                        return static_cast<T*>(this)
-                            ->getArchitecture()
-                            .exactSlmLocation(
-                                std::forward<decltype(args)>(args)...);
-                      },
-                      initialMapping[a]);
-                  const auto [bInitX, bInitY] = std::apply(
-                      [&](auto&&... args) {
-                        return static_cast<T*>(this)
-                            ->getArchitecture()
-                            .exactSlmLocation(
-                                std::forward<decltype(args)>(args)...);
-                      },
-                      initialMapping[b]);
-                  const auto [aGateX, aGateY] = std::apply(
-                      [&](auto&&... args) {
-                        return static_cast<T*>(this)
-                            ->getArchitecture()
-                            .exactSlmLocation(
-                                std::forward<decltype(args)>(args)...);
-                      },
-                      gateMapping[a]);
-                  const auto [bGateX, bGateY] = std::apply(
-                      [&](auto&&... args) {
-                        return static_cast<T*>(this)
-                            ->getArchitecture()
-                            .exactSlmLocation(
-                                std::forward<decltype(args)>(args)...);
-                      },
-                      gateMapping[b]);
-                  const auto aDx =
-                      static_cast<double>(aGateX) - static_cast<double>(aInitX);
-                  const auto aDy =
-                      static_cast<double>(aGateY) - static_cast<double>(aInitY);
-                  const auto bDx =
-                      static_cast<double>(bGateX) - static_cast<double>(bInitX);
-                  const auto bDy =
-                      static_cast<double>(bGateY) - static_cast<double>(bInitY);
-                  return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
-                });
+      std::sort(
+          remainGraph.begin(), remainGraph.end(),
+          [&](const std::size_t a, const std::size_t b) {
+            const auto [aInitX, aInitY] = std::apply(
+                [&](auto&&... args) {
+                  return static_cast<T*>(this)
+                      ->getArchitecture()
+                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
+                },
+                initialMapping[a]);
+            const auto [bInitX, bInitY] = std::apply(
+                [&](auto&&... args) {
+                  return static_cast<T*>(this)
+                      ->getArchitecture()
+                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
+                },
+                initialMapping[b]);
+            const auto [aGateX, aGateY] = std::apply(
+                [&](auto&&... args) {
+                  return static_cast<T*>(this)
+                      ->getArchitecture()
+                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
+                },
+                gateMapping[a]);
+            const auto [bGateX, bGateY] = std::apply(
+                [&](auto&&... args) {
+                  return static_cast<T*>(this)
+                      ->getArchitecture()
+                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
+                },
+                gateMapping[b]);
+            const auto aDx =
+                static_cast<double>(aGateX) - static_cast<double>(aInitX);
+            const auto aDy =
+                static_cast<double>(aGateY) - static_cast<double>(aInitY);
+            const auto bDx =
+                static_cast<double>(bGateX) - static_cast<double>(bInitX);
+            const auto bDy =
+                static_cast<double>(bGateY) - static_cast<double>(bInitY);
+            return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
+          });
     }
     const auto idLayerStart =
         static_cast<T*>(this)->getResult().instructions.size();
@@ -139,7 +142,7 @@ private:
           graphConstruction(remainGraph, initialMapping, gateMapping);
       // collect violation
       const auto& violations = collectViolation(tuples);
-      // solve MIS
+      // solve maximal independent set problem
       const auto& movedQubits = maximalIsSolve(tuples.size(), violations);
 
       std::unordered_set<std::size_t>
@@ -369,8 +372,7 @@ private:
     for (std::size_t i = 0; i < static_cast<T*>(this)->getNQubits(); ++i) {
       initialLocs.emplace_back(
           i,
-          std::get<0>(static_cast<T*>(this)->getQubitMapping().front()[i])
-              ->id,
+          std::get<0>(static_cast<T*>(this)->getQubitMapping().front()[i])->id,
           std::get<1>(static_cast<T*>(this)->getQubitMapping().front()[i]),
           std::get<2>(static_cast<T*>(this)->getQubitMapping().front()[i]));
     }
@@ -380,6 +382,23 @@ private:
                        {"begin_time", 0.},
                        {"end_time", 0.},
                        {"init_locs", initialLocs}});
+    //===------------------------------------------------------------------===//
+    // NAComputation: process initial locations
+    NAComputation& naComputation =
+        static_cast<T*>(this)->getResult().naComputation;
+    const Architecture& architecture = static_cast<T*>(this)->getArchitecture();
+    naComputation.emplaceBackZone("zone_cz0");
+    for (std::size_t i = 0; i < static_cast<T*>(this)->getNQubits(); ++i) {
+      naComputation.emplaceInitialLocation(
+          naComputation.emplaceBackAtom("atom" + std::to_string(i)),
+          std::apply(
+              [&](auto&&... args) {
+                return architecture.exactSlmLocation(
+                    std::forward<decltype(args)>(args)...);
+              },
+              static_cast<T*>(this)->getQubitMapping().front()[i]));
+    }
+    //===------------------------------------------------------------------===//
 
     // process single-qubit gates
     std::unordered_set<std::size_t> setQubitDependency{};
@@ -399,9 +418,8 @@ private:
     nlohmann::json dependency;
     dependency["qubit"] = setQubitDependency;
     if (!resultGate.empty()) {
-      write1QGateInstruction(
-          instIdx, resultGate, dependency,
-          static_cast<T*>(this)->getQubitMapping().front());
+      write1QGateInstruction(instIdx, resultGate, dependency,
+                             static_cast<T*>(this)->getQubitMapping().front());
       static_cast<T*>(this)->getResult().instructions.back()["begin_time"] = 0.;
       static_cast<T*>(this)->getResult().instructions.back()["end_time"] =
           static_cast<T*>(this)->getArchitecture().time1QGate *
@@ -415,7 +433,7 @@ private:
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& initialMapping,
       const std::vector<std::tuple<const SLM*, size_t, size_t>>& finalMapping)
       -> void {
-    // seperate qubits in listAodqubit into multiple lists where qubits in one
+    // separate qubits in listAodqubit into multiple lists where qubits in one
     // list can pick up simultaneously we use row-based pick up
     std::unordered_map<std::size_t, std::vector<std::size_t>>
         pickupDict; // key: row, value: a list of qubit in the same row
@@ -431,7 +449,7 @@ private:
     }
     std::vector<std::vector<std::size_t>> listAodqubits{};
     std::vector<std::vector<std::tuple<size_t, const SLM*, size_t, size_t>>>
-        listendLocation{};
+        listenedLocation{};
     std::vector<std::vector<std::tuple<size_t, const SLM*, size_t, size_t>>>
         listBeginlocation{};
     nlohmann::json dependency = {{"qubit", std::vector<std::size_t>()},
@@ -469,12 +487,12 @@ private:
         qubitDependency[q] = instIdx;
       }
       listBeginlocation.emplace_back(std::move(rowBeginLocation));
-      listendLocation.emplace_back(std::move(rowendLocation));
+      listenedLocation.emplace_back(std::move(rowendLocation));
     }
     dependency["qubit"] = setQubitdependency;
     dependency["site"] = setSiteDependency;
     writeRearrangementInstruction(instIdx, listAodqubits, listBeginlocation,
-                                  listendLocation, dependency);
+                                  listenedLocation, dependency);
   }
 
   auto writeRearrangementInstruction(
@@ -528,7 +546,8 @@ private:
     static_cast<T*>(this)->getResult().instructions.emplace_back(inst);
   }
 
-  auto flattenRearrangmentInstruction() -> void {
+  /*===------------------------------ UNUSED ------------------------------===//
+  auto flattenRearrangementInstruction() -> void {
     for (nlohmann::json& inst :
          static_cast<T*>(this)->getResult().instructions) {
       if (inst["type"] == "rearrangeJob") {
@@ -550,6 +569,7 @@ private:
       }
     }
   }
+  //===------------------------------ UNUSED ------------------------------===*/
 
   /// generate a layer for gate execution
   auto processGateLayer(
@@ -560,7 +580,7 @@ private:
         static_cast<T*>(this)->getGateSchedulingIdx()[layer];
     const std::vector<const std::pair<qc::Qubit, qc::Qubit>*>& listGate =
         static_cast<T*>(this)->getGateScheduling()[layer];
-    const std::vector<const qc::StandardOperation*>& list1qgate =
+    const std::vector<const qc::StandardOperation*>& list1QGate =
         static_cast<T*>(this)->getGate1QScheduling()[layer];
     std::unordered_map<std::size_t, std::vector<std::size_t>> dictGateZone{};
     for (std::size_t i = 0; i < listGate.size(); ++i) {
@@ -599,7 +619,7 @@ private:
         static_cast<T*>(this)->getResult().instructions.size();
     std::vector<nlohmann::json> resultGate;
     std::unordered_set<std::size_t> setQubitdependency;
-    for (const auto* gateInfo : list1qgate) {
+    for (const auto* gateInfo : list1QGate) {
       // collect qubit dependency
       const auto qubit = gateInfo->getTargets().front();
       setQubitdependency.emplace(qubitDependency[qubit]);
@@ -607,7 +627,7 @@ private:
       resultGate.emplace_back(
           nlohmann::json{{"name", gateInfo->getName()}, {"q", qubit}});
     }
-    nlohmann::json dependency = {"qubit", setQubitdependency};
+    nlohmann::json dependency = {{"qubit", setQubitdependency}};
     if (!resultGate.empty()) {
       write1QGateInstruction(instIdx, resultGate, dependency, gateMapping);
     }
@@ -623,6 +643,13 @@ private:
                        {"zone_id", rydbergIdx},
                        {"gates", resultGate},
                        {"dependency", dependency}});
+    //===------------------------------------------------------------------===//
+    // NAComputation: process cz gate
+    NAComputation& naComputation =
+        static_cast<T*>(this)->getResult().naComputation;
+    naComputation.emplaceBack<GlobalCZOp>(
+        naComputation.getZones().front().get());
+    //===------------------------------------------------------------------===//
   }
 
   auto write1QGateInstruction(
@@ -645,6 +672,18 @@ private:
                        {"locs", locs},
                        {"gates", resultGate},
                        {"dependency", dependency}});
+    //===------------------------------------------------------------------===//
+    // NAComputation: process 1q gates
+    NAComputation& naComputation =
+        static_cast<T*>(this)->getResult().naComputation;
+    std::vector<const Atom*> atoms{};
+    for (const auto& gate : resultGate) {
+      const std::size_t q = gate["q"];
+      atoms.emplace_back(naComputation.getAtoms()[q].get());
+    }
+    // for now, we generate a Local RZ gate no matter what the original gate was
+    naComputation.emplaceBack<LocalRZOp>(0, atoms);
+    //===------------------------------------------------------------------===//
   }
 
   /// construct reverse movement layer by processing the forward movement
@@ -719,7 +758,7 @@ private:
     }
   }
 
-  /// processs the aod assignment between two Rydberg stages
+  /// process the aod assignment between two Rydberg stages
   auto aodAssignment(const std::size_t idLayerStart) -> void {
     std::vector listInstructionDuration(
         2, std::vector<std::pair<double, std::size_t>>{});
@@ -762,8 +801,10 @@ private:
         inst["aod_id"] = aodId;
         aodEndTime.emplace(endTime, aodId);
         for (auto& detailInst : inst["insts"]) {
-          detailInst["begin_time"] = detailInst["begin_time"].get<double>() + beginTime;
-          detailInst["end_time"] = detailInst["end_time"].get<double>() + beginTime;
+          detailInst["begin_time"] =
+              detailInst["begin_time"].get<double>() + beginTime;
+          detailInst["end_time"] =
+              detailInst["end_time"].get<double>() + beginTime;
         }
         if (static_cast<T*>(this)->getResult().runtime < endTime) {
           static_cast<T*>(this)->getResult().runtime = endTime;
@@ -792,8 +833,8 @@ private:
     }
   }
 
-  auto getBeginTime(const std::size_t curInstIdx, const nlohmann::json& dependency)
-      -> double {
+  auto getBeginTime(const std::size_t curInstIdx,
+                    const nlohmann::json& dependency) -> double {
     double beginTime = 0;
     for (const auto& dependencyType : dependency.items()) {
       if (dependencyType.value().is_number_integer()) {
@@ -816,7 +857,7 @@ private:
               double atomTransferFinishTime = 0;
               for (const nlohmann::json& detailInst :
                    static_cast<T*>(this)->getResult().instructions[instIdx]
-                                                                   ["insts"]) {
+                                                                  ["insts"]) {
                 std::string instType = detailInst["type"];
                 instType = instType.substr(0, instType.find(":"));
                 if (instType == "activate") {
@@ -829,7 +870,7 @@ private:
               double atomTransferBeginTime = 0;
               for (const auto& detailInst :
                    static_cast<T*>(this)->getResult().instructions[curInstIdx]
-                                                                   ["insts"]) {
+                                                                  ["insts"]) {
                 std::string instType = detailInst["type"];
                 instType = instType.substr(0, instType.find(":"));
                 if (instType == "deactivate") {
@@ -859,7 +900,8 @@ private:
           for (const std::size_t instIdx : dependencyType.value()) {
             if (beginTime < static_cast<T*>(this)
                                 ->getResult()
-                                .instructions[instIdx]["end_time"].template get<double>()) {
+                                .instructions[instIdx]["end_time"]
+                                .template get<double>()) {
               beginTime = static_cast<T*>(this)
                               ->getResult()
                               .instructions[instIdx]["end_time"];
@@ -880,8 +922,7 @@ private:
       instType = instType.substr(0, instType.find(":"));
       detailInst["begin_time"] = duration;
       if (instType == "activate" || instType == "deactivate") {
-        duration +=
-            static_cast<T*>(this)->getArchitecture().timeAtomTransfer;
+        duration += static_cast<T*>(this)->getArchitecture().timeAtomTransfer;
         detailInst["end_time"] = duration;
       } else if (instType == "move") {
         double moveDuration = 0;
@@ -920,7 +961,11 @@ private:
           std::vector<std::tuple<size_t, const SLM*, size_t, size_t>>>&
           endLocation) -> nlohmann::json {
     nlohmann::json details{};
-
+    //===------------------------------------------------------------------===//
+    // NAComputation: process rearrangement (get reference)
+    NAComputation& naComputation =
+        static_cast<T*>(this)->getResult().naComputation;
+    //===------------------------------------------------------------------===//
     // ---------------------- find out number of cols ----------------------
     std::vector<std::size_t> allColX{};   // all the x coord of qubits
     std::vector<nlohmann::json> coords{}; // coords of qubits
@@ -930,7 +975,8 @@ private:
       std::vector<nlohmann::json> coordsRow{};
       for (const auto& [q, slm, r, c] : locs) {
         const auto& [x, y] =
-            static_cast<T*>(this)->getArchitecture().exactSlmLocation(slm, r, c);
+            static_cast<T*>(this)->getArchitecture().exactSlmLocation(slm, r,
+                                                                      c);
         coordsRow.emplace_back(nlohmann::json{{"id", q}, {"x", x}, {"y", y}});
         allColX.emplace_back(x);
       }
@@ -949,17 +995,17 @@ private:
     // ---------------------------------------------------------------------
 
     // -------------------- activation and parking -------------------------
-    std::unordered_set<std::size_t> allColIdxSoFar{}; // which col has been activated
+    std::unordered_set<std::size_t>
+        allColIdxSoFar{}; // which col has been activated
     for (std::size_t rowId = 0; rowId < beginLocation.size(); ++rowId) {
       // for each row
       const auto& locs = beginLocation[rowId];
-      const std::size_t row_y =
-          static_cast<T*>(this)
-              ->getArchitecture()
-              .exactSlmLocation(std::get<1>(locs.front()),
-                                  std::get<2>(locs.front()),
-                                  std::get<3>(locs.front()))
-              .second;
+      const std::size_t row_y = static_cast<T*>(this)
+                                    ->getArchitecture()
+                                    .exactSlmLocation(std::get<1>(locs.front()),
+                                                      std::get<2>(locs.front()),
+                                                      std::get<3>(locs.front()))
+                                    .second;
       const std::pair rowLoc{std::get<1>(locs.front())->id,
                              std::get<2>(locs.front())};
       // before activation, adjust column position. This is necessary
@@ -991,13 +1037,21 @@ private:
           {"col_x", std::vector<std::size_t>{}},
           {"col_loc", std::vector<std::pair<std::size_t, std::size_t>>{}},
       };
+      //===----------------------------------------------------------------===//
+      // NAComputation: process rearrangement (collect atoms)
+      std::vector<const Atom*> activateAtoms{};
+      std::vector<const Atom*> shiftBackAtoms{};
+      std::vector<Location> shiftBackTargetLocations{};
+      std::vector<const Atom*> parkingAtoms{};
+      std::vector<Location> parkingTargetLocations{};
+      //===----------------------------------------------------------------===//
 
       for (std::size_t j = 0; j < locs.size(); ++j) {
         const auto& [q, slm, r, c] = locs[j];
         const std::size_t colX = static_cast<T*>(this)
-                                      ->getArchitecture()
-                                      .exactSlmLocation(slm, r, c)
-                                      .first;
+                                     ->getArchitecture()
+                                     .exactSlmLocation(slm, r, c)
+                                     .first;
         const std::pair colLoc{slm->id, c};
         const auto colId = colXToId[colX];
         if (allColIdxSoFar.find(colId) == allColIdxSoFar.end()) {
@@ -1007,6 +1061,10 @@ private:
           activate["col_id"].emplace_back(colId);
           activate["col_x"].emplace_back(colX);
           activate["col_loc"].emplace_back(colLoc);
+          //===------------------------------------------------------------===//
+          // NAComputation: process rearrangement (collect atoms)
+          activateAtoms.emplace_back(naComputation.getAtoms().at(q).get());
+          //===------------------------------------------------------------===//
         } else {
           // the col has been activated, thus parked previously and we
           // need the shift back, but we do not activate again.
@@ -1017,6 +1075,11 @@ private:
           shiftBack["col_loc_end"].emplace_back(colLoc);
           // since there's a shift, update the coords of the qubit
           coords[rowId][j]["x"] = colX;
+          //===------------------------------------------------------------===//
+          // NAComputation: process rearrangement (collect atoms)
+          shiftBackAtoms.emplace_back(naComputation.getAtoms().at(q).get());
+          shiftBackTargetLocations.emplace_back(colX, row_y);
+          //===------------------------------------------------------------===//
         }
       }
 
@@ -1024,8 +1087,17 @@ private:
 
       if (!shiftBack["col_id"].empty()) {
         details.emplace_back(shiftBack);
+        //===--------------------------------------------------------------===//
+        // NAComputation: process rearrangement (add move)
+        naComputation.emplaceBack<MoveOp>(shiftBackAtoms,
+                                          shiftBackTargetLocations);
+        //===--------------------------------------------------------------===//
       }
       details.emplace_back(activate);
+      //===--------------------------------------------------------------===//
+      // NAComputation: process rearrangement (add move)
+      naComputation.emplaceBack<LoadOp>(activateAtoms);
+      //===--------------------------------------------------------------===//
 
       if (rowId < inst["begin_locs"].size() - 1) {
         // parking movement after the activation
@@ -1065,9 +1137,20 @@ private:
           parking["col_loc_end"].emplace_back(std::pair{-1, -1});
           coords[rowId][j]["x"] = parking["col_x_end"].back();
           coords[rowId][j]["y"] = parking["row_y_end"].front();
+          //===--------------------------------------------------------------===//
+          // NAComputation: process rearrangement (collect atoms)
+          parkingAtoms.emplace_back(naComputation.getAtoms().at(q).get());
+          parkingTargetLocations.emplace_back(
+              parking["col_x_end"].back().get<std::size_t>(),
+              parking["row_y_end"].front().get<std::size_t>());
+          //===--------------------------------------------------------------===//
         }
         parking["end_coord"] = coords;
         details.emplace_back(parking);
+        //===--------------------------------------------------------------===//
+        // NAComputation: process rearrangement (add move)
+        naComputation.emplaceBack<MoveOp>(parkingAtoms, parkingTargetLocations);
+        //===--------------------------------------------------------------===//
       }
     }
     // ---------------------------------------------------------------------
@@ -1090,6 +1173,12 @@ private:
         {"end_coord", std::vector<std::size_t>{}},
     };
 
+    //===----------------------------------------------------------------===//
+    // NAComputation: process rearrangement (collect atoms)
+    std::vector<const Atom*> moveAtoms{};
+    std::vector<Location> moveLocations{};
+    std::vector<const Atom*> deactivateAtoms{};
+    //===----------------------------------------------------------------===//
     for (std::size_t rowId = 0; rowId < beginLocation.size(); ++rowId) {
       const auto& beginLocs = beginLocation[rowId];
       const auto& endLocs = endLocation[rowId];
@@ -1106,8 +1195,8 @@ private:
           static_cast<T*>(this)
               ->getArchitecture()
               .exactSlmLocation(std::get<1>(endLocs.front()),
-                                  std::get<2>(endLocs.front()),
-                                  std::get<3>(endLocs.front()))
+                                std::get<2>(endLocs.front()),
+                                std::get<3>(endLocs.front()))
               .second);
       bigMove["row_loc_end"].emplace_back(std::pair{
           std::get<1>(endLocs.front())->id, std::get<2>(endLocs.front())});
@@ -1115,12 +1204,12 @@ private:
       for (std::size_t j = 0; j < beginLocs.size(); ++j) {
         const auto& beginLoc = beginLocs[j];
         const auto& endLoc = endLocs[j];
-        const auto col_x = static_cast<T*>(this)
-                               ->getArchitecture()
-                               .exactSlmLocation(std::get<1>(beginLoc),
-                                                   std::get<2>(beginLoc),
-                                                   std::get<3>(beginLoc))
-                               .first;
+        const auto col_x =
+            static_cast<T*>(this)
+                ->getArchitecture()
+                .exactSlmLocation(std::get<1>(beginLoc), std::get<2>(beginLoc),
+                                  std::get<3>(beginLoc))
+                .first;
         const std::size_t colId = colXToId[col_x];
 
         if (std::find(bigMove["col_id"].cbegin(), bigMove["col_id"].cend(),
@@ -1139,7 +1228,7 @@ private:
               static_cast<T*>(this)
                   ->getArchitecture()
                   .exactSlmLocation(std::get<1>(endLoc), std::get<2>(endLoc),
-                                      std::get<3>(endLoc))
+                                    std::get<3>(endLoc))
                   .first);
           bigMove["col_loc_end"].emplace_back(
               std::pair{std::get<1>(endLoc)->id, std::get<3>(endLoc)});
@@ -1159,10 +1248,21 @@ private:
                                   std::get<2>(endLocs.front()),
                                   std::get<3>(endLocs.front()))
                 .second;
+        //===--------------------------------------------------------------===//
+        // NAComputation: process rearrangement (collect atoms)
+        moveAtoms.emplace_back(
+            naComputation.getAtoms().at(std::get<0>(beginLoc)).get());
+        moveLocations.emplace_back(coords[rowId][j]["x"].get<std::size_t>(),
+                                   coords[rowId][j]["y"].get<std::size_t>());
+        //===--------------------------------------------------------------===//
       }
     }
     bigMove["end_coord"] = coords;
     details.emplace_back(bigMove);
+    //===------------------------------------------------------------------===//
+    // NAComputation: process rearrangement (add move)
+    naComputation.emplaceBack<MoveOp>(moveAtoms, moveLocations);
+    //===------------------------------------------------------------------===//
     // ---------------------------------------------------------------------
 
     // --------------------------- deactivation ----------------------------
@@ -1172,10 +1272,20 @@ private:
                        {"col_id", std::vector<std::size_t>{}}});
     for (std::size_t i = 0; i < beginLocation.size(); ++i) {
       details.back()["row_id"].emplace_back(i);
+      //===----------------------------------------------------------------===//
+      // NAComputation: process rearrangement (collect atoms)
+      for (const auto& [q, slm, r, c] : beginLocation[i]) {
+        deactivateAtoms.emplace_back(naComputation.getAtoms().at(q).get());
+      }
+      //===----------------------------------------------------------------===//
     }
     for (std::size_t i = 0; i < allColX.size(); ++i) {
       details.back()["col_id"].emplace_back(i);
     }
+    //===------------------------------------------------------------------===//
+    // NAComputation: process rearrangement (add move)
+    naComputation.emplaceBack<StoreOp>(deactivateAtoms);
+    //===------------------------------------------------------------------===//
     // ---------------------------------------------------------------------
 
     for (std::size_t instCounter = 0; instCounter < details.size();

@@ -20,7 +20,7 @@ private:
   friend T;
 
 public:
-  auto solve(bool saveFile = true) -> Result {
+  auto solve(bool saveFile = true) -> const Result& {
     // member to hold intermediate results
     gateScheduling.clear();
     gate1QScheduling.clear();
@@ -100,6 +100,21 @@ public:
       timingtJsonOfs << timingJson;
       std::cout << "[INFO]           Saved results to "
                 << absolute(timingJsonFilename) << "\n";
+
+      //===----------------------------------------------------------------===//
+      // NAComputation: save NAComputation to file
+      const auto naFilename = dir / "na" / (result.name + "_code.naviz");
+      create_directories(naFilename.parent_path());
+      std::ofstream naOfs(naFilename);
+      if (!naOfs) {
+        std::stringstream ss{};
+        ss << "Cannot open file " << absolute(naFilename);
+        throw std::runtime_error(ss.str());
+      }
+      naOfs << result.naComputation;
+      std::cout << "[INFO]           Saved NAComputation to "
+                << absolute(naFilename) << "\n";
+      //===----------------------------------------------------------------===//
     }
 
     if (toVerify) {
@@ -111,7 +126,7 @@ public:
   }
 };
 
-class ZACompiler final
-    : public Compiler<ZACompiler, Placer, Router, Scheduler> {};
+class AZACompiler final
+    : public Compiler<AZACompiler, Placer, Router, Scheduler> {};
 
 } // namespace na

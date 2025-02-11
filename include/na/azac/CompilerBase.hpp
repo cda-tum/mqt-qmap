@@ -3,6 +3,7 @@
 #include "Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <chrono>
@@ -35,6 +36,7 @@ public:
     std::string name = "Untitled";
     std::string architectureSpecPath = "inline";
     nlohmann::json instructions;
+    NAComputation naComputation{};
     double runtime = 0;
   };
   struct RuntimeAnalysis {
@@ -47,7 +49,7 @@ public:
 
 protected:
   std::filesystem::path dir = "./result/";
-  std::size_t nQubits = 0; ///< number of qubits
+  std::size_t nQubits = 0;        ///< number of qubits
   std::size_t nTwoQubitGates = 0; ///< number of 2-qubit gates
   Architecture architecture;
   Result result{};
@@ -74,7 +76,7 @@ protected:
   bool reuse = true;
   std::size_t common1Q = 0;
   /// list of 2-qubit CZ gates as a list of pairs of qubits
-  std::vector<std::pair<qc::Qubit, qc::Qubit>> twoQubitGates{};
+  std::vector<std::unique_ptr<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGates{};
   /// map that stores the 1-qubit gates that act on a qubit after the
   /// respective 2-qubit gate
   std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
@@ -89,8 +91,7 @@ protected:
   /// @note Computed by the scheduler
   std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
       gateScheduling{};
-  std::vector<std::vector<std::size_t>>
-      gateSchedulingIdx{};
+  std::vector<std::vector<std::size_t>> gateSchedulingIdx{};
   /// list of 1-qubit gates that are executed in each layer
   /// @note Computed by the scheduler
   std::vector<std::vector<const qc::StandardOperation*>> gate1QScheduling{};
@@ -101,24 +102,20 @@ public:
       : CompilerBase(std::filesystem::path(filename)) {}
   explicit CompilerBase(const std::filesystem::path& path)
       : CompilerBase(std::ifstream(path)) {}
-  explicit CompilerBase(std::istream& is)
-      : CompilerBase(std::move(is)) {}
-  explicit CompilerBase(std::istream&& is) {
-    loadSettings(std::move(is));
-  }
+  explicit CompilerBase(std::istream& is) : CompilerBase(std::move(is)) {}
+  explicit CompilerBase(std::istream&& is) { loadSettings(std::move(is)); }
   auto loadSettings(const std::string& filename) -> void {
     loadSettings(std::filesystem::path(filename));
   }
   auto loadSettings(const std::filesystem::path& path) -> void {
     loadSettings(std::ifstream(path));
   }
-  auto loadSettings(std::istream& is) -> void {
-    loadSettings(std::move(is));
-  }
+  auto loadSettings(std::istream& is) -> void { loadSettings(std::move(is)); }
   auto loadSettings(std::istream&& is) -> void;
   auto setProgram(const qc::QuantumComputation& qc) -> void;
   [[nodiscard]] auto toString() const -> std::string;
-  friend auto operator<<(std::ostream& os, const CompilerBase& cb) -> std::ostream& {
+  friend auto operator<<(std::ostream& os, const CompilerBase& cb)
+      -> std::ostream& {
     os << cb.toString();
     return os;
   }
@@ -128,21 +125,28 @@ protected:
   auto collectReuseQubit() -> void;
   static auto toString(RoutingStrategy strategy) -> std::string;
   static auto toRoutingStrategy(const std::string& strategy) -> RoutingStrategy;
-  friend auto operator<<(std::ostream& os, const RoutingStrategy rs) -> std::ostream& {
+  friend auto operator<<(std::ostream& os, const RoutingStrategy rs)
+      -> std::ostream& {
     os << toString(rs);
     return os;
   }
   static auto toString(SchedulingStrategy strategy) -> std::string;
-  static auto toSchedulingStrategy(const std::string& strategy) -> SchedulingStrategy;
-  friend auto operator<<(std::ostream& os,
-                                  const SchedulingStrategy ss) -> std::ostream& {
+  static auto toSchedulingStrategy(const std::string& strategy)
+      -> SchedulingStrategy;
+  friend auto operator<<(std::ostream& os, const SchedulingStrategy ss)
+      -> std::ostream& {
     os << toString(ss);
     return os;
   }
+
 public:
-  [[nodiscard]] auto getDir() const -> const std::filesystem::path& { return dir; }
+  [[nodiscard]] auto getDir() const -> const std::filesystem::path& {
+    return dir;
+  }
   [[nodiscard]] auto getNQubits() const -> std::size_t { return nQubits; }
-  [[nodiscard]] auto getNTwoQubitGates() const -> std::size_t { return nTwoQubitGates; }
+  [[nodiscard]] auto getNTwoQubitGates() const -> std::size_t {
+    return nTwoQubitGates;
+  }
   [[nodiscard]] auto getArchitecture() const -> const Architecture& {
     return architecture;
   }
@@ -151,14 +155,18 @@ public:
     return runtimeAnalysis;
   }
   [[nodiscard]] auto isToVerify() const -> bool { return toVerify; }
-  [[nodiscard]] auto isTrivialPlacement() const -> bool { return trivialPlacement; }
+  [[nodiscard]] auto isTrivialPlacement() const -> bool {
+    return trivialPlacement;
+  }
   [[nodiscard]] auto getRoutingStrategy() const -> RoutingStrategy {
     return routingStrategy;
   }
   [[nodiscard]] auto getSchedulingStrategy() const -> SchedulingStrategy {
     return schedulingStrategy;
   }
-  [[nodiscard]] auto isDynamicPlacement() const -> bool { return dynamicPlacement; }
+  [[nodiscard]] auto isDynamicPlacement() const -> bool {
+    return dynamicPlacement;
+  }
   [[nodiscard]] auto getGivenInitialMapping() const -> const std::optional<
       std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>& {
     return givenInitialMapping;
@@ -170,7 +178,7 @@ public:
   [[nodiscard]] auto isReuse() const -> bool { return reuse; }
   [[nodiscard]] auto getCommon1Q() const -> std::size_t { return common1Q; }
   [[nodiscard]] auto getTwoQubitGates() const
-      -> const std::vector<std::pair<qc::Qubit, qc::Qubit>>& {
+      -> const std::vector<std::unique_ptr<std::pair<qc::Qubit, qc::Qubit>>>& {
     return twoQubitGates;
   }
   [[nodiscard]] auto getDictG1QParent() const
@@ -211,8 +219,8 @@ public:
     qubitMapping = newQubitMapping;
   }
   auto setGateSchedulingIdx(
-      const std::vector<std::vector<std::size_t>>&
-          newGateSchedulingIdx) -> void {
+      const std::vector<std::vector<std::size_t>>& newGateSchedulingIdx)
+      -> void {
     gateSchedulingIdx = newGateSchedulingIdx;
   }
   auto setGate1QScheduling(

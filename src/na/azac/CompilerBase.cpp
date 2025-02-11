@@ -77,9 +77,9 @@ std::string CompilerBase::toString() const {
   } else {
     ss << "[INFO]           Scheduling strategy: edge coloring\n";
   }
-  if  (trivialPlacement) {
+  if (trivialPlacement) {
     ss << "[INFO]           Placement strategy: trivial placement\n";
-  } else if  (givenInitialMapping) {
+  } else if (givenInitialMapping) {
     ss << "[INFO]           Initial placement strategy: user-defined "
           "placement\n";
   } else if (l2) {
@@ -89,12 +89,12 @@ std::string CompilerBase::toString() const {
     ss << "[INFO]           Initial placement strategy: SA-based placement "
           "with Euclidean distance model\n";
   }
-  if  (dynamicPlacement) {
+  if (dynamicPlacement) {
     ss << "[INFO]           Intermediate placement strategy: minimal "
           "weighted matching\n";
   } else {
     ss << "[INFO]           Intermediate placement strategy: return to "
-          "intial mapping\n";
+          "initial mapping\n";
   }
   if (reuse) {
     ss << "[INFO]                                            reuse aware\n";
@@ -102,12 +102,12 @@ std::string CompilerBase::toString() const {
     ss << "[INFO]                                            no reuse\n";
   }
   ss << "[INFO]           Routing strategy: " << routingStrategy;
-  if  (useWindow) {
+  if (useWindow) {
     ss << " with window size " << windowSize << "\n";
   } else {
     ss << " without window\n";
   }
-  if  (toVerify) {
+  if (toVerify) {
     ss << "[INFO]           Verifier: enable\n";
   } else {
     ss << "[INFO]           Verifier: disable\n";
@@ -127,8 +127,8 @@ auto CompilerBase::collectReuseQubit() -> void {
   }
   for (std::size_t i = 1; i < gateScheduling.size(); ++i) {
     reuseQubits.emplace_back();
-    std::vector matrix (gateScheduling[i].size(),
-                       std::vector (gateScheduling[i - 1].size(), false));
+    std::vector matrix(gateScheduling[i].size(),
+                       std::vector(gateScheduling[i - 1].size(), false));
     for (std::size_t gateIdx = 0; gateIdx < gateScheduling[i].size();
          ++gateIdx) {
       const auto& gate = gateScheduling[i][gateIdx];
@@ -199,8 +199,8 @@ std::string CompilerBase::toString(const SchedulingStrategy strategy) {
     return "trivial";
   }
 }
-auto
-CompilerBase::toSchedulingStrategy(const std::string& strategy) -> CompilerBase::SchedulingStrategy {
+auto CompilerBase::toSchedulingStrategy(const std::string& strategy)
+    -> CompilerBase::SchedulingStrategy {
   static const std::unordered_map<std::string, SchedulingStrategy>
       STRINGTostrategy{{"asap", SchedulingStrategy::ASAP},
                        {"trivial", SchedulingStrategy::TRIVIAL}};
@@ -227,14 +227,15 @@ auto CompilerBase::setProgram(const qc::QuantumComputation& qc) -> void {
           stdop.getType() == qc::Z) {
         const auto& usedQubits = stdop.getUsedQubits();
         const std::vector qubits(usedQubits.cbegin(), usedQubits.cend());
-        if (qubits[0] < qubits[1]) {
-          twoQubitGates.emplace_back(qubits[0], qubits[1]);
-        } else {
-          twoQubitGates.emplace_back(qubits[1], qubits[0]);
-        }
+        listQubitLast2qGate[qubits[0]] = listQubitLast2qGate[qubits[1]] =
+            twoQubitGates
+                .emplace_back(std::make_unique<std::pair<qc::Qubit, qc::Qubit>>(
+                    std::min(qubits[0], qubits[1]),
+                    std::max(qubits[0], qubits[1])))
+                .get();
       } else if (stdop.getNcontrols() == 0 && stdop.getNtargets() == 1) {
         const auto& qubit = *stdop.getTargets().cbegin();
-        if  (dictG1QParent.find(listQubitLast2qGate[qubit]) ==
+        if (dictG1QParent.find(listQubitLast2qGate[qubit]) ==
             dictG1QParent.cend()) {
           dictG1QParent[listQubitLast2qGate[qubit]] =
               std::vector<qc::StandardOperation>{};
@@ -254,7 +255,8 @@ auto CompilerBase::setProgram(const qc::QuantumComputation& qc) -> void {
   }
   nTwoQubitGates = twoQubitGates.size();
   std::cout << "[INFO]           Number of qubits: " << nQubits << "\n";
-  std::cout << "[INFO]           Number of two-qubit gates: " << nTwoQubitGates << "\n";
+  std::cout << "[INFO]           Number of two-qubit gates: " << nTwoQubitGates
+            << "\n";
   std::cout << "[INFO]           Number of single-qubit gates: "
             << nSingleQubitGate << "\n";
 }

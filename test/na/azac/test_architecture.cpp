@@ -123,4 +123,8 @@ TEST_F(TestArchitecture, NearestSite) {
   }
 }
 
+TEST_F(TestArchitecture, ExportNoThrow) {
+  ASSERT_NO_THROW(arch.exportNAVizMachine(arch.name + ".namachine"));
+}
+
 } // namespace na
