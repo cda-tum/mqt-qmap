@@ -3,7 +3,7 @@
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/Architecture.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 #include "na/nasp/Solver.hpp"
 
 #include <algorithm>
@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace na {
-auto SolverFactory::create(const Architecture& arch) -> NASolver {
+auto SolverFactory::create(const nalac::Architecture& arch) -> NASolver {
   const auto interactionZone =
       *arch.getPropertiesOfOperation(qc::Z, 1).zones.cbegin();
   const auto maxX =
@@ -26,9 +26,9 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
   const auto maxR =
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
-  const auto storageZone = arch.getInitialZones().front();
+  const auto storageZones = arch.getInitialZones().front();
   const auto maxY =
-      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZone));
+      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZones));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD
@@ -64,20 +64,20 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
   const auto noInteractionRadius = arch.getNoInteractionRadius();
   const auto firstSite = arch.getSitesInZone(interactionZone)[0];
   const auto siteRight =
-      arch.getNearestSiteRight(arch.getLocationOfSite(firstSite), true, true);
+      arch.getNearestSiteRight(arch.getPositionOfSite(firstSite), true, true);
   const auto siteBelow =
-      arch.getNearestSiteDown(arch.getLocationOfSite(firstSite), true, true);
+      arch.getNearestSiteDown(arch.getPositionOfSite(firstSite), true, true);
   if (!siteRight || !siteBelow) {
     throw std::invalid_argument(
         "Unexpected architecture: There is no site to the right or below the "
         "first site in the interaction zone.");
   }
   const auto maxHOffset = static_cast<uint16_t>(
-      (arch.getLocationOfSite(*siteRight) - arch.getLocationOfSite(firstSite))
+      (arch.getPositionOfSite(*siteRight) - arch.getPositionOfSite(firstSite))
           .length() -
       (noInteractionRadius / 2 / minAtomDistance));
   const auto maxVOffset = static_cast<uint16_t>(
-      (arch.getLocationOfSite(*siteBelow) - arch.getLocationOfSite(firstSite))
+      (arch.getPositionOfSite(*siteBelow) - arch.getPositionOfSite(firstSite))
           .length() -
       (noInteractionRadius / 2 / minAtomDistance));
   return {maxX,       maxY,     maxC,     maxR, maxHOffset,

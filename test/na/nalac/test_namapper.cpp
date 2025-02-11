@@ -4,17 +4,14 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/StandardOperation.hpp"
-#include "na/Architecture.hpp"
-#include "na/Configuration.hpp"
-#include "na/NAComputation.hpp"
 #include "na/nalac/NAMapper.hpp"
-#include "na/operations/GlobalCZOp.hpp"
-#include "na/operations/GlobalOp.hpp"
-#include "na/operations/GlobalRYOp.hpp"
-#include "na/operations/LocalOp.hpp"
-#include "na/operations/LocalRZOp.hpp"
-#include "na/operations/ShuttlingOp.hpp"
-#include "qasm3/Importer.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
+#include "na/nalac/datastructures/NAComputation.hpp"
+#include "na/nalac/datastructures/NADefinitions.hpp"
+#include "na/nalac/datastructures/operations/NAGlobalOperation.hpp"
+#include "na/nalac/datastructures/operations/NALocalOperation.hpp"
+#include "na/nalac/datastructures/operations/NAShuttlingOperation.hpp"
 #include "qasm3/Importer.hpp"
 
 #include <algorithm>
@@ -28,73 +25,77 @@
 #include <unordered_map>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 auto retrieveQuantumComputation(const NAComputation& nac,
                                 const Architecture& arch)
     -> qc::QuantumComputation {
-  qc::QuantumComputation qComp(nac.getAtomsSize());
-  std::unordered_map<const Atom*, qc::Qubit> atomToQubit(nac.getAtomsSize());
-  qc::Qubit q = 0;
-  for (const auto& atom : nac.getAtoms()) {
-    atomToQubit.emplace(atom.get(), q++);
+  qc::QuantumComputation qComp(nac.getInitialPositions().size());
+  std::vector<Point> positionOfQubits;
+  std::unordered_map<Point, qc::Qubit> positionToQubit;
+  positionOfQubits.reserve(nac.getInitialPositions().size());
+  qc::Qubit n = 0;
+  for (const auto& p : nac.getInitialPositions()) {
+    positionToQubit[*p] = n++;
+    positionOfQubits.emplace_back(*p);
   }
   for (const auto& naOp : nac) {
-    if (naOp->is<LocalOp>()) {
-      const auto& localOp = naOp->as<LocalOp>();
-      if (!localOp.is<LocalRZOp>()) {
-        throw std::invalid_argument(
-            "So far, only rz gates are supported as local gates.");
+    if (naOp->isLocalOperation()) {
+      const auto& localOp = dynamic_cast<const NALocalOperation&>(*naOp);
+      if (localOp.getType().second != 0 ||
+          !isSingleQubitGate(localOp.getType().first)) {
+        throw std::invalid_argument("Only single qubit gates are supported.");
       }
-      for (const auto& atom : localOp.getAtoms()) {
-        qComp.emplace_back<qc::StandardOperation>(atomToQubit[atom], qc::RZ,
+      for (const auto& pos : localOp.getPositions()) {
+        qComp.emplace_back<qc::StandardOperation>(positionToQubit[*pos],
+                                                  localOp.getType().first,
                                                   localOp.getParams());
       }
-    } else if (naOp->is<ShuttlingOp>()) {
-      // does not contribute to qc::QuantumComputation
-    } else if (naOp->is<GlobalOp>()) {
-      if (!naOp->is<GlobalRYOp>() && !naOp->is<GlobalCZOp>()) {
-        throw std::invalid_argument(
-            "So far, only ry and cz gates are supported as global gates.");
+    } else if (naOp->isShuttlingOperation()) {
+      const auto& shuttlingOp =
+          dynamic_cast<const NAShuttlingOperation&>(*naOp);
+      for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
+        positionOfQubits[positionToQubit[*shuttlingOp.getStart()[i]]] =
+            *shuttlingOp.getEnd()[i];
       }
-      const auto& globalOp = naOp->as<GlobalCZOp>();
-      if (naOp->is<GlobalCZOp>()) {
-        const auto& zones = arch.getPropertiesOfOperation(qc::Z, 1).zones;
-        for (std::size_t i1 = 0; i1 < nac.getAtomsSize(); ++i1) {
-          const auto& atom1 = nac.getAtoms()[i1];
-          const auto loc1 =
-              nac.getLocationOfAtomAfterOperation(atom1.get(), naOp);
-          for (std::size_t i2 = 0; i2 < nac.getAtomsSize(); ++i2) {
-            const auto& atom2 = nac.getAtoms()[i2];
-            const auto loc2 =
-                nac.getLocationOfAtomAfterOperation(atom2.get(), naOp);
-            if ((loc1 - loc2).length() <= arch.getInteractionRadius() &&
+      positionToQubit.clear();
+      for (qc::Qubit i = 0; i < positionOfQubits.size(); ++i) {
+        positionToQubit[positionOfQubits[i]] = i;
+      }
+    } else if (naOp->isGlobalOperation()) {
+      const auto& globalOp = dynamic_cast<const NAGlobalOperation&>(*naOp);
+      const auto& zones =
+          arch.getPropertiesOfOperation(globalOp.getType().first,
+                                        globalOp.getType().second)
+              .zones;
+      if (!isSingleQubitGate(globalOp.getType().first) ||
+          globalOp.getType().second > 1) {
+        throw std::invalid_argument("Only 1Q- and 2Q-gates are supported.");
+      }
+      if (globalOp.getType().second == 1) {
+        for (std::size_t i1 = 0; i1 < positionOfQubits.size(); ++i1) {
+          const auto& pos1 = positionOfQubits[i1];
+          for (std::size_t i2 = i1 + 1; i2 < positionOfQubits.size(); ++i2) {
+            const auto& pos2 = positionOfQubits[i2];
+            if ((pos1 - pos2).length() <= arch.getInteractionRadius() &&
                 std::any_of(zones.cbegin(), zones.cend(),
-                            [&arch, &loc1](const auto& z) {
-                              return arch.getZoneAt(loc1) == z;
+                            [&arch, &pos1](const auto& z) {
+                              return arch.getZoneAt(pos1) == z;
                             }) &&
                 std::any_of(zones.cbegin(), zones.cend(),
-                            [&arch, &loc2](const auto& z) {
-                              return arch.getZoneAt(loc2) == z;
+                            [&arch, &pos2](const auto& z) {
+                              return arch.getZoneAt(pos2) == z;
                             })) {
-              qComp.emplace_back<qc::StandardOperation>(i1, i2, qc::RZ,
-                                                        globalOp.getParams());
+              qComp.emplace_back<qc::StandardOperation>(
+                  i1, i2, globalOp.getType().first, globalOp.getParams());
             }
           }
         }
       } else {
-        const auto& zones = arch.getPropertiesOfOperation(qc::RY, 0).zones;
         qc::CompoundOperation compoundOp;
-        for (std::size_t i = 0; i < nac.getAtomsSize(); ++i) {
-          const auto& atom = nac.getAtoms()[i];
-          const auto loc = nac.getLocationOfAtomAfterOperation(atom, naOp);
-          if (std::any_of(zones.cbegin(), zones.cend(),
-                          [&arch, &loc](const auto& z) {
-                            return arch.getZoneAt(loc) == z;
-                          })) {
-            compoundOp.emplace_back<qc::StandardOperation>(
-                i, qc::RY, globalOp.getParams());
-          }
+        for (std::size_t i = 0; i < positionOfQubits.size(); ++i) {
+          compoundOp.emplace_back<qc::StandardOperation>(
+              i, globalOp.getType().first, globalOp.getParams());
         }
         qComp.emplace_back<qc::CompoundOperation>(compoundOp);
       }
@@ -132,7 +133,7 @@ auto checkEquivalence(const qc::QuantumComputation& circ,
   }
   return true;
 }
-} // namespace na
+} // namespace na::nalac
 
 TEST(NAMapper, Exceptions) {
   std::istringstream archIS(R"({
@@ -259,11 +260,12 @@ TEST(NAMapper, Exceptions) {
     }
   }
   // total: 1296 sites
-  const auto& arch = na::Architecture(archIS, gridSS);
+  const auto& arch = na::nalac::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
-  na::NAMapper mapper(
-      arch, na::Configuration(
-                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  na::nalac::NAMapper mapper(
+      arch,
+      na::nalac::Configuration(
+          3, 3, na::nalac::NAMappingMethod::MaximizeParallelismHeuristic));
   EXPECT_THROW(std::ignore = mapper.getResult(), std::logic_error);
   EXPECT_THROW(std::ignore = mapper.getStats(), std::logic_error);
   EXPECT_THROW(
@@ -674,30 +676,32 @@ rz(3.9927041) q[4];
 rz(3.9927041) q[5];
 rz(3.9927041) q[7];)";
   const auto& circ = qasm3::Importer::imports(qasm);
-  const auto& arch = na::Architecture(archIS, gridSS);
+  const auto& arch = na::nalac::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
-  na::NAMapper mapper(
-      arch, na::Configuration(
-                1, 1, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  na::nalac::NAMapper mapper(
+      arch,
+      na::nalac::Configuration(
+          1, 1, na::nalac::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   const auto& result = mapper.getResult();
-  EXPECT_TRUE(result.validate());
-  EXPECT_TRUE(na::checkEquivalence(circ, result, arch));
+  EXPECT_TRUE(result.validateAODConstraints());
+  EXPECT_TRUE(na::nalac::checkEquivalence(circ, result, arch));
   std::ignore = mapper.getStats();
   // ---------------------------------------------------------------------
-  na::NAMapper mapper2(
-      arch, na::Configuration(
-                3, 3, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  na::nalac::NAMapper mapper2(
+      arch,
+      na::nalac::Configuration(
+          3, 3, na::nalac::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper2.map(circ);
   const auto& result2 = mapper2.getResult();
-  EXPECT_TRUE(result2.validate());
+  EXPECT_TRUE(result2.validateAODConstraints());
   // ---------------------------------------------------------------------
-  na::NAMapper mapper3(arch,
-                       na::Configuration(1, 1, na::NAMappingMethod::Naive));
+  na::nalac::NAMapper mapper3(
+      arch, na::nalac::Configuration(1, 1, na::nalac::NAMappingMethod::Naive));
   mapper3.map(circ);
   const auto& result3 = mapper3.getResult();
-  EXPECT_TRUE(result3.validate());
-  EXPECT_TRUE(na::checkEquivalence(circ, result3, arch));
+  EXPECT_TRUE(result3.validateAODConstraints());
+  EXPECT_TRUE(na::nalac::checkEquivalence(circ, result3, arch));
   // ---------------------------------------------------------------------
 }
 
@@ -927,14 +931,15 @@ cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
   const auto& circ = qasm3::Importer::imports(qasm);
-  const auto& arch = na::Architecture(archIS, gridSS);
+  const auto& arch = na::nalac::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
-  na::NAMapper mapper(
-      arch, na::Configuration(
-                3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  na::nalac::NAMapper mapper(
+      arch,
+      na::nalac::Configuration(
+          3, 2, na::nalac::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(mapper.getResult().validate());
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }
 
 TEST(NAMapper, QAOA16NarrowEntangling) {
@@ -1163,12 +1168,13 @@ cp(pi) q[9],q[11];
 ry(-2.2154814) q;
 ry(2.2154814) q;)";
   const auto& circ = qasm3::Importer::imports(qasm);
-  const auto& arch = na::Architecture(archIS, gridSS);
+  const auto& arch = na::nalac::Architecture(archIS, gridSS);
   // ---------------------------------------------------------------------
-  na::NAMapper mapper(
-      arch, na::Configuration(
-                3, 2, na::NAMappingMethod::MaximizeParallelismHeuristic));
+  na::nalac::NAMapper mapper(
+      arch,
+      na::nalac::Configuration(
+          3, 2, na::nalac::NAMappingMethod::MaximizeParallelismHeuristic));
   mapper.map(circ);
   std::ignore = mapper.getStats();
-  EXPECT_TRUE(mapper.getResult().validate());
+  EXPECT_TRUE(mapper.getResult().validateAODConstraints());
 }

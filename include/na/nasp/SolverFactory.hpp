@@ -3,7 +3,7 @@
 #include "Definitions.hpp"
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/Architecture.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 
 #include <utility>
 #include <vector>
@@ -22,7 +22,7 @@ public:
    * @param arch The architecture to create the solver for.
    * @return The created NASolver.
    */
-  [[nodiscard]] static auto create(const Architecture& arch) -> NASolver;
+  [[nodiscard]] static auto create(const nalac::Architecture& arch) -> NASolver;
 
   /**
    * @brief Get the list of entangling operations that the solver takes as
