@@ -68,10 +68,10 @@ protected:
 
   class Atom {
   public:
-    enum class PositionStatus : std::uint8_t { UNDEFINED, DEFINED };
-    PositionStatus positionStatus = PositionStatus::UNDEFINED;
-    Location initialPosition{0, 0};
-    Location currentPosition = initialPosition;
+    enum class LocationStatus : std::uint8_t { UNDEFINED, DEFINED };
+    LocationStatus positionStatus = LocationStatus::UNDEFINED;
+    std::pair<std::int64_t, std::int64_t> initialLocation{0, 0};
+    std::pair<std::int64_t, std::int64_t> currentLocation = initialLocation;
     std::vector<ZoneId> zones;
     explicit Atom(const std::vector<ZoneId>& z = {}) : zones(z) {};
   };
