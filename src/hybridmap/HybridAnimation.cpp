@@ -35,7 +35,7 @@ void AnimationAtoms::initPositions(
   auto flyingAncillaidxPlusOne = 0;
   for (const auto& [id, coord] : initFaPos) {
     flyingAncillaidxPlusOne++;
-    coordIdxToId[coord + arch.getNpositions()] = id + initHwPos.size();
+    coordIdxToId[coord + (2 * arch.getNpositions())] = id + initHwPos.size();
     const auto column = coord % nCols;
     const auto row = coord / nCols;
     const auto offset =
@@ -132,11 +132,13 @@ std::string AnimationAtoms::opToNaViz(const std::unique_ptr<qc::Operation>& op,
     }
     // must be a gate
   } else if (op->getNqubits() > 1) {
+    opString += "@" + std::to_string(startTime) + " cz {";
     for (const auto& coordIdx : op->getUsedQubits()) {
       const auto id = coordIdxToId.at(coordIdx);
-      opString += "@" + std::to_string(startTime) + " cz atom" +
-                  std::to_string(id) + "\n";
+      opString += " atom" + std::to_string(id) + ",";
     }
+    opString.pop_back();
+    opString += "}\n";
   } else {
     // single qubit gate
     const auto coordIdx = op->getTargets().front();

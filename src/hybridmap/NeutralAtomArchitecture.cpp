@@ -254,7 +254,8 @@ std::string NeutralAtomArchitecture::getAnimationMachine(
       "\n\tunit: \"us\"\n}\n";
 
   animationMachine += "distance {\n\tinteraction: " +
-                      std::to_string(this->getInteractionRadius()) +
+                      std::to_string(this->getInteractionRadius() *
+                                     this->getInterQubitDistance()) +
                       "\n\tunit: \"um\"\n}\n";
   const auto zoneStart = -this->getInterQubitDistance();
   const auto zoneEndX = this->getNcolumns() * this->getInterQubitDistance() +

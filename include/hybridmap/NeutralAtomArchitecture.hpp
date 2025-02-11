@@ -569,7 +569,8 @@ public:
       }
     }
     const std::string toReplace = "XXX";
-    const std::string replaceWith = std::to_string(getInteractionRadius());
+    const std::string replaceWith =
+        std::to_string(getInteractionRadius() * getInterQubitDistance());
 
     size_t pos = 0;
     while ((pos = style.find(toReplace, pos)) != std::string::npos) {

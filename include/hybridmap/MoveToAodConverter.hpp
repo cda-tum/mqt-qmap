@@ -348,7 +348,8 @@ public:
           "columns and rows of the neutral atom architecture.");
     }
     for (auto i = 0; i < flyingAncillas.getInitHwPos().size(); ++i) {
-      const auto coord = flyingAncillas.getInitHwPos().at(i);
+      const auto coord =
+          flyingAncillas.getInitHwPos().at(i) + (2 * arch.getNpositions());
       const auto col = coord % arch.getNcolumns();
       const auto row = coord / arch.getNcolumns();
       const AncillaAtom ancillaAtom({col, row},
