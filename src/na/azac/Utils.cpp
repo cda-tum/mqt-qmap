@@ -279,14 +279,13 @@ auto minimumWeightFullBipartiteMatching(
       potentialsX[v] += quantitiesX[v];
       maxPotential = std::max(potentialsX[v], maxPotential);
     }
+    freeDestinations[y] = false;
+    ++sizeMatching;
     while (true) {
       x = pathSetY[y];
-      const bool freeSourceFound = freeSources[x];
       invMatching[y] = x;
-      ++sizeMatching;
-      freeSources[x] = false;
-      freeDestinations[y] = false;
-      if (freeSourceFound) {
+      if (freeSources[x]) {
+        freeSources[x] = false;
         break;
       }
       y = pathSetX[x];
