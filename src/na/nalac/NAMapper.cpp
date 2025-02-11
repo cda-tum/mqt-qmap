@@ -8,8 +8,14 @@
 #include "ir/operations/Operation.hpp"
 #include "na/Architecture.hpp"
 #include "na/Configuration.hpp"
+#include "na/NAComputation.hpp"
+#include "na/entities/Atom.hpp"
+#include "na/entities/Zone.hpp"
 #include "na/nalac/NAGraphAlgorithms.hpp"
+#include "na/operations/GlobalCZOp.hpp"
 #include "na/operations/GlobalOp.hpp"
+#include "na/operations/GlobalRYOp.hpp"
+#include "na/operations/LocalRZOp.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -26,7 +32,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace na {
@@ -79,43 +87,56 @@ auto NAMapper::validateCircuit() -> void {
 }
 
 auto NAMapper::makeLogicalArrays() -> void {
-  const auto logicQC = mappedQc;
-  mappedQc.clear();
-  mappedQc.clearAtoms();
-  mappedQc.clearInitialLocations();
   const auto rows = static_cast<std::int64_t>(config.getPatchRows());
   const auto cols = static_cast<std::int64_t>(config.getPatchCols());
-  std::unordered_map<const Atom*, std::vector<std::vector<const Atom*>>>
+  const NAComputation logicQc = std::move(mappedQc);
+  mappedQc = NAComputation();
+  std::unordered_map<const na::Atom*, std::vector<std::vector<const na::Atom*>>>
       arrayAtoms{};
-  for (const auto& atom : logicQC.getAtoms()) {
-    const auto loc = logicQC.getInitialLocations().at(atom.get());
+  for (const auto& atom : logicQc.getAtoms()) {
+    arrayAtoms.emplace(atom.get(), std::vector<std::vector<const na::Atom*>>{});
+    arrayAtoms[atom.get()].reserve(rows);
     for (std::int64_t r = 0; r < rows; ++r) {
+      arrayAtoms[atom.get()].emplace_back();
       for (std::int64_t c = 0; c < cols; ++c) {
         mappedQc.emplaceInitialLocation(
-            initialArch.getLocationOffsetBy(loc, r, c));
+            arrayAtoms[atom.get()][r].emplace_back(mappedQc.emplaceBackAtom(
+                atom->getName() + "_" + std::to_string(r) + "_" +
+                std::to_string(c))),
+            initialArch.getLocationOffsetBy(
+                logicQc.getInitialLocations().at(atom.get()), r, c));
       }
     }
   }
-  for (const auto& op : logicQC) {
-    if (op->is<GlobalOp>()) {
-      mappedQc.emplaceBack(op->clone());
-    } else if (op->isLocalOperation()) {
-      const auto& lop = dynamic_cast<NALocalOperation&>(*op);
-      const auto& allLocations = lop.getLocations();
-      const auto& posPerRow =
-          std::accumulate(allLocations.cbegin(), allLocations.cend(),
-                          std::map<std::int64_t, std::set<std::int64_t>>(),
-                          [&](auto& acc, const auto& p) {
-                            acc[p->y].insert(p->x);
-                            return acc;
-                          });
-      for (const auto& [y, xs] : posPerRow) {
+  std::unordered_map<const Zone*, const Zone*> arrayZones;
+  for (const auto& zone : logicQc.getZones()) {
+    arrayZones.emplace(zone.get(), mappedQc.emplaceBackZone(zone->getName()));
+  }
+  for (const auto& op : logicQc) {
+    if (op->is<GlobalRYOp>()) {
+      const auto& ry = op->as<GlobalRYOp>();
+      mappedQc.emplaceBack<GlobalRYOp>(ry.getParams().front(),
+                                       arrayZones[ry.getZone()]);
+    } else if (op->is<GlobalCZOp>()) {
+      const auto& cz = op->as<GlobalCZOp>();
+      mappedQc.emplaceBack<GlobalCZOp>(arrayZones[cz.getZone()]);
+    } else if (op->is<LocalRZOp>()) {
+      const auto& rz = op->as<LocalRZOp>();
+      const auto& allAtoms = rz.getAtoms();
+      const auto& atomsPerRow = std::accumulate(
+          allAtoms.cbegin(), allAtoms.cend(),
+          std::vector < std::pair<double, std::vector<const na::Atom*>>(),
+          [&](auto& acc, const auto* const p) {
+            acc[p->y].insert(p->x);
+            return acc;
+          });
+      for (const auto& [y, xs] : atomsPerRow) {
         for (std::int64_t r = 0; r < rows; ++r) {
-          std::vector<std::shared_ptr<Point>> positions;
+          std::vector<std::shared_ptr<Location>> positions;
           positions.reserve(xs.size() * static_cast<std::size_t>(cols));
           for (const auto x : xs) {
             for (std::int64_t c = 0; c < cols; ++c) {
-              positions.emplace_back(std::make_shared<Point>(
+              positions.emplace_back(std::make_shared<Location>(
                   initialArch.getLocationOffsetBy({x, y}, r, c)));
             }
           }
@@ -128,18 +149,18 @@ auto NAMapper::makeLogicalArrays() -> void {
       const auto shuttlingSize = sop.getStart().size();
       const auto pointCount =
           shuttlingSize * static_cast<std::size_t>(rows * cols);
-      std::vector<std::shared_ptr<Point>> start;
+      std::vector<std::shared_ptr<Location>> start;
       start.reserve(pointCount);
-      std::vector<std::shared_ptr<Point>> end;
+      std::vector<std::shared_ptr<Location>> end;
       end.reserve(pointCount);
       for (std::size_t i = 0; i < shuttlingSize; ++i) {
         const auto s = sop.getStart()[i];
         const auto e = sop.getEnd()[i];
         for (std::int64_t r = 0; r < rows; ++r) {
           for (std::int64_t c = 0; c < cols; ++c) {
-            start.emplace_back(std::make_shared<Point>(
+            start.emplace_back(std::make_shared<Location>(
                 initialArch.getLocationOffsetBy(*s, r, c)));
-            end.emplace_back(std::make_shared<Point>(
+            end.emplace_back(std::make_shared<Location>(
                 initialArch.getLocationOffsetBy(*e, r, c)));
           }
         }
@@ -178,20 +199,20 @@ auto NAMapper::calculateMovements() -> void {
     if (op->isShuttlingOperation()) {
       const auto& shuttlingOp = dynamic_cast<NAShuttlingOperation&>(*op);
       if (shuttlingOp.getType() == MOVE) {
-        std::vector<std::shared_ptr<Point>> hOffsetStart;
-        std::vector<std::shared_ptr<Point>> hOffsetEnd;
-        std::vector<std::shared_ptr<Point>> vMoveStart;
-        std::vector<std::shared_ptr<Point>> vMoveEnd;
-        std::vector<std::shared_ptr<Point>> hMoveStart;
-        std::vector<std::shared_ptr<Point>> hMoveEnd;
-        std::vector<std::shared_ptr<Point>> vOffsetStart;
-        std::vector<std::shared_ptr<Point>> vOffsetEnd;
+        std::vector<std::shared_ptr<Location>> hOffsetStart;
+        std::vector<std::shared_ptr<Location>> hOffsetEnd;
+        std::vector<std::shared_ptr<Location>> vMoveStart;
+        std::vector<std::shared_ptr<Location>> vMoveEnd;
+        std::vector<std::shared_ptr<Location>> hMoveStart;
+        std::vector<std::shared_ptr<Location>> hMoveEnd;
+        std::vector<std::shared_ptr<Location>> vOffsetStart;
+        std::vector<std::shared_ptr<Location>> vOffsetEnd;
         bool vOffset = false;
         for (std::size_t i = 0; i < shuttlingOp.getStart().size(); ++i) {
           const auto start = *shuttlingOp.getStart()[i];
           const auto end = *shuttlingOp.getEnd()[i];
           const auto dx = end.x - start.x;
-          Point const mid = {start.x, end.y};
+          Location const mid = {start.x, end.y};
           if (dx > 0) {
             if (const auto s = arch.getNearestSiteRight(mid, true)) {
               if (arch.getLocationOfSite(*s).x < end.x) {
@@ -219,41 +240,41 @@ auto NAMapper::calculateMovements() -> void {
             if (const auto s = arch.getNearestSiteDown(start, true)) {
               if (arch.getLocationOfSite(*s).y < end.y) {
                 // in this case an atom is on the way
-                hOffsetStart.emplace_back(std::make_shared<Point>(start));
+                hOffsetStart.emplace_back(std::make_shared<Location>(start));
                 start.x += (dx >= 0 ? d : -d);
-                hOffsetEnd.emplace_back(std::make_shared<Point>(start));
+                hOffsetEnd.emplace_back(std::make_shared<Location>(start));
               }
             }
           } else if (dy < 0) {
             if (const auto s = arch.getNearestSiteUp(start, true)) {
               if (arch.getLocationOfSite(*s).y > end.y) {
                 // in this case an atom is on the way
-                hOffsetStart.emplace_back(std::make_shared<Point>(start));
+                hOffsetStart.emplace_back(std::make_shared<Location>(start));
                 start.x += (dx >= 0 ? d : -d);
-                hOffsetEnd.emplace_back(std::make_shared<Point>(start));
+                hOffsetEnd.emplace_back(std::make_shared<Location>(start));
               }
             }
           }
           // at this stage, if an hoffset is necessary, the start position was
           // modified already to reflect the hoffset
-          Point mid = {start.x, end.y};
+          Location mid = {start.x, end.y};
           if (vOffset) {
             mid.y += (dy >= 0 ? -d : d);
           }
           if (start.y != mid.y) {
-            vMoveStart.emplace_back(std::make_shared<Point>(start));
+            vMoveStart.emplace_back(std::make_shared<Location>(start));
             start = mid;
-            vMoveEnd.emplace_back(std::make_shared<Point>(start));
+            vMoveEnd.emplace_back(std::make_shared<Location>(start));
           }
           if (start.x != end.x) {
-            hMoveStart.emplace_back(std::make_shared<Point>(start));
+            hMoveStart.emplace_back(std::make_shared<Location>(start));
             start.x = end.x;
-            hMoveEnd.emplace_back(std::make_shared<Point>(start));
+            hMoveEnd.emplace_back(std::make_shared<Location>(start));
           }
           if (start.y != end.y) {
-            vOffsetStart.emplace_back(std::make_shared<Point>(start));
+            vOffsetStart.emplace_back(std::make_shared<Location>(start));
             start.y = end.y;
-            vOffsetEnd.emplace_back(std::make_shared<Point>(start));
+            vOffsetEnd.emplace_back(std::make_shared<Location>(start));
           }
         }
         if (!hOffsetStart.empty()) {
@@ -290,7 +311,7 @@ auto NAMapper::checkApplicability(const qc::Operation* op,
   }
   assert(op->isStandardOperation()); // ensured by preprocess
   if (op->isSingleQubitGate()) {
-    assert(arch.isAllowedLocally({op->getType(), op->getNcontrols()}));
+    assert(arch.isAllowedLocally(op->getType(), op->getNcontrols()));
     assert(op->getNcontrols() == 0);
     // individual gate that can act on one or more atoms
     return std::all_of(
@@ -327,7 +348,7 @@ auto NAMapper::updatePlacement(const qc::Operation* op,
     // global gates are represented as compound operations
     return;
   }
-  assert(arch.isAllowedLocally({op->getType(), 0}));
+  assert(arch.isAllowedLocally(op->getType(), 0));
   assert(op->getNcontrols() == 0);
   // individual gate that can act on one or more atoms
   std::for_each(op->getTargets().cbegin(), op->getTargets().cend(),
@@ -369,18 +390,19 @@ auto NAMapper::getMisplacement(const std::vector<Atom>& initial,
       continue;
     }
 
-    if (i < indexOfQ && initial.at(target[i]).currentLocation->x >
-                            initial.at(q).currentLocation->x) {
+    if (i < indexOfQ && initial.at(target[i]).currentLocation.first >
+                            initial.at(q).currentLocation.first) {
       misplacement += 1;
     }
-    if (i > indexOfQ && initial.at(target[i]).currentLocation->x <
-                            initial.at(q).currentLocation->x) {
+    if (i > indexOfQ && initial.at(target[i]).currentLocation.first <
+                            initial.at(q).currentLocation.first) {
       misplacement -= 1;
     }
   }
 
   for (const auto& p : target) {
-    if (initial.at(p).currentLocation->x < initial.at(q).currentLocation->x) {
+    if (initial.at(p).currentLocation.first <
+        initial.at(q).currentLocation.first) {
       misplacement += 1;
     }
   }
@@ -400,17 +422,17 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
   const auto dx = static_cast<std::int64_t>(config.getPatchCols()) *
                   static_cast<std::int64_t>(arch.getNoInteractionRadius());
   { // load atoms that are not already shuttling
-    std::vector<std::shared_ptr<Point>> start;
-    std::vector<std::shared_ptr<Point>> end;
+    std::vector<std::pair<std::int64_t, std::int64_t>> start;
+    std::vector<std::pair<std::int64_t, std::int64_t>> end;
     for (const auto q : qubits) {
       if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
         start.emplace_back(placement.at(q).currentLocation);
         currentlyShuttling.insert(q);
-        currentFreeSites.at(*arch.getSiteAt(*placement.at(q).currentLocation)) =
+        currentFreeSites.at(arch.getSiteAt(placement.at(q).currentLocation)) =
             true;
-        placement.at(q).currentLocation =
-            std::make_shared<Point>(placement.at(q).currentLocation->x + d,
-                                    placement.at(q).currentLocation->y);
+        placement.at(q).currentLocation = {
+            placement.at(q).currentLocation.first + d,
+            placement.at(q).currentLocation.second};
         end.emplace_back(placement.at(q).currentLocation);
       }
     }
@@ -463,10 +485,10 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
               return (std::get<0>(a) < std::get<0>(b));
             });
   for (auto& [r, n] : moveableSelectedRows) {
-    std::vector<std::shared_ptr<Point>> start;
-    std::vector<std::shared_ptr<Point>> end;
-    std::vector<std::shared_ptr<Point>> storeStart;
-    std::vector<std::shared_ptr<Point>> storeEnd;
+    std::vector<std::shared_ptr<Location>> start;
+    std::vector<std::shared_ptr<Location>> end;
+    std::vector<std::shared_ptr<Location>> storeStart;
+    std::vector<std::shared_ptr<Location>> storeEnd;
     std::size_t notStoredLeft = 0;
     std::size_t j = 0;
     const auto& sitesInRow = arch.getSitesInRow(destination, r);
@@ -481,11 +503,11 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
               [&](const auto& s) { return currentFreeSites.at(s); });
           const auto& sPos = arch.getLocationOfSite(site);
           placement.at(q).currentLocation =
-              std::make_shared<Point>(sPos.x + d, sPos.y);
+              std::make_shared<Location>(sPos.x + d, sPos.y);
           end.emplace_back(placement.at(q).currentLocation);
           storeStart.emplace_back(placement.at(q).currentLocation);
           placement.at(q).currentLocation =
-              std::make_shared<Point>(sPos.x, sPos.y);
+              std::make_shared<Location>(sPos.x, sPos.y);
           storeEnd.emplace_back(placement.at(q).currentLocation);
           currentlyShuttling.erase(q);
           currentFreeSites.at(site) = false;
@@ -496,11 +518,11 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
           const auto& s = sitesInRow.at(j);
           const auto& sPos = arch.getLocationOfSite(s);
           placement.at(q).currentLocation =
-              std::make_shared<Point>(sPos.x + d, sPos.y);
+              std::make_shared<Location>(sPos.x + d, sPos.y);
           end.emplace_back(placement.at(q).currentLocation);
           storeStart.emplace_back(placement.at(q).currentLocation);
           placement.at(q).currentLocation =
-              std::make_shared<Point>(sPos.x, sPos.y);
+              std::make_shared<Location>(sPos.x, sPos.y);
           storeEnd.emplace_back(placement.at(q).currentLocation);
           currentlyShuttling.erase(q);
           currentFreeSites.at(s) = false;
@@ -510,11 +532,11 @@ auto NAMapper::store(std::vector<bool>& initialFreeSites,
           const auto& s = sitesInRow.at(j);
           const auto& sPos = arch.getLocationOfSite(s);
           placement.at(q).currentLocation =
-              std::make_shared<Point>(sPos.x + d, sPos.y);
+              std::make_shared<Location>(sPos.x + d, sPos.y);
           end.emplace_back(placement.at(q).currentLocation);
           notStoredLeft += 1;
         } else {
-          placement.at(q).currentLocation = std::make_shared<Point>(
+          placement.at(q).currentLocation = std::make_shared<Location>(
               arch.getLocationOfSite(sitesInRow.back()).x +
                   static_cast<std::int64_t>(j - sitesInRow.size() + 1) * dx + d,
               y);
@@ -605,17 +627,18 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
       currentFreeSites.at(s) = false;
     }
     // here the position of q is defined
-    std::vector<std::shared_ptr<Point>> start;
-    std::vector<std::shared_ptr<Point>> end;
-    std::vector<std::shared_ptr<Point>> loadStart;
-    std::vector<std::shared_ptr<Point>> loadEnd;
+    std::vector<std::shared_ptr<Location>> start;
+    std::vector<std::shared_ptr<Location>> end;
+    std::vector<std::shared_ptr<Location>> loadStart;
+    std::vector<std::shared_ptr<Location>> loadEnd;
     const auto currentX = placement.at(q).currentLocation->x;
     const auto y = placement.at(q).currentLocation->y;
     // pick up q itself
     loadStart.emplace_back(placement.at(q).currentLocation);
     currentFreeSites.at(*arch.getSiteAt(*placement.at(q).currentLocation)) =
         true;
-    placement.at(q).currentLocation = std::make_shared<Point>(currentX + d, y);
+    placement.at(q).currentLocation =
+        std::make_shared<Location>(currentX + d, y);
     loadEnd.emplace_back(placement.at(q).currentLocation);
     currentlyShuttling.insert(q);
     // iterate through all not yet picked up atoms to the left and check
@@ -630,7 +653,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
         // move it to the correct row
         if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
           start.emplace_back(placement.at(p).currentLocation);
-          placement.at(p).currentLocation = std::make_shared<Point>(x, y);
+          placement.at(p).currentLocation = std::make_shared<Location>(x, y);
           end.emplace_back(placement.at(p).currentLocation);
           const auto xl = arch.getNearestXLeft(x, arch.getZoneAt({x, y}), true);
           const auto nx =
@@ -651,7 +674,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
               currentFreeSites.at(
                   *arch.getSiteAt(*placement.at(p).currentLocation)) = true;
               placement.at(p).currentLocation =
-                  std::make_shared<Point>(x + d, y);
+                  std::make_shared<Location>(x + d, y);
               loadEnd.emplace_back(placement.at(p).currentLocation);
               currentlyShuttling.insert(p);
               const auto nx =
@@ -697,7 +720,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
                   pickUpOrder.end());
               loadStart.emplace_back(placement.at(p).currentLocation);
               placement.at(p).currentLocation =
-                  std::make_shared<Point>(freeX + d, y);
+                  std::make_shared<Location>(freeX + d, y);
               loadEnd.emplace_back(placement.at(p).currentLocation);
               currentlyShuttling.insert(p);
               const auto nx = arch.getNearestXLeft(
@@ -721,7 +744,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
       // if the atom is picked up, move it to the correct row
       if (currentlyShuttling.find(p) != currentlyShuttling.cend()) {
         start.emplace_back(placement.at(p).currentLocation);
-        placement.at(p).currentLocation = std::make_shared<Point>(x, y);
+        placement.at(p).currentLocation = std::make_shared<Location>(x, y);
         end.emplace_back(placement.at(p).currentLocation);
         const auto nx = arch.getNearestXRight(x, arch.getZoneAt({x, y}));
         x = nx == x ? x + dx : nx + d;
@@ -738,7 +761,8 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
             loadStart.emplace_back(placement.at(p).currentLocation);
             currentFreeSites.at(
                 *arch.getSiteAt(*placement.at(p).currentLocation)) = true;
-            placement.at(p).currentLocation = std::make_shared<Point>(x + d, y);
+            placement.at(p).currentLocation =
+                std::make_shared<Location>(x + d, y);
             loadEnd.emplace_back(placement.at(p).currentLocation);
             currentlyShuttling.insert(p);
             const auto nx =
@@ -784,7 +808,7 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
                 pickUpOrder.end());
             loadStart.emplace_back(placement.at(p).currentLocation);
             placement.at(p).currentLocation =
-                std::make_shared<Point>(freeX + d, y);
+                std::make_shared<Location>(freeX + d, y);
             loadEnd.emplace_back(placement.at(p).currentLocation);
             currentlyShuttling.insert(p);
             const auto nx =
@@ -800,8 +824,14 @@ auto NAMapper::pickUp(std::vector<bool>& initialFreeSites,
     mappedQc.emplaceBack<NAShuttlingOperation>(LOAD, loadStart, loadEnd);
   }
 }
-
-auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
+/// @returns a pair representing the NA computation in a discrete fashion, which
+/// is later transformed into a real NACOmputation using double values for
+/// locations. Those cannot be used in maps which we need during the mapping
+/// process. The first vector in the pair are the initial positions of atoms,
+/// the second vector are the operations that are executed in the NA
+/// computation.
+auto NAMapper::map(const qc::QuantumComputation& qc) -> std::pair <
+    std::vector<std::tuple<Zone, Index, Index>, std::vector<std::tuple<>>> {
   auto startPreprocess = std::chrono::high_resolution_clock::now();
   initialQc = qc;
   const auto nqubits = initialQc.getNqubits();
@@ -858,7 +888,7 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
               op->getParameter());
         } else {
           // collect executable gates of the same type
-          std::vector<std::shared_ptr<Point>> positions = {
+          std::vector<std::shared_ptr<Location>> positions = {
               placement.at(op->getTargets().front()).currentLocation};
           for (const auto& v :
                layer.getExecutablesOfType(op->getType(), op->getNcontrols())) {
@@ -900,65 +930,65 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
       (*it)->execute();
       const auto& q1 = op->getTargets().front();
       const auto& q2 = op->getControls().begin()->qubit;
-      Point start = *placement.at(q1).currentLocation;
-      Point end = start;
-      const Point& target = arch.getLocationOfSite(
+      Location start = *placement.at(q1).currentLocation;
+      Location end = start;
+      const Location& target = arch.getLocationOfSite(
           arch.getSitesInZone(*arch.getPropertiesOfOperation({op->getType(), 1})
                                    .zones.begin())
               .at(0));
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          LOAD, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = end;
       end = target;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          MOVE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = end;
       end.x -= d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          STORE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = *placement.at(q2).currentLocation;
       end = start;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          LOAD, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = end;
       end = target;
       end.y += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          MOVE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       mappedQc.emplaceBack<NAGlobalOperation>(FullOpType{qc::OpType::Z, 1});
       maxSeqWidth = 1UL;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE, std::vector{std::make_shared<Point>(end)},
-          std::vector{std::make_shared<Point>(start)});
+          MOVE, std::vector{std::make_shared<Location>(end)},
+          std::vector{std::make_shared<Location>(start)});
       end = *placement.at(q2).currentLocation;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          STORE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = target;
       end = start;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          LOAD, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          LOAD, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = end;
       end = *placement.at(q1).currentLocation;
       end.x += d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          MOVE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          MOVE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
       start = end;
       end.x -= d;
       mappedQc.emplaceBack<NAShuttlingOperation>(
-          STORE, std::vector{std::make_shared<Point>(start)},
-          std::vector{std::make_shared<Point>(end)});
+          STORE, std::vector{std::make_shared<Location>(start)},
+          std::vector{std::make_shared<Location>(end)});
     } else if (config.getMethod() ==
                NAMappingMethod::MaximizeParallelismHeuristic) {
       const auto& graph = layer.constructInteractionGraph(qc::OpType::Z, 1);
@@ -1002,11 +1032,11 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
              fixedOrdered);
       // all atoms are picked up in order, move them to the destination zone and
       // store them there
-      std::vector<std::shared_ptr<Point>> start{};
+      std::vector<std::shared_ptr<Location>> start{};
       start.reserve(fixed.size());
-      std::vector<std::shared_ptr<Point>> mid{};
+      std::vector<std::shared_ptr<Location>> mid{};
       mid.reserve(fixed.size());
-      std::vector<std::shared_ptr<Point>> end{};
+      std::vector<std::shared_ptr<Location>> end{};
       end.reserve(fixed.size());
       for (const auto& [q, x] : fixed) {
         if (currentlyShuttling.find(q) == currentlyShuttling.cend()) {
@@ -1022,10 +1052,11 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
               "Target site in interaction zone is unexpectedly occupied.");
         }
         start.emplace_back(placement.at(q).currentLocation);
-        placement.at(q).currentLocation = std::make_shared<Point>(p.x + d, p.y);
+        placement.at(q).currentLocation =
+            std::make_shared<Location>(p.x + d, p.y);
         mid.emplace_back(placement.at(q).currentLocation);
         currentFreeSites.at(*arch.getSiteAt(p)) = false;
-        placement.at(q).currentLocation = std::make_shared<Point>(p);
+        placement.at(q).currentLocation = std::make_shared<Location>(p);
         end.emplace_back(placement.at(q).currentLocation);
       }
       currentlyShuttling.clear();
@@ -1044,8 +1075,8 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
              moveableOrdered);
       // ------------------------------------------------------------------
       // 4. Apply the cz gates
-      std::vector<std::shared_ptr<Point>> startMoveable;
-      std::vector<std::shared_ptr<Point>> endMoveable;
+      std::vector<std::shared_ptr<Location>> startMoveable;
+      std::vector<std::shared_ptr<Location>> endMoveable;
       std::transform(moveableOrdered.cbegin(), moveableOrdered.cend(),
                      std::back_inserter(startMoveable), [&](const auto& q) {
                        return placement.at(q).currentLocation;
@@ -1062,15 +1093,15 @@ auto NAMapper::map(const qc::QuantumComputation& qc) -> void {
             const auto pos =
                 arch.getLocationOfSite(sites.at(static_cast<std::size_t>(x)));
             placement.at(q).currentLocation =
-                std::make_shared<Point>(pos.x, pos.y + d);
+                std::make_shared<Location>(pos.x, pos.y + d);
           } else if (x < 0) {
             const auto pos = arch.getLocationOfSite(sites.at(0));
             placement.at(q).currentLocation =
-                std::make_shared<Point>(pos.x + (x * dx - d), pos.y + d);
+                std::make_shared<Location>(pos.x + (x * dx - d), pos.y + d);
           } else { // x >= sites.size()
             const auto pos = arch.getLocationOfSite(sites.at(sites.size() - 1));
             placement.at(q).currentLocation =
-                std::make_shared<Point>(pos.x + (x * dx + d), pos.y + d);
+                std::make_shared<Location>(pos.x + (x * dx + d), pos.y + d);
           }
           endMoveable.emplace_back(placement.at(q).currentLocation);
         }
