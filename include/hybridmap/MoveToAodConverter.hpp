@@ -325,6 +325,7 @@ protected:
    * is created for the remaining moves.
    */
   void processMoveGroups();
+  void postProcessMoveGroups();
 
   std::pair<std::vector<AtomMove>, MoveGroup>
   processMoves(const std::vector<std::pair<AtomMove, uint32_t>>& moves,
