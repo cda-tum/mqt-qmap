@@ -382,7 +382,6 @@ void MoveToAodConverter::processMoveGroups() {
     groupIt->processedOpsFinal = aodDeactivationHelper.getAodOperations();
     groupIt->processedOpShuttle = MoveGroup::connectAodOperations(
         aodActivationHelper, aodDeactivationHelper);
-    int a;
   }
 }
 std::pair<std::vector<AtomMove>, MoveToAodConverter::MoveGroup>
