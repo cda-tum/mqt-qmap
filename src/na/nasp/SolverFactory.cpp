@@ -1,9 +1,9 @@
 #include "na/nasp/SolverFactory.hpp"
 
+#include "../../../include/na/nalac/Architecture.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/Architecture.hpp"
 #include "na/nasp/Solver.hpp"
 
 #include <algorithm>
@@ -26,9 +26,9 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
   const auto maxR =
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
-  const auto storageZone = arch.getInitialZones().front();
+  const auto storageZones = arch.getInitialZones().front();
   const auto maxY =
-      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZone));
+      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZones));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD
