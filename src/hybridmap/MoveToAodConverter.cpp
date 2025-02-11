@@ -66,10 +66,10 @@ AtomMove MoveToAodConverter::convertOpToMove(qc::Operation* get) {
   auto q2 = get->getTargets().back();
   const auto load1 = q1 < arch.getNpositions();
   const auto load2 = q2 < arch.getNpositions();
-  while (q1 > arch.getNpositions()) {
+  while (q1 >= arch.getNpositions()) {
     q1 -= arch.getNpositions();
   }
-  while (q2 > arch.getNpositions()) {
+  while (q2 >= arch.getNpositions()) {
     q2 -= arch.getNpositions();
   }
   return {q1, q2, load1, load2};
