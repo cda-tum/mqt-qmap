@@ -34,7 +34,7 @@ inline const char* defaultStyle =
     "\"AOD\"\n	}\n	legend {\n		display: true\n		title: "
     "\"Atom States\"\n	}\n}\n\ncoordinate {\n	tick {\n		x: "
     "20\n		y: 20\n		color: #999999\n		line "
-    "{\n			thickness: 0.5\n			dash "
+    "{\n			thickness: 0.0\n			dash "
     "{\n				length: 0\n			"
     "	duty: 100%\n			}\n		}\n	}\n	number "
     "{\n		x {\n			distance: 40\n		"
