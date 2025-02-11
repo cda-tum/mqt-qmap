@@ -34,11 +34,10 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     std::cout << "\n* schedule start!\n";
   }
 
-  std::vector<qc::fp> totalExecutionTimes(arch->getNpositions(), 0);
+  std::vector<qc::fp> totalExecutionTimes(3 * arch->getNpositions(), 0);
   // saves for each coord the time slots that are blocked by a multi qubit gate
   std::vector rydbergBlockedQubitsTimes(
-      arch->getNpositions() + arch->getNpositions(),
-      std::deque<std::pair<qc::fp, qc::fp>>());
+      3 * arch->getNpositions(), std::deque<std::pair<qc::fp, qc::fp>>());
   qc::fp aodLastBlockedTime = 0;
   qc::fp totalGateTime = 0;
   qc::fp totalGateFidelities = 1;
@@ -112,7 +111,7 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
                 (start <= maxTime + opTime && end > maxTime + opTime)) {
               rydbergBlocked = true;
               // update maxTime to the end of the blocking
-              maxTime = end;
+              maxTime = std::max(maxTime, end);
               // remove the blocking
               break;
             }
@@ -149,8 +148,9 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     totalGateFidelities *= opFidelity;
     totalGateTime += opTime;
     if (verbose) {
-      std::cout << "\n";
-      printTotalExecutionTimes(totalExecutionTimes, rydbergBlockedQubitsTimes);
+      // std::cout << "\n";
+      // printTotalExecutionTimes(totalExecutionTimes,
+      // rydbergBlockedQubitsTimes);
     }
 
     // update animation

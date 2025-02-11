@@ -293,7 +293,7 @@ qc::fp NeutralAtomArchitecture::getOpTime(const qc::Operation* op) const {
     return (distanceX + distanceY) / v;
   }
   std::string opName;
-  for (size_t i = 0; i < op->getNcontrols(); ++i) {
+  for (size_t i = 0; i < op->getNqubits() - 1; ++i) {
     opName += "c";
   }
   if (op->getType() == qc::OpType::P) {
@@ -317,7 +317,7 @@ qc::fp NeutralAtomArchitecture::getOpFidelity(const qc::Operation* op) const {
     return getShuttlingAverageFidelity(op->getType());
   }
   std::string opName;
-  for (size_t i = 0; i < op->getNcontrols(); ++i) {
+  for (size_t i = 0; i < op->getNqubits() - 1; ++i) {
     opName += "c";
   }
   opName += op->getName();
@@ -346,6 +346,8 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
       auto const distance = getEuclideanDistance(coord, i);
       if (distance <= getBlockingFactor() * getInteractionRadius()) {
         blockedCoordIndices.emplace(i);
+        blockedCoordIndices.emplace(i + getNpositions());
+        blockedCoordIndices.emplace(i + (2 * getNpositions()));
       }
     }
   }
