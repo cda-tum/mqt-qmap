@@ -2243,7 +2243,7 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
   const auto fa = faDistReduction * faFidelity;
   const auto passBy = faDistReduction * passByFidelity;
   // return MappingMethod::PassByMethod;
-  return MappingMethod::FlyingAncillaMethod;
+  // return MappingMethod::FlyingAncillaMethod;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
