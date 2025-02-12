@@ -1,5 +1,0 @@
-if(TARGET MQT::AZAC)
-  file(GLOB AZAC_TEST_SOURCES *.cpp)
-  package_add_test(mqt-qmap-azac-test MQT::AZAC ${AZAC_TEST_SOURCES})
-  target_link_libraries(mqt-qmap-azac-test PRIVATE MQT::CoreCircuitOptimizer MQT::CoreQASM)
-endif()
