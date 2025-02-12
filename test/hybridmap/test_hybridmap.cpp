@@ -126,7 +126,7 @@ protected:
   std::string testArchitecturePath = "architectures/rubidium_shuttling.json";
   const na::NeutralAtomArchitecture arch =
       na::NeutralAtomArchitecture(testArchitecturePath);
-  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  na::InitialMapping const initialMapping = na::InitialMapping::Graph;
   na::MapperParameters mapperParameters;
   na::NeutralAtomMapper mapper;
   qc::QuantumComputation qc;

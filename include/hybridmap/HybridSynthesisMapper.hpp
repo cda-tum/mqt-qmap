@@ -63,11 +63,10 @@ public:
    * @param nQubits The number of qubits to be mapped.
    * @param initialMapping The initial mapping to be used.
    */
-  void initMapping(size_t nQubits,
-                   InitialMapping initialMapping = InitialMapping::Identity) {
+  void initMapping(size_t nQubits) {
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     synthesizedQc = qc::QuantumComputation(nQubits);
-    mapping = Mapping(nQubits, initialMapping);
+    mapping = Mapping(nQubits);
   }
 
   /**

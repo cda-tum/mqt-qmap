@@ -6,6 +6,8 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "HardwareQubits.hpp"
+#include "NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Permutation.hpp"
@@ -16,6 +18,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace na {
 
@@ -27,18 +30,38 @@ class Mapping {
 protected:
   // std::map<qc::Qubit, HwQubit>
   qc::Permutation circToHw;
+  HardwareQubits hwQubits;
+  qc::DAG dag;
+
+  /**
+   * @brief GraphMatching for initCoordMapping
+   */
+  [[nodiscard]]
+  std::vector<CoordIndex> graphMatching() const;
 
 public:
   Mapping() = default;
-  Mapping(const size_t nQubits, const InitialMapping initialMapping) {
+  explicit Mapping(const size_t nQubits) {
+    for (size_t i = 0; i < nQubits; ++i) {
+      circToHw.emplace(i, i);
+    }
+  }
+  Mapping(const size_t nQubits, const InitialMapping initialMapping,
+          qc::QuantumComputation qc, const HardwareQubits& hwQubits)
+      : dag(qc::CircuitOptimizer::constructDAG(qc)), hwQubits(hwQubits) {
+
     switch (initialMapping) {
     case Identity:
       for (size_t i = 0; i < nQubits; ++i) {
         circToHw.emplace(i, i);
       }
       break;
-    default:
-      qc::unreachable();
+    case Graph:
+      const auto qubitIndices = graphMatching();
+      for (size_t i = 0; i < nQubits; i++) {
+        circToHw.emplace(i, qubitIndices[i]);
+      }
+      break;
     }
   }
   /**

@@ -36,8 +36,8 @@ public:
 };
 
 // Enums for the different initial mappings strategies
-enum InitialCoordinateMapping : uint8_t { Trivial, Random, Graph };
-enum InitialMapping : uint8_t { Identity };
+enum InitialCoordinateMapping : uint8_t { Trivial, Random };
+enum InitialMapping : uint8_t { Identity, Graph };
 enum MappingMethod : uint8_t {
   SwapMethod,
   BridgeMethod,
@@ -56,9 +56,6 @@ initialCoordinateMappingFromString(
   if (initialCoordinateMapping == "random" || initialCoordinateMapping == "1") {
     return InitialCoordinateMapping::Random;
   }
-  if (initialCoordinateMapping == "graph" || initialCoordinateMapping == "2") {
-    return InitialCoordinateMapping::Graph;
-  }
   throw std::invalid_argument("Invalid initial coordinate mapping value: " +
                               initialCoordinateMapping);
 }
@@ -67,6 +64,9 @@ initialCoordinateMappingFromString(
 initialMappingFromString(const std::string& initialMapping) {
   if (initialMapping == "identity" || initialMapping == "0") {
     return InitialMapping::Identity;
+  }
+  if (initialMapping == "graph" || initialMapping == "1") {
+    return InitialMapping::Graph;
   }
   throw std::invalid_argument("Invalid initial mapping value: " +
                               initialMapping);

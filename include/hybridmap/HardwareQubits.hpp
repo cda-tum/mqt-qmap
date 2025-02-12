@@ -98,7 +98,6 @@ public:
 
     switch (initialCoordinateMapping) {
     case Trivial:
-    case Graph:
       for (uint32_t i = 0; i < this->nQubits; ++i) {
         hwToCoordIdx.emplace(i, i);
       }

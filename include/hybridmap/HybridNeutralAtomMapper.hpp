@@ -7,6 +7,7 @@
 
 #include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
@@ -113,15 +114,7 @@ protected:
   // The current mapping between circuit qubits and hardware qubits
   Mapping mapping;
 
-  qc::DAG dag;
-
   // Methods for mapping
-
-  /**
-   * @brief GraphMatching for initCoordMapping
-   */
-  void graphMatching(std::vector<CoordIndex>& qubitIndices,
-                     std::vector<CoordIndex>& hwIndices, const qc::DAG& dag);
 
   /**
    * @brief Maps the gate to the mapped quantum circuit.
@@ -448,7 +441,8 @@ public:
         hardwareQubits(*arch, arch->getNqubits() - p->numFlyingAncillas,
                        p->initialCoordMapping, p->seed),
         flyingAncillas(*arch, p->numFlyingAncillas,
-                       InitialCoordinateMapping::Trivial, p->seed) {
+                       InitialCoordinateMapping::Trivial, p->seed),
+        mapping() {
     if (arch->getNpositions() - arch->getNqubits() < 1 &&
         p->shuttlingWeight > 0) {
       throw std::runtime_error(
@@ -533,20 +527,23 @@ public:
    * operations
    */
   qc::QuantumComputation map(qc::QuantumComputation& qc,
-                             Mapping initialMapping) {
+                             const Mapping& initialMapping) {
     mappedQc = qc::QuantumComputation(arch->getNpositions());
     mappedQcAOD = qc::QuantumComputation(arch->getNpositions());
     nMoves = 0;
     nSwaps = 0;
     nBridges = 0;
     nFAncillas = 0;
-    mapAppend(qc, std::move(initialMapping));
+    mapAppend(qc, initialMapping);
     return mappedQc;
   }
 
   qc::QuantumComputation map(qc::QuantumComputation& qc,
                              const InitialMapping initialMapping) {
-    return map(qc, Mapping(qc.getNqubits(), initialMapping));
+    const auto dag = qc::CircuitOptimizer::constructDAG(qc);
+    const auto actualMapping =
+        Mapping(qc.getNqubits(), initialMapping, qc, hardwareQubits);
+    return map(qc, actualMapping);
   }
 
   /**
@@ -555,7 +552,7 @@ public:
    * @param initialMapping The initial mapping of the circuit qubits to the
    * hardware qubits
    */
-  void mapAppend(qc::QuantumComputation& qc, Mapping initialMapping);
+  void mapAppend(qc::QuantumComputation& qc, const Mapping& initialMapping);
 
   /**
    * @brief Maps the given quantum circuit to the given architecture and
