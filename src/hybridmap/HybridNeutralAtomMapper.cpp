@@ -55,14 +55,15 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
 
   if (this->parameters->verbose) {
     std::cout << "* Init Coord Mapping w/ [row:" << arch->getNrows()
-              << " X col:" << arch->getNcolumns() << "] hardware" << std::endl;
+              << " X col:" << arch->getNcolumns() << "] hardware" << "\n";
     for (uint32_t q = 0; q < qc.getNqubits(); q++) {
       std::cout << "q " << std::setw(3) << q;
-      std::cout << " -> h " << std::setw(3) << this->mapping.getHwQubit(q);
+      const auto hwQubit = this->mapping.getHwQubit(q);
+      std::cout << " -> h " << std::setw(3) << hwQubit;
       std::cout << " -> c " << std::setw(3)
-                << this->hardwareQubits.getCoordIndex(q) << std::endl;
+                << hardwareQubits.getCoordIndex(hwQubit) << "\n";
     }
-    std::cout << std::endl;
+    std::cout << "\n";
   }
 
   // init layers
