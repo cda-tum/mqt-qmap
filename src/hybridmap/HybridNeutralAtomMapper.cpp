@@ -159,21 +159,23 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
 
 void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
                                     const FlyingAncillaComb& faComb) {
-  auto usedQubits = faComb.op->getUsedQubits();
+  const auto usedQubits = faComb.op->getUsedQubits();
+  auto usedCoords =
+      hardwareQubits.getCoordIndices(mapping.getHwQubits(usedQubits));
   for (const auto& passBy : faComb.moves) {
     mappedQc.move(passBy.q1, passBy.q2 + arch->getNpositions());
     if (this->parameters->verbose) {
       std::cout << "passby " << passBy.q1 << " " << passBy.q2 << '\n';
     }
-    if (usedQubits.find(passBy.q1) != usedQubits.end()) {
-      usedQubits.erase(passBy.q1);
-      usedQubits.insert(passBy.q2 + arch->getNpositions());
+    if (usedCoords.find(passBy.q1) != usedCoords.end()) {
+      usedCoords.erase(passBy.q1);
+      usedCoords.insert(passBy.q2 + arch->getNpositions());
     }
   }
   const auto opCopy = faComb.op->clone();
-  const std::vector<CoordIndex> usedQubitsVec = {usedQubits.begin(),
-                                                 usedQubits.end()};
-  opCopy->setTargets(usedQubitsVec);
+  const std::vector<CoordIndex> usedCoordsVec = {usedCoords.begin(),
+                                                 usedCoords.end()};
+  opCopy->setTargets(usedCoordsVec);
   opCopy->setControls({});
   mappedQc.emplace_back(opCopy->clone());
 
@@ -370,7 +372,10 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
 }
 void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                                            const FlyingAncillaComb& faComb) {
-  auto usedQubits = faComb.op->getUsedQubits();
+  const auto usedQubits = faComb.op->getUsedQubits();
+  auto usedCoords =
+      hardwareQubits.getCoordIndices(mapping.getHwQubits(usedQubits));
+
   const auto nPos = this->arch->getNpositions();
   for (const auto& passBy : faComb.moves) {
     const auto ancQ1 = passBy.q1 + (nPos * 2);
@@ -383,9 +388,9 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     mappedQc.h(ancQ1);
     mappedQc.move(ancQ1, ancQ2);
 
-    if (usedQubits.find(passBy.q1) != usedQubits.end()) {
-      usedQubits.erase(passBy.q1);
-      usedQubits.insert(ancQ2);
+    if (usedCoords.find(passBy.q1) != usedCoords.end()) {
+      usedCoords.erase(passBy.q1);
+      usedCoords.insert(ancQ2);
     }
 
     if (this->parameters->verbose) {
@@ -394,9 +399,9 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     }
   }
   const auto opCopy = faComb.op->clone();
-  const std::vector<CoordIndex> usedQubitsVec = {usedQubits.begin(),
-                                                 usedQubits.end()};
-  opCopy->setTargets(usedQubitsVec);
+  const std::vector<CoordIndex> usedCoordsVec = {usedCoords.begin(),
+                                                 usedCoords.end()};
+  opCopy->setTargets(usedCoordsVec);
   opCopy->setControls({});
   mappedQc.emplace_back(opCopy->clone());
 
