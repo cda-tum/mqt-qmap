@@ -88,6 +88,15 @@ private:
   static auto checkRectangularShape(
       const std::initializer_list<std::initializer_list<bool>>& entries)
       -> bool;
+  /**
+   * @brief Check if the given list of lists is representing a sparse matrix,
+   * i.e., has no duplicates in the same row.
+   * @param entries is the list of lists with non-negative integer values to check.
+   * @return @c true if the list of lists does not contain duplicates, @c false otherwise.
+   */
+  static auto checkUniqueIndices(
+      const std::initializer_list<std::initializer_list<std::size_t>>& entries)
+      -> bool;
 
 public:
   /**
@@ -99,13 +108,14 @@ public:
    * entries in this matrix are initialized with @c false.
    */
   DLEBMF(size_t rows, size_t cols);
+
   /**
    * @brief Create a new matrix with the given entries.
    * @param entries is a list of lists with boolean values. The list of lists
    * must represent a matrix, i.e., all inner lists must be of the same size.
    * @throws std::invalid_argument if the given list of lists is not
    * rectangular.
-   * @note The arguments of this constructor can easily be written as a
+   * @note The arguments of this factory method can easily be written as a
    * brace-init list. For example, the matrix
    * \f[
    * \begin{pmatrix}
@@ -120,7 +130,31 @@ public:
    * false}, {false, false, true, false}});
    * @endcode
    */
-  DLEBMF(const std::initializer_list<std::initializer_list<bool>>& entries);
+  static auto fromDenseMatrix(
+      const std::initializer_list<std::initializer_list<bool>>& entries) -> DLEBMF;
+  /**
+   * @brief Create a new matrix with the given entries.
+   * @param entries is a list of lists of non-negative integers values representing
+   * indices. The list of indices refers to the @c true entries in the matrix.
+   * @throw std::invalid_argument if an index occurs more than once in the same
+   * row, has more rows than specified or has a higher column index than columns
+   * specified.
+   * @note The arguments of this factory method can easily be written as a
+   * brace-init list. For example, the matrix
+   * \f[
+   * \begin{pmatrix}
+   * 1 & 0 & 1 & 0 \\
+   * 0 & 0 & 0 & 0 \\
+   * 0 & 0 & 1 & 0
+   * \end{pmatrix}
+   * \f]
+   * can be created with
+   * @code
+   * na::DLEBMF matrix({{0, 2}, {}, {2}});
+   * @endcode
+   */
+  static auto fromSparseMatrix(std::size_t rows, std::size_t cols,
+      const std::initializer_list<std::initializer_list<std::size_t>>& entries) -> DLEBMF;
 
   /**
    * @brief Get the value of the entry at the given row and column, this can

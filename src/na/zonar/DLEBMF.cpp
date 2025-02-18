@@ -4,29 +4,32 @@
 #include <cstddef>
 #include <initializer_list>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace na {
 DLEBMF::DLEBMF(const size_t rows, const size_t cols) : rows(rows), cols(cols) {
   createEmptyColumns();
 }
 
-DLEBMF::DLEBMF(
-    const std::initializer_list<std::initializer_list<bool>>& entries) {
+auto DLEBMF::fromDenseMatrix(
+    const std::initializer_list<std::initializer_list<bool>>& entries)
+    -> DLEBMF {
   if (checkRectangularShape(entries)) {
     throw std::invalid_argument("All columns must have the same length.");
   }
-  rows = entries.size();
-  cols = entries.begin() != entries.end() ? entries.begin()->size() : 0;
-  createEmptyColumns();
+  DLEBMF instance(entries.size(), entries.begin() != entries.end()
+                                      ? entries.begin()->size()
+                                      : 0);
 
   size_t r = 0;
   for (const auto& row : entries) {
     size_t c = 0;
-    Column* currentCol = matrix.get();
+    Column* currentCol = instance.matrix.get();
     Cell* lastInRow = nullptr;
     for (const auto val : row) {
       if (val) {
@@ -53,6 +56,67 @@ DLEBMF::DLEBMF(
     }
     ++r;
   }
+  return instance;
+}
+auto DLEBMF::fromSparseMatrix(
+    const std::size_t rows, const std::size_t cols,
+    const std::initializer_list<std::initializer_list<std::size_t>>& entries)
+    -> DLEBMF {
+  if (entries.size() != rows) {
+    throw std::invalid_argument(
+        "Number of rows does not match the number of rows in the entries.");
+  }
+  // Get the maximum column index
+  const auto maxColId = std::accumulate(
+      entries.begin(), entries.end(), 0,
+      [](const std::size_t acc, const std::initializer_list<std::size_t>& col) {
+        return col.size() == 0
+                   ? acc
+                   : std::max(acc, *std::max_element(col.begin(), col.end()));
+      });
+  if (maxColId >= cols) {
+    throw std::invalid_argument("The maximum column index in the entries "
+                                "exceeds the number of columns.");
+  }
+  // Check for duplicate indices in the same row
+  if (!checkUniqueIndices(entries)) {
+    throw std::invalid_argument(
+        "Duplicate indices in the same row are not allowed.");
+  }
+
+  DLEBMF instance(rows, cols);
+
+  size_t r = 0;
+  for (const auto& row : entries) {
+    Column* currentCol = instance.matrix.get();
+    Cell* lastInRow = nullptr;
+    std::vector colIdxs(row.begin(), row.end());
+    std::sort(colIdxs.begin(), colIdxs.end());
+    for (const auto c : colIdxs) {
+      while (currentCol->col < c) {
+        currentCol = currentCol->right.get();
+      }
+      auto currentCell = std::make_unique<Cell>();
+      currentCell->row = r;
+      currentCell->col = c;
+      currentCell->left = lastInRow;
+      currentCell->up = currentCol->bottom;
+      if (lastInRow != nullptr) {
+        lastInRow->right = currentCell.get();
+      }
+      lastInRow = currentCell.get();
+      currentCol->size++;
+      if (currentCol->down == nullptr) {
+        currentCol->down = std::move(currentCell);
+        currentCol->bottom = currentCol->down.get();
+      } else {
+        currentCol->bottom->down = std::move(currentCell);
+        currentCol->bottom = currentCol->bottom->down.get();
+      }
+    }
+    ++r;
+  }
+  return instance;
 }
 
 auto DLEBMF::createEmptyColumns() -> void {
@@ -82,6 +146,19 @@ auto DLEBMF::checkRectangularShape(
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   return std::any_of(firstCol + 1, entries.end(),
                      [nCols](const auto& col) { return col.size() != nCols; });
+}
+
+auto DLEBMF::checkUniqueIndices(
+    const std::initializer_list<std::initializer_list<std::size_t>>& entries)
+    -> bool {
+  for (const auto& row : entries) {
+    std::vector colIdxs(row.begin(), row.end());
+    std::sort(colIdxs.begin(), colIdxs.end());
+    if (std::adjacent_find(colIdxs.begin(), colIdxs.end()) != colIdxs.end()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 auto DLEBMF::get(const size_t row, const size_t col) const -> bool {
