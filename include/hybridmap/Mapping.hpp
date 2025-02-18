@@ -8,9 +8,11 @@
 #include "Definitions.hpp"
 #include "HardwareQubits.hpp"
 #include "NeutralAtomArchitecture.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/Permutation.hpp"
+#include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 
 #include <algorithm>
@@ -37,7 +39,7 @@ protected:
    * @brief GraphMatching for initCoordMapping
    */
   [[nodiscard]]
-  std::vector<CoordIndex> graphMatching() const;
+  std::vector<CoordIndex> graphMatching();
 
 public:
   Mapping() = default;
@@ -47,8 +49,9 @@ public:
     }
   }
   Mapping(const size_t nQubits, const InitialMapping initialMapping,
-          qc::QuantumComputation qc, const HardwareQubits& hwQubits)
-      : dag(qc::CircuitOptimizer::constructDAG(qc)), hwQubits(hwQubits) {
+          qc::QuantumComputation qc, HardwareQubits hwQubits)
+      : hwQubits(std::move(hwQubits)),
+        dag(qc::CircuitOptimizer::constructDAG(qc)) {
 
     switch (initialMapping) {
     case Identity:
@@ -144,7 +147,7 @@ public:
    * @param swap The two circuit qubits to be swapped
    * @throws std::runtime_error if hardware qubits are not mapped
    */
-  void applySwap(Swap swap);
+  void applySwap(const Swap& swap);
 };
 
 } // namespace na

@@ -5,17 +5,26 @@
 
 #include "hybridmap/Mapping.hpp"
 
+#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+#include <queue>
 #include <stdexcept>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace na {
-void Mapping::applySwap(Swap swap) {
-  auto q1 = swap.first;
-  auto q2 = swap.second;
+void Mapping::applySwap(const Swap& swap) {
+  const auto q1 = swap.first;
+  const auto q2 = swap.second;
   if (this->isMapped(q1) && this->isMapped(q2)) {
-    auto circQ1 = this->getCircQubit(q1);
-    auto circQ2 = this->getCircQubit(q2);
+    const auto circQ1 = this->getCircQubit(q1);
+    const auto circQ2 = this->getCircQubit(q2);
     this->setCircuitQubit(circQ2, q1);
     this->setCircuitQubit(circQ1, q2);
   } else if (this->isMapped(q1) && !this->isMapped(q2)) {
@@ -27,23 +36,22 @@ void Mapping::applySwap(Swap swap) {
   }
 }
 
-std::vector<CoordIndex> Mapping::graphMatching() const {
-  std::cout << "\n* initialMapping: Graph Matching\n";
+std::vector<CoordIndex> Mapping::graphMatching() {
 
-  std::vector<CoordIndex> qubitIndices(
-      dag.size(), std::numeric_limits<unsigned int>::max());
-  std::vector<CoordIndex> hwIndices(hwQubits.getNumQubits(),
-                                    std::numeric_limits<unsigned int>::max());
+  std::vector qubitIndices(dag.size(),
+                           std::numeric_limits<unsigned int>::max());
+  std::vector hwIndices(hwQubits.getNumQubits(),
+                        std::numeric_limits<unsigned int>::max());
 
   // make hardware graph
   std::unordered_map<uint32_t, std::vector<uint32_t>> hwGraph;
-  for (size_t i = 0; i < hwQubits.getNumQubits(); ++i) {
+  for (qc::Qubit i = 0; i < hwQubits.getNumQubits(); ++i) {
     auto neighbors = hwQubits.getNearbyQubits(i);
-    hwGraph[i] = std::vector<uint32_t>(neighbors.begin(), neighbors.end());
+    hwGraph[i] = std::vector(neighbors.begin(), neighbors.end());
   }
   for (auto& [qubit, neighbors] : hwGraph) {
     std::sort(neighbors.begin(), neighbors.end(),
-              [this](uint32_t a, uint32_t b) {
+              [this](const uint32_t a, const uint32_t b) {
                 return hwQubits.getNearbyQubits(a).size() >
                        hwQubits.getNearbyQubits(b).size();
               });
@@ -57,20 +65,6 @@ std::vector<CoordIndex> Mapping::graphMatching() const {
       hwCenter = qubit;
     }
   }
-
-  /*
-  //for debug//
-  for (size_t i = 0; i < hwQubits.getNumQubits(); ++i){
-    auto coordIdx = hwQubits.getCoordIndex(i);
-    std::cout << "hwQubit " << i << " -> coordIdx " << coordIdx << "\t";
-    std::cout << "-> neighbors: ";
-    for(auto j : hwGraph[i]){
-      std::cout << j << " ";
-    }
-    std::cout << "\n";
-  }
-  std::cout << "=> hwCenter: " << hwCenter << "\n";
-  */
 
   // make circuit graph
   std::vector<std::vector<std::pair<qc::Qubit, double>>> circGraph(dag.size());
@@ -89,33 +83,23 @@ std::vector<CoordIndex> Mapping::graphMatching() const {
     }
     std::vector<std::pair<qc::Qubit, double>> neighbors(weightMap.begin(),
                                                         weightMap.end());
-    std::sort(
-        neighbors.begin(), neighbors.end(),
-        [](const std::pair<qc::Qubit, double>& a,
-           std::pair<qc::Qubit, double>& b) { return a.second > b.second; });
+    std::sort(neighbors.begin(), neighbors.end(),
+              [](const std::pair<qc::Qubit, double>& a,
+                 const std::pair<qc::Qubit, double>& b) {
+                return a.second > b.second;
+              });
     circGraph[qubit] = std::move(neighbors);
   }
-
-  /*
-  //for debug//
-  for (qc::Qubit qubit = 0; qubit<circGraph.size(); ++qubit){
-    std::cout << "Qubit " << qubit << " -> ";
-    for(const auto& [neighbor, weight] : circGraph[qubit]){
-      std::cout << "(q" << neighbor << " - weight " << weight << ") ";
-    }
-    std::cout << "\n";
-  }
-  */
 
   // circuit queue for graph matching
   std::vector<std::pair<int, std::pair<int, double>>> nodes;
   for (size_t i = 0; i < circGraph.size(); ++i) {
-    int degree = circGraph[i].size();
-    double weight_sum = 0;
+    const auto degree = circGraph[i].size();
+    double weightSum = 0;
     for (const auto& neighbor : circGraph[i]) {
-      weight_sum += neighbor.second;
+      weightSum += neighbor.second;
     }
-    nodes.emplace_back(i, std::make_pair(degree, weight_sum));
+    nodes.emplace_back(i, std::make_pair(degree, weightSum));
   }
   std::sort(nodes.begin(), nodes.end(),
             [](const std::pair<int, std::pair<int, double>>& a,
@@ -133,69 +117,63 @@ std::vector<CoordIndex> Mapping::graphMatching() const {
   // graph matching -> return qubit Indices
   uint32_t nMapped = 0;
   bool firstCenter = true;
-  int i = 0;
   while (!circGraphQueue.empty() && nMapped != dag.size()) {
     auto qi = circGraphQueue.front();
-    HwQubit Qi = std::numeric_limits<unsigned int>::max();
-    // std::cout << "*" << ++i << "th mapping: q" << qi << "\n";
+    HwQubit qI = std::numeric_limits<unsigned int>::max();
     //  center mapping
     if (qubitIndices[qi] == std::numeric_limits<unsigned int>::max()) {
       // first center
       if (firstCenter) {
-        Qi = hwCenter;
+        qI = hwCenter;
         firstCenter = false;
       }
       // next..
       else {
-        int minDistance = std::numeric_limits<int>::max();
-        for (HwQubit Qcandi = 0; Qcandi < hwQubits.getNumQubits(); ++Qcandi) {
-          if (hwIndices[Qcandi] != std::numeric_limits<unsigned int>::max()) {
+        auto minDistance = std::numeric_limits<qc::fp>::max();
+        for (HwQubit qCandi = 0; qCandi < hwQubits.getNumQubits(); ++qCandi) {
+          if (hwIndices[qCandi] != std::numeric_limits<unsigned int>::max()) {
             continue;
           }
-          int weightDistance = 0;
-          for (auto qn_pair : circGraph[qi]) {
-            auto qn = qn_pair.first;
-            auto qn_weight = qn_pair.second;
-            HwQubit Qn = qubitIndices[qn];
-            if (Qn == std::numeric_limits<unsigned int>::max()) {
+          auto weightDistance = 0.0;
+          for (auto qnPair : circGraph[qi]) {
+            auto qn = qnPair.first;
+            auto qnWeight = qnPair.second;
+            HwQubit const qN = qubitIndices[qn];
+            if (qN == std::numeric_limits<unsigned int>::max()) {
               continue;
             }
             weightDistance +=
-                const_cast<na::HardwareQubits&>(hwQubits).getSwapDistance(
-                    Qn, Qcandi, true) *
-                qn_weight;
+                qnWeight * hwQubits.getSwapDistance(qN, qCandi, true);
           }
           if (weightDistance < minDistance) {
             minDistance = weightDistance;
-            Qi = Qcandi;
+            qI = qCandi;
           }
         }
       }
-      qubitIndices[qi] = Qi;
-      hwIndices[Qi] = qi;
+      qubitIndices[qi] = qI;
+      hwIndices[qI] = qi;
       nMapped++;
-      // std::cout << "q" << qi << "-> Q" << Qi << "\n";
     } else {
-      Qi = qubitIndices[qi];
+      qI = qubitIndices[qi];
     }
     // neighbor mapping
-    for (auto& qn_pair : circGraph[qi]) {
-      uint32_t qn = qn_pair.first;
+    for (auto& qnPair : circGraph[qi]) {
+      auto const qn = qnPair.first;
       if (qubitIndices[qn] != std::numeric_limits<unsigned int>::max()) {
         continue;
       }
-      HwQubit Qn = std::numeric_limits<unsigned int>::max();
-      for (const auto& Qcandi : hwGraph[Qi]) {
-        if (hwIndices[Qcandi] == std::numeric_limits<unsigned int>::max()) {
-          Qn = Qcandi;
+      HwQubit qN = std::numeric_limits<unsigned int>::max();
+      for (const auto& qCandi : hwGraph[qI]) {
+        if (hwIndices[qCandi] == std::numeric_limits<unsigned int>::max()) {
+          qN = qCandi;
           break;
         }
       }
-      if (Qn != std::numeric_limits<unsigned int>::max()) {
-        qubitIndices[qn] = Qn;
-        hwIndices[Qn] = qn;
+      if (qN != std::numeric_limits<unsigned int>::max()) {
+        qubitIndices[qn] = qN;
+        hwIndices[qN] = qn;
         nMapped++;
-        // std::cout << "q" << qn << "-> Q" << Qn << "\n";
       }
     }
     circGraphQueue.pop();
