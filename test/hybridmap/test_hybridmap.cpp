@@ -8,6 +8,7 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "qasm3/Importer.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -81,8 +82,8 @@ protected:
 };
 
 TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
-  auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
-  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  const auto arch = na::NeutralAtomArchitecture(testArchitecturePath);
+  constexpr na::InitialMapping initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper mapper(arch);
   na::MapperParameters mapperParameters;
   mapperParameters.initialMapping = initialCoordinateMapping;
@@ -96,11 +97,11 @@ TEST_P(NeutralAtomMapperTest, MapCircuitsIdentity) {
   mapperParameters.verbose = true;
   mapper.setParameters(mapperParameters);
 
-  qc::QuantumComputation qc(testQcPath);
+  auto qc = qasm3::Importer::importf(testQcPath);
   auto qcMapped = mapper.map(qc, initialMapping);
   auto qcAodMapped = mapper.convertToAod(qcMapped);
 
-  auto scheduleResults = mapper.schedule(true, true);
+  const auto scheduleResults = mapper.schedule(true, true);
 
   ASSERT_GT(scheduleResults.totalFidelities, 0);
   ASSERT_GT(scheduleResults.totalIdleTime, 0);
@@ -121,9 +122,9 @@ INSTANTIATE_TEST_SUITE_P(
                           na::InitialCoordinateMapping::Random)));
 
 TEST(NeutralAtomMapperTest, Output) {
-  auto arch =
+  const auto arch =
       na::NeutralAtomArchitecture("architectures/rubidium_shuttling.json");
-  na::InitialMapping const initialMapping = na::InitialMapping::Identity;
+  constexpr na::InitialMapping initialMapping = na::InitialMapping::Identity;
   na::NeutralAtomMapper mapper(arch);
   na::MapperParameters mapperParameters;
   mapperParameters.initialMapping = na::InitialCoordinateMapping::Trivial;
@@ -137,7 +138,7 @@ TEST(NeutralAtomMapperTest, Output) {
   mapperParameters.verbose = true;
   mapper.setParameters(mapperParameters);
 
-  qc::QuantumComputation qc(
+  auto qc = qasm3::Importer::importf(
       "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");
   auto qcMapped = mapper.map(qc, initialMapping);
 
