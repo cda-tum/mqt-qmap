@@ -121,7 +121,7 @@ void MoveToAodConverter::initMoveGroups(qc::QuantumComputation& qc) {
         currentMoveGroup = MoveGroup();
         currentMoveGroup.addMove(move, idx);
       }
-    } else if (op->getNqubits() > 1 && (!currentMoveGroup.moves.empty())) {
+    } else if ((!currentMoveGroup.moves.empty())) {
       for (const auto& qubit : op->getUsedQubits()) {
         if (std::find(currentMoveGroup.qubitsUsedByGates.begin(),
                       currentMoveGroup.qubitsUsedByGates.end(),
