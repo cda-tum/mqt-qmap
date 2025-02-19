@@ -309,7 +309,7 @@ MoveToAodConverter::canAddActivation(
       static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);
   auto end =
       static_cast<std::uint32_t>(dim == Dimension::X ? final.x : final.y);
-  auto delta = end - start;
+  const qc::fp delta = static_cast<qc::fp>(end - start);
 
   // Get Moves that start/end at the same position as the current move
   auto aodMovesActivation = activationHelper.getAodMovesFromInit(dim, start);
@@ -345,8 +345,8 @@ MoveToAodConverter::canAddActivation(
     for (const auto& aodMoveDeactivation : aodMovesDeactivation) {
       if (aodMoveActivation->init == start &&
           aodMoveDeactivation->init == end &&
-          aodMoveActivation->delta == delta &&
-          aodMoveDeactivation->delta == delta) {
+          std::abs(aodMoveActivation->delta) == std::abs(delta) &&
+          std::abs(aodMoveDeactivation->delta) == std::abs(delta)) {
         return std::make_pair(ActivationMergeType::Merge,
                               ActivationMergeType::Merge);
       }
@@ -710,12 +710,8 @@ MoveToAodConverter::AodActivationHelper::getAodOperation(
   if (offsetOperations.empty()) {
     return {AodOperation(type, qubitsActivation, initOperations)};
   }
-  if (this->type == qc::OpType::AodActivate) {
-    return {AodOperation(type, qubitsActivation, initOperations),
-            AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
-  }
-  return {AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations),
-          AodOperation(type, qubitsActivation, initOperations)};
+  return {AodOperation(type, qubitsActivation, initOperations),
+          AodOperation(qc::OpType::AodMove, qubitsOffset, offsetOperations)};
 }
 
 std::vector<AodOperation>
@@ -727,6 +723,10 @@ MoveToAodConverter::AodActivationHelper::getAodOperations() const {
     aodOperations.insert(aodOperations.end(), operations.begin(),
                          operations.end());
   }
+  if (type == qc::OpType::AodActivate) {
+    return aodOperations;
+  }
+  std::reverse(aodOperations.begin(), aodOperations.end());
   return aodOperations;
 }
 } // namespace na
