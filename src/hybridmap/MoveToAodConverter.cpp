@@ -146,7 +146,6 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
     return false;
   }
   // checks if the op can be executed in parallel
-  auto moveVector = archArg.getVector(move.c1, move.c2);
   std::vector<std::pair<AtomMove, uint32_t>>* movesToCheck;
   if (move.load1 || move.load2) {
     movesToCheck = &moves;
@@ -155,8 +154,14 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
   }
   return std::all_of(
       movesToCheck->begin(), movesToCheck->end(),
-      [&moveVector, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
+      [&move, &archArg](const std::pair<AtomMove, uint32_t> opPair) {
         auto moveGroup = opPair.first;
+        // check that passby and move are not in same group
+        if (move.load1 != moveGroup.load1 || move.load2 != moveGroup.load2) {
+          return false;
+        }
+        // check if parallel executable
+        auto moveVector = archArg.getVector(move.c1, move.c2);
         auto opVector = archArg.getVector(moveGroup.c1, moveGroup.c2);
         return parallelCheck(moveVector, opVector);
       });
