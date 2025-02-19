@@ -304,6 +304,7 @@ MoveToAodConverter::canAddActivation(
       static_cast<std::uint32_t>(dim == Dimension::X ? origin.x : origin.y);
   auto end =
       static_cast<std::uint32_t>(dim == Dimension::X ? final.x : final.y);
+  auto delta = end - start;
 
   // Get Moves that start/end at the same position as the current move
   auto aodMovesActivation = activationHelper.getAodMovesFromInit(dim, start);
@@ -338,7 +339,9 @@ MoveToAodConverter::canAddActivation(
   for (const auto& aodMoveActivation : aodMovesActivation) {
     for (const auto& aodMoveDeactivation : aodMovesDeactivation) {
       if (aodMoveActivation->init == start &&
-          aodMoveDeactivation->init == end) {
+          aodMoveDeactivation->init == end &&
+          aodMoveActivation->delta == delta &&
+          aodMoveDeactivation->delta == delta) {
         return std::make_pair(ActivationMergeType::Merge,
                               ActivationMergeType::Merge);
       }
