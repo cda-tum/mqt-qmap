@@ -2257,11 +2257,9 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
           faCombSize) *
       std::exp(-passByTime / this->arch->getDecoherenceTime());
 
-  const auto move = moveDistReduction * moveFidelity;
-  const auto fa = faDistReduction * faFidelity;
-  const auto passBy = faDistReduction * passByFidelity;
-  // return MappingMethod::PassByMethod;
-  // return MappingMethod::FlyingAncillaMethod;
+  const auto move = std::log(moveFidelity) / moveDistReduction;
+  const auto fa = std::log(faFidelity) / faDistReduction;
+  const auto passBy = std::log(passByFidelity) / faDistReduction;
 
   if (move > fa && move > passBy) {
     return MappingMethod::MoveMethod;
