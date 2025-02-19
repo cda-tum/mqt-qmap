@@ -2184,7 +2184,8 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   qc::fp const bridgeFidelity = this->arch->getGateAverageFidelity(bridgeName) *
                                 std::exp(-this->arch->getGateTime(bridgeName) /
                                          this->arch->getDecoherenceTime());
-  if (swapDistReduction * swapFidelity > bridgeDistReduction * bridgeFidelity) {
+  if (bridgeDistReduction * std::log(swapFidelity) >
+      swapDistReduction * std::log(bridgeFidelity)) {
     return MappingMethod::SwapMethod;
   }
   return MappingMethod::BridgeMethod;
