@@ -53,6 +53,10 @@ public:
       : hwQubits(std::move(hwQubits)),
         dag(qc::CircuitOptimizer::constructDAG(qc)) {
 
+    if (qc.getNqubits() > hwQubits.getNumQubits()) {
+      throw std::runtime_error("Not enough qubits in architecture for circuit");
+    }
+
     switch (initialMapping) {
     case Identity:
       for (size_t i = 0; i < nQubits; ++i) {
