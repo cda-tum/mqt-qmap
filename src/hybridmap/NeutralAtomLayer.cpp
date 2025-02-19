@@ -45,16 +45,31 @@ void NeutralAtomLayer::initAllQubits() {
 void NeutralAtomLayer::updateCandidatesByQubits(
     const std::set<qc::Qubit>& qubitsToUpdate) {
   for (const auto& qubit : qubitsToUpdate) {
-    while (iterators[qubit] < ends[qubit]) {
-      auto* op = (*iterators[qubit])->get();
-      // check if operation commutes with gates and candidates
-      auto commutes = commutesWithAtQubit(gates, op, qubit) &&
-                      commutesWithAtQubit(candidates[qubit], op, qubit);
-      if (commutes) {
+    if (isFrontLayer) {
+      while (iterators[qubit] < ends[qubit]) {
+        auto* op = (*iterators[qubit])->get();
+        // check if operation commutes with gates and candidates
+        auto commutes = commutesWithAtQubit(gates, op, qubit) &&
+                        commutesWithAtQubit(candidates[qubit], op, qubit);
+        if (commutes) {
+          candidates[qubit].emplace_back(op);
+          iterators[qubit]++;
+        } else {
+          break;
+        }
+      }
+    }
+    // for lookahead layer, take the next k multi-qubit gates
+    else {
+      size_t multiQubitGatesFound = 0;
+      while (iterators[qubit] < ends[qubit] &&
+             multiQubitGatesFound < lookaheadDepth) {
+        auto* op = (*iterators[qubit])->get();
         candidates[qubit].emplace_back(op);
         iterators[qubit]++;
-      } else {
-        break;
+        if (op->getUsedQubits().size() > 1) {
+          multiQubitGatesFound++;
+        }
       }
     }
   }

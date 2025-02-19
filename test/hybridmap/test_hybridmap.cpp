@@ -135,6 +135,7 @@ protected:
     mapper = na::NeutralAtomMapper(arch);
     mapperParameters.initialCoordMapping =
         na::InitialCoordinateMapping::Trivial;
+    mapperParameters.lookaheadDepth = 1;
     mapperParameters.lookaheadWeightSwaps = 0.1;
     mapperParameters.lookaheadWeightMoves = 0.1;
     mapperParameters.decay = 0;
@@ -145,7 +146,7 @@ protected:
     mapperParameters.verbose = true;
     mapperParameters.numFlyingAncillas = 2;
     mapperParameters.limitShuttlingLayer = 2;
-    mapperParameters.useBridge = false;
+    mapperParameters.useBridge = true;
     mapperParameters.usePassBy = true;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(

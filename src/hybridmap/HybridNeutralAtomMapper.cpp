@@ -67,9 +67,9 @@ void NeutralAtomMapper::mapAppend(qc::QuantumComputation& qc,
   }
 
   // init layers
-  NeutralAtomLayer lookaheadLayer(dag);
+  NeutralAtomLayer lookaheadLayer(dag, false, this->parameters->lookaheadDepth);
   lookaheadLayer.initAllQubits();
-  NeutralAtomLayer frontLayer(dag);
+  NeutralAtomLayer frontLayer(dag, true, this->parameters->lookaheadDepth);
   frontLayer.initAllQubits();
   lookaheadLayer.removeGatesAndUpdate(frontLayer.getGates());
   mapAllPossibleGates(frontLayer, lookaheadLayer);

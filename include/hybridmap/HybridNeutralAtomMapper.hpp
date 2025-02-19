@@ -33,6 +33,7 @@ namespace na {
  * @brief Struct to store the runtime parameters of the mapper.
  */
 struct MapperParameters {
+  uint32_t lookaheadDepth = 1;
   qc::fp lookaheadWeightSwaps = 0.1;
   qc::fp lookaheadWeightMoves = 0.1;
   qc::fp decay = 0.1;

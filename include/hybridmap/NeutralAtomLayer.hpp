@@ -31,6 +31,8 @@ protected:
   GateList newGates;
   GateList mappedSingleQubitGates;
   GateLists candidates;
+  uint32_t lookaheadDepth;
+  bool isFrontLayer;
 
   /**
    * @brief Updates the gates for the given qubits
@@ -53,7 +55,10 @@ protected:
 
 public:
   // Constructor
-  explicit NeutralAtomLayer(qc::DAG graph) : dag(std::move(graph)) {
+  explicit NeutralAtomLayer(qc::DAG graph, bool isFrontLayer,
+                            uint32_t lookaheadDepth = 1)
+      : dag(std::move(graph)), lookaheadDepth(lookaheadDepth),
+        isFrontLayer(isFrontLayer) {
     iterators.reserve(dag.size());
     candidates.reserve(dag.size());
     for (auto& i : dag) {
