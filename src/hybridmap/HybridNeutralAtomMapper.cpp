@@ -1339,6 +1339,7 @@ NeutralAtomMapper::getMovePositionRec(MultiQubitMovePos currentPos,
 
 MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
   MoveCombs allMoves;
+  size_t i = 0;
   for (const auto& op : this->frontLayerShuttling) {
     auto usedQubits = op->getUsedQubits();
     auto usedHwQubits = this->mapping.getHwQubits(usedQubits);
@@ -1355,6 +1356,10 @@ MoveCombs NeutralAtomMapper::getAllMoveCombinations() {
     auto moves = getMoveCombinationsToPosition(usedHwQubits, bestPos);
     moves.setOperation(op, bestPos);
     allMoves.addMoveCombs(moves);
+    ++i;
+    if (i >= parameters->limitShuttlingLayer) {
+      break;
+    }
   }
   allMoves.removeLongerMoveCombs();
   return allMoves;

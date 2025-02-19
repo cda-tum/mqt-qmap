@@ -144,6 +144,7 @@ protected:
     mapperParameters.seed = 43;
     mapperParameters.verbose = true;
     mapperParameters.numFlyingAncillas = 2;
+    mapperParameters.limitShuttlingLayer = 2;
     mapper.setParameters(mapperParameters);
     qc = qc::QuantumComputation(
         // "circuits/dj_nativegates_rigetti_qiskit_opt3_10.qasm");

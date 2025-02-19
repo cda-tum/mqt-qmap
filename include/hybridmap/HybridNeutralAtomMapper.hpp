@@ -41,6 +41,7 @@ struct MapperParameters {
   qc::fp shuttlingWeight = 1;
   uint32_t seed = 0;
   uint32_t numFlyingAncillas = 0;
+  uint32_t limitShuttlingLayer = std::numeric_limits<uint32_t>::max();
   bool verbose = false;
   InitialCoordinateMapping initialCoordMapping;
 };
