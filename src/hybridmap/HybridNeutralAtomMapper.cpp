@@ -1747,17 +1747,20 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
       }
 
       auto bestSwap = findBestSwap(lastSwap);
-      auto bestBridge = findBestBridge();
-
-      if (compareSwapAndBridge(bestSwap, bestBridge) ==
-          MappingMethod::SwapMethod) {
+      MappingMethod bestMethod = MappingMethod::SwapMethod;
+      if (parameters->useBridge) {
+        auto bestBridge = findBestBridge();
+        bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
+        if (bestMethod == MappingMethod::BridgeMethod) {
+          updateBlockedQubits(
+              {bestBridge.second.begin(), bestBridge.second.end()});
+          applyBridge(frontLayer, bestBridge);
+        }
+      }
+      if (bestMethod == MappingMethod::SwapMethod) {
         lastSwap = bestSwap;
         updateBlockedQubits(bestSwap);
         applySwap(bestSwap);
-      } else {
-        updateBlockedQubits(
-            {bestBridge.second.begin(), bestBridge.second.end()});
-        applyBridge(frontLayer, bestBridge);
       }
 
       gatesToExecute = getExecutableGates(frontLayer.getGates());
@@ -2189,6 +2192,9 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
 
 MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
     const MoveComb& bestMoveComb, const FlyingAncillaComb& bestFaComb) const {
+  if (!parameters->usePassBy) {
+    return MappingMethod::MoveMethod;
+  }
   // move distance reduction
   auto const moveDistReduction =
       moveCombDistanceReduction(bestMoveComb, this->frontLayerShuttling) +

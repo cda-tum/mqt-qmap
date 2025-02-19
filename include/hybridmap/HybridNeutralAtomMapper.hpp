@@ -42,6 +42,8 @@ struct MapperParameters {
   uint32_t seed = 0;
   uint32_t numFlyingAncillas = 0;
   uint32_t limitShuttlingLayer = std::numeric_limits<uint32_t>::max();
+  bool useBridge = true;
+  bool usePassBy = true;
   bool verbose = false;
   InitialCoordinateMapping initialCoordMapping;
 };
