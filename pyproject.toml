@@ -371,6 +371,7 @@ docs = [
   "sphinxext-opengraph>=0.9.1",
   "ipykernel>=6.29.5",
   "nbsphinx>=0.9.6",
+  "sphinx!=8.2.0", # see https://github.com/spatialaudio/nbsphinx/issues/825
   "sphinx-autodoc-typehints>=2.3.0",
 ]
 test = [
