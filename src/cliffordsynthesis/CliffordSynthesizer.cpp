@@ -490,8 +490,9 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   std::size_t layer = 0U;
   std::size_t i = 0;
   for (const auto& gate : qc) {
-    if (gate->isCompoundOperation()) {
-      const auto* compOp = dynamic_cast<qc::CompoundOperation*>(gate.get());
+    if (const auto* const compOp =
+            dynamic_cast<const qc::CompoundOperation* const>(gate.get());
+        compOp != nullptr) {
       for (const auto& subGate : *compOp) {
         gateToLayer(*subGate, i, layers, layerNum, layer);
       }
