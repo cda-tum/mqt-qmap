@@ -21,7 +21,7 @@ if sys.platform == "win32":
         bin_dir = site_packages / "mqt" / "core" / "bin"
         os.add_dll_directory(str(bin_dir))
 
-        if "Z3_ROOT" in os.environ:
+        if "Z3_ROOT" in os.environ:  # pragma: no cover
             lib_path = Path(os.environ["Z3_ROOT"]) / "lib"
             if lib_path.exists():
                 os.add_dll_directory(str(lib_path))
@@ -30,7 +30,7 @@ if sys.platform == "win32":
                 os.add_dll_directory(str(bin_path))
 
         z3_dir = site_packages / "z3"
-        if z3_dir.exists():
+        if z3_dir.exists():  # pragma: no cover
             lib_path = z3_dir / "lib"
             if lib_path.exists():
                 os.add_dll_directory(str(lib_path))
