@@ -245,66 +245,66 @@ LogicTerm LogicTerm::lte(const LogicTerm& a, const LogicTerm& b) {
 LogicTerm LogicTerm::neg(const LogicTerm& a) { return {OpType::NEG, a}; }
 
 LogicTerm LogicTerm::operator&&(const LogicTerm& other) const {
-  return LogicTerm::a(*this, other);
+  return a(*this, other);
 }
 
 LogicTerm LogicTerm::operator&(const LogicTerm& other) const {
-  return LogicTerm::bvAnd(*this, other);
+  return bvAnd(*this, other);
 }
 
 LogicTerm LogicTerm::operator|(const LogicTerm& other) const {
-  return LogicTerm::bvOr(*this, other);
+  return bvOr(*this, other);
 }
 
 LogicTerm LogicTerm::operator^(const LogicTerm& other) const {
-  return LogicTerm::bvXor(*this, other);
+  return bvXor(*this, other);
 }
 
 LogicTerm LogicTerm::operator||(const LogicTerm& other) const {
-  return LogicTerm::o(*this, other);
+  return o(*this, other);
 }
 
 LogicTerm LogicTerm::operator==(const LogicTerm& other) const {
-  return LogicTerm::eq(*this, other);
+  return eq(*this, other);
 }
 
 LogicTerm LogicTerm::operator!=(const LogicTerm& other) const {
-  return LogicTerm::neq(*this, other);
+  return neq(*this, other);
 }
 
 LogicTerm LogicTerm::operator+(const LogicTerm& other) const {
-  return LogicTerm::add(*this, other);
+  return add(*this, other);
 }
 
 LogicTerm LogicTerm::operator-(const LogicTerm& other) const {
-  return LogicTerm::sub(*this, other);
+  return sub(*this, other);
 }
 
 LogicTerm LogicTerm::operator*(const LogicTerm& other) const {
-  return LogicTerm::mul(*this, other);
+  return mul(*this, other);
 }
 
 LogicTerm LogicTerm::operator/(const LogicTerm& other) const {
-  return LogicTerm::div(*this, other);
+  return div(*this, other);
 }
 
 LogicTerm LogicTerm::operator>(const LogicTerm& other) const {
-  return LogicTerm::gt(*this, other);
+  return gt(*this, other);
 }
 
 LogicTerm LogicTerm::operator<(const LogicTerm& other) const {
-  return LogicTerm::lt(*this, other);
+  return lt(*this, other);
 }
 
 LogicTerm LogicTerm::operator>=(const LogicTerm& other) const {
-  return LogicTerm::gte(*this, other);
+  return gte(*this, other);
 }
 
 LogicTerm LogicTerm::operator<=(const LogicTerm& other) const {
-  return LogicTerm::lte(*this, other);
+  return lte(*this, other);
 }
 
-LogicTerm LogicTerm::operator!() const { return LogicTerm::neg(*this); }
+LogicTerm LogicTerm::operator!() const { return neg(*this); }
 
 bool LogicTerm::isConst() const { return getOpType() == OpType::Constant; }
 
