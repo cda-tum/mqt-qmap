@@ -8,6 +8,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -119,6 +121,28 @@ auto DLEBMF::fromSparseMatrix(
   return instance;
 }
 
+auto DLEBMF::Column::operator==(const Column& other) const -> bool {
+  // shortcut if the columns are the same object
+  if (this == &other) {
+    return true;
+  }
+  // shortcut if the columns have different sizes
+  if (size != other.size) {
+    return false;
+  }
+  // check if the columns have the same @c true entries
+  Cell* thisCell = down.get();
+  Cell* otherCell = other.down.get();
+  while (thisCell != nullptr && otherCell != nullptr) {
+    if (thisCell->row != otherCell->row) {
+      return false;
+    }
+    thisCell = thisCell->down.get();
+    otherCell = otherCell->down.get();
+  }
+  // only if the end was reached for both columns, they are equal
+  return thisCell == nullptr && otherCell == nullptr;
+}
 auto DLEBMF::createEmptyColumns() -> void {
   if (cols == 0) {
     matrix = nullptr;
@@ -169,7 +193,7 @@ auto DLEBMF::get(const size_t row, const size_t col) const -> bool {
   for (size_t i = 0; i < col; ++i) {
     currentCol = currentCol->right.get();
   }
-  if (currentCol->size == 0) {
+  if (currentCol->isEmpty()) {
     return false;
   }
   const auto* currentCell = currentCol->down.get();
@@ -180,8 +204,112 @@ auto DLEBMF::get(const size_t row, const size_t col) const -> bool {
 }
 
 auto DLEBMF::factorize() -> const std::vector<Factor>& {
-  // 1. remove all empty columns
-  // 2. remove all duplicate columns
+  //===--------------------------------------------------------------------===//
+  // Collect empty columns
+  //===--------------------------------------------------------------------===//
+  // this vector will hold all empty columns. Each pair consists of the empty
+  // column, and a pointer to the column to the right
+  std::vector<std::pair<std::unique_ptr<Column>, const Column*>> emptyColumns;
+  // while the first column is empty, put this column into the vector and let
+  // `matrix` point to the next column, repeat until the first column is not
+  // empty
+  while (matrix->isEmpty()) {
+    const Column* right = matrix->right.get();
+    emptyColumns.emplace_back(std::move(matrix), right);
+    // let `matrix` point to the bext column
+    matrix = std::move(emptyColumns.back().first->right);
+  }
+  // go through all remaining columns and emplace all empty columns into the
+  // vector
+  Column* left = matrix.get();
+  while (left->right != nullptr) {
+    if (left->right->isEmpty()) {
+      const Column* right = left->right->right.get();
+      emptyColumns.emplace_back(std::move(left->right), right);
+      left->right = std::move(emptyColumns.back().first->right);
+    }
+    left = left->right.get();
+  }
+  //===--------------------------------------------------------------------===//
+  // Collect duplicate columns
+  //===--------------------------------------------------------------------===//
+  // this vector will hold all duplicates of already existing columns. Each
+  // pair consists of the duplicate column, and a pointer to the column to the
+  // right
+  std::vector<std::pair<std::unique_ptr<Column>, const Column*>>
+      duplicateColumns;
+  std::unordered_set<const Column*> uniqueColumns;
+  uniqueColumns.emplace(matrix.get());
+  left = matrix.get();
+  while (left->right != nullptr) {
+    if (uniqueColumns.find(left->right.get()) != uniqueColumns.end()) {
+      const Column* right = left->right->right.get();
+      duplicateColumns.emplace_back(std::move(left->right), right);
+      left->right = std::move(duplicateColumns.back().first->right);
+    } else {
+      uniqueColumns.emplace(left->right.get());
+    }
+    left = left->right.get();
+  }
+  //===--------------------------------------------------------------------===//
+  // Look for the column with the fewest true entries
+  //===--------------------------------------------------------------------===//
+  const Column* fewestOnes = matrix.get();
+  const Column* current = matrix.get();
+  while (current != nullptr) {
+    if (current->size < fewestOnes->size) {
+      fewestOnes = current;
+    }
+    current = current->right.get();
+  }
+  for (std::size_t i = fewestOnes->size; i > 0; --i) {
+    // collect all rows that have at least true entries where the selected
+    // column (`fewestOnes`) has its i first true entries
+    std::vector<const Column*> fullColumns;
+    current = matrix.get();
+    while (current != nullptr) {
+      if (current == fewestOnes) {
+        fullColumns.emplace_back(fewestOnes);
+      } else {
+        const Cell* currentCell = current->down.get();
+        const Cell* fewestOnesCell = fewestOnes->down.get();
+        bool isFull = true;
+        for (std::size_t k = 0; k < i; ++k) {
+          // the current column might have more ones so we skip them
+          const auto currentRow = fewestOnesCell->row;
+          while (currentCell != nullptr && currentCell->row < currentRow) {
+            currentCell = currentCell->down.get();
+          }
+          if (currentCell == nullptr || currentCell->row != currentRow) {
+            isFull = false;
+            break;
+          }
+          currentCell = currentCell->down.get();
+          fewestOnesCell = fewestOnesCell->down.get();
+        }
+        if (isFull) {
+          fullColumns.emplace_back(current);
+        }
+      }
+      current = current->right.get();
+    }
+    // remove first i true entries from all fullCols including the selected
+    // column `fewestOnes` and record the corresponding columns and rows as a
+    // factor
+    Factor factor();
+    for (const Column* fullColumn : fullColumns) {
+      const Cell* fullColumnCell = fullColumn->down.get();
+      const Cell* fewestOnesCell = fewestOnes->down.get();
+      for (std::size_t k = 0; k < i; ++k) {
+        // Problem: Openset contains a reference to another item, however, open set items
+        // do not have a stable memory location (yet) -> unique_ptr?
+        // Problem: ALL permutations should be considered. It does not suffice to consider
+        // subsets starting with the first true entry as it might also be the first and forth
+        // true entry in one factor leading to the optimal solution.
+      }
+    }
+  }
+  std::vector<Factor> factors;
   // 3. select a column; choose the one with the fewest 1s
   // 4. select a subset of rows with 1s in the selected column; choose all
   // subsets including the first row with a one and all subsequent rows with a 1

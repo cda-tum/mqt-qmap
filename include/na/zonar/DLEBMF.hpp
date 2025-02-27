@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <memory>
 #include <ostream>
@@ -24,10 +25,10 @@ namespace na {
  * column.
  */
 class DLEBMF {
-private:
   size_t rows = 0; ///< Number of rows in the matrix.
   size_t cols = 0; ///< Number of columns in the matrix.
 
+public:
   /**
    * @brief A struct to represent a @c true entry in the matrix.
    * @details The cells are created as unique pointers. The owner of the
@@ -66,8 +67,14 @@ private:
     Column* left = nullptr;
     /// Pointer to the last, bottommost cell in the column.
     Cell* bottom = nullptr;
+    /// Checks if the column is empty, i.e., has no @c true entries.
+    [[nodiscard]] auto isEmpty() const -> bool { return size == 0; }
+    /// Checks if the column is equal to another column, i.e., has the same size
+    /// and @c true entries at the same positions.
+    [[nodiscard]] auto operator==(const Column& other) const -> bool;
   };
 
+private:
   /// Pointer to the first column in the matrix that holds the rest of the
   /// matrix.
   std::unique_ptr<Column> matrix;
@@ -91,8 +98,10 @@ private:
   /**
    * @brief Check if the given list of lists is representing a sparse matrix,
    * i.e., has no duplicates in the same row.
-   * @param entries is the list of lists with non-negative integer values to check.
-   * @return @c true if the list of lists does not contain duplicates, @c false otherwise.
+   * @param entries is the list of lists with non-negative integer values to
+   * check.
+   * @return @c true if the list of lists does not contain duplicates, @c false
+   * otherwise.
    */
   static auto checkUniqueIndices(
       const std::initializer_list<std::initializer_list<std::size_t>>& entries)
@@ -131,11 +140,13 @@ public:
    * @endcode
    */
   static auto fromDenseMatrix(
-      const std::initializer_list<std::initializer_list<bool>>& entries) -> DLEBMF;
+      const std::initializer_list<std::initializer_list<bool>>& entries)
+      -> DLEBMF;
   /**
    * @brief Create a new matrix with the given entries.
-   * @param entries is a list of lists of non-negative integers values representing
-   * indices. The list of indices refers to the @c true entries in the matrix.
+   * @param entries is a list of lists of non-negative integers values
+   * representing indices. The list of indices refers to the @c true entries in
+   * the matrix.
    * @throw std::invalid_argument if an index occurs more than once in the same
    * row, has more rows than specified or has a higher column index than columns
    * specified.
@@ -153,8 +164,10 @@ public:
    * na::DLEBMF matrix({{0, 2}, {}, {2}});
    * @endcode
    */
-  static auto fromSparseMatrix(std::size_t rows, std::size_t cols,
-      const std::initializer_list<std::initializer_list<std::size_t>>& entries) -> DLEBMF;
+  static auto fromSparseMatrix(
+      std::size_t rows, std::size_t cols,
+      const std::initializer_list<std::initializer_list<std::size_t>>& entries)
+      -> DLEBMF;
 
   /**
    * @brief Get the value of the entry at the given row and column, this can
@@ -198,6 +211,20 @@ public:
       return cols;
     }
     /**
+     * @brief Appends the give row index to the list of rows. No ordering takes
+     * place internally, hence, if the rows should be ordered, add them in
+     * increasing order.
+     * @param i The row to be added
+     */
+    auto addRow(const std::size_t i) -> void { rows.emplace_back(i); }
+    /**
+     * @brief Appends the give column index to the list of columns. No ordering
+     * takes place internally, hence, if the columns should be ordered, add them
+     * in increasing order.
+     * @param i The column to be added
+     */
+    auto addCol(const std::size_t i) -> void { cols.emplace_back(i); }
+    /**
      * @brief Returns a string representation of the factor.
      * @details The string contains the vectors of row and column indices
      * in a human-readable format.
@@ -217,6 +244,16 @@ public:
     }
   };
 
+  /**
+   * @brief Factorize the matrix into a list of factors.
+   * @details The exact binary factorization of a matrix is a list of matrices
+   * also factors that have the same shape as the original matrix and are
+   * sub matrices of the original matrix.
+   * All factors combined form the original matrix without any duplicates.
+   * @par
+   * The factorization is computed using the dancing links technique.
+   * @return
+   */
   [[nodiscard]] auto factorize() -> const std::vector<Factor>&;
 
   /**
@@ -244,3 +281,23 @@ public:
 };
 
 } // namespace na
+
+namespace std {
+template <> struct hash<na::DLEBMF::Cell> {
+  auto operator()(const na::DLEBMF::Cell* cell) const noexcept -> size_t {
+    if (cell->down == nullptr) {
+      return hash<size_t>()(cell->row);
+    }
+    return hash<size_t>()(cell->row) ^ hash()(cell->down.get()) << 1;
+  }
+};
+template <> struct hash<na::DLEBMF::Column> {
+  auto operator()(const na::DLEBMF::Column* column) const noexcept -> size_t {
+    if (column->down == nullptr) {
+      return hash<size_t>()(0);
+    }
+    return hash<size_t>()(column->size) ^
+           hash<na::DLEBMF::Cell>()(column->down.get()) << 1;
+  }
+};
+} // namespace std
