@@ -17,4 +17,4 @@ endif()
 
 add_subdirectory(nalac)
 add_subdirectory(nasp)
-add_subdirectory(zonar)
+add_subdirectory(defa)
