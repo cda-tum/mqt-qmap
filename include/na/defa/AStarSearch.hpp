@@ -9,10 +9,10 @@
 #include <vector>
 
 namespace na {
-template <class Node, class ForwardIt>
+template <class Node>
 
 /**
- * @brief A* search algorithm for trees where neighbors are sorted by cost
+ * @brief A* search algorithm for trees
  * @details A* is a graph traversal and path search algorithm that finds the
  * shortest path between a start node and a goal node. It evaluates nodes by
  * combining the cost to reach the node and the cost to get from the node to the
@@ -29,33 +29,18 @@ template <class Node, class ForwardIt>
  * check whether a node is already in the open set. This would also require an
  * O(log(n)) check operation which is not necessary for trees as one path can
  * only reach a node.
- * - To keep the maintenance of the open set as simple as possible, the open set
- * only stores one neighbor of its parent node at a time. To achieve this, the
- * @p getNeighbors function must return the neighbors in increasing order of
- * cost. The first neighbor is then the one with the lowest cost and is
- * placed in the priority queue. If this neighbor is not the only one, it is
- * placed in the queue as a special item meaning that it represents also all
- * other neighbors with higher cost. When this item is popped from the queue,
- * it is replaced by the next neighbor with higher cost.
  * @note This implementation of A* search can only handle trees and not general
  * graphs. This is because it does not keep track of visited nodes and therefore
  * cannot detect cycles. Also for DAGs it may expand nodes multiple times when
  * they can be reached by different paths from the start node.
- * @note The function @p getNeighbors must return the neighbors of a node in a
- * sorted order by cost. The neighbor with the lowest cost must be the first
- * element in the range of neighbors.
  * @note @p getHeuristic must be admissible, meaning that it never
  * overestimates the cost to reach the goal from the current node calculated by
  * @p getCost for every edge on the path.
- * @note The calling program has to make sure that the pointers and iterators
- * passed to this function are valid and that the iterators are not invalidated
- * during the search, e.g., by calling one of the passed functions like @p
- * getNeighbors.
+ * @note The calling program has to make sure that the pointers passed to this
+ * function are valid and that the iterators are not invalidated during the
+ * search, e.g., by calling one of the passed functions like @p getNeighbors.
  * @param start a pointer to the start node
- * @param getNeighbors a function that returns the neighbors of a node as an
- * iterator pair, the first iterator must be the 'begin' iterator and the second
- * iterator must be the 'end' iterator. The neighbors must be sorted by cost,
- * see the note above.
+ * @param getNeighbors a function that returns the neighbors of a node
  * @param isGoal a function that returns true if a node is one of potentially
  * multiple goals
  * @param getCost a function that returns the cost of moving from one node to
@@ -67,7 +52,7 @@ template <class Node, class ForwardIt>
  */
 auto aStarTreeSearch(
     const Node* start,
-    std::function<std::pair<ForwardIt, ForwardIt>(const Node*)> getNeighbors,
+    std::function<std::vector<const Node*>(const Node*)> getNeighbors,
     std::function<bool(const Node*)> isGoal,
     std::function<double(const Node*, const Node*)> getCost,
     std::function<double(const Node*)> getHeuristic)
@@ -80,22 +65,11 @@ auto aStarTreeSearch(
     double priority;  //< sum of cost and heuristic
     double cost;      //< actual cost to reach the node
     const Node* node; //< pointer to the node
-    // iterator pair to the siblings of a node with a 'begin' and 'end' iterator
-    // if the iterator is 'empty' the optional is set to 'nullopt' and then
-    // this item represents a regular item. If it is not empty, the item
-    // is a special item and represents the contained node together with all
-    // its more costly siblings.
-    std::optional<std::pair<ForwardIt, ForwardIt>> siblings;
     // pointer to the parent item to reconstruct the path in the end
     Item* parent;
     Item(const double priority, const double cost, const Node* node,
-         ForwardIt siblings, ForwardIt end, Item* parent)
-        : priority(priority), cost(cost), node(node),
-          siblings(std::pair{siblings, end}), parent(parent) {}
-    Item(const double priority, const double cost, const Node* node,
          Item* parent)
-        : priority(priority), cost(cost), node(node), siblings(std::nullopt),
-          parent(parent) {}
+        : priority(priority), cost(cost), node(node), parent(parent) {}
   };
   // compare function for the open set
   struct ItemCompare {
@@ -133,54 +107,20 @@ auto aStarTreeSearch(
       std::reverse(path.begin(), path.end());
       return path;
     }
-    // replace the entry in the open set representing the popped item including
-    // all its siblings with higher cost
-    if (itm->siblings) {
-      const Node* nextSibling = *itm->siblings->first++;
-      const auto cost = itm->parent->cost + getCost(itm->node, nextSibling);
-      const auto heuristic = getHeuristic(nextSibling);
-      // if the sibling is the last one, create a regular item otherwise create
-      // a special item together with the advanced iterator
-      if (itm->siblings->first == itm->siblings->second) {
-        openSet.emplace(
-            items
-                .emplace_back(std::make_unique<Item>(cost + heuristic, cost,
-                                                     nextSibling, itm->parent))
-                .get());
-      } else {
-        openSet.emplace(
-            items
-                .emplace_back(std::make_unique<Item>(
-                    cost + heuristic, cost, nextSibling, itm->siblings->first,
-                    itm->siblings->second, itm->parent))
-                .get());
-      }
-    }
-    // expand the current node by adding all neighbors to the open set in the
-    // form of one representative for all neighbors with the cost of the
-    // neighbor with the lowest cost
-    auto [it, end] = getNeighbors(itm->node);
-    if (it != end) {
-      const Node* firstNeighbor = *it++;
-      // getCost returns the cost for the edge from the current node (itm->node)
-      // to the neighbor (firstNeighbor).
-      // hence, the total cost is the cost to reach the current node (itm->cost)
-      // plus the cost to reach the neighbor (getCost(itm->node, firstNeighbor))
-      const auto cost = itm->cost + getCost(itm->node, firstNeighbor);
-      const auto heuristic = getHeuristic(firstNeighbor);
-      // if the neighbor is the last one, create a regular item otherwise create
-      // a special item together with the advanced iterator
-      if (it == end) {
+    // expand the current node by adding all neighbors to the open set
+    const auto& neighbors = getNeighbors(itm->node);
+    if (!neighbors.empty()) {
+      for (const auto* neighbor : neighbors) {
+        // getCost returns the cost for the edge from the current node
+        // (itm->node) to the neighbor. hence, the total cost is the cost to
+        // reach the current node (itm->cost) plus the cost to reach the
+        // neighbor (getCost(itm->node, firstNeighbor))
+        const auto cost = itm->cost + getCost(itm->node, neighbor);
+        const auto heuristic = getHeuristic(neighbor);
         openSet.emplace(items
                             .emplace_back(std::make_unique<Item>(
-                                cost + heuristic, cost, firstNeighbor, itm))
+                                cost + heuristic, cost, neighbor, itm))
                             .get());
-      } else {
-        openSet.emplace(
-            items
-                .emplace_back(std::make_unique<Item>(
-                    cost + heuristic, cost, firstNeighbor, it, end, itm))
-                .get());
       }
     }
   }

@@ -33,14 +33,13 @@ TEST(AStarSearch, Grid) {
   }
   ASSERT_NO_THROW({
     const auto path =
-        (na::aStarTreeSearch<Node, std::vector<const Node*>::const_iterator>(
+        (na::aStarTreeSearch<Node>(
             /* start: */
             nodes[30].get(),
             /* getNeighbors: */
             [](const Node* node)
-                -> std::pair<std::vector<const Node*>::const_iterator,
-                             std::vector<const Node*>::const_iterator> {
-              return {node->neighbors.cbegin(), node->neighbors.cend()};
+                -> std::vector<const Node*> {
+              return node->neighbors;
             },
             /* isGoal: */
             [](const Node* node) -> bool {
