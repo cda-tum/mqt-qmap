@@ -76,9 +76,9 @@ class SubarchitectureOrder:
         so = SubarchitectureOrder()
         so.arch = graph
 
-        so.__compute_subarchs()  # noqa: SLF001
-        so.__compute_subarch_order()  # noqa: SLF001
-        so.__compute_desirable_subarchitectures()  # noqa: SLF001
+        so.__compute_subarchs()
+        so.__compute_subarch_order()
+        so.__compute_desirable_subarchitectures()
         return so
 
     @classmethod
