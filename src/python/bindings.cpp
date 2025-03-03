@@ -16,7 +16,6 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
-#include "na/NADefinitions.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "na/nasp/SolverFactory.hpp"
@@ -957,8 +956,8 @@ whether idle qubits should be shielded from the entangling operations.
     :func:`get_ops_for_solver`.
 
 .. note::
-    The returned solver's result can either directly exported to the YAML format
-    by calling the method :func:`yaml` on the result object or the result object
+    The returned solver's result can either directly exported to the JSON format
+    by calling the method :func:`json` on the result object or the result object
     can be passed to the function :func:`generate_code` to generate code
     consisting of neutral atom operations.
 
@@ -981,7 +980,7 @@ whether idle qubits should be shielded from the entangling operations.
       .def(
           "yaml",
           [](const na::NASolver::Result& result, const bool compact) {
-            return result.yaml(0, compact);
+            return result.json(0, compact);
           },
           "compact"_a = true, R"(
 Returns the result as a YAML string.

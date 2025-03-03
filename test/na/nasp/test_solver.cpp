@@ -153,7 +153,7 @@ TEST(Solver, Exceptions) {
                std::invalid_argument);
 }
 
-TEST(Solver, YAMLRoundTrip) {
+TEST(Solver, JSONRoundTrip) {
   const auto& circ =
       qasm3::Importer::importf(TEST_CIRCUITS_PATH "/steane.qasm");
   // create solver
