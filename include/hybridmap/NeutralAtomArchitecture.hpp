@@ -6,17 +6,17 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/operations/OpType.hpp"
+#include "na/entities/Location.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include <datastructures/SymmetricMatrix.hpp>
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <na/entities/Location.hpp>
 #include <set>
 #include <string>
 #include <vector>
