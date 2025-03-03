@@ -352,7 +352,7 @@ build = [
   "pybind11>=2.13.6",
   "scikit-build-core>=0.11.0",
   "setuptools-scm>=8.1",
-  "mqt.core>=3.0.0b4",
+  "mqt.core @ git+https://github.com/cda-tum/mqt-core@refactor-na-computation",
 ]
 docs = [
   "networkx>=3.2.1",
