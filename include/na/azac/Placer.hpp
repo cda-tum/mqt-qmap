@@ -4,8 +4,14 @@
 #include "na/azac/Utils.hpp"
 
 #include <algorithm>
+#include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <map>
+#include <memory>
+#include <stdexcept>
 #include <tuple>
+#include <vector>
 
 namespace na {
 
@@ -48,8 +54,7 @@ protected:
 
 private:
   auto placeTrivial() -> void {
-    std::vector<std::unique_ptr<SLM>>::const_iterator slmIt =
-        static_cast<T*>(this)->getArchitecture().storageZones.cbegin();
+    auto slmIt = static_cast<T*>(this)->getArchitecture().storageZones.cbegin();
     const SLM* slm = slmIt->get();
     // decide whether to begin with row 0 or row n
     const double dis1 = static_cast<T*>(this)
@@ -951,4 +956,228 @@ private:
   };
 };
 
+/// class to find a qubit layout
+template <typename T> class AStarPlacer {
+protected:
+  /// generate qubit initial layout
+  auto placeQubitInitial() -> void {
+    const auto t_p = std::chrono::system_clock::now();
+    if (static_cast<T*>(this)->getGivenInitialMapping()) {
+      static_cast<T*>(this)->getQubitMapping().emplace_back(
+          *static_cast<T*>(this)->getGivenInitialMapping());
+    } else {
+      if (static_cast<T*>(this)->isTrivialPlacement()) {
+        placeTrivial();
+      } else {
+        throw std::invalid_argument(
+            "Initial placement via simulated annealing is not implemented");
+      }
+    }
+    static_cast<T*>(this)->getRuntimeAnalysis().initialPlacement =
+        std::chrono::system_clock::now() - t_p;
+  }
+
+  /// generate qubit initial layout
+  auto placeQubitIntermediate() -> void {
+    const auto t_p = std::chrono::system_clock::now();
+    /* Architecture =        */ static_cast<T*>(this)->getArchitecture();
+    /* Initial Mapping =     */ static_cast<T*>(this)
+        ->getQubitMapping()
+        .front();
+    /* Gate Scheduling =     */ static_cast<T*>(this)->getGateScheduling();
+    /* Dynamic Placement =   */ static_cast<T*>(this)->isDynamicPlacement();
+    /* Reuse Qubits =        */ static_cast<T*>(this)->getReuseQubits();
+    /* Final Qubit Mapping = */ static_cast<T*>(this)->getQubitMapping();
+
+    static_cast<T*>(this)->getRuntimeAnalysis().intermediatePlacement =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - t_p);
+  }
+
+private:
+  auto placeTrivial() -> void {
+    auto slmIt = static_cast<T*>(this)->getArchitecture().storageZones.cbegin();
+    const SLM* slm = slmIt->get();
+    // decide whether to begin with row 0 or row n
+    const double dis1 = static_cast<T*>(this)
+                            ->getArchitecture()
+                            .nearestEntanglementSiteDistance(slm, 0, 0);
+    const double dis2 =
+        static_cast<T*>(this)
+            ->getArchitecture()
+            .nearestEntanglementSiteDistance(slm, slm->nRows - 1, 0);
+    std::size_t c = 0;
+    std::int64_t r =
+        dis1 < dis2 ? 0 : static_cast<std::int64_t>(slm->nRows) - 1;
+    const std::int64_t step = dis1 < dis2 ? 1 : -1;
+    std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>
+        listPossiblePosition{};
+    for (std::size_t i = 0; i < static_cast<T*>(this)->getNQubits(); ++i) {
+      listPossiblePosition.emplace_back(slm, r, c);
+      ++c;
+      if (c % slm->nCols == 0) {
+        r += step;
+        c = 0;
+        if (r == static_cast<std::int64_t>(slm->nRows)) {
+          ++slmIt;
+          slm = slmIt->get();
+          if (step > 0) {
+            r = static_cast<std::int64_t>(slm->nRows) - 1;
+          } else {
+            r = 0;
+          }
+        }
+      }
+    }
+    static_cast<T*>(this)->getQubitMapping().emplace_back(listPossiblePosition);
+  }
+
+  /// A node representing one stage in the process of placing all atoms
+  /// that must be moved for the next stage starting from the last mapping
+  /// until a new mapping is found satisfying all constraints of the next
+  /// stage
+  struct Node {
+    /// the maximum distance an already placed atom must travel to its
+    /// target location
+    double maxDistanceOfPlacedAtom = 0.0;
+    /// a binary search tree representing the horizontal groups
+    /// @see getNeighbors for more details
+    std::vector<std::map<size_t, size_t>> hGroups;
+    /// the maximum distance of placed atoms in every group to their
+    /// target location
+    std::vector<double> maxDistancesOfPlacedAtomsPerHGroup;
+    /// @see hGroups
+    std::vector<std::map<size_t, size_t>> vGroups;
+    /// @see maxDistancesOfPlacedAtomsPerHGroup
+    std::vector<double> maxDistancesOfPlacedAtomsPerVGroup;
+  };
+
+  std::vector<std::unique_ptr<Node>> nodes;
+
+  /// @brief Returns the cost of a node, i.e., the total cost to reach that node
+  /// from the start node.
+  /// @details Different groups cannot be rearranged concurrently in one step.
+  /// Hence, we add up the time it takes to perform the rearrangements of one
+  /// group in one step and sum it up over all groups.
+  /// This will not resemble the exact time to rearrange all costs because at
+  /// this point it is not clear how the horizontal and vertical groups can be
+  /// combined.
+  auto getCost(Node current) -> double {
+    double cost = 0.0;
+    for (const auto d : current->maxDistancesOfPlacedAtomsPerHGroup) {
+      cost += std::sqrt(d);
+    }
+    for (const auto d : current->maxDistancesOfPlacedAtomsPerVGroup) {
+      cost += std::sqrt(d);
+    }
+    return cost;
+  }
+
+  /// @brief Return the estimated cost still required to reach a goal node.
+  /// @details To yield an optimal results, the heuristic must be admissible,
+  /// i.e., never overestimating the cost.
+  /// The heuristic returns the estimated costs that are still added to the
+  /// current actual cost to reach a goal node.
+  /// Hence, the heuristic must always be less or equal to the additional cost
+  /// needed to reach a goal.
+  /// In the best case, all atoms that are not placed yet are compatible with
+  /// an existing group and can just be added to that group.
+  /// Hence, the sum in the cost function does not get an additional summand
+  /// just the existing summands may increase.
+  /// In the case of minimal increase in the overall cost, only one summand
+  /// increases its value.
+  /// This increase is bounded from below by the maximal distance of an atom to
+  /// its nearest potential target site minus the maximum distance already
+  /// placed atoms must travel to their determined target site.
+  double getHeuristic(Node current) {
+    double maxDistanceOfUnplacedAtom = 0.0;
+    for (const auto& atom : /* unplaced atoms */) {
+      maxDistanceOfUnplacedAtom = std::max(maxDistanceOfUnplacedAtom,
+                                           /* distance to nearest site */)
+    }
+    return maxDistanceOfUnplacedAtom - current->maxDistanceOfPlacedAtom;
+  }
+
+  /// @brief Return pointers to all neighbors of the given node.
+  /// @details When calling this function, the neighbors are allocated
+  /// permanently such that (1) the returned pointers remain valid when the
+  /// execution returned from this function and (2) not all nodes in the tree
+  /// have to be created before they are needed.
+  /// Hence, nodes are only created on demand in this function.
+  /// Consequently, this function must only be called once per node.
+  /// Otherwise, neighbors for the same node are created twice.
+  /// @par
+  /// When creating a new node, the horizontal and vertical groups are checked
+  /// whether the new corresponding placement is compatible with any of the
+  /// existing groups.
+  /// If yes, the new placement is added to the respective group and otherwise,
+  /// a new group is formed with the new placement.
+  auto getNeighbors(const Node* node) -> std::vector<const Node*> {
+    size_t atomToBePlacedNext = node->partialPlacement.size();
+    std::vector<const Node*> neighbors;
+    for (const auto site : /* all possible target sites for the atom */) {
+      // assume nodes is of type std::vector<std::unique_ptr<Node>>
+      // make a copy of node, the parent of neighbor
+      Node* neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
+      neighbor->maxDistanceOfPlacedAtom =
+            std::max(node->maxDistanceOfPlacedAtom, /* distance for
+                current atom from its current site to `site` */);
+      // check whether the current placement is compatible with any
+      // existing group
+      const size_t key = /* the atom's row it is currently in */;
+      const size_t value = /* the atom's row it should be placed in */;
+      size_t i = 0;
+      for (auto& hGroup : neighbor->hGroups) {
+        auto it = hGroup.lower_bound(key);
+        if (it != hGroup.end()) {
+          // an assignment for this key already exists in this group
+          const auto& [upperKey, upperValue] = *it;
+          if (upperKey == key) {
+            if (upperValue == value) {
+              // new placement is compatible with this group
+              break;
+            }
+          } else { // if (upperKey > key)
+            if (it != hGroup.begin()) {
+              // it can be safely decremented
+              --it;
+              const auto& [_, lowerValue] = *it;
+              if (lowerValue < value && value < upperValue) {
+                // new placement is compatible with this group
+                break;
+              }
+            } else { // if (it == hGroup.begin())
+              if (value < upperValue) {
+                // new placement is compatible with this group
+                break;
+              }
+            }
+          }
+        } else { // if (it == hGroup.end())
+          // it can be safely decremented because group must contain
+          // at least one element
+          --it;
+          const auto& [_, lowerValue] = *it;
+          if (lowerValue < value) {
+            // new placement is compatible with this group
+            break;
+          }
+        }
+        ++i;
+      }
+      if (i == neighbor->hGroups.size()) {
+        // no compatible group could be found and a new group is created
+        neighbor->hGroups.emplace_back();
+        neighbor->maxDistancesOfPlacedAtomsPerHGroup.emplace_back(0.0);
+      }
+      neighbor->hGroups[i].emplace(key, value);
+      neighbor->maxDistancesOfPlacedAtomsPerHGroup[i] =
+                std::max(neighbor->maxDistancesOfPlacedAtomsPerHGroup[i],
+                         /* distance for current atom from its current site
+                            to `site` */);
+      // [ do the same for the vertical group... ]
+      neighbors.emplace_back(neighbor);
+    }
+  }
+};
 } // namespace na
