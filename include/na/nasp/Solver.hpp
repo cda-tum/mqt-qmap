@@ -5,11 +5,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <yaml-cpp/node/node.h>
 #include <z3++.h>
 
 namespace na {
@@ -390,10 +390,9 @@ public:
       /// an AOD
       int32_t v;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Qubit;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Qubit;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
       [[nodiscard]] auto operator==(const Qubit& other) const -> bool;
     };
 
@@ -402,10 +401,9 @@ public:
       uint16_t stage = 0;
       std::pair<qc::Qubit, qc::Qubit> qubits;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Gate;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Gate;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
 
       [[nodiscard]] auto operator==(const Gate& other) const -> bool;
     };
@@ -416,10 +414,9 @@ public:
       std::vector<Qubit> qubits;
       std::vector<Gate> gates;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Stage;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Stage;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
 
       [[nodiscard]] auto operator==(const Stage& other) const -> bool;
     };
@@ -433,10 +430,9 @@ public:
     uint16_t maxHOffset = 0;
     uint16_t maxVOffset = 0;
 
-    [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Result;
+    [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Result;
 
-    [[nodiscard]] auto yaml(std::size_t indent = 0, bool compact = true) const
-        -> std::string;
+    [[nodiscard]] auto json() const -> nlohmann::json;
 
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };

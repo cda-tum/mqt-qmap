@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
-#include <yaml-cpp/yaml.h> // NOLINT(*-include-cleaner)
 
 TEST(Solver, SteaneDoubleSidedStorage) {
   const auto& circ =
@@ -164,7 +164,7 @@ TEST(Solver, YAMLRoundTrip) {
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
                    std::nullopt, false, true);
-  const auto resultRT = na::NASolver::Result::fromYAML(
-      YAML::Load(result.yaml())); // NOLINT(*-include-cleaner)
+  const auto resultRT = na::NASolver::Result::fromJSON(
+      nlohmann::json(result.json())); // NOLINT(*-include-cleaner)
   EXPECT_EQ(resultRT, result);
 }

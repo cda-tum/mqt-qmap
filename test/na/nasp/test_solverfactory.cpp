@@ -1,6 +1,6 @@
-#include "../../../include/na/nalac/Architecture.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 #include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 
@@ -13,7 +13,7 @@
 #include <tuple>
 
 TEST(SolverFactory, Create) {
-  na::Architecture arch;
+  na::nalac::Architecture arch;
   // write content to a file
   std::istringstream archIS(R"({
     "name": "Nature",
@@ -154,7 +154,7 @@ TEST(SolverFactory, Create) {
 }
 
 TEST(SolverFactory, CreateExceptions) {
-  na::Architecture arch;
+  na::nalac::Architecture arch;
   // write content to a file
   std::istringstream archIS(R"({
     "name": "Nature",
