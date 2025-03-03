@@ -58,7 +58,7 @@ auto CodeGenerator::coordFromDiscrete(
   }
   if (y <= maxEntanglingY) {
     return {static_cast<double>(x * dx + h * minAtomDist),
-            static_cast<double>(zoneDist + (y - 1) * dy + v * minAtomDist))};
+            static_cast<double>(zoneDist + (y - 1) * dy + v * minAtomDist)};
   }
   return {static_cast<double>(x * dx + h * minAtomDist),
           static_cast<double>(2LL * zoneDist + (y - 2) * dy + v * minAtomDist)};
@@ -96,8 +96,6 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     std::vector<const Atom*> loadAtoms;
     std::size_t c = 0;
     for (const auto& q : result.stages.front().qubits) {
-      const auto* atom = code.emplaceBackAtom("atom" + std::to_string(i));
-      atoms.emplace_back(atom);
       auto pos = coordFromDiscrete(q, maxHOffset, maxVOffset, minEntanglingY,
                                    maxEntanglingY, minAtomDist,
                                    noInteractionRadius, zoneDist);
