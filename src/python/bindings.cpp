@@ -978,16 +978,11 @@ whether idle qubits should be shielded from the entangling operations.
       "Neutral Atom State Preparation Solver Result")
       .def(py::init<>(), "Create a result object")
       .def(
-          "yaml",
-          [](const na::NASolver::Result& result, const bool compact) {
-            return result.json(0, compact);
-          },
-          "compact"_a = true, R"(
-Returns the result as a YAML string.
+          "json",
+          [](const na::NASolver::Result& result) { return result.json(); }, R"(
+Returns the result as a JSON string.
 
-:param compact: if True, the YAML string contains JSON elements to make it more
-compact
-:returns: the result as a YAML string
+:returns: the result as a JSON string
 )");
 
   m.def(
@@ -1023,9 +1018,8 @@ of the abstraction from the 2D grid used for the solver must be provided again.
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
-        const auto fullOpType =
-            na::FullOpType{qc::opTypeFromString(operationType), numControls};
-        return na::SolverFactory::getOpsForSolver(qc, fullOpType, quiet);
+        return na::SolverFactory::getOpsForSolver(
+            qc, qc::opTypeFromString(operationType), numControls, quiet);
       },
       "qc"_a, "operation_type"_a = "Z", "num_operands"_a = 1, "quiet"_a = true,
       R"(
