@@ -21,7 +21,7 @@
 
 namespace na {
 void HardwareQubits::initTrivialSwapDistances() {
-  swapDistances = SymmetricMatrix<SwapDistance>(arch->getNqubits());
+  swapDistances = qc::SymmetricMatrix<SwapDistance>(arch->getNqubits());
   for (uint32_t i = 0; i < arch->getNqubits(); ++i) {
     for (uint32_t j = 0; j < i; ++j) {
       swapDistances(i, j) =
@@ -84,7 +84,7 @@ void HardwareQubits::computeSwapDistance(HwQubit q1, HwQubit q2) {
 void HardwareQubits::resetSwapDistances() {
   // TODO Improve to only reset the swap distances necessary (use a breadth
   // first search)
-  swapDistances = SymmetricMatrix(arch->getNqubits(), -1);
+  swapDistances = qc::SymmetricMatrix(arch->getNqubits(), -1);
 }
 
 void HardwareQubits::move(HwQubit hwQubit, CoordIndex newCoord) {

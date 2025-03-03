@@ -663,7 +663,7 @@ auto NASolver::solve(const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
                 maxEntanglingY, maxHOffset,   maxVOffset};
 }
 
-/// Initialize a Qubit from a YAML string.
+/// Initialize a Qubit from a JSON string.
 // NOLINTNEXTLINE (misc-include-cleaner)
 auto NASolver::Result::Qubit::fromJSON(const nlohmann::json& json) -> Qubit {
   Qubit qubit{};

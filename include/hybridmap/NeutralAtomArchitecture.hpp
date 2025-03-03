@@ -6,18 +6,17 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/operations/OpType.hpp"
-#include "ir/operations/Operation.hpp"
-#include "na/NADefinitions.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <datastructures/SymmetricMatrix.hpp>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <na/entities/Location.hpp>
 #include <set>
 #include <string>
 #include <vector>
@@ -145,8 +144,8 @@ protected:
   Properties properties{};
   Parameters parameters;
 
-  std::vector<Point> coordinates;
-  SymmetricMatrix<SwapDistance> swapDistances;
+  std::vector<Location> coordinates;
+  qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
   /**
@@ -265,8 +264,8 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] SwapDistance getSwapDistance(const Point& c1,
-                                             const Point& c2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(const Location& c1,
+                                             const Location& c2) const {
     return swapDistances(
         static_cast<size_t>(c1.x + c1.y) * properties.getNcolumns(),
         static_cast<size_t>(c2.x + c2.y) * properties.getNcolumns());
@@ -363,7 +362,7 @@ public:
    * @param idx The index
    * @return The coordinate corresponding to the index
    */
-  [[nodiscard]] Point getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Location getCoordinate(CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
@@ -371,7 +370,7 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Point& c) {
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Location& c) {
     return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
   }
 
@@ -393,8 +392,8 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] static qc::fp getEuclideanDistance(const Point& c1,
-                                                   const Point& c2) {
+  [[nodiscard]] static qc::fp getEuclideanDistance(const Location& c1,
+                                                   const Location& c2) {
     return static_cast<qc::fp>(c1.getEuclideanDistance(c2));
   }
   /**
