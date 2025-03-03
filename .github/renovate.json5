@@ -7,8 +7,8 @@
     enabled: true
   },
   lockFileMaintenance: {
-    "enabled": true,
-    // "automerge": true, disabled due to endless update loops caused by setuptools_scm
+    enabled: true,
+    automerge: true
   },
   configMigration: true,
   labels: ["dependencies"],
