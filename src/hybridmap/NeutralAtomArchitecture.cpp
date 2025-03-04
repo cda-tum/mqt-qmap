@@ -157,7 +157,8 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
             });
 
   // compute swap distances
-  this->swapDistances = SymmetricMatrix<SwapDistance>(this->getNpositions());
+  this->swapDistances =
+      qc::SymmetricMatrix<SwapDistance>(this->getNpositions());
 
   for (uint32_t coordIndex1 = 0; coordIndex1 < this->getNpositions();
        coordIndex1++) {
