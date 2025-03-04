@@ -37,7 +37,7 @@ class HardwareQubits {
 protected:
   const NeutralAtomArchitecture* arch;
   qc::Permutation hwToCoordIdx;
-  SymmetricMatrix<SwapDistance> swapDistances;
+  qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::map<HwQubit, HwQubits> nearbyQubits;
   qc::Permutation initialHwPos;
 
@@ -104,7 +104,7 @@ public:
         hwToCoordIdx.emplace(i, indices[i]);
       }
 
-      swapDistances = SymmetricMatrix(architecture.getNqubits(), -1);
+      swapDistances = qc::SymmetricMatrix(architecture.getNqubits(), -1);
     }
     initNearbyQubits();
     initialHwPos = hwToCoordIdx;
