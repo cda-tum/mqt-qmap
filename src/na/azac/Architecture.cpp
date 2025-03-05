@@ -377,81 +377,55 @@ auto Architecture::preprocessing() -> void {
   for (const auto& slms : entanglementZones) {
     for (const auto& slm : slms) {
       entanglementToNearestStorageSite.emplace(
-          slm.get(),
-          std::vector<
-              std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>{});
+          slm.get(), std::vector<std::vector<std::vector<
+                         std::tuple<const SLM*, std::size_t, std::size_t>>>>{});
       entanglementToNearestStorageSite[slm.get()].reserve(slm->nRows);
       for (std::size_t row = 0; row < slm->nRows; ++row) {
         entanglementToNearestStorageSite[slm.get()].emplace_back();
         entanglementToNearestStorageSite[slm.get()].back().reserve(slm->nCols);
         for (std::size_t col = 0; col < slm->nCols; ++col) {
-          const auto& [x, y] = exactSlmLocation(*slm, row, col);
+          const auto& entanglementSiteLocation =
+              exactSlmLocation(*slm, row, col);
           //===------------------------------------------------------------===//
-          // In the first step, find the nearest storage SLM (not the specific
-          // site in the storage SLM yet)
+          // get all storage sites and put them in a vector with their
+          // distance to the entanglement site
           //===------------------------------------------------------------===//
-          // In the loop, we will calculate a lower bound of the distance
-          // between the entanglement site and a storage SLM. Any site in the
-          // storage SLM will have at least this distance to the entanglement
-          // site. This distance will be the variable @c minimalDistance.
-          // Among all storage SLMs, we will find the one that has the minimum
-          // distance to the entanglement site, the @c minimumDistance.
-          double minimumDistance = std::numeric_limits<double>::max();
-          const SLM* nearestStorageSLM = nullptr;
-          for (const auto& storageSLM : storageZones) {
-            std::size_t minimalXDistance = 0;
-            if (x < storageSLM->location.first) {
-              minimalXDistance = storageSLM->location.first - x;
-            } else if (const auto maxX = storageSLM->location.first +
-                                         ((storageSLM->nCols - 1) *
-                                          storageSLM->siteSeparation.first);
-                       x > maxX) {
-              minimalXDistance = x - maxX;
-            }
-            std::size_t minimalYDistance = 0;
-            if (y < storageSLM->location.second) {
-              minimalYDistance = storageSLM->location.second - y;
-            } else if (const auto maxY = storageSLM->location.second +
-                                         ((storageSLM->nRows - 1) *
-                                          storageSLM->siteSeparation.second);
-                       y > maxY) {
-              minimalYDistance = y - maxY;
-            }
-            const auto minimalDistance = std::sqrt(
-                std::pow(minimalXDistance, 2) + std::pow(minimalYDistance, 2));
-            if (minimalDistance < minimumDistance) {
-              minimumDistance = minimalDistance;
-              nearestStorageSLM = storageSLM.get();
+          std::vector<std::pair<
+              std::tuple<const SLM*, std::size_t, std::size_t>, double>>
+              allStorageSitesWithTheirDistance;
+          for (const auto& storageSlm : storageZones) {
+            for (std::size_t storageRow = 0; storageRow < storageSlm->nRows;
+                 ++storageRow) {
+              for (std::size_t storageCol = 0; storageCol < storageSlm->nCols;
+                   ++storageCol) {
+                const auto distance = na::distance(
+                    entanglementSiteLocation,
+                    exactSlmLocation(*storageSlm, storageRow, storageCol));
+                allStorageSitesWithTheirDistance.emplace_back(
+                    std::make_tuple(storageSlm.get(), storageRow, storageCol),
+                    distance);
+              }
             }
           }
           //===------------------------------------------------------------===//
-          // In the second step, find the specific site in the determined
-          // storage SLM
+          // sort the storage sites by their distance to the entanglement site
           //===------------------------------------------------------------===//
-          std::size_t storageCol = 0;
-          if (const auto maxX = nearestStorageSLM->location.first +
-                                ((nearestStorageSLM->nCols - 1) *
-                                 nearestStorageSLM->siteSeparation.first);
-              x > maxX) {
-            storageCol = nearestStorageSLM->nCols - 1;
-          } else if (x >= nearestStorageSLM->location.first) {
-            storageCol = (x - nearestStorageSLM->location.first +
-                          (nearestStorageSLM->siteSeparation.first / 2)) /
-                         nearestStorageSLM->siteSeparation.first;
-          }
-          std::size_t storageRow = 0;
-          if (const auto maxY = nearestStorageSLM->location.second +
-                                ((nearestStorageSLM->nRows - 1) *
-                                 nearestStorageSLM->siteSeparation.second);
-              y > maxY) {
-            storageRow = nearestStorageSLM->nRows - 1;
-          } else if (y >= nearestStorageSLM->location.second) {
-            storageRow = (y - nearestStorageSLM->location.second +
-                          (nearestStorageSLM->siteSeparation.second / 2)) /
-                         nearestStorageSLM->siteSeparation.second;
-          }
-          entanglementToNearestStorageSite[slm.get()].back().emplace_back(
-              nearestStorageSLM, storageRow, storageCol);
+          std::sort(
+              allStorageSitesWithTheirDistance.begin(),
+              allStorageSitesWithTheirDistance.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+          //===------------------------------------------------------------===//
+          // put the sorted storage sites in the map
+          //===------------------------------------------------------------===//
+          entanglementToNearestStorageSite[slm.get()].back().emplace_back();
+          entanglementToNearestStorageSite[slm.get()].back().back().reserve(
+              allStorageSitesWithTheirDistance.size());
+          std::transform(
+              allStorageSitesWithTheirDistance.begin(),
+              allStorageSitesWithTheirDistance.end(),
+              std::back_inserter(
+                  entanglementToNearestStorageSite[slm.get()].back().back()),
+              [](const auto& t) { return t.first; });
         }
       }
     }
@@ -460,98 +434,42 @@ auto Architecture::preprocessing() -> void {
   // calculate the nearest entanglement site for each storage site
   //===--------------------------------------------------------------------===//
   storageToNearestEntanglementSite.clear();
-  storageToNearestEntanglementSiteDistance.clear();
   for (const auto& slm : storageZones) {
     storageToNearestEntanglementSite.emplace(
         slm.get(),
-        std::vector<
-            std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>{});
+        std::vector<std::vector<
+            std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>>{});
     storageToNearestEntanglementSite[slm.get()].reserve(slm->nRows);
-    storageToNearestEntanglementSiteDistance.emplace(
-        slm.get(), std::vector<std::vector<double>>{});
-    storageToNearestEntanglementSiteDistance[slm.get()].reserve(slm->nRows);
     for (std::size_t row = 0; row < slm->nRows; ++row) {
       storageToNearestEntanglementSite[slm.get()].emplace_back();
       storageToNearestEntanglementSite[slm.get()].back().reserve(slm->nCols);
-      storageToNearestEntanglementSiteDistance[slm.get()].emplace_back();
-      storageToNearestEntanglementSiteDistance[slm.get()].back().reserve(
-          slm->nCols);
       for (std::size_t col = 0; col < slm->nCols; ++col) {
-        const auto& [x, y] = exactSlmLocation(*slm, row, col);
+        const auto& storageSiteLocation = exactSlmLocation(*slm, row, col);
         //===--------------------------------------------------------------===//
-        // in the first step, find the nearest storage SLM (not the specific
-        // site in the storage SLM yet)
+        // get all entanglement sites and put them in a vector with their
+        // distance to the storage site
         //===--------------------------------------------------------------===//
-        // in the loop, we will calculate a lower bound of the distance
-        // between the storage site and an entanglement SLM. Any site in the
-        // entanglement SLM will have at least this distance to the storage
-        // site. This distance will be the variable @c minimalDistance.
-        // Among all entanglement SLMs, we will find the one that has the
-        // minimum distance to the storage site, the @c minimumDistance.
-        double minimumDistance = std::numeric_limits<double>::max();
-        const SLM* nearestEntanglementSLM = nullptr;
-        for (const auto& entanglementSLMs : entanglementZones) {
-          for (const auto& entanglementSLM : entanglementSLMs) {
-            std::size_t minimalXDistance = 0;
-            if (x < entanglementSLM->location.first) {
-              minimalXDistance = entanglementSLM->location.first - x;
-            } else if (const auto maxX =
-                           entanglementSLM->location.first +
-                           ((entanglementSLM->nCols - 1) *
-                            entanglementSLM->siteSeparation.first);
-                       x > maxX) {
-              minimalXDistance = x - maxX;
-            }
-            std::size_t minimalYDistance = 0;
-            if (y < entanglementSLM->location.second) {
-              minimalYDistance = entanglementSLM->location.second - y;
-            } else if (const auto maxY =
-                           entanglementSLM->location.second +
-                           ((entanglementSLM->nRows - 1) *
-                            entanglementSLM->siteSeparation.second);
-                       y > maxY) {
-              minimalYDistance = y - maxY;
-            }
-            const auto minimalDistance = std::sqrt(
-                std::pow(minimalXDistance, 2) + std::pow(minimalYDistance, 2));
-            if (minimalDistance < minimumDistance) {
-              minimumDistance = minimalDistance;
-              nearestEntanglementSLM = entanglementSLM.get();
+        std::vector<
+            std::pair<std::tuple<const SLM*, std::size_t, std::size_t>, double>>
+            allEntanglementSitesWithTheirDistance;
+        for (const auto& slms : entanglementZones) {
+          for (const auto& entanglementSlm : slms) {
+            for (std::size_t entanglementRow = 0;
+                 entanglementRow < entanglementSlm->nRows; ++entanglementRow) {
+              for (std::size_t entanglementCol = 0;
+                   entanglementCol < entanglementSlm->nCols;
+                   ++entanglementCol) {
+                const auto distance = na::distance(
+                    storageSiteLocation,
+                    exactSlmLocation(*entanglementSlm, entanglementRow,
+                                     entanglementCol));
+                allEntanglementSitesWithTheirDistance.emplace_back(
+                    std::make_tuple(entanglementSlm.get(), entanglementRow,
+                                    entanglementCol),
+                    distance);
+              }
             }
           }
-          //===------------------------------------------------------------===//
-          // In the second step, find the specific site in the determined
-          // storage SLM
-          //===------------------------------------------------------------===//
-          std::size_t storageCol = 0;
-          if (const auto maxX = nearestEntanglementSLM->location.first +
-                                ((nearestEntanglementSLM->nCols - 1) *
-                                 nearestEntanglementSLM->siteSeparation.first);
-              x > maxX) {
-            storageCol = nearestEntanglementSLM->nCols - 1;
-          } else if (x >= nearestEntanglementSLM->location.first) {
-            storageCol = (x - nearestEntanglementSLM->location.first +
-                          (nearestEntanglementSLM->siteSeparation.first / 2)) /
-                         nearestEntanglementSLM->siteSeparation.first;
-          }
-          std::size_t storageRow = 0;
-          if (const auto maxY = nearestEntanglementSLM->location.second +
-                                ((nearestEntanglementSLM->nRows - 1) *
-                                 nearestEntanglementSLM->siteSeparation.second);
-              y > maxY) {
-            storageRow = nearestEntanglementSLM->nRows - 1;
-          } else if (y >= nearestEntanglementSLM->location.second) {
-            storageRow = (y - nearestEntanglementSLM->location.second +
-                          (nearestEntanglementSLM->siteSeparation.second / 2)) /
-                         nearestEntanglementSLM->siteSeparation.second;
-          }
-          storageToNearestEntanglementSite[slm.get()].back().emplace_back(
-              nearestEntanglementSLM, storageRow, storageCol);
-          storageToNearestEntanglementSiteDistance[slm.get()]
-              .back()
-              .emplace_back(distance(slm.get(), row, col,
-                                     nearestEntanglementSLM, storageRow,
-                                     storageCol));
         }
       }
     }
@@ -566,27 +484,33 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
 }
 auto Architecture::nearestStorageSite(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const
-    -> std::tuple<const SLM*, std::size_t, std::size_t> {
+    -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
+  return entanglementToNearestStorageSite.at(&slm)[r][c].front();
+}
+auto Architecture::nearestStorageSitesAsc(const SLM& slm, std::size_t r,
+                                          std::size_t c) const
+    -> const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>& {
   return entanglementToNearestStorageSite.at(&slm)[r][c];
 }
 auto Architecture::nearestEntanglementSite(const SLM* const idx,
                                            const std::size_t r,
                                            const std::size_t c) const
-    -> std::tuple<const SLM*, std::size_t, std::size_t> {
-  return storageToNearestEntanglementSite.at(idx)[r][c];
+    -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
+  return storageToNearestEntanglementSite.at(idx)[r][c].front();
 }
 auto Architecture::nearestEntanglementSiteDistance(const SLM* const idx,
                                                    const std::size_t r,
                                                    const std::size_t c) const
     -> double {
-  return storageToNearestEntanglementSiteDistance.at(idx)[r][c];
+  return distance({idx, r, c},
+                  storageToNearestEntanglementSite.at(idx)[r][c].front());
 }
 auto Architecture::nearestEntanglementSite(
     const SLM* const idx1, const std::size_t r1, const std::size_t c1,
     const SLM* const idx2, const std::size_t r2, const std::size_t c2) const
     -> std::tuple<const SLM*, std::size_t, std::size_t> {
-  const auto& site1 = storageToNearestEntanglementSite.at(idx1)[r1][c1];
-  const auto& site2 = storageToNearestEntanglementSite.at(idx2)[r2][c2];
+  const auto& site1 = storageToNearestEntanglementSite.at(idx1)[r1][c1].front();
+  const auto& site2 = storageToNearestEntanglementSite.at(idx2)[r2][c2].front();
   // the nearest entanglement zone for both qubits is the same
   if (site1 == site2) {
     return site1;

@@ -7,6 +7,7 @@
 #include <optional>
 #include <queue>
 #include <stdexcept>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,106 @@ auto maximumBipartiteMatching(
 auto minimumWeightFullBipartiteMatching(
     const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t>;
+
+template <class Priority, class T, class Compare = std::less<Priority>>
+class Heap {
+public:
+  using PriorityType = Priority;
+  using ElementType = T;
+  using ValueType = std::pair<PriorityType, ElementType>;
+  using SizeType = typename std::vector<ValueType>::size_type;
+  using PriorityCompare = Compare;
+  using Reference = ValueType&;
+
+private:
+  std::vector<ValueType> heap_;
+  std::unordered_map<ElementType, SizeType> keyToIndex_;
+
+  void heapifyUp(size_t i) {
+    while (i > 0) {
+      size_t parent = (i - 1) / 2;
+      if (PriorityCompare{}(heap_[i].first, heap_[parent].first)) {
+        std::swap(heap_[i], heap_[parent]);
+        keyToIndex_[heap_[i]] = i;
+        keyToIndex_[heap_[parent]] = parent;
+        i = parent;
+      } else {
+        break;
+      }
+    }
+  }
+
+  void heapifyDown(size_t i) {
+    while (true) {
+      size_t leftChild = (2 * i) + 1;
+      size_t rightChild = (2 * i) + 2;
+      size_t smallest = i;
+
+      if (leftChild < heap_.size() &&
+          PriorityCompare{}(heap_[leftChild], heap_[smallest])) {
+        smallest = leftChild;
+      }
+      if (rightChild < heap_.size() &&
+          PriorityCompare{}(heap_[rightChild], heap_[smallest])) {
+        smallest = rightChild;
+      }
+      if (smallest != i) {
+        std::swap(heap_[i], heap_[smallest]);
+        keyToIndex_[heap_[i]] = i;
+        keyToIndex_[heap_[smallest]] = smallest;
+        i = smallest;
+      } else {
+        break;
+      }
+    }
+  }
+
+public:
+  [[nodiscard]] auto top() const -> const ValueType& { return heap_.front(); }
+  auto pop() -> void {
+    keyToIndex_.erase(heap_.front().second);
+    std::swap(heap_.front(), heap_.back());
+    heap_.pop_back();
+    keyToIndex_.at(heap_.front().second) = 0;
+    heapifyDown(0);
+  }
+  [[nodiscard]] auto empty() const -> bool { return heap_.empty(); }
+  [[nodiscard]] auto size() const -> SizeType { return heap_.size(); }
+  auto push(const ValueType& value) -> void {
+    if (keyToIndex_.find(value.second) != keyToIndex_.end()) {
+      update(value.second, value.first);
+    }
+    heap_.push_back(value);
+    keyToIndex_.at(value.second) = heap_.size() - 1;
+    heapifyUp(heap_.size() - 1);
+  }
+  template <class... Args> auto emplace(Args&&... args) -> Reference {
+    auto value = value_type(std::forward<Args>(args)...);
+    if (keyToIndex_.find(value.second) != keyToIndex_.end()) {
+      return update(std::move(value));
+    }
+    push(std::move(value));
+    return heap_[keyToIndex_.at(value.second)];
+  }
+  auto update(const ValueType& value) -> Reference {
+    const auto i = keyToIndex_.find(value.second)->second;
+    heap_[i] = value;
+    keyToIndex_.at(value.second) = i;
+    // for the case that the priority is increased
+    heapifyUp(i);
+    // for the case that the priority is decreased
+    heapifyDown(i);
+    return heap_[keyToIndex_.at(value.second)];
+  }
+  auto erase(const ElementType& element) -> void {
+    const auto i = keyToIndex_.find(element)->second;
+    keyToIndex_.erase(element);
+    std::swap(heap_[i], heap_.back());
+    heap_.pop_back();
+    keyToIndex_.at(heap_[i].second) = i;
+    heapifyDown(i);
+  }
+};
 
 /**
  * @brief A* search algorithm for trees
