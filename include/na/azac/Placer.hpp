@@ -1273,12 +1273,12 @@ private:
   /// This will not resemble the exact time to rearrange all costs because at
   /// this point it is not clear how the horizontal and vertical groups can be
   /// combined.
-  auto getCost(Node current) -> double {
+  auto getCost(const Node& node) -> double {
     double cost = 0.0;
-    for (const auto d : current->maxDistancesOfPlacedAtomsPerHGroup) {
+    for (const auto d : node.maxDistancesOfPlacedAtomsPerHGroup) {
       cost += std::sqrt(d);
     }
-    for (const auto d : current->maxDistancesOfPlacedAtomsPerVGroup) {
+    for (const auto d : node.maxDistancesOfPlacedAtomsPerVGroup) {
       cost += std::sqrt(d);
     }
     return cost;
@@ -1300,19 +1300,19 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  double getHeuristic(const Node* current) {
+  double getHeuristic(const Node& node) {
     double maxDistanceOfUnplacedAtom = 0.0;
-    for (size_t i = current->level + 1; i < nAtoms; ++i) {
+    for (size_t i = node.level + 1; i < nAtoms; ++i) {
       for (const auto& site : nearestFreeSitesForEachAtom[i]) {
-        if (current->consumedFreeSites.find(site.first) ==
-            current->consumedFreeSites.end()) {
+        if (node.consumedFreeSites.find(site.first) ==
+            node.consumedFreeSites.end()) {
           maxDistanceOfUnplacedAtom =
               std::max(maxDistanceOfUnplacedAtom, site.second);
           break;
         }
       }
     }
-    return maxDistanceOfUnplacedAtom - current->maxDistanceOfPlacedAtom;
+    return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
   }
 
   /// @brief Return pointers to all neighbors of the given node.
@@ -1329,24 +1329,24 @@ private:
   /// existing groups.
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
-  auto getNeighbors(const Node* node) -> std::vector<const Node*> {
-    size_t atomToBePlacedNext = node->partialPlacement.size();
+  auto getNeighbors(const Node& node) -> std::vector<const Node*> {
+    size_t atomToBePlacedNext = node.partialPlacement.size();
     std::vector<const Node*> neighbors;
     for (const auto site : /* all possible target sites for the atom */) {
       // assume nodes is of type std::vector<std::unique_ptr<Node>>
       // make a copy of node, the parent of neighbor
-      Node* neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
-      ++neighbor->level;
-      neighbor->maxDistanceOfPlacedAtom =
-            std::max(node->maxDistanceOfPlacedAtom, /* distance for
+      Node& neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
+      ++neighbor.level;
+      neighbor.maxDistanceOfPlacedAtom =
+            std::max(node.maxDistanceOfPlacedAtom, /* distance for
                 current atom from its current site to `site` */);
-      neighbor->consumedFreeSites.emplace(site);
+      neighbor.consumedFreeSites.emplace(site);
       // check whether the current placement is compatible with any
       // existing group
       const size_t key = /* the atom's row it is currently in */;
       const size_t value = /* the atom's row it should be placed in */;
       size_t i = 0;
-      for (auto& hGroup : neighbor->hGroups) {
+      for (auto& hGroup : neighbor.hGroups) {
         auto it = hGroup.lower_bound(key);
         if (it != hGroup.end()) {
           // an assignment for this key already exists in this group
@@ -1384,14 +1384,14 @@ private:
         }
         ++i;
       }
-      if (i == neighbor->hGroups.size()) {
+      if (i == neighbor.hGroups.size()) {
         // no compatible group could be found and a new group is created
-        neighbor->hGroups.emplace_back();
-        neighbor->maxDistancesOfPlacedAtomsPerHGroup.emplace_back(0.0);
+        neighbor.hGroups.emplace_back();
+        neighbor.maxDistancesOfPlacedAtomsPerHGroup.emplace_back(0.0);
       }
-      neighbor->hGroups[i].emplace(key, value);
-      neighbor->maxDistancesOfPlacedAtomsPerHGroup[i] =
-                std::max(neighbor->maxDistancesOfPlacedAtomsPerHGroup[i],
+      neighbor.hGroups[i].emplace(key, value);
+      neighbor.maxDistancesOfPlacedAtomsPerHGroup[i] =
+                std::max(neighbor.maxDistancesOfPlacedAtomsPerHGroup[i],
                          /* distance for current atom from its current site
                             to `site` */);
       // [ do the same for the vertical group... ]
