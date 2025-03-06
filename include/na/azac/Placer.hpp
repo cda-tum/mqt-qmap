@@ -4,6 +4,7 @@
 #include "na/azac/Utils.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -188,8 +189,8 @@ private:
           const std::tuple key{slm1, std::get<1>(lastGateMapping[q]), slm2,
                                std::get<1>(qubitMapping[q])};
           const double dis = architecture.distance(
-              std::get<0>(lastGateMapping[q]), std::get<1>(lastGateMapping[q]),
-              std::get<2>(lastGateMapping[q]), std::get<0>(qubitMapping[q]),
+              *std::get<0>(lastGateMapping[q]), std::get<1>(lastGateMapping[q]),
+              std::get<2>(lastGateMapping[q]), *std::get<0>(qubitMapping[q]),
               std::get<1>(qubitMapping[q]), std::get<2>(qubitMapping[q]));
           if (const auto it = movementParallelMovement1.find(key);
               it != movementParallelMovement1.end()) {
@@ -210,8 +211,8 @@ private:
           const std::tuple key{slm2, std::get<1>(qubitMapping[q]), slm1,
                                std::get<1>(gateMapping[q])};
           const double dis = architecture.distance(
-              std::get<0>(qubitMapping[q]), std::get<1>(qubitMapping[q]),
-              std::get<2>(qubitMapping[q]), std::get<0>(gateMapping[q]),
+              *std::get<0>(qubitMapping[q]), std::get<1>(qubitMapping[q]),
+              std::get<2>(qubitMapping[q]), *std::get<0>(gateMapping[q]),
               std::get<1>(gateMapping[q]), std::get<2>(gateMapping[q]));
           if (const auto it = movementParallelMovement2.find(key);
               it != movementParallelMovement2.end()) {
@@ -246,8 +247,8 @@ private:
           const std::tuple key{slm1, std::get<1>(lastGateMapping[q]), slm2,
                                std::get<1>(qubitMapping[q])};
           double dis = architecture.distance(
-              std::get<0>(lastGateMapping[q]), std::get<1>(lastGateMapping[q]),
-              std::get<2>(lastGateMapping[q]), std::get<0>(qubitMapping[q]),
+              *std::get<0>(lastGateMapping[q]), std::get<1>(lastGateMapping[q]),
+              std::get<2>(lastGateMapping[q]), *std::get<0>(qubitMapping[q]),
               std::get<1>(qubitMapping[q]), std::get<2>(qubitMapping[q]));
           if (const auto it = movementParallelMovement1.find(key);
               it != movementParallelMovement1.end()) {
@@ -269,8 +270,8 @@ private:
           const std::tuple key{slm2, std::get<1>(qubitMapping[q]), slm1,
                                std::get<1>(gateMapping[q])};
           const double dis = architecture.distance(
-              std::get<0>(qubitMapping[q]), std::get<1>(qubitMapping[q]),
-              std::get<2>(qubitMapping[q]), std::get<0>(gateMapping[q]),
+              *std::get<0>(qubitMapping[q]), std::get<1>(qubitMapping[q]),
+              std::get<2>(qubitMapping[q]), *std::get<0>(gateMapping[q]),
               std::get<1>(gateMapping[q]), std::get<2>(gateMapping[q]));
           if (const auto it = movementParallelMovement2.find(key);
               it != movementParallelMovement2.end()) {
@@ -341,15 +342,15 @@ private:
         std::unordered_set<std::tuple<const SLM*, std::size_t, std::size_t>>
             nearestSites{};
         nearestSites.emplace(architecture.nearestEntanglementSite(
-            std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
-            std::get<2>(qubitMapping[q1]), std::get<0>(qubitMapping[q2]),
+            *std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
+            std::get<2>(qubitMapping[q1]), *std::get<0>(qubitMapping[q2]),
             std::get<1>(qubitMapping[q2]), std::get<2>(qubitMapping[q2])));
         nearestSites.emplace(architecture.nearestEntanglementSite(
-            std::get<0>(qubitMapping[q1]), 0, std::get<2>(qubitMapping[q1]),
-            std::get<0>(qubitMapping[q2]), 0, std::get<2>(qubitMapping[q2])));
+            *std::get<0>(qubitMapping[q1]), 0, std::get<2>(qubitMapping[q1]),
+            *std::get<0>(qubitMapping[q2]), 0, std::get<2>(qubitMapping[q2])));
         nearestSites.emplace(architecture.nearestEntanglementSite(
-            std::get<0>(qubitMapping[q1]), slm->nRows - 1,
-            std::get<2>(qubitMapping[q1]), std::get<0>(qubitMapping[q2]),
+            *std::get<0>(qubitMapping[q1]), slm->nRows - 1,
+            std::get<2>(qubitMapping[q1]), *std::get<0>(qubitMapping[q2]),
             slm->nRows - 1, std::get<2>(qubitMapping[q2])));
         for (const auto& nearestSite : nearestSites) {
           setNearbySite.emplace(nearestSite);
@@ -383,12 +384,12 @@ private:
           }
           const auto idxRydberg = siteRydbergToIdx[site];
           double dis1 = architecture.distance(
-              std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
-              std::get<2>(qubitMapping[q1]), std::get<0>(site),
+              *std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
+              std::get<2>(qubitMapping[q1]), *std::get<0>(site),
               std::get<1>(site), std::get<2>(site));
           double dis2 = architecture.distance(
-              std::get<0>(qubitMapping[q2]), std::get<1>(qubitMapping[q2]),
-              std::get<2>(qubitMapping[q2]), std::get<0>(site),
+              *std::get<0>(qubitMapping[q2]), std::get<1>(qubitMapping[q2]),
+              std::get<2>(qubitMapping[q2]), *std::get<0>(site),
               std::get<1>(site), std::get<2>(site));
           double dis3 = 0;
           std::optional<std::size_t> q3;
@@ -400,8 +401,8 @@ private:
           }
           if (q3) {
             dis3 = architecture.distance(
-                std::get<0>(qubitMapping[*q3]), std::get<1>(qubitMapping[*q3]),
-                std::get<2>(qubitMapping[*q3]), std::get<0>(site),
+                *std::get<0>(qubitMapping[*q3]), std::get<1>(qubitMapping[*q3]),
+                std::get<2>(qubitMapping[*q3]), *std::get<0>(site),
                 std::get<1>(site), std::get<2>(site));
           }
           listColCoo.emplace_back(idxRydberg);
@@ -515,15 +516,16 @@ private:
           std::unordered_set<std::tuple<const SLM*, std::size_t, std::size_t>>
               nearestSites{};
           nearestSites.emplace(architecture.nearestEntanglementSite(
-              std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
-              std::get<2>(qubitMapping[q1]), std::get<0>(qubitMapping[q2]),
+              *std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
+              std::get<2>(qubitMapping[q1]), *std::get<0>(qubitMapping[q2]),
               std::get<1>(qubitMapping[q2]), std::get<2>(qubitMapping[q2])));
           nearestSites.emplace(architecture.nearestEntanglementSite(
-              std::get<0>(qubitMapping[q1]), 0, std::get<2>(qubitMapping[q1]),
-              std::get<0>(qubitMapping[q2]), 0, std::get<2>(qubitMapping[q2])));
+              *std::get<0>(qubitMapping[q1]), 0, std::get<2>(qubitMapping[q1]),
+              *std::get<0>(qubitMapping[q2]), 0,
+              std::get<2>(qubitMapping[q2])));
           nearestSites.emplace(architecture.nearestEntanglementSite(
-              std::get<0>(qubitMapping[q1]), slm->nRows - 1,
-              std::get<2>(qubitMapping[q1]), std::get<0>(qubitMapping[q2]),
+              *std::get<0>(qubitMapping[q1]), slm->nRows - 1,
+              std::get<2>(qubitMapping[q1]), *std::get<0>(qubitMapping[q2]),
               slm->nRows - 1, std::get<2>(qubitMapping[q2])));
           for (const auto& nearestSite : nearestSites) {
             setNearbySite.emplace(nearestSite);
@@ -558,12 +560,12 @@ private:
           }
           const auto idxRydberg = siteRydbergToIdx[site];
           double dis1 = architecture.distance(
-              std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
-              std::get<2>(qubitMapping[q1]), std::get<0>(site),
+              *std::get<0>(qubitMapping[q1]), std::get<1>(qubitMapping[q1]),
+              std::get<2>(qubitMapping[q1]), *std::get<0>(site),
               std::get<1>(site), std::get<2>(site));
           double dis2 = architecture.distance(
-              std::get<0>(qubitMapping[q2]), std::get<1>(qubitMapping[q2]),
-              std::get<2>(qubitMapping[q2]), std::get<0>(site),
+              *std::get<0>(qubitMapping[q2]), std::get<1>(qubitMapping[q2]),
+              std::get<2>(qubitMapping[q2]), *std::get<0>(site),
               std::get<1>(site), std::get<2>(site));
           double dis3 = 0;
           std::optional<std::size_t> q3;
@@ -575,8 +577,8 @@ private:
           }
           if (q3) {
             dis3 = architecture.distance(
-                std::get<0>(qubitMapping[*q3]), std::get<1>(qubitMapping[*q3]),
-                std::get<2>(qubitMapping[*q3]), std::get<0>(site),
+                *std::get<0>(qubitMapping[*q3]), std::get<1>(qubitMapping[*q3]),
+                std::get<2>(qubitMapping[*q3]), *std::get<0>(site),
                 std::get<1>(site), std::get<2>(site));
           }
           listColCoo.emplace_back(idxRydberg);
@@ -903,16 +905,16 @@ private:
           }
           const auto idxStorage = siteStorageToIdx[site];
           const double dis = architecture.distance(
-              std::get<0>(gateLocation), std::get<1>(gateLocation),
-              std::get<2>(gateLocation), std::get<0>(site), std::get<1>(site),
+              *std::get<0>(gateLocation), std::get<1>(gateLocation),
+              std::get<2>(gateLocation), *std::get<0>(site), std::get<1>(site),
               std::get<2>(site));
           double lookaheadCost = 0;
           for (const auto& neighborQ : dictQubitInteraction[q]) {
             const auto& siteNeighborQ = lastGateMapping[neighborQ];
             if (!std::get<0>(siteNeighborQ)->entanglementZone) {
               lookaheadCost += architecture.nearestEntanglementSiteDistance(
-                  std::get<0>(site), std::get<1>(site), std::get<2>(site),
-                  std::get<0>(siteNeighborQ), std::get<1>(siteNeighborQ),
+                  *std::get<0>(site), std::get<1>(site), std::get<2>(site),
+                  *std::get<0>(siteNeighborQ), std::get<1>(siteNeighborQ),
                   std::get<2>(siteNeighborQ));
             } else {
               const std::pair<std::size_t, std::size_t>& exactLocNeighborQ =
@@ -986,18 +988,14 @@ protected:
         std::chrono::system_clock::now() - t_p;
   }
 
-  /// generate qubit initial layout
+  /// generate all qubit intermediate layouts
   auto placeQubitIntermediate() -> void {
     const auto t_p = std::chrono::system_clock::now();
-    /* Architecture =        */ static_cast<T*>(this)->getArchitecture();
-    /* Initial Mapping =     */ static_cast<T*>(this)
-        ->getQubitMapping()
-        .front();
-    /* Gate Scheduling =     */ static_cast<T*>(this)->getGateScheduling();
-    /* Dynamic Placement =   */ static_cast<T*>(this)->isDynamicPlacement();
-    /* Reuse Qubits =        */ static_cast<T*>(this)->getReuseQubits();
-    /* Final Qubit Mapping = */ static_cast<T*>(this)->getQubitMapping();
-
+    for (std::size_t layer = 0;
+         layer < static_cast<T*>(this)->getGateScheduling().size(); ++layer) {
+      placeGatesInEntanglementZone(layer);
+      placeQubitsInStorageZone(layer);
+    }
     static_cast<T*>(this)->getRuntimeAnalysis().intermediatePlacement =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - t_p);
@@ -1041,11 +1039,211 @@ private:
     static_cast<T*>(this)->getQubitMapping().emplace_back(listPossiblePosition);
   }
 
+  /// This function places the qubits corresponding to gates in the entanglement
+  /// zone. After this placement has been performed, the activation of the
+  /// Rydberg beam will execute the gates in the given layer. Afterward, the
+  /// next placement for moving (non-reuse) qubits back to the storage zone is
+  /// determined by @ref placeQubitsInStorageZone.
+  auto placeGatesInEntanglementZone(const size_t layer) -> void {
+    //===------------------------------------------------------------------===//
+    // Retrieve references to required data structures
+    //===------------------------------------------------------------------===//
+    const Architecture& architecture = static_cast<T*>(this)->getArchitecture();
+    // placement of atoms in the previous stage, i.e., when the last gates were
+    // executed
+    const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
+        previousPlacement = static_cast<T*>(this)->getQubitMapping().back();
+    // gates that were executed in the previous stage
+    const std::vector<const std::pair<qc::Qubit, qc::Qubit>*>& gates =
+        static_cast<T*>(this)->getGateScheduling().at(layer);
+    // qubits that are reused in the next stage and hence remain at their last
+    // position
+    const std::unordered_set<std::size_t>& reuseQubits =
+        static_cast<T*>(this)->getReuseQubits().at(layer);
+    //===------------------------------------------------------------------===//
+    // Duplicate the previous placement as a starting point for the current
+    //===------------------------------------------------------------------===//
+    std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
+        currentPlacement =
+            static_cast<T*>(this)->getQubitMapping().emplace_back(
+                previousPlacement);
+    //===------------------------------------------------------------------===//
+    // Find gates that must be placed
+    //===------------------------------------------------------------------===//
+    std::vector<std::pair<std::pair<size_t, size_t>, double>> gatesToPlace;
+    std::vector<std::pair<size_t, double>> atomsToPlace;
+    for (const auto* gate : gates) {
+      if (reuseQubits.find(gate->first) != reuseQubits.end()) {
+        assert(std::get<0>(previousPlacement[gate->first])->isEntanglement());
+        currentPlacement[gate->second] =
+            architecture.otherEntanglementSite(previousPlacement[gate->first]);
+      } else if (reuseQubits.find(gate->second) != reuseQubits.end()) {
+        assert(std::get<0>(previousPlacement[gate->second])->isEntanglement());
+        currentPlacement[gate->first] =
+            architecture.otherEntanglementSite(previousPlacement[gate->second]);
+      } else {
+        const auto& nearestEntanglementSite =
+            architecture.nearestEntanglementSite(
+                previousPlacement[gate->first],
+                previousPlacement[gate->second]);
+        const auto& otherNearestEntanglementSite =
+            architecture.otherEntanglementSite(nearestEntanglementSite);
+        //===------------------------------------------------------------------===//
+        // Calculate the various distances to the entanglement sites
+        //===------------------------------------------------------------------===//
+        // Example:
+        //       nearest    other
+        //         ┌─┐       ┌─┐ <-- Entanglement sites
+        //         └┬┘       └┬┘
+        //          │╲dis2   ╱│
+        //     dis1 │  ╲   ╱  │
+        //          │    ╳    │
+        //          │  ╱   ╲  │ dis4
+        //          │╱dis3   ╲│
+        //         ┌┴┐       ┌┴┐ <-- Storage sites
+        //         └─┘       └─┘
+        //          ^         ^
+        //   gate->first   gate->second
+        const auto dis1 = architecture.distance(previousPlacement[gate->first],
+                                                nearestEntanglementSite);
+        const auto dis2 = architecture.distance(previousPlacement[gate->second],
+                                                nearestEntanglementSite);
+        const auto dis3 = architecture.distance(previousPlacement[gate->first],
+                                                otherNearestEntanglementSite);
+        const auto dis4 = architecture.distance(previousPlacement[gate->second],
+                                                otherNearestEntanglementSite);
+        // If the situation is as depicted in the example above
+        if (dis1 + dis4 <= dis2 + dis3) {
+          gatesToPlace.emplace_back(
+              {atomsToPlace.size(), atomsToPlace.size() + 1},
+              std::max(dis1, dis4));
+          atomsToPlace.emplace_back(gate->first, dis1);
+          atomsToPlace.emplace_back(gate->second, dis2);
+        } else {
+          // otherwise, either the entanglement sites or storage sites are
+          // flipped
+          gatesToPlace.emplace_back(
+              {atomsToPlace.size(), atomsToPlace.size() + 1},
+              std::max(dis2, dis3));
+          atomsToPlace.emplace_back(gate->first, dis2);
+          atomsToPlace.emplace_back(gate->second, dis3);
+        }
+      }
+    }
+    nAtoms = atomsToPlace.size();
+    //===------------------------------------------------------------------===//
+    // Order the gates to be placed by the distance to the nearest entanglement
+    // site
+    //===------------------------------------------------------------------===//
+    std::sort(gatesToPlace.begin(), gatesToPlace.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+    //===------------------------------------------------------------------===//
+    // Extract occupied entanglement sites from the previous placement
+    //===------------------------------------------------------------------===//
+    // This set will only contain of the first SLM in a pair of entanglement
+    // SLMs and represents the occupied pair of sites
+    std::set<std::tuple<const std::vector<std::unique_ptr<SLM>>*, std::size_t,
+                        std::size_t>>
+        occupiedEntanglementSites{};
+    for (const auto qubit : reuseQubits) {
+      assert(std::get<0>(previousPlacement[qubit])->isEntanglement());
+      occupiedEntanglementSites.emplace(
+          std::get<0>(previousPlacement[qubit])->entanglementZone,
+          std::get<1>(previousPlacement[qubit]),
+          std::get<2>(previousPlacement[qubit]));
+    }
+    //===------------------------------------------------------------------===//
+    // Discretize the previous placement of the qubits to be placed
+    //===------------------------------------------------------------------===//
+    std::vector<std::pair<size_t, std::pair<const SLM*, size_t>>>
+        atomsToPlaceWithRow;
+    std::vector<std::pair<size_t, std::pair<const SLM*, size_t>>>
+        atomsToPlaceWithColumn;
+    atomsToPlaceWithRow.reserve(nAtoms);
+    atomsToPlaceWithColumn.reserve(nAtoms);
+    for (size_t atom = 0; atom < nAtoms; ++atom) {
+      const auto& [slm, r, c] = previousPlacement[atomsToPlace[atom].first];
+      atomsToPlaceWithRow.emplace_back(atom, std::pair{slm, r});
+      atomsToPlaceWithColumn.emplace_back(atom, std::pair{slm, c});
+    }
+    std::sort(
+        atomsToPlaceWithRow.begin(), atomsToPlaceWithRow.end(),
+        [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
+           const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
+          return a.second.first->location.second +
+                     a.second.first->siteSeparation.second * a.second.second <
+                 b.second.first->location.second +
+                     b.second.first->siteSeparation.second * b.second.second;
+        });
+    std::sort(
+        atomsToPlaceWithColumn.begin(), atomsToPlaceWithColumn.end(),
+        [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
+           const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
+          return a.second.first->location.first +
+                     a.second.first->siteSeparation.first * a.second.second <
+                 b.second.first->location.first +
+                     b.second.first->siteSeparation.first * b.second.second;
+        });
+    //===------------------------------------------------------------------===//
+    // Discretize the entanglement sites to be used for the placement
+    //===------------------------------------------------------------------===//
+    std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
+        rowsWithFreeSites;
+    std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
+        columnsWithFreeSites;
+    size_t nDiscreteRows = 0;
+    size_t nDiscreteColumns = 0;
+    for (const auto& entangleSLMs : architecture.entanglementZones) {
+      for (const auto& entangleSLM : entangleSLMs) {
+        // find rows with free sites
+        std::unordered_map<size_t, size_t>& rows =
+            rowsWithFreeSites
+                .emplace(entangleSLM.get(),
+                         std::unordered_map<size_t, size_t>{})
+                .first->second;
+        for (size_t r = 0; r < entangleSLM->nRows; ++r) {
+          bool freeRow = false;
+          for (size_t c = 0; c < entangleSLM->nCols; ++c) {
+            if (occupiedEntanglementSites.find(
+                    {entangleSLM->entanglementZone, r, c}) ==
+                occupiedEntanglementSites.end()) {
+              freeRow = true;
+              break;
+            }
+          }
+          if (freeRow) {
+            rows.emplace(r, ++nDiscreteRows);
+          }
+        }
+        // find columns with free sites
+        std::unordered_map<size_t, size_t>& columns =
+            columnsWithFreeSites
+                .emplace(entangleSLM.get(),
+                         std::unordered_map<size_t, size_t>{})
+                .first->second;
+        for (size_t c = 0; c < entangleSLM->nCols; ++c) {
+          bool freeColumn = false;
+          for (size_t r = 0; r < entangleSLM->nRows; ++r) {
+            if (occupiedEntanglementSites.find(
+                    {entangleSLM->entanglementZone, r, c}) ==
+                occupiedEntanglementSites.end()) {
+              freeColumn = true;
+              break;
+            }
+          }
+          if (freeColumn) {
+            columns.emplace(c, ++nDiscreteColumns);
+          }
+        }
+      }
+    }
+  }
+
   /// This function places qubits from the entanglement zone in the storage
   /// zone after a rydberg gate has been performed.
   /// It initializes the graph structure for the A* algorithm.
   /// Afterward, the A* algorithm is called to find the optimal mapping.
-  auto placeQubitInStorageZone(const size_t layer) -> void {
+  auto placeQubitsInStorageZone(const size_t layer) -> void {
     //===------------------------------------------------------------------===//
     // Retrieve references to required data structures
     //===------------------------------------------------------------------===//
@@ -1076,7 +1274,7 @@ private:
     // the respective distance
     //===------------------------------------------------------------------===//
     std::vector<std::pair<size_t, double>> atomsToPlace;
-    atomsToPlace.reserve(gates.size() * 2 - reuseQubits.size());
+    atomsToPlace.reserve((gates.size() * 2) - reuseQubits.size());
     for (const auto* atoms : gates) {
       if (const auto atom = atoms->first;
           reuseQubits.find(atom) == reuseQubits.end()) {
@@ -1118,7 +1316,7 @@ private:
     // Order the atoms to be placed by the distance to the nearest free site
     //===------------------------------------------------------------------===//
     std::sort(atomsToPlace.begin(), atomsToPlace.end(),
-              [](const auto& a, const auto& b) { return a.second < b.second; });
+              [](const auto& a, const auto& b) { return a.second > b.second; });
     //===------------------------------------------------------------------===//
     // Discretize the previous placement of the atoms to be placed
     //===------------------------------------------------------------------===//
@@ -1133,24 +1331,24 @@ private:
       atomsToPlaceWithRow.emplace_back(atom, std::pair{slm, r});
       atomsToPlaceWithColumn.emplace_back(atom, std::pair{slm, c});
     }
-    std::sort(atomsToPlaceWithRow.begin(), atomsToPlaceWithRow.end(),
-              [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
-                 const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
-                return a.second.first->location.second <
-                           b.second.first->location.second ||
-                       (a.second.first->location.second ==
-                            b.second.first->location.second &&
-                        a.second.second < b.second.second);
-              });
-    std::sort(atomsToPlaceWithColumn.begin(), atomsToPlaceWithColumn.end(),
-              [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
-                 const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
-                return a.second.first->location.first <
-                           b.second.first->location.first ||
-                       (a.second.first->location.first ==
-                            b.second.first->location.first &&
-                        a.second.second < b.second.second);
-              });
+    std::sort(
+        atomsToPlaceWithRow.begin(), atomsToPlaceWithRow.end(),
+        [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
+           const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
+          return a.second.first->location.second +
+                     a.second.first->siteSeparation.second * a.second.second <
+                 b.second.first->location.second +
+                     b.second.first->siteSeparation.second * b.second.second;
+        });
+    std::sort(
+        atomsToPlaceWithColumn.begin(), atomsToPlaceWithColumn.end(),
+        [](const std::pair<size_t, std::pair<const SLM*, size_t>>& a,
+           const std::pair<size_t, std::pair<const SLM*, size_t>>& b) {
+          return a.second.first->location.first +
+                     a.second.first->siteSeparation.first * a.second.second <
+                 b.second.first->location.first +
+                     b.second.first->siteSeparation.first * b.second.second;
+        });
     std::vector<std::pair<const SLM*, size_t>> startRows;
     std::vector<std::pair<const SLM*, size_t>> startColumns;
     std::vector<size_t> atomsStartRow(nAtoms);
@@ -1172,8 +1370,8 @@ private:
     currentSitesForEachAtom.clear();
     currentSitesForEachAtom.reserve(nAtoms);
     for (size_t atom = 0; atom < nAtoms; ++atom) {
-      currentSitesForEachAtom.emplace_back(
-          std::pair{atomsStartRow[atom], atomsStartColumn[atom]});
+      currentSitesForEachAtom.emplace_back(atomsStartRow[atom],
+                                           atomsStartColumn[atom]);
     }
     //===------------------------------------------------------------------===//
     // Discretize the free sites for the atoms to be placed
@@ -1281,9 +1479,10 @@ private:
                        std::vector<double>{},
                        std::vector<std::map<size_t, size_t>>{},
                        std::vector<double>{}); // root node
-    const Node& finalNode = *aStarTreeSearch(*nodes.front(), getNeighbors,
-                                             isGoal, getCost, getHeuristic)
-                                 .back();
+    const Node& finalNode =
+        *aStarTreeSearch(*nodes.front(), getQubitPlacementNeighbors, isGoal,
+                         getCost, getHeuristic)
+             .back();
     //===------------------------------------------------------------------===//
     // Extract the final mapping
     //===------------------------------------------------------------------===//
@@ -1316,11 +1515,12 @@ private:
     // Store the final mapping
     //===------------------------------------------------------------------===//
     std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
-        nextPlacement = static_cast<T*>(this)->getQubitMapping().emplace_back(
-            previousPlacement);
+        currentPlacement =
+            static_cast<T*>(this)->getQubitMapping().emplace_back(
+                previousPlacement);
     for (size_t i = 0; i < nAtoms; ++i) {
       const auto atom = atomsToPlace[i].first;
-      nextPlacement[atom] =
+      currentPlacement[atom] =
           std::tuple{finalSLMs[i], finalRows[i], finalColumns[i]};
     }
   }
@@ -1368,8 +1568,17 @@ private:
   /// The set of free sites per atom may be limited by a window size that
   /// restricts the sites to be considered to be within the window around the
   /// very nearest site.
-  std::vector<std::vector<std::pair<std::pair<size_t, size_t>, double>>>
+  std::vector<std::vector<std::pair<std::pair<size_t, size_t>, float>>>
       nearestFreeSitesForEachAtom;
+
+  /// todo
+  std::vector<std::vector<
+      std::pair<std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>>,
+                std::pair<float, float>>>>
+      nearestFreeSitesForEachGate;
+
+  /// todo
+  std::vector<std::pair<size_t, size_t>> atomsOfGatesToBePlaced;
 
   auto isGoal(const Node& node) -> bool {
     return node.consumedFreeSites.size() == nAtoms;
@@ -1411,7 +1620,7 @@ private:
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
   double getHeuristic(const Node& node) {
-    double maxDistanceOfUnplacedAtom = 0.0;
+    float maxDistanceOfUnplacedAtom = 0.0;
     for (size_t i = node.consumedFreeSites.size() + 1; i < nAtoms; ++i) {
       for (const auto& site : nearestFreeSitesForEachAtom[i]) {
         if (node.consumedFreeSites.find(site.first) ==
@@ -1442,14 +1651,15 @@ private:
   /// existing groups.
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
-  auto getNeighbors(const Node& node) -> std::vector<const Node*> {
+  auto getQubitPlacementNeighbors(const Node& node)
+      -> std::vector<const Node*> {
     size_t atomToBePlacedNext = node.consumedFreeSites.size();
     std::vector<const Node*> neighbors;
     for (const auto [site, distance] :
          nearestFreeSitesForEachAtom[atomToBePlacedNext]) {
       // assume nodes is of type std::vector<std::unique_ptr<Node>>
       // make a copy of node, the parent of neighbor
-      Node& neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
+      Node& neighbor = *nodes.emplace_back(std::make_unique<Node>(node));
       neighbor.maxDistanceOfPlacedAtom =
           std::max(node.maxDistanceOfPlacedAtom, distance);
       neighbor.consumedFreeSites.emplace(site);
@@ -1457,111 +1667,143 @@ private:
       // check whether the current placement is compatible with any existing
       // horizontal group
       //===------------------------------------------------------------------===//
-      const size_t keyRow = currentSitesForEachAtom[atomToBePlacedNext].first;
-      const size_t valueRow = site.first;
-      size_t i = 0;
-      for (auto& hGroup : neighbor.hGroups) {
-        auto it = hGroup.lower_bound(keyRow);
-        if (it != hGroup.end()) {
-          // an assignment for this key already exists in this group
-          const auto& [upperKey, upperValue] = *it;
-          if (upperKey == keyRow) {
-            if (upperValue == valueRow) {
-              // new placement is compatible with this group
-              break;
-            }
-          } else { // if (upperKey > key)
-            if (it != hGroup.begin()) {
-              // it can be safely decremented
-              --it;
-              const auto& [_, lowerValue] = *it;
-              if (lowerValue < valueRow && valueRow < upperValue) {
-                // new placement is compatible with this group
-                break;
-              }
-            } else { // if (it == hGroup.begin())
-              if (valueRow < upperValue) {
-                // new placement is compatible with this group
-                break;
-              }
-            }
-          }
-        } else { // if (it == hGroup.end())
-          // it can be safely decremented because group must contain
-          // at least one element
-          --it;
-          const auto& [_, lowerValue] = *it;
-          if (lowerValue < valueRow) {
-            // new placement is compatible with this group
-            break;
-          }
-        }
-        ++i;
-      }
-      if (i == neighbor.hGroups.size()) {
-        // no compatible group could be found and a new group is created
-        neighbor.hGroups.emplace_back();
-        neighbor.maxDistancesOfPlacedAtomsPerHGroup.emplace_back(0.0);
-      }
-      neighbor.hGroups[i].emplace(keyRow, valueRow);
-      neighbor.maxDistancesOfPlacedAtomsPerHGroup[i] =
-          std::max(neighbor.maxDistancesOfPlacedAtomsPerHGroup[i], distance);
+      checkCompatibilityAndAddPlacement(
+          currentSitesForEachAtom[atomToBePlacedNext].first, site.first,
+          distance, neighbor.hGroups,
+          neighbor.maxDistancesOfPlacedAtomsPerHGroup);
       //===------------------------------------------------------------------===//
       // do the same for the vertical group
       //===------------------------------------------------------------------===//
-      const size_t keyColumn =
-          currentSitesForEachAtom[atomToBePlacedNext].second;
-      const size_t valueColumn = site.second;
-      size_t j = 0;
-      for (auto& vGroup : neighbor.vGroups) {
-        auto it = vGroup.lower_bound(keyColumn);
-        if (it != vGroup.end()) {
-          // an assignment for this key already exists in this group
-          const auto& [upperKey, upperValue] = *it;
-          if (upperKey == keyColumn) {
-            if (upperValue == valueColumn) {
-              // new placement is compatible with this group
-              break;
-            }
-          } else { // if (upperKey > key)
-            if (it != vGroup.begin()) {
-              // it can be safely decremented
-              --it;
-              const auto& [_, lowerValue] = *it;
-              if (lowerValue < valueColumn && valueColumn < upperValue) {
-                // new placement is compatible with this group
-                break;
-              }
-            } else { // if (it == vGroup.begin())
-              if (valueColumn < upperValue) {
-                // new placement is compatible with this group
-                break;
-              }
-            }
-          }
-        } else { // if (it == vGroup.end())
-          // it can be safely decremented because group must contain
-          // at least one element
-          --it;
-          const auto& [_, lowerValue] = *it;
-          if (lowerValue < valueColumn) {
-            // new placement is compatible with this group
-            break;
-          }
-        }
-        ++j;
-      }
-      if (j == neighbor.vGroups.size()) {
-        // no compatible group could be found and a new group is created
-        neighbor.vGroups.emplace_back();
-        neighbor.maxDistancesOfPlacedAtomsPerVGroup.emplace_back(0.0);
-      }
-      neighbor.vGroups[j].emplace(keyColumn, valueColumn);
-      neighbor.maxDistancesOfPlacedAtomsPerVGroup[j] =
-          std::max(neighbor.maxDistancesOfPlacedAtomsPerVGroup[j], distance);
+      checkCompatibilityAndAddPlacement(
+          currentSitesForEachAtom[atomToBePlacedNext].second, site.second,
+          distance, neighbor.vGroups,
+          neighbor.maxDistancesOfPlacedAtomsPerVGroup);
       //===------------------------------------------------------------------===//
       neighbors.emplace_back(neighbor);
     }
+  }
+
+  /// @brief Return pointers to all neighbors of the given node.
+  /// @details When calling this function, the neighbors are allocated
+  /// permanently such that (1) the returned pointers remain valid when the
+  /// execution returned from this function and (2) not all nodes in the tree
+  /// have to be created before they are needed.
+  /// Hence, nodes are only created on demand in this function.
+  /// Consequently, this function must only be called once per node.
+  /// Otherwise, neighbors for the same node are created twice.
+  /// @par
+  /// When creating a new node, the horizontal and vertical groups are checked
+  /// whether the new corresponding placement is compatible with any of the
+  /// existing groups.
+  /// If yes, the new placement is added to the respective group and otherwise,
+  /// a new group is formed with the new placement.
+  auto getGatePlacementNeighbors(const Node& node) -> std::vector<const Node*> {
+    const auto gateToBePlacedNext = node.consumedFreeSites.size();
+    const auto& atomsToBePlacedNext =
+        atomsOfGatesToBePlaced[gateToBePlacedNext];
+    std::vector<const Node*> neighbors;
+    for (const auto& [pair, distances] :
+         nearestFreeSitesForEachGate[gateToBePlacedNext]) {
+      const auto& [leftSite, rightSite] = pair;
+      // assume nodes is of type std::vector<std::unique_ptr<Node>>
+      // make a copy of node, the parent of neighbor
+      Node& neighbor = *nodes.emplace_back(std::make_unique<Node>(node));
+      neighbor.maxDistanceOfPlacedAtom =
+          std::max(node.maxDistanceOfPlacedAtom,
+                   std::max(distances.first, distances.second));
+      neighbor.consumedFreeSites.emplace(leftSite);
+      neighbor.consumedFreeSites.emplace(rightSite);
+      //===------------------------------------------------------------------===//
+      // Get the current placement of the atoms that must be placed next
+      //===------------------------------------------------------------------===//
+      const auto& currentSiteOfLeftAtom =
+          currentSitesForEachAtom[atomsToBePlacedNext.first];
+      const auto& currentSiteOfRightAtom =
+          currentSitesForEachAtom[atomsToBePlacedNext.second];
+      //===------------------------------------------------------------------===//
+      // check whether the current placement is compatible with any existing
+      // horizontal group
+      //===------------------------------------------------------------------===//
+      checkCompatibilityAndAddPlacement(
+          currentSiteOfLeftAtom.first, leftSite.first, distances.first,
+          neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
+      checkCompatibilityAndAddPlacement(
+          currentSiteOfRightAtom.first, rightSite.first, distances.second,
+          neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
+      //===------------------------------------------------------------------===//
+      // do the same for the vertical group
+      //===------------------------------------------------------------------===//
+      checkCompatibilityAndAddPlacement(
+          currentSiteOfLeftAtom.second, leftSite.second, distances.first,
+          neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
+      checkCompatibilityAndAddPlacement(
+          currentSiteOfRightAtom.second, rightSite.second, distances.second,
+          neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
+      //===------------------------------------------------------------------===//
+      neighbors.emplace_back(neighbor);
+    }
+  }
+
+  /// Checks for the new placement of the atom whether it is compatible with
+  /// one of the existing groups. If yes, the new placement is added to the
+  /// respective group. Otherwise, a new group is formed with the new placement.
+  /// @param key the start index of the new placement
+  /// @param value the target index of the new placement
+  /// @param groups the groups to which the new placement can be added
+  /// @param maxDistances the maximum distances of placed atoms in each group
+  /// @return true if the new placement could be added to an existing group
+  auto checkCompatibilityAndAddPlacement(
+      const size_t key, const size_t value, const float distance,
+      std::vector<std::map<uint16_t, uint16_t>>& groups,
+      std::vector<float>& maxDistances) -> bool {
+    size_t i = 0;
+    for (auto& hGroup : groups) {
+      auto it = hGroup.lower_bound(key);
+      if (it != hGroup.end()) {
+        // an assignment for this key already exists in this group
+        const auto& [upperKey, upperValue] = *it;
+        if (upperKey == key) {
+          if (upperValue == value) {
+            // new placement is compatible with this group
+            break;
+          }
+        } else { // if (upperKey > key)
+          if (it != hGroup.begin()) {
+            // it can be safely decremented
+            --it;
+            const auto& [_, lowerValue] = *it;
+            if (lowerValue < value && value < upperValue) {
+              // new placement is compatible with this group
+              break;
+            }
+          } else { // if (it == hGroup.begin())
+            if (value < upperValue) {
+              // new placement is compatible with this group
+              break;
+            }
+          }
+        }
+      } else { // if (it == hGroup.end())
+        // it can be safely decremented because group must contain
+        // at least one element
+        --it;
+        const auto& [_, lowerValue] = *it;
+        if (lowerValue < value) {
+          // new placement is compatible with this group
+          break;
+        }
+      }
+      ++i;
+    }
+    if (i == groups.size()) {
+      // no compatible group could be found and a new group is created
+      groups.emplace_back().emplace(key, value);
+      maxDistances.emplace_back(distance);
+      return false;
+    }
+    groups[i].emplace(key, value);
+    maxDistances[i] = std::max(maxDistances[i], distance);
+    return true;
   }
 };
 } // namespace na

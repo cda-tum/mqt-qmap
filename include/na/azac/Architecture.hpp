@@ -7,6 +7,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -50,16 +51,16 @@ struct SLM {
 } // namespace na
 
 namespace std {
-template <> struct hash<const na::SLM*> {
-  size_t operator()(const na::SLM* slm) const noexcept {
-    if (slm == nullptr) {
-      return 0;
-    }
-    const size_t h1 = hash<size_t>{}(slm->location.first);
-    const size_t h2 = hash<size_t>{}(slm->location.second);
-    return h1 ^ (h2 << 1);
-  }
-};
+// template <> struct hash<const na::SLM*> {
+//   size_t operator()(const na::SLM* slm) const noexcept {
+//     if (slm == nullptr) {
+//       return 0;
+//     }
+//     const size_t h1 = hash<size_t>{}(slm->location.first);
+//     const size_t h2 = hash<size_t>{}(slm->location.second);
+//     return h1 ^ (h2 << 1);
+//   }
+// };
 
 template <> struct hash<tuple<const na::SLM*, size_t, size_t>> {
   size_t
@@ -177,12 +178,7 @@ struct Architecture {
   /// @see isValidSlmPosition
   isValidSlmPosition(const std::tuple<const SLM*, const std::size_t,
                                       const std::size_t>& t) const -> bool {
-    return isValidSlmPosition(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  /// @see isValidSlmPosition
-  auto isValidSlmPosition(const SLM* const slm, const std::size_t r,
-                          const std::size_t c) const -> bool {
-    return isValidSlmPosition(*slm, r, c);
+    return isValidSlmPosition(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
   }
   //===--------------------------------------------------------------------===//
   /// Compute the exact location of the SLM site given the row and column
@@ -193,13 +189,7 @@ struct Architecture {
   auto exactSlmLocation(const std::tuple<const SLM*, const std::size_t,
                                          const std::size_t>& t) const
       -> std::pair<std::size_t, std::size_t> {
-    return exactSlmLocation(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  /// @see exactSlmLocation
-  auto exactSlmLocation(const SLM* const slm, const std::size_t r,
-                        const std::size_t c) const
-      -> std::pair<std::size_t, std::size_t> {
-    return exactSlmLocation(*slm, r, c);
+    return exactSlmLocation(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
   }
   //===--------------------------------------------------------------------===//
   /// Compute the site region for entanglement zone and the nearest Rydberg site
@@ -217,14 +207,8 @@ struct Architecture {
       const std::tuple<const SLM*, const std::size_t, const std::size_t>& t1,
       const std::tuple<const SLM*, const std::size_t, const std::size_t>& t2)
       const -> double {
-    return distance(std::get<0>(t1), std::get<1>(t1), std::get<2>(t1),
-                    std::get<0>(t2), std::get<1>(t2), std::get<2>(t2));
-  }
-  /// @see distance
-  auto distance(const SLM* const idx1, const std::size_t r1,
-                const std::size_t c1, const SLM* const idx2,
-                const std::size_t r2, const std::size_t c2) const -> double {
-    return distance(*idx1, r1, c1, *idx2, r2, c2);
+    return distance(*std::get<0>(t1), std::get<1>(t1), std::get<2>(t1),
+                    *std::get<0>(t2), std::get<1>(t2), std::get<2>(t2));
   }
   //===--------------------------------------------------------------------===//
   /// return the nearest storage site for an entanglement site
@@ -234,13 +218,7 @@ struct Architecture {
   auto nearestStorageSite(const std::tuple<const SLM*, const std::size_t,
                                            const std::size_t>& t) const
       -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestStorageSite(std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  /// @see nearestStorageSite
-  auto nearestStorageSite(const SLM* const slm, const std::size_t r,
-                          const std::size_t c) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestStorageSite(*slm, r, c);
+    return nearestStorageSite(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
   }
   //===--------------------------------------------------------------------===//
   /// return the nearest storage sites in ascending order by their distance for
@@ -252,54 +230,37 @@ struct Architecture {
   auto nearestStorageSitesAsc(const std::tuple<const SLM*, const std::size_t,
                                                const std::size_t>& t) const
       -> const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>& {
-    return nearestStorageSitesAsc(std::get<0>(t), std::get<1>(t),
+    return nearestStorageSitesAsc(*std::get<0>(t), std::get<1>(t),
                                   std::get<2>(t));
-  }
-  /// @see nearestStorageSitesAsc
-  auto nearestStorageSitesAsc(const SLM* const slm, const std::size_t r,
-                              const std::size_t c) const
-      -> const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>& {
-    return nearestStorageSitesAsc(*slm, r, c);
   }
   //===--------------------------------------------------------------------===//
   /// return the nearest Rydberg site for a qubit in the storage zone
-  auto nearestEntanglementSite(const SLM* idx, std::size_t r,
+  auto nearestEntanglementSite(const SLM& idx, std::size_t r,
                                std::size_t c) const
       -> const std::tuple<const SLM*, std::size_t, std::size_t>&;
   /// @see nearestEntanglementSite
   auto nearestEntanglementSite(
       const std::tuple<const SLM*, std::size_t, std::size_t>& t) const
       -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestEntanglementSite(std::get<0>(t), std::get<1>(t),
+    return nearestEntanglementSite(*std::get<0>(t), std::get<1>(t),
                                    std::get<2>(t));
-  }
-  /// @see nearestEntanglementSite
-  auto nearestEntanglementSite(const SLM& slm, const std::size_t r,
-                               const std::size_t c) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestEntanglementSite(&slm, r, c);
   }
   //===--------------------------------------------------------------------===//
   /// return the distance nearest Rydberg site for a qubit in the storage zone
-  auto nearestEntanglementSiteDistance(const SLM* idx, std::size_t r,
+  auto nearestEntanglementSiteDistance(const SLM& idx, std::size_t r,
                                        std::size_t c) const -> double;
   /// @see nearestEntanglementSiteDistance
   auto nearestEntanglementSiteDistance(
       const std::tuple<const SLM*, std::size_t, std::size_t>& t1) const
       -> double {
-    return nearestEntanglementSiteDistance(std::get<0>(t1), std::get<1>(t1),
+    return nearestEntanglementSiteDistance(*std::get<0>(t1), std::get<1>(t1),
                                            std::get<2>(t1));
-  }
-  /// @see nearestEntanglementSiteDistance
-  auto nearestEntanglementSiteDistance(const SLM& slm, const std::size_t r,
-                                       const std::size_t c) const -> double {
-    return nearestEntanglementSiteDistance(&slm, r, c);
   }
   //===--------------------------------------------------------------------===//
   /// return the nearest Rydberg site for two qubit in the storage zone
   /// based on the position of two qubits
-  auto nearestEntanglementSite(const SLM* idx1, std::size_t r1, std::size_t c1,
-                               const SLM* idx2, std::size_t r2,
+  auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
+                               const SLM& idx2, std::size_t r2,
                                std::size_t c2) const
       -> std::tuple<const SLM*, std::size_t, std::size_t>;
   /// @see nearestEntanglementSite
@@ -307,24 +268,17 @@ struct Architecture {
       const std::tuple<const SLM*, std::size_t, std::size_t>& t1,
       const std::tuple<const SLM*, std::size_t, std::size_t>& t2) const
       -> std::tuple<const SLM*, std::size_t, std::size_t> {
-    return nearestEntanglementSite(std::get<0>(t1), std::get<1>(t1),
-                                   std::get<2>(t1), std::get<0>(t2),
+    return nearestEntanglementSite(*std::get<0>(t1), std::get<1>(t1),
+                                   std::get<2>(t1), *std::get<0>(t2),
                                    std::get<1>(t2), std::get<2>(t2));
-  }
-  /// @see nearestEntanglementSite
-  auto nearestEntanglementSite(const SLM& idx1, const std::size_t r1,
-                               const std::size_t c1, const SLM& idx2,
-                               const std::size_t r2, const std::size_t c2) const
-      -> std::tuple<const SLM*, std::size_t, std::size_t> {
-    return nearestEntanglementSite(&idx1, r1, c1, &idx2, r2, c2);
   }
   //===--------------------------------------------------------------------===//
   /// return the maximum/sum of the distance to move two qubits to one rydberg
   /// site. If the two qubits are in the same row, i.e., can be picked up
   /// simultaneously, the maximum distance is returned. Otherwise, the
   /// sum of the distances is returned.
-  auto nearestEntanglementSiteDistance(const SLM* slm1, std::size_t r1,
-                                       std::size_t c1, const SLM* slm2,
+  auto nearestEntanglementSiteDistance(const SLM& slm1, std::size_t r1,
+                                       std::size_t c1, const SLM& slm2,
                                        std::size_t r2, std::size_t c2) const
       -> double;
   /// @see nearestEntanglementSiteDistance
@@ -332,16 +286,9 @@ struct Architecture {
       const std::tuple<const SLM*, std::size_t, std::size_t>& t1,
       const std::tuple<const SLM*, std::size_t, std::size_t>& t2) const
       -> double {
-    return nearestEntanglementSiteDistance(std::get<0>(t1), std::get<1>(t1),
-                                           std::get<2>(t1), std::get<0>(t2),
+    return nearestEntanglementSiteDistance(*std::get<0>(t1), std::get<1>(t1),
+                                           std::get<2>(t1), *std::get<0>(t2),
                                            std::get<1>(t2), std::get<2>(t2));
-  }
-  /// @see nearestEntanglementSiteDistance
-  auto nearestEntanglementSiteDistance(const SLM& slm1, const std::size_t r1,
-                                       const std::size_t c1, const SLM& slm2,
-                                       const std::size_t r2,
-                                       const std::size_t c2) const -> double {
-    return nearestEntanglementSiteDistance(&slm1, r1, c1, &slm2, r2, c2);
   }
   //===--------------------------------------------------------------------===//
   /// Returns the time to move from one location to another location
@@ -352,6 +299,17 @@ struct Architecture {
                         const std::pair<std::size_t, std::size_t>& p2) const
       -> double {
     return movementDuration(p1.first, p1.second, p2.first, p2.second);
+  }
+  //===--------------------------------------------------------------------===//
+  /// Returns the other site of a pair of entanglement sites
+  auto otherEntanglementSite(const SLM& slm, std::size_t r, std::size_t c) const
+      -> std::tuple<const SLM*, std::size_t, std::size_t>;
+  /// @see otherEntanglementSite
+  auto otherEntanglementSite(
+      const std::tuple<const SLM*, std::size_t, std::size_t>& t) const
+      -> std::tuple<const SLM*, std::size_t, std::size_t> {
+    return otherEntanglementSite(*std::get<0>(t), std::get<1>(t),
+                                 std::get<2>(t));
   }
 };
 } // namespace na

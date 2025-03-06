@@ -492,25 +492,26 @@ auto Architecture::nearestStorageSitesAsc(const SLM& slm, std::size_t r,
     -> const std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>& {
   return entanglementToNearestStorageSite.at(&slm)[r][c];
 }
-auto Architecture::nearestEntanglementSite(const SLM* const idx,
-                                           const std::size_t r,
+auto Architecture::nearestEntanglementSite(const SLM& idx, const std::size_t r,
                                            const std::size_t c) const
     -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-  return storageToNearestEntanglementSite.at(idx)[r][c].front();
+  return storageToNearestEntanglementSite.at(&idx)[r][c].front();
 }
-auto Architecture::nearestEntanglementSiteDistance(const SLM* const idx,
+auto Architecture::nearestEntanglementSiteDistance(const SLM& idx,
                                                    const std::size_t r,
                                                    const std::size_t c) const
     -> double {
-  return distance({idx, r, c},
-                  storageToNearestEntanglementSite.at(idx)[r][c].front());
+  return distance({&idx, r, c},
+                  storageToNearestEntanglementSite.at(&idx)[r][c].front());
 }
 auto Architecture::nearestEntanglementSite(
-    const SLM* const idx1, const std::size_t r1, const std::size_t c1,
-    const SLM* const idx2, const std::size_t r2, const std::size_t c2) const
+    const SLM& idx1, const std::size_t r1, const std::size_t c1,
+    const SLM& idx2, const std::size_t r2, const std::size_t c2) const
     -> std::tuple<const SLM*, std::size_t, std::size_t> {
-  const auto& site1 = storageToNearestEntanglementSite.at(idx1)[r1][c1].front();
-  const auto& site2 = storageToNearestEntanglementSite.at(idx2)[r2][c2].front();
+  const auto& site1 =
+      storageToNearestEntanglementSite.at(&idx1)[r1][c1].front();
+  const auto& site2 =
+      storageToNearestEntanglementSite.at(&idx2)[r2][c2].front();
   // the nearest entanglement zone for both qubits is the same
   if (site1 == site2) {
     return site1;
@@ -524,15 +525,15 @@ auto Architecture::nearestEntanglementSite(
       "zone. This feature is not supported yet.");
 }
 auto Architecture::nearestEntanglementSiteDistance(
-    const SLM* const slm1, const std::size_t r1, const std::size_t c1,
-    const SLM* const slm2, const std::size_t r2, const std::size_t c2) const
+    const SLM& slm1, const std::size_t r1, const std::size_t c1,
+    const SLM& slm2, const std::size_t r2, const std::size_t c2) const
     -> double {
   const auto& storageSite1 = exactSlmLocation(slm1, r1, c1);
   const auto& storageSite2 = exactSlmLocation(slm2, r2, c2);
   const auto& entanglementSite =
       exactSlmLocation(nearestEntanglementSite(slm1, r1, c1, slm2, r2, c2));
   auto dis = std::numeric_limits<double>::max();
-  if (r1 == r2 and slm1 == slm2) {
+  if (r1 == r2 and &slm1 == &slm2) {
     dis = std::min(std::max(na::distance(storageSite1, entanglementSite),
                             na::distance(storageSite2, entanglementSite)),
                    dis);
@@ -551,6 +552,19 @@ auto Architecture::movementDuration(const std::size_t x1, const std::size_t y1,
   const auto d = na::distance(std::pair{x1, y1}, std::pair{x2, y2});
   const auto t = std::sqrt(d / a);
   return t;
+}
+auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
+                                         std::size_t c) const
+    -> std::tuple<const SLM*, std::size_t, std::size_t> {
+  assert(slm.isEntanglement());
+  assert(slm.entanglementZone != nullptr);
+  assert(slm.entanglementZone->size() == 2);
+  const auto& otherSlm = slm.entanglementZone->front().get() == &slm
+                             ? *slm.entanglementZone->back()
+                             : *slm.entanglementZone->front();
+  assert(slm.nCols == otherSlm.nCols);
+  assert(slm.nRows == otherSlm.nRows);
+  return {&otherSlm, r, c};
 }
 
 } // namespace na
