@@ -1178,13 +1178,18 @@ private:
     //===------------------------------------------------------------------===//
     // Discretize the free sites for the atoms to be placed
     //===------------------------------------------------------------------===//
-    std::unordered_map<const SLM*, std::vector<size_t>> rowsWithFreeSites;
-    std::unordered_map<const SLM*, std::vector<size_t>> columnsWithFreeSites;
+    std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
+        rowsWithFreeSites;
+    std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
+        columnsWithFreeSites;
     size_t nDiscreteRows = 0;
     size_t nDiscreteColumns = 0;
     for (const auto& storageSlm : architecture.storageZones) {
       // find rows with free sites
-      std::vector<size_t> rows;
+      std::unordered_map<size_t, size_t>& rows =
+          rowsWithFreeSites
+              .emplace(storageSlm.get(), std::unordered_map<size_t, size_t>{})
+              .first->second;
       for (size_t r = 0; r < storageSlm->nRows; ++r) {
         bool freeRow = false;
         for (size_t c = 0; c < storageSlm->nCols; ++c) {
@@ -1195,12 +1200,14 @@ private:
           }
         }
         if (freeRow) {
-          rows.emplace_back(++nDiscreteRows);
+          rows.emplace(r, ++nDiscreteRows);
         }
       }
-      rowsWithFreeSites.emplace(storageSlm.get(), std::move(rows));
       // find columns with free sites
-      std::vector<size_t> columns;
+      std::unordered_map<size_t, size_t>& columns =
+          columnsWithFreeSites
+              .emplace(storageSlm.get(), std::unordered_map<size_t, size_t>{})
+              .first->second;
       for (size_t c = 0; c < storageSlm->nCols; ++c) {
         bool freeColumn = false;
         for (size_t r = 0; r < storageSlm->nRows; ++r) {
@@ -1211,10 +1218,27 @@ private:
           }
         }
         if (freeColumn) {
-          columns.emplace_back(++nDiscreteColumns);
+          columns.emplace(c, ++nDiscreteColumns);
         }
       }
-      columnsWithFreeSites.emplace(storageSlm.get(), std::move(columns));
+    }
+    //===------------------------------------------------------------------===//
+    // Provide the above mapping of SLMs and row/columns to their discrete
+    // indices in the reverse direction
+    //===------------------------------------------------------------------===//
+    std::unordered_map<size_t, std::pair<const SLM*, size_t>>
+        discreteTargetRows;
+    std::unordered_map<size_t, std::pair<const SLM*, size_t>>
+        discreteTargetColumns;
+    for (const auto& [slm, rows] : rowsWithFreeSites) {
+      for (const auto& [r, id] : rows) {
+        discreteTargetRows.emplace(id, std::pair{slm, r});
+      }
+    }
+    for (const auto& [slm, columns] : columnsWithFreeSites) {
+      for (const auto& [c, id] : columns) {
+        discreteTargetColumns.emplace(id, std::pair{slm, c});
+      }
     }
     //===------------------------------------------------------------------===//
     // Initialize the nearest free sites for each atom
@@ -1252,7 +1276,7 @@ private:
     // Run the A* algorithm
     //===------------------------------------------------------------------===//
     nodes.clear();
-    nodes.emplace_back(0, 0.0, std::unordered_set<std::pair<size_t, size_t>>{},
+    nodes.emplace_back(0.0, std::unordered_set<std::pair<size_t, size_t>>{},
                        std::vector<std::map<size_t, size_t>>{},
                        std::vector<double>{},
                        std::vector<std::map<size_t, size_t>>{},
@@ -1263,6 +1287,42 @@ private:
     //===------------------------------------------------------------------===//
     // Extract the final mapping
     //===------------------------------------------------------------------===//
+    // the following two maps combine all hGroups and vGroups of the final node,
+    // respectively, and hence serve as a mapping from rows and columns from the
+    // previous placement to rows and columns of the next placement,
+    // respectively.
+    std::unordered_map<size_t, size_t> rowMapping;
+    std::unordered_map<size_t, size_t> columnMapping;
+    for (const auto& hGroup : finalNode.hGroups) {
+      rowMapping.insert(hGroup.begin(), hGroup.end());
+    }
+    for (const auto& vGroup : finalNode.vGroups) {
+      columnMapping.insert(vGroup.begin(), vGroup.end());
+    }
+    std::vector<const SLM*> finalSLMs;
+    std::vector<size_t> finalRows;
+    std::vector<size_t> finalColumns;
+    for (size_t i = 0; i < nAtoms; ++i) {
+      const auto& [startRow, startColumn] = currentSitesForEachAtom[i];
+      const auto targetRow = rowMapping.at(startRow);
+      const auto targetColumn = columnMapping.at(startColumn);
+      finalSLMs.emplace_back(discreteTargetRows.at(targetRow).first);
+      assert(discreteTargetRows.at(targetRow).first ==
+             discreteTargetColumns.at(targetColumn).first);
+      finalRows.emplace_back(discreteTargetRows.at(targetRow).second);
+      finalColumns.emplace_back(discreteTargetColumns.at(targetColumn).second);
+    }
+    //===------------------------------------------------------------------===//
+    // Store the final mapping
+    //===------------------------------------------------------------------===//
+    std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>&
+        nextPlacement = static_cast<T*>(this)->getQubitMapping().emplace_back(
+            previousPlacement);
+    for (size_t i = 0; i < nAtoms; ++i) {
+      const auto atom = atomsToPlace[i].first;
+      nextPlacement[atom] =
+          std::tuple{finalSLMs[i], finalRows[i], finalColumns[i]};
+    }
   }
 
   /// A node representing one stage in the process of placing all atoms
@@ -1270,24 +1330,22 @@ private:
   /// until a new mapping is found satisfying all constraints of the next
   /// stage
   struct Node {
-    /// the level the node is at in the search tree
-    size_t level = 0;
     /// the maximum distance an already placed atom must travel to its
     /// target location
-    double maxDistanceOfPlacedAtom = 0.0;
+    float maxDistanceOfPlacedAtom = 0.0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
-    std::unordered_set<std::pair<size_t, size_t>> consumedFreeSites{};
+    std::unordered_set<std::pair<uint16_t, uint16_t>> consumedFreeSites{};
     /// a binary search tree representing the horizontal groups
     /// @see getNeighbors for more details
-    std::vector<std::map<size_t, size_t>> hGroups;
+    std::vector<std::map<uint16_t, uint16_t>> hGroups;
     /// the maximum distance of placed atoms in every group to their
     /// target location
-    std::vector<double> maxDistancesOfPlacedAtomsPerHGroup;
+    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
     /// @see hGroups
-    std::vector<std::map<size_t, size_t>> vGroups;
+    std::vector<std::map<uint16_t, uint16_t>> vGroups;
     /// @see maxDistancesOfPlacedAtomsPerHGroup
-    std::vector<double> maxDistancesOfPlacedAtomsPerVGroup;
+    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
   };
 
   /// A list of all nodes that have been created so far.
@@ -1313,7 +1371,9 @@ private:
   std::vector<std::vector<std::pair<std::pair<size_t, size_t>, double>>>
       nearestFreeSitesForEachAtom;
 
-  auto isGoal(const Node& node) -> bool { return node.level == nAtoms; }
+  auto isGoal(const Node& node) -> bool {
+    return node.consumedFreeSites.size() == nAtoms;
+  }
 
   /// @brief Returns the cost of a node, i.e., the total cost to reach that node
   /// from the start node.
@@ -1352,7 +1412,7 @@ private:
   /// placed atoms must travel to their determined target site.
   double getHeuristic(const Node& node) {
     double maxDistanceOfUnplacedAtom = 0.0;
-    for (size_t i = node.level + 1; i < nAtoms; ++i) {
+    for (size_t i = node.consumedFreeSites.size() + 1; i < nAtoms; ++i) {
       for (const auto& site : nearestFreeSitesForEachAtom[i]) {
         if (node.consumedFreeSites.find(site.first) ==
             node.consumedFreeSites.end()) {
@@ -1390,7 +1450,6 @@ private:
       // assume nodes is of type std::vector<std::unique_ptr<Node>>
       // make a copy of node, the parent of neighbor
       Node& neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
-      ++neighbor.level;
       neighbor.maxDistanceOfPlacedAtom =
           std::max(node.maxDistanceOfPlacedAtom, distance);
       neighbor.consumedFreeSites.emplace(site);
