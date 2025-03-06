@@ -1169,6 +1169,12 @@ private:
       }
       atomsStartColumn[atom] = startColumns.size() - 1;
     }
+    currentSitesForEachAtom.clear();
+    currentSitesForEachAtom.reserve(nAtoms);
+    for (size_t atom = 0; atom < nAtoms; ++atom) {
+      currentSitesForEachAtom.emplace_back(
+          std::pair{atomsStartRow[atom], atomsStartColumn[atom]});
+    }
     //===------------------------------------------------------------------===//
     // Discretize the free sites for the atoms to be placed
     //===------------------------------------------------------------------===//
@@ -1213,12 +1219,50 @@ private:
     //===------------------------------------------------------------------===//
     // Initialize the nearest free sites for each atom
     //===------------------------------------------------------------------===//
+    const bool useWindowedPlacement =
+        static_cast<T*>(this)->useWindowedPlacement;
+    const size_t windowHeight = static_cast<T*>(this)->windowHeight;
+    const size_t windowWidth = static_cast<T*>(this)->windowWidth;
     nearestFreeSitesForEachAtom.clear();
     nearestFreeSitesForEachAtom.reserve(atomsToPlace.size());
     for (const auto& [atom, _] : atomsToPlace) {
-      nearestFreeSitesForEachAtom.emplace_back(
-          architecture.nearestStorageSite(previousPlacement[atom]));
+      const auto& [nearestSLM, nearestRow, nearestCol] =
+          architecture.nearestStorageSite(previousPlacement[atom]);
+      auto& nearestFreeSitesForAtom =
+          nearestFreeSitesForEachAtom.emplace_back();
+      for (const auto& [slm, r, c] :
+           architecture.nearestStorageSitesAsc(previousPlacement[atom])) {
+        if (occupiedStorageSites.find({slm, r, c}) ==
+            occupiedStorageSites.end()) {
+          if (!useWindowedPlacement ||
+              (nearestSLM == slm &&
+               (r < nearestRow ? nearestRow - r : r - nearestRow) <=
+                   windowHeight &&
+               (c < nearestCol ? nearestCol - c : c - nearestCol) <=
+                   windowWidth)) {
+            nearestFreeSitesForAtom.emplace_back(
+                std::pair{rowsWithFreeSites[slm][r],
+                          columnsWithFreeSites[slm][c]},
+                architecture.distance(previousPlacement[atom], {slm, r, c}));
+          }
+        }
+      }
     }
+    //===------------------------------------------------------------------===//
+    // Run the A* algorithm
+    //===------------------------------------------------------------------===//
+    nodes.clear();
+    nodes.emplace_back(0, 0.0, std::unordered_set<std::pair<size_t, size_t>>{},
+                       std::vector<std::map<size_t, size_t>>{},
+                       std::vector<double>{},
+                       std::vector<std::map<size_t, size_t>>{},
+                       std::vector<double>{}); // root node
+    const Node& finalNode = *aStarTreeSearch(*nodes.front(), getNeighbors,
+                                             isGoal, getCost, getHeuristic)
+                                 .back();
+    //===------------------------------------------------------------------===//
+    // Extract the final mapping
+    //===------------------------------------------------------------------===//
   }
 
   /// A node representing one stage in the process of placing all atoms
@@ -1254,6 +1298,10 @@ private:
   /// The number of atoms that must be placed in this stage.
   size_t nAtoms = 0;
 
+  /// The discrete location of the atoms to be placed. The current location
+  /// is taken from the previous stage.
+  std::vector<std::pair<size_t, size_t>> currentSitesForEachAtom;
+
   /// The atoms that must be placed in this stage are numbered from 0 to
   /// nAtoms - 1.
   /// This vector lists all free sites for each atom ordered ascending by the
@@ -1264,6 +1312,8 @@ private:
   /// very nearest site.
   std::vector<std::vector<std::pair<std::pair<size_t, size_t>, double>>>
       nearestFreeSitesForEachAtom;
+
+  auto isGoal(const Node& node) -> bool { return node.level == nAtoms; }
 
   /// @brief Returns the cost of a node, i.e., the total cost to reach that node
   /// from the start node.
@@ -1312,7 +1362,10 @@ private:
         }
       }
     }
-    return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+    // We can multiply the difference by 2 because the cost function considers
+    // this difference for the horizontal and vertical groups.
+    return 2 *
+           std::sqrt(maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom);
   }
 
   /// @brief Return pointers to all neighbors of the given node.
@@ -1330,29 +1383,31 @@ private:
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
   auto getNeighbors(const Node& node) -> std::vector<const Node*> {
-    size_t atomToBePlacedNext = node.partialPlacement.size();
+    size_t atomToBePlacedNext = node.consumedFreeSites.size();
     std::vector<const Node*> neighbors;
-    for (const auto site : /* all possible target sites for the atom */) {
+    for (const auto [site, distance] :
+         nearestFreeSitesForEachAtom[atomToBePlacedNext]) {
       // assume nodes is of type std::vector<std::unique_ptr<Node>>
       // make a copy of node, the parent of neighbor
       Node& neighbor = nodes.emplace_back(std::make_unique<Node>(*node)).get();
       ++neighbor.level;
       neighbor.maxDistanceOfPlacedAtom =
-            std::max(node.maxDistanceOfPlacedAtom, /* distance for
-                current atom from its current site to `site` */);
+          std::max(node.maxDistanceOfPlacedAtom, distance);
       neighbor.consumedFreeSites.emplace(site);
-      // check whether the current placement is compatible with any
-      // existing group
-      const size_t key = /* the atom's row it is currently in */;
-      const size_t value = /* the atom's row it should be placed in */;
+      //===------------------------------------------------------------------===//
+      // check whether the current placement is compatible with any existing
+      // horizontal group
+      //===------------------------------------------------------------------===//
+      const size_t keyRow = currentSitesForEachAtom[atomToBePlacedNext].first;
+      const size_t valueRow = site.first;
       size_t i = 0;
       for (auto& hGroup : neighbor.hGroups) {
-        auto it = hGroup.lower_bound(key);
+        auto it = hGroup.lower_bound(keyRow);
         if (it != hGroup.end()) {
           // an assignment for this key already exists in this group
           const auto& [upperKey, upperValue] = *it;
-          if (upperKey == key) {
-            if (upperValue == value) {
+          if (upperKey == keyRow) {
+            if (upperValue == valueRow) {
               // new placement is compatible with this group
               break;
             }
@@ -1361,12 +1416,12 @@ private:
               // it can be safely decremented
               --it;
               const auto& [_, lowerValue] = *it;
-              if (lowerValue < value && value < upperValue) {
+              if (lowerValue < valueRow && valueRow < upperValue) {
                 // new placement is compatible with this group
                 break;
               }
             } else { // if (it == hGroup.begin())
-              if (value < upperValue) {
+              if (valueRow < upperValue) {
                 // new placement is compatible with this group
                 break;
               }
@@ -1377,7 +1432,7 @@ private:
           // at least one element
           --it;
           const auto& [_, lowerValue] = *it;
-          if (lowerValue < value) {
+          if (lowerValue < valueRow) {
             // new placement is compatible with this group
             break;
           }
@@ -1389,12 +1444,63 @@ private:
         neighbor.hGroups.emplace_back();
         neighbor.maxDistancesOfPlacedAtomsPerHGroup.emplace_back(0.0);
       }
-      neighbor.hGroups[i].emplace(key, value);
+      neighbor.hGroups[i].emplace(keyRow, valueRow);
       neighbor.maxDistancesOfPlacedAtomsPerHGroup[i] =
-                std::max(neighbor.maxDistancesOfPlacedAtomsPerHGroup[i],
-                         /* distance for current atom from its current site
-                            to `site` */);
-      // [ do the same for the vertical group... ]
+          std::max(neighbor.maxDistancesOfPlacedAtomsPerHGroup[i], distance);
+      //===------------------------------------------------------------------===//
+      // do the same for the vertical group
+      //===------------------------------------------------------------------===//
+      const size_t keyColumn =
+          currentSitesForEachAtom[atomToBePlacedNext].second;
+      const size_t valueColumn = site.second;
+      size_t j = 0;
+      for (auto& vGroup : neighbor.vGroups) {
+        auto it = vGroup.lower_bound(keyColumn);
+        if (it != vGroup.end()) {
+          // an assignment for this key already exists in this group
+          const auto& [upperKey, upperValue] = *it;
+          if (upperKey == keyColumn) {
+            if (upperValue == valueColumn) {
+              // new placement is compatible with this group
+              break;
+            }
+          } else { // if (upperKey > key)
+            if (it != vGroup.begin()) {
+              // it can be safely decremented
+              --it;
+              const auto& [_, lowerValue] = *it;
+              if (lowerValue < valueColumn && valueColumn < upperValue) {
+                // new placement is compatible with this group
+                break;
+              }
+            } else { // if (it == vGroup.begin())
+              if (valueColumn < upperValue) {
+                // new placement is compatible with this group
+                break;
+              }
+            }
+          }
+        } else { // if (it == vGroup.end())
+          // it can be safely decremented because group must contain
+          // at least one element
+          --it;
+          const auto& [_, lowerValue] = *it;
+          if (lowerValue < valueColumn) {
+            // new placement is compatible with this group
+            break;
+          }
+        }
+        ++j;
+      }
+      if (j == neighbor.vGroups.size()) {
+        // no compatible group could be found and a new group is created
+        neighbor.vGroups.emplace_back();
+        neighbor.maxDistancesOfPlacedAtomsPerVGroup.emplace_back(0.0);
+      }
+      neighbor.vGroups[j].emplace(keyColumn, valueColumn);
+      neighbor.maxDistancesOfPlacedAtomsPerVGroup[j] =
+          std::max(neighbor.maxDistancesOfPlacedAtomsPerVGroup[j], distance);
+      //===------------------------------------------------------------------===//
       neighbors.emplace_back(neighbor);
     }
   }

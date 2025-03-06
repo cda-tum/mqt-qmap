@@ -218,11 +218,11 @@ public:
  */
 template <class Node>
 auto aStarTreeSearch(
-    const Node* start,
-    std::function<std::vector<const Node*>(const Node*)> getNeighbors,
-    std::function<bool(const Node*)> isGoal,
-    std::function<double(const Node*)> getCost,
-    std::function<double(const Node*)> getHeuristic)
+    const Node& start,
+    const std::function<std::vector<const Node*>(const Node&)>& getNeighbors,
+    const std::function<bool(const Node&)>& isGoal,
+    const std::function<double(const Node&)>& getCost,
+    const std::function<double(const Node&)>& getHeuristic)
     -> std::vector<const Node*> {
   //===--------------------------------------------------------------------===//
   // Setup open set structure
@@ -233,8 +233,8 @@ auto aStarTreeSearch(
     const Node* node; //< pointer to the node
     // pointer to the parent item to reconstruct the path in the end
     Item* parent;
-    Item(const double priority, const Node* node, Item* parent)
-        : priority(priority), node(node), parent(parent) {}
+    Item(const double priority, const Node& node, Item* parent)
+        : priority(priority), node(&node), parent(parent) {}
   };
   // compare function for the open set
   struct ItemCompare {
@@ -263,25 +263,25 @@ auto aStarTreeSearch(
     openSet.pop();
     // if a goal is reached, that is the shortest path to a goal under the
     // assumption that the heuristic is admissible
-    if (isGoal(itm->node)) {
+    if (isGoal(*itm->node)) {
       // reconstruct the path from the goal to the start and then reverse it
       std::vector<const Node*> path;
       for (; itm != nullptr; itm = itm->parent) {
-        path.emplace_back(itm->node);
+        path.emplace_back(*itm->node);
       }
       std::reverse(path.begin(), path.end());
       return path;
     }
     // expand the current node by adding all neighbors to the open set
-    const auto& neighbors = getNeighbors(itm->node);
+    const auto& neighbors = getNeighbors(*itm->node);
     if (!neighbors.empty()) {
       for (const auto* neighbor : neighbors) {
         // getCost returns the total cost to reach the current node
-        const auto cost = getCost(neighbor);
-        const auto heuristic = getHeuristic(neighbor);
+        const auto cost = getCost(*neighbor);
+        const auto heuristic = getHeuristic(*neighbor);
         openSet.emplace(items
                             .emplace_back(std::make_unique<Item>(
-                                cost + heuristic, neighbor, itm))
+                                cost + heuristic, *neighbor, itm))
                             .get());
       }
     }

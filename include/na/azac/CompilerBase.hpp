@@ -12,6 +12,7 @@
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
@@ -19,6 +20,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -27,6 +29,10 @@ namespace na {
 class CompilerBase {
 public:
   enum class RoutingStrategy : std::uint8_t { MaximalIs, MaximalIsSort };
+  enum class PlacementStrategy : std::uint8_t {
+    VertexMatching, ///< Use weighted bipartite graph matching
+    AStar           ///< Use A* algorithm to find the placement
+  };
   enum class SchedulingStrategy : std::uint8_t {
     ASAP, ///< Schedule gates in groups of commutative gates as soon as possible
     TRIVIAL ///< Schedule gates in the order they appear in the circuit, esp.,
@@ -55,13 +61,28 @@ protected:
   Result result{};
   RuntimeAnalysis runtimeAnalysis{};
   bool toVerify = true;
-  /// trivial placement, i.e., place qubits in the order they appear in the
-  /// circuit if false, a simulated annealing-based placement is chosen
+  /// trivial initial placement, i.e., place qubits in the order they appear in
+  /// the circuit if false, a simulated annealing-based placement is chosen
   /// @see placeTrivial
   bool trivialPlacement = true;
   RoutingStrategy routingStrategy = RoutingStrategy::MaximalIsSort;
   SchedulingStrategy schedulingStrategy = SchedulingStrategy::ASAP;
+  PlacementStrategy placementStrategy = PlacementStrategy::VertexMatching;
+  /// If the placement strategy is VertexMatching, this flag indicates whether
+  /// the placement between gates is dynamic, i.e., if this flag is false, the
+  /// initial placement is used after all gates
   bool dynamicPlacement = true;
+  /// If the placement strategy is AStar, this flag indicates whether the
+  /// placement should use a window when selecting potential free sites
+  bool useWindowedPlacement = true;
+  /// If the window is used during AStar placement, this denotes the number of
+  /// rows above and below the row of the nearest site that are taken into
+  /// account.
+  size_t placementWindowHeight = 4;
+  /// If the window is used during AStar placement, this denotes the number of
+  /// columns to the left and right the column of the nearest site that are
+  /// taken into account.
+  size_t placementWindowWidth = 4;
   /// initial mapping of qubits to SLM sites, if this is not given either a
   /// trivial placement is chosen, see @ref trivialPlacement, or a simulated
   /// annealing-based placement is chosen
@@ -76,25 +97,25 @@ protected:
   bool reuse = true;
   std::size_t common1Q = 0;
   /// list of 2-qubit CZ gates as a list of pairs of qubits
-  std::vector<std::unique_ptr<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGates{};
+  std::vector<std::unique_ptr<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGates;
   /// map that stores the 1-qubit gates that act on a qubit after the
   /// respective 2-qubit gate
   std::unordered_map<const std::pair<qc::Qubit, qc::Qubit>*,
                      std::vector<qc::StandardOperation>>
-      dictG1QParent{};
+      dictG1QParent;
   /// list of qubit placements for all layers
   std::vector<std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>>
-      qubitMapping{};
+      qubitMapping;
   /// list of qubit lists that are reused in each layer
-  std::vector<std::unordered_set<std::size_t>> reuseQubits{};
+  std::vector<std::unordered_set<std::size_t>> reuseQubits;
   /// list of 2-qubit gates that are executed in each layer
   /// @note Computed by the scheduler
   std::vector<std::vector<const std::pair<qc::Qubit, qc::Qubit>*>>
       gateScheduling{};
-  std::vector<std::vector<std::size_t>> gateSchedulingIdx{};
+  std::vector<std::vector<std::size_t>> gateSchedulingIdx;
   /// list of 1-qubit gates that are executed in each layer
   /// @note Computed by the scheduler
-  std::vector<std::vector<const qc::StandardOperation*>> gate1QScheduling{};
+  std::vector<std::vector<const qc::StandardOperation*>> gate1QScheduling;
 
 public:
   CompilerBase() = default;
