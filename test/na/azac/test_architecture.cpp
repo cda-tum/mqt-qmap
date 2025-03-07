@@ -25,11 +25,11 @@ protected:
     "slms": [{
       "id": 0,
       "site_separation": [3, 3],
-      "r": 100,
-      "c": 100,
+      "r": 20,
+      "c": 20,
       "location": [0, 0]}],
     "offset": [0, 0],
-    "dimension": [300, 300]
+    "dimension": [60, 60]
   }],
   "entanglement_zones": [{
     "zone_id": 0,
@@ -37,23 +37,23 @@ protected:
       {
         "id": 1,
         "site_separation": [12, 10],
-        "r": 7,
-        "c": 20,
-        "location": [35, 307]
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
       },
       {
         "id": 2,
         "site_separation": [12, 10],
-        "r": 7,
-        "c": 20,
-        "location": [37, 307]
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
       }],
-    "offset": [35, 307],
-    "dimension": [240, 70]
+    "offset": [5, 70],
+    "dimension": [50, 40]
   }],
-  "aods":[{"id": 0, "site_separation": 2, "r": 100, "c": 100}],
-  "arch_range": [[0, 0], [297, 402]],
-  "rydberg_range": [[[5, 305], [292, 402]]]
+  "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [60, 110]],
+  "rydberg_range": [[[5, 70], [55, 110]]]
 })");
     ASSERT_NO_THROW(arch.load(archIS));
     ASSERT_NO_THROW(arch.preprocessing());
@@ -94,6 +94,7 @@ TEST_F(TestArchitecture, NearestStorageSite) {
     }
   }
 }
+
 TEST_F(TestArchitecture, NearestEntanglementSite) {
   const auto& storageSlm = *arch.storageZones.front();
   const auto nearestEntanglementSite =
