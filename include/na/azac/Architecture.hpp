@@ -51,16 +51,6 @@ struct SLM {
 } // namespace na
 
 namespace std {
-// template <> struct hash<const na::SLM*> {
-//   size_t operator()(const na::SLM* slm) const noexcept {
-//     if (slm == nullptr) {
-//       return 0;
-//     }
-//     const size_t h1 = hash<size_t>{}(slm->location.first);
-//     const size_t h2 = hash<size_t>{}(slm->location.second);
-//     return h1 ^ (h2 << 1);
-//   }
-// };
 
 template <> struct hash<tuple<const na::SLM*, size_t, size_t>> {
   size_t
@@ -116,21 +106,17 @@ struct Architecture {
   /// entanglement zone.
   /// The third index denotes the i-th nearest storage site.
   /// @see storageToNearestEntanglementSite
-  std::unordered_map<const SLM*,
-                     std::vector<std::vector<std::vector<const std::tuple<
-                         const SLM*, std::size_t, std::size_t>*>>>>
+  std::unordered_map<const SLM*, std::vector<std::vector<std::tuple<
+                                     const SLM*, std::size_t, std::size_t>>>>
       entanglementToNearestStorageSite;
-  std::vector<std::tuple<const SLM*, std::size_t, std::size_t>> allStorageSites;
   /// A map from a storage site to the nearest Rydberg sites.
   /// @see entanglementToNearestStorageSite
   std::unordered_map<
       const SLM*,
       std::vector<std::vector<std::unordered_map<
-          const SLM*, std::vector<std::vector<std::vector<const std::tuple<
-                          const SLM*, std::size_t, std::size_t>*>>>>>>>
+          const SLM*, std::vector<std::vector<
+                          std::tuple<const SLM*, std::size_t, std::size_t>>>>>>>
       storageToNearestEntanglementSite;
-  std::vector<std::tuple<const SLM*, std::size_t, std::size_t>>
-      allEntanglementSites;
 
   Architecture() = default;
   explicit Architecture(const std::string& filename)
@@ -228,20 +214,6 @@ struct Architecture {
     return nearestStorageSite(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
   }
   //===--------------------------------------------------------------------===//
-  /// return the nearest storage sites in ascending order by their distance for
-  /// an entanglement site
-  auto nearestStorageSitesAsc(const SLM& slm, std::size_t r,
-                              std::size_t c) const -> const
-      std::vector<const std::tuple<const SLM*, std::size_t, std::size_t>*>&;
-  /// @see nearestStorageSitesAsc
-  auto nearestStorageSitesAsc(const std::tuple<const SLM*, const std::size_t,
-                                               const std::size_t>& t) const
-      -> const
-      std::vector<const std::tuple<const SLM*, std::size_t, std::size_t>*>& {
-    return nearestStorageSitesAsc(*std::get<0>(t), std::get<1>(t),
-                                  std::get<2>(t));
-  }
-  //===--------------------------------------------------------------------===//
   /// return the nearest Rydberg site for two qubit in the storage zone
   /// based on the position of two qubits
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
@@ -256,23 +228,6 @@ struct Architecture {
     return nearestEntanglementSite(*std::get<0>(t1), std::get<1>(t1),
                                    std::get<2>(t1), *std::get<0>(t2),
                                    std::get<1>(t2), std::get<2>(t2));
-  }
-  //===--------------------------------------------------------------------===//
-  /// return the nearest Rydberg site for two qubit in the storage zone
-  /// based on the position of two qubits
-  auto nearestEntanglementSitesAsc(const SLM& idx1, std::size_t r1,
-                                   std::size_t c1, const SLM& idx2,
-                                   std::size_t r2, std::size_t c2) const
-      -> const
-      std::vector<const std::tuple<const SLM*, std::size_t, std::size_t>*>&;
-  /// @see nearestEntanglementSiteAsc
-  auto nearestEntanglementSitesAsc(
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t1,
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t2) const -> const
-      std::vector<const std::tuple<const SLM*, std::size_t, std::size_t>*>& {
-    return nearestEntanglementSitesAsc(*std::get<0>(t1), std::get<1>(t1),
-                                       std::get<2>(t1), *std::get<0>(t2),
-                                       std::get<1>(t2), std::get<2>(t2));
   }
   //===--------------------------------------------------------------------===//
   /// return the maximum/sum of the distance to move two qubits to one rydberg

@@ -1236,18 +1236,24 @@ private:
               previousPlacement[atomsToPlace[atom2].first]);
       auto& nearestFreeSitesForGate =
           nearestFreeSitesForEachGate.emplace_back();
-      for (const auto* site : architecture.nearestEntanglementSitesAsc(
-               previousPlacement[atomsToPlace[atom1].first],
-               previousPlacement[atomsToPlace[atom2].first])) {
-        const auto& [slm, r, c] = *site;
-        if (occupiedEntanglementSites.find({slm->entanglementZone, r, c}) ==
-            occupiedEntanglementSites.end()) {
-          if (!useWindowedPlacement ||
-              (nearestSLM == slm &&
-               (r < nearestRow ? nearestRow - r : r - nearestRow) <=
-                   windowHeight &&
-               (c < nearestCol ? nearestCol - c : c - nearestCol) <=
-                   windowWidth)) {
+      size_t rLow = 0;
+      size_t rHigh = nearestSLM->nRows;
+      size_t cLow = 0;
+      size_t cHigh = nearestSLM->nCols;
+      if (useWindowedPlacement) {
+        rLow =
+            nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
+        rHigh =
+            std::max(nearestRow + (windowHeight / 2) + 1, nearestSLM->nRows);
+        cLow =
+            nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
+        cHigh = std::max(nearestCol + (windowWidth / 2) + 1, nearestSLM->nCols);
+      }
+      for (size_t r = rLow; r < rHigh; ++r) {
+        for (size_t c = cLow; c < cHigh; ++c) {
+          if (occupiedEntanglementSites.find(
+                  {nearestSLM->entanglementZone, r, c}) ==
+              occupiedEntanglementSites.end()) {
             //                  other
             //         ┌─┐       ┌─┐ <-- Entanglement sites
             //         └┬┘       └┬┘
@@ -1261,11 +1267,13 @@ private:
             //          ^         ^
             //        atom1     atom2
             const auto& [otherSlm, otherRow, otherCol] =
-                architecture.otherEntanglementSite(*slm, r, c);
+                architecture.otherEntanglementSite(*nearestSLM, r, c);
             const auto dis1 = architecture.distance(
-                previousPlacement[atomsToPlace[atom1].first], {slm, r, c});
+                previousPlacement[atomsToPlace[atom1].first],
+                {nearestSLM, r, c});
             const auto dis2 = architecture.distance(
-                previousPlacement[atomsToPlace[atom2].first], {slm, r, c});
+                previousPlacement[atomsToPlace[atom2].first],
+                {nearestSLM, r, c});
             const auto dis3 = architecture.distance(
                 previousPlacement[atomsToPlace[atom1].first],
                 {otherSlm, otherRow, otherCol});
@@ -1275,8 +1283,8 @@ private:
             if (dis1 + dis4 <= dis2 + dis3) {
               nearestFreeSitesForGate.emplace_back(
                   std::pair{
-                      std::pair{rowsWithFreeSites[slm][r],
-                                columnsWithFreeSites[slm][c]},
+                      std::pair{rowsWithFreeSites[nearestSLM][r],
+                                columnsWithFreeSites[nearestSLM][c]},
                       std::pair{rowsWithFreeSites[otherSlm][otherRow],
                                 columnsWithFreeSites[otherSlm][otherCol]}},
                   std::max(dis1, dis4));
@@ -1284,8 +1292,8 @@ private:
               nearestFreeSitesForGate.emplace_back(
                   std::pair{std::pair{rowsWithFreeSites[otherSlm][otherRow],
                                       columnsWithFreeSites[otherSlm][otherCol]},
-                            std::pair{rowsWithFreeSites[slm][r],
-                                      columnsWithFreeSites[slm][c]}},
+                            std::pair{rowsWithFreeSites[nearestSLM][r],
+                                      columnsWithFreeSites[nearestSLM][c]}},
                   std::max(dis2, dis3));
             }
           }
@@ -1383,38 +1391,16 @@ private:
       if (const auto atom = atoms->first;
           reuseQubits.find(atom) == reuseQubits.end()) {
         const auto& currentSite = previousPlacement[atom];
-        bool freeSiteFound = false;
-        for (const auto* site :
-             architecture.nearestStorageSitesAsc(currentSite)) {
-          if (occupiedStorageSites.find(*site) == occupiedStorageSites.end()) {
-            atomsToPlace.emplace_back(
-                atom, architecture.distance(currentSite, *site));
-            freeSiteFound = true;
-            break;
-          }
-        }
-        if (!freeSiteFound) {
-          throw std::invalid_argument(
-              "No free site found for atom that must be placed");
-        }
+        const auto& nearestSite = architecture.nearestStorageSite(currentSite);
+        atomsToPlace.emplace_back(
+            atom, architecture.distance(currentSite, nearestSite));
       }
       if (const auto atom = atoms->second;
           reuseQubits.find(atom) == reuseQubits.end()) {
         const auto& currentSite = previousPlacement[atom];
-        bool freeSiteFound = false;
-        for (const auto* site :
-             architecture.nearestStorageSitesAsc(currentSite)) {
-          if (occupiedStorageSites.find(*site) == occupiedStorageSites.end()) {
-            atomsToPlace.emplace_back(
-                atom, architecture.distance(currentSite, *site));
-            freeSiteFound = true;
-            break;
-          }
-        }
-        if (!freeSiteFound) {
-          throw std::invalid_argument(
-              "No free site found for atom that must be placed");
-        }
+        const auto& nearestSite = architecture.nearestStorageSite(currentSite);
+        atomsToPlace.emplace_back(
+            atom, architecture.distance(currentSite, nearestSite));
       }
     }
     nAtoms = atomsToPlace.size();
@@ -1560,21 +1546,28 @@ private:
           architecture.nearestStorageSite(previousPlacement[atom]);
       auto& nearestFreeSitesForAtom =
           nearestFreeSitesForEachAtom.emplace_back();
-      for (const auto* site :
-           architecture.nearestStorageSitesAsc(previousPlacement[atom])) {
-        const auto& [slm, r, c] = *site;
-        if (occupiedStorageSites.find({slm, r, c}) ==
-            occupiedStorageSites.end()) {
-          if (!useWindowedPlacement ||
-              (nearestSLM == slm &&
-               (r < nearestRow ? nearestRow - r : r - nearestRow) <=
-                   windowHeight &&
-               (c < nearestCol ? nearestCol - c : c - nearestCol) <=
-                   windowWidth)) {
+      size_t rLow = 0;
+      size_t rHigh = nearestSLM->nRows;
+      size_t cLow = 0;
+      size_t cHigh = nearestSLM->nCols;
+      if (useWindowedPlacement) {
+        rLow =
+            nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
+        rHigh =
+            std::max(nearestRow + (windowHeight / 2) + 1, nearestSLM->nRows);
+        cLow =
+            nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
+        cHigh = std::max(nearestCol + (windowWidth / 2) + 1, nearestSLM->nCols);
+      }
+      for (size_t r = rLow; r < rHigh; ++r) {
+        for (size_t c = cLow; c < cHigh; ++c) {
+          if (occupiedStorageSites.find({nearestSLM, r, c}) ==
+              occupiedStorageSites.end()) {
             nearestFreeSitesForAtom.emplace_back(
-                std::pair{rowsWithFreeSites[slm][r],
-                          columnsWithFreeSites[slm][c]},
-                architecture.distance(previousPlacement[atom], {slm, r, c}));
+                std::pair{rowsWithFreeSites[nearestSLM][r],
+                          columnsWithFreeSites[nearestSLM][c]},
+                architecture.distance(previousPlacement[atom],
+                                      {nearestSLM, r, c}));
           }
         }
       }
