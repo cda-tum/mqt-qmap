@@ -56,6 +56,7 @@ public:
   using ValueType = std::pair<PriorityType, ElementType>;
   using SizeType = typename std::vector<ValueType>::size_type;
   using PriorityCompare = Compare;
+  using ConstReference = const ValueType&;
   using Reference = ValueType&;
 
 private:
@@ -111,7 +112,7 @@ public:
   /// Returns a reference to the top element of the heap.
   /// @details Takes O(1) time.
   /// @return A reference to the top element of the heap.
-  [[nodiscard]] auto top() const -> const Reference { return heap_.front(); }
+  [[nodiscard]] auto top() const -> ConstReference { return heap_.front(); }
   /// Removes the top element from the heap.
   /// @details Takes O(log(n)) time.
   auto pop() -> void {
@@ -142,7 +143,7 @@ public:
   /// @details Takes O(log(n)) time.
   /// @param args The arguments to construct the priority-element pair.
   /// @return A reference to the newly constructed priority-element pair.
-  template <class... Args> auto emplace(Args&&... args) -> const Reference {
+  template <class... Args> auto emplace(Args&&... args) -> ConstReference {
     auto value = value_type(std::forward<Args>(args)...);
     if (keyToIndex_.find(value.second) != keyToIndex_.end()) {
       return update(std::move(value));
@@ -154,7 +155,7 @@ public:
   /// @details Takes O(log(n)) time.
   /// @param value The priority-element pair with the new priority for the
   /// element to be updated.
-  auto update(const ValueType& value) -> const Reference {
+  auto update(const ValueType& value) -> ConstReference {
     const auto i = keyToIndex_.find(value.second)->second;
     heap_[i] = value;
     keyToIndex_.at(value.second) = i;

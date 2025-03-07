@@ -152,7 +152,7 @@ TEST_P(TestAZACompiler, SolveNoThrow) { ASSERT_NO_THROW(compiler.solve()); }
 TEST_P(TestAZACompiler, ResultValid) {
   ASSERT_NO_THROW(compiler.solve());
   const auto& result = compiler.getResult();
-  EXPECT_TRUE(result.naComputation.validate());
+  EXPECT_TRUE(result.naComputation.validate().first);
 }
 
 INSTANTIATE_TEST_SUITE_P(

@@ -91,47 +91,30 @@ private:
 
     if (static_cast<T*>(this)->getRoutingStrategy() !=
         CompilerBase::RoutingStrategy::MaximalIs) {
-      std::sort(
-          remainGraph.begin(), remainGraph.end(),
-          [&](const std::size_t a, const std::size_t b) {
-            const auto [aInitX, aInitY] = std::apply(
-                [&](auto&&... args) {
-                  return static_cast<T*>(this)
-                      ->getArchitecture()
-                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
-                },
-                initialMapping[a]);
-            const auto [bInitX, bInitY] = std::apply(
-                [&](auto&&... args) {
-                  return static_cast<T*>(this)
-                      ->getArchitecture()
-                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
-                },
-                initialMapping[b]);
-            const auto [aGateX, aGateY] = std::apply(
-                [&](auto&&... args) {
-                  return static_cast<T*>(this)
-                      ->getArchitecture()
-                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
-                },
-                gateMapping[a]);
-            const auto [bGateX, bGateY] = std::apply(
-                [&](auto&&... args) {
-                  return static_cast<T*>(this)
-                      ->getArchitecture()
-                      .exactSlmLocation(std::forward<decltype(args)>(args)...);
-                },
-                gateMapping[b]);
-            const auto aDx =
-                static_cast<double>(aGateX) - static_cast<double>(aInitX);
-            const auto aDy =
-                static_cast<double>(aGateY) - static_cast<double>(aInitY);
-            const auto bDx =
-                static_cast<double>(bGateX) - static_cast<double>(bInitX);
-            const auto bDy =
-                static_cast<double>(bGateY) - static_cast<double>(bInitY);
-            return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
-          });
+      std::sort(remainGraph.begin(), remainGraph.end(),
+                [&](const std::size_t a, const std::size_t b) {
+                  const auto [aInitX, aInitY] =
+                      static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                          initialMapping[a]);
+                  const auto [bInitX, bInitY] =
+                      static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                          initialMapping[b]);
+                  const auto [aGateX, aGateY] =
+                      static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                          gateMapping[a]);
+                  const auto [bGateX, bGateY] =
+                      static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                          gateMapping[b]);
+                  const auto aDx =
+                      static_cast<double>(aGateX) - static_cast<double>(aInitX);
+                  const auto aDy =
+                      static_cast<double>(aGateY) - static_cast<double>(aInitY);
+                  const auto bDx =
+                      static_cast<double>(bGateX) - static_cast<double>(bInitX);
+                  const auto bDy =
+                      static_cast<double>(bGateY) - static_cast<double>(bInitY);
+                  return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
+                });
     }
     const auto idLayerStart =
         static_cast<T*>(this)->getResult().instructions.size();
@@ -181,50 +164,31 @@ private:
 
         if (static_cast<T*>(this)->getRoutingStrategy() !=
             CompilerBase::RoutingStrategy::MaximalIs) {
-          std::sort(remainGraph.begin(), remainGraph.end(),
-                    [&](const std::size_t a, const std::size_t b) {
-                      const auto [aFinalX, aFinalY] = std::apply(
-                          [&](auto&&... args) {
-                            return static_cast<T*>(this)
-                                ->getArchitecture()
-                                .exactSlmLocation(
-                                    std::forward<decltype(args)>(args)...);
-                          },
-                          (*finalMapping)[a]);
-                      const auto [bFinalX, bFinalY] = std::apply(
-                          [&](auto&&... args) {
-                            return static_cast<T*>(this)
-                                ->getArchitecture()
-                                .exactSlmLocation(
-                                    std::forward<decltype(args)>(args)...);
-                          },
-                          (*finalMapping)[b]);
-                      const auto [aGateX, aGateY] = std::apply(
-                          [&](auto&&... args) {
-                            return static_cast<T*>(this)
-                                ->getArchitecture()
-                                .exactSlmLocation(
-                                    std::forward<decltype(args)>(args)...);
-                          },
-                          gateMapping[a]);
-                      const auto [bGateX, bGateY] = std::apply(
-                          [&](auto&&... args) {
-                            return static_cast<T*>(this)
-                                ->getArchitecture()
-                                .exactSlmLocation(
-                                    std::forward<decltype(args)>(args)...);
-                          },
-                          gateMapping[b]);
-                      const auto aDx = static_cast<double>(aGateX) -
-                                       static_cast<double>(aFinalX);
-                      const auto aDy = static_cast<double>(aGateY) -
-                                       static_cast<double>(aFinalY);
-                      const auto bDx = static_cast<double>(bGateX) -
-                                       static_cast<double>(bFinalX);
-                      const auto bDy = static_cast<double>(bGateY) -
-                                       static_cast<double>(bFinalY);
-                      return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
-                    });
+          std::sort(
+              remainGraph.begin(), remainGraph.end(),
+              [&](const std::size_t a, const std::size_t b) {
+                const auto [aFinalX, aFinalY] =
+                    static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                        (*finalMapping)[a]);
+                const auto [bFinalX, bFinalY] =
+                    static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                        (*finalMapping)[b]);
+                const auto [aGateX, aGateY] =
+                    static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                        gateMapping[a]);
+                const auto [bGateX, bGateY] =
+                    static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+                        gateMapping[b]);
+                const auto aDx =
+                    static_cast<double>(aGateX) - static_cast<double>(aFinalX);
+                const auto aDy =
+                    static_cast<double>(aGateY) - static_cast<double>(aFinalY);
+                const auto bDx =
+                    static_cast<double>(bGateX) - static_cast<double>(bFinalX);
+                const auto bDy =
+                    static_cast<double>(bGateY) - static_cast<double>(bFinalY);
+                return aDx * aDx + aDy * aDy > bDx * bDx + bDy * bDy;
+              });
         }
         while (!remainGraph.empty()) {
           // graph construction
@@ -276,18 +240,12 @@ private:
             : remainGraph.size();
     for (std::size_t i = 0; i < vectorLength; ++i) {
       const auto q = remainGraph[i];
-      const auto& [q_x, q_y] = std::apply(
-          [&](auto&&... args) {
-            return static_cast<T*>(this)->getArchitecture().exactSlmLocation(
-                std::forward<decltype(args)>(args)...);
-          },
-          initialMapping[q]);
-      const auto& [site_x, site_y] = std::apply(
-          [&](auto&&... args) {
-            return static_cast<T*>(this)->getArchitecture().exactSlmLocation(
-                std::forward<decltype(args)>(args)...);
-          },
-          finalMapping[q]);
+      const auto& [q_x, q_y] =
+          static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+              initialMapping[q]);
+      const auto& [site_x, site_y] =
+          static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+              finalMapping[q]);
       vectors.emplace_back(q_x, site_x, q_y, site_y);
     }
     return vectors;
@@ -389,14 +347,11 @@ private:
     const Architecture& architecture = static_cast<T*>(this)->getArchitecture();
     naComputation.emplaceBackZone("zone_cz0");
     for (std::size_t i = 0; i < static_cast<T*>(this)->getNQubits(); ++i) {
+      const auto& initialLocation = architecture.exactSlmLocation(
+          static_cast<T*>(this)->getQubitMapping().front()[i]);
       naComputation.emplaceInitialLocation(
           naComputation.emplaceBackAtom("atom" + std::to_string(i)),
-          std::apply(
-              [&](auto&&... args) {
-                return architecture.exactSlmLocation(
-                    std::forward<decltype(args)>(args)...);
-              },
-              static_cast<T*>(this)->getQubitMapping().front()[i]));
+          initialLocation.first, initialLocation.second);
     }
     //===------------------------------------------------------------------===//
 
@@ -438,12 +393,9 @@ private:
     std::unordered_map<std::size_t, std::vector<std::size_t>>
         pickupDict; // key: row, value: a list of qubit in the same row
     for (const auto q : setAodQubit) {
-      const auto& [x, y] = std::apply(
-          [&](auto&&... args) {
-            return static_cast<T*>(this)->getArchitecture().exactSlmLocation(
-                std::forward<decltype(args)>(args)...);
-          },
-          initialMapping[q]);
+      const auto& [x, y] =
+          static_cast<T*>(this)->getArchitecture().exactSlmLocation(
+              initialMapping[q]);
       pickupDict.try_emplace(y, std::vector<std::size_t>{});
       pickupDict[y].emplace_back(q);
     }
@@ -647,8 +599,7 @@ private:
     // NAComputation: process cz gate
     NAComputation& naComputation =
         static_cast<T*>(this)->getResult().naComputation;
-    naComputation.emplaceBack<GlobalCZOp>(
-        naComputation.getZones().front().get());
+    naComputation.emplaceBack<GlobalCZOp>(*naComputation.getZones().front());
     //===------------------------------------------------------------------===//
   }
 
@@ -682,7 +633,7 @@ private:
       atoms.emplace_back(naComputation.getAtoms()[q].get());
     }
     // for now, we generate a Local RZ gate no matter what the original gate was
-    naComputation.emplaceBack<LocalRZOp>(0, atoms);
+    naComputation.emplaceBack<LocalRZOp>(atoms, 0);
     //===------------------------------------------------------------------===//
   }
 
@@ -975,7 +926,7 @@ private:
       std::vector<nlohmann::json> coordsRow{};
       for (const auto& [q, slm, r, c] : locs) {
         const auto& [x, y] =
-            static_cast<T*>(this)->getArchitecture().exactSlmLocation(slm, r,
+            static_cast<T*>(this)->getArchitecture().exactSlmLocation(*slm, r,
                                                                       c);
         coordsRow.emplace_back(nlohmann::json{{"id", q}, {"x", x}, {"y", y}});
         allColX.emplace_back(x);
@@ -1000,12 +951,13 @@ private:
     for (std::size_t rowId = 0; rowId < beginLocation.size(); ++rowId) {
       // for each row
       const auto& locs = beginLocation[rowId];
-      const std::size_t row_y = static_cast<T*>(this)
-                                    ->getArchitecture()
-                                    .exactSlmLocation(std::get<1>(locs.front()),
-                                                      std::get<2>(locs.front()),
-                                                      std::get<3>(locs.front()))
-                                    .second;
+      const std::size_t row_y =
+          static_cast<T*>(this)
+              ->getArchitecture()
+              .exactSlmLocation(*std::get<1>(locs.front()),
+                                std::get<2>(locs.front()),
+                                std::get<3>(locs.front()))
+              .second;
       const std::pair rowLoc{std::get<1>(locs.front())->id,
                              std::get<2>(locs.front())};
       // before activation, adjust column position. This is necessary
@@ -1050,7 +1002,7 @@ private:
         const auto& [q, slm, r, c] = locs[j];
         const std::size_t colX = static_cast<T*>(this)
                                      ->getArchitecture()
-                                     .exactSlmLocation(slm, r, c)
+                                     .exactSlmLocation(*slm, r, c)
                                      .first;
         const std::pair colLoc{slm->id, c};
         const auto colId = colXToId[colX];
@@ -1078,7 +1030,8 @@ private:
           //===------------------------------------------------------------===//
           // NAComputation: process rearrangement (collect atoms)
           shiftBackAtoms.emplace_back(naComputation.getAtoms().at(q).get());
-          shiftBackTargetLocations.emplace_back(colX, row_y);
+          shiftBackTargetLocations.emplace_back(
+              Location{static_cast<double>(colX), static_cast<double>(row_y)});
           //===------------------------------------------------------------===//
         }
       }
@@ -1124,7 +1077,7 @@ private:
           const auto& [q, slm, r, c] = locs[j];
           const std::size_t col_x = static_cast<T*>(this)
                                         ->getArchitecture()
-                                        .exactSlmLocation(slm, r, c)
+                                        .exactSlmLocation(*slm, r, c)
                                         .first;
           const std::pair colLoc{slm, c};
           const auto colId = colXToId[col_x];
@@ -1141,8 +1094,10 @@ private:
           // NAComputation: process rearrangement (collect atoms)
           parkingAtoms.emplace_back(naComputation.getAtoms().at(q).get());
           parkingTargetLocations.emplace_back(
-              parking["col_x_end"].back().get<std::size_t>(),
-              parking["row_y_end"].front().get<std::size_t>());
+              Location{static_cast<double>(
+                           parking["col_x_end"].back().get<std::size_t>()),
+                       static_cast<double>(
+                           parking["row_y_end"].front().get<std::size_t>())});
           //===--------------------------------------------------------------===//
         }
         parking["end_coord"] = coords;
@@ -1194,7 +1149,7 @@ private:
       bigMove["row_y_end"].emplace_back(
           static_cast<T*>(this)
               ->getArchitecture()
-              .exactSlmLocation(std::get<1>(endLocs.front()),
+              .exactSlmLocation(*std::get<1>(endLocs.front()),
                                 std::get<2>(endLocs.front()),
                                 std::get<3>(endLocs.front()))
               .second);
@@ -1207,7 +1162,7 @@ private:
         const auto col_x =
             static_cast<T*>(this)
                 ->getArchitecture()
-                .exactSlmLocation(std::get<1>(beginLoc), std::get<2>(beginLoc),
+                .exactSlmLocation(*std::get<1>(beginLoc), std::get<2>(beginLoc),
                                   std::get<3>(beginLoc))
                 .first;
         const std::size_t colId = colXToId[col_x];
@@ -1227,7 +1182,7 @@ private:
           bigMove["col_x_end"].emplace_back(
               static_cast<T*>(this)
                   ->getArchitecture()
-                  .exactSlmLocation(std::get<1>(endLoc), std::get<2>(endLoc),
+                  .exactSlmLocation(*std::get<1>(endLoc), std::get<2>(endLoc),
                                     std::get<3>(endLoc))
                   .first);
           bigMove["col_loc_end"].emplace_back(
@@ -1238,13 +1193,13 @@ private:
         coords[rowId][j]["x"] =
             static_cast<T*>(this)
                 ->getArchitecture()
-                .exactSlmLocation(std::get<1>(endLoc), std::get<2>(endLoc),
+                .exactSlmLocation(*std::get<1>(endLoc), std::get<2>(endLoc),
                                   std::get<3>(endLoc))
                 .first;
         coords[rowId][j]["y"] =
             static_cast<T*>(this)
                 ->getArchitecture()
-                .exactSlmLocation(std::get<1>(endLocs.front()),
+                .exactSlmLocation(*std::get<1>(endLocs.front()),
                                   std::get<2>(endLocs.front()),
                                   std::get<3>(endLocs.front()))
                 .second;
@@ -1252,8 +1207,9 @@ private:
         // NAComputation: process rearrangement (collect atoms)
         moveAtoms.emplace_back(
             naComputation.getAtoms().at(std::get<0>(beginLoc)).get());
-        moveLocations.emplace_back(coords[rowId][j]["x"].get<std::size_t>(),
-                                   coords[rowId][j]["y"].get<std::size_t>());
+        moveLocations.emplace_back(Location{
+            static_cast<double>(coords[rowId][j]["x"].get<std::size_t>()),
+            static_cast<double>(coords[rowId][j]["y"].get<std::size_t>())});
         //===--------------------------------------------------------------===//
       }
     }

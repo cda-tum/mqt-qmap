@@ -18,7 +18,6 @@
 #include <vector>
 
 namespace na {
-
 /// class to find a qubit layout
 template <typename T> class Placer {
 protected:
@@ -59,15 +58,16 @@ protected:
 private:
   auto placeTrivial() -> void {
     auto slmIt = static_cast<T*>(this)->getArchitecture().storageZones.cbegin();
+    const SLM& firstEntanglementZone = *static_cast<T*>(this)
+                                            ->getArchitecture()
+                                            .entanglementZones.front()
+                                            .front();
     const SLM* slm = slmIt->get();
     // decide whether to begin with row 0 or row n
-    const double dis1 = static_cast<T*>(this)
-                            ->getArchitecture()
-                            .nearestEntanglementSiteDistance(slm, 0, 0);
-    const double dis2 =
-        static_cast<T*>(this)
-            ->getArchitecture()
-            .nearestEntanglementSiteDistance(slm, slm->nRows - 1, 0);
+    const double dis1 = static_cast<T*>(this)->getArchitecture().distance(
+        *slm, 0, 0, firstEntanglementZone, 0, 0);
+    const double dis2 = static_cast<T*>(this)->getArchitecture().distance(
+        *slm, slm->nRows - 1, 0, firstEntanglementZone, 0, 0);
     std::size_t c = 0;
     std::int64_t r =
         dis1 < dis2 ? 0 : static_cast<std::int64_t>(slm->nRows) - 1;
@@ -766,18 +766,10 @@ private:
         auto upperRow = lowerRow;
         auto leftCol = std::get<2>(qubitMapping[q]);
         auto rightCol = leftCol;
-        const std::pair<size_t, size_t>& exactLocQ = std::apply(
-            [&](auto&&... args) {
-              return architecture.exactSlmLocation(
-                  std::forward<decltype(args)>(args)...);
-            },
-            qubitMapping[q]);
-        const std::pair<size_t, size_t>& exactLocGate = std::apply(
-            [&](auto&&... args) {
-              return architecture.exactSlmLocation(
-                  std::forward<decltype(args)>(args)...);
-            },
-            mapping[0][q]);
+        const std::pair<size_t, size_t>& exactLocQ =
+            architecture.exactSlmLocation(qubitMapping[q]);
+        const std::pair<size_t, size_t>& exactLocGate =
+            architecture.exactSlmLocation(mapping[0][q]);
         if (exactLocGate.second < exactLocQ.second) {
           lowerRow = 0;
         } else {
@@ -791,13 +783,7 @@ private:
           const SLM* tmpSlmIdx = std::get<0>(lastGateMapping[neighbor_q]);
           const std::tuple<const SLM*, size_t, size_t>& neighborQLocation =
               tmpSlmIdx->isEntanglement()
-                  ? std::apply(
-                        [&](auto&&... args)
-                            -> std::tuple<const SLM*, size_t, size_t> {
-                          return architecture.nearestStorageSite(
-                              std::forward<decltype(args)>(args)...);
-                        },
-                        lastGateMapping[neighbor_q])
+                  ? architecture.nearestStorageSite(lastGateMapping[neighbor_q])
                   : lastGateMapping[neighbor_q];
           if (const auto& it =
                   dictBoudingbox.find(std::get<0>(neighborQLocation));
@@ -819,12 +805,7 @@ private:
             leftCol = std::get<2>(neighborQLocation);
             rightCol = std::get<2>(neighborQLocation);
             const std::pair<std::size_t, std::size_t>& exactLocNeighborQ =
-                std::apply(
-                    [&](auto&&... args) {
-                      return architecture.exactSlmLocation(
-                          std::forward<decltype(args)>(args)...);
-                    },
-                    neighborQLocation);
+                architecture.exactSlmLocation(neighborQLocation);
             if (exactLocGate.second < exactLocNeighborQ.second) {
               lowerRow = 0;
             } else {
@@ -837,12 +818,7 @@ private:
         }
         const auto& gateLocation = lastGateMapping[q];
         const std::tuple<const SLM*, std::size_t, std::size_t>
-            nearestStorageSite = std::apply(
-                [&](auto&&... args) {
-                  return architecture.nearestStorageSite(
-                      std::forward<decltype(args)>(args)...);
-                },
-                gateLocation);
+            nearestStorageSite = architecture.nearestStorageSite(gateLocation);
         // todo: what is ratio?
         const std::size_t ratio = 3;
         if (const auto it =
@@ -918,12 +894,7 @@ private:
                   std::get<2>(siteNeighborQ));
             } else {
               const std::pair<std::size_t, std::size_t>& exactLocNeighborQ =
-                  std::apply(
-                      [&](auto&&... args) {
-                        return architecture.exactSlmLocation(
-                            std::forward<decltype(args)>(args)...);
-                      },
-                      lastGateMapping[neighborQ]);
+                  architecture.exactSlmLocation(lastGateMapping[neighborQ]);
               const auto dx =
                   static_cast<std::int64_t>(exactLocNeighborQ.first) -
                   static_cast<std::int64_t>(exactLocQ.first);
@@ -960,13 +931,6 @@ private:
     }
   };
 };
-
-template <>
-inline auto std::hash<std::pair<size_t, size_t>>::operator()(
-    const std::pair<size_t, size_t>& p) -> size_t {
-  return std::hash<size_t>{}(p.first) ^ std::hash<size_t>{}(p.second) << 1;
-}
-
 /// class to find a qubit layout
 template <typename T> class AStarPlacer {
 protected:
@@ -1115,7 +1079,7 @@ private:
         // If the situation is as depicted in the example above
         if (dis1 + dis4 <= dis2 + dis3) {
           gatesToPlace.emplace_back(
-              {atomsToPlace.size(), atomsToPlace.size() + 1},
+              std::pair{atomsToPlace.size(), atomsToPlace.size() + 1},
               std::max(dis1, dis4));
           atomsToPlace.emplace_back(gate->first, dis1);
           atomsToPlace.emplace_back(gate->second, dis2);
@@ -1123,7 +1087,7 @@ private:
           // otherwise, either the entanglement sites or storage sites are
           // flipped
           gatesToPlace.emplace_back(
-              {atomsToPlace.size(), atomsToPlace.size() + 1},
+              std::pair{atomsToPlace.size(), atomsToPlace.size() + 1},
               std::max(dis2, dis3));
           atomsToPlace.emplace_back(gate->first, dis2);
           atomsToPlace.emplace_back(gate->second, dis3);
@@ -1185,57 +1149,197 @@ private:
                      b.second.first->siteSeparation.first * b.second.second;
         });
     //===------------------------------------------------------------------===//
-    // Discretize the entanglement sites to be used for the placement
+    // Discretize the free sites for the atoms to be placed
+    //===------------------------------------------------------------------===//
+    std::vector<std::pair<std::pair<const SLM*, size_t>, size_t>>
+        discreteTargetRows;
+    std::vector<std::pair<std::pair<const SLM*, size_t>, size_t>>
+        discreteTargetColumns;
+    for (const auto& entangleSlms : architecture.entanglementZones) {
+      for (const auto& storageSlm : entangleSlms) {
+        // find rows with free sites
+        for (size_t r = 0; r < storageSlm->nRows; ++r) {
+          for (size_t c = 0; c < storageSlm->nCols; ++c) {
+            if (occupiedEntanglementSites.find(
+                    {storageSlm->entanglementZone, r, c}) ==
+                occupiedEntanglementSites.end()) {
+              // free site in row r found at column c
+              discreteTargetRows.emplace_back(
+                  std::pair{storageSlm.get(), r},
+                  storageSlm->location.second +
+                      (storageSlm->siteSeparation.second * r));
+              break;
+            }
+          }
+        }
+        // find columns with free sites
+        for (size_t c = 0; c < storageSlm->nCols; ++c) {
+          for (size_t r = 0; r < storageSlm->nRows; ++r) {
+            if (occupiedEntanglementSites.find(
+                    {storageSlm->entanglementZone, r, c}) ==
+                occupiedEntanglementSites.end()) {
+              // free site in column c found at row r
+              discreteTargetColumns.emplace_back(
+                  std::pair{storageSlm.get(), c},
+                  storageSlm->location.first +
+                      (storageSlm->siteSeparation.first * c));
+              break;
+            }
+          }
+        }
+      }
+    }
+    std::sort(discreteTargetRows.begin(), discreteTargetRows.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+    std::sort(discreteTargetColumns.begin(), discreteTargetColumns.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+    //===------------------------------------------------------------------===//
+    // Provide the above mapping to SLMs and row/columns from their discrete
+    // indices in the reverse direction
     //===------------------------------------------------------------------===//
     std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
         rowsWithFreeSites;
     std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
         columnsWithFreeSites;
-    size_t nDiscreteRows = 0;
-    size_t nDiscreteColumns = 0;
-    for (const auto& entangleSLMs : architecture.entanglementZones) {
-      for (const auto& entangleSLM : entangleSLMs) {
-        // find rows with free sites
-        std::unordered_map<size_t, size_t>& rows =
-            rowsWithFreeSites
-                .emplace(entangleSLM.get(),
-                         std::unordered_map<size_t, size_t>{})
-                .first->second;
-        for (size_t r = 0; r < entangleSLM->nRows; ++r) {
-          bool freeRow = false;
-          for (size_t c = 0; c < entangleSLM->nCols; ++c) {
-            if (occupiedEntanglementSites.find(
-                    {entangleSLM->entanglementZone, r, c}) ==
-                occupiedEntanglementSites.end()) {
-              freeRow = true;
-              break;
+    for (size_t r = 0; r < discreteTargetRows.size(); ++r) {
+      if (rowsWithFreeSites.find(discreteTargetRows[r].first.first) ==
+          rowsWithFreeSites.end()) {
+        rowsWithFreeSites.emplace(discreteTargetRows[r].first.first,
+                                  std::unordered_map<size_t, size_t>{});
+      }
+      rowsWithFreeSites[discreteTargetRows[r].first.first].emplace(
+          discreteTargetRows[r].first.second, r);
+    }
+    for (size_t c = 0; c < discreteTargetColumns.size(); ++c) {
+      if (columnsWithFreeSites.find(discreteTargetColumns[c].first.first) ==
+          columnsWithFreeSites.end()) {
+        columnsWithFreeSites.emplace(discreteTargetColumns[c].first.first,
+                                     std::unordered_map<size_t, size_t>{});
+      }
+      columnsWithFreeSites[discreteTargetColumns[c].first.first].emplace(
+          discreteTargetColumns[c].first.second, c);
+    }
+    //===------------------------------------------------------------------===//
+    // Initialize the nearest free sites for each atom
+    //===------------------------------------------------------------------===//
+    const bool useWindowedPlacement =
+        static_cast<T*>(this)->useWindowedPlacement;
+    const size_t windowHeight = static_cast<T*>(this)->windowHeight;
+    const size_t windowWidth = static_cast<T*>(this)->windowWidth;
+    nearestFreeSitesForEachAtom.clear();
+    nearestFreeSitesForEachAtom.reserve(atomsToPlace.size());
+    for (const auto& [gate, _] : gatesToPlace) {
+      const auto& [atom1, atom2] = gate;
+      const auto& [nearestSLM, nearestRow, nearestCol] =
+          architecture.nearestEntanglementSite(
+              previousPlacement[atomsToPlace[atom1].first],
+              previousPlacement[atomsToPlace[atom2].first]);
+      auto& nearestFreeSitesForGate =
+          nearestFreeSitesForEachGate.emplace_back();
+      for (const auto* site : architecture.nearestEntanglementSitesAsc(
+               previousPlacement[atomsToPlace[atom1].first],
+               previousPlacement[atomsToPlace[atom2].first])) {
+        const auto& [slm, r, c] = *site;
+        if (occupiedEntanglementSites.find({slm->entanglementZone, r, c}) ==
+            occupiedEntanglementSites.end()) {
+          if (!useWindowedPlacement ||
+              (nearestSLM == slm &&
+               (r < nearestRow ? nearestRow - r : r - nearestRow) <=
+                   windowHeight &&
+               (c < nearestCol ? nearestCol - c : c - nearestCol) <=
+                   windowWidth)) {
+            //                  other
+            //         ┌─┐       ┌─┐ <-- Entanglement sites
+            //         └┬┘       └┬┘
+            //          │╲dis2   ╱│
+            //     dis1 │  ╲   ╱  │
+            //          │    ╳    │
+            //          │  ╱   ╲  │ dis4
+            //          │╱dis3   ╲│
+            //         ┌┴┐       ┌┴┐ <-- Storage sites
+            //         └─┘       └─┘
+            //          ^         ^
+            //        atom1     atom2
+            const auto& [otherSlm, otherRow, otherCol] =
+                architecture.otherEntanglementSite(*slm, r, c);
+            const auto dis1 = architecture.distance(
+                previousPlacement[atomsToPlace[atom1].first], {slm, r, c});
+            const auto dis2 = architecture.distance(
+                previousPlacement[atomsToPlace[atom2].first], {slm, r, c});
+            const auto dis3 = architecture.distance(
+                previousPlacement[atomsToPlace[atom1].first],
+                {otherSlm, otherRow, otherCol});
+            const auto dis4 = architecture.distance(
+                previousPlacement[atomsToPlace[atom2].first],
+                {otherSlm, otherRow, otherCol});
+            if (dis1 + dis4 <= dis2 + dis3) {
+              nearestFreeSitesForGate.emplace_back(
+                  std::pair{
+                      std::pair{rowsWithFreeSites[slm][r],
+                                columnsWithFreeSites[slm][c]},
+                      std::pair{rowsWithFreeSites[otherSlm][otherRow],
+                                columnsWithFreeSites[otherSlm][otherCol]}},
+                  std::max(dis1, dis4));
+            } else {
+              nearestFreeSitesForGate.emplace_back(
+                  std::pair{std::pair{rowsWithFreeSites[otherSlm][otherRow],
+                                      columnsWithFreeSites[otherSlm][otherCol]},
+                            std::pair{rowsWithFreeSites[slm][r],
+                                      columnsWithFreeSites[slm][c]}},
+                  std::max(dis2, dis3));
             }
-          }
-          if (freeRow) {
-            rows.emplace(r, ++nDiscreteRows);
-          }
-        }
-        // find columns with free sites
-        std::unordered_map<size_t, size_t>& columns =
-            columnsWithFreeSites
-                .emplace(entangleSLM.get(),
-                         std::unordered_map<size_t, size_t>{})
-                .first->second;
-        for (size_t c = 0; c < entangleSLM->nCols; ++c) {
-          bool freeColumn = false;
-          for (size_t r = 0; r < entangleSLM->nRows; ++r) {
-            if (occupiedEntanglementSites.find(
-                    {entangleSLM->entanglementZone, r, c}) ==
-                occupiedEntanglementSites.end()) {
-              freeColumn = true;
-              break;
-            }
-          }
-          if (freeColumn) {
-            columns.emplace(c, ++nDiscreteColumns);
           }
         }
       }
+    }
+    //===------------------------------------------------------------------===//
+    // Run the A* algorithm
+    //===------------------------------------------------------------------===//
+    nodes.clear();
+    nodes.emplace_back(0.0, std::unordered_set<std::pair<size_t, size_t>>{},
+                       std::vector<std::map<size_t, size_t>>{},
+                       std::vector<double>{},
+                       std::vector<std::map<size_t, size_t>>{},
+                       std::vector<double>{}); // root node
+    const Node& finalNode =
+        *aStarTreeSearch(*nodes.front(), &getGatePlacementNeighbors, &isGoal,
+                         &getCost, &getHeuristic)
+             .back();
+    //===------------------------------------------------------------------===//
+    // Extract the final mapping
+    //===------------------------------------------------------------------===//
+    // the following two maps combine all hGroups and vGroups of the final node,
+    // respectively, and hence serve as a mapping from rows and columns from the
+    // previous placement to rows and columns of the next placement,
+    // respectively.
+    std::unordered_map<size_t, size_t> rowMapping;
+    std::unordered_map<size_t, size_t> columnMapping;
+    for (const auto& hGroup : finalNode.hGroups) {
+      rowMapping.insert(hGroup.begin(), hGroup.end());
+    }
+    for (const auto& vGroup : finalNode.vGroups) {
+      columnMapping.insert(vGroup.begin(), vGroup.end());
+    }
+    std::vector<const SLM*> finalSLMs;
+    std::vector<size_t> finalRows;
+    std::vector<size_t> finalColumns;
+    for (size_t i = 0; i < nAtoms; ++i) {
+      const auto& [startRow, startColumn] = currentSitesForEachAtom[i];
+      const auto targetRow = rowMapping.at(startRow);
+      const auto targetColumn = columnMapping.at(startColumn);
+      finalSLMs.emplace_back(discreteTargetRows.at(targetRow).first.first);
+      assert(discreteTargetRows.at(targetRow).first ==
+             discreteTargetColumns.at(targetColumn).first);
+      finalRows.emplace_back(discreteTargetRows.at(targetRow).second);
+      finalColumns.emplace_back(discreteTargetColumns.at(targetColumn).second);
+    }
+    //===------------------------------------------------------------------===//
+    // Store the final mapping
+    //===------------------------------------------------------------------===//
+    for (size_t i = 0; i < nAtoms; ++i) {
+      const auto atom = atomsToPlace[i].first;
+      currentPlacement[atom] =
+          std::tuple{finalSLMs[i], finalRows[i], finalColumns[i]};
     }
   }
 
@@ -1270,8 +1374,8 @@ private:
       }
     }
     //===------------------------------------------------------------------===//
-    // Find the nearest free site for each atom that must be placed with
-    // the respective distance
+    // Get the atoms that must be placed with the distance to their nearest free
+    // site
     //===------------------------------------------------------------------===//
     std::vector<std::pair<size_t, double>> atomsToPlace;
     atomsToPlace.reserve((gates.size() * 2) - reuseQubits.size());
@@ -1280,10 +1384,11 @@ private:
           reuseQubits.find(atom) == reuseQubits.end()) {
         const auto& currentSite = previousPlacement[atom];
         bool freeSiteFound = false;
-        for (const auto& site : architecture.nearestStorageSite(currentSite)) {
-          if (occupiedStorageSites.find(site) == occupiedStorageSites.end()) {
-            atomsToPlace.emplace_back(atom,
-                                      architecture.distance(currentSite, site));
+        for (const auto* site :
+             architecture.nearestStorageSitesAsc(currentSite)) {
+          if (occupiedStorageSites.find(*site) == occupiedStorageSites.end()) {
+            atomsToPlace.emplace_back(
+                atom, architecture.distance(currentSite, *site));
             freeSiteFound = true;
             break;
           }
@@ -1297,10 +1402,11 @@ private:
           reuseQubits.find(atom) == reuseQubits.end()) {
         const auto& currentSite = previousPlacement[atom];
         bool freeSiteFound = false;
-        for (const auto& site : architecture.nearestStorageSite(currentSite)) {
-          if (occupiedStorageSites.find(site) == occupiedStorageSites.end()) {
-            atomsToPlace.emplace_back(atom,
-                                      architecture.distance(currentSite, site));
+        for (const auto* site :
+             architecture.nearestStorageSitesAsc(currentSite)) {
+          if (occupiedStorageSites.find(*site) == occupiedStorageSites.end()) {
+            atomsToPlace.emplace_back(
+                atom, architecture.distance(currentSite, *site));
             freeSiteFound = true;
             break;
           }
@@ -1376,67 +1482,69 @@ private:
     //===------------------------------------------------------------------===//
     // Discretize the free sites for the atoms to be placed
     //===------------------------------------------------------------------===//
+    std::vector<std::pair<std::pair<const SLM*, size_t>, size_t>>
+        discreteTargetRows;
+    std::vector<std::pair<std::pair<const SLM*, size_t>, size_t>>
+        discreteTargetColumns;
+    for (const auto& storageSlm : architecture.storageZones) {
+      // find rows with free sites
+      for (size_t r = 0; r < storageSlm->nRows; ++r) {
+        for (size_t c = 0; c < storageSlm->nCols; ++c) {
+          if (occupiedStorageSites.find({storageSlm.get(), r, c}) ==
+              occupiedStorageSites.end()) {
+            // free site in row r found at column c
+            discreteTargetRows.emplace_back(
+                std::pair{storageSlm.get(), r},
+                storageSlm->location.second +
+                    (storageSlm->siteSeparation.second * r));
+            break;
+          }
+        }
+      }
+      // find columns with free sites
+      for (size_t c = 0; c < storageSlm->nCols; ++c) {
+        for (size_t r = 0; r < storageSlm->nRows; ++r) {
+          if (occupiedStorageSites.find({storageSlm.get(), r, c}) ==
+              occupiedStorageSites.end()) {
+            // free site in column c found at row r
+            discreteTargetColumns.emplace_back(
+                std::pair{storageSlm.get(), c},
+                storageSlm->location.first +
+                    (storageSlm->siteSeparation.first * c));
+            break;
+          }
+        }
+      }
+    }
+    std::sort(discreteTargetRows.begin(), discreteTargetRows.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+    std::sort(discreteTargetColumns.begin(), discreteTargetColumns.end(),
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+    //===------------------------------------------------------------------===//
+    // Provide the above mapping to SLMs and row/columns from their discrete
+    // indices in the reverse direction
+    //===------------------------------------------------------------------===//
     std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
         rowsWithFreeSites;
     std::unordered_map<const SLM*, std::unordered_map<size_t, size_t>>
         columnsWithFreeSites;
-    size_t nDiscreteRows = 0;
-    size_t nDiscreteColumns = 0;
-    for (const auto& storageSlm : architecture.storageZones) {
-      // find rows with free sites
-      std::unordered_map<size_t, size_t>& rows =
-          rowsWithFreeSites
-              .emplace(storageSlm.get(), std::unordered_map<size_t, size_t>{})
-              .first->second;
-      for (size_t r = 0; r < storageSlm->nRows; ++r) {
-        bool freeRow = false;
-        for (size_t c = 0; c < storageSlm->nCols; ++c) {
-          if (occupiedStorageSites.find({storageSlm.get(), r, c}) ==
-              occupiedStorageSites.end()) {
-            freeRow = true;
-            break;
-          }
-        }
-        if (freeRow) {
-          rows.emplace(r, ++nDiscreteRows);
-        }
+    for (size_t r = 0; r < discreteTargetRows.size(); ++r) {
+      if (rowsWithFreeSites.find(discreteTargetRows[r].first.first) ==
+          rowsWithFreeSites.end()) {
+        rowsWithFreeSites.emplace(discreteTargetRows[r].first.first,
+                                  std::unordered_map<size_t, size_t>{});
       }
-      // find columns with free sites
-      std::unordered_map<size_t, size_t>& columns =
-          columnsWithFreeSites
-              .emplace(storageSlm.get(), std::unordered_map<size_t, size_t>{})
-              .first->second;
-      for (size_t c = 0; c < storageSlm->nCols; ++c) {
-        bool freeColumn = false;
-        for (size_t r = 0; r < storageSlm->nRows; ++r) {
-          if (occupiedStorageSites.find({storageSlm.get(), r, c}) ==
-              occupiedStorageSites.end()) {
-            freeColumn = true;
-            break;
-          }
-        }
-        if (freeColumn) {
-          columns.emplace(c, ++nDiscreteColumns);
-        }
-      }
+      rowsWithFreeSites[discreteTargetRows[r].first.first].emplace(
+          discreteTargetRows[r].first.second, r);
     }
-    //===------------------------------------------------------------------===//
-    // Provide the above mapping of SLMs and row/columns to their discrete
-    // indices in the reverse direction
-    //===------------------------------------------------------------------===//
-    std::unordered_map<size_t, std::pair<const SLM*, size_t>>
-        discreteTargetRows;
-    std::unordered_map<size_t, std::pair<const SLM*, size_t>>
-        discreteTargetColumns;
-    for (const auto& [slm, rows] : rowsWithFreeSites) {
-      for (const auto& [r, id] : rows) {
-        discreteTargetRows.emplace(id, std::pair{slm, r});
+    for (size_t c = 0; c < discreteTargetColumns.size(); ++c) {
+      if (columnsWithFreeSites.find(discreteTargetColumns[c].first.first) ==
+          columnsWithFreeSites.end()) {
+        columnsWithFreeSites.emplace(discreteTargetColumns[c].first.first,
+                                     std::unordered_map<size_t, size_t>{});
       }
-    }
-    for (const auto& [slm, columns] : columnsWithFreeSites) {
-      for (const auto& [c, id] : columns) {
-        discreteTargetColumns.emplace(id, std::pair{slm, c});
-      }
+      columnsWithFreeSites[discreteTargetColumns[c].first.first].emplace(
+          discreteTargetColumns[c].first.second, c);
     }
     //===------------------------------------------------------------------===//
     // Initialize the nearest free sites for each atom
@@ -1452,8 +1560,9 @@ private:
           architecture.nearestStorageSite(previousPlacement[atom]);
       auto& nearestFreeSitesForAtom =
           nearestFreeSitesForEachAtom.emplace_back();
-      for (const auto& [slm, r, c] :
+      for (const auto* site :
            architecture.nearestStorageSitesAsc(previousPlacement[atom])) {
+        const auto& [slm, r, c] = *site;
         if (occupiedStorageSites.find({slm, r, c}) ==
             occupiedStorageSites.end()) {
           if (!useWindowedPlacement ||
@@ -1480,8 +1589,8 @@ private:
                        std::vector<std::map<size_t, size_t>>{},
                        std::vector<double>{}); // root node
     const Node& finalNode =
-        *aStarTreeSearch(*nodes.front(), getQubitPlacementNeighbors, isGoal,
-                         getCost, getHeuristic)
+        *aStarTreeSearch(*nodes.front(), &getQubitPlacementNeighbors, &isGoal,
+                         &getCost, &getHeuristic)
              .back();
     //===------------------------------------------------------------------===//
     // Extract the final mapping
@@ -1505,7 +1614,7 @@ private:
       const auto& [startRow, startColumn] = currentSitesForEachAtom[i];
       const auto targetRow = rowMapping.at(startRow);
       const auto targetColumn = columnMapping.at(startColumn);
-      finalSLMs.emplace_back(discreteTargetRows.at(targetRow).first);
+      finalSLMs.emplace_back(discreteTargetRows.at(targetRow).first.first);
       assert(discreteTargetRows.at(targetRow).first ==
              discreteTargetColumns.at(targetColumn).first);
       finalRows.emplace_back(discreteTargetRows.at(targetRow).second);
@@ -1572,9 +1681,8 @@ private:
       nearestFreeSitesForEachAtom;
 
   /// todo
-  std::vector<std::vector<
-      std::pair<std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>>,
-                std::pair<float, float>>>>
+  std::vector<std::vector<std::pair<
+      std::pair<std::pair<size_t, size_t>, std::pair<size_t, size_t>>, float>>>
       nearestFreeSitesForEachGate;
 
   /// todo
@@ -1753,7 +1861,7 @@ private:
   /// @param maxDistances the maximum distances of placed atoms in each group
   /// @return true if the new placement could be added to an existing group
   auto checkCompatibilityAndAddPlacement(
-      const size_t key, const size_t value, const float distance,
+      const uint16_t key, const uint16_t value, const float distance,
       std::vector<std::map<uint16_t, uint16_t>>& groups,
       std::vector<float>& maxDistances) -> bool {
     size_t i = 0;
