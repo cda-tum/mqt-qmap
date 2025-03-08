@@ -2,6 +2,7 @@
 
 #include "Architecture.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/CodeGenerator.hpp"
 #include "na/azac/Placer.hpp"
@@ -38,6 +39,18 @@ public:
       -> NAComputation {
     std::cout << "[INFO] AZAC: An advanced compiler for zoned neutral atom "
                  "architecture\n";
+    std::cout << "[INFO]           Number of qubits: " << qComp.getNqubits()
+              << "\n";
+    const auto nTwoQubitGates = std::count_if(
+        qComp.cbegin(), qComp.cend(),
+        [](const qc::Operation& op) { return op.getNqubits() == 2; });
+    const auto nOneQubitGates = std::count_if(
+        qComp.cbegin(), qComp.cend(),
+        [](const qc::Operation& op) { return op.getNqubits() == 1; });
+    std::cout << "[INFO]           Number of two-qubit gates: "
+              << nTwoQubitGates << "\n";
+    std::cout << "[INFO]           Number of single-qubit gates: "
+              << nOneQubitGates << "\n";
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [oneQubitGateLayers, twoQubitGateLayers] = self.schedule(qComp);
@@ -80,8 +93,9 @@ public:
   }
 };
 
-class AZACompiler final : public Compiler<AZACompiler, Scheduler, ReuseAnalyzer,
-                                          Placer, Router, CodeGenerator> {
+class AZACompiler final
+    : public Compiler<AZACompiler, ASAPScheduler, ReuseAnalyzer, Placer, Router,
+                      CodeGenerator> {
 public:
   AZACompiler(const Architecture& architecture, const nlohmann::json& config)
       : Compiler(architecture, config) {}

@@ -14,10 +14,10 @@ namespace na {
  * zoned neutral atom compiler.
  */
 class ReuseAnalyzer {
-protected:
+public:
   /**
    * Create a new ReuseAnalyzer.
-   * @details Both parameters are unused. Hence, the constructor does nothing
+   * @note Both parameters are unused. Hence, the constructor does nothing
    * and the function @ref analyzeReuse is a static function.
    */
   ReuseAnalyzer(const Architecture& /* unused */,
