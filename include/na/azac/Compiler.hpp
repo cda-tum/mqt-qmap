@@ -1,132 +1,89 @@
 #pragma once
 
-#include "na/azac/CompilerBase.hpp"
+#include "Architecture.hpp"
+#include "ir/QuantumComputation.hpp"
+#include "na/NAComputation.hpp"
+#include "na/azac/CodeGenerator.hpp"
 #include "na/azac/Placer.hpp"
+#include "na/azac/ReuseAnalyzer.hpp"
 #include "na/azac/Router.hpp"
 #include "na/azac/Scheduler.hpp"
 
+#include <cassert>
 #include <chrono>
-#include <fstream>
 #include <iostream>
 #include <nlohmann/json_fwd.hpp>
-#include <stdexcept>
+#include <utility>
 
 namespace na {
+#define self (*static_cast<ConcreteType*>(this))
+template <class ConcreteType, class... Mixins>
+class Compiler : public Mixins... {
+  friend ConcreteType;
+  Architecture architecture_;
+  nlohmann::json config_;
+  std::chrono::microseconds schedulingTime_;
+  std::chrono::microseconds reuseAnalysisTime_;
+  std::chrono::microseconds placementTime_;
+  std::chrono::microseconds routingTime_;
+  std::chrono::microseconds codeGenerationTime_;
+  std::chrono::microseconds totalTime_;
 
-template <typename T, template <typename> class... Mixins>
-class Compiler : public CompilerBase, public Mixins<T>... {
-private:
-  Compiler() = default;
-  friend T;
+  Compiler(Architecture architecture, nlohmann::json config)
+      : Mixins(architecture_, config_)...,
+        architecture_(std::move(architecture)), config_(std::move(config)) {}
 
 public:
-  auto solve(bool saveFile = true) -> const Result& {
-    // member to hold intermediate results
-    gateScheduling.clear();
-    gate1QScheduling.clear();
-    qubitMapping.clear();
-    reuseQubits.clear();
-    qubitMapping.clear();
-
-    std::cout << "[INFO] AZAC: An advanced compiler for neutral atom-based "
-                 "compute-store "
+  [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
+      -> NAComputation {
+    std::cout << "[INFO] AZAC: An advanced compiler for zoned neutral atom "
                  "architecture\n";
-    std::cout << *this;
-    // todo: check if the program input is valid, i.e., #q < #p
-    const auto tS = std::chrono::system_clock::now();
-    // gate scheduling with graph coloring
-    std::cout << "[INFO] AZAC: Run scheduling\n";
-    static_cast<T*>(this)->schedule();
 
-    if (reuse) {
-      collectReuseQubit();
-    } else {
-      reuseQubits.reserve(gateScheduling.size());
-      for (std::size_t i = 0; i < gateScheduling.size(); ++i) {
-        reuseQubits.emplace_back();
-      }
-    }
+    const auto& schedulingStart = std::chrono::system_clock::now();
+    const auto& [oneQubitGateLayers, twoQubitGateLayers] = self.schedule(qComp);
+    schedulingTime_ = std::chrono::system_clock::now() - schedulingStart;
+    std::cout << "[INFO]           Time for scheduling: "
+              << schedulingTime_.count() << "µs\n";
 
-    static_cast<T*>(this)->placeQubitInitial();
-    std::cout << "[INFO]           Time for initial placement: "
-              << runtimeAnalysis.initialPlacement.count() << "µs\n";
-    static_cast<T*>(this)->placeQubitIntermediate();
-    std::cout << "[INFO]           Time for intermediate placement: ";
-    std::cout << runtimeAnalysis.intermediatePlacement.count() << "µs\n";
-    static_cast<T*>(this)->routeQubit();
-    runtimeAnalysis.total = std::chrono::system_clock::now() - tS;
-    std::cout << "[INFO]           Time for routing: "
-              << runtimeAnalysis.routing.count() << "µs\n";
-    std::cout << "[INFO] AZAC: Total Time: " << runtimeAnalysis.total.count()
+    const auto& reuseAnalysisStart = std::chrono::system_clock::now();
+    const auto& reuseQubits = self.analyzeReuse(twoQubitGateLayers);
+    reuseAnalysisTime_ = std::chrono::system_clock::now() - reuseAnalysisStart;
+    std::cout << "[INFO]           Time for reuse analysis: "
+              << reuseAnalysisTime_.count() << "µs\n";
+
+    const auto& placementStart = std::chrono::system_clock::now();
+    const auto& placement = static_cast<ConcreteType*>(this)->place(
+        twoQubitGateLayers, reuseQubits);
+    placementTime_ = std::chrono::system_clock::now() - placementStart;
+    std::cout << "[INFO]           Time for placement: "
+              << placementTime_.count() << "µs\n";
+
+    const auto& routingStart = std::chrono::system_clock::now();
+    const auto& routing = self.route(placement);
+    routingTime_ = std::chrono::system_clock::now() - routingStart;
+    std::cout << "[INFO]           Time for routing: " << routingTime_.count()
               << "µs\n";
-    if (saveFile) {
-      if (dir.empty()) {
-        dir = "./result/";
-      }
-      const auto codeFilename = dir / "code" / (result.name + "_code.json");
-      create_directories(codeFilename.parent_path());
-      std::ofstream codeOfs(codeFilename);
-      if (!codeOfs) {
-        std::stringstream ss{};
-        ss << "Cannot open file " << absolute(codeFilename);
-        throw std::runtime_error(ss.str());
-      }
-      nlohmann::json resultJson;
-      resultJson["instructions"] = result.instructions;
-      resultJson["runtime"] = result.runtime;
-      resultJson["name"] = result.name;
-      resultJson["architecture_spec_path"] = result.architectureSpecPath;
-      codeOfs << resultJson;
-      std::cout << "[INFO]           Saved code to " << absolute(codeFilename)
-                << "\n";
 
-      const auto timingJsonFilename =
-          dir / "time" / (result.name + "_time.json");
-      create_directories(timingJsonFilename.parent_path());
-      std::ofstream timingtJsonOfs(timingJsonFilename);
-      if (!timingtJsonOfs) {
-        std::stringstream ss{};
-        ss << "Cannot open file " << absolute(timingJsonFilename);
-        throw std::runtime_error(ss.str());
-      }
-      nlohmann::json timingJson{};
-      timingJson["scheduling"] = runtimeAnalysis.scheduling.count();
-      timingJson["initial_placement"] =
-          runtimeAnalysis.initialPlacement.count();
-      timingJson["intermediate_placement"] =
-          runtimeAnalysis.intermediatePlacement.count();
-      timingJson["routing"] = runtimeAnalysis.routing.count();
-      timingJson["total"] = runtimeAnalysis.total.count();
-      timingtJsonOfs << timingJson;
-      std::cout << "[INFO]           Saved results to "
-                << absolute(timingJsonFilename) << "\n";
+    const auto& codeGenerationStart = std::chrono::system_clock::now();
+    const NAComputation& code =
+        self.generateCode(oneQubitGateLayers, placement, routing);
+    assert(code.validate().first);
+    codeGenerationTime_ =
+        std::chrono::system_clock::now() - codeGenerationStart;
+    std::cout << "[INFO]           Time for code generation: "
+              << codeGenerationTime_.count() << "µs\n";
 
-      //===----------------------------------------------------------------===//
-      // NAComputation: save NAComputation to file
-      const auto naFilename = dir / "na" / (result.name + "_code.naviz");
-      create_directories(naFilename.parent_path());
-      std::ofstream naOfs(naFilename);
-      if (!naOfs) {
-        std::stringstream ss{};
-        ss << "Cannot open file " << absolute(naFilename);
-        throw std::runtime_error(ss.str());
-      }
-      naOfs << result.naComputation;
-      std::cout << "[INFO]           Saved NAComputation to "
-                << absolute(naFilename) << "\n";
-      //===----------------------------------------------------------------===//
-    }
-
-    if (toVerify) {
-      std::cout << "[INFO] AZAC: Start Verification\n";
-      throw std::invalid_argument("Verification is not implemented yet");
-    }
-
-    return result;
+    totalTime_ = std::chrono::system_clock::now() - routingStart;
+    std::cout << "[INFO]           Total time: " << totalTime_.count()
+              << "µs\n";
+    return code;
   }
 };
 
-class AZACompiler final
-    : public Compiler<AZACompiler, Placer, Router, Scheduler> {};
-
+class AZACompiler final : public Compiler<AZACompiler, Scheduler, ReuseAnalyzer,
+                                          Placer, Router, CodeGenerator> {
+public:
+  AZACompiler(const Architecture& architecture, const nlohmann::json& config)
+      : Compiler(architecture, config) {}
+};
 } // namespace na

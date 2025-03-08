@@ -75,13 +75,11 @@ protected:
   /// If the placement strategy is AStar, this flag indicates whether the
   /// placement should use a window when selecting potential free sites
   bool useWindowedPlacement = true;
-  /// If the window is used during AStar placement, this denotes the number of
-  /// rows above and below the row of the nearest site that are taken into
-  /// account.
+  /// If the window is used during AStar placement, this denotes the height in
+  /// terms of rows of the window centered at the nearest site
   size_t placementWindowHeight = 4;
-  /// If the window is used during AStar placement, this denotes the number of
-  /// columns to the left and right the column of the nearest site that are
-  /// taken into account.
+  /// If the window is used during AStar placement, this denotes the width in
+  /// terms of columns of the window centered at the nearest site
   size_t placementWindowWidth = 4;
   /// initial mapping of qubits to SLM sites, if this is not given either a
   /// trivial placement is chosen, see @ref trivialPlacement, or a simulated
