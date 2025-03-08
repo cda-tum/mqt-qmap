@@ -1,15 +1,17 @@
 #pragma once
 
+#include "Definitions.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 #include "na/entities/Atom.hpp"
-#include "na/operations/LoadOp.hpp"
+#include "na/entities/Zone.hpp"
 
-#include <cassert>
+#include <cstddef>
 #include <functional>
-#include <string>
-#include <unordered_set>
+#include <nlohmann/json_fwd.hpp>
+#include <tuple>
+#include <vector>
 
 namespace na {
 /**
@@ -17,7 +19,39 @@ namespace na {
  * atom compiler.
  */
 class CodeGenerator {
+  /// The architecture of the neutral atom system
   std::reference_wrapper<const Architecture> architecture_;
+  /// The offset for parking spots
+  size_t parkingOffset_ = 1;
+
+  /// Append all one-qubit gates of a layer to the code
+  auto appendOneQubitGates(
+      const std::vector<std::reference_wrapper<const qc::Operation>>&
+          oneQubitGates,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>& atomLocations,
+      const std::vector<std::reference_wrapper<const Atom>>& atoms,
+      NAComputation& code) const -> void;
+
+  /// Append all necessary operations to perform the next set of two-qubit gates
+  auto appendTwoQubitGates(
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
+          currentLocations,
+      const std::vector<std::vector<qc::Qubit>>& executionRouting,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
+          executionLocations,
+      const std::vector<std::vector<qc::Qubit>>& targetRouting,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
+          targetLocations,
+      const std::vector<std::reference_wrapper<const Atom>>& atoms,
+      const Zone& zone, NAComputation& code) const -> void;
+
+  /// Append all necessary operations to rearrange the atoms
+  auto appendRearrangement(
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>& startSites,
+      const std::vector<std::vector<qc::Qubit>>& routing,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetSites,
+      const std::vector<std::reference_wrapper<const Atom>>& atoms,
+      NAComputation& code) const -> void;
 
 protected:
   /**
@@ -26,46 +60,26 @@ protected:
    * placement and routing of the qubits. It generates a neutral atom
    * computation. The second parameter of the constructor is unused.
    * @param architecture is the architecture of the neutral atom system
+   * @param config is the configuration of the code generator
    */
-  CodeGenerator(const Architecture& architecture,
-                const nlohmann::json& /* unused */)
-      : architecture_(architecture) {}
+  CodeGenerator(const Architecture& architecture, const nlohmann::json& config);
+  /**
+   * Generate the neutral atom computation based on the results of the previous
+   * steps in the compiler.
+   * @param oneQubitGateLayers is a list of layers of single-qubit gates
+   * @param placement is the placement of the qubits. The very first entry is
+   * the initial placement of the atoms. Every consecutive pair of entries
+   * encloses one layer of two-qubit gates.
+   * @param routing is the routing of the qubits. It consists of groups of atoms
+   * that can be moved together to establish the next placement.
+   * @return the neutral atom computation
+   */
   [[nodiscard]] auto generateCode(
       const std::vector<std::vector<
           std::reference_wrapper<const qc::Operation>>>& oneQubitGateLayers,
       const std::vector<std::vector<std::tuple<const SLM&, size_t, size_t>>>&
           placement,
       const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
-      -> NAComputation {
-    NAComputation code;
-    const auto& initialPlacement = placement.front();
-    std::vector<std::reference_wrapper<const Atom>> atoms;
-    atoms.reserve(initialPlacement.size());
-    for (const auto& [slm, r, c] : initialPlacement) {
-      atoms.emplace_back(
-          code.emplaceBackAtom("atom" + std::to_string(atoms.size())));
-      const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
-      code.emplaceInitialLocation(atoms.back(), x, y);
-    }
-    assert(oneQubitGateLayers.size() == placement.size() + 1);
-    assert(placement.size() == routing.size());
-    std::unordered_set<std::reference_wrapper<const Atom>> loadedAtoms;
-    for (size_t layer = 0; true; ++layer) {
-      const auto& oneQubitGates = oneQubitGateLayers[layer];
-      for (const auto& op : oneQubitGates) {
-        // todo
-      }
-      if (layer == placement.size()) {
-        break;
-      }
-      const auto& atomLocations = placement[layer];
-      const auto& routingSteps = routing[layer];
-      std::vector<const Atom*> atomsToLoad;
-      for (const auto& routingStep : routingSteps) {
-      }
-      code.emplaceBack<LoadOp>(atomsToLoad);
-    }
-    return code;
-  }
+      -> NAComputation;
 };
 } // namespace na
