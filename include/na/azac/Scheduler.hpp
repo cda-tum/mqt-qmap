@@ -8,7 +8,6 @@
 #include <stdexcept>
 
 namespace na {
-
 template <typename T> class Scheduler {
 private:
   /// as soon as possible algorithm for g_q
