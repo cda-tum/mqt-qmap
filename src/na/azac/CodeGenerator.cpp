@@ -41,24 +41,24 @@ auto na::CodeGenerator::appendOneQubitGates(
   }
 }
 auto na::CodeGenerator::appendTwoQubitGates(
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& currentLocations,
+    const std::vector<std::tuple<const SLM&, size_t, size_t>>& currentPlacement,
     const std::vector<std::vector<qc::Qubit>>& executionRouting,
     const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-        executionLocations,
+        executionPlacement,
     const std::vector<std::vector<qc::Qubit>>& targetRouting,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetLocations,
+    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& zone, NAComputation& code) const -> void {
-  appendRearrangement(currentLocations, executionRouting, executionLocations,
+  appendRearrangement(currentPlacement, executionRouting, executionPlacement,
                       atoms, code);
   code.emplaceBack<GlobalCZOp>(zone);
-  appendRearrangement(executionLocations, targetRouting, targetLocations, atoms,
+  appendRearrangement(executionPlacement, targetRouting, targetPlacement, atoms,
                       code);
 }
 auto na::CodeGenerator::appendRearrangement(
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& startSites,
+    const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
     const std::vector<std::vector<qc::Qubit>>& routing,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetSites,
+    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
   for (const auto& qubits : routing) {
@@ -67,12 +67,12 @@ auto na::CodeGenerator::appendRearrangement(
     std::vector<Location> targetLocations;
     for (const auto& qubit : qubits) {
       // get the current location of the qubit
-      const auto& [slm, r, c] = startSites[qubit];
+      const auto& [slm, r, c] = startPlacement[qubit];
       const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
       rowsWithQubits.try_emplace(y).first->second.emplace(x, qubit);
       atomsToMove.emplace_back(&atoms[qubit].get());
       // get the target location of the qubit
-      const auto& [targetSlm, targetR, targetC] = targetSites[qubit];
+      const auto& [targetSlm, targetR, targetC] = targetPlacement[qubit];
       const auto& [targetX, targetY] =
           architecture_.get().exactSlmLocation(targetSlm, targetR, targetC);
       targetLocations.emplace_back(

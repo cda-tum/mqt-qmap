@@ -24,10 +24,12 @@ auto na::ReuseAnalyzer::analyzeReuse(
   }
   std::vector<std::unordered_set<qc::Qubit>> reuseQubits;
   reuseQubits.reserve(twoQubitGateLayers.size());
-  for (auto layer = twoQubitGateLayers.begin();
-       layer != twoQubitGateLayers.end();) {
+  for (auto layer = twoQubitGateLayers.begin();;) {
     const auto& twoQubitGatesInPreviousLayer = *layer;
-    const auto& twoQubitGatesInCurrentLayer = *++layer;
+    if (++layer == twoQubitGateLayers.end()) {
+      break;
+    }
+    const auto& twoQubitGatesInCurrentLayer = *layer;
     std::vector matrix(twoQubitGatesInCurrentLayer.size(),
                        std::vector(twoQubitGatesInPreviousLayer.size(), false));
     const auto& usedQubitsInPreviousLayer = usedQubitsInLayers.back();

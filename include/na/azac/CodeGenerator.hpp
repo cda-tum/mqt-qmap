@@ -35,21 +35,22 @@ class CodeGenerator {
   /// Append all necessary operations to perform the next set of two-qubit gates
   auto appendTwoQubitGates(
       const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          currentLocations,
+          currentPlacement,
       const std::vector<std::vector<qc::Qubit>>& executionRouting,
       const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          executionLocations,
+          executionPlacement,
       const std::vector<std::vector<qc::Qubit>>& targetRouting,
       const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          targetLocations,
+          targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       const Zone& zone, NAComputation& code) const -> void;
 
   /// Append all necessary operations to rearrange the atoms
   auto appendRearrangement(
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>& startSites,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
       const std::vector<std::vector<qc::Qubit>>& routing,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetSites,
+      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
+          targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
 

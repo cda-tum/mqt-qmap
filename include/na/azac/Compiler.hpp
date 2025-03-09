@@ -94,8 +94,8 @@ public:
 };
 
 class AZACompiler final
-    : public Compiler<AZACompiler, ASAPScheduler, ReuseAnalyzer, Placer, Router,
-                      CodeGenerator> {
+    : public Compiler<AZACompiler, ASAPScheduler, ReuseAnalyzer, Placer,
+                      ISRouter, CodeGenerator> {
 public:
   AZACompiler(const Architecture& architecture, const nlohmann::json& config)
       : Compiler(architecture, config) {}
