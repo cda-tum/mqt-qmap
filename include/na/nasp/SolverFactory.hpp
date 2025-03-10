@@ -3,8 +3,7 @@
 #include "Definitions.hpp"
 #include "Solver.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "na/Architecture.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 
 #include <utility>
 #include <vector>
@@ -23,7 +22,7 @@ public:
    * @param arch The architecture to create the solver for.
    * @return The created NASolver.
    */
-  [[nodiscard]] static auto create(const Architecture& arch) -> NASolver;
+  [[nodiscard]] static auto create(const nalac::Architecture& arch) -> NASolver;
 
   /**
    * @brief Get the list of entangling operations that the solver takes as
@@ -46,12 +45,13 @@ public:
    *
    * @param circ
    * @param opType
+   * @param ctrls
    * @param quiet
    * @return
    */
-  [[nodiscard]] static auto getOpsForSolver(const qc::QuantumComputation& circ,
-                                            FullOpType opType,
-                                            bool quiet = false)
+  [[nodiscard]] static auto
+  getOpsForSolver(const qc::QuantumComputation& circ, qc::OpType opType,
+                  std::size_t ctrls, bool quiet = false)
       -> std::vector<std::pair<qc::Qubit, qc::Qubit>>;
 };
 } // namespace na

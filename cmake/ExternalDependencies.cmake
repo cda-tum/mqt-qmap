@@ -40,9 +40,9 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_VERSION 3.0.0
+set(MQT_CORE_VERSION 3.0.0b6
     CACHE STRING "MQT Core version")
-set(MQT_CORE_REV "c2701a0747781eeca43b71dec43ffb0531022a51"
+set(MQT_CORE_REV "a927ced12cbd62cb3c397763856c9987b2afbdf0"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
 set(MQT_CORE_REPO_OWNER "cda-tum"
     CACHE STRING "MQT Core repository owner (change when using a fork)")
@@ -132,22 +132,6 @@ if(BUILD_MQT_QMAP_BINDINGS)
       FetchContent_Declare(pybind11_json GIT_REPOSITORY https://github.com/pybind/pybind11_json)
       list(APPEND FETCH_PACKAGES pybind11_json)
     endif()
-  endif()
-endif()
-
-# Add YAML-CPP as a dependency.
-set(YAML_VERSION
-    0.8.0
-    CACHE STRING "YAML-CPP version")
-set(YAML_URL https://github.com/jbeder/yaml-cpp/archive/refs/tags/${YAML_VERSION}.tar.gz)
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  FetchContent_Declare(yaml-cpp URL ${YAML_URL} FIND_PACKAGE_ARGS ${YAML_VERSION})
-  list(APPEND FETCH_PACKAGES yaml-cpp)
-else()
-  find_package(yaml-cpp ${YAML_VERSION} QUIET)
-  if(NOT yaml-cpp_FOUND)
-    FetchContent_Declare(yaml-cpp URL ${YAML_URL})
-    list(APPEND FETCH_PACKAGES yaml-cpp)
   endif()
 endif()
 

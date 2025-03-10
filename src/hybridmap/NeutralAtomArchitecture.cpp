@@ -116,8 +116,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 void NeutralAtomArchitecture::createCoordinates() {
   coordinates.reserve(properties.getNpositions());
   for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
-    this->coordinates.emplace_back(i % this->properties.getNcolumns(),
-                                   i / this->properties.getNcolumns());
+    this->coordinates.emplace_back(
+        Location{static_cast<double>(i % this->properties.getNcolumns()),
+                 static_cast<double>(i / this->properties.getNcolumns())});
   }
 }
 NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
@@ -135,8 +136,9 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
 
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
-      auto const dist = NeutralAtomArchitecture::getEuclideanDistance(
-          Point(0, 0), Point(i, j));
+      const auto dist = NeutralAtomArchitecture::getEuclideanDistance(
+          Location{0.0, 0.0},
+          Location{static_cast<double>(i), static_cast<double>(j)});
       if (dist <= interactionRadius) {
         if (dist == 0) {
           continue;
@@ -152,7 +154,7 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
   }
   // sort diagonal distances by distance
   std::sort(diagonalDistances.begin(), diagonalDistances.end(),
-            [](DiagonalDistance const& a, DiagonalDistance const& b) {
+            [](const DiagonalDistance& a, const DiagonalDistance& b) {
               return a.distance < b.distance;
             });
 
@@ -170,7 +172,7 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
       int32_t swapDistance = 0;
       for (auto it = diagonalDistances.rbegin(); it != diagonalDistances.rend();
            ++it) {
-        auto const& diagonalDistance = *it;
+        const auto& diagonalDistance = *it;
         while (deltaX >= diagonalDistance.x && deltaY >= diagonalDistance.y) {
           swapDistance += 1;
           deltaX -= diagonalDistance.x;
@@ -266,7 +268,7 @@ NeutralAtomArchitecture::getBlockedCoordIndices(const qc::Operation* op) const {
       }
       // do a preselection
       // now check exact difference
-      auto const distance = getEuclideanDistance(coord, i);
+      const auto distance = getEuclideanDistance(coord, i);
       if (distance <= getBlockingFactor() * getInteractionRadius()) {
         blockedCoordIndices.emplace(i);
       }
