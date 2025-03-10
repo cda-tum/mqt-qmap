@@ -20,6 +20,7 @@
 #include <iterator>
 #include <map>
 #include <nlohmann/json_fwd.hpp>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -138,18 +139,34 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
                              const nlohmann::json& config)
     : architecture_(architecture) {
   if (const auto& configIt = config.find("code_generator");
-      configIt != config.end()) {
-    const auto& generatorConfig = configIt.value();
-    if (const auto& it = generatorConfig.find("parking_offset");
-        it != generatorConfig.end() && it->is_number_unsigned()) {
-      parkingOffset_ = it.value();
-    } else {
-      std::cout << "[WARN] Configuration for CodeGenerator does not contain "
-                   "a valid parking offset. Using default offset.\n";
+      configIt != config.end() && configIt->is_object()) {
+    bool parkingOffsetSet = false;
+    for (const auto& [key, value] : configIt.value().items()) {
+      if (key == "parking_offset") {
+        if (value.is_number_unsigned()) {
+          parkingOffset_ = value;
+          parkingOffsetSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for CodeGenerator contains an invalid "
+                 "value for parking_offset. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else {
+        std::ostringstream oss;
+        oss << "[WARN] Configuration for CodeGenerator contains an unknown "
+               "key: "
+            << key << ". Ignoring.\n";
+        std::cout << oss.str();
+      }
+    }
+    if (!parkingOffsetSet) {
+      std::cout << "[WARN] Configuration for CodeGenerator does not contain a "
+                   "value for parking_offset. Using default.\n";
     }
   } else {
     std::cout << "[WARN] Configuration does not contain settings for "
-                 "CodeGenerator. Using default settings.\n";
+                 "CodeGenerator or is malformed. Using default settings.\n";
   }
 }
 auto CodeGenerator::generateCode(

@@ -8,8 +8,10 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -18,25 +20,111 @@
 #include <vector>
 
 namespace na {
-/// class to find a qubit layout
-template <typename T> class Placer {
+/// class to find a qubit layout based on vertex matching of a weighted
+/// bipartite graph
+class Placer {
+  std::reference_wrapper<const Architecture> architecture_;
+  /// If true, during the initial placement the atoms are placed starting in the
+  /// last row instead of the first row in the first SLM
+  bool reverseInitialPlacement_ = false;
+
+  /// this flag indicates whether the  placement should use a window when
+  /// selecting potential free sites
+  bool useWindow_ = true;
+
 protected:
-  /// generate qubit initial layout
-  auto placeQubitInitial() -> void {
-    const auto t_p = std::chrono::system_clock::now();
-    if (static_cast<T*>(this)->getGivenInitialMapping()) {
-      static_cast<T*>(this)->getQubitMapping().emplace_back(
-          *static_cast<T*>(this)->getGivenInitialMapping());
+  Placer(const Architecture& architecture, const nlohmann::json& config)
+      : architecture_(architecture) {
+    // get first storage SLM and first entanglement SLM
+    const auto& firstStorageSlm = *architecture_.get().storageZones.front();
+    const auto& firstEntanglementSlm =
+        *architecture_.get().entanglementZones.front().front();
+    // check which side of the first storage SLM is closer to the entanglement
+    // SLM
+    if (firstStorageSlm.location.second <
+        firstEntanglementSlm.location.second) {
+      // if the entanglement SLM is closer to the last row of the storage SLM
+      // start initial placement of the atoms in the last row instead of the
+      // first and hence revert initial placement
+      reverseInitialPlacement_ = true;
+    }
+    if (const auto& configIt = config.find("vm_placer");
+        configIt != config.end() && configIt->is_object()) {
+      for (const auto& [key, value] : configIt.value().items()) {
+        if (key == "use_window") {
+          if (value.is_boolean()) {
+            useWindow_ = value;
+          } else {
+            std::ostringstream oss;
+            oss << "[WARN] Configuration for VMPlacer contains an invalid "
+                   "value for use_window. Using default.\n";
+            std::cout << oss.str();
+          }
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for VMPlacer contains an unknown key: "
+              << key << ". Ignoring.\n";
+          std::cout << oss.str();
+        }
+      }
     } else {
-      if (static_cast<T*>(this)->isTrivialPlacement()) {
-        placeTrivial();
-      } else {
-        throw std::invalid_argument(
-            "Initial placement via simulated annealing is not implemented");
+      std::cout << "[WARN] Configuration does not contain settings for "
+                   "VMPlacer or is malformed. Using default settings.\n";
+    }
+  }
+  [[nodiscard]] auto
+  place(const size_t nQubits,
+        const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+            twoQubitGateLayers,
+        const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
+      -> std::vector<std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>> {
+    std::vector<std::vector<
+        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>
+        placement;
+    placement.reserve((2 * twoQubitGateLayers.size()) + 1);
+    placement.emplace_back(makeInitialPlacement(nQubits));
+    for (size_t layer = 0; layer < twoQubitGateLayers.size(); ++layer) {
+      const auto& [gatePlacement, qubitPlacement] = makeIntermediatePlacement(
+          placement.back(),
+          layer == 0 ? std::unordered_set<qc::Qubit>{} : reuseQubits[layer - 1],
+          reuseQubits[layer], twoQubitGateLayers[layer]);
+      placement.emplace_back(gatePlacement);
+      placement.emplace_back(qubitPlacement);
+    }
+    return placement;
+  }
+  /// generate qubit initial layout
+  auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
+      -> std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+    auto slmIt = architecture_.get().storageZones.cbegin();
+    std::size_t c = 0;
+    std::int64_t r = reverseInitialPlacement_
+                         ? static_cast<std::int64_t>((*slmIt)->nRows) - 1
+                         : 0;
+    const std::int64_t step = reverseInitialPlacement_ ? -1 : 1;
+    std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+        initialPlacement;
+    initialPlacement.reserve(nQubits);
+    for (qc::Qubit qubit = 0; qubit < nQubits; ++qubit) {
+      initialPlacement.emplace_back(**slmIt, r, c++);
+      if (c == (*slmIt)->nCols) {
+        // the end of the row reached, go to the next row
+        r += step;
+        c = 0;
+        if (r == static_cast<std::int64_t>((*slmIt)->nRows)) {
+          // the end of the slm reached, go to the next slm
+          ++slmIt;
+          if (step > 0) {
+            r = static_cast<std::int64_t>((*slmIt)->nRows) - 1;
+          } else {
+            r = 0;
+          }
+        }
       }
     }
-    static_cast<T*>(this)->getRuntimeAnalysis().initialPlacement =
-        std::chrono::system_clock::now() - t_p;
+    return initialPlacement;
   }
 
   /// generate qubit initial layout

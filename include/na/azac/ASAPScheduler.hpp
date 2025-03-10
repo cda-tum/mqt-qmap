@@ -24,9 +24,7 @@ public:
    * @note The second parameter of the constructor is unused.
    * @param architecture is the architecture of the neutral atom system
    */
-  ASAPScheduler(const Architecture& architecture,
-                const nlohmann::json& /* unused */)
-      : architecture_(architecture) {}
+  ASAPScheduler(const Architecture& architecture, const nlohmann::json& config);
   /**
    * This function schedules the operations of a quantum computation.
    * @details Every operation is scheduled as soon as possible. The function

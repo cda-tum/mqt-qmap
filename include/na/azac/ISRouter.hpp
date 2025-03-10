@@ -68,8 +68,7 @@ class ISRouter {
 
 protected:
   /// Create a ISRouter
-  ISRouter(const Architecture& architecture, const nlohmann::json& /* unused */)
-      : architecture_(architecture) {}
+  ISRouter(const Architecture& architecture, const nlohmann::json& config);
   /**
    * Given the computed placement, compute a possible routing.
    * @details For this task, all movements are put in a conflict graph where an

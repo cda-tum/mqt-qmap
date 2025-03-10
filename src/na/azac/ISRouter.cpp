@@ -6,7 +6,9 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <set>
+#include <sstream>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -70,6 +72,19 @@ auto ISRouter::isCompatibleMovement(
     return false;
   }
   return true;
+}
+ISRouter::ISRouter(const Architecture& architecture,
+                   const nlohmann::json& config)
+    : architecture_(architecture) {
+  if (const auto& configIt = config.find("is_router");
+      configIt != config.end() && configIt->is_object()) {
+    for (const auto& [key, value] : configIt.value().items()) {
+      std::ostringstream oss;
+      oss << "[WARN] Configuration for ISRouter contains an unknown key: "
+          << key << ". Ignoring.\n";
+      std::cout << oss.str();
+    }
+  }
 }
 auto ISRouter::route(
     const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,

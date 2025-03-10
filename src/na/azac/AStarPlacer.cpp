@@ -15,6 +15,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <queue>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -842,34 +843,65 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
   }
   // check whether the config contains information on the windowed placement
   if (const auto& configIt = config.find("a_star_placer");
-      configIt != config.end()) {
-    const auto& placerConfig = configIt.value();
-    if (const auto& it = placerConfig.find("use_window");
-        it != placerConfig.end() && it->is_boolean()) {
-      useWindow_ = it.value();
-    } else {
-      std::cout << "[WARN] Configuration for AStarPlacer does not contain "
-                   "the flag use_window. Using default.\n";
+      configIt != config.end() && configIt->is_object()) {
+    bool useWindowSet = false;
+    bool windowHeightSet = false;
+    bool windowWidthSet = false;
+    for (const auto& [key, value] : configIt.value().items()) {
+      if (key == "use_window") {
+        if (value.is_boolean()) {
+          useWindow_ = value;
+          useWindowSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+                 "value for use_window. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "window_height") {
+        if (value.is_number_unsigned()) {
+          windowHeight_ = value;
+          windowHeightSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+                 "value for window_height. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "window_width") {
+        if (value.is_number_unsigned()) {
+          windowWidth_ = value;
+          windowWidthSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+                 "value for window_width. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else {
+        std::ostringstream oss;
+        oss << "[WARN] Configuration for AStarPlacer contains an unknown key: "
+            << key << ". Ignoring.\n";
+        std::cout << oss.str();
+      }
     }
-    if (const auto& it = placerConfig.find("window_height");
-        it != placerConfig.end() && it->is_boolean()) {
-      windowHeight_ = it.value();
-    } else {
-      std::cout << "[WARN] Configuration for AStarPlacer does not contain "
-                   "the window height even though use_window is true. Using "
-                   "default.\n";
+    if (!useWindowSet) {
+      std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+                   "setting for use_window. Using default.\n";
     }
-    if (const auto& it = placerConfig.find("window_width");
-        it != placerConfig.end() && it->is_boolean()) {
-      windowWidth_ = it.value();
-    } else {
-      std::cout << "[WARN] Configuration for AStarPlacer does not contain "
-                   "the window width even though use_window is true. Using "
-                   "default.\n";
+    if (useWindow_) {
+      if (!windowHeightSet) {
+        std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+                     "setting for window_height. Using default.\n";
+      }
+      if (!windowWidthSet) {
+        std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+                     "setting for window_width. Using default.\n";
+      }
     }
   } else {
     std::cout << "[WARN] Configuration does not contain settings for "
-                 "AStarPlacer. Using default settings.\n";
+                 "AStarPlacer or is malformed. Using default settings.\n";
   }
 }
 auto AStarPlacer::place(

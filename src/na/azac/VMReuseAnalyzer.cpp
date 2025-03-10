@@ -5,12 +5,26 @@
 
 #include <cassert>
 #include <cstddef>
+#include <iostream>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace na {
+VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
+                                 const nlohmann::json& config) {
+  if (const auto& configIt = config.find("vm_reuse_analyzer");
+      configIt != config.end() && configIt->is_object()) {
+    for (const auto& [key, value] : configIt.value().items()) {
+      std::ostringstream oss;
+      oss << "[WARN] Configuration for Placer contains an unknown key: " << key
+          << ". Ignoring.\n";
+      std::cout << oss.str();
+    }
+  }
+}
 auto VMReuseAnalyzer::analyzeReuse(
     const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
         twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {

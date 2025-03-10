@@ -11,11 +11,27 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#include <iostream>
+#include <nlohmann/json_fwd.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace na {
+ASAPScheduler::ASAPScheduler(const Architecture& architecture,
+                             const nlohmann::json& config)
+    : architecture_(architecture) {
+  if (const auto& configIt = config.find("asap_scheduler");
+      configIt != config.end() && configIt->is_object()) {
+    for (const auto& [key, value] : configIt.value().items()) {
+      std::ostringstream oss;
+      oss << "[WARN] Configuration for ASAPScheduler contains an unknown key: "
+          << key << ". Ignoring.\n";
+      std::cout << oss.str();
+    }
+  }
+}
 auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
     -> std::pair<
         std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
