@@ -28,29 +28,31 @@ class CodeGenerator {
   auto appendOneQubitGates(
       const std::vector<std::reference_wrapper<const qc::Operation>>&
           oneQubitGates,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>& atomLocations,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& atomLocations,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
 
   /// Append all necessary operations to perform the next set of two-qubit gates
   auto appendTwoQubitGates(
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          currentPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& currentPlacement,
       const std::vector<std::vector<qc::Qubit>>& executionRouting,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          executionPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& executionPlacement,
       const std::vector<std::vector<qc::Qubit>>& targetRouting,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          targetPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       const Zone& zone, NAComputation& code) const -> void;
 
   /// Append all necessary operations to rearrange the atoms
   auto appendRearrangement(
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& startPlacement,
       const std::vector<std::vector<qc::Qubit>>& routing,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          targetPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
 
@@ -78,7 +80,8 @@ protected:
   [[nodiscard]] auto generateCode(
       const std::vector<std::vector<
           std::reference_wrapper<const qc::Operation>>>& oneQubitGateLayers,
-      const std::vector<std::vector<std::tuple<const SLM&, size_t, size_t>>>&
+      const std::vector<std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
           placement,
       const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
       -> NAComputation;

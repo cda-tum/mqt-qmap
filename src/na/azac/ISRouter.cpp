@@ -1,9 +1,11 @@
+#include "na/azac/ISRouter.hpp"
+
 #include "Definitions.hpp"
 #include "na/azac/Architecture.hpp"
-#include "na/azac/Router.hpp"
 
 #include <cassert>
 #include <cstddef>
+#include <functional>
 #include <set>
 #include <tuple>
 #include <unordered_map>
@@ -13,9 +15,11 @@
 
 auto na::ISRouter::createConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetPlacement)
-    const -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& startPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& targetPlacement) const
+    -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
   std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> conflictGraph;
   for (auto atomIt = atomsToMove.cbegin(); atomIt != atomsToMove.cend();
        ++atomIt) {
@@ -67,8 +71,9 @@ auto na::ISRouter::isCompatibleMovement(
   return true;
 }
 auto na::ISRouter::route(
-    const std::vector<std::vector<std::tuple<const SLM&, size_t, size_t>>>&
-        placement) const -> std::vector<std::vector<std::vector<qc::Qubit>>> {
+    const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                             size_t, size_t>>>& placement) const
+    -> std::vector<std::vector<std::vector<qc::Qubit>>> {
   std::vector<std::vector<std::vector<qc::Qubit>>> routing;
   for (auto it = placement.cbegin(); true;) {
     const auto& startPlacement = *it;
@@ -76,7 +81,8 @@ auto na::ISRouter::route(
       break;
     }
     const auto& targetPlacement = *it;
-    std::set<std::pair<double, qc::Qubit>> atomsToMoveOrderedAscByDist;
+    std::set<std::pair<double, qc::Qubit>, std::greater<>>
+        atomsToMoveOrderedAscByDist;
     assert(startPlacement.size() == targetPlacement.size());
     for (qc::Qubit atom = 0; atom < startPlacement.size(); ++atom) {
       const auto& [startSlm, startRow, startColumn] = startPlacement[atom];
@@ -94,9 +100,8 @@ auto na::ISRouter::route(
     atomsToMove.reserve(atomsToMoveOrderedAscByDist.size());
     // put the atoms into the vector such they are ordered decreasingly by their
     // movement distance
-    for (auto atomIt = atomsToMoveOrderedAscByDist.crbegin();
-         atomIt != atomsToMoveOrderedAscByDist.crend(); ++atomIt) {
-      atomsToMove.emplace_back(atomIt->second);
+    for (const auto& atomIt : atomsToMoveOrderedAscByDist) {
+      atomsToMove.emplace_back(atomIt.second);
     }
     auto conflictGraph =
         createConflictGraph(atomsToMove, startPlacement, targetPlacement);
@@ -114,8 +119,8 @@ auto na::ISRouter::route(
             conflictingNeighbors.emplace(neighbor);
           }
         } else {
-          // if atom could not be put into the current independent set, add it
-          // to the remaining atoms
+          // if an atom could not be put into the current independent set, add
+          // it to the remaining atoms
           remainingAtoms.emplace_back(atom);
         }
       }

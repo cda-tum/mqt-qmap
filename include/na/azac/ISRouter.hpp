@@ -35,9 +35,10 @@ class ISRouter {
    */
   [[nodiscard]] auto createConflictGraph(
       const std::vector<qc::Qubit>& atomsToMove,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
-      const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-          targetPlacement) const
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& startPlacement,
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
 
   /**
@@ -81,7 +82,8 @@ protected:
    * vector of groups containing atoms that can be moved simultaneously
    */
   [[nodiscard]] auto
-  route(const std::vector<std::vector<std::tuple<const SLM&, size_t, size_t>>>&
+  route(const std::vector<std::vector<
+            std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
             placement) const
       -> std::vector<std::vector<std::vector<qc::Qubit>>>;
 };

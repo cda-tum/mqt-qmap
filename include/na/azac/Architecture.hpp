@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <istream>
 #include <memory>
 #include <nlohmann/json.hpp>
@@ -36,17 +37,18 @@ struct SLM {
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
   /// SLMs in the same group
-  std::vector<std::unique_ptr<SLM>>* entanglementZone = nullptr;
-  std::optional<std::size_t> entanglementId = std::nullopt;
+  std::optional<std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>>
+      entanglementZone_;
+  std::optional<std::size_t> entanglementId_ = std::nullopt;
 
   explicit SLM(nlohmann::json slmSpec);
   explicit SLM(nlohmann::json slmSpec,
-               decltype(entanglementZone) entanglementZone,
+               const std::vector<std::unique_ptr<SLM>>& entanglementZone,
                std::size_t entanglementId);
-  [[nodiscard]] auto isStorage() const -> bool {
-    return entanglementZone == nullptr;
+  [[nodiscard]] auto isEntanglement() const -> bool {
+    return entanglementZone_.has_value();
   }
-  [[nodiscard]] auto isEntanglement() const -> bool { return !isStorage(); }
+  [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
 };
 } // namespace na
 
@@ -106,16 +108,19 @@ struct Architecture {
   /// entanglement zone.
   /// The third index denotes the i-th nearest storage site.
   /// @see storageToNearestEntanglementSite
-  std::unordered_map<const SLM*, std::vector<std::vector<std::tuple<
-                                     const SLM*, std::size_t, std::size_t>>>>
+  std::unordered_map<
+      std::reference_wrapper<const SLM>,
+      std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                         std::size_t, std::size_t>>>>
       entanglementToNearestStorageSite;
   /// A map from a storage site to the nearest Rydberg sites.
   /// @see entanglementToNearestStorageSite
   std::unordered_map<
-      const SLM*,
+      std::reference_wrapper<const SLM>,
       std::vector<std::vector<std::unordered_map<
-          const SLM*, std::vector<std::vector<
-                          std::tuple<const SLM*, std::size_t, std::size_t>>>>>>>
+          std::reference_wrapper<const SLM>,
+          std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                             std::size_t, std::size_t>>>>>>>
       storageToNearestEntanglementSite;
 
   Architecture() = default;
@@ -165,71 +170,54 @@ struct Architecture {
   //===--------------------------------------------------------------------===//
   /// Check if the given position is a valid SLM position, i.e., whether the
   /// given row and column are within the range of the SLM.
-  auto isValidSlmPosition(const SLM& slm, std::size_t r, std::size_t c) const
-      -> bool;
-  auto
-  /// @see isValidSlmPosition
-  isValidSlmPosition(const std::tuple<const SLM*, const std::size_t,
-                                      const std::size_t>& t) const -> bool {
-    return isValidSlmPosition(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  //===--------------------------------------------------------------------===//
+  [[nodiscard]] auto isValidSlmPosition(const SLM& slm, std::size_t r,
+                                        std::size_t c) const -> bool;
   /// Compute the exact location of the SLM site given the row and column
   /// indices expressed in coordinates in the global coordinate system.
-  auto exactSlmLocation(const SLM& slm, std::size_t r, std::size_t c) const
+  [[nodiscard]] auto exactSlmLocation(const SLM& slm, std::size_t r,
+                                      std::size_t c) const
       -> std::pair<std::size_t, std::size_t>;
-  /// @see exactSlmLocation
-  auto exactSlmLocation(const std::tuple<const SLM*, const std::size_t,
-                                         const std::size_t>& t) const
-      -> std::pair<std::size_t, std::size_t> {
-    return exactSlmLocation(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  //===--------------------------------------------------------------------===//
+  /**
+   * In the loop, we will calculate a lower bound of the distance
+   * between the entanglement site and a storage SLM. Any site in the
+   * storage SLM will have at least this distance to the entanglement
+   * site. This distance will be the variable @c minimalDistance.
+   * Among all storage SLMs, we will find the one that has the minimum
+   * distance to the entanglement site, the @c minimumDistance.
+   */
+  [[nodiscard]] auto findNearestStorageSLM(size_t x, size_t y) const
+      -> const SLM&;
+  /**
+   * In the loop, we will calculate a lower bound of the distance
+   * between the entanglement site and a storage SLM. Any site in
+   * the storage SLM will have at least this distance to the
+   * entanglement site. This distance will be the variable @c
+   * minimalDistance. Among all storage SLMs, we will find the one
+   * that has the minimum distance to the entanglement site, the @c
+   * minimumDistance.
+   */
+  [[nodiscard]] auto findNearestEntanglementSLM(size_t x, size_t y,
+                                                size_t otherX,
+                                                size_t otherY) const
+      -> const SLM&;
   /// Compute the site region for entanglement zone and the nearest Rydberg site
   /// for each storage site.
   /// @note We assume we only have one storage zone or one entanglement zone per
   /// row.
   auto preprocessing() -> void;
-  //===--------------------------------------------------------------------===//
   /// Compute the distance between two specific SLM sites
   auto distance(const SLM& idx1, std::size_t r1, std::size_t c1,
                 const SLM& idx2, std::size_t r2, std::size_t c2) const
       -> double;
-  /// @see distance
-  auto distance(
-      const std::tuple<const SLM*, const std::size_t, const std::size_t>& t1,
-      const std::tuple<const SLM*, const std::size_t, const std::size_t>& t2)
-      const -> double {
-    return distance(*std::get<0>(t1), std::get<1>(t1), std::get<2>(t1),
-                    *std::get<0>(t2), std::get<1>(t2), std::get<2>(t2));
-  }
-  //===--------------------------------------------------------------------===//
   /// return the nearest storage site for an entanglement site
   auto nearestStorageSite(const SLM& slm, std::size_t r, std::size_t c) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>&;
-  /// @see nearestStorageSite
-  auto nearestStorageSite(const std::tuple<const SLM*, const std::size_t,
-                                           const std::size_t>& t) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestStorageSite(*std::get<0>(t), std::get<1>(t), std::get<2>(t));
-  }
-  //===--------------------------------------------------------------------===//
+      -> const std::tuple<const SLM&, std::size_t, std::size_t>&;
   /// return the nearest Rydberg site for two qubit in the storage zone
   /// based on the position of two qubits
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
                                const SLM& idx2, std::size_t r2,
                                std::size_t c2) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>&;
-  /// @see nearestEntanglementSite
-  auto nearestEntanglementSite(
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t1,
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t2) const
-      -> const std::tuple<const SLM*, std::size_t, std::size_t>& {
-    return nearestEntanglementSite(*std::get<0>(t1), std::get<1>(t1),
-                                   std::get<2>(t1), *std::get<0>(t2),
-                                   std::get<1>(t2), std::get<2>(t2));
-  }
-  //===--------------------------------------------------------------------===//
+      -> const std::tuple<const SLM&, std::size_t, std::size_t>&;
   /// return the maximum/sum of the distance to move two qubits to one rydberg
   /// site. If the two qubits are in the same row, i.e., can be picked up
   /// simultaneously, the maximum distance is returned. Otherwise, the
@@ -238,35 +226,11 @@ struct Architecture {
                                        std::size_t c1, const SLM& slm2,
                                        std::size_t r2, std::size_t c2) const
       -> double;
-  /// @see nearestEntanglementSiteDistance
-  auto nearestEntanglementSiteDistance(
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t1,
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t2) const
-      -> double {
-    return nearestEntanglementSiteDistance(*std::get<0>(t1), std::get<1>(t1),
-                                           std::get<2>(t1), *std::get<0>(t2),
-                                           std::get<1>(t2), std::get<2>(t2));
-  }
-  //===--------------------------------------------------------------------===//
   /// Returns the time to move from one location to another location
   static auto movementDuration(std::size_t x1, std::size_t y1, std::size_t x2,
                                std::size_t y2) -> double;
-  /// @see movementDuration
-  auto movementDuration(const std::pair<std::size_t, std::size_t>& p1,
-                        const std::pair<std::size_t, std::size_t>& p2) const
-      -> double {
-    return movementDuration(p1.first, p1.second, p2.first, p2.second);
-  }
-  //===--------------------------------------------------------------------===//
   /// Returns the other site of a pair of entanglement sites
   auto otherEntanglementSite(const SLM& slm, std::size_t r, std::size_t c) const
-      -> std::tuple<const SLM*, std::size_t, std::size_t>;
-  /// @see otherEntanglementSite
-  auto otherEntanglementSite(
-      const std::tuple<const SLM*, std::size_t, std::size_t>& t) const
-      -> std::tuple<const SLM*, std::size_t, std::size_t> {
-    return otherEntanglementSite(*std::get<0>(t), std::get<1>(t),
-                                 std::get<2>(t));
-  }
+      -> std::tuple<const SLM&, std::size_t, std::size_t>;
 };
 } // namespace na

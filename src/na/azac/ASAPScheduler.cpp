@@ -64,6 +64,6 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       throw std::invalid_argument("Operation type not supported");
     }
   }
-  return std::make_pair(oneQubitGateLayers, twoQubitGateLayers);
+  return std::pair{oneQubitGateLayers, twoQubitGateLayers};
 }
 }; // namespace na

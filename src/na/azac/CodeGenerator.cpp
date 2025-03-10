@@ -28,25 +28,28 @@
 auto na::CodeGenerator::appendOneQubitGates(
     const std::vector<std::reference_wrapper<const qc::Operation>>&
         oneQubitGates,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& atomLocations,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& atomLocations,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
   for (const auto& op : oneQubitGates) {
     assert(op.get().getNqubits() == 1);
     const qc::Qubit qubit = op.get().getTargets().front();
     const auto& [x, y] =
-        std::apply(architecture_.get().exactSlmLocation, atomLocations[qubit])
-            assert(op.get().getType() == qc::Z);
+        std::apply(architecture_.get().exactSlmLocation, atomLocations[qubit]);
+    assert(op.get().getType() == qc::Z);
     code.emplaceBack<LocalRZOp>(atoms[qubit], x, y);
   }
 }
 auto na::CodeGenerator::appendTwoQubitGates(
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& currentPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& currentPlacement,
     const std::vector<std::vector<qc::Qubit>>& executionRouting,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>&
-        executionPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& executionPlacement,
     const std::vector<std::vector<qc::Qubit>>& targetRouting,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& zone, NAComputation& code) const -> void {
   appendRearrangement(currentPlacement, executionRouting, executionPlacement,
@@ -56,9 +59,11 @@ auto na::CodeGenerator::appendTwoQubitGates(
                       code);
 }
 auto na::CodeGenerator::appendRearrangement(
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& startPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& startPlacement,
     const std::vector<std::vector<qc::Qubit>>& routing,
-    const std::vector<std::tuple<const SLM&, size_t, size_t>>& targetPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
   for (const auto& qubits : routing) {
@@ -83,7 +88,7 @@ auto na::CodeGenerator::appendRearrangement(
     std::vector<const Atom*> firstAtomsToLoad;
     firstAtomsToLoad.reserve(firstRow.size());
     for (const auto& [x, qubit] : firstRow) {
-      alreadyLoadedQubits.emplace_back(qubit, std::make_pair(x, minY));
+      alreadyLoadedQubits.emplace_back(qubit, std::pair{x, minY});
       firstAtomsToLoad.emplace_back(&atoms[qubit].get());
     }
     code.emplaceBack<LoadOp>(firstAtomsToLoad);
@@ -118,7 +123,7 @@ auto na::CodeGenerator::appendRearrangement(
       std::vector<const Atom*> atomsToLoad;
       atomsToLoad.reserve(row.size());
       for (const auto& [x, qubit] : row) {
-        alreadyLoadedQubits.emplace_back(qubit, std::make_pair(x, y));
+        alreadyLoadedQubits.emplace_back(qubit, std::pair{x, y});
         atomsToLoad.emplace_back(&atoms[qubit].get());
       }
       code.emplaceBack<LoadOp>(atomsToLoad);
@@ -131,7 +136,7 @@ auto na::CodeGenerator::appendRearrangement(
 na::CodeGenerator::CodeGenerator(const Architecture& architecture,
                                  const nlohmann::json& config)
     : architecture_(architecture) {
-  if (const auto& configIt = config.find("parking_offset");
+  if (const auto& configIt = config.find("code_generator");
       configIt != config.end()) {
     const auto& generatorConfig = configIt.value();
     if (const auto& it = generatorConfig.find("parking_offset");
@@ -149,8 +154,8 @@ na::CodeGenerator::CodeGenerator(const Architecture& architecture,
 auto na::CodeGenerator::generateCode(
     const std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>&
         oneQubitGateLayers,
-    const std::vector<std::vector<std::tuple<const SLM&, size_t, size_t>>>&
-        placement,
+    const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                             size_t, size_t>>>& placement,
     const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
     -> NAComputation {
   NAComputation code;
