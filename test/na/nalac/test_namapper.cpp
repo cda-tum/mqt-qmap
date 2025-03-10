@@ -13,7 +13,6 @@
 #include "na/nalac/datastructures/operations/NALocalOperation.hpp"
 #include "na/nalac/datastructures/operations/NAShuttlingOperation.hpp"
 #include "qasm3/Importer.hpp"
-#include "qasm3/Importer.hpp"
 
 #include <algorithm>
 #include <cstddef>
