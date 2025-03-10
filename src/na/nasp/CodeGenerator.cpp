@@ -77,8 +77,8 @@ auto CodeGenerator::generate(const QuantumComputation& input,
   CircuitOptimizer::flattenOperations(flattened);
   const Layer layer(flattened);
   NAComputation code;
-  const auto* globalZone = code.emplaceBackZone("global");
-  const auto* interactionZone = code.emplaceBackZone("zone_cz0");
+  const auto& globalZone = code.emplaceBackZone("global");
+  const auto& interactionZone = code.emplaceBackZone("zone_cz0");
   std::vector<const Atom*> atoms;
   std::vector<bool> wasAOD;
   atoms.reserve(result.stages.front().qubits.size());
@@ -96,14 +96,14 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     std::vector<const Atom*> loadAtoms;
     std::size_t c = 0;
     for (const auto& q : result.stages.front().qubits) {
-      auto pos = coordFromDiscrete(q, maxHOffset, maxVOffset, minEntanglingY,
-                                   maxEntanglingY, minAtomDist,
-                                   noInteractionRadius, zoneDist);
+      const auto& pos = coordFromDiscrete(
+          q, maxHOffset, maxVOffset, minEntanglingY, maxEntanglingY,
+          minAtomDist, noInteractionRadius, zoneDist);
       wasAOD.emplace_back(q.a);
-      const auto& atom = atoms.emplace_back(
-          code.emplaceBackAtom("atom" + std::to_string(c++)));
+      const auto& atom = *atoms.emplace_back(
+          &code.emplaceBackAtom("atom" + std::to_string(c++)));
       if (q.a) {
-        loadAtoms.emplace_back(atom);
+        loadAtoms.emplace_back(&atom);
       }
       code.emplaceInitialLocation(atom, pos);
     }
@@ -122,7 +122,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     throw std::invalid_argument("Not all atoms are initialized to plus state.");
   }
   // initialize atoms in to |+> state starting in |0> state
-  code.emplaceBack<GlobalRYOp>(PI_2, globalZone);
+  code.emplaceBack<GlobalRYOp>(globalZone, PI_2);
   std::for_each(ops.cbegin(), ops.cend(), [](const auto& v) { v->execute(); });
   // Reference to the executable set of the input circuit
   const auto& executableSet = layer.getExecutableSet();
@@ -202,7 +202,7 @@ auto CodeGenerator::generate(const QuantumComputation& input,
     }
   }
   if (!executableSet.empty()) {
-    code.emplaceBack<GlobalRYOp>(-PI_4, globalZone);
+    code.emplaceBack<GlobalRYOp>(globalZone, -PI_4);
     while (!executableSet.empty()) {
       const auto& v = (*executableSet.cbegin());
       if (v->getOperation()->getType() != H) {
@@ -210,10 +210,10 @@ auto CodeGenerator::generate(const QuantumComputation& input,
             "Not all non CZ-gates in input circuit are executed.");
       }
       const auto q = v->getOperation()->getTargets().front();
-      code.emplaceBack<LocalRZOp>(PI, atoms[q]);
+      code.emplaceBack<LocalRZOp>(*atoms[q], PI);
       v->execute();
     }
-    code.emplaceBack<GlobalRYOp>(PI_4, globalZone);
+    code.emplaceBack<GlobalRYOp>(globalZone, PI_4);
   }
   return code;
 }
