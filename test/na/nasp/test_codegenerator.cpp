@@ -32,6 +32,6 @@ TEST(CodeGenerator, Generate) {
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
                    std::nullopt, false, true);
   const auto& comp = na::CodeGenerator::generate(circ, result);
-  const auto valid = comp.validate();
+  const auto valid = comp.validate().first;
   EXPECT_TRUE(valid);
 }
