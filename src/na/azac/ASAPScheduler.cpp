@@ -66,4 +66,4 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
   }
   return std::pair{oneQubitGateLayers, twoQubitGateLayers};
 }
-}; // namespace na
+} // namespace na

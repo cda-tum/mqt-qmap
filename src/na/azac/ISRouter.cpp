@@ -13,7 +13,8 @@
 #include <utility>
 #include <vector>
 
-auto na::ISRouter::createConflictGraph(
+namespace na {
+auto ISRouter::createConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove,
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& startPlacement,
@@ -39,7 +40,7 @@ auto na::ISRouter::createConflictGraph(
   }
   return conflictGraph;
 }
-auto na::ISRouter::getMovementVector(
+auto ISRouter::getMovementVector(
     const std::tuple<const SLM&, size_t, size_t>& start,
     const std::tuple<const SLM&, size_t, size_t>& target) const
     -> std::tuple<size_t, size_t, size_t, size_t> {
@@ -51,7 +52,7 @@ auto na::ISRouter::getMovementVector(
       architecture_.get().exactSlmLocation(targetSlm, targetRow, targetColumn);
   return std::make_tuple(startX, startY, targetX, targetY);
 }
-auto na::ISRouter::isCompatibleMovement(
+auto ISRouter::isCompatibleMovement(
     std::tuple<size_t, size_t, size_t, size_t> v,
     std::tuple<size_t, size_t, size_t, size_t> w) -> bool {
   const auto& [v0, v1, v2, v3] = v;
@@ -70,7 +71,7 @@ auto na::ISRouter::isCompatibleMovement(
   }
   return true;
 }
-auto na::ISRouter::route(
+auto ISRouter::route(
     const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                              size_t, size_t>>>& placement) const
     -> std::vector<std::vector<std::vector<qc::Qubit>>> {
@@ -129,3 +130,4 @@ auto na::ISRouter::route(
   }
   return routing;
 }
+} // namespace na

@@ -6,10 +6,10 @@
 #include "na/NAComputation.hpp"
 #include "na/azac/ASAPScheduler.hpp"
 #include "na/azac/AStarPlacer.hpp"
-#include "na/azac/BMReuseAnalyzer.hpp"
 #include "na/azac/CodeGenerator.hpp"
 #include "na/azac/ISRouter.hpp"
 #include "na/azac/VMPlacer.hpp"
+#include "na/azac/VMReuseAnalyzer.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -95,7 +95,7 @@ public:
 };
 
 class ZACompiler final
-    : public Compiler<ZACompiler, ASAPScheduler, BMReuseAnalyzer, VMPlacer,
+    : public Compiler<ZACompiler, ASAPScheduler, VMReuseAnalyzer, VMPlacer,
                       ISRouter, CodeGenerator> {
 public:
   ZACompiler(const Architecture& architecture, const nlohmann::json& config)
@@ -103,7 +103,7 @@ public:
 };
 
 class AZACompiler final
-    : public Compiler<AZACompiler, ASAPScheduler, BMReuseAnalyzer, AStarPlacer,
+    : public Compiler<AZACompiler, ASAPScheduler, VMReuseAnalyzer, AStarPlacer,
                       ISRouter, CodeGenerator> {
 public:
   AZACompiler(const Architecture& architecture, const nlohmann::json& config)

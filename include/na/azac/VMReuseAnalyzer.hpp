@@ -10,17 +10,24 @@
 
 namespace na {
 /**
- * The class BMReuseAnalyzer implements the default reuse analysis for the
+ * The class VMReuseAnalyzer implements the default reuse analysis for the
  * zoned neutral atom compiler that uses a bipartite maximum matching.
  */
-class BMReuseAnalyzer {
-public:
+class VMReuseAnalyzer {
+  /// Computes a maximum matching in a bipartite graph
+  /// @note implemented pseudocode from
+  /// https://epubs.siam.org/doi/pdf/10.1137/0202019?download=true
+  [[nodiscard]] static auto maximumBipartiteMatching(
+      const std::vector<std::vector<std::size_t>>& sparseMatrix,
+      bool inverted = false) -> std::vector<std::optional<std::size_t>>;
+
+protected:
   /**
-   * Create a new BMReuseAnalyzer.
+   * Create a new VMReuseAnalyzer.
    * @note Both parameters are unused. Hence, the constructor does nothing
    * and the function @ref analyzeReuse is a static function.
    */
-  BMReuseAnalyzer(const Architecture& /* unused */,
+  VMReuseAnalyzer(const Architecture& /* unused */,
                   const nlohmann::json& /* unused */) {}
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] static auto

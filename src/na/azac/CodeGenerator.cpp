@@ -25,7 +25,8 @@
 #include <utility>
 #include <vector>
 
-auto na::CodeGenerator::appendOneQubitGates(
+namespace na {
+auto CodeGenerator::appendOneQubitGates(
     const std::vector<std::reference_wrapper<const qc::Operation>>&
         oneQubitGates,
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
@@ -41,7 +42,7 @@ auto na::CodeGenerator::appendOneQubitGates(
     code.emplaceBack<LocalRZOp>(atoms[qubit], x, y);
   }
 }
-auto na::CodeGenerator::appendTwoQubitGates(
+auto CodeGenerator::appendTwoQubitGates(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& currentPlacement,
     const std::vector<std::vector<qc::Qubit>>& executionRouting,
@@ -58,7 +59,7 @@ auto na::CodeGenerator::appendTwoQubitGates(
   appendRearrangement(executionPlacement, targetRouting, targetPlacement, atoms,
                       code);
 }
-auto na::CodeGenerator::appendRearrangement(
+auto CodeGenerator::appendRearrangement(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& startPlacement,
     const std::vector<std::vector<qc::Qubit>>& routing,
@@ -133,8 +134,8 @@ auto na::CodeGenerator::appendRearrangement(
     code.emplaceBack<StoreOp>(atomsToMove);
   }
 }
-na::CodeGenerator::CodeGenerator(const Architecture& architecture,
-                                 const nlohmann::json& config)
+CodeGenerator::CodeGenerator(const Architecture& architecture,
+                             const nlohmann::json& config)
     : architecture_(architecture) {
   if (const auto& configIt = config.find("code_generator");
       configIt != config.end()) {
@@ -151,7 +152,7 @@ na::CodeGenerator::CodeGenerator(const Architecture& architecture,
                  "CodeGenerator. Using default settings.\n";
   }
 }
-auto na::CodeGenerator::generateCode(
+auto CodeGenerator::generateCode(
     const std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>&
         oneQubitGateLayers,
     const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
@@ -184,3 +185,4 @@ auto na::CodeGenerator::generateCode(
   }
   return code;
 }
+} // namespace na
