@@ -384,7 +384,7 @@ test = [
   "ipywidgets>=8.1.5",
   "pytest>=8.3.4",
   "pytest-cov>=6",
-  "mqt.qcec>=3.0.0b1",
+  "mqt.qcec>=3.0.0b2",
 ]
 dev = [
   {include-group = "build"},
