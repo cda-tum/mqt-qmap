@@ -116,8 +116,9 @@ void NeutralAtomArchitecture::loadJson(const std::string& filename) {
 void NeutralAtomArchitecture::createCoordinates() {
   coordinates.reserve(properties.getNpositions());
   for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
-    this->coordinates.emplace_back(i % this->properties.getNcolumns(),
-                                   i / this->properties.getNcolumns());
+    this->coordinates.emplace_back(
+        Location{static_cast<double>(i % this->properties.getNcolumns()),
+                 static_cast<double>(i / this->properties.getNcolumns())});
   }
 }
 NeutralAtomArchitecture::NeutralAtomArchitecture(const std::string& filename) {
@@ -136,7 +137,8 @@ void NeutralAtomArchitecture::computeSwapDistances(qc::fp interactionRadius) {
   for (uint32_t i = 0; i < this->getNcolumns() && i < interactionRadius; i++) {
     for (uint32_t j = i; j < this->getNrows(); j++) {
       const auto dist = NeutralAtomArchitecture::getEuclideanDistance(
-          Location(0, 0), Location(i, j));
+          Location{0.0, 0.0},
+          Location{static_cast<double>(i), static_cast<double>(j)});
       if (dist <= interactionRadius) {
         if (dist == 0) {
           continue;
