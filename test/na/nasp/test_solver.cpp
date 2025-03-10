@@ -164,7 +164,6 @@ TEST(Solver, JSONRoundTrip) {
   const auto result =
       solver.solve(pairs, static_cast<uint16_t>(circ.getNqubits()), 4,
                    std::nullopt, false, true);
-  const auto resultRT = na::NASolver::Result::fromJSON(
-      nlohmann::json(result.json())); // NOLINT(*-include-cleaner)
+  const auto resultRT = na::NASolver::Result::fromJSON(result.json());
   EXPECT_EQ(resultRT, result);
 }

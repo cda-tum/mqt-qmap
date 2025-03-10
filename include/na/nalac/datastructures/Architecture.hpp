@@ -73,7 +73,7 @@ public:
     Value t1 = 0;
     Value t2 = 0;
 
-    [[nodiscard]] Value tEff() const {
+    [[nodiscard]] auto tEff() const -> Value {
       if (t1 == 0 && t2 == 0) {
         return 0;
       }

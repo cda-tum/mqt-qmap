@@ -51,7 +51,7 @@ TEST(NAOperation, LocalOperation) {
   EXPECT_FALSE(op.isShuttlingOperation());
   EXPECT_FALSE(op.isGlobalOperation());
   EXPECT_TRUE(op.isLocalOperation());
-  EXPECT_EQ(op.getType(), (std::pair{qc::RY, 0}));
+  EXPECT_EQ(op.getType(), (std::pair{qc::RY, size_t{0U}}));
   EXPECT_DOUBLE_EQ(op.getParams()[0], qc::PI_2);
   EXPECT_EQ(op.getPositions()[0]->x, 0);
   EXPECT_ANY_THROW(NALocalOperation(qc::ECR, 0, std::make_shared<Point>(0, 0)));

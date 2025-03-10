@@ -11,6 +11,7 @@
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "na/entities/Location.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -118,6 +119,7 @@ void NeutralAtomArchitecture::createCoordinates() {
   for (std::uint16_t i = 0; i < this->properties.getNpositions(); i++) {
     this->coordinates.emplace_back(
         Location{static_cast<double>(i % this->properties.getNcolumns()),
+                 // NOLINTNEXTLINE(bugprone-integer-division)
                  static_cast<double>(i / this->properties.getNcolumns())});
   }
 }

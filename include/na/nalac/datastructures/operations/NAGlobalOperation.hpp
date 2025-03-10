@@ -22,14 +22,14 @@
 namespace na::nalac {
 class NAGlobalOperation : public NAOperation {
 protected:
-  qc::OpType opType;
-  std::size_t ctrls;
-  std::vector<qc::fp> params;
+  qc::OpType opType_;
+  std::size_t ctrls_;
+  std::vector<qc::fp> params_;
 
 public:
   explicit NAGlobalOperation(const qc::OpType opType, const std::size_t ctrls,
-                             const std::vector<qc::fp>& parameters)
-      : opType(opType), ctrls(ctrls), params(parameters) {
+                             const std::vector<qc::fp>& params)
+      : opType_(opType), ctrls_(ctrls), params_(params) {
     if (!isSingleQubitGate(opType)) {
       throw std::invalid_argument("Operation is not single qubit.");
     }
@@ -37,10 +37,10 @@ public:
   explicit NAGlobalOperation(const qc::OpType opType, const std::size_t ctrls)
       : NAGlobalOperation(opType, ctrls, {}) {}
   [[nodiscard]] auto getParams() const -> const std::vector<qc::fp>& {
-    return params;
+    return params_;
   }
   [[nodiscard]] auto getType() const -> std::pair<qc::OpType, std::size_t> {
-    return {opType, ctrls};
+    return {opType_, ctrls_};
   }
   [[nodiscard]] auto isGlobalOperation() const -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override;

@@ -31,11 +31,11 @@ struct Point {
   Point(const std::int64_t xp, const std::int64_t yp) : x(xp), y(yp) {};
   Point(const Point& p) = default;
   virtual ~Point() = default;
-  Point& operator=(const Point& p) = default;
-  Point operator-(const Point& p) const { return {x - p.x, y - p.y}; }
-  Point operator-(const Point&& p) const { return {x - p.x, y - p.y}; }
-  Point operator+(const Point& p) const { return {x + p.x, y + p.y}; }
-  Point operator+(const Point&& p) const { return {x + p.x, y + p.y}; }
+  auto operator=(const Point& p) -> Point& = default;
+  auto operator-(const Point& p) const -> Point { return {x - p.x, y - p.y}; }
+  auto operator-(const Point&& p) const -> Point { return {x - p.x, y - p.y}; }
+  auto operator+(const Point& p) const -> Point { return {x + p.x, y + p.y}; }
+  auto operator+(const Point&& p) const -> Point { return {x + p.x, y + p.y}; }
   [[nodiscard]] auto length() const -> std::uint64_t {
     return static_cast<std::uint64_t>(std::round(std::sqrt(x * x + y * y)));
   }
@@ -56,15 +56,15 @@ struct Point {
     return delta.length();
   }
 
-  [[maybe_unused]] [[nodiscard]] std::int64_t
-  getManhattanDistanceX(const Point& c) const {
+  [[maybe_unused]] [[nodiscard]] auto
+  getManhattanDistanceX(const Point& c) const -> std::int64_t {
     if (x > c.x) {
       return x - c.x;
     }
     return c.x - x;
   }
-  [[maybe_unused]] [[nodiscard]] std::int64_t
-  getManhattanDistanceY(const Point& c) const {
+  [[maybe_unused]] [[nodiscard]] auto
+  getManhattanDistanceY(const Point& c) const -> std::int64_t {
     if (y > c.y) {
       return y - c.y;
     }
@@ -104,8 +104,8 @@ struct Point {
 
 /// Hash function for OpType, e.g., for use in unordered_map
 template <> struct std::hash<std::pair<qc::OpType, std::size_t>> {
-  std::size_t
-  operator()(const std::pair<qc::OpType, std::size_t>& t) const noexcept {
+  auto operator()(const std::pair<qc::OpType, std::size_t>& t) const noexcept
+      -> std::size_t {
     const std::size_t h1 = std::hash<qc::OpType>{}(t.first);
     const std::size_t h2 = std::hash<std::size_t>{}(t.second);
     return qc::combineHash(h1, h2);
@@ -114,7 +114,7 @@ template <> struct std::hash<std::pair<qc::OpType, std::size_t>> {
 
 /// Hash function for Point, e.g., for use in unordered_map
 template <> struct std::hash<na::nalac::Point> {
-  std::size_t operator()(const na::nalac::Point& p) const noexcept {
+  auto operator()(const na::nalac::Point& p) const noexcept -> std::size_t {
     const std::size_t h1 = std::hash<decltype(p.x)>{}(p.x);
     const std::size_t h2 = std::hash<decltype(p.y)>{}(p.y);
     return qc::combineHash(h1, h2);
