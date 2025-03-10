@@ -301,6 +301,9 @@ public:
 
   virtual MappingResults& getResults() { return results; }
 
+  /// get an rvalue reference to the mapped circuit to move it out of the mapper
+  qc::QuantumComputation&& moveMappedCircuit() { return std::move(qcMapped); }
+
   virtual nlohmann::basic_json<> json() { return results.json(); }
 
   virtual std::string csv() { return results.csv(); }

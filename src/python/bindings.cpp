@@ -55,8 +55,9 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 // c++ binding function
-MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
-                   Configuration& config) {
+std::pair<qc::QuantumComputation, MappingResults>
+map(const qc::QuantumComputation& circ, Architecture& arch,
+    Configuration& config) {
   if (config.useTeleportation) {
     config.teleportationQubits =
         std::min((arch.getNqubits() - circ.getNqubits()) & ~1U,
@@ -85,12 +86,9 @@ MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
   }
 
   auto& results = mapper->getResults();
+  auto&& qcMapped = mapper->moveMappedCircuit();
 
-  std::stringstream qasm{};
-  mapper->dumpResult(qasm);
-  results.mappedCircuit = qasm.str();
-
-  return results;
+  return {std::move(qcMapped), results};
 }
 
 PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
@@ -701,6 +699,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   synthesizer.def_property_readonly("results",
                                     &cs::CliffordSynthesizer::getResults,
                                     "Returns the results of the synthesis.");
+  synthesizer.def_property_readonly(
+      "result_circuit", [](cs::CliffordSynthesizer& self) {
+        return qasm3::Importer::imports(self.getResults().getResultCircuit());
+      });
 
   // Neutral Atom Hybrid Mapper
   py::enum_<na::InitialCoordinateMapping>(

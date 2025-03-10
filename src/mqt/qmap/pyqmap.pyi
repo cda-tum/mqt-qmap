@@ -393,7 +393,9 @@ class SwapReduction:
     @property
     def value(self) -> int: ...
 
-def map(circ: QuantumComputation, arch: Architecture, config: Configuration) -> MappingResults: ...  # noqa: A001
+def map(  # noqa: A001
+    circ: QuantumComputation, arch: Architecture, config: Configuration
+) -> tuple[QuantumComputation, MappingResults]: ...
 
 class TargetMetric:
     __members__: ClassVar[dict[TargetMetric, int]] = ...  # read-only
@@ -508,6 +510,8 @@ class CliffordSynthesizer:
     def synthesize(self, config: SynthesisConfiguration = ...) -> None: ...
     @property
     def results(self) -> SynthesisResults: ...
+    @property
+    def result_circuit(self) -> QuantumComputation: ...
 
 class InitialCoordinateMapping:
     __members__: ClassVar[dict[str, int]] = ...  # read-only
