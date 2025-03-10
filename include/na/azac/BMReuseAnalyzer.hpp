@@ -10,18 +10,18 @@
 
 namespace na {
 /**
- * The class ReuseAnalyzer implements the default reuse analysis for the
- * zoned neutral atom compiler.
+ * The class BMReuseAnalyzer implements the default reuse analysis for the
+ * zoned neutral atom compiler that uses a bipartite maximum matching.
  */
-class ReuseAnalyzer {
+class BMReuseAnalyzer {
 public:
   /**
-   * Create a new ReuseAnalyzer.
+   * Create a new BMReuseAnalyzer.
    * @note Both parameters are unused. Hence, the constructor does nothing
    * and the function @ref analyzeReuse is a static function.
    */
-  ReuseAnalyzer(const Architecture& /* unused */,
-                const nlohmann::json& /* unused */) {}
+  BMReuseAnalyzer(const Architecture& /* unused */,
+                  const nlohmann::json& /* unused */) {}
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] static auto
   analyzeReuse(const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&

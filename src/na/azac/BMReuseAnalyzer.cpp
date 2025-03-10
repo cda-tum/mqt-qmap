@@ -1,4 +1,4 @@
-#include "na/azac/ReuseAnalyzer.hpp"
+#include "na/azac/BMReuseAnalyzer.hpp"
 
 #include "Definitions.hpp"
 #include "na/azac/Utils.hpp"
@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-auto na::ReuseAnalyzer::analyzeReuse(
+auto na::BMReuseAnalyzer::analyzeReuse(
     const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
         twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
   std::vector<std::unordered_map<qc::Qubit, size_t>> usedQubitsInLayers;

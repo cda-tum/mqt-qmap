@@ -34,9 +34,9 @@ auto na::CodeGenerator::appendOneQubitGates(
   for (const auto& op : oneQubitGates) {
     assert(op.get().getNqubits() == 1);
     const qc::Qubit qubit = op.get().getTargets().front();
-    const auto& [slm, r, c] = atomLocations[qubit];
-    const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
-    assert(op.get().getType() == qc::Z);
+    const auto& [x, y] =
+        std::apply(architecture_.get().exactSlmLocation, atomLocations[qubit])
+            assert(op.get().getType() == qc::Z);
     code.emplaceBack<LocalRZOp>(atoms[qubit], x, y);
   }
 }
@@ -67,14 +67,13 @@ auto na::CodeGenerator::appendRearrangement(
     std::vector<Location> targetLocations;
     for (const auto& qubit : qubits) {
       // get the current location of the qubit
-      const auto& [slm, r, c] = startPlacement[qubit];
-      const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
+      const auto& [x, y] = std::apply(architecture_.get().exactSlmLocation,
+                                      startPlacement[qubit]);
       rowsWithQubits.try_emplace(y).first->second.emplace(x, qubit);
       atomsToMove.emplace_back(&atoms[qubit].get());
       // get the target location of the qubit
-      const auto& [targetSlm, targetR, targetC] = targetPlacement[qubit];
-      const auto& [targetX, targetY] =
-          architecture_.get().exactSlmLocation(targetSlm, targetR, targetC);
+      const auto& [targetX, targetY] = std::apply(
+          architecture_.get().exactSlmLocation, targetPlacement[qubit]);
       targetLocations.emplace_back(
           Location{static_cast<double>(targetX), static_cast<double>(targetY)});
     }

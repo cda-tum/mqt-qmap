@@ -4,11 +4,12 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
+#include "na/azac/ASAPScheduler.hpp"
+#include "na/azac/AStarPlacer.hpp"
+#include "na/azac/BMReuseAnalyzer.hpp"
 #include "na/azac/CodeGenerator.hpp"
-#include "na/azac/Placer.hpp"
-#include "na/azac/ReuseAnalyzer.hpp"
-#include "na/azac/Router.hpp"
-#include "na/azac/Scheduler.hpp"
+#include "na/azac/ISRouter.hpp"
+#include "na/azac/VMPlacer.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -66,7 +67,7 @@ public:
 
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement = static_cast<ConcreteType*>(this)->place(
-        twoQubitGateLayers, reuseQubits);
+        qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     placementTime_ = std::chrono::system_clock::now() - placementStart;
     std::cout << "[INFO]           Time for placement: "
               << placementTime_.count() << "µs\n";
@@ -93,8 +94,16 @@ public:
   }
 };
 
+class ZACompiler final
+    : public Compiler<ZACompiler, ASAPScheduler, BMReuseAnalyzer, VMPlacer,
+                      ISRouter, CodeGenerator> {
+public:
+  ZACompiler(const Architecture& architecture, const nlohmann::json& config)
+      : Compiler(architecture, config) {}
+};
+
 class AZACompiler final
-    : public Compiler<AZACompiler, ASAPScheduler, ReuseAnalyzer, Placer,
+    : public Compiler<AZACompiler, ASAPScheduler, BMReuseAnalyzer, AStarPlacer,
                       ISRouter, CodeGenerator> {
 public:
   AZACompiler(const Architecture& architecture, const nlohmann::json& config)

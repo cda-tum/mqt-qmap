@@ -13,8 +13,9 @@
 namespace na {
 
 /**
- * This class represents the Router that forms groups of parallel movements by
- * calculating a maximal independent set.
+ * This class implements the default Router for the zoned neutral atom compiler
+ * that forms groups of parallel movements by calculating a maximal independent
+ * set.
  */
 class ISRouter {
   std::reference_wrapper<const Architecture> architecture_;
@@ -23,7 +24,7 @@ class ISRouter {
    * Creates the conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
    * corresponding move with respect to the given @p start- and @p
-   * targetPlacement stands in conflict with each other. The graph is
+   * targetPlacement stand in conflict with each other. The graph is
    * represented as adjacency lists.
    * @param atomsToMove are all atoms corresponding to nodes in the graph
    * @param startPlacement is the start placement of all atoms as a mapping from

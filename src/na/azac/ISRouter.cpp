@@ -1,7 +1,6 @@
-#include "na/azac/Router.hpp"
-
 #include "Definitions.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Router.hpp"
 
 #include <cassert>
 #include <cstddef>
