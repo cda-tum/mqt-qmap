@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <ir/QuantumComputation.hpp>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
@@ -467,6 +468,36 @@ public:
         uint16_t newNumQubits, uint16_t newNumStages,
         std::optional<uint16_t> newNumTransfers = std::nullopt,
         bool mindOpsOrder = false, bool shieldIdleQubits = true) -> Result;
+
+  /**
+   * @brief Get the list of entangling operations that the solver takes as
+   * input.
+   *
+   * @details The solver only considers the entangling operations of a circuit.
+   * For that it receives a list of qubit pairs that represent each one
+   * entangling operation. This function generates this list from a given
+   * QuantumComputation and a FullOpType that specifies the entangling
+   * operation.
+   *
+   * @warning This function expects a QuantumComputation that was used as input
+   * for the NASolver. Additionally, this function assumes the quantum circuit
+   * represented by the QuantumComputation to be of the following form:
+   * First, all qubits are initialized in the |+> state by applying a Hadamard
+   * gate to each qubit. Then, a set of entangling gates (CZ) is applied to the
+   * qubits. Finally, hadamard gates are applied to some qubits. Unfortunately,
+   * the function cannot deal with arbitrary quantum circuits as the NASolver
+   * cannot do either.
+   *
+   * @param circ
+   * @param opType
+   * @param ctrls
+   * @param quiet
+   * @return
+   */
+  [[nodiscard]] static auto
+  getOpsForSolver(const qc::QuantumComputation& circ, qc::OpType opType,
+                  std::size_t ctrls, bool quiet = false)
+      -> std::vector<std::pair<qc::Qubit, qc::Qubit>>;
 };
 
 struct ExprHash {

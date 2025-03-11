@@ -3,10 +3,12 @@
 #include "Definitions.hpp"
 
 #include <algorithm>
+#include <circuit_optimizer/CircuitOptimizer.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <ir/QuantumComputation.hpp>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <numeric>
@@ -763,5 +765,31 @@ auto NASolver::Result::json() const -> nlohmann::json {
 }
 auto NASolver::Result::operator==(const Result& other) const -> bool {
   return sat == other.sat && stages == other.stages;
+}
+auto NASolver::getOpsForSolver(const qc::QuantumComputation& circ,
+                               const qc::OpType opType, const std::size_t ctrls,
+                               const bool quiet)
+    -> std::vector<std::pair<unsigned int, unsigned int>> {
+  auto flattened = circ;
+  qc::CircuitOptimizer::flattenOperations(flattened);
+  std::vector<std::pair<unsigned int, unsigned int>> ops;
+  ops.reserve(flattened.size());
+  for (const auto& op : flattened) {
+    if (op->getType() == opType && op->getNcontrols() == ctrls) {
+      const auto& operands = op->getUsedQubits();
+      if (operands.size() != 2) {
+        std::stringstream ss;
+        ss << "Operation " << op->getName() << " does not have two operands.";
+        throw std::invalid_argument(ss.str());
+      }
+      ops.emplace_back(*operands.cbegin(), *operands.rbegin());
+    } else if (!quiet) {
+      std::stringstream ss;
+      ss << "Operation " << op->getName() << " is not of type " << opType
+         << " or does not have " << ctrls << " controls.";
+      throw std::invalid_argument(ss.str());
+    }
+  }
+  return ops;
 }
 } // namespace na

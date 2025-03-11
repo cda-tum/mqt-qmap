@@ -18,7 +18,6 @@
 #include "na/NAComputation.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/Mapper.hpp"
@@ -1020,7 +1019,7 @@ of the abstraction from the 2D grid used for the solver must be provided again.
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
-        return na::SolverFactory::getOpsForSolver(
+        return na::NASolver::getOpsForSolver(
             qc, qc::opTypeFromString(operationType), numControls, quiet);
       },
       "qc"_a, "operation_type"_a = "Z", "num_operands"_a = 1, "quiet"_a = true,
