@@ -20,6 +20,27 @@ namespace na {
 class ISRouter {
   std::reference_wrapper<const Architecture> architecture_;
 
+protected:
+  /// Create a ISRouter
+  ISRouter(const Architecture& architecture, const nlohmann::json& config);
+  /**
+   * Given the computed placement, compute a possible routing.
+   * @details For this task, all movements are put in a conflict graph where an
+   * edge indicates that two atoms (nodes) cannot be moved together. The atoms
+   * are sorted by their distance in decreasing order such that atoms with
+   * larger distance are routed first and hopefully lead to more homogenous
+   * routing groups with similar movement distances within one group.
+   * @param placement is a vector of the atom's placement at every layer
+   * @return the routing, i.e., for every transition between two placements a
+   * vector of groups containing atoms that can be moved simultaneously
+   */
+  [[nodiscard]] auto
+  route(const std::vector<std::vector<
+            std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
+            placement) const
+      -> std::vector<std::vector<std::vector<qc::Qubit>>>;
+
+private:
   /**
    * Creates the conflict graph.
    * @details Atom/qubit indices are the nodes. Two nodes are connected if their
@@ -65,25 +86,5 @@ class ISRouter {
   [[nodiscard]] static auto
   isCompatibleMovement(std::tuple<size_t, size_t, size_t, size_t> v,
                        std::tuple<size_t, size_t, size_t, size_t> w) -> bool;
-
-protected:
-  /// Create a ISRouter
-  ISRouter(const Architecture& architecture, const nlohmann::json& config);
-  /**
-   * Given the computed placement, compute a possible routing.
-   * @details For this task, all movements are put in a conflict graph where an
-   * edge indicates that two atoms (nodes) cannot be moved together. The atoms
-   * are sorted by their distance in decreasing order such that atoms with
-   * larger distance are routed first and hopefully lead to more homogenous
-   * routing groups with similar movement distances within one group.
-   * @param placement is a vector of the atom's placement at every layer
-   * @return the routing, i.e., for every transition between two placements a
-   * vector of groups containing atoms that can be moved simultaneously
-   */
-  [[nodiscard]] auto
-  route(const std::vector<std::vector<
-            std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
-            placement) const
-      -> std::vector<std::vector<std::vector<qc::Qubit>>>;
 };
 } // namespace na

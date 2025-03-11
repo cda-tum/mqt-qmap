@@ -24,6 +24,37 @@ class CodeGenerator {
   /// The offset for parking spots
   size_t parkingOffset_ = 1;
 
+protected:
+  /**
+   * Create a new CodeGenerator.
+   * @details The code generation is based on the given architecture and the
+   * placement and routing of the qubits. It generates a neutral atom
+   * computation. The second parameter of the constructor is unused.
+   * @param architecture is the architecture of the neutral atom system
+   * @param config is the configuration of the code generator
+   */
+  CodeGenerator(const Architecture& architecture, const nlohmann::json& config);
+  /**
+   * Generate the neutral atom computation based on the results of the previous
+   * steps in the compiler.
+   * @param oneQubitGateLayers is a list of layers of single-qubit gates
+   * @param placement is the placement of the qubits. The very first entry is
+   * the initial placement of the atoms. Every consecutive pair of entries
+   * encloses one layer of two-qubit gates.
+   * @param routing is the routing of the qubits. It consists of groups of atoms
+   * that can be moved together to establish the next placement.
+   * @return the neutral atom computation
+   */
+  [[nodiscard]] auto generateCode(
+      const std::vector<std::vector<
+          std::reference_wrapper<const qc::Operation>>>& oneQubitGateLayers,
+      const std::vector<std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
+          placement,
+      const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
+      -> NAComputation;
+
+private:
   /// Append all one-qubit gates of a layer to the code
   auto appendOneQubitGates(
       const std::vector<std::reference_wrapper<const qc::Operation>>&
@@ -55,35 +86,5 @@ class CodeGenerator {
                                    size_t>>& targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
-
-protected:
-  /**
-   * Create a new CodeGenerator.
-   * @details The code generation is based on the given architecture and the
-   * placement and routing of the qubits. It generates a neutral atom
-   * computation. The second parameter of the constructor is unused.
-   * @param architecture is the architecture of the neutral atom system
-   * @param config is the configuration of the code generator
-   */
-  CodeGenerator(const Architecture& architecture, const nlohmann::json& config);
-  /**
-   * Generate the neutral atom computation based on the results of the previous
-   * steps in the compiler.
-   * @param oneQubitGateLayers is a list of layers of single-qubit gates
-   * @param placement is the placement of the qubits. The very first entry is
-   * the initial placement of the atoms. Every consecutive pair of entries
-   * encloses one layer of two-qubit gates.
-   * @param routing is the routing of the qubits. It consists of groups of atoms
-   * that can be moved together to establish the next placement.
-   * @return the neutral atom computation
-   */
-  [[nodiscard]] auto generateCode(
-      const std::vector<std::vector<
-          std::reference_wrapper<const qc::Operation>>>& oneQubitGateLayers,
-      const std::vector<std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
-          placement,
-      const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
-      -> NAComputation;
 };
 } // namespace na

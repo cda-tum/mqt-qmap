@@ -107,6 +107,25 @@ class AStarPlacer {
   /// The number of either atom or gate jobs that must be performed
   size_t nJobs_;
 
+protected:
+  AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
+
+  /**
+   * This function defines the interface of the placer and delegates the
+   * placement of the qubits to the other functions.
+   * @param nQubits the number of qubits to be placed
+   * @param twoQubitGateLayers the qubits that must be placed for each layer
+   * @param reuseQubits the qubits that are reused in the next stage
+   */
+  [[nodiscard]] auto
+  place(size_t nQubits,
+        const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+            twoQubitGateLayers,
+        const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
+      -> std::vector<std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>;
+
+private:
   /**
    * @brief A* search algorithm for trees
    * @details A* is a graph traversal and path search algorithm that finds the
@@ -382,23 +401,5 @@ class AStarPlacer {
       uint16_t key, uint16_t value, float distance,
       std::vector<std::map<uint16_t, uint16_t>>& groups,
       std::vector<float>& maxDistances) -> bool;
-
-protected:
-  AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
-
-  /**
-   * This function defines the interface of the placer and delegates the
-   * placement of the qubits to the other functions.
-   * @param nQubits the number of qubits to be placed
-   * @param twoQubitGateLayers the qubits that must be placed for each layer
-   * @param reuseQubits the qubits that are reused in the next stage
-   */
-  [[nodiscard]] auto
-  place(size_t nQubits,
-        const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
-            twoQubitGateLayers,
-        const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>;
 };
 } // namespace na

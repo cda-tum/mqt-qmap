@@ -1,0 +1,802 @@
+#include "na/azac/VMPlacer.hpp"
+
+#include "Definitions.hpp"
+#include "na/azac/Architecture.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <nlohmann/json_fwd.hpp>
+#include <optional>
+#include <queue>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+namespace na {
+auto VMPlacer::minimumWeightFullBipartiteMatching(
+    const std::vector<std::vector<std::optional<double>>>& costMatrix)
+    -> std::vector<std::size_t> {
+  const std::size_t sizeX = costMatrix.size();
+  if (sizeX == 0) {
+    return {};
+  }
+  auto it = costMatrix.cbegin();
+  const std::size_t sizeY = it->size();
+  if (sizeX > sizeY) {
+    throw std::invalid_argument(
+        "Input matrix must have more columns than rows");
+  }
+  if (std::all_of(it->cbegin(), it->cend(), [](const std::optional<double>& o) {
+        return o == std::nullopt;
+      })) {
+    throw std::invalid_argument("Input matrix must not contain empty rows");
+  }
+  // check the rectangular shape of input matrix, i.e., check whether all
+  // consecutive rows have the same size
+  for (++it; it != costMatrix.cend(); ++it) {
+    if (it->size() != sizeY) {
+      throw std::invalid_argument("Input matrix must be rectangular");
+    }
+    if (std::all_of(
+            it->cbegin(), it->cend(),
+            [](const std::optional<double>& o) { return o == std::nullopt; })) {
+      throw std::invalid_argument("Input matrix must not contain empty rows");
+    }
+  }
+  // for all x lists all neighbors y in increasing order of c(x, y)
+  std::vector list(sizeX, std::vector<std::size_t>{});
+  for (std::size_t x = 0; x < sizeX; ++x) {
+    for (std::size_t y = 0; y < sizeY; ++y) {
+      if (costMatrix[x][y]) {
+        list[x].emplace_back(y);
+      }
+    }
+    std::sort(list[x].begin(), list[x].end(),
+              [x, &costMatrix](const std::size_t a, const std::size_t b) {
+                return costMatrix[x][a] < costMatrix[x][b];
+              });
+  }
+  // initialize the set of free sources
+  std::vector freeSources(sizeX, true);
+  // initialize the set of free targets
+  std::vector freeDestinations(sizeY, true);
+  // initialize the matching
+  std::vector<std::optional<std::size_t>> invMatching(sizeY, std::nullopt);
+  std::size_t sizeMatching = 0;
+  std::vector quantitiesX(sizeX, 0.0);
+  std::vector quantitiesY(sizeY, 0.0);
+  std::vector potentialsX(sizeX, 0.0);
+  std::vector potentialsY(sizeY, 0.0);
+  double maxPotential = 0.0;
+  while (sizeMatching < sizeX) {
+    std::vector<std::size_t> pathSetX(sizeX, 0);
+    std::vector<std::size_t> pathSetY(sizeY, 0);
+    // items have the form (<special>, <x>, <y>, <cost>)
+    // if special, the iterator to the edge in list is stored in the
+    // optional
+    std::priority_queue<
+        std::tuple<double, std::size_t, std::size_t,
+                   std::optional<std::vector<std::size_t>::const_iterator>>,
+        std::vector<std::tuple<
+            double, std::size_t, std::size_t,
+            std::optional<std::vector<std::size_t>::const_iterator>>>,
+        std::greater<>>
+        queue{};
+    std::vector residueSetX = freeSources;
+    std::vector residueSetY(sizeY, false);
+    for (std::size_t x = 0; x < sizeX; ++x) {
+      if (residueSetX[x]) {
+        quantitiesX[x] = 0.0;
+        const auto listIt = list[x].cbegin();
+        const auto y = *listIt;
+        queue.emplace(quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                          maxPotential,
+                      x, y, listIt);
+      }
+    }
+    // intersection of `remainder_set` and `freeDestinations` is empty
+    std::vector intersection(sizeY, false);
+    std::size_t x = 0;
+    std::size_t y = 0;
+    while (std::all_of(intersection.cbegin(), intersection.cend(),
+                       [](const bool b) { return !b; })) {
+      // select regular item from queue
+      bool special = false;
+      do {
+        const auto& itm = queue.top();
+        auto optIt = std::get<3>(itm);
+        special = optIt.has_value();
+        x = std::get<1>(itm);
+        y = std::get<2>(itm);
+        queue.pop();
+        if (special) {
+          if (list[x].back() != y) {
+            const auto w = *(++(*optIt));
+            queue.emplace(quantitiesX[x] + *costMatrix[x][w] + potentialsX[x] -
+                              maxPotential,
+                          x, w, *optIt);
+          }
+          queue.emplace(quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                            potentialsY[y],
+                        x, y, std::nullopt);
+        }
+      } while (special || invMatching[y] == x);
+      // select regular item from queue - done
+      if (!residueSetY[y]) {
+        pathSetY[y] = x;
+        residueSetY[y] = true;
+        intersection[y] = freeDestinations[y];
+        quantitiesY[y] = quantitiesX[x] + *costMatrix[x][y] + potentialsX[x] -
+                         potentialsY[y];
+        if (!freeDestinations[y]) {
+          const auto v = *invMatching[y];
+          pathSetX[v] = y;
+          residueSetX[v] = true;
+          quantitiesX[v] = quantitiesY[y];
+          const auto itW = list[v].cbegin();
+          const auto w = *itW;
+          queue.emplace(quantitiesX[v] + *costMatrix[v][w] + potentialsX[v] -
+                            maxPotential,
+                        v, w, itW);
+        }
+      }
+    }
+    // reset maxPotential and update quantities and potentials
+    // afterward maxPotential will have the correct value again
+    maxPotential = std::numeric_limits<double>::min();
+    for (std::size_t v = 0; v < sizeY; ++v) {
+      if (!residueSetY[v]) {
+        quantitiesY[v] = quantitiesY[y];
+      }
+      potentialsY[v] += quantitiesY[v];
+      maxPotential = std::max(potentialsY[v], maxPotential);
+    }
+    for (std::size_t v = 0; v < sizeX; ++v) {
+      if (!residueSetX[v]) {
+        quantitiesX[v] = quantitiesY[y];
+      }
+      potentialsX[v] += quantitiesX[v];
+      maxPotential = std::max(potentialsX[v], maxPotential);
+    }
+    freeDestinations[y] = false;
+    ++sizeMatching;
+    while (true) {
+      x = pathSetY[y];
+      invMatching[y] = x;
+      if (freeSources[x]) {
+        freeSources[x] = false;
+        break;
+      }
+      y = pathSetX[x];
+    }
+  }
+  std::vector<std::size_t> matching(sizeX, 0);
+  for (std::size_t y = 0; y < sizeY; ++y) {
+    if (const auto optX = invMatching[y]) {
+      matching[*optX] = y;
+    }
+  }
+  return matching;
+}
+auto VMPlacer::computeMovementCostBetweenPlacements(
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& placementBefore,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& placementAfter) const -> double {
+  double cost = 0;
+  std::unordered_map<std::pair<size_t, size_t>, double>
+      movementParallelMovement;
+
+  for (std::size_t q = 0; q < placementBefore.size(); ++q) {
+    if (placementBefore[q] != placementAfter[q]) {
+      const auto& [slm1, r1, c1] = placementBefore[q];
+      const auto& [x1, y1] = architecture_.get().exactSlmLocation(slm1, r1, c1);
+      const auto& [slm2, r2, c2] = placementAfter[q];
+      const auto& [x2, y2] = architecture_.get().exactSlmLocation(slm2, r2, c2);
+      const double dis =
+          architecture_.get().distance(slm1, r1, c1, slm2, r2, c2);
+      if (const auto& [it, inserted] =
+              movementParallelMovement.try_emplace(std::pair{y1, y2}, dis);
+          !inserted) {
+        it->second = std::max(it->second, dis);
+      }
+    }
+  }
+  for (const auto& [_, value] : movementParallelMovement) {
+    cost += std::sqrt(value);
+  }
+  return cost;
+}
+auto VMPlacer::computeLayersMovementCost(
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& placementBefore,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& placementBetween,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& placementAfter) const -> double {
+  return computeMovementCostBetweenPlacements(placementBefore,
+                                              placementBetween) +
+         computeMovementCostBetweenPlacements(placementBetween, placementAfter);
+}
+auto VMPlacer::filterMapping(
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& previousGatePlacement,
+    const std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                           size_t, size_t>>,
+                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                           size_t, size_t>>>&
+        placementsWithoutReuse,
+    const std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                           size_t, size_t>>,
+                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                           size_t, size_t>>>&
+        placementsWithReuse) const
+    -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                        size_t, size_t>>,
+                 std::vector<std::tuple<std::reference_wrapper<const SLM>,
+                                        size_t, size_t>>> {
+  const auto& [qubitPlacementWithoutReuse, gatePlacementWithoutReuse] =
+      placementsWithoutReuse;
+  const double costNoReuse = computeLayersMovementCost(
+      previousGatePlacement, qubitPlacementWithoutReuse,
+      gatePlacementWithoutReuse);
+  // now calculate cost with reuse
+  const auto& [qubitPlacementWithReuse, gatePlacementWithReuse] =
+      placementsWithReuse;
+  const double costReuse = computeLayersMovementCost(
+      previousGatePlacement, qubitPlacementWithReuse, gatePlacementWithReuse);
+  const auto nQubit = previousGatePlacement.size();
+  if (costAtomTransfer_ * std::pow((1 - (costNoReuse / 1.5e6)), nQubit) >
+      std::pow((1 - (costReuse / 1.5e6)), nQubit)) {
+    return {qubitPlacementWithoutReuse, gatePlacementWithoutReuse};
+  }
+  return {qubitPlacementWithReuse, gatePlacementWithReuse};
+}
+auto VMPlacer::placeGatesInEntanglementZone(
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& previousQubitPlacement,
+    const std::unordered_set<qc::Qubit>& reuseQubits,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& twoQubitGates,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& nextTwoQubitGates,
+    const bool reuse) const
+    -> std::vector<
+        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+  std::unordered_map<qc::Qubit, qc::Qubit> dictReuseQubitNeighbor;
+  if (!nextTwoQubitGates.empty() and reuse) {
+    for (const auto q : reuseQubits) {
+      for (const auto gate : nextTwoQubitGates) {
+        if (q == gate.first) {
+          dictReuseQubitNeighbor[q] = gate.second;
+          break;
+        }
+        if (q == gate.second) {
+          dictReuseQubitNeighbor[q] = gate.first;
+          break;
+        }
+      }
+    }
+  }
+  const auto expandFactor =
+      static_cast<size_t>(std::ceil(std::sqrt(twoQubitGates.size() / 2)));
+  std::unordered_map<std::tuple<std::reference_wrapper<
+                                    const std::vector<std::unique_ptr<SLM>>>,
+                                size_t, size_t>,
+                     size_t>
+      siteRydbergToIdx;
+  std::vector<std::tuple<
+      std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>, size_t,
+      size_t>>
+      listRydberg;
+  // WARNING: The role of listColCoo and listRowCoo is swapped compared to
+  // the original implementation because our matching algorithm only
+  // supports a single direction, i.e., fewer rows than columns.
+  std::vector<size_t> listRowCoo;
+  std::vector<size_t> listColCoo;
+  std::vector<double> listData;
+  for (size_t i = 0; i < twoQubitGates.size(); ++i) {
+    const auto& [q1, q2] = twoQubitGates[i];
+    // a set of possible locations sites for one operand of the gate
+    std::unordered_set<std::tuple<
+        std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>, size_t,
+        size_t>>
+        nearestSites;
+    if (reuse && reuseQubits.find(q1) != reuseQubits.end()) {
+      const auto& [slm, r, c] = previousQubitPlacement[q1];
+      assert(slm.get().isEntanglement());
+      nearestSites.emplace(std::cref(*slm.get().entanglementZone_), r, c);
+    } else if (reuse && reuseQubits.find(q2) != reuseQubits.end()) {
+      const auto& [slm, r, c] = previousQubitPlacement[q2];
+      assert(slm.get().isEntanglement());
+      nearestSites.emplace(*slm.get().entanglementZone_, r, c);
+    } else {
+      const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
+      const auto& [slm2, r2, c2] = previousQubitPlacement[q2];
+      // add the nearest entanglement site as well as the site in the same
+      // column on top and bottom to the set
+      const auto& [nearestSlm, nearestR, nearestC] =
+          architecture_.get().nearestEntanglementSite(slm1, r1, c1, slm2, r2,
+                                                      c2);
+      nearestSites.emplace(*nearestSlm.entanglementZone_, nearestR, nearestC);
+      const auto& [topSlm, topR, topC] =
+          architecture_.get().nearestEntanglementSite(slm1, 0, c1, slm2, 0, c2);
+      nearestSites.emplace(*topSlm.entanglementZone_, topR, topC);
+      const auto& [bottomSlm, bottomR, bottomC] =
+          architecture_.get().nearestEntanglementSite(
+              slm1, slm1.get().nRows - 1, c1, slm2, slm2.get().nRows - 1, c2);
+      nearestSites.emplace(*bottomSlm.entanglementZone_, bottomR, bottomC);
+      for (const auto& nearestSite : nearestSites) {
+        nearestSites.emplace(nearestSite);
+        const auto& [slm, slm_r, slm_c] = nearestSite;
+        auto low_r = slm_r > expandFactor ? slm_r - expandFactor : 0;
+        auto high_r =
+            std::min(slm.get().front()->nRows, slm_r + expandFactor + 1);
+        auto low_c = slm_c > expandFactor ? slm_c - expandFactor : 0;
+        auto high_c =
+            std::min(slm.get().front()->nCols, slm_c + expandFactor + 1);
+        if (high_c - low_c < 2 * expandFactor) {
+          const auto heightGap = static_cast<size_t>(std::ceil(
+                                     static_cast<double>(twoQubitGates.size()) /
+                                     static_cast<double>(high_c - low_c))) -
+                                 expandFactor;
+          low_r = low_r > (heightGap / 2) ? low_r - (heightGap / 2) : 0;
+          high_r = std::min(slm.get().front()->nRows,
+                            low_r + heightGap + expandFactor);
+        }
+        if (high_r - low_r < 2 * expandFactor) {
+          const auto widthGap = static_cast<size_t>(std::ceil(
+                                    static_cast<double>(twoQubitGates.size()) /
+                                    static_cast<double>(high_r - low_r))) -
+                                expandFactor;
+          low_c = low_c > (widthGap / 2) ? low_c - (widthGap / 2) : 0;
+          high_c = std::min(slm.get().front()->nCols,
+                            low_c + widthGap + expandFactor);
+        }
+        for (size_t r = low_r; r < high_r; ++r) {
+          for (size_t c = low_c; c < high_c; ++c) {
+            nearestSites.emplace(slm, r, c);
+          }
+        }
+      }
+    }
+    for (const auto& site : nearestSites) {
+      if (siteRydbergToIdx.find(site) == siteRydbergToIdx.end()) {
+        siteRydbergToIdx[site] = listRydberg.size();
+        listRydberg.emplace_back(site);
+      }
+      const auto idxRydberg = siteRydbergToIdx[site];
+      const auto& [slm, r, c] = site;
+      const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
+      const auto& [slm2, r2, c2] = previousQubitPlacement[q2];
+      double dis1 =
+          architecture_.get().distance(slm1, r1, c1, *slm.get().front(), r, c);
+      double dis2 =
+          architecture_.get().distance(slm2, r2, c2, *slm.get().front(), r, c);
+      // lookahead for the next gate
+      double dis3 = 0;
+      std::optional<size_t> q3;
+      if (dictReuseQubitNeighbor.find(q1) != dictReuseQubitNeighbor.end()) {
+        q3 = dictReuseQubitNeighbor[q1];
+      } else if (dictReuseQubitNeighbor.find(q2) !=
+                 dictReuseQubitNeighbor.end()) {
+        q3 = dictReuseQubitNeighbor[q2];
+      }
+      if (q3) {
+        const auto& [slm3, r3, c3] = previousQubitPlacement[*q3];
+        dis3 = architecture_.get().distance(slm3, r3, c3, *slm.get().front(), r,
+                                            c);
+      }
+      listColCoo.emplace_back(idxRydberg);
+      listRowCoo.emplace_back(i);
+      if (&slm1 == &slm2 && r1 == r2) {
+        listData.emplace_back(std::sqrt(std::max(dis1, dis2)) +
+                              std::sqrt(dis3));
+      } else {
+        listData.emplace_back(std::sqrt(dis1) + std::sqrt(dis2) +
+                              std::sqrt(dis3));
+      }
+    }
+  }
+
+  if (listRydberg.size() < twoQubitGates.size()) {
+    std::stringstream ss;
+    ss << "[Error] AZAC: Minimum-weight-full-matching-based intermediate "
+          "placement: No enough sites for gates ("
+       << listRydberg.size() << " vs " << twoQubitGates.size() << ").";
+    throw std::invalid_argument(ss.str());
+  }
+
+  std::vector matrix(
+      twoQubitGates.size(),
+      std::vector<std::optional<double>>(listRydberg.size(), std::nullopt));
+  for (size_t i = 0; i < listRowCoo.size(); ++i) {
+    matrix[listRowCoo[i]][listColCoo[i]] = listData[i];
+  }
+  const auto& matching = minimumWeightFullBipartiteMatching(matrix);
+  double cost = 0;
+  for (size_t i = 0; i < matching.size(); ++i) {
+    cost = cost + matrix[i][matching[i]].value();
+  }
+  auto newPlacement = previousQubitPlacement;
+  for (size_t idxGate = 0; idxGate < matching.size(); ++idxGate) {
+    const auto q0 = twoQubitGates[idxGate].first;
+    const auto q1 = twoQubitGates[idxGate].second;
+    const auto& [zone, r, c] = listRydberg[matching[idxGate]];
+    if (reuse && (reuseQubits.find(q0) != reuseQubits.end())) {
+      // q0 remains at its current location, place q1 at the other site of
+      // this pair of entanglement sites
+      if (const std::tuple leftSite{*zone.get().front(), r, c};
+          leftSite == previousQubitPlacement[q0]) {
+        newPlacement[q1] = std::tuple{*zone.get().back(), r, c};
+      } else {
+        newPlacement[q1] = leftSite;
+      }
+    } else if (reuse && (reuseQubits.find(q1) != reuseQubits.end())) {
+      // q1 remains at its current location, place q0 at the other site of
+      // this pair of entanglement sites
+      if (const std::tuple leftSite{*zone.get().front(), r, c};
+          leftSite == previousQubitPlacement[q1]) {
+        newPlacement[q0] = std::tuple{*zone.get().back(), r, c};
+      } else {
+        newPlacement[q0] = leftSite;
+      }
+    } else {
+      // avoid crossings, i.e., place the left qubit in the left site and the
+      // right qubit in the right site
+      const auto& [slm0, r0, c0] = previousQubitPlacement[q0];
+      const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
+      if (c0 < c1) {
+        newPlacement[q0] = std::tuple{*zone.get().front(), r, c};
+        newPlacement[q1] = std::tuple{*zone.get().back(), r, c};
+      } else {
+        newPlacement[q0] = std::tuple{*zone.get().back(), r, c};
+        newPlacement[q1] = std::tuple{*zone.get().front(), r, c};
+      }
+    }
+  }
+  return newPlacement;
+}
+auto VMPlacer::placeQubitsInStorageZone(
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& initialPlacement,
+    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                 size_t>>& previousGatePlacement,
+    const std::unordered_set<qc::Qubit>& reuseQubits,
+    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& nextTwoQubitGates,
+    const bool reuse) const
+    -> std::vector<
+        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+  // for each storage SLM array, construct a matrix indicating occupancy of
+  // sites
+  std::unordered_map<std::reference_wrapper<const SLM>,
+                     std::vector<std::vector<bool>>>
+      isEmptyStorageSite{};
+  // for each SLM array, initialize the site as empty
+  for (const auto& slm : architecture_.get().storageZones) {
+    isEmptyStorageSite.emplace(
+        *slm, std::vector(slm->nRows, std::vector(slm->nCols, true)));
+  }
+  // qubits that need to be placed, in particular, this does not include
+  // qubits that are reused NOTE: the indices stored in qubitToPlace are
+  // the indices of the lastGateMapping and do not refer to the actual
+  // index of a qubit
+  std::vector<qc::Qubit> qubitToPlace{};
+  // go through the placement of qubits after the last gate
+  for (size_t q = 0; q < previousGatePlacement.size(); ++q) {
+    const auto& [slm, r, c] = previousGatePlacement[q];
+    if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
+      // the mapped qubit is in the storage zone, set the site as occupied
+      isEmptyStorageSite[slm][r][c] = false;
+    } else if (!reuse || reuseQubits.find(q) == reuseQubits.end()) {
+      // the mapped qubit is in the entangling zone and must be placed (if
+      // not reused)
+      qubitToPlace.emplace_back(q);
+    }
+  }
+  // occupied sites in the initial mapping that are currently unoccupied;
+  // those are used as candidate sites for qubit placement as it is
+  // guaranteed that they exist
+  std::unordered_set<
+      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+      commonSite{};
+  for (const auto& [slm, r, c] : initialPlacement) {
+    if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
+      if (isEmptyStorageSite[slm][r][c]) {
+        // add site to common sites if it is currently unoccupied
+        commonSite.emplace(slm, r, c);
+      }
+    } else {
+      // site is in an entangling zone and not yet added to
+      // isEmptyStorageSite
+      isEmptyStorageSite[slm] =
+          std::vector(slm.get().nRows, std::vector(slm.get().nCols, true));
+      commonSite.emplace(slm, r, c);
+    }
+  }
+  // dictionary to store the qubit interactions with other qubits
+  std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> dictQubitInteraction{};
+  for (const auto q : qubitToPlace) {
+    dictQubitInteraction.emplace(q, std::vector<qc::Qubit>{});
+  }
+  if (!nextTwoQubitGates.empty()) {
+    for (const auto& gate : nextTwoQubitGates) {
+      if (dictQubitInteraction.find(gate.first) != dictQubitInteraction.end() &&
+          ((!reuse) || (reuseQubits.find(gate.second) == reuseQubits.end()))) {
+        dictQubitInteraction[gate.first].emplace_back(gate.second);
+      }
+      if (dictQubitInteraction.find(gate.second) !=
+              dictQubitInteraction.end() &&
+          ((!reuse) || (reuseQubits.find(gate.first) == reuseQubits.end()))) {
+        dictQubitInteraction[gate.second].emplace_back(gate.first);
+      }
+    }
+  }
+  const size_t expandFactor = 1;
+
+  std::unordered_map<
+      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>, size_t>
+      siteStorageToIdx{};
+  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+      listStorage{};
+  std::vector<size_t> listColCoo{};
+  std::vector<size_t> listRowCoo{};
+  std::vector<double> listData{};
+
+  for (size_t i = 0; i < qubitToPlace.size(); ++i) {
+    const auto q = qubitToPlace[i];
+    std::unordered_map<std::reference_wrapper<const SLM>,
+                       std::tuple<size_t, size_t, size_t, size_t>>
+        dictBoudingbox{};
+    const auto& [slm, r, c] = initialPlacement[q];
+    auto lowerRow = r;
+    auto upperRow = lowerRow;
+    auto leftCol = c;
+    auto rightCol = leftCol;
+    const std::pair<size_t, size_t>& exactLocQ =
+        architecture_.get().exactSlmLocation(slm, r, c);
+    const auto& [initSlm, initRow, initCol] = initialPlacement[q];
+    const std::pair<size_t, size_t>& exactLocGate =
+        architecture_.get().exactSlmLocation(initSlm, initRow, initCol);
+    if (exactLocGate.second < exactLocQ.second) {
+      lowerRow = 0;
+    } else {
+      upperRow = slm.get().nRows;
+    }
+
+    dictBoudingbox.emplace(std::get<0>(initialPlacement[q]),
+                           std::tuple{lowerRow, upperRow, leftCol, rightCol});
+    for (const qc::Qubit neighbor : dictQubitInteraction[q]) {
+      const auto& [tmpSlm, tmpRow, tmpCol] = previousGatePlacement[neighbor];
+      const auto& [neighborSlm, neighborRow, neighborCol] =
+          tmpSlm.get().isEntanglement()
+              ? architecture_.get().nearestStorageSite(tmpSlm, tmpRow, tmpCol)
+              : previousGatePlacement[neighbor];
+      if (const auto& it = dictBoudingbox.find(neighborSlm);
+          it != dictBoudingbox.end()) {
+        const auto& [lower, upper, left, right] = it->second;
+        it->second = std::tuple{
+            std::min(neighborRow, lower), std::max(neighborRow, upper),
+            std::min(neighborCol, left), std::max(neighborCol, right)};
+      } else {
+        lowerRow = neighborRow;
+        upperRow = neighborRow;
+        leftCol = neighborCol;
+        rightCol = neighborCol;
+        const auto& [x, y] = architecture_.get().exactSlmLocation(
+            neighborSlm, neighborRow, neighborCol);
+        if (exactLocGate.second < y) {
+          lowerRow = 0;
+        } else {
+          upperRow = neighborSlm.get().nRows;
+        }
+        it->second = std::tuple{lowerRow, upperRow, leftCol, rightCol};
+      }
+    }
+    const auto& [gateSlm, gateRow, gateCol] = previousGatePlacement[q];
+    const auto& [nearestSlm, nearestRow, nearestCol] =
+        architecture_.get().nearestStorageSite(gateSlm, gateRow, gateCol);
+    // todo: what is ratio?
+    const size_t ratio = 3;
+    if (const auto it = dictBoudingbox.find(nearestSlm);
+        it != dictBoudingbox.end()) {
+      const auto& [lower, upper, left, right] = it->second;
+      it->second = std::tuple{std::min(nearestRow - ratio, lower),
+                              std::max(nearestRow + ratio, upper),
+                              std::min(nearestCol - ratio, left),
+                              std::max(nearestCol + ratio, right)};
+    } else {
+      it->second = std::tuple{nearestRow - ratio, nearestRow + ratio,
+                              nearestCol - ratio, nearestCol + ratio};
+    }
+    auto setNearbySite = commonSite;
+    if (isEmptyStorageSite[initSlm][initRow][initCol]) {
+      setNearbySite.emplace(initialPlacement[q]);
+    }
+
+    for (auto& [slmId, boundingBox] : dictBoudingbox) {
+      auto& [lower, upper, left, right] = boundingBox;
+      lower = lower > expandFactor ? lower - expandFactor : 0;
+      upper = std::min(upper + expandFactor + 1, slmId.get().nRows);
+      left = left > expandFactor ? left - expandFactor : 0;
+      right = std::min(right + expandFactor + 1, slmId.get().nCols);
+      for (auto row = lower; row < upper; ++row) {
+        for (auto col = left; col < right; ++col) {
+          if (isEmptyStorageSite.find(slmId) == isEmptyStorageSite.end() ||
+              isEmptyStorageSite[slmId][row][col]) {
+            setNearbySite.emplace(slmId, row, col);
+          }
+        }
+      }
+    }
+
+    for (const auto& site : setNearbySite) {
+      const auto& [it, success] =
+          siteStorageToIdx.try_emplace(site, listStorage.size());
+      if (success) {
+        listStorage.emplace_back(site);
+      }
+      const auto idxStorage = it->second;
+      const auto& [siteSlm, siteRow, siteCol] = site;
+      const double dis = architecture_.get().distance(
+          gateSlm, gateRow, gateCol, siteSlm, siteRow, siteCol);
+      double lookaheadCost = 0;
+      for (const auto& neighbor : dictQubitInteraction[q]) {
+        const auto& [neighborSlm, neighborRow, neighborCol] =
+            previousGatePlacement[neighbor];
+        if (neighborSlm.get().isStorage()) {
+          lookaheadCost += architecture_.get().nearestEntanglementSiteDistance(
+              siteSlm, siteRow, siteCol, neighborSlm, neighborRow, neighborCol);
+        } else {
+          const std::pair<size_t, size_t>& exactLocNeighborQ =
+              architecture_.get().exactSlmLocation(neighborSlm, neighborRow,
+                                                   neighborCol);
+          const auto dx = static_cast<std::int64_t>(exactLocNeighborQ.first) -
+                          static_cast<std::int64_t>(exactLocQ.first);
+          const auto dy = static_cast<std::int64_t>(exactLocNeighborQ.second) -
+                          static_cast<std::int64_t>(exactLocQ.second);
+          lookaheadCost += std::sqrt(std::sqrt((dx * dx) + (dy * dy)));
+        }
+      }
+      const double cost = std::sqrt(dis) + (0.1 * lookaheadCost);
+      listColCoo.emplace_back(idxStorage);
+      listRowCoo.emplace_back(i);
+      listData.emplace_back(cost);
+    }
+  }
+
+  // to construct from three arrays:
+  // - listData the entries of the matrix, in any order
+  // - listRowCoo the row indices of the matrix entries
+  // - listColCoo the column indices of the matrix entries
+  // Where A[listRowCoo[k], listColCoo[k]] = listData[k].
+  std::vector costMatrix(
+      qubitToPlace.size(),
+      std::vector<std::optional<double>>(listStorage.size(), std::nullopt));
+  for (size_t k = 0; k < listData.size(); ++k) {
+    costMatrix[listRowCoo[k]][listColCoo[k]] = listData[k];
+  }
+  const auto& matching = minimumWeightFullBipartiteMatching(costMatrix);
+  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+      newPlacement = previousGatePlacement;
+  for (size_t j = 0; j < matching.size(); ++j) {
+    newPlacement[qubitToPlace[j]] = listStorage[matching[j]];
+  }
+  return newPlacement;
+}
+VMPlacer::VMPlacer(const Architecture& architecture,
+                   const nlohmann::json& config)
+    : architecture_(architecture) {
+  // get first storage SLM and first entanglement SLM
+  const auto& firstStorageSlm = *architecture_.get().storageZones.front();
+  const auto& firstEntanglementSlm =
+      *architecture_.get().entanglementZones.front().front();
+  // check which side of the first storage SLM is closer to the entanglement
+  // SLM
+  if (firstStorageSlm.location.second < firstEntanglementSlm.location.second) {
+    // if the entanglement SLM is closer to the last row of the storage SLM
+    // start initial placement of the atoms in the last row instead of the
+    // first and hence revert initial placement
+    reverseInitialPlacement_ = true;
+  }
+  if (const auto& configIt = config.find("vm_placer");
+      configIt != config.end() && configIt->is_object()) {
+    bool useWindowSet = false;
+    bool windowSizeSet = false;
+    bool dynamicPlacementSet = false;
+    for (const auto& [key, value] : configIt.value().items()) {
+      if (key == "use_window") {
+        if (value.is_boolean()) {
+          useWindow_ = value;
+          useWindowSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+                 "value for use_window. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "window_size") {
+        if (value.is_number_unsigned()) {
+          windowSize_ = value;
+          windowSizeSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+                 "value for window_size. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "dynamic_placement") {
+        if (value.is_boolean()) {
+          dynamicPlacement_ = value;
+          dynamicPlacementSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+                 "value for dynamic_placement. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else {
+        std::ostringstream oss;
+        oss << "[WARN] Configuration for VMPlacer contains an unknown key: "
+            << key << ". Ignoring.\n";
+        std::cout << oss.str();
+      }
+    }
+    if (!useWindowSet) {
+      std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+                   "setting for use_window. Using default.\n";
+    }
+    if (useWindow_) {
+      if (!windowSizeSet) {
+        std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+                     "setting for window_size. Using default.\n";
+      }
+    }
+    if (!dynamicPlacementSet) {
+      std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+                   "setting for dynamic_placement. Using default.\n";
+    }
+  } else {
+    std::cout << "[WARN] Configuration does not contain settings for "
+                 "VMPlacer or is malformed. Using default settings.\n";
+  }
+}
+auto VMPlacer::makeInitialPlacement(const size_t nQubits) const -> std::vector<
+    std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+  auto slmIt = architecture_.get().storageZones.cbegin();
+  std::size_t c = 0;
+  std::int64_t r = reverseInitialPlacement_
+                       ? static_cast<std::int64_t>((*slmIt)->nRows) - 1
+                       : 0;
+  const std::int64_t step = reverseInitialPlacement_ ? -1 : 1;
+  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+      initialPlacement;
+  initialPlacement.reserve(nQubits);
+  for (qc::Qubit qubit = 0; qubit < nQubits; ++qubit) {
+    initialPlacement.emplace_back(**slmIt, r, c++);
+    if (c == (*slmIt)->nCols) {
+      // the end of the row reached, go to the next row
+      r += step;
+      c = 0;
+      if (r == static_cast<std::int64_t>((*slmIt)->nRows)) {
+        // the end of the slm reached, go to the next slm
+        ++slmIt;
+        if (step > 0) {
+          r = static_cast<std::int64_t>((*slmIt)->nRows) - 1;
+        } else {
+          r = 0;
+        }
+      }
+    }
+  }
+  return initialPlacement;
+}
+} // namespace na
