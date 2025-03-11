@@ -198,10 +198,10 @@ auto VMPlacer::computeMovementCostBetweenPlacements(
       movementParallelMovement;
 
   for (std::size_t q = 0; q < placementBefore.size(); ++q) {
-    if (placementBefore[q] != placementAfter[q]) {
-      const auto& [slm1, r1, c1] = placementBefore[q];
+    const auto& [slm1, r1, c1] = placementBefore[q];
+    const auto& [slm2, r2, c2] = placementAfter[q];
+    if (&slm1.get() != &slm2.get() || r1 != r2 || c1 != c2) {
       const auto& [x1, y1] = architecture_.get().exactSlmLocation(slm1, r1, c1);
-      const auto& [slm2, r2, c2] = placementAfter[q];
       const auto& [x2, y2] = architecture_.get().exactSlmLocation(slm2, r2, c2);
       const double dis =
           architecture_.get().distance(slm1, r1, c1, slm2, r2, c2);
@@ -274,7 +274,7 @@ auto VMPlacer::placeGatesInEntanglementZone(
   std::unordered_map<qc::Qubit, qc::Qubit> dictReuseQubitNeighbor;
   if (!nextTwoQubitGates.empty() and reuse) {
     for (const auto q : reuseQubits) {
-      for (const auto gate : nextTwoQubitGates) {
+      for (const auto& gate : nextTwoQubitGates) {
         if (q == gate.first) {
           dictReuseQubitNeighbor[q] = gate.second;
           break;
@@ -288,14 +288,21 @@ auto VMPlacer::placeGatesInEntanglementZone(
   }
   const auto expandFactor =
       static_cast<size_t>(std::ceil(std::sqrt(twoQubitGates.size() / 2)));
-  std::unordered_map<std::tuple<std::reference_wrapper<
-                                    const std::vector<std::unique_ptr<SLM>>>,
-                                size_t, size_t>,
-                     size_t>
+  std::unordered_map<
+      std::tuple<std::reference_wrapper<const std::pair<std::unique_ptr<SLM>,
+                                                        std::unique_ptr<SLM>>>,
+                 size_t, size_t>,
+      size_t,
+      std::hash<std::tuple<
+          const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&, size_t,
+          size_t>>,
+      std::equal_to<std::tuple<
+          const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&, size_t,
+          size_t>>>
       siteRydbergToIdx;
-  std::vector<std::tuple<
-      std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>, size_t,
-      size_t>>
+  std::vector<std::tuple<std::reference_wrapper<const std::pair<
+                             std::unique_ptr<SLM>, std::unique_ptr<SLM>>>,
+                         size_t, size_t>>
       listRydberg;
   // WARNING: The role of listColCoo and listRowCoo is swapped compared to
   // the original implementation because our matching algorithm only
@@ -306,14 +313,21 @@ auto VMPlacer::placeGatesInEntanglementZone(
   for (size_t i = 0; i < twoQubitGates.size(); ++i) {
     const auto& [q1, q2] = twoQubitGates[i];
     // a set of possible locations sites for one operand of the gate
-    std::unordered_set<std::tuple<
-        std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>, size_t,
-        size_t>>
+    std::unordered_set<
+        std::tuple<std::reference_wrapper<const std::pair<
+                       std::unique_ptr<SLM>, std::unique_ptr<SLM>>>,
+                   size_t, size_t>,
+        std::hash<std::tuple<
+            const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&,
+            size_t, size_t>>,
+        std::equal_to<std::tuple<
+            const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&,
+            size_t, size_t>>>
         nearestSites;
     if (reuse && reuseQubits.find(q1) != reuseQubits.end()) {
       const auto& [slm, r, c] = previousQubitPlacement[q1];
       assert(slm.get().isEntanglement());
-      nearestSites.emplace(std::cref(*slm.get().entanglementZone_), r, c);
+      nearestSites.emplace(*slm.get().entanglementZone_, r, c);
     } else if (reuse && reuseQubits.find(q2) != reuseQubits.end()) {
       const auto& [slm, r, c] = previousQubitPlacement[q2];
       assert(slm.get().isEntanglement());
@@ -326,30 +340,32 @@ auto VMPlacer::placeGatesInEntanglementZone(
       const auto& [nearestSlm, nearestR, nearestC] =
           architecture_.get().nearestEntanglementSite(slm1, r1, c1, slm2, r2,
                                                       c2);
-      nearestSites.emplace(*nearestSlm.entanglementZone_, nearestR, nearestC);
+      nearestSites.emplace(*nearestSlm.get().entanglementZone_, nearestR,
+                           nearestC);
       const auto& [topSlm, topR, topC] =
           architecture_.get().nearestEntanglementSite(slm1, 0, c1, slm2, 0, c2);
-      nearestSites.emplace(*topSlm.entanglementZone_, topR, topC);
+      nearestSites.emplace(*topSlm.get().entanglementZone_, topR, topC);
       const auto& [bottomSlm, bottomR, bottomC] =
           architecture_.get().nearestEntanglementSite(
               slm1, slm1.get().nRows - 1, c1, slm2, slm2.get().nRows - 1, c2);
-      nearestSites.emplace(*bottomSlm.entanglementZone_, bottomR, bottomC);
+      nearestSites.emplace(*bottomSlm.get().entanglementZone_, bottomR,
+                           bottomC);
       for (const auto& nearestSite : nearestSites) {
         nearestSites.emplace(nearestSite);
         const auto& [slm, slm_r, slm_c] = nearestSite;
         auto low_r = slm_r > expandFactor ? slm_r - expandFactor : 0;
         auto high_r =
-            std::min(slm.get().front()->nRows, slm_r + expandFactor + 1);
+            std::min(slm.get().first->nRows, slm_r + expandFactor + 1);
         auto low_c = slm_c > expandFactor ? slm_c - expandFactor : 0;
         auto high_c =
-            std::min(slm.get().front()->nCols, slm_c + expandFactor + 1);
+            std::min(slm.get().first->nCols, slm_c + expandFactor + 1);
         if (high_c - low_c < 2 * expandFactor) {
           const auto heightGap = static_cast<size_t>(std::ceil(
                                      static_cast<double>(twoQubitGates.size()) /
                                      static_cast<double>(high_c - low_c))) -
                                  expandFactor;
           low_r = low_r > (heightGap / 2) ? low_r - (heightGap / 2) : 0;
-          high_r = std::min(slm.get().front()->nRows,
+          high_r = std::min(slm.get().first->nRows,
                             low_r + heightGap + expandFactor);
         }
         if (high_r - low_r < 2 * expandFactor) {
@@ -358,8 +374,8 @@ auto VMPlacer::placeGatesInEntanglementZone(
                                     static_cast<double>(high_r - low_r))) -
                                 expandFactor;
           low_c = low_c > (widthGap / 2) ? low_c - (widthGap / 2) : 0;
-          high_c = std::min(slm.get().front()->nCols,
-                            low_c + widthGap + expandFactor);
+          high_c =
+              std::min(slm.get().first->nCols, low_c + widthGap + expandFactor);
         }
         for (size_t r = low_r; r < high_r; ++r) {
           for (size_t c = low_c; c < high_c; ++c) {
@@ -378,9 +394,9 @@ auto VMPlacer::placeGatesInEntanglementZone(
       const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
       const auto& [slm2, r2, c2] = previousQubitPlacement[q2];
       double dis1 =
-          architecture_.get().distance(slm1, r1, c1, *slm.get().front(), r, c);
+          architecture_.get().distance(slm1, r1, c1, *slm.get().first, r, c);
       double dis2 =
-          architecture_.get().distance(slm2, r2, c2, *slm.get().front(), r, c);
+          architecture_.get().distance(slm2, r2, c2, *slm.get().first, r, c);
       // lookahead for the next gate
       double dis3 = 0;
       std::optional<size_t> q3;
@@ -392,12 +408,12 @@ auto VMPlacer::placeGatesInEntanglementZone(
       }
       if (q3) {
         const auto& [slm3, r3, c3] = previousQubitPlacement[*q3];
-        dis3 = architecture_.get().distance(slm3, r3, c3, *slm.get().front(), r,
-                                            c);
+        dis3 =
+            architecture_.get().distance(slm3, r3, c3, *slm.get().first, r, c);
       }
       listColCoo.emplace_back(idxRydberg);
       listRowCoo.emplace_back(i);
-      if (&slm1 == &slm2 && r1 == r2) {
+      if (&slm1.get() == &slm2.get() && r1 == r2) {
         listData.emplace_back(std::sqrt(std::max(dis1, dis2)) +
                               std::sqrt(dis3));
       } else {
@@ -434,18 +450,18 @@ auto VMPlacer::placeGatesInEntanglementZone(
     if (reuse && (reuseQubits.find(q0) != reuseQubits.end())) {
       // q0 remains at its current location, place q1 at the other site of
       // this pair of entanglement sites
-      if (const std::tuple leftSite{*zone.get().front(), r, c};
+      if (const std::tuple leftSite{*zone.get().first, r, c};
           leftSite == previousQubitPlacement[q0]) {
-        newPlacement[q1] = std::tuple{*zone.get().back(), r, c};
+        newPlacement[q1] = std::tuple{*zone.get().second, r, c};
       } else {
         newPlacement[q1] = leftSite;
       }
     } else if (reuse && (reuseQubits.find(q1) != reuseQubits.end())) {
       // q1 remains at its current location, place q0 at the other site of
       // this pair of entanglement sites
-      if (const std::tuple leftSite{*zone.get().front(), r, c};
+      if (const std::tuple leftSite{*zone.get().first, r, c};
           leftSite == previousQubitPlacement[q1]) {
-        newPlacement[q0] = std::tuple{*zone.get().back(), r, c};
+        newPlacement[q0] = std::tuple{*zone.get().second, r, c};
       } else {
         newPlacement[q0] = leftSite;
       }
@@ -455,11 +471,11 @@ auto VMPlacer::placeGatesInEntanglementZone(
       const auto& [slm0, r0, c0] = previousQubitPlacement[q0];
       const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
       if (c0 < c1) {
-        newPlacement[q0] = std::tuple{*zone.get().front(), r, c};
-        newPlacement[q1] = std::tuple{*zone.get().back(), r, c};
+        newPlacement[q0] = std::tuple{*zone.get().first, r, c};
+        newPlacement[q1] = std::tuple{*zone.get().second, r, c};
       } else {
-        newPlacement[q0] = std::tuple{*zone.get().back(), r, c};
-        newPlacement[q1] = std::tuple{*zone.get().front(), r, c};
+        newPlacement[q0] = std::tuple{*zone.get().second, r, c};
+        newPlacement[q1] = std::tuple{*zone.get().first, r, c};
       }
     }
   }
@@ -478,7 +494,8 @@ auto VMPlacer::placeQubitsInStorageZone(
   // for each storage SLM array, construct a matrix indicating occupancy of
   // sites
   std::unordered_map<std::reference_wrapper<const SLM>,
-                     std::vector<std::vector<bool>>>
+                     std::vector<std::vector<bool>>, std::hash<SLM>,
+                     std::equal_to<SLM>>
       isEmptyStorageSite{};
   // for each SLM array, initialize the site as empty
   for (const auto& slm : architecture_.get().storageZones) {
@@ -491,7 +508,7 @@ auto VMPlacer::placeQubitsInStorageZone(
   // index of a qubit
   std::vector<qc::Qubit> qubitToPlace{};
   // go through the placement of qubits after the last gate
-  for (size_t q = 0; q < previousGatePlacement.size(); ++q) {
+  for (qc::Qubit q = 0; q < previousGatePlacement.size(); ++q) {
     const auto& [slm, r, c] = previousGatePlacement[q];
     if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
       // the mapped qubit is in the storage zone, set the site as occupied
@@ -506,7 +523,9 @@ auto VMPlacer::placeQubitsInStorageZone(
   // those are used as candidate sites for qubit placement as it is
   // guaranteed that they exist
   std::unordered_set<
-      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
+      std::hash<std::tuple<const SLM&, size_t, size_t>>,
+      std::equal_to<std::tuple<const SLM&, size_t, size_t>>>
       commonSite{};
   for (const auto& [slm, r, c] : initialPlacement) {
     if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
@@ -543,7 +562,9 @@ auto VMPlacer::placeQubitsInStorageZone(
   const size_t expandFactor = 1;
 
   std::unordered_map<
-      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>, size_t>
+      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>, size_t,
+      std::hash<std::tuple<const SLM&, size_t, size_t>>,
+      std::equal_to<std::tuple<const SLM&, size_t, size_t>>>
       siteStorageToIdx{};
   std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
       listStorage{};
@@ -554,7 +575,8 @@ auto VMPlacer::placeQubitsInStorageZone(
   for (size_t i = 0; i < qubitToPlace.size(); ++i) {
     const auto q = qubitToPlace[i];
     std::unordered_map<std::reference_wrapper<const SLM>,
-                       std::tuple<size_t, size_t, size_t, size_t>>
+                       std::tuple<size_t, size_t, size_t, size_t>,
+                       std::hash<SLM>, std::equal_to<SLM>>
         dictBoudingbox{};
     const auto& [slm, r, c] = initialPlacement[q];
     auto lowerRow = r;
@@ -698,7 +720,7 @@ VMPlacer::VMPlacer(const Architecture& architecture,
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSlm = *architecture_.get().storageZones.front();
   const auto& firstEntanglementSlm =
-      *architecture_.get().entanglementZones.front().front();
+      *architecture_.get().entanglementZones.front().first;
   // check which side of the first storage SLM is closer to the entanglement
   // SLM
   if (firstStorageSlm.location.second < firstEntanglementSlm.location.second) {

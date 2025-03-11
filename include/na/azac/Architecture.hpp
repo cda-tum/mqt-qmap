@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Definitions.hpp>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -7,10 +8,10 @@
 #include <istream>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -37,46 +38,60 @@ struct SLM {
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
   /// SLMs in the same group
-  std::optional<std::reference_wrapper<const std::vector<std::unique_ptr<SLM>>>>
+  std::optional<std::reference_wrapper<
+      const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>>>
       entanglementZone_;
+  /// only used for printing
   std::optional<std::size_t> entanglementId_ = std::nullopt;
 
   explicit SLM(nlohmann::json slmSpec);
   explicit SLM(nlohmann::json slmSpec,
-               const std::vector<std::unique_ptr<SLM>>& entanglementZone,
+               const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&
+                   entanglementZone,
                std::size_t entanglementId);
   [[nodiscard]] auto isEntanglement() const -> bool {
     return entanglementZone_.has_value();
   }
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
+  [[nodiscard]] auto operator==(const SLM& other) const -> bool;
 };
 } // namespace na
-
-namespace std {
-
-template <> struct hash<tuple<const na::SLM*, size_t, size_t>> {
-  size_t
-  operator()(const tuple<const na::SLM*, size_t, size_t>& t) const noexcept {
-    const auto& [slm, a, b] = t;
-    const size_t h1 = hash<const na::SLM*>{}(slm);
-    const size_t h2 = hash<size_t>{}(a);
-    const size_t h3 = hash<size_t>{}(b);
-    return h1 ^ (h2 << 1) ^ (h3 << 2);
+template <class F, class S> struct std::hash<std::pair<F, S>> {
+  size_t operator()(const std::pair<F, S>& p) const noexcept {
+    const auto h1 =
+        std::hash<std::remove_cv_t<std::remove_reference_t<F>>>{}(p.first);
+    const auto h2 =
+        std::hash<std::remove_cv_t<std::remove_reference_t<S>>>{}(p.second);
+    return qc::combineHash(h1, h2);
   }
 };
-
-template <> struct hash<tuple<const na::SLM*, size_t, const na::SLM*, size_t>> {
-  size_t operator()(const tuple<const na::SLM*, size_t, const na::SLM*, size_t>&
-                        t) const noexcept {
-    const auto& [slm1, x1, slm2, x2] = t;
-    const size_t h1 = hash<const na::SLM*>{}(slm1);
-    const size_t h2 = hash<size_t>{}(x1);
-    const size_t h3 = hash<const na::SLM*>{}(slm2);
-    const size_t h4 = hash<size_t>{}(x2);
-    return h1 ^ (h3 << 1) ^ (h2 << 2) ^ (h4 << 3);
+template <class S, class T, class U>
+struct std::hash<std::tuple<std::reference_wrapper<S>, T, U>> {
+  size_t operator()(const std::tuple<S, T, U>& t) const noexcept {
+    const auto h1 = std::hash<std::remove_cv_t<S>>{}(std::get<0>(t));
+    const auto h2 = std::hash<std::remove_cv_t<std::remove_reference_t<T>>>{}(
+        std::get<1>(t));
+    const auto h3 = std::hash<std::remove_cv_t<std::remove_reference_t<U>>>{}(
+        std::get<2>(t));
+    return qc::combineHash(qc::combineHash(h1, h2), h3);
   }
 };
-} // namespace std
+template <class S, class T, class U> struct std::hash<std::tuple<S, T, U>> {
+  size_t operator()(const std::tuple<S, T, U>& t) const noexcept {
+    const auto h1 = std::hash<std::remove_cv_t<std::remove_reference_t<S>>>{}(
+        std::get<0>(t));
+    const auto h2 = std::hash<std::remove_cv_t<std::remove_reference_t<T>>>{}(
+        std::get<1>(t));
+    const auto h3 = std::hash<std::remove_cv_t<std::remove_reference_t<U>>>{}(
+        std::get<2>(t));
+    return qc::combineHash(qc::combineHash(h1, h2), h3);
+  }
+};
+template <> struct std::hash<na::SLM> {
+  size_t operator()(const na::SLM& slm) const noexcept {
+    return std::hash<std::pair<size_t, size_t>>{}(slm.location);
+  }
+};
 
 namespace na {
 
@@ -84,7 +99,8 @@ namespace na {
 struct Architecture {
   std::string name;
   std::vector<std::unique_ptr<SLM>> storageZones;
-  std::vector<std::vector<std::unique_ptr<SLM>>> entanglementZones;
+  std::vector<std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>>
+      entanglementZones;
   std::vector<std::unique_ptr<AOD>> aods;
   double timeAtomTransfer = 15; ///< µs
   double timeRydberg = 0.36;    ///< µs
@@ -111,7 +127,8 @@ struct Architecture {
   std::unordered_map<
       std::reference_wrapper<const SLM>,
       std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                         std::size_t, std::size_t>>>>
+                                         std::size_t, std::size_t>>>,
+      std::hash<SLM>, std::equal_to<SLM>>
       entanglementToNearestStorageSite;
   /// A map from a storage site to the nearest Rydberg sites.
   /// @see entanglementToNearestStorageSite
@@ -120,7 +137,9 @@ struct Architecture {
       std::vector<std::vector<std::unordered_map<
           std::reference_wrapper<const SLM>,
           std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             std::size_t, std::size_t>>>>>>>
+                                             std::size_t, std::size_t>>>,
+          std::hash<SLM>, std::equal_to<SLM>>>>,
+      std::hash<SLM>, std::equal_to<SLM>>
       storageToNearestEntanglementSite;
 
   Architecture() = default;
@@ -138,6 +157,12 @@ struct Architecture {
     load(std::move(json));
     preprocessing();
   }
+  // Delete copy constructor and copy assignment operator
+  Architecture(const Architecture&) = delete;
+  Architecture& operator=(const Architecture&) = delete;
+  // Default move constructor and move assignment operator
+  Architecture(Architecture&&) noexcept = default;
+  Architecture& operator=(Architecture&&) noexcept = default;
   auto load(const std::string& filename) -> void {
     load(std::filesystem::path(filename));
   }
@@ -211,13 +236,14 @@ struct Architecture {
       -> double;
   /// return the nearest storage site for an entanglement site
   auto nearestStorageSite(const SLM& slm, std::size_t r, std::size_t c) const
-      -> const std::tuple<const SLM&, std::size_t, std::size_t>&;
+      -> const
+      std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
   /// return the nearest Rydberg site for two qubit in the storage zone
   /// based on the position of two qubits
   auto nearestEntanglementSite(const SLM& idx1, std::size_t r1, std::size_t c1,
                                const SLM& idx2, std::size_t r2,
-                               std::size_t c2) const
-      -> const std::tuple<const SLM&, std::size_t, std::size_t>&;
+                               std::size_t c2) const -> const
+      std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>&;
   /// return the maximum/sum of the distance to move two qubits to one rydberg
   /// site. If the two qubits are in the same row, i.e., can be picked up
   /// simultaneously, the maximum distance is returned. Otherwise, the
@@ -231,6 +257,7 @@ struct Architecture {
                                std::size_t y2) -> double;
   /// Returns the other site of a pair of entanglement sites
   auto otherEntanglementSite(const SLM& slm, std::size_t r, std::size_t c) const
-      -> std::tuple<const SLM&, std::size_t, std::size_t>;
+      -> std::tuple<std::reference_wrapper<const SLM>, std::size_t,
+                    std::size_t>;
 };
 } // namespace na

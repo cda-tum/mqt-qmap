@@ -6,6 +6,7 @@
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 #include "na/entities/Atom.hpp"
+#include "na/entities/Location.hpp"
 #include "na/entities/Zone.hpp"
 #include "na/operations/GlobalCZOp.hpp"
 #include "na/operations/LoadOp.hpp"
@@ -30,17 +31,13 @@ namespace na {
 auto CodeGenerator::appendOneQubitGates(
     const std::vector<std::reference_wrapper<const qc::Operation>>&
         oneQubitGates,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& atomLocations,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
   for (const auto& op : oneQubitGates) {
     assert(op.get().getNqubits() == 1);
     const qc::Qubit qubit = op.get().getTargets().front();
-    const auto& [x, y] =
-        std::apply(architecture_.get().exactSlmLocation, atomLocations[qubit]);
     assert(op.get().getType() == qc::Z);
-    code.emplaceBack<LocalRZOp>(atoms[qubit], x, y);
+    code.emplaceBack<LocalRZOp>(atoms[qubit], op.get().getParameter().front());
   }
 }
 auto CodeGenerator::appendTwoQubitGates(
@@ -74,13 +71,14 @@ auto CodeGenerator::appendRearrangement(
     std::vector<Location> targetLocations;
     for (const auto& qubit : qubits) {
       // get the current location of the qubit
-      const auto& [x, y] = std::apply(architecture_.get().exactSlmLocation,
-                                      startPlacement[qubit]);
+      const auto& [slm, r, c] = startPlacement[qubit];
+      const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
       rowsWithQubits.try_emplace(y).first->second.emplace(x, qubit);
       atomsToMove.emplace_back(&atoms[qubit].get());
       // get the target location of the qubit
-      const auto& [targetX, targetY] = std::apply(
-          architecture_.get().exactSlmLocation, targetPlacement[qubit]);
+      const auto& [targetSlm, targetR, targetC] = targetPlacement[qubit];
+      const auto& [targetX, targetY] =
+          architecture_.get().exactSlmLocation(targetSlm, targetR, targetC);
       targetLocations.emplace_back(
           Location{static_cast<double>(targetX), static_cast<double>(targetY)});
     }
@@ -98,7 +96,7 @@ auto CodeGenerator::appendRearrangement(
     // row-by-row as a simple strategy to avoid ghost-spots
     for (auto it = std::next(rowsWithQubits.cbegin());
          it != rowsWithQubits.cend(); ++it) {
-      const auto& [y, row] = *it;
+      const auto& [yCoordinateOfRow, row] = *it;
       // perform an offset move to avoid ghost-spots
       std::vector<const Atom*> atomsToOffset;
       std::vector<Location> offsetTargetLocations;
@@ -125,7 +123,7 @@ auto CodeGenerator::appendRearrangement(
       std::vector<const Atom*> atomsToLoad;
       atomsToLoad.reserve(row.size());
       for (const auto& [x, qubit] : row) {
-        alreadyLoadedQubits.emplace_back(qubit, std::pair{x, y});
+        alreadyLoadedQubits.emplace_back(qubit, std::pair{x, yCoordinateOfRow});
         atomsToLoad.emplace_back(&atoms[qubit].get());
       }
       code.emplaceBack<LoadOp>(atomsToLoad);
@@ -192,7 +190,7 @@ auto CodeGenerator::generateCode(
   for (size_t layer = 0; true; ++layer) {
     const auto& oneQubitGates = oneQubitGateLayers[layer];
     const auto& atomLocations = placement[2 * layer];
-    appendOneQubitGates(oneQubitGates, atomLocations, atoms, code);
+    appendOneQubitGates(oneQubitGates, atoms, code);
     if (layer == oneQubitGateLayers.size() - 1) {
       break;
     }

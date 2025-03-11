@@ -39,7 +39,7 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
   // calculate the maximum possible number of two-qubit gates per layer
   std::size_t maxTwoQubitGateNumPerLayer = 0;
   for (const auto& zone : architecture_.get().entanglementZones) {
-    maxTwoQubitGateNumPerLayer += zone.front()->nRows * zone.front()->nCols;
+    maxTwoQubitGateNumPerLayer += zone.first->nRows * zone.first->nCols;
   }
   std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
       oneQubitGateLayers(1);

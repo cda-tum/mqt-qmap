@@ -104,7 +104,7 @@ auto ISRouter::route(
       const auto& [startSlm, startRow, startColumn] = startPlacement[atom];
       const auto& [targetSlm, targetRow, targetColumn] = targetPlacement[atom];
       // if atom must be moved
-      if (&startSlm != &targetSlm || startRow != targetRow ||
+      if (&startSlm.get() != &targetSlm.get() || startRow != targetRow ||
           startColumn != targetColumn) {
         const auto distance =
             architecture_.get().distance(startSlm, startRow, startColumn,

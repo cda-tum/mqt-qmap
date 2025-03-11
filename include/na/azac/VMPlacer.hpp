@@ -16,6 +16,10 @@ namespace na {
 /// class to find a qubit layout based on vertex matching of a weighted
 /// bipartite graph
 class VMPlacer {
+  friend class VMPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
+  friend class VMPlacerTest_MinimumWeightFullBipartiteMatching2_Test;
+  friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingExceptions_Test;
+
   std::reference_wrapper<const Architecture> architecture_;
   /// If true, during the initial placement the atoms are placed starting in the
   /// last row instead of the first row in the first SLM
@@ -31,7 +35,7 @@ class VMPlacer {
   bool dynamicPlacement_ = true;
 
   // todo: Why is that?
-  constexpr double costAtomTransfer_ = 0.9999;
+  constexpr static double costAtomTransfer_ = 0.9999;
 
 protected:
   VMPlacer(const Architecture& architecture, const nlohmann::json& config);

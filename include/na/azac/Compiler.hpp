@@ -98,15 +98,15 @@ class ZACompiler final
     : public Compiler<ZACompiler, ASAPScheduler, VMReuseAnalyzer, VMPlacer,
                       ISRouter, CodeGenerator> {
 public:
-  ZACompiler(const Architecture& architecture, const nlohmann::json& config)
-      : Compiler(architecture, config) {}
+  ZACompiler(Architecture&& architecture, nlohmann::json&& config)
+      : Compiler(std::move(architecture), std::move(config)) {}
 };
 
 class AZACompiler final
     : public Compiler<AZACompiler, ASAPScheduler, VMReuseAnalyzer, AStarPlacer,
                       ISRouter, CodeGenerator> {
 public:
-  AZACompiler(const Architecture& architecture, const nlohmann::json& config)
-      : Compiler(architecture, config) {}
+  AZACompiler(Architecture&& architecture, nlohmann::json&& config)
+      : Compiler(std::move(architecture), std::move(config)) {}
 };
 } // namespace na

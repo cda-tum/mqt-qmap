@@ -1,12 +1,17 @@
 #include "na/azac/VMReuseAnalyzer.hpp"
 
 #include "Definitions.hpp"
-#include "na/azac/Utils.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <deque>
 #include <iostream>
+#include <numeric>
+#include <optional>
+#include <queue>
 #include <sstream>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -96,9 +101,9 @@ auto VMReuseAnalyzer::analyzeReuse(
   }
   return reuseQubits;
 }
-auto maximumBipartiteMatching(
-    const std::vector<std::vector<std::size_t>>& sparseMatrix,
-    const bool inverted) -> std::vector<std::optional<std::size_t>> {
+auto VMReuseAnalyzer::maximumBipartiteMatching(
+    const std::vector<std::vector<std::size_t>>& sparseMatrix, bool inverted)
+    -> std::vector<std::optional<std::size_t>> {
   // Conversely, to other implementations and the literature, we do NOT
   // introduce two extra nodes, one connected to all free sources and one
   // connected to all free sinks. Instead, we start the search directly from

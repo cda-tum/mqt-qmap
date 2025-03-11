@@ -105,7 +105,7 @@ class AStarPlacer {
   std::vector<GateJob> gateJobs_;
 
   /// The number of either atom or gate jobs that must be performed
-  size_t nJobs_;
+  size_t nJobs_ = 0;
 
 protected:
   AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
@@ -188,11 +188,14 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& placement,
       const std::vector<qc::Qubit>& atoms) const
-      -> std::pair<
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>,
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>>;
+      -> std::pair<std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>,
+                   std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
    * This function discretizes the storage zone of the architecture and returns
@@ -202,13 +205,19 @@ private:
    * indices and the second one maps columns to their discrete indices
    */
   [[nodiscard]] auto discretizeNonOccupiedStorageSites(
-      const std::set<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                size_t>>& occupiedSites) const
-      -> std::pair<
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>,
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>>;
+      const std::unordered_set<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
+          std::hash<std::tuple<const SLM&, size_t, size_t>>,
+          std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
+      const
+      -> std::pair<std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>,
+                   std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
    * This function discretizes the entanglement zone of the architecture and
@@ -218,13 +227,19 @@ private:
    * indices and the second one maps columns to their discrete indices
    */
   [[nodiscard]] auto discretizeNonOccupiedEntanglementSites(
-      const std::set<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                size_t>>& occupiedSites) const
-      -> std::pair<
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>,
-          std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                   uint16_t>>;
+      const std::unordered_set<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
+          std::hash<std::tuple<const SLM&, size_t, size_t>>,
+          std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
+      const
+      -> std::pair<std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>,
+                   std::unordered_map<
+                       std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>>;
   /**
    * Given the discretion of the previous placement of the atoms and the
    * discretization of the target slms, this function updates the placement of
@@ -247,16 +262,24 @@ private:
       const std::vector<qc::Qubit>& atoms,
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
-      const std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint16_t>& discreteRows,
-      const std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint16_t>& discreteColumns,
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
+          std::hash<std::pair<const SLM&, size_t>>,
+          std::equal_to<std::pair<const SLM&, size_t>>>& discreteRows,
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
+          std::hash<std::pair<const SLM&, size_t>>,
+          std::equal_to<std::pair<const SLM&, size_t>>>& discreteColumns,
       const std::unordered_map<uint16_t, uint16_t>& rowMapping,
       const std::unordered_map<uint16_t, uint16_t>& columnMapping,
-      const std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint16_t>& discreteTargetRows,
-      const std::map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint16_t>& discreteTargetColumns,
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
+          std::hash<std::pair<const SLM&, size_t>>,
+          std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetRows,
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
+          std::hash<std::pair<const SLM&, size_t>>,
+          std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetColumns,
       std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                              size_t>>& placement) const -> void;
 
@@ -305,7 +328,7 @@ private:
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
-  auto isGoal(const Node& node) -> bool {
+  auto isGoal(const Node& node) const -> bool {
     return node.consumedFreeSites.size() == nJobs_;
   }
 

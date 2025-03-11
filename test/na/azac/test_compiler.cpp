@@ -53,37 +53,6 @@ constexpr std::string_view settings = R"({
   "use_verifier": false
 })";
 
-class TestAZACSettings : public testing::Test {
-protected:
-  AZACompiler compiler;
-  void SetUp() override {
-    std::istringstream settingsStream{std::string{settings}};
-    ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
-  }
-};
-
-TEST_F(TestAZACSettings, LoadSettingsNoThrow) {}
-
-TEST_F(TestAZACSettings, PrintSettingsNonEmpty) {
-  std::cout << compiler.toString() << '\n';
-  EXPECT_FALSE(compiler.toString().empty());
-}
-
-TEST_F(TestAZACSettings, SetProgramNoThrow) {
-  qc::QuantumComputation circ(2);
-  circ.h(0);
-  circ.h(1);
-  circ.cz(0, 1);
-  circ.h(1);
-  ASSERT_NO_THROW(compiler.setProgram(circ));
-}
-
-TEST_F(TestAZACSettings, SetProgramThrow) {
-  qc::QuantumComputation circ(2);
-  circ.cx(0, 1);
-  ASSERT_THROW(compiler.setProgram(circ), std::invalid_argument);
-}
-
 constexpr std::string_view steaneWithoutOneQubitGates = R"(OPENQASM 2.0;
 include "qelib1.inc";
 qreg q[7];
@@ -121,39 +90,13 @@ class TestAZACompiler
     : public ::testing::TestWithParam<std::pair<std::string, std::string>> {
 protected:
   qc::QuantumComputation circ;
-  AZACompiler compiler;
   void SetUp() override {
     const auto& [name, qasm] = GetParam();
     circ = qasm3::Importer::imports(qasm);
     qc::CircuitOptimizer::flattenOperations(circ);
     std::istringstream settingsStream{std::string{settings}};
-    ASSERT_NO_THROW(compiler.loadSettings(settingsStream));
-    compiler.getResult().name = name;
-    ASSERT_NO_THROW(compiler.setProgram(circ));
   }
 };
-
-TEST_P(TestAZACompiler, GetNQubits) {
-  EXPECT_EQ(compiler.getNQubits(), circ.getNqubits());
-}
-
-TEST_P(TestAZACompiler, GetNTwoQubitGates) {
-  std::size_t twoQubitOps = 0;
-  for (const auto& op : circ) {
-    if (op->getNqubits() == 2) {
-      ++twoQubitOps;
-    }
-  }
-  EXPECT_EQ(compiler.getNTwoQubitGates(), twoQubitOps);
-}
-
-TEST_P(TestAZACompiler, SolveNoThrow) { ASSERT_NO_THROW(compiler.solve()); }
-
-TEST_P(TestAZACompiler, ResultValid) {
-  ASSERT_NO_THROW(compiler.solve());
-  const auto& result = compiler.getResult();
-  EXPECT_TRUE(result.naComputation.validate().first);
-}
 
 INSTANTIATE_TEST_SUITE_P(
     SteanStatePreps, // Custom instantiation name

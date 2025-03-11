@@ -1,5 +1,4 @@
 #include "na/azac/Architecture.hpp"
-#include "na/azac/Utils.hpp"
 
 #include <cstddef>
 #include <gtest/gtest.h>
@@ -73,22 +72,22 @@ TEST_F(TestArchitecture, Distance) {
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 0, 1), slm1.siteSeparation.first);
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 1, 0), slm1.siteSeparation.second);
 
-  const auto& slm2 = *arch.entanglementZones.front().front();
+  const auto& slm2 = *arch.entanglementZones.front().first;
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm2, 0, 0),
-            distance(slm1.location, slm2.location));
+            std::hypot(slm1.location.first - slm2.location.first,
+                       slm1.location.second - slm2.location.second));
 }
 
 TEST_F(TestArchitecture, NearestStorageSite) {
-  const auto& entanglementSLM = *arch.entanglementZones.front().front();
-  const auto nearestStorageSite =
+  const auto& entanglementSLM = *arch.entanglementZones.front().first;
+  const auto& [nearestSlm, nearestRow, nearestCol] =
       arch.nearestStorageSite(entanglementSLM, 0, 0);
   const auto minDistance =
-      arch.distance({&entanglementSLM, 0, 0}, nearestStorageSite);
+      arch.distance(entanglementSLM, 0, 0, nearestSlm, nearestRow, nearestCol);
   for (const auto& slm : arch.storageZones) {
     for (std::size_t r = 0; r < slm->nRows; ++r) {
       for (std::size_t c = 0; c < slm->nCols; ++c) {
-        const auto distance =
-            arch.distance({&entanglementSLM, 0, 0}, {slm.get(), r, c});
+        const auto distance = arch.distance(entanglementSLM, 0, 0, *slm, r, c);
         EXPECT_GE(distance, minDistance);
       }
     }
@@ -97,18 +96,17 @@ TEST_F(TestArchitecture, NearestStorageSite) {
 
 TEST_F(TestArchitecture, NearestEntanglementSite) {
   const auto& storageSlm = *arch.storageZones.front();
-  const auto nearestEntanglementSite =
+  const auto& [nearestSlm, nearestRow, nearestCol] =
       arch.nearestEntanglementSite(storageSlm, 0, 0, storageSlm, 0, 1);
   const auto minDistance =
-      arch.distance({&storageSlm, 0, 0}, nearestEntanglementSite) +
-      arch.distance({&storageSlm, 0, 1}, nearestEntanglementSite);
+      arch.distance(storageSlm, 0, 0, nearestSlm, nearestRow, nearestCol) +
+      arch.distance(storageSlm, 0, 1, nearestSlm, nearestRow, nearestCol);
   for (const auto& slms : arch.entanglementZones) {
-    for (const auto& slm : slms) {
-      for (std::size_t r = 0; r < slm->nRows; ++r) {
-        for (std::size_t c = 0; c < slm->nCols; ++c) {
-          const auto distance =
-              arch.distance({&storageSlm, 0, 0}, {slm.get(), r, c}) +
-              arch.distance({&storageSlm, 0, 1}, {slm.get(), r, c});
+    for (const auto& slm : {*slms.first, *slms.second}) {
+      for (std::size_t r = 0; r < slm.nRows; ++r) {
+        for (std::size_t c = 0; c < slm.nCols; ++c) {
+          const auto distance = arch.distance(storageSlm, 0, 0, slm, r, c) +
+                                arch.distance(storageSlm, 0, 1, slm, r, c);
           EXPECT_GE(distance, minDistance);
         }
       }

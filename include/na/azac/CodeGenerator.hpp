@@ -59,8 +59,6 @@ private:
   auto appendOneQubitGates(
       const std::vector<std::reference_wrapper<const qc::Operation>>&
           oneQubitGates,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& atomLocations,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
 

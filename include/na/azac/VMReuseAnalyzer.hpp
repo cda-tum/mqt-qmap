@@ -3,7 +3,9 @@
 #include "Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
+#include <cstddef>
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -14,6 +16,8 @@ namespace na {
  * zoned neutral atom compiler that uses a bipartite maximum matching.
  */
 class VMReuseAnalyzer {
+  friend class VMReuseAnalyzerTest_MaximumBipartiteMatching_Test;
+
 protected:
   /**
    * Create a new VMReuseAnalyzer.
