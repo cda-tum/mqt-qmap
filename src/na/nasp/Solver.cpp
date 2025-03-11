@@ -3,12 +3,12 @@
 #include "Definitions.hpp"
 
 #include <algorithm>
-#include <circuit_optimizer/CircuitOptimizer.hpp>
+#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
-#include <ir/QuantumComputation.hpp>
+#include "ir/QuantumComputation.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <numeric>
