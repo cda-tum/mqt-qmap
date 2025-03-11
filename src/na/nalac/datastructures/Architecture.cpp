@@ -1,9 +1,8 @@
-#include "na/Architecture.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 
 #include "Definitions.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/Configuration.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -24,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 auto Architecture::fromFile(const std::string& jsonFn, const std::string& csvFn)
     -> void {
@@ -83,7 +82,7 @@ auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
   try {
     // load rest of JSON
     name = data["name"];
-    std::map<std::string, Zone> nameToZone;
+    std::map<std::string, ZoneId> nameToZone;
     for (const auto& zone : data["zones"]) {
       nameToZone[zone["name"]] = zones.size();
       const ZoneProperties zp{zone["name"], zone["xmin"], zone["xmax"],
@@ -95,10 +94,10 @@ auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
     }
     for (auto const& op : data["operations"]) {
       const std::string opName = op["name"];
-      const FullOpType ty = {qc::opTypeFromString(opName),
-                             opName.find_first_not_of('c')};
+      const std::pair ty = {qc::opTypeFromString(opName),
+                            opName.find_first_not_of('c')};
       const Scope sc = getScopeOfString(op["type"]);
-      std::unordered_set<Zone> zo = {};
+      std::unordered_set<ZoneId> zo = {};
       for (auto const& zs : op["zones"]) {
         zo.emplace(nameToZone.find(zs)->second);
       }
@@ -128,7 +127,7 @@ auto Architecture::fromFileStream(std::istream& jsonS, std::istream& csvS)
   }
 }
 
-auto Architecture::getZoneAt(const Point& p) const -> Zone {
+auto Architecture::getZoneAt(const Point& p) const -> ZoneId {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -139,19 +138,20 @@ auto Architecture::getZoneAt(const Point& p) const -> Zone {
     ss << "The point " << p << " is not in any zone.";
     throw std::invalid_argument(ss.str());
   }
-  return static_cast<Zone>(std::distance(zones.cbegin(), it));
+  return static_cast<ZoneId>(std::distance(zones.cbegin(), it));
 }
 
-auto Architecture::isAllowedLocally(const FullOpType& t) const -> bool {
-  const auto it = gateSet.find(t);
+auto Architecture::isAllowedLocally(const qc::OpType t,
+                                    const std::size_t ctrls) const -> bool {
+  const auto it = gateSet.find({t, ctrls});
   return it != gateSet.end() && it->second.scope == Scope::Local;
 }
-auto Architecture::isAllowedLocally(const FullOpType& t, const Zone& zone) const
-    -> bool {
-  if (!isAllowedLocally(t)) {
+auto Architecture::isAllowedLocally(const qc::OpType t, const std::size_t ctrls,
+                                    const ZoneId& zone) const -> bool {
+  if (!isAllowedLocally(t, ctrls)) {
     return false; // gate not supported at all
   }
-  const auto it = gateSet.find(t);
+  const auto it = gateSet.find({t, ctrls});
   if (it == gateSet.end()) {
     qc::unreachable(); // please the clang-tidy null dereference checker
   }
@@ -160,8 +160,9 @@ auto Architecture::isAllowedLocally(const FullOpType& t, const Zone& zone) const
   return gateZones.find(zone) != gateZones.end();
 }
 
-auto Architecture::isAllowedLocallyAt(const FullOpType& t, const Point& p) const
-    -> bool {
+auto Architecture::isAllowedLocallyAt(const qc::OpType t,
+                                      const std::size_t ctrls,
+                                      const Point& p) const -> bool {
   const auto& it =
       std::find_if(zones.cbegin(), zones.cend(), [&](const auto& zProp) {
         return p.x >= zProp.minX && p.x <= zProp.maxX && p.y >= zProp.minY &&
@@ -172,21 +173,23 @@ auto Architecture::isAllowedLocallyAt(const FullOpType& t, const Point& p) const
     ss << "The point " << p << " is not in any zone.";
     throw std::invalid_argument(ss.str());
   }
-  return isAllowedLocally(t,
-                          static_cast<Zone>(std::distance(zones.cbegin(), it)));
+  return isAllowedLocally(
+      t, ctrls, static_cast<ZoneId>(std::distance(zones.cbegin(), it)));
 }
 
-auto Architecture::isAllowedGlobally(const FullOpType& t) const -> bool {
-  const auto it = gateSet.find(t);
+auto Architecture::isAllowedGlobally(const qc::OpType t,
+                                     const std::size_t ctrls) const -> bool {
+  const auto it = gateSet.find({t, ctrls});
   return it != gateSet.end() && it->second.scope == Scope::Global;
 }
 
-auto Architecture::isAllowedGlobally(const FullOpType& t,
-                                     const Zone& zone) const -> bool {
-  if (!isAllowedGlobally(t)) {
+auto Architecture::isAllowedGlobally(const qc::OpType t,
+                                     const std::size_t ctrls,
+                                     const ZoneId& zone) const -> bool {
+  if (!isAllowedGlobally(t, ctrls)) {
     return false; // gate not supported at all
   }
-  const auto it = gateSet.find(t);
+  const auto it = gateSet.find({t, ctrls});
   if (it == gateSet.end()) {
     qc::unreachable(); // please the clang-tidy null dereference checker
   }
@@ -194,7 +197,7 @@ auto Architecture::isAllowedGlobally(const FullOpType& t,
   // zone exists in gateZones
   return gateZones.find(zone) != gateZones.end();
 }
-auto Architecture::getRowsInZone(const Zone& z) const -> std::vector<Number> {
+auto Architecture::getRowsInZone(const ZoneId& z) const -> std::vector<Number> {
   std::unordered_set<Number> rows;
   std::for_each(sites.cbegin(), sites.cend(), [&](const auto& s) {
     if (s.x >= zones[z].minX && s.x <= zones[z].maxX and s.y >= zones[z].minY &&
@@ -206,7 +209,7 @@ auto Architecture::getRowsInZone(const Zone& z) const -> std::vector<Number> {
   std::sort(result.begin(), result.end());
   return result;
 }
-auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
+auto Architecture::getColsInZone(const ZoneId& z) const -> std::vector<Number> {
   std::unordered_set<Number> cols;
   std::for_each(sites.cbegin(), sites.cend(), [&](const auto& s) {
     if (s.x >= zones[z].minX && s.x <= zones[z].maxX and
@@ -218,13 +221,13 @@ auto Architecture::getColsInZone(const Zone& z) const -> std::vector<Number> {
   std::sort(result.begin(), result.end());
   return result;
 }
-auto Architecture::getNColsInZone(const Zone& z) const -> Index {
+auto Architecture::getNColsInZone(const ZoneId& z) const -> Index {
   return getColsInZone(z).size();
 }
-auto Architecture::getNrowsInZone(const Zone& z) const -> Index {
+auto Architecture::getNrowsInZone(const ZoneId& z) const -> Index {
   return getRowsInZone(z).size();
 }
-auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
+auto Architecture::getSitesInRow(const ZoneId& z, const Index& row) const
     -> std::vector<Index> {
   const auto y = Architecture::getRowsInZone(z)[row];
   std::vector<Index> atoms;
@@ -236,7 +239,7 @@ auto Architecture::getSitesInRow(const Zone& z, const Index& row) const
   }
   return atoms;
 }
-auto Architecture::getSitesInZone(const Zone& z) const -> std::vector<Index> {
+auto Architecture::getSitesInZone(const ZoneId& z) const -> std::vector<Index> {
   std::vector<Index> atoms;
   for (Index i = 0; i < sites.size(); ++i) {
     const auto& s = sites[i];
@@ -247,7 +250,7 @@ auto Architecture::getSitesInZone(const Zone& z) const -> std::vector<Index> {
   }
   return atoms;
 }
-auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
+auto Architecture::getNearestXLeft(const Number& x, const ZoneId& z,
                                    const bool proper) const -> Number {
   const auto& cols = getColsInZone(z);
   if (!std::any_of(cols.cbegin(), cols.cend(),
@@ -264,7 +267,7 @@ auto Architecture::getNearestXLeft(const Number& x, const Zone& z,
   return result;
 }
 
-auto Architecture::getNearestXRight(const Number& x, const Zone& z,
+auto Architecture::getNearestXRight(const Number& x, const ZoneId& z,
                                     const bool proper) const -> Number {
   const auto& cols = getColsInZone(z);
   if (!std::any_of(cols.cbegin(), cols.cend(),
@@ -584,4 +587,4 @@ auto Architecture::getPositionOffsetBy(const Point& p, const Number& rows,
   return {anchorSitePos.x + dx, anchorSitePos.y + dy};
 }
 
-} // namespace na
+} // namespace na::nalac

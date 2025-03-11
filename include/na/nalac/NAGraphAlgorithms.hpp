@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 using Color = std::uint16_t;
 using Edge = std::pair<qc::Qubit, qc::Qubit>;
@@ -159,4 +159,4 @@ public:
       -> std::pair<std::vector<std::unordered_map<qc::Qubit, std::int64_t>>,
                    std::unordered_map<qc::Qubit, std::int64_t>>;
 };
-} // namespace na
+} // namespace na::nalac

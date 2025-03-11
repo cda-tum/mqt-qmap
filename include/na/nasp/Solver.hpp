@@ -5,11 +5,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <yaml-cpp/node/node.h>
 #include <z3++.h>
 
 namespace na {
@@ -136,28 +136,28 @@ private:
                         uint16_t maxHOffset, uint16_t maxVOffset);
 
     /// @see id
-    [[nodiscard]] uint16_t getId() const { return id; }
+    [[nodiscard]] auto getId() const -> uint16_t { return id; }
 
     /// @see x
-    [[nodiscard]] const expr& getX() const { return x; }
+    [[nodiscard]] auto getX() const -> const expr& { return x; }
 
     /// @see y
-    [[nodiscard]] const expr& getY() const { return y; }
+    [[nodiscard]] auto getY() const -> const expr& { return y; }
 
     /// @see a
-    [[nodiscard]] const expr& getA() const { return a; }
+    [[nodiscard]] auto getA() const -> const expr& { return a; }
 
     /// @see c
-    [[nodiscard]] const expr& getC() const { return c; }
+    [[nodiscard]] auto getC() const -> const expr& { return c; }
 
     /// @see r
-    [[nodiscard]] const expr& getR() const { return r; }
+    [[nodiscard]] auto getR() const -> const expr& { return r; }
 
     /// @see h
-    [[nodiscard]] const expr& getH() const { return h; }
+    [[nodiscard]] auto getH() const -> const expr& { return h; }
 
     /// @see v
-    [[nodiscard]] const expr& getV() const { return v; }
+    [[nodiscard]] auto getV() const -> const expr& { return v; }
   };
 
   class Stage {
@@ -210,7 +210,7 @@ private:
                                  uint16_t maxY, uint16_t maxC, uint16_t maxR,
                                  uint16_t maxHOffset, uint16_t maxVOffset);
 
-    [[nodiscard]] uint16_t getT() const { return t; }
+    [[nodiscard]] auto getT() const -> uint16_t { return t; }
 
     [[nodiscard]] auto getQubit(const size_t i) const -> const Qubit& {
       return qubits[i];
@@ -360,7 +360,7 @@ public:
                          uint16_t newMaxVDist, uint16_t newMinEntanglingY,
                          uint16_t newMaxEntanglingY);
   [[nodiscard]] NASolver(const NASolver& other) = default;
-  [[nodiscard]] NASolver& operator=(const NASolver& other) = default;
+  [[nodiscard]] auto operator=(const NASolver& other) -> NASolver& = default;
   virtual ~NASolver() = default;
 
   /// This struct wraps the result of the solver
@@ -390,10 +390,9 @@ public:
       /// an AOD
       int32_t v;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Qubit;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Qubit;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
       [[nodiscard]] auto operator==(const Qubit& other) const -> bool;
     };
 
@@ -402,10 +401,9 @@ public:
       uint16_t stage = 0;
       std::pair<qc::Qubit, qc::Qubit> qubits;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Gate;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Gate;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
 
       [[nodiscard]] auto operator==(const Gate& other) const -> bool;
     };
@@ -416,10 +414,9 @@ public:
       std::vector<Qubit> qubits;
       std::vector<Gate> gates;
 
-      [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Stage;
+      [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Stage;
 
-      [[nodiscard]] auto yaml(std::size_t indent, bool item = true,
-                              bool compact = true) const -> std::string;
+      [[nodiscard]] auto json() const -> nlohmann::json;
 
       [[nodiscard]] auto operator==(const Stage& other) const -> bool;
     };
@@ -433,10 +430,9 @@ public:
     uint16_t maxHOffset = 0;
     uint16_t maxVOffset = 0;
 
-    [[nodiscard]] static auto fromYAML(const YAML::Node& yaml) -> Result;
+    [[nodiscard]] static auto fromJSON(const nlohmann::json& json) -> Result;
 
-    [[nodiscard]] auto yaml(std::size_t indent = 0, bool compact = true) const
-        -> std::string;
+    [[nodiscard]] auto json() const -> nlohmann::json;
 
     [[nodiscard]] auto operator==(const Result& other) const -> bool;
   };
@@ -474,6 +470,6 @@ public:
 };
 
 struct ExprHash {
-  uint32_t operator()(const expr& e) const { return e.hash(); }
+  auto operator()(const expr& e) const -> uint32_t { return e.hash(); }
 };
 } // namespace na

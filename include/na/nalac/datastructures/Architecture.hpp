@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Definitions.hpp"
-#include "na/Configuration.hpp"
-#include "na/NADefinitions.hpp"
+#include "NADefinitions.hpp"
+#include "ir/operations/OpType.hpp"
+#include "na/nalac/datastructures/Configuration.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -18,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::nalac {
 
 /// The scope of an operation (Global or Local)
 enum class Scope : uint8_t { Global, Local };
@@ -51,7 +52,7 @@ using Index = std::size_t;
 /// For distance, those cannot be negative
 using Distance = std::size_t;
 /// The zones are just stored as int
-using Zone = Index;
+using ZoneId = Index;
 /// Any double-valued property
 using Value = qc::fp;
 /// Any information on numbers of something
@@ -72,7 +73,7 @@ public:
     Value t1 = 0;
     Value t2 = 0;
 
-    [[nodiscard]] Value tEff() const {
+    [[nodiscard]] auto tEff() const -> Value {
       if (t1 == 0 && t2 == 0) {
         return 0;
       }
@@ -85,8 +86,8 @@ public:
    * @details Times are in µs, fidelities are in [0,1].
    */
   struct OperationProperties {
-    Scope scope;                    // local or global
-    std::unordered_set<Zone> zones; // the zones where the gate can be applied
+    Scope scope;                      // local or global
+    std::unordered_set<ZoneId> zones; // the zones where the gate can be applied
     Value time;     // the time the gate takes to be applied in µs
     Value fidelity; // the fidelity of the gate
   };
@@ -124,7 +125,7 @@ protected:
   std::vector<ZoneProperties>
       zones; // a mapping from zones (int) to their name from the config
   std::vector<Point> sites; // a vector of sites
-  std::unordered_map<FullOpType, OperationProperties>
+  std::unordered_map<std::pair<qc::OpType, std::size_t>, OperationProperties>
       gateSet; // all possible operations by their type, i.e. gate set
   DecoherenceTimes decoherenceTimes;          // the decoherence characteristic
   std::vector<ShuttlingProperties> shuttling; // all properties regarding AODs
@@ -133,7 +134,7 @@ protected:
   Distance interactionRadius = 0; // the Rydberg radius
   Distance noInteractionRadius =
       0; // sufficient radius to avoid Rydberg interaction
-  std::vector<Zone> initialZones; // the zones where the atoms are initially
+  std::vector<ZoneId> initialZones; // the zones where the atoms are initially
 
 public:
   Architecture() = default;
@@ -158,7 +159,7 @@ public:
   [[nodiscard]] auto getZoneLabel(const Index& i) const -> const std::string& {
     return zones[i].name;
   }
-  [[nodiscard]] auto getInitialZones() const -> const std::vector<Zone>& {
+  [[nodiscard]] auto getInitialZones() const -> const std::vector<ZoneId>& {
     return initialZones;
   }
   [[nodiscard]] auto getNSites() const -> Index { return sites.size(); }
@@ -184,13 +185,14 @@ public:
   [[nodiscard]] auto getNoInteractionRadius() const -> Distance {
     return noInteractionRadius;
   }
-  [[nodiscard]] auto getPropertiesOfZone(const Zone& zone) const
+  [[nodiscard]] auto getPropertiesOfZone(const ZoneId& zone) const
       -> const ZoneProperties& {
     return zones[zone];
   }
-  [[nodiscard]] auto getPropertiesOfOperation(const FullOpType& t) const
+  [[nodiscard]] auto getPropertiesOfOperation(const qc::OpType t,
+                                              const std::size_t ctrls) const
       -> const OperationProperties& {
-    if (auto it = gateSet.find(t); it != gateSet.end()) {
+    if (const auto& it = gateSet.find({t, ctrls}); it != gateSet.end()) {
       return it->second;
     }
     std::stringstream ss;
@@ -205,79 +207,84 @@ public:
    * @return the distance in µm
    */
   [[nodiscard]] auto getDistance(const Index& i, const Index& j) const
-      -> Index {
+      -> uint64_t {
     return (getPositionOfSite(j) - getPositionOfSite(i)).length();
   }
-  [[nodiscard]] auto getZoneAt(const Point& p) const -> Zone;
-  [[nodiscard]] auto getZoneOfSite(const Index& i) const -> Zone {
+  [[nodiscard]] auto getZoneAt(const Point& p) const -> ZoneId;
+  [[nodiscard]] auto getZoneOfSite(const Index& i) const -> ZoneId {
     return getZoneAt(getPositionOfSite(i));
   }
   /// Checks whether the gate can be applied at all.
-  [[nodiscard]] auto isAllowedLocally(const FullOpType& t) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(qc::OpType t, std::size_t ctrls) const
+      -> bool;
   /// Checks whether the gate can be applied (locally) in this zone.
-  [[nodiscard]] auto isAllowedLocally(const FullOpType& t,
-                                      const Zone& zone) const -> bool;
+  [[nodiscard]] auto isAllowedLocally(qc::OpType t, std::size_t ctrls,
+                                      const ZoneId& zone) const -> bool;
   /// Checks whether the gate can be applied (locally) on this qubit.
-  [[nodiscard]] auto isAllowedLocallyAt(const FullOpType& t,
+  [[nodiscard]] auto isAllowedLocallyAt(qc::OpType t, std::size_t ctrls,
                                         const Point& p) const -> bool;
-  /// Checks whether the gate is a global gate for this Zone.
-  [[nodiscard]] auto isAllowedGlobally(const FullOpType& t) const -> bool;
-  [[nodiscard]] auto isAllowedGlobally(const FullOpType& t,
-                                       const Zone& zone) const -> bool;
-  [[nodiscard]] auto getNrowsInZone(const Zone& z) const -> Index;
-  [[nodiscard]] auto getNColsInZone(const Zone& z) const -> Index;
-  [[nodiscard]] auto getSitesInRow(const Zone& z, const Index& row) const
+  /// Checks whether the gate is a global gate for this ZoneId.
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType t, std::size_t ctrls) const
+      -> bool;
+  [[nodiscard]] auto isAllowedGlobally(qc::OpType t, std::size_t ctrls,
+                                       const ZoneId& zone) const -> bool;
+  [[nodiscard]] auto getNrowsInZone(const ZoneId& z) const -> Index;
+  [[nodiscard]] auto getNColsInZone(const ZoneId& z) const -> Index;
+  [[nodiscard]] auto getSitesInRow(const ZoneId& z, const Index& row) const
       -> std::vector<Index>;
-  [[nodiscard]] auto getNearestXLeft(const Number& x, const Zone& z,
+  [[nodiscard]] auto getNearestXLeft(const Number& x, const ZoneId& z,
                                      bool proper = true) const -> Number;
-  [[nodiscard]] auto getNearestXRight(const Number& x, const Zone& z,
+  [[nodiscard]] auto getNearestXRight(const Number& x, const ZoneId& z,
                                       bool proper = true) const -> Number;
   [[nodiscard]] auto hasSiteLeft(const Point& p, bool proper = false,
-                                 bool sameZone = false) const
+                                 bool sameZoneId = false) const
       -> std::pair<std::vector<Point>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteRight(const Point& p, bool proper = false,
-                                  bool sameZone = false) const
+                                  bool sameZoneId = false) const
       -> std::pair<std::vector<Point>::const_iterator, bool>;
   [[nodiscard]] auto hasSiteUp(const Point& p, bool proper = false,
-                               bool sameZone = false) const
+                               bool sameZoneId = false) const
       -> std::pair<std::vector<Point>::const_reverse_iterator, bool>;
   [[nodiscard]] auto hasSiteDown(const Point& p, bool proper = false,
-                                 bool sameZone = false) const
+                                 bool sameZoneId = false) const
       -> std::pair<std::vector<Point>::const_iterator, bool>;
   [[nodiscard]] auto getNearestSiteLeft(const Point& p, bool proper = false,
-                                        bool sameZone = false) const
+                                        bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteRight(const Point& p, bool proper = false,
-                                         bool sameZone = false) const
+                                         bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUp(const Point& p, bool proper = false,
-                                      bool sameZone = false) const
+                                      bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDown(const Point& p, bool proper = false,
-                                        bool sameZone = false) const
+                                        bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUpRight(const Point& p, bool proper = false,
-                                           bool sameZone = false) const
+                                           bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteUpLeft(const Point& p, bool proper = false,
-                                          bool sameZone = false) const
+                                          bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDownLeft(const Point& p, bool proper = false,
-                                            bool sameZone = false) const
+                                            bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getNearestSiteDownRight(const Point& p,
                                              bool proper = false,
-                                             bool sameZone = false) const
+                                             bool sameZoneId = false) const
       -> std::optional<Index>;
   [[nodiscard]] auto getSiteAt(const Point& p) const -> std::optional<Index>;
-  [[nodiscard]] auto getSitesInZone(const Zone& z) const -> std::vector<Index>;
+  [[nodiscard]] auto getSitesInZone(const ZoneId& z) const
+      -> std::vector<Index>;
   [[nodiscard]] auto withConfig(const Configuration& config) const
       -> Architecture;
   [[nodiscard]] auto getPositionOffsetBy(const Point& p, const Number& rows,
                                          const Number& cols) const -> Point;
 
 private:
-  [[nodiscard]] auto getRowsInZone(const Zone& z) const -> std::vector<Number>;
-  [[nodiscard]] auto getColsInZone(const Zone& z) const -> std::vector<Number>;
+  [[nodiscard]] auto getRowsInZone(const ZoneId& z) const
+      -> std::vector<Number>;
+  [[nodiscard]] auto getColsInZone(const ZoneId& z) const
+      -> std::vector<Number>;
 };
-} // namespace na
+} // namespace na::nalac

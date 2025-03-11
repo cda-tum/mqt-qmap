@@ -9,7 +9,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace na {
+namespace na::nalac {
 
 enum class NAMappingMethod : std::uint8_t {
   Naive,
@@ -55,4 +55,4 @@ public:
   [[nodiscard]] auto getPatchCols() const -> std::size_t { return patchCols; }
   [[nodiscard]] auto getMethod() const -> NAMappingMethod { return method; }
 };
-} // namespace na
+} // namespace na::nalac

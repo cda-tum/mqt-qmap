@@ -10,8 +10,7 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/operations/OpType.hpp"
-#include "ir/operations/Operation.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/entities/Location.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -145,7 +144,7 @@ protected:
   Properties properties{};
   Parameters parameters;
 
-  std::vector<Point> coordinates;
+  std::vector<Location> coordinates;
   qc::SymmetricMatrix<SwapDistance> swapDistances;
   std::vector<std::set<CoordIndex>> nearbyCoordinates;
 
@@ -265,8 +264,8 @@ public:
    * @param c2 The second coordinate
    * @return The swap distance between the two coordinates
    */
-  [[nodiscard]] SwapDistance getSwapDistance(const Point& c1,
-                                             const Point& c2) const {
+  [[nodiscard]] SwapDistance getSwapDistance(const Location& c1,
+                                             const Location& c2) const {
     return swapDistances(
         static_cast<size_t>(c1.x + c1.y) * properties.getNcolumns(),
         static_cast<size_t>(c2.x + c2.y) * properties.getNcolumns());
@@ -363,7 +362,7 @@ public:
    * @param idx The index
    * @return The coordinate corresponding to the index
    */
-  [[nodiscard]] Point getCoordinate(CoordIndex idx) const {
+  [[nodiscard]] Location getCoordinate(CoordIndex idx) const {
     return coordinates[idx];
   }
   /**
@@ -371,7 +370,7 @@ public:
    * @param c The coordinate
    * @return The index corresponding to the coordinate
    */
-  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Point& c) {
+  [[nodiscard]] [[maybe_unused]] CoordIndex getIndex(const Location& c) {
     return static_cast<CoordIndex>(c.x + c.y * properties.getNcolumns());
   }
 
@@ -384,8 +383,7 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2)));
+    return coordinates.at(idx1).getEuclideanDistance(coordinates.at(idx2));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates
@@ -393,9 +391,9 @@ public:
    * @param c2 The second coordinate
    * @return The Euclidean distance between the two coordinates
    */
-  [[nodiscard]] static qc::fp getEuclideanDistance(const Point& c1,
-                                                   const Point& c2) {
-    return static_cast<qc::fp>(c1.getEuclideanDistance(c2));
+  [[nodiscard]] static qc::fp getEuclideanDistance(const Location& c1,
+                                                   const Location& c2) {
+    return c1.getEuclideanDistance(c2);
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices
@@ -403,8 +401,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceX(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceX(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
         this->coordinates.at(idx1).getManhattanDistanceX(
             this->coordinates.at(idx2)));
@@ -415,11 +413,10 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceY(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceY(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
-        this->coordinates.at(idx1).getManhattanDistanceY(
-            this->coordinates.at(idx2)));
+        coordinates.at(idx1).getManhattanDistanceY(coordinates.at(idx2)));
   }
 
   // Nearby coordinates
@@ -429,7 +426,7 @@ public:
    * @return The precomputed nearby coordinates for the coordinate index
    */
   [[nodiscard]] std::set<CoordIndex>
-  getNearbyCoordinates(CoordIndex idx) const {
+  getNearbyCoordinates(const CoordIndex idx) const {
     return nearbyCoordinates[idx];
   }
   /**

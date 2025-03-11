@@ -57,7 +57,7 @@ repos:
 
   # Python linting using ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
+    rev: v0.9.10
     hooks:
       - id: ruff
         args: ["--fix", "--show-fixes"]
@@ -86,11 +86,11 @@ repos:
           - pytest
           - rustworkx
           - mqt.qcec
-          - mqt.core>=3.0.0b5
+          - mqt.core>=3.0.0b7
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos
-    rev: v1.30.0
+    rev: v1.30.2
     hooks:
       - id: typos
 
@@ -135,7 +135,7 @@ repos:
 
   # Check JSON schemata
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.31.2
+    rev: 0.31.3
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
@@ -143,6 +143,6 @@ repos:
 
   # Check the pyproject.toml file
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
-    rev: 2025.02.24
+    rev: 2025.03.10
     hooks:
       - id: validate-pyproject

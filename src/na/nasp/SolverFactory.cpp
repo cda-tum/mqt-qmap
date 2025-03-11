@@ -3,8 +3,7 @@
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
-#include "na/Architecture.hpp"
-#include "na/NADefinitions.hpp"
+#include "na/nalac/datastructures/Architecture.hpp"
 #include "na/nasp/Solver.hpp"
 
 #include <algorithm>
@@ -16,9 +15,9 @@
 #include <vector>
 
 namespace na {
-auto SolverFactory::create(const Architecture& arch) -> NASolver {
+auto SolverFactory::create(const nalac::Architecture& arch) -> NASolver {
   const auto interactionZone =
-      *arch.getPropertiesOfOperation({qc::Z, 1}).zones.cbegin();
+      *arch.getPropertiesOfOperation(qc::Z, 1).zones.cbegin();
   const auto maxX =
       static_cast<uint16_t>(arch.getNColsInZone(interactionZone) - 1);
   const auto maxEntanglingY =
@@ -27,9 +26,9 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).cols);
   const auto maxR =
       static_cast<uint16_t>(arch.getPropertiesOfShuttlingUnit(0).rows);
-  const auto storageZone = arch.getInitialZones().front();
+  const auto storageZones = arch.getInitialZones().front();
   const auto maxY =
-      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZone));
+      static_cast<uint16_t>(maxEntanglingY + arch.getNrowsInZone(storageZones));
   // the atoms are located, e.g., in the following manner:
   //   0 <-- SLM               0 <-- SLM
   // o o o <-- AOD    OR    o o o o <-- AOD
@@ -86,15 +85,15 @@ auto SolverFactory::create(const Architecture& arch) -> NASolver {
 }
 
 auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
-                                    const FullOpType opType, const bool quiet)
+                                    const qc::OpType opType,
+                                    const std::size_t ctrls, const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
   auto flattened = circ;
   qc::CircuitOptimizer::flattenOperations(flattened);
   std::vector<std::pair<unsigned int, unsigned int>> ops;
   ops.reserve(flattened.size());
   for (const auto& op : flattened) {
-    if (op->getType() == opType.type &&
-        op->getNcontrols() == opType.nControls) {
+    if (op->getType() == opType && op->getNcontrols() == ctrls) {
       const auto& operands = op->getUsedQubits();
       if (operands.size() != 2) {
         std::stringstream ss;
@@ -104,8 +103,8 @@ auto SolverFactory::getOpsForSolver(const qc::QuantumComputation& circ,
       ops.emplace_back(*operands.cbegin(), *operands.rbegin());
     } else if (!quiet) {
       std::stringstream ss;
-      ss << "Operation " << op->getName() << " is not of type " << opType.type
-         << " or does not have " << opType.nControls << " controls.";
+      ss << "Operation " << op->getName() << " is not of type " << opType
+         << " or does not have " << ctrls << " controls.";
       throw std::invalid_argument(ss.str());
     }
   }
