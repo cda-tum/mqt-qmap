@@ -179,7 +179,7 @@ cz q[0], q[1];
   EXPECT_NO_THROW({
     const auto& pairs = na::NASolver::getOpsForSolver(circ, qc::Z, 1, true);
     EXPECT_EQ(pairs.size(), 1);
-    EXPECT_EQ(pairs.front(), std::make_pair(0, 1));
+    EXPECT_EQ(pairs.front(), (std::pair{0UL, 1UL}));
   });
   EXPECT_THROW(std::ignore =
                    na::NASolver::getOpsForSolver(circ, qc::Z, 1, false),
