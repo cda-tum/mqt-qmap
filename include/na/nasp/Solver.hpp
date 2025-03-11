@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
 #include <cstdint>
-#include "ir/QuantumComputation.hpp"
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>

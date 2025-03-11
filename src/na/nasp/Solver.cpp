@@ -1,14 +1,14 @@
 #include "na/nasp/Solver.hpp"
 
 #include "Definitions.hpp"
+#include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <algorithm>
-#include "circuit_optimizer/CircuitOptimizer.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
-#include "ir/QuantumComputation.hpp"
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <numeric>
