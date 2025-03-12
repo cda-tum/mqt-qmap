@@ -138,43 +138,19 @@ struct Architecture {
       std::hash<SLM>, std::equal_to<SLM>>
       storageToNearestEntanglementSite;
 
-  Architecture() = default;
   explicit Architecture(const std::string& filename)
       : Architecture(std::filesystem::path(filename)) {}
   explicit Architecture(const std::filesystem::path& filepath)
       : Architecture(std::ifstream(filepath)) {}
-  explicit Architecture(std::istream& is) : Architecture(std::move(is)) {}
-  explicit Architecture(std::istream&& is) {
-    load(std::move(is));
-    preprocessing();
-  }
-  explicit Architecture(nlohmann::json& json) : Architecture(std::move(json)) {}
-  explicit Architecture(nlohmann::json&& json) {
-    load(std::move(json));
-    preprocessing();
-  }
+  explicit Architecture(std::istream&& ifs)
+      : Architecture(nlohmann::json::parse(std::move(ifs))) {}
+  explicit Architecture(nlohmann::json json);
   // Delete copy constructor and copy assignment operator
   Architecture(const Architecture&) = delete;
   Architecture& operator=(const Architecture&) = delete;
   // Default move constructor and move assignment operator
   Architecture(Architecture&&) noexcept = default;
   Architecture& operator=(Architecture&&) noexcept = default;
-  auto load(const std::string& filename) -> void {
-    load(std::filesystem::path(filename));
-  }
-  auto load(const std::filesystem::path& filepath) -> void {
-    load(std::ifstream(filepath));
-  }
-  auto load(std::istream& is) -> void { load(std::move(is)); }
-  auto load(std::istream&& is) -> void {
-    nlohmann::json architectureSpec{};
-    std::move(is) >> architectureSpec;
-    load(std::move(architectureSpec));
-  }
-  auto load(const nlohmann::json& architectureSpec) -> void {
-    load(std::move(architectureSpec));
-  }
-  auto load(const nlohmann::json&& architectureSpec) -> void;
   auto exportNAVizMachine() const -> std::string;
   auto exportNAVizMachine(std::ostream&& os) const -> void {
     os << exportNAVizMachine();
@@ -198,34 +174,6 @@ struct Architecture {
   [[nodiscard]] auto exactSlmLocation(const SLM& slm, std::size_t r,
                                       std::size_t c) const
       -> std::pair<std::size_t, std::size_t>;
-  /**
-   * In the loop, we will calculate a lower bound of the distance
-   * between the entanglement site and a storage SLM. Any site in the
-   * storage SLM will have at least this distance to the entanglement
-   * site. This distance will be the variable @c minimalDistance.
-   * Among all storage SLMs, we will find the one that has the minimum
-   * distance to the entanglement site, the @c minimumDistance.
-   */
-  [[nodiscard]] auto findNearestStorageSLM(size_t x, size_t y) const
-      -> const SLM&;
-  /**
-   * In the loop, we will calculate a lower bound of the distance
-   * between the entanglement site and a storage SLM. Any site in
-   * the storage SLM will have at least this distance to the
-   * entanglement site. This distance will be the variable @c
-   * minimalDistance. Among all storage SLMs, we will find the one
-   * that has the minimum distance to the entanglement site, the @c
-   * minimumDistance.
-   */
-  [[nodiscard]] auto findNearestEntanglementSLM(size_t x, size_t y,
-                                                size_t otherX,
-                                                size_t otherY) const
-      -> const SLM&;
-  /// Compute the site region for entanglement zone and the nearest Rydberg site
-  /// for each storage site.
-  /// @note We assume we only have one storage zone or one entanglement zone per
-  /// row.
-  auto preprocessing() -> void;
   /// Compute the distance between two specific SLM sites
   auto distance(const SLM& idx1, std::size_t r1, std::size_t c1,
                 const SLM& idx2, std::size_t r2, std::size_t c2) const
@@ -255,5 +203,37 @@ struct Architecture {
   auto otherEntanglementSite(const SLM& slm, std::size_t r, std::size_t c) const
       -> std::tuple<std::reference_wrapper<const SLM>, std::size_t,
                     std::size_t>;
+
+private:
+  /// Compute the site region for entanglement zone and the nearest Rydberg site
+  /// for each storage site.
+  /// @note We assume we only have one storage zone or one entanglement zone per
+  /// row.
+  auto preprocessing() -> void;
+  /**
+   * In the loop, we will calculate a lower bound of the distance
+   * between the entanglement site and a storage SLM. Any site in the
+   * storage SLM will have at least this distance to the entanglement
+   * site. This distance will be the variable @c minimalDistance.
+   * Among all storage SLMs, we will find the one that has the minimum
+   * distance to the entanglement site, the @c minimumDistance.
+   * @note those functions are meant to be used in @ref preprocessing.
+   */
+  [[nodiscard]] auto findNearestStorageSLM(size_t x, size_t y) const
+      -> const SLM&;
+  /**
+   * In the loop, we will calculate a lower bound of the distance
+   * between the entanglement site and a storage SLM. Any site in
+   * the storage SLM will have at least this distance to the
+   * entanglement site. This distance will be the variable @c
+   * minimalDistance. Among all storage SLMs, we will find the one
+   * that has the minimum distance to the entanglement site, the @c
+   * minimumDistance.
+   * @note those functions are meant to be used in @ref preprocessing.
+   */
+  [[nodiscard]] auto findNearestEntanglementSLM(size_t x, size_t y,
+                                                size_t otherX,
+                                                size_t otherY) const
+      -> const SLM&;
 };
 } // namespace na

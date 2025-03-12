@@ -149,87 +149,80 @@ auto SLM::operator==(const SLM& other) const -> bool {
   }
   return true;
 }
-auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
-  ;
-  if (architectureSpec.contains("name")) {
-    if (architectureSpec["name"].is_string()) {
-      name = architectureSpec["name"];
+Architecture::Architecture(nlohmann::json json) {
+  if (json.contains("name")) {
+    if (json["name"].is_string()) {
+      name = json["name"];
     } else {
-      throw std::invalid_argument("architecture name must be a string");
+      throw std::invalid_argument("Architecture name must be a string");
     }
   } else {
-    throw std::invalid_argument("architecture name is missed in architecture "
+    throw std::invalid_argument("Architecture name is missed in architecture "
                                 "spec");
   }
-  if (architectureSpec.contains("operation_duration")) {
-    if (architectureSpec["operation_duration"].is_object()) {
+  if (json.contains("operation_duration")) {
+    if (json["operation_duration"].is_object()) {
       operationDurations = OperationDurations{};
-      if (architectureSpec["operation_duration"].contains("rydberg")) {
-        if (architectureSpec["operation_duration"]["rydberg"].is_number()) {
+      if (json["operation_duration"].contains("rydberg")) {
+        if (json["operation_duration"]["rydberg"].is_number()) {
           operationDurations->timeRydberg =
-              architectureSpec["operation_duration"]["rydberg"];
+              json["operation_duration"]["rydberg"];
         } else {
           throw std::invalid_argument(
-              "rydberg duration must be a number in architecture spec");
+              "Rydberg duration must be a number in architecture spec");
         }
       } else {
         throw std::invalid_argument(
-            "operation duration must contain rydberg duration");
+            "Operation duration must contain rydberg duration");
       }
-      if (architectureSpec["operation_duration"].contains("atom_transfer")) {
-        if (architectureSpec["operation_duration"]["atom_transfer"]
-                .is_number()) {
+      if (json["operation_duration"].contains("atom_transfer")) {
+        if (json["operation_duration"]["atom_transfer"].is_number()) {
           operationDurations->timeAtomTransfer =
-              architectureSpec["operation_duration"]["atom_transfer"];
+              json["operation_duration"]["atom_transfer"];
         } else {
           throw std::invalid_argument(
-              "atom transfer duration must be a number in architecture spec");
+              "Atom transfer duration must be a number in architecture spec");
         }
       } else {
         throw std::invalid_argument(
-            "operation duration must contain atom transfer duration");
+            "Operation duration must contain atom transfer duration");
       }
-      if (architectureSpec["operation_duration"].contains("1qGate")) {
-        operationDurations->time1QGate =
-            architectureSpec["operation_duration"]["1qGate"];
+      if (json["operation_duration"].contains("1qGate")) {
+        operationDurations->time1QGate = json["operation_duration"]["1qGate"];
       } else {
         throw std::invalid_argument(
-            "operation duration must contain 1qGate duration");
+            "Operation duration must contain 1qGate duration");
       }
     } else {
       throw std::invalid_argument(
-          "operation duration must be an dict in architecture spec");
+          "Operation duration must be an dict in architecture spec");
     }
   } else {
-    std::cout << "[WARN] operation duration is missed in architecture spec\n";
+    std::cout << "[WARN] Operation duration is missed in architecture spec\n";
   }
-  if (architectureSpec.contains("arch_range")) {
-    if (architectureSpec["arch_range"].is_array() &&
-        architectureSpec["arch_range"].size() == 2 &&
-        architectureSpec["arch_range"][0].is_array() &&
-        architectureSpec["arch_range"][0].size() == 2 &&
-        architectureSpec["arch_range"][1].is_array() &&
-        architectureSpec["arch_range"][1].size() == 2 &&
-        architectureSpec["arch_range"][0][0].is_number() &&
-        architectureSpec["arch_range"][0][1].is_number() &&
-        architectureSpec["arch_range"][1][0].is_number() &&
-        architectureSpec["arch_range"][1][1].is_number()) {
-      archRangeMinX = architectureSpec["arch_range"][0][0];
-      archRangeMaxX = architectureSpec["arch_range"][0][1];
-      archRangeMinY = architectureSpec["arch_range"][1][0];
-      archRangeMaxY = architectureSpec["arch_range"][1][1];
+  if (json.contains("arch_range")) {
+    if (json["arch_range"].is_array() && json["arch_range"].size() == 2 &&
+        json["arch_range"][0].is_array() && json["arch_range"][0].size() == 2 &&
+        json["arch_range"][1].is_array() && json["arch_range"][1].size() == 2 &&
+        json["arch_range"][0][0].is_number() &&
+        json["arch_range"][0][1].is_number() &&
+        json["arch_range"][1][0].is_number() &&
+        json["arch_range"][1][1].is_number()) {
+      archRangeMinX = json["arch_range"][0][0];
+      archRangeMaxX = json["arch_range"][0][1];
+      archRangeMinY = json["arch_range"][1][0];
+      archRangeMaxY = json["arch_range"][1][1];
     } else {
       throw std::invalid_argument(
-          "architecture range must be a 2x2 number array in architecture spec");
+          "Architecture range must be a 2x2 number array in architecture spec");
     }
   } else {
     throw std::invalid_argument(
-        "architecture range is missed in architecture spec");
+        "Architecture range is missed in architecture spec");
   }
-  if (architectureSpec.contains("rydberg_range")) {
-    if (architectureSpec["rydberg_range"].is_array() &&
-        !architectureSpec["rydberg_range"].empty()) {
-      for (const auto& rydbergRange : architectureSpec["rydberg_range"]) {
+  if (json.contains("rydberg_range")) {
+    if (json["rydberg_range"].is_array() && !json["rydberg_range"].empty()) {
+      for (const auto& rydbergRange : json["rydberg_range"]) {
         if (rydbergRange.is_array() && rydbergRange.size() == 2 &&
             rydbergRange[0].is_array() && rydbergRange[0].size() == 2 &&
             rydbergRange[1].is_array() && rydbergRange[1].size() == 2 &&
@@ -240,41 +233,41 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
           rydbergRangeMinY.emplace_back(rydbergRange[1][0]);
           rydbergRangeMaxY.emplace_back(rydbergRange[1][1]);
         } else {
-          throw std::invalid_argument("rydberg range must be a Nx2x2 number "
+          throw std::invalid_argument("Rydberg range must be a Nx2x2 number "
                                       "array in architecture spec, N > 1");
         }
       }
     } else {
-      throw std::invalid_argument("rydberg range must be a Nx2x2 number array "
+      throw std::invalid_argument("Rydberg range must be a Nx2x2 number array "
                                   "in architecture spec, N > 1");
     }
   } else {
     throw std::invalid_argument(
-        "architecture range is missed in architecture spec");
+        "Architecture range is missed in architecture spec");
   }
-  if (architectureSpec.contains("storage_zones")) {
-    if (architectureSpec["storage_zones"].is_array()) {
-      for (const auto& zone : architectureSpec["storage_zones"]) {
+  if (json.contains("storage_zones")) {
+    if (json["storage_zones"].is_array()) {
+      for (const auto& zone : json["storage_zones"]) {
         if (zone.contains("slms") && zone["slms"].is_array()) {
           for (const auto& slmSpec : zone["slms"]) {
             storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
           }
         } else {
           throw std::invalid_argument(
-              "storage zone configuration must contain an array of slms");
+              "Storage zone configuration must contain an array of slms");
         }
       }
     } else {
       throw std::invalid_argument(
-          "storage zone configuration must be an array in architecture spec");
+          "Storage zone configuration must be an array in architecture spec");
     }
   } else {
     throw std::invalid_argument(
-        "storage zone configuration is missed in architecture spec");
+        "Storage zone configuration is missed in architecture spec");
   }
-  if (architectureSpec.contains("entanglement_zones")) {
-    if (architectureSpec["entanglement_zones"].is_array()) {
-      for (const auto& zone : architectureSpec["entanglement_zones"]) {
+  if (json.contains("entanglement_zones")) {
+    if (json["entanglement_zones"].is_array()) {
+      for (const auto& zone : json["entanglement_zones"]) {
         if (zone.contains("slms") && zone["slms"].is_array()) {
           if (zone["slms"].size() != 2) {
             throw std::invalid_argument("entanglement zone must contain two "
@@ -289,21 +282,21 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
           slmPair.back().entanglementZone_ = &slmPair;
         } else {
           throw std::invalid_argument(
-              "entanglement zone configuration must contain an array of slms");
+              "Entanglement zone configuration must contain an array of slms");
         }
       }
     } else {
       throw std::invalid_argument(
-          "entanglement zone configuration must be an array in architecture "
+          "Entanglement zone configuration must be an array in architecture "
           "spec");
     }
   } else {
     throw std::invalid_argument(
-        "entanglement zone configuration is missed in architecture spec");
+        "Entanglement zone configuration is missed in architecture spec");
   }
-  if (architectureSpec.contains("aods")) {
-    if (architectureSpec["aods"].is_array()) {
-      for (const auto& aodSpec : architectureSpec["aods"]) {
+  if (json.contains("aods")) {
+    if (json["aods"].is_array()) {
+      for (const auto& aodSpec : json["aods"]) {
         aods.emplace_back(std::make_unique<AOD>(aodSpec));
       }
     } else {
@@ -313,6 +306,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
   } else {
     throw std::invalid_argument("AOD is missed in architecture spec");
   }
+  preprocessing();
 }
 auto Architecture::exportNAVizMachine() const -> std::string {
   std::stringstream ss;

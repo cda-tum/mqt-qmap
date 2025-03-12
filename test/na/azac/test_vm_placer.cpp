@@ -30,6 +30,11 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
+  "vm_placer" : {
+    "use_window" : true,
+    "window_size" : 10,
+    "dynamic_placement" : true
+  }
 })";
 class VMPlacerTest : public ::testing::Test {
 protected:
@@ -38,7 +43,8 @@ protected:
   VMPlacer placer;
   VMPlacerTest()
       : architecture(nlohmann::json::parse(architectureJson)),
-        config(configJson), placer(architecture, config) {}
+        config(nlohmann::json::parse(configJson)),
+        placer(architecture, config) {}
 };
 TEST_F(VMPlacerTest, Empty) {
   EXPECT_THAT(
@@ -46,6 +52,21 @@ TEST_F(VMPlacerTest, Empty) {
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
                    std::vector<std::unordered_set<qc::Qubit>>{}),
       ::testing::ElementsAre(::testing::SizeIs(2)));
+}
+TEST(VMReuseAnalyzerTest, NoConfig) {
+  Architecture architecture;
+  nlohmann::json config = R"({
+  "vm_reuse_analyzer": {
+    "unknown_key": 42
+  }
+})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = VMPlacer(architecture, config);
+  std::cout.rdbuf(oldCout);
+  EXPECT_EQ(buffer.str(),
+            "[WARN] Configuration for VMReuseAnalyzer contains an "
+            "unknown key: unknown_key. Ignoring.\n");
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
