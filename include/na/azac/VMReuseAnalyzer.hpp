@@ -18,6 +18,7 @@ namespace na {
 class VMReuseAnalyzer {
   friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Direct_Test;
   friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Inverse_Test;
+  friend class VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest_Direct_Test;
 
 public:
   /**

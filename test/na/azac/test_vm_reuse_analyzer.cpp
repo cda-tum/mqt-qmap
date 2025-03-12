@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <cstddef>
+#include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
 #include <gtest/gtest.h>
 #include <optional>
 #include <utility>
@@ -27,7 +29,6 @@ protected:
                                                            /* 3 -> */ {2, 3}};
 };
 TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
-  const auto matching = VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix);
   // The result should be the following (unique) maximum matching:
   //   ┌───┐ ┌───┐ ┌───┐ ┌───┐
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ <-- SOURCES
@@ -38,20 +39,18 @@ TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
   //   ┌─┴─┐ ┌─┴─┐ ┌─┴─┐ ┌─┴─┐
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ <-- SINKS
   //   └───┘ └───┘ └───┘ └───┘
-  ASSERT_EQ(matching.size(), 4);
-  EXPECT_EQ(matching[0], 0);
-  EXPECT_EQ(matching[1], 2);
-  EXPECT_EQ(matching[2], 1);
-  EXPECT_EQ(matching[3], 3);
+  EXPECT_NO_THROW({
+    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
+                testing::ElementsAre(0, 2, 1, 3));
+  });
 }
 TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
-  const auto invMatching =
-      VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true);
-  ASSERT_EQ(invMatching.size(), 4);
-  EXPECT_EQ(invMatching[0], 0);
-  EXPECT_EQ(invMatching[1], 2);
-  EXPECT_EQ(invMatching[2], 1);
-  EXPECT_EQ(invMatching[3], 3);
+  EXPECT_NO_THROW({
+    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
+                testing::ElementsAre(0, 2, 1, 3));
+  });
+}
+TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
   // We also test with the inverted graph, i.e., the sources and sinks are
   // labeled in reverse order, but sources stay sources and sinks stay sinks.
   const std::vector<std::vector<std::size_t>> inverseSparseMatrix{
@@ -59,13 +58,10 @@ TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
       /* 1 -> */ {0, 1, 2},
       /* 2 -> */ {1},
       /* 3 -> */ {2, 3}};
-  const auto matchingOfInverse =
-      VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix);
-  ASSERT_EQ(matchingOfInverse.size(), 4);
-  EXPECT_EQ(matchingOfInverse[0], 0);
-  EXPECT_EQ(matchingOfInverse[1], 2);
-  EXPECT_EQ(matchingOfInverse[2], 1);
-  EXPECT_EQ(matchingOfInverse[3], 3);
+  EXPECT_NO_THROW({
+    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
+                testing::ElementsAre(0, 2, 1, 3));
+  });
 }
 class VMReuseAnalyzerAnalyzeTest : public ::testing::Test {
 protected:
@@ -78,33 +74,33 @@ public:
 };
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers;
-  EXPECT_NO_THROW(
-      { EXPECT_TRUE(analyzer.analyzeReuse(twoQubitGateLayers).empty()); });
+  EXPECT_NO_THROW({
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), testing::IsEmpty());
+  });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, OneLayer) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}};
-  EXPECT_NO_THROW(
-      { EXPECT_TRUE(analyzer.analyzeReuse(twoQubitGateLayers).empty()); });
+  EXPECT_NO_THROW({
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), testing::IsEmpty());
+  });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}, {{1, 2}}};
   EXPECT_NO_THROW({
-    const auto& reuseQubits = analyzer.analyzeReuse(twoQubitGateLayers);
-    ASSERT_EQ(reuseQubits.size(), 1);
-    const auto& reuseQubitsInLayer = reuseQubits.front();
-    EXPECT_EQ(reuseQubitsInLayer, (std::unordered_set<qc::Qubit>{1}));
+    EXPECT_THAT(
+        analyzer.analyzeReuse(twoQubitGateLayers),
+        testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1}));
   });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
   EXPECT_NO_THROW({
-    const auto& reuseQubits = analyzer.analyzeReuse(twoQubitGateLayers);
-    ASSERT_EQ(reuseQubits.size(), 1);
-    const auto& reuseQubitsInLayer = reuseQubits.front();
-    EXPECT_EQ(reuseQubitsInLayer, (std::unordered_set<qc::Qubit>{1, 3, 5}));
+    EXPECT_THAT(
+        analyzer.analyzeReuse(twoQubitGateLayers),
+        testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1, 3, 5}));
   });
 }
 TEST(VMReuseAnalyzerTest, Config) {

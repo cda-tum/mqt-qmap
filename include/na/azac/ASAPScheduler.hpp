@@ -18,7 +18,7 @@ namespace na {
 class ASAPScheduler {
   std::reference_wrapper<const Architecture> architecture_;
 
-protected:
+public:
   /**
    * Create a new ASAPScheduler.
    * @note The second parameter of the constructor is unused.
