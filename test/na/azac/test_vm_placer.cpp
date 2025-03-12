@@ -36,37 +36,63 @@ constexpr std::string_view configJson = R"({
     "dynamic_placement" : true
   }
 })";
-class VMPlacerTest : public ::testing::Test {
+class VMPlacerPlaceTest : public ::testing::Test {
 protected:
   Architecture architecture;
   nlohmann::json config;
   VMPlacer placer;
-  VMPlacerTest()
+  VMPlacerPlaceTest()
       : architecture(nlohmann::json::parse(architectureJson)),
         config(nlohmann::json::parse(configJson)),
         placer(architecture, config) {}
 };
-TEST_F(VMPlacerTest, Empty) {
+TEST_F(VMPlacerPlaceTest, Empty) {
   EXPECT_THAT(
       placer.place(2,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
                    std::vector<std::unordered_set<qc::Qubit>>{}),
       ::testing::ElementsAre(::testing::SizeIs(2)));
 }
-TEST(VMReuseAnalyzerTest, NoConfig) {
-  Architecture architecture;
+TEST(VMPlacerTest, NoConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  nlohmann::json config = R"({})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = VMPlacer(architecture, config);
+  EXPECT_EQ(buffer.str(),
+            "[WARN] Configuration does not contain settings for VMPlacer or is "
+            "malformed. Using default settings.\n");
+  std::cout.rdbuf(oldCout);
+}
+TEST(VMPlacerTest, InvalidConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
   nlohmann::json config = R"({
-  "vm_reuse_analyzer": {
+  "vm_placer": {
+    "use_window": "invalid",
+    "window_size": 10,
     "unknown_key": 42
   }
 })"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = VMPlacer(architecture, config);
+  EXPECT_THAT(
+      buffer.str(),
+      ::testing::AllOf(
+          ::testing::MatchesRegex(
+              "\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n"),
+          ::testing::HasSubstr("[WARN] Configuration for VMPlacer "
+                               "contains an invalid value for "
+                               "use_window. Using default."),
+          ::testing::HasSubstr("[WARN] Configuration for VMPlacer does "
+                               "not contain a setting for "
+                               "use_window. Using default."),
+          ::testing::HasSubstr("[WARN] Configuration for VMPlacer does "
+                               "not contain a setting for "
+                               "dynamic_placement. Using default."),
+          ::testing::HasSubstr("[WARN] Configuration for VMPlacer contains an "
+                               "unknown key: unknown_key. Ignoring.")));
   std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(),
-            "[WARN] Configuration for VMReuseAnalyzer contains an "
-            "unknown key: unknown_key. Ignoring.\n");
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
