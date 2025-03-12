@@ -10,7 +10,6 @@
 #include <map>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
-#include <set>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -95,7 +94,7 @@ class AStarPlacer {
       /// the target sites for the two atoms
       std::pair<DiscreteSite, DiscreteSite> sites;
       /// the max distance the atoms must travel to reach the target sites
-      float distance;
+      std::pair<float, float> distance;
     };
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;

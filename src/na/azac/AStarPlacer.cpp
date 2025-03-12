@@ -498,18 +498,26 @@ auto AStarPlacer::placeGatesInEntanglementZone(
               rightSlm, rightRow, rightCol, otherSlm, otherRow, otherCol));
           if (dis1 + dis4 <= dis2 + dis3) {
             job.options.emplace_back(GateJob::Option{
-                {{discreteTargetRows.at({nearestSlm, r}),
-                  discreteTargetColumns.at({nearestSlm, c})},
-                 {discreteTargetRows.at({otherSlm, otherRow}),
-                  discreteTargetColumns.at({otherSlm, otherCol})}},
-                std::max(dis1, dis4)});
+                std::pair{
+                    std::pair{
+                        discreteTargetRows.at(std::pair{nearestSlm, r}),
+                        discreteTargetColumns.at(std::pair{nearestSlm, c})},
+                    std::pair{
+                        discreteTargetRows.at(std::pair{otherSlm, otherRow}),
+                        discreteTargetColumns.at(
+                            std::pair{otherSlm, otherCol})}},
+                std::pair{dis1, dis4}});
           } else {
             job.options.emplace_back(GateJob::Option{
-                {{discreteTargetRows.at({otherSlm, otherRow}),
-                  discreteTargetColumns.at({otherSlm, otherCol})},
-                 {discreteTargetRows.at({nearestSlm, r}),
-                  discreteTargetColumns.at({nearestSlm, c})}},
-                std::max(dis2, dis3)});
+                std::pair{
+                    std::pair{
+                        discreteTargetRows.at(std::pair{otherSlm, otherRow}),
+                        discreteTargetColumns.at(
+                            std::pair{otherSlm, otherCol})},
+                    std::pair{
+                        discreteTargetRows.at(std::pair{nearestSlm, r}),
+                        discreteTargetColumns.at(std::pair{nearestSlm, c})}},
+                std::pair{dis2, dis3}});
           }
         }
       }
@@ -742,7 +750,8 @@ auto AStarPlacer::getGatePlacementHeuristic(const Node& node) const -> float {
           node.consumedFreeSites.find(option.sites.second) ==
               node.consumedFreeSites.end()) {
         maxDistanceOfUnplacedAtom =
-            std::max(maxDistanceOfUnplacedAtom, option.distance);
+            std::max({maxDistanceOfUnplacedAtom, option.distance.first,
+                      option.distance.second});
         break;
       }
     }
@@ -790,24 +799,24 @@ auto AStarPlacer::getGatePlacementNeighbors(const Node& node)
     // make a copy of node, the parent of neighbor as use this as a starting
     // point for the new node
     Node& neighbor = *nodes_.emplace_back(std::make_unique<Node>(node));
-    neighbor.maxDistanceOfPlacedAtom =
-        std::max({node.maxDistanceOfPlacedAtom, distances});
+    neighbor.maxDistanceOfPlacedAtom = std::max(
+        {node.maxDistanceOfPlacedAtom, distances.first, distances.second});
     neighbor.consumedFreeSites.emplace(leftSite);
     neighbor.consumedFreeSites.emplace(rightSite);
     // check whether the current placement is compatible with any existing
     // horizontal group
     checkCompatibilityAndAddPlacement(
-        currentSiteOfLeftAtom.first, leftSite.first, distances,
+        currentSiteOfLeftAtom.first, leftSite.first, distances.first,
         neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
     checkCompatibilityAndAddPlacement(
-        currentSiteOfRightAtom.first, rightSite.first, distances,
+        currentSiteOfRightAtom.first, rightSite.first, distances.second,
         neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
     // do the same for the vertical group
     checkCompatibilityAndAddPlacement(
-        currentSiteOfLeftAtom.second, leftSite.second, distances,
+        currentSiteOfLeftAtom.second, leftSite.second, distances.first,
         neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
     checkCompatibilityAndAddPlacement(
-        currentSiteOfRightAtom.second, rightSite.second, distances,
+        currentSiteOfRightAtom.second, rightSite.second, distances.second,
         neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
     // add the final neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
