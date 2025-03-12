@@ -144,7 +144,7 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
                              ::testing::ElementsAre(::testing::Pair(1U, 2U))));
 }
 TEST(ASAPSchedulerTest, Config) {
-  Architecture architecture;
+  Architecture architecture(std::istringstream(architectureJson.data()));
   nlohmann::json config;
   std::istringstream iss(R"({
   "asap_scheduler": {
