@@ -24,8 +24,9 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
       configIt != config.end() && configIt->is_object()) {
     for (const auto& [key, value] : configIt.value().items()) {
       std::ostringstream oss;
-      oss << "[WARN] Configuration for Placer contains an unknown key: " << key
-          << ". Ignoring.\n";
+      oss << "[WARN] Configuration for VMReuseAnalyzer contains an unknown "
+             "key: "
+          << key << ". Ignoring.\n";
       std::cout << oss.str();
     }
   }

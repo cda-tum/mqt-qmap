@@ -108,8 +108,6 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
   });
 }
 TEST(VMReuseAnalyzerTest, Config) {
-  std::stringstream buffer;
-  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   Architecture architecture;
   nlohmann::json config;
   std::istringstream iss(R"({
@@ -118,10 +116,13 @@ TEST(VMReuseAnalyzerTest, Config) {
   }
 })");
   iss >> config;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   VMReuseAnalyzer analyzer{architecture, config};
   std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(), "[WARN] Configuration for Placer contains an unknown "
-                          "key: unknown_key. Ignoring.\n");
+  EXPECT_EQ(buffer.str(),
+            "[WARN] Configuration for VMReuseAnalyzer contains an "
+            "unknown key: unknown_key. Ignoring.\n");
   // silence unused variable warning
   (void)analyzer;
 }
