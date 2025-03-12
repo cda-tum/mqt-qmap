@@ -37,7 +37,7 @@ class VMPlacer {
   // todo: Why is that?
   constexpr static double costAtomTransfer_ = 0.9999;
 
-protected:
+public:
   VMPlacer(const Architecture& architecture, const nlohmann::json& config);
   [[nodiscard]] auto
   place(const size_t nQubits,

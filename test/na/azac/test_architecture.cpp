@@ -5,12 +5,7 @@
 #include <sstream>
 
 namespace na {
-
-class TestArchitecture : public ::testing::Test {
-protected:
-  Architecture arch;
-  void SetUp() override {
-    std::istringstream archIS(R"({
+constexpr std::string_view architectureJson = R"({
   "name": "full_compute_store_architecture",
   "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
   "operation_fidelity": {
@@ -53,10 +48,11 @@ protected:
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[5, 70], [55, 110]]]
-})");
-    ASSERT_NO_THROW(arch.load(archIS));
-    ASSERT_NO_THROW(arch.preprocessing());
-  }
+})";
+class TestArchitecture : public ::testing::Test {
+protected:
+  Architecture arch;
+  TestArchitecture() : arch(nlohmann::json::parse(architectureJson)) {}
 };
 
 TEST_F(TestArchitecture, Load) {}

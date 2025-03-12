@@ -104,13 +104,11 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
 }
 TEST(VMReuseAnalyzerTest, Config) {
   Architecture architecture;
-  nlohmann::json config;
-  std::istringstream iss(R"({
+  nlohmann::json config = R"({
   "vm_reuse_analyzer": {
     "unknown_key": 42
   }
-})");
-  iss >> config;
+})"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   VMReuseAnalyzer analyzer{architecture, config};

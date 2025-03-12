@@ -1,12 +1,9 @@
 #include "ir/operations/StandardOperation.hpp"
 #include "na/azac/ASAPScheduler.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <gtest/gtest.h>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -41,7 +38,7 @@ protected:
   nlohmann::json config;
   ASAPScheduler scheduler;
   ASAPSchedulerScheduleTest()
-      : architecture(std::istringstream(architectureJson.data())),
+      : architecture(nlohmann::json::parse(architectureJson)),
         scheduler(architecture, config) {}
 };
 TEST_F(ASAPSchedulerScheduleTest, NoGate) {
@@ -144,14 +141,12 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
                              ::testing::ElementsAre(::testing::Pair(1U, 2U))));
 }
 TEST(ASAPSchedulerTest, Config) {
-  Architecture architecture(std::istringstream(architectureJson.data()));
-  nlohmann::json config;
-  std::istringstream iss(R"({
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  const auto config = R"({
   "asap_scheduler": {
     "unknown_key": 42
   }
-})");
-  iss >> config;
+})"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   ASAPScheduler scheduler{architecture, config};

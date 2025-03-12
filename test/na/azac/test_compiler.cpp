@@ -94,7 +94,6 @@ protected:
     const auto& [name, qasm] = GetParam();
     circ = qasm3::Importer::imports(qasm);
     qc::CircuitOptimizer::flattenOperations(circ);
-    std::istringstream settingsStream{std::string{settings}};
   }
 };
 
