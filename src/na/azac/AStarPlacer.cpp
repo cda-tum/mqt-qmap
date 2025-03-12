@@ -206,7 +206,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
   std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>>
       columns;
   for (const auto& zone : architecture_.get().entanglementZones) {
-    for (const auto& slm : {zone->first, zone->second}) {
+    for (const auto& slm : *zone) {
       // find rows with free sites
       for (size_t r = 0; r < slm.nRows; ++r) {
         for (size_t c = 0; c < slm.nCols; ++c) {
@@ -882,7 +882,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
   // get first storage SLM and first entanglement SLM
   const auto& firstStorageSlm = *architecture_.get().storageZones.front();
   const auto& firstEntanglementSlm =
-      architecture_.get().entanglementZones.front()->first;
+      architecture_.get().entanglementZones.front()->front();
   // check which side of the first storage SLM is closer to the entanglement
   // SLM
   if (firstStorageSlm.location.second < firstEntanglementSlm.location.second) {

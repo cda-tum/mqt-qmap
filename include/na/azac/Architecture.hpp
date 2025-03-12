@@ -1,6 +1,8 @@
 #pragma once
 
-#include <Definitions.hpp>
+#include "Definitions.hpp"
+
+#include <array>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
@@ -38,7 +40,7 @@ struct SLM {
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
   /// SLMs in the same group
-  const std::pair<SLM, SLM>* entanglementZone_ = nullptr;
+  const std::array<SLM, 2>* entanglementZone_ = nullptr;
   /// only used for printing
   std::optional<std::size_t> entanglementId_ = std::nullopt;
 
@@ -59,17 +61,6 @@ template <class F, class S> struct std::hash<std::pair<F, S>> {
     return qc::combineHash(h1, h2);
   }
 };
-template <class S, class T, class U>
-struct std::hash<std::tuple<std::reference_wrapper<S>, T, U>> {
-  size_t operator()(const std::tuple<S, T, U>& t) const noexcept {
-    const auto h1 = std::hash<std::remove_cv_t<S>>{}(std::get<0>(t));
-    const auto h2 = std::hash<std::remove_cv_t<std::remove_reference_t<T>>>{}(
-        std::get<1>(t));
-    const auto h3 = std::hash<std::remove_cv_t<std::remove_reference_t<U>>>{}(
-        std::get<2>(t));
-    return qc::combineHash(qc::combineHash(h1, h2), h3);
-  }
-};
 template <class S, class T, class U> struct std::hash<std::tuple<S, T, U>> {
   size_t operator()(const std::tuple<S, T, U>& t) const noexcept {
     const auto h1 = std::hash<std::remove_cv_t<std::remove_reference_t<S>>>{}(
@@ -86,6 +77,15 @@ template <> struct std::hash<na::SLM> {
     return std::hash<std::pair<size_t, size_t>>{}(slm.location);
   }
 };
+template <class T> struct std::hash<std::array<T, 2>> {
+  size_t operator()(const std::array<T, 2>& p) const noexcept {
+    const auto h1 =
+        std::hash<std::remove_cv_t<std::remove_reference_t<T>>>{}(p.front());
+    const auto h2 =
+        std::hash<std::remove_cv_t<std::remove_reference_t<T>>>{}(p.back());
+    return qc::combineHash(h1, h2);
+  }
+};
 
 namespace na {
 
@@ -93,7 +93,7 @@ namespace na {
 struct Architecture {
   std::string name;
   std::vector<std::unique_ptr<SLM>> storageZones;
-  std::vector<std::unique_ptr<std::pair<SLM, SLM>>> entanglementZones;
+  std::vector<std::unique_ptr<std::array<SLM, 2>>> entanglementZones;
   std::vector<std::unique_ptr<AOD>> aods;
   struct OperationDurations {
     double timeAtomTransfer = 15; ///< µs

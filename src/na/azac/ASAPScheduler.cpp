@@ -33,7 +33,7 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
   }
   // calculate the maximum possible number of two-qubit gates per layer
   for (const auto& zone : architecture_.get().entanglementZones) {
-    maxTwoQubitGateNumPerLayer_ += zone->first.nRows * zone->first.nCols;
+    maxTwoQubitGateNumPerLayer_ += zone->front().nRows * zone->front().nCols;
   }
   if (maxTwoQubitGateNumPerLayer_ == 0) {
     throw std::invalid_argument("Architecture must contain at least one site "
