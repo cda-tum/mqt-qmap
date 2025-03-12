@@ -33,6 +33,10 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
 auto VMReuseAnalyzer::analyzeReuse(
     const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
         twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
+  if (twoQubitGateLayers.size() <= 1) {
+    // early exit if there are no qubits to reuse between layers
+    return std::vector<std::unordered_set<qc::Qubit>>{};
+  }
   std::vector<std::unordered_map<qc::Qubit, size_t>> usedQubitsInLayers;
   usedQubitsInLayers.reserve(twoQubitGateLayers.size());
   const auto& firstGateLayer = twoQubitGateLayers.front();
@@ -43,7 +47,7 @@ auto VMReuseAnalyzer::analyzeReuse(
     usedQubitsInFirstLayer[gate.second] = gateIdx;
   }
   std::vector<std::unordered_set<qc::Qubit>> reuseQubits;
-  reuseQubits.reserve(twoQubitGateLayers.size());
+  reuseQubits.reserve(twoQubitGateLayers.size() - 1);
   for (auto layer = twoQubitGateLayers.begin();;) {
     const auto& twoQubitGatesInPreviousLayer = *layer;
     if (++layer == twoQubitGateLayers.end()) {

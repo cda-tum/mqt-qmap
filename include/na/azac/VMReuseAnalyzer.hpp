@@ -16,9 +16,10 @@ namespace na {
  * zoned neutral atom compiler that uses a bipartite maximum matching.
  */
 class VMReuseAnalyzer {
-  friend class VMReuseAnalyzerTest_MaximumBipartiteMatching_Test;
+  friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Direct_Test;
+  friend class VMReuseAnalyzerMaximumBipartiteMatchingTest_Inverse_Test;
 
-protected:
+public:
   /**
    * Create a new VMReuseAnalyzer.
    * @note Both parameters are unused. Hence, the constructor does nothing
