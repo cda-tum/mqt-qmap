@@ -39,16 +39,12 @@ TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
   //   ┌─┴─┐ ┌─┴─┐ ┌─┴─┐ ┌─┴─┐
   //   │ 0 │ │ 1 │ │ 2 │ │ 3 │ <-- SINKS
   //   └───┘ └───┘ └───┘ └───┘
-  EXPECT_NO_THROW({
-    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
-                ::testing::ElementsAre(0, 2, 1, 3));
-  });
+  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
+              ::testing::ElementsAre(0, 2, 1, 3));
 }
 TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
-  EXPECT_NO_THROW({
-    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
-                ::testing::ElementsAre(0, 2, 1, 3));
-  });
+  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
+              ::testing::ElementsAre(0, 2, 1, 3));
 }
 TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
   // We also test with the inverted graph, i.e., the sources and sinks are
@@ -58,10 +54,8 @@ TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
       /* 1 -> */ {0, 1, 2},
       /* 2 -> */ {1},
       /* 3 -> */ {2, 3}};
-  EXPECT_NO_THROW({
-    EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
-                ::testing::ElementsAre(0, 2, 1, 3));
-  });
+  EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
+              ::testing::ElementsAre(0, 2, 1, 3));
 }
 class VMReuseAnalyzerAnalyzeTest : public ::testing::Test {
 protected:
@@ -72,35 +66,25 @@ protected:
 };
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers;
-  EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
-                ::testing::IsEmpty());
-  });
+  EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, OneLayer) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}};
-  EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
-                ::testing::IsEmpty());
-  });
+  EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}, {{1, 2}}};
-  EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
-                ::testing::ElementsAre(::testing::UnorderedElementsAre(1U)));
-  });
+  EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+              ::testing::ElementsAre(::testing::UnorderedElementsAre(1U)));
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
-  EXPECT_NO_THROW({
-    EXPECT_THAT(
-        analyzer.analyzeReuse(twoQubitGateLayers),
-        ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 3U, 5U)));
-  });
+  EXPECT_THAT(
+      analyzer.analyzeReuse(twoQubitGateLayers),
+      ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 3U, 5U)));
 }
 TEST(VMReuseAnalyzerTest, Config) {
   Architecture architecture;
@@ -111,12 +95,10 @@ TEST(VMReuseAnalyzerTest, Config) {
 })"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  VMReuseAnalyzer analyzer{architecture, config};
+  std::ignore = VMReuseAnalyzer(architecture, config);
   std::cout.rdbuf(oldCout);
   EXPECT_EQ(buffer.str(),
             "[WARN] Configuration for VMReuseAnalyzer contains an "
             "unknown key: unknown_key. Ignoring.\n");
-  // silence unused variable warning
-  (void)analyzer;
 }
 } // namespace na

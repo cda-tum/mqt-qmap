@@ -40,6 +40,13 @@ protected:
       : architecture(nlohmann::json::parse(architectureJson)),
         config(configJson), placer(architecture, config) {}
 };
+TEST_F(VMPlacerTest, Empty) {
+  EXPECT_THAT(
+      placer.place(2,
+                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
+                   std::vector<std::unordered_set<qc::Qubit>>{}),
+      ::testing::ElementsAre(::testing::SizeIs(2)));
+}
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
   // are the sources, and the nodes in the lower row are the sinks.

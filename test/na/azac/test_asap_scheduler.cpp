@@ -149,11 +149,9 @@ TEST(ASAPSchedulerTest, Config) {
 })"_json;
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
-  ASAPScheduler scheduler{architecture, config};
+  std::ignore = ASAPScheduler(architecture, config);
   std::cout.rdbuf(oldCout);
   EXPECT_EQ(buffer.str(), "[WARN] Configuration for ASAPScheduler contains an "
                           "unknown key: unknown_key. Ignoring.\n");
-  // silence unused variable warning
-  (void)scheduler;
 }
 } // namespace na
