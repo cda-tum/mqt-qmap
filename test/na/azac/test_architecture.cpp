@@ -6,7 +6,7 @@
 
 namespace na {
 
-class TestArchitecture : public testing::Test {
+class TestArchitecture : public ::testing::Test {
 protected:
   Architecture arch;
   void SetUp() override {
@@ -72,14 +72,14 @@ TEST_F(TestArchitecture, Distance) {
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 0, 1), slm1.siteSeparation.first);
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 1, 0), slm1.siteSeparation.second);
 
-  const auto& slm2 = *arch.entanglementZones.front().first;
+  const auto& slm2 = arch.entanglementZones.front()->first;
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm2, 0, 0),
             std::hypot(slm1.location.first - slm2.location.first,
                        slm1.location.second - slm2.location.second));
 }
 
 TEST_F(TestArchitecture, NearestStorageSite) {
-  const auto& entanglementSLM = *arch.entanglementZones.front().first;
+  const auto& entanglementSLM = arch.entanglementZones.front()->first;
   const auto& [nearestSlm, nearestRow, nearestCol] =
       arch.nearestStorageSite(entanglementSLM, 0, 0);
   const auto minDistance =
@@ -102,7 +102,7 @@ TEST_F(TestArchitecture, NearestEntanglementSite) {
       arch.distance(storageSlm, 0, 0, nearestSlm, nearestRow, nearestCol) +
       arch.distance(storageSlm, 0, 1, nearestSlm, nearestRow, nearestCol);
   for (const auto& slms : arch.entanglementZones) {
-    for (const auto& slm : {*slms.first, *slms.second}) {
+    for (const auto& slm : {slms->first, slms->second}) {
       for (std::size_t r = 0; r < slm.nRows; ++r) {
         for (std::size_t c = 0; c < slm.nCols; ++c) {
           const auto distance = arch.distance(storageSlm, 0, 0, slm, r, c) +

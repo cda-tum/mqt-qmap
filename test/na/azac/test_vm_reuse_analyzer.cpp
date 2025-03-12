@@ -68,8 +68,6 @@ protected:
   Architecture architecture;
   nlohmann::json config;
   VMReuseAnalyzer analyzer;
-
-public:
   VMReuseAnalyzerAnalyzeTest() : analyzer{architecture, config} {}
 };
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
@@ -91,18 +89,17 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}, {{1, 2}}};
   EXPECT_NO_THROW({
-    EXPECT_THAT(
-        analyzer.analyzeReuse(twoQubitGateLayers),
-        ::testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1}));
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+                ::testing::ElementsAre(::testing::UnorderedElementsAre(1U)));
   });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
   EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
-                ::testing::UnorderedElementsAre(
-                    std::unordered_set<qc::Qubit>{1, 3, 5}));
+    EXPECT_THAT(
+        analyzer.analyzeReuse(twoQubitGateLayers),
+        ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 3U, 5U)));
   });
 }
 TEST(VMReuseAnalyzerTest, Config) {

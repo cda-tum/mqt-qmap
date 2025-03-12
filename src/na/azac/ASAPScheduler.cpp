@@ -31,15 +31,24 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
       std::cout << oss.str();
     }
   }
+  // calculate the maximum possible number of two-qubit gates per layer
+  for (const auto& zone : architecture_.get().entanglementZones) {
+    maxTwoQubitGateNumPerLayer_ += zone->first.nRows * zone->first.nCols;
+  }
+  if (maxTwoQubitGateNumPerLayer_ == 0) {
+    throw std::invalid_argument("Architecture must contain at least one site "
+                                "in an entanglement zone");
+  }
 }
 auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
     -> std::pair<
         std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
         std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>> {
-  // calculate the maximum possible number of two-qubit gates per layer
-  std::size_t maxTwoQubitGateNumPerLayer = 0;
-  for (const auto& zone : architecture_.get().entanglementZones) {
-    maxTwoQubitGateNumPerLayer += zone.first->nRows * zone.first->nCols;
+  if (qc.empty()) {
+    // early exit if there are no operations to schedule
+    return std::pair{
+        std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>{},
+        std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{}};
   }
   std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
       oneQubitGateLayers(1);
@@ -62,7 +71,8 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
         auto layer =
             std::max(nextLayerForQubit[qubit1], nextLayerForQubit[qubit2]);
         while (layer < twoQubitGateLayers.size() &&
-               twoQubitGateLayers[layer].size() >= maxTwoQubitGateNumPerLayer) {
+               twoQubitGateLayers[layer].size() >=
+                   maxTwoQubitGateNumPerLayer_) {
           ++layer;
         }
         assert(layer <= twoQubitGateLayers.size());

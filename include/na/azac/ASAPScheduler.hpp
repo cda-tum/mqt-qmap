@@ -17,6 +17,7 @@ namespace na {
  */
 class ASAPScheduler {
   std::reference_wrapper<const Architecture> architecture_;
+  size_t maxTwoQubitGateNumPerLayer_ = 0;
 
 public:
   /**

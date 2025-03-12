@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <fstream>
 #include <functional>
+#include <iostream>
 #include <istream>
 #include <iterator>
 #include <limits>
@@ -127,15 +128,6 @@ SLM::SLM(nlohmann::json slmSpec) {
     throw std::invalid_argument("SLM location is missed in architecture spec");
   }
 }
-
-SLM::SLM(nlohmann::json slmSpec,
-         const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&
-             entanglementZone,
-         const std::size_t entanglementId)
-    : SLM(std::move(slmSpec)) {
-  entanglementZone_ = entanglementZone;
-  entanglementId_ = entanglementId;
-}
 auto SLM::operator==(const SLM& other) const -> bool {
   if (&other == this) {
     return true;
@@ -149,12 +141,11 @@ auto SLM::operator==(const SLM& other) const -> bool {
   if (other.siteSeparation != siteSeparation) {
     return false;
   }
-  if (other.entanglementZone_.has_value() != entanglementZone_.has_value()) {
+  if ((other.entanglementZone_ == nullptr) != (entanglementZone_ == nullptr)) {
     return false;
   }
-  if (entanglementZone_.has_value()) {
-    return &entanglementZone_.value().get() ==
-           &other.entanglementZone_.value().get();
+  if (entanglementZone_ != nullptr) {
+    return other.entanglementZone_ == entanglementZone_;
   }
   return true;
 }
@@ -172,9 +163,11 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
   }
   if (architectureSpec.contains("operation_duration")) {
     if (architectureSpec["operation_duration"].is_object()) {
+      operationDurations = OperationDurations{};
       if (architectureSpec["operation_duration"].contains("rydberg")) {
         if (architectureSpec["operation_duration"]["rydberg"].is_number()) {
-          timeRydberg = architectureSpec["operation_duration"]["rydberg"];
+          operationDurations->timeRydberg =
+              architectureSpec["operation_duration"]["rydberg"];
         } else {
           throw std::invalid_argument(
               "rydberg duration must be a number in architecture spec");
@@ -186,7 +179,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
       if (architectureSpec["operation_duration"].contains("atom_transfer")) {
         if (architectureSpec["operation_duration"]["atom_transfer"]
                 .is_number()) {
-          timeAtomTransfer =
+          operationDurations->timeAtomTransfer =
               architectureSpec["operation_duration"]["atom_transfer"];
         } else {
           throw std::invalid_argument(
@@ -197,7 +190,8 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
             "operation duration must contain atom transfer duration");
       }
       if (architectureSpec["operation_duration"].contains("1qGate")) {
-        time1QGate = architectureSpec["operation_duration"]["1qGate"];
+        operationDurations->time1QGate =
+            architectureSpec["operation_duration"]["1qGate"];
       } else {
         throw std::invalid_argument(
             "operation duration must contain 1qGate duration");
@@ -207,8 +201,7 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
           "operation duration must be an dict in architecture spec");
     }
   } else {
-    throw std::invalid_argument(
-        "operation duration is missed in architecture spec");
+    std::cout << "[WARN] operation duration is missed in architecture spec\n";
   }
   if (architectureSpec.contains("arch_range")) {
     if (architectureSpec["arch_range"].is_array() &&
@@ -281,34 +274,19 @@ auto Architecture::load(const nlohmann::json&& architectureSpec) -> void {
   }
   if (architectureSpec.contains("entanglement_zones")) {
     if (architectureSpec["entanglement_zones"].is_array()) {
-      // corresponding slms that form an entanglement group/zone are matched by
-      // their y-coordinate, i.e., slms with the same y-coordinate are in the
-      // same group
-      std::unordered_map<
-          std::size_t, std::reference_wrapper<std::pair<std::unique_ptr<SLM>,
-                                                        std::unique_ptr<SLM>>>>
-          ySlm{};
       for (const auto& zone : architectureSpec["entanglement_zones"]) {
         if (zone.contains("slms") && zone["slms"].is_array()) {
-          for (const auto& slmSpec : zone["slms"]) {
-            if (!slmSpec.contains("location") &&
-                !slmSpec["location"].is_array() &&
-                slmSpec["location"].size() != 2) {
-              throw std::invalid_argument("location is missed in slm spec or "
-                                          "it is not a 2-element array");
-            }
-            const std::size_t y = slmSpec["location"][1];
-            const auto& [it, success] =
-                ySlm.try_emplace(y, entanglementZones.emplace_back());
-            if (success) {
-              // first SLM already exists
-              it->second.get().second =
-                  std::make_unique<SLM>(slmSpec, it->second, zone["zone_id"]);
-            } else {
-              it->second.get().first =
-                  std::make_unique<SLM>(slmSpec, it->second, zone["zone_id"]);
-            }
+          if (zone["slms"].size() != 2) {
+            throw std::invalid_argument("entanglement zone must contain two "
+                                        "slms in architecture spec");
           }
+          auto& slmPair = *entanglementZones.emplace_back(
+              std::make_unique<std::pair<SLM, SLM>>(zone["slms"].front(),
+                                                    zone["slms"].back()));
+          slmPair.first.entanglementId_ = zone["zone_id"];
+          slmPair.first.entanglementZone_ = &slmPair;
+          slmPair.second.entanglementId_ = zone["zone_id"];
+          slmPair.second.entanglementZone_ = &slmPair;
         } else {
           throw std::invalid_argument(
               "entanglement zone configuration must contain an array of slms");
@@ -347,17 +325,16 @@ auto Architecture::exportNAVizMachine() const -> std::string {
     throw std::runtime_error(
         "Right now, only one entanglement zone is supported");
   }
-  const auto& slm1 = entanglementZones.front().first;
-  const auto& slm2 = entanglementZones.front().second;
-  const auto minX = std::min(slm1->location.first, slm2->location.first);
-  const auto minY = std::min(slm1->location.second, slm2->location.second);
+  const auto& slm1 = entanglementZones.front()->first;
+  const auto& slm2 = entanglementZones.front()->second;
+  const auto minX = std::min(slm1.location.first, slm2.location.first);
+  const auto minY = std::min(slm1.location.second, slm2.location.second);
   const auto maxX = std::max(
-      slm1->location.first + ((slm1->nCols - 1) * slm1->siteSeparation.first),
-      slm2->location.first + ((slm2->nCols - 1) * slm2->siteSeparation.first));
+      slm1.location.first + ((slm1.nCols - 1) * slm1.siteSeparation.first),
+      slm2.location.first + ((slm2.nCols - 1) * slm2.siteSeparation.first));
   const auto maxY = std::max(
-      slm1->location.second + ((slm1->nRows - 1) * slm1->siteSeparation.second),
-      slm2->location.second +
-          ((slm2->nRows - 1) * slm2->siteSeparation.second));
+      slm1.location.second + ((slm1.nRows - 1) * slm1.siteSeparation.second),
+      slm2.location.second + ((slm2.nRows - 1) * slm2.siteSeparation.second));
   ss << "zone zone_cz0 {\n    from: (" << minX - 10 << ", " << minY - 10
      << ")\n    to: (" << maxX + 10 << ", " << maxY + 10 << ")\n}\n";
   // Generate traps for storage slms
@@ -373,7 +350,7 @@ auto Architecture::exportNAVizMachine() const -> std::string {
   }
   // do the same for entanglement slms
   for (const auto& zone : entanglementZones) {
-    for (const auto& slm : {*zone.first, *zone.second}) {
+    for (const auto& slm : {zone->first, zone->second}) {
       for (std::size_t row = 0; row < slm.nRows; ++row) {
         for (std::size_t col = 0; col < slm.nCols; ++col) {
           const auto& [x, y] = exactSlmLocation(slm, row, col);
@@ -445,7 +422,7 @@ auto Architecture::findNearestEntanglementSLM(const size_t x, const size_t y,
   const SLM* nearestEntanglementSLM = nullptr;
   for (const auto& entangleSLMs : entanglementZones) {
     for (const auto& entangleSLM :
-         {*entangleSLMs.first, *entangleSLMs.second}) {
+         {entangleSLMs->first, entangleSLMs->second}) {
       std::size_t minimalXDistance = (x > otherX ? x - otherX : otherX - x);
       if (x < entangleSLM.location.first &&
           otherX < entangleSLM.location.first) {
@@ -484,7 +461,7 @@ auto Architecture::preprocessing() -> void {
   //===--------------------------------------------------------------------===//
   entanglementToNearestStorageSite.clear();
   for (const auto& slms : entanglementZones) {
-    for (const auto& slm : {*slms.first, *slms.second}) {
+    for (const auto& slm : {slms->first, slms->second}) {
       entanglementToNearestStorageSite.emplace(
           slm,
           std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
@@ -682,9 +659,9 @@ auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
                                          std::size_t c) const
     -> std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t> {
   assert(slm.entanglementZone_);
-  const auto& otherSlm = slm.entanglementZone_->get().first.get() == &slm
-                             ? *slm.entanglementZone_->get().second
-                             : *slm.entanglementZone_->get().first;
+  const auto& otherSlm = &slm.entanglementZone_->first == &slm
+                             ? slm.entanglementZone_->second
+                             : slm.entanglementZone_->first;
   assert(slm.nCols == otherSlm.nCols);
   assert(slm.nRows == otherSlm.nRows);
   return {otherSlm, r, c};

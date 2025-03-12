@@ -38,19 +38,13 @@ struct SLM {
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
   /// SLMs in the same group
-  std::optional<std::reference_wrapper<
-      const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>>>
-      entanglementZone_;
+  const std::pair<SLM, SLM>* entanglementZone_ = nullptr;
   /// only used for printing
   std::optional<std::size_t> entanglementId_ = std::nullopt;
 
   explicit SLM(nlohmann::json slmSpec);
-  explicit SLM(nlohmann::json slmSpec,
-               const std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>&
-                   entanglementZone,
-               std::size_t entanglementId);
   [[nodiscard]] auto isEntanglement() const -> bool {
-    return entanglementZone_.has_value();
+    return entanglementZone_ != nullptr;
   }
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
   [[nodiscard]] auto operator==(const SLM& other) const -> bool;
@@ -99,12 +93,14 @@ namespace na {
 struct Architecture {
   std::string name;
   std::vector<std::unique_ptr<SLM>> storageZones;
-  std::vector<std::pair<std::unique_ptr<SLM>, std::unique_ptr<SLM>>>
-      entanglementZones;
+  std::vector<std::unique_ptr<std::pair<SLM, SLM>>> entanglementZones;
   std::vector<std::unique_ptr<AOD>> aods;
-  double timeAtomTransfer = 15; ///< µs
-  double timeRydberg = 0.36;    ///< µs
-  double time1QGate = 0.625;    ///< µs
+  struct OperationDurations {
+    double timeAtomTransfer = 15; ///< µs
+    double timeRydberg = 0.36;    ///< µs
+    double time1QGate = 0.625;    ///< µs
+  };
+  std::optional<OperationDurations> operationDurations;
   std::size_t archRangeMinX = 0;
   std::size_t archRangeMaxX = 0;
   std::size_t archRangeMinY = 0;
