@@ -41,13 +41,13 @@ TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Direct) {
   //   └───┘ └───┘ └───┘ └───┘
   EXPECT_NO_THROW({
     EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix),
-                testing::ElementsAre(0, 2, 1, 3));
+                ::testing::ElementsAre(0, 2, 1, 3));
   });
 }
 TEST_F(VMReuseAnalyzerMaximumBipartiteMatchingTest, Inverse) {
   EXPECT_NO_THROW({
     EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(sparseMatrix, true),
-                testing::ElementsAre(0, 2, 1, 3));
+                ::testing::ElementsAre(0, 2, 1, 3));
   });
 }
 TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
@@ -60,7 +60,7 @@ TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
       /* 3 -> */ {2, 3}};
   EXPECT_NO_THROW({
     EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
-                testing::ElementsAre(0, 2, 1, 3));
+                ::testing::ElementsAre(0, 2, 1, 3));
   });
 }
 class VMReuseAnalyzerAnalyzeTest : public ::testing::Test {
@@ -75,14 +75,16 @@ public:
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers;
   EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), testing::IsEmpty());
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+                ::testing::IsEmpty());
   });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, OneLayer) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}}};
   EXPECT_NO_THROW({
-    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), testing::IsEmpty());
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+                ::testing::IsEmpty());
   });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
@@ -91,16 +93,16 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
   EXPECT_NO_THROW({
     EXPECT_THAT(
         analyzer.analyzeReuse(twoQubitGateLayers),
-        testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1}));
+        ::testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1}));
   });
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
   EXPECT_NO_THROW({
-    EXPECT_THAT(
-        analyzer.analyzeReuse(twoQubitGateLayers),
-        testing::UnorderedElementsAre(std::unordered_set<qc::Qubit>{1, 3, 5}));
+    EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+                ::testing::UnorderedElementsAre(
+                    std::unordered_set<qc::Qubit>{1, 3, 5}));
   });
 }
 TEST(VMReuseAnalyzerTest, Config) {

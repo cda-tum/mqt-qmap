@@ -105,7 +105,7 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(std::pair{"SteaneWithoutOneQubitGates",
                                 steaneWithoutOneQubitGates},
                       std::pair{"Steane", steane}),
-    [](const testing::TestParamInfo<std::pair<std::string, std::string>>&
+    [](const ::testing::TestParamInfo<std::pair<std::string, std::string>>&
            info) { return info.param.first; });
 
 } // namespace na
