@@ -72,9 +72,8 @@ TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
                        {{0U, 1U}, {2U, 3U}}},
                    std::vector<std::unordered_set<qc::Qubit>>{});
-  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placement, ::testing::SizeIs(3));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::map<size_t, qc::Qubit> qubitsInStorageByX;
   std::unordered_set<size_t> qubitsInStorageYs;
   for (qc::Qubit q = 0; q < placement.front().size(); ++q) {
@@ -112,9 +111,8 @@ TEST_F(VMPlacerPlaceTest, OneGateCross) {
       nQubits,
       std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{1U, 0U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
-  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placement, ::testing::SizeIs(3));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
@@ -135,9 +133,8 @@ TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
                        {{0U, 2U}, {1U, 3U}}},
                    std::vector<std::unordered_set<qc::Qubit>>{});
-  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placement, ::testing::SizeIs(3));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
   std::unordered_set<size_t> qubitsInEntanglementYs;
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
@@ -175,9 +172,8 @@ TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
                                                                  {28U, 29U},
                                                                  {30U, 31U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
-  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits),
-                                                ::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placement, ::testing::SizeIs(3));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::unordered_set<std::pair<size_t, size_t>> qubitsLocationsInEntanglement;
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
@@ -186,6 +182,30 @@ TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
     qubitsLocationsInEntanglement.emplace(x, y);
   }
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
+}
+TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
+  const size_t nQubits = 3;
+  const auto& placement =
+      placer.place(nQubits,
+                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
+                       {{0U, 1U}}, {{1U, 2U}}},
+                   std::vector<std::unordered_set<qc::Qubit>>{{1U}});
+  EXPECT_THAT(placement, ::testing::SizeIs(5));
+  EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
+  // Check that qubit 1 remains in the entanglement zone while qubits 0 and 2
+  // are placed in the storage zone in the intermediate layer
+  EXPECT_TRUE(std::get<0>(placement[2][0]).get().isStorage());
+  EXPECT_TRUE(std::get<0>(placement[2][1]).get().isEntanglement());
+  EXPECT_TRUE(std::get<0>(placement[2][2]).get().isStorage());
+  // Check that qubit 1 remains at the same position from layer 1 through 3
+  EXPECT_EQ(std::get<0>(placement[1][1]).get(),
+            std::get<0>(placement[2][1]).get());
+  EXPECT_EQ(std::get<1>(placement[1][1]), std::get<1>(placement[2][1]));
+  EXPECT_EQ(std::get<2>(placement[1][1]), std::get<2>(placement[2][1]));
+  EXPECT_EQ(std::get<0>(placement[2][1]).get(),
+            std::get<0>(placement[3][1]).get());
+  EXPECT_EQ(std::get<1>(placement[2][1]), std::get<1>(placement[3][1]));
+  EXPECT_EQ(std::get<2>(placement[2][1]), std::get<2>(placement[3][1]));
 }
 TEST(VMPlacerTest, NoConfig) {
   Architecture architecture(nlohmann::json::parse(architectureJson));

@@ -109,7 +109,7 @@ public:
           const std::vector<
               std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>&
               gatePlacementWithReuse = placeGatesInEntanglementZone(
-                  qubitPlacementWithoutReuse, reuseQubits[layer],
+                  qubitPlacementWithReuse, reuseQubits[layer],
                   twoQubitGateLayers[layer + 1],
                   twoQubitGateLayers.size() > layer + 2
                       ? twoQubitGateLayers[layer + 2]
