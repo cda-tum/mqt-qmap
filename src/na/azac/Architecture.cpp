@@ -606,7 +606,7 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
 auto Architecture::nearestStorageSite(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const -> const
     std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>& {
-  return entanglementToNearestStorageSite.at(slm)[r][c];
+  return entanglementToNearestStorageSite.at(std::cref(slm))[r][c];
 }
 auto Architecture::nearestEntanglementSite(
     const SLM& idx1, const std::size_t r1, const std::size_t c1,
@@ -616,7 +616,9 @@ auto Architecture::nearestEntanglementSite(
       (&idx1 == &idx2 && r1 == r2 && c1 > c2)) {
     return nearestEntanglementSite(idx2, r2, c2, idx1, r1, c1);
   }
-  return storageToNearestEntanglementSite.at(idx1)[r1][c1].at(idx2)[r2][c2];
+  return storageToNearestEntanglementSite.at(std::cref(idx1))[r1][c1].at(
+      std::cref(idx2))[&idx1 == &idx2 ? r2 - r1 : r2]
+                      [&idx1 == &idx2 && r1 == r2 ? c2 - c1 : c2];
 }
 auto Architecture::nearestEntanglementSiteDistance(
     const SLM& slm1, const std::size_t r1, const std::size_t c1,

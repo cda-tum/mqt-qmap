@@ -277,11 +277,11 @@ auto VMPlacer::placeGatesInEntanglementZone(
     for (const auto q : reuseQubits) {
       for (const auto& gate : nextTwoQubitGates) {
         if (q == gate.first) {
-          dictReuseQubitNeighbor[q] = gate.second;
+          dictReuseQubitNeighbor.emplace(q, gate.second);
           break;
         }
         if (q == gate.second) {
-          dictReuseQubitNeighbor[q] = gate.first;
+          dictReuseQubitNeighbor.emplace(q, gate.first);
           break;
         }
       }
@@ -375,10 +375,10 @@ auto VMPlacer::placeGatesInEntanglementZone(
     }
     for (const auto& site : nearestSites) {
       if (siteRydbergToIdx.find(site) == siteRydbergToIdx.end()) {
-        siteRydbergToIdx[site] = listRydberg.size();
+        siteRydbergToIdx.emplace(site, listRydberg.size());
         listRydberg.emplace_back(site);
       }
-      const auto idxRydberg = siteRydbergToIdx[site];
+      const auto idxRydberg = siteRydbergToIdx.at(site);
       const auto& [slm, r, c] = site;
       const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
       const auto& [slm2, r2, c2] = previousQubitPlacement[q2];
@@ -390,10 +390,10 @@ auto VMPlacer::placeGatesInEntanglementZone(
       double dis3 = 0;
       std::optional<size_t> q3;
       if (dictReuseQubitNeighbor.find(q1) != dictReuseQubitNeighbor.end()) {
-        q3 = dictReuseQubitNeighbor[q1];
+        q3 = dictReuseQubitNeighbor.at(q1);
       } else if (dictReuseQubitNeighbor.find(q2) !=
                  dictReuseQubitNeighbor.end()) {
-        q3 = dictReuseQubitNeighbor[q2];
+        q3 = dictReuseQubitNeighbor.at(q2);
       }
       if (q3) {
         const auto& [slm3, r3, c3] = previousQubitPlacement[*q3];
@@ -439,18 +439,18 @@ auto VMPlacer::placeGatesInEntanglementZone(
     if (reuse && (reuseQubits.find(q0) != reuseQubits.end())) {
       // q0 remains at its current location, place q1 at the other site of
       // this pair of entanglement sites
-      if (const std::tuple leftSite{zone.get().front(), r, c};
+      if (const auto& leftSite = std::tie(zone.get().front(), r, c);
           leftSite == previousQubitPlacement[q0]) {
-        newPlacement[q1] = std::tuple{zone.get().back(), r, c};
+        newPlacement[q1] = std::tie(zone.get().back(), r, c);
       } else {
         newPlacement[q1] = leftSite;
       }
     } else if (reuse && (reuseQubits.find(q1) != reuseQubits.end())) {
       // q1 remains at its current location, place q0 at the other site of
       // this pair of entanglement sites
-      if (const std::tuple leftSite{zone.get().front(), r, c};
+      if (const auto& leftSite = std::tie(zone.get().front(), r, c);
           leftSite == previousQubitPlacement[q1]) {
-        newPlacement[q0] = std::tuple{zone.get().back(), r, c};
+        newPlacement[q0] = std::tie(zone.get().back(), r, c);
       } else {
         newPlacement[q0] = leftSite;
       }
@@ -460,11 +460,11 @@ auto VMPlacer::placeGatesInEntanglementZone(
       const auto& [slm0, r0, c0] = previousQubitPlacement[q0];
       const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
       if (c0 < c1) {
-        newPlacement[q0] = std::tuple{zone.get().front(), r, c};
-        newPlacement[q1] = std::tuple{zone.get().back(), r, c};
+        newPlacement[q0] = std::tie(zone.get().front(), r, c);
+        newPlacement[q1] = std::tie(zone.get().back(), r, c);
       } else {
-        newPlacement[q0] = std::tuple{zone.get().back(), r, c};
-        newPlacement[q1] = std::tuple{zone.get().front(), r, c};
+        newPlacement[q0] = std::tie(zone.get().back(), r, c);
+        newPlacement[q1] = std::tie(zone.get().front(), r, c);
       }
     }
   }
@@ -501,7 +501,7 @@ auto VMPlacer::placeQubitsInStorageZone(
     const auto& [slm, r, c] = previousGatePlacement[q];
     if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
       // the mapped qubit is in the storage zone, set the site as occupied
-      isEmptyStorageSite[slm][r][c] = false;
+      isEmptyStorageSite.at(slm)[r][c] = false;
     } else if (!reuse || reuseQubits.find(q) == reuseQubits.end()) {
       // the mapped qubit is in the entangling zone and must be placed (if
       // not reused)
@@ -518,15 +518,16 @@ auto VMPlacer::placeQubitsInStorageZone(
       commonSite{};
   for (const auto& [slm, r, c] : initialPlacement) {
     if (isEmptyStorageSite.find(slm) != isEmptyStorageSite.end()) {
-      if (isEmptyStorageSite[slm][r][c]) {
+      if (isEmptyStorageSite.at(slm)[r][c]) {
         // add site to common sites if it is currently unoccupied
         commonSite.emplace(slm, r, c);
       }
     } else {
       // site is in an entangling zone and not yet added to
       // isEmptyStorageSite
-      isEmptyStorageSite[slm] =
-          std::vector(slm.get().nRows, std::vector(slm.get().nCols, true));
+      isEmptyStorageSite.emplace(
+          slm,
+          std::vector(slm.get().nRows, std::vector(slm.get().nCols, true)));
       commonSite.emplace(slm, r, c);
     }
   }
@@ -585,7 +586,7 @@ auto VMPlacer::placeQubitsInStorageZone(
 
     dictBoudingbox.emplace(std::get<0>(initialPlacement[q]),
                            std::tuple{lowerRow, upperRow, leftCol, rightCol});
-    for (const qc::Qubit neighbor : dictQubitInteraction[q]) {
+    for (const qc::Qubit neighbor : dictQubitInteraction.at(q)) {
       const auto& [tmpSlm, tmpRow, tmpCol] = previousGatePlacement[neighbor];
       const auto& [neighborSlm, neighborRow, neighborCol] =
           tmpSlm.get().isEntanglement()
@@ -629,7 +630,7 @@ auto VMPlacer::placeQubitsInStorageZone(
                               nearestCol - ratio, nearestCol + ratio};
     }
     auto setNearbySite = commonSite;
-    if (isEmptyStorageSite[initSlm][initRow][initCol]) {
+    if (isEmptyStorageSite.at(initSlm)[initRow][initCol]) {
       setNearbySite.emplace(initialPlacement[q]);
     }
 
@@ -642,7 +643,7 @@ auto VMPlacer::placeQubitsInStorageZone(
       for (auto row = lower; row < upper; ++row) {
         for (auto col = left; col < right; ++col) {
           if (isEmptyStorageSite.find(slmId) == isEmptyStorageSite.end() ||
-              isEmptyStorageSite[slmId][row][col]) {
+              isEmptyStorageSite.at(slmId)[row][col]) {
             setNearbySite.emplace(slmId, row, col);
           }
         }
@@ -660,7 +661,7 @@ auto VMPlacer::placeQubitsInStorageZone(
       const double dis = architecture_.get().distance(
           gateSlm, gateRow, gateCol, siteSlm, siteRow, siteCol);
       double lookaheadCost = 0;
-      for (const auto& neighbor : dictQubitInteraction[q]) {
+      for (const auto& neighbor : dictQubitInteraction.at(q)) {
         const auto& [neighborSlm, neighborRow, neighborCol] =
             previousGatePlacement[neighbor];
         if (neighborSlm.get().isStorage()) {

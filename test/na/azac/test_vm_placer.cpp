@@ -47,11 +47,23 @@ protected:
         placer(architecture, config) {}
 };
 TEST_F(VMPlacerPlaceTest, Empty) {
+  const size_t nQubits = 1;
   EXPECT_THAT(
-      placer.place(2,
+      placer.place(nQubits,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
                    std::vector<std::unordered_set<qc::Qubit>>{}),
-      ::testing::ElementsAre(::testing::SizeIs(2)));
+      ::testing::ElementsAre(::testing::SizeIs(nQubits)));
+}
+TEST_F(VMPlacerPlaceTest, OneGate) {
+  const size_t nQubits = 2;
+  EXPECT_THAT(
+      placer.place(
+          nQubits,
+          std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{0U, 1U}}},
+          std::vector<std::unordered_set<qc::Qubit>>{}),
+      ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                             ::testing::SizeIs(nQubits),
+                             ::testing::SizeIs(nQubits)));
 }
 TEST(VMPlacerTest, NoConfig) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
