@@ -65,6 +65,128 @@ TEST_F(VMPlacerPlaceTest, OneGate) {
                              ::testing::SizeIs(nQubits),
                              ::testing::SizeIs(nQubits)));
 }
+TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
+  const size_t nQubits = 4;
+  const auto& placement =
+      placer.place(nQubits,
+                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
+                       {{0U, 1U}, {2U, 3U}}},
+                   std::vector<std::unordered_set<qc::Qubit>>{});
+  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits)));
+  std::map<size_t, qc::Qubit> qubitsInStorageByX;
+  std::unordered_set<size_t> qubitsInStorageYs;
+  for (qc::Qubit q = 0; q < placement.front().size(); ++q) {
+    const auto& [slm, r, c] = placement.front()[q];
+    EXPECT_TRUE(slm.get().isStorage());
+    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    qubitsInStorageByX.emplace(x, q);
+    qubitsInStorageYs.emplace(y);
+  }
+  std::vector<qc::Qubit> qubitsInStorageAsc;
+  for (const auto& [_, q] : qubitsInStorageByX) {
+    qubitsInStorageAsc.push_back(q);
+  }
+  EXPECT_THAT(qubitsInStorageAsc, ::testing::ElementsAre(0U, 1U, 2U, 3U));
+  EXPECT_THAT(qubitsInStorageYs, ::testing::UnorderedElementsAre(19UL * 3));
+  std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
+  std::unordered_set<size_t> qubitsInEntanglementYs;
+  for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
+    const auto& [slm, r, c] = placement[1][q];
+    EXPECT_TRUE(slm.get().isEntanglement());
+    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    qubitsInEntanglementByX.emplace(x, q);
+    qubitsInEntanglementYs.emplace(y);
+  }
+  std::vector<qc::Qubit> qubitsInEntanglementAsc;
+  for (const auto& [_, q] : qubitsInEntanglementByX) {
+    qubitsInEntanglementAsc.push_back(q);
+  }
+  EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U, 2U, 3U));
+  EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
+}
+TEST_F(VMPlacerPlaceTest, OneGateCross) {
+  const size_t nQubits = 2;
+  const auto& placement = placer.place(
+      nQubits,
+      std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{1U, 0U}}},
+      std::vector<std::unordered_set<qc::Qubit>>{});
+  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits)));
+  std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
+  for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
+    const auto& [slm, r, c] = placement[1][q];
+    EXPECT_TRUE(slm.get().isEntanglement());
+    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    qubitsInEntanglementByX.emplace(x, q);
+  }
+  std::vector<qc::Qubit> qubitsInEntanglementAsc;
+  for (const auto& [_, q] : qubitsInEntanglementByX) {
+    qubitsInEntanglementAsc.push_back(q);
+  }
+  EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U));
+}
+TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
+  const size_t nQubits = 4;
+  const auto& placement =
+      placer.place(nQubits,
+                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
+                       {{0U, 2U}, {1U, 3U}}},
+                   std::vector<std::unordered_set<qc::Qubit>>{});
+  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits)));
+  std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
+  std::unordered_set<size_t> qubitsInEntanglementYs;
+  for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
+    const auto& [slm, r, c] = placement[1][q];
+    EXPECT_TRUE(slm.get().isEntanglement());
+    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    qubitsInEntanglementByX.emplace(x, q);
+    qubitsInEntanglementYs.emplace(y);
+  }
+  std::vector<qc::Qubit> qubitsInEntanglementAsc;
+  for (const auto& [_, q] : qubitsInEntanglementByX) {
+    qubitsInEntanglementAsc.push_back(q);
+  }
+  EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 2U, 1U, 3U));
+  EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
+}
+TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
+  const size_t nQubits = 32;
+  const auto& placement = placer.place(
+      nQubits,
+      std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{0U, 1U},
+                                                                 {2U, 3U},
+                                                                 {4U, 5U},
+                                                                 {6U, 7U},
+                                                                 {8U, 9U},
+                                                                 {10U, 11U},
+                                                                 {12U, 13U},
+                                                                 {14U, 15U},
+                                                                 {16U, 17U},
+                                                                 {18U, 19U},
+                                                                 {20U, 21U},
+                                                                 {22U, 23U},
+                                                                 {24U, 25U},
+                                                                 {26U, 27U},
+                                                                 {28U, 29U},
+                                                                 {30U, 31U}}},
+      std::vector<std::unordered_set<qc::Qubit>>{});
+  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits),
+                                                ::testing::SizeIs(nQubits)));
+  std::unordered_set<std::pair<size_t, size_t>> qubitsLocationsInEntanglement;
+  for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
+    const auto& [slm, r, c] = placement[1][q];
+    EXPECT_TRUE(slm.get().isEntanglement());
+    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    qubitsLocationsInEntanglement.emplace(x, y);
+  }
+  EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
+}
 TEST(VMPlacerTest, NoConfig) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
   nlohmann::json config = R"({})"_json;
