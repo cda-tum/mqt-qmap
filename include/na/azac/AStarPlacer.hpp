@@ -19,7 +19,7 @@
 namespace na {
 class AStarPlacer {
   friend class AStarPlacerTest_AStarSearch_Test;
-  using DiscreteSite = std::array<uint16_t, 2>;
+  using DiscreteSite = std::array<uint8_t, 2>;
 
   std::reference_wrapper<const Architecture> architecture_;
   /// If true, during the initial placement the atoms are placed starting in the
@@ -35,33 +35,11 @@ class AStarPlacer {
   /// window centered at the nearest site
   size_t windowWidth_ = 4;
 
-  /// A node representing one stage in the process of placing all atoms
-  /// that must be moved for the next stage starting from the last mapping
-  /// until a new mapping is found satisfying all constraints of the next
-  /// stage
-  struct Node {
-    /// the maximum distance an already placed atom must travel to its
-    /// target location
-    float maxDistanceOfPlacedAtom = 0.0;
-    /// a set of all sites that are already occupied by an atom due to the
-    /// current placement
-    std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// a binary search tree representing the horizontal groups
-    /// @see getNeighbors for more details
-    std::vector<std::map<uint16_t, uint16_t>> hGroups;
-    /// the maximum distance of placed atoms in every group to their
-    /// target location
-    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
-    /// @see hGroups
-    std::vector<std::map<uint16_t, uint16_t>> vGroups;
-    /// @see maxDistancesOfPlacedAtomsPerHGroup
-    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
-  };
-
-  /// When placing atoms after a rydberg layer bayk in the storage zone, this
+  /// When placing atoms after a rydberg layer back in the storage zone, this
   /// struct stores for every such atom all required information, i.e., the
   /// current site and potential target sites ordered by distance (ascending).
   struct AtomJob {
+    qc::Qubit qubit;
     /// the current site of the atom
     DiscreteSite currentSite;
     /// a struct describing one potential target site
@@ -80,8 +58,9 @@ class AStarPlacer {
   /// current sites of the corresponding atoms and potential target sites
   /// ordered by distance (ascending).
   struct GateJob {
+    std::array<qc::Qubit, 2> qubits;
     /// the current sites of the two atoms
-    std::array<DiscreteSite, 2> currentDiscreteSites;
+    std::array<DiscreteSite, 2> currentSites;
     /// a struct describing one potential target site for each atom
     struct Option {
       /// the target sites for the two atoms
@@ -91,6 +70,54 @@ class AStarPlacer {
     };
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
+  };
+
+  /// A node representing one stage in the process of placing all atoms
+  /// that must be moved for the next stage starting from the last mapping
+  /// until a new mapping is found satisfying all constraints of the next
+  /// stage
+  struct AtomNode {
+    const AtomJob::Option* option;
+    /// the maximum distance an already placed atom must travel to its
+    /// target location
+    float maxDistanceOfPlacedAtom = 0.0;
+    /// a set of all sites that are already occupied by an atom due to the
+    /// current placement
+    std::unordered_set<DiscreteSite> consumedFreeSites;
+    /// a binary search tree representing the horizontal groups
+    /// @see getNeighbors for more details
+    std::vector<std::map<uint8_t, uint8_t>> hGroups;
+    /// the maximum distance of placed atoms in every group to their
+    /// target location
+    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
+    /// @see hGroups
+    std::vector<std::map<uint8_t, uint8_t>> vGroups;
+    /// @see maxDistancesOfPlacedAtomsPerHGroup
+    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
+  };
+
+  /// A node representing one stage in the process of placing all atoms
+  /// that must be moved for the next stage starting from the last mapping
+  /// until a new mapping is found satisfying all constraints of the next
+  /// stage
+  struct GateNode {
+    const GateJob::Option* option;
+    /// the maximum distance an already placed atom must travel to its
+    /// target location
+    float maxDistanceOfPlacedAtom = 0.0;
+    /// a set of all sites that are already occupied by an atom due to the
+    /// current placement
+    std::unordered_set<DiscreteSite> consumedFreeSites;
+    /// a binary search tree representing the horizontal groups
+    /// @see getNeighbors for more details
+    std::vector<std::map<uint8_t, uint8_t>> hGroups;
+    /// the maximum distance of placed atoms in every group to their
+    /// target location
+    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
+    /// @see hGroups
+    std::vector<std::map<uint8_t, uint8_t>> vGroups;
+    /// @see maxDistancesOfPlacedAtomsPerHGroup
+    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
   };
 
 public:
@@ -152,6 +179,7 @@ private:
    * @return a vector of node pointers representing the path from the start to a
    * goal
    */
+  template <class Node>
   [[nodiscard]] static auto aStarTreeSearch(
       const Node& start,
       const std::function<std::vector<std::reference_wrapper<const Node>>(
@@ -176,11 +204,11 @@ private:
       const std::vector<qc::Qubit>& atoms) const
       -> std::pair<std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>,
                    std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
@@ -198,11 +226,11 @@ private:
       const
       -> std::pair<std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>,
                    std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
@@ -220,54 +248,12 @@ private:
       const
       -> std::pair<std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>,
                    std::unordered_map<
                        std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint16_t, std::hash<std::pair<const SLM&, size_t>>,
+                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
-  /**
-   * Given the discretion of the previous placement of the atoms and the
-   * discretization of the target slms, this function updates the placement of
-   * based on the previous placement for the given list of atoms.
-   * @param atoms is a list of atoms that must be placed
-   * @param previousPlacement is the previous placement of the atoms
-   * @param discreteRows is a map from the previous rows to their discrete
-   *      indices
-   * @param discreteColumns is a map from the previous columns to their discrete
-   *    indices
-   * @param rowMapping is a map from the discrete rows to their indices
-   * @param columnMapping is a map from the discrete columns to their indices
-   * @param discreteTargetRows is a map from the target rows to their discrete
-   *  indices
-   *  @param discreteTargetColumns is a map from the target columns to their
-   *   discrete indices
-   *  @param placement is the updated placement of the atoms
-   */
-  auto updatePlacement(
-      const std::vector<qc::Qubit>& atoms,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
-          std::hash<std::pair<const SLM&, size_t>>,
-          std::equal_to<std::pair<const SLM&, size_t>>>& discreteRows,
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
-          std::hash<std::pair<const SLM&, size_t>>,
-          std::equal_to<std::pair<const SLM&, size_t>>>& discreteColumns,
-      const std::unordered_map<uint16_t, uint16_t>& rowMapping,
-      const std::unordered_map<uint16_t, uint16_t>& columnMapping,
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
-          std::hash<std::pair<const SLM&, size_t>>,
-          std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetRows,
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, size_t>, uint16_t,
-          std::hash<std::pair<const SLM&, size_t>>,
-          std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetColumns,
-      std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                             size_t>>& placement) const -> void;
 
   /// This function generates a trivial initial placement for the qubits and
   /// just places in order.
@@ -314,6 +300,7 @@ private:
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
+  template <class Node>
   [[nodiscard]] static auto isGoal(const size_t nAtoms, const Node& node)
       -> bool {
     return node.consumedFreeSites.size() == nAtoms;
@@ -327,6 +314,7 @@ private:
   /// This will not resemble the exact time to rearrange all costs because at
   /// this point it is not clear how the horizontal and vertical groups can be
   /// combined.
+  template <class Node>
   [[nodiscard]] static auto getCost(const Node& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
@@ -347,7 +335,7 @@ private:
   /// placed atoms must travel to their determined target site.
   [[nodiscard]] static auto
   getAtomPlacementHeuristic(const std::vector<AtomJob>& atomJobs,
-                            const Node& node) -> float;
+                            const AtomNode& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
   /// @details To yield an optimal results, the heuristic must be admissible,
@@ -367,7 +355,7 @@ private:
   /// placed atoms must travel to their determined target site.
   [[nodiscard]] static auto
   getGatePlacementHeuristic(const std::vector<GateJob>& gateJobs,
-                            const Node& node) -> float;
+                            const GateNode& node) -> float;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated
@@ -384,10 +372,10 @@ private:
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
   [[nodiscard]] static auto
-  getAtomPlacementNeighbors(std::vector<std::unique_ptr<Node>>& nodes,
+  getAtomPlacementNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
                             const std::vector<AtomJob>& atomJobs,
-                            const Node& node)
-      -> std::vector<std::reference_wrapper<const Node>>;
+                            const AtomNode& node)
+      -> std::vector<std::reference_wrapper<const AtomNode>>;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated
@@ -404,10 +392,10 @@ private:
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
   [[nodiscard]] static auto
-  getGatePlacementNeighbors(std::vector<std::unique_ptr<Node>>& nodes,
+  getGatePlacementNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
                             const std::vector<GateJob>& gateJobs,
-                            const Node& node)
-      -> std::vector<std::reference_wrapper<const Node>>;
+                            const GateNode& node)
+      -> std::vector<std::reference_wrapper<const GateNode>>;
 
   /// Checks for the new placement of the atom whether it is compatible with
   /// one of the existing groups. If yes, the new placement is added to the
@@ -418,8 +406,8 @@ private:
   /// @param maxDistances the maximum distances of placed atoms in each group
   /// @return true if the new placement could be added to an existing group
   static auto checkCompatibilityAndAddPlacement(
-      uint16_t key, uint16_t value, float distance,
-      std::vector<std::map<uint16_t, uint16_t>>& groups,
+      uint8_t key, uint8_t value, float distance,
+      std::vector<std::map<uint8_t, uint8_t>>& groups,
       std::vector<float>& maxDistances) -> bool;
 };
 } // namespace na

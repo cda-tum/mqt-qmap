@@ -30,10 +30,10 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
-  "vm_placer" : {
+  "a_star_placer" : {
     "use_window" : true,
-    "window_size" : 10,
-    "dynamic_placement" : true
+    "window_height" : 6,
+    "window_width" : 4
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
@@ -147,8 +147,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
-  GTEST_SKIP();
-  const size_t nQubits = 32;
+  const size_t nQubits = 16;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U},
@@ -158,15 +157,7 @@ TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
                                                           {8U, 9U},
                                                           {10U, 11U},
                                                           {12U, 13U},
-                                                          {14U, 15U},
-                                                          {16U, 17U},
-                                                          {18U, 19U},
-                                                          {20U, 21U},
-                                                          {22U, 23U},
-                                                          {24U, 25U},
-                                                          {26U, 27U},
-                                                          {28U, 29U},
-                                                          {30U, 31U}}},
+                                                          {14U, 15U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
@@ -264,10 +255,10 @@ TEST(AStarPlacerTest, AStarSearch) {
   // ┌─────┐        ┌─────┐        ┌Goal=┐        ┌─────┐
   // │  12 ├─────→  │  13 ├─────→  │  14 ├─────→  │  15 │
   // └─────┘        └─────┘        └=====┘        └─────┘
-  const std::vector<AStarPlacer::Node> nodes(16);
+  const std::vector<AStarPlacer::AtomNode> nodes(16);
   std::unordered_map<
-      const AStarPlacer::Node*,
-      std::vector<std::reference_wrapper<const AStarPlacer::Node>>>
+      const AStarPlacer::AtomNode*,
+      std::vector<std::reference_wrapper<const AStarPlacer::AtomNode>>>
       neighbors{{nodes.data(), {std::cref(nodes[1]), std::cref(nodes[4])}},
                 {&nodes[1], {std::cref(nodes[2]), std::cref(nodes[5])}},
                 {&nodes[2], {std::cref(nodes[3]), std::cref(nodes[6])}},
@@ -284,22 +275,22 @@ TEST(AStarPlacerTest, AStarSearch) {
                 {&nodes[13], {std::cref(nodes[14])}},
                 {&nodes[14], {std::cref(nodes[15])}},
                 {&nodes[15], {}}};
-  const auto path = (AStarPlacer::aStarTreeSearch(
+  const auto path = (AStarPlacer::aStarTreeSearch<AStarPlacer::AtomNode>(
       /* start: */
       nodes[0],
       /* getNeighbors: */
-      [&neighbors](const AStarPlacer::Node& node)
-          -> std::vector<std::reference_wrapper<const AStarPlacer::Node>> {
+      [&neighbors](const AStarPlacer::AtomNode& node)
+          -> std::vector<std::reference_wrapper<const AStarPlacer::AtomNode>> {
         return neighbors.at(&node);
       },
       /* isGoal: */
-      [&nodes](const AStarPlacer::Node& node) -> bool {
+      [&nodes](const AStarPlacer::AtomNode& node) -> bool {
         return &node == &nodes[14];
       },
       /* getCost: */
-      [](const AStarPlacer::Node& /* unused */) -> double { return 1.0; },
+      [](const AStarPlacer::AtomNode& /* unused */) -> double { return 1.0; },
       /* getHeuristic: */
-      [&nodes](const AStarPlacer::Node& node) -> double {
+      [&nodes](const AStarPlacer::AtomNode& node) -> double {
         const auto* head = nodes.data();
         const auto i = std::distance(head, &node);
         const long x = i % 4;
@@ -307,7 +298,7 @@ TEST(AStarPlacerTest, AStarSearch) {
         return std::hypot(x, y);
       }));
   // convert to const Node* for easier comparison
-  std::vector<const AStarPlacer::Node*> pathNodes;
+  std::vector<const AStarPlacer::AtomNode*> pathNodes;
   for (const auto& node : path) {
     pathNodes.emplace_back(&node.get());
   }
