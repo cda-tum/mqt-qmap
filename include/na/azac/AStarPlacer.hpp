@@ -19,7 +19,7 @@
 namespace na {
 class AStarPlacer {
   friend class AStarPlacerTest_AStarSearch_Test;
-  using DiscreteSite = std::pair<uint16_t, uint16_t>;
+  using DiscreteSite = std::array<uint16_t, 2>;
 
   std::reference_wrapper<const Architecture> architecture_;
   /// If true, during the initial placement the atoms are placed starting in the
@@ -81,13 +81,13 @@ class AStarPlacer {
   /// ordered by distance (ascending).
   struct GateJob {
     /// the current sites of the two atoms
-    std::pair<DiscreteSite, DiscreteSite> currentDiscreteSites;
+    std::array<DiscreteSite, 2> currentDiscreteSites;
     /// a struct describing one potential target site for each atom
     struct Option {
       /// the target sites for the two atoms
-      std::pair<DiscreteSite, DiscreteSite> sites;
+      std::array<DiscreteSite, 2> sites;
       /// the max distance the atoms must travel to reach the target sites
-      std::pair<float, float> distance;
+      std::array<float, 2> distance;
     };
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
@@ -105,7 +105,7 @@ public:
    */
   [[nodiscard]] auto
   place(size_t nQubits,
-        const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+        const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
             twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
       -> std::vector<std::vector<
@@ -279,7 +279,7 @@ private:
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& previousReuseQubits,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::pair<qc::Qubit, qc::Qubit>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
       -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                           size_t, size_t>>,
                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
@@ -296,7 +296,7 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::pair<qc::Qubit, qc::Qubit>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
@@ -310,7 +310,7 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::pair<qc::Qubit, qc::Qubit>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
