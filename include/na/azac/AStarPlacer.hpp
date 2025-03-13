@@ -18,6 +18,7 @@
 
 namespace na {
 class AStarPlacer {
+  friend class AStarPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::pair<uint16_t, uint16_t>;
 
   std::reference_wrapper<const Architecture> architecture_;
@@ -57,11 +58,6 @@ class AStarPlacer {
     std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
   };
 
-  /// A list of all nodes that have been created so far.
-  /// This list is dynamically extended when new nodes are created.
-  /// This happens when a node is expanded by calling getNeighbors.
-  std::vector<std::unique_ptr<Node>> nodes_;
-
   /// When placing atoms after a rydberg layer bayk in the storage zone, this
   /// struct stores for every such atom all required information, i.e., the
   /// current site and potential target sites ordered by distance (ascending).
@@ -78,9 +74,6 @@ class AStarPlacer {
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
   };
-  /// a list of all atoms that must be placed in the storage zone after a
-  /// rydberg layer
-  std::vector<AtomJob> atomJobs_;
 
   /// When placing gates in the entanglement zone before a rydberg layer, this
   /// struct stores for every such gate all required information, i.e., the
@@ -99,14 +92,8 @@ class AStarPlacer {
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
   };
-  /// a list of all gates that must be placed in the entanglement zone before a
-  /// rydberg layer
-  std::vector<GateJob> gateJobs_;
 
-  /// The number of either atom or gate jobs that must be performed
-  size_t nJobs_ = 0;
-
-protected:
+public:
   AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
 
   /**
@@ -327,8 +314,9 @@ private:
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
-  auto isGoal(const Node& node) const -> bool {
-    return node.consumedFreeSites.size() == nJobs_;
+  [[nodiscard]] static auto isGoal(const size_t nAtoms, const Node& node)
+      -> bool {
+    return node.consumedFreeSites.size() == nAtoms;
   }
 
   /// @brief Returns the cost of a node, i.e., the total cost to reach that node
@@ -339,7 +327,7 @@ private:
   /// This will not resemble the exact time to rearrange all costs because at
   /// this point it is not clear how the horizontal and vertical groups can be
   /// combined.
-  [[nodiscard]] auto getCost(const Node& node) const -> float;
+  [[nodiscard]] static auto getCost(const Node& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
   /// @details To yield an optimal results, the heuristic must be admissible,
@@ -357,7 +345,9 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] auto getAtomPlacementHeuristic(const Node& node) const -> float;
+  [[nodiscard]] static auto
+  getAtomPlacementHeuristic(const std::vector<AtomJob>& atomJobs,
+                            const Node& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
   /// @details To yield an optimal results, the heuristic must be admissible,
@@ -375,7 +365,9 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] auto getGatePlacementHeuristic(const Node& node) const -> float;
+  [[nodiscard]] static auto
+  getGatePlacementHeuristic(const std::vector<GateJob>& gateJobs,
+                            const Node& node) -> float;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated
@@ -391,7 +383,10 @@ private:
   /// existing groups.
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
-  [[nodiscard]] auto getAtomPlacementNeighbors(const Node& node)
+  [[nodiscard]] static auto
+  getAtomPlacementNeighbors(std::vector<std::unique_ptr<Node>>& nodes,
+                            const std::vector<AtomJob>& atomJobs,
+                            const Node& node)
       -> std::vector<std::reference_wrapper<const Node>>;
 
   /// @brief Return pointers to all neighbors of the given node.
@@ -408,7 +403,10 @@ private:
   /// existing groups.
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
-  [[nodiscard]] auto getGatePlacementNeighbors(const Node& node)
+  [[nodiscard]] static auto
+  getGatePlacementNeighbors(std::vector<std::unique_ptr<Node>>& nodes,
+                            const std::vector<GateJob>& gateJobs,
+                            const Node& node)
       -> std::vector<std::reference_wrapper<const Node>>;
 
   /// Checks for the new placement of the atom whether it is compatible with
