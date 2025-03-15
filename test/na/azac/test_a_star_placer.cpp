@@ -219,6 +219,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = AStarPlacer(architecture, config);
+  std::cout.rdbuf(oldCout);
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
@@ -231,7 +232,6 @@ TEST(AStarPlacerTest, InvalidConfig) {
               "for use_window. Using default."),
           ::testing::HasSubstr("[WARN] Configuration for AStarPlacer contains "
                                "an unknown key: unknown_key. Ignoring.")));
-  std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

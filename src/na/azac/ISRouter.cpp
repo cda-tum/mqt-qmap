@@ -91,6 +91,10 @@ auto ISRouter::route(
                                              size_t, size_t>>>& placement) const
     -> std::vector<std::vector<std::vector<qc::Qubit>>> {
   std::vector<std::vector<std::vector<qc::Qubit>>> routing;
+  // early return if no placement is given
+  if (placement.empty()) {
+    return routing;
+  }
   for (auto it = placement.cbegin(); true;) {
     const auto& startPlacement = *it;
     if (++it == placement.cend()) {
@@ -125,14 +129,17 @@ auto ISRouter::route(
     while (!atomsToMove.empty()) {
       auto& independentSet = currentRouting.emplace_back();
       std::vector<qc::Qubit> remainingAtoms;
-      std::unordered_set<qc::Qubit> conflictingNeighbors;
+      std::unordered_set<qc::Qubit> conflictingAtomsMoves;
       for (const auto& atom : atomsToMove) {
-        if (conflictingNeighbors.find(atom) == conflictingNeighbors.end()) {
+        if (conflictingAtomsMoves.find(atom) == conflictingAtomsMoves.end()) {
           // if the atom does not conflict with any atom that is already in the
           // independent set, add it and mark its neighbors as conflicting
           independentSet.emplace_back(atom);
-          for (const auto neighbor : conflictGraph.at(atom)) {
-            conflictingNeighbors.emplace(neighbor);
+          if (const auto conflictingNeighbors = conflictGraph.find(atom);
+              conflictingNeighbors != conflictGraph.end()) {
+            for (const auto neighbor : conflictingNeighbors->second) {
+              conflictingAtomsMoves.emplace(neighbor);
+            }
           }
         } else {
           // if an atom could not be put into the current independent set, add

@@ -20,7 +20,7 @@ namespace na {
 class ISRouter {
   std::reference_wrapper<const Architecture> architecture_;
 
-protected:
+public:
   /// Create a ISRouter
   ISRouter(const Architecture& architecture, const nlohmann::json& config);
   /**

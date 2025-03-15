@@ -3,7 +3,9 @@
 #include <cstddef>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <map>
 #include <optional>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -47,7 +49,7 @@ protected:
         placer(architecture, config) {}
 };
 TEST_F(VMPlacerPlaceTest, Empty) {
-  const size_t nQubits = 1;
+  constexpr size_t nQubits = 1;
   EXPECT_THAT(
       placer.place(nQubits,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
@@ -55,7 +57,7 @@ TEST_F(VMPlacerPlaceTest, Empty) {
       ::testing::ElementsAre(::testing::SizeIs(nQubits)));
 }
 TEST_F(VMPlacerPlaceTest, OneGate) {
-  const size_t nQubits = 2;
+  constexpr size_t nQubits = 2;
   EXPECT_THAT(
       placer.place(
           nQubits,
@@ -66,7 +68,7 @@ TEST_F(VMPlacerPlaceTest, OneGate) {
                              ::testing::SizeIs(nQubits)));
 }
 TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
-  const size_t nQubits = 4;
+  constexpr size_t nQubits = 4;
   const auto& placement =
       placer.place(nQubits,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
@@ -106,7 +108,7 @@ TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(VMPlacerPlaceTest, OneGateCross) {
-  const size_t nQubits = 2;
+  constexpr size_t nQubits = 2;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{1U, 0U}}},
@@ -127,7 +129,7 @@ TEST_F(VMPlacerPlaceTest, OneGateCross) {
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U));
 }
 TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
-  const size_t nQubits = 4;
+  constexpr size_t nQubits = 4;
   const auto& placement =
       placer.place(nQubits,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
@@ -152,7 +154,7 @@ TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
-  const size_t nQubits = 32;
+  constexpr size_t nQubits = 32;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{0U, 1U},
@@ -184,7 +186,7 @@ TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
 }
 TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
-  const size_t nQubits = 3;
+  constexpr size_t nQubits = 3;
   const auto& placement =
       placer.place(nQubits,
                    std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
@@ -230,6 +232,7 @@ TEST(VMPlacerTest, InvalidConfig) {
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = VMPlacer(architecture, config);
+  std::cout.rdbuf(oldCout);
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
@@ -246,7 +249,6 @@ TEST(VMPlacerTest, InvalidConfig) {
                                "dynamic_placement. Using default."),
           ::testing::HasSubstr("[WARN] Configuration for VMPlacer contains an "
                                "unknown key: unknown_key. Ignoring.")));
-  std::cout.rdbuf(oldCout);
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
