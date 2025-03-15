@@ -27,7 +27,8 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
       configIt != config.end() && configIt->is_object()) {
     for (const auto& [key, value] : configIt.value().items()) {
       std::ostringstream oss;
-      oss << "[WARN] Configuration for ASAPScheduler contains an unknown key: "
+      oss << "\033[1;35m[WARN]\033[0m Configuration for ASAPScheduler contains "
+             "an unknown key: "
           << key << ". Ignoring.\n";
       std::cout << oss.str();
     }
@@ -59,7 +60,8 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
   // after the last layer with a two-qubit gate acting on that qubit
   std::vector<size_t> nextLayerForQubit(qc.getNqubits(), 0);
   for (const auto& op : qc) {
-    if (op->isGlobal(qc.getNqubits()) && qc.getNqubits() > 1) {
+    if (op->isGlobal(qc.getNqubits()) && !op->isControlled() &&
+        qc.getNqubits() > 1) {
       const auto maxNextLayerForQubit = *std::max_element(
           nextLayerForQubit.cbegin(), nextLayerForQubit.cend());
       for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {

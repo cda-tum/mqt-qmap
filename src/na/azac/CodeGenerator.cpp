@@ -180,24 +180,28 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
           parkingOffsetSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for CodeGenerator contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+                 "contains an invalid "
                  "value for parking_offset. Using default.\n";
           std::cout << oss.str();
         }
       } else {
         std::ostringstream oss;
-        oss << "[WARN] Configuration for CodeGenerator contains an unknown "
+        oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+               "contains an unknown "
                "key: "
             << key << ". Ignoring.\n";
         std::cout << oss.str();
       }
     }
     if (!parkingOffsetSet) {
-      std::cout << "[WARN] Configuration for CodeGenerator does not contain a "
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+                   "does not contain a "
                    "value for parking_offset. Using default.\n";
     }
   } else {
-    std::cout << "[WARN] Configuration does not contain settings for "
+    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
+                 "settings for "
                  "CodeGenerator or is malformed. Using default settings.\n";
   }
 }

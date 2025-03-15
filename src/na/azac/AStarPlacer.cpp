@@ -592,22 +592,16 @@ auto AStarPlacer::placeQubitsInStorageZone(
   // Find atoms that must be placed
   //===------------------------------------------------------------------===//
   std::set<std::pair<double, qc::Qubit>> atomsToPlaceMap;
-  for (const auto& [first, second] : twoQubitGates) {
-    if (reuseQubits.find(first) == reuseQubits.end()) {
-      const auto& [slm, r, c] = previousPlacement[first];
-      const auto& [nearestSlm, nearestRow, nearestCol] =
-          architecture_.get().nearestStorageSite(slm, r, c);
-      const auto distance = architecture_.get().distance(
-          slm, r, c, nearestSlm, nearestRow, nearestCol);
-      atomsToPlaceMap.emplace(distance, first);
-    }
-    if (reuseQubits.find(second) == reuseQubits.end()) {
-      const auto& [slm, r, c] = previousPlacement[second];
-      const auto& [nearestSlm, nearestRow, nearestCol] =
-          architecture_.get().nearestStorageSite(slm, r, c);
-      const auto distance = architecture_.get().distance(
-          slm, r, c, nearestSlm, nearestRow, nearestCol);
-      atomsToPlaceMap.emplace(distance, second);
+  for (const auto& gate : twoQubitGates) {
+    for (const auto qubit : gate) {
+      if (reuseQubits.find(qubit) == reuseQubits.end()) {
+        const auto& [slm, r, c] = previousPlacement[qubit];
+        const auto& [nearestSlm, nearestRow, nearestCol] =
+            architecture_.get().nearestStorageSite(slm, r, c);
+        const auto distance = architecture_.get().distance(
+            slm, r, c, nearestSlm, nearestRow, nearestCol);
+        atomsToPlaceMap.emplace(distance, qubit);
+      }
     }
   }
   //===------------------------------------------------------------------===//
@@ -654,6 +648,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
         architecture_.get().nearestStorageSite(previousSlm, previousRow,
                                                previousCol);
     auto& job = atomJobs.emplace_back();
+    job.qubit = atom;
     job.currentSite =
         std::array{discreteRows.at(std::tie(previousSlm, previousRow)),
                    discreteColumns.at(std::tie(previousSlm, previousCol))};
@@ -963,7 +958,8 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           useWindowSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid "
                  "value for use_window. Using default.\n";
           std::cout << oss.str();
         }
@@ -973,7 +969,8 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           windowHeightSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid "
                  "value for window_height. Using default.\n";
           std::cout << oss.str();
         }
@@ -983,33 +980,39 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           windowWidthSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for AStarPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid "
                  "value for window_width. Using default.\n";
           std::cout << oss.str();
         }
       } else {
         std::ostringstream oss;
-        oss << "[WARN] Configuration for AStarPlacer contains an unknown key: "
+        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+               "an unknown key: "
             << key << ". Ignoring.\n";
         std::cout << oss.str();
       }
     }
     if (!useWindowSet) {
-      std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+                   "not contain a "
                    "setting for use_window. Using default.\n";
     }
     if (useWindow_) {
       if (!windowHeightSet) {
-        std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+        std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                     "does not contain a "
                      "setting for window_height. Using default.\n";
       }
       if (!windowWidthSet) {
-        std::cout << "[WARN] Configuration for AStarPlacer does not contain a "
+        std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                     "does not contain a "
                      "setting for window_width. Using default.\n";
       }
     }
   } else {
-    std::cout << "[WARN] Configuration does not contain settings for "
+    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
+                 "settings for "
                  "AStarPlacer or is malformed. Using default settings.\n";
   }
 }

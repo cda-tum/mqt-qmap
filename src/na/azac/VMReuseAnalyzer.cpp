@@ -24,7 +24,8 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
       configIt != config.end() && configIt->is_object()) {
     for (const auto& [key, value] : configIt.value().items()) {
       std::ostringstream oss;
-      oss << "[WARN] Configuration for VMReuseAnalyzer contains an unknown "
+      oss << "\033[1;35m[WARN]\033[0m Configuration for VMReuseAnalyzer "
+             "contains an unknown "
              "key: "
           << key << ". Ignoring.\n";
       std::cout << oss.str();

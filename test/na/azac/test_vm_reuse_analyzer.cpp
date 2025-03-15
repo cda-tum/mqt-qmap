@@ -41,22 +41,22 @@ protected:
         analyzer{architecture, config} {}
 };
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoGates) {
-  std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers;
+  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers;
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, OneLayer) {
-  std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
+  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}}};
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers), ::testing::IsEmpty());
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, NoChoice) {
-  std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
+  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}}, {{1, 2}}};
   EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
               ::testing::ElementsAre(::testing::UnorderedElementsAre(1U)));
 }
 TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
-  std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>> twoQubitGateLayers{
+  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
       {{0, 1}, {2, 3}, {4, 5}}, {{1, 2}, {3, 4}, {5, 7}}};
   EXPECT_THAT(
       analyzer.analyzeReuse(twoQubitGateLayers),
@@ -73,9 +73,10 @@ TEST(VMReuseAnalyzerTest, Config) {
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = VMReuseAnalyzer(architecture, config);
   std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(),
-            "[WARN] Configuration for VMReuseAnalyzer contains an "
-            "unknown key: unknown_key. Ignoring.\n");
+  EXPECT_EQ(
+      buffer.str(),
+      "\033[1;35m[WARN]\033[0m Configuration for VMReuseAnalyzer contains an "
+      "unknown key: unknown_key. Ignoring.\n");
 }
 class VMReuseAnalyzerMaximumBipartiteMatchingTest : public ::testing::Test {
 protected:

@@ -185,7 +185,8 @@ TEST(ISRouterTest, InvalidConfig) {
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = ISRouter(architecture, config);
   std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(), "[WARN] Configuration for ISRouter contains an "
-                          "unknown key: unknown_key. Ignoring.\n");
+  EXPECT_EQ(buffer.str(),
+            "\033[1;35m[WARN]\033[0m Configuration for ISRouter contains an "
+            "unknown key: unknown_key. Ignoring.\n");
 }
 } // namespace na

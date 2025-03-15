@@ -233,15 +233,16 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex("\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n"),
+          ::testing::MatchesRegex(
+              ".*\\[WARN\\].*\n.*\\[WARN\\].*\n.*\\[WARN\\].*\n"),
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "CodeGenerator contains an invalid "
+                               "value for parking_offset. Using default."),
           ::testing::HasSubstr(
-              "[WARN] Configuration for CodeGenerator contains an invalid "
-              "value for parking_offset. Using default."),
-          ::testing::HasSubstr(
-              "[WARN] Configuration for CodeGenerator does "
+              "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator does "
               "not contain a value for parking_offset. Using default."),
-          ::testing::HasSubstr(
-              "[WARN] Configuration for CodeGenerator contains an "
-              "unknown key: unknown_key. Ignoring.")));
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "CodeGenerator contains an "
+                               "unknown key: unknown_key. Ignoring.")));
 }
 } // namespace na

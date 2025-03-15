@@ -50,30 +50,27 @@ protected:
 };
 TEST_F(VMPlacerPlaceTest, Empty) {
   constexpr size_t nQubits = 1;
-  EXPECT_THAT(
-      placer.place(nQubits,
-                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{},
-                   std::vector<std::unordered_set<qc::Qubit>>{}),
-      ::testing::ElementsAre(::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placer.place(nQubits,
+                           std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
+                           std::vector<std::unordered_set<qc::Qubit>>{}),
+              ::testing::ElementsAre(::testing::SizeIs(nQubits)));
 }
 TEST_F(VMPlacerPlaceTest, OneGate) {
   constexpr size_t nQubits = 2;
-  EXPECT_THAT(
-      placer.place(
-          nQubits,
-          std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{0U, 1U}}},
-          std::vector<std::unordered_set<qc::Qubit>>{}),
-      ::testing::ElementsAre(::testing::SizeIs(nQubits),
-                             ::testing::SizeIs(nQubits),
-                             ::testing::SizeIs(nQubits)));
+  EXPECT_THAT(placer.place(nQubits,
+                           std::vector<std::vector<std::array<qc::Qubit, 2>>>{
+                               {{0U, 1U}}},
+                           std::vector<std::unordered_set<qc::Qubit>>{}),
+              ::testing::ElementsAre(::testing::SizeIs(nQubits),
+                                     ::testing::SizeIs(nQubits),
+                                     ::testing::SizeIs(nQubits)));
 }
 TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
   constexpr size_t nQubits = 4;
-  const auto& placement =
-      placer.place(nQubits,
-                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
-                       {{0U, 1U}, {2U, 3U}}},
-                   std::vector<std::unordered_set<qc::Qubit>>{});
+  const auto& placement = placer.place(
+      nQubits,
+      std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U}, {2U, 3U}}},
+      std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::map<size_t, qc::Qubit> qubitsInStorageByX;
@@ -110,8 +107,7 @@ TEST_F(VMPlacerPlaceTest, TwoGatesCons) {
 TEST_F(VMPlacerPlaceTest, OneGateCross) {
   constexpr size_t nQubits = 2;
   const auto& placement = placer.place(
-      nQubits,
-      std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{1U, 0U}}},
+      nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{1U, 0U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
@@ -130,11 +126,10 @@ TEST_F(VMPlacerPlaceTest, OneGateCross) {
 }
 TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
   constexpr size_t nQubits = 4;
-  const auto& placement =
-      placer.place(nQubits,
-                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
-                       {{0U, 2U}, {1U, 3U}}},
-                   std::vector<std::unordered_set<qc::Qubit>>{});
+  const auto& placement = placer.place(
+      nQubits,
+      std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 2U}, {1U, 3U}}},
+      std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
   std::map<size_t, qc::Qubit> qubitsInEntanglementByX;
@@ -157,22 +152,22 @@ TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
   constexpr size_t nQubits = 32;
   const auto& placement = placer.place(
       nQubits,
-      std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{{{0U, 1U},
-                                                                 {2U, 3U},
-                                                                 {4U, 5U},
-                                                                 {6U, 7U},
-                                                                 {8U, 9U},
-                                                                 {10U, 11U},
-                                                                 {12U, 13U},
-                                                                 {14U, 15U},
-                                                                 {16U, 17U},
-                                                                 {18U, 19U},
-                                                                 {20U, 21U},
-                                                                 {22U, 23U},
-                                                                 {24U, 25U},
-                                                                 {26U, 27U},
-                                                                 {28U, 29U},
-                                                                 {30U, 31U}}},
+      std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U},
+                                                          {2U, 3U},
+                                                          {4U, 5U},
+                                                          {6U, 7U},
+                                                          {8U, 9U},
+                                                          {10U, 11U},
+                                                          {12U, 13U},
+                                                          {14U, 15U},
+                                                          {16U, 17U},
+                                                          {18U, 19U},
+                                                          {20U, 21U},
+                                                          {22U, 23U},
+                                                          {24U, 25U},
+                                                          {26U, 27U},
+                                                          {28U, 29U},
+                                                          {30U, 31U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
@@ -189,7 +184,7 @@ TEST_F(VMPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   constexpr size_t nQubits = 3;
   const auto& placement =
       placer.place(nQubits,
-                   std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>{
+                   std::vector<std::vector<std::array<qc::Qubit, 2>>>{
                        {{0U, 1U}}, {{1U, 2U}}},
                    std::vector<std::unordered_set<qc::Qubit>>{{1U}});
   EXPECT_THAT(placement, ::testing::SizeIs(5));
@@ -215,9 +210,9 @@ TEST(VMPlacerTest, NoConfig) {
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = VMPlacer(architecture, config);
-  EXPECT_EQ(buffer.str(),
-            "[WARN] Configuration does not contain settings for VMPlacer or is "
-            "malformed. Using default settings.\n");
+  EXPECT_EQ(buffer.str(), "\033[1;35m[WARN]\033[0m Configuration does not "
+                          "contain settings for VMPlacer or is "
+                          "malformed. Using default settings.\n");
   std::cout.rdbuf(oldCout);
 }
 TEST(VMPlacerTest, InvalidConfig) {
@@ -236,19 +231,23 @@ TEST(VMPlacerTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex(
-              "\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n"),
-          ::testing::HasSubstr("[WARN] Configuration for VMPlacer "
-                               "contains an invalid value for "
-                               "use_window. Using default."),
-          ::testing::HasSubstr("[WARN] Configuration for VMPlacer does "
-                               "not contain a setting for "
-                               "use_window. Using default."),
-          ::testing::HasSubstr("[WARN] Configuration for VMPlacer does "
-                               "not contain a setting for "
-                               "dynamic_placement. Using default."),
-          ::testing::HasSubstr("[WARN] Configuration for VMPlacer contains an "
-                               "unknown key: unknown_key. Ignoring.")));
+          ::testing::MatchesRegex(".*\\[WARN\\].*\n.*\\[WARN\\].*\n.*\\[WARN\\]"
+                                  ".*\n.*\\[WARN\\].*\n"),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
+              "contains an invalid value for "
+              "use_window. Using default."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+              "not contain a setting for "
+              "use_window. Using default."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+              "not contain a setting for "
+              "dynamic_placement. Using default."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
+              "unknown key: unknown_key. Ignoring.")));
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row

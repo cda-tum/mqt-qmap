@@ -38,47 +38,51 @@ constexpr std::string_view settings = R"({
   },
   "code_generator" : {
     "parking_offset" : 1
+  },
+  "a_star_placer" : {
+    "use_window" : true,
+    "window_height" : 6,
+    "window_width" : 4
   }
 })";
-class TestCompiler : public ::testing::TestWithParam<std::string> {
-private:
-  nlohmann::json settings_;
-  Architecture architecture_;
-
-protected:
-  qc::QuantumComputation circ_;
-  ZACompiler compiler_;
-  TestCompiler()
-      : settings_(nlohmann::json::parse(settings)),
-        architecture_(settings_["architecture"]),
-        compiler_(architecture_, settings_) {}
-  void SetUp() override {
-    const auto& path = GetParam();
-    circ_ = qasm3::Importer::importf(path);
-    // qc::CircuitOptimizer::flattenOperations(circ_);
-  }
-};
-TEST_P(TestCompiler, EndToEnd) {
-  const auto& code = compiler_.compile(circ_);
-  EXPECT_TRUE(code.validate().first);
-  double timeSum = 0;
-  const auto& stats = compiler_.getStatistics().asJson();
-  for (const auto& [key, value] : stats.items()) {
-    if (key != "total_time") {
-      timeSum += value.get<double>();
-    }
-  }
-  EXPECT_GE(stats["total_time"], timeSum);
-}
-INSTANTIATE_TEST_SUITE_P(TestCompiler, // Custom instantiation name
-                         TestCompiler, // Test suite name
-                         // Parameters to test with
-                         ::testing::Values(TEST_CIRCUITS),
-                         [](const ::testing::TestParamInfo<std::string>& info) {
-                           const auto& path = info.param;
-                           const auto& filename =
-                               path.substr(path.find_last_of("/") + 1);
-                           return filename.substr(0,
-                                                  filename.find_last_of("."));
-                         });
+#define COMPILER_TEST(compiler_type)                                           \
+  class compiler_type##Test : public ::testing::TestWithParam<std::string> {   \
+    nlohmann::json settings_;                                                  \
+    Architecture architecture_;                                                \
+                                                                               \
+  protected:                                                                   \
+    qc::QuantumComputation circ_;                                              \
+    compiler_type compiler_;                                                   \
+    compiler_type##Test()                                                      \
+        : settings_(nlohmann::json::parse(settings)),                          \
+          architecture_(settings_["architecture"]),                            \
+          compiler_(architecture_, settings_) {}                               \
+    void SetUp() override { circ_ = qasm3::Importer::importf(GetParam()); }    \
+  };                                                                           \
+  /*=========================== END TO END TESTS ===========================*/ \
+  TEST_P(compiler_type##Test, EndToEnd) {                                      \
+    const auto& code = this->compiler_.compile(this->circ_);                   \
+    EXPECT_TRUE(code.validate().first);                                        \
+    double timeSum = 0;                                                        \
+    const auto& stats = this->compiler_.getStatistics().asJson();              \
+    for (const auto& [key, value] : stats.items()) {                           \
+      if (key != "total_time") {                                               \
+        timeSum += value.get<double>();                                        \
+      }                                                                        \
+    }                                                                          \
+    EXPECT_GE(stats["total_time"], timeSum);                                   \
+  }                                                                            \
+  /*========================================================================*/ \
+  INSTANTIATE_TEST_SUITE_P(                                                    \
+      Allcompiler_type##Test,           /* Custom instantiation name */        \
+      compiler_type##Test,              /* Test suite name */                  \
+      ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
+      [](const ::testing::TestParamInfo<std::string>& info) {                  \
+        const auto& path = info.param;                                         \
+        const auto& filename = path.substr(path.find_last_of("/") + 1);        \
+        return filename.substr(0, filename.find_last_of("."));                 \
+      })
+/*============================== INSTANTIATIONS ==============================*/
+COMPILER_TEST(ZACompiler);
+COMPILER_TEST(AZACompiler);
 } // namespace na

@@ -54,10 +54,11 @@ private:
 public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
-    std::cout << "[INFO] AZAC: An advanced compiler for zoned neutral atom "
+    std::cout << "\033[1;32m[INFO]\033[0m AZAC: An advanced compiler for zoned "
+                 "neutral atom "
                  "architecture\n";
-    std::cout << "[INFO]           Number of qubits: " << qComp.getNqubits()
-              << "\n";
+    std::cout << "\033[1;32m[INFO]\033[0m           Number of qubits: "
+              << qComp.getNqubits() << "\n";
     const auto nTwoQubitGates =
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
@@ -68,23 +69,24 @@ public:
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 1;
                       });
-    std::cout << "[INFO]           Number of two-qubit gates: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Number of two-qubit gates: "
               << nTwoQubitGates << "\n";
-    std::cout << "[INFO]           Number of single-qubit gates: "
-              << nOneQubitGates << "\n";
+    std::cout
+        << "\033[1;32m[INFO]\033[0m           Number of single-qubit gates: "
+        << nOneQubitGates << "\n";
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [oneQubitGateLayers, twoQubitGateLayers] = self.schedule(qComp);
     statistics_.schedulingTime =
         std::chrono::system_clock::now() - schedulingStart;
-    std::cout << "[INFO]           Time for scheduling: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Time for scheduling: "
               << statistics_.schedulingTime.count() << "µs\n";
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = self.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
         std::chrono::system_clock::now() - reuseAnalysisStart;
-    std::cout << "[INFO]           Time for reuse analysis: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Time for reuse analysis: "
               << statistics_.reuseAnalysisTime.count() << "µs\n";
 
     const auto& placementStart = std::chrono::system_clock::now();
@@ -92,13 +94,13 @@ public:
         qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.placementTime =
         std::chrono::system_clock::now() - placementStart;
-    std::cout << "[INFO]           Time for placement: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Time for placement: "
               << statistics_.placementTime.count() << "µs\n";
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = self.route(placement);
     statistics_.routingTime = std::chrono::system_clock::now() - routingStart;
-    std::cout << "[INFO]           Time for routing: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Time for routing: "
               << statistics_.routingTime.count() << "µs\n";
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
@@ -106,11 +108,11 @@ public:
     assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::system_clock::now() - codeGenerationStart;
-    std::cout << "[INFO]           Time for code generation: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Time for code generation: "
               << statistics_.codeGenerationTime.count() << "µs\n";
 
     statistics_.totalTime = std::chrono::system_clock::now() - schedulingStart;
-    std::cout << "[INFO]           Total time: "
+    std::cout << "\033[1;32m[INFO]\033[0m           Total time: "
               << statistics_.totalTime.count() << "µs\n";
     return code;
   }
@@ -131,7 +133,7 @@ class AZACompiler final
     : public Compiler<AZACompiler, ASAPScheduler, VMReuseAnalyzer, AStarPlacer,
                       ISRouter, CodeGenerator> {
 public:
-  AZACompiler(const Architecture& architecture, nlohmann::json&& config)
-      : Compiler(architecture, std::move(config)) {}
+  AZACompiler(const Architecture& architecture, const nlohmann::json& config)
+      : Compiler(architecture, config) {}
 };
 } // namespace na

@@ -732,7 +732,8 @@ VMPlacer::VMPlacer(const Architecture& architecture,
           useWindowSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
+                 "an invalid "
                  "value for use_window. Using default.\n";
           std::cout << oss.str();
         }
@@ -742,7 +743,8 @@ VMPlacer::VMPlacer(const Architecture& architecture,
           windowSizeSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
+                 "an invalid "
                  "value for window_size. Using default.\n";
           std::cout << oss.str();
         }
@@ -752,33 +754,39 @@ VMPlacer::VMPlacer(const Architecture& architecture,
           dynamicPlacementSet = true;
         } else {
           std::ostringstream oss;
-          oss << "[WARN] Configuration for VMPlacer contains an invalid "
+          oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains "
+                 "an invalid "
                  "value for dynamic_placement. Using default.\n";
           std::cout << oss.str();
         }
       } else {
         std::ostringstream oss;
-        oss << "[WARN] Configuration for VMPlacer contains an unknown key: "
+        oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
+               "unknown key: "
             << key << ". Ignoring.\n";
         std::cout << oss.str();
       }
     }
     if (!useWindowSet) {
-      std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+                   "not contain a "
                    "setting for use_window. Using default.\n";
     }
     if (useWindow_) {
       if (!windowSizeSet) {
-        std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+        std::cout << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+                     "not contain a "
                      "setting for window_size. Using default.\n";
       }
     }
     if (!dynamicPlacementSet) {
-      std::cout << "[WARN] Configuration for VMPlacer does not contain a "
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+                   "not contain a "
                    "setting for dynamic_placement. Using default.\n";
     }
   } else {
-    std::cout << "[WARN] Configuration does not contain settings for "
+    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
+                 "settings for "
                  "VMPlacer or is malformed. Using default settings.\n";
   }
 }

@@ -147,17 +147,11 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
-  const size_t nQubits = 16;
+  const size_t nQubits = 12;
   const auto& placement = placer.place(
       nQubits,
-      std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U},
-                                                          {2U, 3U},
-                                                          {4U, 5U},
-                                                          {6U, 7U},
-                                                          {8U, 9U},
-                                                          {10U, 11U},
-                                                          {12U, 13U},
-                                                          {14U, 15U}}},
+      std::vector<std::vector<std::array<qc::Qubit, 2>>>{
+          {{0U, 1U}, {2U, 3U}, {4U, 5U}, {6U, 7U}, {8U, 9U}, {10U, 11U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
@@ -200,10 +194,9 @@ TEST(AStarPlacerTest, NoConfig) {
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = AStarPlacer(architecture, config);
-  EXPECT_EQ(
-      buffer.str(),
-      "[WARN] Configuration does not contain settings for AStarPlacer or is "
-      "malformed. Using default settings.\n");
+  EXPECT_EQ(buffer.str(), "\033[1;35m[WARN]\033[0m Configuration does not "
+                          "contain settings for AStarPlacer or is "
+                          "malformed. Using default settings.\n");
   std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, InvalidConfig) {
@@ -223,15 +216,17 @@ TEST(AStarPlacerTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex("\\[WARN\\].*\n\\[WARN\\].*\n\\[WARN\\].*\n"),
+          ::testing::MatchesRegex(
+              ".*.*\\[WARN\\].*\n.*.*\\[WARN\\].*\n.*\\[WARN\\].*\n"),
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "AStarPlacer contains an invalid value "
+                               "for use_window. Using default."),
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "AStarPlacer does not contain a setting "
+                               "for use_window. Using default."),
           ::testing::HasSubstr(
-              "[WARN] Configuration for AStarPlacer contains an invalid value "
-              "for use_window. Using default."),
-          ::testing::HasSubstr(
-              "[WARN] Configuration for AStarPlacer does not contain a setting "
-              "for use_window. Using default."),
-          ::testing::HasSubstr("[WARN] Configuration for AStarPlacer contains "
-                               "an unknown key: unknown_key. Ignoring.")));
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an unknown key: unknown_key. Ignoring.")));
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

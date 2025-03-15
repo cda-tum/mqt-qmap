@@ -198,7 +198,9 @@ Architecture::Architecture(nlohmann::json json) {
           "Operation duration must be an dict in architecture spec");
     }
   } else {
-    std::cout << "[WARN] Operation duration is missed in architecture spec\n";
+    // print warn in green
+    std::cout << "\033[1;35m[WARN]\033[0m Operation duration is missed in "
+                 "architecture spec. Using default values.\n";
   }
   if (json.contains("arch_range")) {
     if (json["arch_range"].is_array() && json["arch_range"].size() == 2 &&

@@ -68,8 +68,9 @@ TEST_F(ASAPSchedulerScheduleTest, TwoQubitGate) {
   const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
   EXPECT_THAT(oneQubitGateLayers, ::testing::ElementsAre(::testing::IsEmpty(),
                                                          ::testing::IsEmpty()));
-  EXPECT_THAT(twoQubitGateLayers, ::testing::ElementsAre(::testing::ElementsAre(
-                                      ::testing::Pair(0U, 1U))));
+  EXPECT_THAT(twoQubitGateLayers,
+              ::testing::UnorderedElementsAre(::testing::ElementsAre(
+                  ::testing::UnorderedElementsAre(0U, 1U))));
 }
 TEST_F(ASAPSchedulerScheduleTest, OneQubitSandwich) {
   // q_0: ──────────■──────────
@@ -87,8 +88,9 @@ TEST_F(ASAPSchedulerScheduleTest, OneQubitSandwich) {
                       static_cast<qc::StandardOperation&>(*qc.at(0)))),
                   ::testing::ElementsAre(::testing::RefEq(
                       static_cast<qc::StandardOperation&>(*qc.at(2))))));
-  EXPECT_THAT(twoQubitGateLayers, ::testing::ElementsAre(::testing::ElementsAre(
-                                      ::testing::Pair(0U, 1U))));
+  EXPECT_THAT(twoQubitGateLayers,
+              ::testing::ElementsAre(::testing::UnorderedElementsAre(
+                  ::testing::UnorderedElementsAre(0U, 1U))));
 }
 TEST_F(ASAPSchedulerScheduleTest, TwoQubitSequence) {
   // q_0: ─■───────
@@ -107,9 +109,12 @@ TEST_F(ASAPSchedulerScheduleTest, TwoQubitSequence) {
   EXPECT_THAT(oneQubitGateLayers, ::testing::Each(::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
-      ::testing::ElementsAre(::testing::ElementsAre(::testing::Pair(0U, 1U)),
-                             ::testing::ElementsAre(::testing::Pair(1U, 2U)),
-                             ::testing::ElementsAre(::testing::Pair(2U, 3U))));
+      ::testing::ElementsAre(::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(0U, 1U)),
+                             ::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(1U, 2U)),
+                             ::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(2U, 3U))));
 }
 TEST_F(ASAPSchedulerScheduleTest, Mixed) {
   //            INPUT ORDER                         SCHEDULED ORDER
@@ -136,9 +141,11 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
                   ::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
-      ::testing::ElementsAre(::testing::ElementsAre(::testing::Pair(0U, 1U),
-                                                    ::testing::Pair(2U, 3U)),
-                             ::testing::ElementsAre(::testing::Pair(1U, 2U))));
+      ::testing::ElementsAre(::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(0U, 1U),
+                                 ::testing::UnorderedElementsAre(2U, 3U)),
+                             ::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(1U, 2U))));
 }
 TEST(ASAPSchedulerTest, Config) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
@@ -151,7 +158,9 @@ TEST(ASAPSchedulerTest, Config) {
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = ASAPScheduler(architecture, config);
   std::cout.rdbuf(oldCout);
-  EXPECT_EQ(buffer.str(), "[WARN] Configuration for ASAPScheduler contains an "
-                          "unknown key: unknown_key. Ignoring.\n");
+  EXPECT_EQ(
+      buffer.str(),
+      "\033[1;35m[WARN]\033[0m Configuration for ASAPScheduler contains an "
+      "unknown key: unknown_key. Ignoring.\n");
 }
 } // namespace na
