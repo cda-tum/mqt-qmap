@@ -24,7 +24,7 @@ class CodeGenerator {
   /// The offset for parking spots
   size_t parkingOffset_ = 1;
 
-protected:
+public:
   /**
    * Create a new CodeGenerator.
    * @details The code generation is based on the given architecture and the
@@ -45,7 +45,7 @@ protected:
    * that can be moved together to establish the next placement.
    * @return the neutral atom computation
    */
-  [[nodiscard]] auto generateCode(
+  [[nodiscard]] auto generate(
       const std::vector<std::vector<
           std::reference_wrapper<const qc::Operation>>>& oneQubitGateLayers,
       const std::vector<std::vector<

@@ -32,23 +32,23 @@ constexpr std::string_view architectureJson = R"({
   "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
-class ISRouterPlaceTest : public ::testing::Test {
+class ISRouterRouteTest : public ::testing::Test {
 protected:
   Architecture architecture;
   nlohmann::json config;
   ISRouter router;
-  ISRouterPlaceTest()
+  ISRouterRouteTest()
       : architecture(nlohmann::json::parse(architectureJson)),
         router(architecture, config) {}
 };
-TEST_F(ISRouterPlaceTest, Empty) {
+TEST_F(ISRouterRouteTest, Empty) {
   EXPECT_THAT(
       router.route(
           std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                              size_t, size_t>>>{}),
       ::testing::IsEmpty());
 }
-TEST_F(ISRouterPlaceTest, Initial) {
+TEST_F(ISRouterRouteTest, Initial) {
   const auto& slm = *architecture.storageZones.front();
   EXPECT_THAT(
       router.route(
@@ -57,7 +57,7 @@ TEST_F(ISRouterPlaceTest, Initial) {
               {{slm, 0, 0}}}),
       ::testing::IsEmpty());
 }
-TEST_F(ISRouterPlaceTest, OneLayer) {
+TEST_F(ISRouterRouteTest, OneLayer) {
   // STORAGE     ...         │ ...         │ ...
   //         18  o o o o ... │ o o o o ... │ o o o o ...
   //         19  0 1 o o ... │ o o o o ... │ 0 1 o o ...
@@ -83,7 +83,7 @@ TEST_F(ISRouterPlaceTest, OneLayer) {
                              ::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(0U, 1U))));
 }
-TEST_F(ISRouterPlaceTest, Cross) {
+TEST_F(ISRouterRouteTest, Cross) {
   // STORAGE     ...         │ ...
   //         18  o o o o ... │ o o o o ...
   //         19  0 1 o o ... │ o o o o ...
@@ -107,7 +107,7 @@ TEST_F(ISRouterPlaceTest, Cross) {
           ::testing::UnorderedElementsAre(0U),
           ::testing::UnorderedElementsAre(1U))));
 }
-TEST_F(ISRouterPlaceTest, Overtake) {
+TEST_F(ISRouterRouteTest, Overtake) {
   // STORAGE     ...         │ ...
   //         18  0 1 o o ... │ o o o o ...
   //         19  2 3 o o ... │ o o o o ...
@@ -137,7 +137,7 @@ TEST_F(ISRouterPlaceTest, Overtake) {
           ::testing::UnorderedElementsAre(0U, 1U),
           ::testing::UnorderedElementsAre(2U, 3U))));
 }
-TEST_F(ISRouterPlaceTest, Array) {
+TEST_F(ISRouterRouteTest, Array) {
   // STORAGE     ...             │ ...
   //         18  0 1 2 3 o o ... │ o o o o o o ...
   //         19  4 5 6 7 o o ... │ o o o o o o ...

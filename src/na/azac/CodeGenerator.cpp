@@ -167,7 +167,7 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
                  "CodeGenerator or is malformed. Using default settings.\n";
   }
 }
-auto CodeGenerator::generateCode(
+auto CodeGenerator::generate(
     const std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>&
         oneQubitGateLayers,
     const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
@@ -185,18 +185,18 @@ auto CodeGenerator::generateCode(
     const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
     code.emplaceInitialLocation(atoms.back(), x, y);
   }
+  // early return if no one-qubit gates are given
+  if (oneQubitGateLayers.empty()) {
+    return code;
+  }
   assert(2 * oneQubitGateLayers.size() == placement.size() + 1);
   assert(placement.size() == routing.size() + 1);
-  for (size_t layer = 0; true; ++layer) {
-    const auto& oneQubitGates = oneQubitGateLayers[layer];
-    const auto& atomLocations = placement[2 * layer];
-    appendOneQubitGates(oneQubitGates, atoms, code);
-    if (layer == oneQubitGateLayers.size() - 1) {
-      break;
-    }
-    appendTwoQubitGates(atomLocations, routing[2 * layer],
+  appendOneQubitGates(oneQubitGateLayers.front(), atoms, code);
+  for (size_t layer = 0; layer + 1 < oneQubitGateLayers.size(); ++layer) {
+    appendTwoQubitGates(placement[2 * layer], routing[2 * layer],
                         placement[(2 * layer) + 1], routing[(2 * layer) + 1],
                         placement[2 * (layer + 1)], atoms, rydbergZone, code);
+    appendOneQubitGates(oneQubitGateLayers[layer + 1], atoms, code);
   }
   return code;
 }
