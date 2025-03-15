@@ -1,14 +1,17 @@
 #include "na/azac/CodeGenerator.hpp"
 
 #include "Definitions.hpp"
+#include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
+#include "ir/operations/StandardOperation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 #include "na/entities/Atom.hpp"
 #include "na/entities/Location.hpp"
 #include "na/entities/Zone.hpp"
 #include "na/operations/GlobalCZOp.hpp"
+#include "na/operations/GlobalRYOp.hpp"
 #include "na/operations/LoadOp.hpp"
 #include "na/operations/LocalRZOp.hpp"
 #include "na/operations/MoveOp.hpp"
@@ -29,15 +32,46 @@
 
 namespace na {
 auto CodeGenerator::appendOneQubitGates(
+    const size_t nQubits,
     const std::vector<std::reference_wrapper<const qc::Operation>>&
         oneQubitGates,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
-    NAComputation& code) const -> void {
+    const Zone& globalZone, NAComputation& code) const -> void {
   for (const auto& op : oneQubitGates) {
-    assert(op.get().getNqubits() == 1);
-    const qc::Qubit qubit = op.get().getTargets().front();
-    assert(op.get().getType() == qc::Z);
-    code.emplaceBack<LocalRZOp>(atoms[qubit], op.get().getParameter().front());
+    bool oneQubitGate = false;
+    if (op.get().isGlobal(nQubits)) {
+      const auto opType =
+          op.get().isCompoundOperation()
+              ? dynamic_cast<const qc::CompoundOperation&>(op.get())
+                    .front()
+                    ->getType()
+              : op.get().getType();
+      if (opType == qc::RY) {
+        code.emplaceBack<GlobalRYOp>(globalZone,
+                                     op.get().getParameter().front());
+      } else if (opType == qc::Y) {
+        code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+      } else if (nQubits == 1) {
+        oneQubitGate =
+            true; // special case for one qubit, fall back to local gate
+      } else {
+        assert(false);
+      }
+    } else {
+      oneQubitGate = true;
+    }
+    if (oneQubitGate) {
+      assert(op.get().getNqubits() == 1);
+      const qc::Qubit qubit = op.get().getTargets().front();
+      if (op.get().getType() == qc::RZ) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit],
+                                    op.get().getParameter().front());
+      } else if (op.get().getType() == qc::Z) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI);
+      } else {
+        assert(false);
+      }
+    }
   }
 }
 auto CodeGenerator::appendTwoQubitGates(
@@ -176,6 +210,7 @@ auto CodeGenerator::generate(
     -> NAComputation {
   NAComputation code;
   const auto& rydbergZone = code.emplaceBackZone("zone_cz0");
+  const auto& globalZone = code.emplaceBackZone("global");
   const auto& initialPlacement = placement.front();
   std::vector<std::reference_wrapper<const Atom>> atoms;
   atoms.reserve(initialPlacement.size());
@@ -191,12 +226,14 @@ auto CodeGenerator::generate(
   }
   assert(2 * oneQubitGateLayers.size() == placement.size() + 1);
   assert(placement.size() == routing.size() + 1);
-  appendOneQubitGates(oneQubitGateLayers.front(), atoms, code);
+  appendOneQubitGates(atoms.size(), oneQubitGateLayers.front(), atoms,
+                      globalZone, code);
   for (size_t layer = 0; layer + 1 < oneQubitGateLayers.size(); ++layer) {
     appendTwoQubitGates(placement[2 * layer], routing[2 * layer],
                         placement[(2 * layer) + 1], routing[(2 * layer) + 1],
                         placement[2 * (layer + 1)], atoms, rydbergZone, code);
-    appendOneQubitGates(oneQubitGateLayers[layer + 1], atoms, code);
+    appendOneQubitGates(atoms.size(), oneQubitGateLayers[layer + 1], atoms,
+                        globalZone, code);
   }
   return code;
 }

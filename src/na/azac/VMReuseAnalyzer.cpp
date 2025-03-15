@@ -32,7 +32,7 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
   }
 }
 auto VMReuseAnalyzer::analyzeReuse(
-    const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
         twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
   if (twoQubitGateLayers.size() <= 1) {
     // early exit if there are no qubits to reuse between layers
@@ -43,9 +43,9 @@ auto VMReuseAnalyzer::analyzeReuse(
   const auto& firstGateLayer = twoQubitGateLayers.front();
   auto& usedQubitsInFirstLayer = usedQubitsInLayers.emplace_back();
   for (size_t gateIdx = 0; gateIdx < firstGateLayer.size(); ++gateIdx) {
-    const auto& gate = firstGateLayer[gateIdx];
-    usedQubitsInFirstLayer[gate.first] = gateIdx;
-    usedQubitsInFirstLayer[gate.second] = gateIdx;
+    for (const auto qubit : firstGateLayer[gateIdx]) {
+      usedQubitsInFirstLayer[qubit] = gateIdx;
+    }
   }
   std::vector<std::unordered_set<qc::Qubit>> reuseQubits;
   reuseQubits.reserve(twoQubitGateLayers.size() - 1);
@@ -63,16 +63,16 @@ auto VMReuseAnalyzer::analyzeReuse(
     for (size_t gateIdx = 0; gateIdx < twoQubitGatesInCurrentLayer.size();
          ++gateIdx) {
       const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
-      const auto& itFirst = usedQubitsInPreviousLayer.find(gate.first);
-      const auto& itSecond = usedQubitsInPreviousLayer.find(gate.second);
+      const auto& itFirst = usedQubitsInPreviousLayer.find(gate.front());
+      const auto& itSecond = usedQubitsInPreviousLayer.find(gate.back());
       if (itFirst != usedQubitsInPreviousLayer.end()) {
         // If the both qubits of the gate are used in the previous layer also
         // by the identical gate, then both qubits can stay at their location
         // and be reused.
         if (itSecond != usedQubitsInPreviousLayer.end() &&
             itFirst->second == itSecond->second) {
-          reuseQubitsInCurrentLayer.emplace(gate.first);
-          reuseQubitsInCurrentLayer.emplace(gate.second);
+          reuseQubitsInCurrentLayer.emplace(gate.front());
+          reuseQubitsInCurrentLayer.emplace(gate.back());
         } else {
           matrix[gateIdx][itFirst->second] = true;
         }
@@ -80,8 +80,8 @@ auto VMReuseAnalyzer::analyzeReuse(
       if (itSecond != usedQubitsInPreviousLayer.end()) {
         matrix[gateIdx][itSecond->second] = true;
       }
-      usedQubitsInCurrentLayer[gate.first] = gateIdx;
-      usedQubitsInCurrentLayer[gate.second] = gateIdx;
+      usedQubitsInCurrentLayer[gate.front()] = gateIdx;
+      usedQubitsInCurrentLayer[gate.back()] = gateIdx;
     }
     std::vector sparseMatrix(matrix.size(), std::vector<std::size_t>{});
     for (std::size_t r = 0; r < matrix.size(); ++r) {
@@ -95,11 +95,11 @@ auto VMReuseAnalyzer::analyzeReuse(
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
       if (const auto& reuseGate = matching[gateIdx]; reuseGate) {
         const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
-        if (usedQubitsInPreviousLayer.at(gate.first) == reuseGate) {
-          reuseQubitsInCurrentLayer.emplace(gate.first);
+        if (usedQubitsInPreviousLayer.at(gate.front()) == reuseGate) {
+          reuseQubitsInCurrentLayer.emplace(gate.front());
         } else {
-          assert(usedQubitsInPreviousLayer.at(gate.second) == reuseGate);
-          reuseQubitsInCurrentLayer.emplace(gate.second);
+          assert(usedQubitsInPreviousLayer.at(gate.back()) == reuseGate);
+          reuseQubitsInCurrentLayer.emplace(gate.back());
         }
       }
     }

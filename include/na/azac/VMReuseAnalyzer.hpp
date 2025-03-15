@@ -30,7 +30,7 @@ public:
                   const nlohmann::json& config);
   /// Analyze the reuse of qubits in the given two-qubit gate layers.
   [[nodiscard]] static auto
-  analyzeReuse(const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+  analyzeReuse(const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
                    twoQubitGateLayers)
       -> std::vector<std::unordered_set<qc::Qubit>>;
 

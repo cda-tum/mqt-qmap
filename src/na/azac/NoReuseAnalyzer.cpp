@@ -24,7 +24,7 @@ NoReuseAnalyzer::NoReuseAnalyzer(const Architecture&,
   }
 }
 auto NoReuseAnalyzer::analyzeReuse(
-    const std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>&
+    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
         twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
   return std::vector<std::unordered_set<qc::Qubit>>(twoQubitGateLayers.size() -
                                                     1);

@@ -57,10 +57,11 @@ public:
 private:
   /// Append all one-qubit gates of a layer to the code
   auto appendOneQubitGates(
+      size_t nQubits,
       const std::vector<std::reference_wrapper<const qc::Operation>>&
           oneQubitGates,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
-      NAComputation& code) const -> void;
+      const Zone& globalZone, NAComputation& code) const -> void;
 
   /// Append all necessary operations to perform the next set of two-qubit gates
   auto appendTwoQubitGates(

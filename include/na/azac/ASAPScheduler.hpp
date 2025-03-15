@@ -5,6 +5,7 @@
 #include "ir/operations/Operation.hpp"
 #include "na/azac/Architecture.hpp"
 
+#include <array>
 #include <functional>
 #include <nlohmann/json_fwd.hpp>
 #include <utility>
@@ -43,6 +44,6 @@ public:
   [[nodiscard]] auto schedule(const qc::QuantumComputation& qc) const
       -> std::pair<
           std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
-          std::vector<std::vector<std::pair<qc::Qubit, qc::Qubit>>>>;
+          std::vector<std::vector<std::array<qc::Qubit, 2>>>>;
 };
 } // namespace na

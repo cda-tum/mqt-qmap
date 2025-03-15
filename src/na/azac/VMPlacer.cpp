@@ -267,8 +267,8 @@ auto VMPlacer::placeGatesInEntanglementZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousQubitPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& twoQubitGates,
-    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& nextTwoQubitGates,
+    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates,
     const bool reuse) const
     -> std::vector<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
@@ -276,12 +276,12 @@ auto VMPlacer::placeGatesInEntanglementZone(
   if (!nextTwoQubitGates.empty() and reuse) {
     for (const auto q : reuseQubits) {
       for (const auto& gate : nextTwoQubitGates) {
-        if (q == gate.first) {
-          dictReuseQubitNeighbor.emplace(q, gate.second);
+        if (q == gate.front()) {
+          dictReuseQubitNeighbor.emplace(q, gate.back());
           break;
         }
-        if (q == gate.second) {
-          dictReuseQubitNeighbor.emplace(q, gate.first);
+        if (q == gate.back()) {
+          dictReuseQubitNeighbor.emplace(q, gate.front());
           break;
         }
       }
@@ -433,8 +433,8 @@ auto VMPlacer::placeGatesInEntanglementZone(
   }
   auto newPlacement = previousQubitPlacement;
   for (size_t idxGate = 0; idxGate < matching.size(); ++idxGate) {
-    const auto q0 = twoQubitGates[idxGate].first;
-    const auto q1 = twoQubitGates[idxGate].second;
+    const auto q0 = twoQubitGates[idxGate].front();
+    const auto q1 = twoQubitGates[idxGate].back();
     const auto& [zone, r, c] = listRydberg[matching[idxGate]];
     if (reuse && (reuseQubits.find(q0) != reuseQubits.end())) {
       // q0 remains at its current location, place q1 at the other site of
@@ -476,7 +476,7 @@ auto VMPlacer::placeQubitsInStorageZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousGatePlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::pair<qc::Qubit, qc::Qubit>>& nextTwoQubitGates,
+    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates,
     const bool reuse) const
     -> std::vector<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
@@ -538,14 +538,15 @@ auto VMPlacer::placeQubitsInStorageZone(
   }
   if (!nextTwoQubitGates.empty()) {
     for (const auto& gate : nextTwoQubitGates) {
-      if (dictQubitInteraction.find(gate.first) != dictQubitInteraction.end() &&
-          ((!reuse) || (reuseQubits.find(gate.second) == reuseQubits.end()))) {
-        dictQubitInteraction[gate.first].emplace_back(gate.second);
-      }
-      if (dictQubitInteraction.find(gate.second) !=
+      if (dictQubitInteraction.find(gate.front()) !=
               dictQubitInteraction.end() &&
-          ((!reuse) || (reuseQubits.find(gate.first) == reuseQubits.end()))) {
-        dictQubitInteraction[gate.second].emplace_back(gate.first);
+          ((!reuse) || (reuseQubits.find(gate.back()) == reuseQubits.end()))) {
+        dictQubitInteraction[gate.front()].emplace_back(gate.back());
+      }
+      if (dictQubitInteraction.find(gate.back()) !=
+              dictQubitInteraction.end() &&
+          ((!reuse) || (reuseQubits.find(gate.front()) == reuseQubits.end()))) {
+        dictQubitInteraction[gate.back()].emplace_back(gate.front());
       }
     }
   }
@@ -780,6 +781,98 @@ VMPlacer::VMPlacer(const Architecture& architecture,
     std::cout << "[WARN] Configuration does not contain settings for "
                  "VMPlacer or is malformed. Using default settings.\n";
   }
+}
+auto VMPlacer::place(
+    const size_t nQubits,
+    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
+        twoQubitGateLayers,
+    const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
+    -> std::vector<std::vector<
+        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>> {
+  std::vector<std::vector<
+      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>
+      placement;
+  placement.reserve((2 * twoQubitGateLayers.size()) + 1);
+  placement.emplace_back(makeInitialPlacement(nQubits));
+  // early return if no two-qubit gates are present
+  if (twoQubitGateLayers.empty()) {
+    return placement;
+  }
+  placement.emplace_back(placeGatesInEntanglementZone(
+      placement.front(), std::unordered_set<qc::Qubit>{},
+      twoQubitGateLayers.front(),
+      twoQubitGateLayers.size() > 1 ? twoQubitGateLayers[1]
+                                    : std::vector<std::array<qc::Qubit, 2>>{},
+      false));
+  for (size_t layer = 0; layer < twoQubitGateLayers.size(); ++layer) {
+    // first compute the next qubit and gate placement without reusing atoms
+    std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+        qubitPlacementWithoutReuse;
+    if (dynamicPlacement_) {
+      qubitPlacementWithoutReuse = placeQubitsInStorageZone(
+          placement.front(), placement.back(), reuseQubits[layer],
+          twoQubitGateLayers.size() > layer + 1
+              ? twoQubitGateLayers[layer + 1]
+              : std::vector<std::array<qc::Qubit, 2>>{},
+          false);
+    } else {
+      // keep the initial mapping for static placement
+      qubitPlacementWithoutReuse = placement.front();
+    }
+    if (layer + 1 < twoQubitGateLayers.size()) {
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& gatePlacementWithoutReuse =
+          placeGatesInEntanglementZone(
+              qubitPlacementWithoutReuse, reuseQubits[layer],
+              twoQubitGateLayers[layer + 1],
+              twoQubitGateLayers.size() > layer + 2
+                  ? twoQubitGateLayers[layer + 2]
+                  : std::vector<std::array<qc::Qubit, 2>>{},
+              false);
+      // then compute the next qubit and gate placement with reusing atoms
+      if (!reuseQubits[layer].empty()) {
+        std::vector<
+            std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
+            qubitPlacementWithReuse;
+        if (dynamicPlacement_) {
+          qubitPlacementWithReuse = placeQubitsInStorageZone(
+              placement.front(), placement.back(), reuseQubits[layer],
+              twoQubitGateLayers.size() > layer + 1
+                  ? twoQubitGateLayers[layer + 1]
+                  : std::vector<std::array<qc::Qubit, 2>>{},
+              true);
+        } else {
+          // keep the initial mapping for static placement
+          qubitPlacementWithReuse = placement.front();
+          for (const auto q : reuseQubits[layer]) {
+            qubitPlacementWithReuse[q] = placement.back()[q];
+          }
+        }
+        const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                     size_t>>& gatePlacementWithReuse =
+            placeGatesInEntanglementZone(
+                qubitPlacementWithReuse, reuseQubits[layer],
+                twoQubitGateLayers[layer + 1],
+                twoQubitGateLayers.size() > layer + 2
+                    ? twoQubitGateLayers[layer + 2]
+                    : std::vector<std::array<qc::Qubit, 2>>{},
+                true);
+        // keep the mapping with shorter distance
+        const auto& [gatePlacement, qubitPlacement] = filterMapping(
+            placement.back(),
+            std::pair{qubitPlacementWithoutReuse, gatePlacementWithoutReuse},
+            std::pair{qubitPlacementWithReuse, gatePlacementWithReuse});
+        placement.emplace_back(gatePlacement);
+        placement.emplace_back(qubitPlacement);
+      } else {
+        placement.emplace_back(qubitPlacementWithoutReuse);
+        placement.emplace_back(gatePlacementWithoutReuse);
+      }
+    } else {
+      placement.emplace_back(qubitPlacementWithoutReuse);
+    }
+  }
+  return placement;
 }
 auto VMPlacer::makeInitialPlacement(const size_t nQubits) const -> std::vector<
     std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {

@@ -13,27 +13,43 @@
 
 #include <cassert>
 #include <chrono>
+#include <functional>
 #include <iostream>
+#include <memory>
 #include <nlohmann/json_fwd.hpp>
-#include <utility>
 
 namespace na {
 #define self (*static_cast<ConcreteType*>(this))
 template <class ConcreteType, class... Mixins>
-class Compiler : public Mixins... {
+class Compiler : protected Mixins... {
   friend ConcreteType;
-  Architecture architecture_;
-  nlohmann::json config_;
-  std::chrono::microseconds schedulingTime_;
-  std::chrono::microseconds reuseAnalysisTime_;
-  std::chrono::microseconds placementTime_;
-  std::chrono::microseconds routingTime_;
-  std::chrono::microseconds codeGenerationTime_;
-  std::chrono::microseconds totalTime_;
 
-  Compiler(Architecture architecture, nlohmann::json config)
-      : Mixins(architecture_, config_)...,
-        architecture_(std::move(architecture)), config_(std::move(config)) {}
+public:
+  struct Statistics {
+    std::chrono::microseconds schedulingTime;
+    std::chrono::microseconds reuseAnalysisTime;
+    std::chrono::microseconds placementTime;
+    std::chrono::microseconds routingTime;
+    std::chrono::microseconds codeGenerationTime;
+    std::chrono::microseconds totalTime;
+    [[nodiscard]] auto asJson() const -> nlohmann::json {
+      return {{"scheduling_time", schedulingTime.count()},
+              {"reuse_analysis_time", reuseAnalysisTime.count()},
+              {"placement_time", placementTime.count()},
+              {"routing_time", routingTime.count()},
+              {"code_generation_time", codeGenerationTime.count()},
+              {"total_time", totalTime.count()}};
+    }
+  };
+
+private:
+  std::reference_wrapper<const Architecture> architecture_;
+  nlohmann::json config_;
+  Statistics statistics_;
+
+  Compiler(const Architecture& architecture, const nlohmann::json& config)
+      : Mixins(architecture, config)..., architecture_(architecture),
+        config_(config) {}
 
 public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
@@ -42,12 +58,16 @@ public:
                  "architecture\n";
     std::cout << "[INFO]           Number of qubits: " << qComp.getNqubits()
               << "\n";
-    const auto nTwoQubitGates = std::count_if(
-        qComp.cbegin(), qComp.cend(),
-        [](const qc::Operation& op) { return op.getNqubits() == 2; });
-    const auto nOneQubitGates = std::count_if(
-        qComp.cbegin(), qComp.cend(),
-        [](const qc::Operation& op) { return op.getNqubits() == 1; });
+    const auto nTwoQubitGates =
+        std::count_if(qComp.cbegin(), qComp.cend(),
+                      [](const std::unique_ptr<qc::Operation>& op) {
+                        return op->getNqubits() == 2;
+                      });
+    const auto nOneQubitGates =
+        std::count_if(qComp.cbegin(), qComp.cend(),
+                      [](const std::unique_ptr<qc::Operation>& op) {
+                        return op->getNqubits() == 1;
+                      });
     std::cout << "[INFO]           Number of two-qubit gates: "
               << nTwoQubitGates << "\n";
     std::cout << "[INFO]           Number of single-qubit gates: "
@@ -55,42 +75,47 @@ public:
 
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [oneQubitGateLayers, twoQubitGateLayers] = self.schedule(qComp);
-    schedulingTime_ = std::chrono::system_clock::now() - schedulingStart;
+    statistics_.schedulingTime =
+        std::chrono::system_clock::now() - schedulingStart;
     std::cout << "[INFO]           Time for scheduling: "
-              << schedulingTime_.count() << "µs\n";
+              << statistics_.schedulingTime.count() << "µs\n";
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = self.analyzeReuse(twoQubitGateLayers);
-    reuseAnalysisTime_ = std::chrono::system_clock::now() - reuseAnalysisStart;
+    statistics_.reuseAnalysisTime =
+        std::chrono::system_clock::now() - reuseAnalysisStart;
     std::cout << "[INFO]           Time for reuse analysis: "
-              << reuseAnalysisTime_.count() << "µs\n";
+              << statistics_.reuseAnalysisTime.count() << "µs\n";
 
     const auto& placementStart = std::chrono::system_clock::now();
     const auto& placement = static_cast<ConcreteType*>(this)->place(
         qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
-    placementTime_ = std::chrono::system_clock::now() - placementStart;
+    statistics_.placementTime =
+        std::chrono::system_clock::now() - placementStart;
     std::cout << "[INFO]           Time for placement: "
-              << placementTime_.count() << "µs\n";
+              << statistics_.placementTime.count() << "µs\n";
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = self.route(placement);
-    routingTime_ = std::chrono::system_clock::now() - routingStart;
-    std::cout << "[INFO]           Time for routing: " << routingTime_.count()
-              << "µs\n";
+    statistics_.routingTime = std::chrono::system_clock::now() - routingStart;
+    std::cout << "[INFO]           Time for routing: "
+              << statistics_.routingTime.count() << "µs\n";
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
-    const NAComputation& code =
-        self.generateCode(oneQubitGateLayers, placement, routing);
+    NAComputation code = self.generate(oneQubitGateLayers, placement, routing);
     assert(code.validate().first);
-    codeGenerationTime_ =
+    statistics_.codeGenerationTime =
         std::chrono::system_clock::now() - codeGenerationStart;
     std::cout << "[INFO]           Time for code generation: "
-              << codeGenerationTime_.count() << "µs\n";
+              << statistics_.codeGenerationTime.count() << "µs\n";
 
-    totalTime_ = std::chrono::system_clock::now() - routingStart;
-    std::cout << "[INFO]           Total time: " << totalTime_.count()
-              << "µs\n";
+    statistics_.totalTime = std::chrono::system_clock::now() - schedulingStart;
+    std::cout << "[INFO]           Total time: "
+              << statistics_.totalTime.count() << "µs\n";
     return code;
+  }
+  [[nodiscard]] auto getStatistics() const -> const Statistics& {
+    return statistics_;
   }
 };
 
@@ -98,15 +123,15 @@ class ZACompiler final
     : public Compiler<ZACompiler, ASAPScheduler, VMReuseAnalyzer, VMPlacer,
                       ISRouter, CodeGenerator> {
 public:
-  ZACompiler(Architecture&& architecture, nlohmann::json&& config)
-      : Compiler(std::move(architecture), std::move(config)) {}
+  ZACompiler(const Architecture& architecture, const nlohmann::json& config)
+      : Compiler(architecture, config) {}
 };
 
 class AZACompiler final
     : public Compiler<AZACompiler, ASAPScheduler, VMReuseAnalyzer, AStarPlacer,
                       ISRouter, CodeGenerator> {
 public:
-  AZACompiler(Architecture&& architecture, nlohmann::json&& config)
-      : Compiler(std::move(architecture), std::move(config)) {}
+  AZACompiler(const Architecture& architecture, nlohmann::json&& config)
+      : Compiler(architecture, std::move(config)) {}
 };
 } // namespace na
