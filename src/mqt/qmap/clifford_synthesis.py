@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from qiskit import QuantumCircuit
+    from qiskit.circuit import QuantumCircuit
 
     from .compile import CircuitInputType
 

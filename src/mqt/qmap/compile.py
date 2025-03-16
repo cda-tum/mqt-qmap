@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from os import PathLike
 
-    from qiskit import QuantumCircuit
+    from qiskit.circuit import QuantumCircuit
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
