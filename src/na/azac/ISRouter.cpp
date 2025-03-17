@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <nlohmann/json_fwd.hpp>
 #include <set>
 #include <sstream>
 #include <tuple>
