@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -14,6 +15,7 @@
 #include <map>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
+#include <numeric>
 #include <optional>
 #include <queue>
 #include <set>
@@ -738,10 +740,37 @@ template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   }
   return cost;
 }
+auto AStarPlacer::sumStdDeviationForGroups(
+    const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
+    -> float {
+  float sumStdDev = 0.F;
+  for (const auto& groupPair : groups) {
+    for (const auto& group : groupPair) {
+      std::vector<float> diffs;
+      diffs.reserve(groups.size());
+      for (const auto& [key, value] : group) {
+        diffs.emplace_back(static_cast<float>(value) - static_cast<float>(key));
+      }
+      const auto n = static_cast<float>(group.size());
+      const auto mean = std::accumulate(diffs.cbegin(), diffs.cend(), 0.F) / n;
+      const auto variance =
+          std::accumulate(diffs.cbegin(), diffs.cend(), 0.F,
+                          [mean](const float acc, const float diff) -> float {
+                            return acc + ((diff - mean) * (diff - mean));
+                          }) /
+          n;
+      sumStdDev += std::sqrt(variance);
+    }
+  }
+  return 0.5F * sumStdDev;
+}
 auto AStarPlacer::getAtomPlacementHeuristic(
     const std::vector<AtomJob>& atomJobs, const AtomNode& node) -> float {
+  const auto nAtomJobs = atomJobs.size();
+  const auto nUnplacedAtoms =
+      static_cast<float>(nAtomJobs - node.consumedFreeSites.size());
   float maxDistanceOfUnplacedAtom = 0.0;
-  for (size_t i = node.consumedFreeSites.size(); i < atomJobs.size(); ++i) {
+  for (size_t i = node.consumedFreeSites.size(); i < nAtomJobs; ++i) {
     for (const auto& option : atomJobs[i].options) {
       if (node.consumedFreeSites.find(option.site) ==
           node.consumedFreeSites.end()) {
@@ -754,15 +783,20 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       }
     }
   }
-  if (maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom) {
-    return 0;
-  }
-  return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  float heuristic =
+      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+          ? 0.F
+          : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  heuristic += sumStdDeviationForGroups(node.groups) * nUnplacedAtoms;
+  return heuristic;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
     const std::vector<GateJob>& gateJobs, const GateNode& node) -> float {
+  const auto nGateJobs = gateJobs.size();
+  const auto nUnplacedGates =
+      static_cast<float>(nGateJobs - node.consumedFreeSites.size());
   float maxDistanceOfUnplacedAtom = 0.0;
-  for (size_t i = node.consumedFreeSites.size() / 2; i < gateJobs.size(); ++i) {
+  for (size_t i = node.consumedFreeSites.size() / 2; i < nGateJobs; ++i) {
     for (const auto& option : gateJobs[i].options) {
       // this assumes that the first found pair of free sites is the nearest
       // pair of free sites for that gate. This requires that the job options
@@ -780,10 +814,12 @@ auto AStarPlacer::getGatePlacementHeuristic(
       }
     }
   }
-  if (maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom) {
-    return 0;
-  }
-  return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  float heuristic =
+      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+          ? 0.F
+          : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  heuristic += sumStdDeviationForGroups(node.groups) * nUnplacedGates;
+  return heuristic;
 }
 auto AStarPlacer::getAtomPlacementNeighbors(
     std::deque<std::unique_ptr<AtomNode>>& nodes,

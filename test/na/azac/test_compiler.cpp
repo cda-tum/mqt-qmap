@@ -63,6 +63,15 @@ constexpr std::string_view settings = R"({
   TEST_P(compiler_type##Test, EndToEnd) {                                      \
     const auto& code = this->compiler_.compile(this->circ_);                   \
     EXPECT_TRUE(code.validate().first);                                        \
+    /*===----------------------------------------------------------------===*/ \
+    /* write code to a file with extension .naviz in a directory converted */  \
+    std::filesystem::path inputFile(GetParam());                               \
+    std::filesystem::path outputFile = inputFile.parent_path() / "converted" / \
+                                       (inputFile.stem().string() + ".naviz"); \
+    std::filesystem::create_directories(outputFile.parent_path());             \
+    std::ofstream output(outputFile);                                          \
+    output << code;                                                            \
+    /*===----------------------------------------------------------------===*/ \
     double timeSum = 0;                                                        \
     const auto& stats = this->compiler_.getStatistics().asJson();              \
     for (const auto& [key, value] : stats.items()) {                           \

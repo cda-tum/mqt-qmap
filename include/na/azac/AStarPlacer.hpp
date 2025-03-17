@@ -313,6 +313,11 @@ private:
   /// combined.
   template <class Node>
   [[nodiscard]] static auto getCost(const Node& node) -> float;
+  /// @brief Calculates the standard deviation of the differences value - key
+  /// and sums them up over all horizontal and vertical groups.
+  [[nodiscard]] static auto sumStdDeviationForGroups(
+      const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
+      -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
   /// @details To yield an optimal results, the heuristic must be admissible,
