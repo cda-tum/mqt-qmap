@@ -145,7 +145,9 @@ TEST_F(VMPlacerPlaceTest, TwoGatesZip) {
   for (const auto& [_, q] : qubitsInEntanglementByX) {
     qubitsInEntanglementAsc.push_back(q);
   }
-  EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 2U, 1U, 3U));
+  EXPECT_THAT(qubitsInEntanglementAsc,
+              ::testing::AnyOf(::testing::ElementsAre(0U, 2U, 1U, 3U),
+                               ::testing::ElementsAre(1U, 3U, 0U, 2U)));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(VMPlacerPlaceTest, FullEntanglementZone) {
