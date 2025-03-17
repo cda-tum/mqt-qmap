@@ -9,7 +9,8 @@ import pytest
 from qiskit import QuantumCircuit
 
 from mqt.qcec import verify
-from mqt.qmap import (
+from mqt.qmap.compile import compile  # noqa: A004
+from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -20,7 +21,6 @@ from mqt.qmap import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    compile,  # noqa: A004
 )
 from mqt.qmap.visualization import SearchVisualizer
 

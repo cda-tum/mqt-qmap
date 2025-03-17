@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
     from qiskit.transpiler import Target
 
-from mqt.qmap import Architecture
+from ..pyqmap import Architecture
 
 __all__ = [
     "import_backend",
