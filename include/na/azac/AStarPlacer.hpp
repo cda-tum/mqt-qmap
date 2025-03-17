@@ -3,13 +3,16 @@
 #include "Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -77,23 +80,20 @@ class AStarPlacer {
   /// until a new mapping is found satisfying all constraints of the next
   /// stage
   struct AtomNode {
-    const AtomJob::Option* option;
+    const AtomJob::Option* option = nullptr;
     /// the maximum distance an already placed atom must travel to its
     /// target location
     float maxDistanceOfPlacedAtom = 0.0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// a binary search tree representing the horizontal groups
+    /// a binary search tree representing the horizontal and vertical group,
+    /// respectively
     /// @see getNeighbors for more details
-    std::vector<std::map<uint8_t, uint8_t>> hGroups;
+    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>> groups;
     /// the maximum distance of placed atoms in every group to their
     /// target location
-    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
-    /// @see hGroups
-    std::vector<std::map<uint8_t, uint8_t>> vGroups;
-    /// @see maxDistancesOfPlacedAtomsPerHGroup
-    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
+    std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
   };
 
   /// A node representing one stage in the process of placing all atoms
@@ -101,23 +101,20 @@ class AStarPlacer {
   /// until a new mapping is found satisfying all constraints of the next
   /// stage
   struct GateNode {
-    const GateJob::Option* option;
+    const GateJob::Option* option = nullptr;
     /// the maximum distance an already placed atom must travel to its
     /// target location
     float maxDistanceOfPlacedAtom = 0.0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// a binary search tree representing the horizontal groups
+    /// a binary search tree representing the horizontal and vertical group,
+    /// respectively
     /// @see getNeighbors for more details
-    std::vector<std::map<uint8_t, uint8_t>> hGroups;
+    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>> groups;
     /// the maximum distance of placed atoms in every group to their
     /// target location
-    std::vector<float> maxDistancesOfPlacedAtomsPerHGroup;
-    /// @see hGroups
-    std::vector<std::map<uint8_t, uint8_t>> vGroups;
-    /// @see maxDistancesOfPlacedAtomsPerHGroup
-    std::vector<float> maxDistancesOfPlacedAtomsPerVGroup;
+    std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
   };
 
 public:
@@ -396,18 +393,41 @@ private:
                             const std::vector<GateJob>& gateJobs,
                             const GateNode& node)
       -> std::vector<std::reference_wrapper<const GateNode>>;
+  /// Checks the compatibility with a new assignment, i.e., a key-value pair,
+  /// whether t is compatible with an existing group. The group can either be
+  /// a horizontal or vertical group. In case, the new assignment is compatible
+  /// with the group, an iterator is returned pointing to the assignment in the
+  /// group, if it already exists or to the element directly following the
+  /// new key. Additionally, a boolean is returned indicating whether the new
+  /// exists in the group.
+  /// @param key the key of the new assignment
+  /// @param value the value of the new assignment
+  /// @param group the group to which the new assignment is compared
+  /// @return an optional pair of an iterator pointing to the key equal or
+  /// directly following the new key in the group and a boolean indicating
+  /// whether the new assignment exists in the group. If the new assignment is
+  /// not compatible with the group, an empty optional is returned.
+  [[nodiscard]] static auto
+  checkCompatibilityWithGroup(uint8_t key, uint8_t value,
+                              const std::map<uint8_t, uint8_t>& group)
+      -> std::optional<
+          std::pair<std::map<uint8_t, uint8_t>::const_iterator, bool>>;
 
   /// Checks for the new placement of the atom whether it is compatible with
   /// one of the existing groups. If yes, the new placement is added to the
   /// respective group. Otherwise, a new group is formed with the new placement.
-  /// @param key the start index of the new placement
-  /// @param value the target index of the new placement
+  /// @param hKey the horizontal start index of the new placement
+  /// @param hValue the horizontal target index of the new placement
+  /// @param vKey the vertical start index of the new placement
+  /// @param vValue the vertical target index of the new placement
+  /// @param distance the distance the atom must travel to reach the target site
   /// @param groups the groups to which the new placement can be added
   /// @param maxDistances the maximum distances of placed atoms in each group
   /// @return true if the new placement could be added to an existing group
   static auto checkCompatibilityAndAddPlacement(
-      uint8_t key, uint8_t value, float distance,
-      std::vector<std::map<uint8_t, uint8_t>>& groups,
+      uint8_t hKey, uint8_t hValue, uint8_t vKey, uint8_t vValue,
+      float distance,
+      std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups,
       std::vector<float>& maxDistances) -> bool;
 };
 } // namespace na

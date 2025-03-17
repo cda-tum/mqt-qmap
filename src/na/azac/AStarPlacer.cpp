@@ -10,9 +10,11 @@
 #include <deque>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -533,10 +535,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   /// This happens when a node is expanded by calling getNeighbors.
   std::deque<std::unique_ptr<GateNode>> nodes;
   // make the root node
-  nodes.emplace_back(std::make_unique<GateNode>(GateNode{
-      nullptr, 0.0F, std::unordered_set<DiscreteSite>{},
-      std::vector<std::map<uint8_t, uint8_t>>{}, std::vector<float>{},
-      std::vector<std::map<uint8_t, uint8_t>>{}, std::vector<float>{}}));
+  nodes.emplace_back(std::make_unique<GateNode>());
   const auto& path = aStarTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
@@ -692,10 +691,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
   /// This list is dynamically extended when new nodes are created.
   /// This happens when a node is expanded by calling getNeighbors.
   std::deque<std::unique_ptr<AtomNode>> nodes;
-  nodes.emplace_back(std::make_unique<AtomNode>(AtomNode{
-      nullptr, 0.0F, std::unordered_set<DiscreteSite>{},
-      std::vector<std::map<uint8_t, uint8_t>>{}, std::vector<float>{},
-      std::vector<std::map<uint8_t, uint8_t>>{}, std::vector<float>{}}));
+  nodes.emplace_back(std::make_unique<AtomNode>());
   const auto& path = aStarTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
@@ -737,10 +733,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
 }
 template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   float cost = 0.0;
-  for (const auto d : node.maxDistancesOfPlacedAtomsPerHGroup) {
-    cost += d;
-  }
-  for (const auto d : node.maxDistancesOfPlacedAtomsPerVGroup) {
+  for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += d;
   }
   return cost;
@@ -761,12 +754,10 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       }
     }
   }
-  // We can multiply the difference by 2 because the cost function considers
-  // this difference for the horizontal and vertical groups.
   if (maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom) {
     return 0;
   }
-  return 2 * (maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom);
+  return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
     const std::vector<GateJob>& gateJobs, const GateNode& node) -> float {
@@ -789,12 +780,10 @@ auto AStarPlacer::getGatePlacementHeuristic(
       }
     }
   }
-  // We can multiply the difference by 2 because the cost function considers
-  // this difference for the horizontal and vertical groups.
   if (maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom) {
     return 0;
   }
-  return 2 * (maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom);
+  return maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
 }
 auto AStarPlacer::getAtomPlacementNeighbors(
     std::deque<std::unique_ptr<AtomNode>>& nodes,
@@ -815,15 +804,11 @@ auto AStarPlacer::getAtomPlacementNeighbors(
     neighbor.maxDistanceOfPlacedAtom =
         std::max(node.maxDistanceOfPlacedAtom, distance);
     neighbor.consumedFreeSites.emplace(site);
-    // check whether the current placement is compatible with any existing
-    // horizontal group
+    // check whether the current placement is compatible with any existing group
     checkCompatibilityAndAddPlacement(
-        atomJob.currentSite.front(), site.front(), distance, neighbor.hGroups,
-        neighbor.maxDistancesOfPlacedAtomsPerHGroup);
-    // do the same for the vertical group
-    checkCompatibilityAndAddPlacement(
-        atomJob.currentSite.back(), site.back(), distance, neighbor.vGroups,
-        neighbor.maxDistancesOfPlacedAtomsPerVGroup);
+        atomJob.currentSite.front(), site.front(), atomJob.currentSite.back(),
+        site.back(), distance, neighbor.groups,
+        neighbor.maxDistancesOfPlacedAtomsPerGroup);
     // add the neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
   }
@@ -860,75 +845,89 @@ auto AStarPlacer::getGatePlacementNeighbors(
     // check whether the current placement is compatible with any existing
     // horizontal group
     checkCompatibilityAndAddPlacement(
-        currentSiteOfLeftAtom.front(), leftSite.front(), distances.front(),
-        neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
-    checkCompatibilityAndAddPlacement(
-        currentSiteOfRightAtom.front(), rightSite.front(), distances.back(),
-        neighbor.hGroups, neighbor.maxDistancesOfPlacedAtomsPerHGroup);
-    // do the same for the vertical group
-    checkCompatibilityAndAddPlacement(
+        currentSiteOfLeftAtom.front(), leftSite.front(),
         currentSiteOfLeftAtom.back(), leftSite.back(), distances.front(),
-        neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
+        neighbor.groups, neighbor.maxDistancesOfPlacedAtomsPerGroup);
     checkCompatibilityAndAddPlacement(
+        currentSiteOfRightAtom.front(), rightSite.front(),
         currentSiteOfRightAtom.back(), rightSite.back(), distances.back(),
-        neighbor.vGroups, neighbor.maxDistancesOfPlacedAtomsPerVGroup);
+        neighbor.groups, neighbor.maxDistancesOfPlacedAtomsPerGroup);
     // add the final neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
   }
   return neighbors;
 }
-auto AStarPlacer::checkCompatibilityAndAddPlacement(
-    const uint8_t key, const uint8_t value, const float distance,
-    std::vector<std::map<uint8_t, uint8_t>>& groups,
-    std::vector<float>& maxDistances) -> bool {
-  size_t i = 0;
-  for (auto& hGroup : groups) {
-    auto it = hGroup.lower_bound(key);
-    if (it != hGroup.end()) {
-      // an assignment for this key already exists in this group
-      const auto& [upperKey, upperValue] = *it;
-      if (upperKey == key) {
-        if (upperValue == value) {
+auto AStarPlacer::checkCompatibilityWithGroup(
+    const uint8_t key, const uint8_t value,
+    const std::map<uint8_t, uint8_t>& group)
+    -> std::optional<
+        std::pair<std::map<uint8_t, uint8_t>::const_iterator, bool>> {
+  if (auto it = group.lower_bound(key); it != group.end()) {
+    // an assignment for this key already exists in this group
+    if (const auto& [upperKey, upperValue] = *it; upperKey == key) {
+      if (upperValue == value) {
+        // new placement is compatible with this group and key already exists
+        return std::pair{it, true};
+      }
+    } else { // if (upperKey > key)
+      if (it != group.begin()) {
+        // it can be safely decremented
+        if (const auto& [_, lowerValue] = *std::prev(it);
+            lowerValue < value && value < upperValue) {
           // new placement is compatible with this group
-          break;
+          return std::pair{it, false};
         }
-      } else { // if (upperKey > key)
-        if (it != hGroup.begin()) {
-          // it can be safely decremented
-          --it;
-          const auto& [_, lowerValue] = *it;
-          if (lowerValue < value && value < upperValue) {
-            // new placement is compatible with this group
-            break;
-          }
-        } else { // if (it == hGroup.begin())
-          if (value < upperValue) {
-            // new placement is compatible with this group
-            break;
-          }
+      } else { // if (it == hGroup.begin())
+        if (value < upperValue) {
+          // new placement is compatible with this group
+          return std::pair{it, false};
         }
       }
-    } else { // if (it == hGroup.end())
-      // it can be safely decremented because group must contain
-      // at least one element
-      --it;
-      const auto& [_, lowerValue] = *it;
-      if (lowerValue < value) {
+    }
+  } else { // if (it == hGroup.end())
+    // it can be safely decremented because the group must contain
+    // at least one element
+    if (const auto& [_, lowerValue] = *std::prev(it); lowerValue < value) {
+      // new placement is compatible with this group
+      return std::pair{it, false};
+    }
+  }
+  return std::nullopt;
+}
+auto AStarPlacer::checkCompatibilityAndAddPlacement(
+    const uint8_t hKey, const uint8_t hValue, const uint8_t vKey,
+    const uint8_t vValue, const float distance,
+    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups,
+    std::vector<float>& maxDistances) -> bool {
+  size_t i = 0;
+  for (auto& group : groups) {
+    auto& [hGroup, vGroup] = group;
+    if (const auto& hCompatible =
+            checkCompatibilityWithGroup(hKey, hValue, hGroup);
+        hCompatible) {
+      if (const auto& vCompatible =
+              checkCompatibilityWithGroup(vKey, vValue, vGroup)) {
+        const auto& [hIt, hExists] = *hCompatible;
+        const auto& [vIt, vExists] = *vCompatible;
         // new placement is compatible with this group
-        break;
+        if (!hExists) {
+          hGroup.emplace_hint(hIt, hKey, hValue);
+        }
+        if (!vExists) {
+          vGroup.emplace_hint(vIt, vKey, vValue);
+        }
+        maxDistances[i] = std::max(maxDistances[i], distance);
+        return true;
       }
     }
     ++i;
   }
-  if (i == groups.size()) {
-    // no compatible group could be found and a new group is created
-    groups.emplace_back().emplace(key, value);
-    maxDistances.emplace_back(distance);
-    return false;
-  }
-  groups[i].emplace(key, value);
-  maxDistances[i] = std::max(maxDistances[i], distance);
-  return true;
+  // no compatible group could be found and a new group is created
+  auto& [hGroup, vGroup] = groups.emplace_back();
+  hGroup.emplace(hKey, hValue);
+  vGroup.emplace(vKey, vValue);
+  maxDistances.emplace_back(distance);
+  return false;
 }
 AStarPlacer::AStarPlacer(const Architecture& architecture,
                          const nlohmann::json& config)
