@@ -67,6 +67,7 @@ constexpr std::string_view settings = R"({
     /* write code to a file with extension .naviz in a directory converted */  \
     std::filesystem::path inputFile(GetParam());                               \
     std::filesystem::path outputFile = inputFile.parent_path() / "converted" / \
+                                       #compiler_type /                        \
                                        (inputFile.stem().string() + ".naviz"); \
     std::filesystem::create_directories(outputFile.parent_path());             \
     std::ofstream output(outputFile);                                          \
@@ -83,7 +84,7 @@ constexpr std::string_view settings = R"({
   }                                                                            \
   /*========================================================================*/ \
   INSTANTIATE_TEST_SUITE_P(                                                    \
-      Allcompiler_type##Test,           /* Custom instantiation name */        \
+      compiler_type##TestWithCircuits,  /* Custom instantiation name */        \
       compiler_type##Test,              /* Test suite name */                  \
       ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
       [](const ::testing::TestParamInfo<std::string>& info) {                  \
