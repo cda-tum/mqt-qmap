@@ -137,8 +137,9 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   uint8_t rowIndex = 0;
   for (const auto& [_, sites] : rows) {
     for (const auto& site : sites) {
-      rowIndices.emplace(site, rowIndex++);
+      rowIndices.emplace(site, rowIndex);
     }
+    ++rowIndex;
   }
   std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
                      uint8_t, std::hash<std::pair<const SLM&, size_t>>,
@@ -147,8 +148,9 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   uint8_t columnIndex = 0;
   for (const auto& [_, sites] : columns) {
     for (const auto& site : sites) {
-      columnIndices.emplace(site, columnIndex++);
+      columnIndices.emplace(site, columnIndex);
     }
+    ++columnIndex;
   }
   return std::pair{rowIndices, columnIndices};
 }
@@ -439,7 +441,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   // Initialize the gate jobs
   //===------------------------------------------------------------------===//
   /// The number of either atom or gate jobs that must be performed
-  size_t nJobs = gatesToPlace.size();
+  const size_t nJobs = gatesToPlace.size();
   /// a list of all gates that must be placed in the entanglement zone before a
   /// rydberg layer
   std::vector<GateJob> gateJobs;
@@ -762,7 +764,7 @@ auto AStarPlacer::sumStdDeviationForGroups(
       sumStdDev += std::sqrt(variance);
     }
   }
-  return 0.5F * sumStdDev;
+  return sumStdDev;
 }
 auto AStarPlacer::getAtomPlacementHeuristic(
     const std::vector<AtomJob>& atomJobs, const AtomNode& node) -> float {
