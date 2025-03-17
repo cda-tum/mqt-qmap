@@ -54,7 +54,7 @@ TEST_F(AStarPlacerPlaceTest, Empty) {
               ::testing::ElementsAre(::testing::SizeIs(nQubits)));
 }
 TEST_F(AStarPlacerPlaceTest, OneGate) {
-  const size_t nQubits = 2;
+  constexpr size_t nQubits = 2;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{
                                {{0U, 1U}}},
@@ -64,7 +64,7 @@ TEST_F(AStarPlacerPlaceTest, OneGate) {
                                      ::testing::SizeIs(nQubits)));
 }
 TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
-  const size_t nQubits = 4;
+  constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U}, {2U, 3U}}},
@@ -103,7 +103,7 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesCons) {
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
 TEST_F(AStarPlacerPlaceTest, OneGateCross) {
-  const size_t nQubits = 2;
+  constexpr size_t nQubits = 2;
   const auto& placement = placer.place(
       nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{1U, 0U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
@@ -123,7 +123,7 @@ TEST_F(AStarPlacerPlaceTest, OneGateCross) {
   EXPECT_THAT(qubitsInEntanglementAsc, ::testing::ElementsAre(0U, 1U));
 }
 TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
-  const size_t nQubits = 4;
+  constexpr size_t nQubits = 4;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 2U}, {1U, 3U}}},
@@ -148,12 +148,18 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
                                ::testing::ElementsAre(1U, 3U, 0U, 2U)));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
-  const size_t nQubits = 12;
+TEST_F(AStarPlacerPlaceTest, HalfFullEntanglementZone) {
+  constexpr size_t nQubits = 16;
   const auto& placement = placer.place(
       nQubits,
-      std::vector<std::vector<std::array<qc::Qubit, 2>>>{
-          {{0U, 1U}, {2U, 3U}, {4U, 5U}, {6U, 7U}, {8U, 9U}, {10U, 11U}}},
+      std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U},
+                                                          {2U, 3U},
+                                                          {4U, 5U},
+                                                          {6U, 7U},
+                                                          {8U, 9U},
+                                                          {10U, 11U},
+                                                          {12U, 13U},
+                                                          {14U, 15U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));
@@ -167,7 +173,7 @@ TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
   EXPECT_THAT(qubitsLocationsInEntanglement, ::testing::SizeIs(nQubits));
 }
 TEST_F(AStarPlacerPlaceTest, TwoTwoQubitLayerReuse) {
-  const size_t nQubits = 3;
+  constexpr size_t nQubits = 3;
   const auto& placement =
       placer.place(nQubits,
                    std::vector<std::vector<std::array<qc::Qubit, 2>>>{
