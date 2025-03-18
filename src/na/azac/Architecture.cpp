@@ -128,6 +128,7 @@ SLM::SLM(nlohmann::json slmSpec) {
     throw std::invalid_argument("SLM location is missed in architecture spec");
   }
 }
+
 auto SLM::operator==(const SLM& other) const -> bool {
   if (&other == this) {
     return true;
@@ -149,6 +150,7 @@ auto SLM::operator==(const SLM& other) const -> bool {
   }
   return true;
 }
+
 Architecture::Architecture(nlohmann::json json) {
   if (json.contains("name")) {
     if (json["name"].is_string()) {
@@ -164,7 +166,7 @@ Architecture::Architecture(nlohmann::json json) {
     if (json["operation_duration"].is_object()) {
       operationDurations = OperationDurations{};
       if (json["operation_duration"].contains("rydberg")) {
-        if (json["operation_duration"]["rydberg"].is_number()) {
+        if (json["operation_duration"]["rydberg"].is_number_float()) {
           operationDurations->timeRydberg =
               json["operation_duration"]["rydberg"];
         } else {
@@ -176,7 +178,7 @@ Architecture::Architecture(nlohmann::json json) {
             "Operation duration must contain rydberg duration");
       }
       if (json["operation_duration"].contains("atom_transfer")) {
-        if (json["operation_duration"]["atom_transfer"].is_number()) {
+        if (json["operation_duration"]["atom_transfer"].is_number_float()) {
           operationDurations->timeAtomTransfer =
               json["operation_duration"]["atom_transfer"];
         } else {
@@ -188,14 +190,69 @@ Architecture::Architecture(nlohmann::json json) {
             "Operation duration must contain atom transfer duration");
       }
       if (json["operation_duration"].contains("1qGate")) {
-        operationDurations->time1QGate = json["operation_duration"]["1qGate"];
+        if (json["operation_duration"]["1qGate"].is_number_float()) {
+          operationDurations->timeOneQubitGate =
+              json["operation_duration"]["1qGate"];
+        } else {
+          throw std::invalid_argument(
+              "One qubit gate duration must be a number in architecture spec");
+        }
       } else {
         throw std::invalid_argument(
             "Operation duration must contain 1qGate duration");
       }
     } else {
       throw std::invalid_argument(
-          "Operation duration must be an dict in architecture spec");
+          "Operation duration must be a dict in architecture spec");
+    }
+  } else {
+    // print warn in green
+    std::cout << "\033[1;35m[WARN]\033[0m Operation duration is missed in "
+                 "architecture spec. Using default values.\n";
+  }
+
+  if (json.contains("operation_fidelity")) {
+    if (json["operation_fidelity"].is_object()) {
+      operationFidelities = OperationFidelities{};
+      if (json["operation_fidelity"].contains("two_qubit_gate")) {
+        if (json["operation_fidelity"]["two_qubit_gate"].is_number_float()) {
+          operationFidelities->fidelityTwoQubitGate =
+              json["operation_fidelity"]["two_qubit_gate"];
+        } else {
+          throw std::invalid_argument("Two qubit gate fidelity must be a float "
+                                      "in architecture spec");
+        }
+      } else {
+        throw std::invalid_argument("Operation fidelity must contain two qubit "
+                                    "gate fidelity");
+      }
+      if (json["operation_fidelity"].contains("atom_transfer")) {
+        if (json["operation_fidelity"]["atom_transfer"].is_number_float()) {
+          operationFidelities->fidelityAtomTransfer =
+              json["operation_fidelity"]["atom_transfer"];
+        } else {
+          throw std::invalid_argument("Atom transfer fidelity must be a float "
+                                      "in architecture spec");
+        }
+      } else {
+        throw std::invalid_argument("Operation fidelity must contain atom "
+                                    "transfer fidelity");
+      }
+      if (json["operation_fidelity"].contains("single_qubit_gate")) {
+        if (json["operation_fidelity"]["single_qubit_gate"].is_number_float()) {
+          operationFidelities->fidelityOneQubitGate =
+              json["operation_fidelity"]["single_qubit_gate"];
+        } else {
+          throw std::invalid_argument("One qubit gate fidelity must be a float "
+                                      "in architecture spec");
+        }
+      } else {
+        throw std::invalid_argument("Operation fidelity must contain one qubit "
+                                    "gate fidelity");
+      }
+    } else {
+      throw std::invalid_argument(
+          "Operation fidelities must be a dict in architecture spec");
     }
   } else {
     // print warn in green
@@ -310,6 +367,7 @@ Architecture::Architecture(nlohmann::json json) {
   }
   preprocessing();
 }
+
 auto Architecture::exportNAVizMachine() const -> std::string {
   std::stringstream ss;
   ss << "name: \"" << name << "\"\n";
@@ -359,10 +417,12 @@ auto Architecture::exportNAVizMachine() const -> std::string {
   }
   return ss.str();
 }
+
 auto Architecture::isValidSlmPosition(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const -> bool {
   return r < slm.nRows && c < slm.nCols;
 }
+
 auto Architecture::exactSlmLocation(const SLM& slm, const std::size_t r,
                                     const std::size_t c) const
     -> std::pair<std::size_t, std::size_t> {
@@ -370,6 +430,7 @@ auto Architecture::exactSlmLocation(const SLM& slm, const std::size_t r,
   return {(slm.siteSeparation.first * c) + slm.location.first,
           (slm.siteSeparation.second * r) + slm.location.second};
 }
+
 auto Architecture::findNearestStorageSLM(const size_t x, const size_t y) const
     -> const SLM& {
   double minimumDistance = std::numeric_limits<double>::max();
@@ -403,6 +464,7 @@ auto Architecture::findNearestStorageSLM(const size_t x, const size_t y) const
   assert(nearestStorageSLM != nullptr);
   return *nearestStorageSLM;
 }
+
 auto Architecture::findNearestEntanglementSLM(const size_t x, const size_t y,
                                               const size_t otherX,
                                               const size_t otherY) const
@@ -450,6 +512,7 @@ auto Architecture::findNearestEntanglementSLM(const size_t x, const size_t y,
   assert(nearestEntanglementSLM != nullptr);
   return *nearestEntanglementSLM;
 }
+
 auto Architecture::preprocessing() -> void {
   //===--------------------------------------------------------------------===//
   // calculate the nearest storage site for each entanglement site
@@ -596,6 +659,7 @@ auto Architecture::preprocessing() -> void {
     }
   }
 }
+
 auto Architecture::distance(const SLM& idx1, const std::size_t r1,
                             const std::size_t c1, const SLM& idx2,
                             const std::size_t r2, const std::size_t c2) const
@@ -605,11 +669,13 @@ auto Architecture::distance(const SLM& idx1, const std::size_t r1,
   return std::hypot(static_cast<double>(x1) - static_cast<double>(x2),
                     static_cast<double>(y1) - static_cast<double>(y2));
 }
+
 auto Architecture::nearestStorageSite(const SLM& slm, const std::size_t r,
                                       const std::size_t c) const -> const
     std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>& {
   return entanglementToNearestStorageSite.at(std::cref(slm))[r][c];
 }
+
 auto Architecture::nearestEntanglementSite(
     const SLM& idx1, const std::size_t r1, const std::size_t c1,
     const SLM& idx2, const std::size_t r2, const std::size_t c2) const -> const
@@ -622,6 +688,7 @@ auto Architecture::nearestEntanglementSite(
       std::cref(idx2))[&idx1 == &idx2 ? r2 - r1 : r2]
                       [&idx1 == &idx2 && r1 == r2 ? c2 - c1 : c2];
 }
+
 auto Architecture::nearestEntanglementSiteDistance(
     const SLM& slm1, const std::size_t r1, const std::size_t c1,
     const SLM& slm2, const std::size_t r2, const std::size_t c2) const
@@ -653,6 +720,7 @@ auto Architecture::nearestEntanglementSiteDistance(
   }
   return dis;
 }
+
 auto Architecture::movementDuration(const std::size_t x1, const std::size_t y1,
                                     const std::size_t x2, const std::size_t y2)
     -> double {
@@ -663,6 +731,7 @@ auto Architecture::movementDuration(const std::size_t x1, const std::size_t y1,
   const auto t = std::sqrt(d / a);
   return t;
 }
+
 auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
                                          std::size_t c) const
     -> std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t> {
@@ -675,4 +744,4 @@ auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
   return {otherSlm, r, c};
 }
 
-} // namespace na
+} // namespace na::azac

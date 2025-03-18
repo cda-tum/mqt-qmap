@@ -96,11 +96,17 @@ struct Architecture {
   std::vector<std::unique_ptr<std::array<SLM, 2>>> entanglementZones;
   std::vector<std::unique_ptr<AOD>> aods;
   struct OperationDurations {
-    double timeAtomTransfer = 15; ///< µs
-    double timeRydberg = 0.36;    ///< µs
-    double time1QGate = 0.625;    ///< µs
+    double timeAtomTransfer = 15;    ///< µs
+    double timeRydberg = 0.36;       ///< µs
+    double timeOneQubitGate = 0.625; ///< µs
   };
   std::optional<OperationDurations> operationDurations;
+  struct OperationFidelities {
+    double fidelityTwoQubitGate = 0.995;
+    double fidelityOneQubitGate = 0.9997;
+    double fidelityAtomTransfer = 0.999;
+  };
+  std::optional<OperationFidelities> operationFidelities;
   std::size_t archRangeMinX = 0;
   std::size_t archRangeMaxX = 0;
   std::size_t archRangeMinY = 0;
