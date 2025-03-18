@@ -316,6 +316,7 @@ private:
   /// @brief Calculates the standard deviation of the differences value - key
   /// and sums them up over all horizontal and vertical groups.
   [[nodiscard]] static auto sumStdDeviationForGroups(
+      const std::array<float, 2>& scaleFactors,
       const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
       -> float;
 
@@ -337,6 +338,7 @@ private:
   /// placed atoms must travel to their determined target site.
   [[nodiscard]] static auto
   getAtomPlacementHeuristic(const std::vector<AtomJob>& atomJobs,
+                            const std::array<float, 2>& scaleFactors,
                             const AtomNode& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
@@ -357,6 +359,7 @@ private:
   /// placed atoms must travel to their determined target site.
   [[nodiscard]] static auto
   getGatePlacementHeuristic(const std::vector<GateJob>& gateJobs,
+                            const std::array<float, 2>& scaleFactors,
                             const GateNode& node) -> float;
 
   /// @brief Return pointers to all neighbors of the given node.

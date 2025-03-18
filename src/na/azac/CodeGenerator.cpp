@@ -40,22 +40,34 @@ auto CodeGenerator::appendOneQubitGates(
   for (const auto& op : oneQubitGates) {
     bool oneQubitGate = false;
     if (op.get().isGlobal(nQubits)) {
-      const auto opType =
-          op.get().isCompoundOperation()
-              ? dynamic_cast<const qc::CompoundOperation&>(op.get())
-                    .front()
-                    ->getType()
-              : op.get().getType();
-      if (opType == qc::RY) {
-        code.emplaceBack<GlobalRYOp>(globalZone,
-                                     op.get().getParameter().front());
-      } else if (opType == qc::Y) {
-        code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
-      } else if (nQubits == 1) {
-        oneQubitGate =
-            true; // special case for one qubit, fall back to local gate
+      if (op.get().isCompoundOperation()) {
+        const auto& compOp =
+            dynamic_cast<const qc::CompoundOperation&>(op.get());
+        const auto opType = compOp.front()->getType();
+        if (opType == qc::RY) {
+          code.emplaceBack<GlobalRYOp>(globalZone,
+                                       compOp.front()->getParameter().front());
+        } else if (opType == qc::Y) {
+          code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+        } else if (nQubits == 1) {
+          oneQubitGate =
+              true; // special case for one qubit, fall back to local gate
+        } else {
+          assert(false);
+        }
       } else {
-        assert(false);
+        const auto opType = op.get().getType();
+        if (opType == qc::RY) {
+          code.emplaceBack<GlobalRYOp>(globalZone,
+                                       op.get().getParameter().front());
+        } else if (opType == qc::Y) {
+          code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+        } else if (nQubits == 1) {
+          oneQubitGate =
+              true; // special case for one qubit, fall back to local gate
+        } else {
+          assert(false);
+        }
       }
     } else {
       oneQubitGate = true;

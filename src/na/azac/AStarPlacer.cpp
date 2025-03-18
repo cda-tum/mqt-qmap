@@ -4,6 +4,7 @@
 #include "na/azac/Architecture.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -412,6 +413,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       }
     }
   }
+  if (gatesToPlace.empty()) {
+    return currentPlacement;
+  }
   //===------------------------------------------------------------------===//
   // Discretize the previous placement of the atoms to be placed
   //===------------------------------------------------------------------===//
@@ -532,6 +536,39 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         });
   }
   //===------------------------------------------------------------------===//
+  // Get the extent of discrete source and target
+  //===------------------------------------------------------------------===//
+  const uint8_t maxDiscreteSourceRow =
+      1 + std::max_element(discreteRows.begin(), discreteRows.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteSourceColumn =
+      1 + std::max_element(discreteColumns.begin(), discreteColumns.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteTargetRow =
+      1 + std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteTargetColumn =
+      1 + std::max_element(discreteTargetColumns.begin(),
+                           discreteTargetColumns.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const std::array<float, 2> scaleFactors{
+      std::min(1.F, static_cast<float>(maxDiscreteTargetRow) /
+                        static_cast<float>(maxDiscreteSourceRow)),
+      std::min(1.F, static_cast<float>(maxDiscreteTargetColumn) /
+                        static_cast<float>(maxDiscreteSourceColumn))};
+  //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
   /// A list of all nodes that have been created so far.
@@ -547,8 +584,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       },
       [nJobs](const auto& node) { return isGoal(2 * nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&gateJobs](const auto& node) {
-        return getGatePlacementHeuristic(gateJobs, std::move(node));
+      [&gateJobs, &scaleFactors](const auto& node) {
+        return getGatePlacementHeuristic(gateJobs, scaleFactors,
+                                         std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -606,6 +644,9 @@ auto AStarPlacer::placeQubitsInStorageZone(
         atomsToPlaceMap.emplace(distance, qubit);
       }
     }
+  }
+  if (atomsToPlaceMap.empty()) {
+    return currentPlacement;
   }
   //===------------------------------------------------------------------===//
   // Discretize the previous placement of the atoms to be placed
@@ -689,6 +730,39 @@ auto AStarPlacer::placeQubitsInStorageZone(
         });
   }
   //===------------------------------------------------------------------===//
+  // Get the extent of discrete source and target
+  //===------------------------------------------------------------------===//
+  const uint8_t maxDiscreteSourceRow =
+      1 + std::max_element(discreteRows.begin(), discreteRows.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteSourceColumn =
+      1 + std::max_element(discreteColumns.begin(), discreteColumns.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteTargetRow =
+      1 + std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const uint8_t maxDiscreteTargetColumn =
+      1 + std::max_element(discreteTargetColumns.begin(),
+                           discreteTargetColumns.end(),
+                           [](const auto& lhs, const auto& rhs) {
+                             return lhs.second < rhs.second;
+                           })
+              ->second;
+  const std::array<float, 2> scaleFactors{
+      std::min(1.F, static_cast<float>(maxDiscreteTargetRow) /
+                        static_cast<float>(maxDiscreteSourceRow)),
+      std::min(1.F, static_cast<float>(maxDiscreteTargetColumn) /
+                        static_cast<float>(maxDiscreteSourceColumn))};
+  //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
   /// A list of all nodes that have been created so far.
@@ -703,8 +777,9 @@ auto AStarPlacer::placeQubitsInStorageZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&atomJobs](const auto& node) {
-        return getAtomPlacementHeuristic(atomJobs, std::move(node));
+      [&atomJobs, &scaleFactors](const auto& node) {
+        return getAtomPlacementHeuristic(atomJobs, scaleFactors,
+                                         std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -743,15 +818,18 @@ template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   return cost;
 }
 auto AStarPlacer::sumStdDeviationForGroups(
+    const std::array<float, 2>& scaleFactors,
     const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
     -> float {
   float sumStdDev = 0.F;
   for (const auto& groupPair : groups) {
-    for (const auto& group : groupPair) {
+    for (size_t i = 0; i < 2; ++i) {
+      const auto& group = groupPair[i];
       std::vector<float> diffs;
       diffs.reserve(groups.size());
       for (const auto& [key, value] : group) {
-        diffs.emplace_back(static_cast<float>(value) - static_cast<float>(key));
+        diffs.emplace_back(static_cast<float>(value) -
+                           (scaleFactors[i] * static_cast<float>(key)));
       }
       const auto n = static_cast<float>(group.size());
       const auto mean = std::accumulate(diffs.cbegin(), diffs.cend(), 0.F) / n;
@@ -767,7 +845,8 @@ auto AStarPlacer::sumStdDeviationForGroups(
   return sumStdDev;
 }
 auto AStarPlacer::getAtomPlacementHeuristic(
-    const std::vector<AtomJob>& atomJobs, const AtomNode& node) -> float {
+    const std::vector<AtomJob>& atomJobs,
+    const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
   const auto nUnplacedAtoms =
       static_cast<float>(nAtomJobs - node.consumedFreeSites.size());
@@ -789,11 +868,13 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic += sumStdDeviationForGroups(node.groups) * nUnplacedAtoms;
+  heuristic +=
+      sumStdDeviationForGroups(scaleFactors, node.groups) * nUnplacedAtoms;
   return heuristic;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
-    const std::vector<GateJob>& gateJobs, const GateNode& node) -> float {
+    const std::vector<GateJob>& gateJobs,
+    const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
   const auto nUnplacedGates =
       static_cast<float>(nGateJobs - node.consumedFreeSites.size());
@@ -820,7 +901,8 @@ auto AStarPlacer::getGatePlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic += sumStdDeviationForGroups(node.groups) * nUnplacedGates;
+  heuristic +=
+      sumStdDeviationForGroups(scaleFactors, node.groups) * nUnplacedGates;
   return heuristic;
 }
 auto AStarPlacer::getAtomPlacementNeighbors(

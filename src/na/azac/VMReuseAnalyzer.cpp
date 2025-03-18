@@ -96,10 +96,12 @@ auto VMReuseAnalyzer::analyzeReuse(
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
       if (const auto& reuseGate = matching[gateIdx]; reuseGate) {
         const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
-        if (usedQubitsInPreviousLayer.at(gate.front()) == reuseGate) {
+        if (usedQubitsInPreviousLayer.find(gate.front()) !=
+            usedQubitsInPreviousLayer.end()) {
           reuseQubitsInCurrentLayer.emplace(gate.front());
         } else {
-          assert(usedQubitsInPreviousLayer.at(gate.back()) == reuseGate);
+          assert(usedQubitsInPreviousLayer.find(gate.back()) !=
+                 usedQubitsInPreviousLayer.end());
           reuseQubitsInCurrentLayer.emplace(gate.back());
         }
       }
