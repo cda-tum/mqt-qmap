@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 class AStarPlacer {
   friend class AStarPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::array<uint8_t, 2>;

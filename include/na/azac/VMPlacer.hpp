@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /// class to find a qubit layout based on vertex matching of a weighted
 /// bipartite graph
 class VMPlacer {

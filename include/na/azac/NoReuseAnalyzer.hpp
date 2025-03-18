@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /**
  * The class NoReuseAnalyzer implements a fake reuse analyser that basically
  * disables the reuse analysis.

@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /**
  * The class ASAPScheduler implements the as-soon-as-possible scheduling
  * strategy for the zoned neutral atom compiler.

@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /// An 2D-Array of AOD traps
 struct AOD {
   std::size_t id = 0;
@@ -72,8 +72,8 @@ template <class S, class T, class U> struct std::hash<std::tuple<S, T, U>> {
     return qc::combineHash(qc::combineHash(h1, h2), h3);
   }
 };
-template <> struct std::hash<na::SLM> {
-  size_t operator()(const na::SLM& slm) const noexcept {
+template <> struct std::hash<na::azac::SLM> {
+  size_t operator()(const na::azac::SLM& slm) const noexcept {
     return std::hash<std::pair<size_t, size_t>>{}(slm.location);
   }
 };
@@ -87,7 +87,7 @@ template <class T> struct std::hash<std::array<T, 2>> {
   }
 };
 
-namespace na {
+namespace na::azac {
 
 /// Class to define zone architecture
 struct Architecture {

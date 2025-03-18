@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 
 /**
  * This class implements the default Router for the zoned neutral atom compiler

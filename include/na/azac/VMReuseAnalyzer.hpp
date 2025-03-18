@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /**
  * The class VMReuseAnalyzer implements the default reuse analysis for the
  * zoned neutral atom compiler that uses a bipartite maximum matching.

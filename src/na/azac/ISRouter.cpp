@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 auto ISRouter::createConflictGraph(
     const std::vector<qc::Qubit>& atomsToMove,
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,

@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 auto VMPlacer::minimumWeightFullBipartiteMatching(
     const std::vector<std::vector<std::optional<double>>>& costMatrix)
     -> std::vector<std::size_t> {

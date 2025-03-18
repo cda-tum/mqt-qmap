@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 
 template <class Priority, class T, class Compare = std::less<Priority>>
 /// A class that implements a heap data structure.

@@ -13,7 +13,7 @@
 #include <tuple>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 /**
  * The class CodeGenerator implements the code generation for the zoned neutral
  * atom compiler.

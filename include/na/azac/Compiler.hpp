@@ -18,8 +18,8 @@
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
 
-namespace na {
-#define self (*static_cast<ConcreteType*>(this))
+namespace na::azac {
+#define SELF (*static_cast<ConcreteType*>(this))
 template <class ConcreteType, class... Mixins>
 class Compiler : protected Mixins... {
   friend ConcreteType;
@@ -76,14 +76,14 @@ public:
         << nOneQubitGates << "\n";
 
     const auto& schedulingStart = std::chrono::system_clock::now();
-    const auto& [oneQubitGateLayers, twoQubitGateLayers] = self.schedule(qComp);
+    const auto& [oneQubitGateLayers, twoQubitGateLayers] = SELF.schedule(qComp);
     statistics_.schedulingTime =
         std::chrono::system_clock::now() - schedulingStart;
     std::cout << "\033[1;32m[INFO]\033[0m           Time for scheduling: "
               << statistics_.schedulingTime.count() << "µs\n";
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
-    const auto& reuseQubits = self.analyzeReuse(twoQubitGateLayers);
+    const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
         std::chrono::system_clock::now() - reuseAnalysisStart;
     std::cout << "\033[1;32m[INFO]\033[0m           Time for reuse analysis: "
@@ -98,13 +98,13 @@ public:
               << statistics_.placementTime.count() << "µs\n";
 
     const auto& routingStart = std::chrono::system_clock::now();
-    const auto& routing = self.route(placement);
+    const auto& routing = SELF.route(placement);
     statistics_.routingTime = std::chrono::system_clock::now() - routingStart;
     std::cout << "\033[1;32m[INFO]\033[0m           Time for routing: "
               << statistics_.routingTime.count() << "µs\n";
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
-    NAComputation code = self.generate(oneQubitGateLayers, placement, routing);
+    NAComputation code = SELF.generate(oneQubitGateLayers, placement, routing);
     assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::system_clock::now() - codeGenerationStart;

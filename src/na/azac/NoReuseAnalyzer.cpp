@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 NoReuseAnalyzer::NoReuseAnalyzer(const Architecture&,
                                  const nlohmann::json& config) {
   if (const auto& configIt = config.find("no_reuse_analyzer");

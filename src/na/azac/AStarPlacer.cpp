@@ -28,7 +28,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 template <class Node>
 auto AStarPlacer::aStarTreeSearch(
     const Node& start,

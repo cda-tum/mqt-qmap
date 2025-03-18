@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 AOD::AOD(nlohmann::json aodSpec) {
   if (aodSpec.contains("id")) {
     if (aodSpec["id"].is_number()) {

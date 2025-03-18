@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 ASAPScheduler::ASAPScheduler(const Architecture& architecture,
                              const nlohmann::json& config)
     : architecture_(architecture) {

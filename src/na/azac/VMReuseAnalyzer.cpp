@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
                                  const nlohmann::json& config) {
   if (const auto& configIt = config.find("vm_reuse_analyzer");

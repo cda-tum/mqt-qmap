@@ -30,7 +30,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 auto CodeGenerator::appendOneQubitGates(
     const size_t nQubits,
     const std::vector<std::reference_wrapper<const qc::Operation>>&
