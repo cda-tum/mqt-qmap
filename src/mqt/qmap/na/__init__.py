@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from . import state_preparation
 
-__all__ = ["state_preparation"]
-
+__all__ = ["state_preparation", "azacompiler"]
 
 def __dir__() -> list[str]:
     return __all__

@@ -16,6 +16,7 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
+#include "na/azac/Compiler.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "qasm3/Importer.hpp"
@@ -992,7 +993,7 @@ Returns the result as a JSON string.
          const uint16_t minAtomDist, const uint16_t noInteractionRadius,
          const uint16_t zoneDist) {
         return na::CodeGenerator::generate(qc, result, minAtomDist,
-                                           noInteractionRadius, zoneDist)
+                                                  noInteractionRadius, zoneDist)
             .toString();
       },
       "qc"_a, "result"_a, "min_atom_dist"_a = 1, "no_interaction_radius"_a = 10,
@@ -1042,5 +1043,23 @@ Extract entangling operations as list of qubit pairs from the circuit.
   operation type and quiet is False
 :raises ValueError: if the operation has more than two operands including
   controls
+)");
+
+  m.def(
+      "azacompile",
+      [](const std::string& settings,
+         const qc::QuantumComputation& qc) -> std::string {
+        const nlohmann::json settings_ = nlohmann::json::parse(settings);
+        const na::azac::Architecture architecture(settings_["architecture"]);
+        auto compiler = na::azac::AZACompiler(architecture, settings_);
+        return compiler.compile(qc).toString();
+      },
+      "settings"_a, "qc"_a, R"(
+Create an advanced zoned atom compiler with the given settings and
+compile the quantum circuit to neutral atom operations.
+
+:param settings: is the path to a .JSON file containing the settings
+:param qc: is the quantum circuit
+:returns: neutral atom operations
 )");
 }

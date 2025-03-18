@@ -699,3 +699,8 @@ def generate_code(
     no_interaction_radius: int = ...,
     zone_dist: int = ...,
 ) -> str: ...
+
+def azacompile(
+        settings: str,
+        circ: QuantumComputation
+) -> str: ...
