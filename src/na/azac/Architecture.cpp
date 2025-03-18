@@ -166,7 +166,7 @@ Architecture::Architecture(nlohmann::json json) {
     if (json["operation_duration"].is_object()) {
       operationDurations = OperationDurations{};
       if (json["operation_duration"].contains("rydberg")) {
-        if (json["operation_duration"]["rydberg"].is_number_float()) {
+        if (json["operation_duration"]["rydberg"].is_number()) {
           operationDurations->timeRydberg =
               json["operation_duration"]["rydberg"];
         } else {
@@ -178,7 +178,7 @@ Architecture::Architecture(nlohmann::json json) {
             "Operation duration must contain rydberg duration");
       }
       if (json["operation_duration"].contains("atom_transfer")) {
-        if (json["operation_duration"]["atom_transfer"].is_number_float()) {
+        if (json["operation_duration"]["atom_transfer"].is_number()) {
           operationDurations->timeAtomTransfer =
               json["operation_duration"]["atom_transfer"];
         } else {
@@ -190,7 +190,7 @@ Architecture::Architecture(nlohmann::json json) {
             "Operation duration must contain atom transfer duration");
       }
       if (json["operation_duration"].contains("1qGate")) {
-        if (json["operation_duration"]["1qGate"].is_number_float()) {
+        if (json["operation_duration"]["1qGate"].is_number()) {
           operationDurations->timeOneQubitGate =
               json["operation_duration"]["1qGate"];
         } else {
@@ -215,7 +215,7 @@ Architecture::Architecture(nlohmann::json json) {
     if (json["operation_fidelity"].is_object()) {
       operationFidelities = OperationFidelities{};
       if (json["operation_fidelity"].contains("two_qubit_gate")) {
-        if (json["operation_fidelity"]["two_qubit_gate"].is_number_float()) {
+        if (json["operation_fidelity"]["two_qubit_gate"].is_number()) {
           operationFidelities->fidelityTwoQubitGate =
               json["operation_fidelity"]["two_qubit_gate"];
         } else {
@@ -227,7 +227,7 @@ Architecture::Architecture(nlohmann::json json) {
                                     "gate fidelity");
       }
       if (json["operation_fidelity"].contains("atom_transfer")) {
-        if (json["operation_fidelity"]["atom_transfer"].is_number_float()) {
+        if (json["operation_fidelity"]["atom_transfer"].is_number()) {
           operationFidelities->fidelityAtomTransfer =
               json["operation_fidelity"]["atom_transfer"];
         } else {
@@ -239,7 +239,7 @@ Architecture::Architecture(nlohmann::json json) {
                                     "transfer fidelity");
       }
       if (json["operation_fidelity"].contains("single_qubit_gate")) {
-        if (json["operation_fidelity"]["single_qubit_gate"].is_number_float()) {
+        if (json["operation_fidelity"]["single_qubit_gate"].is_number()) {
           operationFidelities->fidelityOneQubitGate =
               json["operation_fidelity"]["single_qubit_gate"];
         } else {
