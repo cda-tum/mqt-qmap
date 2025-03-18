@@ -1,3 +1,5 @@
 add_subdirectory(nalac)
-add_subdirectory(nasp)
+if(Z3_FOUND)
+    add_subdirectory(nasp)
+endif()
 add_subdirectory(azac)
