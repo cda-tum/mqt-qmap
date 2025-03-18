@@ -51,7 +51,7 @@ struct SLM {
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
   [[nodiscard]] auto operator==(const SLM& other) const -> bool;
 };
-} // namespace na
+} // namespace na::azac
 template <class F, class S> struct std::hash<std::pair<F, S>> {
   size_t operator()(const std::pair<F, S>& p) const noexcept {
     const auto h1 =
@@ -236,4 +236,4 @@ private:
                                                 size_t otherY) const
       -> const SLM&;
 };
-} // namespace na
+} // namespace na::azac

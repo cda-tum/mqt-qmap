@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "a_star_placer_architecture",
   "storage_zones": [{
@@ -327,4 +327,4 @@ TEST(AStarPlacerTest, AStarSearch) {
               ::testing::ElementsAre(&nodes[0], ::testing::_, ::testing::_,
                                      ::testing::_, ::testing::_, &nodes[14]));
 }
-} // namespace na
+} // namespace na::azac

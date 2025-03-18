@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "vm_placer_architecture",
   "storage_zones": [{
@@ -330,4 +330,4 @@ TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingExceptions) {
                    {{0, 0}, {std::nullopt, std::nullopt}}),
                std::invalid_argument);
 }
-} // namespace na
+} // namespace na::azac

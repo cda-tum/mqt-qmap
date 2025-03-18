@@ -469,4 +469,4 @@ private:
       std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups,
       std::vector<float>& maxDistances) -> bool;
 };
-} // namespace na
+} // namespace na::azac

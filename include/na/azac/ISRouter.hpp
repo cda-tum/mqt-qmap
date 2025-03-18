@@ -87,4 +87,4 @@ private:
   isCompatibleMovement(std::tuple<size_t, size_t, size_t, size_t> v,
                        std::tuple<size_t, size_t, size_t, size_t> w) -> bool;
 };
-} // namespace na
+} // namespace na::azac

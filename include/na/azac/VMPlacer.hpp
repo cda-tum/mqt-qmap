@@ -113,4 +113,4 @@ private:
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 };
-} // namespace na
+} // namespace na::azac

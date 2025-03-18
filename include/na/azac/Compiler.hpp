@@ -136,4 +136,4 @@ public:
   AZACompiler(const Architecture& architecture, const nlohmann::json& config)
       : Compiler(architecture, config) {}
 };
-} // namespace na
+} // namespace na::azac

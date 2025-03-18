@@ -46,4 +46,4 @@ public:
           std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
           std::vector<std::vector<std::array<qc::Qubit, 2>>>>;
 };
-} // namespace na
+} // namespace na::azac

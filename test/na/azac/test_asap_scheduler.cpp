@@ -10,7 +10,7 @@
 namespace testing {
 MATCHER_P(RefEq, value, "") { return arg.get() == value; }
 } // namespace testing
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "asap_scheduler_architecture",
   "storage_zones": [{
@@ -163,4 +163,4 @@ TEST(ASAPSchedulerTest, Config) {
       "\033[1;35m[WARN]\033[0m Configuration for ASAPScheduler contains an "
       "unknown key: unknown_key. Ignoring.\n");
 }
-} // namespace na
+} // namespace na::azac

@@ -28,4 +28,4 @@ protected:
                    twoQubitGateLayers)
       -> std::vector<std::unordered_set<qc::Qubit>>;
 };
-} // namespace na
+} // namespace na::azac

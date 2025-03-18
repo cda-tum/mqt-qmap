@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <utility>
 
-namespace na {
+namespace na::azac {
 
 constexpr std::string_view settings = R"({
   "architecture": {
@@ -97,4 +97,4 @@ constexpr std::string_view settings = R"({
 /*============================== INSTANTIATIONS ==============================*/
 COMPILER_TEST(ZACompiler);
 COMPILER_TEST(AZACompiler);
-} // namespace na
+} // namespace na::azac

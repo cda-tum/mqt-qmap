@@ -86,4 +86,4 @@ private:
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       NAComputation& code) const -> void;
 };
-} // namespace na
+} // namespace na::azac

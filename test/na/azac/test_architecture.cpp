@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "full_compute_store_architecture",
   "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
@@ -116,4 +116,4 @@ TEST_F(TestArchitecture, ExportNoThrow) {
   ASSERT_NO_THROW(arch.exportNAVizMachine(arch.name + ".namachine"));
 }
 
-} // namespace na
+} // namespace na::azac

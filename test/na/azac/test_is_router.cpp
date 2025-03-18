@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "is_router_architecture",
   "storage_zones": [{
@@ -189,4 +189,4 @@ TEST(ISRouterTest, InvalidConfig) {
             "\033[1;35m[WARN]\033[0m Configuration for ISRouter contains an "
             "unknown key: unknown_key. Ignoring.\n");
 }
-} // namespace na
+} // namespace na::azac

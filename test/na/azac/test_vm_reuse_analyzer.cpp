@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "asap_scheduler_architecture",
   "storage_zones": [{
@@ -125,4 +125,4 @@ TEST(VMReuseAnalyzerMaximumBipartiteMatchingInvertedTest, Direct) {
   EXPECT_THAT(VMReuseAnalyzer::maximumBipartiteMatching(inverseSparseMatrix),
               ::testing::ElementsAre(0, 2, 1, 3));
 }
-} // namespace na
+} // namespace na::azac

@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace na {
+namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "code_generator_architecture",
   "storage_zones": [{
@@ -251,4 +251,4 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   }
   EXPECT_EQ(warnings, 3);
 }
-} // namespace na
+} // namespace na::azac

@@ -42,4 +42,4 @@ private:
       const std::vector<std::vector<std::size_t>>& sparseMatrix,
       bool inverted = false) -> std::vector<std::optional<std::size_t>>;
 };
-} // namespace na
+} // namespace na::azac
