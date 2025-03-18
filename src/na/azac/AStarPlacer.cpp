@@ -333,6 +333,59 @@ auto AStarPlacer::makeIntermediatePlacement(
   return {gatePlacement,
           placeQubitsInStorageZone(gatePlacement, reuseQubits, twoQubitGates)};
 }
+auto AStarPlacer::addGateOption(
+    const std::unordered_map<
+        std::pair<std::reference_wrapper<const SLM>, size_t>, uint8_t,
+        std::hash<std::pair<const SLM&, size_t>>,
+        std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetRows,
+    const std::unordered_map<
+        std::pair<std::reference_wrapper<const SLM>, size_t>, uint8_t,
+        std::hash<std::pair<const SLM&, size_t>>,
+        std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetColumns,
+    const SLM& leftSlm, const size_t leftRow, const size_t leftCol,
+    const SLM& rightSlm, const size_t rightRow, const size_t rightCol,
+    const SLM& nearestSlm, const size_t r, const size_t c, GateJob& job) const
+    -> void {
+  //                  other
+  //         ┌─┐       ┌─┐ <-- Entanglement sites
+  //         └┬┘       └┬┘
+  //          │╲dis2   ╱│
+  //     dis1 │  ╲   ╱  │
+  //          │    ╳    │
+  //          │  ╱   ╲  │ dis4
+  //          │╱dis3   ╲│
+  //         ┌┴┐       ┌┴┐ <-- Storage sites
+  //         └─┘       └─┘
+  //          ^         ^
+  //        atom1     atom2
+  const auto& [otherSlm, otherRow, otherCol] =
+      architecture_.get().otherEntanglementSite(nearestSlm, r, c);
+  const auto dis1 = static_cast<float>(architecture_.get().distance(
+      leftSlm, leftRow, leftCol, nearestSlm, r, c));
+  const auto dis2 = static_cast<float>(architecture_.get().distance(
+      rightSlm, rightRow, rightCol, nearestSlm, r, c));
+  const auto dis3 = static_cast<float>(architecture_.get().distance(
+      leftSlm, leftRow, leftCol, otherSlm, otherRow, otherCol));
+  const auto dis4 = static_cast<float>(architecture_.get().distance(
+      rightSlm, rightRow, rightCol, otherSlm, otherRow, otherCol));
+  if (dis1 + dis4 <= dis2 + dis3) {
+    job.options.emplace_back(GateJob::Option{
+        std::array{
+            std::array{discreteTargetRows.at(std::tie(nearestSlm, r)),
+                       discreteTargetColumns.at(std::tie(nearestSlm, c))},
+            std::array{discreteTargetRows.at(std::tie(otherSlm, otherRow)),
+                       discreteTargetColumns.at(std::tie(otherSlm, otherCol))}},
+        std::array{dis1, dis4}});
+  } else {
+    job.options.emplace_back(GateJob::Option{
+        std::array{
+            std::array{discreteTargetRows.at(std::tie(otherSlm, otherRow)),
+                       discreteTargetColumns.at(std::tie(otherSlm, otherCol))},
+            std::array{discreteTargetRows.at(std::tie(nearestSlm, r)),
+                       discreteTargetColumns.at(std::tie(nearestSlm, c))}},
+        std::array{dis2, dis3}});
+  }
+}
 auto AStarPlacer::placeGatesInEntanglementZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
@@ -473,65 +526,103 @@ auto AStarPlacer::placeGatesInEntanglementZone(
     size_t cLow = 0;
     size_t cHigh = nearestSlm.get().nCols;
     if (useWindow_) {
-      rLow =
-          nearestRow > windowHeight_ / 2 ? nearestRow - (windowHeight_ / 2) : 0;
-      rHigh = std::min(nearestRow + (windowHeight_ / 2) + 1,
+      rLow = nearestRow > windowMinHeight_ / 2
+                 ? nearestRow - (windowMinHeight_ / 2)
+                 : 0;
+      rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
                        nearestSlm.get().nRows);
-      cLow =
-          nearestCol > windowWidth_ / 2 ? nearestCol - (windowWidth_ / 2) : 0;
-      cHigh =
-          std::min(nearestCol + (windowWidth_ / 2) + 1, nearestSlm.get().nCols);
+      cLow = nearestCol > windowMinWidth_ / 2
+                 ? nearestCol - (windowMinWidth_ / 2)
+                 : 0;
+      cHigh = std::min(nearestCol + (windowMinWidth_ / 2) + 1,
+                       nearestSlm.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
         if (occupiedEntanglementSites.find(std::tie(nearestSlm, r, c)) ==
             occupiedEntanglementSites.end()) {
-          //                  other
-          //         ┌─┐       ┌─┐ <-- Entanglement sites
-          //         └┬┘       └┬┘
-          //          │╲dis2   ╱│
-          //     dis1 │  ╲   ╱  │
-          //          │    ╳    │
-          //          │  ╱   ╲  │ dis4
-          //          │╱dis3   ╲│
-          //         ┌┴┐       ┌┴┐ <-- Storage sites
-          //         └─┘       └─┘
-          //          ^         ^
-          //        atom1     atom2
-          const auto& [otherSlm, otherRow, otherCol] =
-              architecture_.get().otherEntanglementSite(nearestSlm, r, c);
-          const auto dis1 = static_cast<float>(architecture_.get().distance(
-              leftSlm, leftRow, leftCol, nearestSlm, r, c));
-          const auto dis2 = static_cast<float>(architecture_.get().distance(
-              rightSlm, rightRow, rightCol, nearestSlm, r, c));
-          const auto dis3 = static_cast<float>(architecture_.get().distance(
-              leftSlm, leftRow, leftCol, otherSlm, otherRow, otherCol));
-          const auto dis4 = static_cast<float>(architecture_.get().distance(
-              rightSlm, rightRow, rightCol, otherSlm, otherRow, otherCol));
-          if (dis1 + dis4 <= dis2 + dis3) {
-            job.options.emplace_back(GateJob::Option{
-                std::array{
-                    std::array{
-                        discreteTargetRows.at(std::tie(nearestSlm, r)),
-                        discreteTargetColumns.at(std::tie(nearestSlm, c))},
-                    std::array{
-                        discreteTargetRows.at(std::tie(otherSlm, otherRow)),
-                        discreteTargetColumns.at(
-                            std::tie(otherSlm, otherCol))}},
-                std::array{dis1, dis4}});
-          } else {
-            job.options.emplace_back(GateJob::Option{
-                std::array{
-                    std::array{
-                        discreteTargetRows.at(std::tie(otherSlm, otherRow)),
-                        discreteTargetColumns.at(std::tie(otherSlm, otherCol))},
-                    std::array{
-                        discreteTargetRows.at(std::tie(nearestSlm, r)),
-                        discreteTargetColumns.at(std::tie(nearestSlm, c))}},
-                std::array{dis2, dis3}});
+          addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
+                        leftRow, leftCol, rightSlm, rightRow, rightCol,
+                        nearestSlm, r, c, job);
+        }
+      }
+    }
+    size_t expansion = 0;
+    while (useWindow_ && static_cast<double>(job.options.size()) <
+                             windowShare_ * static_cast<double>(nJobs)) {
+      // window does not contain enough options, so expand it
+      ++expansion;
+      size_t windowWidth = 0;
+      size_t windowHeight = 0;
+      if (windowRatio_ < 1.0) {
+        // landscpe ==> expand width and adjust height
+        windowWidth = windowMinWidth_ + expansion;
+        windowHeight = static_cast<size_t>(
+            std::round(windowRatio_ * static_cast<double>(windowWidth)));
+      } else {
+        // portrait ==> expand height and adjust width
+        windowHeight = windowMinHeight_ + expansion;
+        windowWidth = static_cast<size_t>(
+            std::round(static_cast<double>(windowHeight) / windowRatio_));
+      }
+      auto rLowNew =
+          nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
+      auto rHighNew =
+          std::min(nearestRow + (windowHeight / 2) + 1, nearestSlm.get().nRows);
+      auto cLowNew =
+          nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
+      auto cHighNew =
+          std::min(nearestCol + (windowWidth / 2) + 1, nearestSlm.get().nCols);
+      if (rLowNew < rLow) {
+        assert(rLow - rLowNew == 1);
+        for (size_t c = cLowNew; c < cHighNew; ++c) {
+          if (occupiedEntanglementSites.find(std::tie(
+                  nearestSlm, rLowNew, c)) == occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
+                          leftRow, leftCol, rightSlm, rightRow, rightCol,
+                          nearestSlm, rLowNew, c, job);
           }
         }
       }
+      if (rHighNew > rHigh) {
+        assert(rHighNew - rHigh == 1);
+        for (size_t c = cLowNew; c < cHighNew; ++c) {
+          // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
+          if (occupiedEntanglementSites.find(std::tie(nearestSlm, rHigh, c)) ==
+              occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
+                          leftRow, leftCol, rightSlm, rightRow, rightCol,
+                          nearestSlm, rHigh, c, job);
+          }
+        }
+      }
+      if (cLowNew < cLow) {
+        assert(cLow - cLowNew == 1);
+        for (size_t r = rLow; r < rHigh; ++r) {
+          if (occupiedEntanglementSites.find(std::tie(
+                  nearestSlm, r, cLowNew)) == occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
+                          leftRow, leftCol, rightSlm, rightRow, rightCol,
+                          nearestSlm, r, cLowNew, job);
+          }
+        }
+      }
+      if (cHighNew < cHigh) {
+        assert(cHighNew - cHigh == 1);
+        for (size_t r = rLow; r < rHigh; ++r) {
+          // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
+          if (occupiedEntanglementSites.find(std::tie(nearestSlm, r, cHigh)) ==
+              occupiedEntanglementSites.end()) {
+            addGateOption(discreteTargetRows, discreteTargetColumns, leftSlm,
+                          leftRow, leftCol, rightSlm, rightRow, rightCol,
+                          nearestSlm, r, cHigh, job);
+          }
+        }
+      }
+      rLow = rLowNew;
+      rHigh = rHighNew;
+      cLow = cLowNew;
+      cHigh = cHighNew;
     }
     std::sort(
         job.options.begin(), job.options.end(),
@@ -693,7 +784,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
   for (const auto atom : atomsToPlace) {
     const auto& [previousSlm, previousRow, previousCol] =
         previousPlacement[atom];
-    const auto& [nearestSLM, nearestRow, nearestCol] =
+    const auto& [nearestSlm, nearestRow, nearestCol] =
         architecture_.get().nearestStorageSite(previousSlm, previousRow,
                                                previousCol);
     auto& job = atomJobs.emplace_back();
@@ -702,31 +793,132 @@ auto AStarPlacer::placeQubitsInStorageZone(
         std::array{discreteRows.at(std::tie(previousSlm, previousRow)),
                    discreteColumns.at(std::tie(previousSlm, previousCol))};
     size_t rLow = 0;
-    size_t rHigh = nearestSLM.get().nRows;
+    size_t rHigh = nearestSlm.get().nRows;
     size_t cLow = 0;
-    size_t cHigh = nearestSLM.get().nCols;
+    size_t cHigh = nearestSlm.get().nCols;
     if (useWindow_) {
-      rLow =
-          nearestRow > windowHeight_ / 2 ? nearestRow - (windowHeight_ / 2) : 0;
-      rHigh = std::min(nearestRow + (windowHeight_ / 2) + 1,
-                       nearestSLM.get().nRows);
-      cLow =
-          nearestCol > windowWidth_ / 2 ? nearestCol - (windowWidth_ / 2) : 0;
-      cHigh =
-          std::min(nearestCol + (windowWidth_ / 2) + 1, nearestSLM.get().nCols);
+      rLow = nearestRow > windowMinHeight_ / 2
+                 ? nearestRow - (windowMinHeight_ / 2)
+                 : 0;
+      rHigh = std::min(nearestRow + (windowMinHeight_ / 2) + 1,
+                       nearestSlm.get().nRows);
+      cLow = nearestCol > windowMinWidth_ / 2
+                 ? nearestCol - (windowMinWidth_ / 2)
+                 : 0;
+      cHigh = std::min(nearestCol + (windowMinWidth_ / 2) + 1,
+                       nearestSlm.get().nCols);
     }
     for (size_t r = rLow; r < rHigh; ++r) {
       for (size_t c = cLow; c < cHigh; ++c) {
-        if (occupiedStorageSites.find(std::tie(nearestSLM, r, c)) ==
+        if (occupiedStorageSites.find(std::tie(nearestSlm, r, c)) ==
             occupiedStorageSites.end()) {
           const auto distance = static_cast<float>(architecture_.get().distance(
-              previousSlm, previousRow, previousCol, nearestSLM, r, c));
+              previousSlm, previousRow, previousCol, nearestSlm, r, c));
           job.options.emplace_back(AtomJob::Option{
-              {discreteTargetRows.at(std::tie(nearestSLM, r)),
-               discreteTargetColumns.at(std::tie(nearestSLM, c))},
+              {discreteTargetRows.at(std::tie(nearestSlm, r)),
+               discreteTargetColumns.at(std::tie(nearestSlm, c))},
               distance});
         }
       }
+    }
+    size_t expansion = 0;
+    while (useWindow_ && static_cast<double>(job.options.size()) <
+                             windowShare_ * static_cast<double>(nJobs)) {
+      std::cout << "\033[1;32m[INFO]\033[0 Expanding window for atom " << atom
+                << "\n";
+      // window does not contain enough options, so expand it
+      ++expansion;
+      size_t windowWidth = 0;
+      size_t windowHeight = 0;
+      if (windowRatio_ < 1.0) {
+        // landscpe ==> expand width and adjust height
+        windowWidth = windowMinWidth_ + expansion;
+        windowHeight = static_cast<size_t>(
+            std::round(windowRatio_ * static_cast<double>(windowWidth)));
+      } else {
+        // portrait ==> expand height and adjust width
+        windowHeight = windowMinHeight_ + expansion;
+        windowWidth = static_cast<size_t>(
+            std::round(static_cast<double>(windowHeight) / windowRatio_));
+      }
+      auto rLowNew =
+          nearestRow > windowHeight / 2 ? nearestRow - (windowHeight / 2) : 0;
+      auto rHighNew =
+          std::min(nearestRow + (windowHeight / 2) + 1, nearestSlm.get().nRows);
+      auto cLowNew =
+          nearestCol > windowWidth / 2 ? nearestCol - (windowWidth / 2) : 0;
+      auto cHighNew =
+          std::min(nearestCol + (windowWidth / 2) + 1, nearestSlm.get().nCols);
+      if (rLowNew < rLow) {
+        assert(rLow - rLowNew == 1);
+        for (size_t c = cLowNew; c < cHighNew; ++c) {
+          if (occupiedStorageSites.find(std::tie(nearestSlm, rLowNew, c)) ==
+              occupiedStorageSites.end()) {
+            const auto distance =
+                static_cast<float>(architecture_.get().distance(
+                    previousSlm, previousRow, previousCol, nearestSlm, rLowNew,
+                    c));
+            job.options.emplace_back(AtomJob::Option{
+                {discreteTargetRows.at(std::tie(nearestSlm, rLowNew)),
+                 discreteTargetColumns.at(std::tie(nearestSlm, c))},
+                distance});
+          }
+        }
+      }
+      if (rHighNew > rHigh) {
+        assert(rHighNew - rHigh == 1);
+        for (size_t c = cLowNew; c < cHighNew; ++c) {
+          // NOTE: we have to use rHighNew - 1 here, which is equal to rHigh
+          if (occupiedStorageSites.find(std::tie(nearestSlm, rHigh, c)) ==
+              occupiedStorageSites.end()) {
+            const auto distance =
+                static_cast<float>(architecture_.get().distance(
+                    previousSlm, previousRow, previousCol, nearestSlm, rHigh,
+                    c));
+            job.options.emplace_back(AtomJob::Option{
+                {discreteTargetRows.at(std::tie(nearestSlm, rHigh)),
+                 discreteTargetColumns.at(std::tie(nearestSlm, c))},
+                distance});
+          }
+        }
+      }
+      if (cLowNew < cLow) {
+        assert(cLow - cLowNew == 1);
+        for (size_t r = rLow; r < rHigh; ++r) {
+          if (occupiedStorageSites.find(std::tie(nearestSlm, r, cLowNew)) ==
+              occupiedStorageSites.end()) {
+            const auto distance =
+                static_cast<float>(architecture_.get().distance(
+                    previousSlm, previousRow, previousCol, nearestSlm, r,
+                    cLowNew));
+            job.options.emplace_back(AtomJob::Option{
+                {discreteTargetRows.at(std::tie(nearestSlm, r)),
+                 discreteTargetColumns.at(std::tie(nearestSlm, cLowNew))},
+                distance});
+          }
+        }
+      }
+      if (cHighNew < cHigh) {
+        assert(cHighNew - cHigh == 1);
+        for (size_t r = rLow; r < rHigh; ++r) {
+          // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
+          if (occupiedStorageSites.find(std::tie(nearestSlm, r, cHigh)) ==
+              occupiedStorageSites.end()) {
+            const auto distance =
+                static_cast<float>(architecture_.get().distance(
+                    previousSlm, previousRow, previousCol, nearestSlm, r,
+                    cHigh));
+            job.options.emplace_back(AtomJob::Option{
+                {discreteTargetRows.at(std::tie(nearestSlm, r)),
+                 discreteTargetColumns.at(std::tie(nearestSlm, cHigh))},
+                distance});
+          }
+        }
+      }
+      rLow = rLowNew;
+      rHigh = rHighNew;
+      cLow = cLowNew;
+      cHigh = cHighNew;
     }
     std::sort(
         job.options.begin(), job.options.end(),
@@ -1079,8 +1271,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
   if (const auto& configIt = config.find("a_star_placer");
       configIt != config.end() && configIt->is_object()) {
     bool useWindowSet = false;
-    bool windowHeightSet = false;
-    bool windowWidthSet = false;
+    bool windowMinWidthSet = false;
+    bool windowRatioSet = false;
+    bool windowShareSet = false;
     bool deepeningFactorSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
@@ -1094,26 +1287,35 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
                  "value for use_window. Using default.\n";
           std::cout << oss.str();
         }
-      } else if (key == "window_height") {
+      } else if (key == "window_min_width") {
         if (value.is_number_unsigned()) {
-          windowHeight_ = value;
-          windowHeightSet = true;
+          windowMinWidth_ = value;
+          windowMinWidthSet = true;
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid "
-                 "value for window_height. Using default.\n";
+                 "contains an invalid value for window_min_width. Using "
+                 "default.\n";
           std::cout << oss.str();
         }
-      } else if (key == "window_width") {
-        if (value.is_number_unsigned()) {
-          windowWidth_ = value;
-          windowWidthSet = true;
+      } else if (key == "window_ratio") {
+        if (value.is_number_float()) {
+          windowRatio_ = value;
+          windowRatioSet = true;
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid "
-                 "value for window_width. Using default.\n";
+                 "contains an invalid value for window_ratio. Using default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "window_share") {
+        if (value.is_number_float()) {
+          windowShare_ = value;
+          windowShareSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid value for window_share. Using default.\n";
           std::cout << oss.str();
         }
       } else if (key == "deepening_factor") {
@@ -1137,22 +1339,29 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     }
     if (!useWindowSet) {
       std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-                   "not contain a "
-                   "setting for use_window. Using default.\n";
+                   "not contain a setting for use_window. Using default.\n";
     }
     if (useWindow_) {
-      if (!windowHeightSet) {
+      if (!windowMinWidthSet) {
         std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                     "does not contain a "
-                     "setting for window_height. Using default.\n";
+                     "does not contain a setting for window_min_width. Using "
+                     "default.\n";
       }
-      if (!windowWidthSet) {
-        std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                     "does not contain a "
-                     "setting for window_width. Using default.\n";
+      if (!windowRatioSet) {
+        std::cout
+            << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+               "does not contain a setting for window_ratio. Using default.\n";
+      }
+      if (!windowShareSet) {
+        std::cout
+            << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+               "does not contain a setting for window_share. Using default.\n";
       }
     }
-
+    if (windowMinWidthSet) {
+      windowMinHeight_ = static_cast<size_t>(
+          std::round(windowRatio_ * static_cast<double>(windowMinWidth_)));
+    }
     if (!deepeningFactorSet) {
       std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
                    "not contain a "

@@ -31,12 +31,30 @@ class AStarPlacer {
   /// this flag indicates whether the  placement should use a window when
   /// selecting potential free sites
   bool useWindow_ = true;
-  /// If the window is used, this denotes the height in
-  /// terms of rows of the window centered at the nearest site
-  size_t windowHeight_ = 4;
-  /// If the window is used, this denotes the width in terms of columns of the
-  /// window centered at the nearest site
-  size_t windowWidth_ = 4;
+  /// If the window is used, this denotes the minimum width in terms of rows of
+  /// the window centered at the nearest site
+  size_t windowMinWidth_ = 4;
+  size_t windowMinHeight_ = 6;
+  /// If the window is used, this denotes the ration between the height and the
+  /// width of the window. A value greater than 1 means that the window is
+  /// higher than wide. A value of exactly 1 means that the window is square. A
+  /// value smaller than 1 means that the window is wider than high.
+  double windowRatio_ = 1.5;
+  /// If the window is used, this denotes the share of free sites in the window
+  /// in relation to the number of atoms to be moved in this step. The window is
+  /// extended according to the ratio as long as the share of free sites is
+  /// smaller than this value. A value greater or equal to 1 ensures that there
+  /// exists a solution. However, a smaller value might be a reasonable good
+  /// guess since it is almost certain that not all atoms to be moved will end
+  /// in the same window.
+  double windowShare_ = 0.4;
+  /// The heuristic used in the A* search contains a term that resembles the
+  /// standard deviation of the differences between the current and target sites
+  /// of the atoms to be moved in every orientation. This factor is multiplied
+  /// with the standard deviation to adjust the influence of this term. Setting
+  /// it to 0.0 disables this term resulting in an admissible heuristic.
+  /// However, this leads to a vast exploration of the search tree and usually
+  /// results in a huge number of nodes visited.
   float deepeningFactor_ = 1.0;
 
   /// When placing atoms after a rydberg layer back in the storage zone, this
@@ -268,6 +286,20 @@ private:
                                           size_t, size_t>>,
                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                           size_t, size_t>>>;
+  auto addGateOption(
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, unsigned long>,
+          unsigned char, std::hash<std::pair<const SLM&, unsigned long>>,
+          std::equal_to<std::pair<const SLM&, unsigned long>>>&
+          discreteTargetRows,
+      const std::unordered_map<
+          std::pair<std::reference_wrapper<const SLM>, unsigned long>,
+          unsigned char, std::hash<std::pair<const SLM&, unsigned long>>,
+          std::equal_to<std::pair<const SLM&, unsigned long>>>&
+          discreteTargetColumns,
+      const SLM& leftSlm, size_t leftRow, size_t leftCol, const SLM& rightSlm,
+      size_t rightRow, size_t rightCol, const SLM& nearestSlm, size_t r,
+      size_t c, GateJob& job) const -> void;
 
   /**
    * This function places the qubits corresponding to gates in the entanglement
