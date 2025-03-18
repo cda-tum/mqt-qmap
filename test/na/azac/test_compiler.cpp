@@ -42,7 +42,8 @@ constexpr std::string_view settings = R"({
   "a_star_placer" : {
     "use_window" : true,
     "window_height" : 6,
-    "window_width" : 4
+    "window_width" : 4,
+    "deepening_factor" : 1.0
   }
 })";
 #define COMPILER_TEST(compiler_type)                                           \

@@ -37,6 +37,7 @@ class AStarPlacer {
   /// If the window is used, this denotes the width in terms of columns of the
   /// window centered at the nearest site
   size_t windowWidth_ = 4;
+  float deepeningFactor_ = 1.0;
 
   /// When placing atoms after a rydberg layer back in the storage zone, this
   /// struct stores for every such atom all required information, i.e., the
@@ -336,10 +337,9 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto
-  getAtomPlacementHeuristic(const std::vector<AtomJob>& atomJobs,
-                            const std::array<float, 2>& scaleFactors,
-                            const AtomNode& node) -> float;
+  [[nodiscard]] static auto getAtomPlacementHeuristic(
+      const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
+      const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float;
 
   /// @brief Return the estimated cost still required to reach a goal node.
   /// @details To yield an optimal results, the heuristic must be admissible,
@@ -357,10 +357,9 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto
-  getGatePlacementHeuristic(const std::vector<GateJob>& gateJobs,
-                            const std::array<float, 2>& scaleFactors,
-                            const GateNode& node) -> float;
+  [[nodiscard]] static auto getGatePlacementHeuristic(
+      const std::vector<GateJob>& gateJobs, const float deepeningFactor,
+      const std::array<float, 2>& scaleFactors, const GateNode& node) -> float;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated

@@ -577,6 +577,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   std::deque<std::unique_ptr<GateNode>> nodes;
   // make the root node
   nodes.emplace_back(std::make_unique<GateNode>());
+  const auto deepeningFactor = deepeningFactor_;
   const auto& path = aStarTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
@@ -584,9 +585,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       },
       [nJobs](const auto& node) { return isGoal(2 * nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&gateJobs, &scaleFactors](const auto& node) {
-        return getGatePlacementHeuristic(gateJobs, scaleFactors,
-                                         std::move(node));
+      [&gateJobs, &scaleFactors, deepeningFactor](const auto& node) {
+        return getGatePlacementHeuristic(gateJobs, deepeningFactor,
+                                         scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -770,6 +771,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
   /// This happens when a node is expanded by calling getNeighbors.
   std::deque<std::unique_ptr<AtomNode>> nodes;
   nodes.emplace_back(std::make_unique<AtomNode>());
+  const auto deepeningFactor = deepeningFactor_;
   const auto& path = aStarTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
@@ -777,9 +779,9 @@ auto AStarPlacer::placeQubitsInStorageZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&atomJobs, &scaleFactors](const auto& node) {
-        return getAtomPlacementHeuristic(atomJobs, scaleFactors,
-                                         std::move(node));
+      [&atomJobs, &scaleFactors, deepeningFactor](const auto& node) {
+        return getAtomPlacementHeuristic(atomJobs, deepeningFactor,
+                                         scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -845,7 +847,7 @@ auto AStarPlacer::sumStdDeviationForGroups(
   return sumStdDev;
 }
 auto AStarPlacer::getAtomPlacementHeuristic(
-    const std::vector<AtomJob>& atomJobs,
+    const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
   const auto nUnplacedAtoms =
@@ -868,12 +870,13 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic +=
-      sumStdDeviationForGroups(scaleFactors, node.groups) * nUnplacedAtoms;
+  heuristic += deepeningFactor *
+               sumStdDeviationForGroups(scaleFactors, node.groups) *
+               nUnplacedAtoms;
   return heuristic;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
-    const std::vector<GateJob>& gateJobs,
+    const std::vector<GateJob>& gateJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
   const auto nUnplacedGates =
@@ -898,7 +901,8 @@ auto AStarPlacer::getGatePlacementHeuristic(
     }
   }
   float heuristic =
-      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+      deepeningFactor * maxDistanceOfUnplacedAtom <=
+              node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
   heuristic +=
@@ -1070,6 +1074,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool useWindowSet = false;
     bool windowHeightSet = false;
     bool windowWidthSet = false;
+    bool deepeningFactorSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
         if (value.is_boolean()) {
@@ -1104,6 +1109,17 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
                  "value for window_width. Using default.\n";
           std::cout << oss.str();
         }
+      } else if (key == "deepening_factor") {
+        if (value.is_number_float()) {
+          deepeningFactor_ = value;
+          deepeningFactorSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid "
+                 "value for deepening_factor. Using default.\n";
+          std::cout << oss.str();
+        }
       } else {
         std::ostringstream oss;
         oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
@@ -1128,6 +1144,12 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
                      "does not contain a "
                      "setting for window_width. Using default.\n";
       }
+    }
+
+    if (!deepeningFactorSet) {
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+                   "not contain a "
+                   "setting for deepening_factor. Using default.\n";
     }
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
