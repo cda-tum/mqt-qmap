@@ -34,7 +34,7 @@ constexpr std::string_view configJson = R"({
     "use_window" : true,
     "window_height" : 6,
     "window_width" : 4,
-    "deepening_factor" : 1.0
+    "deepening_factor" : 10.0
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
@@ -149,8 +149,8 @@ TEST_F(AStarPlacerPlaceTest, TwoGatesZip) {
                                ::testing::ElementsAre(1U, 3U, 0U, 2U)));
   EXPECT_THAT(qubitsInEntanglementYs, ::testing::UnorderedElementsAre(70UL));
 }
-TEST_F(AStarPlacerPlaceTest, HalfFullEntanglementZone) {
-  constexpr size_t nQubits = 16;
+TEST_F(AStarPlacerPlaceTest, FullEntanglementZone) {
+  constexpr size_t nQubits = 32;
   const auto& placement = placer.place(
       nQubits,
       std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U},
@@ -160,7 +160,15 @@ TEST_F(AStarPlacerPlaceTest, HalfFullEntanglementZone) {
                                                           {8U, 9U},
                                                           {10U, 11U},
                                                           {12U, 13U},
-                                                          {14U, 15U}}},
+                                                          {14U, 15U},
+                                                          {16U, 17U},
+                                                          {18U, 19U},
+                                                          {20U, 21U},
+                                                          {22U, 23U},
+                                                          {24U, 25U},
+                                                          {26U, 27U},
+                                                          {28U, 29U},
+                                                          {30U, 31U}}},
       std::vector<std::unordered_set<qc::Qubit>>{});
   EXPECT_THAT(placement, ::testing::SizeIs(3));
   EXPECT_THAT(placement, ::testing::Each(::testing::SizeIs(nQubits)));

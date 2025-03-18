@@ -43,7 +43,7 @@ constexpr std::string_view settings = R"({
     "use_window" : true,
     "window_height" : 6,
     "window_width" : 4,
-    "deepening_factor" : 1.0
+    "deepening_factor" : 100.0
   }
 })";
 #define COMPILER_TEST(compiler_type)                                           \

@@ -585,7 +585,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       },
       [nJobs](const auto& node) { return isGoal(2 * nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&gateJobs, &scaleFactors, deepeningFactor](const auto& node) {
+      [&gateJobs, deepeningFactor, &scaleFactors](const auto& node) {
         return getGatePlacementHeuristic(gateJobs, deepeningFactor,
                                          scaleFactors, std::move(node));
       });
@@ -779,7 +779,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&atomJobs, &scaleFactors, deepeningFactor](const auto& node) {
+      [&atomJobs, deepeningFactor, &scaleFactors](const auto& node) {
         return getAtomPlacementHeuristic(atomJobs, deepeningFactor,
                                          scaleFactors, std::move(node));
       });
@@ -850,8 +850,7 @@ auto AStarPlacer::getAtomPlacementHeuristic(
     const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
-  const auto nUnplacedAtoms =
-      static_cast<float>(nAtomJobs - node.consumedFreeSites.size());
+  const auto nPlacedAtoms = static_cast<float>(node.consumedFreeSites.size());
   float maxDistanceOfUnplacedAtom = 0.0;
   for (size_t i = node.consumedFreeSites.size(); i < nAtomJobs; ++i) {
     for (const auto& option : atomJobs[i].options) {
@@ -870,17 +869,19 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic += deepeningFactor *
-               sumStdDeviationForGroups(scaleFactors, node.groups) *
-               nUnplacedAtoms;
+  heuristic += nPlacedAtoms == 0
+                   ? 0.F
+                   : deepeningFactor *
+                         sumStdDeviationForGroups(scaleFactors, node.groups) /
+                         nPlacedAtoms;
   return heuristic;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
     const std::vector<GateJob>& gateJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
-  const auto nUnplacedGates =
-      static_cast<float>(nGateJobs - node.consumedFreeSites.size());
+  const auto nPlacedGates =
+      static_cast<float>(node.consumedFreeSites.size() / 2);
   float maxDistanceOfUnplacedAtom = 0.0;
   for (size_t i = node.consumedFreeSites.size() / 2; i < nGateJobs; ++i) {
     for (const auto& option : gateJobs[i].options) {
@@ -901,12 +902,14 @@ auto AStarPlacer::getGatePlacementHeuristic(
     }
   }
   float heuristic =
-      deepeningFactor * maxDistanceOfUnplacedAtom <=
-              node.maxDistanceOfPlacedAtom
+      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic +=
-      sumStdDeviationForGroups(scaleFactors, node.groups) * nUnplacedGates;
+  heuristic += nPlacedGates == 0
+                   ? 0.F
+                   : deepeningFactor *
+                         sumStdDeviationForGroups(scaleFactors, node.groups) /
+                         nPlacedGates;
   return heuristic;
 }
 auto AStarPlacer::getAtomPlacementNeighbors(
