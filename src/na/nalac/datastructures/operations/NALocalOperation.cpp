@@ -16,20 +16,20 @@
 namespace na::nalac {
 auto NALocalOperation::toString() const -> std::string {
   std::stringstream ss;
-  ss << std::string(ctrls, 'c') << opType;
-  if (!params.empty()) {
+  ss << std::string(ctrls_, 'c') << opType_;
+  if (!params_.empty()) {
     ss << "(";
-    for (const auto& p : params) {
+    for (const auto& p : params_) {
       ss << p << ", ";
     }
     ss.seekp(-2, std::ios_base::end);
     ss << ")";
   }
   ss << " at ";
-  if (positions.empty()) {
+  if (positions_.empty()) {
     ss.seekp(-1, std::ios_base::end);
   } else {
-    for (const auto& p : positions) {
+    for (const auto& p : positions_) {
       ss << *p << ", ";
     }
     ss.seekp(-2, std::ios_base::end);

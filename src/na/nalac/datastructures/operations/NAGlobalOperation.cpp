@@ -16,10 +16,10 @@
 namespace na::nalac {
 auto NAGlobalOperation::toString() const -> std::string {
   std::stringstream ss;
-  ss << std::string(ctrls, 'c') << opType;
-  if (!params.empty()) {
+  ss << std::string(ctrls_, 'c') << opType_;
+  if (!params_.empty()) {
     ss << "(";
-    for (const auto& p : params) {
+    for (const auto& p : params_) {
       ss << p << ", ";
     }
     ss.seekp(-2, std::ios_base::end);

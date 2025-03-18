@@ -383,8 +383,7 @@ public:
    */
   [[nodiscard]] qc::fp getEuclideanDistance(const CoordIndex idx1,
                                             const CoordIndex idx2) const {
-    return static_cast<qc::fp>(this->coordinates.at(idx1).getEuclideanDistance(
-        this->coordinates.at(idx2)));
+    return coordinates.at(idx1).getEuclideanDistance(coordinates.at(idx2));
   }
   /**
    * @brief Get the Euclidean distance between two coordinates
@@ -394,7 +393,7 @@ public:
    */
   [[nodiscard]] static qc::fp getEuclideanDistance(const Location& c1,
                                                    const Location& c2) {
-    return static_cast<qc::fp>(c1.getEuclideanDistance(c2));
+    return c1.getEuclideanDistance(c2);
   }
   /**
    * @brief Get the Manhattan distance between two coordinate indices
@@ -402,8 +401,8 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceX(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceX(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
         this->coordinates.at(idx1).getManhattanDistanceX(
             this->coordinates.at(idx2)));
@@ -414,11 +413,10 @@ public:
    * @param idx2 The index of the second coordinate
    * @return The Manhattan distance between the two coordinate indices
    */
-  [[nodiscard]] CoordIndex getManhattanDistanceY(CoordIndex idx1,
-                                                 CoordIndex idx2) const {
+  [[nodiscard]] CoordIndex getManhattanDistanceY(const CoordIndex idx1,
+                                                 const CoordIndex idx2) const {
     return static_cast<CoordIndex>(
-        this->coordinates.at(idx1).getManhattanDistanceY(
-            this->coordinates.at(idx2)));
+        coordinates.at(idx1).getManhattanDistanceY(coordinates.at(idx2)));
   }
 
   // Nearby coordinates
@@ -428,7 +426,7 @@ public:
    * @return The precomputed nearby coordinates for the coordinate index
    */
   [[nodiscard]] std::set<CoordIndex>
-  getNearbyCoordinates(CoordIndex idx) const {
+  getNearbyCoordinates(const CoordIndex idx) const {
     return nearbyCoordinates[idx];
   }
   /**

@@ -73,7 +73,7 @@ public:
     Value t1 = 0;
     Value t2 = 0;
 
-    [[nodiscard]] Value tEff() const {
+    [[nodiscard]] auto tEff() const -> Value {
       if (t1 == 0 && t2 == 0) {
         return 0;
       }
@@ -207,7 +207,7 @@ public:
    * @return the distance in µm
    */
   [[nodiscard]] auto getDistance(const Index& i, const Index& j) const
-      -> double {
+      -> uint64_t {
     return (getPositionOfSite(j) - getPositionOfSite(i)).length();
   }
   [[nodiscard]] auto getZoneAt(const Point& p) const -> ZoneId;

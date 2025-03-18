@@ -23,16 +23,16 @@
 namespace na::nalac {
 class NALocalOperation : public NAOperation {
 protected:
-  qc::OpType opType;
-  std::size_t ctrls;
-  std::vector<qc::fp> params;
-  std::vector<std::shared_ptr<Point>> positions;
+  qc::OpType opType_;
+  std::size_t ctrls_;
+  std::vector<qc::fp> params_;
+  std::vector<std::shared_ptr<Point>> positions_;
 
 public:
   NALocalOperation(const qc::OpType opType, const std::size_t ctrls,
-                   const std::vector<qc::fp>& parameter,
-                   const std::vector<std::shared_ptr<Point>>& pos)
-      : opType(opType), ctrls(ctrls), params(parameter), positions(pos) {
+                   const std::vector<qc::fp>& params,
+                   const std::vector<std::shared_ptr<Point>>& positions)
+      : opType_(opType), ctrls_(ctrls), params_(params), positions_(positions) {
     if (!isSingleQubitGate(opType)) {
       throw std::invalid_argument("Operation is not single qubit.");
     }
@@ -53,13 +53,13 @@ public:
       : NALocalOperation(opType, ctrls, {}, std::move(pos)) {}
   [[nodiscard]] auto getPositions() const
       -> const std::vector<std::shared_ptr<Point>>& {
-    return positions;
+    return positions_;
   }
   [[nodiscard]] auto getParams() const -> const std::vector<qc::fp>& {
-    return params;
+    return params_;
   }
   [[nodiscard]] auto getType() const -> std::pair<qc::OpType, std::size_t> {
-    return {opType, ctrls};
+    return {opType_, ctrls_};
   }
   [[nodiscard]] auto isLocalOperation() const -> bool override { return true; }
   [[nodiscard]] auto toString() const -> std::string override;

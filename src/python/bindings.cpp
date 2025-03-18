@@ -18,7 +18,6 @@
 #include "na/NAComputation.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
-#include "na/nasp/SolverFactory.hpp"
 #include "qasm3/Importer.hpp"
 #include "sc/Architecture.hpp"
 #include "sc/Mapper.hpp"
@@ -55,8 +54,9 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 // c++ binding function
-MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
-                   Configuration& config) {
+std::pair<qc::QuantumComputation, MappingResults>
+map(const qc::QuantumComputation& circ, Architecture& arch,
+    Configuration& config) {
   if (config.useTeleportation) {
     config.teleportationQubits =
         std::min((arch.getNqubits() - circ.getNqubits()) & ~1U,
@@ -85,12 +85,9 @@ MappingResults map(const qc::QuantumComputation& circ, Architecture& arch,
   }
 
   auto& results = mapper->getResults();
+  auto&& qcMapped = mapper->moveMappedCircuit();
 
-  std::stringstream qasm{};
-  mapper->dumpResult(qasm);
-  results.mappedCircuit = qasm.str();
-
-  return results;
+  return {std::move(qcMapped), results};
 }
 
 PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
@@ -701,6 +698,10 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
   synthesizer.def_property_readonly("results",
                                     &cs::CliffordSynthesizer::getResults,
                                     "Returns the results of the synthesis.");
+  synthesizer.def_property_readonly(
+      "result_circuit", [](cs::CliffordSynthesizer& self) {
+        return qasm3::Importer::imports(self.getResults().getResultCircuit());
+      });
 
   // Neutral Atom Hybrid Mapper
   py::enum_<na::InitialCoordinateMapping>(
@@ -1018,7 +1019,7 @@ of the abstraction from the 2D grid used for the solver must be provided again.
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
                        [](unsigned char c) { return std::tolower(c); });
-        return na::SolverFactory::getOpsForSolver(
+        return na::NASolver::getOpsForSolver(
             qc, qc::opTypeFromString(operationType), numControls, quiet);
       },
       "qc"_a, "operation_type"_a = "Z", "num_operands"_a = 1, "quiet"_a = true,

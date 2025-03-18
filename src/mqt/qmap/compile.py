@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
 
-from qiskit import QuantumCircuit, QuantumRegister, qasm3
-from qiskit.transpiler import Layout, TranspileLayout
-
 if TYPE_CHECKING:
     from os import PathLike
 
+    from qiskit.circuit import QuantumCircuit
     from qiskit.providers import Backend
     from qiskit.providers.models import BackendProperties
     from qiskit.transpiler.target import Target
@@ -21,6 +19,7 @@ if TYPE_CHECKING:
     CircuitInputType = Union[QuantumComputation, str, PathLike[str], QuantumCircuit]
 
 from mqt.core import load
+from mqt.core.plugins.qiskit import mqt_to_qiskit
 
 from .load_architecture import load_architecture
 from .load_calibration import load_calibration
@@ -48,30 +47,6 @@ __all__ = [
 
 def __dir__() -> list[str]:
     return __all__
-
-
-def extract_initial_layout_from_qasm(qasm: str, qregs: list[QuantumRegister]) -> Layout:
-    """Extract the initial layout resulting from compiling a circuit from a QASM file.
-
-    Args:
-        qasm: The QASM file to extract the initial layout from.
-        qregs: The quantum registers of the circuit.
-
-    Returns:
-        The initial layout.
-    """
-    for line in qasm.split("\n"):
-        if line.startswith("// i "):
-            # strip away initial part of line
-            stripped_line = line[5:]
-            # split line into tokens
-            tokens = stripped_line.split(" ")
-            # convert tokens to integers
-            int_tokens = [int(token) for token in tokens]
-            # create an empty layout
-            return Layout().from_intlist(int_tokens, *qregs)
-    msg = "No initial layout found in QASM file."
-    raise ValueError(msg)
 
 
 def compile(  # noqa: A001
@@ -199,13 +174,5 @@ def compile(  # noqa: A001
     config.lookahead_factor = lookahead_factor
 
     qc = load(circ)
-    results = map(qc, architecture, config)
-
-    circ = qasm3.loads(results.mapped_circuit)
-    layout = extract_initial_layout_from_qasm(results.mapped_circuit, circ.qregs)
-
-    circ._layout = TranspileLayout(  # noqa: SLF001
-        initial_layout=layout, input_qubit_mapping=layout.get_virtual_bits()
-    )
-
-    return circ, results
+    qc_mapped, results = map(qc, architecture, config)
+    return mqt_to_qiskit(qc_mapped, set_layout=True), results

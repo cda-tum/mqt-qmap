@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include "ir/QuantumComputation.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -136,28 +137,28 @@ private:
                         uint16_t maxHOffset, uint16_t maxVOffset);
 
     /// @see id
-    [[nodiscard]] uint16_t getId() const { return id; }
+    [[nodiscard]] auto getId() const -> uint16_t { return id; }
 
     /// @see x
-    [[nodiscard]] const expr& getX() const { return x; }
+    [[nodiscard]] auto getX() const -> const expr& { return x; }
 
     /// @see y
-    [[nodiscard]] const expr& getY() const { return y; }
+    [[nodiscard]] auto getY() const -> const expr& { return y; }
 
     /// @see a
-    [[nodiscard]] const expr& getA() const { return a; }
+    [[nodiscard]] auto getA() const -> const expr& { return a; }
 
     /// @see c
-    [[nodiscard]] const expr& getC() const { return c; }
+    [[nodiscard]] auto getC() const -> const expr& { return c; }
 
     /// @see r
-    [[nodiscard]] const expr& getR() const { return r; }
+    [[nodiscard]] auto getR() const -> const expr& { return r; }
 
     /// @see h
-    [[nodiscard]] const expr& getH() const { return h; }
+    [[nodiscard]] auto getH() const -> const expr& { return h; }
 
     /// @see v
-    [[nodiscard]] const expr& getV() const { return v; }
+    [[nodiscard]] auto getV() const -> const expr& { return v; }
   };
 
   class Stage {
@@ -210,7 +211,7 @@ private:
                                  uint16_t maxY, uint16_t maxC, uint16_t maxR,
                                  uint16_t maxHOffset, uint16_t maxVOffset);
 
-    [[nodiscard]] uint16_t getT() const { return t; }
+    [[nodiscard]] auto getT() const -> uint16_t { return t; }
 
     [[nodiscard]] auto getQubit(const size_t i) const -> const Qubit& {
       return qubits[i];
@@ -360,7 +361,7 @@ public:
                          uint16_t newMaxVDist, uint16_t newMinEntanglingY,
                          uint16_t newMaxEntanglingY);
   [[nodiscard]] NASolver(const NASolver& other) = default;
-  [[nodiscard]] NASolver& operator=(const NASolver& other) = default;
+  [[nodiscard]] auto operator=(const NASolver& other) -> NASolver& = default;
   virtual ~NASolver() = default;
 
   /// This struct wraps the result of the solver
@@ -467,9 +468,39 @@ public:
         uint16_t newNumQubits, uint16_t newNumStages,
         std::optional<uint16_t> newNumTransfers = std::nullopt,
         bool mindOpsOrder = false, bool shieldIdleQubits = true) -> Result;
+
+  /**
+   * @brief Get the list of entangling operations that the solver takes as
+   * input.
+   *
+   * @details The solver only considers the entangling operations of a circuit.
+   * For that it receives a list of qubit pairs that represent each one
+   * entangling operation. This function generates this list from a given
+   * QuantumComputation and a FullOpType that specifies the entangling
+   * operation.
+   *
+   * @warning This function expects a QuantumComputation that was used as input
+   * for the NASolver. Additionally, this function assumes the quantum circuit
+   * represented by the QuantumComputation to be of the following form:
+   * First, all qubits are initialized in the |+> state by applying a Hadamard
+   * gate to each qubit. Then, a set of entangling gates (CZ) is applied to the
+   * qubits. Finally, hadamard gates are applied to some qubits. Unfortunately,
+   * the function cannot deal with arbitrary quantum circuits as the NASolver
+   * cannot do either.
+   *
+   * @param circ
+   * @param opType
+   * @param ctrls
+   * @param quiet
+   * @return
+   */
+  [[nodiscard]] static auto
+  getOpsForSolver(const qc::QuantumComputation& circ, qc::OpType opType,
+                  std::size_t ctrls, bool quiet = false)
+      -> std::vector<std::pair<qc::Qubit, qc::Qubit>>;
 };
 
 struct ExprHash {
-  uint32_t operator()(const expr& e) const { return e.hash(); }
+  auto operator()(const expr& e) const -> uint32_t { return e.hash(); }
 };
 } // namespace na

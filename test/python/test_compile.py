@@ -9,7 +9,8 @@ import pytest
 from qiskit import QuantumCircuit
 
 from mqt.qcec import verify
-from mqt.qmap import (
+from mqt.qmap.compile import compile  # noqa: A004
+from mqt.qmap.pyqmap import (
     Arch,
     Architecture,
     CommanderGrouping,
@@ -20,7 +21,6 @@ from mqt.qmap import (
     LookaheadHeuristic,
     Method,
     SwapReduction,
-    compile,  # noqa: A004
 )
 from mqt.qmap.visualization import SearchVisualizer
 
@@ -59,7 +59,6 @@ def test_available_architectures_str(example_circuit: QuantumCircuit, arch: str)
     """Test that the available architectures can be properly used."""
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -83,7 +82,6 @@ def test_available_architectures_enum(example_circuit: QuantumCircuit, arch: Arc
     """Test that the available architecture enums can be properly used."""
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -96,7 +94,6 @@ def test_architecture_from_file(example_circuit: QuantumCircuit) -> None:
 
     example_circuit_mapped, results = compile(example_circuit, arch="test_architecture.arch")
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -107,7 +104,6 @@ def test_architecture_from_python(example_circuit: QuantumCircuit) -> None:
     arch = Architecture(3, {(0, 1), (0, 2), (1, 2)})
     example_circuit_mapped, results = compile(example_circuit, arch=arch)
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True
@@ -123,7 +119,6 @@ def test_calibration_from_file(example_circuit: QuantumCircuit) -> None:
 
     example_circuit_mapped, results = compile(example_circuit, arch=None, calibration="test_calibration.cal")
     assert results.timeout is False
-    assert results.mapped_circuit
 
     result = verify(example_circuit, example_circuit_mapped)
     assert result.considered_equivalent() is True

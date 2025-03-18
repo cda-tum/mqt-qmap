@@ -29,7 +29,7 @@ protected:
 public:
   NAComputation() = default;
   NAComputation(NAComputation&& qc) noexcept = default;
-  NAComputation& operator=(NAComputation&& qc) noexcept = default;
+  auto operator=(NAComputation&& qc) noexcept -> NAComputation& = default;
   NAComputation(const NAComputation& qc)
       : initialPositions(qc.initialPositions) {
     operations.reserve(qc.operations.size());
@@ -37,7 +37,7 @@ public:
                    std::back_inserter(operations),
                    [](const auto& op) { return op->clone(); });
   }
-  NAComputation& operator=(const NAComputation& qc) {
+  auto operator=(const NAComputation& qc) -> NAComputation& {
     if (this != &qc) {
       initialPositions = qc.initialPositions;
       operations.clear();
