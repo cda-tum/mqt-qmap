@@ -233,8 +233,6 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex(
-              ".*\\[WARN\\].*\n.*\\[WARN\\].*\n.*\\[WARN\\].*\n"),
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "CodeGenerator contains an invalid "
                                "value for parking_offset. Using default."),
@@ -244,5 +242,13 @@ TEST(CodeGeneratorTest, InvalidConfig) {
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "CodeGenerator contains an "
                                "unknown key: unknown_key. Ignoring.")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
+  EXPECT_EQ(warnings, 3);
 }
 } // namespace na

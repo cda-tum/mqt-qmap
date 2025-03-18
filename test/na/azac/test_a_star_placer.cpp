@@ -1,9 +1,10 @@
 #include "na/azac/AStarPlacer.hpp"
 
 #include <cstddef>
+#include <gmock/gmock-function-mocker.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
-#include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -34,7 +35,7 @@ constexpr std::string_view configJson = R"({
     "use_window" : true,
     "window_height" : 6,
     "window_width" : 4,
-    "deepening_factor" : 10.0
+    "deepening_factor" : 20.0
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
@@ -221,8 +222,10 @@ TEST(AStarPlacerTest, InvalidConfig) {
   nlohmann::json config = R"({
   "a_star_placer": {
     "use_window": "invalid",
-    "window_height": 10,
-    "window_width": 10,
+    "window_min_width": 4,
+    "window_ratio": 1.5,
+    "window_share": 0.4,
+    "deepening_factor": 10.0,
     "unknown_key": 42
   }
 })"_json;
@@ -233,8 +236,6 @@ TEST(AStarPlacerTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex(
-              ".*.*\\[WARN\\].*\n.*.*\\[WARN\\].*\n.*\\[WARN\\].*\n"),
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "AStarPlacer contains an invalid value "
                                "for use_window. Using default."),
@@ -244,6 +245,14 @@ TEST(AStarPlacerTest, InvalidConfig) {
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
               "an unknown key: unknown_key. Ignoring.")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
+  EXPECT_EQ(warnings, 3);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

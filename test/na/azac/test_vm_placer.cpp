@@ -233,8 +233,6 @@ TEST(VMPlacerTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::MatchesRegex(".*\\[WARN\\].*\n.*\\[WARN\\].*\n.*\\[WARN\\]"
-                                  ".*\n.*\\[WARN\\].*\n"),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
               "contains an invalid value for "
@@ -250,6 +248,14 @@ TEST(VMPlacerTest, InvalidConfig) {
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
               "unknown key: unknown_key. Ignoring.")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
+  EXPECT_EQ(warnings, 4);
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row
