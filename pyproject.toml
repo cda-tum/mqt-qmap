@@ -3,7 +3,7 @@ requires = [
   "scikit-build-core>=0.11.0",
   "setuptools-scm>=8.2",
   "pybind11>=2.13.6",
-  "mqt.core @ mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
+  "mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -43,7 +43,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "mqt.core @ mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
+    "mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
     "qiskit[qasm3-import]>=1.0.0",
     "rustworkx[all]>=0.16.0",
     "importlib_resources>=5.0; python_version < '3.10'",
@@ -353,7 +353,7 @@ build = [
   "pybind11>=2.13.6",
   "scikit-build-core>=0.11.0",
   "setuptools-scm>=8.2",
-  "mqt.core @ mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
+  "mqt.core @ git+https://github.com/cda-tum/mqt-core@na-more-ops",
 ]
 docs = [
   "networkx>=3.2.1",

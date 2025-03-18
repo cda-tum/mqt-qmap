@@ -40,7 +40,7 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_VERSION 3.0.0b8
+set(MQT_CORE_VERSION 3.0.0
     CACHE STRING "MQT Core version")
 set(MQT_CORE_REV "na-more-ops"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
