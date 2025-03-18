@@ -435,6 +435,10 @@ auto AStarPlacer::placeGatesInEntanglementZone(
     const auto& [slm, r, c] = previousPlacement[qubit];
     assert(slm.get().isEntanglement());
     occupiedEntanglementSites.emplace(slm, r, c);
+    // also add the interaction partner's site to the set
+    const auto& [otherSlm, otherRow, otherCol] =
+        architecture_.get().otherEntanglementSite(slm, r, c);
+    occupiedEntanglementSites.emplace(otherSlm, otherRow, otherCol);
   }
   //===------------------------------------------------------------------===//
   // Discretize the free sites for the atoms to be placed
