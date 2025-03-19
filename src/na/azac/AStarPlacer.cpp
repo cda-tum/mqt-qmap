@@ -1076,7 +1076,8 @@ auto AStarPlacer::getGatePlacementHeuristic(
     const std::vector<GateJob>& gateJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
-  const auto nPlacedGates =
+  assert(node.consumedFreeSites.size() % 2 == 0);
+  const auto nPlacedGates = // NOLINTNEXTLINE(bugprone-integer-division)
       static_cast<float>(node.consumedFreeSites.size() / 2);
   float maxDistanceOfUnplacedAtom = 0.0;
   for (size_t i = node.consumedFreeSites.size() / 2; i < nGateJobs; ++i) {
@@ -1397,4 +1398,4 @@ auto AStarPlacer::place(
   }
   return placement;
 }
-} // namespace na
+} // namespace na::azac
