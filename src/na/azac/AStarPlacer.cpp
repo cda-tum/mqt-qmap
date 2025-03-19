@@ -1044,7 +1044,8 @@ auto AStarPlacer::getAtomPlacementHeuristic(
     const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
-  const auto nPlacedAtoms = static_cast<float>(node.consumedFreeSites.size());
+  const auto nUnplacedAtoms =
+      static_cast<float>(nAtomJobs - node.consumedFreeSites.size());
   float maxDistanceOfUnplacedAtom = 0.0;
   for (size_t i = node.consumedFreeSites.size(); i < nAtomJobs; ++i) {
     for (const auto& option : atomJobs[i].options) {
@@ -1063,11 +1064,9 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic += nPlacedAtoms == 0
-                   ? 0.F
-                   : deepeningFactor *
-                         sumStdDeviationForGroups(scaleFactors, node.groups) /
-                         nPlacedAtoms;
+  heuristic += deepeningFactor *
+               sumStdDeviationForGroups(scaleFactors, node.groups) *
+               nUnplacedAtoms;
   return heuristic;
 }
 auto AStarPlacer::getGatePlacementHeuristic(
@@ -1075,8 +1074,8 @@ auto AStarPlacer::getGatePlacementHeuristic(
     const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
   assert(node.consumedFreeSites.size() % 2 == 0);
-  const auto nPlacedGates = // NOLINTNEXTLINE(bugprone-integer-division)
-      static_cast<float>(node.consumedFreeSites.size() / 2);
+  const auto nUnplacedGates = // NOLINTNEXTLINE(bugprone-integer-division)
+      static_cast<float>(nGateJobs - (node.consumedFreeSites.size() / 2));
   float maxDistanceOfUnplacedAtom = 0.0;
   for (size_t i = node.consumedFreeSites.size() / 2; i < nGateJobs; ++i) {
     for (const auto& option : gateJobs[i].options) {
@@ -1100,11 +1099,9 @@ auto AStarPlacer::getGatePlacementHeuristic(
       maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
-  heuristic += nPlacedGates == 0
-                   ? 0.F
-                   : deepeningFactor *
-                         sumStdDeviationForGroups(scaleFactors, node.groups) /
-                         nPlacedGates;
+  heuristic += deepeningFactor *
+               sumStdDeviationForGroups(scaleFactors, node.groups) *
+               nUnplacedGates;
   return heuristic;
 }
 auto AStarPlacer::getAtomPlacementNeighbors(
