@@ -375,22 +375,15 @@ auto Architecture::exportNAVizMachine() const -> std::string {
   ss << "time {\n    load: 1\n    store: 1\n    ry: 1\n    rz: 1\n    cz: 1\n  "
         "  unit: \"us\"\n}\n";
   ss << "distance {\n    interaction: 10\n    unit: \"um\"\n}\n";
-  if (entanglementZones.size() != 1) {
-    throw std::runtime_error(
-        "Right now, only one entanglement zone is supported");
+  for (size_t i = 0; i < entanglementZones.size(); ++i) {
+    const auto minX = rydbergRangeMinX[i];
+    const auto minY = rydbergRangeMinY[i];
+    const auto maxX = rydbergRangeMaxX[i];
+    const auto maxY = rydbergRangeMaxY[i];
+    ss << "zone zone_cz" << *entanglementZones[i]->front().entanglementId_
+       << " {\n    from: (" << minX << ", " << minY << ")\n    to: (" << maxX
+       << ", " << maxY << ")\n}\n";
   }
-  const auto& slm1 = entanglementZones.front()->front();
-  const auto& slm2 = entanglementZones.front()->back();
-  const auto minX = std::min(slm1.location.first, slm2.location.first);
-  const auto minY = std::min(slm1.location.second, slm2.location.second);
-  const auto maxX = std::max(
-      slm1.location.first + ((slm1.nCols - 1) * slm1.siteSeparation.first),
-      slm2.location.first + ((slm2.nCols - 1) * slm2.siteSeparation.first));
-  const auto maxY = std::max(
-      slm1.location.second + ((slm1.nRows - 1) * slm1.siteSeparation.second),
-      slm2.location.second + ((slm2.nRows - 1) * slm2.siteSeparation.second));
-  ss << "zone zone_cz0 {\n    from: (" << minX - 10 << ", " << minY - 10
-     << ")\n    to: (" << maxX + 10 << ", " << maxY + 10 << ")\n}\n";
   // Generate traps for storage slms
   for (const auto& slm : storageZones) {
     for (std::size_t row = 0; row < slm->nRows; ++row) {
