@@ -1276,6 +1276,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool windowRatioSet = false;
     bool windowShareSet = false;
     bool deepeningFactorSet = false;
+    bool lookaheadFactorSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
         if (value.is_boolean()) {
@@ -1326,8 +1327,19 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid "
-                 "value for deepening_factor. Using default.\n";
+                 "contains an invalid value for deepening_factor. Using "
+                 "default.\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "lookahead_factor") {
+        if (value.is_number_float()) {
+          lookaheadFactor_ = value;
+          lookaheadFactorSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid value for lookahead_factor. Using "
+                 "default.\n";
           std::cout << oss.str();
         }
       } else {
@@ -1364,9 +1376,14 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::round(windowRatio_ * static_cast<double>(windowMinWidth_)));
     }
     if (!deepeningFactorSet) {
-      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-                   "not contain a "
-                   "setting for deepening_factor. Using default.\n";
+      std::cout
+          << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for deepening_factor. Using default.\n";
+    }
+    if (!lookaheadFactorSet) {
+      std::cout
+          << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for lookahead_factor. Using default.\n";
     }
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "

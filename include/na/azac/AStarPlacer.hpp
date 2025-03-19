@@ -55,8 +55,14 @@ class AStarPlacer {
   /// it to 0.0 disables this term resulting in an admissible heuristic.
   /// However, this leads to a vast exploration of the search tree and usually
   /// results in a huge number of nodes visited.
-  float deepeningFactor_ = 1.0;
-
+  float deepeningFactor_ = 1.0F;
+  /// The cost function can consider the distance of atoms to their interaction
+  /// partner in the next layer. This factor is multiplied with the distance to
+  /// adjust the influence of this term. Setting it to 0.0 disables the
+  /// lookahead entirely. A factor of 1.0 implies that the lookahead is as
+  /// important as the distance to the target site, which is usually not
+  /// desired.
+  float lookaheadFactor_ = 0.2F;
   /// When placing atoms after a rydberg layer back in the storage zone, this
   /// struct stores for every such atom all required information, i.e., the
   /// current site and potential target sites ordered by distance (ascending).
