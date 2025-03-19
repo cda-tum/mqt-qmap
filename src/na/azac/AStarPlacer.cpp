@@ -824,8 +824,6 @@ auto AStarPlacer::placeQubitsInStorageZone(
     size_t expansion = 0;
     while (useWindow_ && static_cast<double>(job.options.size()) <
                              windowShare_ * static_cast<double>(nJobs)) {
-      std::cout << "\033[1;32m[INFO]\033[0 Expanding window for atom " << atom
-                << "\n";
       // window does not contain enough options, so expand it
       ++expansion;
       size_t windowWidth = 0;
