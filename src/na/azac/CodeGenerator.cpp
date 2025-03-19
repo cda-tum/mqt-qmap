@@ -64,7 +64,7 @@ auto CodeGenerator::appendOneQubitGates(
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
         } else if (nQubits == 1) {
           oneQubitGate =
-              true; // special case for one qubit, fall back to local gate
+              true; // special case for one qubit, fall through to local gate
         } else {
           assert(false);
         }
@@ -253,4 +253,4 @@ auto CodeGenerator::generate(
   }
   return code;
 }
-} // namespace na
+} // namespace na::azac

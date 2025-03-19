@@ -95,12 +95,20 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
         nextLayerForQubit[qubit1] = layer + 1;
         nextLayerForQubit[qubit2] = layer + 1;
       } else {
-        throw std::invalid_argument("Operation type not supported");
+        std::stringstream ss;
+        ss << "Operation type not supported: " << stdOp.getType() << " with "
+           << stdOp.getNcontrols() << " controls and " << stdOp.getNtargets()
+           << " targets";
+        throw std::invalid_argument(ss.str());
       }
     } else {
-      throw std::invalid_argument("Operation type not supported");
+      std::stringstream ss;
+      ss << "Operation type not supported: " << op->getType() << " with "
+         << op->getNcontrols() << " controls and " << op->getNtargets()
+         << " targets";
+      throw std::invalid_argument(ss.str());
     }
   }
   return std::pair{oneQubitGateLayers, twoQubitGateLayers};
 }
-} // namespace na
+} // namespace na::azac

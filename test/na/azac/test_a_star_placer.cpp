@@ -33,8 +33,9 @@ constexpr std::string_view architectureJson = R"({
 constexpr std::string_view configJson = R"({
   "a_star_placer" : {
     "use_window" : true,
-    "window_height" : 6,
-    "window_width" : 4,
+    "window_min_width" : 4,
+    "window_ratio" : 1.5,
+    "window_share" : 0.6,
     "deepening_factor" : 20.0
   }
 })";
