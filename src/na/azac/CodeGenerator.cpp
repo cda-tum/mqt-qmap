@@ -12,8 +12,10 @@
 #include "na/entities/Zone.hpp"
 #include "na/operations/GlobalCZOp.hpp"
 #include "na/operations/GlobalRYOp.hpp"
+#include "na/operations/GlobalUOp.hpp"
 #include "na/operations/LoadOp.hpp"
 #include "na/operations/LocalRZOp.hpp"
+#include "na/operations/LocalUOp.hpp"
 #include "na/operations/MoveOp.hpp"
 #include "na/operations/StoreOp.hpp"
 
@@ -62,6 +64,17 @@ auto CodeGenerator::appendOneQubitGates(
                                        op.get().getParameter().front());
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
+        } else if (opType == qc::U) {
+          code.emplaceBack<GlobalUOp>(globalZone, op.get().getParameter().at(0),
+                                      op.get().getParameter().at(1),
+                                      op.get().getParameter().at(2));
+        } else if (opType == qc::U2) {
+          code.emplaceBack<GlobalUOp>(globalZone, qc::PI_2,
+                                      op.get().getParameter().at(0),
+                                      op.get().getParameter().at(1));
+        } else if (opType == qc::P) {
+          code.emplaceBack<GlobalUOp>(globalZone, 0, 0,
+                                      op.get().getParameter().at(0));
         } else if (nQubits == 1) {
           oneQubitGate =
               true; // special case for one qubit, fall through to local gate
@@ -80,6 +93,17 @@ auto CodeGenerator::appendOneQubitGates(
                                     op.get().getParameter().front());
       } else if (op.get().getType() == qc::Z) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI);
+      } else if (op.get().getType() == qc::U) {
+        code.emplaceBack<LocalUOp>(atoms[qubit], op.get().getParameter().at(0),
+                                   op.get().getParameter().at(1),
+                                   op.get().getParameter().at(2));
+      } else if (op.get().getType() == qc::U2) {
+        code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2,
+                                   op.get().getParameter().at(0),
+                                   op.get().getParameter().at(1));
+      } else if (op.get().getType() == qc::P) {
+        code.emplaceBack<LocalUOp>(atoms[qubit], 0, 0,
+                                   op.get().getParameter().at(0));
       } else {
         assert(false);
       }
