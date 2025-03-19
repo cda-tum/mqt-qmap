@@ -47,7 +47,7 @@ constexpr std::string_view architectureJson = R"({
   }],
   "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
   "arch_range": [[0, 0], [60, 110]],
-  "rydberg_range": [[[5, 70], [55, 110]]]
+  "rydberg_range": [[[0, 57], [65, 105]]]
 })";
 class TestArchitecture : public ::testing::Test {
 protected:
