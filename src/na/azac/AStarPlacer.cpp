@@ -728,7 +728,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
   //===------------------------------------------------------------------===//
   // Find atoms that must be placed
   //===------------------------------------------------------------------===//
-  std::set<std::pair<double, qc::Qubit>> atomsToPlaceMap;
+  std::set<std::pair<double, qc::Qubit>, std::greater<>> atomsToPlaceSet;
   for (const auto& gate : twoQubitGates) {
     for (const auto qubit : gate) {
       if (reuseQubits.find(qubit) == reuseQubits.end()) {
@@ -737,11 +737,11 @@ auto AStarPlacer::placeQubitsInStorageZone(
             architecture_.get().nearestStorageSite(slm, r, c);
         const auto distance = architecture_.get().distance(
             slm, r, c, nearestSlm, nearestRow, nearestCol);
-        atomsToPlaceMap.emplace(distance, qubit);
+        atomsToPlaceSet.emplace(distance, qubit);
       }
     }
   }
-  if (atomsToPlaceMap.empty()) {
+  if (atomsToPlaceSet.empty()) {
     return currentPlacement;
   }
   //===------------------------------------------------------------------===//
@@ -749,9 +749,26 @@ auto AStarPlacer::placeQubitsInStorageZone(
   //===------------------------------------------------------------------===//
   std::vector<qc::Qubit> atomsToPlace;
   atomsToPlace.reserve(atomsToPlace.size());
-  for (const auto& [_, atom] : atomsToPlaceMap) {
+  for (const auto& [_, atom] : atomsToPlaceSet) {
     atomsToPlace.emplace_back(atom);
   }
+  // Place the atoms with the longest distance first, but the place atoms in
+  // increasing order of distance to the first atom
+  const auto& frontPlacement = previousPlacement[atomsToPlace.front()];
+  std::set<std::pair<double, qc::Qubit>> atomsWithoutFirstAtom;
+  for (auto atomIt = atomsToPlace.cbegin() + 1; atomIt != atomsToPlace.cend();
+       ++atomIt) {
+    const auto& [frontSlm, frontRow, frontCol] = frontPlacement;
+    const auto& [slm, r, c] = previousPlacement[*atomIt];
+    const auto distance =
+        architecture_.get().distance(slm, r, c, frontSlm, frontRow, frontCol);
+    atomsWithoutFirstAtom.emplace(distance, *atomIt);
+  }
+  std::transform(atomsWithoutFirstAtom.cbegin(), atomsWithoutFirstAtom.cend(),
+                 atomsToPlace.begin() + 1,
+                 [](const auto& pair) { return pair.second; });
+  // Discretize the previous placement of the atoms to be placed that are
+  // ordered now
   const auto& [discreteRows, discreteColumns] =
       discretizePlacementOfAtoms(previousPlacement, atomsToPlace);
   //===------------------------------------------------------------------===//
