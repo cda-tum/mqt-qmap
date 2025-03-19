@@ -4,7 +4,6 @@
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
-#include "ir/operations/StandardOperation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
 #include "na/entities/Atom.hpp"
@@ -12,7 +11,6 @@
 #include "na/entities/Zone.hpp"
 #include "na/operations/GlobalCZOp.hpp"
 #include "na/operations/GlobalRYOp.hpp"
-#include "na/operations/GlobalUOp.hpp"
 #include "na/operations/LoadOp.hpp"
 #include "na/operations/LocalRZOp.hpp"
 #include "na/operations/LocalUOp.hpp"
@@ -64,17 +62,6 @@ auto CodeGenerator::appendOneQubitGates(
                                        op.get().getParameter().front());
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
-        } else if (opType == qc::U) {
-          code.emplaceBack<GlobalUOp>(globalZone, op.get().getParameter().at(0),
-                                      op.get().getParameter().at(1),
-                                      op.get().getParameter().at(2));
-        } else if (opType == qc::U2) {
-          code.emplaceBack<GlobalUOp>(globalZone, qc::PI_2,
-                                      op.get().getParameter().at(0),
-                                      op.get().getParameter().at(1));
-        } else if (opType == qc::P) {
-          code.emplaceBack<GlobalUOp>(globalZone, 0, 0,
-                                      op.get().getParameter().at(0));
         } else if (nQubits == 1) {
           oneQubitGate =
               true; // special case for one qubit, fall through to local gate
@@ -120,10 +107,15 @@ auto CodeGenerator::appendTwoQubitGates(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
-    const Zone& zone, NAComputation& code) const -> void {
+    const std::vector<std::reference_wrapper<const Zone>>& zones,
+    NAComputation& code) const -> void {
   appendRearrangement(currentPlacement, executionRouting, executionPlacement,
                       atoms, code);
-  code.emplaceBack<GlobalCZOp>(zone);
+  std::vector<const Zone*> zonePtrs;
+  zonePtrs.reserve(zones.size());
+  std::transform(zones.begin(), zones.end(), std::back_inserter(zonePtrs),
+                 [](const auto& zone) { return &zone.get(); });
+  code.emplaceBack<GlobalCZOp>(zonePtrs);
   appendRearrangement(executionPlacement, targetRouting, targetPlacement, atoms,
                       code);
 }
@@ -249,8 +241,22 @@ auto CodeGenerator::generate(
     const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
     -> NAComputation {
   NAComputation code;
-  const auto& rydbergZone = code.emplaceBackZone("zone_cz0");
-  const auto& globalZone = code.emplaceBackZone("global");
+  std::vector<std::reference_wrapper<const Zone>> rydbergZones;
+  for (size_t i = 0; i < architecture_.get().rydbergRangeMinX.size(); ++i) {
+    rydbergZones.emplace_back(code.emplaceBackZone(
+        "zone_cz" + std::to_string(i),
+        Zone::Extent{
+            static_cast<double>(architecture_.get().rydbergRangeMinX.at(i)),
+            static_cast<double>(architecture_.get().rydbergRangeMinY.at(i)),
+            static_cast<double>(architecture_.get().rydbergRangeMaxX.at(i)),
+            static_cast<double>(architecture_.get().rydbergRangeMaxY.at(i))}));
+  }
+  const auto& globalZone = code.emplaceBackZone(
+      "global",
+      Zone::Extent{static_cast<double>(architecture_.get().archRangeMinX),
+                   static_cast<double>(architecture_.get().archRangeMinY),
+                   static_cast<double>(architecture_.get().archRangeMaxX),
+                   static_cast<double>(architecture_.get().archRangeMaxY)});
   const auto& initialPlacement = placement.front();
   std::vector<std::reference_wrapper<const Atom>> atoms;
   atoms.reserve(initialPlacement.size());
@@ -271,7 +277,7 @@ auto CodeGenerator::generate(
   for (size_t layer = 0; layer + 1 < oneQubitGateLayers.size(); ++layer) {
     appendTwoQubitGates(placement[2 * layer], routing[2 * layer],
                         placement[(2 * layer) + 1], routing[(2 * layer) + 1],
-                        placement[2 * (layer + 1)], atoms, rydbergZone, code);
+                        placement[2 * (layer + 1)], atoms, rydbergZones, code);
     appendOneQubitGates(atoms.size(), oneQubitGateLayers[layer + 1], atoms,
                         globalZone, code);
   }

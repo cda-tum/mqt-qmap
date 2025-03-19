@@ -74,7 +74,8 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& targetPlacement,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
-      const Zone& zone, NAComputation& code) const -> void;
+      const std::vector<std::reference_wrapper<const Zone>>& zones,
+      NAComputation& code) const -> void;
 
   /// Append all necessary operations to rearrange the atoms
   auto appendRearrangement(
