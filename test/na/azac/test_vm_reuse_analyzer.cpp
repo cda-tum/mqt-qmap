@@ -62,6 +62,12 @@ TEST_F(VMReuseAnalyzerAnalyzeTest, Unique) {
       analyzer.analyzeReuse(twoQubitGateLayers),
       ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 3U, 5U)));
 }
+TEST_F(VMReuseAnalyzerAnalyzeTest, UniqueUnbalanced) {
+  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers{
+      {{0, 1}, {2, 3}, {4, 5}, {6, 7}}, {{1, 6}, {7, 8}}};
+  EXPECT_THAT(analyzer.analyzeReuse(twoQubitGateLayers),
+              ::testing::ElementsAre(::testing::UnorderedElementsAre(1U, 7U)));
+}
 TEST(VMReuseAnalyzerTest, Config) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
   nlohmann::json config = R"({

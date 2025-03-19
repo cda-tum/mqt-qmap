@@ -92,16 +92,14 @@ auto VMReuseAnalyzer::analyzeReuse(
         }
       }
     }
-    const auto& matching = maximumBipartiteMatching(sparseMatrix, true);
+    const auto& matching = maximumBipartiteMatching(sparseMatrix);
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
-      if (const auto& reuseGate = matching[gateIdx]; reuseGate) {
+      if (const auto& reuseGateIdx = matching[gateIdx]; reuseGateIdx) {
         const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
-        if (usedQubitsInPreviousLayer.find(gate.front()) !=
-            usedQubitsInPreviousLayer.end()) {
+        if (usedQubitsInPreviousLayer.at(gate.front()) == *reuseGateIdx) {
           reuseQubitsInCurrentLayer.emplace(gate.front());
         } else {
-          assert(usedQubitsInPreviousLayer.find(gate.back()) !=
-                 usedQubitsInPreviousLayer.end());
+          assert(usedQubitsInPreviousLayer.at(gate.back()) == *reuseGateIdx);
           reuseQubitsInCurrentLayer.emplace(gate.back());
         }
       }
@@ -225,4 +223,4 @@ auto VMReuseAnalyzer::maximumBipartiteMatching(
   }
   return matching;
 }
-} // namespace na
+} // namespace na::azac
