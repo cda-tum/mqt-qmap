@@ -81,6 +81,27 @@ public:
         std::chrono::system_clock::now() - schedulingStart;
     std::cout << "\033[1;32m[INFO]\033[0m           Time for scheduling: "
               << statistics_.schedulingTime.count() << "µs\n";
+    std::cout
+        << "\033[1;32m[INFO]\033[0m           Number of one-qubit gate layers: "
+        << oneQubitGateLayers.size() << "\n";
+    std::cout
+        << "\033[1;32m[INFO]\033[0m           Number of two-qubit gate layers: "
+        << twoQubitGateLayers.size() << "\n";
+    if (!twoQubitGateLayers.empty()) {
+      const auto& [min, sum, max] = std::accumulate(
+          twoQubitGateLayers.cbegin(), twoQubitGateLayers.cend(),
+          std::array<size_t, 3>{std::numeric_limits<size_t>::max(), 0UL, 0UL},
+          [](const auto& acc, const auto& layer) -> std::array<size_t, 3> {
+            const auto& [minAcc, sumAcc, maxAcc] = acc;
+            const auto n = layer.size();
+            return {std::min(minAcc, n), sumAcc + n, std::max(maxAcc, n)};
+          });
+      const auto avg = static_cast<double>(sum) /
+                       static_cast<double>(twoQubitGateLayers.size());
+      std::cout << "\033[1;32m[INFO]\033[0m           Number of two-qubit "
+                   "gates per layer: min: "
+                << min << ", avg: " << avg << ", max: " << max << "\n";
+    }
 
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
