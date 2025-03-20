@@ -102,7 +102,7 @@ private:
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
   /// Generate qubit mapping based on minimum weight matching.
-  auto placeQubitsInStorageZone(
+  auto placeAtomsInStorageZone(
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& initialPlacement,
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,

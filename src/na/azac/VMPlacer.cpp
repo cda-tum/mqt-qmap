@@ -470,7 +470,7 @@ auto VMPlacer::placeGatesInEntanglementZone(
   }
   return newPlacement;
 }
-auto VMPlacer::placeQubitsInStorageZone(
+auto VMPlacer::placeAtomsInStorageZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& initialPlacement,
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
@@ -817,7 +817,7 @@ auto VMPlacer::place(
     std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
         qubitPlacementWithoutReuse;
     if (dynamicPlacement_) {
-      qubitPlacementWithoutReuse = placeQubitsInStorageZone(
+      qubitPlacementWithoutReuse = placeAtomsInStorageZone(
           placement.front(), placement.back(), reuseQubits[layer],
           twoQubitGateLayers.size() > layer + 1
               ? twoQubitGateLayers[layer + 1]
@@ -843,7 +843,7 @@ auto VMPlacer::place(
             std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
             qubitPlacementWithReuse;
         if (dynamicPlacement_) {
-          qubitPlacementWithReuse = placeQubitsInStorageZone(
+          qubitPlacementWithReuse = placeAtomsInStorageZone(
               placement.front(), placement.back(), reuseQubits[layer],
               twoQubitGateLayers.size() > layer + 1
                   ? twoQubitGateLayers[layer + 1]
@@ -912,4 +912,4 @@ auto VMPlacer::makeInitialPlacement(const size_t nQubits) const -> std::vector<
   }
   return initialPlacement;
 }
-} // namespace na
+} // namespace na::azac

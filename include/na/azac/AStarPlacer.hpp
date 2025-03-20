@@ -312,7 +312,7 @@ private:
    * zone. After this placement has been performed, the activation of the
    * Rydberg beam will execute the gates in the given layer. Afterward, the
    * next placement for moving (non-reuse) qubits back to the storage zone is
-   * determined by @ref placeQubitsInStorageZone.
+   * determined by @ref placeAtomsInStorageZone.
    */
   [[nodiscard]] auto placeGatesInEntanglementZone(
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
@@ -328,7 +328,7 @@ private:
    * It initializes the graph structure for the A* algorithm.
    * Afterward, the A* algorithm is called to find the optimal mapping.
    */
-  auto placeQubitsInStorageZone(
+  auto placeAtomsInStorageZone(
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
@@ -350,8 +350,9 @@ private:
   /// This will not resemble the exact time to rearrange all costs because at
   /// this point it is not clear how the horizontal and vertical groups can be
   /// combined.
-  template <class Node>
-  [[nodiscard]] static auto getCost(const Node& node) -> float;
+  [[nodiscard]] static auto getCost(const GateNode& node) -> float;
+  [[nodiscard]] static auto getCost(const AtomNode& node) -> float;
+
   /// @brief Calculates the standard deviation of the differences value - key
   /// and sums them up over all horizontal and vertical groups.
   [[nodiscard]] static auto sumStdDeviationForGroups(
@@ -375,27 +376,10 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto getAtomPlacementHeuristic(
+  [[nodiscard]] static auto getHeuristic(
       const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
       const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float;
-
-  /// @brief Return the estimated cost still required to reach a goal node.
-  /// @details To yield an optimal results, the heuristic must be admissible,
-  /// i.e., never overestimating the cost.
-  /// The heuristic returns the estimated costs that are still added to the
-  /// current actual cost to reach a goal node.
-  /// Hence, the heuristic must always be less or equal to the additional cost
-  /// needed to reach a goal.
-  /// In the best case, all atoms that are not placed yet are compatible with
-  /// an existing group and can just be added to that group.
-  /// Hence, the sum in the cost function does not get an additional summand
-  /// just the existing summands may increase.
-  /// In the case of minimal increase in the overall cost, only one summand
-  /// increases its value.
-  /// This increase is bounded from below by the maximal distance of an atom to
-  /// its nearest potential target site minus the maximum distance already
-  /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto getGatePlacementHeuristic(
+  [[nodiscard]] static auto getHeuristic(
       const std::vector<GateJob>& gateJobs, const float deepeningFactor,
       const std::array<float, 2>& scaleFactors, const GateNode& node) -> float;
 
@@ -414,30 +398,14 @@ private:
   /// If yes, the new placement is added to the respective group and otherwise,
   /// a new group is formed with the new placement.
   [[nodiscard]] static auto
-  getAtomPlacementNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-                            const std::vector<AtomJob>& atomJobs,
-                            const AtomNode& node)
+  getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
+               const std::vector<AtomJob>& atomJobs, const AtomNode& node)
       -> std::vector<std::reference_wrapper<const AtomNode>>;
-
-  /// @brief Return pointers to all neighbors of the given node.
-  /// @details When calling this function, the neighbors are allocated
-  /// permanently such that (1) the returned pointers remain valid when the
-  /// execution returned from this function and (2) not all nodes in the tree
-  /// have to be created before they are needed.
-  /// Hence, nodes are only created on demand in this function.
-  /// Consequently, this function must only be called once per node.
-  /// Otherwise, neighbors for the same node are created twice.
-  /// @par
-  /// When creating a new node, the horizontal and vertical groups are checked
-  /// whether the new corresponding placement is compatible with any of the
-  /// existing groups.
-  /// If yes, the new placement is added to the respective group and otherwise,
-  /// a new group is formed with the new placement.
   [[nodiscard]] static auto
-  getGatePlacementNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-                            const std::vector<GateJob>& gateJobs,
-                            const GateNode& node)
+  getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
+               const std::vector<GateJob>& gateJobs, const GateNode& node)
       -> std::vector<std::reference_wrapper<const GateNode>>;
+
   /// Checks the compatibility with a new assignment, i.e., a key-value pair,
   /// whether t is compatible with an existing group. The group can either be
   /// a horizontal or vertical group. In case, the new assignment is compatible
