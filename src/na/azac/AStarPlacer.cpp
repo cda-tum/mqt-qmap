@@ -47,6 +47,7 @@ auto AStarPlacer::aStarTreeSearch(
     const Node* node; //< pointer to the node
     // pointer to the parent item to reconstruct the path in the end
     Item* parent;
+
     Item(const double priority, const Node& node, Item* parent)
         : priority(priority), node(&node), parent(parent) {
       assert(!std::isnan(priority));
@@ -104,6 +105,7 @@ auto AStarPlacer::aStarTreeSearch(
   }
   throw std::runtime_error("No path from start to any goal found.");
 }
+
 auto AStarPlacer::discretizePlacementOfAtoms(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& placement,
@@ -155,6 +157,7 @@ auto AStarPlacer::discretizePlacementOfAtoms(
   }
   return std::pair{rowIndices, columnIndices};
 }
+
 auto AStarPlacer::discretizeNonOccupiedStorageSites(
     const std::unordered_set<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
@@ -212,6 +215,7 @@ auto AStarPlacer::discretizeNonOccupiedStorageSites(
   }
   return std::pair{rowIndices, columnIndices};
 }
+
 auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
     const std::unordered_set<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
@@ -287,6 +291,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
   }
   return std::pair{rowIndices, columnIndices};
 }
+
 auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
     -> std::vector<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
@@ -318,6 +323,7 @@ auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
   }
   return initialPlacement;
 }
+
 auto AStarPlacer::makeIntermediatePlacement(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
@@ -333,6 +339,7 @@ auto AStarPlacer::makeIntermediatePlacement(
   return {gatePlacement,
           placeQubitsInStorageZone(gatePlacement, reuseQubits, twoQubitGates)};
 }
+
 auto AStarPlacer::addGateOption(
     const std::unordered_map<
         std::pair<std::reference_wrapper<const SLM>, size_t>, uint8_t,
@@ -386,6 +393,7 @@ auto AStarPlacer::addGateOption(
         std::array{dis2, dis3}});
   }
 }
+
 auto AStarPlacer::placeGatesInEntanglementZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
@@ -459,7 +467,8 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         const auto& [slm, r, c] = previousPlacement[first];
         currentPlacement[second] =
             architecture_.get().otherEntanglementSite(slm, r, c);
-      } else { // second qubit is reused
+      } else {
+        // second qubit is reused
         const auto& [slm, r, c] = previousPlacement[second];
         currentPlacement[first] =
             architecture_.get().otherEntanglementSite(slm, r, c);
@@ -634,35 +643,35 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   // Get the extent of discrete source and target
   //===------------------------------------------------------------------===//
   const uint8_t maxDiscreteSourceRow =
-      1 + std::max_element(discreteRows.begin(), discreteRows.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteRows.begin(), discreteRows.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteSourceColumn =
-      1 + std::max_element(discreteColumns.begin(), discreteColumns.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteColumns.begin(), discreteColumns.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteTargetRow =
-      1 + std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteTargetColumn =
-      1 + std::max_element(discreteTargetColumns.begin(),
-                           discreteTargetColumns.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteTargetColumns.begin(),
+                       discreteTargetColumns.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const std::array<float, 2> scaleFactors{
-      std::min(1.F, static_cast<float>(maxDiscreteTargetRow) /
-                        static_cast<float>(maxDiscreteSourceRow)),
-      std::min(1.F, static_cast<float>(maxDiscreteTargetColumn) /
-                        static_cast<float>(maxDiscreteSourceColumn))};
+      std::min(1.F, static_cast<float>(1 + maxDiscreteTargetRow) /
+                        static_cast<float>(1 + maxDiscreteSourceRow)),
+      std::min(1.F, static_cast<float>(1 + maxDiscreteTargetColumn) /
+                        static_cast<float>(1 + maxDiscreteSourceColumn))};
   //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
@@ -715,6 +724,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   }
   return currentPlacement;
 }
+
 auto AStarPlacer::placeQubitsInStorageZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
@@ -798,12 +808,20 @@ auto AStarPlacer::placeQubitsInStorageZone(
   /// rydberg layer
   std::vector<AtomJob> atomJobs;
   atomJobs.reserve(nJobs);
+  uint8_t minDiscreteColumnOfNearestSite = std::numeric_limits<uint8_t>::max();
+  uint8_t maxDiscreteColumnOfNearestSite = 0;
   for (const auto atom : atomsToPlace) {
     const auto& [previousSlm, previousRow, previousCol] =
         previousPlacement[atom];
     const auto& [nearestSlm, nearestRow, nearestCol] =
         architecture_.get().nearestStorageSite(previousSlm, previousRow,
                                                previousCol);
+    const auto discreteColumnOfNearestSite =
+        discreteTargetColumns.at(std::tie(nearestSlm, nearestCol));
+    minDiscreteColumnOfNearestSite =
+        std::min(minDiscreteColumnOfNearestSite, discreteColumnOfNearestSite);
+    maxDiscreteColumnOfNearestSite =
+        std::max(maxDiscreteColumnOfNearestSite, discreteColumnOfNearestSite);
     auto& job = atomJobs.emplace_back();
     job.qubit = atom;
     job.currentSite =
@@ -945,35 +963,39 @@ auto AStarPlacer::placeQubitsInStorageZone(
   // Get the extent of discrete source and target
   //===------------------------------------------------------------------===//
   const uint8_t maxDiscreteSourceRow =
-      1 + std::max_element(discreteRows.begin(), discreteRows.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteRows.begin(), discreteRows.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteSourceColumn =
-      1 + std::max_element(discreteColumns.begin(), discreteColumns.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteColumns.begin(), discreteColumns.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteTargetRow =
-      1 + std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const uint8_t maxDiscreteTargetColumn =
-      1 + std::max_element(discreteTargetColumns.begin(),
-                           discreteTargetColumns.end(),
-                           [](const auto& lhs, const auto& rhs) {
-                             return lhs.second < rhs.second;
-                           })
-              ->second;
+      std::max_element(discreteTargetColumns.begin(),
+                       discreteTargetColumns.end(),
+                       [](const auto& lhs, const auto& rhs) {
+                         return lhs.second < rhs.second;
+                       })
+          ->second;
   const std::array<float, 2> scaleFactors{
-      std::min(1.F, static_cast<float>(maxDiscreteTargetRow) /
-                        static_cast<float>(maxDiscreteSourceRow)),
-      std::min(1.F, static_cast<float>(maxDiscreteTargetColumn) /
-                        static_cast<float>(maxDiscreteSourceColumn))};
+      std::min(1.F, static_cast<float>(1 + maxDiscreteTargetRow) /
+                        static_cast<float>(1 + maxDiscreteSourceRow)),
+      std::min(
+          std::max(1.F, static_cast<float>(maxDiscreteColumnOfNearestSite -
+                                           minDiscreteColumnOfNearestSite) /
+                            static_cast<float>(maxDiscreteSourceColumn)),
+          static_cast<float>(1 + maxDiscreteTargetColumn) /
+              static_cast<float>(1 + maxDiscreteSourceColumn))};
   //===------------------------------------------------------------------===//
   // Run the A* algorithm
   //===------------------------------------------------------------------===//
@@ -1023,6 +1045,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
   }
   return currentPlacement;
 }
+
 template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   float cost = 0.0;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
@@ -1030,6 +1053,7 @@ template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   }
   return cost;
 }
+
 auto AStarPlacer::sumStdDeviationForGroups(
     const std::array<float, 2>& scaleFactors,
     const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
@@ -1057,6 +1081,7 @@ auto AStarPlacer::sumStdDeviationForGroups(
   }
   return sumStdDev;
 }
+
 auto AStarPlacer::getAtomPlacementHeuristic(
     const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float {
@@ -1082,10 +1107,11 @@ auto AStarPlacer::getAtomPlacementHeuristic(
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
   heuristic += deepeningFactor *
-               sumStdDeviationForGroups(scaleFactors, node.groups) *
+               (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedAtoms;
   return heuristic;
 }
+
 auto AStarPlacer::getGatePlacementHeuristic(
     const std::vector<GateJob>& gateJobs, const float deepeningFactor,
     const std::array<float, 2>& scaleFactors, const GateNode& node) -> float {
@@ -1117,10 +1143,11 @@ auto AStarPlacer::getGatePlacementHeuristic(
           ? 0.F
           : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
   heuristic += deepeningFactor *
-               sumStdDeviationForGroups(scaleFactors, node.groups) *
+               (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedGates;
   return heuristic;
 }
+
 auto AStarPlacer::getAtomPlacementNeighbors(
     std::deque<std::unique_ptr<AtomNode>>& nodes,
     const std::vector<AtomJob>& atomJobs, const AtomNode& node)
@@ -1150,6 +1177,7 @@ auto AStarPlacer::getAtomPlacementNeighbors(
   }
   return neighbors;
 }
+
 auto AStarPlacer::getGatePlacementNeighbors(
     std::deque<std::unique_ptr<GateNode>>& nodes,
     const std::vector<GateJob>& gateJobs, const GateNode& node)
@@ -1193,6 +1221,7 @@ auto AStarPlacer::getGatePlacementNeighbors(
   }
   return neighbors;
 }
+
 auto AStarPlacer::checkCompatibilityWithGroup(
     const uint8_t key, const uint8_t value,
     const std::map<uint8_t, uint8_t>& group)
@@ -1205,7 +1234,8 @@ auto AStarPlacer::checkCompatibilityWithGroup(
         // new placement is compatible with this group and key already exists
         return std::pair{it, true};
       }
-    } else { // if (upperKey > key)
+    } else {
+      // if (upperKey > key)
       if (it != group.begin()) {
         // it can be safely decremented
         if (const auto& [_, lowerValue] = *std::prev(it);
@@ -1213,14 +1243,16 @@ auto AStarPlacer::checkCompatibilityWithGroup(
           // new placement is compatible with this group
           return std::pair{it, false};
         }
-      } else { // if (it == hGroup.begin())
+      } else {
+        // if (it == hGroup.begin())
         if (value < upperValue) {
           // new placement is compatible with this group
           return std::pair{it, false};
         }
       }
     }
-  } else { // if (it == hGroup.end())
+  } else {
+    // if (it == hGroup.end())
     // it can be safely decremented because the group must contain
     // at least one element
     if (const auto& [_, lowerValue] = *std::prev(it); lowerValue < value) {
@@ -1230,6 +1262,7 @@ auto AStarPlacer::checkCompatibilityWithGroup(
   }
   return std::nullopt;
 }
+
 auto AStarPlacer::checkCompatibilityAndAddPlacement(
     const uint8_t hKey, const uint8_t hValue, const uint8_t vKey,
     const uint8_t vValue, const float distance,
@@ -1265,6 +1298,7 @@ auto AStarPlacer::checkCompatibilityAndAddPlacement(
   maxDistances.emplace_back(distance);
   return false;
 }
+
 AStarPlacer::AStarPlacer(const Architecture& architecture,
                          const nlohmann::json& config)
     : architecture_(architecture) {
@@ -1403,6 +1437,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
                  "AStarPlacer or is malformed. Using default settings.\n";
   }
 }
+
 auto AStarPlacer::place(
     const size_t nQubits,
     const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
