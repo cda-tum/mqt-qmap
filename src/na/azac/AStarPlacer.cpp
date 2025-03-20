@@ -616,7 +616,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
           }
         }
       }
-      if (cHighNew < cHigh) {
+      if (cHighNew > cHigh) {
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
@@ -865,12 +865,16 @@ auto AStarPlacer::placeQubitsInStorageZone(
       size_t windowHeight = 0;
       if (windowRatio_ < 1.0) {
         // landscpe ==> expand width and adjust height
-        windowWidth = windowMinWidth_ + expansion;
+        // the overall width and height is divided by 2 later, hence an
+        // expansion of 2 is needed to actually increase the window size
+        windowWidth = windowMinWidth_ + 2 * expansion;
         windowHeight = static_cast<size_t>(
             std::round(windowRatio_ * static_cast<double>(windowWidth)));
       } else {
         // portrait ==> expand height and adjust width
-        windowHeight = windowMinHeight_ + expansion;
+        // the overall width and height is divided by 2 later, hence an
+        // expansion of 2 is needed to actually increase the window size
+        windowHeight = windowMinHeight_ + 2 * expansion;
         windowWidth = static_cast<size_t>(
             std::round(static_cast<double>(windowHeight) / windowRatio_));
       }
@@ -931,7 +935,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
           }
         }
       }
-      if (cHighNew < cHigh) {
+      if (cHighNew > cHigh) {
         assert(cHighNew - cHigh == 1);
         for (size_t r = rLow; r < rHigh; ++r) {
           // NOTE: we have to use cHighNew - 1 here, which is equal to cHigh
@@ -1049,7 +1053,7 @@ auto AStarPlacer::placeQubitsInStorageZone(
 template <class Node> auto AStarPlacer::getCost(const Node& node) -> float {
   float cost = 0.0;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
-    cost += d;
+    cost += std::sqrt(d);
   }
   return cost;
 }
@@ -1102,10 +1106,10 @@ auto AStarPlacer::getAtomPlacementHeuristic(
       }
     }
   }
-  float heuristic =
-      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
-          ? 0.F
-          : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  float heuristic = maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+                        ? 0.F
+                        : std::sqrt(maxDistanceOfUnplacedAtom) -
+                              std::sqrt(node.maxDistanceOfPlacedAtom);
   heuristic += deepeningFactor *
                (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedAtoms;
@@ -1138,10 +1142,10 @@ auto AStarPlacer::getGatePlacementHeuristic(
       }
     }
   }
-  float heuristic =
-      maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
-          ? 0.F
-          : maxDistanceOfUnplacedAtom - node.maxDistanceOfPlacedAtom;
+  float heuristic = maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+                        ? 0.F
+                        : std::sqrt(maxDistanceOfUnplacedAtom) -
+                              std::sqrt(node.maxDistanceOfPlacedAtom);
   heuristic += deepeningFactor *
                (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedGates;
@@ -1347,7 +1351,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "window_ratio") {
-        if (value.is_number_float()) {
+        if (value.is_number()) {
           windowRatio_ = value;
           windowRatioSet = true;
         } else {
@@ -1357,7 +1361,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "window_share") {
-        if (value.is_number_float()) {
+        if (value.is_number()) {
           windowShare_ = value;
           windowShareSet = true;
         } else {
@@ -1367,7 +1371,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "deepening_factor") {
-        if (value.is_number_float()) {
+        if (value.is_number()) {
           deepeningFactor_ = value;
           deepeningFactorSet = true;
         } else {
@@ -1378,7 +1382,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "lookahead_factor") {
-        if (value.is_number_float()) {
+        if (value.is_number()) {
           lookaheadFactor_ = value;
           lookaheadFactorSet = true;
         } else {
