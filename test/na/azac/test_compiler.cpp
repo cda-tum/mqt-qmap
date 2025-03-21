@@ -45,7 +45,7 @@ constexpr std::string_view settings = R"({
     "window_ratio" : 1.5,
     "window_share" : 0.6,
     "deepening_factor" : 0.6,
-    "lookahead_factor": 0.0
+    "lookahead_factor": 0.2
   }
 })";
 #define COMPILER_TEST(compiler_type)                                           \

@@ -850,6 +850,22 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   const auto& [discreteTargetRows, discreteTargetColumns] =
       discretizeNonOccupiedStorageSites(occupiedStorageSites);
+  std::unordered_map<
+      uint8_t,
+      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
+                                             size_t, size_t>>>
+      targetSites;
+  for (const auto& [row, r] : discreteTargetRows) {
+    const SLM& slm = row.first.get();
+    auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
+    for (const auto& [column, c] : discreteTargetColumns) {
+      if (&slm == &column.first.get()) {
+        targetSitesForThisRow.emplace(c,
+                                      std::tie(slm, row.second, column.second));
+      }
+    }
+  }
+  assert(!targetSites.empty());
   //===------------------------------------------------------------------===//
   // Initialize atom jobs
   //===------------------------------------------------------------------===//
@@ -1013,6 +1029,31 @@ auto AStarPlacer::placeAtomsInStorageZone(
         [](const AtomJob::Option& lhs, const AtomJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
+    // Determine whether lookahead for the gate should be considered.
+    // That is the case it the gate to be placed contains a reuse qubit
+    // because then we do not only decide the position of the gate in this layer
+    // but also of the gate in the next layer.
+    for (const auto& nextGate : nextTwoQubitGates) {
+      const auto& [nextLeftAtom, nextRightAtom] = nextGate;
+      if (nextLeftAtom == atom || nextRightAtom == atom) {
+        const qc::Qubit nextInteractionPartner =
+            nextLeftAtom == atom ? nextRightAtom : nextLeftAtom;
+        const auto& [nextSlm, nextRow, nextCol] =
+            previousPlacement[nextInteractionPartner];
+        job.minLookaheadCost = std::numeric_limits<float>::max();
+        for (auto& option : job.options) {
+          const auto& [row, col] = option.site;
+          const auto& [targetSlm, targetRow, targetCol] =
+              targetSites.at(row).at(col);
+          const auto distance = static_cast<float>(architecture_.get().distance(
+              nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
+          option.lookaheadCost = std::sqrt(distance);
+          job.minLookaheadCost =
+              std::min(job.minLookaheadCost, option.lookaheadCost);
+        }
+        break;
+      }
+    }
   }
   //===------------------------------------------------------------------===//
   // Get the extent of discrete source and target
@@ -1074,22 +1115,6 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
-  std::unordered_map<
-      uint8_t,
-      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>
-      targetSites;
-  for (const auto& [row, r] : discreteTargetRows) {
-    const SLM& slm = row.first.get();
-    auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
-    for (const auto& [column, c] : discreteTargetColumns) {
-      if (&slm == &column.first.get()) {
-        targetSitesForThisRow.emplace(c,
-                                      std::tie(slm, row.second, column.second));
-      }
-    }
-  }
-  assert(!targetSites.empty());
   assert(path.size() == nJobs + 1);
   for (size_t i = 0; i < nJobs; ++i) {
     const auto& job = atomJobs[i];
