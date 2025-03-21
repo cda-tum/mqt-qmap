@@ -37,7 +37,8 @@ constexpr std::string_view configJson = R"({
     "window_ratio" : 1.5,
     "window_share" : 0.6,
     "deepening_factor" : 0.6,
-    "lookahead_factor": 0.2
+    "lookahead_factor": 0.2,
+    "reuse_level": 100.0
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
@@ -229,6 +230,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
     "window_share": 0.4,
     "deepening_factor": 10.0,
     "lookahead_factor": 0.2,
+    "reuse_level": 100.0,
     "unknown_key": 42
   }
 })"_json;

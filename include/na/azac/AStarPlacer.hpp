@@ -122,7 +122,8 @@ class AStarPlacer {
   /// until a new mapping is found satisfying all constraints of the next
   /// stage
   struct AtomNode {
-    const AtomJob::Option* option = nullptr;
+    uint8_t level = 0;
+    uint16_t option = 0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -142,7 +143,8 @@ class AStarPlacer {
   /// until a new mapping is found satisfying all constraints of the next
   /// stage
   struct GateNode {
-    const GateJob::Option* option = nullptr;
+    uint8_t level = 0;
+    uint16_t option = 0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -355,11 +357,8 @@ private:
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
-  template <class Node>
-  [[nodiscard]] static auto isGoal(const size_t nAtoms, const Node& node)
-      -> bool {
-    return node.consumedFreeSites.size() == nAtoms;
-  }
+  [[nodiscard]] static auto isGoal(size_t nGates, const GateNode& node) -> bool;
+  [[nodiscard]] static auto isGoal(size_t nAtoms, const AtomNode& node) -> bool;
 
   /// @brief Returns the cost of a node, i.e., the total cost to reach that node
   /// from the start node.
