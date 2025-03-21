@@ -388,12 +388,12 @@ private:
   /// placed atoms must travel to their determined target site.
   [[nodiscard]] static auto
   getHeuristic(const std::vector<AtomJob>& atomJobs, float deepeningFactor,
-               float lookaheadFactor, const std::array<float, 2>& scaleFactors,
-               const AtomNode& node) -> float;
+               const std::array<float, 2>& scaleFactors, const AtomNode& node)
+      -> float;
   [[nodiscard]] static auto
   getHeuristic(const std::vector<GateJob>& gateJobs, float deepeningFactor,
-               float lookaheadFactor, const std::array<float, 2>& scaleFactors,
-               const GateNode& node) -> float;
+               const std::array<float, 2>& scaleFactors, const GateNode& node)
+      -> float;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated
