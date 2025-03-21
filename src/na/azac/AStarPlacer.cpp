@@ -699,7 +699,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
           }
         }
       }
-      job.minLookaheadCost = std::numeric_limits<float>::max();
+      job.meanLookaheadCost = 0.0F;
       const auto& [nextSlm, nextRow, nextCol] =
           previousPlacement[nextInteractionPartner];
       for (auto& option : job.options) {
@@ -709,9 +709,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         const auto distance = static_cast<float>(architecture_.get().distance(
             nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
         option.lookaheadCost = lookaheadFactor_ * std::sqrt(distance);
-        job.minLookaheadCost =
-            std::min(job.minLookaheadCost, option.lookaheadCost);
+        job.meanLookaheadCost += option.lookaheadCost;
       }
+      job.meanLookaheadCost /= static_cast<float>(job.options.size());
     }
   }
   //===------------------------------------------------------------------===//
@@ -1055,7 +1055,9 @@ auto AStarPlacer::placeAtomsInStorageZone(
             nextLeftAtom == atom ? nextRightAtom : nextLeftAtom;
         const auto& [nextSlm, nextRow, nextCol] =
             previousPlacement[nextInteractionPartner];
-        job.minLookaheadCost = std::numeric_limits<float>::max();
+        // use this attribute to sum up the costs and calculate the mean by
+        // dividing by the number of options
+        job.meanLookaheadCost = 0.0F;
         for (auto& option : job.options) {
           if (option.reuse) {
             const auto distance =
@@ -1076,9 +1078,9 @@ auto AStarPlacer::placeAtomsInStorageZone(
                                              targetSlm, targetRow, targetCol));
             option.lookaheadCost = lookaheadFactor_ * std::sqrt(distance);
           }
-          job.minLookaheadCost =
-              std::min(job.minLookaheadCost, option.lookaheadCost);
+          job.meanLookaheadCost += option.lookaheadCost;
         }
+        job.meanLookaheadCost /= static_cast<float>(job.options.size());
         break;
       }
     }
@@ -1210,7 +1212,7 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
   float accMinLookaheadCost = 0.0F;
   for (size_t i = node.level; i < nAtomJobs; ++i) {
     const auto& job = atomJobs[i];
-    accMinLookaheadCost += job.minLookaheadCost;
+    accMinLookaheadCost += job.meanLookaheadCost;
     for (const auto& option : job.options) {
       if (option.reuse) {
         // since them jobs are sorted by distance and this has distance 0 as the
@@ -1251,10 +1253,10 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
   const auto nGateJobs = gateJobs.size();
   const auto nUnplacedGates = static_cast<float>(nGateJobs - node.level);
   float maxDistanceOfUnplacedAtom = 0.0F;
-  float accMinLookaheadCost = 0.0F;
+  float accMeanLookaheadCost = 0.0F;
   for (size_t i = node.level; i < nGateJobs; ++i) {
     const auto& job = gateJobs[i];
-    accMinLookaheadCost += job.minLookaheadCost;
+    accMeanLookaheadCost += job.meanLookaheadCost;
     for (const auto& option : job.options) {
       // this assumes that the first found pair of free sites is the nearest
       // pair of free sites for that gate. This requires that the job options
@@ -1280,7 +1282,7 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
                         ? 0.F
                         : std::sqrt(maxDistanceOfUnplacedAtom) -
                               std::sqrt(maxDistanceOfPlacedAtom);
-  heuristic += accMinLookaheadCost;
+  heuristic += accMeanLookaheadCost;
   heuristic += deepeningFactor *
                (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedGates;

@@ -91,7 +91,7 @@ class AStarPlacer {
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
     /// minimum lookahead distance
-    float minLookaheadCost = 0.0F;
+    float meanLookaheadCost = 0.0F;
   };
 
   /// When placing gates in the entanglement zone before a rydberg layer, this
@@ -114,7 +114,7 @@ class AStarPlacer {
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
     /// minimum lookahead distance
-    float minLookaheadCost = 0.0F;
+    float meanLookaheadCost = 0.0F;
   };
 
   /// A node representing one stage in the process of placing all atoms
