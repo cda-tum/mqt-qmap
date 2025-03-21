@@ -786,35 +786,36 @@ auto AStarPlacer::placeAtomsInStorageZone(
   // Duplicate the previous placement as a starting point for the current
   std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
       currentPlacement = previousPlacement;
+  if (twoQubitGates.empty()) {
+    return currentPlacement;
+  }
   //===------------------------------------------------------------------===//
   // Find atoms that must be placed
   //===------------------------------------------------------------------===//
-  std::set<std::pair<double, qc::Qubit>, std::greater<>> atomsToPlaceSet;
+  std::vector<qc::Qubit> atomsToPlace;
+  double maxDistance = 0.0;
+  size_t atomIndexWithMaxDistance = 0;
   for (const auto& gate : twoQubitGates) {
     for (const auto qubit : gate) {
-      if (reuseQubits.find(qubit) == reuseQubits.end()) {
-        const auto& [slm, r, c] = previousPlacement[qubit];
-        const auto& [nearestSlm, nearestRow, nearestCol] =
-            architecture_.get().nearestStorageSite(slm, r, c);
-        const auto distance = architecture_.get().distance(
-            slm, r, c, nearestSlm, nearestRow, nearestCol);
-        atomsToPlaceSet.emplace(distance, qubit);
+      const auto& [slm, r, c] = previousPlacement[qubit];
+      const auto& [nearestSlm, nearestRow, nearestCol] =
+          architecture_.get().nearestStorageSite(slm, r, c);
+      const auto distance = architecture_.get().distance(
+          slm, r, c, nearestSlm, nearestRow, nearestCol);
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        atomIndexWithMaxDistance = atomsToPlace.size();
       }
+      atomsToPlace.emplace_back(qubit);
     }
-  }
-  if (atomsToPlaceSet.empty()) {
-    return currentPlacement;
   }
   //===------------------------------------------------------------------===//
   // Discretize the previous placement of the atoms to be placed
   //===------------------------------------------------------------------===//
-  std::vector<qc::Qubit> atomsToPlace;
-  atomsToPlace.reserve(atomsToPlace.size());
-  for (const auto& [_, atom] : atomsToPlaceSet) {
-    atomsToPlace.emplace_back(atom);
-  }
   // Place the atoms with the longest distance first, but the place atoms in
   // increasing order of distance to the first atom
+  // swap atoms at index 0 and atomIndexWithMaxDistance
+  std::swap(atomsToPlace.front(), atomsToPlace.at(atomIndexWithMaxDistance));
   const auto& frontPlacement = previousPlacement[atomsToPlace.front()];
   std::set<std::pair<double, qc::Qubit>> atomsWithoutFirstAtom;
   for (auto atomIt = atomsToPlace.cbegin() + 1; atomIt != atomsToPlace.cend();
@@ -890,10 +891,15 @@ auto AStarPlacer::placeAtomsInStorageZone(
     maxDiscreteColumnOfNearestSite =
         std::max(maxDiscreteColumnOfNearestSite, discreteColumnOfNearestSite);
     auto& job = atomJobs.emplace_back();
-    job.qubit = atom;
+    job.atom = atom;
     job.currentSite =
         std::array{discreteRows.at(std::tie(previousSlm, previousRow)),
                    discreteColumns.at(std::tie(previousSlm, previousCol))};
+    if (reuseQubits.find(atom) != reuseQubits.end()) {
+      // atom can be reused, so we add an option for the atom to stay at the
+      // current site
+      job.options.emplace_back(AtomJob::Option{{0, 0}, 0.0F, true});
+    }
     size_t rLow = 0;
     size_t rHigh = nearestSlm.get().nRows;
     size_t cLow = 0;
@@ -1042,12 +1048,21 @@ auto AStarPlacer::placeAtomsInStorageZone(
             previousPlacement[nextInteractionPartner];
         job.minLookaheadCost = std::numeric_limits<float>::max();
         for (auto& option : job.options) {
-          const auto& [row, col] = option.site;
-          const auto& [targetSlm, targetRow, targetCol] =
-              targetSites.at(row).at(col);
-          const auto distance = static_cast<float>(architecture_.get().distance(
-              nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
-          option.lookaheadCost = std::sqrt(distance);
+          if (option.reuse) {
+            const auto distance =
+                static_cast<float>(architecture_.get().distance(
+                    nextSlm, nextRow, nextCol, previousSlm, previousRow,
+                    previousCol));
+            option.lookaheadCost = std::sqrt(distance - reuseLevel_);
+          } else {
+            const auto& [row, col] = option.site;
+            const auto& [targetSlm, targetRow, targetCol] =
+                targetSites.at(row).at(col);
+            const auto distance = static_cast<float>(
+                architecture_.get().distance(nextSlm, nextRow, nextCol,
+                                             targetSlm, targetRow, targetCol));
+            option.lookaheadCost = std::sqrt(distance);
+          }
           job.minLookaheadCost =
               std::min(job.minLookaheadCost, option.lookaheadCost);
         }
@@ -1119,9 +1134,11 @@ auto AStarPlacer::placeAtomsInStorageZone(
   for (size_t i = 0; i < nJobs; ++i) {
     const auto& job = atomJobs[i];
     const auto& option = *path[i + 1].get().option;
-    const auto atom = job.qubit;
-    const auto& [row, col] = option.site;
-    currentPlacement[atom] = targetSites.at(row).at(col);
+    if (!option.reuse) {
+      const auto atom = job.atom;
+      const auto& [row, col] = option.site;
+      currentPlacement[atom] = targetSites.at(row).at(col);
+    }
   }
   return currentPlacement;
 }
@@ -1262,20 +1279,24 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   const auto& atomJob = atomJobs[atomToBePlacedNext];
   std::vector<std::reference_wrapper<const AtomNode>> neighbors;
   for (const auto& option : atomJob.options) {
-    const auto& [site, distance, lookaheadCost] = option;
+    const auto& [site, distance, lookaheadCost, reuse] = option;
     // skip the sites that are already consumed
-    if (node.consumedFreeSites.find(site) != node.consumedFreeSites.end()) {
+    if (!reuse &&
+        node.consumedFreeSites.find(site) != node.consumedFreeSites.end()) {
       continue;
     }
     // make a copy of node, the parent of neighbor
     AtomNode& neighbor = *nodes.emplace_back(std::make_unique<AtomNode>(node));
+    if (!reuse) {
+      neighbor.consumedFreeSites.emplace(site);
+      // check whether the current placement is compatible with any existing
+      // group
+      checkCompatibilityAndAddPlacement(
+          atomJob.currentSite.front(), site.front(), atomJob.currentSite.back(),
+          site.back(), distance, neighbor.groups,
+          neighbor.maxDistancesOfPlacedAtomsPerGroup);
+    }
     neighbor.option = &option;
-    neighbor.consumedFreeSites.emplace(site);
-    // check whether the current placement is compatible with any existing group
-    checkCompatibilityAndAddPlacement(
-        atomJob.currentSite.front(), site.front(), atomJob.currentSite.back(),
-        site.back(), distance, neighbor.groups,
-        neighbor.maxDistancesOfPlacedAtomsPerGroup);
     neighbor.lookaheadCost += lookaheadCost;
     // add the neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
@@ -1426,6 +1447,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool windowShareSet = false;
     bool deepeningFactorSet = false;
     bool lookaheadFactorSet = false;
+    bool reuseLevelSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
         if (value.is_boolean()) {
@@ -1491,6 +1513,17 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
                  "default.\n";
           std::cout << oss.str();
         }
+      } else if (key == "reuse_level") {
+        if (value.is_number()) {
+          reuseLevel_ = value;
+          reuseLevelSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid value for reuse_level. Using "
+                 "default.\n";
+          std::cout << oss.str();
+        }
       } else {
         std::ostringstream oss;
         oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
@@ -1533,6 +1566,10 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::cout
           << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
              "not contain a setting for lookahead_factor. Using default.\n";
+    }
+    if (!reuseLevelSet) {
+      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+                   "not contain a setting for reuse_level. Using default.\n";
     }
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "

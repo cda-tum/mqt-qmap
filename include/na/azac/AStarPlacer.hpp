@@ -63,11 +63,16 @@ class AStarPlacer {
   /// important as the distance to the target site, which is usually not
   /// desired.
   float lookaheadFactor_ = 0.2F;
+  /// The reuse level corresponds to the estimated extra fidelity loss due to
+  /// the extra trap transfers when the atom is not reused and instead move to
+  /// the entanglement zone. It is subtracted from the cost for the reuse
+  /// option to favor this option over the non-reuse options.
+  float reuseLevel_ = 1.0F;
   /// When placing atoms after a rydberg layer back in the storage zone, this
   /// struct stores for every such atom all required information, i.e., the
   /// current site and potential target sites ordered by distance (ascending).
   struct AtomJob {
-    qc::Qubit qubit;
+    qc::Qubit atom;
     /// the current site of the atom
     DiscreteSite currentSite;
     /// a struct describing one potential target site
@@ -76,6 +81,10 @@ class AStarPlacer {
       DiscreteSite site;
       /// the distance the atom must travel to reach the target site
       float distance;
+      /// When this flag is set to false, it indicates that the atom should not
+      /// move at all and remain in the entanglement zone. Then the attribute
+      /// site is ignored.
+      bool reuse = false;
       /// additional lookahead distance to next interaction partner
       float lookaheadCost = 0.0F;
     };
