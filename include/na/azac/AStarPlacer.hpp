@@ -76,9 +76,13 @@ class AStarPlacer {
       DiscreteSite site;
       /// the distance the atom must travel to reach the target site
       float distance;
+      /// additional lookahead distance to next interaction partner
+      float lookaheadCost = 0.0F;
     };
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
+    /// minimum lookahead distance
+    float minLookaheadCost = 0.0F;
   };
 
   /// When placing gates in the entanglement zone before a rydberg layer, this
@@ -95,9 +99,13 @@ class AStarPlacer {
       std::array<DiscreteSite, 2> sites;
       /// the max distance the atoms must travel to reach the target sites
       std::array<float, 2> distance;
+      /// additional lookahead distance to next interaction partner
+      float lookaheadCost = 0.0F;
     };
     /// a list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
+    /// minimum lookahead distance
+    float minLookaheadCost = 0.0F;
   };
 
   /// A node representing one stage in the process of placing all atoms
@@ -106,9 +114,6 @@ class AStarPlacer {
   /// stage
   struct AtomNode {
     const AtomJob::Option* option = nullptr;
-    /// the maximum distance an already placed atom must travel to its
-    /// target location
-    float maxDistanceOfPlacedAtom = 0.0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -119,6 +124,8 @@ class AStarPlacer {
     /// the maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
+    /// accumulated lookahead cost
+    float lookaheadCost = 0.0F;
   };
 
   /// A node representing one stage in the process of placing all atoms
@@ -127,9 +134,6 @@ class AStarPlacer {
   /// stage
   struct GateNode {
     const GateJob::Option* option = nullptr;
-    /// the maximum distance an already placed atom must travel to its
-    /// target location
-    float maxDistanceOfPlacedAtom = 0.0;
     /// a set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -140,6 +144,8 @@ class AStarPlacer {
     /// the maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
+    /// accumulated lookahead cost
+    float lookaheadCost = 0.0F;
   };
 
 public:
@@ -287,7 +293,8 @@ private:
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& previousReuseQubits,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
       -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                           size_t, size_t>>,
                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
@@ -318,7 +325,9 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const std::unordered_set<qc::Qubit>& nextReuseQubits,
+      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
@@ -332,7 +341,8 @@ private:
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
       -> std::vector<
           std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
@@ -376,12 +386,14 @@ private:
   /// This increase is bounded from below by the maximal distance of an atom to
   /// its nearest potential target site minus the maximum distance already
   /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto getHeuristic(
-      const std::vector<AtomJob>& atomJobs, const float deepeningFactor,
-      const std::array<float, 2>& scaleFactors, const AtomNode& node) -> float;
-  [[nodiscard]] static auto getHeuristic(
-      const std::vector<GateJob>& gateJobs, const float deepeningFactor,
-      const std::array<float, 2>& scaleFactors, const GateNode& node) -> float;
+  [[nodiscard]] static auto
+  getHeuristic(const std::vector<AtomJob>& atomJobs, float deepeningFactor,
+               float lookaheadFactor, const std::array<float, 2>& scaleFactors,
+               const AtomNode& node) -> float;
+  [[nodiscard]] static auto
+  getHeuristic(const std::vector<GateJob>& gateJobs, float deepeningFactor,
+               float lookaheadFactor, const std::array<float, 2>& scaleFactors,
+               const GateNode& node) -> float;
 
   /// @brief Return pointers to all neighbors of the given node.
   /// @details When calling this function, the neighbors are allocated

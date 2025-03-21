@@ -329,15 +329,18 @@ auto AStarPlacer::makeIntermediatePlacement(
                                  size_t>>& previousPlacement,
     const std::unordered_set<qc::Qubit>& previousReuseQubits,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
     -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                         size_t, size_t>>,
                  std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                         size_t, size_t>>> {
   const auto& gatePlacement = placeGatesInEntanglementZone(
-      previousPlacement, previousReuseQubits, twoQubitGates);
+      previousPlacement, previousReuseQubits, twoQubitGates, reuseQubits,
+      nextTwoQubitGates);
   return {gatePlacement,
-          placeAtomsInStorageZone(gatePlacement, reuseQubits, twoQubitGates)};
+          placeAtomsInStorageZone(gatePlacement, reuseQubits, twoQubitGates,
+                                  nextTwoQubitGates)};
 }
 
 auto AStarPlacer::addGateOption(
@@ -398,7 +401,9 @@ auto AStarPlacer::placeGatesInEntanglementZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+    const std::unordered_set<qc::Qubit>& nextReuseQubits,
+    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
     -> std::vector<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
   // Duplicate the previous placement as a starting point for the current
@@ -507,6 +512,22 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   const auto& [discreteTargetRows, discreteTargetColumns] =
       discretizeNonOccupiedEntanglementSites(occupiedEntanglementSites);
+  std::unordered_map<
+      uint8_t,
+      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
+                                             size_t, size_t>>>
+      targetSites;
+  for (const auto& [row, r] : discreteTargetRows) {
+    const SLM& slm = row.first.get();
+    auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
+    for (const auto& [column, c] : discreteTargetColumns) {
+      if (&slm == &column.first.get()) {
+        targetSitesForThisRow.emplace(c,
+                                      std::tie(slm, row.second, column.second));
+      }
+    }
+  }
+  assert(!targetSites.empty());
   //===------------------------------------------------------------------===//
   // Initialize the gate jobs
   //===------------------------------------------------------------------===//
@@ -564,7 +585,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       size_t windowWidth = 0;
       size_t windowHeight = 0;
       if (windowRatio_ < 1.0) {
-        // landscpe ==> expand width and adjust height
+        // landscape ==> expand width and adjust height
         windowWidth = windowMinWidth_ + expansion;
         windowHeight = static_cast<size_t>(
             std::round(windowRatio_ * static_cast<double>(windowWidth)));
@@ -638,6 +659,51 @@ auto AStarPlacer::placeGatesInEntanglementZone(
         [](const GateJob::Option& lhs, const GateJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
+    // Determine whether lookahead for the gate should be considered.
+    // That is the case it the gate to be placed contains a reuse qubit
+    // because then we do not only decide the position of the gate in this layer
+    // but also of the gate in the next layer.
+    bool leftReuse = nextReuseQubits.find(leftAtom) != nextReuseQubits.end();
+    bool rightReuse = nextReuseQubits.find(rightAtom) != nextReuseQubits.end();
+    qc::Qubit nextInteractionPartner = 0;
+    if (leftReuse || rightReuse) {
+      for (const auto& nextGate : nextTwoQubitGates) {
+        const auto& [nextLeftAtom, nextRightAtom] = nextGate;
+        if (leftReuse) {
+          if (nextLeftAtom == leftAtom) {
+            nextInteractionPartner = nextRightAtom;
+            break;
+          }
+          if (nextRightAtom == leftAtom) {
+            nextInteractionPartner = nextLeftAtom;
+            break;
+          }
+        }
+        if (rightReuse) {
+          if (nextLeftAtom == rightAtom) {
+            nextInteractionPartner = nextRightAtom;
+            break;
+          }
+          if (nextRightAtom == rightAtom) {
+            nextInteractionPartner = nextLeftAtom;
+            break;
+          }
+        }
+      }
+      job.minLookaheadCost = std::numeric_limits<float>::max();
+      const auto& [nextSlm, nextRow, nextCol] =
+          previousPlacement[nextInteractionPartner];
+      for (auto& option : job.options) {
+        const auto& [row, col] = option.sites[leftReuse ? 0 : 1];
+        const auto& [targetSlm, targetRow, targetCol] =
+            targetSites.at(row).at(col);
+        const auto distance = static_cast<float>(architecture_.get().distance(
+            nextSlm, nextRow, nextCol, targetSlm, targetRow, targetCol));
+        option.lookaheadCost = std::sqrt(distance);
+        job.minLookaheadCost =
+            std::min(job.minLookaheadCost, option.lookaheadCost);
+      }
+    }
   }
   //===------------------------------------------------------------------===//
   // Get the extent of discrete source and target
@@ -682,6 +748,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   // make the root node
   nodes.emplace_back(std::make_unique<GateNode>());
   const auto deepeningFactor = deepeningFactor_;
+  const auto lookaheadFactor = lookaheadFactor_;
   const auto& path = aStarTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
@@ -689,29 +756,14 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       },
       [nJobs](const auto& node) { return isGoal(2 * nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&gateJobs, deepeningFactor, &scaleFactors](const auto& node) {
-        return getHeuristic(gateJobs, deepeningFactor, scaleFactors,
-                            std::move(node));
+      [&gateJobs, deepeningFactor, lookaheadFactor,
+       &scaleFactors](const auto& node) {
+        return getHeuristic(gateJobs, deepeningFactor, lookaheadFactor,
+                            scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
-  std::unordered_map<
-      uint8_t,
-      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>
-      targetSites;
-  for (const auto& [row, r] : discreteTargetRows) {
-    const SLM& slm = row.first.get();
-    auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
-    for (const auto& [column, c] : discreteTargetColumns) {
-      if (&slm == &column.first.get()) {
-        targetSitesForThisRow.emplace(c,
-                                      std::tie(slm, row.second, column.second));
-      }
-    }
-  }
-  assert(!targetSites.empty());
   assert(path.size() == nJobs + 1);
   for (size_t i = 0; i < nJobs; ++i) {
     const auto& job = gateJobs[i];
@@ -729,7 +781,8 @@ auto AStarPlacer::placeAtomsInStorageZone(
     const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                  size_t>>& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates)
+    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
     -> std::vector<
         std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
   // Duplicate the previous placement as a starting point for the current
@@ -1009,6 +1062,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   std::deque<std::unique_ptr<AtomNode>> nodes;
   nodes.emplace_back(std::make_unique<AtomNode>());
   const auto deepeningFactor = deepeningFactor_;
+  const auto lookaheadFactor = lookaheadFactor_;
   const auto& path = aStarTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
@@ -1016,9 +1070,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&atomJobs, deepeningFactor, &scaleFactors](const auto& node) {
-        return getHeuristic(atomJobs, deepeningFactor, scaleFactors,
-                            std::move(node));
+      [&atomJobs, deepeningFactor, lookaheadFactor,
+       &scaleFactors](const auto& node) {
+        return getHeuristic(atomJobs, deepeningFactor, lookaheadFactor,
+                            scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -1051,7 +1106,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
 }
 
 auto AStarPlacer::getCost(const GateNode& node) -> float {
-  float cost = 0.0;
+  float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
   }
@@ -1059,7 +1114,7 @@ auto AStarPlacer::getCost(const GateNode& node) -> float {
 }
 
 auto AStarPlacer::getCost(const AtomNode& node) -> float {
-  float cost = 0.0;
+  float cost = node.lookaheadCost;
   for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
     cost += std::sqrt(d);
   }
@@ -1096,14 +1151,18 @@ auto AStarPlacer::sumStdDeviationForGroups(
 
 auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
                                const float deepeningFactor,
+                               const float lookaheadFactor,
                                const std::array<float, 2>& scaleFactors,
                                const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
   const auto nUnplacedAtoms =
       static_cast<float>(nAtomJobs - node.consumedFreeSites.size());
-  float maxDistanceOfUnplacedAtom = 0.0;
+  float maxDistanceOfUnplacedAtom = 0.0F;
+  float accMinLookaheadCost = 0.0F;
   for (size_t i = node.consumedFreeSites.size(); i < nAtomJobs; ++i) {
-    for (const auto& option : atomJobs[i].options) {
+    const auto& job = atomJobs[i];
+    accMinLookaheadCost += job.minLookaheadCost;
+    for (const auto& option : job.options) {
       if (node.consumedFreeSites.find(option.site) ==
           node.consumedFreeSites.end()) {
         // this assumes that the first found free site is the nearest free site
@@ -1115,10 +1174,15 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
       }
     }
   }
-  float heuristic = maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+  float maxDistanceOfPlacedAtom = 0.0F;
+  for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
+    maxDistanceOfPlacedAtom = std::max(maxDistanceOfPlacedAtom, d);
+  }
+  float heuristic = maxDistanceOfUnplacedAtom <= maxDistanceOfPlacedAtom
                         ? 0.F
                         : std::sqrt(maxDistanceOfUnplacedAtom) -
-                              std::sqrt(node.maxDistanceOfPlacedAtom);
+                              std::sqrt(maxDistanceOfPlacedAtom);
+  heuristic += lookaheadFactor * accMinLookaheadCost;
   heuristic += deepeningFactor *
                (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedAtoms;
@@ -1127,15 +1191,19 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
 
 auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
                                const float deepeningFactor,
+                               const float lookaheadFactor,
                                const std::array<float, 2>& scaleFactors,
                                const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
   assert(node.consumedFreeSites.size() % 2 == 0);
   const auto nUnplacedGates = // NOLINTNEXTLINE(bugprone-integer-division)
       static_cast<float>(nGateJobs - (node.consumedFreeSites.size() / 2));
-  float maxDistanceOfUnplacedAtom = 0.0;
+  float maxDistanceOfUnplacedAtom = 0.0F;
+  float accMinLookaheadCost = 0.0F;
   for (size_t i = node.consumedFreeSites.size() / 2; i < nGateJobs; ++i) {
-    for (const auto& option : gateJobs[i].options) {
+    const auto& job = gateJobs[i];
+    accMinLookaheadCost += job.minLookaheadCost;
+    for (const auto& option : job.options) {
       // this assumes that the first found pair of free sites is the nearest
       // pair of free sites for that gate. This requires that the job options
       // are sorted by distance.
@@ -1152,10 +1220,15 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
       }
     }
   }
-  float heuristic = maxDistanceOfUnplacedAtom <= node.maxDistanceOfPlacedAtom
+  float maxDistanceOfPlacedAtom = 0.0F;
+  for (const auto d : node.maxDistancesOfPlacedAtomsPerGroup) {
+    maxDistanceOfPlacedAtom = std::max(maxDistanceOfPlacedAtom, d);
+  }
+  float heuristic = maxDistanceOfUnplacedAtom <= maxDistanceOfPlacedAtom
                         ? 0.F
                         : std::sqrt(maxDistanceOfUnplacedAtom) -
-                              std::sqrt(node.maxDistanceOfPlacedAtom);
+                              std::sqrt(maxDistanceOfPlacedAtom);
+  heuristic += lookaheadFactor * accMinLookaheadCost;
   heuristic += deepeningFactor *
                (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
                nUnplacedGates;
@@ -1170,22 +1243,21 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   const auto& atomJob = atomJobs[atomToBePlacedNext];
   std::vector<std::reference_wrapper<const AtomNode>> neighbors;
   for (const auto& option : atomJob.options) {
-    const auto& [site, distance] = option;
-    // skip the site is already consumed
+    const auto& [site, distance, lookaheadCost] = option;
+    // skip the sites that are already consumed
     if (node.consumedFreeSites.find(site) != node.consumedFreeSites.end()) {
       continue;
     }
     // make a copy of node, the parent of neighbor
     AtomNode& neighbor = *nodes.emplace_back(std::make_unique<AtomNode>(node));
     neighbor.option = &option;
-    neighbor.maxDistanceOfPlacedAtom =
-        std::max(node.maxDistanceOfPlacedAtom, distance);
     neighbor.consumedFreeSites.emplace(site);
     // check whether the current placement is compatible with any existing group
     checkCompatibilityAndAddPlacement(
         atomJob.currentSite.front(), site.front(), atomJob.currentSite.back(),
         site.back(), distance, neighbor.groups,
         neighbor.maxDistancesOfPlacedAtomsPerGroup);
+    neighbor.lookaheadCost += lookaheadCost;
     // add the neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
   }
@@ -1203,7 +1275,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
   const auto& [currentSiteOfLeftAtom, currentSiteOfRightAtom] =
       gateJob.currentSites;
   for (const auto& option : gateJob.options) {
-    const auto& [sites, distances] = option;
+    const auto& [sites, distances, lookaheadCost] = option;
     const auto& [leftSite, rightSite] = sites;
     // skip if one of the sites is already consumed
     if (node.consumedFreeSites.find(leftSite) != node.consumedFreeSites.end() ||
@@ -1215,9 +1287,6 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
     // point for the new node
     GateNode& neighbor = *nodes.emplace_back(std::make_unique<GateNode>(node));
     neighbor.option = &option;
-    neighbor.maxDistanceOfPlacedAtom =
-        std::max(node.maxDistanceOfPlacedAtom,
-                 *std::max_element(distances.cbegin(), distances.cend()));
     neighbor.consumedFreeSites.emplace(leftSite);
     neighbor.consumedFreeSites.emplace(rightSite);
     // check whether the current placement is compatible with any existing
@@ -1230,6 +1299,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
         currentSiteOfRightAtom.front(), rightSite.front(),
         currentSiteOfRightAtom.back(), rightSite.back(), distances.back(),
         neighbor.groups, neighbor.maxDistancesOfPlacedAtomsPerGroup);
+    neighbor.lookaheadCost += lookaheadCost;
     // add the final neighbor to the list of neighbors to be returned
     neighbors.emplace_back(neighbor);
   }
@@ -1470,7 +1540,10 @@ auto AStarPlacer::place(
         layer == 0 ? std::unordered_set<qc::Qubit>{} : reuseQubits[layer - 1],
         layer == reuseQubits.size() ? std::unordered_set<qc::Qubit>{}
                                     : reuseQubits[layer],
-        twoQubitGateLayers[layer]);
+        twoQubitGateLayers[layer],
+        layer == twoQubitGateLayers.size() - 1
+            ? std::vector<std::array<qc::Qubit, 2>>{}
+            : twoQubitGateLayers[layer + 1]);
     placement.emplace_back(gatePlacement);
     placement.emplace_back(qubitPlacement);
   }
