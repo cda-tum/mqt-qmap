@@ -1062,6 +1062,9 @@ auto AStarPlacer::placeAtomsInStorageZone(
                 static_cast<float>(architecture_.get().distance(
                     nextSlm, nextRow, nextCol, previousSlm, previousRow,
                     previousCol));
+            // NOTE: the multiplication with the lookahead factor is missing
+            // here on purpose as this is the distance the "reuse" costs by
+            // taking the distance of the next interaction partner as cost here
             option.lookaheadCost =
                 std::max(0.0F, std::sqrt(distance) - reuseLevel_);
           } else {
@@ -1071,7 +1074,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
             const auto distance = static_cast<float>(
                 architecture_.get().distance(nextSlm, nextRow, nextCol,
                                              targetSlm, targetRow, targetCol));
-            option.lookaheadCost = std::sqrt(distance);
+            option.lookaheadCost = lookaheadFactor_ * std::sqrt(distance);
           }
           job.minLookaheadCost =
               std::min(job.minLookaheadCost, option.lookaheadCost);
