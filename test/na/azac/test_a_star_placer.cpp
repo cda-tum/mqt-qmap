@@ -37,8 +37,9 @@ constexpr std::string_view configJson = R"({
     "window_ratio" : 1.5,
     "window_share" : 0.6,
     "deepening_factor" : 0.6,
+    "deepening_value" : 0.2,
     "lookahead_factor": 0.2,
-    "reuse_level": 100.0
+    "reuse_level": 5.0
   }
 })";
 class AStarPlacerPlaceTest : public ::testing::Test {
@@ -215,9 +216,18 @@ TEST(AStarPlacerTest, NoConfig) {
   std::stringstream buffer;
   std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
   std::ignore = AStarPlacer(architecture, config);
-  EXPECT_EQ(buffer.str(), "\033[1;35m[WARN]\033[0m Configuration does not "
-                          "contain settings for AStarPlacer or is "
-                          "malformed. Using default settings.\n");
+  EXPECT_EQ(
+      buffer.str(),
+      "\033[1;35m[WARN]\033[0m Configuration does not contain settings for "
+      "AStarPlacer or is malformed. Using default settings ("
+      "\"use_window\" :true, "
+      "\"window_min_width\" :8, "
+      "\"window_ratio\" :1, "
+      "\"window_share\" :0.6, "
+      "\"deepening_factor\" :0.8, "
+      "\"deepening_value\" :0.2, "
+      "\"lookahead_factor\" :0.2, "
+      "\"reuse_level\" :5).\n");
   std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, InvalidConfig) {
@@ -228,7 +238,8 @@ TEST(AStarPlacerTest, InvalidConfig) {
     "window_min_width": 4,
     "window_ratio": 1.5,
     "window_share": 0.4,
-    "deepening_factor": 10.0,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
     "lookahead_factor": 0.2,
     "reuse_level": 100.0,
     "unknown_key": 42
@@ -243,10 +254,10 @@ TEST(AStarPlacerTest, InvalidConfig) {
       ::testing::AllOf(
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "AStarPlacer contains an invalid value "
-                               "for use_window. Using default."),
+                               "for use_window. Using default (true)."),
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "AStarPlacer does not contain a setting "
-                               "for use_window. Using default."),
+                               "for use_window. Using default (true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
               "an unknown key: unknown_key. Ignoring.")));

@@ -757,6 +757,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   // make the root node
   nodes.emplace_back(std::make_unique<GateNode>());
   const auto deepeningFactor = deepeningFactor_;
+  const auto deepeningValue = deepeningValue_;
   const auto& path = aStarTreeSearch<GateNode>(
       *nodes.front(),
       [&nodes, &gateJobs](const auto& node) {
@@ -764,9 +765,10 @@ auto AStarPlacer::placeGatesInEntanglementZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&gateJobs, deepeningFactor, &scaleFactors](const auto& node) {
-        return getHeuristic(gateJobs, deepeningFactor, scaleFactors,
-                            std::move(node));
+      [&gateJobs, deepeningFactor, deepeningValue,
+       &scaleFactors](const auto& node) {
+        return getHeuristic(gateJobs, deepeningFactor, deepeningValue,
+                            scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -1131,6 +1133,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   std::deque<std::unique_ptr<AtomNode>> nodes;
   nodes.emplace_back(std::make_unique<AtomNode>());
   const auto deepeningFactor = deepeningFactor_;
+  const auto deepeningValue = deepeningValue_;
   const auto& path = aStarTreeSearch<AtomNode>(
       *nodes.front(),
       [&nodes, &atomJobs](const auto& node) {
@@ -1138,9 +1141,10 @@ auto AStarPlacer::placeAtomsInStorageZone(
       },
       [nJobs](const auto& node) { return isGoal(nJobs, std::move(node)); },
       [](const auto& node) { return getCost(std::move(node)); },
-      [&atomJobs, deepeningFactor, &scaleFactors](const auto& node) {
-        return getHeuristic(atomJobs, deepeningFactor, scaleFactors,
-                            std::move(node));
+      [&atomJobs, deepeningFactor, deepeningValue,
+       &scaleFactors](const auto& node) {
+        return getHeuristic(atomJobs, deepeningFactor, deepeningValue,
+                            scaleFactors, std::move(node));
       });
   //===------------------------------------------------------------------===//
   // Extract the final mapping
@@ -1176,8 +1180,7 @@ auto AStarPlacer::getCost(const AtomNode& node) -> float {
 
 auto AStarPlacer::sumStdDeviationForGroups(
     const std::array<float, 2>& scaleFactors,
-    const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
-    -> float {
+    const std::vector<CompatibilityGroup>& groups) -> float {
   float sumStdDev = 0.F;
   for (const auto& groupPair : groups) {
     for (size_t i = 0; i < 2; ++i) {
@@ -1204,6 +1207,7 @@ auto AStarPlacer::sumStdDeviationForGroups(
 
 auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
                                const float deepeningFactor,
+                               const float deepeningValue,
                                const std::array<float, 2>& scaleFactors,
                                const AtomNode& node) -> float {
   const auto nAtomJobs = atomJobs.size();
@@ -1240,14 +1244,16 @@ auto AStarPlacer::getHeuristic(const std::vector<AtomJob>& atomJobs,
                         : std::sqrt(maxDistanceOfUnplacedAtom) -
                               std::sqrt(maxDistanceOfPlacedAtom);
   heuristic += accMinLookaheadCost;
-  heuristic += deepeningFactor *
-               (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
-               nUnplacedAtoms;
+  heuristic +=
+      deepeningFactor *
+      (sumStdDeviationForGroups(scaleFactors, node.groups) + deepeningValue) *
+      nUnplacedAtoms;
   return heuristic;
 }
 
 auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
                                const float deepeningFactor,
+                               const float deepeningValue,
                                const std::array<float, 2>& scaleFactors,
                                const GateNode& node) -> float {
   const auto nGateJobs = gateJobs.size();
@@ -1283,9 +1289,10 @@ auto AStarPlacer::getHeuristic(const std::vector<GateJob>& gateJobs,
                         : std::sqrt(maxDistanceOfUnplacedAtom) -
                               std::sqrt(maxDistanceOfPlacedAtom);
   heuristic += accMeanLookaheadCost;
-  heuristic += deepeningFactor *
-               (sumStdDeviationForGroups(scaleFactors, node.groups) + 0.2F) *
-               nUnplacedGates;
+  heuristic +=
+      deepeningFactor *
+      (sumStdDeviationForGroups(scaleFactors, node.groups) + deepeningValue) *
+      nUnplacedGates;
   return heuristic;
 }
 
@@ -1414,8 +1421,8 @@ auto AStarPlacer::checkCompatibilityWithGroup(
 auto AStarPlacer::checkCompatibilityAndAddPlacement(
     const uint8_t hKey, const uint8_t hValue, const uint8_t vKey,
     const uint8_t vValue, const float distance,
-    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups,
-    std::vector<float>& maxDistances) -> bool {
+    std::vector<CompatibilityGroup>& groups, std::vector<float>& maxDistances)
+    -> bool {
   size_t i = 0;
   for (auto& group : groups) {
     auto& [hGroup, vGroup] = group;
@@ -1470,6 +1477,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool windowRatioSet = false;
     bool windowShareSet = false;
     bool deepeningFactorSet = false;
+    bool deepeningValueSet = false;
     bool lookaheadFactorSet = false;
     bool reuseLevelSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
@@ -1479,9 +1487,11 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           useWindowSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::boolalpha;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
                  "contains an invalid "
-                 "value for use_window. Using default.\n";
+                 "value for use_window. Using default ("
+              << useWindow_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "window_min_width") {
@@ -1492,7 +1502,8 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
                  "contains an invalid value for window_min_width. Using "
-                 "default.\n";
+                 "default ("
+              << windowMinWidth_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "window_ratio") {
@@ -1501,8 +1512,10 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           windowRatioSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for window_ratio. Using default.\n";
+                 "contains an invalid value for window_ratio. Using default ("
+              << windowRatio_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "window_share") {
@@ -1511,8 +1524,10 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           windowShareSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for window_share. Using default.\n";
+                 "contains an invalid value for window_share. Using default ("
+              << windowShare_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "deepening_factor") {
@@ -1521,9 +1536,24 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           deepeningFactorSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
                  "contains an invalid value for deepening_factor. Using "
-                 "default.\n";
+                 "default ("
+              << deepeningFactor_ << ").\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "deepening_value") {
+        if (value.is_number()) {
+          deepeningValue_ = value;
+          deepeningValueSet = true;
+        } else {
+          std::ostringstream oss;
+          oss << std::setprecision(4);
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid value for deepening_value. Using "
+                 "default ("
+              << deepeningValue_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "lookahead_factor") {
@@ -1532,9 +1562,11 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           lookaheadFactorSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
                  "contains an invalid value for lookahead_factor. Using "
-                 "default.\n";
+                 "default ("
+              << lookaheadFactor_ << ").\n";
           std::cout << oss.str();
         }
       } else if (key == "reuse_level") {
@@ -1543,9 +1575,11 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           reuseLevelSet = true;
         } else {
           std::ostringstream oss;
+          oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
                  "contains an invalid value for reuse_level. Using "
-                 "default.\n";
+                 "default ("
+              << reuseLevel_ << ").\n";
           std::cout << oss.str();
         }
       } else {
@@ -1557,24 +1591,37 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       }
     }
     if (!useWindowSet) {
-      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-                   "not contain a setting for use_window. Using default.\n";
+      std::ostringstream oss;
+      oss << std::boolalpha;
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for use_window. Using default ("
+          << useWindow_ << ").\n";
+      std::cout << oss.str();
     }
     if (useWindow_) {
       if (!windowMinWidthSet) {
-        std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                     "does not contain a setting for window_min_width. Using "
-                     "default.\n";
+        std::ostringstream oss;
+        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+               "does not contain a setting for window_min_width. Using "
+               "default ("
+            << windowMinWidth_ << ").\n";
+        std::cout << oss.str();
       }
       if (!windowRatioSet) {
-        std::cout
-            << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a setting for window_ratio. Using default.\n";
+        std::ostringstream oss;
+        oss << std::setprecision(4);
+        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+               "does not contain a setting for window_ratio. Using default ("
+            << windowRatio_ << ").\n";
+        std::cout << oss.str();
       }
       if (!windowShareSet) {
-        std::cout
-            << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a setting for window_share. Using default.\n";
+        std::ostringstream oss;
+        oss << std::setprecision(4);
+        oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+               "does not contain a setting for window_share. Using default ("
+            << windowShare_ << ").\n";
+        std::cout << oss.str();
       }
     }
     if (windowMinWidthSet) {
@@ -1582,23 +1629,52 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::round(windowRatio_ * static_cast<double>(windowMinWidth_)));
     }
     if (!deepeningFactorSet) {
-      std::cout
-          << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for deepening_factor. Using default.\n";
+      std::ostringstream oss;
+      oss << std::setprecision(4);
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for deepening_factor. Using default ("
+          << deepeningFactor_ << ").\n";
+      std::cout << oss.str();
+    }
+    if (!deepeningValueSet) {
+      std::ostringstream oss;
+      oss << std::setprecision(4);
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for deepening_value. Using default ("
+          << deepeningValue_ << ").\n";
+      std::cout << oss.str();
     }
     if (!lookaheadFactorSet) {
-      std::cout
-          << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for lookahead_factor. Using default.\n";
+      std::ostringstream oss;
+      oss << std::setprecision(4);
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for lookahead_factor. Using default ("
+          << lookaheadFactor_ << ").\n";
+      std::cout << oss.str();
     }
     if (!reuseLevelSet) {
-      std::cout << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-                   "not contain a setting for reuse_level. Using default.\n";
+      std::ostringstream oss;
+      oss << std::setprecision(4);
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for reuse_level. Using default ("
+          << reuseLevel_ << ").\n";
+      std::cout << oss.str();
     }
   } else {
-    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-                 "settings for "
-                 "AStarPlacer or is malformed. Using default settings.\n";
+    std::ostringstream oss;
+    oss << std::boolalpha << std::setprecision(4);
+    oss << "\033[1;35m[WARN]\033[0m Configuration does not contain "
+           "settings for AStarPlacer or is malformed. Using default settings "
+           "("
+        << "\"use_window\" :" << useWindow_
+        << ", \"window_min_width\" :" << windowMinWidth_
+        << ", \"window_ratio\" :" << windowRatio_
+        << ", \"window_share\" :" << windowShare_
+        << ", \"deepening_factor\" :" << deepeningFactor_
+        << ", \"deepening_value\" :" << deepeningValue_
+        << ", \"lookahead_factor\" :" << lookaheadFactor_
+        << ", \"reuse_level\" :" << reuseLevel_ << ").\n";
+    std::cout << oss.str();
   }
 }
 

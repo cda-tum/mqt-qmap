@@ -20,154 +20,223 @@
 #include <vector>
 
 namespace na::azac {
+/**
+ * @brief The A* placer is a class that provides a method to determine the
+ * placement of the atoms in each layer using the A* search algorithm.
+ */
 class AStarPlacer {
   friend class AStarPlacerTest_AStarSearch_Test;
   using DiscreteSite = std::array<uint8_t, 2>;
+  using CompatibilityGroup = std::array<std::map<uint8_t, uint8_t>, 2>;
 
   std::reference_wrapper<const Architecture> architecture_;
-  /// If true, during the initial placement the atoms are placed starting in the
-  /// last row instead of the first row in the first SLM
+  /**
+   * @brief If true, during the initial placement, the atoms are placed starting
+   * in the last row instead of the first row.
+   * @details This flag is computed automatically based on the given
+   * architecture. If the (first) entanglement zone is closer to the bottom of
+   * the storage zone, this flag is set to true.
+   * @note Is automatically set in the constructor.
+   */
   bool reverseInitialPlacement_ = false;
-  /// this flag indicates whether the  placement should use a window when
-  /// selecting potential free sites
+  /**
+   * @brief This flag indicates whether the placement should use a window when
+   * selecting potential free sites.
+   * @note Specified by the user in the configuration file.
+   */
   bool useWindow_ = true;
-  /// If the window is used, this denotes the minimum width in terms of rows of
-  /// the window centered at the nearest site
-  size_t windowMinWidth_ = 4;
-  size_t windowMinHeight_ = 6;
-  /// If the window is used, this denotes the ration between the height and the
-  /// width of the window. A value greater than 1 means that the window is
-  /// higher than wide. A value of exactly 1 means that the window is square. A
-  /// value smaller than 1 means that the window is wider than high.
-  double windowRatio_ = 1.5;
-  /// If the window is used, this denotes the share of free sites in the window
-  /// in relation to the number of atoms to be moved in this step. The window is
-  /// extended according to the ratio as long as the share of free sites is
-  /// smaller than this value. A value greater or equal to 1 ensures that there
-  /// exists a solution. However, a smaller value might be a reasonable good
-  /// guess since it is almost certain that not all atoms to be moved will end
-  /// in the same window.
-  double windowShare_ = 0.4;
-  /// The heuristic used in the A* search contains a term that resembles the
-  /// standard deviation of the differences between the current and target sites
-  /// of the atoms to be moved in every orientation. This factor is multiplied
-  /// with the standard deviation to adjust the influence of this term. Setting
-  /// it to 0.0 disables this term resulting in an admissible heuristic.
-  /// However, this leads to a vast exploration of the search tree and usually
-  /// results in a huge number of nodes visited.
-  float deepeningFactor_ = 1.0F;
-  /// The cost function can consider the distance of atoms to their interaction
-  /// partner in the next layer. This factor is multiplied with the distance to
-  /// adjust the influence of this term. Setting it to 0.0 disables the
-  /// lookahead entirely. A factor of 1.0 implies that the lookahead is as
-  /// important as the distance to the target site, which is usually not
-  /// desired.
+  /**
+   * @brief If the window is used, this denotes the minimum width in terms of
+   * rows. The window is centered at the nearest site.
+   * @note Specified by the user in the configuration file.
+   */
+  size_t windowMinWidth_ = 8;
+  /**
+   * @brief If the window is used, this denotes the minimum height in terms of
+   * columns. The window is centered at the nearest site. This value is
+   * computed based on the @ref windowMinWidth_ and the @ref windowRatio_.
+   * @note Is automatically computed in the constructor.
+   */
+  size_t windowMinHeight_ = 8;
+  /**
+   * @brief If the window is used, this denotes the ratio between the height and
+   * the width of the window.
+   * @details A value greater than 1 means that the window is
+   * higher than wide (portrait). A value of exactly 1 means that the window is
+   * square. A value smaller than 1 means that the window is wider than high
+   * (landscape).
+   * @note Specified by the user in the configuration file.
+   */
+  double windowRatio_ = 1.0;
+  /**
+   * @brief If the window is used, this denotes the share of free sites in the
+   * window in relation to the number of atoms to be moved in this step.
+   * @details The window is extended according to the ratio as long as the share
+   * of free sites is smaller than this value. A value of one ensures that there
+   * are at least as many free sites in the window of every atom as atoms that
+   * need to be moved. Hence, a value greater or equal to 1 ensures that there
+   * exists a solution. However, a smaller value might be a reasonable good
+   * guess since it is almost certain that not all atoms to be moved will end in
+   * the same window.
+   * @note Specified by the user in the configuration file.
+   */
+  double windowShare_ = 0.6;
+  /**
+   * @brief The heuristic used in the A* search contains a term that resembles
+   * the standard deviation of the differences between the current and target
+   * sites of the atoms to be moved in every orientation.
+   * @details This factor is multiplied with the sum of standard deviations to
+   * adjust the influence of this term. Setting it to 0.0 disables this term
+   * and, if the lookahead is also disabled, resulting in an admissible
+   * heuristic. However, this leads to a vast exploration of the search tree and
+   * usually results in a huge number of nodes visited.
+   */
+  float deepeningFactor_ = 0.8F;
+  /**
+   * @brief Before the sum of standard deviations is multiplied with the number
+   * of unplaced nodes and @ref deepeningFactor_, this value is added to the sum
+   * to amplify the influence of the unplaced nodes count.
+   * @see deepeningFactor_
+   */
+  float deepeningValue_ = 0.2F;
+  /**
+   * @brief The cost function can consider the distance of atoms to their
+   * interaction partner in the next layer.
+   * @details This factor is multiplied with the distance to adjust the
+   * influence of this term. Setting it to 0.0 disables the lookahead entirely.
+   * A factor of 1.0 implies that the lookahead is as important as the distance
+   * to the target site, which is usually not desired.
+   */
   float lookaheadFactor_ = 0.2F;
-  /// The reuse level corresponds to the estimated extra fidelity loss due to
-  /// the extra trap transfers when the atom is not reused and instead move to
-  /// the entanglement zone. It is subtracted from the cost for the reuse
-  /// option to favor this option over the non-reuse options.
-  float reuseLevel_ = 1.0F;
-  /// When placing atoms after a rydberg layer back in the storage zone, this
-  /// struct stores for every such atom all required information, i.e., the
-  /// current site and potential target sites ordered by distance (ascending).
+  /**
+   * @brief The reuse level corresponds to the estimated extra fidelity loss due
+   * to the extra trap transfers when the atom is not reused and instead moved
+   * to the storage zone and back to the entanglement zone.
+   * @details It is subtracted from the cost for the reuse option to favor this
+   * option over the non-reuse options.
+   */
+  float reuseLevel_ = 5.0F;
+  /**
+   * @brief When placing atoms after a rydberg layer back in the storage zone,
+   * this struct stores for every such atom all required information, i.e., the
+   * current site and potential target sites ordered by distance (ascending).
+   */
   struct AtomJob {
+    /// The atom to be placed
     qc::Qubit atom;
-    /// the current site of the atom
+    /// The current site of the atom
     DiscreteSite currentSite;
-    /// a struct describing one potential target site
+    /// A struct describing one potential target site
     struct Option {
-      /// the target site
+      /// The target site
       DiscreteSite site;
-      /// the distance the atom must travel to reach the target site
+      /// The distance the atom must travel to reach the target site
       float distance;
-      /// When this flag is set to false, it indicates that the atom should not
-      /// move at all and remain in the entanglement zone. Then the attribute
-      /// site is ignored.
+      /**
+       * When this flag is set to false, it indicates that the atom should not
+       * move at all and remain in the entanglement zone. Then the attribute
+       * site is ignored.
+       */
       bool reuse = false;
-      /// additional lookahead distance to next interaction partner
+      /// Additional lookahead distance to next interaction partner
       float lookaheadCost = 0.0F;
     };
-    /// a list of all potential target sites ordered by distance (ascending)
+    /// A list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
-    /// minimum lookahead distance
+    /// The minimum lookahead distance
     float meanLookaheadCost = 0.0F;
   };
 
-  /// When placing gates in the entanglement zone before a rydberg layer, this
-  /// struct stores for every such gate all required information, i.e., the
-  /// current sites of the corresponding atoms and potential target sites
-  /// ordered by distance (ascending).
+  /**
+   * @brief When placing gates in the entanglement zone before a rydberg layer,
+   * this struct stores for every such gate all required information, i.e., the
+   * current sites of the corresponding atoms and potential target sites
+   * ordered by distance (ascending).
+   */
   struct GateJob {
+    /// The two atoms belonging to that gate
     std::array<qc::Qubit, 2> qubits;
-    /// the current sites of the two atoms
+    /// The current sites of the two atoms
     std::array<DiscreteSite, 2> currentSites;
-    /// a struct describing one potential target site for each atom
+    /// A struct describing one potential target site for each atom
     struct Option {
-      /// the target sites for the two atoms
+      /// The target sites for the two atoms
       std::array<DiscreteSite, 2> sites;
-      /// the max distance the atoms must travel to reach the target sites
+      /// The max distance the atoms must travel to reach the target sites
       std::array<float, 2> distance;
-      /// additional lookahead distance to next interaction partner
+      /// The additional lookahead distance to next interaction partner
       float lookaheadCost = 0.0F;
     };
-    /// a list of all potential target sites ordered by distance (ascending)
+    /// A list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
-    /// minimum lookahead distance
+    /// The minimum lookahead distance
     float meanLookaheadCost = 0.0F;
   };
 
-  /// A node representing one stage in the process of placing all atoms
-  /// that must be moved for the next stage starting from the last mapping
-  /// until a new mapping is found satisfying all constraints of the next
-  /// stage
+  /**
+   * @brief A node representing one stage in the process of placing all atoms
+   * that must be moved for the next stage starting from the last mapping
+   * until a new mapping is found satisfying all constraints of the next
+   * stage
+   */
   struct AtomNode {
+    /// The current level in the search tree. A level equal to the number of
+    /// atoms to be placed indicates that all atoms have been placed.
     uint8_t level = 0;
+    /// The index of the chosen option for the current atom instead of a pointer
+    /// to that option to save memory
     uint16_t option = 0;
-    /// a set of all sites that are already occupied by an atom due to the
+    /// A set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// a binary search tree representing the horizontal and vertical group,
+    /// A binary search tree representing the horizontal and vertical group,
     /// respectively
     /// @see getNeighbors for more details
-    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>> groups;
-    /// the maximum distance of placed atoms in every group to their
+    std::vector<CompatibilityGroup> groups;
+    /// The maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
-    /// accumulated lookahead cost
+    /// The accumulated lookahead cost
     float lookaheadCost = 0.0F;
   };
 
-  /// A node representing one stage in the process of placing all atoms
-  /// that must be moved for the next stage starting from the last mapping
-  /// until a new mapping is found satisfying all constraints of the next
-  /// stage
+  /**
+   * @brief A node representing one stage in the process of placing all atoms
+   * that must be moved for the next stage starting from the last mapping
+   * until a new mapping is found satisfying all constraints of the next
+   * stage.
+   */
   struct GateNode {
+    /// The current level in the search tree. A level equal to the number of
+    /// gates to be placed indicates that all gates have been placed.
     uint8_t level = 0;
+    /// The index of the chosen option for the current gate instead of a pointer
+    /// to that option to save memory
     uint16_t option = 0;
-    /// a set of all sites that are already occupied by an atom due to the
+    /// A set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
-    /// a binary search tree representing the horizontal and vertical group,
+    /// A binary search tree representing the horizontal and vertical group,
     /// respectively
     /// @see getNeighbors for more details
-    std::vector<std::array<std::map<uint8_t, uint8_t>, 2>> groups;
-    /// the maximum distance of placed atoms in every group to their
+    std::vector<CompatibilityGroup> groups;
+    /// The maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
-    /// accumulated lookahead cost
+    /// The accumulated lookahead cost
     float lookaheadCost = 0.0F;
   };
 
 public:
+  /// Constructs an A* placer for the given architecture and configuration.
   AStarPlacer(const Architecture& architecture, const nlohmann::json& config);
 
   /**
    * This function defines the interface of the placer and delegates the
-   * placement of the qubits to the other functions.
-   * @param nQubits the number of qubits to be placed
-   * @param twoQubitGateLayers the qubits that must be placed for each layer
-   * @param reuseQubits the qubits that are reused in the next stage
+   * placement of the qubits to the respective functions.
+   * @param nQubits denotes the number of qubits to be placed
+   * @param twoQubitGateLayers are the qubits that must be placed for each layer
+   * @param reuseQubits are the qubits that are reused in the next stage
    */
   [[nodiscard]] auto
   place(size_t nQubits,
@@ -202,21 +271,21 @@ private:
    * times when they can be reached by different paths from the start node.
    * @note @p getHeuristic must be admissible, meaning that it never
    * overestimates the cost to reach the goal from the current node calculated
-   * by
-   * @p getCost for every edge on the path.
+   * by @p getCost for every edge on the path.
    * @note The calling program has to make sure that the pointers passed to this
    * function are valid and that the iterators are not invalidated during the
    * search, e.g., by calling one of the passed functions like @p getNeighbors.
-   * @param start a pointer to the start node
-   * @param getNeighbors a function that returns the neighbors of a node
-   * @param isGoal a function that returns true if a node is one of potentially
-   * multiple goals
-   * @param getCost a function that returns the total cost to reach that
+   * @param start is a reference to the start node
+   * @param getNeighbors is a function that returns the neighbors of a node as
+   * references
+   * @param isGoal is a function that returns true if a node is one of
+   * potentially multiple goals
+   * @param getCost is a function that returns the total cost to reach that
    * particular node from the start node
-   * @param getHeuristic a function that returns the heuristic cost from the
+   * @param getHeuristic is a function that returns the heuristic cost from the
    * node to any goal.
-   * @return a vector of node pointers representing the path from the start to a
-   * goal
+   * @return a vector of node references representing the path from the start to
+   * a goal
    */
   template <class Node>
   [[nodiscard]] static auto aStarTreeSearch(
@@ -229,9 +298,9 @@ private:
       -> std::vector<std::reference_wrapper<const Node>>;
 
   /**
-   * This function takes a list of atoms together with their current placement
-   * and returns two maps from concrete columns and rows to their discrete
-   * indices.
+   * @brief This function takes a list of atoms together with their current
+   * placement and returns two maps from concrete columns and rows to their
+   * discrete indices.
    * @param placement is a list of atoms together with their current placement
    * @param atoms is a list of all atoms that must be placed
    * @return a pair of two maps, the first one maps rows to their discrete
@@ -251,8 +320,8 @@ private:
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
-   * This function discretizes the storage zone of the architecture and returns
-   * two maps from concrete columns and rows to their discrete indices.
+   * @brief This function discretizes the storage zone of the architecture and
+   * returns two maps from concrete columns and rows to their discrete indices.
    * @param occupiedSites is a set of occupied sites in the storage zone
    * @return a pair of two maps, the first one maps rows to their discrete
    * indices and the second one maps columns to their discrete indices
@@ -273,8 +342,9 @@ private:
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
 
   /**
-   * This function discretizes the entanglement zone of the architecture and
-   * returns two maps from concrete columns and rows to their discrete indices.
+   * @brief This function discretizes the entanglement zone of the architecture
+   * and returns two maps from concrete columns and rows to their discrete
+   * indices.
    * @param occupiedSites is a set of occupied sites in the storage zone
    * @return a pair of two maps, the first one maps rows to their discrete
    * indices and the second one maps columns to their discrete indices
@@ -294,11 +364,42 @@ private:
                        uint8_t, std::hash<std::pair<const SLM&, size_t>>,
                        std::equal_to<std::pair<const SLM&, size_t>>>>;
 
-  /// This function generates a trivial initial placement for the qubits and
-  /// just places in order.
+  /**
+   * @brief This function generates a trivial initial placement for the qubits
+   * and fills up the storage zone row by row in the order of the atoms.
+   * @param nQubits is the total number of qubits in the quantum computation
+   * @return a list of tuples containing the SLM, row, and column of the atom's
+   * initial placement
+   */
   [[nodiscard]] auto makeInitialPlacement(size_t nQubits) const -> std::vector<
       std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
 
+  /**
+   * @brief Generates the placements for the next two-qubit and one-qubit
+   * layers.
+   * @details This function takes the placement of the last one-qubit layer
+   * where some atoms may have remained in the entanglement zone due to their
+   * reuse. It then generates the placement for the next two-qubit layer by
+   * and the next one-qubit layer considering the reuse of the atoms.
+   * @param previousPlacement is a reference to the previous placement of the
+   * atoms
+   * @param previousReuseQubits is a reference to the atoms that may have
+   * remained in the entanglement zone during the previous placement, i.e., they
+   * do not need to be considered for the current placement. Since, the reuse is
+   * optional and not mandatory, not all atoms may have been reused.
+   * @param reuseQubits is a reference to the atoms that can be reused for the
+   * next layer and must be considered during the placement for the one-qubit
+   * gate layer.
+   * @param twoQubitGates is a list of all two-qubit gates that must be placed
+   * in the current layer.
+   * @param nextTwoQubitGates is a list of all two-qubit gates that must be
+   * placed in the current layer.
+   * @return a pair of two lists, the first one contains the placement for the
+   * two-qubit gates and the second one contains the placement for the one-qubit
+   * gates.
+   * @see placeGatesInEntanglementZone
+   * @see placeAtomsInStorageZone
+   */
   [[nodiscard]] auto makeIntermediatePlacement(
       const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
                                    size_t>>& previousPlacement,
@@ -310,6 +411,254 @@ private:
                                           size_t, size_t>>,
                    std::vector<std::tuple<std::reference_wrapper<const SLM>,
                                           size_t, size_t>>>;
+
+  /**
+   * @brief This function places the atoms corresponding to gates in the
+   * entanglement zone.
+   * @details After this placement has been performed, the activation of the
+   * Rydberg beam will execute the gates in the given layer. Afterward, the
+   * next placement for moving (non-reuse) qubits back to the storage zone is
+   * determined by @ref placeAtomsInStorageZone.
+   * @param previousPlacement is a reference to the previous placement of the
+   * atoms
+   * @param reuseQubits is a reference to the atoms that may have been reused,
+   * i.e., they have remained in the entanglement zone and do not need to be
+   * considered for the current placement.
+   * @param twoQubitGates is a list of all two-qubit gates that must be placed
+   * in the current layer.
+   * @param nextReuseQubits is a reference to the atoms that can be reused for
+   * the next layer. Those atoms are taken into account when calculating the
+   * lookahead for gates with reuse atoms.
+   * @param nextTwoQubitGates is a list of all two-qubit gates in the next
+   * two-qubit gate layer used to calculate the lookahead.
+   * @return the placement of the atoms for the current two-qubit gate layer.
+   */
+  [[nodiscard]] auto placeGatesInEntanglementZone(
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& previousPlacement,
+      const std::unordered_set<qc::Qubit>& reuseQubits,
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const std::unordered_set<qc::Qubit>& nextReuseQubits,
+      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
+      -> std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+
+  /**
+   * @brief This function places qubits from the entanglement zone in the
+   * storage zone after a rydberg gate has been performed.
+   * @param previousPlacement is a reference to the previous placement of the
+   * atoms.
+   * @param reuseQubits is a reference to the atoms that can be reused, i.e.,
+   * remain in the entanglement zone for the next two-qubit gate layer.
+   * @param twoQubitGates is a list of all two-qubit gates that have been
+   * executed in the previous two-qubit gate layer. Those atoms are located in
+   * the entanglement zone and must be moved back to the storage zone except
+   * those that are reused.
+   * @param nextTwoQubitGates is a list of all two-qubit gates in the next
+   * two-qubit gate layer used to calculate the lookahead.
+   * @return the placement of the atoms for the current one-qubit gate layer.
+   */
+  auto placeAtomsInStorageZone(
+      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
+                                   size_t>>& previousPlacement,
+      const std::unordered_set<qc::Qubit>& reuseQubits,
+      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
+      -> std::vector<
+          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+
+  /**
+   * @param nGates is the number of gates to be placed
+   * @param node is the node to be checked
+   * @return true if the given node is a goal node
+   */
+  [[nodiscard]] static auto isGoal(size_t nGates, const GateNode& node) -> bool;
+  /**
+   * @param nAtoms is the number of atoms to be placed
+   * @param node is the node to be checked
+   * @return true if the given node is a goal node
+   */
+  [[nodiscard]] static auto isGoal(size_t nAtoms, const AtomNode& node) -> bool;
+
+  /**
+   * @brief Returns the cost of a node, i.e., the total cost to reach that node
+   * from the start node.
+   * @details The cost of a node is the sum of the distances of all atoms to
+   * their target sites. Additionally, the cost of the lookahead is added to the
+   * total cost.
+   * @param node is the node to be checked
+   * @return the cost of the node
+   */
+  [[nodiscard]] static auto getCost(const GateNode& node) -> float;
+  /**
+   * @brief Returns the cost of a node, i.e., the total cost to reach that node
+   * from the start node.
+   * @details The cost of a node is the sum of the distances of all atoms to
+   * their target sites. Additionally, the cost of the lookahead is added to the
+   * total cost.
+   * @param node is the node to be checked
+   * @return the cost of the node
+   */
+  [[nodiscard]] static auto getCost(const AtomNode& node) -> float;
+
+  /**
+   * @brief Calculates the standard deviation of the differences value - key
+   * and sums them up over all horizontal and vertical groups.
+   * @details To compensate for different sizing of the source and target area,
+   * the keys are scaled by the respective scale factors. E.g., for the
+   * horizontal group, if the target area features a wider distances of the
+   * sites than the source area, then, a respective scale factor smaller than 1
+   * should be used. The goal is that if the standard deviation is 0, all atoms
+   * are moved without changing their relative distances.
+   * @param scaleFactors are the scale factors for the horizontal and vertical
+   * groups
+   * @param groups are the groups to be considered
+   * @return the sum of standard deviations
+   */
+  [[nodiscard]] static auto
+  sumStdDeviationForGroups(const std::array<float, 2>& scaleFactors,
+                           const std::vector<CompatibilityGroup>& groups)
+      -> float;
+
+  /**
+   * @brief Return the estimated cost still required to reach a goal node.
+   * @param atomJobs are the atoms to be placed
+   * @param deepeningFactor is the factor to adjust the influence of the
+   * standard deviation term
+   * @param deepeningValue is the value added to the sum of standard deviations
+   * @param scaleFactors are the scale factors for the horizontal and vertical
+   * groups
+   * @param node is the node to be checked
+   * @return the heuristic cost
+   */
+  [[nodiscard]] static auto
+  getHeuristic(const std::vector<AtomJob>& atomJobs, float deepeningFactor,
+               float deepeningValue, const std::array<float, 2>& scaleFactors,
+               const AtomNode& node) -> float;
+
+  /**
+   * @brief Return the estimated cost still required to reach a goal node.
+   * @param gateJobs are the gates to be placed
+   * @param deepeningFactor is the factor to adjust the influence of the
+   * standard deviation term
+   * @param deepeningValue is the value added to the sum of standard deviations
+   * @param scaleFactors are the scale factors for the horizontal and vertical
+   * groups
+   * @param node is the node to be checked
+   * @return the heuristic cost
+   */
+  [[nodiscard]] static auto
+  getHeuristic(const std::vector<GateJob>& gateJobs, float deepeningFactor,
+               float deepeningValue, const std::array<float, 2>& scaleFactors,
+               const GateNode& node) -> float;
+
+  /**
+   * @brief Return references to all neighbors of the given node.
+   * @details When calling this function, the neighbors are allocated
+   * permanently such that (1) the returned references remain valid when the
+   * execution returned from this function and (2) not all nodes in the tree
+   * have to be created before they are needed. Hence, nodes are only created on
+   * demand in this function. Consequently, this function must only be called
+   * once per node. Otherwise, neighbors for the same node are created twice.
+   * @par
+   * When creating a new node, the horizontal and vertical groups are checked
+   * whether the new corresponding placement is compatible with any of the
+   * existing groups. If yes, the new placement is added to the respective group
+   * and otherwise, a new group is formed with the new placement.
+   * @param nodes is the list of all nodes created so far with permanent memory
+   * allocation
+   * @param atomJobs are the atoms to be placed
+   * @param node is the node to be expanded
+   * @return a list of references to the neighbors of the given node
+   */
+  [[nodiscard]] static auto
+  getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
+               const std::vector<AtomJob>& atomJobs, const AtomNode& node)
+      -> std::vector<std::reference_wrapper<const AtomNode>>;
+
+  /**
+   * @brief Return references to all neighbors of the given node.
+   * @details When calling this function, the neighbors are allocated
+   * permanently such that (1) the returned references remain valid when the
+   * execution returned from this function and (2) not all nodes in the tree
+   * have to be created before they are needed. Hence, nodes are only created on
+   * demand in this function. Consequently, this function must only be called
+   * once per node. Otherwise, neighbors for the same node are created twice.
+   * @par
+   * When creating a new node, the horizontal and vertical groups are checked
+   * whether the new corresponding placement is compatible with any of the
+   * existing groups. If yes, the new placement is added to the respective group
+   * and otherwise, a new group is formed with the new placement.
+   * @param nodes is the list of all nodes created so far with permanent memory
+   * allocation
+   * @param gateJobs are the gates to be placed
+   * @param node is the node to be expanded
+   * @return a list of references to the neighbors of the given node
+   */
+  [[nodiscard]] static auto
+  getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
+               const std::vector<GateJob>& gateJobs, const GateNode& node)
+      -> std::vector<std::reference_wrapper<const GateNode>>;
+
+  /**
+   * Checks the compatibility with a new assignment, i.e., a key-value pair,
+   * whether it is compatible with an existing group. The group can either be
+   * a horizontal or vertical group. In case the new assignment is compatible
+   * with the group, an iterator is returned pointing to the assignment in the
+   * group, if it already exists or to the element directly following the
+   * new key. Additionally, a boolean is returned indicating whether the new
+   * exists in the group.
+   * @param key the key of the new assignment
+   * @param value the value of the new assignment
+   * @param group the group to which the new assignment is compared
+   * @return an optional pair of an iterator pointing to the key equal or
+   * directly following the new key in the group and a boolean indicating
+   * whether the new assignment exists in the group. If the new assignment is
+   * not compatible with the group, an empty optional is returned.
+   */
+  [[nodiscard]] static auto
+  checkCompatibilityWithGroup(uint8_t key, uint8_t value,
+                              const std::map<uint8_t, uint8_t>& group)
+      -> std::optional<
+          std::pair<std::map<uint8_t, uint8_t>::const_iterator, bool>>;
+
+  /**
+   * Checks for the new placement of the atom whether it is compatible with
+   * one of the existing groups. If yes, the new placement is added to the
+   * respective group. Otherwise, a new group is formed with the new placement.
+   * @param hKey the horizontal start index of the new placement
+   * @param hValue the horizontal target index of the new placement
+   * @param vKey the vertical start index of the new placement
+   * @param vValue the vertical target index of the new placement
+   * @param distance the distance the atom must travel to reach the target site
+   * @param groups the groups to which the new placement can be added
+   * @param maxDistances the maximum distances of placed atoms in each group
+   * @return true if the new placement could be added to an existing group
+   */
+  static auto
+  checkCompatibilityAndAddPlacement(uint8_t hKey, uint8_t hValue, uint8_t vKey,
+                                    uint8_t vValue, float distance,
+                                    std::vector<CompatibilityGroup>& groups,
+                                    std::vector<float>& maxDistances) -> bool;
+
+  /**
+   * @brief This function creates a new GateJob for the given parameters and
+   * initializes it accordingly.
+   * @param discreteTargetRows is a map from concrete rows to their discrete
+   * indices
+   * @param discreteTargetColumns is a map from concrete columns to their
+   * discrete indices
+   * @param leftSlm is the SLM of the left atom
+   * @param leftRow is the row of the left atom
+   * @param leftCol is the column of the left atom
+   * @param rightSlm is the SLM of the right atom
+   * @param rightRow is the row of the right atom
+   * @param rightCol is the column of the right atom
+   * @param nearestSlm is the SLM of the nearest atom
+   * @param r is the row of the nearest atom
+   * @param c is the column of the nearest atom
+   * @param job is the GateJob to be initialized
+   */
   auto addGateOption(
       const std::unordered_map<
           std::pair<std::reference_wrapper<const SLM>, unsigned long>,
@@ -324,143 +673,5 @@ private:
       const SLM& leftSlm, size_t leftRow, size_t leftCol, const SLM& rightSlm,
       size_t rightRow, size_t rightCol, const SLM& nearestSlm, size_t r,
       size_t c, GateJob& job) const -> void;
-
-  /**
-   * This function places the qubits corresponding to gates in the entanglement
-   * zone. After this placement has been performed, the activation of the
-   * Rydberg beam will execute the gates in the given layer. Afterward, the
-   * next placement for moving (non-reuse) qubits back to the storage zone is
-   * determined by @ref placeAtomsInStorageZone.
-   */
-  [[nodiscard]] auto placeGatesInEntanglementZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
-      const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-      const std::unordered_set<qc::Qubit>& nextReuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
-
-  /**
-   * This function places qubits from the entanglement zone in the storage
-   * zone after a rydberg gate has been performed.
-   * It initializes the graph structure for the A* algorithm.
-   * Afterward, the A* algorithm is called to find the optimal mapping.
-   */
-  auto placeAtomsInStorageZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
-      const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
-
-  [[nodiscard]] static auto isGoal(size_t nGates, const GateNode& node) -> bool;
-  [[nodiscard]] static auto isGoal(size_t nAtoms, const AtomNode& node) -> bool;
-
-  /// @brief Returns the cost of a node, i.e., the total cost to reach that node
-  /// from the start node.
-  /// @details Different groups cannot be rearranged concurrently in one step.
-  /// Hence, we add up the time it takes to perform the rearrangements of one
-  /// group in one step and sum it up over all groups.
-  /// This will not resemble the exact time to rearrange all costs because at
-  /// this point it is not clear how the horizontal and vertical groups can be
-  /// combined.
-  [[nodiscard]] static auto getCost(const GateNode& node) -> float;
-  [[nodiscard]] static auto getCost(const AtomNode& node) -> float;
-
-  /// @brief Calculates the standard deviation of the differences value - key
-  /// and sums them up over all horizontal and vertical groups.
-  [[nodiscard]] static auto sumStdDeviationForGroups(
-      const std::array<float, 2>& scaleFactors,
-      const std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups)
-      -> float;
-
-  /// @brief Return the estimated cost still required to reach a goal node.
-  /// @details To yield an optimal results, the heuristic must be admissible,
-  /// i.e., never overestimating the cost.
-  /// The heuristic returns the estimated costs that are still added to the
-  /// current actual cost to reach a goal node.
-  /// Hence, the heuristic must always be less or equal to the additional cost
-  /// needed to reach a goal.
-  /// In the best case, all atoms that are not placed yet are compatible with
-  /// an existing group and can just be added to that group.
-  /// Hence, the sum in the cost function does not get an additional summand
-  /// just the existing summands may increase.
-  /// In the case of minimal increase in the overall cost, only one summand
-  /// increases its value.
-  /// This increase is bounded from below by the maximal distance of an atom to
-  /// its nearest potential target site minus the maximum distance already
-  /// placed atoms must travel to their determined target site.
-  [[nodiscard]] static auto
-  getHeuristic(const std::vector<AtomJob>& atomJobs, float deepeningFactor,
-               const std::array<float, 2>& scaleFactors, const AtomNode& node)
-      -> float;
-  [[nodiscard]] static auto
-  getHeuristic(const std::vector<GateJob>& gateJobs, float deepeningFactor,
-               const std::array<float, 2>& scaleFactors, const GateNode& node)
-      -> float;
-
-  /// @brief Return pointers to all neighbors of the given node.
-  /// @details When calling this function, the neighbors are allocated
-  /// permanently such that (1) the returned pointers remain valid when the
-  /// execution returned from this function and (2) not all nodes in the tree
-  /// have to be created before they are needed.
-  /// Hence, nodes are only created on demand in this function.
-  /// Consequently, this function must only be called once per node.
-  /// Otherwise, neighbors for the same node are created twice.
-  /// @par
-  /// When creating a new node, the horizontal and vertical groups are checked
-  /// whether the new corresponding placement is compatible with any of the
-  /// existing groups.
-  /// If yes, the new placement is added to the respective group and otherwise,
-  /// a new group is formed with the new placement.
-  [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
-               const std::vector<AtomJob>& atomJobs, const AtomNode& node)
-      -> std::vector<std::reference_wrapper<const AtomNode>>;
-  [[nodiscard]] static auto
-  getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
-               const std::vector<GateJob>& gateJobs, const GateNode& node)
-      -> std::vector<std::reference_wrapper<const GateNode>>;
-
-  /// Checks the compatibility with a new assignment, i.e., a key-value pair,
-  /// whether t is compatible with an existing group. The group can either be
-  /// a horizontal or vertical group. In case, the new assignment is compatible
-  /// with the group, an iterator is returned pointing to the assignment in the
-  /// group, if it already exists or to the element directly following the
-  /// new key. Additionally, a boolean is returned indicating whether the new
-  /// exists in the group.
-  /// @param key the key of the new assignment
-  /// @param value the value of the new assignment
-  /// @param group the group to which the new assignment is compared
-  /// @return an optional pair of an iterator pointing to the key equal or
-  /// directly following the new key in the group and a boolean indicating
-  /// whether the new assignment exists in the group. If the new assignment is
-  /// not compatible with the group, an empty optional is returned.
-  [[nodiscard]] static auto
-  checkCompatibilityWithGroup(uint8_t key, uint8_t value,
-                              const std::map<uint8_t, uint8_t>& group)
-      -> std::optional<
-          std::pair<std::map<uint8_t, uint8_t>::const_iterator, bool>>;
-
-  /// Checks for the new placement of the atom whether it is compatible with
-  /// one of the existing groups. If yes, the new placement is added to the
-  /// respective group. Otherwise, a new group is formed with the new placement.
-  /// @param hKey the horizontal start index of the new placement
-  /// @param hValue the horizontal target index of the new placement
-  /// @param vKey the vertical start index of the new placement
-  /// @param vValue the vertical target index of the new placement
-  /// @param distance the distance the atom must travel to reach the target site
-  /// @param groups the groups to which the new placement can be added
-  /// @param maxDistances the maximum distances of placed atoms in each group
-  /// @return true if the new placement could be added to an existing group
-  static auto checkCompatibilityAndAddPlacement(
-      uint8_t hKey, uint8_t hValue, uint8_t vKey, uint8_t vValue,
-      float distance,
-      std::vector<std::array<std::map<uint8_t, uint8_t>, 2>>& groups,
-      std::vector<float>& maxDistances) -> bool;
 };
 } // namespace na::azac
