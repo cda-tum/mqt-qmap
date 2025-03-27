@@ -16,6 +16,8 @@
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
+#include "na/azac/Architecture.hpp"
+#include "na/azac/Compiler.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "qasm3/Importer.hpp"
@@ -1042,5 +1044,40 @@ Extract entangling operations as list of qubit pairs from the circuit.
   operation type and quiet is False
 :raises ValueError: if the operation has more than two operands including
   controls
+)");
+
+  // Advanced Zoned Atom Compiler
+  py::class_<na::azac::Architecture>(m, "AZACArchitecture", R"(
+The representation of the zoned neutral atom architecture used for AZAC.
+)")
+      .def(py::init<nlohmann::json>(), "properties"_a, R"(
+Create an architecture from a dictionary.
+
+:param properties: is a dictionary with properties
+)");
+
+  py::class_<na::azac::AZACompiler>(m, "AZACompiler", R"(
+The advanced zoned atom compiler (AZAC) is a general purpose compiler for the
+zoned neutral atom architecture.
+)")
+      .def(py::init<const na::azac::Architecture&, const nlohmann::json&>(),
+           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "architecture"_a,
+           "settings"_a, R"(
+Create a AZACompiler for the given architecture and settings.
+
+:param architecture: is the zoned neutral atom architecture
+:param settings: is a dictionary with the settings for the compiler
+)")
+      .def(
+          "compile",
+          [](na::azac::AZACompiler& self, const qc::QuantumComputation& qc) {
+            return self.compile(qc).toString();
+          },
+          "qc"_a,
+          R"(
+Compile a quantum circuit for the zoned neutral atom architecture.
+
+:param qc: is the quantum circuit
+:returns: the compilation results as an NAComputation.
 )");
 }
