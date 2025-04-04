@@ -98,3 +98,7 @@ endif()
 
 # Make all declared dependencies available.
 FetchContent_MakeAvailable(${FETCH_PACKAGES})
+
+# Mark the plog includes as SYSTEM includes to suppress warnings.
+get_target_property(PLOG_IID plog INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(plog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${PLOG_IID}")
