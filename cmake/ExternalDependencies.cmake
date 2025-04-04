@@ -64,11 +64,15 @@ set(JSON_SystemInclude
 FetchContent_Declare(nlohmann_json URL ${JSON_URL} FIND_PACKAGE_ARGS ${JSON_VERSION})
 list(APPEND FETCH_PACKAGES nlohmann_json)
 
-set(PLOG_VERSION
-    1.1.10
-    CACHE STRING "Plog version")
+set(PLOG_REV
+    "94899e0b926ac1b0f4750bfbd495167b4a6ae9ef"
+    CACHE STRING "Plog revision")
 set(PLOG_URL https://github.com/SergiusTheBest/plog/archive/refs/tags/${PLOG_VERSION}.tar.gz)
-FetchContent_Declare(plog URL ${PLOG_URL} FIND_PACKAGE_ARGS ${PLOG_VERSION})
+FetchContent_Declare(
+  plog
+  GIT_REPOSITORY https://github.com/SergiusTheBest/plog.git
+  GIT_TAG ${PLOG_REV}
+  FIND_PACKAGE_ARGS)
 list(APPEND FETCH_PACKAGES plog)
 
 if(BUILD_MQT_QMAP_TESTS)
