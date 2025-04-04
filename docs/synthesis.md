@@ -202,14 +202,15 @@ However, the heuristic still gives a good depth reduction in many cases.
 ### Starting from a functional description
 
 ```{code-cell} ipython3
-from mqt import qmap
+from mqt.qmap import synthesize_clifford
+from mqt.qmap.clifford_synthesis import Tableau
 
-tableau = qmap.Tableau("['+ZZ', '+XX']")
-qc_synth, results = qmap.synthesize_clifford(tableau)
+tableau = Tableau("['+ZZ', '+XX']")
+qc_synth, results = synthesize_clifford(tableau)
 
 qc_synth.draw(output="mpl")
 ```
 
 The synthesis method offers lots of configuration options to fine-tune the synthesis procedure, e.g., changing the target metric.
 
-See {func}`~mqt.qmap.synthesize_clifford` and {func}`~mqt.qmap.optimize_clifford` for more information.
+See {func}`~mqt.qmap.clifford_synthesis.synthesize_clifford` and {func}`~mqt.qmap.clifford_synthesis.optimize_clifford` for more information.
