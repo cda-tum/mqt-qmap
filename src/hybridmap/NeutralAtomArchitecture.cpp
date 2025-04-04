@@ -5,9 +5,9 @@
 
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/SymmetricMatrix.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"

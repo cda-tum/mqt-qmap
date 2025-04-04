@@ -64,9 +64,6 @@ def compile(  # noqa: A001
     lookahead_heuristic: str | LookaheadHeuristic | None = "gate_count_max_distance",
     lookaheads: int = 15,
     lookahead_factor: float = 0.5,
-    use_teleportation: bool = False,
-    teleportation_fake: bool = False,
-    teleportation_seed: int = 0,
     encoding: str | Encoding = "commander",
     commander_grouping: str | CommanderGrouping = "fixed3",
     swap_reduction: str | SwapReduction = "coupling_limit",
@@ -106,9 +103,6 @@ def compile(  # noqa: A001
         include_WCNF: Include WCNF file in the results. Defaults to False.
         use_subsets: Use qubit subsets, or consider all available physical qubits at once. Defaults to True.
         subgraph: List of qubits to consider for mapping (in exact mapper), if None all qubits are considered. Defaults to None.
-        use_teleportation: Use teleportation in addition to swaps. Defaults to False.
-        teleportation_fake: Assign qubits as ancillary for teleportation in the initial placement but don't actually use them (used for comparisons). Defaults to False.
-        teleportation_seed: Fix a seed for the RNG in the initial ancilla placement (0 means the RNG will be seeded from /dev/urandom/ or similar). Defaults to 0.
         pre_mapping_optimizations: Run pre-mapping optimizations. Defaults to True.
         post_mapping_optimizations: Run post-mapping optimizations. Defaults to True.
         add_measurements_to_mapped_circuit: Whether to add measurements at the end of the mapped circuit. Defaults to True.
@@ -154,9 +148,6 @@ def compile(  # noqa: A001
     config.include_WCNF = include_WCNF
     config.use_subsets = use_subsets
     config.subgraph = subgraph
-    config.use_teleportation = use_teleportation
-    config.teleportation_fake = teleportation_fake
-    config.teleportation_seed = teleportation_seed
     config.pre_mapping_optimizations = pre_mapping_optimizations
     config.post_mapping_optimizations = post_mapping_optimizations
     config.add_measurements_to_mapped_circuit = add_measurements_to_mapped_circuit

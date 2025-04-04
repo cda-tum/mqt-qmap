@@ -90,7 +90,6 @@ class CircuitInfo:
     qubits: int
     single_qubit_gates: int
     swaps: int
-    teleportations: int
 
     def __init__(self) -> None: ...
 
@@ -147,12 +146,8 @@ class Configuration:
     subgraph: set[int]
     swap_limit: int
     swap_reduction: SwapReduction
-    teleportation_fake: bool
-    teleportation_qubits: int
-    teleportation_seed: int
     timeout: int
     use_subsets: bool
-    use_teleportation: bool
     verbose: bool
     debug: bool
     data_logging_path: str

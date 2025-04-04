@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/Permutation.hpp"
 #include "ir/operations/Operation.hpp"
 

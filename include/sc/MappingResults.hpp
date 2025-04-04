@@ -34,7 +34,6 @@ struct MappingResults {
     // info in output circuit
     std::size_t swaps = 0;
     std::size_t directionReverse = 0;
-    std::size_t teleportations = 0;
   };
 
   struct HeuristicBenchmarkInfo {
@@ -155,7 +154,6 @@ struct MappingResults {
         stats["WCNF"] = wcnf;
       }
     } else if (config.method == Method::Heuristic) {
-      stats["teleportations"] = output.teleportations;
       stats["benchmark"] = heuristicBenchmark.json();
     }
     stats["additional_gates"] =
@@ -171,8 +169,7 @@ struct MappingResults {
        << input.singleQubitGates << ";" << input.cnots << ";" << architecture
        << ";" << output.name << ";" << output.qubits << ";" << output.gates
        << ";" << output.singleQubitGates << ";" << output.cnots << ";"
-       << output.swaps << ";" << output.directionReverse << ";"
-       << output.teleportations << ";";
+       << output.swaps << ";" << output.directionReverse << ";";
     if (timeout) {
       ss << "TO";
     } else {

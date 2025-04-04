@@ -1,7 +1,7 @@
 #include "na/nalac/NAMapper.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"

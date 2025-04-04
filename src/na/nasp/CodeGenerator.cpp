@@ -1,8 +1,8 @@
 #include "na/nasp/CodeGenerator.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
