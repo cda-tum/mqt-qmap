@@ -162,20 +162,4 @@ struct MappingResults {
 
     return resultJSON;
   }
-
-  virtual std::string csv() {
-    std::stringstream ss{};
-    ss << input.name << ";" << input.qubits << ";" << input.gates << ";"
-       << input.singleQubitGates << ";" << input.cnots << ";" << architecture
-       << ";" << output.name << ";" << output.qubits << ";" << output.gates
-       << ";" << output.singleQubitGates << ";" << output.cnots << ";"
-       << output.swaps << ";" << output.directionReverse << ";";
-    if (timeout) {
-      ss << "TO";
-    } else {
-      ss << time;
-    }
-    ss << ";";
-    return ss.str();
-  }
 };

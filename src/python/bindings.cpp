@@ -292,7 +292,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                      &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
-      .def("csv", &MappingResults::csv)
       .def("__repr__", &MappingResults::toString);
 
   // Main class for storing circuit information

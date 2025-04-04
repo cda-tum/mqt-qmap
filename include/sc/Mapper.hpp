@@ -306,8 +306,6 @@ public:
 
   virtual nlohmann::basic_json<> json() { return results.json(); }
 
-  virtual std::string csv() { return results.csv(); }
-
   std::ostream& printLayering(std::ostream& out) {
     out << "---------------- Layering -------------------\n";
     for (auto& layer : layers) {
