@@ -12,10 +12,11 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
+#include "na/azac/Architecture.hpp"
+#include "na/azac/Compiler.hpp"
 #include "na/nasp/CodeGenerator.hpp"
 #include "na/nasp/Solver.hpp"
 #include "qasm3/Importer.hpp"
@@ -41,7 +42,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <plog/Severity.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -49,6 +50,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -64,7 +66,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
     } else if (config.method == Method::Exact) {
       mapper = std::make_unique<ExactMapper>(circ, arch);
     }
-  } catch (std::exception const& e) {
+  } catch (const std::exception& e) {
     std::stringstream ss{};
     ss << "Could not construct mapper: " << e.what();
     throw std::invalid_argument(ss.str());
@@ -72,7 +74,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
 
   try {
     mapper->map(config);
-  } catch (std::exception const& e) {
+  } catch (const std::exception& e) {
     std::stringstream ss{};
     ss << "Error during mapping: " << e.what();
     throw std::invalid_argument(ss.str());
@@ -1028,5 +1030,50 @@ Extract entangling operations as list of qubit pairs from the circuit.
   operation type and quiet is False
 :raises ValueError: if the operation has more than two operands including
   controls
+)");
+
+  // Advanced Zoned Atom Compiler
+  py::class_<na::azac::Architecture>(m, "AZACArchitecture", R"(
+The representation of the zoned neutral atom architecture used for AZAC.
+)")
+      .def(py::init<nlohmann::json>(), "properties"_a, R"(
+Create an architecture from a dictionary.
+
+:param properties: is a dictionary with properties
+)");
+
+  py::class_<na::azac::AZACompiler>(m, "AZACompiler", R"(
+The advanced zoned atom compiler (AZAC) is a general purpose compiler for the
+zoned neutral atom architecture.
+)")
+      .def(py::init<const na::azac::Architecture&, const nlohmann::json&>(),
+           py::keep_alive<1, 2>(), py::keep_alive<1, 3>(), "architecture"_a,
+           "settings"_a, R"(
+Create a AZACompiler for the given architecture and settings.
+
+:param architecture: is the zoned neutral atom architecture
+:param settings: is a dictionary with the settings for the compiler
+)")
+      .def(
+          "compile",
+          [](na::azac::AZACompiler& self, const qc::QuantumComputation& qc) {
+            return self.compile(qc).toString();
+          },
+          "qc"_a,
+          R"(
+Compile a quantum circuit for the zoned neutral atom architecture.
+
+:param qc: is the quantum circuit
+:returns: the compilation results as an NAComputation.
+)")
+      .def(
+          "stats",
+          [](na::azac::AZACompiler& self) {
+            return self.getStatistics().asJson();
+          },
+          R"(
+Get the statistics of the last compilation.
+
+:returns: the statistics as a dictionary
 )");
 }
