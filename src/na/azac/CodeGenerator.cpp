@@ -1,6 +1,7 @@
 #include "na/azac/CodeGenerator.hpp"
 
 #include "Definitions.hpp"
+#include "dd/DDDefinitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -80,19 +81,64 @@ auto CodeGenerator::appendOneQubitGates(
                                     op.get().getParameter().front());
       } else if (op.get().getType() == qc::Z) {
         code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI);
-      } else if (op.get().getType() == qc::U) {
-        code.emplaceBack<LocalUOp>(atoms[qubit], op.get().getParameter().at(0),
-                                   op.get().getParameter().at(1),
-                                   op.get().getParameter().at(2));
-      } else if (op.get().getType() == qc::U2) {
-        code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2,
-                                   op.get().getParameter().at(0),
-                                   op.get().getParameter().at(1));
+      } else if (op.get().getType() == qc::S) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_2);
+      } else if (op.get().getType() == qc::Sdg) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_2);
+      } else if (op.get().getType() == qc::T) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], qc::PI_4);
+      } else if (op.get().getType() == qc::Tdg) {
+        code.emplaceBack<LocalRZOp>(atoms[qubit], -qc::PI_4);
       } else if (op.get().getType() == qc::P) {
-        code.emplaceBack<LocalUOp>(atoms[qubit], 0, 0,
-                                   op.get().getParameter().at(0));
+        code.emplaceBack<LocalRZOp>(atoms[qubit],
+                                    op.get().getParameter().front());
       } else {
-        assert(false);
+        std::ostringstream oss;
+        oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
+               "inserted as U3 gate: "
+            << op.get().getType() << "\n";
+        std::cout << oss.str();
+        if (op.get().getType() == qc::U) {
+          code.emplaceBack<LocalUOp>(
+              atoms[qubit], op.get().getParameter().front(),
+              op.get().getParameter().at(1), op.get().getParameter().at(2));
+        } else if (op.get().getType() == qc::U2) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2,
+                                     op.get().getParameter().front(),
+                                     op.get().getParameter().at(1));
+        } else if (op.get().getType() == qc::RX) {
+          code.emplaceBack<LocalUOp>(atoms[qubit],
+                                     op.get().getParameter().front(), -qc::PI_2,
+                                     qc::PI_2);
+        } else if (op.get().getType() == qc::RY) {
+          code.emplaceBack<LocalUOp>(atoms[qubit],
+                                     op.get().getParameter().front(), 0, 0);
+        } else if (op.get().getType() == qc::H) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, 0, qc::PI);
+        } else if (op.get().getType() == qc::X) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, 0, qc::PI);
+        } else if (op.get().getType() == qc::Y) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI, qc::PI_2, qc::PI_2);
+        } else if (op.get().getType() == qc::V) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
+                                     qc::PI_2);
+        } else if (op.get().getType() == qc::Vdg) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, qc::PI_2,
+                                     -qc::PI_2);
+        } else if (op.get().getType() == qc::SX) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], qc::PI_2, -qc::PI_2,
+                                     qc::PI_2);
+        } else if (op.get().getType() == qc::SXdg) {
+          code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
+                                     qc::PI_2);
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;31m[ERROR]\033[0m Unsupported one qubit gate will be "
+                 "dropped: "
+              << op.get().getType() << "\n";
+          std::cout << oss.str();
+          assert(false);
+        }
       }
     }
   }
@@ -209,28 +255,27 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-                 "contains an invalid "
-                 "value for parking_offset. Using default.\n";
+                 "contains an invalid value for parking_offset. Using "
+                 "default.\n";
           std::cout << oss.str();
         }
       } else {
         std::ostringstream oss;
         oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-               "contains an unknown "
-               "key: "
+               "contains an unknown key: "
             << key << ". Ignoring.\n";
         std::cout << oss.str();
       }
     }
     if (!parkingOffsetSet) {
-      std::cout << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-                   "does not contain a "
-                   "value for parking_offset. Using default.\n";
+      std::cout
+          << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+             "does not contain a value for parking_offset. Using default.\n";
     }
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-                 "settings for "
-                 "CodeGenerator or is malformed. Using default settings.\n";
+                 "settings for CodeGenerator or is malformed. Using default "
+                 "settings.\n";
   }
 }
 auto CodeGenerator::generate(
