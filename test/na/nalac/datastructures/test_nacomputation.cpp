@@ -7,7 +7,7 @@
  * Licensed under the MIT License
  */
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/nalac/datastructures/NAComputation.hpp"
 #include "na/nalac/datastructures/NADefinitions.hpp"

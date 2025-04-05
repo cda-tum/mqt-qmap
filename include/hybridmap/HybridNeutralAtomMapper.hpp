@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "NeutralAtomLayer.hpp"
 #include "hybridmap/HardwareQubits.hpp"
 #include "hybridmap/Mapping.hpp"
@@ -13,6 +12,7 @@
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/Operation.hpp"
 

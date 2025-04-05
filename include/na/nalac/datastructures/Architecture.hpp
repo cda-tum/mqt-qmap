@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Definitions.hpp"
 #include "NADefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/nalac/datastructures/Configuration.hpp"
 

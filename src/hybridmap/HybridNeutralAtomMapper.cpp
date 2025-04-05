@@ -5,12 +5,12 @@
 
 #include "hybridmap/HybridNeutralAtomMapper.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
 #include "hybridmap/MoveToAodConverter.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -1080,7 +1080,7 @@ CoordIndices NeutralAtomMapper::getBestMovePos(const CoordIndices& gateCoords) {
       }
     }
   }
-  throw qc::QFRException(
+  throw std::runtime_error(
       "No move position found (check if enough free coords are available)");
 }
 
@@ -1088,7 +1088,7 @@ MoveCombs
 NeutralAtomMapper::getMoveCombinationsToPosition(HwQubits& gateQubits,
                                                  CoordIndices& position) {
   if (position.empty()) {
-    throw qc::QFRException("No position given");
+    throw std::invalid_argument("No position given");
   }
   // compute for each qubit the best position around it based on the cost of
   // the single move choose best one

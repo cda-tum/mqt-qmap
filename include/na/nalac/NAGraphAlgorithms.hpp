@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
 #include "datastructures/Layer.hpp"
+#include "ir/Definitions.hpp"
 
 #include <cassert>
 #include <cstddef>
