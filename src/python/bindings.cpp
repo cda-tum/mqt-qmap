@@ -3,7 +3,6 @@
 // See README.md or go to https://github.com/cda-tum/qmap for more information.
 //
 
-#include "Definitions.hpp"
 #include "cliffordsynthesis/CliffordSynthesizer.hpp"
 #include "cliffordsynthesis/Configuration.hpp"
 #include "cliffordsynthesis/Results.hpp"
@@ -13,6 +12,7 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
@@ -57,12 +57,6 @@ using namespace pybind11::literals;
 std::pair<qc::QuantumComputation, MappingResults>
 map(const qc::QuantumComputation& circ, Architecture& arch,
     Configuration& config) {
-  if (config.useTeleportation) {
-    config.teleportationQubits =
-        std::min((arch.getNqubits() - circ.getNqubits()) & ~1U,
-                 static_cast<std::size_t>(8));
-  }
-
   std::unique_ptr<Mapper> mapper;
   try {
     if (config.method == Method::Heuristic) {
@@ -262,11 +256,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
       .def_readwrite("first_lookahead_factor",
                      &Configuration::firstLookaheadFactor)
       .def_readwrite("lookahead_factor", &Configuration::lookaheadFactor)
-      .def_readwrite("use_teleportation", &Configuration::useTeleportation)
-      .def_readwrite("teleportation_qubits",
-                     &Configuration::teleportationQubits)
-      .def_readwrite("teleportation_seed", &Configuration::teleportationSeed)
-      .def_readwrite("teleportation_fake", &Configuration::teleportationFake)
       .def_readwrite("timeout", &Configuration::timeout)
       .def_readwrite("encoding", &Configuration::encoding)
       .def_readwrite("commander_grouping", &Configuration::commanderGrouping)
@@ -303,7 +292,6 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                      &MappingResults::layerHeuristicBenchmark)
       .def_readwrite("wcnf", &MappingResults::wcnf)
       .def("json", &MappingResults::json)
-      .def("csv", &MappingResults::csv)
       .def("__repr__", &MappingResults::toString);
 
   // Main class for storing circuit information
@@ -323,9 +311,7 @@ PYBIND11_MODULE(pyqmap, m, py::mod_gil_not_used()) {
                      &MappingResults::CircuitInfo::totalLogFidelity)
       .def_readwrite("swaps", &MappingResults::CircuitInfo::swaps)
       .def_readwrite("direction_reverse",
-                     &MappingResults::CircuitInfo::directionReverse)
-      .def_readwrite("teleportations",
-                     &MappingResults::CircuitInfo::teleportations);
+                     &MappingResults::CircuitInfo::directionReverse);
 
   // Heuristic benchmark information
   py::class_<MappingResults::HeuristicBenchmarkInfo>(

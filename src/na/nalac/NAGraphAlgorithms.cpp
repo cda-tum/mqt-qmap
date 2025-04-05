@@ -1,8 +1,8 @@
 #include "na/nalac/NAGraphAlgorithms.hpp"
 
-#include "Definitions.hpp"
 #include "datastructures/DirectedAcyclicGraph.hpp"
 #include "datastructures/DisjointSet.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cassert>

@@ -9,9 +9,9 @@
 
 #pragma once
 
-#include "../NADefinitions.hpp"
-#include "Definitions.hpp"
 #include "NAOperation.hpp"
+#include "ir/Definitions.hpp"
+#include "na/nalac/datastructures/NADefinitions.hpp"
 
 #include <cmath>
 #include <memory>

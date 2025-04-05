@@ -1,7 +1,7 @@
 #include "na/nasp/Solver.hpp"
 
-#include "Definitions.hpp"
 #include "circuit_optimizer/CircuitOptimizer.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 
 #include <algorithm>
@@ -298,12 +298,20 @@ auto NASolver::getValidTransferTransitionConstraints(const uint16_t t) const
   return constraints;
 }
 
+namespace {
+struct QubitPairHash {
+  auto operator()(const std::pair<qc::Qubit, qc::Qubit>& x) const -> size_t {
+    return qc::combineHash(x.first, x.second);
+  }
+};
+} // namespace
+
 auto NASolver::getCircuitExecutionConstraints(
     const std::vector<std::pair<qc::Qubit, qc::Qubit>>& ops,
     const bool mindOpsOrder, const bool shieldIdleAtoms) -> std::vector<expr> {
   const auto numGates = ops.size();
   std::unordered_map<std::pair<qc::Qubit, qc::Qubit>, std::vector<expr>,
-                     qc::PairHash<qc::Qubit, qc::Qubit>>
+                     QubitPairHash>
       pairToGates;
   gates.clear();
   gates.reserve(numGates);

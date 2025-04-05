@@ -5,7 +5,7 @@
 
 #include "hybridmap/NeutralAtomUtils.hpp"
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cstddef>

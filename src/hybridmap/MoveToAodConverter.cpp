@@ -5,10 +5,10 @@
 
 #include "hybridmap/MoveToAodConverter.hpp"
 
-#include "Definitions.hpp"
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomDefinitions.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/AodOperation.hpp"
 #include "ir/operations/OpType.hpp"
@@ -373,7 +373,7 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
         if (opFinal.getType() == qc::OpType::AodMove) {
           if (opInit.getTargets().size() <= 1 ||
               opFinal.getTargets().size() <= 1) {
-            throw qc::QFRException(
+            throw std::runtime_error(
                 "AodScheduler::MoveGroup::connectAodOperations: "
                 "AodMove operation with less than 2 targets");
           }
