@@ -2,6 +2,7 @@
 
 #include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 
 #include <cstddef>
 #include <functional>
@@ -34,11 +35,8 @@ public:
    * @return the routing, i.e., for every transition between two placements a
    * vector of groups containing atoms that can be moved simultaneously
    */
-  [[nodiscard]] auto
-  route(const std::vector<std::vector<
-            std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>&
-            placement) const
-      -> std::vector<std::vector<std::vector<qc::Qubit>>>;
+  [[nodiscard]] auto route(const std::vector<Placement>& placement) const
+      -> std::vector<Routing>;
 
 private:
   /**
@@ -54,12 +52,10 @@ private:
    * @return the conflict graph as an unordered_map, where the keys are the
    * nodes and the values are vectors of their neighbors
    */
-  [[nodiscard]] auto createConflictGraph(
-      const std::vector<qc::Qubit>& atomsToMove,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& startPlacement,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& targetPlacement) const
+  [[nodiscard]] auto
+  createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                      const Placement& startPlacement,
+                      const Placement& targetPlacement) const
       -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>>;
 
   /**

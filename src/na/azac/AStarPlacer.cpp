@@ -112,36 +112,17 @@ auto AStarPlacer::isGoal(const size_t nAtoms, const AtomNode& node) -> bool {
   return node.level == nAtoms;
 }
 auto AStarPlacer::discretizePlacementOfAtoms(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& placement,
-    const std::vector<qc::Qubit>& atoms) const
-    -> std::pair<
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>,
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>> {
-  std::map<size_t, std::unordered_set<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>
-      rows;
-  std::map<size_t, std::unordered_set<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>
-      columns;
+    const Placement& placement, const std::vector<qc::Qubit>& atoms) const
+    -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
+  std::map<size_t, RowColumnSet> rows;
+  std::map<size_t, RowColumnSet> columns;
   for (const auto atom : atoms) {
     const auto& [slm, r, c] = placement[atom];
     const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
     rows.try_emplace(y).first->second.emplace(std::pair{std::cref(slm), r});
     columns.try_emplace(x).first->second.emplace(std::pair{std::cref(slm), c});
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      rowIndices;
+  RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
   for (const auto& [_, sites] : rows) {
     for (const auto& site : sites) {
@@ -149,10 +130,7 @@ auto AStarPlacer::discretizePlacementOfAtoms(
     }
     ++rowIndex;
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      columnIndices;
+  RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
   for (const auto& [_, sites] : columns) {
     for (const auto& site : sites) {
@@ -164,17 +142,8 @@ auto AStarPlacer::discretizePlacementOfAtoms(
 }
 
 auto AStarPlacer::discretizeNonOccupiedStorageSites(
-    const std::unordered_set<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
-        std::hash<std::tuple<const SLM&, size_t, size_t>>,
-        std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
-    const -> std::pair<
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>,
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>> {
+    const SiteSet& occupiedSites) const
+    -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
   std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>> rows;
   std::map<size_t, std::pair<std::reference_wrapper<const SLM>, size_t>>
       columns;
@@ -202,18 +171,12 @@ auto AStarPlacer::discretizeNonOccupiedStorageSites(
       }
     }
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      rowIndices;
+  RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
   for (const auto& [_, site] : rows) {
     rowIndices.emplace(site, rowIndex++);
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      columnIndices;
+  RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
   for (const auto& [_, site] : columns) {
     columnIndices.emplace(site, columnIndex++);
@@ -222,27 +185,10 @@ auto AStarPlacer::discretizeNonOccupiedStorageSites(
 }
 
 auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
-    const std::unordered_set<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
-        std::hash<std::tuple<const SLM&, size_t, size_t>>,
-        std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
-    const -> std::pair<
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>,
-        std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                           uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                           std::equal_to<std::pair<const SLM&, size_t>>>> {
-  std::map<size_t, std::unordered_set<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>
-      rows;
-  std::map<size_t, std::unordered_set<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>
-      columns;
+    const SiteSet& occupiedSites) const
+    -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>> {
+  std::map<size_t, RowColumnSet> rows;
+  std::map<size_t, RowColumnSet> columns;
   for (const auto& zone : architecture_.get().entanglementZones) {
     for (const auto& slm : *zone) {
       // find rows with free sites
@@ -272,10 +218,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
       }
     }
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      rowIndices;
+  RowColumnMap<uint8_t> rowIndices;
   uint8_t rowIndex = 0;
   for (const auto& [_, sites] : rows) {
     for (const auto& site : sites) {
@@ -283,10 +226,7 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
     }
     ++rowIndex;
   }
-  std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>,
-                     uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                     std::equal_to<std::pair<const SLM&, size_t>>>
-      columnIndices;
+  RowColumnMap<uint8_t> columnIndices;
   uint8_t columnIndex = 0;
   for (const auto& [_, sites] : columns) {
     for (const auto& site : sites) {
@@ -298,16 +238,14 @@ auto AStarPlacer::discretizeNonOccupiedEntanglementSites(
 }
 
 auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
-    -> std::vector<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+    -> Placement {
   auto slmIt = architecture_.get().storageZones.cbegin();
   std::size_t c = 0;
   std::int64_t r = reverseInitialPlacement_
                        ? static_cast<std::int64_t>((*slmIt)->nRows) - 1
                        : 0;
   const std::int64_t step = reverseInitialPlacement_ ? -1 : 1;
-  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
-      initialPlacement;
+  Placement initialPlacement;
   initialPlacement.reserve(nQubits);
   for (qc::Qubit qubit = 0; qubit < nQubits; ++qubit) {
     initialPlacement.emplace_back(**slmIt, r, c++);
@@ -330,16 +268,12 @@ auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
 }
 
 auto AStarPlacer::makeIntermediatePlacement(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& previousPlacement,
+    const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& previousReuseQubits,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-    -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                        size_t, size_t>>,
-                 std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                        size_t, size_t>>> {
+    const TwoQubitGateLayer& twoQubitGates,
+    const TwoQubitGateLayer& nextTwoQubitGates)
+    -> std::pair<Placement, Placement> {
   const auto& gatePlacement = placeGatesInEntanglementZone(
       previousPlacement, previousReuseQubits, twoQubitGates, reuseQubits,
       nextTwoQubitGates);
@@ -349,18 +283,11 @@ auto AStarPlacer::makeIntermediatePlacement(
 }
 
 auto AStarPlacer::addGateOption(
-    const std::unordered_map<
-        std::pair<std::reference_wrapper<const SLM>, size_t>, uint8_t,
-        std::hash<std::pair<const SLM&, size_t>>,
-        std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetRows,
-    const std::unordered_map<
-        std::pair<std::reference_wrapper<const SLM>, size_t>, uint8_t,
-        std::hash<std::pair<const SLM&, size_t>>,
-        std::equal_to<std::pair<const SLM&, size_t>>>& discreteTargetColumns,
-    const SLM& leftSlm, const size_t leftRow, const size_t leftCol,
-    const SLM& rightSlm, const size_t rightRow, const size_t rightCol,
-    const SLM& nearestSlm, const size_t r, const size_t c, GateJob& job) const
-    -> void {
+    const RowColumnMap<uint8_t>& discreteTargetRows,
+    const RowColumnMap<uint8_t>& discreteTargetColumns, const SLM& leftSlm,
+    const size_t leftRow, const size_t leftCol, const SLM& rightSlm,
+    const size_t rightRow, const size_t rightCol, const SLM& nearestSlm,
+    const size_t r, const size_t c, GateJob& job) const -> void {
   //                  other
   //         ┌─┐       ┌─┐ <-- Entanglement sites
   //         └┬┘       └┬┘
@@ -409,22 +336,17 @@ auto AStarPlacer::addGateOption(
 }
 
 auto AStarPlacer::placeGatesInEntanglementZone(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& previousPlacement,
+    const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+    const TwoQubitGateLayer& twoQubitGates,
     const std::unordered_set<qc::Qubit>& nextReuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-    -> std::vector<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+    const TwoQubitGateLayer& nextTwoQubitGates) -> Placement {
   // Duplicate the previous placement as a starting point for the current
-  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
-      currentPlacement = previousPlacement;
+  auto currentPlacement = previousPlacement;
   //===------------------------------------------------------------------===//
   // Find gates and atoms that must be placed
   //===------------------------------------------------------------------===//
-  std::set<std::pair<double, std::array<qc::Qubit, 2>>, std::greater<>>
-      gatesToPlace;
+  std::set<std::pair<double, QubitPair>, std::greater<>> gatesToPlace;
   std::vector<qc::Qubit> atomsToPlace;
   for (const auto& gate : twoQubitGates) {
     const auto& [first, second] = gate;
@@ -507,11 +429,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   // This set will only contain the first SLM in a pair of entanglement
   // SLMs and represents the occupied pair of sites
-  std::unordered_set<
-      std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>,
-      std::hash<std::tuple<const SLM&, size_t, size_t>>,
-      std::equal_to<std::tuple<const SLM&, size_t, size_t>>>
-      occupiedEntanglementSites{};
+  SiteSet occupiedEntanglementSites{};
   for (const auto qubit : reuseQubits) {
     const auto& [slm, r, c] = previousPlacement[qubit];
     if (slm.get().isEntanglement()) {
@@ -527,11 +445,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   const auto& [discreteTargetRows, discreteTargetColumns] =
       discretizeNonOccupiedEntanglementSites(occupiedEntanglementSites);
-  std::unordered_map<
-      uint8_t,
-      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>
-      targetSites;
+  std::unordered_map<uint8_t, std::unordered_map<uint8_t, Site>> targetSites;
   for (const auto& [row, r] : discreteTargetRows) {
     const SLM& slm = row.first.get();
     auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
@@ -794,16 +708,12 @@ auto AStarPlacer::placeGatesInEntanglementZone(
 }
 
 auto AStarPlacer::placeAtomsInStorageZone(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& previousPlacement,
+    const Placement& previousPlacement,
     const std::unordered_set<qc::Qubit>& reuseQubits,
-    const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-    const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-    -> std::vector<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>> {
+    const TwoQubitGateLayer& twoQubitGates,
+    const TwoQubitGateLayer& nextTwoQubitGates) -> Placement {
   // Duplicate the previous placement as a starting point for the current
-  std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>
-      currentPlacement = previousPlacement;
+  auto currentPlacement = previousPlacement;
   if (twoQubitGates.empty()) {
     return currentPlacement;
   }
@@ -854,11 +764,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   // Extract occupied storage sites from the previous placement
   //===------------------------------------------------------------------===//
-  std::unordered_set<
-      std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>,
-      std::hash<std::tuple<const SLM&, size_t, size_t>>,
-      std::equal_to<std::tuple<const SLM&, size_t, size_t>>>
-      occupiedStorageSites{};
+  SiteSet occupiedStorageSites{};
   for (const auto& [slm, r, c] : previousPlacement) {
     if (slm.get().isStorage()) {
       occupiedStorageSites.emplace(slm, r, c);
@@ -869,11 +775,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   const auto& [discreteTargetRows, discreteTargetColumns] =
       discretizeNonOccupiedStorageSites(occupiedStorageSites);
-  std::unordered_map<
-      uint8_t,
-      std::unordered_map<uint8_t, std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>
-      targetSites;
+  std::unordered_map<uint8_t, std::unordered_map<uint8_t, Site>> targetSites;
   for (const auto& [row, r] : discreteTargetRows) {
     const SLM& slm = row.first.get();
     auto& targetSitesForThisRow = targetSites.try_emplace(r).first->second;
@@ -1690,14 +1592,10 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
 
 auto AStarPlacer::place(
     const size_t nQubits,
-    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
-        twoQubitGateLayers,
+    const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
     const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-    -> std::vector<std::vector<
-        std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>> {
-  std::vector<std::vector<
-      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>
-      placement;
+    -> std::vector<Placement> {
+  std::vector<Placement> placement;
   placement.reserve((2 * twoQubitGateLayers.size()) + 1);
   placement.emplace_back(makeInitialPlacement(nQubits));
   for (size_t layer = 0; layer < twoQubitGateLayers.size(); ++layer) {
@@ -1707,9 +1605,8 @@ auto AStarPlacer::place(
         layer == reuseQubits.size() ? std::unordered_set<qc::Qubit>{}
                                     : reuseQubits[layer],
         twoQubitGateLayers[layer],
-        layer == twoQubitGateLayers.size() - 1
-            ? std::vector<std::array<qc::Qubit, 2>>{}
-            : twoQubitGateLayers[layer + 1]);
+        layer == twoQubitGateLayers.size() - 1 ? TwoQubitGateLayer{}
+                                               : twoQubitGateLayers[layer + 1]);
     placement.emplace_back(gatePlacement);
     placement.emplace_back(qubitPlacement);
   }

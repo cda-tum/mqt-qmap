@@ -2,6 +2,7 @@
 
 #include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 
 #include <array>
 #include <cassert>
@@ -13,13 +14,24 @@
 #include <memory>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
-#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace na::azac {
+/// An unordered map from a row or columns of an SLM to a value of type T.
+/// @tparam T the type of the value
+template <class T>
+using RowColumnMap =
+    std::unordered_map<std::pair<std::reference_wrapper<const SLM>, size_t>, T,
+                       std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>;
+/// An unordered set of rows or columns of an SLM.
+using RowColumnSet =
+    std::unordered_set<std::pair<std::reference_wrapper<const SLM>, size_t>,
+                       std::hash<std::pair<const SLM&, size_t>>,
+                       std::equal_to<std::pair<const SLM&, size_t>>>;
 /**
  * @brief The A* placer is a class that provides a method to determine the
  * placement of the atoms in each layer using the A* search algorithm.
@@ -240,11 +252,9 @@ public:
    */
   [[nodiscard]] auto
   place(size_t nQubits,
-        const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
-            twoQubitGateLayers,
+        const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>;
+      -> std::vector<Placement>;
 
 private:
   /**
@@ -306,18 +316,10 @@ private:
    * @return a pair of two maps, the first one maps rows to their discrete
    * indices and the second one maps columns to their discrete indices
    */
-  [[nodiscard]] auto discretizePlacementOfAtoms(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placement,
-      const std::vector<qc::Qubit>& atoms) const
-      -> std::pair<std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>,
-                   std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>;
+  [[nodiscard]] auto
+  discretizePlacementOfAtoms(const Placement& placement,
+                             const std::vector<qc::Qubit>& atoms) const
+      -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>>;
 
   /**
    * @brief This function discretizes the storage zone of the architecture and
@@ -326,20 +328,9 @@ private:
    * @return a pair of two maps, the first one maps rows to their discrete
    * indices and the second one maps columns to their discrete indices
    */
-  [[nodiscard]] auto discretizeNonOccupiedStorageSites(
-      const std::unordered_set<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
-          std::hash<std::tuple<const SLM&, size_t, size_t>>,
-          std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
-      const
-      -> std::pair<std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>,
-                   std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>;
+  [[nodiscard]] auto
+  discretizeNonOccupiedStorageSites(const SiteSet& occupiedSites) const
+      -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>>;
 
   /**
    * @brief This function discretizes the entanglement zone of the architecture
@@ -349,20 +340,9 @@ private:
    * @return a pair of two maps, the first one maps rows to their discrete
    * indices and the second one maps columns to their discrete indices
    */
-  [[nodiscard]] auto discretizeNonOccupiedEntanglementSites(
-      const std::unordered_set<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>,
-          std::hash<std::tuple<const SLM&, size_t, size_t>>,
-          std::equal_to<std::tuple<const SLM&, size_t, size_t>>>& occupiedSites)
-      const
-      -> std::pair<std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>,
-                   std::unordered_map<
-                       std::pair<std::reference_wrapper<const SLM>, size_t>,
-                       uint8_t, std::hash<std::pair<const SLM&, size_t>>,
-                       std::equal_to<std::pair<const SLM&, size_t>>>>;
+  [[nodiscard]] auto
+  discretizeNonOccupiedEntanglementSites(const SiteSet& occupiedSites) const
+      -> std::pair<RowColumnMap<uint8_t>, RowColumnMap<uint8_t>>;
 
   /**
    * @brief This function generates a trivial initial placement for the qubits
@@ -371,8 +351,7 @@ private:
    * @return a list of tuples containing the SLM, row, and column of the atom's
    * initial placement
    */
-  [[nodiscard]] auto makeInitialPlacement(size_t nQubits) const -> std::vector<
-      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+  [[nodiscard]] auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
   /**
    * @brief Generates the placements for the next two-qubit and one-qubit
@@ -401,16 +380,12 @@ private:
    * @see placeAtomsInStorageZone
    */
   [[nodiscard]] auto makeIntermediatePlacement(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
+      const Placement& previousPlacement,
       const std::unordered_set<qc::Qubit>& previousReuseQubits,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-      -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                          size_t, size_t>>,
-                   std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                          size_t, size_t>>>;
+      const TwoQubitGateLayer& twoQubitGates,
+      const TwoQubitGateLayer& nextTwoQubitGates)
+      -> std::pair<Placement, Placement>;
 
   /**
    * @brief This function places the atoms corresponding to gates in the
@@ -434,14 +409,11 @@ private:
    * @return the placement of the atoms for the current two-qubit gate layer.
    */
   [[nodiscard]] auto placeGatesInEntanglementZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
+      const Placement& previousPlacement,
       const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
+      const TwoQubitGateLayer& twoQubitGates,
       const std::unordered_set<qc::Qubit>& nextReuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+      const TwoQubitGateLayer& nextTwoQubitGates) -> Placement;
 
   /**
    * @brief This function places qubits from the entanglement zone in the
@@ -458,14 +430,11 @@ private:
    * two-qubit gate layer used to calculate the lookahead.
    * @return the placement of the atoms for the current one-qubit gate layer.
    */
-  auto placeAtomsInStorageZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousPlacement,
-      const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates)
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+  auto placeAtomsInStorageZone(const Placement& previousPlacement,
+                               const std::unordered_set<qc::Qubit>& reuseQubits,
+                               const TwoQubitGateLayer& twoQubitGates,
+                               const TwoQubitGateLayer& nextTwoQubitGates)
+      -> Placement;
 
   /**
    * @param nGates is the number of gates to be placed
@@ -659,19 +628,11 @@ private:
    * @param c is the column of the nearest atom
    * @param job is the GateJob to be initialized
    */
-  auto addGateOption(
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, unsigned long>,
-          unsigned char, std::hash<std::pair<const SLM&, unsigned long>>,
-          std::equal_to<std::pair<const SLM&, unsigned long>>>&
-          discreteTargetRows,
-      const std::unordered_map<
-          std::pair<std::reference_wrapper<const SLM>, unsigned long>,
-          unsigned char, std::hash<std::pair<const SLM&, unsigned long>>,
-          std::equal_to<std::pair<const SLM&, unsigned long>>>&
-          discreteTargetColumns,
-      const SLM& leftSlm, size_t leftRow, size_t leftCol, const SLM& rightSlm,
-      size_t rightRow, size_t rightCol, const SLM& nearestSlm, size_t r,
-      size_t c, GateJob& job) const -> void;
+  auto addGateOption(const RowColumnMap<uint8_t>& discreteTargetRows,
+                     const RowColumnMap<uint8_t>& discreteTargetColumns,
+                     const SLM& leftSlm, size_t leftRow, size_t leftCol,
+                     const SLM& rightSlm, size_t rightRow, size_t rightCol,
+                     const SLM& nearestSlm, size_t r, size_t c,
+                     GateJob& job) const -> void;
 };
 } // namespace na::azac

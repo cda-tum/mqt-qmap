@@ -17,12 +17,9 @@
 #include <vector>
 
 namespace na::azac {
-auto ISRouter::createConflictGraph(
-    const std::vector<qc::Qubit>& atomsToMove,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& startPlacement,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& targetPlacement) const
+auto ISRouter::createConflictGraph(const std::vector<qc::Qubit>& atomsToMove,
+                                   const Placement& startPlacement,
+                                   const Placement& targetPlacement) const
     -> std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> {
   std::unordered_map<qc::Qubit, std::vector<qc::Qubit>> conflictGraph;
   for (auto atomIt = atomsToMove.cbegin(); atomIt != atomsToMove.cend();
@@ -88,11 +85,9 @@ ISRouter::ISRouter(const Architecture& architecture,
     }
   }
 }
-auto ISRouter::route(
-    const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>& placement) const
-    -> std::vector<std::vector<std::vector<qc::Qubit>>> {
-  std::vector<std::vector<std::vector<qc::Qubit>>> routing;
+auto ISRouter::route(const std::vector<Placement>& placement) const
+    -> std::vector<Routing> {
+  std::vector<Routing> routing;
   // early return if no placement is given
   if (placement.empty()) {
     return routing;

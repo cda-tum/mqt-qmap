@@ -1,12 +1,12 @@
 #include "na/azac/CodeGenerator.hpp"
 
-#include "dd/DDDefinitions.hpp"
 #include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 #include "na/entities/Atom.hpp"
 #include "na/entities/Location.hpp"
 #include "na/entities/Zone.hpp"
@@ -20,22 +20,18 @@
 
 #include <cassert>
 #include <cstddef>
-#include <functional>
 #include <iostream>
 #include <iterator>
 #include <map>
 #include <nlohmann/json_fwd.hpp>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace na::azac {
 auto CodeGenerator::appendOneQubitGates(
-    const size_t nQubits,
-    const std::vector<std::reference_wrapper<const qc::Operation>>&
-        oneQubitGates,
+    const size_t nQubits, const OneQubitGateLayer& oneQubitGates,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& globalZone, NAComputation& code) const -> void {
   for (const auto& op : oneQubitGates) {
@@ -144,14 +140,9 @@ auto CodeGenerator::appendOneQubitGates(
   }
 }
 auto CodeGenerator::appendTwoQubitGates(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& currentPlacement,
-    const std::vector<std::vector<qc::Qubit>>& executionRouting,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& executionPlacement,
-    const std::vector<std::vector<qc::Qubit>>& targetRouting,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& targetPlacement,
+    const Placement& currentPlacement, const Routing& executionRouting,
+    const Placement& executionPlacement, const Routing& targetRouting,
+    const Placement& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const std::vector<std::reference_wrapper<const Zone>>& zones,
     NAComputation& code) const -> void {
@@ -166,11 +157,8 @@ auto CodeGenerator::appendTwoQubitGates(
                       code);
 }
 auto CodeGenerator::appendRearrangement(
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& startPlacement,
-    const std::vector<std::vector<qc::Qubit>>& routing,
-    const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                 size_t>>& targetPlacement,
+    const Placement& startPlacement, const Routing& routing,
+    const Placement& targetPlacement,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     NAComputation& code) const -> void {
   for (const auto& qubits : routing) {
@@ -279,12 +267,9 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
   }
 }
 auto CodeGenerator::generate(
-    const std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>&
-        oneQubitGateLayers,
-    const std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>& placement,
-    const std::vector<std::vector<std::vector<qc::Qubit>>>& routing) const
-    -> NAComputation {
+    const std::vector<OneQubitGateLayer>& oneQubitGateLayers,
+    const std::vector<Placement>& placement,
+    const std::vector<Routing>& routing) const -> NAComputation {
   NAComputation code;
   std::vector<std::reference_wrapper<const Zone>> rydbergZones;
   for (size_t i = 0; i < architecture_.get().rydbergRangeMinX.size(); ++i) {

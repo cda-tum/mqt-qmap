@@ -1,6 +1,7 @@
 #include "na/azac/VMReuseAnalyzer.hpp"
 
 #include "ir/Definitions.hpp"
+#include "na/azac/Types.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -33,8 +34,8 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
   }
 }
 auto VMReuseAnalyzer::analyzeReuse(
-    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
-        twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
+    const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
+    -> std::vector<std::unordered_set<qc::Qubit>> {
   if (twoQubitGateLayers.size() <= 1) {
     // early exit if there are no qubits to reuse between layers
     return std::vector<std::unordered_set<qc::Qubit>>{};

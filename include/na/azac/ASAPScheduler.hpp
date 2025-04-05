@@ -1,11 +1,9 @@
 #pragma once
 
-#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
-#include "ir/operations/Operation.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 
-#include <array>
 #include <functional>
 #include <nlohmann/json_fwd.hpp>
 #include <utility>
@@ -42,8 +40,7 @@ public:
    * operations. A pair of qubits represents every two-qubit operation.
    */
   [[nodiscard]] auto schedule(const qc::QuantumComputation& qc) const
-      -> std::pair<
-          std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
-          std::vector<std::vector<std::array<qc::Qubit, 2>>>>;
+      -> std::pair<std::vector<OneQubitGateLayer>,
+                   std::vector<TwoQubitGateLayer>>;
 };
 } // namespace na::azac

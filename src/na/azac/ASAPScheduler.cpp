@@ -43,18 +43,15 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
   }
 }
 auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
-    -> std::pair<
-        std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>,
-        std::vector<std::vector<std::array<qc::Qubit, 2>>>> {
+    -> std::pair<std::vector<OneQubitGateLayer>,
+                 std::vector<TwoQubitGateLayer>> {
   if (qc.empty()) {
     // early exit if there are no operations to schedule
-    return std::pair{
-        std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>{},
-        std::vector<std::vector<std::array<qc::Qubit, 2>>>{}};
+    return std::pair{std::vector<OneQubitGateLayer>{},
+                     std::vector<TwoQubitGateLayer>{}};
   }
-  std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>
-      oneQubitGateLayers(1);
-  std::vector<std::vector<std::array<qc::Qubit, 2>>> twoQubitGateLayers(0);
+  std::vector<OneQubitGateLayer> oneQubitGateLayers(1);
+  std::vector<TwoQubitGateLayer> twoQubitGateLayers(0);
   // the following vector contains a mapping from qubits to the layer where
   // the next two-qubit gate can be scheduled for that qubit, i.e., the layer
   // after the last layer with a two-qubit gate acting on that qubit

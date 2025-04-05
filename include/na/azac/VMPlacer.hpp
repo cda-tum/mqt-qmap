@@ -2,13 +2,12 @@
 
 #include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 
-#include <array>
 #include <cstddef>
 #include <functional>
 #include <nlohmann/json_fwd.hpp>
 #include <optional>
-#include <tuple>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -41,15 +40,12 @@ class VMPlacer {
 public:
   VMPlacer(const Architecture& architecture, const nlohmann::json& config);
   [[nodiscard]] auto
-  place(const size_t nQubits,
-        const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
-            twoQubitGateLayers,
+  place(size_t nQubits,
+        const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
-      -> std::vector<std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>;
+      -> std::vector<Placement>;
   /// generate qubit initial layout
-  auto makeInitialPlacement(size_t nQubits) const -> std::vector<
-      std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+  auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
 private:
   /// @note implemented following pseudocode in
@@ -58,59 +54,35 @@ private:
       const std::vector<std::vector<std::optional<double>>>& costMatrix)
       -> std::vector<size_t>;
 
-  [[nodiscard]] auto computeMovementCostBetweenPlacements(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placementBefore,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placementAfter) const -> double;
+  [[nodiscard]] auto
+  computeMovementCostBetweenPlacements(const Placement& placementBefore,
+                                       const Placement& placementAfter) const
+      -> double;
 
-  [[nodiscard]] auto computeLayersMovementCost(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placementBefore,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placementBetween,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& placementAfter) const -> double;
+  [[nodiscard]] auto
+  computeLayersMovementCost(const Placement& placementBefore,
+                            const Placement& placementBetween,
+                            const Placement& placementAfter) const -> double;
 
   [[nodiscard]] auto filterMapping(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousGatePlacement,
-      const std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>,
-                      std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>&
-          placementsWithoutReuse,
-      const std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>,
-                      std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             size_t, size_t>>>&
-          placementsWithReuse) const
-      -> std::pair<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                          size_t, size_t>>,
-                   std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                          size_t, size_t>>>;
+      const Placement& previousGatePlacement,
+      const std::pair<Placement, Placement>& placementsWithoutReuse,
+      const std::pair<Placement, Placement>& placementsWithReuse) const
+      -> std::pair<Placement, Placement>;
   /// generate gate mapping based on minimum weight matching for the first
   /// layer of gates
-  [[nodiscard]] auto placeGatesInEntanglementZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousQubitPlacement,
-      const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& twoQubitGates,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates,
-      bool reuse) const
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+  [[nodiscard]] auto
+  placeGatesInEntanglementZone(const Placement& previousQubitPlacement,
+                               const std::unordered_set<qc::Qubit>& reuseQubits,
+                               const TwoQubitGateLayer& twoQubitGates,
+                               const TwoQubitGateLayer& nextTwoQubitGates,
+                               bool reuse) const -> Placement;
 
   /// Generate qubit mapping based on minimum weight matching.
-  auto placeAtomsInStorageZone(
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& initialPlacement,
-      const std::vector<std::tuple<std::reference_wrapper<const SLM>, size_t,
-                                   size_t>>& previousGatePlacement,
-      const std::unordered_set<qc::Qubit>& reuseQubits,
-      const std::vector<std::array<qc::Qubit, 2>>& nextTwoQubitGates,
-      bool reuse) const
-      -> std::vector<
-          std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>;
+  auto placeAtomsInStorageZone(const Placement& initialPlacement,
+                               const Placement& previousGatePlacement,
+                               const std::unordered_set<qc::Qubit>& reuseQubits,
+                               const TwoQubitGateLayer& nextTwoQubitGates,
+                               bool reuse) const -> Placement;
 };
 } // namespace na::azac

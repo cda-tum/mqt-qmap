@@ -2,6 +2,7 @@
 
 #include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -25,8 +26,8 @@ NoReuseAnalyzer::NoReuseAnalyzer(const Architecture&,
   }
 }
 auto NoReuseAnalyzer::analyzeReuse(
-    const std::vector<std::vector<std::array<qc::Qubit, 2>>>&
-        twoQubitGateLayers) -> std::vector<std::unordered_set<qc::Qubit>> {
+    const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
+    -> std::vector<std::unordered_set<qc::Qubit>> {
   return std::vector<std::unordered_set<qc::Qubit>>(twoQubitGateLayers.size() -
                                                     1);
 }
