@@ -1,6 +1,6 @@
 #include "na/azac/VMReuseAnalyzer.hpp"
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 
 #include <algorithm>
 #include <cassert>

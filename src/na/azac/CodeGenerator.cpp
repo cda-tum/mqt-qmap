@@ -1,7 +1,7 @@
 #include "na/azac/CodeGenerator.hpp"
 
-#include "Definitions.hpp"
 #include "dd/DDDefinitions.hpp"
+#include "ir/Definitions.hpp"
 #include "ir/operations/CompoundOperation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
@@ -132,7 +132,7 @@ auto CodeGenerator::appendOneQubitGates(
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
         } else {
-          std::ostringstream oss;
+          oss.clear();
           oss << "\033[1;31m[ERROR]\033[0m Unsupported one qubit gate will be "
                  "dropped: "
               << op.get().getType() << "\n";

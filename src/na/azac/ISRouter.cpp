@@ -1,6 +1,6 @@
 #include "na/azac/ISRouter.hpp"
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <cassert>
@@ -154,4 +154,4 @@ auto ISRouter::route(
   }
   return routing;
 }
-} // namespace na
+} // namespace na::azac

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 
 #include <array>
 #include <cstddef>

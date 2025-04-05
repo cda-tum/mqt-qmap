@@ -1,6 +1,6 @@
 #include "na/azac/NoReuseAnalyzer.hpp"
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <iostream>
@@ -30,4 +30,4 @@ auto NoReuseAnalyzer::analyzeReuse(
   return std::vector<std::unordered_set<qc::Qubit>>(twoQubitGateLayers.size() -
                                                     1);
 }
-}; // namespace na
+}; // namespace na::azac

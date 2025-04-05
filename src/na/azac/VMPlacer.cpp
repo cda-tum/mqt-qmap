@@ -1,6 +1,6 @@
 #include "na/azac/VMPlacer.hpp"
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <algorithm>

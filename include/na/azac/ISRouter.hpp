@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Definitions.hpp"
+#include "ir/Definitions.hpp"
 #include "na/azac/Architecture.hpp"
 
 #include <cstddef>
