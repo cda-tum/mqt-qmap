@@ -12,7 +12,6 @@
 #include "hybridmap/NeutralAtomArchitecture.hpp"
 #include "hybridmap/NeutralAtomScheduler.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
-#include "ir/Definitions.hpp"
 #include "ir/QuantumComputation.hpp"
 #include "ir/operations/OpType.hpp"
 #include "na/NAComputation.hpp"
@@ -43,7 +42,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 #include <plog/Severity.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -51,6 +50,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -66,7 +66,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
     } else if (config.method == Method::Exact) {
       mapper = std::make_unique<ExactMapper>(circ, arch);
     }
-  } catch (std::exception const& e) {
+  } catch (const std::exception& e) {
     std::stringstream ss{};
     ss << "Could not construct mapper: " << e.what();
     throw std::invalid_argument(ss.str());
@@ -74,7 +74,7 @@ map(const qc::QuantumComputation& circ, Architecture& arch,
 
   try {
     mapper->map(config);
-  } catch (std::exception const& e) {
+  } catch (const std::exception& e) {
     std::stringstream ss{};
     ss << "Error during mapping: " << e.what();
     throw std::invalid_argument(ss.str());
@@ -1065,5 +1065,15 @@ Compile a quantum circuit for the zoned neutral atom architecture.
 
 :param qc: is the quantum circuit
 :returns: the compilation results as an NAComputation.
+)")
+      .def(
+          "stats",
+          [](na::azac::AZACompiler& self) {
+            return self.getStatistics().asJson();
+          },
+          R"(
+Get the statistics of the last compilation.
+
+:returns: the statistics as a dictionary
 )");
 }

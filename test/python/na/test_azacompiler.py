@@ -73,3 +73,6 @@ def test_na_azacompiler(compiler: AZACompiler, circuit_filename: str) -> None:
     qc = load(circuit_filename)
     result = compiler.compile(qc)
     assert result is not None
+    stats = compiler.stats()
+    assert "total_time" in stats
+    assert stats["total_time"] > 0
