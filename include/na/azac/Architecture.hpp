@@ -26,32 +26,46 @@ struct AOD {
   std::size_t nRows = 0;
   std::size_t nCols = 0;
 
+  /// Creates an AOD from a JSON specification.
   explicit AOD(nlohmann::json aodSpec);
 };
 
-/// An 2D-array of SLM traps
+/// An 2D-array of SLM traps.
 struct SLM {
   std::size_t id = 0; ///< SLM id, used only in output
-  /// separation of individual sites in x and y direction
+  /// separation of individual sites in x and y direction.
   std::pair<std::size_t, std::size_t> siteSeparation{0, 0};
   std::size_t nRows = 0; ///< number of rows
   std::size_t nCols = 0; ///< number of columns
-  /// x,y-coordinate of the left uppermost SLM
+  /// x,y-coordinate of the left uppermost SLM.
   std::pair<std::size_t, std::size_t> location{0, 0};
   /// if the SLM is used in entanglement zone, a pointer to all entanglement
-  /// SLMs in the same group
+  /// SLMs in the same group.
   const std::array<SLM, 2>* entanglementZone_ = nullptr;
-  /// only used for printing
+  /// only used for printing.
   std::optional<std::size_t> entanglementId_ = std::nullopt;
-
+  /// Creates an SLM array from a JSON specification.
   explicit SLM(nlohmann::json slmSpec);
+  /// @returns true if the SLM is part of an entanglement zone.
   [[nodiscard]] auto isEntanglement() const -> bool {
     return entanglementZone_ != nullptr;
   }
+  /// @returns true, if the SLM is part of a storage zone.
   [[nodiscard]] auto isStorage() const -> bool { return !isEntanglement(); }
+  /// @returns true, if both SLMs are equal, i.e., they have the same
+  /// location and dimensions.
   [[nodiscard]] auto operator==(const SLM& other) const -> bool;
 };
+/// An element of type Site identifies a concrete site in an SLM array.
+using Site =
+    std::tuple<std::reference_wrapper<const SLM>, std::size_t, std::size_t>;
+/// An unordered map from an SLM to a value of type V.
+/// @tparam V the type of the value
+template <class V>
+using SLMMap = std::unordered_map<std::reference_wrapper<const SLM>, V,
+                                  std::hash<SLM>, std::equal_to<SLM>>;
 } // namespace na::azac
+/// Hash function for pairs where both unqualified types have a hash function.
 template <class F, class S> struct std::hash<std::pair<F, S>> {
   size_t operator()(const std::pair<F, S>& p) const noexcept {
     const auto h1 =
@@ -61,6 +75,7 @@ template <class F, class S> struct std::hash<std::pair<F, S>> {
     return qc::combineHash(h1, h2);
   }
 };
+/// Hash function for 3-tuples where all unqualified types have a hash function.
 template <class S, class T, class U> struct std::hash<std::tuple<S, T, U>> {
   size_t operator()(const std::tuple<S, T, U>& t) const noexcept {
     const auto h1 = std::hash<std::remove_cv_t<std::remove_reference_t<S>>>{}(
@@ -72,11 +87,13 @@ template <class S, class T, class U> struct std::hash<std::tuple<S, T, U>> {
     return qc::combineHash(qc::combineHash(h1, h2), h3);
   }
 };
+/// Hash function for an SLM based on its location.
 template <> struct std::hash<na::azac::SLM> {
   size_t operator()(const na::azac::SLM& slm) const noexcept {
     return std::hash<std::pair<size_t, size_t>>{}(slm.location);
   }
 };
+/// An array of length 2 where the unqualified type has a hash function.
 template <class T> struct std::hash<std::array<T, 2>> {
   size_t operator()(const std::array<T, 2>& p) const noexcept {
     const auto h1 =
@@ -89,88 +106,107 @@ template <class T> struct std::hash<std::array<T, 2>> {
 
 namespace na::azac {
 
-/// Class to define zone architecture
+/// Class to define zone architecture.
 struct Architecture {
-  std::string name;
+  std::string name; ///< name of the architecture
+  /// All storage zones of the architecture. The objects are owned by the
+  /// Architecture class. Outside the class, the SLMs are only referenced.
   std::vector<std::unique_ptr<SLM>> storageZones;
+  /// All entanglement zones of the architecture. Each entanglement zone
+  /// consists of two SLMs. The objects are owned by the Architecture class.
+  /// Outside the class, the SLMs are only referenced.
   std::vector<std::unique_ptr<std::array<SLM, 2>>> entanglementZones;
+  /// All AODs of the architecture. The objects are owned by the Architecture
+  /// class. Outside the class, the AODs are only referenced.
   std::vector<std::unique_ptr<AOD>> aods;
+  /// A struct to define the operation durations.
   struct OperationDurations {
     double timeAtomTransfer = 15;    ///< µs
     double timeRydberg = 0.36;       ///< µs
     double timeOneQubitGate = 0.625; ///< µs
   };
+  /// Operation durations.
   std::optional<OperationDurations> operationDurations;
+  /// A struct to define the operation fidelities.
   struct OperationFidelities {
     double fidelityTwoQubitGate = 0.995;
     double fidelityOneQubitGate = 0.9997;
     double fidelityAtomTransfer = 0.999;
   };
+  /// Operation fidelities.
   std::optional<OperationFidelities> operationFidelities;
+  /// Minimum X coordinate of the architecture's extent.
   std::size_t archRangeMinX = 0;
+  /// Maximum X coordinate of the architecture's extent.
   std::size_t archRangeMaxX = 0;
+  /// Minimum Y coordinate of the architecture's extent.
   std::size_t archRangeMinY = 0;
+  /// Maximum Y coordinate of the architecture's extent.
   std::size_t archRangeMaxY = 0;
+  /// Minimum X coordinates of the different Rydberg zones.
   std::vector<std::size_t> rydbergRangeMinX;
+  /// Maximum X coordinates of the different Rydberg zones.
   std::vector<std::size_t> rydbergRangeMaxX;
+  /// Minimum Y coordinates of the different Rydberg zones.
   std::vector<std::size_t> rydbergRangeMinY;
+  /// Maximum Y coordinates of the different Rydberg zones.
   std::vector<std::size_t> rydbergRangeMaxY;
-  /// A map from an entanglement site to the nearest storage sites in ascending
-  /// order by their distance.
-  /// To get the nearest storage site expressed as a triple of
-  /// (SLM*, row, column), use the following code:
-  /// @code
-  /// entanglementToNearestStorageSite[slm][0/1][column][0];
-  /// @endcode
-  /// The second index denotes the slm in a pair of two slms forming an
-  /// entanglement zone.
-  /// The third index denotes the i-th nearest storage site.
+  /// A map from an entanglement site to the nearest storage site.
   /// @see storageToNearestEntanglementSite
-  std::unordered_map<
-      std::reference_wrapper<const SLM>,
-      std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                         std::size_t, std::size_t>>>,
-      std::hash<SLM>, std::equal_to<SLM>>
-      entanglementToNearestStorageSite;
-  /// A map from a storage site to the nearest Rydberg sites.
+  SLMMap<std::vector<std::vector<Site>>> entanglementToNearestStorageSite;
+  /// A map from a pair of storage sites to the nearest Rydberg site.
   /// @see entanglementToNearestStorageSite
-  std::unordered_map<
-      std::reference_wrapper<const SLM>,
-      std::vector<std::vector<std::unordered_map<
-          std::reference_wrapper<const SLM>,
-          std::vector<std::vector<std::tuple<std::reference_wrapper<const SLM>,
-                                             std::size_t, std::size_t>>>,
-          std::hash<SLM>, std::equal_to<SLM>>>>,
-      std::hash<SLM>, std::equal_to<SLM>>
+  SLMMap<std::vector<std::vector<SLMMap<std::vector<std::vector<Site>>>>>>
       storageToNearestEntanglementSite;
 
+  /// Creates an Architecture from a file containing a JSON specification.
+  /// @param filename the name of the file given as a string
   explicit Architecture(const std::string& filename)
       : Architecture(std::filesystem::path(filename)) {}
+  /// Creates an Architecture from a file containing a JSON specification.
+  /// @param filepath the path to the file
   explicit Architecture(const std::filesystem::path& filepath)
       : Architecture(std::ifstream(filepath)) {}
+  /// Creates an Architecture from a JSON specification.
+  /// @param ifs the input stream containing the JSON specification
   explicit Architecture(std::istream&& ifs)
       : Architecture(nlohmann::json::parse(std::move(ifs))) {}
+  /// Creates an Architecture from a JSON specification.
+  /// @param json the JSON specification
   explicit Architecture(nlohmann::json json);
-  // Delete copy constructor and copy assignment operator
+  // Explicitly delete copy constructor and copy assignment operator because the
+  // SLMs and AODs owned by the Architecture cannot be simpli copied.
   Architecture(const Architecture&) = delete;
   Architecture& operator=(const Architecture&) = delete;
   // Default move constructor and move assignment operator
   Architecture(Architecture&&) noexcept = default;
   Architecture& operator=(Architecture&&) noexcept = default;
+  /// Export the architecture for the NAViz tool.
+  /// @returns a string containing the NAViz-compatible architecture
+  /// specification
   auto exportNAVizMachine() const -> std::string;
+  /// Export the architecture for the NAViz tool.
+  /// @param os the output stream to write the NAViz-compatible architecture
   auto exportNAVizMachine(std::ostream&& os) const -> void {
     os << exportNAVizMachine();
   }
+  /// Export the architecture for the NAViz tool.
+  /// @param os the output stream to write the NAViz-compatible architecture
   auto exportNAVizMachine(std::ostream& os) const -> void {
     exportNAVizMachine(std::move(os));
   }
+  /// Export the architecture for the NAViz tool.
+  /// @param path the path to the `.namachine`-file to write the
+  /// NAViz-compatible architecture
   auto exportNAVizMachine(const std::filesystem::path& path) const -> void {
     exportNAVizMachine(std::ofstream(path));
   }
+  /// Export the architecture for the NAViz tool.
+  /// @param filename the name of the `.namachine`-file to write the
+  /// NAViz-compatible architecture
   auto exportNAVizMachine(const std::string& filename) const -> void {
     exportNAVizMachine(std::filesystem::path(filename));
   }
-  //===--------------------------------------------------------------------===//
   /// Check if the given position is a valid SLM position, i.e., whether the
   /// given row and column are within the range of the SLM.
   [[nodiscard]] auto isValidSlmPosition(const SLM& slm, std::size_t r,
