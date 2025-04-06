@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace testing {
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 MATCHER_P(RefEq, value, "") { return arg.get() == value; }
 } // namespace testing
 namespace na::azac {

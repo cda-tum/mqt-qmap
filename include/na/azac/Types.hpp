@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ir/operations/Operation.hpp"
+#include "na/azac/Architecture.hpp"
 
 #include <array>
 #include <unordered_map>

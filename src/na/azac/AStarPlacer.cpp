@@ -55,7 +55,7 @@ auto AStarPlacer::aStarTreeSearch(
   };
   // compare function for the open set
   struct ItemCompare {
-    bool operator()(const Item* a, const Item* b) const {
+    auto operator()(const Item* a, const Item* b) const -> bool {
       // this way, the item with the lowest priority is on top of the heap
       return a->priority_ > b->priority_;
     }
