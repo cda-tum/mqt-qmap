@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Types.hpp"
 #include "na/NAComputation.hpp"
 #include "na/azac/Architecture.hpp"
+#include "na/azac/Types.hpp"
 #include "na/entities/Atom.hpp"
 #include "na/entities/Zone.hpp"
 
