@@ -70,21 +70,21 @@ auto VMReuseAnalyzer::analyzeReuse(
       const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
       const auto& itFirst = usedQubitsInPreviousLayer.find(gate.front());
       const auto& itSecond = usedQubitsInPreviousLayer.find(gate.back());
-      if (itFirst != usedQubitsInPreviousLayer.end()) {
-        ++nReusableQubits;
-        // If the both qubits of the gate are used in the previous layer also
+      const auto firstReusable = itFirst != usedQubitsInPreviousLayer.end();
+      const auto secondReusable = itSecond != usedQubitsInPreviousLayer.end();
+      if (firstReusable && secondReusable &&
+          itFirst->second == itSecond->second) {
+        // If both qubits of the gate are used in the previous layer also
         // by the identical gate, then both qubits can stay at their location
         // and be reused.
-        if (itSecond != usedQubitsInPreviousLayer.end() &&
-            itFirst->second == itSecond->second) {
-          reuseQubitsInCurrentLayer.emplace(gate.front());
-          reuseQubitsInCurrentLayer.emplace(gate.back());
-          nReusedQubits += 2;
-        } else {
-          matrix[gateIdx][itFirst->second] = true;
-        }
-      }
-      if (itSecond != usedQubitsInPreviousLayer.end()) {
+        nReusableQubits += 2;
+        nReusedQubits += 2;
+        reuseQubitsInCurrentLayer.emplace(gate.front());
+        reuseQubitsInCurrentLayer.emplace(gate.back());
+      } else if (firstReusable) {
+        ++nReusableQubits;
+        matrix[gateIdx][itFirst->second] = true;
+      } else if (secondReusable) {
         ++nReusableQubits;
         matrix[gateIdx][itSecond->second] = true;
       }
@@ -116,8 +116,8 @@ auto VMReuseAnalyzer::analyzeReuse(
     }
   }
   std::cout << "\033[1;32m[INFO]\033[0m " << nReusedQubits
-            << "qubits can be reused of " << nReusableQubits
-            << "reusable qubits.\n";
+            << " qubits can be reused of " << nReusableQubits
+            << " reusable qubits.\n";
   return reuseQubits;
 }
 auto VMReuseAnalyzer::maximumBipartiteMatching(
