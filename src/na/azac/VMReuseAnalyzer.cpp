@@ -130,7 +130,11 @@ auto VMReuseAnalyzer::maximumBipartiteMatching(
   const auto maxSink = std::accumulate(
       sparseMatrix.cbegin(), sparseMatrix.cend(), static_cast<std::size_t>(0),
       [](const std::size_t max, const std::vector<std::size_t>& row) {
-        return std::max(max, *std::max_element(row.cbegin(), row.cend()));
+        if (const auto maxIt = std::max_element(row.cbegin(), row.cend());
+            maxIt != row.cend()) {
+          return std::max(max, *maxIt);
+        }
+        return max;
       });
   std::vector freeSources(sparseMatrix.size(), true);
   std::vector<std::optional<std::size_t>> invMatching(maxSink + 1,

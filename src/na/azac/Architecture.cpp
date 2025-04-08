@@ -679,7 +679,7 @@ auto Architecture::nearestEntanglementSite(
     return nearestEntanglementSite(idx2, r2, c2, idx1, r1, c1);
   }
   assert(&idx1 < &idx2 || (&idx1 == &idx2 && r1 < r2) ||
-         (&idx1 == &idx2 && r1 == r2 && c1 < c2));
+         (&idx1 == &idx2 && r1 == r2 && c1 <= c2));
   return storageToNearestEntanglementSite.at(std::cref(idx1))[r1][c1].at(
       std::cref(idx2))[&idx1 == &idx2 ? r2 - r1 : r2]
                       [&idx1 == &idx2 && r1 == r2 ? c2 - c1 : c2];
