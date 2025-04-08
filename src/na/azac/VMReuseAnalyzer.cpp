@@ -36,9 +36,6 @@ VMReuseAnalyzer::VMReuseAnalyzer(const Architecture&,
 auto VMReuseAnalyzer::analyzeReuse(
     const std::vector<TwoQubitGateLayer>& twoQubitGateLayers)
     -> std::vector<std::unordered_set<qc::Qubit>> {
-  size_t nReusedQubits = 0;
-  size_t nReusableQubits = 0;
-
   if (twoQubitGateLayers.size() <= 1) {
     // early exit if there are no qubits to reuse between layers
     return std::vector<std::unordered_set<qc::Qubit>>{};
@@ -77,15 +74,11 @@ auto VMReuseAnalyzer::analyzeReuse(
         // If both qubits of the gate are used in the previous layer also
         // by the identical gate, then both qubits can stay at their location
         // and be reused.
-        nReusableQubits += 2;
-        nReusedQubits += 2;
         reuseQubitsInCurrentLayer.emplace(gate.front());
         reuseQubitsInCurrentLayer.emplace(gate.back());
       } else if (firstReusable) {
-        ++nReusableQubits;
         matrix[gateIdx][itFirst->second] = true;
       } else if (secondReusable) {
-        ++nReusableQubits;
         matrix[gateIdx][itSecond->second] = true;
       }
       usedQubitsInCurrentLayer[gate.front()] = gateIdx;
@@ -103,7 +96,6 @@ auto VMReuseAnalyzer::analyzeReuse(
     for (std::size_t gateIdx = 0; gateIdx < matching.size(); ++gateIdx) {
       if (const auto& reuseGateIdx = matching[gateIdx]; reuseGateIdx) {
         const auto& gate = twoQubitGatesInCurrentLayer[gateIdx];
-        ++nReusedQubits;
         if (const auto& it = usedQubitsInPreviousLayer.find(gate.front());
             it != usedQubitsInPreviousLayer.end() &&
             it->second == *reuseGateIdx) {
@@ -115,9 +107,6 @@ auto VMReuseAnalyzer::analyzeReuse(
       }
     }
   }
-  std::cout << "\033[1;32m[INFO]\033[0m " << nReusedQubits
-            << " qubits can be reused of " << nReusableQubits
-            << " reusable qubits.\n";
   return reuseQubits;
 }
 auto VMReuseAnalyzer::maximumBipartiteMatching(
