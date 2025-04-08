@@ -15,7 +15,11 @@ namespace na::azac {
  * strategy for the zoned neutral atom compiler.
  */
 class ASAPScheduler {
+  /// A reference to the zoned neutral atom architecture
   std::reference_wrapper<const Architecture> architecture_;
+  /// This value is calculated based on the architecture and indicates the
+  /// maximum capacity of two-qubit gates that can be executed in parallel in
+  /// the entanglement zone.
   size_t maxTwoQubitGateNumPerLayer_ = 0;
 
 public:

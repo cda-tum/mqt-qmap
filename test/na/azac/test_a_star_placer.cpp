@@ -255,9 +255,6 @@ TEST(AStarPlacerTest, InvalidConfig) {
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "AStarPlacer contains an invalid value "
                                "for use_window. Using default (true)."),
-          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
-                               "AStarPlacer does not contain a setting "
-                               "for use_window. Using default (true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
               "an unknown key: unknown_key. Ignoring.")));
@@ -268,7 +265,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
-  EXPECT_EQ(warnings, 3);
+  EXPECT_EQ(warnings, 2);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

@@ -20,6 +20,9 @@ class CodeGenerator {
   std::reference_wrapper<const Architecture> architecture_;
   /// The offset for parking spots
   size_t parkingOffset_ = 1;
+  /// Warn if a gate not belonging to the basis gates (local rz, global ry) is
+  /// used
+  bool warnUnsupportedGates_ = true;
 
 public:
   /**

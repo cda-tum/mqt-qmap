@@ -1394,9 +1394,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool reuseLevelSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
+        useWindowSet = true;
         if (value.is_boolean()) {
           useWindow_ = value;
-          useWindowSet = true;
         } else {
           std::ostringstream oss;
           oss << std::boolalpha;
@@ -1407,9 +1407,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "window_min_width") {
+        windowMinWidthSet = true;
         if (value.is_number_unsigned()) {
           windowMinWidth_ = value;
-          windowMinWidthSet = true;
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
@@ -1419,9 +1419,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "window_ratio") {
+        windowRatioSet = true;
         if (value.is_number()) {
           windowRatio_ = value;
-          windowRatioSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);
@@ -1431,9 +1431,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "window_share") {
+        windowShareSet = true;
         if (value.is_number()) {
           windowShare_ = value;
-          windowShareSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);
@@ -1443,9 +1443,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "deepening_factor") {
+        deepeningFactorSet = true;
         if (value.is_number()) {
           deepeningFactor_ = value;
-          deepeningFactorSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);
@@ -1456,9 +1456,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "deepening_value") {
+        deepeningValueSet = true;
         if (value.is_number()) {
           deepeningValue_ = value;
-          deepeningValueSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);
@@ -1469,9 +1469,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "lookahead_factor") {
+        lookaheadFactorSet = true;
         if (value.is_number()) {
           lookaheadFactor_ = value;
-          lookaheadFactorSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);
@@ -1482,9 +1482,9 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::cout << oss.str();
         }
       } else if (key == "reuse_level") {
+        reuseLevelSet = true;
         if (value.is_number()) {
           reuseLevel_ = value;
-          reuseLevelSet = true;
         } else {
           std::ostringstream oss;
           oss << std::setprecision(4);

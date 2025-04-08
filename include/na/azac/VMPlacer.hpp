@@ -38,16 +38,19 @@ class VMPlacer {
   constexpr static double costAtomTransfer_ = 0.9999;
 
 public:
+  /// Create a VMPlacer based on the given architecture and configuration
   VMPlacer(const Architecture& architecture, const nlohmann::json& config);
+  /// generate qubit placement based on minimum weight matching
   [[nodiscard]] auto
   place(size_t nQubits,
         const std::vector<TwoQubitGateLayer>& twoQubitGateLayers,
         const std::vector<std::unordered_set<qc::Qubit>>& reuseQubits)
       -> std::vector<Placement>;
+
+private:
   /// generate qubit initial layout
   auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
-private:
   /// @note implemented following pseudocode in
   /// https://www2.eecs.berkeley.edu/Pubs/TechRpts/1978/ERL-m-78-67.pdf
   [[nodiscard]] static auto minimumWeightFullBipartiteMatching(

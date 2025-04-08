@@ -89,11 +89,13 @@ auto CodeGenerator::appendOneQubitGates(
         code.emplaceBack<LocalRZOp>(atoms[qubit],
                                     op.get().getParameter().front());
       } else {
-        std::ostringstream oss;
-        oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
-               "inserted as U3 gate: "
-            << op.get().getType() << "\n";
-        std::cout << oss.str();
+        if (warnUnsupportedGates_) {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
+                 "inserted as U3 gate: "
+              << op.get().getType() << "\n";
+          std::cout << oss.str();
+        }
         if (op.get().getType() == qc::U) {
           code.emplaceBack<LocalUOp>(
               atoms[qubit], op.get().getParameter().front(),
@@ -128,8 +130,8 @@ auto CodeGenerator::appendOneQubitGates(
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
         } else {
-          oss.clear();
-          oss << "\033[1;31m[ERROR]\033[0m Unsupported one qubit gate will be "
+          std::ostringstream oss;
+          oss << "\033[1;31m[ERROR]\033[0m Unsupported one-qubit gate will be "
                  "dropped: "
               << op.get().getType() << "\n";
           std::cout << oss.str();
@@ -235,16 +237,31 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
   if (const auto& configIt = config.find("code_generator");
       configIt != config.end() && configIt->is_object()) {
     bool parkingOffsetSet = false;
+    bool warnUnsupportedGatesSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "parking_offset") {
+        parkingOffsetSet = true;
         if (value.is_number_unsigned()) {
           parkingOffset_ = value;
-          parkingOffsetSet = true;
         } else {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
                  "contains an invalid value for parking_offset. Using "
-                 "default.\n";
+                 "default ("
+              << parkingOffset_ << ").\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "warn_unsupported_gates") {
+        warnUnsupportedGatesSet = true;
+        if (value.is_boolean()) {
+          warnUnsupportedGates_ = value;
+        } else {
+          std::ostringstream oss;
+          oss << std::boolalpha;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+                 "contains an invalid value for warn_unsupported_gates. Using "
+                 "default ("
+              << warnUnsupportedGates_ << ").\n";
           std::cout << oss.str();
         }
       } else {
@@ -256,9 +273,20 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
       }
     }
     if (!parkingOffsetSet) {
-      std::cout
-          << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
-             "does not contain a value for parking_offset. Using default.\n";
+      std::ostringstream oss;
+      oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+             "does not contain a value for parking_offset. Using default ("
+          << parkingOffset_ << ").\n";
+      std::cout << oss.str();
+    }
+    if (!warnUnsupportedGatesSet) {
+      std::ostringstream oss;
+      oss << std::boolalpha;
+      oss << "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+             "does not contain a value for warn_unsupported_gates. Using "
+             "default ("
+          << warnUnsupportedGates_ << ").\n";
+      std::cout << oss.str();
     }
   } else {
     std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "

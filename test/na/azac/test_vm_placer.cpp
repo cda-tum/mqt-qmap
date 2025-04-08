@@ -235,16 +235,12 @@ TEST(VMPlacerTest, InvalidConfig) {
       ::testing::AllOf(
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
-              "contains an invalid value for "
-              "use_window. Using default."),
+              "contains an invalid value for use_window. Using default "
+              "(true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-              "not contain a setting for "
-              "use_window. Using default."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-              "not contain a setting for "
-              "dynamic_placement. Using default."),
+              "not contain a setting for dynamic_placement. Using default "
+              "(true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
               "unknown key: unknown_key. Ignoring.")));
@@ -255,7 +251,7 @@ TEST(VMPlacerTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
-  EXPECT_EQ(warnings, 4);
+  EXPECT_EQ(warnings, 3);
 }
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching1) {
   // We consider the following bipartite graph, where the nodes in the upper row

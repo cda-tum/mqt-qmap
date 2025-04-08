@@ -35,7 +35,8 @@ constexpr std::string_view architectureJson = R"({
 })";
 constexpr std::string_view configJson = R"({
   "code_generator" : {
-    "parking_offset" : 1
+    "parking_offset" : 1,
+    "warn_unsupported_gates" : false
   }
 })";
 class CodeGeneratorGenerateTest : public ::testing::Test {
@@ -223,6 +224,7 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   nlohmann::json config = R"({
   "code_generator": {
     "parking_offset": "invalid",
+    "warn_unsupported_gates" : false,
     "unknown_key": 42
   }
 })"_json;
@@ -234,14 +236,11 @@ TEST(CodeGeneratorTest, InvalidConfig) {
       buffer.str(),
       ::testing::AllOf(
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
-                               "CodeGenerator contains an invalid "
-                               "value for parking_offset. Using default."),
-          ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator does "
-              "not contain a value for parking_offset. Using default."),
+                               "CodeGenerator contains an invalid value for "
+                               "parking_offset. Using default (1)."),
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
-                               "CodeGenerator contains an "
-                               "unknown key: unknown_key. Ignoring.")));
+                               "CodeGenerator contains an unknown key: "
+                               "unknown_key. Ignoring.")));
   size_t warnings = 0;
   size_t pos = 0;
   std::string target = "\033[1;35m[WARN]\033[0m";
@@ -249,6 +248,6 @@ TEST(CodeGeneratorTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
-  EXPECT_EQ(warnings, 3);
+  EXPECT_EQ(warnings, 2);
 }
 } // namespace na::azac

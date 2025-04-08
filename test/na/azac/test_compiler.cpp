@@ -37,7 +37,8 @@ constexpr std::string_view settings = R"({
     "dynamic_placement" : true
   },
   "code_generator" : {
-    "parking_offset" : 1
+    "parking_offset" : 1,
+    "warn_unsupported_gates" : false
   },
   "a_star_placer" : {
     "use_window" : true,
