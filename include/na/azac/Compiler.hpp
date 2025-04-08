@@ -55,8 +55,7 @@ public:
   [[nodiscard]] auto compile(const qc::QuantumComputation& qComp)
       -> NAComputation {
     std::cout << "\033[1;32m[INFO]\033[0m AZAC: An advanced compiler for zoned "
-                 "neutral atom "
-                 "architecture\n";
+                 "neutral atom architecture\n";
     std::cout << "\033[1;32m[INFO]\033[0m           Number of qubits: "
               << qComp.getNqubits() << "\n";
     const auto nTwoQubitGates =
