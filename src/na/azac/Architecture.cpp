@@ -268,8 +268,8 @@ Architecture::Architecture(nlohmann::json json) {
         json["arch_range"][1][0].is_number() &&
         json["arch_range"][1][1].is_number()) {
       archRangeMinX = json["arch_range"][0][0];
-      archRangeMaxX = json["arch_range"][0][1];
-      archRangeMinY = json["arch_range"][1][0];
+      archRangeMinY = json["arch_range"][0][1];
+      archRangeMaxX = json["arch_range"][1][0];
       archRangeMaxY = json["arch_range"][1][1];
     } else {
       throw std::invalid_argument(
@@ -288,8 +288,8 @@ Architecture::Architecture(nlohmann::json json) {
             rydbergRange[0][0].is_number() && rydbergRange[0][1].is_number() &&
             rydbergRange[1][0].is_number() && rydbergRange[1][1].is_number()) {
           rydbergRangeMinX.emplace_back(rydbergRange[0][0]);
-          rydbergRangeMaxX.emplace_back(rydbergRange[0][1]);
-          rydbergRangeMinY.emplace_back(rydbergRange[1][0]);
+          rydbergRangeMinY.emplace_back(rydbergRange[0][1]);
+          rydbergRangeMaxX.emplace_back(rydbergRange[1][0]);
           rydbergRangeMaxY.emplace_back(rydbergRange[1][1]);
         } else {
           throw std::invalid_argument("Rydberg range must be a Nx2x2 number "
