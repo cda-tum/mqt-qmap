@@ -77,7 +77,8 @@ public:
     const auto& schedulingStart = std::chrono::system_clock::now();
     const auto& [oneQubitGateLayers, twoQubitGateLayers] = SELF.schedule(qComp);
     statistics_.schedulingTime =
-        std::chrono::system_clock::now() - schedulingStart;
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - schedulingStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for scheduling: "
               << statistics_.schedulingTime.count() << "µs\n";
     std::cout
@@ -105,7 +106,8 @@ public:
     const auto& reuseAnalysisStart = std::chrono::system_clock::now();
     const auto& reuseQubits = SELF.analyzeReuse(twoQubitGateLayers);
     statistics_.reuseAnalysisTime =
-        std::chrono::system_clock::now() - reuseAnalysisStart;
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - reuseAnalysisStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for reuse analysis: "
               << statistics_.reuseAnalysisTime.count() << "µs\n";
 
@@ -113,13 +115,16 @@ public:
     const auto& placement = static_cast<ConcreteType*>(this)->place(
         qComp.getNqubits(), twoQubitGateLayers, reuseQubits);
     statistics_.placementTime =
-        std::chrono::system_clock::now() - placementStart;
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - placementStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for placement: "
               << statistics_.placementTime.count() << "µs\n";
 
     const auto& routingStart = std::chrono::system_clock::now();
     const auto& routing = SELF.route(placement);
-    statistics_.routingTime = std::chrono::system_clock::now() - routingStart;
+    statistics_.routingTime =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - routingStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for routing: "
               << statistics_.routingTime.count() << "µs\n";
 
@@ -127,11 +132,14 @@ public:
     NAComputation code = SELF.generate(oneQubitGateLayers, placement, routing);
     assert(code.validate().first);
     statistics_.codeGenerationTime =
-        std::chrono::system_clock::now() - codeGenerationStart;
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - codeGenerationStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for code generation: "
               << statistics_.codeGenerationTime.count() << "µs\n";
 
-    statistics_.totalTime = std::chrono::system_clock::now() - schedulingStart;
+    statistics_.totalTime =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - schedulingStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Total time: "
               << statistics_.totalTime.count() << "µs\n";
     return code;
