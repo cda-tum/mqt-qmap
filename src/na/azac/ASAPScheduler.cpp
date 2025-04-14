@@ -91,6 +91,8 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
             std::array{std::min(qubit1, qubit2), std::max(qubit1, qubit2)});
         nextLayerForQubit[qubit1] = layer + 1;
         nextLayerForQubit[qubit2] = layer + 1;
+      } else if (op->getType() == qc::Barrier) {
+        // skip barriers
       } else {
         std::stringstream ss;
         ss << "Operation type not supported: " << stdOp.getType() << " with "
@@ -98,6 +100,8 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
            << " targets";
         throw std::invalid_argument(ss.str());
       }
+    } else if (op->getType() == qc::Barrier) {
+      // skip barriers
     } else {
       std::stringstream ss;
       ss << "Operation type not supported: " << op->getType() << " with "
