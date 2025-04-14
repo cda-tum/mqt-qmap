@@ -93,8 +93,8 @@ constexpr std::string_view settings = R"({
       compiler_type##TestWithCircuits,  /* Custom instantiation name */        \
       compiler_type##Test,              /* Test suite name */                  \
       ::testing::Values(TEST_CIRCUITS), /* Parameters to test with */          \
-      [](const ::testing::TestParamInfo<std::string>& info) {                  \
-        const auto& path = info.param;                                         \
+      [](const ::testing::TestParamInfo<std::string>& pinfo) {                 \
+        const auto& path = pinfo.param;                                        \
         const auto& filename = path.substr(path.find_last_of("/") + 1);        \
         return filename.substr(0, filename.find_last_of("."));                 \
       })
