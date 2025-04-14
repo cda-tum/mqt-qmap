@@ -638,24 +638,35 @@ auto AStarPlacer::placeGatesInEntanglementZone(
   //===------------------------------------------------------------------===//
   // Get the extent of discrete source and target
   //===------------------------------------------------------------------===//
+  assert(!discreteRows.empty()); // ==> the following std::max_element does not
+                                 // return a nullptr
   const uint8_t maxDiscreteSourceRow =
       std::max_element(discreteRows.begin(), discreteRows.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(
+      !discreteColumns.empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
       std::max_element(discreteColumns.begin(), discreteColumns.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(!discreteTargetRows
+              .empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteTargetRow =
       std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(!discreteTargetColumns
+              .empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
       std::max_element(discreteTargetColumns.begin(),
                        discreteTargetColumns.end(),
@@ -663,6 +674,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
                          return lhs.second < rhs.second;
                        })
           ->second;
+  // return a nullptr
   const std::array<float, 2> scaleFactors{
       std::min(1.F, static_cast<float>(1 + maxDiscreteTargetRow) /
                         static_cast<float>(1 + maxDiscreteSourceRow)),
@@ -1002,24 +1014,35 @@ auto AStarPlacer::placeAtomsInStorageZone(
   //===------------------------------------------------------------------===//
   // Get the extent of discrete source and target
   //===------------------------------------------------------------------===//
+  assert(!discreteRows.empty()); // ==> the following std::max_element does not
+                                 // return a nullptr
   const uint8_t maxDiscreteSourceRow =
       std::max_element(discreteRows.begin(), discreteRows.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(
+      !discreteColumns.empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteSourceColumn =
       std::max_element(discreteColumns.begin(), discreteColumns.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(!discreteTargetRows
+              .empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteTargetRow =
       std::max_element(discreteTargetRows.begin(), discreteTargetRows.end(),
                        [](const auto& lhs, const auto& rhs) {
                          return lhs.second < rhs.second;
                        })
           ->second;
+  assert(!discreteTargetColumns
+              .empty()); // ==> the following std::max_element does not
+  // return a nullptr
   const uint8_t maxDiscreteTargetColumn =
       std::max_element(discreteTargetColumns.begin(),
                        discreteTargetColumns.end(),
