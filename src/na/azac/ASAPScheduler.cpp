@@ -57,8 +57,10 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
   // after the last layer with a two-qubit gate acting on that qubit
   std::vector<size_t> nextLayerForQubit(qc.getNqubits(), 0);
   for (const auto& op : qc) {
-    if (op->isGlobal(qc.getNqubits()) && !op->isControlled() &&
-        qc.getNqubits() > 1) {
+    if (op->getType() == qc::Barrier) {
+      // skip barriers
+    } else if (op->isGlobal(qc.getNqubits()) && !op->isControlled() &&
+               qc.getNqubits() > 1) {
       const auto maxNextLayerForQubit = *std::max_element(
           nextLayerForQubit.cbegin(), nextLayerForQubit.cend());
       for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {
@@ -91,8 +93,6 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
             std::array{std::min(qubit1, qubit2), std::max(qubit1, qubit2)});
         nextLayerForQubit[qubit1] = layer + 1;
         nextLayerForQubit[qubit2] = layer + 1;
-      } else if (op->getType() == qc::Barrier) {
-        // skip barriers
       } else {
         std::stringstream ss;
         ss << "Operation type not supported: " << stdOp.getType() << " with "
@@ -100,8 +100,6 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
            << " targets";
         throw std::invalid_argument(ss.str());
       }
-    } else if (op->getType() == qc::Barrier) {
-      // skip barriers
     } else {
       std::stringstream ss;
       ss << "Operation type not supported: " << op->getType() << " with "

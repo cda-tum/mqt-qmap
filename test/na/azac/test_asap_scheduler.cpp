@@ -148,6 +148,38 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
                              ::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(1U, 2U))));
 }
+TEST_F(ASAPSchedulerScheduleTest, Barrier) {
+  // q_0: ─░─■─░─■─
+  //         │ ░ │
+  // q_1: ───■─░─■─
+  qc::QuantumComputation qc(2);
+  qc.emplace_back<qc::StandardOperation>(0, qc::Barrier);
+  qc.cz(0, 1);
+  qc.barrier();
+  qc.cz(0, 1);
+  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
+  EXPECT_THAT(oneQubitGateLayers, ::testing::SizeIs(3));
+  EXPECT_THAT(oneQubitGateLayers, ::testing::Each(::testing::IsEmpty()));
+  EXPECT_THAT(
+      twoQubitGateLayers,
+      ::testing::ElementsAre(::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(0U, 1U)),
+                             ::testing::UnorderedElementsAre(
+                                 ::testing::UnorderedElementsAre(0U, 1U))));
+}
+TEST_F(ASAPSchedulerScheduleTest, NonGlobalCompound) {
+  qc::QuantumComputation qc(2);
+  qc::CompoundOperation compoundOp;
+  compoundOp.emplace_back<qc::StandardOperation>(0, qc::RY,
+                                                 std::vector{qc::PI_2});
+  qc.emplace_back<qc::CompoundOperation>(compoundOp);
+  EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
+}
+TEST_F(ASAPSchedulerScheduleTest, UnsupportedCXGate) {
+  qc::QuantumComputation qc(2);
+  qc.cx(0, 1);
+  EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
+}
 TEST(ASAPSchedulerTest, Config) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
   const auto config = R"({
