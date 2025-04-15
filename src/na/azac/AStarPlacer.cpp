@@ -1239,7 +1239,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   const auto& atomJob = atomJobs[atomToBePlacedNext];
   std::vector<std::reference_wrapper<const AtomNode>> neighbors;
   assert(atomJob.options.size() <= std::numeric_limits<uint16_t>::max());
-  for (uint16_t i = 0; i < atomJob.options.size(); ++i) {
+  for (uint16_t i = 0; i < static_cast<uint16_t>(atomJob.options.size()); ++i) {
     const auto& option = atomJob.options[i];
     const auto& [site, distance, reuse, lookaheadCost] = option;
     // skip the sites that are already consumed
@@ -1278,7 +1278,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<GateNode>>& nodes,
   const auto& [currentSiteOfLeftAtom, currentSiteOfRightAtom] =
       gateJob.currentSites;
   assert(gateJob.options.size() <= std::numeric_limits<uint16_t>::max());
-  for (uint16_t i = 0; i < gateJob.options.size(); ++i) {
+  for (uint16_t i = 0; i < static_cast<uint16_t>(gateJob.options.size()); ++i) {
     const auto& option = gateJob.options[i];
     const auto& [sites, distances, lookaheadCost] = option;
     const auto& [leftSite, rightSite] = sites;
@@ -1328,7 +1328,7 @@ auto AStarPlacer::checkCompatibilityWithGroup(
       // if (upperKey > key)
       if (it != group.begin()) {
         // it can be safely decremented
-        if (const auto& [_, lowerValue] = *std::prev(it);
+        if (const auto lowerValue = std::prev(it)->second;
             lowerValue < value && value < upperValue) {
           // new placement is compatible with this group
           return std::pair{it, false};
@@ -1345,7 +1345,7 @@ auto AStarPlacer::checkCompatibilityWithGroup(
     // if (it == hGroup.end())
     // it can be safely decremented because the group must contain
     // at least one element
-    if (const auto& [_, lowerValue] = *std::prev(it); lowerValue < value) {
+    if (const auto lowerValue = std::prev(it)->second; lowerValue < value) {
       // new placement is compatible with this group
       return std::pair{it, false};
     }

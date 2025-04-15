@@ -152,6 +152,9 @@ auto SLM::operator==(const SLM& other) const -> bool {
 }
 
 Architecture::Architecture(nlohmann::json json) {
+  // check if the name exists and is a string, otherwise throw an error
+  // JSON Example:
+  // "name": "My Super Cool Architecture"
   if (json.contains("name")) {
     if (json["name"].is_string()) {
       name = json["name"];
@@ -162,6 +165,14 @@ Architecture::Architecture(nlohmann::json json) {
     throw std::invalid_argument("Architecture name is missed in architecture "
                                 "spec");
   }
+  // check if the operation's duration exists, otherwise print a warning
+  // throw an error if the specification is invalid
+  // JSON Example:
+  // "operation_duration": {
+  //   "rydberg": 0.36,
+  //   "1qGate": 52,
+  //   "atom_transfer": 15
+  // }
   if (json.contains("operation_duration")) {
     if (json["operation_duration"].is_object()) {
       operationDurations = OperationDurations{};
@@ -206,11 +217,16 @@ Architecture::Architecture(nlohmann::json json) {
           "Operation duration must be a dict in architecture spec");
     }
   } else {
-    // print warn in green
-    std::cout << "\033[1;35m[WARN]\033[0m Operation duration is missed in "
+    std::cout << "\033[1;35m[WARN]\033[0m Operation's duration is missed in "
                  "architecture spec. Using default values.\n";
   }
-
+  // check if the operation's fidelity exists, otherwise print a warning
+  // throw an error if the specification is invalid
+  // "operation_fidelity": {
+  //   "two_qubit_gate": 0.995,
+  //   "single_qubit_gate": 0.9997,
+  //   "atom_transfer": 0.999
+  // }
   if (json.contains("operation_fidelity")) {
     if (json["operation_fidelity"].is_object()) {
       operationFidelities = OperationFidelities{};
@@ -255,10 +271,48 @@ Architecture::Architecture(nlohmann::json json) {
           "Operation fidelities must be a dict in architecture spec");
     }
   } else {
-    // print warn in green
-    std::cout << "\033[1;35m[WARN]\033[0m Operation duration is missed in "
+    std::cout << "\033[1;35m[WARN]\033[0m Operation's fidelity is missed in "
                  "architecture spec. Using default values.\n";
   }
+  // check if the qubit's T1 time exists, otherwise print a warning
+  // throw an error if the time is not a number
+  // JSON Example:
+  // "qubit_spec": {
+  //   "T": 1.5e6
+  // }
+  if (json.contains("qubit_spec")) {
+    if (json["qubit_spec"].is_object()) {
+      if (json["qubit_spec"].contains("T")) {
+        if (json["qubit_spec"]["T"].is_number()) {
+          qubitT1 = json["qubit_spec"]["T"];
+        } else {
+          throw std::invalid_argument("The qubit's T1 time must be a number in "
+                                      "architecture spec");
+        }
+      } else {
+        throw std::invalid_argument("The qubit spec must contain T1 time");
+      }
+    } else {
+      throw std::invalid_argument(
+          "The qubit spec must be a dict in architecture spec");
+    }
+  } else {
+    std::cout << "\033[1;35m[WARN]\033[0m The qubit spec is missed in "
+                 "architecture spec. Using default values.\n";
+  }
+  // check if the architecture range exists and is valid, otherwise throw an
+  // error
+  // JSON Example:
+  // "arch_range": [
+  //   [
+  //     0,
+  //     0
+  //   ],
+  //   [
+  //     60,
+  //     110
+  //   ]
+  //
   if (json.contains("arch_range")) {
     if (json["arch_range"].is_array() && json["arch_range"].size() == 2 &&
         json["arch_range"][0].is_array() && json["arch_range"][0].size() == 2 &&
@@ -279,6 +333,20 @@ Architecture::Architecture(nlohmann::json json) {
     throw std::invalid_argument(
         "Architecture range is missed in architecture spec");
   }
+  // check if the rydberg range exists and is valid, otherwise throw an error
+  // JSON Example:
+  // "rydberg_range": [
+  //   [
+  //     [
+  //       0,
+  //       57
+  //     ],
+  //     [
+  //       65,
+  //       105
+  //     ]
+  //   ]
+  // ]
   if (json.contains("rydberg_range")) {
     if (json["rydberg_range"].is_array() && !json["rydberg_range"].empty()) {
       for (const auto& rydbergRange : json["rydberg_range"]) {
@@ -304,6 +372,36 @@ Architecture::Architecture(nlohmann::json json) {
     throw std::invalid_argument(
         "Architecture range is missed in architecture spec");
   }
+  // check if the storage zones exist and are valid, otherwise throw an error
+  // JSON Example:
+  // "storage_zones": [
+  //   {
+  //     "zone_id": 0,
+  //     "slms": [
+  //       {
+  //         "id": 0,
+  //         "site_separation": [
+  //           3,
+  //           3
+  //         ],
+  //         "r": 20,
+  //         "c": 20,
+  //         "location": [
+  //           0,
+  //           0
+  //         ]
+  //       }
+  //     ],
+  //     "offset": [
+  //       0,
+  //       0
+  //     ],
+  //     "dimension": [
+  //       60,
+  //       60
+  //     ]
+  //   }
+  // ]
   if (json.contains("storage_zones")) {
     if (json["storage_zones"].is_array()) {
       for (const auto& zone : json["storage_zones"]) {
@@ -324,6 +422,50 @@ Architecture::Architecture(nlohmann::json json) {
     throw std::invalid_argument(
         "Storage zone configuration is missed in architecture spec");
   }
+  // check if the entanglement zones exist and are valid, otherwise throw an
+  // error
+  // JSON Example:
+  // "entanglement_zones": [
+  //   {
+  //     "zone_id": 0,
+  //     "slms": [
+  //       {
+  //         "id": 1,
+  //         "site_separation": [
+  //           12,
+  //           10
+  //         ],
+  //         "r": 4,
+  //         "c": 4,
+  //         "location": [
+  //           5,
+  //           70
+  //         ]
+  //       },
+  //       {
+  //         "id": 2,
+  //         "site_separation": [
+  //           12,
+  //           10
+  //         ],
+  //         "r": 4,
+  //         "c": 4,
+  //         "location": [
+  //           7,
+  //           70
+  //         ]
+  //       }
+  //     ],
+  //     "offset": [
+  //       5,
+  //       70
+  //      ],
+  //     "dimension": [
+  //       50,
+  //       40
+  //     ]
+  //   }
+  // ]
   if (json.contains("entanglement_zones")) {
     if (json["entanglement_zones"].is_array()) {
       for (const auto& zone : json["entanglement_zones"]) {
@@ -353,6 +495,16 @@ Architecture::Architecture(nlohmann::json json) {
     throw std::invalid_argument(
         "Entanglement zone configuration is missed in architecture spec");
   }
+  // check if the AODs exist and are valid, otherwise throw an error
+  // JSON Example:
+  // "aods": [
+  //   {
+  //     "id": 0,
+  //     "site_separation": 2,
+  //     "r": 20,
+  //     "c": 20
+  //   }
+  // ]
   if (json.contains("aods")) {
     if (json["aods"].is_array()) {
       for (const auto& aodSpec : json["aods"]) {
@@ -365,6 +517,8 @@ Architecture::Architecture(nlohmann::json json) {
   } else {
     throw std::invalid_argument("AOD is missed in architecture spec");
   }
+  // preprocess the created architecture, i.e., calculate the nearest sites for
+  // entanglement and storage zones
   preprocessing();
 }
 

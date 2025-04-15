@@ -135,6 +135,7 @@ struct Architecture {
   };
   /// Operation fidelities.
   std::optional<OperationFidelities> operationFidelities;
+  std::optional<double> qubitT1; ///< T1 time of the qubit in µs
   /// Minimum X coordinate of the architecture's extent.
   std::size_t archRangeMinX = 0;
   /// Maximum X coordinate of the architecture's extent.
