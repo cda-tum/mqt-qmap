@@ -15,7 +15,6 @@ constexpr std::string_view architectureJson = R"({
   },
   "qubit_spec": {"T": 1.5e6},
   "storage_zones": [{
-    "zone_id": 0,
     "slms": [{
       "id": 0,
       "site_separation": [3, 3],
@@ -49,21 +48,18 @@ constexpr std::string_view architectureJson = R"({
   "arch_range": [[0, 0], [60, 110]],
   "rydberg_range": [[[0, 57], [65, 105]]]
 })";
-class TestArchitecture : public ::testing::Test {
+class TwoZoneArchitectureTest : public ::testing::Test {
 protected:
   Architecture arch;
-  TestArchitecture() : arch(nlohmann::json::parse(architectureJson)) {}
+  TwoZoneArchitectureTest() : arch(nlohmann::json::parse(architectureJson)) {}
 };
-
-TEST_F(TestArchitecture, Load) {}
-
-TEST_F(TestArchitecture, Storage) {
+TEST_F(TwoZoneArchitectureTest, Load) {}
+TEST_F(TwoZoneArchitectureTest, Storage) {
   EXPECT_EQ(arch.storageZones.size(), 1);
   EXPECT_EQ(arch.storageZones.front()->nRows, 20);
   EXPECT_EQ(arch.storageZones.front()->nCols, 20);
 }
-
-TEST_F(TestArchitecture, Distance) {
+TEST_F(TwoZoneArchitectureTest, Distance) {
   const auto& slm1 = *arch.storageZones.front();
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 0, 1), slm1.siteSeparation.first);
   EXPECT_EQ(arch.distance(slm1, 0, 0, slm1, 1, 0), slm1.siteSeparation.second);
@@ -75,8 +71,7 @@ TEST_F(TestArchitecture, Distance) {
                        static_cast<double>(slm1.location.second) -
                            static_cast<double>(slm2.location.second)));
 }
-
-TEST_F(TestArchitecture, NearestStorageSite) {
+TEST_F(TwoZoneArchitectureTest, NearestStorageSite) {
   const auto& entanglementSLM = arch.entanglementZones.front()->front();
   const auto& [nearestSlm, nearestRow, nearestCol] =
       arch.nearestStorageSite(entanglementSLM, 0, 0);
@@ -91,8 +86,7 @@ TEST_F(TestArchitecture, NearestStorageSite) {
     }
   }
 }
-
-TEST_F(TestArchitecture, NearestEntanglementSite) {
+TEST_F(TwoZoneArchitectureTest, NearestEntanglementSite) {
   const auto& storageSlm = *arch.storageZones.front();
   const auto& [nearestSlm, nearestRow, nearestCol] =
       arch.nearestEntanglementSite(storageSlm, 0, 0, storageSlm, 0, 1);
@@ -111,9 +105,701 @@ TEST_F(TestArchitecture, NearestEntanglementSite) {
     }
   }
 }
-
-TEST_F(TestArchitecture, ExportNoThrow) {
+TEST_F(TwoZoneArchitectureTest, ExportNoThrow) {
   ASSERT_NO_THROW(arch.exportNAVizMachine(arch.name + ".namachine"));
 }
-
+TEST(ArchitectureTest, InvalidAODId) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": "one", "site_separation": 2, "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingAODId) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"site_separation": 2, "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidAODSeparation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": "2 µm", "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingAODSeparation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidAODRows) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": 2, "r": "twenty", "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingAODRows) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": 2, "c": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidAODColumns) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": "twenty"}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingAODColumns) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": 2, "r": 20}],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidSLMId) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": "one",
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingSLMId) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidSLMSeparation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": 3,
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingSLMSeparation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "r": 20,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidSLMLocation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": 20,
+      "location": 0}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingSLMLocation) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "r": 20,
+      "c": 20}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidSLMRows) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": "twenty",
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingSLMRows) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "c": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidSLMColumns) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "site_separation": [3, 3],
+      "r": 20,
+      "c": "twenty",
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingSLMColumns) {
+  nlohmann::json spec = R"({
+  "name": "invalid_architecture",
+  "storage_zones": [{
+    "slms": [{
+      "id": 0,
+      "r": 20,
+      "location": [0, 0]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {
+        "id": 1,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [5, 70]
+      },
+      {
+        "id": 2,
+        "site_separation": [12, 10],
+        "r": 4,
+        "c": 4,
+        "location": [7, 70]
+      }],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[],
+  "arch_range": [[0, 0], [2, 2]],
+  "rydberg_range": [[[0, 0], [2, 1]]]
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
 } // namespace na::azac

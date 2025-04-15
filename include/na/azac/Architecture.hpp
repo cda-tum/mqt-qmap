@@ -239,9 +239,6 @@ struct Architecture {
                                        std::size_t c1, const SLM& slm2,
                                        std::size_t r2, std::size_t c2) const
       -> double;
-  /// Returns the time to move from one location to another location
-  static auto movementDuration(std::size_t x1, std::size_t y1, std::size_t x2,
-                               std::size_t y2) -> double;
   /// Returns the other site of a pair of entanglement sites
   auto otherEntanglementSite(const SLM& slm, std::size_t r, std::size_t c) const
       -> std::tuple<std::reference_wrapper<const SLM>, std::size_t,

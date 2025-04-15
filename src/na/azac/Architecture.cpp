@@ -376,7 +376,6 @@ Architecture::Architecture(nlohmann::json json) {
   // JSON Example:
   // "storage_zones": [
   //   {
-  //     "zone_id": 0,
   //     "slms": [
   //       {
   //         "id": 0,
@@ -404,15 +403,21 @@ Architecture::Architecture(nlohmann::json json) {
   // ]
   if (json.contains("storage_zones")) {
     if (json["storage_zones"].is_array()) {
-      for (const auto& zone : json["storage_zones"]) {
-        if (zone.contains("slms") && zone["slms"].is_array()) {
-          for (const auto& slmSpec : zone["slms"]) {
-            storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
+      if (!json["storage_zones"].empty()) {
+        for (const auto& zone : json["storage_zones"]) {
+          if (zone.contains("slms") && zone["slms"].is_array()) {
+            for (const auto& slmSpec : zone["slms"]) {
+              storageZones.emplace_back(std::make_unique<SLM>(slmSpec));
+            }
+          } else {
+            throw std::invalid_argument(
+                "Storage zone configuration must contain an array of slms");
           }
-        } else {
-          throw std::invalid_argument(
-              "Storage zone configuration must contain an array of slms");
         }
+      } else {
+        throw std::invalid_argument(
+            "Storage zone configuration must contain at least one zone in "
+            "architecture spec");
       }
     } else {
       throw std::invalid_argument(
@@ -468,23 +473,29 @@ Architecture::Architecture(nlohmann::json json) {
   // ]
   if (json.contains("entanglement_zones")) {
     if (json["entanglement_zones"].is_array()) {
-      for (const auto& zone : json["entanglement_zones"]) {
-        if (zone.contains("slms") && zone["slms"].is_array()) {
-          if (zone["slms"].size() != 2) {
-            throw std::invalid_argument("entanglement zone must contain two "
-                                        "slms in architecture spec");
+      if (!json["entanglement_zones"].empty()) {
+        for (const auto& zone : json["entanglement_zones"]) {
+          if (zone.contains("slms") && zone["slms"].is_array()) {
+            if (zone["slms"].size() != 2) {
+              throw std::invalid_argument("entanglement zone must contain two "
+                                          "slms in architecture spec");
+            }
+            auto& slmPair = *entanglementZones.emplace_back(
+                std::make_unique<std::array<SLM, 2>>(std::array<SLM, 2>{
+                    SLM(zone["slms"].front()), SLM(zone["slms"].back())}));
+            slmPair.front().entanglementId_ = zone["zone_id"];
+            slmPair.front().entanglementZone_ = &slmPair;
+            slmPair.back().entanglementId_ = zone["zone_id"];
+            slmPair.back().entanglementZone_ = &slmPair;
+          } else {
+            throw std::invalid_argument("Entanglement zone configuration must "
+                                        "contain an array of slms");
           }
-          auto& slmPair = *entanglementZones.emplace_back(
-              std::make_unique<std::array<SLM, 2>>(std::array<SLM, 2>{
-                  SLM(zone["slms"].front()), SLM(zone["slms"].back())}));
-          slmPair.front().entanglementId_ = zone["zone_id"];
-          slmPair.front().entanglementZone_ = &slmPair;
-          slmPair.back().entanglementId_ = zone["zone_id"];
-          slmPair.back().entanglementZone_ = &slmPair;
-        } else {
-          throw std::invalid_argument(
-              "Entanglement zone configuration must contain an array of slms");
         }
+      } else {
+        throw std::invalid_argument("Entanglement zone configuration must "
+                                    "contain at least one zone in architecture "
+                                    "spec");
       }
     } else {
       throw std::invalid_argument(
@@ -869,17 +880,6 @@ auto Architecture::nearestEntanglementSiteDistance(
         dis);
   }
   return dis;
-}
-
-auto Architecture::movementDuration(const std::size_t x1, const std::size_t y1,
-                                    const std::size_t x2, const std::size_t y2)
-    -> double {
-  // todo: add reference for constant
-  constexpr double a = 0.00275;
-  const auto d = std::hypot(static_cast<double>(x1) - static_cast<double>(x2),
-                            static_cast<double>(y1) - static_cast<double>(y2));
-  const auto t = std::sqrt(d / a);
-  return t;
 }
 
 auto Architecture::otherEntanglementSite(const SLM& slm, std::size_t r,
