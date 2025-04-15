@@ -35,8 +35,13 @@ auto CodeGenerator::appendOneQubitGates(
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& globalZone, NAComputation& code) const -> void {
   for (const auto& op : oneQubitGates) {
+    // A flag to indicate if the gate is a gate on one qubit.
+    // This flag is used for circuit consisting of only one qubit since in this
+    // case, global and local gates are the same.
     bool oneQubitGate = false;
     if (op.get().isGlobal(nQubits)) {
+      // a global operation can be wrapped in a compound operation or a standard
+      // operation acting on all qubits
       if (op.get().isCompoundOperation()) {
         const auto& compOp =
             dynamic_cast<const qc::CompoundOperation&>(op.get());
@@ -47,9 +52,11 @@ auto CodeGenerator::appendOneQubitGates(
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
         } else if (nQubits == 1) {
-          oneQubitGate =
-              true; // special case for one qubit, fall back to local gate
+          // special case for one qubit, fall back to local gates
+          oneQubitGate = true;
         } else {
+          // this case should never occur since the scheduler should filter out
+          // other global gates that are not supported already.
           assert(false);
         }
       } else {
@@ -60,18 +67,24 @@ auto CodeGenerator::appendOneQubitGates(
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
         } else if (nQubits == 1) {
-          oneQubitGate =
-              true; // special case for one qubit, fall through to local gate
+          // special case for one qubit, fall through to local gates
+          oneQubitGate = true;
         } else {
+          // this case should never occur since the scheduler should filter out
+          // other global gates that are not supported already.
           assert(false);
         }
       }
     } else {
+      // if a gate is not global, it is assumed to be a local gate.
       oneQubitGate = true;
     }
     if (oneQubitGate) {
+      // one qubit gates act exactly on one qubit and are converted to local
+      // gates
       assert(op.get().getNqubits() == 1);
       const qc::Qubit qubit = op.get().getTargets().front();
+      // By default, all variants of rotational z-gates are supported
       if (op.get().getType() == qc::RZ) {
         code.emplaceBack<LocalRZOp>(atoms[qubit],
                                     op.get().getParameter().front());
@@ -89,6 +102,8 @@ auto CodeGenerator::appendOneQubitGates(
         code.emplaceBack<LocalRZOp>(atoms[qubit],
                                     op.get().getParameter().front());
       } else {
+        // in this case, the gate is not any variant of a rotational z-gate.
+        // depending on the settings, a warning is printed.
         if (warnUnsupportedGates_) {
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
@@ -130,6 +145,8 @@ auto CodeGenerator::appendOneQubitGates(
           code.emplaceBack<LocalUOp>(atoms[qubit], -qc::PI_2, -qc::PI_2,
                                      qc::PI_2);
         } else {
+          // if the gate type is not recognized, an error is printed and the
+          // gate is not included in the output.
           std::ostringstream oss;
           oss << "\033[1;31m[ERROR]\033[0m Unsupported one-qubit gate will be "
                  "dropped: "

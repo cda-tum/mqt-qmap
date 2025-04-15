@@ -201,8 +201,8 @@ auto VMPlacer::computeMovementCostBetweenPlacements(
     const auto& [slm1, r1, c1] = placementBefore[q];
     const auto& [slm2, r2, c2] = placementAfter[q];
     if (&slm1.get() != &slm2.get() || r1 != r2 || c1 != c2) {
-      const auto& [x1, y1] = architecture_.get().exactSlmLocation(slm1, r1, c1);
-      const auto& [x2, y2] = architecture_.get().exactSlmLocation(slm2, r2, c2);
+      const auto y1 = architecture_.get().exactSlmLocation(slm1, r1, c1).second;
+      const auto y2 = architecture_.get().exactSlmLocation(slm2, r2, c2).second;
       const double dis =
           architecture_.get().distance(slm1, r1, c1, slm2, r2, c2);
       if (const auto& [it, inserted] =
@@ -438,8 +438,8 @@ auto VMPlacer::placeGatesInEntanglementZone(
     } else {
       // avoid crossings, i.e., place the left qubit in the left site and the
       // right qubit in the right site
-      const auto& [slm0, r0, c0] = previousQubitPlacement[q0];
-      const auto& [slm1, r1, c1] = previousQubitPlacement[q1];
+      const auto c0 = std::get<2>(previousQubitPlacement[q0]);
+      const auto c1 = std::get<2>(previousQubitPlacement[q1]);
       if (c0 < c1) {
         newPlacement[q0] = std::tie(zone.get().front(), r, c);
         newPlacement[q1] = std::tie(zone.get().back(), r, c);
@@ -565,8 +565,10 @@ auto VMPlacer::placeAtomsInStorageZone(
         upperRow = neighborRow;
         leftCol = neighborCol;
         rightCol = neighborCol;
-        const auto& [x, y] = architecture_.get().exactSlmLocation(
-            neighborSlm, neighborRow, neighborCol);
+        const auto y =
+            architecture_.get()
+                .exactSlmLocation(neighborSlm, neighborRow, neighborCol)
+                .second;
         if (exactLocGate.second < y) {
           lowerRow = 0;
         } else {
