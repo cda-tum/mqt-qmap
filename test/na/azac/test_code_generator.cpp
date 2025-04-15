@@ -63,9 +63,9 @@ TEST_F(CodeGeneratorGenerateTest, Empty) {
           .toString(),
       "atom (0.000, 0.000) atom0\n");
 }
-TEST_F(CodeGeneratorGenerateTest, OneQubitGate) {
+TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto rz = qc::StandardOperation(0, qc::Z, {qc::PI});
+  const auto rz = qc::StandardOperation(0, qc::RZ, {qc::PI});
   EXPECT_EQ(
       codeGenerator
           .generate(
@@ -79,6 +79,297 @@ TEST_F(CodeGeneratorGenerateTest, OneQubitGate) {
           .toString(),
       "atom (0.000, 0.000) atom0\n"
       "@+ rz 3.14159 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, PGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto p = qc::StandardOperation(0, qc::P, {qc::PI});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {p}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz 3.14159 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, ZGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto z = qc::StandardOperation(0, qc::Z);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {z}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz 3.14159 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, SGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto s = qc::StandardOperation(0, qc::S);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {s}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz 1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, SdgGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto sdg = qc::StandardOperation(0, qc::Sdg);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {sdg}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz -1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, TGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto t = qc::StandardOperation(0, qc::T);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {t}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz 0.78540 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, TdgGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto tdg = qc::StandardOperation(0, qc::Tdg);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {tdg}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ rz -0.78540 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, U3Gate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto u = qc::StandardOperation(0, qc::U, {0.1, 0.2, 0.3});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {u}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 0.10000 0.20000 0.30000 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, U2Gate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto u2 = qc::StandardOperation(0, qc::U2, {0.1, 0.2});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {u2}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 1.57080 0.10000 0.20000 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, RXGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto rx = qc::StandardOperation(0, qc::RX, {0.1});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {rx}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 0.10000 -1.57080 1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, RYGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto ry = qc::StandardOperation(0, qc::RY, {0.1});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {ry}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}, {slm, 0, 1}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "atom (3.000, 0.000) atom1\n"
+      "@+ u 0.10000 0.00000 0.00000 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, YGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto ry = qc::StandardOperation(0, qc::Y);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {ry}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}, {slm, 0, 1}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "atom (3.000, 0.000) atom1\n"
+      "@+ u 3.14159 1.57080 1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, HGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto h = qc::StandardOperation(0, qc::H);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {h}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 1.57080 0.00000 3.14159 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, XGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto x = qc::StandardOperation(0, qc::X);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {x}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 3.14159 0.00000 3.14159 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, VGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto v = qc::StandardOperation(0, qc::V);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {v}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u -1.57080 -1.57080 1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, VdgGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto vdg = qc::StandardOperation(0, qc::Vdg);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {vdg}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u -1.57080 1.57080 -1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, SXGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto sx = qc::StandardOperation(0, qc::SX);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {sx}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u 1.57080 -1.57080 1.57080 atom0\n");
+}
+TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto sxdg = qc::StandardOperation(0, qc::SXdg);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {sxdg}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ u -1.57080 -1.57080 1.57080 atom0\n");
 }
 TEST_F(CodeGeneratorGenerateTest, TwoQubitGate) {
   const auto& storage = *architecture.storageZones.front();
