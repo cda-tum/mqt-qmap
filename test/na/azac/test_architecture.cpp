@@ -805,4 +805,71 @@ TEST(ArchitectureTest, MissingSLMColumns) {
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
+TEST(ArchitectureTest, SLMEqualityOperator) {
+  const SLM slm{R"({
+  "id": 0,
+  "site_separation": [3, 3],
+  "r": 20,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  // &other == this
+  EXPECT_TRUE(slm == slm);
+  const SLM slmOther{R"({
+  "id": 0,
+  "site_separation": [3, 3],
+  "r": 20,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  // equal slm
+  EXPECT_TRUE(slm == slmOther);
+  const SLM slmOtherLocation{R"({
+  "id": 0,
+  "site_separation": [3, 3],
+  "r": 20,
+  "c": 20,
+  "location": [1, 0]
+})"_json};
+  // other.location != location
+  EXPECT_FALSE(slm == slmOtherLocation);
+  const SLM slmOtherRows{R"({
+  "id": 0,
+  "site_separation": [3, 3],
+  "r": 21,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  // other.nRows != nRows || other.nCols != nCols
+  EXPECT_FALSE(slm == slmOtherRows);
+  const SLM slmOtherSeparation{R"({
+  "id": 0,
+  "site_separation": [4, 3],
+  "r": 21,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  // other.siteSeparation != siteSeparation
+  EXPECT_FALSE(slm == slmOtherSeparation);
+  SLM slmEntanglement{R"({
+  "id": 0,
+  "site_separation": [4, 3],
+  "r": 21,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  slmEntanglement.entanglementId_ = 0;
+  // other.entanglementZone_ != entanglementZone_
+  EXPECT_FALSE(slm == slmEntanglement);
+  SLM slmOtherEntanglement{R"({
+  "id": 0,
+  "site_separation": [4, 3],
+  "r": 21,
+  "c": 20,
+  "location": [0, 0]
+})"_json};
+  slmEntanglement.entanglementId_ = 1;
+  // other.entanglementZone_ != entanglementZone_
+  EXPECT_FALSE(slm == slmOtherEntanglement);
+}
 } // namespace na::azac

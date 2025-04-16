@@ -142,11 +142,8 @@ auto SLM::operator==(const SLM& other) const -> bool {
   if (other.siteSeparation != siteSeparation) {
     return false;
   }
-  if ((other.entanglementZone_ == nullptr) != (entanglementZone_ == nullptr)) {
+  if (other.entanglementZone_ != entanglementZone_) {
     return false;
-  }
-  if (entanglementZone_ != nullptr) {
-    return other.entanglementZone_ == entanglementZone_;
   }
   return true;
 }
