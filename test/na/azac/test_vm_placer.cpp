@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <gmock/gmock-matchers.h>
+#include <gmock/gmock-more-matchers.h>
 #include <gtest/gtest.h>
 #include <map>
 #include <optional>
@@ -222,7 +223,8 @@ TEST(VMPlacerTest, InvalidConfig) {
   nlohmann::json config = R"({
   "vm_placer": {
     "use_window": "invalid",
-    "window_size": 10,
+    "window_size": "invalid",
+    "dynamic_placement" : "invalid",
     "unknown_key": 42
   }
 })"_json;
@@ -238,12 +240,49 @@ TEST(VMPlacerTest, InvalidConfig) {
               "contains an invalid value for use_window. Using default "
               "(true)."),
           ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-              "not contain a setting for dynamic_placement. Using default "
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
+              "contains an invalid value for window_size. Using default "
+              "(0)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer "
+              "contains an invalid value for dynamic_placement. Using default "
               "(true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer contains an "
               "unknown key: unknown_key. Ignoring.")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
+  EXPECT_EQ(warnings, 4);
+}
+TEST(VMPlacerTest, EmptyConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  nlohmann::json config = R"({
+  "vm_placer": {}
+})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = VMPlacer(architecture, config);
+  std::cout.rdbuf(oldCout);
+  EXPECT_THAT(
+      buffer.str(),
+      ::testing::AllOf(
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+              "not contains a value for use_window. Using default "
+              "(true)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+              "not contains a value for window_size. Using default "
+              "(0)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does"
+              "not contains a value for dynamic_placement. Using default "
+              "(true).")));
   size_t warnings = 0;
   size_t pos = 0;
   std::string target = "\033[1;35m[WARN]\033[0m";
@@ -315,6 +354,10 @@ TEST(VMPlacerTest, MinimumWeightFullBipartiteMatching2) {
       VMPlacer::minimumWeightFullBipartiteMatching(costMatrix);
   EXPECT_THAT(matching, ::testing::ElementsAre(2, 1, 3));
 }
+TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingEmpty) {
+  EXPECT_THAT(VMPlacer::minimumWeightFullBipartiteMatching({}),
+              ::testing::IsEmpty());
+}
 TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingExceptions) {
   EXPECT_THROW(std::ignore =
                    VMPlacer::minimumWeightFullBipartiteMatching({{0}, {0}}),
@@ -323,7 +366,10 @@ TEST(VMPlacerTest, MinimumWeightFullBipartiteMatchingExceptions) {
                    {{std::nullopt}}),
                std::invalid_argument);
   EXPECT_THROW(std::ignore = VMPlacer::minimumWeightFullBipartiteMatching(
-                   {{0, 0}, {std::nullopt, std::nullopt}}),
+                   {{0, std::nullopt}, {std::nullopt, std::nullopt}}),
+               std::invalid_argument);
+  EXPECT_THROW(std::ignore = VMPlacer::minimumWeightFullBipartiteMatching(
+                   {{0, std::nullopt}, {0}}),
                std::invalid_argument);
 }
 } // namespace na::azac

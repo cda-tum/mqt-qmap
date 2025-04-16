@@ -19,6 +19,7 @@ class VMPlacer {
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatching1_Test;
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatching2_Test;
   friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingExceptions_Test;
+  friend class VMPlacerTest_MinimumWeightFullBipartiteMatchingEmpty_Test;
 
   std::reference_wrapper<const Architecture> architecture_;
   /// If true, during the initial placement the atoms are placed starting in the
