@@ -149,23 +149,40 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
                                  ::testing::UnorderedElementsAre(1U, 2U))));
 }
 TEST_F(ASAPSchedulerScheduleTest, Barrier) {
-  // q_0: ─░─■─░─■─
-  //         │ ░ │
-  // q_1: ───■─░─■─
-  qc::QuantumComputation qc(2);
-  qc.emplace_back<qc::StandardOperation>(0, qc::Barrier);
+  // q_0: ─■─────────░───
+  //       │┌───────┐░
+  // q_1: ─■┤ Rz(π) ├░───
+  //        └───────┘░
+  // q_2: ───────────░─■─
+  //                 ░ │
+  // q_3: ───────────░─■─
+  qc::QuantumComputation qc(4);
   qc.cz(0, 1);
+  qc.rz(qc::PI, 1);
   qc.barrier();
-  qc.cz(0, 1);
+  qc.cz(2, 3);
   const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers, ::testing::SizeIs(3));
-  EXPECT_THAT(oneQubitGateLayers, ::testing::Each(::testing::IsEmpty()));
+  EXPECT_THAT(oneQubitGateLayers,
+              ::testing::ElementsAre(
+                  ::testing::IsEmpty(),
+                  ::testing::ElementsAre(::testing::RefEq(
+                      static_cast<qc::StandardOperation&>(*qc.at(1)))),
+                  ::testing::IsEmpty(), ::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
       ::testing::ElementsAre(::testing::UnorderedElementsAre(
                                  ::testing::UnorderedElementsAre(0U, 1U)),
+                             ::testing::IsEmpty(),
                              ::testing::UnorderedElementsAre(
-                                 ::testing::UnorderedElementsAre(0U, 1U))));
+                                 ::testing::UnorderedElementsAre(2U, 3U))));
+}
+TEST_F(ASAPSchedulerScheduleTest, NonGlobalBarrier) {
+  // q_0: ─░─
+  //
+  // q_1: ───
+  qc::QuantumComputation qc(2);
+  qc.emplace_back<qc::StandardOperation>(0, qc::Barrier);
+  EXPECT_THROW(std::ignore = scheduler.schedule(qc), std::invalid_argument);
 }
 TEST_F(ASAPSchedulerScheduleTest, NonGlobalCompound) {
   qc::QuantumComputation qc(2);
