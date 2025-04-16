@@ -51,9 +51,6 @@ auto CodeGenerator::appendOneQubitGates(
                                        compOp.front()->getParameter().front());
         } else if (opType == qc::Y) {
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
-        } else if (nQubits == 1) {
-          // special case for one qubit, fall back to local gates
-          oneQubitGate = true;
         } else {
           // this case should never occur since the scheduler should filter out
           // other global gates that are not supported already.
@@ -108,7 +105,7 @@ auto CodeGenerator::appendOneQubitGates(
           std::ostringstream oss;
           oss << "\033[1;35m[WARN]\033[0m Gate not part of basis gates will be "
                  "inserted as U3 gate: "
-              << op.get().getType() << "\n";
+              << op.get().getType();
           std::cout << oss.str();
         }
         if (op.get().getType() == qc::U) {
@@ -148,11 +145,9 @@ auto CodeGenerator::appendOneQubitGates(
           // if the gate type is not recognized, an error is printed and the
           // gate is not included in the output.
           std::ostringstream oss;
-          oss << "\033[1;31m[ERROR]\033[0m Unsupported one-qubit gate will be "
-                 "dropped: "
+          oss << "\033[1;31m[ERROR]\033[0m Unsupported one-qubit gate: "
               << op.get().getType() << "\n";
-          std::cout << oss.str();
-          assert(false);
+          throw std::invalid_argument(oss.str());
         }
       }
     }

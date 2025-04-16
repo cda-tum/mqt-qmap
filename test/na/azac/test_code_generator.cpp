@@ -1,4 +1,7 @@
+#include "ir/operations/CompoundOperation.hpp"
+#include "ir/operations/NonUnitaryOperation.hpp"
 #include "ir/operations/StandardOperation.hpp"
+#include "ir/operations/SymbolicOperation.hpp"
 #include "na/azac/CodeGenerator.hpp"
 
 #include <cstddef>
@@ -36,7 +39,7 @@ constexpr std::string_view architectureJson = R"({
 constexpr std::string_view configJson = R"({
   "code_generator" : {
     "parking_offset" : 1,
-    "warn_unsupported_gates" : false
+    "warn_unsupported_gates" : true
   }
 })";
 class CodeGeneratorGenerateTest : public ::testing::Test {
@@ -63,9 +66,80 @@ TEST_F(CodeGeneratorGenerateTest, Empty) {
           .toString(),
       "atom (0.000, 0.000) atom0\n");
 }
+TEST_F(CodeGeneratorGenerateTest, GlobalRYGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto ry = qc::StandardOperation(0, qc::RY, {0.1});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {ry}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ ry 0.10000 global\n");
+}
+TEST_F(CodeGeneratorGenerateTest, GlobalYGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto y = qc::StandardOperation(0, qc::Y);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {y}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ ry 3.14159 global\n");
+}
+TEST_F(CodeGeneratorGenerateTest, GlobalCompoundRYGate) {
+  const auto& slm = *architecture.storageZones.front();
+  // Create a compound operation with a single RY gate
+  qc::CompoundOperation cry;
+  cry.emplace_back<qc::StandardOperation>(0, qc::RY, std::vector{0.1});
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {cry}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ ry 0.10000 global\n");
+}
+TEST_F(CodeGeneratorGenerateTest, GlobalCompoundYGate) {
+  const auto& slm = *architecture.storageZones.front();
+  qc::CompoundOperation cy;
+  cy.emplace_back<qc::StandardOperation>(0, qc::Y);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {cy}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "@+ ry 3.14159 global\n");
+}
 TEST_F(CodeGeneratorGenerateTest, RZGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto rz = qc::StandardOperation(0, qc::RZ, {qc::PI});
+  const auto rz = qc::StandardOperation(0, qc::RZ, {0.1});
   EXPECT_EQ(
       codeGenerator
           .generate(
@@ -78,11 +152,11 @@ TEST_F(CodeGeneratorGenerateTest, RZGate) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{})
           .toString(),
       "atom (0.000, 0.000) atom0\n"
-      "@+ rz 3.14159 atom0\n");
+      "@+ rz 0.10000 atom0\n");
 }
 TEST_F(CodeGeneratorGenerateTest, PGate) {
   const auto& slm = *architecture.storageZones.front();
-  const auto p = qc::StandardOperation(0, qc::P, {qc::PI});
+  const auto p = qc::StandardOperation(0, qc::P, {0.1});
   EXPECT_EQ(
       codeGenerator
           .generate(
@@ -95,7 +169,7 @@ TEST_F(CodeGeneratorGenerateTest, PGate) {
               std::vector<std::vector<std::vector<qc::Qubit>>>{})
           .toString(),
       "atom (0.000, 0.000) atom0\n"
-      "@+ rz 3.14159 atom0\n");
+      "@+ rz 0.10000 atom0\n");
 }
 TEST_F(CodeGeneratorGenerateTest, ZGate) {
   const auto& slm = *architecture.storageZones.front();
@@ -371,6 +445,19 @@ TEST_F(CodeGeneratorGenerateTest, SXdgGate) {
       "atom (0.000, 0.000) atom0\n"
       "@+ u -1.57080 -1.57080 1.57080 atom0\n");
 }
+TEST_F(CodeGeneratorGenerateTest, UnsupportedGate) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto unsupported = qc::NonUnitaryOperation(0, 0);
+  EXPECT_THROW(
+      std::ignore = codeGenerator.generate(
+          std::vector<std::vector<std::reference_wrapper<const qc::Operation>>>{
+              {unsupported}},
+          std::vector<std::vector<
+              std::tuple<std::reference_wrapper<const SLM>, size_t, size_t>>>{
+              {{slm, 0, 0}}},
+          std::vector<std::vector<std::vector<qc::Qubit>>>{}),
+      std::invalid_argument);
+}
 TEST_F(CodeGeneratorGenerateTest, TwoQubitGate) {
   const auto& storage = *architecture.storageZones.front();
   const auto& entanglementLeft =
@@ -515,7 +602,7 @@ TEST(CodeGeneratorTest, InvalidConfig) {
   nlohmann::json config = R"({
   "code_generator": {
     "parking_offset": "invalid",
-    "warn_unsupported_gates" : false,
+    "warn_unsupported_gates" : "invalid",
     "unknown_key": 42
   }
 })"_json;
@@ -530,6 +617,9 @@ TEST(CodeGeneratorTest, InvalidConfig) {
                                "CodeGenerator contains an invalid value for "
                                "parking_offset. Using default (1)."),
           ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "CodeGenerator contains an invalid value for "
+                               "warn_unsupported_gates. Using default (true)."),
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
                                "CodeGenerator contains an unknown key: "
                                "unknown_key. Ignoring.")));
   size_t warnings = 0;
@@ -539,6 +629,45 @@ TEST(CodeGeneratorTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
+  EXPECT_EQ(warnings, 3);
+}
+TEST(CodeGeneratorTest, EmptyConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  nlohmann::json config = R"({
+  "code_generator": {}
+})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = CodeGenerator(architecture, config);
+  std::cout.rdbuf(oldCout);
+  EXPECT_THAT(
+      buffer.str(),
+      ::testing::AllOf(
+          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
+                               "CodeGenerator does not contain a value for "
+                               "parking_offset. Using default (1).\n"),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for CodeGenerator "
+              "does not contain a value for warn_unsupported_gates. Using "
+              "default (true).\n")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
   EXPECT_EQ(warnings, 2);
+}
+TEST(CodeGeneratorTest, NoConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  nlohmann::json config = R"({})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = CodeGenerator(architecture, config);
+  std::cout.rdbuf(oldCout);
+  EXPECT_EQ(buffer.str(),
+            "\033[1;35m[WARN]\033[0m Configuration does not contain settings "
+            "for CodeGenerator or is malformed. Using default settings.\n");
 }
 } // namespace na::azac

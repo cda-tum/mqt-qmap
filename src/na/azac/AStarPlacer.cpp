@@ -590,7 +590,7 @@ auto AStarPlacer::placeGatesInEntanglementZone(
           return lhs.distance < rhs.distance;
         });
     // Determine whether lookahead for the gate should be considered.
-    // That is the case it the gate to be placed contains a reuse qubit
+    // That is the case if the gate to be placed contains a reuse qubit
     // because then we do not only decide the position of the gate in this layer
     // but also of the gate in the next layer.
     bool leftReuse = nextReuseQubits.find(leftAtom) != nextReuseQubits.end();
@@ -970,10 +970,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
         [](const AtomJob::Option& lhs, const AtomJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
-    // Determine whether lookahead for the gate should be considered.
-    // That is the case it the gate to be placed contains a reuse qubit
-    // because then we do not only decide the position of the gate in this layer
-    // but also of the gate in the next layer.
+    // Determine lookahead for the atom to be placed is  a reuse qubit
     for (const auto& nextGate : nextTwoQubitGates) {
       const auto& [nextLeftAtom, nextRightAtom] = nextGate;
       if (nextLeftAtom == atom || nextRightAtom == atom) {
