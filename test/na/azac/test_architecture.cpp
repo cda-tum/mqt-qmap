@@ -619,6 +619,7 @@ TEST(ArchitectureTest, MissingSLMLocation) {
   "storage_zones": [{
     "slms": [{
       "id": 0,
+      "site_separation": [3, 3],
       "r": 20,
       "c": 20}],
     "offset": [0, 0],
@@ -695,6 +696,7 @@ TEST(ArchitectureTest, MissingSLMRows) {
   "storage_zones": [{
     "slms": [{
       "id": 0,
+      "site_separation": [3, 3],
       "c": 20,
       "location": [0, 0]}],
     "offset": [0, 0],
@@ -771,6 +773,7 @@ TEST(ArchitectureTest, MissingSLMColumns) {
   "storage_zones": [{
     "slms": [{
       "id": 0,
+      "site_separation": [3, 3],
       "r": 20,
       "location": [0, 0]}],
     "offset": [0, 0],
