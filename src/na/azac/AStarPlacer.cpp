@@ -36,8 +36,8 @@ auto AStarPlacer::aStarTreeSearch(
         const Node&)>& getNeighbors,
     const std::function<bool(const Node&)>& isGoal,
     const std::function<double(const Node&)>& getCost,
-    const std::function<double(const Node&)>& getHeuristic)
-    -> std::vector<std::reference_wrapper<const Node>> {
+    const std::function<double(const Node&)>& getHeuristic,
+    const size_t maxNodes) -> std::vector<std::reference_wrapper<const Node>> {
   //===--------------------------------------------------------------------===//
   // Setup open set structure
   //===--------------------------------------------------------------------===//
@@ -75,7 +75,7 @@ auto AStarPlacer::aStarTreeSearch(
   //===--------------------------------------------------------------------===//
   // Perform A* search
   //===--------------------------------------------------------------------===//
-  while (!openSet.empty()) {
+  while (items.size() < maxNodes && !openSet.empty()) {
     Item* itm = openSet.top();
     openSet.pop();
     // if a goal is reached, that is the shortest path to a goal under the
@@ -102,6 +102,12 @@ auto AStarPlacer::aStarTreeSearch(
                             .get());
       }
     }
+  }
+  if (items.size() >= maxNodes) {
+    throw std::runtime_error(
+        "Maximum number of nodes reached. Increase max_nodes or increase "
+        "deepening_value and deepening_factor to reduce the number of explored "
+        "nodes.");
   }
   throw std::runtime_error("No path from start to any goal found.");
 }
@@ -702,7 +708,8 @@ auto AStarPlacer::placeGatesInEntanglementZone(
        &scaleFactors](const auto& node) {
         return getHeuristic(gateJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
-      });
+      },
+      maxNodes_);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
@@ -830,7 +837,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
     if (reuseQubits.find(atom) != reuseQubits.end()) {
       // atom can be reused, so we add an option for the atom to stay at the
       // current site
-      job.options.emplace_back(AtomJob::Option{{0, 0}, 0.0F, true});
+      job.options.emplace_back(AtomJob::Option{{0, 0}, true, 0.0F});
     }
     size_t rLow = 0;
     size_t rHigh = nearestSlm.get().nRows;
@@ -857,6 +864,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
           job.options.emplace_back(AtomJob::Option{
               {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
                discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+              false,
               distance});
         }
       }
@@ -904,6 +912,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
                 {discreteTargetRows.at(
                      std::pair{std::cref(nearestSlm), rLowNew}),
                  discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+                false,
                 distance});
           }
         }
@@ -921,6 +930,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
             job.options.emplace_back(AtomJob::Option{
                 {discreteTargetRows.at(std::pair{std::cref(nearestSlm), rHigh}),
                  discreteTargetColumns.at(std::pair{std::cref(nearestSlm), c})},
+                false,
                 distance});
           }
         }
@@ -938,6 +948,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
                 {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
                  discreteTargetColumns.at(
                      std::pair{std::cref(nearestSlm), cLowNew})},
+                false,
                 distance});
           }
         }
@@ -956,6 +967,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
                 {discreteTargetRows.at(std::pair{std::cref(nearestSlm), r}),
                  discreteTargetColumns.at(
                      std::pair{std::cref(nearestSlm), cHigh})},
+                false,
                 distance});
           }
         }
@@ -970,7 +982,7 @@ auto AStarPlacer::placeAtomsInStorageZone(
         [](const AtomJob::Option& lhs, const AtomJob::Option& rhs) -> bool {
           return lhs.distance < rhs.distance;
         });
-    // Determine lookahead for the atom to be placed is  a reuse qubit
+    // Determine lookahead for the atom to be placed is a reuse qubit
     for (const auto& nextGate : nextTwoQubitGates) {
       const auto& [nextLeftAtom, nextRightAtom] = nextGate;
       if (nextLeftAtom == atom || nextRightAtom == atom) {
@@ -1077,7 +1089,8 @@ auto AStarPlacer::placeAtomsInStorageZone(
        &scaleFactors](const auto& node) {
         return getHeuristic(atomJobs, deepeningFactor, deepeningValue,
                             scaleFactors, std::move(node));
-      });
+      },
+      maxNodes_);
   //===------------------------------------------------------------------===//
   // Extract the final mapping
   //===------------------------------------------------------------------===//
@@ -1238,7 +1251,7 @@ auto AStarPlacer::getNeighbors(std::deque<std::unique_ptr<AtomNode>>& nodes,
   assert(atomJob.options.size() <= std::numeric_limits<uint16_t>::max());
   for (uint16_t i = 0; i < static_cast<uint16_t>(atomJob.options.size()); ++i) {
     const auto& option = atomJob.options[i];
-    const auto& [site, distance, reuse, lookaheadCost] = option;
+    const auto& [site, reuse, distance, lookaheadCost] = option;
     // skip the sites that are already consumed
     if (!reuse &&
         node.consumedFreeSites.find(site) != node.consumedFreeSites.end()) {
@@ -1412,6 +1425,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
     bool deepeningValueSet = false;
     bool lookaheadFactorSet = false;
     bool reuseLevelSet = false;
+    bool maxNodesSet = false;
     for (const auto& [key, value] : configIt.value().items()) {
       if (key == "use_window") {
         useWindowSet = true;
@@ -1509,9 +1523,19 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           std::ostringstream oss;
           oss << std::setprecision(4);
           oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-                 "contains an invalid value for reuse_level. Using "
-                 "default ("
+                 "contains an invalid value for reuse_level. Using default ("
               << reuseLevel_ << ").\n";
+          std::cout << oss.str();
+        }
+      } else if (key == "max_nodes") {
+        maxNodesSet = true;
+        if (value.is_number_unsigned()) {
+          maxNodes_ = value;
+        } else {
+          std::ostringstream oss;
+          oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
+                 "contains an invalid value for max_nodes. Using default ("
+              << maxNodes_ << ").\n";
           std::cout << oss.str();
         }
       } else {
@@ -1592,20 +1616,27 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
           << reuseLevel_ << ").\n";
       std::cout << oss.str();
     }
+    if (!maxNodesSet) {
+      std::ostringstream oss;
+      oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
+             "not contain a setting for max_nodes. Using default ("
+          << maxNodes_ << ").\n";
+      std::cout << oss.str();
+    }
   } else {
     std::ostringstream oss;
     oss << std::boolalpha << std::setprecision(4);
     oss << "\033[1;35m[WARN]\033[0m Configuration does not contain "
            "settings for AStarPlacer or is malformed. Using default settings "
            "("
-        << "\"use_window\" :" << useWindow_
-        << ", \"window_min_width\" :" << windowMinWidth_
-        << ", \"window_ratio\" :" << windowRatio_
-        << ", \"window_share\" :" << windowShare_
-        << ", \"deepening_factor\" :" << deepeningFactor_
-        << ", \"deepening_value\" :" << deepeningValue_
-        << ", \"lookahead_factor\" :" << lookaheadFactor_
-        << ", \"reuse_level\" :" << reuseLevel_ << ").\n";
+        << "\"use_window\": " << useWindow_
+        << ", \"window_min_width\": " << windowMinWidth_
+        << ", \"window_ratio\": " << windowRatio_
+        << ", \"window_share\": " << windowShare_
+        << ", \"deepening_factor\": " << deepeningFactor_
+        << ", \"deepening_value\": " << deepeningValue_
+        << ", \"lookahead_factor\": " << lookaheadFactor_
+        << ", \"reuse_level\": " << reuseLevel_ << ").\n";
     std::cout << oss.str();
   }
 }

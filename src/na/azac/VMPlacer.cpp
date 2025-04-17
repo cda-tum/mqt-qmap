@@ -738,8 +738,7 @@ VMPlacer::VMPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::boolalpha;
       oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-             "not contain a "
-             "setting for use_window. Using default ("
+             "not contain a value for use_window. Using default ("
           << useWindow_ << ").\n";
       std::cout << oss.str();
     }
@@ -747,8 +746,7 @@ VMPlacer::VMPlacer(const Architecture& architecture,
       if (!windowSizeSet) {
         std::ostringstream oss;
         oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-               "not contain a "
-               "setting for window_size. Using default ("
+               "not contain a value for window_size. Using default ("
             << windowSize_ << ").\n";
         std::cout << oss.str();
       }
@@ -757,15 +755,14 @@ VMPlacer::VMPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::boolalpha;
       oss << "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-             "not contain a "
-             "setting for dynamic_placement. Using default ("
+             "not contain a value for dynamic_placement. Using default ("
           << dynamicPlacement_ << ").\n";
       std::cout << oss.str();
     }
   } else {
-    std::cout << "\033[1;35m[WARN]\033[0m Configuration does not contain "
-                 "settings for "
-                 "VMPlacer or is malformed. Using default settings.\n";
+    std::cout
+        << "\033[1;35m[WARN]\033[0m Configuration does not contain "
+           "settings for VMPlacer or is malformed. Using default settings.\n";
   }
 }
 auto VMPlacer::place(

@@ -273,15 +273,15 @@ TEST(VMPlacerTest, EmptyConfig) {
       ::testing::AllOf(
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-              "not contains a value for use_window. Using default "
+              "not contain a value for use_window. Using default "
               "(true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
-              "not contains a value for window_size. Using default "
+              "not contain a value for window_size. Using default "
               "(0)."),
           ::testing::HasSubstr(
-              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does"
-              "not contains a value for dynamic_placement. Using default "
+              "\033[1;35m[WARN]\033[0m Configuration for VMPlacer does "
+              "not contain a value for dynamic_placement. Using default "
               "(true).")));
   size_t warnings = 0;
   size_t pos = 0;

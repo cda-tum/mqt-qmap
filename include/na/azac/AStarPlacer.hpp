@@ -129,6 +129,15 @@ class AStarPlacer {
    */
   float reuseLevel_ = 5.0F;
   /**
+   * @brief The maximum number of nodes that are allowed to be visited in the A*
+   * search tree.
+   * @detsils If this number is exceeded, the search is aborted and an error is
+   * raised. In the current implementation, one node roughly consumes 120 Byte.
+   * Hence, allowing 50,000,000 nodes results in memory consumption of about 6
+   * GB plus the size of the rest of the data structures.
+   */
+  size_t maxNodes_ = 50'000'000;
+  /**
    * @brief When placing atoms after a rydberg layer back in the storage zone,
    * this struct stores for every such atom all required information, i.e., the
    * current site and potential target sites ordered by distance (ascending).
@@ -138,25 +147,25 @@ class AStarPlacer {
     qc::Qubit atom;
     /// The current site of the atom
     DiscreteSite currentSite;
+    /// The minimum lookahead distance
+    float meanLookaheadCost = 0.0F;
     /// A struct describing one potential target site
     struct Option {
       /// The target site
       DiscreteSite site;
-      /// The distance the atom must travel to reach the target site
-      float distance;
       /**
        * When this flag is set to false, it indicates that the atom should not
        * move at all and remain in the entanglement zone. Then the attribute
        * site is ignored.
        */
-      bool reuse = false;
+      bool reuse;
+      /// The distance the atom must travel to reach the target site
+      float distance;
       /// Additional lookahead distance to next interaction partner
       float lookaheadCost = 0.0F;
     };
     /// A list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
-    /// The minimum lookahead distance
-    float meanLookaheadCost = 0.0F;
   };
 
   /**
@@ -170,6 +179,8 @@ class AStarPlacer {
     std::array<qc::Qubit, 2> qubits;
     /// The current sites of the two atoms
     std::array<DiscreteSite, 2> currentSites;
+    /// The minimum lookahead distance
+    float meanLookaheadCost = 0.0F;
     /// A struct describing one potential target site for each atom
     struct Option {
       /// The target sites for the two atoms
@@ -181,8 +192,6 @@ class AStarPlacer {
     };
     /// A list of all potential target sites ordered by distance (ascending)
     std::vector<Option> options;
-    /// The minimum lookahead distance
-    float meanLookaheadCost = 0.0F;
   };
 
   /**
@@ -198,6 +207,8 @@ class AStarPlacer {
     /// The index of the chosen option for the current atom instead of a pointer
     /// to that option to save memory
     uint16_t option = 0;
+    /// The accumulated lookahead cost
+    float lookaheadCost = 0.0F;
     /// A set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -208,8 +219,6 @@ class AStarPlacer {
     /// The maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
-    /// The accumulated lookahead cost
-    float lookaheadCost = 0.0F;
   };
 
   /**
@@ -225,6 +234,8 @@ class AStarPlacer {
     /// The index of the chosen option for the current gate instead of a pointer
     /// to that option to save memory
     uint16_t option = 0;
+    /// The accumulated lookahead cost
+    float lookaheadCost = 0.0F;
     /// A set of all sites that are already occupied by an atom due to the
     /// current placement
     std::unordered_set<DiscreteSite> consumedFreeSites;
@@ -235,8 +246,6 @@ class AStarPlacer {
     /// The maximum distance of placed atoms in every group to their
     /// target location
     std::vector<float> maxDistancesOfPlacedAtomsPerGroup;
-    /// The accumulated lookahead cost
-    float lookaheadCost = 0.0F;
   };
 
 public:
@@ -304,7 +313,7 @@ private:
           const Node&)>& getNeighbors,
       const std::function<bool(const Node&)>& isGoal,
       const std::function<double(const Node&)>& getCost,
-      const std::function<double(const Node&)>& getHeuristic)
+      const std::function<double(const Node&)>& getHeuristic, size_t maxNodes)
       -> std::vector<std::reference_wrapper<const Node>>;
 
   /**

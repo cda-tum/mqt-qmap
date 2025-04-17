@@ -31,13 +31,13 @@ constexpr std::string_view architectureJson = R"({
   "rydberg_range": [[[5, 70], [55, 110]]]
 })";
 constexpr std::string_view configJson = R"({
-  "a_star_placer" : {
-    "use_window" : true,
-    "window_min_width" : 4,
-    "window_ratio" : 1.5,
-    "window_share" : 0.6,
-    "deepening_factor" : 0.6,
-    "deepening_value" : 0.2,
+  "a_star_placer": {
+    "use_window": true,
+    "window_min_width": 4,
+    "window_ratio": 1.5,
+    "window_share": 0.6,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
     "lookahead_factor": 0.2,
     "reuse_level": 5.0
   }
@@ -53,11 +53,33 @@ protected:
         placer(architecture, config) {}
 };
 TEST_F(AStarPlacerPlaceTest, Empty) {
-  const size_t nQubits = 1;
+  constexpr size_t nQubits = 1;
   EXPECT_THAT(placer.place(nQubits,
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
                            std::vector<std::unordered_set<qc::Qubit>>{}),
               ::testing::ElementsAre(::testing::SizeIs(nQubits)));
+}
+TEST(AStarPlacerTest, NoSolution) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  AStarPlacer placer(architecture, R"({
+  "a_star_placer": {
+    "use_window": true,
+    "window_min_width": 0,
+    "window_ratio": 1.5,
+    "window_share": 0.0,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
+    "lookahead_factor": 0.2,
+    "reuse_level": 5.0
+  }
+})"_json);
+  constexpr size_t nQubits = 2;
+  EXPECT_THROW(
+      std::ignore = placer.place(
+          nQubits,
+          std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U}}},
+          std::vector<std::unordered_set<qc::Qubit>>{}),
+      std::runtime_error);
 }
 TEST_F(AStarPlacerPlaceTest, OneGate) {
   constexpr size_t nQubits = 2;
@@ -220,14 +242,14 @@ TEST(AStarPlacerTest, NoConfig) {
       buffer.str(),
       "\033[1;35m[WARN]\033[0m Configuration does not contain settings for "
       "AStarPlacer or is malformed. Using default settings ("
-      "\"use_window\" :true, "
-      "\"window_min_width\" :8, "
-      "\"window_ratio\" :1, "
-      "\"window_share\" :0.6, "
-      "\"deepening_factor\" :0.8, "
-      "\"deepening_value\" :0.2, "
-      "\"lookahead_factor\" :0.2, "
-      "\"reuse_level\" :5).\n");
+      "\"use_window\": true, "
+      "\"window_min_width\": 8, "
+      "\"window_ratio\": 1, "
+      "\"window_share\": 0.6, "
+      "\"deepening_factor\": 0.8, "
+      "\"deepening_value\": 0.2, "
+      "\"lookahead_factor\": 0.2, "
+      "\"reuse_level\": 5).\n");
   std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, InvalidConfig) {
@@ -242,6 +264,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
     "deepening_value": 0.2,
     "lookahead_factor": 0.2,
     "reuse_level": 100.0,
+    "max_nodes": "invalid",
     "unknown_key": 42
   }
 })"_json;
@@ -252,9 +275,12 @@ TEST(AStarPlacerTest, InvalidConfig) {
   EXPECT_THAT(
       buffer.str(),
       ::testing::AllOf(
-          ::testing::HasSubstr("\033[1;35m[WARN]\033[0m Configuration for "
-                               "AStarPlacer contains an invalid value "
-                               "for use_window. Using default (true)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for use_window. Using default (true)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for max_nodes. Using default (50000000)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
               "an unknown key: unknown_key. Ignoring.")));
@@ -265,7 +291,7 @@ TEST(AStarPlacerTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
-  EXPECT_EQ(warnings, 2);
+  EXPECT_EQ(warnings, 3);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use
@@ -330,7 +356,8 @@ TEST(AStarPlacerTest, AStarSearch) {
         const long x = i % 4;
         const long y = i / 4;
         return std::hypot(x, y);
-      }));
+      },
+      1'000'000));
   // convert to const Node* for easier comparison
   std::vector<const AStarPlacer::AtomNode*> pathNodes;
   for (const auto& node : path) {

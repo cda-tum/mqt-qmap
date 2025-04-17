@@ -334,7 +334,6 @@ TEST(ArchitectureTest, InvalidStorage3) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "storage_zones": [{
-    "slms": [],
     "offset": [0, 0],
     "dimension": [60, 60]
   }],
