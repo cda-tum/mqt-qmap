@@ -366,8 +366,7 @@ Architecture::Architecture(nlohmann::json json) {
                                   "in architecture spec, N > 1");
     }
   } else {
-    throw std::invalid_argument(
-        "Architecture range is missed in architecture spec");
+    throw std::invalid_argument("Rydberg range is missed in architecture spec");
   }
   // check if the storage zones exist and are valid, otherwise throw an error
   // JSON Example:

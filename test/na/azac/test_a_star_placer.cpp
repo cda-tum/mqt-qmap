@@ -119,7 +119,7 @@ TEST_F(AStarPlacerPlaceTest, OneGateCross) {
   for (qc::Qubit q = 0; q < placement[1].size(); ++q) {
     const auto& [slm, r, c] = placement[1][q];
     EXPECT_TRUE(slm.get().isEntanglement());
-    const auto& [x, y] = architecture.exactSlmLocation(slm, r, c);
+    const auto x = architecture.exactSlmLocation(slm, r, c).first;
     qubitsInEntanglementByX.emplace(x, q);
   }
   std::vector<qc::Qubit> qubitsInEntanglementAsc;
