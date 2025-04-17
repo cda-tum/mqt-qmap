@@ -108,6 +108,142 @@ TEST_F(TwoZoneArchitectureTest, NearestEntanglementSite) {
 TEST_F(TwoZoneArchitectureTest, ExportNoThrow) {
   ASSERT_NO_THROW(arch.exportNAVizMachine(arch.name + ".namachine"));
 }
+TEST(ArchitectureTest, InvalidName) {
+  nlohmann::json spec = R"({
+  "name": 42
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingName) {
+  nlohmann::json spec = R"({
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidDurations) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": 0
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidRydbergDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": "0.36µs", "1qGate": 52, "atom_transfer": 15}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingRydbergDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"1qGate": 52, "atom_transfer": 15}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidTransferDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": "15 µs"}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingTransferDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidOneQubitOperationDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": "52µs", "atom_transfer": 15}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingOneQubitOperationDuration) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "atom_transfer": 15}
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidFidelities) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": 0
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidRydbergFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "two_qubit_gate": "0.995",
+    "single_qubit_gate": 0.9997,
+    "atom_transfer": 0.999
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingRydbergFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "single_qubit_gate": 0.9997,
+    "atom_transfer": 0.999
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidTransferFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "two_qubit_gate": 0.995,
+    "single_qubit_gate": 0.9997,
+    "atom_transfer": "0.999"
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingTransferFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "two_qubit_gate": 0.995,
+    "single_qubit_gate": 0.9997
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, InvalidOneQubitOperationFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "two_qubit_gate": 0.995,
+    "single_qubit_gate": "0.9997",
+    "atom_transfer": 0.999
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
+TEST(ArchitectureTest, MissingOneQubitOperationFidelity) {
+  nlohmann::json spec = R"({
+  "name": "full_compute_store_architecture",
+  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_fidelity": {
+    "two_qubit_gate": 0.995,
+    "atom_transfer": 0.999
+  }
+})"_json;
+  EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
+}
 TEST(ArchitectureTest, InvalidAODId) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
@@ -845,7 +981,7 @@ TEST(ArchitectureTest, SLMEqualityOperator) {
   const SLM slmOtherSeparation{R"({
   "id": 0,
   "site_separation": [4, 3],
-  "r": 21,
+  "r": 20,
   "c": 20,
   "location": [0, 0]
 })"_json};
@@ -854,7 +990,7 @@ TEST(ArchitectureTest, SLMEqualityOperator) {
   SLM slmEntanglement{R"({
   "id": 0,
   "site_separation": [4, 3],
-  "r": 21,
+  "r": 20,
   "c": 20,
   "location": [0, 0]
 })"_json};
@@ -864,7 +1000,7 @@ TEST(ArchitectureTest, SLMEqualityOperator) {
   SLM slmOtherEntanglement{R"({
   "id": 0,
   "site_separation": [4, 3],
-  "r": 21,
+  "r": 20,
   "c": 20,
   "location": [0, 0]
 })"_json};
