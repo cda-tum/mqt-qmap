@@ -256,6 +256,27 @@ TEST(AStarPlacerTest, LimitSpace) {
                    std::vector<std::unordered_set<qc::Qubit>>{}),
                std::runtime_error);
 }
+TEST(AStarPlacerTest, WindowExpansion) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  AStarPlacer placer(architecture, R"({
+  "a_star_placer": {
+    "use_window": true,
+    "window_min_width": 1,
+    "window_ratio": 1.0,
+    "window_share": 1.0,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
+    "lookahead_factor": 0.2,
+    "reuse_level": 5.0
+  }
+})"_json);
+  constexpr size_t nQubits = 4;
+  EXPECT_NO_THROW(std::ignore = placer.place(
+                      nQubits,
+                      std::vector<std::vector<std::array<qc::Qubit, 2>>>{
+                          {{0U, 3U}, {1U, 2U}}},
+                      std::vector<std::unordered_set<qc::Qubit>>{}));
+}
 TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
   Architecture architecture(R"({
   "name": "a_star_placer_architecture",
@@ -318,13 +339,13 @@ TEST(AStarPlacerTest, InvalidConfig) {
   nlohmann::json config = R"({
   "a_star_placer": {
     "use_window": "invalid",
-    "window_min_width": 4,
-    "window_ratio": 1.5,
-    "window_share": 0.4,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 100.0,
+    "window_min_width": "invalid",
+    "window_ratio": "invalid",
+    "window_share": "invalid",
+    "deepening_factor": "invalid",
+    "deepening_value": "invalid",
+    "lookahead_factor": "invalid",
+    "reuse_level": "invalid",
     "max_nodes": "invalid",
     "unknown_key": 42
   }
@@ -341,6 +362,27 @@ TEST(AStarPlacerTest, InvalidConfig) {
               "an invalid value for use_window. Using default (true)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for window_min_width. Using default (8)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for window_ratio. Using default (1)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for window_share. Using default (0.6)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for deepening_factor. Using default (0.8)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for deepening_value. Using default (0.2)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for lookahead_factor. Using default (0.2)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
+              "an invalid value for reuse_level. Using default (5)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
               "an invalid value for max_nodes. Using default (50000000)."),
           ::testing::HasSubstr(
               "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer contains "
@@ -352,7 +394,55 @@ TEST(AStarPlacerTest, InvalidConfig) {
     ++warnings;
     pos += target.length();
   }
-  EXPECT_EQ(warnings, 3);
+  EXPECT_EQ(warnings, 10);
+}
+TEST(AStarPlacerTest, EmptyConfig) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  nlohmann::json config = R"({
+  "a_star_placer": {}
+})"_json;
+  std::stringstream buffer;
+  std::streambuf* oldCout = std::cout.rdbuf(buffer.rdbuf());
+  std::ignore = AStarPlacer(architecture, config);
+  std::cout.rdbuf(oldCout);
+  EXPECT_THAT(
+      buffer.str(),
+      ::testing::AllOf(
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for use_window. Using default (true)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for window_min_width. Using default (8)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for window_ratio. Using default (1)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for window_share. Using default (0.6)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for deepening_factor. Using default (0.8)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for deepening_value. Using default (0.2)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for lookahead_factor. Using default (0.2)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for reuse_level. Using default (5)."),
+          ::testing::HasSubstr(
+              "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does not "
+              "contain a value for max_nodes. Using default (50000000).")));
+  size_t warnings = 0;
+  size_t pos = 0;
+  std::string target = "\033[1;35m[WARN]\033[0m";
+  while ((pos = buffer.str().find(target, pos)) != std::string::npos) {
+    ++warnings;
+    pos += target.length();
+  }
+  EXPECT_EQ(warnings, 9);
 }
 TEST(AStarPlacerTest, AStarSearch) {
   // for testing purposes, we do not use the structure of nodes and just use

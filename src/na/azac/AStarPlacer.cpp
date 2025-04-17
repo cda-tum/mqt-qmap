@@ -1547,7 +1547,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::boolalpha;
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for use_window. Using default ("
+             "not contain a value for use_window. Using default ("
           << useWindow_ << ").\n";
       std::cout << oss.str();
     }
@@ -1555,7 +1555,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       if (!windowMinWidthSet) {
         std::ostringstream oss;
         oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a setting for window_min_width. Using "
+               "does not contain a value for window_min_width. Using "
                "default ("
             << windowMinWidth_ << ").\n";
         std::cout << oss.str();
@@ -1564,7 +1564,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
         std::ostringstream oss;
         oss << std::setprecision(4);
         oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a setting for window_ratio. Using default ("
+               "does not contain a value for window_ratio. Using default ("
             << windowRatio_ << ").\n";
         std::cout << oss.str();
       }
@@ -1572,7 +1572,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
         std::ostringstream oss;
         oss << std::setprecision(4);
         oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer "
-               "does not contain a setting for window_share. Using default ("
+               "does not contain a value for window_share. Using default ("
             << windowShare_ << ").\n";
         std::cout << oss.str();
       }
@@ -1585,7 +1585,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::setprecision(4);
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for deepening_factor. Using default ("
+             "not contain a value for deepening_factor. Using default ("
           << deepeningFactor_ << ").\n";
       std::cout << oss.str();
     }
@@ -1593,7 +1593,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::setprecision(4);
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for deepening_value. Using default ("
+             "not contain a value for deepening_value. Using default ("
           << deepeningValue_ << ").\n";
       std::cout << oss.str();
     }
@@ -1601,7 +1601,7 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::setprecision(4);
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for lookahead_factor. Using default ("
+             "not contain a value for lookahead_factor. Using default ("
           << lookaheadFactor_ << ").\n";
       std::cout << oss.str();
     }
@@ -1609,14 +1609,14 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
       std::ostringstream oss;
       oss << std::setprecision(4);
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for reuse_level. Using default ("
+             "not contain a value for reuse_level. Using default ("
           << reuseLevel_ << ").\n";
       std::cout << oss.str();
     }
     if (!maxNodesSet) {
       std::ostringstream oss;
       oss << "\033[1;35m[WARN]\033[0m Configuration for AStarPlacer does "
-             "not contain a setting for max_nodes. Using default ("
+             "not contain a value for max_nodes. Using default ("
           << maxNodes_ << ").\n";
       std::cout << oss.str();
     }
