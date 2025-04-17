@@ -4,6 +4,7 @@
 #include <gmock/gmock-function-mocker.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
+#include <src/gtest-internal-inl.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -58,28 +59,6 @@ TEST_F(AStarPlacerPlaceTest, Empty) {
                            std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
                            std::vector<std::unordered_set<qc::Qubit>>{}),
               ::testing::ElementsAre(::testing::SizeIs(nQubits)));
-}
-TEST(AStarPlacerTest, NoSolution) {
-  Architecture architecture(nlohmann::json::parse(architectureJson));
-  AStarPlacer placer(architecture, R"({
-  "a_star_placer": {
-    "use_window": true,
-    "window_min_width": 0,
-    "window_ratio": 1.5,
-    "window_share": 0.0,
-    "deepening_factor": 0.6,
-    "deepening_value": 0.2,
-    "lookahead_factor": 0.2,
-    "reuse_level": 5.0
-  }
-})"_json);
-  constexpr size_t nQubits = 2;
-  EXPECT_THROW(
-      std::ignore = placer.place(
-          nQubits,
-          std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U}}},
-          std::vector<std::unordered_set<qc::Qubit>>{}),
-      std::runtime_error);
 }
 TEST_F(AStarPlacerPlaceTest, OneGate) {
   constexpr size_t nQubits = 2;
@@ -232,6 +211,87 @@ TEST_F(AStarPlacerPlaceTest, TwoTwoQubitLayerReuse) {
   EXPECT_EQ(std::get<1>(placement[2][1]), std::get<1>(placement[3][1]));
   EXPECT_EQ(std::get<2>(placement[2][1]), std::get<2>(placement[3][1]));
 }
+TEST(AStarPlacerTest, NoSolution) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  AStarPlacer placer(architecture, R"({
+  "a_star_placer": {
+    "use_window": true,
+    "window_min_width": 0,
+    "window_ratio": 1.5,
+    "window_share": 0.0,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
+    "lookahead_factor": 0.2,
+    "reuse_level": 5.0
+  }
+})"_json);
+  constexpr size_t nQubits = 2;
+  EXPECT_THROW(
+      std::ignore = placer.place(
+          nQubits,
+          std::vector<std::vector<std::array<qc::Qubit, 2>>>{{{0U, 1U}}},
+          std::vector<std::unordered_set<qc::Qubit>>{}),
+      std::runtime_error);
+}
+TEST(AStarPlacerTest, LimitSpace) {
+  Architecture architecture(nlohmann::json::parse(architectureJson));
+  AStarPlacer placer(architecture, R"({
+  "a_star_placer": {
+    "use_window": true,
+    "window_min_width": 4,
+    "window_ratio": 1.5,
+    "window_share": 0.6,
+    "deepening_factor": 0.6,
+    "deepening_value": 0.2,
+    "lookahead_factor": 0.2,
+    "reuse_level": 5.0,
+    "max_nodes": 2
+  }
+})"_json);
+  constexpr size_t nQubits = 4;
+  EXPECT_THROW(std::ignore = placer.place(
+                   nQubits,
+                   std::vector<std::vector<std::array<qc::Qubit, 2>>>{
+                       {{0U, 1U}, {2U, 3U}}},
+                   std::vector<std::unordered_set<qc::Qubit>>{}),
+               std::runtime_error);
+}
+TEST(AStarPlacerTest, InitialPlacementForTwoSlms) {
+  Architecture architecture(R"({
+  "name": "a_star_placer_architecture",
+  "storage_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {"id": 0, "site_separation": [3, 3], "r": 2, "c": 20, "location": [0, 0]},
+      {"id": 1, "site_separation": [3, 3], "r": 18, "c": 20, "location": [0, 6]}],
+    "offset": [0, 0],
+    "dimension": [60, 60]
+  }],
+  "entanglement_zones": [{
+    "zone_id": 0,
+    "slms": [
+      {"id": 1, "site_separation": [12, 10], "r": 4, "c": 4, "location": [5, 70]},
+      {"id": 2, "site_separation": [12, 10], "r": 4, "c": 4, "location": [7, 70]}
+    ],
+    "offset": [5, 70],
+    "dimension": [50, 40]
+  }],
+  "aods":[{"id": 0, "site_separation": 2, "r": 20, "c": 20}],
+  "arch_range": [[0, 0], [60, 110]],
+  "rydberg_range": [[[5, 70], [55, 110]]]
+})"_json);
+  AStarPlacer placer(architecture, nlohmann::json::parse(configJson));
+  constexpr size_t nQubits = 50;
+  const auto& placement = placer.place(
+      nQubits, std::vector<std::vector<std::array<qc::Qubit, 2>>>{},
+      std::vector<std::unordered_set<qc::Qubit>>{});
+  EXPECT_THAT(placement, ::testing::ElementsAre(::testing::SizeIs(nQubits)));
+  // check that there exists a qubit that is placed in SLM with ID 1
+  EXPECT_THAT(placement,
+              ::testing::ElementsAre(::testing::Contains(::testing::FieldsAre(
+                  ::testing::Field(&SLM::id, ::testing::Eq(1)),
+                  ::testing::Lt(18), ::testing::Lt(20)))));
+}
 TEST(AStarPlacerTest, NoConfig) {
   Architecture architecture(nlohmann::json::parse(architectureJson));
   nlohmann::json config = R"({})"_json;
@@ -249,7 +309,8 @@ TEST(AStarPlacerTest, NoConfig) {
       "\"deepening_factor\": 0.8, "
       "\"deepening_value\": 0.2, "
       "\"lookahead_factor\": 0.2, "
-      "\"reuse_level\": 5).\n");
+      "\"reuse_level\": 5, "
+      "\"max_nodes\": 50000000).\n");
   std::cout.rdbuf(oldCout);
 }
 TEST(AStarPlacerTest, InvalidConfig) {

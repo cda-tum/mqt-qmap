@@ -259,14 +259,11 @@ auto AStarPlacer::makeInitialPlacement(const size_t nQubits) const
       // the end of the row reached, go to the next row
       r += step;
       c = 0;
-      if (r == static_cast<std::int64_t>((*slmIt)->nRows)) {
+      if (step == 1 ? r == static_cast<std::int64_t>((*slmIt)->nRows)
+                    : r == -1) {
         // the end of the slm reached, go to the next slm
         ++slmIt;
-        if (step > 0) {
-          r = static_cast<std::int64_t>((*slmIt)->nRows) - 1;
-        } else {
-          r = 0;
-        }
+        r = step == 1 ? static_cast<std::int64_t>((*slmIt)->nRows) - 1 : 0;
       }
     }
   }
@@ -1636,7 +1633,8 @@ AStarPlacer::AStarPlacer(const Architecture& architecture,
         << ", \"deepening_factor\": " << deepeningFactor_
         << ", \"deepening_value\": " << deepeningValue_
         << ", \"lookahead_factor\": " << lookaheadFactor_
-        << ", \"reuse_level\": " << reuseLevel_ << ").\n";
+        << ", \"reuse_level\": " << reuseLevel_
+        << ", \"max_nodes\": " << maxNodes_ << ").\n";
     std::cout << oss.str();
   }
 }
