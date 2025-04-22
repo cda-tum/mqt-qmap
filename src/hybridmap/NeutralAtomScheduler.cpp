@@ -74,8 +74,13 @@ na::SchedulerResults na::NeutralAtomScheduler::schedule(
     // DEBUG info
     if (verbose) {
       std::cout << op->getName() << "  ";
-      for (const auto& qubit : qubits) {
-        std::cout << "q" << qubit << " ";
+      // print control qubits
+      for (const auto& c : op->getControls()) {
+        std::cout << "c" << c.qubit << " ";
+      }
+      // print target qubits
+      for (const auto& t : op->getTargets()) {
+        std::cout << "q" << t << " ";
       }
       std::cout << "-> time: " << opTime << ", fidelity: " << opFidelity
                 << "\n";
