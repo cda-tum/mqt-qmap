@@ -518,21 +518,39 @@ AodOperation MoveToAodConverter::MoveGroup::connectAodOperations(
     for (const auto& deactivation : aodDeactivationHelper.allActivations) {
       if (activation.moves == deactivation.moves) {
         // get target qubits
+        qc::Targets starts;
+        qc::Targets ends;
         const auto nPos = aodActivationHelper.arch->getNpositions();
         for (const auto& move : activation.moves) {
           if (move.load1) {
-            targetQubits.emplace_back(move.c1);
+            starts.emplace_back(move.c1);
           } else if (move.load2) {
-            targetQubits.emplace_back(move.c1 + nPos);
+            starts.emplace_back(move.c1 + nPos);
           } else {
-            targetQubits.emplace_back(move.c1 + (2 * nPos));
+            starts.emplace_back(move.c1 + (2 * nPos));
           }
           if (move.load2) {
-            targetQubits.emplace_back(move.c2);
+            ends.emplace_back(move.c2);
           } else if (move.load1) {
-            targetQubits.emplace_back(move.c2 + nPos);
+            ends.emplace_back(move.c2 + nPos);
           } else {
-            targetQubits.emplace_back(move.c2 + (2 * nPos));
+            ends.emplace_back(move.c2 + (2 * nPos));
+          }
+        }
+
+        // Ensure that the ordering of the target qubits such that atoms are
+        // moved away before used as a target
+        for (size_t i = 0; i < starts.size(); i++) {
+          const auto pos =
+              std::find(targetQubits.begin(), targetQubits.end(), starts[i]);
+          if (pos == targetQubits.end()) {
+            // if the start qubit is not already in the target qubits
+            targetQubits.emplace_back(starts[i]);
+            targetQubits.emplace_back(ends[i]);
+          } else {
+            // insert before one before the found position
+            targetQubits.insert(pos - 1, ends[i]);
+            targetQubits.insert(pos - 1, starts[i]);
           }
         }
 
