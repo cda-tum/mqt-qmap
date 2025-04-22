@@ -503,7 +503,7 @@ std::set<Swap> NeutralAtomMapper::getAllPossibleSwaps(
   }
   return swaps;
 }
-Bridge NeutralAtomMapper::findBestBridge() const {
+Bridge NeutralAtomMapper::findBestBridge() {
   auto allBridges = getShortestBridges();
   if (allBridges.empty()) {
     return {};
@@ -528,13 +528,18 @@ Bridge NeutralAtomMapper::findBestBridge() const {
   return allBridges[bestBridgeIdx];
 }
 
-Bridges NeutralAtomMapper::getShortestBridges() const {
+Bridges NeutralAtomMapper::getShortestBridges() {
   Bridges allBridges;
   size_t minBridgeLength = std::numeric_limits<size_t>::max();
   for (const auto* const op : this->frontLayerGate) {
     if (op->getUsedQubits().size() == 2) {
       auto usedQuBits = op->getUsedQubits();
       auto usedHwQubits = this->mapping.getHwQubits(usedQuBits);
+      // shortcut if distance already larger than minBridgeLength
+      if (this->hardwareQubits.getAllToAllSwapDistance(usedHwQubits) >
+          minBridgeLength) {
+        continue;
+      }
       const auto bridges = this->hardwareQubits.computeAllShortestPaths(
           *usedHwQubits.begin(), *usedHwQubits.rbegin());
       if (bridges.empty()) {

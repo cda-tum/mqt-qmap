@@ -232,8 +232,8 @@ protected:
 
   // Methods for bridge operations mapping
 
-  [[nodiscard]] Bridge findBestBridge() const;
-  [[nodiscard]] Bridges getShortestBridges() const;
+  [[nodiscard]] Bridge findBestBridge();
+  [[nodiscard]] Bridges getShortestBridges();
 
   [[nodiscard]] CoordIndices computeCurrentCoordUsages() const;
 
