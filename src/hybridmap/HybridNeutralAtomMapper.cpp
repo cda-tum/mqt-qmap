@@ -536,8 +536,10 @@ Bridges NeutralAtomMapper::getShortestBridges() {
       auto usedQuBits = op->getUsedQubits();
       auto usedHwQubits = this->mapping.getHwQubits(usedQuBits);
       // shortcut if distance already larger than minBridgeLength
-      if (this->hardwareQubits.getAllToAllSwapDistance(usedHwQubits) >
-          minBridgeLength) {
+      const auto dist =
+          this->hardwareQubits.getAllToAllSwapDistance(usedHwQubits);
+      if (dist > this->parameters->maxBridgeDistance ||
+          dist > static_cast<qc::fp>(minBridgeLength)) {
         continue;
       }
       const auto bridges = this->hardwareQubits.computeAllShortestPaths(
@@ -1753,7 +1755,7 @@ size_t NeutralAtomMapper::gateBasedMapping(NeutralAtomLayer& frontLayer,
 
       auto bestSwap = findBestSwap(lastSwap);
       MappingMethod bestMethod = MappingMethod::SwapMethod;
-      if (parameters->useBridge) {
+      if (parameters->maxBridgeDistance > 0) {
         auto bestBridge = findBestBridge();
         bestMethod = compareSwapAndBridge(bestSwap, bestBridge);
         if (bestMethod == MappingMethod::BridgeMethod) {
