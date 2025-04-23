@@ -454,6 +454,9 @@ public:
           "No free coordinates for shuttling but shuttling "
           "weight is greater than 0.");
     }
+    if (parameters->numFlyingAncillas > 1) {
+      throw std::runtime_error("Only one flying ancilla is supported for now.");
+    }
     //   precompute exponential decay weights
     this->decayWeights.reserve(this->arch->getNcolumns());
     for (uint32_t i = this->arch->getNcolumns(); i > 0; --i) {
