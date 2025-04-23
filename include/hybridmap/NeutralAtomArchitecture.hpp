@@ -414,7 +414,7 @@ public:
         if (c1 == c2) {
           continue;
         }
-        dist += getSwapDistance(c1, c2);
+        dist += getEuclideanDistance(c1, c2);
       }
     }
     return dist;
