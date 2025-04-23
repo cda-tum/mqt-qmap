@@ -13,6 +13,7 @@
 #include "hybridmap/NeutralAtomLayer.hpp"
 #include "hybridmap/NeutralAtomUtils.hpp"
 #include "ir/QuantumComputation.hpp"
+#include "ir/operations/Control.hpp"
 #include "ir/operations/OpType.hpp"
 #include "ir/operations/Operation.hpp"
 #include "ir/operations/StandardOperation.hpp"
@@ -160,24 +161,38 @@ qc::QuantumComputation NeutralAtomMapper::convertToAod() {
 
 void NeutralAtomMapper::applyPassBy(NeutralAtomLayer& frontLayer,
                                     const FlyingAncillaComb& faComb) {
-  const auto usedQubits = faComb.op->getUsedQubits();
-  auto usedCoords =
-      hardwareQubits.getCoordIndices(mapping.getHwQubits(usedQubits));
+  auto opTargets = faComb.op->getTargets();
+  auto targetHwQubits = mapping.getHwQubits(opTargets);
+  auto targetCoords = hardwareQubits.getCoordIndices(targetHwQubits);
+  auto opControls = faComb.op->getControls();
+  HwQubitsVector controlQubits;
+  for (const auto& control : opControls) {
+    controlQubits.emplace_back(control.qubit);
+  }
+  auto controlHwQubits = mapping.getHwQubits(controlQubits);
+  auto controlCoords = hardwareQubits.getCoordIndices(controlHwQubits);
+
   for (const auto& passBy : faComb.moves) {
     mappedQc.move(passBy.q1, passBy.q2 + arch->getNpositions());
     if (this->parameters->verbose) {
       std::cout << "passby " << passBy.q1 << " " << passBy.q2 << '\n';
     }
-    if (usedCoords.find(passBy.q1) != usedCoords.end()) {
-      usedCoords.erase(passBy.q1);
-      usedCoords.insert(passBy.q2 + arch->getNpositions());
+    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.q1);
+    if (itT != targetCoords.end()) {
+      *itT = passBy.q2 + arch->getNpositions();
+    }
+    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.q1);
+    if (itC != controlCoords.end()) {
+      *itC = passBy.q2 + arch->getNpositions();
     }
   }
-  const auto opCopy = faComb.op->clone();
-  const std::vector<CoordIndex> usedCoordsVec = {usedCoords.begin(),
-                                                 usedCoords.end()};
-  opCopy->setTargets(usedCoordsVec);
-  opCopy->setControls({});
+  auto opCopy = faComb.op->clone();
+  opCopy->setTargets(targetCoords);
+  qc::Controls controls;
+  for (const auto& control : controlCoords) {
+    controls.emplace(control);
+  }
+  opCopy->setControls(controls);
   mappedQc.emplace_back(opCopy->clone());
 
   // mapGate(faComb.op);
