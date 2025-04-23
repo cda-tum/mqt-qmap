@@ -2206,7 +2206,8 @@ NeutralAtomMapper::compareSwapAndBridge(const Swap& bestSwap,
   qc::fp const bridgeFidelity = this->arch->getGateAverageFidelity(bridgeName) *
                                 std::exp(-this->arch->getGateTime(bridgeName) /
                                          this->arch->getDecoherenceTime());
-  if (bridgeDistReduction * std::log(swapFidelity) >
+  if (bridgeDistReduction * std::log(swapFidelity) /
+          parameters->dynamicMappingWeight >
       swapDistReduction * std::log(bridgeFidelity)) {
     return MappingMethod::SwapMethod;
   }
@@ -2279,7 +2280,8 @@ MappingMethod NeutralAtomMapper::compareShuttlingAndFlyingAncilla(
           faCombSize) *
       std::exp(-passByTime / this->arch->getDecoherenceTime());
 
-  const auto move = std::log(moveFidelity) / moveDistReduction;
+  const auto move = std::log(moveFidelity) / moveDistReduction /
+                    parameters->dynamicMappingWeight;
   const auto fa = std::log(faFidelity) / faDistReduction;
   const auto passBy = std::log(passByFidelity) / faDistReduction;
 
