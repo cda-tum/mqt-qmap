@@ -160,6 +160,10 @@ bool MoveToAodConverter::MoveGroup::canAddMove(
         if (move.load1 != moveGroup.load1 || move.load2 != moveGroup.load2) {
           return false;
         }
+        // if start or end is same -> false
+        if (move.c1 == moveGroup.c1 || move.c2 == moveGroup.c2) {
+          return false;
+        }
         // check if parallel executable
         auto moveVector = archArg.getVector(move.c1, move.c2);
         auto opVector = archArg.getVector(moveGroup.c1, moveGroup.c2);
