@@ -104,6 +104,20 @@ public:
   }
 
   /**
+   * @brief Returns the hardware qubits assigned to the given circuit qubits.
+   * @param qubits The circuit qubits to be queried
+   * @return The hardware qubits assigned to the given circuit qubits
+   */
+  [[nodiscard]] std::vector<HwQubit>
+  getHwQubits(const std::vector<qc::Qubit>& qubits) const {
+    std::vector<HwQubit> hwQubits;
+    for (const auto& qubit : qubits) {
+      hwQubits.emplace_back(this->getHwQubit(qubit));
+    }
+    return hwQubits;
+  }
+
+  /**
    * @brief Returns the circuit qubit assigned to the given hardware qubit.
    * @details Throws an exception if the hardware qubit is not assigned to any
    * circuit qubit.
