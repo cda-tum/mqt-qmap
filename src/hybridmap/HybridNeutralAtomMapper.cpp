@@ -388,9 +388,16 @@ void NeutralAtomMapper::applyBridge(NeutralAtomLayer& frontLayer,
 }
 void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
                                            const FlyingAncillaComb& faComb) {
-  const auto usedQubits = faComb.op->getUsedQubits();
-  auto usedCoords =
-      hardwareQubits.getCoordIndices(mapping.getHwQubits(usedQubits));
+  auto targetCoords = hardwareQubits.getCoordIndices(
+      mapping.getHwQubits(faComb.op->getTargets()));
+  // get control vector
+  auto opControls = faComb.op->getControls();
+  HwQubitsVector controlQubits;
+  for (const auto& control : opControls) {
+    controlQubits.emplace_back(control.qubit);
+  }
+  auto controlCoords =
+      hardwareQubits.getCoordIndices(mapping.getHwQubits(controlQubits));
 
   const auto nPos = this->arch->getNpositions();
   for (const auto& passBy : faComb.moves) {
@@ -404,9 +411,13 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     mappedQc.h(ancQ1);
     mappedQc.move(ancQ1, ancQ2);
 
-    if (usedCoords.find(passBy.q1) != usedCoords.end()) {
-      usedCoords.erase(passBy.q1);
-      usedCoords.insert(ancQ2);
+    auto itT = std::find(targetCoords.begin(), targetCoords.end(), passBy.q1);
+    if (itT != targetCoords.end()) {
+      *itT = ancQ2;
+    }
+    auto itC = std::find(controlCoords.begin(), controlCoords.end(), passBy.q1);
+    if (itC != controlCoords.end()) {
+      *itC = ancQ2;
     }
 
     if (this->parameters->verbose) {
@@ -415,10 +426,12 @@ void NeutralAtomMapper::applyFlyingAncilla(NeutralAtomLayer& frontLayer,
     }
   }
   const auto opCopy = faComb.op->clone();
-  const std::vector<CoordIndex> usedCoordsVec = {usedCoords.begin(),
-                                                 usedCoords.end()};
-  opCopy->setTargets(usedCoordsVec);
-  opCopy->setControls({});
+  opCopy->setTargets(targetCoords);
+  qc::Controls controls;
+  for (const auto& control : controlCoords) {
+    controls.emplace(control);
+  }
+  opCopy->setControls(controls);
   mappedQc.emplace_back(opCopy->clone());
 
   for (const auto& passBy : faComb.moves) {
