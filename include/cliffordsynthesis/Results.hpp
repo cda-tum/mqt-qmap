@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #pragma once
 
@@ -11,7 +16,7 @@
 
 #include <cstddef>
 #include <limits>
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 #include <ostream>
 #include <string>
 

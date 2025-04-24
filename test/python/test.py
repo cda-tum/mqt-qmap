@@ -1,11 +1,18 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """A simple example of using QMAP."""
 
 from __future__ import annotations
 
+from mqt import qmap
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import Fake5QV1
-
-from mqt import qmap
 
 if __name__ == "__main__":
     qc = QuantumCircuit(3)

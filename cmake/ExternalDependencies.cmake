@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 # Declare all external dependencies and make sure that they are available.
 
 include(FetchContent)
@@ -40,7 +48,9 @@ if(BUILD_MQT_QMAP_BINDINGS)
 endif()
 
 # cmake-format: off
-set(MQT_CORE_VERSION 3.0.0
+set(MQT_CORE_MINIMUM_VERSION 3.0.0
+    CACHE STRING "MQT Core minimum version")
+set(MQT_CORE_VERSION 3.0.2
     CACHE STRING "MQT Core version")
 set(MQT_CORE_REV "na-add-barrier"
     CACHE STRING "MQT Core identifier (tag, branch or commit hash)")
@@ -51,7 +61,7 @@ FetchContent_Declare(
   mqt-core
   GIT_REPOSITORY https://github.com/${MQT_CORE_REPO_OWNER}/core.git
   GIT_TAG ${MQT_CORE_REV}
-  FIND_PACKAGE_ARGS ${MQT_CORE_VERSION})
+  FIND_PACKAGE_ARGS ${MQT_CORE_MINIMUM_VERSION})
 list(APPEND FETCH_PACKAGES mqt-core)
 
 set(JSON_VERSION
@@ -74,6 +84,13 @@ FetchContent_Declare(
   GIT_TAG ${PLOG_REV}
   FIND_PACKAGE_ARGS)
 list(APPEND FETCH_PACKAGES plog)
+
+set(SPDLOG_VERSION
+    1.15.3
+    CACHE STRING "spdlog version")
+set(SPDLOG_URL https://github.com/gabime/spdlog/archive/refs/tags/v${SPDLOG_VERSION}.tar.gz)
+FetchContent_Declare(spdlog URL ${SPDLOG_URL} FIND_PACKAGE_ARGS ${SPDLOG_VERSION})
+list(APPEND FETCH_PACKAGES spdlog)
 
 if(BUILD_MQT_QMAP_TESTS)
   set(gtest_force_shared_crt

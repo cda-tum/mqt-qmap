@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "sc/exact/ExactMapper.hpp"
 
@@ -152,9 +157,7 @@ void ExactMapper::map(const Configuration& settings) {
             static_cast<double>(settings.timeout) *
             (static_cast<double>(limit) * 0.5) /
             static_cast<double>(maxLimit < upperLimit ? upperLimit : maxLimit));
-        if (timeout <= 10000U) {
-          timeout = 10000U;
-        }
+        timeout = std::max(timeout, static_cast<std::size_t>(10000U));
         if (settings.verbose) {
           std::cout << "Timeout: " << timeout
                     << "  Max-Timeout: " << settings.timeout << '\n';
@@ -519,8 +522,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qc.getNqubits());
         for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
           lb->assertFormula(
@@ -544,8 +548,9 @@ number of variables: (|L|-1) * m!
 
       for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qubitChoice.size());
         for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {
@@ -572,7 +577,9 @@ number of variables: (|L|-1) * m!
     for (std::size_t k = 0; k < reducedLayerIndices.size(); ++k) {
       for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
         std::vector<LogicTerm> vars;
+        vars.reserve(qc.getNqubits());
         std::vector<std::size_t> varIDs;
+        varIDs.reserve(qc.getNqubits());
         for (std::size_t j = 0; j < qc.getNqubits(); ++j) {
           vars.emplace_back(x[k][i][j]);
           varIDs.emplace_back(j);
@@ -583,8 +590,9 @@ number of variables: (|L|-1) * m!
       for (std::size_t j = 0; j < qc.getNqubits();
            ++j) { // There is no exactly one Bimander
         std::vector<LogicTerm> varIDs;
+        varIDs.reserve(qubitChoice.size());
         for (std::size_t i = 0; i < qubitChoice.size(); ++i) {
-          varIDs.push_back(x[k][i][j]);
+          varIDs.emplace_back(x[k][i][j]);
         }
 
         if (config.commanderGrouping == CommanderGrouping::Fixed2) {

@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test the compilation of circuits."""
 
 from __future__ import annotations
@@ -6,8 +14,6 @@ import locale
 from pathlib import Path
 
 import pytest
-from qiskit import QuantumCircuit
-
 from mqt.qcec import verify
 from mqt.qmap.compile import compile  # noqa: A004
 from mqt.qmap.pyqmap import (
@@ -23,6 +29,7 @@ from mqt.qmap.pyqmap import (
     SwapReduction,
 )
 from mqt.qmap.visualization import SearchVisualizer
+from qiskit import QuantumCircuit
 
 
 @pytest.fixture

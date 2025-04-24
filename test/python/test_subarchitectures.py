@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test subarchitecture generation."""
 
 from __future__ import annotations
@@ -8,14 +16,13 @@ from typing import TYPE_CHECKING, Optional
 
 import pytest
 import rustworkx as rx
-from qiskit.providers.fake_provider import GenericBackendV2
-
 from mqt.qmap.pyqmap import Architecture
 from mqt.qmap.subarchitectures import (
     SubarchitectureOrder,
     ibm_guadalupe_subarchitectures,
     rigetti_16_subarchitectures,
 )
+from qiskit.providers.fake_provider import GenericBackendV2
 
 if TYPE_CHECKING:
     from mqt.qmap._compat.typing import TypeAlias

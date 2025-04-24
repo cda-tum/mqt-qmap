@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Test cases for Clifford synthesis."""
 
 from __future__ import annotations
@@ -7,10 +15,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from mqt import qcec, qmap
 from qiskit import QuantumCircuit, qasm2
 from qiskit.quantum_info import Clifford, PauliList
-
-from mqt import qcec, qmap
 
 
 @dataclass
