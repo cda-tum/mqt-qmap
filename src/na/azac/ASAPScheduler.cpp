@@ -70,6 +70,8 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
         twoQubitGateLayers.emplace_back();
         ++newNextLayerForQubit;
       }
+      assert(oneQubitGateLayers.back().empty());
+      oneQubitGateLayers.back().emplace_back(*op);
       for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {
         nextLayerForQubit[q] = newNextLayerForQubit;
       }

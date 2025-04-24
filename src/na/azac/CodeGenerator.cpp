@@ -10,6 +10,7 @@
 #include "na/entities/Atom.hpp"
 #include "na/entities/Location.hpp"
 #include "na/entities/Zone.hpp"
+#include "na/operations/Barrier.hpp"
 #include "na/operations/GlobalCZOp.hpp"
 #include "na/operations/GlobalRYOp.hpp"
 #include "na/operations/LoadOp.hpp"
@@ -39,7 +40,12 @@ auto CodeGenerator::appendOneQubitGates(
     // This flag is used for circuit consisting of only one qubit since in this
     // case, global and local gates are the same.
     bool oneQubitGate = false;
-    if (op.get().isGlobal(nQubits)) {
+    if (op.get().getType() == qc::Barrier) {
+      // If the input is coming from the scheduler, this should be satisfied;
+      // Otherwise the scheduler did something wrong.
+      assert(op.get().getNqubits() == nQubits);
+      code.emplaceBack<Barrier>();
+    } else if (op.get().isGlobal(nQubits)) {
       // a global operation can be wrapped in a compound operation or a standard
       // operation acting on all qubits
       if (op.get().isCompoundOperation()) {

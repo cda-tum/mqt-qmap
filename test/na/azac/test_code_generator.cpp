@@ -66,6 +66,23 @@ TEST_F(CodeGeneratorGenerateTest, Empty) {
           .toString(),
       "atom (0.000, 0.000) atom0\n");
 }
+TEST_F(CodeGeneratorGenerateTest, Barrier) {
+  const auto& slm = *architecture.storageZones.front();
+  const auto barrier = qc::StandardOperation(qc::Targets{0}, qc::Barrier);
+  EXPECT_EQ(
+      codeGenerator
+          .generate(
+              std::vector<
+                  std::vector<std::reference_wrapper<const qc::Operation>>>{
+                  {barrier}},
+              std::vector<std::vector<std::tuple<
+                  std::reference_wrapper<const SLM>, size_t, size_t>>>{
+                  {{slm, 0, 0}}},
+              std::vector<std::vector<std::vector<qc::Qubit>>>{})
+          .toString(),
+      "atom (0.000, 0.000) atom0\n"
+      "// barrier\n");
+}
 TEST_F(CodeGeneratorGenerateTest, GlobalRYGate) {
   const auto& slm = *architecture.storageZones.front();
   const auto ry = qc::StandardOperation(0, qc::RY, {0.1});
