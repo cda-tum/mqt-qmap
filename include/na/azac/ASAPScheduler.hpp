@@ -33,18 +33,18 @@ public:
    * This function schedules the operations of a quantum computation.
    * @details Every operation is scheduled as soon as possible. The function
    * splits the operations into layers. Every layer (except for the last one)
-   * contains some one-qubit operations and two-qubit operations. The one-qubit
-   * operations are executed before the two-qubit operations. For every layer,
-   * all two-qubit operations can be executed in parallel, i.e., every qubit is
-   * involved in at most one two-qubit operation. The last layer contains only
-   * the remaining one-qubit operations.
+   * contains some single-qubit operations and two-qubit operations. The
+   * single-qubit operations are executed before the two-qubit operations. For
+   * every layer, all two-qubit operations can be executed in parallel, i.e.,
+   * every qubit is involved in at most one two-qubit operation. The last layer
+   * contains only the remaining single-qubit operations.
    * @param qc is the quantum computation
    * @return a pair of two vectors. The first vector contains the layers of
-   * one-qubit operations. The second vector contains the layers of two-qubit
+   * single-qubit operations. The second vector contains the layers of two-qubit
    * operations. A pair of qubits represents every two-qubit operation.
    */
   [[nodiscard]] auto schedule(const qc::QuantumComputation& qc) const
-      -> std::pair<std::vector<OneQubitGateLayer>,
+      -> std::pair<std::vector<SingleQubitGateLayer>,
                    std::vector<TwoQubitGateLayer>>;
 };
 } // namespace na::azac

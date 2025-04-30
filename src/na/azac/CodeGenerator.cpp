@@ -30,15 +30,15 @@
 #include <vector>
 
 namespace na::azac {
-auto CodeGenerator::appendOneQubitGates(
-    const size_t nQubits, const OneQubitGateLayer& oneQubitGates,
+auto CodeGenerator::appendSingleQubitGates(
+    const size_t nQubits, const SingleQubitGateLayer& singleQubitGates,
     const std::vector<std::reference_wrapper<const Atom>>& atoms,
     const Zone& globalZone, NAComputation& code) const -> void {
-  for (const auto& op : oneQubitGates) {
+  for (const auto& op : singleQubitGates) {
     // A flag to indicate if the gate is a gate on one qubit.
     // This flag is used for circuit consisting of only one qubit since in this
     // case, global and local gates are the same.
-    bool oneQubitGate = false;
+    bool singleQubitGate = false;
     if (op.get().isGlobal(nQubits)) {
       // a global operation can be wrapped in a compound operation or a standard
       // operation acting on all qubits
@@ -65,7 +65,7 @@ auto CodeGenerator::appendOneQubitGates(
           code.emplaceBack<GlobalRYOp>(globalZone, qc::PI);
         } else if (nQubits == 1) {
           // special case for one qubit, fall through to local gates
-          oneQubitGate = true;
+          singleQubitGate = true;
         } else {
           // this case should never occur since the scheduler should filter out
           // other global gates that are not supported already.
@@ -74,9 +74,9 @@ auto CodeGenerator::appendOneQubitGates(
       }
     } else {
       // if a gate is not global, it is assumed to be a local gate.
-      oneQubitGate = true;
+      singleQubitGate = true;
     }
-    if (oneQubitGate) {
+    if (singleQubitGate) {
       // one qubit gates act exactly on one qubit and are converted to local
       // gates
       assert(op.get().getNqubits() == 1);
@@ -145,7 +145,7 @@ auto CodeGenerator::appendOneQubitGates(
           // if the gate type is not recognized, an error is printed and the
           // gate is not included in the output.
           std::ostringstream oss;
-          oss << "\033[1;31m[ERROR]\033[0m Unsupported one-qubit gate: "
+          oss << "\033[1;31m[ERROR]\033[0m Unsupported single-qubit gate: "
               << op.get().getType() << "\n";
           throw std::invalid_argument(oss.str());
         }
@@ -307,7 +307,7 @@ CodeGenerator::CodeGenerator(const Architecture& architecture,
   }
 }
 auto CodeGenerator::generate(
-    const std::vector<OneQubitGateLayer>& oneQubitGateLayers,
+    const std::vector<SingleQubitGateLayer>& singleQubitGateLayers,
     const std::vector<Placement>& placement,
     const std::vector<Routing>& routing) const -> NAComputation {
   NAComputation code;
@@ -336,20 +336,20 @@ auto CodeGenerator::generate(
     const auto& [x, y] = architecture_.get().exactSlmLocation(slm, r, c);
     code.emplaceInitialLocation(atoms.back(), x, y);
   }
-  // early return if no one-qubit gates are given
-  if (oneQubitGateLayers.empty()) {
+  // early return if no single-qubit gates are given
+  if (singleQubitGateLayers.empty()) {
     return code;
   }
-  assert(2 * oneQubitGateLayers.size() == placement.size() + 1);
+  assert(2 * singleQubitGateLayers.size() == placement.size() + 1);
   assert(placement.size() == routing.size() + 1);
-  appendOneQubitGates(atoms.size(), oneQubitGateLayers.front(), atoms,
-                      globalZone, code);
-  for (size_t layer = 0; layer + 1 < oneQubitGateLayers.size(); ++layer) {
+  appendSingleQubitGates(atoms.size(), singleQubitGateLayers.front(), atoms,
+                         globalZone, code);
+  for (size_t layer = 0; layer + 1 < singleQubitGateLayers.size(); ++layer) {
     appendTwoQubitGates(placement[2 * layer], routing[2 * layer],
                         placement[(2 * layer) + 1], routing[(2 * layer) + 1],
                         placement[2 * (layer + 1)], atoms, rydbergZones, code);
-    appendOneQubitGates(atoms.size(), oneQubitGateLayers[layer + 1], atoms,
-                        globalZone, code);
+    appendSingleQubitGates(atoms.size(), singleQubitGateLayers[layer + 1],
+                           atoms, globalZone, code);
   }
   return code;
 }

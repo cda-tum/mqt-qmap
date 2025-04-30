@@ -43,14 +43,14 @@ ASAPScheduler::ASAPScheduler(const Architecture& architecture,
   }
 }
 auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
-    -> std::pair<std::vector<OneQubitGateLayer>,
+    -> std::pair<std::vector<SingleQubitGateLayer>,
                  std::vector<TwoQubitGateLayer>> {
   if (qc.empty()) {
     // early exit if there are no operations to schedule
-    return std::pair{std::vector<OneQubitGateLayer>{},
+    return std::pair{std::vector<SingleQubitGateLayer>{},
                      std::vector<TwoQubitGateLayer>{}};
   }
-  std::vector<OneQubitGateLayer> oneQubitGateLayers(1);
+  std::vector<SingleQubitGateLayer> singleQubitGateLayers(1);
   std::vector<TwoQubitGateLayer> twoQubitGateLayers(0);
   // the following vector contains a mapping from qubits to the layer where
   // the next two-qubit gate can be scheduled for that qubit, i.e., the layer
@@ -64,9 +64,9 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       // start a new layer
       auto newNextLayerForQubit = *std::max_element(nextLayerForQubit.cbegin(),
                                                     nextLayerForQubit.cend());
-      if (!oneQubitGateLayers.back().empty()) {
+      if (!singleQubitGateLayers.back().empty()) {
         // add the new layer
-        oneQubitGateLayers.emplace_back();
+        singleQubitGateLayers.emplace_back();
         twoQubitGateLayers.emplace_back();
         ++newNextLayerForQubit;
       }
@@ -80,11 +80,11 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       for (qc::Qubit q = 0; q < qc.getNqubits(); ++q) {
         nextLayerForQubit[q] = maxNextLayerForQubit;
       }
-      oneQubitGateLayers[maxNextLayerForQubit].emplace_back(*op);
+      singleQubitGateLayers[maxNextLayerForQubit].emplace_back(*op);
     } else if (op->isStandardOperation()) {
       const auto& stdOp = dynamic_cast<qc::StandardOperation&>(*op);
       if (stdOp.getNtargets() == 1 && stdOp.getNcontrols() == 0) {
-        oneQubitGateLayers[nextLayerForQubit[stdOp.getTargets().front()]]
+        singleQubitGateLayers[nextLayerForQubit[stdOp.getTargets().front()]]
             .emplace_back(stdOp);
       } else if (stdOp.getType() == qc::Z && stdOp.getNtargets() == 1 &&
                  stdOp.getNcontrols() == 1) {
@@ -100,7 +100,7 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
         assert(layer <= twoQubitGateLayers.size());
         if (layer == twoQubitGateLayers.size()) {
           // add a new layer
-          oneQubitGateLayers.emplace_back();
+          singleQubitGateLayers.emplace_back();
           twoQubitGateLayers.emplace_back();
         }
         twoQubitGateLayers[layer].emplace_back(
@@ -122,6 +122,6 @@ auto ASAPScheduler::schedule(const qc::QuantumComputation& qc) const
       throw std::invalid_argument(ss.str());
     }
   }
-  return std::pair{oneQubitGateLayers, twoQubitGateLayers};
+  return std::pair{singleQubitGateLayers, twoQubitGateLayers};
 }
 } // namespace na::azac

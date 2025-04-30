@@ -37,7 +37,7 @@ public:
   /**
    * Generate the neutral atom computation based on the results of the previous
    * steps in the compiler.
-   * @param oneQubitGateLayers is a list of layers of single-qubit gates
+   * @param singleQubitGateLayers is a list of layers of single-qubit gates
    * @param placement is the placement of the qubits. The very first entry is
    * the initial placement of the atoms. Every consecutive pair of entries
    * encloses one layer of two-qubit gates.
@@ -46,14 +46,14 @@ public:
    * @return the neutral atom computation
    */
   [[nodiscard]] auto
-  generate(const std::vector<OneQubitGateLayer>& oneQubitGateLayers,
+  generate(const std::vector<SingleQubitGateLayer>& singleQubitGateLayers,
            const std::vector<Placement>& placement,
            const std::vector<Routing>& routing) const -> NAComputation;
 
 private:
-  /// Append all one-qubit gates of a layer to the code
-  auto appendOneQubitGates(
-      size_t nQubits, const OneQubitGateLayer& oneQubitGates,
+  /// Append all single-qubit gates of a layer to the code
+  auto appendSingleQubitGates(
+      size_t nQubits, const SingleQubitGateLayer& singleQubitGates,
       const std::vector<std::reference_wrapper<const Atom>>& atoms,
       const Zone& globalZone, NAComputation& code) const -> void;
 

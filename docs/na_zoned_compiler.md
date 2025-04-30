@@ -11,8 +11,6 @@ mystnb:
 %config InlineBackend.figure_formats = ['svg']
 ```
 
-<style>.widget-subarea{display:none;} /*hide widgets as they do not work with sphinx*/</style>
-
 # Zoned Neutral Atom Compiler
 
 Successful quantum computation requires advanced software, especially compilers that optimize quantum algorithms for
@@ -27,12 +25,38 @@ computation.
 
 In this example, we will demonstrate how to use the zoned neutral atom compiler to generate a sequence of
 target-specific instructions for a quantum circuit.
-The circuit prepares a GHZ state of 8 qubits using the native gates of the zoned neutral atom architecture, i.e., global
+For this purpose, we employ a circuit that prepares a Greenberger-Horne-Zeilinger (GHZ) state of 8 qubits.
+Compared to the usual GHZ circuit that applies the CX-gates in a chain, this circuit applies the CX-gates in a tree-like
+manner.
+First, it brings one qubit into maximal superposition and then applies the first CX-gate as usual.
+Afterward, it applies two CX-gates in parallel controlled on the qubits already in superposition instead of applying them
+serially.
+
+```{code-cell} ipython3
+from qiskit import QuantumCircuit
+from numpy import pi
+
+qc = QuantumCircuit(8)
+qc.h(0)
+qc.cx(0, 4)
+qc.cx(0, 2)
+qc.cx(4, 6)
+qc.cx(0, 1)
+qc.cx(2, 3)
+qc.cx(4, 5)
+qc.cx(6, 7)
+
+qc.draw(output="mpl")
+```
+
+This circuit is not compatible with the native gate set of the zoned neutral atom architecture that consists of global
 ry-gates, local rz-gates, and controlled z-gates.
+The following circuit is equivalent to the previous one but decomposes the circuit into the native gate set of the
+zoned neutral atom architecture.
 
 ```{note}
-Even though other one-qubit gates may not be supported by the hardware, the compiler can handle arbitrary one-qubit gates.
-It will translate them to generic u3 gates and include them in the output.
+Even though other single-qubit gates may not be supported by the hardware, the compiler can handle arbitrary
+single-qubit gates. It will translate them to generic u3 gates and include them in the output.
 ```
 
 ```{code-cell} ipython3
@@ -70,7 +94,7 @@ qc.append(global_ry(pi/4, 8), range(8))
 qc.draw(output="mpl")
 ```
 
-On the considered architecture, the one-qubit gates, i.e., the global ry and local rz-gates can be executed everywhere.
+On the considered architecture, the single-qubit gates, i.e., the global ry and local rz-gates can be executed everywhere.
 However, the controlled z-gates can only be executed between nearby atoms in the so-called entanglement zone.
 This entanglement zone is spatially separated from the storage zone, where all atoms not involved in a cz-gate are
 stored.

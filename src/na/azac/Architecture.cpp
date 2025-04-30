@@ -199,7 +199,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_duration"].contains("1qGate")) {
         if (json["operation_duration"]["1qGate"].is_number()) {
-          operationDurations->timeOneQubitGate =
+          operationDurations->timeSingleQubitGate =
               json["operation_duration"]["1qGate"];
         } else {
           throw std::invalid_argument(
@@ -253,7 +253,7 @@ Architecture::Architecture(nlohmann::json json) {
       }
       if (json["operation_fidelity"].contains("single_qubit_gate")) {
         if (json["operation_fidelity"]["single_qubit_gate"].is_number()) {
-          operationFidelities->fidelityOneQubitGate =
+          operationFidelities->fidelitySingleQubitGate =
               json["operation_fidelity"]["single_qubit_gate"];
         } else {
           throw std::invalid_argument("One qubit gate fidelity must be a float "

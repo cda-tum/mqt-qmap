@@ -9,8 +9,8 @@
 #include <vector>
 
 namespace na::azac {
-/// A list of one-qubit gates representing a one-qubit gate layer.
-using OneQubitGateLayer =
+/// A list of single-qubit gates representing a single-qubit gate layer.
+using SingleQubitGateLayer =
     std::vector<std::reference_wrapper<const qc::Operation>>;
 /// A pair of qubits as an array that allows iterating over the qubits.
 using QubitPair = std::array<qc::Qubit, 2>;

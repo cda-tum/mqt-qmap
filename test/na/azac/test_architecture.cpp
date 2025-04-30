@@ -154,14 +154,14 @@ TEST(ArchitectureTest, MissingTransferDuration) {
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
-TEST(ArchitectureTest, InvalidOneQubitOperationDuration) {
+TEST(ArchitectureTest, InvalidSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg": 0.36, "1qGate": "52µs", "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
-TEST(ArchitectureTest, MissingOneQubitOperationDuration) {
+TEST(ArchitectureTest, MissingSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_duration": {"rydberg": 0.36, "atom_transfer": 15}
@@ -217,7 +217,7 @@ TEST(ArchitectureTest, MissingTransferFidelity) {
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
-TEST(ArchitectureTest, InvalidOneQubitOperationFidelity) {
+TEST(ArchitectureTest, InvalidSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {
@@ -228,7 +228,7 @@ TEST(ArchitectureTest, InvalidOneQubitOperationFidelity) {
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
-TEST(ArchitectureTest, MissingOneQubitOperationFidelity) {
+TEST(ArchitectureTest, MissingSingleQubitOperationFidelity) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
   "operation_fidelity": {

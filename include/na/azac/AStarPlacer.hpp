@@ -363,12 +363,12 @@ private:
   [[nodiscard]] auto makeInitialPlacement(size_t nQubits) const -> Placement;
 
   /**
-   * @brief Generates the placements for the next two-qubit and one-qubit
+   * @brief Generates the placements for the next two-qubit and single-qubit
    * layers.
-   * @details This function takes the placement of the last one-qubit layer
+   * @details This function takes the placement of the last single-qubit layer
    * where some atoms may have remained in the entanglement zone due to their
    * reuse. It then generates the placement for the next two-qubit layer by
-   * and the next one-qubit layer considering the reuse of the atoms.
+   * and the next single-qubit layer considering the reuse of the atoms.
    * @param previousPlacement is a reference to the previous placement of the
    * atoms
    * @param previousReuseQubits is a reference to the atoms that may have
@@ -376,15 +376,15 @@ private:
    * do not need to be considered for the current placement. Since, the reuse is
    * optional and not mandatory, not all atoms may have been reused.
    * @param reuseQubits is a reference to the atoms that can be reused for the
-   * next layer and must be considered during the placement for the one-qubit
+   * next layer and must be considered during the placement for the single-qubit
    * gate layer.
    * @param twoQubitGates is a list of all two-qubit gates that must be placed
    * in the current layer.
    * @param nextTwoQubitGates is a list of all two-qubit gates that must be
    * placed in the current layer.
    * @return a pair of two lists, the first one contains the placement for the
-   * two-qubit gates and the second one contains the placement for the one-qubit
-   * gates.
+   * two-qubit gates and the second one contains the placement for the
+   * single-qubit gates.
    * @see placeGatesInEntanglementZone
    * @see placeAtomsInStorageZone
    */
@@ -437,7 +437,7 @@ private:
    * those that are reused.
    * @param nextTwoQubitGates is a list of all two-qubit gates in the next
    * two-qubit gate layer used to calculate the lookahead.
-   * @return the placement of the atoms for the current one-qubit gate layer.
+   * @return the placement of the atoms for the current single-qubit gate layer.
    */
   auto placeAtomsInStorageZone(const Placement& previousPlacement,
                                const std::unordered_set<qc::Qubit>& reuseQubits,

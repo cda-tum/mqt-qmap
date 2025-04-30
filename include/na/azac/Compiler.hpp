@@ -63,7 +63,7 @@ public:
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 2;
                       });
-    const auto nOneQubitGates =
+    const auto nSingleQubitGates =
         std::count_if(qComp.cbegin(), qComp.cend(),
                       [](const std::unique_ptr<qc::Operation>& op) {
                         return op->getNqubits() == 1;
@@ -72,18 +72,19 @@ public:
               << nTwoQubitGates << "\n";
     std::cout
         << "\033[1;32m[INFO]\033[0m           Number of single-qubit gates: "
-        << nOneQubitGates << "\n";
+        << nSingleQubitGates << "\n";
 
     const auto& schedulingStart = std::chrono::system_clock::now();
-    const auto& [oneQubitGateLayers, twoQubitGateLayers] = SELF.schedule(qComp);
+    const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+        SELF.schedule(qComp);
     statistics_.schedulingTime =
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::system_clock::now() - schedulingStart);
     std::cout << "\033[1;32m[INFO]\033[0m           Time for scheduling: "
               << statistics_.schedulingTime.count() << "µs\n";
-    std::cout
-        << "\033[1;32m[INFO]\033[0m           Number of one-qubit gate layers: "
-        << oneQubitGateLayers.size() << "\n";
+    std::cout << "\033[1;32m[INFO]\033[0m           Number of single-qubit "
+                 "gate layers: "
+              << singleQubitGateLayers.size() << "\n";
     std::cout
         << "\033[1;32m[INFO]\033[0m           Number of two-qubit gate layers: "
         << twoQubitGateLayers.size() << "\n";
@@ -129,7 +130,8 @@ public:
               << statistics_.routingTime.count() << "µs\n";
 
     const auto& codeGenerationStart = std::chrono::system_clock::now();
-    NAComputation code = SELF.generate(oneQubitGateLayers, placement, routing);
+    NAComputation code =
+        SELF.generate(singleQubitGateLayers, placement, routing);
     assert(code.validate().first);
     statistics_.codeGenerationTime =
         std::chrono::duration_cast<std::chrono::microseconds>(

@@ -44,18 +44,20 @@ protected:
 };
 TEST_F(ASAPSchedulerScheduleTest, NoGate) {
   qc::QuantumComputation qc;
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers, ::testing::IsEmpty());
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers, ::testing::IsEmpty());
   EXPECT_THAT(twoQubitGateLayers, ::testing::IsEmpty());
 }
-TEST_F(ASAPSchedulerScheduleTest, OneQubitGate) {
+TEST_F(ASAPSchedulerScheduleTest, SingleQubitGate) {
   //    ┌───────┐
   // q: ┤ Rz(π) ├
   //    └───────┘
   qc::QuantumComputation qc(1);
   qc.rz(qc::PI, 0);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers,
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers,
               ::testing::ElementsAre(::testing::ElementsAre(::testing::RefEq(
                   static_cast<qc::StandardOperation&>(*qc.at(0))))));
   EXPECT_THAT(twoQubitGateLayers, ::testing::IsEmpty());
@@ -66,14 +68,16 @@ TEST_F(ASAPSchedulerScheduleTest, TwoQubitGate) {
   // q_1: ─■─
   qc::QuantumComputation qc(2);
   qc.cz(0, 1);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers, ::testing::ElementsAre(::testing::IsEmpty(),
-                                                         ::testing::IsEmpty()));
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(
+      singleQubitGateLayers,
+      ::testing::ElementsAre(::testing::IsEmpty(), ::testing::IsEmpty()));
   EXPECT_THAT(twoQubitGateLayers,
               ::testing::UnorderedElementsAre(::testing::ElementsAre(
                   ::testing::UnorderedElementsAre(0U, 1U))));
 }
-TEST_F(ASAPSchedulerScheduleTest, OneQubitSandwich) {
+TEST_F(ASAPSchedulerScheduleTest, SingleQubitSandwich) {
   // q_0: ──────────■──────────
   //      ┌───────┐ │ ┌───────┐
   // q_1: ┤ Rz(π) ├─■─┤ Rz(π) ├
@@ -82,8 +86,9 @@ TEST_F(ASAPSchedulerScheduleTest, OneQubitSandwich) {
   qc.rz(qc::PI, 1);
   qc.cz(0, 1);
   qc.rz(qc::PI, 1);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers,
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers,
               ::testing::ElementsAre(
                   ::testing::ElementsAre(::testing::RefEq(
                       static_cast<qc::StandardOperation&>(*qc.at(0)))),
@@ -105,9 +110,10 @@ TEST_F(ASAPSchedulerScheduleTest, TwoQubitSequence) {
   qc.cz(0, 1);
   qc.cz(1, 2);
   qc.cz(2, 3);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers, ::testing::SizeIs(4));
-  EXPECT_THAT(oneQubitGateLayers, ::testing::Each(::testing::IsEmpty()));
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers, ::testing::SizeIs(4));
+  EXPECT_THAT(singleQubitGateLayers, ::testing::Each(::testing::IsEmpty()));
   EXPECT_THAT(
       twoQubitGateLayers,
       ::testing::ElementsAre(::testing::UnorderedElementsAre(
@@ -132,8 +138,9 @@ TEST_F(ASAPSchedulerScheduleTest, Mixed) {
   qc.rz(qc::PI, 2);
   qc.cz(2, 3);
   qc.cz(1, 2);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers,
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers,
               ::testing::ElementsAre(
                   ::testing::ElementsAre(::testing::RefEq(
                       static_cast<qc::StandardOperation&>(*qc.at(2)))),
@@ -161,8 +168,9 @@ TEST_F(ASAPSchedulerScheduleTest, Barrier) {
   qc.rz(qc::PI, 1);
   qc.barrier();
   qc.cz(2, 3);
-  const auto& [oneQubitGateLayers, twoQubitGateLayers] = scheduler.schedule(qc);
-  EXPECT_THAT(oneQubitGateLayers,
+  const auto& [singleQubitGateLayers, twoQubitGateLayers] =
+      scheduler.schedule(qc);
+  EXPECT_THAT(singleQubitGateLayers,
               ::testing::ElementsAre(
                   ::testing::IsEmpty(),
                   ::testing::ElementsAre(::testing::RefEq(
