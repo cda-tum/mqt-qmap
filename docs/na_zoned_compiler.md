@@ -98,6 +98,9 @@ On the considered architecture, the single-qubit gates, i.e., the global ry and 
 However, the controlled z-gates can only be executed between nearby atoms in the so-called entanglement zone.
 This entanglement zone is spatially separated from the storage zone, where all atoms not involved in a cz-gate are
 stored.
+
+![Zoned Neutral Atom Architecture](images/zones.pdf)
+
 To find an optimized sequence of target-specific instructions, we use the zoned neutral atom compiler.
 This compiler requires first a specification of the architecture.
 
@@ -156,7 +159,7 @@ compiler = AZACompiler(arch, parse_json("""{
 ```
 
 Now, the created compiler can be used to compile the circuit from above.
-The output is in the `.naviz` format that can be read by the `NAViz` tool
+The output is in the `.naviz` format that can be read by the `MQT NAViz` tool
 at [github.com/cda-tum/mqt-naviz](https://github.com/cda-tum/mqt-naviz).
 This tool allows visualizing the resulting quantum computation.
 

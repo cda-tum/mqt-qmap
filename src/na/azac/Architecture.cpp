@@ -167,7 +167,7 @@ Architecture::Architecture(nlohmann::json json) {
   // JSON Example:
   // "operation_duration": {
   //   "rydberg": 0.36,
-  //   "1qGate": 52,
+  //   "1q_gate": 52,
   //   "atom_transfer": 15
   // }
   if (json.contains("operation_duration")) {
@@ -197,17 +197,17 @@ Architecture::Architecture(nlohmann::json json) {
         throw std::invalid_argument(
             "Operation duration must contain atom transfer duration");
       }
-      if (json["operation_duration"].contains("1qGate")) {
-        if (json["operation_duration"]["1qGate"].is_number()) {
+      if (json["operation_duration"].contains("1q_gate")) {
+        if (json["operation_duration"]["1q_gate"].is_number()) {
           operationDurations->timeSingleQubitGate =
-              json["operation_duration"]["1qGate"];
+              json["operation_duration"]["1q_gate"];
         } else {
           throw std::invalid_argument(
               "One qubit gate duration must be a number in architecture spec");
         }
       } else {
         throw std::invalid_argument(
-            "Operation duration must contain 1qGate duration");
+            "Operation duration must contain 1q_gate duration");
       }
     } else {
       throw std::invalid_argument(

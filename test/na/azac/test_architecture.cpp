@@ -7,7 +7,7 @@
 namespace na::azac {
 constexpr std::string_view architectureJson = R"({
   "name": "full_compute_store_architecture",
-  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": 15},
+  "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": 15},
   "operation_fidelity": {
     "two_qubit_gate": 0.995,
     "single_qubit_gate": 0.9997,
@@ -129,35 +129,35 @@ TEST(ArchitectureTest, InvalidDurations) {
 TEST(ArchitectureTest, InvalidRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": "0.36µs", "1qGate": 52, "atom_transfer": 15}
+  "operation_duration": {"rydberg": "0.36µs", "1q_gate": 52, "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingRydbergDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"1qGate": 52, "atom_transfer": 15}
+  "operation_duration": {"1q_gate": 52, "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1qGate": 52, "atom_transfer": "15 µs"}
+  "operation_duration": {"rydberg": 0.36, "1q_gate": 52, "atom_transfer": "15 µs"}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, MissingTransferDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1qGate": 52}
+  "operation_duration": {"rydberg": 0.36, "1q_gate": 52}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
 TEST(ArchitectureTest, InvalidSingleQubitOperationDuration) {
   nlohmann::json spec = R"({
   "name": "invalid_architecture",
-  "operation_duration": {"rydberg": 0.36, "1qGate": "52µs", "atom_transfer": 15}
+  "operation_duration": {"rydberg": 0.36, "1q_gate": "52µs", "atom_transfer": 15}
 })"_json;
   EXPECT_THROW([[maybe_unused]] Architecture arch(spec), std::invalid_argument);
 }
