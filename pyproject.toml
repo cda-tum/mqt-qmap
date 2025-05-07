@@ -300,13 +300,16 @@ skip = "*-musllinux*"
 archs = "auto64"
 test-groups = ["test"]
 test-command = "pytest {project}/test/python"
-test-skip = ["cp3*t-*"] # skip testing on free-threading Python until our dependencies are ready
 build-frontend = "build[uv]"
 enable = ["cpython-freethreading"]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-ppc64le-image = "manylinux_2_28"
 manylinux-s390x-image = "manylinux_2_28"
+test-skip = [
+  "cp3*t-*", # no freethreading qiskit wheels
+  "cp*-win_arm64", # no numpy, qiskit, ... wheels
+]
 
 # The mqt-core shared libraries are provided by the mqt-core Python package.
 # They should not be vendorized into the mqt-qcec wheel. This requires

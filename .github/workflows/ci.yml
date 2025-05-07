@@ -28,6 +28,7 @@ jobs:
       enable-macos13-clang-release: true
       enable-macos14-clang-release: true
       enable-windows2022-msvc-release: true
+      enable-windows11-arm-msvc-release: true
       # Runs to disable
       enable-ubuntu2404-gcc-debug: false
       enable-ubuntu2404-clang-release: false
@@ -60,6 +61,9 @@ jobs:
       enable-windows2025-msvc-debug: false
       enable-windows2025-clang-release: false
       enable-windows2025-clang-debug: false
+      enable-windows11-arm-msvc-debug: false
+      enable-windows11-arm-clang-release: false
+      enable-windows11-arm-clang-debug: false
       # General settings
       setup-z3: true
 
@@ -102,12 +106,16 @@ jobs:
       enable-windows2025-msvc-debug: true
       enable-windows2025-clang-release: true
       enable-windows2025-clang-debug: true
+      enable-windows11-arm-msvc-debug: true
+      enable-windows11-arm-clang-release: true
+      enable-windows11-arm-clang-debug: true
       # Runs to disable (these are already enabled in the non-extensive run)
       enable-ubuntu2404-gcc-release: false
       enable-ubuntu2404-arm-gcc-release: false
       enable-macos13-clang-release: false
       enable-macos14-clang-release: false
       enable-windows2022-msvc-release: false
+      enable-windows11-arm-msvc-release: false
       # General settings
       setup-z3: true
 
@@ -148,6 +156,8 @@ jobs:
       enable-ubuntu2204-arm: false
       enable-macos15: false
       enable-windows2025: false
+      # Testing on Windows 11 ARM is not supported yet
+      enable-windows11-arm: false
       # General settings
       setup-z3: true
     permissions:
@@ -171,6 +181,8 @@ jobs:
       enable-macos13: false
       enable-macos14: false
       enable-windows2022: false
+      # Testing on Windows 11 ARM is not supported yet
+      enable-windows11-arm: false
       # General settings
       setup-z3: true
     permissions:
@@ -202,6 +214,18 @@ jobs:
       setup-z3: true
       # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
+      # Runs to enable
+      enable-ubuntu2404: true
+      enable-ubuntu2404-arm: true
+      enable-macos13: true
+      enable-macos14: true
+      enable-windows2022: true
+      enable-windows11-arm: true
+      # Runs to disable
+      enable-ubuntu2204: false
+      enable-ubuntu2204-arm: false
+      enable-macos15: false
+      enable-windows2025: false
 
   required-checks-pass: # This job does nothing and is only used for branch protection
     name: 🚦 Check
