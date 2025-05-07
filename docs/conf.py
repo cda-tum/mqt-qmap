@@ -45,14 +45,13 @@ except ModuleNotFoundError:
 release = version.split("+")[0]
 
 project = "MQT QMAP"
-author = "Chair for Design Automation, Technical University of Munich"
+author = "Chair for Design Automation, TUM & Munich Quantum Software Company"
 language = "en"
-project_copyright = "2025, Chair for Design Automation, Technical University of Munich"
+project_copyright = "2023 - 2025 Chair for Design Automation, TUM & 2025 Munich Quantum Software Company"
 
 master_doc = "index"
 
 templates_path = ["_templates"]
-html_css_files = ["custom.css"]
 
 extensions = [
     "myst_nb",
@@ -162,6 +161,12 @@ napoleon_numpy_docstring = False
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"
 html_static_path = ["_static"]
+html_css_files = [
+    "custom.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
+]
 html_theme_options = {
     "light_logo": "mqt_dark.png",
     "dark_logo": "mqt_light.png",
@@ -169,6 +174,20 @@ html_theme_options = {
     "source_branch": "main",
     "source_directory": "docs/",
     "navigation_with_keys": True,
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/cda-tum/mqt-qmap/",
+            "html": "",
+            "class": "fa-brands fa-solid fa-github fa-2x",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/mqt-qmap/",
+            "html": "",
+            "class": "fa-brands fa-solid fa-python fa-2x",
+        },
+    ],
 }
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -184,7 +203,9 @@ latex_documents = [
         master_doc,
         "mqt_qmap.tex",
         r"MQT QMAP\\{\Large A tool for Mapping Quantum Circuits to various Hardware Technologies}",
-        r"Chair for Design Automation\\Technical University of Munich",
+        r"""Chair for Design Automation\\ Technical University of Munich, Germany\\
+        \href{mailto:quantum.cda@xcit.tum.de}{quantum.cda@xcit.tum.de}\\
+        Munich Quantum Software Company GmbH\\Garching near Munich, Germany""",
         "howto",
         False,
     ),
