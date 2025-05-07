@@ -1,10 +1,10 @@
 [![PyPI](https://img.shields.io/pypi/v/mqt.qmap?logo=pypi&style=flat-square)](https://pypi.org/project/mqt.qmap/)
 ![OS](https://img.shields.io/badge/os-linux%20%7C%20macos%20%7C%20windows-blue?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![CI](https://img.shields.io/github/actions/workflow/status/cda-tum/mqt-qmap/ci.yml?branch=main&style=flat-square&logo=github&label=ci)](https://github.com/cda-tum/mqt-qmap/actions/workflows/ci.yml)
-[![CD](https://img.shields.io/github/actions/workflow/status/cda-tum/mqt-qmap/cd.yml?style=flat-square&logo=github&label=cd)](https://github.com/cda-tum/mqt-qmap/actions/workflows/cd.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/munich-quantum-toolkit/qmap/ci.yml?branch=main&style=flat-square&logo=github&label=ci)](https://github.com/munich-quantum-toolkit/qmap/actions/workflows/ci.yml)
+[![CD](https://img.shields.io/github/actions/workflow/status/munich-quantum-toolkit/qmap/cd.yml?style=flat-square&logo=github&label=cd)](https://github.com/munich-quantum-toolkit/qmap/actions/workflows/cd.yml)
 [![Documentation](https://img.shields.io/readthedocs/mqtqmap?logo=readthedocs&style=flat-square)](https://mqt.readthedocs.io/projects/qmap)
-[![codecov](https://img.shields.io/codecov/c/github/cda-tum/mqt-qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/cda-tum/mqt-qmap)
+[![codecov](https://img.shields.io/codecov/c/github/munich-quantum-toolkit/qmap?style=flat-square&logo=codecov)](https://codecov.io/gh/munich-quantum-toolkit/qmap)
 
 <p align="center">
   <a href="https://mqt.readthedocs.io">
@@ -18,7 +18,7 @@
 # MQT QMAP - A tool for Quantum Circuit Compilation
 
 A tool for quantum circuit compilation developed as part of the [_Munich Quantum Toolkit (MQT)_](https://mqt.readthedocs.io) [^1].
-It builds upon [MQT Core](https://github.com/cda-tum/mqt-core), which forms the backbone of the MQT.
+It builds upon [MQT Core](https://github.com/munich-quantum-toolkit/core), which forms the backbone of the MQT.
 
 <p align="center">
   <a href="https://mqt.readthedocs.io/projects/qmap">

@@ -7,7 +7,7 @@
 MQT QMAP is an open-source C++17 and Python library for mapping quantum circuits onto various hardware technologies developed as part of the _{doc}`Munich Quantum Toolkit (MQT) <mqt:index>`_ [^1].
 
 This documentation provides a comprehensive guide to the MQT QMAP library, including {doc}`installation instructions <installation>`, demo notebooks, and detailed {doc}`API documentation <api/mqt/qmap/index>`.
-The source code of MQT QMAP is publicly available on GitHub at [cda-tum/mqt-qmap](https://github.com/cda-tum/mqt-qmap), while pre-built binaries are available via [PyPI](https://pypi.org/project/mqt.qmap/) for all major operating systems and all modern Python versions.
+The source code of MQT QMAP is publicly available on GitHub at [munich-quantum-toolkit/qmap](https://github.com/munich-quantum-toolkit/qmap), while pre-built binaries are available via [PyPI](https://pypi.org/project/mqt.qmap/) for all major operating systems and all modern Python versions.
 MQT QMAP is fully compatible with Qiskit 1.0 and above.
 
 We recommend you to start with the {doc}`installation instructions <installation>` or by reading our overview paper {cite:p}`wille2023qmap`.

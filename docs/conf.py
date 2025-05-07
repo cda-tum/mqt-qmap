@@ -170,14 +170,14 @@ html_css_files = [
 html_theme_options = {
     "light_logo": "mqt_dark.png",
     "dark_logo": "mqt_light.png",
-    "source_repository": "https://github.com/cda-tum/mqt-qmap/",
+    "source_repository": "https://github.com/munich-quantum-toolkit/qmap/",
     "source_branch": "main",
     "source_directory": "docs/",
     "navigation_with_keys": True,
     "footer_icons": [
         {
             "name": "GitHub",
-            "url": "https://github.com/cda-tum/mqt-qmap/",
+            "url": "https://github.com/munich-quantum-toolkit/qmap/",
             "html": "",
             "class": "fa-brands fa-solid fa-github fa-2x",
         },
