@@ -137,6 +137,8 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.9
     with:
       setup-z3: true
+      clang-version: 20
+      files-changed-only: false
 
   # run extensive Python tests whenever this is on a PR and the PR has the `extensive-python-ci` label
   python-tests:
