@@ -96,7 +96,7 @@ $ uv pip install mqt.qmap --no-binary mqt.qmap --no-binary mqt.core
 :::
 ::::
 
-This requires a [C++ compiler supporting C++17](https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers) and a minimum [CMake](https://cmake.org/) version of 3.19.
+This requires a [C++ compiler supporting C++17](https://en.wikipedia.org/wiki/List_of_compilers#C++_compilers) and a minimum [CMake](https://cmake.org/) version of 3.24.
 Additionally, the [SMT solver Z3](https://github.com/Z3Prover/z3) has to be installed and the dynamic linker has to be able to find the library.
 This can be accomplished in a multitude of ways:
 
