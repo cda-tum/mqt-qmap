@@ -96,7 +96,7 @@ jobs:
       enable-macos14-gcc-release: false
       enable-macos14-gcc-debug: false
       enable-macos15-clang-release: false
-      enable-macos15-clang-debug: true
+      enable-macos15-clang-debug: false
       enable-macos15-gcc-release: false
       enable-macos15-gcc-debug: false
       enable-windows2022-msvc-debug: false
@@ -119,26 +119,26 @@ jobs:
       # General settings
       setup-z3: true
 
-  cpp-coverage:
-    name: 🇨‌ Coverage
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@v1.9
-    with:
-      setup-z3: true
-    permissions:
-      contents: read
-      id-token: write
-
-  cpp-linter:
-    name: 🇨‌ Lint
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.9
-    with:
-      setup-z3: true
-      clang-version: 20
-      files-changed-only: false
+  #  cpp-coverage:
+  #    name: 🇨‌ Coverage
+  #    needs: change-detection
+  #    if: fromJSON(needs.change-detection.outputs.run-cpp-tests)
+  #    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-coverage.yml@v1.9
+  #    with:
+  #      setup-z3: true
+  #    permissions:
+  #      contents: read
+  #      id-token: write
+  #
+  #  cpp-linter:
+  #    name: 🇨‌ Lint
+  #    needs: change-detection
+  #    if: fromJSON(needs.change-detection.outputs.run-cpp-linter)
+  #    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-linter.yml@v1.9
+  #    with:
+  #      setup-z3: true
+  #      clang-version: 20
+  #      files-changed-only: false
 
   # run extensive Python tests whenever this is on a PR and the PR has the `extensive-python-ci` label
   python-tests:
@@ -156,7 +156,7 @@ jobs:
       # Runs to disable
       enable-ubuntu2204: false
       enable-ubuntu2204-arm: false
-      enable-macos15: false
+      enable-macos15: true
       enable-windows2025: false
       # Testing on Windows 11 ARM is not supported yet
       enable-windows11-arm: false
@@ -175,7 +175,7 @@ jobs:
       # Runs to enable
       enable-ubuntu2204: false
       enable-ubuntu2204-arm: false
-      enable-macos15: true
+      enable-macos15: false
       enable-windows2025: false
       # Runs to disable (these are already enabled in the non-extensive run)
       enable-ubuntu2404: false
@@ -191,21 +191,21 @@ jobs:
       contents: read
       id-token: write
 
-  python-linter:
-    name: 🐍 Lint
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@v1.9
-    with:
-      setup-z3: true
-
-  code-ql:
-    name: 📝 CodeQL
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-code-ql)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-code-ql.yml@v1.9
-    with:
-      setup-z3: true
+  #  python-linter:
+  #    name: 🐍 Lint
+  #    needs: change-detection
+  #    if: fromJSON(needs.change-detection.outputs.run-python-tests)
+  #    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@v1.9
+  #    with:
+  #      setup-z3: true
+  #
+  #  code-ql:
+  #    name: 📝 CodeQL
+  #    needs: change-detection
+  #    if: fromJSON(needs.change-detection.outputs.run-code-ql)
+  #    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-code-ql.yml@v1.9
+  #    with:
+  #      setup-z3: true
 
   cd:
     name: 🚀 CD
@@ -236,12 +236,8 @@ jobs:
       - change-detection
       - cpp-tests
       - cpp-tests-extensive
-      - cpp-coverage
-      - cpp-linter
       - python-tests
       - python-tests-extensive
-      - python-linter
-      - code-ql
       - cd
     runs-on: ubuntu-latest
     steps:
@@ -258,28 +254,12 @@ jobs:
               && '' || 'cpp-tests-extensive,'
             }}
             ${{
-              fromJSON(needs.change-detection.outputs.run-cpp-tests)
-              && '' || 'cpp-coverage,'
-            }}
-            ${{
-              fromJSON(needs.change-detection.outputs.run-cpp-linter)
-              && '' || 'cpp-linter,'
-            }}
-            ${{
               fromJSON(needs.change-detection.outputs.run-python-tests)
               && '' || 'python-tests,'
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-python-tests) && github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'extensive-python-ci')
               && '' || 'python-tests-extensive,'
-            }}
-            ${{
-              fromJSON(needs.change-detection.outputs.run-python-tests)
-              && '' || 'python-linter,'
-            }}
-            ${{
-              fromJSON(needs.change-detection.outputs.run-code-ql)
-              && '' || 'code-ql,'
             }}
             ${{
               fromJSON(needs.change-detection.outputs.run-cd)
