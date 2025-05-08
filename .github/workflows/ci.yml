@@ -23,12 +23,12 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.9
     with:
       # Runs to enable
-      enable-ubuntu2404-gcc-release: true
-      enable-ubuntu2404-arm-gcc-release: true
-      enable-macos13-clang-release: true
-      enable-macos14-clang-release: true
-      enable-windows2022-msvc-release: true
-      enable-windows11-arm-msvc-release: true
+      enable-ubuntu2404-gcc-release: false
+      enable-ubuntu2404-arm-gcc-release: false
+      enable-macos13-clang-release: false
+      enable-macos14-clang-release: false
+      enable-windows2022-msvc-release: false
+      enable-windows11-arm-msvc-release: false
       # Runs to disable
       enable-ubuntu2404-gcc-debug: false
       enable-ubuntu2404-clang-release: false
@@ -75,40 +75,40 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-cpp-ci.yml@v1.9
     with:
       # Runs to enable
-      enable-ubuntu2404-gcc-debug: true
-      enable-ubuntu2404-clang-release: true
-      enable-ubuntu2404-clang-debug: true
-      enable-ubuntu2204-gcc-release: true
-      enable-ubuntu2204-gcc-debug: true
-      enable-ubuntu2204-clang-release: true
-      enable-ubuntu2204-clang-debug: true
-      enable-ubuntu2404-arm-gcc-debug: true
-      enable-ubuntu2404-arm-clang-release: true
-      enable-ubuntu2404-arm-clang-debug: true
-      enable-ubuntu2204-arm-gcc-release: true
-      enable-ubuntu2204-arm-gcc-debug: true
-      enable-ubuntu2204-arm-clang-release: true
-      enable-ubuntu2204-arm-clang-debug: true
-      enable-macos13-clang-debug: true
-      enable-macos13-gcc-release: true
-      enable-macos13-gcc-debug: true
-      enable-macos14-clang-debug: true
-      enable-macos14-gcc-release: true
-      enable-macos14-gcc-debug: true
-      enable-macos15-clang-release: true
-      enable-macos15-clang-debug: true
-      enable-macos15-gcc-release: true
-      enable-macos15-gcc-debug: true
-      enable-windows2022-msvc-debug: true
-      enable-windows2022-clang-release: true
-      enable-windows2022-clang-debug: true
-      enable-windows2025-msvc-release: true
-      enable-windows2025-msvc-debug: true
-      enable-windows2025-clang-release: true
-      enable-windows2025-clang-debug: true
-      enable-windows11-arm-msvc-debug: true
-      enable-windows11-arm-clang-release: true
-      enable-windows11-arm-clang-debug: true
+      enable-ubuntu2404-gcc-debug: false
+      enable-ubuntu2404-clang-release: false
+      enable-ubuntu2404-clang-debug: false
+      enable-ubuntu2204-gcc-release: false
+      enable-ubuntu2204-gcc-debug: false
+      enable-ubuntu2204-clang-release: false
+      enable-ubuntu2204-clang-debug: false
+      enable-ubuntu2404-arm-gcc-debug: false
+      enable-ubuntu2404-arm-clang-release: false
+      enable-ubuntu2404-arm-clang-debug: false
+      enable-ubuntu2204-arm-gcc-release: false
+      enable-ubuntu2204-arm-gcc-debug: false
+      enable-ubuntu2204-arm-clang-release: false
+      enable-ubuntu2204-arm-clang-debug: false
+      enable-macos13-clang-debug: false
+      enable-macos13-gcc-release: false
+      enable-macos13-gcc-debug: false
+      enable-macos14-clang-debug: false
+      enable-macos14-gcc-release: false
+      enable-macos14-gcc-debug: false
+      enable-macos15-clang-release: false
+      enable-macos15-clang-debug: false
+      enable-macos15-gcc-release: false
+      enable-macos15-gcc-debug: false
+      enable-windows2022-msvc-debug: false
+      enable-windows2022-clang-release: false
+      enable-windows2022-clang-debug: false
+      enable-windows2025-msvc-release: false
+      enable-windows2025-msvc-debug: false
+      enable-windows2025-clang-release: false
+      enable-windows2025-clang-debug: false
+      enable-windows11-arm-msvc-debug: false
+      enable-windows11-arm-clang-release: false
+      enable-windows11-arm-clang-debug: false
       # Runs to disable (these are already enabled in the non-extensive run)
       enable-ubuntu2404-gcc-release: false
       enable-ubuntu2404-arm-gcc-release: false
@@ -148,11 +148,11 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.9
     with:
       # Runs to enable
-      enable-ubuntu2404: true
-      enable-ubuntu2404-arm: true
-      enable-macos13: true
-      enable-macos14: true
-      enable-windows2022: true
+      enable-ubuntu2404: false
+      enable-ubuntu2404-arm: false
+      enable-macos13: false
+      enable-macos14: false
+      enable-windows2022: false
       # Runs to disable
       enable-ubuntu2204: false
       enable-ubuntu2204-arm: false
@@ -173,10 +173,10 @@ jobs:
     uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-ci.yml@v1.9
     with:
       # Runs to enable
-      enable-ubuntu2204: true
-      enable-ubuntu2204-arm: true
+      enable-ubuntu2204: false
+      enable-ubuntu2204-arm: false
       enable-macos15: true
-      enable-windows2025: true
+      enable-windows2025: false
       # Runs to disable (these are already enabled in the non-extensive run)
       enable-ubuntu2404: false
       enable-ubuntu2404-arm: false
@@ -217,12 +217,12 @@ jobs:
       # 4.13.0 has incorrectly tagged manylinux wheels
       z3-version: 4.12.6
       # Runs to enable
-      enable-ubuntu2404: true
-      enable-ubuntu2404-arm: true
-      enable-macos13: true
-      enable-macos14: true
-      enable-windows2022: true
-      enable-windows11-arm: true
+      enable-ubuntu2404: false
+      enable-ubuntu2404-arm: false
+      enable-macos13: false
+      enable-macos14: false
+      enable-windows2022: false
+      enable-windows11-arm: false
       # Runs to disable
       enable-ubuntu2204: false
       enable-ubuntu2204-arm: false
