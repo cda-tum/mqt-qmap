@@ -51,7 +51,7 @@ jobs:
       enable-macos14-gcc-release: false
       enable-macos14-gcc-debug: false
       enable-macos15-clang-release: false
-      enable-macos15-clang-debug: true
+      enable-macos15-clang-debug: false
       enable-macos15-gcc-release: false
       enable-macos15-gcc-debug: false
       enable-windows2022-msvc-debug: false
@@ -226,7 +226,7 @@ jobs:
       # Runs to disable
       enable-ubuntu2204: false
       enable-ubuntu2204-arm: false
-      enable-macos15: true
+      enable-macos15: false
       enable-windows2025: false
 
   required-checks-pass: # This job does nothing and is only used for branch protection
