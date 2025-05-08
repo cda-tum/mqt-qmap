@@ -151,7 +151,7 @@ jobs:
       enable-ubuntu2404: false
       enable-ubuntu2404-arm: false
       enable-macos13: false
-      enable-macos14: false
+      enable-macos14: true
       enable-windows2022: false
       # Runs to disable
       enable-ubuntu2204: false
