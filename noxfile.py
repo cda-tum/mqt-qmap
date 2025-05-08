@@ -61,6 +61,7 @@ def _run_tests(
     session.run(
         "uv",
         "sync",
+        "--verbose",
         "--inexact",
         "--only-group",
         "build",
@@ -82,6 +83,7 @@ def _run_tests(
     session.run(
         "uv",
         "sync",
+        "--verbose",
         "--inexact",
         "--no-dev",  # do not auto-install dev dependencies
         "--no-build-isolation-package",
@@ -94,6 +96,7 @@ def _run_tests(
     session.run(
         "uv",
         "run",
+        "--verbose",
         "--no-sync",  # do not sync as everything is already installed
         *install_args,
         "pytest",
