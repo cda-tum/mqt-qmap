@@ -9,9 +9,9 @@
  */
 
 #include <iostream>
-#include <z3.h>
+#include <z3.h> // NOLINT(misc-include-cleaner)
 
 int main() {
-  std::cout << Z3_get_full_version();
+  std::cout << Z3_get_full_version(); // NOLINT(misc-include-cleaner)
   return 0;
 }

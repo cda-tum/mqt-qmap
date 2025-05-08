@@ -27,7 +27,7 @@
 #include <z3++.h>
 
 namespace z3logic {
-
+namespace {
 CType extractNumberType(
     const std::vector<LogicTerm>&
         terms) { // TODO check if all terms are numbers, handle BV
@@ -44,6 +44,7 @@ CType extractNumberType(
   }
   return res;
 }
+} // namespace
 
 z3::expr Z3Base::getExprTerm(const uint64_t id, const CType type,
                              Z3Base* z3base) {

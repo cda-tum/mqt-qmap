@@ -30,15 +30,12 @@ namespace logicbase {
 uint64_t LogicTerm::getMaxChildrenDepth() const {
   uint64_t max = 0;
   for (const LogicTerm& t : getNodes()) {
-    const uint64_t d = t.getMaxChildrenDepth();
-    if (d > max) {
-      max = d;
-    }
+    max = std::max(max, t.getMaxChildrenDepth());
   }
   return max + 1;
 }
 
-std::string LogicTerm::getStrRep(OpType op) {
+std::string LogicTerm::getStrRep(const OpType op) {
   std::stringstream os;
   switch (op) {
   case OpType::Constant:
