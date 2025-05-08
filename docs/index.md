@@ -48,6 +48,8 @@ mapping
 synthesis
 na_state_prep
 references
+CHANGELOG
+UPGRADING
 ```
 
 ````{only} not latex
