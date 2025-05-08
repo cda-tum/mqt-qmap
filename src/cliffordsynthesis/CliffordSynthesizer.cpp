@@ -470,6 +470,7 @@ void CliffordSynthesizer::updateResults(const Configuration& config,
   }
 }
 
+namespace {
 void gateToLayer(const qc::Operation& gate, std::size_t& i,
                  std::vector<std::size_t>& layers,
                  std::vector<std::size_t>& layerNum, std::size_t& layer) {
@@ -512,6 +513,7 @@ std::vector<std::size_t> getLayers(const qc::QuantumComputation& qc) {
   }
   return layers;
 }
+} // namespace
 
 void CliffordSynthesizer::depthHeuristicSynthesis() {
   PLOG_INFO << "Optimizing Circuit with Heuristic";

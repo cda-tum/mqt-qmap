@@ -50,6 +50,7 @@
 constexpr qc::OpType SWAP = qc::OpType::SWAP;
 constexpr double FLOAT_TOLERANCE = 1e-6;
 
+namespace {
 /**
  * @brief Get id of the final node in a given layer from a data log.
  */
@@ -218,6 +219,7 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   path.push_back(node->id);
   return path;
 }
+} // namespace
 
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
@@ -1201,6 +1203,7 @@ TEST(Functionality, DataLogger) {
               finalSolutionNode.lookaheadPenalty);
     EXPECT_EQ(layerJson["final_search_depth"], finalSolutionNode.depth);
     std::vector<std::int16_t> layout{};
+    layout.reserve(architecture.getNqubits());
     for (std::size_t j = 0; j < architecture.getNqubits(); ++j) {
       layout.emplace_back(finalSolutionNode.qubits.at(j));
     }

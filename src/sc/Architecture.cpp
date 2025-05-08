@@ -42,9 +42,8 @@ void Architecture::loadCouplingMap(const std::string& filename) {
   const std::size_t slash = filename.find_last_of('/');
   const std::size_t dot = filename.find_last_of('.');
   name = filename.substr(slash + 1, dot - slash - 1);
-  auto ifs = std::ifstream(filename);
-  if (ifs.good()) {
-    this->loadCouplingMap(ifs);
+  if (auto ifs = std::ifstream(filename); ifs.good()) {
+    loadCouplingMap(ifs);
   } else {
     throw QMAPException("Error opening coupling map file.");
   }
@@ -494,10 +493,10 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   std::vector<bool> visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
-  for (const auto& edge : cm) {
-    connections.at(edge.first).emplace(edge.second);
+  for (const auto& [q0, q1] : cm) {
+    connections.at(q0).emplace(q1);
     // make sure that the connections are bidirectional
-    connections.at(edge.second).emplace(edge.first);
+    connections.at(q1).emplace(q0);
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
     d.clear();
@@ -508,9 +507,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     std::fill(visited.begin(), visited.end(), false);
     findCouplingLimit(q, 0, connections, d, visited);
     auto it = std::max_element(d.begin(), d.end());
-    if ((*it) > maxSum) {
-      maxSum = (*it);
-    }
+    maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
 }
@@ -523,12 +520,11 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
   std::vector<bool> visited;
   connections.resize(nQubits);
   std::uint16_t maxSum = 0;
-  for (const auto& edge : cm) {
-    if ((qubitChoice.count(edge.first) != 0U) &&
-        (qubitChoice.count(edge.second) != 0U)) {
-      connections.at(edge.first).emplace(edge.second);
+  for (const auto& [q0, q1] : cm) {
+    if ((qubitChoice.count(q0) != 0U) && (qubitChoice.count(q1) != 0U)) {
+      connections.at(q0).emplace(q1);
       // make sure that the connections are bidirectional
-      connections.at(edge.second).emplace(edge.first);
+      connections.at(q1).emplace(q0);
     }
   }
   for (std::uint16_t q = 0; q < nQubits; ++q) {
@@ -543,9 +539,7 @@ std::size_t Architecture::findCouplingLimit(const CouplingMap& cm,
     std::fill(visited.begin(), visited.end(), false);
     findCouplingLimit(q, 0, connections, d, visited);
     auto it = std::max_element(d.begin(), d.end());
-    if ((*it) > maxSum) {
-      maxSum = (*it);
-    }
+    maxSum = std::max(maxSum, (*it));
   }
   return maxSum;
 }
@@ -559,8 +553,7 @@ void Architecture::findCouplingLimit(
   }
   visited[node] = true;
 
-  auto& elem = d[node];
-  if (elem == 0 || elem > curSum) {
+  if (auto& elem = d[node]; elem == 0 || elem > curSum) {
     elem = curSum;
   }
   if (connections.at(node).empty()) {
@@ -568,7 +561,7 @@ void Architecture::findCouplingLimit(
     return;
   }
 
-  for (auto child : connections.at(node)) {
+  for (const auto child : connections.at(node)) {
     findCouplingLimit(child, curSum + 1, connections, d, visited);
   }
 

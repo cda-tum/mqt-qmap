@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+namespace {
 ::testing::AssertionResult matrixNear(const Matrix& a, const Matrix& b,
                                       double delta) {
   if (a.size() != b.size()) {
@@ -48,6 +49,7 @@
   }
   return ::testing::AssertionSuccess();
 }
+} // namespace
 
 class TestArchitecture : public testing::TestWithParam<std::string> {
 protected:
