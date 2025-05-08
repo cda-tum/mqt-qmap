@@ -44,7 +44,7 @@ jobs:
           echo "date=${QISKIT_COMMIT_DATE}" >> $GITHUB_OUTPUT
 
       - name: Create or update issue
-        if: ${{ needs.qiskit-upstream-tests.result != 'success' }}
+        if: ${{ needs.qiskit-upstream-tests.result != 'success' && needs.qiskit-upstream-tests.result != 'cancelled' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ github.token }}
