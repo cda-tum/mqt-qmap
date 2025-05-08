@@ -1009,7 +1009,7 @@ of the abstraction from the 2D grid used for the solver must be provided again.
         auto opTypeLowerStr = operationType;
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
-                       [](unsigned char c) { return std::tolower(c); });
+                       [](const auto c) { return std::tolower(c); });
         return na::NASolver::getOpsForSolver(
             qc, qc::opTypeFromString(operationType), numControls, quiet);
       },

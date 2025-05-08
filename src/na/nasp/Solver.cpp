@@ -788,26 +788,45 @@ auto NASolver::getOpsForSolver(const qc::QuantumComputation& circ,
                                const qc::OpType opType, const std::size_t ctrls,
                                const bool quiet)
     -> std::vector<std::pair<unsigned int, unsigned int>> {
+  std::cout << __FUNCTION__ << " called" << std::endl;
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   auto flattened = circ;
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   qc::CircuitOptimizer::flattenOperations(flattened);
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   std::vector<std::pair<unsigned int, unsigned int>> ops;
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   ops.reserve(flattened.size());
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   for (const auto& op : flattened) {
+    std::cout << __FILE__ << ":" << __LINE__ << std::endl;
     if (op->getType() == opType && op->getNcontrols() == ctrls) {
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       const auto& operands = op->getUsedQubits();
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       if (operands.size() != 2) {
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         std::stringstream ss;
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         ss << "Operation " << op->getName() << " does not have two operands.";
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         throw std::invalid_argument(ss.str());
       }
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       ops.emplace_back(*operands.cbegin(), *operands.rbegin());
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
     } else if (!quiet) {
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       std::stringstream ss;
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       ss << "Operation " << op->getName() << " is not of type " << opType
          << " or does not have " << ctrls << " controls.";
+      std::cout << __FILE__ << ":" << __LINE__ << std::endl;
       throw std::invalid_argument(ss.str());
     }
+    std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   }
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   return ops;
 }
 } // namespace na

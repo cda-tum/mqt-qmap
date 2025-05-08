@@ -690,8 +690,8 @@ class NAStatePreparationSolver:
 
 def get_ops_for_solver(
     circ: QuantumComputation,
-    operation_type: str,
-    num_controls: int,
+    operation_type: str = ...,
+    num_controls: int = ...,
     quiet: bool = ...,
 ) -> list[tuple[int, int]]: ...
 def generate_code(
