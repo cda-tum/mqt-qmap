@@ -1,3 +1,11 @@
+# Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+# Copyright (c) 2025 Munich Quantum Software Company GmbH
+# All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+#
+# Licensed under the MIT License
+
 """Functionality for computing good subarchitectures for quantum circuit mapping.
 
 This file implements the methods presented in https://arxiv.org/abs/2210.09321.

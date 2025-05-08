@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
+
 #include "Z3Logic.hpp"
 
 #include "Logic.hpp"
@@ -17,7 +27,7 @@
 #include <z3++.h>
 
 namespace z3logic {
-
+namespace {
 CType extractNumberType(
     const std::vector<LogicTerm>&
         terms) { // TODO check if all terms are numbers, handle BV
@@ -34,6 +44,7 @@ CType extractNumberType(
   }
   return res;
 }
+} // namespace
 
 z3::expr Z3Base::getExprTerm(const uint64_t id, const CType type,
                              Z3Base* z3base) {

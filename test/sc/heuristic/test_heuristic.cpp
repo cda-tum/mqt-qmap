@@ -1,7 +1,12 @@
-//
-// This file is part of the MQT QMAP library released under the MIT license.
-// See README.md or go to https://github.com/cda-tum/qmap for more information.
-//
+/*
+ * Copyright (c) 2023 - 2025 Chair for Design Automation, TUM
+ * Copyright (c) 2025 Munich Quantum Software Company GmbH
+ * All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
+ *
+ * Licensed under the MIT License
+ */
 
 #include "ir/Definitions.hpp"
 #include "ir/operations/Control.hpp"
@@ -45,6 +50,7 @@
 constexpr qc::OpType SWAP = qc::OpType::SWAP;
 constexpr double FLOAT_TOLERANCE = 1e-6;
 
+namespace {
 /**
  * @brief Get id of the final node in a given layer from a data log.
  */
@@ -213,6 +219,7 @@ getPathToRoot(std::vector<HeuristicMapper::Node>& nodes, std::size_t nodeId) {
   path.push_back(node->id);
   return path;
 }
+} // namespace
 
 class TestHeuristics
     : public testing::TestWithParam<std::tuple<Heuristic, std::string>> {
@@ -1196,6 +1203,7 @@ TEST(Functionality, DataLogger) {
               finalSolutionNode.lookaheadPenalty);
     EXPECT_EQ(layerJson["final_search_depth"], finalSolutionNode.depth);
     std::vector<std::int16_t> layout{};
+    layout.reserve(architecture.getNqubits());
     for (std::size_t j = 0; j < architecture.getNqubits(); ++j) {
       layout.emplace_back(finalSolutionNode.qubits.at(j));
     }

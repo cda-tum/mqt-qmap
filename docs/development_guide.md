@@ -8,21 +8,21 @@ Ready to contribute to the project? This guide will get you started.
 
    ::::{tab-set}
    :::{tab-item} External Contribution
-   If you do not have write access to the [cda-tum/mqt-qmap](https://github.com/cda-tum/mqt-qmap) repository,
+   If you do not have write access to the [munich-quantum-toolkit/qmap](https://github.com/munich-quantum-toolkit/qmap) repository,
    fork the repository on GitHub (see <https://docs.github.com/en/get-started/quickstart/fork-a-repo>)
    and clone your fork locally.
 
    ```console
-   $ git clone git@github.com:your_name_here/mqt-qmap.git
+   $ git clone git@github.com:your_name_here/qmap.git mqt-qmap
    ```
 
    :::
    :::{tab-item} Internal Contribution
-   If you do have write access to the [cda-tum/mqt-qmap](https://github.com/cda-tum/mqt-qmap) repository,
+   If you do have write access to the [munich-quantum-toolkit/qmap](https://github.com/munich-quantum-toolkit/qmap) repository,
    clone the repository locally.
 
    ```console
-   $ git clone git@github.com/cda-tum/mqt-qmap.git
+   $ git clone git@github.com/munich-quantum-toolkit/qmap.git mqt-qmap
    ```
 
    :::
@@ -126,7 +126,7 @@ Ready to contribute to the project? This guide will get you started.
 
 ## Working on the C++ library
 
-Building the project requires a C++ compiler supporting _C++17_ and CMake with a minimum version of _3.19_.
+Building the project requires a C++ compiler supporting _C++17_ and CMake with a minimum version of _3.24_.
 As of 2025, our CI pipeline on GitHub continuously tests the library under the following matrix of systems and compilers:
 
 - Ubuntu 24.04 with GCC 13 or Clang 18 on x86_64 and arm64
@@ -137,10 +137,10 @@ As of 2025, our CI pipeline on GitHub continuously tests the library under the f
 - Windows 2022 with MSVC 19.42 or Clang 18 on x86_64
 - Windows 2025 with MSVC 19.42 or Clang 18 on x86_64
 
-To access the latest build logs, visit the [GitHub Actions page](https://github.com/cda-tum/mqt-qmap/actions/workflows/ci.yml).
+To access the latest build logs, visit the [GitHub Actions page](https://github.com/munich-quantum-toolkit/qmap/actions/workflows/ci.yml).
 
 We are not aware of any issues with other compilers or operating systems.
-If you encounter any problems, please [open an issue](https://github.com/cda-tum/mqt-qmap/issues) and let us know.
+If you encounter any problems, please [open an issue](https://github.com/munich-quantum-toolkit/qmap/issues) and let us know.
 
 ### Configure and Build
 
@@ -183,7 +183,7 @@ The project uses CMake's [FetchContent](https://cmake.org/cmake/help/latest/modu
 As such, the configuration step requires an active internet connection (at least the first time it is run) to download the dependencies.
 Specifically, the project downloads
 
-- [mqt-core](https://github.com/cda-tum/mqt-core), which forms the backbone of the MQT (roughly 20 MB)
+- [mqt-core](https://github.com/munich-quantum-toolkit/core), which forms the backbone of the MQT (roughly 20 MB)
 - [nlohmann/json](https://github.com/nlohmann/json) for JSON serialization and deserialization (roughly 100 KB)
 - [Boost Multiprecision](https://github.com/boostorg/multiprecision) for arbitrary precision arithmetic (roughly 4 MB)
 - [GoogleTest](https://github.com/google/googletest) for unit testing (roughly 1 MB)
@@ -204,7 +204,7 @@ We use the [GoogleTest](https://google.github.io/googletest/primer.html) framewo
 All tests are contained in the {code}`test` directory, which is further divided into subdirectories for different parts of the library.
 You are expected to write tests for any new features you implement and ensure that all tests pass.
 Our CI pipeline on GitHub will also run the tests and check for any failures.
-It will also collect code coverage information and upload it to [Codecov](https://codecov.io/gh/cda-tum/mqt-qmap).
+It will also collect code coverage information and upload it to [Codecov](https://codecov.io/gh/munich-quantum-toolkit/qmap).
 Our goal is to have new contributions at least maintain the current code coverage level, while striving for covering as much of the code as possible.
 Try to write meaningful tests that actually test the correctness of the code and not just exercise the code paths.
 
