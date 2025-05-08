@@ -1006,10 +1006,14 @@ of the abstraction from the 2D grid used for the solver must be provided again.
       "get_ops_for_solver",
       [](const qc::QuantumComputation& qc, const std::string& operationType,
          const uint64_t numControls, const bool quiet) {
+        std::cout << "get_ops_for_solver" << std::endl;
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         auto opTypeLowerStr = operationType;
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         std::transform(opTypeLowerStr.begin(), opTypeLowerStr.end(),
                        opTypeLowerStr.begin(),
                        [](const auto c) { return std::tolower(c); });
+        std::cout << __FILE__ << ":" << __LINE__ << std::endl;
         return na::NASolver::getOpsForSolver(
             qc, qc::opTypeFromString(operationType), numControls, quiet);
       },
