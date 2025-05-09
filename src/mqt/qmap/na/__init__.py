@@ -10,9 +10,9 @@
 
 from __future__ import annotations
 
-from . import state_preparation
+from . import azac, state_preparation
 
-__all__ = ["state_preparation"]
+__all__ = ["azac", "state_preparation"]
 
 
 def __dir__() -> list[str]:

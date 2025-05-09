@@ -11,7 +11,7 @@ The source code of MQT QMAP is publicly available on GitHub at [munich-quantum-t
 MQT QMAP is fully compatible with Qiskit 1.0 and above.
 
 We recommend you to start with the {doc}`installation instructions <installation>` or by reading our overview paper {cite:p}`wille2023qmap`.
-Then proceed to the {doc}`mapping page <mapping>`, the {doc}`synthesis/optimization page <synthesis>`, or the {doc}`neutral atom state preparation page <na_state_prep>`, and read the {doc}`reference documentation <api/mqt/qmap/index>`.
+Then proceed to the {doc}`mapping page <mapping>`, the {doc}`synthesis/optimization page <synthesis>`, the {doc}`neutral atom state preparation page <na_state_prep>`, or the {doc}`zoned neutral atom compiler <na_zoned_compiler>`, and read the {doc}`reference documentation <api/mqt/qmap/index>`.
 If you are interested in the theory behind QMAP, have a look at the publications in the {doc}`publication list <references>`.
 
 We appreciate any feedback and contributions to the project. If you want to contribute, you can find more information in the {doc}`Contribution <contributing>` guide.
@@ -47,6 +47,7 @@ installation
 mapping
 synthesis
 na_state_prep
+na_zoned_compiler
 references
 CHANGELOG
 UPGRADING
