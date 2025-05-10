@@ -11,11 +11,11 @@
 from __future__ import annotations
 
 import pytest
+from mqt.qcec import verify
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import GenericBackendV2
 
 from mqt import qmap
-from mqt.qcec import verify
 
 
 @pytest.fixture

@@ -17,10 +17,9 @@ if TYPE_CHECKING:
 
     from .compile import CircuitInputType
 
-from qiskit.quantum_info import Clifford, PauliList
-
 from mqt.core import load
 from mqt.core.plugins.qiskit import mqt_to_qiskit
+from qiskit.quantum_info import Clifford, PauliList
 
 from .pyqmap import (
     CliffordSynthesizer,
