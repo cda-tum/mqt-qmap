@@ -14,9 +14,9 @@ import locale
 from pathlib import Path
 
 import pytest
+from mqt.qcec import verify
 from qiskit import QuantumCircuit
 
-from mqt.qcec import verify
 from mqt.qmap.compile import compile  # noqa: A004
 from mqt.qmap.pyqmap import (
     Arch,
